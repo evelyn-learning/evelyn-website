@@ -1,0 +1,632 @@
+[
+  {
+    "id": "apmacro.circular-flow-gdp.mcq.01",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the circular flow model, households receive factor income from firms because households:",
+    "choices": [
+      "Purchase goods and services in the product market",
+      "Pay taxes to the government",
+      "Receive transfer payments from the government",
+      "Supply labor, land, and capital to firms in the resource market"
+    ],
+    "answer": "D",
+    "hints": ["In the resource (factor) market, firms buy inputs and households sell them."]
+  },
+  {
+    "id": "apmacro.circular-flow-gdp.mcq.02",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following transactions is EXCLUDED from U.S. GDP?",
+    "choices": [
+      "Services provided by a dentist to a paying patient",
+      "Government spending on new military equipment",
+      "The sale of a five-year-old car between two private citizens",
+      "Construction of a new apartment building by a developer"
+    ],
+    "answer": "C",
+    "hints": ["GDP counts only new production. A used-good transaction simply transfers existing wealth — no new output is created."]
+  },
+  {
+    "id": "apmacro.circular-flow-gdp.mcq.03",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A mill sells flour to a bakery for 2 dollars. The bakery bakes the flour into a loaf and sells it to a consumer for 5 dollars. Under the expenditure approach to GDP, what is the total contribution of these two transactions to GDP?",
+    "choices": [
+      "5 dollars, since only the final sale to the consumer is counted",
+      "7 dollars, the sum of all market transactions",
+      "2 dollars, since only the intermediate input is counted",
+      "3 dollars, since only the value added at the bakery stage is counted"
+    ],
+    "answer": "A",
+    "hints": ["The expenditure approach counts only final goods to avoid double-counting the intermediate flour purchase."]
+  },
+  {
+    "id": "apmacro.circular-flow-gdp.mcq.04",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Using the income approach, an economy reports the following annual factor payments: wages = 500 billion dollars, corporate profits = 100 billion dollars, rental income = 60 billion dollars, and net interest income = 40 billion dollars. Assuming these four categories fully capture factor income, what is GDP in billions of dollars?",
+    "choices": [
+      "560 billion dollars",
+      "600 billion dollars",
+      "660 billion dollars",
+      "700 billion dollars"
+    ],
+    "answer": "D",
+    "hints": ["Income approach: sum all payments to factors of production — wages, profits, rent, and interest."]
+  },
+  {
+    "id": "apmacro.circular-flow-gdp.mcq.05",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A U.S. citizen works abroad for a foreign company. A foreign national works inside the United States for a U.S. firm. Which of the following correctly describes how these two income streams are treated in U.S. GDP versus U.S. GNP?",
+    "choices": [
+      "Both earnings are included in both U.S. GDP and U.S. GNP",
+      "The foreign national's U.S. earnings are included in U.S. GDP but not U.S. GNP; the U.S. citizen's foreign earnings are included in U.S. GNP but not U.S. GDP",
+      "Both earnings are excluded from both U.S. GDP and U.S. GNP",
+      "The U.S. citizen's foreign earnings are included in U.S. GDP but not U.S. GNP"
+    ],
+    "answer": "B",
+    "hints": ["GDP = production within borders regardless of citizenship; GNP = production by citizens regardless of location."]
+  },
+  {
+    "id": "apmacro.circular-flow-gdp.numeric.01",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "An economy reports these annual expenditures: consumption = 800 billion dollars, private investment = 150 billion dollars, government purchases = 200 billion dollars, exports = 100 billion dollars, and imports = 120 billion dollars. Using the expenditure approach (GDP = C + I + G + NX), what is GDP in billions of dollars? Give a whole number.",
+    "answer": "1130",
+    "hints": ["NX = exports minus imports. Be careful to subtract imports, not add them."]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.01",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following activities is EXCLUDED from GDP even though it creates real economic value?",
+    "choices": [
+      "A carpenter builds a deck for a paying customer",
+      "A restaurant sells meals to paying diners",
+      "A parent stays home full-time to raise children without receiving payment",
+      "A government contractor is paid to repair a public bridge"
+    ],
+    "answer": "C",
+    "hints": ["GDP captures only market transactions. Unpaid household work has no market price to record."]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.02",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a recognized limitation of using GDP as a measure of economic well-being?",
+    "choices": [
+      "GDP overstates economic growth by including the value of exports",
+      "GDP excludes the value of leisure time and non-market household production",
+      "GDP counts only government spending and ignores private consumption",
+      "GDP automatically rises whenever the inflation rate falls"
+    ],
+    "answer": "B",
+    "hints": ["Ask: what meaningful activities produce value but never appear in any market transaction?"]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.03",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two countries have identical real GDP per capita. Country A has highly unequal income distribution; Country B distributes income far more evenly. What does this comparison illustrate about GDP per capita as a welfare measure?",
+    "choices": [
+      "GDP per capita is not a useful metric for international comparisons of any kind",
+      "Country A must provide a higher standard of living for its average citizen",
+      "GDP per capita does not reveal how income is distributed across the population",
+      "Country B must have a lower total GDP than Country A"
+    ],
+    "answer": "C",
+    "hints": ["GDP per capita is an average. Averages can hide extreme inequality in the underlying distribution."]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.04",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A massive oil spill devastates a coastal region. Thousands of cleanup workers are hired and large sums are spent on remediation. What is the most likely effect on measured GDP and actual societal well-being?",
+    "choices": [
+      "Both measured GDP and societal well-being increase as cleanup activity creates productive value",
+      "Measured GDP increases because cleanup spending is recorded, but actual well-being may decrease or remain unchanged once the environmental damage is considered",
+      "Measured GDP decreases because the spill destroys physical capital",
+      "Both measured GDP and societal well-being decrease because no useful final output is created"
+    ],
+    "answer": "B",
+    "hints": ["GDP records the dollar value of transactions, not whether those transactions represent a net gain in welfare."]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.05",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Human Development Index (HDI) is considered a broader measure of well-being than GDP per capita primarily because the HDI incorporates:",
+    "choices": [
+      "Only purchasing-power-adjusted real incomes across countries",
+      "Military spending and national defense capability",
+      "Education attainment and life expectancy in addition to income",
+      "Government budget balances and sovereign debt levels"
+    ],
+    "answer": "C",
+    "hints": ["The HDI has three dimensions: a long and healthy life, knowledge (education), and a decent standard of living."]
+  },
+  {
+    "id": "apmacro.gdp-limitations.mcq.06",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country X's nominal GDP increases by 6% over one year. During the same year, the country's population grows by 4% and the price level rises by 3%. Which conclusion about real GDP per capita is most accurate?",
+    "choices": [
+      "Real GDP per capita rose substantially because nominal GDP grew by 6%",
+      "Real GDP per capita roughly fell, since real GDP grew by approximately 3% while population grew by 4%",
+      "Real GDP per capita changed at exactly the same rate as nominal GDP per capita",
+      "Real GDP per capita grew by 6% because inflation is irrelevant to per capita comparisons"
+    ],
+    "answer": "B",
+    "hints": ["Two adjustments are needed: strip out inflation to get real GDP growth (~3%), then strip out population growth (~4%) to get per-capita change (~-1%)."]
+  },
+  {
+    "id": "apmacro.unemployment.mcq.01",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A worker was laid off three weeks ago and is actively sending out job applications and attending interviews each week. This worker is classified as:",
+    "choices": [
+      "Not in the labor force",
+      "Employed part-time",
+      "A discouraged worker",
+      "Unemployed"
+    ],
+    "answer": "D",
+    "hints": ["Unemployed = without a job AND actively seeking one. Active search is the key requirement."]
+  },
+  {
+    "id": "apmacro.unemployment.mcq.02",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recent college graduate spends three months searching for her first full-time professional job after earning her degree. Her unemployment during this search period is best classified as:",
+    "choices": [
+      "Cyclical unemployment",
+      "Structural unemployment",
+      "Frictional unemployment",
+      "Seasonal unemployment"
+    ],
+    "answer": "C",
+    "hints": ["Frictional unemployment arises from the normal time it takes workers to find jobs — including first-time entrants to the labor market."]
+  },
+  {
+    "id": "apmacro.unemployment.numeric.01",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Econland has a working-age population of 200 million. Of these, 140 million are employed, 10 million are unemployed (actively seeking work), and 50 million are not in the labor force. Calculate the unemployment rate as a percentage, rounded to one decimal place.",
+    "answer": "6.7",
+    "hints": ["Labor force = employed + unemployed. Unemployment rate = (unemployed / labor force) x 100."]
+  },
+  {
+    "id": "apmacro.unemployment.numeric.02",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Riverside has a working-age population of 320 million. The labor force participation rate is 65%, and 15 million people are unemployed (actively seeking work). Calculate the unemployment rate as a percentage, rounded to one decimal place.",
+    "answer": "7.2",
+    "hints": ["First find the labor force size using the participation rate (65% x 320 million), then apply the unemployment rate formula."]
+  },
+  {
+    "id": "apmacro.unemployment.mcq.03",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A software engineer loses her job after her company replaces routine coding tasks with automated systems, rendering her specific skill set obsolete. This type of unemployment is best classified as:",
+    "choices": [
+      "Frictional",
+      "Cyclical",
+      "Seasonal",
+      "Structural"
+    ],
+    "answer": "D",
+    "hints": ["Structural unemployment arises from a mismatch between workers' skills and employer needs — often driven by technology or shifts in industry."]
+  },
+  {
+    "id": "apmacro.unemployment.mcq.04",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During a severe recession, the official unemployment rate rises from 5% to 9%. At the same time, many workers stop actively looking for jobs because they believe no suitable work is available. Which statement best describes the effect of these discouraged workers on the official unemployment rate?",
+    "choices": [
+      "Discouraged workers are still counted as unemployed, pushing the official rate above 9%",
+      "Discouraged workers are reclassified as employed, artificially reducing the reported rate",
+      "Discouraged workers exit the labor force entirely, causing the official unemployment rate to understate the true degree of labor market weakness",
+      "Discouraged workers increase the labor force participation rate by swelling measured labor supply"
+    ],
+    "answer": "C",
+    "hints": ["To be counted as unemployed, a worker must be actively searching. Discouraged workers have stopped searching and therefore drop out of the labor force denominator entirely."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.mcq.01",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Consumer Price Index (CPI) is primarily designed to measure:",
+    "choices": [
+      "Changes in the price level of a fixed basket of goods and services purchased by a typical urban consumer",
+      "The total market value of final goods and services produced in the country",
+      "Wholesale price changes at the producer level before goods reach consumers",
+      "Changes in nominal wages earned by workers over time"
+    ],
+    "answer": "A",
+    "hints": ["The CPI tracks what it costs to buy the same fixed basket of goods over time relative to a base period."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.numeric.01",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In the base year, a fixed market basket costs 400 dollars. In the current year, the same basket costs 460 dollars. The base-year CPI is set to 100. Calculate the CPI for the current year. Give a whole number.",
+    "answer": "115",
+    "hints": ["CPI = (cost of basket in current year / cost of basket in base year) x 100."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.mcq.02",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The CPI was 120 in Year 1 and rose to 126 in Year 2. What was the inflation rate between Year 1 and Year 2?",
+    "choices": [
+      "6%",
+      "5%",
+      "4.8%",
+      "4.5%"
+    ],
+    "answer": "B",
+    "hints": ["Inflation rate = (CPI current - CPI previous) / CPI previous x 100. Divide by the starting value, not by 100."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.numeric.02",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The CPI was 150 in Year 1 and 162 in Year 2. Calculate the inflation rate between Year 1 and Year 2 as a percentage, rounded to one decimal place.",
+    "answer": "8.0",
+    "hints": ["Inflation rate = (162 - 150) / 150 x 100. The base is Year 1's CPI, not 100."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.mcq.03",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The CPI is widely acknowledged to overstate the true increase in the cost of living. The primary source of this upward bias is:",
+    "choices": [
+      "The CPI excludes food and energy, understating actual household expenditures",
+      "The CPI is revised only once per decade, lagging far behind actual price changes",
+      "The CPI includes luxury goods that typical households never purchase",
+      "The CPI uses a fixed basket that does not account for consumers switching to relatively cheaper substitutes when prices change"
+    ],
+    "answer": "D",
+    "hints": ["When beef prices rise, many consumers buy more chicken. A fixed basket assumes no such substitution, overstating how much more expensive living has become."]
+  },
+  {
+    "id": "apmacro.price-indices-inflation.mcq.04",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In Year 1, a worker earns a nominal wage of 50,000 dollars per year and the CPI is 125. By Year 3, the nominal wage rises to 55,000 dollars and the CPI rises to 140. Which of the following correctly describes what happened to this worker's real wage?",
+    "choices": [
+      "The real wage rose because the nominal wage increased from Year 1 to Year 3",
+      "The real wage was unchanged because both nominal wages and prices increased",
+      "The real wage fell because prices rose proportionally more than the nominal wage",
+      "The real wage rose because the nominal wage increase exceeded the rate of inflation"
+    ],
+    "answer": "C",
+    "hints": ["Nominal wage rose by 10% (50,000 to 55,000); CPI rose by 12% (125 to 140). When prices rise faster than wages, real purchasing power falls."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.01",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A retiree lives entirely on a fixed pension payment each month. If the annual inflation rate unexpectedly rises from 2% to 8%, what most likely happens to this retiree's standard of living?",
+    "choices": [
+      "It falls because the fixed pension buys fewer goods and services as prices rise",
+      "It improves because higher inflation signals a stronger, growing economy",
+      "It remains unchanged because the nominal pension payment stays constant",
+      "It improves because the government automatically adjusts all private pensions for inflation"
+    ],
+    "answer": "A",
+    "hints": ["A fixed nominal income combined with a rising price level means the same dollars purchase progressively less — real purchasing power falls."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.02",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The term 'shoe-leather costs' of inflation refers to:",
+    "choices": [
+      "Higher production costs for shoe manufacturers as raw-material prices rise with inflation",
+      "The time and resources households and businesses spend making more frequent trips to the bank or managing cash holdings to minimize inflation's erosion of purchasing power",
+      "The cost firms face when updating price lists, menus, and catalogs to reflect higher prices",
+      "The redistribution of real wealth from creditors to debtors caused by unexpected inflation"
+    ],
+    "answer": "B",
+    "hints": ["The name is a metaphor: protecting yourself from inflation requires more trips to the bank — metaphorically wearing out your shoes."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.03",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A homeowner borrowed 200,000 dollars at a fixed nominal interest rate when both parties expected 2% annual inflation. Inflation instead averages 6% per year for the entire life of the loan. Who benefits from this unexpected inflation?",
+    "choices": [
+      "The lender, because higher inflation increases the real return earned on the loan",
+      "Neither party, since inflation affects borrowers and lenders symmetrically",
+      "The borrower, because the real value of the outstanding debt declines",
+      "The government, because it collects higher income-tax revenue from both parties"
+    ],
+    "answer": "C",
+    "hints": ["Unexpected inflation redistributes wealth from lenders to borrowers: the borrower repays with dollars worth less in real terms than the lender expected."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.04",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A lender and borrower agree on a one-year loan at a nominal interest rate of 5%. Both expect inflation to be 3%. The realized inflation rate turns out to be 7%. What real interest rate did the lender actually receive?",
+    "choices": [
+      "8%",
+      "2%",
+      "5%",
+      "-2%"
+    ],
+    "answer": "D",
+    "hints": ["Real interest rate = nominal rate minus ACTUAL inflation rate. Use what happened, not what was expected."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.05",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is the best example of a 'menu cost' caused by inflation?",
+    "choices": [
+      "A bank raises its loan interest rates to compensate for expected future inflation",
+      "A restaurant chain must repeatedly reprint its menus and update its point-of-sale systems as inflation erodes the accuracy of listed prices",
+      "A worker demands a wage increase after noticing that his real purchasing power has declined",
+      "An investor shifts her portfolio from bonds to real assets as a hedge against rising prices"
+    ],
+    "answer": "B",
+    "hints": ["Menu costs are the literal and figurative costs of changing posted prices — reprinting, IT updates, and the time spent on frequent price revisions."]
+  },
+  {
+    "id": "apmacro.costs-of-inflation.mcq.06",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy experiences deflation — a sustained, broad-based fall in the general price level. Which of the following best describes a significant harmful consequence of deflation?",
+    "choices": [
+      "Debtors benefit greatly because the real value of their debt falls as prices decline",
+      "Consumers rush to buy goods immediately because they expect prices to continue falling",
+      "Households and businesses postpone spending in anticipation of even lower future prices, reducing aggregate demand and potentially deepening a recession",
+      "Fixed-income recipients see their real purchasing power decline as the price level falls"
+    ],
+    "answer": "C",
+    "hints": ["Deflation creates a 'wait and buy later' incentive. If everyone waits, spending collapses — a deflationary spiral that can severely worsen a downturn."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.mcq.01",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Real GDP differs from nominal GDP in that real GDP:",
+    "choices": [
+      "Includes only domestically produced goods, not services",
+      "Is adjusted for changes in the price level by holding prices fixed at base-year levels",
+      "Counts only goods sold to final consumers and excludes business investment",
+      "Measures GDP using the income approach rather than the expenditure approach"
+    ],
+    "answer": "B",
+    "hints": ["To see whether actual output changed, you must hold prices constant. Real GDP does this; nominal GDP does not."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.numeric.01",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In the current year, nominal GDP is 600 billion dollars and the GDP deflator is 120. Calculate real GDP in billions of dollars. Give a whole number.",
+    "answer": "500",
+    "hints": ["Real GDP = (Nominal GDP / GDP Deflator) x 100."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.mcq.02",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Year 1, nominal GDP is 1,000 billion dollars and the GDP deflator is 100. In Year 2, nominal GDP rises to 1,100 billion dollars and the GDP deflator rises to 110. Which of the following correctly describes what happened to real GDP?",
+    "choices": [
+      "Real GDP increased by 10% because nominal GDP rose by 10%",
+      "Real GDP fell because the price level increased",
+      "Real GDP rose by 5%",
+      "Real GDP remained unchanged because nominal GDP and prices rose at the same rate"
+    ],
+    "answer": "D",
+    "hints": ["Compute real GDP for each year: Year 1 = 1000/100 x 100 = 1000; Year 2 = 1100/110 x 100 = 1000."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.numeric.02",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Country B had nominal GDP of 400 billion dollars in Year 1 and 480 billion dollars in Year 2. The GDP deflator was 100 in Year 1 and 110 in Year 2. Calculate the percentage change in real GDP between Year 1 and Year 2, rounded to one decimal place.",
+    "answer": "9.1",
+    "hints": ["Convert both years to real GDP using the deflator formula, then compute the percentage change between the two real values."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.mcq.03",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the current year, nominal GDP equals 750 billion dollars and real GDP equals 600 billion dollars. The base-year GDP deflator is 100. What is the GDP deflator for the current year?",
+    "choices": [
+      "80",
+      "100",
+      "125",
+      "150"
+    ],
+    "answer": "C",
+    "hints": ["GDP deflator = (Nominal GDP / Real GDP) x 100."]
+  },
+  {
+    "id": "apmacro.real-vs-nominal-gdp.mcq.04",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy's GDP deflator rose from 110 to 121 over one year, and nominal GDP rose from 550 billion dollars to 665.5 billion dollars. Which of the following correctly identifies both the change in real GDP and the inflation rate implied by the deflator?",
+    "choices": [
+      "Real GDP grew by 10% and the inflation rate was 10%",
+      "Real GDP grew by 21% and the inflation rate was 10%",
+      "Real GDP fell because nominal GDP growth was entirely offset by the rise in the deflator",
+      "Real GDP grew by 10% but the inflation rate was 21%"
+    ],
+    "answer": "A",
+    "hints": ["Real GDP Year 1 = 550/110 x 100 = 500; Real GDP Year 2 = 665.5/121 x 100 = 550. Inflation = (121 - 110)/110 x 100."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.01",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Economists commonly define a recession as:",
+    "choices": [
+      "Any calendar year in which the general price level rises",
+      "A period during which the unemployment rate exceeds 8%",
+      "At least two consecutive quarters of declining real GDP",
+      "Any period during which the federal government runs a budget deficit"
+    ],
+    "answer": "C",
+    "hints": ["The standard definition focuses on real output, not inflation or unemployment, and requires two consecutive quarters."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.02",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is classified as a LEADING economic indicator?",
+    "choices": [
+      "The unemployment rate",
+      "New building permits issued for residential construction",
+      "Real GDP",
+      "Average duration of unemployment spells"
+    ],
+    "answer": "B",
+    "hints": ["Leading indicators change before the broader economy turns. Permits signal future construction activity months before it materializes."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.03",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During the contraction phase of the business cycle, an economy would most likely experience:",
+    "choices": [
+      "Rising real GDP and declining unemployment",
+      "Falling real GDP and rising unemployment",
+      "Rising price levels and increasing business investment",
+      "Falling price levels alongside rising real GDP"
+    ],
+    "answer": "B",
+    "hints": ["Contraction means the economy is shrinking. Less production means fewer workers are needed."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.04",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When an economy's actual real GDP falls below its potential GDP, economists describe this situation as:",
+    "choices": [
+      "An inflationary gap, because the economy is producing below its capacity",
+      "A positive output gap, signaling that the economy is overheating",
+      "A recessionary gap, indicating that productive capacity is being underutilized",
+      "A balanced budget position, reflecting fiscal neutrality"
+    ],
+    "answer": "C",
+    "hints": ["Output gap = actual GDP minus potential GDP. When negative, the economy has idle resources — a recessionary gap."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.05",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Potential GDP is best described as:",
+    "choices": [
+      "The absolute maximum output an economy could produce under any conceivable conditions",
+      "The level of real GDP consistent with full employment at the economy's natural rate of unemployment",
+      "The level of GDP achieved at the peak of the most recent business cycle expansion",
+      "Nominal GDP divided by total population"
+    ],
+    "answer": "B",
+    "hints": ["Potential GDP does not mean zero unemployment — frictional and structural unemployment still exist at potential. It means no cyclical unemployment."]
+  },
+  {
+    "id": "apmacro.business-cycle.mcq.06",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During the expansion phase of the business cycle, which combination of conditions is most likely observed?",
+    "choices": [
+      "Rising real GDP, declining unemployment, and increasing inflationary pressure as the economy approaches potential",
+      "Falling real GDP, rising unemployment, and deflationary pressure throughout the economy",
+      "Stable real GDP, stable unemployment, and a stable price level",
+      "Rising real GDP alongside rising unemployment and falling price levels simultaneously"
+    ],
+    "answer": "A",
+    "hints": ["In an expansion, output rises, firms hire more, and increased demand can push prices upward — especially as the economy nears potential GDP."]
+  }
+]

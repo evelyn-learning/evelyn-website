@@ -1,0 +1,389 @@
+[
+  {
+    "id": "apenvsci.ozone.mcq.01",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The ozone layer that shields Earth's surface from harmful ultraviolet radiation is located in which layer of the atmosphere?",
+    "choices": [
+      "Stratosphere",
+      "Troposphere",
+      "Mesosphere",
+      "Thermosphere"
+    ],
+    "answer": "A",
+    "hints": ["Think about which layer sits above the weather layer where commercial jets cruise."]
+  },
+  {
+    "id": "apenvsci.ozone.mcq.02",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Chlorofluorocarbons (CFCs) were widely used as refrigerants and aerosol propellants. How do CFCs damage the stratospheric ozone layer?",
+    "choices": [
+      "CFCs absorb UV-A radiation and convert it to heat, directly warming the ozone layer",
+      "CFCs react directly and irreversibly with each O3 molecule in a one-to-one reaction",
+      "CFCs release free chlorine atoms when exposed to UV radiation; each chlorine atom acts as a catalyst that can destroy thousands of ozone molecules",
+      "CFCs elevate stratospheric nitrogen oxide concentrations, which then break down O3"
+    ],
+    "answer": "C",
+    "hints": ["Focus on the catalytic nature of the destruction — one Cl atom can react many times before being deactivated."]
+  },
+  {
+    "id": "apenvsci.ozone.mcq.03",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ground-level (tropospheric) ozone differs from stratospheric ozone in which of the following ways?",
+    "choices": [
+      "It protects organisms from UV-B radiation just as stratospheric ozone does",
+      "It is primarily produced by the breakdown of chlorofluorocarbons near Earth's surface",
+      "Its concentration in the troposphere is higher than the concentration of ozone in the stratosphere",
+      "It is a component of photochemical smog and is harmful to human respiratory health"
+    ],
+    "answer": "D",
+    "hints": ["Tropospheric ozone forms from NOx and volatile organic compounds reacting in sunlight — it is a secondary air pollutant."]
+  },
+  {
+    "id": "apenvsci.ozone.mcq.04",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Satellite measurements show that the Antarctic ozone hole reaches its greatest extent each September and October rather than persisting as a year-round phenomenon. Which explanation best accounts for this seasonal pattern?",
+    "choices": [
+      "The polar vortex isolates stratospheric air over Antarctica during winter; polar stratospheric clouds (PSCs) form in the extreme cold and provide surfaces for reactions that activate chlorine, which then rapidly catalyzes ozone destruction when spring sunlight returns",
+      "Antarctic sunlight peaks in October, maximizing direct UV photolysis of O3 molecules",
+      "Subglacial volcanic eruptions release SO2 during winter that accumulates and reacts with ozone when spring temperatures rise",
+      "CFCs are carried to Antarctica by winter storm systems and reach peak stratospheric concentration in September"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider what happens chemically during the dark Antarctic winter on the surfaces of polar stratospheric clouds.",
+      "Chlorine must be activated into a reactive form before it can catalyze ozone destruction — this activation requires sunlight."
+    ]
+  },
+  {
+    "id": "apenvsci.ozone.mcq.05",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Montreal Protocol (1987) is widely regarded as one of the most successful international environmental agreements. What was its primary mechanism for protecting stratospheric ozone?",
+    "choices": [
+      "It required developing nations to phase out all industrial activity associated with CFC use within 20 years",
+      "It established a global carbon tax on fossil-fuel combustion to reduce industrial demand for CFC refrigerants",
+      "It mandated installation of UV-filtering glass on all new commercial buildings worldwide",
+      "It set legally binding targets for signatory nations to phase out the production and consumption of ozone-depleting substances, including CFCs and HCFCs"
+    ],
+    "answer": "D",
+    "hints": ["The protocol targeted the specific substances causing depletion, not broader energy policy."]
+  },
+  {
+    "id": "apenvsci.ozone.mcq.06",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Even if all production of ozone-depleting substances were halted today, scientists predict that stratospheric ozone concentrations would not return to pre-1980 levels for several more decades. Which factor most directly explains this long recovery time?",
+    "choices": [
+      "The ozone hole has become a self-sustaining atmospheric feature that no longer depends on CFC concentration",
+      "CFCs already emitted have atmospheric lifetimes of decades to over a century, so chlorine atoms will continue to reach the stratosphere for years; additionally, each free Cl atom acts as a catalyst and destroys many ozone molecules before being permanently deactivated",
+      "UV radiation continually photo-dissociates newly formed O3 faster than the ozone layer can rebuild",
+      "Oxygen released from tropical forest photosynthesis reacts with residual stratospheric ozone"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider both the long atmospheric lifetime of CFCs and the catalytic nature of Cl chemistry.",
+      "CFCs released in the 1970s and 1980s are still slowly migrating into the stratosphere today."
+    ]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.mcq.01",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following gases is NOT classified as a greenhouse gas?",
+    "choices": [
+      "Carbon dioxide (CO2)",
+      "Methane (CH4)",
+      "Molecular nitrogen (N2)",
+      "Nitrous oxide (N2O)"
+    ],
+    "answer": "C",
+    "hints": ["Greenhouse gases must absorb and re-emit infrared radiation; consider which diatomic molecule lacks this property."]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.mcq.02",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Methane (CH4) has a 100-year Global Warming Potential (GWP) of approximately 28. Which statement correctly interprets this value?",
+    "choices": [
+      "One kilogram of methane traps approximately 28 times as much heat as one kilogram of CO2 over a 100-year period",
+      "Methane is 28 times more abundant in the atmosphere than CO2 on a mass basis",
+      "Methane persists in the atmosphere 28 times longer than CO2 does",
+      "Methane produces only 28 percent as much warming per molecule as CO2 does"
+    ],
+    "answer": "A",
+    "hints": ["GWP is always expressed relative to CO2 = 1 and measures heat-trapping ability per unit mass over a defined time horizon."]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.mcq.03",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As Arctic sea ice melts, it exposes darker ocean water beneath. The darker surface absorbs more solar radiation, causing further warming that melts still more ice. This process is best described as:",
+    "choices": [
+      "A negative feedback loop that gradually stabilizes global temperatures",
+      "A positive feedback loop (the ice-albedo feedback) that amplifies initial warming",
+      "A primary climate forcing driven directly by increasing atmospheric CO2",
+      "A thermohaline circulation change that redistributes heat between ocean basins"
+    ],
+    "answer": "B",
+    "hints": ["Positive feedbacks amplify the original change; negative feedbacks dampen it."]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.mcq.04",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Thawing Arctic permafrost is considered one of the most dangerous potential climate feedbacks. Which sequence of events correctly describes this positive feedback loop?",
+    "choices": [
+      "Warming → increased evaporation → greater cloud cover → more sunlight reflected → net surface cooling",
+      "Warming → increased tundra plant growth → greater carbon uptake → lower atmospheric CO2 → partial cooling offset",
+      "Warming → glacial meltwater dilutes oceans → weaker thermohaline circulation → regional cooling in the North Atlantic",
+      "Warming → permafrost thaws → frozen organic matter decomposes → CO2 and CH4 released → additional atmospheric warming"
+    ],
+    "answer": "D",
+    "hints": ["Frozen permafrost contains vast stores of ancient organic carbon that decompose and release greenhouse gases when thawed."]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.numeric.01",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Pre-industrial atmospheric CO2 concentration (circa 1750) was approximately 280 ppm. By 2024 that concentration had risen to approximately 420 ppm. By what whole-number percentage has atmospheric CO2 increased above the 1750 baseline? Express your answer as a whole number (units: percent).",
+    "answer": "50",
+    "hints": ["Percentage increase = (new value minus original value) divided by original value, times 100."]
+  },
+  {
+    "id": "apenvsci.greenhouse-climate.mcq.05",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A climate scientist explains that initial warming from elevated CO2 increases atmospheric water vapor, which is itself a potent greenhouse gas. Simultaneously, warming melts high-albedo ice, replacing it with darker, lower-albedo surfaces that absorb more solar energy. Taken together, the net effect of these two processes on the original CO2-driven warming is best described as:",
+    "choices": [
+      "Two positive feedbacks that together amplify warming well beyond what the original CO2 forcing alone would produce",
+      "Two independent negative feedbacks whose partial cooling effects offset the initial CO2 warming",
+      "One positive feedback (water vapor) and one negative feedback (albedo change) that cancel each other out",
+      "Secondary climate forcings that are classified and measured independently of the primary greenhouse effect"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both water vapor increase and ice-albedo loss push temperatures higher, not lower.",
+      "A feedback that amplifies initial warming is positive; one that dampens it is negative."
+    ]
+  },
+  {
+    "id": "apenvsci.ocean-changes.mcq.01",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Ocean acidification is caused primarily by which of the following processes?",
+    "choices": [
+      "Acid rain falling directly into the ocean at high latitudes",
+      "Agricultural fertilizer runoff introducing nitrates into coastal waters",
+      "Increased UV-B radiation breaking down carbonate minerals at the ocean surface",
+      "Oceans absorbing excess atmospheric CO2, which reacts with seawater to produce carbonic acid (H2CO3)"
+    ],
+    "answer": "D",
+    "hints": ["The ocean absorbs roughly 25 to 30 percent of all CO2 emitted by human activities."]
+  },
+  {
+    "id": "apenvsci.ocean-changes.mcq.02",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Coral bleaching events have increased in frequency as ocean temperatures rise. Which biological mechanism directly causes coral bleaching?",
+    "choices": [
+      "Elevated UV-B radiation directly bleaches the pigment molecules in coral tissue",
+      "Thermal stress causes corals to expel their symbiotic photosynthetic algae (zooxanthellae), removing the corals' primary food source and revealing the white calcium carbonate skeleton",
+      "Warmer water reduces dissolved oxygen below the minimum threshold required for coral respiration",
+      "Increased dissolved CO2 is directly toxic to coral polyps at elevated concentrations"
+    ],
+    "answer": "B",
+    "hints": ["The color in healthy corals comes from the zooxanthellae living inside the coral tissue, not from the coral itself."]
+  },
+  {
+    "id": "apenvsci.ocean-changes.mcq.03",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sea-level rise measured during the 20th and 21st centuries is partly attributable to the thermal expansion of seawater. Which statement correctly explains why warmer oceans occupy greater volume?",
+    "choices": [
+      "Melting sea ice adds previously frozen water molecules to the ocean, increasing its total mass",
+      "Warmer surface water sinks to the deep ocean and compresses the existing water column",
+      "Water molecules move faster when heated and take up more space, lowering seawater density and increasing its volume",
+      "Increased salinity from enhanced evaporation causes ionic repulsion between water molecules, expanding the solution"
+    ],
+    "answer": "C",
+    "hints": ["Higher kinetic energy at elevated temperature means molecules require more space between them — density decreases, volume increases."]
+  },
+  {
+    "id": "apenvsci.ocean-changes.mcq.04",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When atmospheric CO2 dissolves in seawater it reacts with water to form carbonic acid, releasing hydrogen ions (H+) and lowering pH. This process also reduces the concentration of carbonate ions (CO3 2-). Which group of marine organisms is most directly threatened by reduced carbonate ion availability?",
+    "choices": [
+      "Calcifying organisms — such as oysters, sea urchins, and reef-building corals — that rely on dissolved carbonate ions to precipitate calcium carbonate (CaCO3) for shells and skeletons",
+      "Pelagic fish, because carbonate ions directly regulate osmotic pressure across gill membranes",
+      "Photosynthetic phytoplankton, which require carbonate ions as electron donors in the light-independent reactions of photosynthesis",
+      "Marine mammals, because reduced carbonate concentration impairs the transmission of echolocation signals through water"
+    ],
+    "answer": "A",
+    "hints": ["Think about which organisms build hard structures from calcium carbonate and what chemical building blocks they need."]
+  },
+  {
+    "id": "apenvsci.ocean-changes.numeric.01",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Pre-industrial ocean surface pH was approximately 8.2; current average surface pH is approximately 8.1. Because pH is a logarithmic scale (pH = -log[H+]), a decrease of 0.1 pH units corresponds to a factor of 10^0.1 approximately equal to 1.26 increase in hydrogen ion concentration [H+]. By what whole-number percentage has [H+] increased? Express your answer as a whole number (units: percent).",
+    "answer": "26",
+    "hints": ["Percentage increase = (new/original - 1) x 100; here new/original = 1.26, so the increase is 0.26 x 100."]
+  },
+  {
+    "id": "apenvsci.ocean-changes.mcq.05",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Oceanographers are concerned that continued warming and increased freshwater input from melting Greenland ice could weaken the Atlantic Meridional Overturning Circulation (AMOC). If AMOC were to slow significantly, which combination of regional effects would most likely result?",
+    "choices": [
+      "Global ocean temperatures would equilibrate toward a uniform value, reducing existing regional climate differences",
+      "Antarctic ice sheets would melt faster as deep-water warming in the South Atlantic intensified",
+      "Northern Europe would experience significant cooling while tropical Atlantic surface waters warmed, and sea levels along the U.S. East Coast could rise due to reduced northward water transport",
+      "Tropical coral reefs would benefit from cooler upwelling waters replacing warm surface water across equatorial regions"
+    ],
+    "answer": "C",
+    "hints": [
+      "AMOC currently carries warm tropical water northward, giving Northern Europe a climate warmer than its latitude alone would predict.",
+      "If AMOC weakens, less warm water reaches the north but accumulates in the tropics."
+    ]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.01",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the HIPPCO framework for identifying threats to global biodiversity, what does the first letter 'H' represent?",
+    "choices": [
+      "Hunting and poaching of rare wildlife species",
+      "Habitat destruction and fragmentation",
+      "High-temperature climate events driven by global warming",
+      "Heavy metal contamination of soil and water"
+    ],
+    "answer": "B",
+    "hints": ["HIPPCO stands for: Habitat destruction, Invasive species, Population growth, Pollution, Climate change, Overexploitation."]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.02",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following scenarios best illustrates an invasive species causing biodiversity loss?",
+    "choices": [
+      "Burmese pythons released in southern Florida have established a breeding population that has dramatically reduced native mammal and bird populations through predation",
+      "A local deer population increases after hunters remove most of its wolf predators from the region",
+      "A migratory songbird returns each spring to the same woodland where it nested the previous year",
+      "A drought-tolerant native shrub expands its range northward during an unusually dry decade"
+    ],
+    "answer": "A",
+    "hints": ["An invasive species is non-native, establishes a self-sustaining population, and causes ecological harm in its introduced range."]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.03",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Habitat fragmentation typically leads to long-term reductions in biodiversity in the affected landscape. Which mechanism best explains this outcome?",
+    "choices": [
+      "Fragmented habitats always have a greater edge-to-interior ratio, which uniformly increases species richness throughout every fragment",
+      "Fragmentation primarily raises competition with invasive species in coastal wetland habitats",
+      "Forest fragmentation increases local precipitation, altering the hydrology of remaining patches in unpredictable ways",
+      "Small, isolated habitat patches support smaller populations with reduced genetic diversity, limited immigration from neighboring patches, and higher vulnerability to local extinction after disturbances"
+    ],
+    "answer": "D",
+    "hints": ["Think about how isolation affects population size and the ability of a species to recolonize a patch after a local extinction event."]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.04",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historical removal of wolves from Yellowstone National Park led to unchecked elk browsing that degraded riparian vegetation, reduced songbird habitat, and destabilized stream banks. The wolf's ecological role in this system is best described as that of a:",
+    "choices": [
+      "Invasive species whose absence disrupted the food web it had originally evolved alongside",
+      "Specialist species that occupied a narrow niche and was therefore irreplaceable in that ecosystem",
+      "Keystone species whose removal had disproportionately large cascading effects on ecosystem structure and function",
+      "Umbrella species requiring a territory so large that its conservation incidentally protected the entire watershed"
+    ],
+    "answer": "C",
+    "hints": ["A keystone species has an impact on its ecosystem far larger than its biomass alone would suggest."]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.05",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "CITES (the Convention on International Trade in Endangered Species of Wild Fauna and Flora) reduces biodiversity loss primarily through which mechanism?",
+    "choices": [
+      "Providing direct financial grants for habitat restoration projects in biodiversity hotspot countries",
+      "Regulating and monitoring international trade in wild animals and plants, and restricting or banning trade in species threatened by overexploitation",
+      "Setting binding national caps on greenhouse gas emissions to slow climate-driven habitat loss",
+      "Establishing marine protected areas beyond national jurisdiction in international waters"
+    ],
+    "answer": "B",
+    "hints": ["The 'T' in CITES stands for Trade — the convention directly targets the commercial international wildlife trade as a driver of species decline."]
+  },
+  {
+    "id": "apenvsci.biodiversity-threats.mcq.06",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "By the 1990s the Florida panther population had declined to roughly 30 individuals and showed severe inbreeding depression — including low sperm viability, kinked tails, and heart defects. Biologists introduced 8 Texas pumas (a closely related subspecies) into the Florida population. Within a decade, population size roughly doubled and the frequency of genetic defects fell sharply. This conservation intervention is best classified as:",
+    "choices": [
+      "Ex situ conservation — removing threatened individuals to a captive breeding facility to protect them from habitat threats",
+      "Rewilding — reintroducing an apex predator to restore trophic cascades in a degraded ecosystem",
+      "Habitat corridor creation — physically connecting fragmented patches to allow natural dispersal of individuals",
+      "Assisted gene flow (genetic rescue) — deliberately introducing individuals from a related population to restore lost genetic diversity and reverse inbreeding depression in an isolated group"
+    ],
+    "answer": "D",
+    "hints": [
+      "The intervention added new genetic material to an isolated, inbred population rather than protecting it in captivity.",
+      "Genetic rescue specifically targets loss of genetic diversity, not habitat connectivity or captive management."
+    ]
+  }
+]

@@ -1,0 +1,680 @@
+[
+  {
+    "id": "appsych.stress-health.mcq.01",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In health psychology, a stressor is best defined as:",
+    "choices": [
+      "Any event or stimulus that taxes or exceeds an organism's ability to cope",
+      "A hormone secreted by the adrenal medulla during perceived danger",
+      "The physiological arousal response triggered by perceived threat",
+      "A cognitive technique for managing worry through reappraisal"
+    ],
+    "answer": "A",
+    "hints": ["Think about what initiates the stress response, not the response itself."]
+  },
+  {
+    "id": "appsych.stress-health.mcq.02",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "According to Selye's General Adaptation Syndrome, which description best characterizes the RESISTANCE stage?",
+    "choices": [
+      "The body experiences alarm; epinephrine surges and emergency resources are rapidly mobilized",
+      "The body's coping resources are depleted and susceptibility to illness sharply increases",
+      "The parasympathetic nervous system dominates and heart rate returns to resting levels",
+      "The body appears to stabilize as it actively maintains defenses against a continuing stressor"
+    ],
+    "answer": "D",
+    "hints": ["The resistance stage comes after alarm but before exhaustion — the body is coping but at a cost."]
+  },
+  {
+    "id": "appsych.stress-health.mcq.03",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Research on Type A behavior patterns suggests that which specific component is most strongly linked to elevated cardiovascular disease risk?",
+    "choices": [
+      "Time urgency and a strong preoccupation with deadlines",
+      "Hostility and cynical distrust of others",
+      "Achievement motivation and high career ambition",
+      "Frequent multitasking and rapid switching between tasks"
+    ],
+    "answer": "B",
+    "hints": ["Subsequent research narrowed the original Type A concept to a single toxic ingredient."]
+  },
+  {
+    "id": "appsych.stress-health.mcq.04",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Amid six months of job insecurity, Priya develops frequent colds and reports persistent fatigue. A health psychologist would most likely explain this pattern by noting that:",
+    "choices": [
+      "Acute stress briefly boosts immune function before producing long-term suppression",
+      "The parasympathetic nervous system directly suppresses T-cell production under ongoing stress",
+      "Chronic stress elevates cortisol levels, which over time suppresses immune system functioning",
+      "Cognitive appraisal of threat activates the parasympathetic fight-or-flight response"
+    ],
+    "answer": "C",
+    "hints": ["The HPA axis and its main hormone are central to connecting chronic stress and illness."]
+  },
+  {
+    "id": "appsych.stress-health.mcq.05",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After receiving a poor performance review, Daniel sits quietly, takes deep breaths, and reminds himself that one review does not define his career — but takes no concrete steps to change his work habits. Daniel is using:",
+    "choices": [
+      "Emotion-focused coping, which regulates the emotional response rather than altering the stressor itself",
+      "Problem-focused coping, which directly addresses the source of the stress",
+      "Proactive coping, which prevents anticipated stressors from materializing",
+      "Secondary appraisal, which involves evaluating available external resources"
+    ],
+    "answer": "A",
+    "hints": ["He changes how he feels about the problem, not the problem itself."]
+  },
+  {
+    "id": "appsych.stress-health.mcq.06",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a landmark nursing-home study, residents randomly assigned to greater personal control — choosing their own plants, activities, and visit schedules — showed significantly better health outcomes than a comparison group 18 months later. This finding most directly supports which principle of health psychology?",
+    "choices": [
+      "The general adaptation syndrome: controllability reduces the intensity of the alarm reaction",
+      "Type A research: people high in perceived control exhibit less hostility over time",
+      "Emotion-focused coping is always superior to problem-focused coping in institutional settings",
+      "Perceived control and self-efficacy are protective factors that buffer the harmful effects of stress on health"
+    ],
+    "answer": "D",
+    "hints": ["The key variable the researchers manipulated was the degree of personal agency given to residents."]
+  },
+
+  {
+    "id": "appsych.positive-psychology.mcq.01",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Subjective well-being (SWB) is best described as:",
+    "choices": [
+      "The absence of diagnosable psychological disorders",
+      "Wealth and material resources sufficient for a comfortable life",
+      "An individual's self-evaluation of life satisfaction combined with a favorable balance of positive over negative affect",
+      "Social recognition and sense of belonging within one's community"
+    ],
+    "answer": "C",
+    "hints": ["SWB has both a cognitive component (life satisfaction) and an affective component."]
+  },
+  {
+    "id": "appsych.positive-psychology.mcq.02",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rock climber becomes so absorbed in a difficult ascent that she loses track of time, feels completely energized, and senses that the challenge perfectly matches her skill level. Csikszentmihalyi would label this experience:",
+    "choices": [
+      "Flow",
+      "Hedonic adaptation",
+      "Self-actualization",
+      "Intrinsic motivation"
+    ],
+    "answer": "A",
+    "hints": ["This theorist coined a specific term for the state of total absorption in a well-matched challenge."]
+  },
+  {
+    "id": "appsych.positive-psychology.mcq.03",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Barbara Fredrickson's broaden-and-build theory predicts that experiencing positive emotions will:",
+    "choices": [
+      "Signal safety to the organism and trigger parasympathetic recovery from a prior stress response",
+      "Widen an individual's attention and thought-action repertoire and, over time, build durable personal resources",
+      "Dampen the stress response primarily by inhibiting cortisol secretion from the adrenal cortex",
+      "Cause rapid emotional satiation, eventually producing the hedonic treadmill effect"
+    ],
+    "answer": "B",
+    "hints": ["The name 'broaden-and-build' maps directly onto the theory's two core claims."]
+  },
+  {
+    "id": "appsych.positive-psychology.mcq.04",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After losing their home in a natural disaster, a family rebuilds a stable routine within six months, describes the experience as having strengthened family bonds, and scores high on well-being measures. Which concept best accounts for this outcome?",
+    "choices": [
+      "Hedonic adaptation alone: baseline happiness inevitably returns to its set point regardless of the nature of the experience",
+      "Defensive pessimism: anticipating negative outcomes in advance reduced the emotional blow",
+      "Cognitive dissonance: the family revised their beliefs to align with their actual circumstances",
+      "Resilience and post-traumatic growth: individuals can maintain or regain well-being and find deeper meaning after severe adversity"
+    ],
+    "answer": "D",
+    "hints": ["The family is not merely returning to baseline — they report growth. Which concept captures positive change through hardship?"]
+  },
+  {
+    "id": "appsych.positive-psychology.mcq.05",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which finding is most consistent with the research literature on gratitude and well-being?",
+    "choices": [
+      "Gratitude exercises improve well-being only when practiced by individuals who already have clinical depression",
+      "Writing gratitude letters reduces cortisol levels more effectively than standard stress-reduction techniques",
+      "Regularly reflecting on things one is grateful for is associated with increased positive affect and prosocial behavior",
+      "The well-being effects of gratitude practices are limited to collectivist cultures where interdependence is emphasized"
+    ],
+    "answer": "C",
+    "hints": ["Classic counting-blessings studies by Emmons and McCullough are the reference point here."]
+  },
+  {
+    "id": "appsych.positive-psychology.mcq.06",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Martin Seligman's PERMA model identifies five elements of well-being. Which of the following is NOT one of the five elements in that framework?",
+    "choices": [
+      "Positive emotions",
+      "Reward",
+      "Relationships",
+      "Meaning"
+    ],
+    "answer": "B",
+    "hints": ["Spell out PERMA: each letter stands for one element — P, E, R, M, A."]
+  },
+
+  {
+    "id": "appsych.classifying-disorders.mcq.01",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The primary purpose of the DSM-5 (Diagnostic and Statistical Manual of Mental Disorders, Fifth Edition) is to:",
+    "choices": [
+      "Provide evidence-based treatment protocols for each recognized psychological disorder",
+      "Rank psychological disorders by population prevalence and social burden",
+      "Explain the biological etiology underlying each recognized disorder",
+      "Provide standardized criteria for the diagnosis and classification of psychological disorders"
+    ],
+    "answer": "D",
+    "hints": ["Think about what clinicians actually use the DSM-5 to do in practice."]
+  },
+  {
+    "id": "appsych.classifying-disorders.mcq.02",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The biopsychosocial model of psychological disorders is distinguished from the strictly medical model primarily in that it:",
+    "choices": [
+      "Incorporates biological, psychological, and social factors as interacting causes of disorders, rather than attributing disorders solely to physical pathology",
+      "Denies that brain chemistry or genetics plays any meaningful role in explaining mental illness",
+      "Focuses exclusively on social and environmental determinants while deliberately minimizing genetic contributions",
+      "Holds that all psychological disorders can be cured through cognitive restructuring alone"
+    ],
+    "answer": "A",
+    "hints": ["The name of the model lists the three interacting levels it considers."]
+  },
+  {
+    "id": "appsych.classifying-disorders.mcq.03",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After Vanessa receives a schizophrenia diagnosis, her family begins interpreting her laughter, unusual remarks, and even ordinary forgetfulness as symptoms of the disorder. Which perspective best explains this shift?",
+    "choices": [
+      "The diathesis-stress model: knowing the diagnosis increases awareness of genetic vulnerability markers",
+      "The biopsychosocial model: awareness of diagnosis activates additional psychosocial risk factors",
+      "Labeling theory: a diagnostic label can alter how others perceive and interpret an individual's behavior",
+      "The medical model: family members are now accurately recognizing legitimate clinical signs"
+    ],
+    "answer": "C",
+    "hints": ["Which perspective argues that the act of assigning a label shapes subsequent perception?"]
+  },
+  {
+    "id": "appsych.classifying-disorders.mcq.04",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Psychologists commonly apply three core criteria when evaluating whether a behavior constitutes a psychological disorder. Which combination best captures these criteria?",
+    "choices": [
+      "Diagnosis, duration, and distress",
+      "Deviance, distress, and dysfunction",
+      "Dangerous, dimensional, and drug-responsive",
+      "Deliberate, delusional, and dysfunctional"
+    ],
+    "answer": "B",
+    "hints": ["All three criteria start with the same letter — and none requires that the behavior be dangerous."]
+  },
+  {
+    "id": "appsych.classifying-disorders.mcq.05",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Twin studies find that if one identical twin is diagnosed with schizophrenia, the co-twin has roughly a 50% chance of also developing the disorder — not 100%. Which framework best explains why genetic identity does not guarantee the same outcome?",
+    "choices": [
+      "The medical model: schizophrenia involves many genetic variants each with very low individual penetrance",
+      "Labeling theory: the unaffected twin was never exposed to the diagnostic labeling process",
+      "The humanistic model: the unaffected twin received more unconditional positive regard during development",
+      "The diathesis-stress model: a genetic vulnerability requires additional environmental stressors or triggers to produce the disorder"
+    ],
+    "answer": "D",
+    "hints": ["What is the role of environment when genes alone do not guarantee an outcome?"]
+  },
+  {
+    "id": "appsych.classifying-disorders.mcq.06",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In Rosenhan's 'On Being Sane in Insane Places' study, healthy pseudopatients admitted to psychiatric hospitals by reporting hallucinations were later observed behaving normally, yet staff continued to view their conduct through the lens of mental illness. This study is most often cited as evidence that:",
+    "choices": [
+      "Diagnostic labels can create powerful expectations that distort professionals' subsequent perceptions of a patient's behavior",
+      "Psychiatric hospitals lack the structural capacity to distinguish healthy individuals from patients with severe disorders",
+      "The diagnostic criteria for schizophrenia used during the 1970s were scientifically invalid",
+      "Hallucinations cannot be reliably differentiated from normal subjective experiences through direct observation"
+    ],
+    "answer": "A",
+    "hints": ["The study is a classic critique of psychiatric classification — specifically about what happens once a label is applied."]
+  },
+
+  {
+    "id": "appsych.anxiety-disorders.mcq.01",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Generalized Anxiety Disorder (GAD) is primarily characterized by:",
+    "choices": [
+      "Recurrent intrusive thoughts paired with repetitive behaviors intended to reduce distress",
+      "Persistent and excessive worry about multiple life domains that is difficult to control",
+      "Sudden, intense episodes of terror accompanied by physical symptoms such as racing heart and dizziness",
+      "Persistent avoidance and re-experiencing of a specific traumatic event"
+    ],
+    "answer": "B",
+    "hints": ["The 'generalized' in GAD is the clue — worry is not focused on one object or situation."]
+  },
+  {
+    "id": "appsych.anxiety-disorders.mcq.02",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Without any clear trigger, Kwame suddenly experiences an overwhelming surge of terror, a pounding heart, chest tightness, and a sense of unreality. Afterward, he spends weeks dreading when the next episode will strike. His symptoms are most consistent with:",
+    "choices": [
+      "Specific phobia",
+      "Generalized Anxiety Disorder",
+      "Social anxiety disorder",
+      "Panic disorder"
+    ],
+    "answer": "D",
+    "hints": ["Key features: unexpected onset, intense physical symptoms, and anticipatory worry about future episodes."]
+  },
+  {
+    "id": "appsych.anxiety-disorders.mcq.03",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every morning, Rachel spends two hours arranging her textbooks in a precise order and re-checking that her door is locked exactly twelve times. She recognizes the behavior as excessive but feels overwhelming distress if she skips any step. This pattern best fits:",
+    "choices": [
+      "Panic disorder",
+      "Post-Traumatic Stress Disorder",
+      "Obsessive-Compulsive Disorder",
+      "Specific phobia"
+    ],
+    "answer": "C",
+    "hints": ["Two key components are present: intrusive, ego-dystonic thoughts and repetitive rituals aimed at reducing them."]
+  },
+  {
+    "id": "appsych.anxiety-disorders.mcq.04",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A combat veteran experiences vivid, unbidden flashbacks to battle, actively avoids veterans' groups and war films, feels emotionally detached from loved ones, and is easily startled by loud sounds. Which diagnosis best fits this clinical picture?",
+    "choices": [
+      "Generalized Anxiety Disorder",
+      "Major Depressive Disorder",
+      "Panic disorder",
+      "Post-Traumatic Stress Disorder"
+    ],
+    "answer": "D",
+    "hints": ["The four symptom clusters of this diagnosis include intrusion, avoidance, negative alterations in mood/cognition, and hyperarousal."]
+  },
+  {
+    "id": "appsych.anxiety-disorders.mcq.05",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which explanation best accounts for how a specific phobia initially develops, according to classical conditioning theory?",
+    "choices": [
+      "A neutral stimulus acquires fear-eliciting properties after being repeatedly paired with an aversive unconditioned stimulus",
+      "A feared object is reinforced by parental attention, which strengthens the avoidance response over time",
+      "Observational learning causes the individual to mimic a model's fearful reaction without direct experience",
+      "Cognitive distortions produce catastrophic misinterpretations of otherwise neutral environmental cues"
+    ],
+    "answer": "A",
+    "hints": ["John Watson's Little Albert study is the classic demonstration of this principle."]
+  },
+  {
+    "id": "appsych.anxiety-disorders.mcq.06",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Mowrer's two-factor theory argues that anxiety disorders are acquired through classical conditioning and maintained through operant conditioning. Which scenario best illustrates the operant maintenance component specifically?",
+    "choices": [
+      "A child develops fear of dogs after being bitten, with the bite serving as the unconditioned stimulus",
+      "A person acquires a spider phobia by observing a parent react fearfully, without any direct aversive experience",
+      "A person who fears bridges consistently drives miles out of their way to avoid them; the resulting drop in anxiety reinforces continued avoidance",
+      "A therapist uses systematic desensitization to pair the feared stimulus with a relaxation response, extinguishing the fear"
+    ],
+    "answer": "C",
+    "hints": ["Focus on what keeps the fear going after it forms — specifically, the role of negative reinforcement through escape or avoidance."]
+  },
+
+  {
+    "id": "appsych.mood-disorders.mcq.01",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which symptoms must be present for at least two consecutive weeks for a diagnosis of Major Depressive Disorder?",
+    "choices": [
+      "Depressed mood and/or markedly diminished interest or pleasure in nearly all activities",
+      "Racing thoughts and a noticeably decreased need for sleep",
+      "Recurrent obsessional thoughts and compulsive rituals",
+      "Grandiosity and excessive involvement in high-risk activities"
+    ],
+    "answer": "A",
+    "hints": ["The DSM-5 requires at least one of two specific anchor symptoms — either persistent sad mood or loss of pleasure."]
+  },
+  {
+    "id": "appsych.mood-disorders.mcq.02",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The key distinction between Bipolar I and Bipolar II disorder is that:",
+    "choices": [
+      "Bipolar I involves only depressive episodes, while Bipolar II involves only manic episodes",
+      "Bipolar I is significantly more prevalent in women, whereas Bipolar II is more prevalent in men",
+      "Bipolar I requires at least one full manic episode, whereas Bipolar II is characterized by hypomanic — not full manic — episodes plus depressive episodes",
+      "Bipolar II involves more severe and impairing manic symptoms than Bipolar I"
+    ],
+    "answer": "C",
+    "hints": ["The critical difference lies in the severity of the elevated-mood episode: mania vs. hypomania."]
+  },
+  {
+    "id": "appsych.mood-disorders.mcq.03",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aaron Beck's cognitive triad holds that depressed individuals maintain persistently negative views of which three things?",
+    "choices": [
+      "Childhood experiences, current relationships, and career outcomes",
+      "Motivation, working memory, and attentional focus",
+      "Attachment style, reinforcement history, and learned helplessness",
+      "The self, the world, and the future"
+    ],
+    "answer": "D",
+    "hints": ["Each corner of the triad is a broad domain of evaluation — one is internal, one is external, and one is temporal."]
+  },
+  {
+    "id": "appsych.mood-disorders.mcq.04",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Over the past eight days, Elena has slept fewer than three hours per night without feeling tired, launched four business ventures simultaneously, is speaking so rapidly that friends cannot follow her, and has charged tens of thousands of dollars on items she cannot afford. Her presentation is most consistent with:",
+    "choices": [
+      "A hypomanic episode associated with Bipolar II disorder",
+      "A manic episode associated with Bipolar I disorder",
+      "Generalized Anxiety Disorder with prominent somatic features",
+      "Major Depressive Disorder with atypical features"
+    ],
+    "answer": "B",
+    "hints": ["The duration, severity of functional impairment, and reckless spending point toward the more severe pole of the bipolar spectrum."]
+  },
+  {
+    "id": "appsych.mood-disorders.mcq.05",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After failing multiple job interviews despite extensive preparation, Layla stops applying altogether and tells her friend, 'It doesn't matter what I do — I'll never get hired.' Which concept best explains Layla's behavior?",
+    "choices": [
+      "Learned helplessness: repeated exposure to uncontrollable negative outcomes has produced the belief that one's actions cannot influence results",
+      "Cognitive dissonance: Layla's current beliefs are inconsistent with the effort she previously invested",
+      "Reaction formation: Layla is unconsciously converting deep frustration into apparent indifference",
+      "Operant extinction: the positive reinforcement that interviews once provided has been withdrawn"
+    ],
+    "answer": "A",
+    "hints": ["Seligman's classic dog experiments established this concept — uncontrollable aversive events produce passive resignation."]
+  },
+  {
+    "id": "appsych.mood-disorders.mcq.06",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The monoamine hypothesis of depression proposes that depressive symptoms arise primarily from:",
+    "choices": [
+      "Excess dopamine activity in the mesolimbic reward pathway",
+      "Hypersecretion of cortisol causing direct structural damage to hippocampal neurons",
+      "Overactivation of GABA receptors that reduces overall cortical arousal",
+      "Insufficient activity of monoamine neurotransmitters — particularly serotonin and norepinephrine — in key brain circuits"
+    ],
+    "answer": "D",
+    "hints": ["The classes of antidepressants developed from this hypothesis all act on a specific family of neurotransmitters."]
+  },
+
+  {
+    "id": "appsych.schizo-personality.mcq.01",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the context of schizophrenia, the term 'positive symptoms' refers to:",
+    "choices": [
+      "Symptoms with a favorable prognosis that respond readily to antipsychotic medications",
+      "Emotional states such as elevated mood or euphoria",
+      "Excesses or distortions of normal function, such as hallucinations, delusions, and disorganized speech",
+      "Deficits in normal function, such as flat affect, alogia, and avolition"
+    ],
+    "answer": "C",
+    "hints": ["'Positive' here means added to normal functioning, not 'good' — think additions vs. subtractions."]
+  },
+  {
+    "id": "appsych.schizo-personality.mcq.02",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The dopamine hypothesis of schizophrenia holds that:",
+    "choices": [
+      "Excess dopamine activity — particularly in mesolimbic pathways — contributes to the positive symptoms of schizophrenia",
+      "Dopamine deficiency in the prefrontal cortex produces the elevated mood characteristic of the manic phase of bipolar disorder",
+      "Elevated dopamine receptor sensitivity in the hippocampus produces the hallucinations typical of major depression",
+      "Elevated serotonin activity interacts with dopamine to produce the negative symptoms of schizophrenia"
+    ],
+    "answer": "A",
+    "hints": ["Classic antipsychotics work by blocking dopamine receptors — consider what that implies about the underlying imbalance."]
+  },
+  {
+    "id": "appsych.schizo-personality.mcq.03",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Over many years, Kevin has displayed a pervasive disregard for the rights of others, repeated lying and manipulation, impulsivity, and a consistent absence of remorse after harming people — a pattern that began in adolescence. Which diagnosis best fits this presentation?",
+    "choices": [
+      "Borderline Personality Disorder",
+      "Narcissistic Personality Disorder",
+      "Schizoid Personality Disorder",
+      "Antisocial Personality Disorder"
+    ],
+    "answer": "D",
+    "hints": ["The defining features include persistent violation of others' rights and lack of remorse — hallmarks of one specific Cluster B personality disorder."]
+  },
+  {
+    "id": "appsych.schizo-personality.mcq.04",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A client reports several episodes of 'waking up' in unfamiliar locations with no memory of how she got there. Her therapist identifies two distinct identity states that alternate in controlling her behavior, each holding separate memories and characteristic behavioral patterns. This presentation is most consistent with:",
+    "choices": [
+      "Schizophrenia with prominent paranoid features",
+      "Dissociative Identity Disorder",
+      "Borderline Personality Disorder",
+      "Depersonalization-Derealization Disorder"
+    ],
+    "answer": "B",
+    "hints": ["The presence of distinct alternate identity states — each with its own memories — distinguishes this from other dissociative conditions."]
+  },
+  {
+    "id": "appsych.schizo-personality.mcq.05",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A school psychologist evaluates an eight-year-old who frequently interrupts classmates, cannot remain seated during lessons, begins multiple tasks without completing them, and forgets instructions within minutes of receiving them — in school, at home, and at soccer practice. The most appropriate diagnostic category is:",
+    "choices": [
+      "Oppositional Defiant Disorder",
+      "Conduct Disorder",
+      "Attention-Deficit/Hyperactivity Disorder, a neurodevelopmental disorder",
+      "Generalized Anxiety Disorder"
+    ],
+    "answer": "C",
+    "hints": ["The symptoms span multiple settings and involve inattention and hyperactivity — key criteria for a neurodevelopmental diagnosis."]
+  },
+  {
+    "id": "appsych.schizo-personality.mcq.06",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A psychiatrist notes that a patient with a five-year history of schizophrenia shows virtually no hallucinations or delusions but continues to exhibit flat affect, poverty of speech, and an inability to initiate goal-directed activity. These ongoing presentations are best described as:",
+    "choices": [
+      "Negative symptoms, reflecting deficits in normal functioning that are associated with a poorer long-term prognosis and respond less well to conventional antipsychotics",
+      "Positive symptoms, reflecting excesses of normal mental activity that are being suppressed by ongoing medication",
+      "Residual symptoms, which represent a temporary transitional phase between acute psychotic episodes",
+      "Secondary symptoms, caused entirely by side effects of long-term antipsychotic treatment"
+    ],
+    "answer": "A",
+    "hints": ["'Negative' in this context means subtracted from normal functioning — and this group of symptoms is notoriously harder to treat."]
+  },
+
+  {
+    "id": "appsych.therapy.mcq.01",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which technique is central to psychoanalytic therapy and involves the patient reporting all thoughts and feelings as they arise, without censorship or editing?",
+    "choices": [
+      "Systematic desensitization",
+      "Free association",
+      "Cognitive restructuring",
+      "Unconditional positive regard"
+    ],
+    "answer": "B",
+    "hints": ["Freud developed this method to bypass conscious resistance and access unconscious material."]
+  },
+  {
+    "id": "appsych.therapy.mcq.02",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Carl Rogers identified three core therapeutic conditions that a counselor must provide in client-centered therapy: empathy, congruence (genuineness), and:",
+    "choices": [
+      "Systematic reinforcement of adaptive behavioral patterns",
+      "Skilled interpretation of the client's unconscious defense mechanisms",
+      "Collaborative identification and restructuring of maladaptive thought patterns",
+      "Unconditional positive regard for the client"
+    ],
+    "answer": "D",
+    "hints": ["Rogers believed the therapist must accept the client fully — without conditions — for growth to occur."]
+  },
+  {
+    "id": "appsych.therapy.mcq.03",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A therapist gradually introduces a client with spider phobia to increasingly fearful stimuli — first imagining spiders, then viewing photographs, and ultimately handling a live spider — while the client maintains a relaxed state at each step before advancing. This procedure is best described as:",
+    "choices": [
+      "Systematic desensitization: a behavioral technique that pairs graduated exposure with relaxation to extinguish phobic fear",
+      "Flooding: prolonged, ungraded exposure to the feared stimulus at full intensity until anxiety subsides",
+      "Cognitive restructuring: a technique that targets and modifies the maladaptive beliefs surrounding the feared object",
+      "Aversion therapy: pairing an undesirable response with an aversive stimulus to suppress it"
+    ],
+    "answer": "A",
+    "hints": ["The two defining features are the hierarchy of exposure and the relaxation pairing at each step."]
+  },
+  {
+    "id": "appsych.therapy.mcq.04",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A therapist and client collaborate to identify the client's automatic thought 'I am worthless because I made one mistake,' examine the evidence for and against it, and develop a more balanced alternative thought. This process is most characteristic of:",
+    "choices": [
+      "Psychoanalytic therapy: using free association to uncover the unconscious conflict driving the thought",
+      "Humanistic therapy: the therapist provides unconditional positive regard to restore the client's self-worth",
+      "Cognitive-behavioral therapy: applying cognitive restructuring to identify and modify maladaptive automatic thoughts",
+      "Dialectical behavior therapy: using mindfulness and distress tolerance skills to accept difficult emotions"
+    ],
+    "answer": "C",
+    "hints": ["The Socratic examination of a specific automatic thought is a signature technique associated with Beck's approach."]
+  },
+  {
+    "id": "appsych.therapy.mcq.05",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "SSRIs (selective serotonin reuptake inhibitors) are a first-line pharmacological treatment for depression. Their primary mechanism of action is:",
+    "choices": [
+      "Stimulating dopamine release in prefrontal circuits to restore motivation and reward sensitivity",
+      "Blocking the reuptake of serotonin into the presynaptic neuron, thereby increasing serotonin availability in the synapse",
+      "Enhancing GABA activity broadly throughout the brain to produce a calming, anxiolytic effect",
+      "Preventing the breakdown of monoamine neurotransmitters by inhibiting monoamine oxidase enzymes"
+    ],
+    "answer": "B",
+    "hints": ["The 'SR' in SSRI stands for Serotonin Reuptake Inhibitor — the drug blocks one specific step in the recycling of serotonin."]
+  },
+  {
+    "id": "appsych.therapy.mcq.06",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A client presents with recurrent depression and significant unresolved trauma from childhood. Based on the research evidence, which therapeutic approach has the broadest empirical support for treating comorbid depression and trauma-related symptoms?",
+    "choices": [
+      "Long-term psychoanalysis, because it is specifically designed to resolve unconscious trauma-related conflicts",
+      "Humanistic therapy, because unconditional positive regard directly repairs the damaged self-concept that trauma creates",
+      "A token economy, because systematic behavioral reinforcement restructures the maladaptive response patterns acquired during trauma",
+      "Cognitive-behavioral therapy, including trauma-focused CBT variants, which has consistent empirical support for treating both depressive and trauma-related disorders"
+    ],
+    "answer": "D",
+    "hints": ["Consider which approach has the strongest randomized-trial evidence base for this combination of presentations."]
+  }
+]

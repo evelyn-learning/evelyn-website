@@ -1,0 +1,86 @@
+[
+  {
+    "id": "appsych.research-methods.mcq.01",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A developmental psychologist sits quietly in a park and records how often toddlers share toys with their peers, making no attempt to influence the children. This study BEST illustrates which research method?",
+    "choices": [
+      "Experiment, because the researcher systematically controls the environment",
+      "Survey, because the researcher collects structured data from participants",
+      "Naturalistic observation, because the researcher records behavior in its natural setting without intervening",
+      "Case study, because the researcher focuses on a small group of individuals"
+    ],
+    "answer": "C",
+    "hints": ["Think about whether the researcher is manipulating anything or simply watching."]
+  },
+  {
+    "id": "appsych.research-methods.numeric.01",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A psychologist measures anxiety scores on a 10-point scale for five participants and obtains the following values: 5, 7, 8, 6, 9. Compute the mean anxiety score. Enter a single number.",
+    "answer": "7",
+    "hints": ["Add all five scores together, then divide by 5."]
+  },
+  {
+    "id": "appsych.research-methods.mcq.02",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher randomly assigns 60 college students to one of two conditions: half study a chapter while listening to classical music, and half study the same chapter in silence. Afterward, all students take a 20-question quiz. What is the DEPENDENT variable in this experiment?",
+    "choices": [
+      "Whether students listened to classical music or studied in silence",
+      "The number of students assigned to each condition",
+      "The students' scores on the 20-question quiz",
+      "The difficulty level of the chapter students studied"
+    ],
+    "answer": "C",
+    "hints": ["The dependent variable is what the researcher measures as an outcome — what might change because of the manipulation."]
+  },
+  {
+    "id": "appsych.research-methods.mcq.03",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dr. Okafor randomly selects 200 high school students from a national database and then randomly assigns half to a mindfulness training program and half to a control group. How do random selection and random assignment differ in their PRIMARY purpose?",
+    "choices": [
+      "Random selection allows the researcher to generalize findings to the broader population; random assignment helps ensure the two groups are equivalent at the start, reducing the influence of confounding variables",
+      "Random selection reduces confounds within the study; random assignment ensures the sample is representative of the population",
+      "Both random selection and random assignment serve the same purpose of eliminating experimenter bias",
+      "Random assignment ensures the sample represents the population; random selection controls for placebo effects"
+    ],
+    "answer": "A",
+    "hints": ["Ask yourself: which technique affects who is in the study versus which group participants end up in."]
+  },
+  {
+    "id": "appsych.research-methods.numeric.02",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A researcher records the time in minutes it took 7 participants to complete a puzzle: 4, 5, 6, 6, 7, 8, 28. What is the MEDIAN completion time, in minutes? Enter a single number.",
+    "answer": "6",
+    "hints": ["Arrange the seven values in order from smallest to largest and identify the middle value."]
+  },
+  {
+    "id": "appsych.research-methods.mcq.04",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher reports that students who participated in an after-school tutoring program scored an average of 85 on a final exam, compared to an average of 72 for students who did not participate. A critic argues that students who enrolled in the program were already more academically motivated before the program began, and that this motivation — not the tutoring itself — may explain the higher scores. The critic is identifying:",
+    "choices": [
+      "A sampling error caused by failing to use random selection",
+      "An operational definition that measures motivation too broadly",
+      "A violation of informed consent in the recruitment process",
+      "A confounding variable that threatens the internal validity of the study's causal claim"
+    ],
+    "answer": "D",
+    "hints": ["A confound is a variable other than the independent variable that could explain the observed difference in outcomes.", "Internal validity refers to how confidently we can say the IV caused the change in the DV."]
+  }
+]

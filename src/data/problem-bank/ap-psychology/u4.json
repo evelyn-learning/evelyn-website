@@ -1,0 +1,674 @@
+[
+  {
+    "id": "appsych.attribution-attitudes.mcq.01",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which term describes the tendency to overestimate dispositional factors and underestimate situational factors when explaining other people's behavior?",
+    "choices": [
+      "Self-serving bias",
+      "Fundamental attribution error",
+      "Actor-observer bias",
+      "Cognitive dissonance"
+    ],
+    "answer": "B",
+    "hints": ["Think about which bias involves explaining others' actions by their character rather than their circumstances."]
+  },
+  {
+    "id": "appsych.attribution-attitudes.mcq.02",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus is driving when another car cuts him off. He immediately concludes the other driver is reckless and aggressive, not considering that the driver might be rushing to the hospital. Marcus is MOST likely demonstrating:",
+    "choices": [
+      "Self-serving bias",
+      "Cognitive dissonance",
+      "Fundamental attribution error",
+      "Normative social influence"
+    ],
+    "answer": "C",
+    "hints": ["Marcus is explaining the driver's behavior by character rather than circumstances."]
+  },
+  {
+    "id": "appsych.attribution-attitudes.mcq.03",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student attributes her A grade on a history test to her own intelligence but attributes her F grade on a math test to an unfair professor. This pattern is BEST explained by:",
+    "choices": [
+      "Fundamental attribution error",
+      "Cognitive dissonance",
+      "Self-serving bias",
+      "Actor-observer bias"
+    ],
+    "answer": "C",
+    "hints": ["Notice that she takes credit for success but blames external factors for failure."]
+  },
+  {
+    "id": "appsych.attribution-attitudes.mcq.04",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lena smokes cigarettes despite knowing smoking is harmful. To reduce her discomfort, she begins emphasizing news stories about elderly smokers who lived long lives. This pattern BEST illustrates:",
+    "choices": [
+      "Normative social influence",
+      "Cognitive dissonance reduction",
+      "Self-serving bias",
+      "The foot-in-the-door phenomenon"
+    ],
+    "answer": "B",
+    "hints": ["She is changing her cognitions to bring conflicting beliefs into alignment."]
+  },
+  {
+    "id": "appsych.attribution-attitudes.mcq.05",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A charity volunteer first asks residents to sign a small online petition for clean water, then a week later returns to ask for a large donation. This two-step strategy relies on:",
+    "choices": [
+      "The door-in-the-face technique",
+      "Cognitive dissonance reduction alone",
+      "The foot-in-the-door phenomenon",
+      "Normative social influence"
+    ],
+    "answer": "C",
+    "hints": ["The small initial request makes compliance with a larger follow-up request more likely."]
+  },
+  {
+    "id": "appsych.attribution-attitudes.mcq.06",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Research on the attitude-behavior relationship suggests that attitudes are MOST predictive of behavior when they are:",
+    "choices": [
+      "Formed through observing others rather than through direct personal experience",
+      "Based on peripheral-route persuasion cues such as attractive endorsers",
+      "Specific, strong, and formed through direct personal experience",
+      "Subject to cognitive dissonance immediately before the behavior occurs"
+    ],
+    "answer": "C",
+    "hints": ["Consider what distinguishes attitudes that are well-grounded and closely tied to the behavior in question."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.01",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A stereotype is BEST defined as:",
+    "choices": [
+      "An unfair action that harms members of a social group",
+      "A hostile emotional response directed toward a social group",
+      "A generalized belief about the characteristics of members of a group",
+      "An explicitly prejudiced policy enacted by an institution"
+    ],
+    "answer": "C",
+    "hints": ["A stereotype is a cognitive schema — a belief — not a behavior or an emotion."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.02",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Students randomly divided into Red and Blue classroom teams quickly begin to rate their own team members as more likable and trustworthy than members of the opposing team. This BEST illustrates:",
+    "choices": [
+      "Scapegoating",
+      "The just-world hypothesis",
+      "Normative social influence",
+      "In-group bias"
+    ],
+    "answer": "D",
+    "hints": ["People favor members of their own group, even when group membership is arbitrary."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.03",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement CORRECTLY distinguishes prejudice from discrimination?",
+    "choices": [
+      "Prejudice is behavioral; discrimination is cognitive",
+      "Prejudice involves negative attitudes or feelings toward a group; discrimination involves unfair actions directed at group members",
+      "Prejudice occurs only at the individual level, while discrimination occurs only at the institutional level",
+      "Prejudice and discrimination are two names for the same phenomenon"
+    ],
+    "answer": "B",
+    "hints": ["One term refers to a feeling or evaluation; the other refers to an observable behavior."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.04",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After hearing that a classmate was robbed at night, Priya thinks, 'Well, they probably should not have been out in that part of town.' Priya's thinking MOST closely reflects:",
+    "choices": [
+      "In-group bias",
+      "Scapegoating",
+      "Cognitive dissonance",
+      "The just-world hypothesis"
+    ],
+    "answer": "D",
+    "hints": ["Priya is implying the victim somehow deserved or caused their own misfortune."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.05",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During an economic recession, incidents of hate crimes against an ethnic minority group rise sharply, even though that minority had no role in causing the economic problems. This pattern is BEST explained by:",
+    "choices": [
+      "The just-world hypothesis",
+      "Scapegoating driven by displaced frustration",
+      "Normative social influence",
+      "Fundamental attribution error"
+    ],
+    "answer": "B",
+    "hints": ["When people cannot direct frustration at its true source, they may redirect it toward a convenient target."]
+  },
+  {
+    "id": "appsych.prejudice-stereotypes.mcq.06",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Research using the Implicit Association Test (IAT) has consistently found that:",
+    "choices": [
+      "Only individuals with explicitly prejudiced attitudes show implicit racial bias on the IAT",
+      "Implicit biases measured by the IAT are identical to the stereotypes people consciously hold",
+      "Many people display implicit biases that differ markedly from their consciously expressed attitudes",
+      "Implicit bias as measured by the IAT has no detectable effect on behavior toward out-group members"
+    ],
+    "answer": "C",
+    "hints": ["The IAT often reveals associations that people do not endorse when asked directly."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.01",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When people conform because they genuinely believe that others possess accurate information about the correct answer, they are responding to:",
+    "choices": [
+      "Normative social influence",
+      "Obedience to authority",
+      "Informational social influence",
+      "Deindividuation"
+    ],
+    "answer": "C",
+    "hints": ["Think about whether the motivation is to be liked or to be correct."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.02",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Solomon Asch's line-judgment experiments, which factor was MOST effective at helping a participant resist conforming to an incorrect majority?",
+    "choices": [
+      "The participant's measured IQ score",
+      "The majority being larger than five people",
+      "The presence of at least one other person who gave the correct answer",
+      "The lines being more ambiguous and harder to judge"
+    ],
+    "answer": "C",
+    "hints": ["A single dissenter dramatically reduced the pressure to conform in Asch's studies."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.03",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Milgram's obedience experiments, which variation was MOST effective at reducing participants' willingness to continue delivering shocks?",
+    "choices": [
+      "Moving the learner to an adjacent room where only screams could be heard",
+      "Placing the learner in the same room as the teacher-participant",
+      "Randomly assigning the roles of teacher and learner before the session began",
+      "Replacing the experimenter with a different authority figure midway through"
+    ],
+    "answer": "B",
+    "hints": ["Physical proximity to the victim made the consequences of obedience harder to ignore."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.04",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A person collapses in a crowded subway car. Research on the bystander effect would predict the person is MOST likely to receive help if:",
+    "choices": [
+      "It happens during rush hour when the greatest number of potential helpers are present",
+      "One witness makes direct eye contact with another bystander and says, 'You — please call for help'",
+      "The victim appears visibly distressed, increasing bystanders' emotional arousal",
+      "The large crowd virtually guarantees that someone with first-aid training is present"
+    ],
+    "answer": "B",
+    "hints": ["The bystander effect is driven by diffusion of responsibility; naming a specific person removes that diffusion."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.05",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A corporate leadership team composed of close allies fails to consider the serious risks of a new product launch because nobody wants to voice doubts and disrupt team harmony. This BEST illustrates:",
+    "choices": [
+      "Group polarization",
+      "Deindividuation",
+      "Social loafing",
+      "Groupthink"
+    ],
+    "answer": "D",
+    "hints": ["The key feature is suppression of dissent to preserve cohesion, leading to poor collective decisions."]
+  },
+  {
+    "id": "appsych.social-influence.mcq.06",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Group polarization differs from groupthink primarily in that group polarization:",
+    "choices": [
+      "Occurs only in anonymous online environments rather than face-to-face groups",
+      "Describes a shift toward more extreme positions following group discussion, not necessarily a failure of decision-making processes",
+      "Requires a strong authoritarian leader who actively suppresses dissent",
+      "Refers to situations where individual group members exert less effort than they would working alone"
+    ],
+    "answer": "B",
+    "hints": ["Group polarization is about attitude extremity after discussion; groupthink is about defective decision-making processes."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.01",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Freud, which component of personality operates entirely on the pleasure principle, demanding immediate gratification of impulses?",
+    "choices": [
+      "Superego",
+      "Ego",
+      "Conscience",
+      "Id"
+    ],
+    "answer": "D",
+    "hints": ["This component is present at birth and seeks to satisfy basic drives without delay."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.02",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Carl Rogers argued that healthy personality development requires significant others to offer love and acceptance independent of a person's behavior or achievements. Rogers called this:",
+    "choices": [
+      "Self-actualization",
+      "Unconditional positive regard",
+      "Peak experience",
+      "Reciprocal determinism"
+    ],
+    "answer": "B",
+    "hints": ["Rogers contrasted this with conditional positive regard, which is withheld unless certain standards are met."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.03",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After failing an important exam, a student who is angry at her professor begins picking fights with her younger siblings at home. According to Freudian theory, which defense mechanism is she MOST likely using?",
+    "choices": [
+      "Projection",
+      "Rationalization",
+      "Displacement",
+      "Sublimation"
+    ],
+    "answer": "C",
+    "hints": ["She is shifting negative emotions from the original target to a safer substitute."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.04",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bandura's concept of reciprocal determinism holds that behavior, personal factors, and the environment mutually influence one another. Which of the following BEST illustrates this principle?",
+    "choices": [
+      "A person's fixed genetic traits determine both their behavior and the environments they are drawn to",
+      "An anxious student avoids group projects, which limits social opportunities, reinforcing their belief that they are socially incompetent",
+      "A person's locus of control is determined entirely by early childhood conditioning",
+      "Unconscious drives shape behavior in ways that cannot be modified by conscious effort"
+    ],
+    "answer": "B",
+    "hints": ["Look for a cycle in which the student's internal state, actions, and environment each feed back into each other."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.05",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A psychologist categorizes clients along dimensions such as openness to experience, conscientiousness, and emotional stability. This psychologist is working within which theoretical framework?",
+    "choices": [
+      "Psychodynamic theory",
+      "Humanistic theory",
+      "Social-cognitive theory",
+      "Trait theory"
+    ],
+    "answer": "D",
+    "hints": ["These are three of the Big Five dimensions used to describe stable personality characteristics."]
+  },
+  {
+    "id": "appsych.personality-theories.mcq.06",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Relief workers notice that newly arrived refugees who lack reliable food and shelter show little interest in educational programs offered at the camp. Maslow's hierarchy of needs would PREDICT this outcome because:",
+    "choices": [
+      "Refugees prefer maintaining cultural identity over participating in formal educational structures",
+      "Higher-level growth needs such as cognitive development can only become motivating once physiological and safety needs are adequately met",
+      "Education falls under esteem needs, which are ranked higher than belongingness needs in the hierarchy",
+      "Self-transcendence supersedes cognitive needs under conditions of extreme crisis"
+    ],
+    "answer": "B",
+    "hints": ["Maslow argued that lower-tier deficiency needs must be satisfied before higher-level growth needs can motivate behavior."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.01",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A personality test in which a person responds to ambiguous stimuli — with the assumption that responses will reflect unconscious thoughts and motives — is BEST classified as:",
+    "choices": [
+      "An objective personality inventory",
+      "A projective test",
+      "A structured clinical interview",
+      "A cognitive ability assessment"
+    ],
+    "answer": "B",
+    "hints": ["These tests assume that people 'project' hidden aspects of themselves onto the ambiguous material."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.02",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Minnesota Multiphasic Personality Inventory (MMPI) is classified as an objective personality test primarily because:",
+    "choices": [
+      "It was originally developed using an unbiased and nationally representative normative sample",
+      "Administrators record responses without interacting with the respondent in any way",
+      "Its scores are interpreted according to standardized, empirically derived norms rather than subjective clinician judgment",
+      "It uses abstract inkblot images that have no inherent meaning"
+    ],
+    "answer": "C",
+    "hints": ["The key feature of an objective test is that scoring follows explicit, predetermined rules."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.03",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Dr. Chen shows a patient a series of symmetrical black-and-white inkblot images and asks the patient to describe what each image looks like or reminds them of. Dr. Chen is using:",
+    "choices": [
+      "The Minnesota Multiphasic Personality Inventory",
+      "The Thematic Apperception Test",
+      "The Rorschach Inkblot Test",
+      "A structured behavioral observation protocol"
+    ],
+    "answer": "C",
+    "hints": ["This test uses inkblots, not pictures of people or situations."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.04",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Thematic Apperception Test (TAT) is designed to assess personality by asking respondents to:",
+    "choices": [
+      "Choose adjectives from a checklist that best describe their own personality",
+      "Complete a series of true-or-false statements about their moods and symptoms",
+      "Create stories about ambiguous pictures of people in social situations, presumably revealing underlying motivations",
+      "Reproduce inkblot patterns from memory after a brief viewing"
+    ],
+    "answer": "C",
+    "hints": ["The TAT uses pictures of people, not inkblots — respondents narrate what is happening in each scene."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.05",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A major criticism of projective tests such as the Rorschach Inkblot Test is that:",
+    "choices": [
+      "They cannot be administered to individuals currently experiencing psychological disorders",
+      "Many scoring systems have demonstrated low test-retest reliability and poor predictive validity across independent research studies",
+      "They are too structured to allow unconscious material to surface in responses",
+      "Completing them requires no clinical training on the part of the examiner"
+    ],
+    "answer": "B",
+    "hints": ["Critics question whether projective tests consistently measure what they claim to measure."]
+  },
+  {
+    "id": "appsych.personality-assessment.mcq.06",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher develops a new personality self-report scale. Participants complete the scale on two separate occasions three weeks apart, and their scores correlate at r = 0.91. This evidence most directly supports the scale's:",
+    "choices": [
+      "Construct validity",
+      "Predictive validity",
+      "Test-retest reliability",
+      "Internal consistency"
+    ],
+    "answer": "C",
+    "hints": ["This evidence shows consistency of scores across time, not whether the test measures the right construct or predicts future outcomes."]
+  },
+  {
+    "id": "appsych.motivation.mcq.01",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to drive-reduction theory, which of the following BEST explains why a person eats a meal when hungry?",
+    "choices": [
+      "The meal provides pleasurable stimuli that push arousal above an optimal level",
+      "A biological need — hunger — creates a drive that motivates behavior aimed at restoring homeostasis",
+      "External rewards in the environment make eating more appealing than alternative activities",
+      "A cognitive appraisal process leads the person to decide that eating is the most rational choice"
+    ],
+    "answer": "B",
+    "hints": ["Drive-reduction theory emphasizes biological needs and the restoration of internal balance."]
+  },
+  {
+    "id": "appsych.motivation.mcq.02",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgeon performs best during moderately complex procedures when experiencing moderate arousal, but makes more errors during routine paperwork because that task provides insufficient stimulation. This pattern BEST illustrates:",
+    "choices": [
+      "Drive-reduction theory",
+      "Maslow's hierarchy of needs",
+      "The Yerkes-Dodson law",
+      "The overjustification effect"
+    ],
+    "answer": "C",
+    "hints": ["This law predicts an optimal level of arousal for performance that varies with task complexity."]
+  },
+  {
+    "id": "appsych.motivation.mcq.03",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When people perform an activity purely because they find it inherently enjoyable or interesting — not because of any external reward — psychologists describe their motivation as:",
+    "choices": [
+      "Extrinsic motivation",
+      "Secondary-drive motivation",
+      "Intrinsic motivation",
+      "Incentive motivation"
+    ],
+    "answer": "C",
+    "hints": ["The key distinction is whether the reward comes from inside the activity itself or from outside."]
+  },
+  {
+    "id": "appsych.motivation.mcq.04",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A child who loves drawing for fun is paid a small amount for every picture she completes. When the payments stop, she draws less frequently than she did before the payments began. This BEST illustrates:",
+    "choices": [
+      "The Yerkes-Dodson law",
+      "The overjustification effect",
+      "Drive-reduction theory failing to account for cognitive factors",
+      "Loss of extrinsic motivation without a secondary drive to replace it"
+    ],
+    "answer": "B",
+    "hints": ["External rewards can undermine an already-present intrinsic interest in an activity."]
+  },
+  {
+    "id": "appsych.motivation.mcq.05",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "According to Maslow's hierarchy of needs, a person who has reliable food, shelter, and close friendships but feels chronically undervalued at work is MOST likely striving to meet which level of need?",
+    "choices": [
+      "Safety needs",
+      "Physiological needs",
+      "Belongingness and love needs",
+      "Esteem needs"
+    ],
+    "answer": "D",
+    "hints": ["Being undervalued relates to how one is regarded and respected — which tier does that fall under?"]
+  },
+  {
+    "id": "appsych.motivation.mcq.06",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A professional athlete deliberately listens to high-energy music before competing to raise arousal. According to the Yerkes-Dodson law, this strategy would be MOST likely to hurt performance if:",
+    "choices": [
+      "The competition requires fine motor control and precision, because optimal arousal for complex tasks is lower than for simple tasks",
+      "The athlete has practiced fewer than one hundred repetitions of the required skill",
+      "The athlete is intrinsically rather than extrinsically motivated by the sport",
+      "The music raises arousal without simultaneously activating the sympathetic nervous system"
+    ],
+    "answer": "A",
+    "hints": ["For tasks requiring precision and fine coordination, peak performance occurs at lower arousal levels."]
+  },
+  {
+    "id": "appsych.emotion.mcq.01",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The James-Lange theory of emotion proposes that:",
+    "choices": [
+      "Physiological arousal and the subjective experience of emotion occur simultaneously and independently of each other",
+      "We experience an emotion because we become aware of our own physiological response to a stimulus",
+      "Cognitive labeling of undifferentiated physiological arousal determines which specific emotion we feel",
+      "Emotions originate entirely in subcortical brain structures before reaching conscious awareness"
+    ],
+    "answer": "B",
+    "hints": ["James-Lange reverses the commonsense idea: we do not cry because we feel sad; we feel sad because we cry."]
+  },
+  {
+    "id": "appsych.emotion.mcq.02",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After nearly being hit by a car, a pedestrian simultaneously experiences fear and notices her heart pounding. The simultaneous occurrence of both the physiological arousal and the subjective emotional experience is MOST consistent with:",
+    "choices": [
+      "The James-Lange theory",
+      "The Schachter-Singer two-factor theory",
+      "The Cannon-Bard theory",
+      "The facial feedback hypothesis"
+    ],
+    "answer": "C",
+    "hints": ["This theory argues that the thalamus sends signals to both the cortex and the body at the same time."]
+  },
+  {
+    "id": "appsych.emotion.mcq.03",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "According to the Schachter-Singer two-factor theory, the two factors required for an emotional experience are:",
+    "choices": [
+      "A triggering stimulus and a corresponding cortical response",
+      "Physical arousal and a cognitive label that identifies that arousal",
+      "Facial muscle feedback and subcortical activation",
+      "A person's learning history and their present physiological state"
+    ],
+    "answer": "B",
+    "hints": ["Schachter and Singer argued that arousal is necessary but not sufficient — it must also be interpreted."]
+  },
+  {
+    "id": "appsych.emotion.mcq.04",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a classic study, participants injected with epinephrine and placed with a euphoric confederate reported feeling happy, while those placed with an irritable confederate reported feeling angry — even though both groups had identical physiological arousal. This result MOST directly supports the:",
+    "choices": [
+      "James-Lange theory, because physiological changes preceded the emotional label",
+      "Cannon-Bard theory, because both arousal and emotion occurred simultaneously",
+      "Facial feedback hypothesis, because different facial expressions shaped emotional experience",
+      "Schachter-Singer two-factor theory, because the same arousal was labeled differently depending on social context"
+    ],
+    "answer": "D",
+    "hints": ["The key finding is that identical arousal produced different emotions depending on the social environment."]
+  },
+  {
+    "id": "appsych.emotion.mcq.05",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Participants asked to hold a pen between their teeth (producing a smile-like expression) rated cartoons as funnier than participants who held the pen between pursed lips (a frown-like expression). This finding BEST supports the:",
+    "choices": [
+      "Cannon-Bard theory of emotion",
+      "Cognitive-appraisal theory of emotion",
+      "Facial feedback hypothesis",
+      "James-Lange theory but not the Schachter-Singer theory"
+    ],
+    "answer": "C",
+    "hints": ["The feedback from facial muscles themselves appears to influence the subjective emotional experience."]
+  },
+  {
+    "id": "appsych.emotion.mcq.06",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Richard Lazarus argued that emotion requires an initial cognitive appraisal of whether a stimulus is personally relevant or threatening. Which finding would MOST directly challenge Lazarus's position that appraisal must precede emotion?",
+    "choices": [
+      "People from different cultures differ in which specific events trigger embarrassment",
+      "A patient with a spider phobia experiences intense fear upon glimpsing a spider before consciously identifying it as a spider",
+      "Physiological arousal intensity correlates with perceived emotional intensity across cultures",
+      "Basic facial expressions of emotion are recognized cross-culturally without language instruction"
+    ],
+    "answer": "B",
+    "hints": ["If emotion can occur before conscious recognition or appraisal of the stimulus, that undermines the claim that appraisal comes first."]
+  }
+]

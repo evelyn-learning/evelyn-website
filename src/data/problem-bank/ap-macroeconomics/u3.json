@@ -1,0 +1,844 @@
+[
+  {
+    "id": "apmacro.aggregate-demand.mcq.01",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The aggregate demand curve slopes downward because, as the overall price level falls:",
+    "choices": [
+      "real wealth rises, interest rates tend to decline, and net exports increase — all of which boost total spending",
+      "households substitute domestically produced goods for imports because domestic prices are now lower",
+      "firms hire more workers at lower wages, directly raising national income",
+      "the government automatically increases spending to take advantage of lower borrowing costs"
+    ],
+    "answer": "A",
+    "hints": ["Three distinct effects cause AD to slope downward: the wealth effect, the interest-rate effect, and the net-exports (exchange-rate) effect."]
+  },
+  {
+    "id": "apmacro.aggregate-demand.mcq.02",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following events would most directly shift the aggregate demand curve to the RIGHT?",
+    "choices": [
+      "A sharp increase in personal income tax rates",
+      "A rise in foreign incomes that increases demand for domestically produced exports",
+      "A decrease in government purchases of goods and services",
+      "A rise in the overall price level from 100 to 115"
+    ],
+    "answer": "B",
+    "hints": ["Shifts of AD are caused by changes in C, I, G, or NX — not by changes in the price level itself."]
+  },
+  {
+    "id": "apmacro.aggregate-demand.mcq.03",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aggregate demand is the total planned spending on domestically produced goods and services at each price level. Which set of components makes up aggregate demand?",
+    "choices": [
+      "consumption, savings, government purchases, and gross exports",
+      "consumption, investment, and government purchases only",
+      "consumption, investment, government purchases, and net exports",
+      "wages, interest, profits, and rent"
+    ],
+    "answer": "C",
+    "hints": ["AD = C + I + G + NX, where NX equals exports minus imports."]
+  },
+  {
+    "id": "apmacro.aggregate-demand.mcq.04",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes the interest-rate effect that contributes to the downward slope of the aggregate demand curve?",
+    "choices": [
+      "A higher price level reduces households' real wealth, causing them to cut back on spending",
+      "A higher price level causes the domestic currency to appreciate, making exports less competitive",
+      "A higher price level leads the government to automatically raise tax rates to balance the budget",
+      "A higher price level increases the demand for money, which pushes interest rates up and reduces investment and consumption spending"
+    ],
+    "answer": "D",
+    "hints": ["Distinguish the three effects: wealth effect (A), exchange-rate effect (B), and interest-rate effect (D). Only D involves the money market and borrowing costs."]
+  },
+  {
+    "id": "apmacro.aggregate-demand.mcq.05",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following would cause a SHIFT of the aggregate demand curve rather than a movement along it?",
+    "choices": [
+      "An expansion of government transfer payments, such as an increase in Social Security benefits",
+      "A rise in the overall price level from 100 to 110",
+      "A fall in the overall price level from 110 to 100",
+      "A change in the price level triggered by a negative supply shock"
+    ],
+    "answer": "A",
+    "hints": ["Movements along AD are caused only by price-level changes. Shifts result from changes in the non-price determinants of C, I, G, or NX."]
+  },
+  {
+    "id": "apmacro.aggregate-demand.mcq.06",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A country's currency appreciates in value relative to foreign currencies, making its exports more expensive abroad and its imports cheaper at home. What is the most direct effect on aggregate demand?",
+    "choices": [
+      "AD shifts right because domestic consumers can now purchase more imported goods at lower prices",
+      "AD shifts left because net exports fall as exports decline and imports rise",
+      "AD shifts right because currency appreciation signals strong economic fundamentals that attract investment",
+      "There is no change in AD because any decline in exports is automatically offset by rising imports"
+    ],
+    "answer": "B",
+    "hints": ["Net exports = exports minus imports. Appreciation raises export prices and lowers import prices, so NX falls, reducing the NX component of AD."]
+  },
+
+  {
+    "id": "apmacro.multipliers.numeric.01",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In an economy where the marginal propensity to consume (MPC) is 0.8, what is the value of the spending multiplier?",
+    "answer": "5",
+    "hints": ["Spending multiplier = $\\frac{1}{1 - MPC}$. Substitute MPC = 0.8."]
+  },
+  {
+    "id": "apmacro.multipliers.numeric.02",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In an economy with an MPC of 0.75, what is the MAGNITUDE of the tax multiplier? Give the absolute value as a positive number.",
+    "answer": "3",
+    "hints": ["Tax multiplier magnitude = $\\frac{MPC}{1 - MPC}$. With MPC = 0.75, that is 0.75 divided by 0.25."]
+  },
+  {
+    "id": "apmacro.multipliers.numeric.03",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An economy has an MPC of 0.6. The government increases spending by 50 billion dollars. Assuming no other changes, what is the total ultimate change in real GDP, in billions of dollars?",
+    "answer": "125",
+    "hints": ["Spending multiplier = 1 / (1 - 0.6) = 2.5. Multiply the initial injection by the multiplier."]
+  },
+  {
+    "id": "apmacro.multipliers.mcq.01",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following correctly expresses the formula for the spending multiplier in a simple economy?",
+    "choices": [
+      "MPC divided by MPS",
+      "1 divided by MPC",
+      "1 divided by the quantity (1 minus MPC)",
+      "MPC divided by the quantity (1 plus MPS)"
+    ],
+    "answer": "C",
+    "hints": ["Spending multiplier = $\\frac{1}{1 - MPC}$, which also equals $\\frac{1}{MPS}$."]
+  },
+  {
+    "id": "apmacro.multipliers.mcq.02",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The spending multiplier is always larger in absolute value than the tax multiplier. Which explanation best captures why?",
+    "choices": [
+      "When the government spends, every dollar directly enters the circular flow; a tax cut first allows households to save a fraction equal to MPS before the remainder is spent, so the initial spending impact is smaller",
+      "The tax multiplier applies only to income taxes, while the spending multiplier applies to all forms of government outlays",
+      "The MPC is mathematically always greater than the MPS in any economy, which makes tax cuts weaker",
+      "Tax changes require a longer legislative process, reducing their real-world effectiveness"
+    ],
+    "answer": "A",
+    "hints": ["Spending multiplier = 1/MPS; tax multiplier = MPC/MPS. They differ by exactly 1, reflecting the savings leakage on the first round of a tax change."]
+  },
+  {
+    "id": "apmacro.multipliers.mcq.03",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy has a marginal propensity to save (MPS) of 0.25. If government spending rises by 80 billion dollars, what is the ultimate change in real GDP?",
+    "choices": [
+      "80 billion dollars",
+      "240 billion dollars",
+      "400 billion dollars",
+      "320 billion dollars"
+    ],
+    "answer": "D",
+    "hints": ["Multiplier = 1 / MPS = 1 / 0.25 = 4. Multiply that by the 80 billion dollar injection."]
+  },
+
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.01",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The short-run aggregate supply (SRAS) curve illustrates:",
+    "choices": [
+      "a positive relationship between the price level and the quantity of real output that firms are willing to produce",
+      "a negative relationship between the price level and real output, similar in shape to a demand curve",
+      "the maximum output the economy can produce regardless of the price level",
+      "the relationship between real wages and employment over the long run"
+    ],
+    "answer": "A",
+    "hints": ["SRAS slopes upward: a higher price level is associated with greater real output supplied in the short run because input prices are relatively fixed."]
+  },
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.02",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A global spike in energy prices significantly raises production costs for firms throughout the economy. In the short run, this most likely causes:",
+    "choices": [
+      "SRAS to shift to the right, lowering the price level and raising real output",
+      "a movement upward along the existing SRAS curve with no change in real output",
+      "SRAS to shift to the left, raising the price level and reducing real output",
+      "aggregate demand to shift to the right, raising real output"
+    ],
+    "answer": "C",
+    "hints": ["Higher input costs are a negative supply shock. SRAS shifts left: less output at every price level, and the equilibrium price level rises."]
+  },
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.03",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The short-run aggregate supply curve slopes upward primarily because:",
+    "choices": [
+      "firms can always hire unlimited additional workers at the prevailing wage whenever output rises",
+      "input prices, especially nominal wages, are relatively fixed in the short run, so a higher product price level raises profit margins and encourages firms to produce more",
+      "the government automatically raises spending when firms expand output",
+      "consumers demand more goods when the price level rises, pulling firms to produce more"
+    ],
+    "answer": "B",
+    "hints": ["The key short-run assumption: nominal wages and other input prices are sticky, so rising product prices temporarily widen profit margins."]
+  },
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.04",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A major technological breakthrough allows firms across the economy to produce the same output with significantly fewer inputs. The most likely effect in the AD-AS model is:",
+    "choices": [
+      "SRAS shifts to the right as per-unit production costs fall, raising equilibrium output and lowering the price level",
+      "SRAS shifts to the left because displaced workers earn lower wages, reducing consumer spending",
+      "AD shifts to the right because consumers anticipate that goods will become cheaper",
+      "No change in SRAS because productivity gains only affect the long-run aggregate supply curve"
+    ],
+    "answer": "A",
+    "hints": ["Lower per-unit production costs are a positive supply shock — SRAS shifts right, meaning higher real output and a lower price level at the new equilibrium."]
+  },
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.05",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following events would shift the short-run aggregate supply curve to the RIGHT?",
+    "choices": [
+      "A significant economy-wide rise in workers' nominal wages",
+      "A sharp increase in imported oil prices that raises energy costs for producers",
+      "New environmental regulations that substantially raise firms' compliance costs",
+      "A substantial decrease in the cost of key raw materials used across industries"
+    ],
+    "answer": "D",
+    "hints": ["Lower input costs reduce per-unit production costs, encouraging more output at every price level — SRAS shifts right."]
+  },
+  {
+    "id": "apmacro.short-run-aggregate-supply.mcq.06",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy simultaneously experiences a rising price level and falling real output — a combination sometimes called stagflation. In the AD-AS framework, this outcome is best explained by:",
+    "choices": [
+      "a rightward shift of the aggregate demand curve",
+      "a leftward shift of the aggregate demand curve",
+      "a leftward shift of the short-run aggregate supply curve",
+      "a rightward shift of the long-run aggregate supply curve"
+    ],
+    "answer": "C",
+    "hints": ["Only a leftward shift of SRAS produces higher prices AND lower output simultaneously. AD shifts move price and output in the same direction."]
+  },
+
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.01",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The long-run aggregate supply (LRAS) curve is vertical because:",
+    "choices": [
+      "the price level is fixed and cannot change in the long run",
+      "in the long run all prices — including wages — adjust fully, so real output equals potential output regardless of the price level",
+      "government policy prevents output from ever exceeding the full-employment level",
+      "the spending multiplier is zero in the long run, making aggregate demand irrelevant"
+    ],
+    "answer": "B",
+    "hints": ["LRAS is vertical at potential output: once all prices adjust, the price level has no effect on real productive capacity."]
+  },
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.02",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The vertical long-run aggregate supply curve is positioned at:",
+    "choices": [
+      "the output level where the government budget is balanced",
+      "the output level where the inflation rate equals exactly zero",
+      "the economy's full-employment (potential) level of real output",
+      "the output level determined solely by the current level of interest rates"
+    ],
+    "answer": "C",
+    "hints": ["LRAS is located at potential output — the real GDP the economy produces when all resources are fully and efficiently employed at the natural rate of unemployment."]
+  },
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.03",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following would shift the long-run aggregate supply curve to the RIGHT?",
+    "choices": [
+      "An increase in the working-age population through immigration",
+      "An increase in government transfer payments to low-income households",
+      "A rise in the overall price level caused by expansionary monetary policy",
+      "A decrease in consumer confidence that temporarily reduces household spending"
+    ],
+    "answer": "A",
+    "hints": ["LRAS shifts right when the economy's real productive capacity grows — through more labor, more physical capital, improved technology, or better institutions."]
+  },
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.04",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sustained improvement in technology permanently raises the productive capacity of the entire economy. The most appropriate representation in the AD-AS model is:",
+    "choices": [
+      "a leftward shift of SRAS, reflecting the higher upfront cost of implementing new technology",
+      "a rightward shift of AD, reflecting higher consumer confidence generated by the new technology",
+      "a movement upward along the existing LRAS curve to a higher price level",
+      "a rightward shift of LRAS, reflecting a higher level of potential output"
+    ],
+    "answer": "D",
+    "hints": ["A permanent increase in productive capacity moves potential output to the right — the LRAS shifts right."]
+  },
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.05",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following would NOT cause the long-run aggregate supply curve to shift?",
+    "choices": [
+      "A permanent expansion of the economy's physical capital stock through sustained investment",
+      "A sustained increase in the money supply engineered by the central bank",
+      "A large-scale improvement in workforce educational attainment and skills",
+      "Deregulation that allows businesses to operate and innovate more productively"
+    ],
+    "answer": "B",
+    "hints": ["LRAS is determined by real factors — labor, capital, technology, institutions. Money supply changes affect the price level and AD, not potential output."]
+  },
+  {
+    "id": "apmacro.long-run-aggregate-supply.mcq.06",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the AD-AS model, an increase in the overall price level — with no change in real factors such as technology, capital stock, or the size of the labor force — will:",
+    "choices": [
+      "shift the LRAS curve to the right, as higher prices make firms more profitable and expand capacity",
+      "shift the LRAS curve to the left, as rising nominal costs temporarily erode real wages",
+      "leave the LRAS curve unchanged — potential output is determined by real factors, not the price level",
+      "cause the LRAS curve to slope upward temporarily until wages and prices fully adjust"
+    ],
+    "answer": "C",
+    "hints": ["The LRAS is vertical precisely because the price level does not affect the economy's long-run productive capacity — only real resource availability and technology do."]
+  },
+
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.01",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the AD-AS model, short-run macroeconomic equilibrium is determined by:",
+    "choices": [
+      "the price level at which the economy's unemployment rate equals zero",
+      "the intersection of the aggregate demand curve and the short-run aggregate supply curve",
+      "the level of real GDP at which tax revenue exactly equals government expenditure",
+      "the price level at which the trade balance equals zero"
+    ],
+    "answer": "B",
+    "hints": ["Short-run equilibrium: where AD meets SRAS, simultaneously determining the equilibrium price level and real GDP."]
+  },
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.02",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the short-run equilibrium level of real GDP is BELOW the economy's potential output, the economy is experiencing:",
+    "choices": [
+      "an inflationary gap, with the unemployment rate falling below the natural rate",
+      "long-run equilibrium, since the SRAS curve will adjust on its own",
+      "a balanced-budget equilibrium in which fiscal policy is effectively neutral",
+      "a recessionary gap, with cyclical unemployment above zero"
+    ],
+    "answer": "D",
+    "hints": ["Output below potential = recessionary gap (unemployment above natural rate). Output above potential = inflationary gap."]
+  },
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.03",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Starting from a short-run equilibrium, government spending increases and shifts AD to the right. In the short run, this will:",
+    "choices": [
+      "lower both the price level and real GDP",
+      "raise real GDP while simultaneously lowering the price level",
+      "raise both the price level and real GDP",
+      "raise only the price level with no change in real GDP"
+    ],
+    "answer": "C",
+    "hints": ["A rightward AD shift moves the equilibrium up and to the right along SRAS: both the price level and real output rise."]
+  },
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.04",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An economy's short-run equilibrium real GDP exceeds its potential output. In the AD-AS model, this situation is characterized by:",
+    "choices": [
+      "the AD curve intersecting SRAS to the right of the LRAS curve, indicating an inflationary gap",
+      "the AD curve intersecting SRAS to the left of the LRAS curve, indicating a recessionary gap",
+      "the LRAS curve having shifted rightward to accommodate the higher level of output",
+      "a stable long-run equilibrium with no self-adjustment pressure"
+    ],
+    "answer": "A",
+    "hints": ["Inflationary gap: the AD-SRAS intersection lies to the RIGHT of the vertical LRAS — actual output exceeds potential."]
+  },
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.05",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For an economy to be in BOTH short-run and long-run equilibrium simultaneously, which condition must hold?",
+    "choices": [
+      "The government budget must be in balance so that fiscal policy has a neutral effect",
+      "The AD curve, the SRAS curve, and the LRAS curve must all intersect at the same price level and output level",
+      "Net exports must equal zero so that the current account is balanced",
+      "The unemployment rate must equal exactly zero, meaning the strictest definition of full employment"
+    ],
+    "answer": "B",
+    "hints": ["Long-run equilibrium: all three curves (AD, SRAS, LRAS) meet at one point — actual output equals potential at the prevailing price level."]
+  },
+  {
+    "id": "apmacro.equilibrium-ad-as.mcq.06",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy is initially at long-run equilibrium. A sudden drop in consumer confidence sharply reduces household spending. Immediately after this demand shock, which statement best describes the new short-run situation?",
+    "choices": [
+      "The economy remains in long-run equilibrium because the LRAS curve has not changed",
+      "The new short-run equilibrium features higher output and a higher price level",
+      "The economy automatically and instantly returns to the original equilibrium through flexible wages",
+      "The new short-run equilibrium features lower output and a lower price level, creating a recessionary gap"
+    ],
+    "answer": "D",
+    "hints": ["AD shifts left: lower P and lower Y. Since Y is now below potential output, a recessionary gap opens. Wages are sticky in the short run, so no instant self-adjustment."]
+  },
+
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.01",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Consumer confidence falls sharply, causing households to significantly cut their spending. In the short run, what happens to the price level and real output?",
+    "choices": [
+      "Both the price level and real output rise",
+      "The price level rises while real output falls",
+      "Both the price level and real output fall",
+      "The price level falls while real output rises"
+    ],
+    "answer": "C",
+    "hints": ["A fall in consumer spending shifts AD left. Moving down and to the left along SRAS, both the price level and real output decrease."]
+  },
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.02",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sharp rise in world energy prices significantly increases production costs for firms across the economy. In the short run, the AD-AS model predicts:",
+    "choices": [
+      "a higher price level and lower real output, a combination often called stagflation",
+      "a lower price level and higher real output as firms pass savings on to consumers",
+      "a higher price level and higher real output as firms expand to meet demand",
+      "no change in either the price level or real output because supply and demand effects cancel"
+    ],
+    "answer": "A",
+    "hints": ["Higher energy costs shift SRAS left. The new equilibrium has a higher price level and lower real output — stagflation."]
+  },
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.03",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surge in business optimism leads firms to sharply increase investment spending. Starting from a short-run equilibrium, in the short run this will cause:",
+    "choices": [
+      "the price level to fall and real output to rise",
+      "both the price level and real output to rise",
+      "real output to fall and the price level to remain unchanged",
+      "only the price level to change with no effect on real output"
+    ],
+    "answer": "B",
+    "hints": ["Higher investment shifts AD right. Moving up and to the right along SRAS, both the price level and real output rise."]
+  },
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.04",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An economy's price level falls while its real output rises at the same time. This outcome is most consistent with which change in the AD-AS model?",
+    "choices": [
+      "a leftward shift of the aggregate demand curve",
+      "a rightward shift of the aggregate demand curve",
+      "a leftward shift of the short-run aggregate supply curve",
+      "a rightward shift of the short-run aggregate supply curve"
+    ],
+    "answer": "D",
+    "hints": ["Only a rightward SRAS shift can simultaneously lower the price level and raise real output. An AD shift moves price and output in the same direction."]
+  },
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.05",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Suppose consumer spending falls (shifting AD left) while raw material costs also fall (shifting SRAS right). The combined effect on real output in the short run is:",
+    "choices": [
+      "unambiguously higher, because the positive supply shock always raises output by more",
+      "unambiguously lower, because the demand shock always dominates the supply shock",
+      "ambiguous — real output may rise, fall, or remain unchanged depending on the relative sizes of the two shifts",
+      "always zero because two equal and opposite shifts perfectly cancel each other out"
+    ],
+    "answer": "C",
+    "hints": ["AD shifts left reduces Y; SRAS shifts right increases Y. The net direction of real output depends on which shift is larger — it is genuinely ambiguous."]
+  },
+  {
+    "id": "apmacro.changes-ad-as-short-run.mcq.06",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy is at long-run equilibrium. A negative supply shock shifts SRAS left, raising the price level and reducing real output. The government responds with expansionary fiscal policy specifically designed to restore the original level of real output. After fiscal policy takes full effect, what is true?",
+    "choices": [
+      "Real output is restored to its original level, but the price level is higher than it was before the supply shock occurred",
+      "Both the original price level and the original real output level are simultaneously restored",
+      "Real output is restored, and the price level falls back to exactly its pre-shock level",
+      "Fiscal policy has no effect because demand-side tools cannot offset supply shocks"
+    ],
+    "answer": "A",
+    "hints": ["The supply shock raised P above the original level. Expansionary fiscal (AD shifts right) pushes P even higher while restoring Y. The final price level exceeds the pre-shock equilibrium price."]
+  },
+
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.01",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When an economy is in a recessionary gap (output below potential), the long-run self-adjustment mechanism predicts that:",
+    "choices": [
+      "rising nominal wages will increase consumer spending and close the gap from the demand side",
+      "falling nominal wages will lower production costs, shifting SRAS right until output returns to potential",
+      "the government must always intervene with fiscal policy to restore equilibrium",
+      "aggregate demand automatically rises because falling prices stimulate consumer spending"
+    ],
+    "answer": "B",
+    "hints": ["Recessionary gap: high unemployment puts downward pressure on wages. Lower wages reduce costs, shift SRAS right, and output rises back to potential at a lower price level."]
+  },
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.02",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economy is producing above its potential output. Workers, facing a tight labor market, successfully bargain for higher nominal wages. In the AD-AS model, this rising labor cost will:",
+    "choices": [
+      "shift SRAS to the right, expanding the inflationary gap further",
+      "shift AD to the left, directly reducing consumer spending and aggregate demand",
+      "shift SRAS to the left, raising the price level and pushing real output back toward potential",
+      "shift LRAS to the right, permanently expanding potential output to match actual output"
+    ],
+    "answer": "C",
+    "hints": ["Rising wages increase production costs, shifting SRAS left. The price level rises further and real output falls back to potential, closing the inflationary gap."]
+  },
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.03",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The self-adjustment process in the AD-AS model takes considerable time primarily because:",
+    "choices": [
+      "the government must vote to authorize wage changes before they can occur",
+      "the central bank must first lower interest rates before wages are allowed to adjust",
+      "firms always raise wages instantly whenever aggregate demand increases",
+      "nominal wages are often sticky — especially downward — due to long-term contracts, minimum wage laws, and social norms"
+    ],
+    "answer": "D",
+    "hints": ["Wage stickiness — particularly downward wage rigidity — is the core reason self-adjustment is slow and distinguishes short-run from long-run outcomes."]
+  },
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.04",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Starting from a recessionary gap caused by a leftward shift in aggregate demand, after the long-run self-adjustment process is complete, what is the final outcome?",
+    "choices": [
+      "Real GDP returns to potential output at a lower price level than the original long-run equilibrium",
+      "Real GDP remains permanently below potential because wages never fall far enough",
+      "The price level returns exactly to its pre-recession level with no change in real output",
+      "Government spending automatically increases to fill the output gap without any wage adjustment"
+    ],
+    "answer": "A",
+    "hints": ["Self-adjustment: wages fall, SRAS shifts right, new LR equilibrium restores Y* — but with AD still shifted left, the new price level is lower than the original equilibrium."]
+  },
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.05",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Classical economists argue that active fiscal policy is unnecessary to close output gaps because:",
+    "choices": [
+      "fiscal policy always raises the price level without ever increasing real output",
+      "flexible wages and prices will return the economy to potential output without government intervention",
+      "the government inherently spends money less efficiently than the private sector",
+      "the spending multiplier is always less than one, making fiscal policy mathematically ineffective"
+    ],
+    "answer": "B",
+    "hints": ["Classical view: wages and prices are flexible, so the economy self-corrects to potential output relatively quickly without policy action."]
+  },
+  {
+    "id": "apmacro.long-run-self-adjustment.mcq.06",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best captures the Keynesian argument for using discretionary fiscal policy rather than waiting for long-run self-adjustment?",
+    "choices": [
+      "Wages are completely flexible, so self-adjustment is instantaneous and needs no assistance",
+      "Fiscal policy can only be used during inflationary gaps, not recessionary ones",
+      "When wages are sticky and self-adjustment is painfully slow, the human cost of prolonged unemployment justifies active fiscal intervention to restore output faster",
+      "The self-adjustment mechanism works reliably in open economies but fails in closed economies"
+    ],
+    "answer": "C",
+    "hints": ["Keynes: 'In the long run we are all dead.' If wages are sticky, waiting for self-adjustment imposes large social costs — fiscal policy can close the gap faster."]
+  },
+
+  {
+    "id": "apmacro.fiscal-policy.numeric.01",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "An economy with an MPC of 0.8 is experiencing a recessionary gap of 200 billion dollars (actual output is 200 billion below potential). How many billions of dollars must government spending increase to exactly close the gap?",
+    "answer": "40",
+    "hints": ["Spending multiplier = 1 / (1 - MPC) = 5. Required increase in G = gap divided by the multiplier."]
+  },
+  {
+    "id": "apmacro.fiscal-policy.numeric.02",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An economy with an MPC of 0.6 has a recessionary gap of 90 billion dollars. By how many billions of dollars must taxes be cut to exactly close the gap? Give the answer as a positive number.",
+    "answer": "60",
+    "hints": ["Tax multiplier magnitude = MPC / (1 - MPC) = 0.6 / 0.4 = 1.5. Required tax cut = gap divided by the tax multiplier magnitude."]
+  },
+  {
+    "id": "apmacro.fiscal-policy.mcq.01",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is an example of expansionary fiscal policy?",
+    "choices": [
+      "The central bank reduces the money supply to bring down inflation",
+      "The government raises income taxes and uses the additional revenue to pay down the national debt",
+      "The government increases spending on infrastructure and job training, financed by borrowing",
+      "Congress cuts government spending in order to achieve a balanced budget"
+    ],
+    "answer": "C",
+    "hints": ["Expansionary fiscal policy involves increasing G or cutting taxes to shift AD right. Monetary policy actions (choice A) are separate from fiscal policy."]
+  },
+  {
+    "id": "apmacro.fiscal-policy.mcq.02",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economy is experiencing an inflationary gap. A policymaker who wants to use contractionary fiscal policy to address it would most likely:",
+    "choices": [
+      "increase government spending on public works to create more jobs",
+      "direct the central bank to lower the federal funds rate target",
+      "expand transfer payments to boost household disposable income",
+      "raise taxes or reduce government spending in order to shift AD to the left"
+    ],
+    "answer": "D",
+    "hints": ["Contractionary fiscal policy reduces aggregate demand: higher taxes or lower G shift AD left, reducing the inflationary gap."]
+  },
+  {
+    "id": "apmacro.fiscal-policy.mcq.03",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An increase in government spending shifts aggregate demand to the right. Starting from a recessionary gap, in the short run this will:",
+    "choices": [
+      "lower the price level and raise real output simultaneously",
+      "raise both the price level and real output, moving the economy closer to potential",
+      "raise the price level while reducing real output, worsening the recession",
+      "have no effect if the economy's wages have not yet adjusted downward"
+    ],
+    "answer": "B",
+    "hints": ["AD shifts right: move up along SRAS — higher P and higher Y. From a recessionary gap, this brings output closer to potential."]
+  },
+  {
+    "id": "apmacro.fiscal-policy.mcq.04",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A concern frequently raised about deficit-financed expansionary fiscal policy is the 'crowding-out' effect. This refers to the idea that:",
+    "choices": [
+      "increased government borrowing raises interest rates, which reduces private investment and partially offsets the fiscal stimulus",
+      "government spending programs compete directly with private businesses for the same customers at the checkout counter",
+      "higher public-sector employment draws workers away from more productive private-sector jobs",
+      "fiscal expansion automatically reverses itself within one business cycle as tax revenues rise"
+    ],
+    "answer": "A",
+    "hints": ["Crowding out: government borrows more, interest rates rise in the loanable funds market, private investment falls — dampening the multiplier effect."]
+  },
+
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.01",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An automatic stabilizer is best defined as:",
+    "choices": [
+      "a monetary policy tool the central bank uses to smooth business cycle fluctuations",
+      "a policy that requires the government to spend more during expansions and less during recessions",
+      "a feature of the existing tax-and-spending system that automatically increases the budget deficit during downturns and reduces it during booms, without requiring new legislation",
+      "a law that fixes government spending at a constant fraction of GDP every year"
+    ],
+    "answer": "C",
+    "hints": ["Key phrase: 'without new legislation.' Automatic stabilizers are built into existing law and respond automatically to changing economic conditions."]
+  },
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.02",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is the best example of an automatic stabilizer?",
+    "choices": [
+      "A one-time emergency infrastructure bill passed by Congress during a recession",
+      "The Federal Reserve cutting the discount rate in response to slowing economic growth",
+      "A legislated one-time tax rebate check sent to all households to stimulate spending",
+      "A progressive income tax system in which total tax collections automatically fall as household incomes decline during a recession"
+    ],
+    "answer": "D",
+    "hints": ["Automatic stabilizers require no new legislation. A progressive tax automatically reduces tax burdens during recessions and raises them during booms."]
+  },
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.03",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Automatic stabilizers differ from discretionary fiscal policy primarily because:",
+    "choices": [
+      "automatic stabilizers respond to economic conditions without requiring new legislative action, while discretionary policy requires explicit government decisions each time it is used",
+      "automatic stabilizers are controlled by the Federal Reserve, while discretionary policy is enacted by Congress",
+      "automatic stabilizers only affect investment spending, while discretionary policy influences consumption",
+      "automatic stabilizers are always contractionary, while discretionary fiscal policy is always expansionary"
+    ],
+    "answer": "A",
+    "hints": ["The defining feature of automatic stabilizers: they are already written into law and activate automatically — no new vote or executive order required."]
+  },
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.04",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During a recession, automatic stabilizers help prevent real GDP from declining as sharply because:",
+    "choices": [
+      "they automatically raise interest rates, attracting foreign capital inflows that support domestic investment",
+      "rising transfer payments such as unemployment insurance and falling tax burdens support household disposable income and consumption spending",
+      "they legally require Congress to increase the money supply to offset the contraction",
+      "they shift the LRAS curve rightward, offsetting the reduction in potential output caused by the recession"
+    ],
+    "answer": "B",
+    "hints": ["In a recession: unemployment insurance rises and progressive taxes collect less. Both support household income, cushioning the decline in consumption and AD."]
+  },
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.05",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During an economic expansion, automatic stabilizers tend to:",
+    "choices": [
+      "amplify the expansion by reducing taxes on rising incomes and increasing transfer payments",
+      "have no stabilizing effect because they are designed to work only during recessions",
+      "act as a brake — rising incomes generate higher tax revenues and transfer payments fall, shrinking the budget deficit and moderating spending growth",
+      "cause the government to run a larger deficit in order to fund rising demand for public services"
+    ],
+    "answer": "C",
+    "hints": ["During a boom: taxable incomes rise so tax collections increase; fewer people are unemployed so transfer payments fall. Both reduce the deficit and slow AD growth."]
+  },
+  {
+    "id": "apmacro.automatic-stabilizers.mcq.06",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Compared to discretionary fiscal policy, a key limitation of automatic stabilizers is that:",
+    "choices": [
+      "they are slower to take effect because they still require congressional approval before funds can be disbursed",
+      "they consistently create larger budget deficits than any comparable discretionary spending program would",
+      "they operate only through monetary policy transmission channels, not through fiscal channels",
+      "they cannot be finely calibrated to the size of an economic shock — their magnitude is fixed by existing law and may be too large or too small for a given situation"
+    ],
+    "answer": "D",
+    "hints": ["Automatic stabilizers are fast and certain, but their size is predetermined. Unlike discretionary policy, they cannot be scaled to match the severity of a particular shock."]
+  }
+]

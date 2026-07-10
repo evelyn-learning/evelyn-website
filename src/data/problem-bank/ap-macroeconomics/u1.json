@@ -1,0 +1,547 @@
+[
+  {
+    "id": "apmacro.scarcity.mcq.01",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In economics, scarcity means that:",
+    "choices": [
+      "Most goods are extremely rare and found only in a few specific locations",
+      "Society's unlimited wants exceed the limited resources available to satisfy them",
+      "Only low-income households are unable to afford the goods they need",
+      "Governments have not produced enough basic necessities for the population"
+    ],
+    "answer": "B",
+    "hints": ["Scarcity is not about absolute rarity — it is about the relationship between unlimited wants and finite resources."]
+  },
+  {
+    "id": "apmacro.scarcity.mcq.02",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best illustrates the economic concept of scarcity?",
+    "choices": [
+      "A student must choose between studying economics or biology because her study time is limited",
+      "A toy store runs out of a popular item the week before a holiday",
+      "A government prints additional money to finance a budget shortfall",
+      "A factory reduces output temporarily because a machine breaks down"
+    ],
+    "answer": "A",
+    "hints": ["Scarcity forces a choice. Look for the option in which a limited resource requires an allocation decision."]
+  },
+  {
+    "id": "apmacro.scarcity.mcq.03",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economist would classify a surgeon's skills and medical expertise as which factor of production?",
+    "choices": [
+      "Land, because the surgeon works in a physical hospital location",
+      "Capital, because skills are used as inputs to produce a service",
+      "Labor, because the surgeon applies human effort and expertise to deliver services",
+      "Entrepreneurship, because surgeons typically earn high incomes"
+    ],
+    "answer": "C",
+    "hints": ["The four factors of production are land, labor, capital, and entrepreneurship. Human skills fall under labor."]
+  },
+  {
+    "id": "apmacro.scarcity.mcq.04",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best explains why even a very wealthy country still faces the problem of scarcity?",
+    "choices": [
+      "Wealthy countries have more wants but exactly the same resources as poor countries",
+      "No matter how many resources a country possesses, human wants are virtually unlimited while resources remain finite",
+      "Wealthy countries import fewer goods and must rely entirely on domestic production",
+      "Scarcity is a policy failure caused by poor government planning and can be fixed with better management"
+    ],
+    "answer": "B",
+    "hints": ["Scarcity is universal because the gap between unlimited wants and finite resources persists regardless of how rich a society becomes."]
+  },
+  {
+    "id": "apmacro.scarcity.mcq.05",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following statements about scarcity is most accurate?",
+    "choices": [
+      "Scarcity is the fundamental economic problem facing all societies, regardless of their level of income or development",
+      "Scarcity can be eliminated if a country grows its economy fast enough over time",
+      "Scarcity affects only developing nations that lack sufficient productive capacity",
+      "Technological advances have made scarcity largely irrelevant in modern high-income economies"
+    ],
+    "answer": "A",
+    "hints": ["Economic growth expands productive capacity, but it cannot eliminate the gap between unlimited wants and finite resources."]
+  },
+  {
+    "id": "apmacro.scarcity.mcq.06",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Air in the open atmosphere is typically considered a free good not subject to scarcity. Which scenario best illustrates a context in which breathable air becomes a scarce economic good?",
+    "choices": [
+      "People breathe outdoor air freely in most everyday settings without paying for it",
+      "Airlines pressurize cabin air and make it available to all passengers during a flight at no extra charge",
+      "Governments regulate outdoor air quality standards, classifying clean air as a public good",
+      "A scuba diver must purchase finite, costly compressed air tanks before an underwater dive"
+    ],
+    "answer": "D",
+    "hints": ["A good becomes scarce when it is limited in supply and has competing uses. Ask where breathable air is genuinely finite and must be allocated by price."]
+  },
+
+  {
+    "id": "apmacro.resource-allocation.mcq.01",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a pure market economy, the central questions of what to produce, how to produce it, and for whom to produce it are primarily answered by:",
+    "choices": [
+      "A central planning committee that sets national production quotas",
+      "Tradition and cultural customs passed down through generations",
+      "Decentralized decisions of buyers and sellers interacting through prices",
+      "Government agencies that continuously monitor supply and demand"
+    ],
+    "answer": "C",
+    "hints": ["In a market economy, the price system coordinates decisions without central direction."]
+  },
+  {
+    "id": "apmacro.resource-allocation.mcq.02",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a command economy, who makes the fundamental decisions about how resources are allocated?",
+    "choices": [
+      "The central government or a planning authority",
+      "Individual consumers expressing preferences through their spending choices",
+      "Competing private firms seeking to maximize their profits",
+      "International trading partners negotiating bilateral agreements"
+    ],
+    "answer": "A",
+    "hints": ["A command economy centralizes economic decisions rather than relying on decentralized markets."]
+  },
+  {
+    "id": "apmacro.resource-allocation.mcq.03",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes a traditional economy?",
+    "choices": [
+      "Resources are allocated by government decree to meet national production targets",
+      "Resource allocation decisions are based on custom, ritual, and ancestral practices handed down over generations",
+      "Market prices coordinate the decisions of millions of independent producers and consumers",
+      "A mix of government planning and market mechanisms determines what and how much to produce"
+    ],
+    "answer": "B",
+    "hints": ["In a traditional economy, the what, how, and for whom questions are answered the same way they always have been."]
+  },
+  {
+    "id": "apmacro.resource-allocation.mcq.04",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The price mechanism in a market economy performs which primary function in allocating resources?",
+    "choices": [
+      "It signals to producers where resources are most highly valued and provides incentives to reallocate them accordingly",
+      "It ensures an equal distribution of goods and services across all households in society",
+      "It allows the government to set fair prices that reflect the true social cost of each good",
+      "It eliminates scarcity by automatically adjusting the total quantity of resources available"
+    ],
+    "answer": "A",
+    "hints": ["Rising prices signal high value and attract resources toward those uses without any central coordinator."]
+  },
+  {
+    "id": "apmacro.resource-allocation.mcq.05",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Well-defined and enforced private property rights are essential in a market economy primarily because they:",
+    "choices": [
+      "Allow the government to redistribute wealth and reduce income inequality",
+      "Give individuals incentives to use, maintain, and exchange resources efficiently",
+      "Prevent foreign firms and investors from purchasing domestic productive assets",
+      "Guarantee that all goods and services will be produced at their minimum possible cost"
+    ],
+    "answer": "B",
+    "hints": ["Without property rights, the owner cannot capture the gains from improving or exchanging an asset — incentives collapse."]
+  },
+  {
+    "id": "apmacro.resource-allocation.mcq.06",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Most real-world economies are best described as mixed economies. Which statement most accurately characterizes a mixed economy?",
+    "choices": [
+      "The government owns all productive resources and directs every production and consumption decision",
+      "Markets determine all prices and quantities with absolutely no government involvement of any kind",
+      "Some goods are allocated by markets and others involve government activity, with private property coexisting alongside a public sector",
+      "Resource allocation is determined entirely by tradition and habit, with market prices playing no role"
+    ],
+    "answer": "C",
+    "hints": ["Mixed economies blend market mechanisms with government intervention — neither extreme fully describes most countries."]
+  },
+
+  {
+    "id": "apmacro.ppc.mcq.01",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A point that lies inside (below and to the left of) a country's production possibilities curve indicates that the economy is:",
+    "choices": [
+      "Operating at full employment and maximum productive efficiency",
+      "Producing an unattainable combination of the two goods given current resources and technology",
+      "Using its resources inefficiently or has unemployed resources",
+      "Experiencing economic growth due to an improvement in technology"
+    ],
+    "answer": "C",
+    "hints": ["Points inside the PPC are attainable but represent waste or idle resources."]
+  },
+  {
+    "id": "apmacro.ppc.mcq.02",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following events would most likely cause an outward (rightward) shift of a country's entire production possibilities curve?",
+    "choices": [
+      "A reallocation of existing workers from one industry to another without any new technology",
+      "A discovery of new oil reserves that expands the productive capacity of the economy",
+      "A decision by producers to manufacture more of one good and less of the other good",
+      "A shift in consumer preferences toward purchasing more luxury goods"
+    ],
+    "answer": "B",
+    "hints": ["A PPC shift requires a change in the quantity or quality of resources or technology — not just a reallocation of existing ones."]
+  },
+  {
+    "id": "apmacro.ppc.mcq.03",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A country's production possibilities curve is concave (bowed outward from the origin) rather than a straight line. The most likely explanation is:",
+    "choices": [
+      "The country is experiencing economic growth driven by recent technological advances",
+      "Resources are perfectly substitutable between the two industries with no loss in efficiency",
+      "Resources are not equally well-suited to both goods, so producing more of one good requires giving up ever-larger quantities of the other",
+      "The country is operating inside its PPC due to widespread unemployment"
+    ],
+    "answer": "C",
+    "hints": ["The concave shape reflects increasing opportunity cost — as you shift resources to one industry, you use progressively less suitable inputs."]
+  },
+  {
+    "id": "apmacro.ppc.mcq.04",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy produces only computers and bread. Moving from (0 computers, 100 loaves) to (10 computers, 90 loaves) costs 10 loaves. Moving further from (10 computers, 90 loaves) to (20 computers, 70 loaves) costs 20 loaves. What does this pattern indicate about the shape of the PPC?",
+    "choices": [
+      "The PPC is a straight line because the same number of computers (10) is gained in each move",
+      "The PPC is concave (bowed outward from the origin), reflecting increasing opportunity cost as more computers are produced",
+      "The PPC is shifting outward between the two moves, indicating economic growth has occurred",
+      "The PPC is convex (bowed inward toward the origin), reflecting decreasing opportunity cost"
+    ],
+    "answer": "B",
+    "hints": ["Each additional 10 computers costs more bread than the last batch did — that rising sacrifice is what creates the bowed-out shape."]
+  },
+  {
+    "id": "apmacro.ppc.numeric.01",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A country produces only wheat and steel along a straight-line PPC. If all resources are devoted to wheat it can produce 120 bushels; if all resources are devoted to steel it can produce 40 tons. Assuming constant opportunity cost along the entire PPC, what is the opportunity cost of producing one additional ton of steel, measured in bushels of wheat? Give your answer as a number.",
+    "answer": "3",
+    "hints": ["Along a straight-line PPC, opportunity cost is constant. Divide maximum wheat output by maximum steel output."]
+  },
+  {
+    "id": "apmacro.ppc.numeric.02",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A country's straight-line PPC passes through two endpoints: Point A = (0 bicycles, 60 textbooks) and Point B = (24 bicycles, 0 textbooks). What is the opportunity cost of producing one additional bicycle, measured in textbooks? Give your answer as a number.",
+    "answer": "2.5",
+    "hints": ["Divide the total textbooks foregone (60) by the total bicycles gained (24) to find the constant opportunity cost per bicycle."]
+  },
+
+  {
+    "id": "apmacro.comparative-advantage.mcq.01",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Absolute advantage in producing a good means that a producer:",
+    "choices": [
+      "Has a lower opportunity cost of producing that good than any trading partner",
+      "Can produce more of that good with the same quantity of resources than its trading partner",
+      "Dominates all trading partners in the production of every type of good",
+      "Holds a surplus of that good available for export on international markets"
+    ],
+    "answer": "B",
+    "hints": ["Absolute advantage is about physical productivity — who produces more output per input. Comparative advantage is about opportunity cost."]
+  },
+  {
+    "id": "apmacro.comparative-advantage.mcq.02",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Country Alpha can produce 80 units of grain or 40 units of cloth per year using all of its resources. Country Beta can produce 60 units of grain or 60 units of cloth per year. Which country has a comparative advantage in cloth, and why?",
+    "choices": [
+      "Alpha, because it produces more grain per year and therefore has overall productive superiority",
+      "Alpha, because its maximum cloth output is closer in quantity to its grain output",
+      "Beta, because its opportunity cost of producing one unit of cloth (1 unit of grain) is lower than Alpha's opportunity cost of cloth (2 units of grain)",
+      "Beta, because it has an absolute advantage in producing every good in this scenario"
+    ],
+    "answer": "C",
+    "hints": ["Compute Alpha's OC of cloth: 80 divided by 40 = 2 grain. Compute Beta's OC of cloth: 60 divided by 60 = 1 grain. The lower OC determines comparative advantage."]
+  },
+  {
+    "id": "apmacro.comparative-advantage.mcq.03",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Country Alpha can produce 80 units of grain or 40 units of cloth per year; Country Beta can produce 60 units of grain or 60 units of cloth per year. If both countries specialize according to comparative advantage and then trade, what does economic theory predict about combined total output relative to a no-specialization scenario?",
+    "choices": [
+      "Combined output of both goods will remain unchanged, because resources are simply redistributed between countries",
+      "Combined output of both goods will increase, because each country focuses on what it produces at relatively lower opportunity cost",
+      "Combined output will fall, because specialization creates dangerous economic dependence on trading partners",
+      "Only Alpha will gain from specialization; Beta will necessarily be made worse off by the trade"
+    ],
+    "answer": "B",
+    "hints": ["Specialization by comparative advantage expands the total pie — both countries can consume beyond what they could produce alone."]
+  },
+  {
+    "id": "apmacro.comparative-advantage.mcq.04",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Suppose Country Zara has an absolute advantage over Country Nova in producing both wheat and cloth. Which of the following statements is most accurate?",
+    "choices": [
+      "Because Zara is more productive at both goods, there are no possible gains from trade between the two countries",
+      "Zara should produce both goods and export everything to Nova, who will only lose from such an arrangement",
+      "Trade can still be mutually beneficial if each country specializes in the good for which it has a comparative advantage",
+      "Nova should import all goods from Zara and direct no resources toward any domestic production"
+    ],
+    "answer": "C",
+    "hints": ["Absolute advantage determines who is more productive overall; comparative advantage determines who should specialize. Gains from trade depend on relative opportunity costs, not absolute productivity."]
+  },
+  {
+    "id": "apmacro.comparative-advantage.numeric.01",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Country Arden can produce 90 bushels of rice or 30 meters of silk per year using all of its resources. What is the opportunity cost of producing one additional meter of silk in Country Arden, measured in bushels of rice? Give your answer as a number.",
+    "answer": "3",
+    "hints": ["Opportunity cost of one meter of silk = maximum rice output divided by maximum silk output = 90 divided by 30."]
+  },
+  {
+    "id": "apmacro.comparative-advantage.numeric.02",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Country Bravo can produce 40 units of grain or 8 machines per year. Country Carla can produce 30 units of grain or 10 machines per year. What is the opportunity cost of producing one machine in Country Bravo, measured in units of grain? Give your answer as a number.",
+    "answer": "5",
+    "hints": ["OC of one machine in Bravo = maximum grain divided by maximum machines = 40 divided by 8."]
+  },
+
+  {
+    "id": "apmacro.cost-benefit.mcq.01",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In economics, the opportunity cost of a decision is best defined as:",
+    "choices": [
+      "The total monetary expenditure required to carry out the decision",
+      "The value of the next best alternative that must be foregone when making a choice",
+      "The combined cost of every possible alternative course of action",
+      "The amount paid for an action after deducting any applicable taxes or subsidies"
+    ],
+    "answer": "B",
+    "hints": ["Opportunity cost is not about money spent — it is about the value of the best option that was NOT chosen."]
+  },
+  {
+    "id": "apmacro.cost-benefit.mcq.02",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Maria currently earns 50,000 dollars per year as a teacher. She quits to open her own bakery. The foregone teacher's salary of 50,000 dollars per year is best described as:",
+    "choices": [
+      "An implicit cost, because it represents the value of Maria's next best alternative that she gives up by running the bakery",
+      "An explicit cost, because it was once a direct cash payment deposited into her account",
+      "A sunk cost, because the salary was already earned before she resigned",
+      "An accounting cost that would appear as a line item on the bakery's income statement"
+    ],
+    "answer": "A",
+    "hints": ["Implicit costs are not cash outflows — they are foregone earnings or other values sacrificed by choosing one option over another."]
+  },
+  {
+    "id": "apmacro.cost-benefit.mcq.03",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A small business owner has total revenue of 200,000 dollars and explicit costs of 150,000 dollars for the year. She also could have earned 60,000 dollars working for another firm instead. What is her economic profit for the year?",
+    "choices": [
+      "negative 10,000 dollars (total revenue minus both explicit and implicit costs)",
+      "50,000 dollars (total revenue minus explicit costs only)",
+      "110,000 dollars (total revenue minus implicit costs only)",
+      "260,000 dollars (total revenue plus the foregone salary)"
+    ],
+    "answer": "A",
+    "hints": ["Economic profit = revenue minus all costs, including the implicit opportunity cost of foregone wages."]
+  },
+  {
+    "id": "apmacro.cost-benefit.mcq.04",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A company spent 2 million dollars developing a new product that has just launched to disappointing sales. Economists advise the company to ignore this past expenditure when deciding whether to continue marketing the product. The 2 million dollars is best described as:",
+    "choices": [
+      "An opportunity cost that signals the product is valuable enough to keep promoting",
+      "An implicit cost that should be factored into every future production decision",
+      "An implicit opportunity cost reflecting the firm's best alternative use of that capital",
+      "A sunk cost — already spent and unrecoverable, making it irrelevant to forward-looking decisions"
+    ],
+    "answer": "D",
+    "hints": ["Sunk costs cannot be recovered regardless of future choices. Rational decision-making looks only at future costs and benefits."]
+  },
+  {
+    "id": "apmacro.cost-benefit.mcq.05",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "From an economic perspective, an action is rational to undertake if:",
+    "choices": [
+      "The accounting profit generated by the action is positive",
+      "The government or a regulatory body has approved the expenditure",
+      "The marginal benefit of the action exceeds its marginal cost, including all relevant opportunity costs",
+      "The action generates total revenue that exceeds its explicit monetary costs alone"
+    ],
+    "answer": "C",
+    "hints": ["Rational economic decisions compare the additional benefit gained to the additional cost incurred — including the value of foregone alternatives."]
+  },
+  {
+    "id": "apmacro.cost-benefit.mcq.06",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Jamie owns a building she uses for her own retail store rather than renting it out. She could rent the building to a tenant for 24,000 dollars per year. Her explicit annual operating costs are 80,000 dollars and her annual revenue is 110,000 dollars. What is Jamie's economic profit from running the store?",
+    "choices": [
+      "30,000 dollars (revenue minus explicit costs, ignoring the foregone rental income)",
+      "6,000 dollars (revenue minus both explicit operating costs and the implicit rental opportunity cost)",
+      "negative 14,000 dollars (incorrectly counting the rental cost twice)",
+      "110,000 dollars (revenue before subtracting any costs)"
+    ],
+    "answer": "B",
+    "hints": ["Economic profit includes implicit costs. Foregone rent = 24,000 dollars. Economic profit = 110,000 minus 80,000 minus 24,000."]
+  },
+
+  {
+    "id": "apmacro.marginal-analysis-consumer.mcq.01",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The law of diminishing marginal utility states that:",
+    "choices": [
+      "As a consumer buys more of a good, the market price of that good eventually rises",
+      "As more units of a good are consumed in a given period, the additional satisfaction from each successive unit eventually declines",
+      "Consumers will always prefer lower-priced goods over more expensive alternatives",
+      "Total utility falls immediately as soon as a consumer purchases any unit of a good"
+    ],
+    "answer": "B",
+    "hints": ["Marginal utility is the extra satisfaction from one more unit. The law says this extra amount eventually decreases as consumption rises."]
+  },
+  {
+    "id": "apmacro.marginal-analysis-consumer.mcq.02",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A utility-maximizing consumer allocates her entire budget so that:",
+    "choices": [
+      "The total amount of money spent on each good in her basket is equal",
+      "The total utility derived from every good purchased is exactly the same",
+      "The marginal utility per dollar spent is equal across all goods she purchases",
+      "The price paid for every good in her consumption bundle is identical"
+    ],
+    "answer": "C",
+    "hints": ["The equimarginal principle says utility is maximized when MU divided by price is equal for every good purchased."]
+  },
+  {
+    "id": "apmacro.marginal-analysis-consumer.mcq.03",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dani is deciding between purchasing a fourth slice of pizza or a second soda. The marginal utility of the fourth pizza slice is 12 utils and pizza costs 3 dollars per slice. The marginal utility of the second soda is 10 utils and soda costs 2 dollars per can. To maximize utility, which should Dani purchase next?",
+    "choices": [
+      "Pizza, because its marginal utility in utils (12) is greater than that of soda (10)",
+      "Soda, because its marginal utility per dollar (5 utils per dollar) exceeds that of pizza (4 utils per dollar)",
+      "Neither good; Dani has already reached her utility maximum at the current bundle",
+      "Pizza, because spending more on a higher-priced item always yields greater satisfaction"
+    ],
+    "answer": "B",
+    "hints": ["Compare MU divided by price for each option: pizza = 12 divided by 3 = 4; soda = 10 divided by 2 = 5. Choose the good with the higher MU per dollar."]
+  },
+  {
+    "id": "apmacro.marginal-analysis-consumer.mcq.04",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A consumer spends her entire income on two goods. Good X is priced at 4 dollars per unit and currently has a marginal utility of 12 utils. Good Y is priced at 6 dollars per unit and has a marginal utility of 24 utils. To move toward a utility-maximizing allocation, she should:",
+    "choices": [
+      "Keep the current bundle unchanged, because she is already at a utility maximum",
+      "Purchase equal quantities of X and Y regardless of their relative prices or marginal utilities",
+      "Buy more of Good X and less of Good Y, because Good X carries a lower price",
+      "Buy more of Good Y and less of Good X, because Good Y's marginal utility per dollar (4 utils per dollar) exceeds Good X's (3 utils per dollar)"
+    ],
+    "answer": "D",
+    "hints": ["Compute MU divided by price for each good: X = 12 divided by 4 = 3; Y = 24 divided by 6 = 4. Shift spending toward the good with the higher ratio."]
+  },
+  {
+    "id": "apmacro.marginal-analysis-consumer.numeric.01",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "At the current consumption level, the marginal utility of the next unit of Good X is 18 utils. Good X is priced at 6 dollars per unit. What is the marginal utility per dollar for Good X at this consumption level? Give your answer as a number.",
+    "answer": "3",
+    "hints": ["Marginal utility per dollar = marginal utility divided by the price of the good."]
+  },
+  {
+    "id": "apmacro.marginal-analysis-consumer.numeric.02",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A consumer maximizes utility by spending all of her income on Good P and Good Q. At the optimal bundle, the marginal utility of Good P is 15 utils and Good P costs 5 dollars per unit. Good Q costs 3 dollars per unit. Using the utility-maximizing equilibrium condition, what must be the marginal utility of Good Q at this optimal bundle? Give your answer in utils.",
+    "answer": "9",
+    "hints": ["At a utility maximum: MU of P divided by price of P equals MU of Q divided by price of Q. Solve: 15 divided by 5 equals MU of Q divided by 3."]
+  }
+]

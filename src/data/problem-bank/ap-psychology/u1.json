@@ -1,0 +1,486 @@
+[
+  {
+    "id": "appsych.nervous-endocrine.mcq.01",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The brain and spinal cord together make up which division of the nervous system?",
+    "choices": [
+      "Central nervous system",
+      "Peripheral nervous system",
+      "Autonomic nervous system",
+      "Somatic nervous system"
+    ],
+    "answer": "A",
+    "hints": ["Think about which structures are literally at the center of the body."]
+  },
+  {
+    "id": "appsych.nervous-endocrine.mcq.02",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus is startled by a loud noise behind him. His heart rate spikes, his pupils dilate, and blood flow shifts away from digestion toward his muscles. Which division of the nervous system is driving these changes?",
+    "choices": [
+      "Parasympathetic nervous system",
+      "Sympathetic nervous system",
+      "Somatic nervous system",
+      "Afferent nervous system"
+    ],
+    "answer": "B",
+    "hints": ["This is the division associated with fight-or-flight responses."]
+  },
+  {
+    "id": "appsych.nervous-endocrine.mcq.03",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How does the endocrine system primarily communicate with distant target cells throughout the body?",
+    "choices": [
+      "By sending electrical impulses along dedicated nerve fibers",
+      "By using direct cell-to-cell contact between gland cells and target cells",
+      "By releasing hormones into the bloodstream",
+      "By transmitting neurotransmitters across synaptic gaps"
+    ],
+    "answer": "C",
+    "hints": ["The endocrine system uses the circulatory system as its delivery network."]
+  },
+  {
+    "id": "appsych.nervous-endocrine.mcq.04",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers studying identical twins raised in separate homes find that the twins show highly similar levels of introversion even though their environments differed significantly. This finding most directly supports:",
+    "choices": [
+      "The influence of shared family environments on personality development",
+      "The role of socialization and peer influence in shaping temperament",
+      "The nurture side of the nature–nurture debate in personality",
+      "A substantial genetic contribution to personality traits"
+    ],
+    "answer": "D",
+    "hints": ["Identical twins share 100% of their DNA; separate environments rule out shared upbringing."]
+  },
+  {
+    "id": "appsych.nervous-endocrine.mcq.05",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After finishing a large Thanksgiving dinner, Aisha finds herself drowsy, with a slowed heart rate, increased digestive activity, and relaxed muscles. The autonomic division most active during this rest-and-digest state is the:",
+    "choices": [
+      "Parasympathetic nervous system",
+      "Sympathetic nervous system",
+      "Somatic nervous system",
+      "Reticular activating system"
+    ],
+    "answer": "A",
+    "hints": ["The opposite of fight-or-flight is rest-and-digest."]
+  },
+  {
+    "id": "appsych.nervous-endocrine.mcq.06",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Under prolonged psychological stress, the hypothalamus signals the pituitary gland, which in turn triggers the adrenal cortex to release cortisol. This sequence of events is best described as an example of:",
+    "choices": [
+      "The somatic nervous system activating peripheral muscle responses",
+      "The hypothalamic-pituitary-adrenal (HPA) axis coordinating the nervous and endocrine systems",
+      "The parasympathetic nervous system suppressing the limbic system during stress",
+      "Efferent pathways carrying motor commands from cortex to the adrenal glands"
+    ],
+    "answer": "B",
+    "hints": ["Identify the three glands involved and note that this pathway crosses from brain (nervous system) into glands (endocrine system)."]
+  },
+
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.01",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which part of a neuron is specialized to receive incoming signals from neighboring neurons?",
+    "choices": [
+      "Axon",
+      "Myelin sheath",
+      "Dendrites",
+      "Terminal buttons"
+    ],
+    "answer": "C",
+    "hints": ["The name comes from a Greek word meaning 'tree' — picture many branching receivers."]
+  },
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.02",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes the all-or-none principle of neural firing?",
+    "choices": [
+      "A neuron fires with greater electrical force when it receives a stronger stimulus",
+      "Neurons require simultaneous inputs from many sources before any firing can occur",
+      "A neuron keeps firing continuously once its threshold is exceeded",
+      "A neuron either fires at full strength or does not fire at all, regardless of stimulus intensity"
+    ],
+    "answer": "D",
+    "hints": ["Think of a gun trigger: pulling harder does not make the bullet travel faster."]
+  },
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.03",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Prozac (fluoxetine) works by blocking the mechanism through which sending neurons reabsorb serotonin after it is released. Prozac is therefore classified as a serotonin:",
+    "choices": [
+      "Reuptake inhibitor, keeping serotonin active in the synapse longer",
+      "Receptor antagonist, blocking serotonin from binding to postsynaptic sites",
+      "Direct agonist, mimicking serotonin and stimulating receptors itself",
+      "Reuptake enhancer, clearing serotonin from the synapse more rapidly"
+    ],
+    "answer": "A",
+    "hints": ["If uptake is inhibited, the neurotransmitter stays in the synapse rather than being recycled."]
+  },
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.04",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pharmacologist develops a compound that binds to dopamine receptors and activates them in the same way natural dopamine would. This compound is best described as a dopamine:",
+    "choices": [
+      "Antagonist",
+      "Agonist",
+      "Reuptake inhibitor",
+      "Inhibitory neurotransmitter"
+    ],
+    "answer": "B",
+    "hints": ["An agent that mimics the action of a neurotransmitter at its receptor is called what?"]
+  },
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.05",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Elena suffers from chronic pain following an accident. Her pain specialist explains that the brain produces natural painkilling neurotransmitters that suppress pain signals, but Elena's levels of these chemicals are depleted. The neurotransmitters most likely being discussed are:",
+    "choices": [
+      "Acetylcholine",
+      "GABA",
+      "Endorphins",
+      "Norepinephrine"
+    ],
+    "answer": "C",
+    "hints": ["These naturally occurring chemicals have structures similar to opioid drugs."]
+  },
+  {
+    "id": "appsych.neurons-neurotransmitters.mcq.06",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During an action potential, which sequence of ionic events correctly describes what occurs after the resting membrane potential is disrupted?",
+    "choices": [
+      "Potassium ions rush in, then sodium ions rush out, causing depolarization followed by repolarization",
+      "Calcium ions trigger vesicle release, then sodium rushes in, then the neuron hyperpolarizes",
+      "Sodium ions rush out first, causing the inside of the neuron to become more negative before potassium enters",
+      "Sodium ions rush in, making the inside more positive (depolarization); then potassium rushes out, restoring the negative charge (repolarization)"
+    ],
+    "answer": "D",
+    "hints": ["Sodium gates open first; the cell becomes more positive inside. Which ion then flows out to restore the charge?"]
+  },
+
+  {
+    "id": "appsych.brain-structures.mcq.01",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The cerebellum, medulla oblongata, and pons are all structures found in which major region of the brain?",
+    "choices": [
+      "Forebrain",
+      "Hindbrain",
+      "Limbic system",
+      "Cerebral cortex"
+    ],
+    "answer": "B",
+    "hints": ["These structures sit at the base of the brain, closest to the spinal cord."]
+  },
+  {
+    "id": "appsych.brain-structures.mcq.02",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which limbic system structure is most critical for converting new experiences into long-term declarative memories?",
+    "choices": [
+      "Amygdala",
+      "Hypothalamus",
+      "Hippocampus",
+      "Thalamus"
+    ],
+    "answer": "C",
+    "hints": ["Patients who lose this structure, like the famous case of H.M., cannot form new long-term memories."]
+  },
+  {
+    "id": "appsych.brain-structures.mcq.03",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phineas Gage survived an iron rod driven through his frontal lobe and subsequently became impulsive, profane, and unable to follow through on plans — despite his intelligence and memory remaining largely intact. His case most directly illustrated the role of the frontal lobe in:",
+    "choices": [
+      "Processing incoming visual information from the environment",
+      "Regulating body temperature, hunger, and thirst",
+      "Storing emotionally charged long-term memories",
+      "Governing judgment, impulse control, and executive planning"
+    ],
+    "answer": "D",
+    "hints": ["Gage's personality changed, not his basic sensory or memory function."]
+  },
+  {
+    "id": "appsych.brain-structures.mcq.04",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A stroke damages Wernicke's area in a patient's left temporal lobe. Which deficit would the patient most likely experience?",
+    "choices": [
+      "Difficulty comprehending spoken language while speech production remains fluent",
+      "Difficulty producing fluent speech while language comprehension remains intact",
+      "Loss of the ability to recognize familiar faces",
+      "Inability to form new long-term declarative memories"
+    ],
+    "answer": "A",
+    "hints": ["Wernicke's area is associated with language reception and understanding, not production."]
+  },
+  {
+    "id": "appsych.brain-structures.mcq.05",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A young child undergoes surgery to remove the entire left hemisphere to control severe epilepsy. Over the following years, the child gradually recovers most language function. This outcome best demonstrates:",
+    "choices": [
+      "That language is lateralized to the right hemisphere from birth in most people",
+      "Neural plasticity, in which the brain reorganizes itself to compensate for the damage",
+      "That the corpus callosum transfers language function from left to right hemisphere",
+      "Epigenetic changes that activate previously silent language genes in the right hemisphere"
+    ],
+    "answer": "B",
+    "hints": ["This recovery is especially dramatic in children — the brain is most 'flexible' early in life."]
+  },
+  {
+    "id": "appsych.brain-structures.mcq.06",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a split-brain patient whose corpus callosum has been severed, an image of a hammer is flashed briefly to only the left visual field. What would most likely happen when the patient is asked to verbally identify the object?",
+    "choices": [
+      "The patient names 'hammer' correctly because language is represented in both hemispheres",
+      "The patient reaches with the right hand to pick up a hammer from a tray of objects",
+      "The patient cannot verbally name the object but can select it from a tray using the left hand",
+      "The patient accurately describes the object because visual processing occurs in both hemispheres simultaneously"
+    ],
+    "answer": "C",
+    "hints": ["Left visual field feeds the right hemisphere; where is language typically located? Which hand does the right hemisphere control?"]
+  },
+
+  {
+    "id": "appsych.consciousness-sleep.mcq.01",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During which stage of sleep is brain activity most similar to wakefulness, and is the stage most associated with vivid dreaming?",
+    "choices": [
+      "Stage 1 NREM (light sleep)",
+      "Stage 2 NREM (sleep spindles)",
+      "Stage 3 NREM (slow-wave sleep)",
+      "REM (rapid eye movement) sleep"
+    ],
+    "answer": "D",
+    "hints": ["This stage is characterized by paralyzed voluntary muscles but very active brain wave patterns."]
+  },
+  {
+    "id": "appsych.consciousness-sleep.mcq.02",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The body's master internal biological clock, which entrains the sleep-wake cycle to environmental light-dark cycles, is located in the:",
+    "choices": [
+      "Suprachiasmatic nucleus (SCN) of the hypothalamus",
+      "Hippocampus of the limbic system",
+      "Cerebellum of the hindbrain",
+      "Prefrontal cortex of the frontal lobe"
+    ],
+    "answer": "A",
+    "hints": ["This small structure sits just above the optic chiasm and directly detects light information."]
+  },
+  {
+    "id": "appsych.consciousness-sleep.mcq.03",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jordan frequently experiences sudden, uncontrollable sleep attacks in the middle of conversations. He also reports episodes of sudden muscle weakness triggered by strong emotions like laughter. Which sleep disorder best fits this description?",
+    "choices": [
+      "Sleep apnea",
+      "Narcolepsy",
+      "Insomnia",
+      "Night terrors"
+    ],
+    "answer": "B",
+    "hints": ["The sudden muscle weakness triggered by emotion is a hallmark feature that distinguishes this disorder."]
+  },
+  {
+    "id": "appsych.consciousness-sleep.mcq.04",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A research participant is woken up each time sleep monitors show she is entering REM sleep. On the following night, under normal sleep conditions, she spends unusually long periods in REM sleep. This pattern is best described as:",
+    "choices": [
+      "Circadian rhythm phase delay caused by lab disruption",
+      "Slow-wave sleep rebound compensating for lost deep sleep",
+      "REM rebound, in which the brain compensates for previously lost REM sleep",
+      "Sleep inertia caused by abrupt awakening from deep sleep"
+    ],
+    "answer": "C",
+    "hints": ["The brain appears to 'keep track' of lost sleep in a specific stage and makes it up later."]
+  },
+  {
+    "id": "appsych.consciousness-sleep.mcq.05",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sam studies through several consecutive nights before his final exams. Beyond fatigue, he notices his reaction time is impaired, his decision-making is poor, and he becomes disproportionately emotional over small frustrations. These effects are most directly attributable to:",
+    "choices": [
+      "Disruption of melatonin secretion by the pineal gland",
+      "Overactivation of the sympathetic branch of the autonomic nervous system",
+      "Excessive cortisol accumulation from the chronic stress of studying",
+      "Sleep deprivation impairing prefrontal cortex function and emotional regulation"
+    ],
+    "answer": "D",
+    "hints": ["The prefrontal cortex, critical for rational decision-making and inhibiting emotional reactions, is especially sensitive to sleep loss."]
+  },
+  {
+    "id": "appsych.consciousness-sleep.mcq.06",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "According to the activation-synthesis theory of dreaming proposed by Hobson and McCarley, dreams are best understood as:",
+    "choices": [
+      "The brain's attempt to interpret and find meaning in random neural signals generated during REM sleep",
+      "Symbolic expressions of repressed unconscious wishes and forbidden desires",
+      "A memory consolidation process that transfers daily experiences into long-term storage during NREM sleep",
+      "Neural maintenance routines that have no psychological meaning or cognitive function"
+    ],
+    "answer": "A",
+    "hints": ["This theory is neurobiological: the brain stem fires randomly; higher brain areas try to make a story from the noise."]
+  },
+
+  {
+    "id": "appsych.sensation-perception.mcq.01",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The process by which sensory receptor cells convert physical energy (such as light, sound waves, or pressure) into neural impulses the brain can process is called:",
+    "choices": [
+      "Sensory adaptation",
+      "Perceptual set",
+      "Transduction",
+      "Accommodation"
+    ],
+    "answer": "C",
+    "hints": ["This is literally a conversion process — one form of energy becoming another."]
+  },
+  {
+    "id": "appsych.sensation-perception.mcq.02",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The minimum intensity of a stimulus that a person can detect on 50 percent of trials is the operational definition of the:",
+    "choices": [
+      "Difference threshold",
+      "Just noticeable difference (JND)",
+      "Signal detection criterion (beta)",
+      "Absolute threshold"
+    ],
+    "answer": "D",
+    "hints": ["The key phrase is minimum detectable level — this defines the edge of detectability for a stimulus type."]
+  },
+  {
+    "id": "appsych.sensation-perception.mcq.03",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A viewer looks at a pattern of dots arranged in a rough circle with gaps between them, yet immediately perceives a complete circular shape. Which Gestalt principle best explains this perception?",
+    "choices": [
+      "Closure",
+      "Proximity",
+      "Continuity",
+      "Figure-ground"
+    ],
+    "answer": "A",
+    "hints": ["The mind fills in missing information to perceive a whole, complete form."]
+  },
+  {
+    "id": "appsych.sensation-perception.mcq.04",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "While riding in a car, Maya notices that nearby telephone poles seem to rush past very quickly, while distant mountains appear to move very slowly or not at all. Maya is making use of which monocular depth cue?",
+    "choices": [
+      "Binocular disparity",
+      "Motion parallax",
+      "Convergence",
+      "Interposition"
+    ],
+    "answer": "B",
+    "hints": ["This cue uses the relative speed of moving objects to judge how far away they are."]
+  },
+  {
+    "id": "appsych.sensation-perception.mcq.05",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An experienced radiologist studies an X-ray and spots a faint shadow that a medical student completely overlooks. The radiologist's perception is guided by years of training, pattern recognition, and expectations about what abnormalities look like. This best illustrates:",
+    "choices": [
+      "Bottom-up processing, because the radiologist's perception is driven by the raw sensory data on the film",
+      "Sensory adaptation, because prolonged exposure to X-rays reduces sensitivity to abnormalities",
+      "Top-down processing, because prior knowledge and expectations guide what the radiologist perceives",
+      "Signal detection theory's criterion shift, because the radiologist adopts a conservative reporting threshold"
+    ],
+    "answer": "C",
+    "hints": ["When existing knowledge shapes what we perceive, the processing flows from mind to senses, not the reverse."]
+  },
+  {
+    "id": "appsych.sensation-perception.mcq.06",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A chef adds a small pinch of salt to a lightly seasoned broth and tasters can just barely detect the difference. According to Weber's Law, which of the following is the most accurate prediction about a more heavily salted broth?",
+    "choices": [
+      "The same small pinch of salt will be equally detectable in the heavily salted broth",
+      "Tasters will always be more sensitive to added salt in strongly flavored broths than in bland ones",
+      "The absolute amount of salt needed to produce a just noticeable difference stays constant regardless of background saltiness",
+      "A proportionally larger amount of salt will be needed to produce a just noticeable difference in the heavily salted broth"
+    ],
+    "answer": "D",
+    "hints": ["Weber's Law states that the JND is a constant ratio of the background stimulus, not a constant absolute amount."]
+  }
+]

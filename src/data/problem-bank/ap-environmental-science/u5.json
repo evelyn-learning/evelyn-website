@@ -1,0 +1,380 @@
+[
+  {
+    "id": "apenvsci.agriculture.mcq.01",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Green Revolution of the mid-20th century most directly increased global food production by:",
+    "choices": [
+      "Introducing high-yield crop varieties alongside synthetic fertilizers and expanded irrigation infrastructure",
+      "Expanding farmland into previously untouched tropical old-growth forests to gain new arable land",
+      "Converting livestock operations to organic polyculture to eliminate synthetic chemical inputs",
+      "Replacing subsistence farming with perennial polyculture systems in developing nations"
+    ],
+    "answer": "A",
+    "hints": ["Think about the three main inputs the Green Revolution added: seed genetics, fertilizer, and water delivery."]
+  },
+  {
+    "id": "apenvsci.agriculture.mcq.02",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer in an arid region switches from flood irrigation to drip irrigation. Which outcome most directly results from this change?",
+    "choices": [
+      "Soil salinization accelerates because salts concentrate near drip emitters at the surface",
+      "Evaporative water loss decreases and water is delivered precisely to root zones, improving water-use efficiency",
+      "Groundwater recharge increases because more water percolates past the root zone to the water table",
+      "Crop yields decline because drip systems cannot supply adequate moisture volume during peak growth"
+    ],
+    "answer": "B",
+    "hints": ["Compare how much water actually reaches the plant roots — versus how much evaporates — in each system."]
+  },
+  {
+    "id": "apenvsci.agriculture.mcq.03",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which agricultural practice most directly leads to soil salinization in arid and semi-arid regions?",
+    "choices": [
+      "Heavy rainfall events that leach calcium from the A horizon and deposit it at the soil surface",
+      "Over-application of nitrogen-fixing cover crops that alter soil mineral chemistry over time",
+      "Use of organic mulch layers that trap dissolved mineral salts within the topsoil",
+      "Repeated flood irrigation that leaves dissolved salts behind as irrigation water evaporates from the soil surface"
+    ],
+    "answer": "D",
+    "hints": ["Think about what happens to the minerals dissolved in irrigation water after the water itself evaporates."]
+  },
+  {
+    "id": "apenvsci.agriculture.mcq.04",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Integrated Pest Management (IPM) differs from conventional pesticide-only programs primarily because IPM:",
+    "choices": [
+      "Schedules pesticide applications at fixed calendar intervals to prevent outbreaks before they can occur",
+      "Relies exclusively on genetically modified crop varieties engineered to resist all major pest species",
+      "Combines biological, cultural, mechanical, and chemical controls, applying pesticides only when pest populations exceed an economic threshold",
+      "Aims to eradicate pest populations entirely rather than managing them at economically acceptable levels"
+    ],
+    "answer": "C",
+    "hints": ["IPM uses monitoring and an economic threshold — chemical control is the last resort, not the first."]
+  },
+  {
+    "id": "apenvsci.agriculture.mcq.05",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following most directly describes the primary environmental concern associated with concentrated animal feeding operations (CAFOs)?",
+    "choices": [
+      "Heavy-metal contamination from mineral feed supplements that leaches into nearby groundwater wells",
+      "Extensive land clearing for expanded pasture that destroys biodiversity in temperate grassland biomes",
+      "Release of waste high in nitrogen and phosphorus into waterways, driving eutrophication and downstream hypoxic zones",
+      "Generation of waste heat from large animal populations that raises regional ambient air temperatures"
+    ],
+    "answer": "C",
+    "hints": ["Consider what nutrients are abundant in animal waste, and what those nutrients do when they enter a river or estuary."]
+  },
+  {
+    "id": "apenvsci.agriculture.mcq.06",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An irrigated wheat-growing region develops white crusty deposits on the soil surface, declining crop yields, and increasingly stunted root systems over several decades of intensive flood irrigation. Which combination of soil degradation processes best explains all three observations?",
+    "choices": [
+      "Nitrogen leaching from over-fertilization combined with soil compaction caused by heavy irrigation machinery",
+      "Soil salinization from evaporative salt concentration combined with waterlogging as a raised water table excludes oxygen from root zones",
+      "Topsoil erosion from field-flooding runoff combined with phosphorus depletion from continuous harvesting",
+      "Soil acidification from nitrogenous fertilizers combined with aluminium toxicity from exposed parent rock material"
+    ],
+    "answer": "B",
+    "hints": ["White surface crusts point to salt accumulation; root stunting without visible disease suggests oxygen deprivation at the root zone."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.mcq.01",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The \"tragedy of the commons\" describes a situation in which:",
+    "choices": [
+      "A government monopolizes a shared resource so completely that private users are excluded from it",
+      "Individual resource users, each acting rationally in their own self-interest, collectively overexploit a shared resource until it is degraded or depleted",
+      "Common-pool resources remain sustainable because each user voluntarily restrains their own harvest",
+      "A multinational corporation purchases exclusive rights to a public resource and restricts access to increase scarcity"
+    ],
+    "answer": "B",
+    "hints": ["Garrett Hardin described individual herdsmen adding cattle to a shared pasture — each gains, but all eventually lose."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.mcq.02",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In commercial fishing, the term \"bycatch\" refers to:",
+    "choices": [
+      "Fish harvested legally in international waters beyond a nation's exclusive economic zone",
+      "The portion of a catch sold below market value because individual fish are undersized",
+      "Overcapacity in a fishing fleet that allows vessels to haul more than their assigned quota",
+      "Non-target organisms — including undersized fish, sea turtles, and marine mammals — inadvertently caught and typically discarded"
+    ],
+    "answer": "D",
+    "hints": ["Bycatch is unintentional — species or sizes the fisher did not set out to catch."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.mcq.03",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In fisheries management, the Maximum Sustainable Yield (MSY) is the harvest level that:",
+    "choices": [
+      "Completely eliminates fishing pressure so a depleted stock can fully recover within ten years",
+      "Sets annual catch equal to the historical 20-year average regardless of current stock size",
+      "Can be removed from a population indefinitely because it matches the population's maximum net growth rate",
+      "Maximizes short-term commercial revenue for the fishing fleet without regard to long-term stock viability"
+    ],
+    "answer": "C",
+    "hints": ["MSY occurs where the logistic growth curve is steepest — roughly at half of carrying capacity."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.numeric.01",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A fisheries biologist models a tuna stock using logistic growth. The stock's carrying capacity (K) is 8,000 metric tons and its intrinsic growth rate (r) is 0.40 per year. Under the logistic growth model, the Maximum Sustainable Yield is given by MSY = r × K / 4. Calculate the MSY in metric tons per year.",
+    "answer": "800",
+    "hints": ["Substitute r = 0.40 and K = 8,000 into MSY = r × K / 4."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.mcq.04",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An Exclusive Economic Zone (EEZ) extending 200 nautical miles from a nation's coastline primarily serves to:",
+    "choices": [
+      "Designate a no-take marine protected area where all extraction activities are permanently banned",
+      "Allow all foreign vessels to fish freely within the zone in exchange for a licensing fee",
+      "Distribute marine resources equally among all neighboring coastal states through binding treaty",
+      "Grant the coastal nation sovereign rights to manage and exploit marine resources within the zone, including the authority to set catch limits"
+    ],
+    "answer": "D",
+    "hints": ["EEZs were established under UNCLOS — think about who controls access to resources in that zone."]
+  },
+  {
+    "id": "apenvsci.commons-fishing-footprint.mcq.05",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A nation provides fuel and gear subsidies to its commercial fishing fleet, allowing vessels to operate profitably even when fish stocks are severely depleted. Which analysis best explains why these subsidies accelerate overfishing?",
+    "choices": [
+      "By reducing operating costs below the economic break-even point, subsidies allow fleets to sustain fishing effort well beyond MSY even as falling stock densities would otherwise make fishing economically unviable",
+      "Subsidies internalize the negative externality of overfishing by requiring fleet operators to pay the true social cost of each catch",
+      "They shift the market demand curve for fish downward, reducing consumer prices and therefore reducing the incentive to fish",
+      "They function as Pigouvian taxes that correct the open-access market failure by discouraging excess entry into the fishery"
+    ],
+    "answer": "A",
+    "hints": ["Without subsidies, declining catch rates would eventually make fishing unprofitable — subsidies eliminate that natural economic brake."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.01",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Clearcutting differs from selective cutting primarily in that clearcutting:",
+    "choices": [
+      "Removes only diseased and economically unproductive trees to improve stand health",
+      "Harvests trees in a rotating age-class pattern so that multiple generations coexist simultaneously",
+      "Removes all trees from an area at one time, regardless of species, size, or age",
+      "Leaves a small number of large seed trees per hectare to promote natural regeneration"
+    ],
+    "answer": "C",
+    "hints": ["The prefix 'clear' describes what the landscape looks like after the harvest is complete."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.02",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Compared to underground (subsurface) mining, surface mining typically:",
+    "choices": [
+      "Has lower worker fatality rates per ton of mineral extracted but causes substantially greater habitat loss and land-surface disturbance",
+      "Produces less land disturbance per ton of mineral because operations are confined to a single access shaft",
+      "Requires significantly more labor hours per unit of output due to the complexity of deep excavation",
+      "Is legally restricted to ore deposits no deeper than 30 meters beneath the surface"
+    ],
+    "answer": "A",
+    "hints": ["Surface mining opens entire landscapes to excavation; consider the tradeoff between worker safety below ground and surface habitat above."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.03",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Acid mine drainage forms when:",
+    "choices": [
+      "Acidic precipitation dissolves carbonate rock in limestone formations, lowering stream pH in downstream watersheds",
+      "Sulfur-bearing minerals in exposed mine spoil react with water and oxygen to produce sulfuric acid that drains into nearby waterways",
+      "Anaerobic bacteria in flooded mine shafts produce hydrogen sulfide that reacts with surface groundwater",
+      "Diesel-powered mining equipment releases combustion acids directly into surrounding soils"
+    ],
+    "answer": "B",
+    "hints": ["Many coal and metal deposits contain iron sulfide (pyrite); exposure to air and water oxidizes the sulfur compound."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.04",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best explains why selective cutting generally has fewer ecological impacts than clearcutting on the same forested area?",
+    "choices": [
+      "Selective cutting maintains canopy cover, limiting soil erosion, preserving interior forest microclimate, and retaining habitat for species that cannot tolerate open-canopy conditions",
+      "Selective cutting generates higher timber revenue per hectare, giving landowners financial incentive to invest in habitat conservation programs",
+      "Selective cutting eliminates the risk of wildfire because standing trees prevent the accumulation of dry slash debris on the forest floor",
+      "Selective cutting produces a uniform-age stand structure that is more resistant to pest and disease outbreaks than uneven-age forests"
+    ],
+    "answer": "A",
+    "hints": ["Think about what a continuous canopy provides for soil stability, temperature regulation, and wildlife habitat."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.05",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mountaintop removal coal mining in Appalachian regions generates large amounts of overburden placed into adjacent valley fills. The primary environmental concern associated with valley fills is:",
+    "choices": [
+      "Release of radioactive radon gas from exposed coal seams into surrounding residential communities",
+      "Increased methane emissions from vegetation buried and decomposing beneath the fill material",
+      "Burial of headwater streams, destroying aquatic habitats and fundamentally altering downstream hydrology and water chemistry",
+      "Disruption of aquifer recharge zones beneath mountain ridges, reducing regional groundwater supplies"
+    ],
+    "answer": "C",
+    "hints": ["Headwater streams are the starting points of entire drainage networks — burying them affects everything downstream."]
+  },
+  {
+    "id": "apenvsci.forestry-mining.mcq.06",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The U.S. Surface Mining Control and Reclamation Act (SMCRA) requires that operators who mine coal at the surface must reclaim the disturbed land after extraction. Which of the following most accurately describes SMCRA reclamation requirements?",
+    "choices": [
+      "Paying a flat fee per acre disturbed into a federal fund that purchases conservation easements on unrelated land elsewhere",
+      "Converting all former mine sites into industrial parks or residential developments within five years of mine closure",
+      "Flooding abandoned pit mines with treated wastewater to create permanent artificial reservoir systems",
+      "Restoring the land to its approximate original contour, revegetating with appropriate species, and implementing controls to prevent acid mine drainage and erosion"
+    ],
+    "answer": "D",
+    "hints": ["Reclamation under SMCRA has both a landform restoration component and a biological restoration component."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.01",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Urban sprawl is best characterized as:",
+    "choices": [
+      "High-density, walkable redevelopment of vacant lots and brownfields within existing city limits",
+      "Construction of affordable housing in infill sites near existing transit corridors",
+      "Municipal service consolidation across adjacent jurisdictions to reduce per-capita infrastructure costs",
+      "Low-density, outward expansion of developed land into surrounding rural and natural areas, typically dependent on private automobile infrastructure"
+    ],
+    "answer": "D",
+    "hints": ["Sprawl implies spreading outward — focus on the direction, density, and transportation dependency of the growth pattern."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.02",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As a watershed becomes increasingly covered with impervious surfaces such as roads, rooftops, and parking lots, which hydrological change is most expected?",
+    "choices": [
+      "Decreased peak stream flow because paved surfaces slow runoff and allow gradual percolation into the soil",
+      "Increased groundwater recharge because storm drains channel rainfall into underground infiltration galleries",
+      "Increased peak stream flow and reduced groundwater recharge, as infiltration is replaced by rapid surface runoff",
+      "Decreased surface runoff because impervious surfaces deflect precipitation away from natural stream channels"
+    ],
+    "answer": "C",
+    "hints": ["Impervious means water cannot pass through — trace what happens to a raindrop landing on pavement versus on a vegetated meadow."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.03",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The urban heat island effect is primarily caused by:",
+    "choices": [
+      "Higher ground-level ozone concentrations in city air that absorb additional solar ultraviolet radiation near the surface",
+      "Dark impervious surfaces absorbing and re-emitting solar energy as heat, combined with waste heat from vehicles and buildings and reduced evapotranspiration relative to vegetated land",
+      "Taller buildings that block prevailing winds and trap industrial carbon dioxide emissions at street level",
+      "Elevated particulate matter concentrations that scatter incoming solar radiation back onto city surfaces"
+    ],
+    "answer": "B",
+    "hints": ["Compare a black asphalt parking lot to a forest on a hot sunny day — both absorb sunlight, but they differ greatly in how they release that energy."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.04",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city installs permeable pavement, rain gardens, and bioswales throughout a residential neighborhood. The primary environmental benefit of these green infrastructure practices is to:",
+    "choices": [
+      "Reduce the urban heat island effect by increasing the reflectivity (albedo) of all paved surfaces across the watershed",
+      "Permanently eliminate stormwater from entering any portion of the municipal wastewater treatment system",
+      "Slow, filter, and infiltrate stormwater runoff on-site, reducing downstream peak flows and pollutant loads in receiving waterways",
+      "Generate renewable energy through piezoelectric sensors embedded beneath permeable pavement surfaces"
+    ],
+    "answer": "C",
+    "hints": ["All three practices intercept runoff before it reaches a storm drain — think about where the water goes instead."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.05",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Many older U.S. cities have combined sewer systems in which stormwater and sanitary sewage travel through the same pipes. During heavy rainfall events, these systems commonly:",
+    "choices": [
+      "Divert all combined flow into deep-rock injection wells to prevent surface flooding in low-lying neighborhoods",
+      "Automatically route excess combined flow into emergency holding ponds located in city parks",
+      "Send overflow to dedicated treatment reservoirs that permanently retain all combined wastewater",
+      "Discharge untreated mixtures of stormwater and raw sewage directly into nearby rivers, harbors, or coastal waters"
+    ],
+    "answer": "D",
+    "hints": ["These events are literally called 'combined sewer overflows' (CSOs) — the key word is overflow, and the question is where that overflow goes."]
+  },
+  {
+    "id": "apenvsci.urbanization-water.mcq.06",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A coastal city's hydrological model predicts that a proposed residential development on a forested floodplain will increase peak flood flows in the adjacent river by 35% during major storm events. Which planning requirement would most effectively address this impact while still permitting some development to proceed?",
+    "choices": [
+      "Requiring all new buildings to elevate their first floors at least 0.5 meters above the current 100-year flood elevation",
+      "Mandating hydrologic neutrality — the development must retain or infiltrate sufficient stormwater on-site so that post-development peak flows do not exceed pre-development levels",
+      "Replacing the on-site retention requirement with a financial fee paid into a regional flood-barrier infrastructure fund",
+      "Restricting impervious surface coverage to no more than 80 percent of the total site area"
+    ],
+    "answer": "B",
+    "hints": ["The problem is a 35% increase in peak flows; the most direct fix targets peak flows explicitly, not just building elevation or surface area."]
+  }
+]

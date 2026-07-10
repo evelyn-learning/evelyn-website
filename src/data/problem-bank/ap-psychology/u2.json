@@ -1,0 +1,486 @@
+[
+  {
+    "id": "appsych.memory-models.mcq.01",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which model of memory proposes three distinct sequential stages: sensory memory, short-term memory, and long-term memory?",
+    "choices": [
+      "Working memory model",
+      "Levels-of-processing framework",
+      "Connectionist network model",
+      "Multi-store (Atkinson-Shiffrin) model"
+    ],
+    "answer": "D",
+    "hints": ["This model was proposed in 1968 and is named after its two creators."]
+  },
+  {
+    "id": "appsych.memory-models.mcq.02",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "George Miller's concept of the 'magic number 7 plus or minus 2' refers to the typical capacity of which memory store?",
+    "choices": [
+      "Sensory (iconic) memory",
+      "Short-term (working) memory",
+      "Long-term memory",
+      "Episodic memory"
+    ],
+    "answer": "B",
+    "hints": ["This store holds information for roughly 15 to 30 seconds without rehearsal."]
+  },
+  {
+    "id": "appsych.memory-models.mcq.03",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student keeps a new phone number in mind by silently repeating it to herself over and over until she can dial it. This strategy best illustrates:",
+    "choices": [
+      "Elaborative rehearsal",
+      "Chunking",
+      "Maintenance rehearsal",
+      "Semantic encoding"
+    ],
+    "answer": "C",
+    "hints": ["This technique keeps information active in short-term memory but does not create deep or meaningful connections."]
+  },
+  {
+    "id": "appsych.memory-models.mcq.04",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "According to the levels-of-processing framework (Craik and Lockhart), which study strategy will produce the strongest long-term retention of new vocabulary words?",
+    "choices": [
+      "Copying each word five times in neat handwriting",
+      "Counting the number of vowels in each word",
+      "Reading each word aloud twice from the list",
+      "Writing an original sentence that uses each word in a personally meaningful context"
+    ],
+    "answer": "D",
+    "hints": ["Deeper, more meaningful (semantic) processing creates stronger memory traces than shallow, surface-level processing."]
+  },
+  {
+    "id": "appsych.memory-models.mcq.05",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Baddeley's working memory model replaces the concept of a single short-term memory store with multiple interacting components. Which of the following is NOT one of those components?",
+    "choices": [
+      "Phonological loop",
+      "Visuospatial sketchpad",
+      "Central executive",
+      "Semantic network buffer"
+    ],
+    "answer": "D",
+    "hints": ["Baddeley identified three original components — and later added an episodic buffer — but never a semantic network buffer."]
+  },
+  {
+    "id": "appsych.memory-models.mcq.06",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Mia studies new Spanish vocabulary by linking each word to a vivid mental image and a personal story. Her classmate simply reads the same list repeatedly for an equal amount of time. Mia is likely to remember more words because:",
+    "choices": [
+      "Her phonological loop retains the sounds of Spanish words longer than silent reading does",
+      "She is using elaborative encoding that creates deeper, more interconnected memory traces",
+      "Repeated visual exposure to a word list is ineffective only for non-native speakers",
+      "Mental imagery transfers words directly into long-term memory without short-term storage"
+    ],
+    "answer": "B",
+    "hints": ["Think about what 'depth of processing' means — connecting new information to existing knowledge and personal meaning."]
+  },
+
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.01",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Knowing how to ride a bicycle — a skill that operates largely outside conscious awareness once learned — is stored as which type of long-term memory?",
+    "choices": [
+      "Semantic memory",
+      "Episodic memory",
+      "Procedural memory",
+      "Priming"
+    ],
+    "answer": "C",
+    "hints": ["This memory type stores 'how to do' something rather than 'what' or 'when.'"]
+  },
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.02",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes the serial position effect in free recall of a word list?",
+    "choices": [
+      "Words in the middle of a list are recalled better than those at the beginning or end",
+      "Words at the beginning and at the end of a list are recalled better than middle words",
+      "Longer lists are always harder to recall in their entirety than shorter lists",
+      "Emotionally charged words are recalled better than neutral words regardless of list position"
+    ],
+    "answer": "B",
+    "hints": ["The primacy effect (beginning) and recency effect (end) together produce a U-shaped recall pattern."]
+  },
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.03",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student who studied chemistry in a coffee shop notices she recalls the material more easily when taking a practice quiz in a similar cafe environment than in a silent exam hall. This best illustrates:",
+    "choices": [
+      "Context-dependent (encoding specificity) memory",
+      "The serial position effect",
+      "State-dependent memory",
+      "The primacy effect"
+    ],
+    "answer": "A",
+    "hints": ["The external physical environment during encoding matched the environment during retrieval."]
+  },
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.04",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a night of cramming, Darnell easily identifies correct answers on a multiple-choice test but struggles badly on a short-answer section covering the same material. The most likely explanation is:",
+    "choices": [
+      "Recognition requires less retrieval effort than recall because the test itself provides memory cues",
+      "Recognition requires deeper processing than recall at the time of encoding",
+      "Multiple-choice tests measure procedural memory while short-answer tests measure semantic memory",
+      "Recall is an implicit memory task while recognition is an explicit memory task"
+    ],
+    "answer": "A",
+    "hints": ["On multiple-choice, the correct answer is literally present on the page — acting as a powerful retrieval cue."]
+  },
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.05",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A researcher tests free recall of a 20-word list immediately after presentation and again after a 30-minute filled delay. Both times, primacy (recall of the first words) is equally strong, but recency (recall of the last words) virtually disappears in the delayed test. The best explanation is:",
+    "choices": [
+      "Proactive interference displaced the last words before they could be encoded",
+      "Semantic encoding failed for words presented at the end of the list",
+      "The recency effect depends on items still held in working memory, which fades during a delay",
+      "Retroactive interference during the 30-minute delay erased memory for the final words"
+    ],
+    "answer": "C",
+    "hints": ["Primacy items had time for rehearsal and consolidation into long-term memory; recency items rely on short-term storage that does not survive a delay."]
+  },
+  {
+    "id": "appsych.memory-storage-retrieval.mcq.06",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Long-term potentiation (LTP) is widely regarded as a synaptic basis of learning and memory formation. Which statement most accurately describes LTP?",
+    "choices": [
+      "The gradual weakening of synaptic connections when a neuron fires infrequently over time",
+      "The inhibition of competing neural pathways to sharpen memory consolidation",
+      "The transfer of information from sensory registers into short-term storage",
+      "The strengthening of synaptic connections following repeated or intense co-activation of neurons"
+    ],
+    "answer": "D",
+    "hints": ["'Neurons that fire together, wire together' is the informal summary of this phenomenon."]
+  },
+
+  {
+    "id": "appsych.memory-forgetting.mcq.01",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Ebbinghaus's forgetting curve illustrates that, after learning a list of nonsense syllables, memory loss follows which pattern?",
+    "choices": [
+      "Memory declines gradually and at a steady, linear rate over time",
+      "Most forgetting occurs rapidly soon after learning, then the rate of loss slows considerably",
+      "Emotional memories are retained perfectly while neutral memories decay at a constant rate",
+      "Forgetting occurs only when interfering information is learned afterward"
+    ],
+    "answer": "B",
+    "hints": ["Ebbinghaus plotted retention over days — the curve drops steeply at first, then flattens out."]
+  },
+  {
+    "id": "appsych.memory-forgetting.mcq.02",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After spending a semester learning French, Maya finds it harder to recall the Spanish she studied in high school. Her new French learning is interfering with her older Spanish memories. This is an example of:",
+    "choices": [
+      "Retroactive interference",
+      "Proactive interference",
+      "Decay theory",
+      "Source amnesia"
+    ],
+    "answer": "A",
+    "hints": ["New learning working backward to disrupt older memories — think 'retro' meaning backward."]
+  },
+  {
+    "id": "appsych.memory-forgetting.mcq.03",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Carlos drove a manual-transmission car for years before switching to an automatic. He occasionally hits the floor searching for a clutch pedal that is no longer there, because his old driving habits disrupt his new routine. This best illustrates:",
+    "choices": [
+      "Retroactive interference",
+      "Motivated forgetting",
+      "Proactive interference",
+      "The misinformation effect"
+    ],
+    "answer": "C",
+    "hints": ["Old learning working forward to disrupt new performance — think 'pro' meaning forward."]
+  },
+  {
+    "id": "appsych.memory-forgetting.mcq.04",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After witnessing a minor car collision, Tasha is shown photos and asked, 'How fast was the green car traveling?' even though she clearly saw that the car was blue. When interviewed a week later, Tasha confidently recalls seeing a green car. This outcome is best explained by:",
+    "choices": [
+      "Retroactive interference caused by unrelated daily events during the week",
+      "Source amnesia resulting from damage to Tasha's hippocampus",
+      "Decay of her original sensory memory trace over one week",
+      "The misinformation effect, in which post-event information altered her original memory"
+    ],
+    "answer": "D",
+    "hints": ["Elizabeth Loftus's eyewitness testimony research demonstrated how leading questions distort original memories."]
+  },
+  {
+    "id": "appsych.memory-forgetting.mcq.05",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Following a serious brain injury, Dmitri can vividly recall events from his life before the accident, but he is unable to form any new long-term memories going forward. Dmitri's condition is best described as:",
+    "choices": [
+      "Retrograde amnesia",
+      "Anterograde amnesia",
+      "Proactive amnesia",
+      "Source amnesia"
+    ],
+    "answer": "B",
+    "hints": ["'Antero' means forward in time — he cannot encode new memories from the point of injury onward."]
+  },
+  {
+    "id": "appsych.memory-forgetting.mcq.06",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In an interference experiment, Group A learns Word List 1, then Word List 2, and is finally tested on List 1. Group B learns only Word List 1 and spends equivalent time on an unrelated non-verbal task before being tested on List 1. Group A recalls significantly fewer List 1 words. Elapsed time between learning List 1 and the test is equal for both groups. Which variable best accounts for Group A's inferior recall?",
+    "choices": [
+      "Decay — more time passed before Group A was tested on List 1",
+      "Retrieval failure — no contextual cues were provided during the test",
+      "Retroactive interference — learning List 2 disrupted Group A's memory for List 1",
+      "Proactive interference — List 1 disrupted Group A's ability to encode List 2"
+    ],
+    "answer": "C",
+    "hints": ["The critical difference between groups is that Group A encoded a second verbal list AFTER List 1; elapsed time was equated, ruling out decay."]
+  },
+
+  {
+    "id": "appsych.thinking-language.mcq.01",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In cognitive psychology, a 'prototype' is best defined as:",
+    "choices": [
+      "The first instance of a concept a person ever encountered",
+      "A logical rule that specifies the necessary and sufficient features of a category",
+      "The most typical or representative example of a category",
+      "A step-by-step procedure guaranteed to produce the correct solution to a problem"
+    ],
+    "answer": "C",
+    "hints": ["A robin is a more prototypical bird than a penguin is, even though both are technically birds."]
+  },
+  {
+    "id": "appsych.thinking-language.mcq.02",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After flipping a fair coin and getting heads seven times in a row, Marcus concludes that tails is now 'overdue' and must appear on the next flip. This reasoning best illustrates:",
+    "choices": [
+      "The availability heuristic",
+      "The representativeness heuristic",
+      "Functional fixedness",
+      "Confirmation bias"
+    ],
+    "answer": "B",
+    "hints": ["Marcus is judging probability based on how well the outcome matches his mental model of what a random sequence should look like."]
+  },
+  {
+    "id": "appsych.thinking-language.mcq.03",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An engineer is stuck in his workshop and cannot figure out how to prop open a heavy door while his hands are full. Several large wrenches are nearby, but he never considers using one as a doorstop because he only thinks of wrenches as tightening tools. This is a classic demonstration of:",
+    "choices": [
+      "Mental set",
+      "Confirmation bias",
+      "Algorithm failure",
+      "Functional fixedness"
+    ],
+    "answer": "D",
+    "hints": ["He is unable to perceive the object in a new, unconventional functional role."]
+  },
+  {
+    "id": "appsych.thinking-language.mcq.04",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Participants in a study are significantly more willing to undergo a medical procedure when told it has a 90 percent survival rate than when told it has a 10 percent mortality rate — even though both statistics convey identical information. This finding is best explained by:",
+    "choices": [
+      "The framing effect",
+      "The availability heuristic",
+      "The representativeness heuristic",
+      "Confirmation bias"
+    ],
+    "answer": "A",
+    "hints": ["How information is presented — not just the information itself — can change a person's decision."]
+  },
+  {
+    "id": "appsych.thinking-language.mcq.05",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Noam Chomsky argued that children acquire language so rapidly and universally that imitation and reinforcement alone cannot explain it. He proposed that humans are born with an innate:",
+    "choices": [
+      "Critical period that closes by age 12 and contains no structural grammar",
+      "Tendency to shape language exclusively through operant conditioning",
+      "Language acquisition device (LAD) that is pre-wired for universal grammar",
+      "Phonological loop dedicated to processing and storing speech sounds"
+    ],
+    "answer": "C",
+    "hints": ["Chomsky's nativist position holds that a biologically built-in grammar-learning mechanism accounts for children's rapid language acquisition."]
+  },
+  {
+    "id": "appsych.thinking-language.mcq.06",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Sapir-Whorf hypothesis (linguistic relativity) proposes that:",
+    "choices": [
+      "All human languages share identical deep grammatical structures, making thought universal across cultures",
+      "Language influences or shapes thought, so speakers of different languages may perceive and categorize the world differently",
+      "Children must develop a concept internally before they can acquire words that label it",
+      "Universal color perception is identical across all cultures regardless of how many color terms a language has"
+    ],
+    "answer": "B",
+    "hints": ["The classic example is that languages with finer-grained vocabulary for certain distinctions may help their speakers notice those distinctions more readily."]
+  },
+
+  {
+    "id": "appsych.intelligence.mcq.01",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Charles Spearman observed that people who score high on one type of mental ability test tend to score high on all others as well. He attributed this pattern to a single underlying factor he called:",
+    "choices": [
+      "Fluid intelligence",
+      "Crystallized intelligence",
+      "g (general intelligence)",
+      "Executive function"
+    ],
+    "answer": "C",
+    "hints": ["Spearman used factor analysis across many cognitive tasks and found this one broad factor common to all of them."]
+  },
+  {
+    "id": "appsych.intelligence.mcq.02",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The ability to reason through novel, unfamiliar problems and think flexibly — an ability that tends to decline with advancing age in adulthood — is best described as:",
+    "choices": [
+      "Fluid intelligence",
+      "Crystallized intelligence",
+      "Practical (contextual) intelligence",
+      "Verbal-linguistic intelligence"
+    ],
+    "answer": "A",
+    "hints": ["'Fluid' suggests flexible, in-the-moment reasoning; 'crystallized' refers to accumulated knowledge and skills."]
+  },
+  {
+    "id": "appsych.intelligence.mcq.03",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Howard Gardner challenged traditional intelligence testing by arguing that:",
+    "choices": [
+      "All intelligent behavior can ultimately be reduced to a single general factor (g)",
+      "Only verbal and mathematical abilities qualify as genuine intelligence",
+      "Intelligence is almost entirely fixed by genetic inheritance and cannot be developed",
+      "Human intelligence consists of several distinct and independent abilities, such as musical, bodily-kinesthetic, and interpersonal intelligence"
+    ],
+    "answer": "D",
+    "hints": ["Gardner was influenced by the observation that brain injury can selectively eliminate one ability while leaving others fully intact."]
+  },
+  {
+    "id": "appsych.intelligence.mcq.04",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A newly developed intelligence test yields nearly identical scores when the same individuals retake it under identical conditions. However, the scores show no meaningful correlation with academic grades, teacher ratings, or any other independent measure of intellectual performance. This test has:",
+    "choices": [
+      "High validity and low reliability",
+      "High reliability and low validity",
+      "Both high reliability and high validity",
+      "Neither reliability nor validity"
+    ],
+    "answer": "B",
+    "hints": ["Reliability means consistent results; validity means the test actually measures what it claims to measure."]
+  },
+  {
+    "id": "appsych.intelligence.mcq.05",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In classic stereotype threat research, students from a group targeted by a negative intellectual stereotype scored lower on a challenging test when the stereotype was made salient immediately before testing. This finding most directly implies that:",
+    "choices": [
+      "Standardized intelligence tests are inherently free of situational influences",
+      "Members of stereotyped groups always underperform regardless of testing conditions",
+      "Awareness of a negative group stereotype can impair performance by creating anxiety and diverting cognitive resources",
+      "Stereotype threat affects verbal reasoning only and not quantitative problem-solving"
+    ],
+    "answer": "C",
+    "hints": ["Steele and Aronson found the gap appeared when the stereotype was made relevant — control groups without the prime showed no performance difference."]
+  },
+  {
+    "id": "appsych.intelligence.mcq.06",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Average IQ scores have risen substantially in many countries over the past century — a trend known as the Flynn Effect. Which explanation do psychologists most widely accept for this generational increase?",
+    "choices": [
+      "Improvements in nutrition, education, exposure to cognitively stimulating environments, and growing familiarity with abstract test-taking",
+      "Accumulated genetic mutations in intelligence-related alleles across generations",
+      "IQ tests were intentionally redesigned to be progressively easier in order to reduce score variance",
+      "The official definition of intelligence was formally broadened to include emotional and social intelligence"
+    ],
+    "answer": "A",
+    "hints": ["The gains occurred far too rapidly across generations to be explained by genetic change — environmental improvements are the leading explanation."]
+  }
+]
