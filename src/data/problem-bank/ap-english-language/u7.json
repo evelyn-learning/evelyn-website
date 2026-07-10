@@ -1,0 +1,173 @@
+[
+  {
+    "id": "apenglang.nuance-qualification-concession.mcq.01",
+    "loId": "apenglang.nuance-qualification-concession",
+    "cedCode": "AP-ENGLANG-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's draft claims: \"Every person who uses social media loses the ability to think for themselves.\" Which revision best qualifies this overstated claim without gutting its force into vagueness?",
+    "choices": [
+      "Some people who use social media might possibly, in certain cases, lose some ability to think for themselves, or maybe not.",
+      "For many heavy users, social media's algorithm-driven feeds narrow the range of viewpoints they encounter, weakening the habit of independent judgment.",
+      "Social media use is an extraordinarily complex, multifaceted phenomenon that influences human cognition in countless different ways.",
+      "While social media can affect how people think, it also has plenty of benefits, so its overall effect on independent thought balances out."
+    ],
+    "answer": "B",
+    "hints": [
+      "An overstated absolute ('every person') is refuted by a single counterexample — look for the choice that names a specific population and mechanism instead.",
+      "Watch for a choice that just drains the claim of content with vague uncertainty ('might possibly... or maybe not') — that's hedging, not qualifying."
+    ]
+  },
+  {
+    "id": "apenglang.nuance-qualification-concession.mcq.02",
+    "loId": "apenglang.nuance-qualification-concession",
+    "cedCode": "AP-ENGLANG-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A draft claims: \"Standardized tests always measure students' true intelligence accurately.\" Which revision best qualifies this absolute claim while keeping it a clear, arguable position?",
+    "choices": [
+      "Standardized tests might sort of measure something about students, though it's hard to say exactly what or how much.",
+      "Testing is a complicated topic that means different things to different people in different educational contexts.",
+      "Standardized tests never measure anything meaningful about what a student can actually do.",
+      "Standardized tests measure certain academic skills reasonably well, though they capture only a narrow slice of what 'intelligence' means."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the option that names specifically what the tests DO measure, not just softens the claim into uncertainty.",
+      "Swapping one absolute ('always') for its opposite absolute ('never') is not qualification."
+    ]
+  },
+  {
+    "id": "apenglang.nuance-qualification-concession.mcq.03",
+    "loId": "apenglang.nuance-qualification-concession",
+    "cedCode": "AP-ENGLANG-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft claims: \"This school's later start time has completely eliminated student tardiness and improved every student's grades.\" Which revision both scopes the claim to what the evidence supports AND makes a genuine concession about the claim's own limits?",
+    "choices": [
+      "The later start time has helped some students in some ways, though results vary depending on many different individual factors.",
+      "While the later start time helps most students, critics argue it fails to address the real causes of student stress.",
+      "The later start time has reduced tardiness for most students and modestly improved grades for many, though a few students with early morning commitments now arrive more rushed and stressed.",
+      "The later start time is clearly the single most important reform this school has made in the past decade."
+    ],
+    "answer": "C",
+    "hints": [
+      "A genuine concession names a real limit in the writer's OWN claim, not an opponent's objection — one choice does the latter instead.",
+      "The correct choice should still say something specific enough that a reader could disagree with it — check that the vaguer-sounding choices haven't drained out all the specificity."
+    ]
+  },
+  {
+    "id": "apenglang.complex-reasoning.mcq.01",
+    "loId": "apenglang.complex-reasoning",
+    "cedCode": "AP-ENGLANG-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A draft reasons: \"The coach benched the star player, so the coach clearly doesn't value winning.\" Which revision adds genuine complexity to this reasoning instead of just restating the obvious first link?",
+    "choices": [
+      "Benching the star player suggests the coach is willing to trade a short-term shot at winning for a longer-term message about accountability that could shape the team's culture beyond this single game.",
+      "The coach benched the star player, which shows that the coach made a decision about who plays in this particular game.",
+      "In today's complicated athletic landscape, coaching decisions reflect numerous multifaceted pressures and considerations.",
+      "The coach probably benched the player for some reason, though it's really impossible to know what any coach is thinking."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether the reasoning goes one step past the first plausible link, to a further consequence a less careful reader would miss.",
+      "A restatement of the same fact in different words isn't complexity, and neither is retreating into 'we can't really know.'"
+    ]
+  },
+  {
+    "id": "apenglang.complex-reasoning.mcq.02",
+    "loId": "apenglang.complex-reasoning",
+    "cedCode": "AP-ENGLANG-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A draft reasons: \"The company apologized for the data breach, so the company clearly cares about its customers.\" Which revision traces the implication a further step, rather than stopping at the first plausible link?",
+    "choices": [
+      "The company's apology proves beyond doubt that it deeply and sincerely cares about every one of its customers.",
+      "The apology, arriving only after the breach became public, implies the company's concern is bound up with reputational damage control as much as customer welfare — a tension the statement alone doesn't resolve.",
+      "Issuing apologies has become a common and expected part of corporate crisis communication in the modern business world.",
+      "The apology might mean the company cares, or it might not; it's honestly impossible to say either way."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the choice that names a tension the first-level claim creates, rather than simply asserting the first-level claim more forcefully or retreating from it.",
+      "A generic fact about how corporations usually behave doesn't trace what THIS apology implies."
+    ]
+  },
+  {
+    "id": "apenglang.situating-in-context.mcq.01",
+    "loId": "apenglang.situating-in-context",
+    "cedCode": "AP-ENGLANG-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's essay argues: \"Our town should replace the aging bridge with a new pedestrian walkway.\" Which closing sentence best situates this specific proposal in a genuine broader context, rather than a generic gesture that could close any essay?",
+    "choices": [
+      "In the end, this issue shows that infrastructure is important and affects everyone in the community.",
+      "This proposal, like all human endeavors throughout history, reflects our species' eternal struggle between progress and tradition.",
+      "This bridge decision is the latest round in a debate the town has had since the 1960s highway expansion — how much of its shared infrastructure should serve cars versus people on foot.",
+      "There are many perspectives on bridges, and reasonable people can disagree about infrastructure spending."
+    ],
+    "answer": "C",
+    "hints": [
+      "Try the 'untransferable test': could the sentence close an essay on a completely different topic without changing a word? If yes, it's too generic.",
+      "The strongest choice names a specific, dated local history the immediate proposal actually continues — not a claim about all of humanity."
+    ]
+  },
+  {
+    "id": "apenglang.situating-in-context.mcq.02",
+    "loId": "apenglang.situating-in-context",
+    "cedCode": "AP-ENGLANG-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An essay claims: \"The novel's ending, in which the protagonist chooses silence over confession, reflects a specific failure of nerve.\" Which sentence best situates this specific literary claim within a genuine broader context?",
+    "choices": [
+      "This shows that literature often deals with difficult themes that speak to readers everywhere.",
+      "Silence, confession, guilt, and redemption are universal themes found in nearly every work of literature ever written.",
+      "Some readers might interpret the ending as a failure of nerve, while others might see it quite differently, and both readings have merit.",
+      "The protagonist's silence echoes a pattern the novel traces across three generations of this family, in which each generation's most consequential choices happen in withheld words rather than in dramatic action."
+    ],
+    "answer": "D",
+    "hints": [
+      "A real broader-context sentence names a specific pattern inside THIS text or history, not universal literary themes true of nearly every novel.",
+      "Watch for a choice that just gestures at 'different readings are possible' without connecting to any larger frame at all — that's not situating, that's evasion."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-risk.mcq.01",
+    "loId": "apenglang.rhetorical-risk",
+    "cedCode": "AP-ENGLANG-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A writer is drafting an essay criticizing a wasteful bureaucratic process and is choosing how to open it. Which choice represents an effective, controlled rhetorical risk rather than an unclear or overwrought one?",
+    "choices": [
+      "Open with an escalating cascade of exclamation points and rhetorical questions to make unmistakably clear how upset the writer is!!!",
+      "Open with a plain, literal sentence stating that the process is inefficient and ought to be reformed.",
+      "Sustain a deadpan, official-memo voice throughout the opening paragraphs — praising the committee's 'thorough sixteen-step form' with a straight face — before letting the absurdity of the process speak for itself.",
+      "Open in a sarcastic tone for one sentence, then shift to sincere outrage, then settle into a formal academic register for the rest of the paragraph."
+    ],
+    "answer": "C",
+    "hints": [
+      "A controlled risk commits to one voice and sustains it long enough for the reader to recognize the gap between surface and meaning.",
+      "One choice isn't risky at all (it's the safe, literal option), and another breaks its own tone three times in one paragraph — neither is a controlled risk."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-risk.mcq.02",
+    "loId": "apenglang.rhetorical-risk",
+    "cedCode": "AP-ENGLANG-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph analyzes an essay that compares a broken healthcare system to a leaking ship — patched hulls, abandoned lifeboats, a captain refusing to chart a new course — sustained across several paragraphs without ever breaking into literal statement. Which claim about this stylistic choice best identifies it as an effective, controlled rhetorical risk?",
+    "choices": [
+      "The metaphor is a controlled risk because the writer sustains the ship imagery consistently across every paragraph, so the comparison accumulates meaning instead of reading as one clever aside.",
+      "The metaphor is risky simply because comparing healthcare to a ship is a surprising, creative idea that most writers would never think to use.",
+      "The metaphor works because it relies on sophisticated, elevated vocabulary that makes the prose sound more intelligent throughout.",
+      "The metaphor is effective because it presents both sides of the healthcare debate fairly before reaching a balanced conclusion."
+    ],
+    "answer": "A",
+    "hints": [
+      "A shocking or novel idea alone isn't sophistication — the credit-earning move is showing the choice sustained and controlled across multiple moments.",
+      "Watch for a choice that swaps in fancy diction or balance/fairness as if either were the same thing as stylistic control — neither is what makes a risk 'controlled.'"
+    ]
+  }
+]

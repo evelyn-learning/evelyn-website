@@ -1,0 +1,192 @@
+[
+  {
+    "id": "apenglang.building-an-argument.mcq.01",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Draft position for an argument essay: \"This essay will discuss whether the town should build a new public library.\" Which revision best sharpens this into a defensible, arguable position?",
+    "choices": [
+      "This essay will explore several differing perspectives on the town's ongoing library debate and let readers form their own conclusions.",
+      "Building a new public library would probably be a fairly nice, welcome addition for most residents of the town.",
+      "The town should fund a new central library because the current cramped hours already turn away working parents and students most evenings.",
+      "The town council has spent well over a decade debating possible new library locations, budgets, and staffing plans without ever reaching a final consensus on any of them."
+    ],
+    "answer": "C",
+    "hints": [
+      "A defensible position commits to a specific stance, not a plan to 'discuss' or 'explore' a topic.",
+      "Ask whether a reasonable person could actually disagree with the sentence — if not, it's a fact or a topic, not a claim."
+    ]
+  },
+  {
+    "id": "apenglang.building-an-argument.mcq.02",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Draft position: \"Homework is bad for students and should basically be eliminated.\" Which revision best sharpens this into a defensible, specific position that survives a genuine counter-position?",
+    "choices": [
+      "Middle schools should cap nightly homework at thirty minutes per class because current loads leave too little time for sleep.",
+      "Homework has been an accepted, unquestioned part of American classrooms for a very long time now.",
+      "Homework is honestly just not very fun for most students most of the time, and plenty of them would rather be doing almost anything else.",
+      "Some people think homework is good and some people think homework is bad, and both sides have a point."
+    ],
+    "answer": "A",
+    "hints": [
+      "A vague feeling ('not fun') isn't a claim a reader can push back against with specifics.",
+      "Look for the option that commits to a concrete, narrowed policy a reasonable person could actually oppose."
+    ]
+  },
+  {
+    "id": "apenglang.selecting-evidence.mcq.01",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Local high schools should require a semester of community-service volunteering before graduation.\" Draft paragraph: \"Volunteering is a good experience. It helps students grow. Many students say they liked it.\" Which revision adds the most relevant, sufficient evidence to support the claim?",
+    "choices": [
+      "Volunteering in some form has existed for centuries, tracing back to ancient charitable and religious traditions.",
+      "Most students probably feel rather differently about volunteering depending on their own personality, interests, family schedule, and how much free time they actually have.",
+      "Community service can mean many different things depending on which organization a student ends up joining.",
+      "A three-year study of a nearby district found a 22% rise in civic engagement among students who completed a required service semester."
+    ],
+    "answer": "D",
+    "hints": [
+      "Relevant evidence bears on the specific claim (requiring a semester of service), not just the general topic of volunteering.",
+      "A vague statement about how students 'might feel' isn't evidence — look for a concrete, measurable finding."
+    ]
+  },
+  {
+    "id": "apenglang.selecting-evidence.mcq.02",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Draft paragraph: \"Later school start times help students. Also, sleep experts recommend them. Also, one district saw better attendance after switching. Later start times are clearly beneficial.\" Which revision best fixes this evidence-dump paragraph by sequencing it deliberately and adding commentary that connects each piece to the claim?",
+    "choices": [
+      "Later start times help students, and also sleep experts recommend them, and also most teachers seem to support the idea, and also many parents say they like it as well.",
+      "Pediatric sleep experts recommend an 8:30 a.m. start because adolescent circadian rhythms shift; a nearby district that adopted this saw attendance rise the next year.",
+      "Later start times help students, a topic many school boards across the country have debated for years.",
+      "Sleep experts recommend later starts, students seem to like later starts, and attendance improved somewhere once, so later starts are good."
+    ],
+    "answer": "B",
+    "hints": [
+      "An evidence dump strings pieces together with 'also' and no explanation of why one leads to the next.",
+      "Look for the option that explains WHY the authority's recommendation matters and HOW the district result corroborates it."
+    ]
+  },
+  {
+    "id": "apenglang.line-of-reasoning-argument.mcq.01",
+    "loId": "apenglang.line-of-reasoning-argument",
+    "cedCode": "AP-ENGLANG-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An essay argues cities should build more protected bike lanes. Three body-paragraph points are ready: (1) fewer collisions where protected lanes exist, (2) more foot traffic to small businesses on those streets, (3) construction cost concerns are real but manageable. Which revision states these as a coherent line of reasoning rather than a list of topics?",
+    "choices": [
+      "This essay will discuss safety, then business impact, then construction cost, in whatever particular order happens to seem convenient to the writer at the time of drafting, without any particular reason for that order.",
+      "Cities should build bike lanes because lanes are about safety, lanes are about business, and lanes are about cost.",
+      "Because protected lanes measurably reduce collisions, and that same safety gain also draws more foot traffic to local businesses, cities should expand them.",
+      "Protected bike lanes involve safety considerations, business considerations, and cost considerations, each one worth thinking about separately."
+    ],
+    "answer": "C",
+    "hints": [
+      "A line of reasoning shows each point building on or extending the one before it, not just naming three separate topics.",
+      "Apply the swap test: could these points trade places with nothing lost? If so, it's a list, not a reasoned sequence."
+    ]
+  },
+  {
+    "id": "apenglang.line-of-reasoning-argument.mcq.02",
+    "loId": "apenglang.line-of-reasoning-argument",
+    "cedCode": "AP-ENGLANG-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student explains an essay's structure this way: \"First I talk about safety, then business benefits, then cost. Each paragraph is about a different topic.\" Which revision most improves this into an actual statement of line of reasoning rather than a topic list?",
+    "choices": [
+      "First I talk about safety, then business, then cost, because that's simply the order I thought of them.",
+      "I cover safety first, business second, and cost third, and honestly all three paragraphs matter about equally to the overall essay in the end.",
+      "My essay is organized into three parts — a safety part, a business part, a cost part — in logical order.",
+      "Establishing that lanes reduce collisions first gives the safety case standing before the business point extends it, and only then does cost answer the objection looming over both."
+    ],
+    "answer": "D",
+    "hints": [
+      "Naming what each paragraph is 'about' describes a topic list, not a line of reasoning.",
+      "Look for the option that explains WHY the second point depends on the first, and why the third comes last."
+    ]
+  },
+  {
+    "id": "apenglang.counterargument-rebuttal.mcq.01",
+    "loId": "apenglang.counterargument-rebuttal",
+    "cedCode": "AP-ENGLANG-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Draft paragraph: \"Some people might complain about the new curfew law, but they're wrong and the benefits clearly outweigh whatever they're worried about.\" Which revision best names and concedes a real objection, then rebuts it, instead of dismissing an unnamed one?",
+    "choices": [
+      "Curfew opponents raise a real concern: the law could restrict teens who work evening shifts. That cost is genuine, but the ordinance exempts documented working students.",
+      "Critics of the curfew are simply misinformed and clearly haven't looked closely at the supporting data.",
+      "A few residents dislike the curfew, but most people in town seem to support it overall, so their complaints probably don't matter all that much.",
+      "The curfew law has been debated in city council meetings for several months without full agreement."
+    ],
+    "answer": "A",
+    "hints": [
+      "A real counterargument names the strongest specific objection — not a vague 'some people complain.'",
+      "Look for the option that grants a true cost is real before explaining why the policy still handles it."
+    ]
+  },
+  {
+    "id": "apenglang.counterargument-rebuttal.mcq.02",
+    "loId": "apenglang.counterargument-rebuttal",
+    "cedCode": "AP-ENGLANG-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Draft paragraph addressing the objection that a proposed soda tax burdens low-income shoppers most: \"That's true, low-income families would definitely be hurt the most by this tax, so maybe the tax isn't such a good idea after all.\" Which revision best concedes the true cost and then rebuts it, without abandoning the original claim?",
+    "choices": [
+      "Low-income families are affected by all kinds of taxes, so this really isn't anything new to worry about.",
+      "It's true low-income households spend more on sugary drinks; the city can offset that by directing tax revenue toward produce vouchers for the same households.",
+      "That's a fair point, and honestly it might be reason enough to just drop the proposal.",
+      "People who oppose the soda tax are usually just opposed to any and all forms of government regulation, no matter what it happens to be regulating or how it's designed."
+    ],
+    "answer": "B",
+    "hints": [
+      "The draft concedes the cost but then abandons the claim entirely — a rebuttal has to answer the objection, not surrender to it.",
+      "Look for the option that grants the real cost AND names a specific way the position still holds."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions.mcq.01",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Draft opening line for an essay arguing a city should expand its public transit hours: \"Throughout history, cities have had to make decisions about public transportation.\" Which revision most effectively opens the argument by establishing concrete stakes before stating the claim?",
+    "choices": [
+      "Public transportation is an important topic that affects a great many people in many different ways.",
+      "Since the dawn of urban civilization, people have needed ways to move from place to place.",
+      "Every weeknight at 11:45, the last bus leaves the hospital stop, stranding overnight-shift nurses with no way home but an expensive cab ride.",
+      "This essay will discuss, in a fairly general and even-handed way, the various pros and cons of extending the city's public transit hours."
+    ],
+    "answer": "C",
+    "hints": [
+      "A strong opening earns the claim with a concrete, specific scenario or detail — not a broad 'throughout history' frame.",
+      "Avoid the 'dictionary opening' and the sentence that just announces the essay's topic."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions.mcq.02",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Draft conclusion: \"In conclusion, as I have shown, the city should expand public transit hours because of the reasons discussed above.\" Which revision most effectively closes the argument by answering \"so what\" instead of restating the thesis?",
+    "choices": [
+      "A nurse who no longer must choose between a shift and a safe ride home is one measure of a city that works for everyone.",
+      "In summary, expanding transit hours is something the city should clearly do for all of the reasons already given above in this essay in considerable detail.",
+      "As stated earlier, transit hours matter, and the reasons given above already make that clear.",
+      "To conclude, this essay has shown that public transit is important and hours should be extended."
+    ],
+    "answer": "A",
+    "hints": [
+      "A strong conclusion projects the claim's significance forward instead of repeating the thesis in the same words.",
+      "Test: if you deleted the conclusion, would the essay feel unfinished, or would nothing be lost?"
+    ]
+  }
+]
