@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:passages": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-passages.ts",
     "migrate": "npx ts-node scripts/migrate-wordpress.ts",
     "seed": "npx ts-node scripts/seed-sample-data.ts",
     "seed:teacher": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-teacher.ts",
