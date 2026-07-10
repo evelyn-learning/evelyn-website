@@ -149,3 +149,26 @@ console.log(`\n${passed}/${results.length} classification cases passed` + (faile
 if (failed > 0 || !wrapOk || !profanityPreserved || !spellcheckWorks) {
   process.exit(1);
 }
+
+// ── Session-start greeting exemption (2026-07-09, session-1783615226008):
+//    a real student "Hello." was dropped as a Whisper-hallucination
+//    pattern and never reached the brain. Before the student's first
+//    accepted turn, greeting-only utterances must classify clean;
+//    mid-session (allowGreetings absent/false) they stay noise.
+{
+  const cases: Array<[string, string]> = [
+    ['Hello.', 'clean'],
+    ['hi', 'clean'],
+    ['Hello? Hello?', 'clean'],
+    ['Hey!', 'clean'],
+  ];
+  for (const [text, want] of cases) {
+    const got = classifyTranscript(text, { allowGreetings: true });
+    if (got !== want) { console.error(`FAIL greeting-exemption "${text}": got ${got}, want ${want}`); process.exit(1); }
+  }
+  // Mid-session behavior unchanged: greetings are still hallucination noise.
+  if (classifyTranscript('Hello.') !== 'noise') { console.error('FAIL: mid-session "Hello." must stay noise'); process.exit(1); }
+  // Non-greeting noise still drops even with the exemption active.
+  if (classifyTranscript('Thanks for watching!', { allowGreetings: true }) !== 'noise') { console.error('FAIL: outro hallucination must stay noise at session start'); process.exit(1); }
+  console.log('OK — session-start greeting exemption');
+}

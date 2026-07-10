@@ -907,6 +907,11 @@ export function VoiceTutorRealtime({
   // itself rides ≤4 turns, and the embedded intro was re-spoken on each
   // of them (up to 4 self-intros in session-1783615226008).
   const teacherIntroDirectiveRef = useRef<string | null>(null);
+  // Session-start greeting window (2026-07-09): until the student's
+  // first real turn dispatches, greeting-only utterances ("Hello.") are
+  // exempt from the noise filter — a real greeting was being dropped as
+  // a Whisper hallucination (session-1783615226008).
+  const studentHasSpokenRef = useRef<boolean>(false);
   // Teacher-persona mid-session style salience (2026-07-04): the compact
   // per-turn <teacher_style> body (renderTeacherStyleReminder output),
   // seeded once under the same one-shot latch as the opening directive.
@@ -1854,7 +1859,7 @@ export function VoiceTutorRealtime({
           currentUserTextRef.current = '';
           return;
         }
-        const classification = classifyTranscript(raw);
+        const classification = classifyTranscript(raw, { allowGreetings: !studentHasSpokenRef.current });
         if (classification === 'noise') {
           console.log('[VoiceTutorRealtime] Dropped noise transcript:', raw);
           onDebugEvent?.('noise_filtered', `Filtered: "${raw}"`);
@@ -5845,6 +5850,9 @@ export function VoiceTutorRealtime({
     if (resumeState.transcript.length) {
       transcriptRef.current = [...resumeState.transcript];
       onTranscriptUpdate([...transcriptRef.current]);
+      // A resumed session is past the greeting window — greeting-only
+      // utterances go back to being hallucination noise.
+      studentHasSpokenRef.current = true;
     }
     // Whiteboard → restore prior figures both in the runtime's own ref (so its
     // board-awareness / dedup logic doesn't think the board is empty) and in
@@ -10187,6 +10195,7 @@ export function VoiceTutorRealtime({
     if (!opts?.silent) {
       resolveAwaitingDispatch();
       onListeningHintRef.current?.(null);
+      studentHasSpokenRef.current = true;
     }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
@@ -11078,7 +11087,7 @@ export function VoiceTutorRealtime({
       // phantom "Thanks for watching!" reached the brain and produced a
       // wasted "Sorry, could you say that again?" turn. Match production
       // WS's behaviour exactly — same filter, same drop.
-      const noiseCheck = classifyTranscript(t.text);
+      const noiseCheck = classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
