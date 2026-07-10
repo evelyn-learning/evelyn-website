@@ -63,6 +63,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import {
   extractDeclarations,
@@ -788,6 +789,13 @@ export function VoiceTutorRealtime({
   // inside the gate, its first sentence is dropped — accepted cost.
   const speakTextBlockedUntilRef = useRef<number>(0);
   const SPEAK_TEXT_GATE_MS = 600;
+  // Cancel-storm governor (2026-07-09, session-1783615559112): caps
+  // stage2/3 cancels in a rolling window so a student re-speaking into
+  // silence can't livelock the tutor by aborting every nascent reply.
+  // speechKilledAtRef marks barge-in kills so the delivery-detection
+  // effect can tell a natural playback finish from a killed one.
+  const cancelStormRef = useRef<CancelStormGovernor>(new CancelStormGovernor());
+  const speechKilledAtRef = useRef<number>(0);
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -10888,6 +10896,22 @@ export function VoiceTutorRealtime({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realtime.state]);
+  // Cancel-storm delivery detection: leaving 'speaking' WITHOUT a recent
+  // barge-in kill means a tutor reply actually played out to the student
+  // — the loop is healthy, so reset the governor's cancel history. A
+  // killed queue also leaves 'speaking', hence the speechKilledAtRef
+  // window check (kills mark it at cancel time, transition follows
+  // within tens of ms; 3s is generous).
+  const wasSpeakingRef = useRef<boolean>(false);
+  useEffect(() => {
+    const speaking = realtime.state === 'speaking';
+    if (wasSpeakingRef.current && !speaking
+        && Date.now() - speechKilledAtRef.current > 3000) {
+      cancelStormRef.current.recordDelivery();
+    }
+    wasSpeakingRef.current = speaking;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [realtime.state]);
 
   // (or 'processing' for Stage 2) while the student is still mid-utterance,
   // fire the cancel retroactively so the eventual perception transcript
@@ -10911,6 +10935,14 @@ export function VoiceTutorRealtime({
     if (!openingTurnFullyDelivered()) {
       console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
       onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
+      return;
+    }
+    // Cancel-storm breaker: repeated cancels with no delivered reply is
+    // the "tutor is deaf" livelock — let the in-flight turn play out;
+    // the student's transcript queues behind the busy brain instead.
+    if (!cancelStormRef.current.allowCancel(Date.now())) {
+      console.warn('[PERCEPTION] retro-cancel suppressed — cancel storm (letting reply play out)');
+      onDebugEvent?.('perception_cancel_storm_suppressed', `→${toState}`);
       return;
     }
     const ctx = lastBrainCallContextRef.current;
@@ -10948,6 +10980,8 @@ export function VoiceTutorRealtime({
     // sentence drained from the in-flight orchestrator's SSE buffer
     // between this point and AbortError propagation drops silently.
     speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+    cancelStormRef.current.recordCancel(Date.now());
+    speechKilledAtRef.current = Date.now();
     // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
     // drain so the cancel doesn't flush buffered renders — the verdict
     // decides drop (abort/re-fire) vs flush-all (resume/deliver).
@@ -11372,6 +11406,14 @@ export function VoiceTutorRealtime({
           console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (prod=${prodState})`);
           return;
         }
+        // Cancel-storm breaker: see retro-cancel site. Without this, a
+        // student re-speaking into silence aborts every nascent reply
+        // and no turn ever completes (session-1783615559112).
+        if (!cancelStormRef.current.allowCancel(Date.now())) {
+          console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, prod=${prodState})`);
+          onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${prodState}`);
+          return;
+        }
         const cancelStage: 'processing' | 'speaking' = canStage3 ? 'speaking' : 'processing';
         const stageLabel = canStage3 ? 'STAGE-3' : 'STAGE-2';
         console.warn(
@@ -11403,6 +11445,8 @@ export function VoiceTutorRealtime({
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.
         speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+        cancelStormRef.current.recordCancel(Date.now());
+        speechKilledAtRef.current = Date.now();
         // Render↔speech sync: PAUSE the buffer before the drain (see
         // retro-cancel) — verdict decides drop vs flush-all.
         renderBufferPausedRef.current = true;
