@@ -5,9 +5,13 @@
  */
 import type { Passage } from './types';
 import { PASSAGE_DOUGLASS_FOURTH_OF_JULY } from './seeds/douglass-fourth-of-july';
+import { PASSAGE_HENRY_GIVE_ME_LIBERTY } from './seeds/henry-give-me-liberty';
+import { PASSAGE_SWIFT_MODEST_PROPOSAL } from './seeds/swift-modest-proposal';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
+  PASSAGE_HENRY_GIVE_ME_LIBERTY,
+  PASSAGE_SWIFT_MODEST_PROPOSAL,
 ];
 
 export const passageById = new Map<string, Passage>(
