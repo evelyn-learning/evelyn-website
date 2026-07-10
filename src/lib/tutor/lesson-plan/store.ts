@@ -1300,6 +1300,25 @@ import { SEED_AP_ENGLANG_U1_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defe
 import { SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
 import { SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
 import { SEED_AP_ENGLANG_U1_FRQ_PRACTICE } from './seeds/ap-englang-u1-frq-practice';
+// AP English Language Units 2-5 (Phase 2 fan-out) — content plans
+import { SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT } from './seeds/ap-englang-u2-building-an-argument';
+import { SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL } from './seeds/ap-englang-u2-counterargument-rebuttal';
+import { SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS } from './seeds/ap-englang-u2-intros-conclusions';
+import { SEED_AP_ENGLANG_U2_LINE_OF_REASONING_ARGUMENT } from './seeds/ap-englang-u2-line-of-reasoning-argument';
+import { SEED_AP_ENGLANG_U2_SELECTING_EVIDENCE } from './seeds/ap-englang-u2-selecting-evidence';
+import { SEED_AP_ENGLANG_U3_CITING_ATTRIBUTING_SOURCES } from './seeds/ap-englang-u3-citing-attributing-sources';
+import { SEED_AP_ENGLANG_U3_INTEGRATING_EVIDENCE } from './seeds/ap-englang-u3-integrating-evidence';
+import { SEED_AP_ENGLANG_U3_POSITION_ACROSS_SOURCES } from './seeds/ap-englang-u3-position-across-sources';
+import { SEED_AP_ENGLANG_U3_SYNTHESIS_LINE_OF_REASONING } from './seeds/ap-englang-u3-synthesis-line-of-reasoning';
+import { SEED_AP_ENGLANG_U3_THE_SYNTHESIS_TASK } from './seeds/ap-englang-u3-the-synthesis-task';
+import { SEED_AP_ENGLANG_U4_ANALYZING_LINE_OF_REASONING } from './seeds/ap-englang-u4-analyzing-line-of-reasoning';
+import { SEED_AP_ENGLANG_U4_DICTION_AND_TONE } from './seeds/ap-englang-u4-diction-and-tone';
+import { SEED_AP_ENGLANG_U4_INTROS_CONCLUSIONS_ANALYSIS } from './seeds/ap-englang-u4-intros-conclusions-analysis';
+import { SEED_AP_ENGLANG_U4_METHODS_OF_DEVELOPMENT } from './seeds/ap-englang-u4-methods-of-development';
+import { SEED_AP_ENGLANG_U5_ORGANIZING_FOR_EFFECT } from './seeds/ap-englang-u5-organizing-for-effect';
+import { SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING } from './seeds/ap-englang-u5-reasoning-and-paragraphing';
+import { SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-transitions-cohesion';
+import { SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2566,6 +2585,25 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY,
   SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT,
   SEED_AP_ENGLANG_U1_FRQ_PRACTICE,
+  // AP English Language Units 2-5 content plans
+  SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT,
+  SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL,
+  SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS,
+  SEED_AP_ENGLANG_U2_LINE_OF_REASONING_ARGUMENT,
+  SEED_AP_ENGLANG_U2_SELECTING_EVIDENCE,
+  SEED_AP_ENGLANG_U3_CITING_ATTRIBUTING_SOURCES,
+  SEED_AP_ENGLANG_U3_INTEGRATING_EVIDENCE,
+  SEED_AP_ENGLANG_U3_POSITION_ACROSS_SOURCES,
+  SEED_AP_ENGLANG_U3_SYNTHESIS_LINE_OF_REASONING,
+  SEED_AP_ENGLANG_U3_THE_SYNTHESIS_TASK,
+  SEED_AP_ENGLANG_U4_ANALYZING_LINE_OF_REASONING,
+  SEED_AP_ENGLANG_U4_DICTION_AND_TONE,
+  SEED_AP_ENGLANG_U4_INTROS_CONCLUSIONS_ANALYSIS,
+  SEED_AP_ENGLANG_U4_METHODS_OF_DEVELOPMENT,
+  SEED_AP_ENGLANG_U5_ORGANIZING_FOR_EFFECT,
+  SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING,
+  SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION,
+  SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
