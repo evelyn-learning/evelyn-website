@@ -86,6 +86,7 @@
     "test:pedagogy-c1": "npx tsx scripts/test-plan-seed-framing.ts",
     "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
     "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts",
+    "test:passages": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/passages/store.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
     "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
