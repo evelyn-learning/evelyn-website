@@ -172,3 +172,24 @@ if (failed > 0 || !wrapOk || !profanityPreserved || !spellcheckWorks) {
   if (classifyTranscript('Thanks for watching!', { allowGreetings: true }) !== 'noise') { console.error('FAIL: outro hallucination must stay noise at session start'); process.exit(1); }
   console.log('OK — session-start greeting exemption');
 }
+
+// ── Short-answer whitelist (2026-07-10, session-1783693044096): the
+//    student answered a yes/no question with "No." three times; each was
+//    dropped by the ≤2-char single-word rule (which "yes" escapes only by
+//    being 3 letters). They gave up and asked "Are you going to move on?"
+{
+  const clean: string[] = ['No.', 'no', 'NO', 'No!', 'ok', 'OK.', 'up', 'Yes.', 'Nope.'];
+  for (const t of clean) {
+    const got = classifyTranscript(t);
+    if (got !== 'clean') { console.error(`FAIL short-answer "${t}": got ${got}, want clean`); process.exit(1); }
+  }
+  // Genuine 1-2 char fillers must STILL drop (they live in NOISE_PATTERNS).
+  const noise: string[] = ['uh', 'um', 'hmm', 'oh', 'ah'];
+  for (const t of noise) {
+    const got = classifyTranscript(t);
+    if (got !== 'noise') { console.error(`FAIL filler "${t}": got ${got}, want noise`); process.exit(1); }
+  }
+  // Single letters stay clean (math variables) — unchanged behavior.
+  if (classifyTranscript('x') !== 'clean') { console.error('FAIL: math var x must stay clean'); process.exit(1); }
+  console.log('OK — short-answer whitelist (no/ok reach the brain)');
+}

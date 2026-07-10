@@ -383,15 +383,31 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   // Repeated words like "bye bye" or "hello hello hello" (2-3 identical words)
   const words = normalized.split(/\s+/);
   if (words.length >= 2 && words.length <= 3 && new Set(words).size === 1) return true;
-  // Single word ≤ 2 characters, EXCEPT single-letter math variables.
+  // Single word ≤ 2 characters, EXCEPT single-letter math variables and
+  // the short answers below.
   // Originally "< 4 chars" but that dropped legitimate single-word math
   // answers like "one", "two", "six", "ten", "pi", "yes" (observed live
   // 2026-05-28: student answered "one" twice to "what is minus one times
   // minus one?" — both dropped as noise, brain never got the answer).
-  // 1-2 char fillers ("uh", "ok", "ah", "hm") still drop via NOISE_PATTERNS
-  // above; single letters like "x" / "y" / "i" are kept (math variables).
+  // 1-2 char fillers ("uh", "ah", "hm") still drop; single letters like
+  // "x" / "y" / "i" are kept (math variables).
+  //
+  // SHORT_ANSWER_WORDS (2026-07-10, session-1783693044096): "no" is a
+  // complete answer to a yes/no question, and "yes" escaped this rule
+  // only by being three letters long — so a yes/no question silently
+  // dropped half its possible answers. The student said "No." three
+  // times in fifteen seconds, was ignored each time, and gave up with
+  // "Are you going to move on?". "ok" is likewise a real acknowledgment
+  // (the perception classifier still treats it as a turn-taking filler,
+  // which is the right layer for that decision — not the noise filter).
   const MATH_VAR_LETTERS = new Set(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
-  if (words.length === 1 && normalized.length <= 2 && !MATH_VAR_LETTERS.has(normalized)) return true;
+  const SHORT_ANSWER_WORDS = new Set(['no', 'ok', 'up']);
+  if (
+    words.length === 1
+    && normalized.length <= 2
+    && !MATH_VAR_LETTERS.has(normalized)
+    && !SHORT_ANSWER_WORDS.has(normalized)
+  ) return true;
   // Phonetic garbage — mostly single letters separated by spaces
   if (isPhoneticGarbage(normalized)) return true;
   // Stutter — "f-f-f-f-ck" or "wacht wacht wacht wacht"
