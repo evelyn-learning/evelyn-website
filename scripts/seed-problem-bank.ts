@@ -47,6 +47,7 @@ interface SeedItem {
   choices?: string[];
   answer: string;
   hints?: string[];
+  passageId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -299,6 +300,7 @@ async function main() {
           topicId: opts.course,
           loId: item.loId,
           cedCode: item.cedCode,
+          passageId: item.passageId,
           difficulty: item.difficulty,
           problemText: item.problemText,
           answer: item.answer,

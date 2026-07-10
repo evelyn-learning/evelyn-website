@@ -132,6 +132,8 @@ export interface SegmentConcept extends SegmentBase {
   /** Optional reference materials for the brain (image URL, equation
    *  to write, etc.). */
   references?: Array<{ kind: 'image' | 'equation' | 'note'; content: string }>;
+  /** Optional shared stimulus passage this prompt analyzes (passages/store). */
+  passageId?: string;
 }
 
 /** A solved example walked through end-to-end. The brain narrates each
@@ -189,6 +191,8 @@ export interface SegmentTryYourself extends SegmentBase {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   /** When responseFormat === 'mcq', the choices. */
   choices?: Array<{ id: string; text: string; correct?: boolean }>;
+  /** Optional shared stimulus passage this prompt analyzes (passages/store). */
+  passageId?: string;
   /** Marks this segment as deliberately off-topic relative to the rest
    *  of the plan. Test plans use this to bait the runtime's relevance
    *  checks. The orchestrator MUST refuse to render an offTopic segment
