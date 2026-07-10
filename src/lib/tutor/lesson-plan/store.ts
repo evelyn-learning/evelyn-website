@@ -1302,6 +1302,10 @@ import { SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audie
 import { SEED_AP_ENGLANG_U1_FRQ_PRACTICE } from './seeds/ap-englang-u1-frq-practice';
 // AP English Language Units 2-5 (Phase 2 fan-out) — content plans
 // AP English Language Units 6-9 (Phase 2 fan-out) — content plans
+// AP English Language FRQ-practice plans (Argument/Synthesis/RA)
+import { SEED_AP_ENGLANG_U2_FRQ_PRACTICE } from './seeds/ap-englang-u2-frq-practice';
+import { SEED_AP_ENGLANG_U3_FRQ_PRACTICE } from './seeds/ap-englang-u3-frq-practice';
+import { SEED_AP_ENGLANG_U4_FRQ_PRACTICE } from './seeds/ap-englang-u4-frq-practice';
 import { SEED_AP_ENGLANG_U6_ANALYZING_STYLE } from './seeds/ap-englang-u6-analyzing-style';
 import { SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE } from './seeds/ap-englang-u6-diction-connotation-tone';
 import { SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES } from './seeds/ap-englang-u6-figurative-language-schemes';
@@ -2604,6 +2608,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U1_FRQ_PRACTICE,
   // AP English Language Units 2-5 content plans
   // AP English Language Units 6-9 content plans
+  // AP English Language FRQ-practice plans
+  SEED_AP_ENGLANG_U2_FRQ_PRACTICE,
+  SEED_AP_ENGLANG_U3_FRQ_PRACTICE,
+  SEED_AP_ENGLANG_U4_FRQ_PRACTICE,
   SEED_AP_ENGLANG_U6_ANALYZING_STYLE,
   SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE,
   SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES,
