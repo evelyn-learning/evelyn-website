@@ -194,11 +194,21 @@ export function feat(
  * Slugify a label to a safe data-feature suffix. Preserves alphanumerics
  * and collapses everything else to a single hyphen. Used by renderers that
  * derive feature names from tutor-supplied labels (e.g. cycle stages).
+ *
+ * A sign immediately before a digit is encoded as "neg" so coordinate
+ * labels stay distinct: "(3,0)" → "3-0" but "(-3,0)" → "neg3-0". Without
+ * this, both ellipse vertices slug to "3-0", both points emit the same
+ * data-feature, and a scribble aimed at (3,0) paints on (−3,0) — the
+ * tutor narrates one point while marking the other (2026-07-10 audit).
+ * A spaced binary minus ("x - 3") is NOT a sign and stays a separator.
+ * MUST stay in lockstep with normalizeToken in whiteboard/catalog.ts —
+ * naming (here) and query-matching (there) share this rule.
  */
 export function featSlug(label: string): string {
   return String(label || '')
     .toLowerCase()
     .normalize('NFKD')
+    .replace(/(^|[^a-z0-9])[-−–](?=\d)/g, '$1neg')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48) || 'unnamed';

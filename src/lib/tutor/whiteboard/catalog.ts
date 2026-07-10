@@ -228,11 +228,18 @@ export type ResolveResult = ResolveSuccess | ResolveFailure;
  *   "A"          → "a"
  *   "y-axis"     → "y-axis"
  *   "  A (2,3)"  → "a-2-3"
+ *   "(-3, 0)"    → "neg3-0"   (sign before a digit survives as "neg")
+ *
+ * The sign rule MUST stay in lockstep with featSlug in diagrams/layout.ts:
+ * renderers name features with featSlug, queries match through here — if
+ * the two disagree, coordinate targets resolve to the wrong point (the
+ * (3,0)-vs-(−3,0) wrong-vertex scribble, 2026-07-10 audit).
  */
 export function normalizeToken(s: string): string {
   return String(s ?? '')
     .toLowerCase()
     .normalize('NFKD')
+    .replace(/(^|[^a-z0-9])[-−–](?=\d)/g, '$1neg')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
