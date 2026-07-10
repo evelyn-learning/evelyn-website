@@ -26,13 +26,20 @@ for (const plan of SEED_PLANS) {
 // bank refs
 const bankRoot = join(__dirname, '..', 'src', 'data', 'problem-bank');
 if (existsSync(bankRoot)) {
-  for (const course of readdirSync(bankRoot)) {
+  for (const entry of readdirSync(bankRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const course = entry.name;
     const dir = join(bankRoot, course);
     for (const f of readdirSync(dir)) {
       if (!f.endsWith('.json')) continue;
-      const items = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Array<{ id: string; passageId?: string }>;
-      for (const it of items) if (it.passageId && !passageById.has(it.passageId)) {
-        errors.push(`bank ${course}/${f} item ${it.id} → unknown passageId ${it.passageId}`);
+      try {
+        const items = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Array<{ id: string; passageId?: string }>;
+        for (const it of items) if (it.passageId && !passageById.has(it.passageId)) {
+          errors.push(`bank ${course}/${f} item ${it.id} → unknown passageId ${it.passageId}`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`bank ${course}/${f}: invalid JSON (${msg})`);
       }
     }
   }
