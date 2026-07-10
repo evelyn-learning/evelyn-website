@@ -99,6 +99,14 @@ async function main() {
     } catch (e) {
       rr = { rejected: false, error: e instanceof Error ? e.message : String(e) };
     }
+    // Drain any in-flight WAAPI/CSS animations (e.g. SmoothDraw draw-on)
+    // before capturing, so screenshots never land mid-stroke/mid-wipe.
+    // finish() throws on infinite-iteration animations (e.g. a skeleton
+    // pulse) — catch and leave those running.
+    await page.evaluate(async () => {
+      const anims = document.getAnimations ? document.getAnimations() : [];
+      for (const a of anims) { try { a.finish(); } catch { /* infinite/CSS anims */ } }
+    }).catch(() => {});
     const shot = `${num}-${fx.label}.png`;
     await page.screenshot({ path: path.join(outDir, shot) }).catch(() => {});
     const pass = fx.expect === 'rejected'

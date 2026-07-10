@@ -87,6 +87,7 @@ import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel } from './choiceLabel';
 import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
+import { useDrawOn, drawOnEnabled } from './useDrawOn';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -450,6 +451,12 @@ export function WhiteboardCanvas({
   const pagesLengthRef = useRef(0);
   pagesLengthRef.current = pages.length;
 
+  // SmoothDraw draw-on engine (Task 2). Declared here — ahead of the
+  // interrupt effects below, which close over `finishAll` — and reused by
+  // itemEnterClass/maybeDrawOn further down (near seenAnimIdsRef).
+  const { animateItem, finishAll } = useDrawOn();
+  const drawOnActive = drawOnEnabled();
+
   // Kill-recovery phase A: ids currently flagged "revising" (dimmed). Built
   // from reviseItems markers in stream order (revising:true adds, false
   // clears). The item wrappers dim any rendered item whose id is in this set —
@@ -465,6 +472,27 @@ export function WhiteboardCanvas({
     }
     return s;
   }, [commands]);
+
+  // SmoothDraw interrupts: kill-recovery (revisingIds change) and turn
+  // end (tutorBusy → false, which includes barge-in) fast-forward all
+  // running draw-on animations to their final state. Page-switch needs
+  // nothing: the subtree remounts and seenAnimIdsRef renders seen items
+  // instantly. Spec §2.
+  const prevTutorBusyRef = useRef(tutorBusy);
+  useEffect(() => {
+    if (revisingIds.size > 0) finishAll();
+  }, [revisingIds, finishAll]);
+  useEffect(() => {
+    if (prevTutorBusyRef.current && !tutorBusy) finishAll();
+    prevTutorBusyRef.current = tutorBusy;
+  }, [tutorBusy, finishAll]);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__tutorFinishDrawOn = finishAll;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return () => { delete (window as any).__tutorFinishDrawOn; };
+  }, [finishAll]);
 
   // Handle goToPage navigation: find the target page by title
   useEffect(() => {
@@ -825,7 +853,18 @@ export function WhiteboardCanvas({
   const itemEnterClass = (cmd: WhiteboardCommand): string => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const id = (cmd as any).id as string | undefined;
-    return id && seenAnimIdsRef.current.has(id) ? '' : 'wb-item-enter';
+    if (id && seenAnimIdsRef.current.has(id)) return '';
+    return drawOnActive ? '' : 'wb-item-enter';
+  };
+  // Draw-on trigger: runs in the item wrapper's ref callback on first
+  // mount. Must check seenAnimIdsRef BEFORE the post-commit effect below
+  // marks the id seen — ref callbacks fire pre-effect, so ordering holds.
+  const maybeDrawOn = (cmd: WhiteboardCommand, el: HTMLElement | null) => {
+    if (!el || !drawOnActive) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = (cmd as any).id as string | undefined;
+    if (id && seenAnimIdsRef.current.has(id)) return;
+    animateItem(el);
   };
   useEffect(() => {
     for (const c of safeCurrentPage.commands) {
@@ -1365,7 +1404,7 @@ export function WhiteboardCanvas({
           <div
             className={`relative ${itemEnterClass(renderableCommands[0])} scroll-mt-6`}
             style={reviseStyle(renderableCommands[0])}
-            ref={(el) => { itemRefsRef.current[0] = el; }}
+            ref={(el) => { itemRefsRef.current[0] = el; maybeDrawOn(renderableCommands[0], el); }}
             data-wb-item-index={1}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             data-wb-item-id={(renderableCommands[0] as any).id ?? undefined}
@@ -1404,7 +1443,7 @@ export function WhiteboardCanvas({
                   <div
                     className="relative scroll-mt-6"
                     style={reviseStyle(cmd)}
-                    ref={(el) => { itemRefsRef.current[i] = el; }}
+                    ref={(el) => { itemRefsRef.current[i] = el; maybeDrawOn(cmd, el); }}
                     data-wb-item-index={i + 1}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     data-wb-item-id={(cmd as any).id ?? undefined}
