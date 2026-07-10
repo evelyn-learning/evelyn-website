@@ -26,6 +26,9 @@ export interface GradeItem {
   expectedAnswer?: string;
   /** Optional reference solution for the legacy path. */
   modelResponse?: string;
+  /** Resolved stimulus text (from passageId) the response analyzes; when
+   *  present it is given to each rubric-part grader so it can verify evidence. */
+  passageText?: string;
 }
 
 export type RubricPartGrader = (args: {
@@ -34,6 +37,7 @@ export type RubricPartGrader = (args: {
   scoringCriteria: string;
   modelResponse: string;
   response: GradeFreeResponseRequest['response'];
+  passageText?: string;
 }) => Promise<{ pointsAwarded: number; feedback: string }>;
 
 export type SingleAnswerJudge = (args: {
@@ -72,6 +76,7 @@ export async function gradeFreeResponse(
         scoringCriteria: p.scoringCriteria,
         modelResponse: p.modelResponse,
         response: req.response,
+        passageText: item.passageText,
       });
       parts.push({
         criterionId: p.criterionId,
@@ -113,7 +118,7 @@ async function callClaudeJson(system: string, user: string): Promise<Record<stri
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const msg = await client.messages.create({
     model: GRADER_MODEL,
-    max_tokens: 600,
+    max_tokens: 1000,
     system,
     messages: [{ role: 'user', content: user }],
   });
@@ -138,6 +143,9 @@ export function defaultGradeDeps(): GradeDeps {
         'Award integer or half points from 0 to the criterion maxPoints. Be strict and fair. ' +
         'Reply ONLY as JSON: {"pointsAwarded": number, "feedback": string}.';
       const user = [
+        ...(args.passageText
+          ? [`Stimulus the student analyzed (verify cited evidence against it):\n${args.passageText}`]
+          : []),
         `Criterion (max ${args.maxPoints} pts): ${args.scoringCriteria}`,
         `Reference (full-credit) response: ${args.modelResponse}`,
         `Student response: ${responseToText(args.response)}`,
