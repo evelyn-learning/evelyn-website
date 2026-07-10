@@ -193,6 +193,10 @@ export interface SegmentTryYourself extends SegmentBase {
   choices?: Array<{ id: string; text: string; correct?: boolean }>;
   /** Optional shared stimulus passage this prompt analyzes (passages/store). */
   passageId?: string;
+  /** Optional MULTI-source packet (Synthesis FRQ): several passages the prompt
+   *  synthesizes. Resolved passages are concatenated + labeled Source A/B/C for
+   *  the grader. Use instead of (or alongside) passageId for synthesis tasks. */
+  passageIds?: string[];
   /** Marks this segment as deliberately off-topic relative to the rest
    *  of the plan. Test plans use this to bait the runtime's relevance
    *  checks. The orchestrator MUST refuse to render an offTopic segment

@@ -104,11 +104,24 @@ function resolveTrySegment(itemId: string): SegmentTryYourself | null {
   return null;
 }
 
-/** Resolve a `passageId` to its full stimulus text, undefined when absent or
- *  unknown. Shared by both GradeItem producers below so passage-aware
- *  grading (grade-free-response.ts) actually sees the stimulus text. */
-function resolvePassageText(passageId?: string): string | undefined {
-  return passageId ? resolvePassage(passageId)?.fullText : undefined;
+/** Resolve a `passageId` (and/or a Synthesis `passageIds[]` packet) to the full
+ *  stimulus text, undefined when absent or unknown. Shared by both GradeItem
+ *  producers below so passage-aware grading (grade-free-response.ts) actually
+ *  sees the stimulus text. Multiple sources are labeled Source A/B/C and joined
+ *  so the grader can verify cross-source synthesis. */
+function resolvePassageText(passageId?: string, passageIds?: string[]): string | undefined {
+  const ids = [...(passageId ? [passageId] : []), ...(passageIds ?? [])];
+  if (ids.length === 0) return undefined;
+  const multi = ids.length > 1;
+  const chunks = ids
+    .map((id, i) => {
+      const p = resolvePassage(id);
+      if (!p) return undefined;
+      const label = multi ? `Source ${String.fromCharCode(65 + i)} — ${p.title} (${p.author}):\n` : '';
+      return label + p.fullText;
+    })
+    .filter((c): c is string => Boolean(c));
+  return chunks.length ? chunks.join('\n\n---\n\n') : undefined;
 }
 
 /** Resolve a gradable FRQ item by id from the curated try-yourself seeds.
@@ -123,7 +136,7 @@ export function resolveGradeItem(itemId: string): GradeItem | null {
     rubric: seg.rubric,
     expectedAnswer: seg.expectedAnswer,
     modelResponse: seg.modelResponse,
-    passageText: resolvePassageText(seg.passageId),
+    passageText: resolvePassageText(seg.passageId, seg.passageIds),
   };
 }
 
@@ -164,7 +177,7 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
       rubric: seg.rubric,
       modelResponse: seg.modelResponse,
       hints: seg.hints,
-      passageText: resolvePassageText(seg.passageId),
+      passageText: resolvePassageText(seg.passageId, seg.passageIds),
     };
   }
   // Bare id → ProblemBank (globally-unique ids; choices are string[]; the

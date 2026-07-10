@@ -15,11 +15,14 @@ const ids = SEED_PASSAGES.map((p) => p.id);
 for (const id of ids) if (ids.filter((x) => x === id).length > 1) errors.push(`duplicate passage id ${id}`);
 for (const p of SEED_PASSAGES) if (p.license !== 'public-domain') errors.push(`passage ${p.id} not public-domain`);
 
-// plan refs
+// plan refs (single passageId + Synthesis passageIds[] packet)
 for (const plan of SEED_PLANS) {
   for (const seg of plan.segments ?? []) {
-    const pid = (seg as { passageId?: string }).passageId;
-    if (pid && !passageById.has(pid)) errors.push(`plan ${plan.id} seg ${seg.id} → unknown passageId ${pid}`);
+    const s = seg as { passageId?: string; passageIds?: string[] };
+    const refs = [...(s.passageId ? [s.passageId] : []), ...(s.passageIds ?? [])];
+    for (const pid of refs) {
+      if (!passageById.has(pid)) errors.push(`plan ${plan.id} seg ${seg.id} → unknown passageId ${pid}`);
+    }
   }
 }
 
