@@ -1292,6 +1292,9 @@ import { SEED_SAT_RW_GRAMMAR_AGREEMENT } from './seeds/sat-rw-grammar-agreement'
 import { SEED_SAT_RW_GRAMMAR_STRUCTURE } from './seeds/sat-rw-grammar-structure';
 import { SEED_SAT_RW_RHETORICAL_SYNTHESIS } from './seeds/sat-rw-rhetorical-synthesis';
 import { SEED_SAT_RW_TRANSITIONS } from './seeds/sat-rw-transitions';
+// AP English Language & Composition — Vertical Slice initiative (Unit 1).
+// See docs/superpowers/specs/2026-07-10-ap-eng-lang-design.md.
+import { SEED_AP_ENGLANG_U1_RHETORICAL_SITUATION } from './seeds/ap-englang-u1-rhetorical-situation';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2552,6 +2555,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_SAT_RW_GRAMMAR_STRUCTURE,
   SEED_SAT_RW_RHETORICAL_SYNTHESIS,
   SEED_SAT_RW_TRANSITIONS,
+  SEED_AP_ENGLANG_U1_RHETORICAL_SITUATION,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
