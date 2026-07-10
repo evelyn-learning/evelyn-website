@@ -1301,6 +1301,23 @@ import { SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-ev
 import { SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
 import { SEED_AP_ENGLANG_U1_FRQ_PRACTICE } from './seeds/ap-englang-u1-frq-practice';
 // AP English Language Units 2-5 (Phase 2 fan-out) — content plans
+// AP English Language Units 6-9 (Phase 2 fan-out) — content plans
+import { SEED_AP_ENGLANG_U6_ANALYZING_STYLE } from './seeds/ap-englang-u6-analyzing-style';
+import { SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE } from './seeds/ap-englang-u6-diction-connotation-tone';
+import { SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES } from './seeds/ap-englang-u6-figurative-language-schemes';
+import { SEED_AP_ENGLANG_U6_SYNTAX_FOR_EFFECT } from './seeds/ap-englang-u6-syntax-for-effect';
+import { SEED_AP_ENGLANG_U7_COMPLEX_REASONING } from './seeds/ap-englang-u7-complex-reasoning';
+import { SEED_AP_ENGLANG_U7_NUANCE_QUALIFICATION_CONCESSION } from './seeds/ap-englang-u7-nuance-qualification-concession';
+import { SEED_AP_ENGLANG_U7_RHETORICAL_RISK } from './seeds/ap-englang-u7-rhetorical-risk';
+import { SEED_AP_ENGLANG_U7_SITUATING_IN_CONTEXT } from './seeds/ap-englang-u7-situating-in-context';
+import { SEED_AP_ENGLANG_U8_COMPETING_PERSPECTIVES } from './seeds/ap-englang-u8-competing-perspectives';
+import { SEED_AP_ENGLANG_U8_QUALIFYING_WITH_SOURCES } from './seeds/ap-englang-u8-qualifying-with-sources';
+import { SEED_AP_ENGLANG_U8_SOPHISTICATION_IN_SYNTHESIS } from './seeds/ap-englang-u8-sophistication-in-synthesis';
+import { SEED_AP_ENGLANG_U8_SOURCE_CREDIBILITY_BIAS } from './seeds/ap-englang-u8-source-credibility-bias';
+import { SEED_AP_ENGLANG_U9_MCQ_READING_STRATEGY } from './seeds/ap-englang-u9-mcq-reading-strategy';
+import { SEED_AP_ENGLANG_U9_MCQ_WRITING_EDITING } from './seeds/ap-englang-u9-mcq-writing-editing';
+import { SEED_AP_ENGLANG_U9_REVISION_AND_SOPHISTICATION } from './seeds/ap-englang-u9-revision-and-sophistication';
+import { SEED_AP_ENGLANG_U9_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u9-timed-writing-strategy';
 import { SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT } from './seeds/ap-englang-u2-building-an-argument';
 import { SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL } from './seeds/ap-englang-u2-counterargument-rebuttal';
 import { SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS } from './seeds/ap-englang-u2-intros-conclusions';
@@ -2586,6 +2603,23 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT,
   SEED_AP_ENGLANG_U1_FRQ_PRACTICE,
   // AP English Language Units 2-5 content plans
+  // AP English Language Units 6-9 content plans
+  SEED_AP_ENGLANG_U6_ANALYZING_STYLE,
+  SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE,
+  SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES,
+  SEED_AP_ENGLANG_U6_SYNTAX_FOR_EFFECT,
+  SEED_AP_ENGLANG_U7_COMPLEX_REASONING,
+  SEED_AP_ENGLANG_U7_NUANCE_QUALIFICATION_CONCESSION,
+  SEED_AP_ENGLANG_U7_RHETORICAL_RISK,
+  SEED_AP_ENGLANG_U7_SITUATING_IN_CONTEXT,
+  SEED_AP_ENGLANG_U8_COMPETING_PERSPECTIVES,
+  SEED_AP_ENGLANG_U8_QUALIFYING_WITH_SOURCES,
+  SEED_AP_ENGLANG_U8_SOPHISTICATION_IN_SYNTHESIS,
+  SEED_AP_ENGLANG_U8_SOURCE_CREDIBILITY_BIAS,
+  SEED_AP_ENGLANG_U9_MCQ_READING_STRATEGY,
+  SEED_AP_ENGLANG_U9_MCQ_WRITING_EDITING,
+  SEED_AP_ENGLANG_U9_REVISION_AND_SOPHISTICATION,
+  SEED_AP_ENGLANG_U9_TIMED_WRITING_STRATEGY,
   SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT,
   SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL,
   SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS,
