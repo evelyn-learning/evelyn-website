@@ -164,6 +164,44 @@ const ALL_REPLACEMENTS: Replacement[] = [
   ...LETTER_RESPELLING_REPLACEMENTS,
 ];
 
+/** Spoken names for single-letter math variables in derivative
+ *  notation ("dee why", "dee ex"). Fallback: the letter itself. */
+const VAR_SPOKEN: Record<string, string> = {
+  a: 'ay', b: 'bee', c: 'see', e: 'ee', f: 'ef', g: 'jee',
+  k: 'kay', m: 'em', n: 'en', p: 'pee', q: 'cue', r: 'ar',
+  s: 'ess', t: 'tee', u: 'you', v: 'vee', x: 'ex', y: 'why', z: 'zee',
+};
+const spokenVar = (ch: string): string => VAR_SPOKEN[ch.toLowerCase()] ?? ch;
+
+/**
+ * Derivative / differential notation → spoken form. Deterministic
+ * backstop for the prompt's speak-math-in-words rule: seed content and
+ * brain slips still emit raw "dy/dx", which Cartesia voices as
+ * "die slash dx" (live 2026-07-09, portal calc sessions). Runs BEFORE
+ * the slash whitelist (which deliberately never touches fractions) and
+ * before letter respelling (which only matches standalone letters, so
+ * two-letter "dy" reads as the word "die").
+ */
+function rewriteDerivatives(t: string): string {
+  // d²y/dx² and d^2y/dx^2 — second derivative fractions.
+  t = t.replace(
+    /\bd(?:²|\^2)\s*([a-z])\s*\/\s*d\s*([a-z])\s*(?:²|\^2)/gi,
+    (_, top: string, bot: string) => `dee squared ${spokenVar(top)} over dee ${spokenVar(bot)} squared`,
+  );
+  // dy/dx, dx/dt, … — first-derivative fractions. Both sides must be a
+  // d-prefixed single letter, so numeric fractions and word ratios
+  // ("3/4", "profit/revenue") can never match.
+  t = t.replace(
+    /\bd([a-z])\s*\/\s*d([a-z])\b/gi,
+    (_, top: string, bot: string) => `dee ${spokenVar(top)} over dee ${spokenVar(bot)}`,
+  );
+  // Bare differential tokens ("take dy and divide by dx"). Lowercase
+  // common calculus variables only — case-sensitive and \b-guarded so
+  // "dying", "Dr", and ordinary words never match.
+  t = t.replace(/\bd([xytuv])\b/g, (_, v: string) => `dee ${spokenVar(v)}`);
+  return t;
+}
+
 /**
  * Apply all pronunciation rewrites + punctuation normalizations.
  * Order matters within sections (longer matches first — "arcsin"
@@ -171,6 +209,12 @@ const ALL_REPLACEMENTS: Replacement[] = [
  */
 export function rewriteForTTS(raw: string): string {
   let t = raw;
+  // Double quotes (straight + curly) are stripped outright: after a
+  // number Cartesia reads `"6"` as an inch mark ("six inch"), and
+  // quotation marks add nothing audible elsewhere. Apostrophes /
+  // single quotes are untouched (contractions).
+  t = t.replace(/["“”]/g, '');
+  t = rewriteDerivatives(t);
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = t.replace(pattern, replacement);
   }
