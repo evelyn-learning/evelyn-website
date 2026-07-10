@@ -12,6 +12,9 @@
  * in as the stroke immediately before them (document order) completes.
  * Above STROKE_BATCH strokes, strokes share start slots so dense
  * figures still finish inside the ceiling.
+ *
+ * totalMs is the TRUE animation end (the stroke budget, extended by any
+ * trailing fade) — downstream queue spacing depends on it.
  */
 
 export type Drawable = { kind: 'stroke'; length: number } | { kind: 'fill' };
@@ -71,7 +74,11 @@ export function planSvgDrawOn(drawables: Drawable[]): DrawPlan {
   });
 
   steps.sort((a, b) => a.index - b.index);
-  return { steps, totalMs: total };
+  // totalMs must be the TRUE animation end: a fill trailing the last
+  // stroke fades past the stroke budget, and downstream queue spacing
+  // (Task 2's hook) schedules the next item off totalMs.
+  const maxEnd = steps.reduce((m, s) => Math.max(m, s.delayMs + s.durMs), 0);
+  return { steps, totalMs: Math.max(total, maxEnd) };
 }
 
 export function planHtmlWipe(rowCount: number): DrawPlan {

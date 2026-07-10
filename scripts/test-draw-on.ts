@@ -63,6 +63,16 @@ const strokes = (n: number): Drawable[] =>
   check('batched plan still fits ceiling', plan.totalMs === 1500);
 }
 
+// ── trailing fill never overshoots totalMs (queue-spacing contract) ──
+{
+  const trailing = planSvgDrawOn([
+    { kind: 'stroke', length: 50 }, { kind: 'stroke', length: 50 }, { kind: 'fill' },
+  ]);
+  const maxEnd = Math.max(...trailing.steps.map((s) => s.delayMs + s.durMs));
+  check('totalMs covers the trailing fill exactly', trailing.totalMs === maxEnd);
+  check('trailing-fill totalMs = budget + fade', trailing.totalMs === 800 + 250);
+}
+
 // ── degenerate inputs ─────────────────────────────────────────
 {
   check('zero drawables → empty plan, 0ms', planSvgDrawOn([]).totalMs === 0 && planSvgDrawOn([]).steps.length === 0);
