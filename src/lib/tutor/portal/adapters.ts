@@ -12,6 +12,7 @@ import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
 import type { PracticeSources, PlanLite, BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
+import { resolvePassage } from '@/lib/tutor/passages/store';
 import type { FrqRubric } from '@evelyn/portal-contract/v1';
 
 type Difficulty = 1 | 2 | 3 | 4;
@@ -103,6 +104,13 @@ function resolveTrySegment(itemId: string): SegmentTryYourself | null {
   return null;
 }
 
+/** Resolve a `passageId` to its full stimulus text, undefined when absent or
+ *  unknown. Shared by both GradeItem producers below so passage-aware
+ *  grading (grade-free-response.ts) actually sees the stimulus text. */
+function resolvePassageText(passageId?: string): string | undefined {
+  return passageId ? resolvePassage(passageId)?.fullText : undefined;
+}
+
 /** Resolve a gradable FRQ item by id from the curated try-yourself seeds.
  *  Item ids are plan-qualified (`${planId}::${segmentId}`) so the answer key
  *  resolves to the exact authoring plan. A segment with no rubric grades via
@@ -115,6 +123,7 @@ export function resolveGradeItem(itemId: string): GradeItem | null {
     rubric: seg.rubric,
     expectedAnswer: seg.expectedAnswer,
     modelResponse: seg.modelResponse,
+    passageText: resolvePassageText(seg.passageId),
   };
 }
 
@@ -134,6 +143,10 @@ export interface ResolvedAssessmentKey {
   /** Item hints — used to synthesize a short review rationale (never sent as an
    *  answer key; only a derived feedback string reaches the portal). */
   hints?: string[];
+  /** Resolved stimulus text (from passageId) — threaded into gradeFreeResponse
+   *  so a scored-quiz FRQ gets the same passage-aware grading as the
+   *  standalone /grade endpoint (grade-free-response.ts). */
+  passageText?: string;
 }
 
 export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAssessmentKey | null> {
@@ -151,6 +164,7 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
       rubric: seg.rubric,
       modelResponse: seg.modelResponse,
       hints: seg.hints,
+      passageText: resolvePassageText(seg.passageId),
     };
   }
   // Bare id → ProblemBank (globally-unique ids; choices are string[]; the
@@ -175,6 +189,7 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
         choices,
         correctChoiceId,
         hints: b.hints,
+        passageText: resolvePassageText(b.passageId),
       };
     }
   } catch {

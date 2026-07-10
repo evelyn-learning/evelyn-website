@@ -89,6 +89,7 @@
     "test:pedagogy-d2": "npx tsx src/lib/tutor/portal/extract-social-threads.test.ts",
     "test:passages": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/passages/store.test.ts",
     "test:portal-grading-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/grade-free-response.test.ts",
+    "test:adapters-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/adapters.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
     "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
