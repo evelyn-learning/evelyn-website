@@ -1299,6 +1299,7 @@ import { SEED_AP_ENGLANG_U1_READING_FOR_CLAIM } from './seeds/ap-englang-u1-read
 import { SEED_AP_ENGLANG_U1_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defensible-thesis';
 import { SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
 import { SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
+import { SEED_AP_ENGLANG_U1_FRQ_PRACTICE } from './seeds/ap-englang-u1-frq-practice';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2564,6 +2565,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U1_DEFENSIBLE_THESIS,
   SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY,
   SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT,
+  SEED_AP_ENGLANG_U1_FRQ_PRACTICE,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
