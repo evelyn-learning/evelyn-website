@@ -43,6 +43,7 @@
     "test:cartesia-registry": "npx tsx scripts/test-cartesia-voice-registry.ts",
     "test:tts-flag": "npx tsx scripts/test-tts-engine-flag.ts",
     "test:tts-pronunciation": "npx tsx scripts/test-tts-pronunciation.ts",
+    "test:dispatch-dedupe": "npx tsx scripts/test-dispatch-dedupe.ts",
     "test:cancel-storm": "npx tsx scripts/test-cancel-storm.ts",
     "test:perception-watchdog": "npx tsx scripts/test-perception-watchdog.ts",
     "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",

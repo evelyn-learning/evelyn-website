@@ -65,6 +65,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
+import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import {
   extractDeclarations,
@@ -797,6 +798,11 @@ export function VoiceTutorRealtime({
   // effect can tell a natural playback finish from a killed one.
   const cancelStormRef = useRef<CancelStormGovernor>(new CancelStormGovernor());
   const speechKilledAtRef = useRef<number>(0);
+  // Perception dispatch dedupe (2026-07-09, session-1783615623994): the
+  // direct-dispatch/late-fallback paths bypass the production-WS
+  // suppress window, so a perception re-emission (post-reconnect) fired
+  // the same utterance twice → two brain replies. Short exact-text window.
+  const perceptionDispatchDeduperRef = useRef<DispatchDeduper>(new DispatchDeduper());
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -11227,6 +11233,11 @@ export function VoiceTutorRealtime({
           // Production-WS transcripts that already fired BEFORE
           // late-fallback are caught by the queue-drain dedup above.
           productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+          if (!perceptionDispatchDeduperRef.current.shouldDispatch(t.text, Date.now())) {
+            console.warn(`[PERCEPTION] late-fallback duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
+            onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
+            return;
+          }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
@@ -11254,6 +11265,11 @@ export function VoiceTutorRealtime({
           console.warn(`[PERCEPTION] direct-dispatch (new_turn, prod=${prodState}): firing as student turn, transcript=${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_direct_dispatch', `${heur.verdict} at prod=${prodState}`);
           productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+          if (!perceptionDispatchDeduperRef.current.shouldDispatch(t.text, Date.now())) {
+            console.warn(`[PERCEPTION] direct-dispatch duplicate dropped: ${JSON.stringify(t.text).slice(0, 80)}`);
+            onDebugEvent?.('perception_dispatch_duplicate_dropped', t.text.slice(0, 80));
+            return;
+          }
           void handleStudentTranscriptForBrain(t.text, { bypassPerceptionDedupe: true });
           return;
         }
