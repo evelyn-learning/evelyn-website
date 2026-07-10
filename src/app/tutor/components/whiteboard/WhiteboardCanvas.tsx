@@ -88,6 +88,7 @@ import { stripRedundantChoiceLabel } from './choiceLabel';
 import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
+import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -1846,6 +1847,27 @@ function scribbleMatchesItem(
 
 function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // Phase 2: animate each mark on ONCE (WAAPI on the mark's <g>). Marks
+  // re-render whenever the scribbles array changes; the seen-set keys on
+  // the mark's content seed so re-renders never replay. Kill-recovery
+  // removes the scribble command entirely → the node unmounts with its
+  // animation — no finishAll wiring needed (unlike items, marks cannot
+  // outlive their command). Note: two scribbles CAN share a seed (e.g. a
+  // re-emitted tick after kill-recovery targets the same feature) — the
+  // second one is intentionally skipped (no re-animation), not replayed.
+  const seenMarkSeedsRef = useRef<Set<string>>(new Set());
+  const handMarks = drawOnEnabled();
+  const animateMark = (el: SVGGElement | null, seed: string) => {
+    if (!el || !handMarks || seenMarkSeedsRef.current.has(seed)) return;
+    seenMarkSeedsRef.current.add(seed);
+    el.animate(
+      [
+        { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
+        { opacity: 1, clipPath: 'inset(0 0% 0 0)' },
+      ],
+      { duration: 400, easing: 'ease-out', fill: 'backwards' },
+    );
+  };
   // After paint, walk the parent element for data-feature-* markers the
   // target renderer exposed (e.g. <g data-feature="object"
   // data-feature-cx="0.25" data-feature-cy="0.55" data-feature-w="0.08"
@@ -2127,10 +2149,16 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         // shapes (circle/underline/box/arrow) silently render as a tick
         // so old session state + cached brain calls keep working.
         const isHighlight = s.shape === 'highlight';
+        const seed = `${s.targetFeature ?? s.target ?? 'mark'}`;
 
         let mark: React.ReactNode;
         if (isHighlight) {
-          mark = (
+          // Hand marker swipe when the flag is on and the region is
+          // swipe-shaped; translucent rect otherwise (tall regions, flag off).
+          const band = handMarks ? highlightBand(r, seed) : null;
+          mark = band ? (
+            <path d={strokeOutline(band.spine, band.width, seed)} fill={color} fillOpacity="0.3" stroke="none" />
+          ) : (
             <rect
               x={r.x} y={r.y} width={r.w} height={r.h}
               fill={color} fillOpacity="0.25" stroke="none"
@@ -2152,41 +2180,56 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           let ty = r.y - half * 0.2;
           if (tx + half > vbW - 2) tx = r.x + r.w - half * 0.8;
           if (ty - half * 0.6 < 2) ty = r.y + half * 0.8;
-          // Two-segment ✓ path: short stroke from upper-left of the
-          // ascender down to the cusp, then long stroke up to upper-right.
-          const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
-          const inner = Math.max(3, tickSize * 0.25);
-          // White halo underneath so the colored tick reads on ANY
-          // background fill (yellow Na cell, green frayer cell, etc.).
-          // 2026-05-13 user feedback (image #62): red tick on yellow
-          // Na cell faded into the fill and covered the symbol.
-          // Dual-stroke pattern: render a slightly-fatter WHITE path
-          // first, then the colored path on top — gives the colored
-          // stroke a thin white outline that pops against anything.
-          mark = (
-            <g>
-              <path
-                d={d}
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth={inner + Math.max(2, tickSize * 0.14)}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity={0.95}
-              />
-              <path
-                d={d}
-                fill="none"
-                stroke={color}
-                strokeWidth={inner}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </g>
-          );
+          if (handMarks) {
+            // Hand-drawn ✓: same spine geometry as the stroked path below,
+            // rendered as two filled variable-width outlines (white halo
+            // underneath for any-background readability — same rationale
+            // as the dual-stroke version).
+            const spine = tickSpine(tx, ty, tickSize);
+            const inner = Math.max(3, tickSize * 0.25);
+            mark = (
+              <g>
+                <path d={strokeOutline(spine, inner + Math.max(2, tickSize * 0.14) + 2, `${seed}-halo`)} fill="#ffffff" opacity={0.95} stroke="none" />
+                <path d={strokeOutline(spine, inner + 1.5, seed)} fill={color} stroke="none" />
+              </g>
+            );
+          } else {
+            // Two-segment ✓ path: short stroke from upper-left of the
+            // ascender down to the cusp, then long stroke up to upper-right.
+            const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+            const inner = Math.max(3, tickSize * 0.25);
+            // White halo underneath so the colored tick reads on ANY
+            // background fill (yellow Na cell, green frayer cell, etc.).
+            // 2026-05-13 user feedback (image #62): red tick on yellow
+            // Na cell faded into the fill and covered the symbol.
+            // Dual-stroke pattern: render a slightly-fatter WHITE path
+            // first, then the colored path on top — gives the colored
+            // stroke a thin white outline that pops against anything.
+            mark = (
+              <g>
+                <path
+                  d={d}
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth={inner + Math.max(2, tickSize * 0.14)}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={0.95}
+                />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={color}
+                  strokeWidth={inner}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            );
+          }
         }
 
-        return <g key={i}>{mark}</g>;
+        return <g key={i} ref={(el) => animateMark(el, seed)}>{mark}</g>;
       })}
     </svg>
   );
