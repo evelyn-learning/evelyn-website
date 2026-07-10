@@ -45,6 +45,7 @@
     "test:tts-pronunciation": "npx tsx scripts/test-tts-pronunciation.ts",
     "test:cancel-storm": "npx tsx scripts/test-cancel-storm.ts",
     "test:perception-watchdog": "npx tsx scripts/test-perception-watchdog.ts",
+    "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",
     "test:sentence-spacing": "npx tsx scripts/test-sentence-spacing.ts",
     "test:ink-reconstruct": "npx tsx scripts/test-ink-reconstruct.ts",
     "test:sketch-validate": "npx tsx scripts/test-sketch-validate.ts",
