@@ -51,7 +51,9 @@ const COLORS = {
   grid: '#e2e8f0',
 };
 
-const LEGEND_ENTRIES: Array<{ key: keyof Omit<EnergyBarsPosition, 'label'>; label: string; color: string }> = [
+/** Exported so the tool-scope test can assert the brain-invisible legend
+ *  still matches what show_energy_bars' description promises. */
+export const LEGEND_ENTRIES: Array<{ key: keyof Omit<EnergyBarsPosition, 'label'>; label: string; color: string }> = [
   { key: 'ke', label: 'KE (kinetic)', color: COLORS.ke },
   { key: 'pe', label: 'PE (gravitational)', color: COLORS.pe },
   { key: 'spring', label: 'PE (spring)', color: COLORS.spring },

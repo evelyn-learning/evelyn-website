@@ -1395,7 +1395,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_energy_bars',
-    description: 'Stacked bar chart of energy components at multiple labeled positions in a scenario. Each position is one column; the renderer auto-draws a dashed total-energy line when all columns sum to the same total.',
+    description: 'MECHANICS ONLY. Stacked bar chart of MECHANICAL energy at labeled positions in a physics scenario (a falling ball, a pendulum, a block on a spring, a roller coaster). Each position is one column; the renderer auto-draws a dashed total-energy line when all columns sum to the same total.\n\nThe rendered legend is FIXED to kinetic/gravitational mechanics — the bars are labelled "KE (kinetic)", "PE (gravitational)", "PE (spring)", "Thermal (lost)" — and you CANNOT see or change those labels. So do NOT reach for this tool to depict any other kind of energy: light/radiant, chemical (photosynthesis, respiration, combustion, bond energy), electrical, nuclear, or sound. Putting sunlight into `ke` and stored sugar into `pe` renders a kinetic-vs-gravitational chart for a biology lesson, and the student sees a legend that contradicts everything you are saying. For an energy-FLOW narrative across a process (sunlight → sugar, fuel → heat → work), use `show_diagram` (e.g. the `photosynthesis` kind, or `flowchart_simple` for a generic process chain) instead.',
     parameters: {
       type: 'object',
       properties: {

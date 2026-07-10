@@ -27,6 +27,7 @@
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
     "test:page-grouping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-grouping.ts",
+    "test:energy-bars-scope": "npx tsx scripts/test-energy-bars-scope.ts",
     "test:board-map": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-board-map.ts",
     "test:resume-seed": "npx tsx scripts/test-resume-seed-guard.ts",
     "test:tutor-reactions": "npx tsx scripts/test-tutor-reactions.ts",
