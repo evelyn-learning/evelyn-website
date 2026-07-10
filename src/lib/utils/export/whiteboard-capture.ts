@@ -22,6 +22,8 @@
  */
 
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
+import { drawOnEnabled } from '@/app/tutor/components/whiteboard/useDrawOn';
 
 const CAPTURE_WIDTH_PX = 760;   // matches the whiteboard's nominal width
 const CAPTURE_PADDING_PX = 16;  // matches the renderer's inner padding
@@ -324,6 +326,12 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
     const color = s.color || '#f59e0b';
     const cx = rx + rw / 2;
     const cy = ry + rh / 2;
+    // Seed convention mirrors the live overlay (WhiteboardCanvas.tsx
+    // ScribbleOverlays): targetFeature first, raw target second, 'mark'
+    // fallback. ScribbleInput only declares targetFeature — the cast
+    // tolerates a `target` field if a future caller ever plumbs it
+    // through, without changing behavior today.
+    const seed = `${(s as { targetFeature?: string; target?: string }).targetFeature ?? (s as { target?: string }).target ?? 'mark'}`;
 
     const group = document.createElementNS(SVG_NS, 'g');
     const setAttrs = (el: Element, attrs: Record<string, string | number>) => {
@@ -335,12 +343,22 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
     // to `tick`. Labels move to the per-page annotation strip — they
     // don't render on the diagram itself anymore.
     if (s.shape === 'highlight') {
-      const rect = document.createElementNS(SVG_NS, 'rect');
-      setAttrs(rect, {
-        x: rx, y: ry, width: rw, height: rh,
-        fill: color, 'fill-opacity': '0.25', stroke: 'none',
-      });
-      group.appendChild(rect);
+      // SmoothDraw P2: hand-drawn swipe when drawOnEnabled() and the
+      // region is swipe-shaped; translucent rect otherwise (flag off,
+      // or too-tall regions) — mirrors the live overlay exactly.
+      const band = drawOnEnabled() ? highlightBand({ x: rx, y: ry, w: rw, h: rh }, seed) : null;
+      if (band) {
+        const swipe = document.createElementNS(SVG_NS, 'path');
+        setAttrs(swipe, { d: strokeOutline(band.spine, band.width, seed), fill: color, 'fill-opacity': '0.3', stroke: 'none' });
+        group.appendChild(swipe);
+      } else {
+        const rect = document.createElementNS(SVG_NS, 'rect');
+        setAttrs(rect, {
+          x: rx, y: ry, width: rw, height: rh,
+          fill: color, 'fill-opacity': '0.25', stroke: 'none',
+        });
+        group.appendChild(rect);
+      }
     } else {
       // Corner-outside anchor + clamps — mirrors the live overlay's tick
       // placement in WhiteboardCanvas.tsx (2026-07-10: the centered-right
@@ -351,24 +369,36 @@ function injectHtmlScribbleOverlay(container: HTMLElement, scribbles: ScribbleIn
       let ty = ry - half * 0.2;
       if (tx + half > vw - 2) tx = rx + rw - half * 0.8;
       if (ty - half * 0.6 < 2) ty = ry + half * 0.8;
-      const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
       const inner = Math.max(3, tickSize * 0.25);
-      // White halo underneath for any-background readability —
-      // matches the live overlay's dual-stroke approach.
-      const halo = document.createElementNS(SVG_NS, 'path');
-      setAttrs(halo, {
-        d, fill: 'none', stroke: '#ffffff',
-        'stroke-width': inner + Math.max(2, tickSize * 0.14),
-        'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
-      });
-      group.appendChild(halo);
-      const tickPath = document.createElementNS(SVG_NS, 'path');
-      setAttrs(tickPath, {
-        d, fill: 'none', stroke: color,
-        'stroke-width': inner,
-        'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-      });
-      group.appendChild(tickPath);
+      if (drawOnEnabled()) {
+        // Hand-drawn ✓: same spine geometry as the live overlay, two
+        // filled variable-width outlines (white halo + colored tick).
+        const spine = tickSpine(tx, ty, tickSize);
+        const halo = document.createElementNS(SVG_NS, 'path');
+        setAttrs(halo, { d: strokeOutline(spine, inner + Math.max(2, tickSize * 0.14) + 2, `${seed}-halo`), fill: '#ffffff', opacity: '0.95', stroke: 'none' });
+        group.appendChild(halo);
+        const handTick = document.createElementNS(SVG_NS, 'path');
+        setAttrs(handTick, { d: strokeOutline(spine, inner + 1.5, seed), fill: color, stroke: 'none' });
+        group.appendChild(handTick);
+      } else {
+        const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+        // White halo underneath for any-background readability —
+        // matches the live overlay's dual-stroke approach.
+        const halo = document.createElementNS(SVG_NS, 'path');
+        setAttrs(halo, {
+          d, fill: 'none', stroke: '#ffffff',
+          'stroke-width': inner + Math.max(2, tickSize * 0.14),
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
+        });
+        group.appendChild(halo);
+        const tickPath = document.createElementNS(SVG_NS, 'path');
+        setAttrs(tickPath, {
+          d, fill: 'none', stroke: color,
+          'stroke-width': inner,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        });
+        group.appendChild(tickPath);
+      }
     }
     // Labels deliberately not drawn on the diagram — moved to the
     // per-page annotation strip below the rendered items.
@@ -562,6 +592,12 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
       const rh = rhFrac * vh;
       const cx = rx + rw / 2;
       const cy = ry + rh / 2;
+      // Seed convention mirrors the live overlay (WhiteboardCanvas.tsx
+      // ScribbleOverlays): targetFeature first, raw target second, 'mark'
+      // fallback. ScribbleInput only declares targetFeature — the cast
+      // tolerates a `target` field if a future caller ever plumbs it
+      // through, without changing behavior today.
+      const seed = `${(s as { targetFeature?: string; target?: string }).targetFeature ?? (s as { target?: string }).target ?? 'mark'}`;
 
       const group = doc.createElementNS(SVG_NS, 'g');
 
@@ -573,12 +609,22 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
       // other shape (including legacy `circle`/`underline`/`box`/`arrow`)
       // maps to a small tick just past the feature's right edge.
       if (s.shape === 'highlight') {
-        const rect = doc.createElementNS(SVG_NS, 'rect');
-        addAttrs(rect, {
-          x: rx, y: ry, width: rw, height: rh,
-          fill: color, 'fill-opacity': '0.25', stroke: 'none',
-        });
-        group.appendChild(rect);
+        // SmoothDraw P2: hand-drawn swipe when drawOnEnabled() and the
+        // region is swipe-shaped; translucent rect otherwise (flag off,
+        // or too-tall regions) — mirrors the live overlay exactly.
+        const band = drawOnEnabled() ? highlightBand({ x: rx, y: ry, w: rw, h: rh }, seed) : null;
+        if (band) {
+          const swipe = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(swipe, { d: strokeOutline(band.spine, band.width, seed), fill: color, 'fill-opacity': '0.3', stroke: 'none' });
+          group.appendChild(swipe);
+        } else {
+          const rect = doc.createElementNS(SVG_NS, 'rect');
+          addAttrs(rect, {
+            x: rx, y: ry, width: rw, height: rh,
+            fill: color, 'fill-opacity': '0.25', stroke: 'none',
+          });
+          group.appendChild(rect);
+        }
       } else {
         // Corner-outside anchor + clamps — keep in lockstep with the live
         // overlay (WhiteboardCanvas.tsx) and the capture mirror above.
@@ -588,22 +634,34 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
         let ty = ry - half * 0.2;
         if (tx + half > vw - 2) tx = rx + rw - half * 0.8;
         if (ty - half * 0.6 < 2) ty = ry + half * 0.8;
-        const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
         const inner = Math.max(3, tickSize * 0.25);
-        const halo = doc.createElementNS(SVG_NS, 'path');
-        addAttrs(halo, {
-          d, fill: 'none', stroke: '#ffffff',
-          'stroke-width': inner + Math.max(2, tickSize * 0.14),
-          'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
-        });
-        group.appendChild(halo);
-        const tickPath = doc.createElementNS(SVG_NS, 'path');
-        addAttrs(tickPath, {
-          d, fill: 'none', stroke: color,
-          'stroke-width': inner,
-          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-        });
-        group.appendChild(tickPath);
+        if (drawOnEnabled()) {
+          // Hand-drawn ✓: same spine geometry as the live overlay, two
+          // filled variable-width outlines (white halo + colored tick).
+          const spine = tickSpine(tx, ty, tickSize);
+          const halo = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(halo, { d: strokeOutline(spine, inner + Math.max(2, tickSize * 0.14) + 2, `${seed}-halo`), fill: '#ffffff', opacity: '0.95', stroke: 'none' });
+          group.appendChild(halo);
+          const handTick = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(handTick, { d: strokeOutline(spine, inner + 1.5, seed), fill: color, stroke: 'none' });
+          group.appendChild(handTick);
+        } else {
+          const d = `M ${tx - half} ${ty} L ${tx - half * 0.25} ${ty + half * 0.7} L ${tx + half} ${ty - half * 0.6}`;
+          const halo = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(halo, {
+            d, fill: 'none', stroke: '#ffffff',
+            'stroke-width': inner + Math.max(2, tickSize * 0.14),
+            'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.95',
+          });
+          group.appendChild(halo);
+          const tickPath = doc.createElementNS(SVG_NS, 'path');
+          addAttrs(tickPath, {
+            d, fill: 'none', stroke: color,
+            'stroke-width': inner,
+            'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+          });
+          group.appendChild(tickPath);
+        }
       }
       // Labels intentionally not drawn on the diagram — moved to the
       // per-page annotation strip mirror further down the PDF page.
