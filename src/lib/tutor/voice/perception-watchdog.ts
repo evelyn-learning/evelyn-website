@@ -1,8 +1,13 @@
 /**
  * Transcription-watchdog recovery decision for the perception WS.
  *
- * The watchdog arms on `speech_stopped` and fires when Whisper never
- * returns a `transcription.completed`. The dangerous hang is the one on
+ * NOTE: this guards usePerceptionWS (OpenAI Realtime transcription), the
+ * FALLBACK STT path. Production runs Cartesia Ink 2
+ * (NEXT_PUBLIC_TUTOR_STT_ENGINE=ink2 → useCartesiaInkWS), whose own
+ * watchdog already recovers regardless of socket state.
+ *
+ * The watchdog arms on `speech_stopped` and fires when the transcriber
+ * never returns a `transcription.completed`. The dangerous hang is on
  * a HEALTHY socket: readyState is OPEN, nothing errors, and the
  * student's utterance silently evaporates (observed as a 27s dead gap
  * in session-1783615559112 — the student repeated themselves twice and

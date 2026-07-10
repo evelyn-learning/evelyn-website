@@ -182,7 +182,10 @@ const STYLE_FIELD_LABELS: Array<[keyof NonNullable<TeacherPersonaWire['style']>,
   ['questioning', 'Questioning'],
   ['encouragement', 'Encouragement'],
   ['humor', 'Humor level'],
-  ['catchphrases', 'Catchphrases (yours — use sparingly, at natural moments)'],
+  // Catchphrases deliberately absent (2026-07-10): listing them in the
+  // always-on identity block kept them at maximum salience every single
+  // turn. They now reach the brain only through the rationed per-turn
+  // style reminder — see renderTeacherStyleReminder.
   ['analogyDomains', 'Analogy domains you reach for'],
   ['errorResponse', 'When the student makes an error'],
   ['formality', 'Formality'],
@@ -283,6 +286,28 @@ export function teacherFirstName(name: string): string {
 }
 
 /**
+ * How often the style reminder OFFERS the teacher's catchphrases: turn 0,
+ * then every Nth brain turn.
+ *
+ * Rationing the invitation is the only thing that works. Two rounds of
+ * prompt wording ("use sparingly", then "seasoning: at most one per turn,
+ * never the same one twice in a row") both failed in production: with two
+ * catchphrases the brain simply alternated them. Measured live 2026-07-10
+ * (session-1783693044096, 25 tutor turns): "One step at a time" in 18
+ * turns (72%), "Look at that" in 19 (76%), BOTH in 15. A model asked to
+ * ration something it can see in its own context every turn will not.
+ */
+export const CATCHPHRASE_TURN_INTERVAL = 4;
+
+/** Turn 0 and every CATCHPHRASE_TURN_INTERVAL-th turn thereafter. An
+ *  absent index (callers that don't track turns) never offers them —
+ *  fail-quiet, since over-use is the failure mode we're fixing. */
+function offersCatchphrase(brainTurnIndex: number | undefined): boolean {
+  if (typeof brainTurnIndex !== 'number' || brainTurnIndex < 0) return false;
+  return brainTurnIndex % CATCHPHRASE_TURN_INTERVAL === 0;
+}
+
+/**
  * Pure: the per-turn `<teacher_style>` body (mid-session style salience,
  * 2026-07-04). Once the opening directive retires (≤4 brain turns), only
  * the static <teacher_identity> block carries the persona, and its
@@ -297,7 +322,10 @@ export function teacherFirstName(name: string): string {
  * Returns null when none of the three markers is present — no block,
  * fail-soft (real onboarded teachers may have sparse style fields).
  */
-export function renderTeacherStyleReminder(t: TeacherPersonaWire): string | null {
+export function renderTeacherStyleReminder(
+  t: TeacherPersonaWire,
+  opts?: { brainTurnIndex?: number },
+): string | null {
   const s = t.style;
   if (!s) return null;
   const bits: string[] = [];
@@ -305,14 +333,11 @@ export function renderTeacherStyleReminder(t: TeacherPersonaWire): string | null
   if (s.analogyDomains && s.analogyDomains.length > 0) {
     bits.push(`reach for analogies from ${s.analogyDomains.slice(0, 3).join(' / ')}`);
   }
-  if (s.catchphrases && s.catchphrases.length > 0) {
-    // Live-run lesson (2026-07-04): listing catchphrases per turn without a
-    // repetition guard made the brain say the SAME one verbatim in
-    // back-to-back exchanges — "slightly formulaic" per the judge. They are
-    // seasoning, not a per-turn quota.
+  if (s.catchphrases && s.catchphrases.length > 0 && offersCatchphrase(opts?.brainTurnIndex)) {
     bits.push(
-      `your catchphrases (${s.catchphrases.slice(0, 2).map((c) => `"${c}"`).join(' / ')}) are seasoning: ` +
-      `at most one per turn, never the same one twice in a row`,
+      `if it lands naturally you may drop in one of your catchphrases ` +
+      `(${s.catchphrases.slice(0, 2).map((c) => `"${c}"`).join(' / ')}) — ` +
+      `at most one, never the same one twice in a row`,
     );
   }
   if (bits.length === 0) return null;

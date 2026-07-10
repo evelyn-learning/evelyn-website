@@ -22,7 +22,7 @@ import {
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
-import { renderTeacherIntroDirective, renderTeacherStyleReminder, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -58,9 +58,6 @@ import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib
 import {
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
-  detectTransformation,
-  buildTransformationLatex,
-  detectAnalogy,
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
@@ -94,6 +91,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
@@ -885,7 +883,6 @@ export function VoiceTutorRealtime({
   // transformation-arrow fallback) + whether ANY board render fired this turn
   // (so the fallback only fires when the brain drew nothing). Reset at turn start.
   const turnNarrationRef = useRef<string[]>([]);
-  const boardRenderFiredThisTurnRef = useRef(false);
   // Task B3 (flag-gated): whether the NEXT callBrainOnce call to complete is
   // the proactive-opener turn, and how many valid (post-validation) board
   // renders it dispatches. Only ever written/read when TUTOR_PEDAGOGY_OPENER
@@ -927,7 +924,13 @@ export function VoiceTutorRealtime({
   // (style must persist all session; the T1 judge kept scoring
   // style-consistent 4/5 "not strongly distinctive beyond the opening").
   // null ⇒ flag off / no persona / diagnostic session ⇒ never attached.
-  const teacherStyleReminderRef = useRef<string | null>(null);
+  // Holds the PERSONA (not a prebuilt string) because the reminder is now
+  // rebuilt per turn: catchphrases are offered only every Nth turn (see
+  // CATCHPHRASE_TURN_INTERVAL — a prebuilt string would offer them always).
+  const teacherStylePersonaRef = useRef<TeacherPersonaWire | null>(null);
+  /** Counts style-reminder turns, i.e. brain turns after the opening
+   *  directive retires. Drives the catchphrase interval. */
+  const teacherStyleTurnRef = useRef(0);
   // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
   // effect (below) re-runs mid-session whenever studentPreferences changes
   // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
@@ -2392,13 +2395,6 @@ export function VoiceTutorRealtime({
   // sentences dispatched to TTS so far this turn.
   const dispatchVisualRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
   dispatchVisualRef.current = (processed: WhiteboardCommand[]) => {
-    // Assist bookkeeping: record that the brain drew teaching content this turn
-    // (any show_* / scribble / handwrite), so the transformation-arrow fallback
-    // only fires when the board stayed bare. Meta commands (newPage/scrollTo)
-    // don't count. Tracked regardless of render-sync on/off.
-    if (TUTOR_BOARD_ANCHOR_ASSIST && processed.some(isBoardRenderCommand)) {
-      boardRenderFiredThisTurnRef.current = true;
-    }
     // Task B3 (flag-gated): count valid (post-validation, about-to-render)
     // board renders this batch contributes toward the opener turn, so the
     // finally-block check can tell "opener drew nothing" from "opener drew
@@ -4580,6 +4576,22 @@ export function VoiceTutorRealtime({
         cmdWithId._duplicateOf = existing.itemId;
         console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
         onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        // The brain re-showed this figure because it's about to narrate it.
+        // Dropping the duplicate is right; leaving the student on another
+        // page is not (session-1783693044096: the tutor described the
+        // photosynthesis diagram while the student sat two pages away).
+        // Scroll to it — but never yank the view for a same-page repeat.
+        if (shouldScrollToDedupedItem({
+          itemPageTitle: existing.pageTitle,
+          currentPageTitle: catalogRef.current.getCurrentPageTitle(),
+        })) {
+          onWhiteboardCommand([{
+            action: 'scrollTo',
+            target: 'item',
+            targetId: existing.itemId,
+          } as unknown as WhiteboardCommand]);
+          onDebugEvent?.('dedup_scroll_to_existing', `${existing.itemId} on "${existing.pageTitle}"`);
+        }
         // Whiteboard kill-recovery (B): a deferred ("revising") render that the
         // retry just re-emitted identically dedup-dropped right here — that's
         // the CONFIRM signal. Keep the original (drop it from the pending set
@@ -6233,9 +6245,8 @@ export function VoiceTutorRealtime({
     ttsPlaybackStartedCountRef.current = 0;
     renderBufferPausedRef.current = false;
     renderSyncActiveRef.current = true;
-    // Board-anchor assist: fresh per-turn narration + "brain drew nothing" flag.
+    // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
-    boardRenderFiredThisTurnRef.current = false;
     // Task B3 (flag-gated): fresh per-turn valid-render counter for the
     // opener-fallback check. openingTurnPendingRef itself is NOT reset here
     // (it's a one-shot "is this the opener turn" flag seeded once at mount
@@ -6853,9 +6864,14 @@ export function VoiceTutorRealtime({
         // persona / diagnostic ⇒ ref is null ⇒ field stays undefined ⇒
         // request byte-identical.
         let styleReminder: string | undefined;
-        if (TUTOR_PEDAGOGY_OPENER && teacherStyleReminderRef.current && !openingDirective) {
-          styleReminder = teacherStyleReminderRef.current;
-          console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
+        if (TUTOR_PEDAGOGY_OPENER && teacherStylePersonaRef.current && !openingDirective) {
+          const turn = teacherStyleTurnRef.current++;
+          styleReminder = renderTeacherStyleReminder(teacherStylePersonaRef.current, {
+            brainTurnIndex: turn,
+          }) ?? undefined;
+          if (styleReminder) {
+            console.log(`[teacher-style] attaching per-turn style reminder (turn ${turn}, catchphrases ${turn % CATCHPHRASE_TURN_INTERVAL === 0 ? 'offered' : 'withheld'})`);
+          }
         }
 
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
@@ -10044,64 +10060,23 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('killed_render_rollback_deferred', `${staleIds.length}: ${staleIds.join(',')}`);
         }
       }
-      // Board-anchor assist (stream-end fallbacks): auto-anchor content the brain
-      // narrated but DREW NOTHING for the whole turn (boardRenderFired gate). The
-      // brain now reliably sketches analogies it engages with (prompt path), so
-      // the auto-fire is the last resort for FULLY-neglected turns only — firing
-      // when the brain merely wrote an equation caused DUPLICATES (it would draw
-      // the figure itself a turn later; 2026-06-23). Transformation arrow first,
-      // else analogy → sketch. Both dispatch TERMINALLY, fail to nothing.
-      if (
-        TUTOR_BOARD_ANCHOR_ASSIST
-        && turnNarrationRef.current.length > 0
-        && !boardRenderFiredThisTurnRef.current
-      ) {
-        const narration = turnNarrationRef.current.join(' ');
-        const xform = detectTransformation(narration);
-        if (xform) {
-          onWhiteboardCommand([{
-            action: 'showEquation',
-            latex: buildTransformationLatex(xform),
-            label: 'Transformation',
-          } as WhiteboardCommand]);
-          onDebugEvent?.('board_anchor_transformation_arrow', `${xform.from} → ${xform.to}`);
-        } else if (TUTOR_SKETCH) {
-          const analogy = detectAnalogy(narration);
-          if (analogy) {
-            onDebugEvent?.('board_anchor_analogy', analogy.concept.slice(0, 60));
-            const ctrl = new AbortController();
-            sketchAbortsRef.current.add(ctrl);
-            const timer = setTimeout(() => ctrl.abort(), SKETCH_TIMEOUT_MS);
-            void fetch('/api/tutor/sketch', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ concept: analogy.concept, labels: [], sessionId: sessionIdRef.current }),
-              signal: ctrl.signal,
-            })
-              .then((r) => (r.ok ? r.json() : { primitives: null }))
-              .then((data: { primitives?: unknown[] | null }) => {
-                clearTimeout(timer);
-                sketchAbortsRef.current.delete(ctrl);
-                const prims = Array.isArray(data?.primitives) && data.primitives.length > 0 ? data.primitives : null;
-                if (prims) {
-                  onWhiteboardCommand([{
-                    action: 'showSketch',
-                    primitives: prims,
-                    title: 'Sketch',
-                    concept: analogy.concept,
-                  } as WhiteboardCommand]);
-                  onDebugEvent?.('board_anchor_analogy_rendered', `${prims.length} prims`);
-                } else {
-                  onDebugEvent?.('board_anchor_analogy_dropped', 'fail-to-nothing');
-                }
-              })
-              .catch(() => {
-                clearTimeout(timer);
-                sketchAbortsRef.current.delete(ctrl);
-              });
-          }
-        }
-      }
+      // Board-anchor auto-fire REMOVED (2026-07-10, session-1783693044096).
+      // It regex-scanned the turn's narration and drew on the brain's behalf
+      // whenever no render survived the turn. Three failure modes, all live:
+      //  • it transcribed sentence fragments verbatim — "turns them into food"
+      //    became the board equation "them → food" (pronoun and all);
+      //  • its sketches were drawn by an isolated doodler that sees only the
+      //    extracted phrase, so a Calvin-cycle lesson got an unlabelled
+      //    "kneading dough" doodle with no ATP/NADPH anywhere;
+      //  • worst, the gate misread dedup. When the brain re-showed a figure
+      //    already on the board (exactly the right move), the dedup filter
+      //    dropped the command before dispatchVisual ran, boardRenderFired
+      //    stayed false, and the assist "rescued" the turn by drawing a
+      //    redundant sketch INSTEAD of the figure the brain asked for.
+      // The brain owns show_sketch directly (TUTOR_SKETCH tool path): it has
+      // the board state, the lesson context, and a labels argument — none of
+      // which a regex over prose has. Re-anchoring (extractAnchorKeywords /
+      // sentenceIntroducesAnchor) is unaffected and still runs in render-sync.
       // Task B3 (flag-gated): fail-to-simple opener render fallback. If this
       // was the proactive-opener turn (openingTurnPendingRef, seeded once at
       // mount from beh.opener !== 'none') and it dispatched zero valid board
@@ -11982,10 +11957,8 @@ export function VoiceTutorRealtime({
             // Diagnostic sessions stay outside the persona theatrics —
             // same targetKind gate as the completion gate above. null
             // (no persona / no audible style markers) ⇒ never attached.
-            teacherStyleReminderRef.current =
-              teacherPersona && sig.targetKind !== 'diagnostic'
-                ? renderTeacherStyleReminder(teacherPersona)
-                : null;
+            teacherStylePersonaRef.current =
+              teacherPersona && sig.targetKind !== 'diagnostic' ? teacherPersona : null;
             openingTurnArmedRef.current = true;
           }
         }
