@@ -50,6 +50,15 @@ function main() {
     assert.ok(prompt.includes('x(t) = cos t, x(t) = sin t'), 'the observed duplicate-LHS failure example missing');
   });
 
+  // 2026-07-10 (session-1783659462609): the tutor made a student hand-
+  //    multiply 792 x 128 x 243 for a binomial-theorem lesson, and kept
+  //    quizzing after the student twice asked it to just compute.
+  test('arithmetic-grind clause: bulky arithmetic is not the lesson', () => {
+    assert.ok(prompt.includes('Bulky arithmetic is not the lesson'), 'clause header missing');
+    assert.ok(prompt.includes('compute it YOURSELF'), 'tutor-computes mandate missing');
+    assert.ok(prompt.includes('immediately'), 'honor just-tell-me immediately missing');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

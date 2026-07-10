@@ -215,6 +215,17 @@ export function rewriteForTTS(raw: string): string {
   // single quotes are untouched (contractions).
   t = t.replace(/["“”]/g, '');
   t = rewriteDerivatives(t);
+  // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
+  // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
+  // glyphs) and "==" (never appears in tutor speech).
+  t = t.replace(/\s*=\s*/g, ' equals ');
+  // Unicode sub/superscript digits: Cartesia mangles them ("T₁" was
+  // voiced roughly as "T-jash"). Speak the plain digit ("T 1").
+  const SUBSCRIPT_DIGITS: Record<string, string> = {
+    '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4',
+    '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
+  };
+  t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch}`);
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = t.replace(pattern, replacement);
   }

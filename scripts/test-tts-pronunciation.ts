@@ -169,3 +169,19 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('dying is not a derivative', 'dying is not a derivative', 'dy-inside-word-untouched');
   console.log('OK — live-session 2026-07-09 regressions (derivatives + quotes)');
 }
+
+// Live-session regressions 2026-07-10 (session-1783659462609): "=" voiced
+// as "equal sign" ("n=12" → "n equal sign 12") and unicode subscripts
+// mangled ("T₁" voiced as "T-jash").
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('along with n=12, r=5 into that formula', 'along with n equals 12, r equals 5 into that formula', 'equals-sign-spoken');
+  eq('x = 4 is the answer', 'x equals 4 is the answer', 'spaced-equals');
+  eq('since r=5 counts after the first term, T₁.', 'since r equals 5 counts after the first term, T 1.', 'unicode-subscript-T1');
+  eq('a₀ and a₁ are the coefficients', 'a 0 and a 1 are the coefficients', 'subscript-coefficients');
+  console.log('OK — live-session 2026-07-10 regressions (equals + subscripts)');
+}
