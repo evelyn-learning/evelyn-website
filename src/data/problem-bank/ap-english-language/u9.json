@@ -1,0 +1,230 @@
+[
+  {
+    "id": "apenglang.mcq-reading-strategy.mcq.01",
+    "loId": "apenglang.mcq-reading-strategy",
+    "cedCode": "AP-ENGLANG-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "In \"A Modest Proposal,\" the proposer writes, \"having turned my thoughts for many years upon this important subject, and maturely weighed the several schemes of our projectors, I have always found them grossly mistaken in their computation.\" This claim to have carefully studied and rejected other reformers' faulty calculations primarily serves to —",
+    "choices": [
+      "confirms that earlier writers had, in fact, proposed several cheaper methods for supporting the kingdom's poor children",
+      "establishes the proposer as a careful, credible thinker, priming readers to take his coming proposal seriously",
+      "summarizes the entire pamphlet's larger argument about the economic crisis facing eighteenth-century Ireland as a whole",
+      "quietly undercuts the proposer's own credibility by admitting that his reasoning has also been mistaken in the past"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what this claim of careful, corrective thinking does for the reader's TRUST in the speaker, not just what it states.",
+      "Eliminate any choice that merely restates content or describes the whole pamphlet rather than this one sentence's function."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-reading-strategy.mcq.02",
+    "loId": "apenglang.mcq-reading-strategy",
+    "cedCode": "AP-ENGLANG-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass asks, \"What, to the American slave, is your Fourth of July?\" In this question, the word \"your\" functions primarily to —",
+    "choices": [
+      "mark the holiday as belonging only to the free audience, excluding the enslaved from the celebration it names",
+      "indicate the specific calendar date, the fourth of July, on which Douglass is delivering this particular address",
+      "draw attention to a personal disagreement Douglass has with his audience's taste in how holidays ought to be celebrated",
+      "suggest that Douglass fully shares, alongside his audience, in the holiday's celebration of national independence"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what changes in meaning if 'your' were simply 'the' — what extra work does the possessive add?",
+      "This is a meaning-in-context question: the word's ordinary sense (a date) isn't in doubt — its function in this exact sentence is."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-reading-strategy.mcq.03",
+    "loId": "apenglang.mcq-reading-strategy",
+    "cedCode": "AP-ENGLANG-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry says, \"I have but one lamp by which my feet are guided, and that is the lamp of experience.\" As used in this sentence, \"the lamp of experience\" is best understood as —",
+    "choices": [
+      "a literal physical lamp Henry carried with him on his journey to the convention hall",
+      "a reference to Henry's private religious faith guiding his personal conscience on this matter",
+      "a metaphor for judging the future by looking to documented past events, not to hope or guesswork",
+      "an admission that Henry has no real way of predicting the future and is simply guessing"
+    ],
+    "answer": "C",
+    "hints": [
+      "'Lamp' and 'guided' point toward a method, not a physical object — ask what kind of method 'experience' names."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-reading-strategy.mcq.04",
+    "loId": "apenglang.mcq-reading-strategy",
+    "cedCode": "AP-ENGLANG-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln closes by resolving \"that government of the people, by the people, for the people, shall not perish from the earth.\" This closing tricolon primarily —",
+    "choices": [
+      "reminds the audience of the precise number of soldiers who died in the battle fought on this ground",
+      "emphasizes narrowly that the new government must continue collecting taxes directly from its citizens",
+      "suggests that Lincoln privately doubts this form of government will actually manage to survive",
+      "redefines what is at stake, shifting focus from mourning the dead to preserving self-government"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the tricolon as defining what 'government' actually means here — what is it defining, and why would that matter more to Lincoln's purpose than a body count?"
+    ]
+  },
+  {
+    "id": "apenglang.mcq-reading-strategy.mcq.05",
+    "loId": "apenglang.mcq-reading-strategy",
+    "cedCode": "AP-ENGLANG-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift's proposer writes that \"a young healthy child well nursed, is, at a year old, a most delicious nourishing and wholesome food.\" The calm, appreciative diction of this description primarily creates —",
+    "choices": [
+      "a jarring gap between the tone's calm appreciation and the content's monstrousness, producing the passage's central irony",
+      "an accurate account of several cooking methods available to well-off eighteenth-century households at the time",
+      "a general impression of the widespread economic hardship affecting Ireland's countryside at the time",
+      "a sincere reflection of Swift's own personal culinary preferences, quite apart from the pamphlet's satirical persona"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether the WRITER (Swift) or the PERSONA (the proposer) is speaking here, and what gap opens between the calm words and what they describe."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-writing-editing.mcq.01",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student draft reads: \"(1) The town library cut its weekend hours last year to save money. (2) ___, community book clubs meeting there have doubled in size since then.\" Which choice best completes the transition in sentence (2)?",
+    "choices": [
+      "Therefore,",
+      "For example,",
+      "Even so,",
+      "In addition,"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare what sentence (1) predicts (less library use) with what sentence (2) reports (more club activity) — is that relationship addition, cause/effect, or contrast?",
+      "A connector that sounds natural in isolation can still signal the wrong logical relationship — check the direction, not just the tone."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-writing-editing.mcq.02",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student draft reads: \"(3) Volunteering builds valuable job skills for teenagers. (4) ___\" Which choice, added as sentence (4), best supports the claim in sentence (3) with specific evidence?",
+    "choices": [
+      "Volunteering is generally considered a good use of a teenager's free time.",
+      "Some teenagers would understandably rather spend their free time relaxing instead of volunteering.",
+      "Teenagers have participated in community volunteer programs across the country for many decades now.",
+      "A 2021 survey of hiring managers found that 74% rated volunteer experience as valuable as paid part-time work."
+    ],
+    "answer": "D",
+    "hints": [
+      "The stated goal is SPECIFIC supporting evidence — eliminate any choice that's a vague generality, an opposing view, or a true-but-unrelated fact."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-writing-editing.mcq.03",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student draft reads: \"Due to the fact that the experiment was conducted in a careful and meticulous manner, the results were highly reliable.\" Which revision most effectively improves the sentence's conciseness without losing its meaning?",
+    "choices": [
+      "Owing to the fact that the experiment was carried out in a careful and meticulous fashion, the results proved to be extremely reliable.",
+      "Because the experiment was conducted carefully, the results were reliable.",
+      "The results were reliable.",
+      "The experiment, which was performed in a careful and meticulous fashion by the researchers involved, produced results that could be considered highly reliable."
+    ],
+    "answer": "B",
+    "hints": [
+      "Conciseness means cutting padding WITHOUT losing meaning — a shorter choice that drops the cause-and-effect claim entirely has failed the goal, not succeeded at it.",
+      "'Due to the fact that' and 'in a careful and meticulous manner' are both padded phrasings for a single plainer word each."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-writing-editing.mcq.04",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student draft reads: \"(5) Marie Curie conducted groundbreaking research on radioactivity throughout her career. (6) She discovers two new elements, polonium and radium, in the process.\" Which choice best revises the underlined verb in sentence (6) to match the tense established in sentence (5)?",
+    "choices": [
+      "has discovered",
+      "will discover",
+      "discovered",
+      "discovers"
+    ],
+    "answer": "C",
+    "hints": [
+      "Scan the surrounding sentence for its established tense before picking — sentence (5) is simple past, not present or future."
+    ]
+  },
+  {
+    "id": "apenglang.mcq-writing-editing.mcq.05",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student draft reads: \"(7) The committee reviewed dozens of proposals this quarter, evaluating each against the district's published criteria. (8) Honestly, most of them were kind of a mess.\" Which choice best revises sentence (8) to match the formal register established in sentence (7)?",
+    "choices": [
+      "However, most of the proposals lacked the documentation and organization the criteria required.",
+      "To be fair, some of the proposals were not that bad.",
+      "Honestly, most of them were kind of a mess, to be real.",
+      "Yeah, a lot of those proposals just weren't good enough, honestly."
+    ],
+    "answer": "A",
+    "hints": [
+      "Sentence (7) uses formal, precise language ('published criteria') — the revision should match that register, not just swap one casual phrase for another."
+    ]
+  },
+  {
+    "id": "apenglang.timed-writing-strategy.mcq.01",
+    "loId": "apenglang.timed-writing-strategy",
+    "cedCode": "AP-ENGLANG-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "A prompt asks students to analyze the rhetorical choices Lincoln makes in the Gettysburg Address to convey his message about the significance of the occasion. Within a five-minute planning window, which thesis is both defensible (an arguable claim, not a summary) and specific enough to outline three body paragraphs from?",
+    "choices": [
+      "Lincoln delivered this address at the dedication of a military cemetery in Gettysburg, Pennsylvania, in November of 1863.",
+      "The Gettysburg Address is widely regarded as one of the most famous speeches in American history.",
+      "Lincoln mentions liberty, dedication, and government several times throughout the address.",
+      "Through an escalating triad of denial and a closing tricolon, Lincoln shifts the occasion from mourning the dead to recommitting the living to the nation's founding ideal."
+    ],
+    "answer": "D",
+    "hints": [
+      "A thesis that only reports facts about when/where the speech was given can't be outlined into three analytical body paragraphs.",
+      "The fastest test: could this thesis be argued against? A summary or a vague evaluation ('famous,' 'persuasive') cannot."
+    ]
+  },
+  {
+    "id": "apenglang.revision-and-sophistication.mcq.01",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph includes this flat but technically correct sentence: \"Social media has changed the way teenagers communicate.\" Which revision of this sentence best earns the AP Lang rubric's sophistication point by adding a genuine, specific qualification or stake — rather than a vague, bolted-on closing line?",
+    "choices": [
+      "Social media has changed the way teenagers communicate in many complex, multifaceted, and profoundly significant ways.",
+      "Social media has changed communication most visibly in the shift from sustained conversation to rapid, fragmented exchange — a trade that speeds up contact but narrows room for genuine disagreement.",
+      "Social media has changed the way teenagers communicate, which shows the complexity and richness of modern life today.",
+      "Social media has changed the way teenagers communicate, and this is truly an important and highly significant development."
+    ],
+    "answer": "B",
+    "hints": [
+      "Real sophistication names a SPECIFIC boundary, mechanism, or stake tied to this claim — ask whether the sentence could be pasted into an essay on a totally different topic without anyone noticing.",
+      "Fancier vocabulary or a generic 'shows the complexity' phrase is the classic trap the rubric does NOT reward."
+    ]
+  }
+]

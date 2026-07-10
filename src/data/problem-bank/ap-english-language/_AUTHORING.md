@@ -52,3 +52,34 @@ is simply not required to *answer* the MCQ.
   all 20 items (the known "everything keys to A" trap from earlier banks).
 - All choices and stems are ORIGINAL — written for this bank, not transcribed from
   any real AP exam. `license: 'internal-original'` per `scripts/seed-problem-bank.ts`.
+
+## Unit 4: Methods of Development (Rhetorical Analysis)
+
+Passage-anchored READING MCQ bank (`u4.json`) against the 4 Unit-4 LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-englang-u4-*.ts`). This unit is
+analysis-focused (no argument/synthesis composition skill), so every item
+is a READING MCQ — no WRITING/EDITING items. `cedCode` mirrors each LO's
+`standard` field.
+
+| loId | cedCode | Skill (CED framework) | # items in u4.json |
+|---|---|---|---|
+| `apenglang.methods-of-development` | `AP-ENGLANG-4.1` | Identify the method(s) a writer uses to develop an idea (narration, cause-effect, comparison-contrast, definition, exemplification, description) and explain why that method serves the writer's purpose. | 2 |
+| `apenglang.intros-conclusions-analysis` | `AP-ENGLANG-4.2` | Analyze how an introduction frames an argument and how a conclusion resolves/escalates/redirects it. | 3 |
+| `apenglang.diction-and-tone` | `AP-ENGLANG-4.3` | Analyze word-choice connotation, describe the resulting tone, and trace tonal shift/irony. | 3 |
+| `apenglang.analyzing-line-of-reasoning` | `AP-ENGLANG-4.4` | Trace how a writer's claims build cumulatively across a text (premise → warrant → next claim). | 2 |
+| **Total** | | | **10** |
+
+Unlike Unit 1 (two dedicated passage sets), Unit 4 items are spread across
+all four Unit-1 seed passages so every LO gets tested against more than one
+author's style: Lincoln (Gettysburg Address) × 3, Swift (A Modest Proposal)
+× 3, Henry (Give Me Liberty) × 2, Douglass (Fourth of July) × 2. Same
+self-contained-stem rule as Unit 1: each stem inlines the specific short
+line it questions (`problemText` alone is enough to solve/verify the item);
+`passageId` is still set on every item for set-grouping/full-passage
+rendering.
+
+- Difficulty 1–4 mixed (spread: 1×1, 2×5, 3×3, 4×1).
+- Correct-answer letters distributed non-cyclically: A=2, B=3, C=2, D=3
+  (sequence `BDACDBCADB`) — not all-A, not a repeating ABCD pattern.
+- Verified via `npm run seed:problem-bank -- --course=ap-english-language
+  --file=u4.json --dry-run`: 10/10 passed Sonnet verify, 0 rejected.

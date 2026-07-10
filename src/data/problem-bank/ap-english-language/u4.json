@@ -1,0 +1,202 @@
+[
+  {
+    "id": "apenglang.methods-of-development.mcq.01",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "In the line \"conceived in Liberty, and dedicated to the proposition that all men are created equal,\" Lincoln develops his opening claim about the nation primarily through which method — and to what end?",
+    "choices": [
+      "cause-effect — showing that the Civil War itself was directly caused by the precise wording of this one clause",
+      "definition — pinning down the nation's founding identity as a commitment to an idea (equality), rather than merely a date or place, so the rest of the speech can build on that redefinition",
+      "narration — recounting, as a continuous story, each individual founding father's personal decision to include this clause",
+      "comparison-contrast — measuring the new nation directly against a specific rival nation founded on different principles"
+    ],
+    "answer": "B",
+    "hints": [
+      "A method of development is HOW an idea gets built out, not just what the idea says.",
+      "Ask what this clause is doing: telling a story, tracing a cause, comparing two things, or pinning down what the nation fundamentally IS."
+    ]
+  },
+  {
+    "id": "apenglang.methods-of-development.mcq.02",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift opens his proposal not with his solution but with this scene: \"the streets, the roads, and cabbin-doors crowded with beggars of the female sex, followed by three, four, or six children, all in rags.\" This method of development is best described as —",
+    "choices": [
+      "narration — telling, in strict chronological order, the personal life story of one specific named beggar family",
+      "definition — formally defining the legal term \"beggar\" as it was used in Irish law of the period",
+      "cause-effect — tracing, step by step, the specific historical causes of the famine that produced this poverty",
+      "description — using concrete visual detail of a crowded, ragged street scene to make the abstract problem of poverty vividly felt before any solution is proposed"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice how much physical, visual detail is packed into this single sentence before Swift states any claim.",
+      "Ask which method makes an abstract problem 'felt' through the senses rather than argued through logic or story."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions-analysis.mcq.01",
+    "loId": "apenglang.intros-conclusions-analysis",
+    "cedCode": "AP-ENGLANG-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry opens his speech, \"it is natural to man to indulge in the illusions of hope. We are apt to shut our eyes against a painful truth.\" As an introduction, this opening move primarily —",
+    "choices": [
+      "frames the entire speech as a corrective to comforting illusions, signaling that Henry's aim is to force the delegates to face an unwelcome truth rather than cling to hope",
+      "apologizes in advance for the emotional tone Henry is about to adopt for the remainder of his remarks",
+      "summarizes, point by point, the specific terms of the peace proposal the delegates are about to vote on",
+      "concedes that Henry himself has, until this moment, shared in the delegates' hopeful view of reconciliation"
+    ],
+    "answer": "A",
+    "hints": [
+      "An introduction's job is to frame how everything that follows should be read — ask what stance this opening establishes.",
+      "What does Henry warn hope will do to those who indulge in it, and how does that warning set up the rest of the speech?"
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions-analysis.mcq.02",
+    "loId": "apenglang.intros-conclusions-analysis",
+    "cedCode": "AP-ENGLANG-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln closes, \"that government of the people, by the people, for the people, shall not perish from the earth.\" As a conclusion, this closing line primarily —",
+    "choices": [
+      "resolves a specific factual question about the exact number of soldiers who died at Gettysburg",
+      "redirects listeners away from the war entirely toward a discussion of postwar reconstruction policy",
+      "universalizes the sacrifice at this one battlefield into a stake in the survival of self-government everywhere, rather than merely closing out a funeral tribute",
+      "restates, without elaboration, the same idea already fully explained in the speech's opening sentence"
+    ],
+    "answer": "C",
+    "hints": [
+      "A strong conclusion often pushes a specific, local case toward a larger, universal principle.",
+      "Ask what this line claims is at stake beyond just this one battlefield and this one funeral."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions-analysis.mcq.03",
+    "loId": "apenglang.intros-conclusions-analysis",
+    "cedCode": "AP-ENGLANG-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass opens by asking, \"why am I called upon to speak here to-day?\" instead of offering a direct statement of thanks. As an introduction, this opening question primarily —",
+    "choices": [
+      "simply requests that the event's organizers clarify, for procedural reasons, why he specifically was chosen over another speaker",
+      "reassures the audience that Douglass fully shares their patriotic pride in the day being celebrated",
+      "announces, as a matter of scheduling, that Douglass's remarks will be brief given the lateness of the invitation",
+      "frames the entire speech around Douglass's own doubtful standing, previewing that what follows will interrogate rather than celebrate the occasion"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask why a public speaker would open by questioning his own right to be speaking at all.",
+      "This opening sets the lens for everything that follows — does it read as gratitude, or as doubt?"
+    ]
+  },
+  {
+    "id": "apenglang.diction-and-tone.mcq.01",
+    "loId": "apenglang.diction-and-tone",
+    "cedCode": "AP-ENGLANG-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift describes the children as \"a very great additional grievance\" and admits past projectors were \"grossly mistaken in their computation.\" Word choices like \"grievance\" and \"computation\" cluster together to build which tone?",
+    "choices": [
+      "a warm, sentimental tone that dwells lovingly on the emotional bond between mothers and children",
+      "a detached, clinical, bureaucratic tone that treats a human crisis as a matter of paperwork and arithmetic",
+      "a furious, accusatory tone that directly blames named government officials for the crisis",
+      "a playful, joking tone that signals from the outset that none of the proposal should be taken seriously"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Grievance' and 'computation' both belong to the vocabulary of paperwork and ledgers, not of feeling.",
+      "Ask what kind of speaker reaches for these particular words to describe starving children."
+    ]
+  },
+  {
+    "id": "apenglang.diction-and-tone.mcq.02",
+    "loId": "apenglang.diction-and-tone",
+    "cedCode": "AP-ENGLANG-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift calls a year-old child \"a most delicious nourishing and wholesome food.\" Applied to this subject, this diction most clearly produces which effect?",
+    "choices": [
+      "a sincere culinary review, meant literally as helpful advice for parents seeking better nutrition",
+      "an earnest, appreciative tone that signals Swift's genuine approval of the practice he is describing",
+      "an ironic clash between calm, appetizing word choice and a monstrous subject, forcing the reader to supply the horror the flat tone withholds",
+      "a neutral scientific description meant only to establish the nutritional content of the meat in question"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether a reasonable person could actually mean these words literally about this subject.",
+      "Irony through diction works by mismatch — what's mismatched between the tone here and what's being described?"
+    ]
+  },
+  {
+    "id": "apenglang.diction-and-tone.mcq.03",
+    "loId": "apenglang.diction-and-tone",
+    "cedCode": "AP-ENGLANG-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry warns that false hope makes listeners \"listen to the song of that siren till she transforms us into beasts.\" This diction primarily creates a tone of —",
+    "choices": [
+      "alarm — casting comforting hope as a seductive force that degrades reason and dignity if indulged",
+      "nostalgia — fondly recalling old myths that Henry heard in his own childhood education",
+      "gratitude — thanking the delegates for their optimism about the prospects of peace",
+      "amusement — poking gentle fun at delegates who enjoy classical literature too much"
+    ],
+    "answer": "A",
+    "hints": [
+      "A siren's song is deadly precisely because it sounds pleasant — map that onto what Henry says hope will do.",
+      "Ask what 'transforms us into beasts' suggests about the cost of giving in to that song."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-line-of-reasoning.mcq.01",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass first says, \"Would to God, both for your sakes and ours, that an affirmative answer could be truthfully returned to these questions!\" and later declares, \"This Fourth of July is yours, not mine.\" How do these two moments connect in Douglass's line of reasoning?",
+    "choices": [
+      "The first flatly contradicts the second, so the two statements cancel each other out and reveal a real inconsistency in the argument",
+      "The first and second are unrelated observations about two entirely separate topics, connected only by their shared location in the speech",
+      "The first restates a fact already proven earlier, and the second merely repeats that same fact in different words",
+      "The first briefly concedes what Douglass wishes were true, so that the second statement can turn against that wish and expose it as false, sharpening the accusation that follows"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether the first statement is something Douglass actually believes, or something he wishes were true.",
+      "Look for the pivot: what happens to the wish once Douglass turns to what is actually the case?"
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-line-of-reasoning.mcq.02",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln moves through three claims: the dead \"have consecrated\" the ground; therefore \"it is for us the living... to be dedicated... to the unfinished work\"; so that the nation \"shall have a new birth of freedom.\" How do these three stages connect in Lincoln's line of reasoning?",
+    "choices": [
+      "Each stage restates the one before it in different words, so the passage is a single claim repeated three times rather than an actual chain",
+      "The soldiers' sacrifice already accomplished something words cannot (stage one); that fact obligates the living to finish their unfinished work (stage two); completing that work is what will produce a \"new birth of freedom\" (stage three) — each stage depends on the one before it",
+      "The three moments describe three unrelated audiences — the dead, the living delegates, and a future generation not yet born — with no logical connection between them",
+      "The passage abandons its claim about consecration and instead pivots to an entirely new argument about upcoming elections"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what obligation stage one creates, and what stage two claims we owe because of it.",
+      "A line of reasoning means each stage depends on the one before — check whether removing stage one would still make stage three make sense."
+    ]
+  }
+]
