@@ -15,6 +15,7 @@ import {
   renderTeacherPersonaBlock,
   renderTeacherIntroDirective,
   teacherFirstName,
+  resolveInitialTeacherId,
   renderTeacherStyleReminder,
   type TeacherPersonaWire,
 } from '../src/lib/tutor/ai/teacher-persona';
@@ -354,6 +355,17 @@ function main() {
   test('persona block: backstory is ask-only context, never volunteered', () => {
     const block = renderTeacherPersonaBlock(FULL_PERSONA);
     assert.match(block, /NEVER volunteer/i, 'backstory line must forbid volunteering it');
+  });
+
+  // ── Demo teacher persistence (2026-07-09): the /tutor picker reset to
+  //    Elena on every refresh, so an anonymous student refreshing between
+  //    sessions churned personas (Sameer → Sofia → Elena → Sameer in one
+  //    evening). The stored choice must survive; junk falls back to default.
+  test('resolveInitialTeacherId: stored valid id wins, junk/null falls back to default', () => {
+    assert.equal(resolveInitialTeacherId(DEMO_TEACHERS[1].id), DEMO_TEACHERS[1].id);
+    assert.equal(resolveInitialTeacherId('no-such-teacher'), DEMO_TEACHERS[0].id);
+    assert.equal(resolveInitialTeacherId(null), DEMO_TEACHERS[0].id);
+    assert.equal(resolveInitialTeacherId(''), DEMO_TEACHERS[0].id);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

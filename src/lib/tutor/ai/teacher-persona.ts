@@ -263,6 +263,19 @@ export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
  * name, and the honorific's period trips TTS sentence-splitting
  * ("Ms <pause> Kiara").
  */
+/**
+ * Pure: resolve the /tutor demo picker's initial teacher from a stored
+ * choice (localStorage). The picker used to reset to DEMO_TEACHERS[0]
+ * on every refresh, so an anonymous student refreshing between sessions
+ * met a different teacher each time (2026-07-09 LSAT sessions:
+ * Sameer → Sofia → Elena → Sameer in one evening). Unknown/absent
+ * stored ids fall back to the default.
+ */
+export function resolveInitialTeacherId(stored: string | null): string {
+  if (stored && DEMO_TEACHERS.some((t) => t.id === stored)) return stored;
+  return DEMO_TEACHERS[0].id;
+}
+
 export function teacherFirstName(name: string): string {
   const stripped = name.trim().replace(/^(Mr|Ms|Mrs|Mx|Dr|Prof)\.?\s+/i, '');
   const first = stripped.split(/\s+/)[0];
