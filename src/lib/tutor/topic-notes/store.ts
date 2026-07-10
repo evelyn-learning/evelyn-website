@@ -171,6 +171,115 @@ import { BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES } from './seeds/ap-st
 import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
+// ---------------------------------------------------------------------------
+// AP parity build 2026-07-10 — Macro (U1-U3,U5,U6), Env Sci (U1-U9), Psych
+// (U0-U5) topic-notes baselines. Brings the 3 courses to notes parity with
+// AP Stats + Calc BC. Authored per-plan from the lesson-plan seeds.
+// ---------------------------------------------------------------------------
+import { BASELINE_AP_ENVSCI_CARBON_WATER_CYCLES } from './seeds/ap-envsci-u1-carbon-water-cycles';
+import { BASELINE_AP_ENVSCI_ECOSYSTEMS_BIOMES } from './seeds/ap-envsci-u1-ecosystems-biomes';
+import { BASELINE_AP_ENVSCI_FOOD_WEBS } from './seeds/ap-envsci-u1-food-webs';
+import { BASELINE_AP_ENVSCI_NITROGEN_PHOSPHORUS_CYCLES } from './seeds/ap-envsci-u1-nitrogen-phosphorus-cycles';
+import { BASELINE_AP_ENVSCI_PRODUCTIVITY_ENERGY_FLOW } from './seeds/ap-envsci-u1-productivity-energy-flow';
+import { BASELINE_AP_ENVSCI_BIODIVERSITY_ISLAND_BIOGEO } from './seeds/ap-envsci-u2-biodiversity-island-biogeo';
+import { BASELINE_AP_ENVSCI_DISRUPTIONS_SUCCESSION } from './seeds/ap-envsci-u2-disruptions-succession';
+import { BASELINE_AP_ENVSCI_TOLERANCE_ADAPTATIONS } from './seeds/ap-envsci-u2-tolerance-adaptations';
+import { BASELINE_AP_ENVSCI_AGE_STRUCTURE_FERTILITY } from './seeds/ap-envsci-u3-age-structure-fertility';
+import { BASELINE_AP_ENVSCI_CARRYING_CAPACITY_GROWTH } from './seeds/ap-envsci-u3-carrying-capacity-growth';
+import { BASELINE_AP_ENVSCI_DEMOGRAPHIC_TRANSITION } from './seeds/ap-envsci-u3-demographic-transition';
+import { BASELINE_AP_ENVSCI_SURVIVORSHIP_R_K } from './seeds/ap-envsci-u3-survivorship-r-k';
+import { BASELINE_AP_ENVSCI_ATMOSPHERE_WIND } from './seeds/ap-envsci-u4-atmosphere-wind';
+import { BASELINE_AP_ENVSCI_CLIMATE_ENSO } from './seeds/ap-envsci-u4-climate-enso';
+import { BASELINE_AP_ENVSCI_PLATE_TECTONICS_SOIL } from './seeds/ap-envsci-u4-plate-tectonics-soil';
+import { BASELINE_AP_ENVSCI_WATERSHEDS_SOLAR } from './seeds/ap-envsci-u4-watersheds-solar';
+import { BASELINE_AP_ENVSCI_AGRICULTURE } from './seeds/ap-envsci-u5-agriculture';
+import { BASELINE_AP_ENVSCI_COMMONS_FISHING_FOOTPRINT } from './seeds/ap-envsci-u5-commons-fishing-footprint';
+import { BASELINE_AP_ENVSCI_FORESTRY_MINING } from './seeds/ap-envsci-u5-forestry-mining';
+import { BASELINE_AP_ENVSCI_URBANIZATION_WATER } from './seeds/ap-envsci-u5-urbanization-water';
+import { BASELINE_AP_ENVSCI_ENERGY_CONSERVATION } from './seeds/ap-envsci-u6-energy-conservation';
+import { BASELINE_AP_ENVSCI_ENERGY_OVERVIEW_FOSSIL } from './seeds/ap-envsci-u6-energy-overview-fossil';
+import { BASELINE_AP_ENVSCI_NUCLEAR_BIOMASS } from './seeds/ap-envsci-u6-nuclear-biomass';
+import { BASELINE_AP_ENVSCI_RENEWABLES } from './seeds/ap-envsci-u6-renewables';
+import { BASELINE_AP_ENVSCI_ACID_RAIN } from './seeds/ap-envsci-u7-acid-rain';
+import { BASELINE_AP_ENVSCI_AIR_POLLUTION_SOURCES } from './seeds/ap-envsci-u7-air-pollution-sources';
+import { BASELINE_AP_ENVSCI_AIR_QUALITY_MITIGATION } from './seeds/ap-envsci-u7-air-quality-mitigation';
+import { BASELINE_AP_ENVSCI_SMOG_INVERSION } from './seeds/ap-envsci-u7-smog-inversion';
+import { BASELINE_AP_ENVSCI_EUTROPHICATION_THERMAL } from './seeds/ap-envsci-u8-eutrophication-thermal';
+import { BASELINE_AP_ENVSCI_SOLID_WASTE } from './seeds/ap-envsci-u8-solid-waste';
+import { BASELINE_AP_ENVSCI_TOXICS_POPS_BIOMAG } from './seeds/ap-envsci-u8-toxics-pops-biomag';
+import { BASELINE_AP_ENVSCI_WATER_POLLUTION_SOURCES } from './seeds/ap-envsci-u8-water-pollution-sources';
+import { BASELINE_AP_ENVSCI_BIODIVERSITY_THREATS } from './seeds/ap-envsci-u9-biodiversity-threats';
+import { BASELINE_AP_ENVSCI_GREENHOUSE_CLIMATE } from './seeds/ap-envsci-u9-greenhouse-climate';
+import { BASELINE_AP_ENVSCI_OCEAN_CHANGES } from './seeds/ap-envsci-u9-ocean-changes';
+import { BASELINE_AP_ENVSCI_OZONE } from './seeds/ap-envsci-u9-ozone';
+import { BASELINE_AP_MACRO_COMPARATIVE_ADVANTAGE } from './seeds/ap-macro-u1-comparative-advantage';
+import { BASELINE_AP_MACRO_COST_BENEFIT } from './seeds/ap-macro-u1-cost-benefit';
+import { BASELINE_AP_MACRO_MARGINAL_ANALYSIS_CONSUMER } from './seeds/ap-macro-u1-marginal-analysis-consumer';
+import { BASELINE_AP_MACRO_PPC } from './seeds/ap-macro-u1-ppc';
+import { BASELINE_AP_MACRO_RESOURCE_ALLOCATION } from './seeds/ap-macro-u1-resource-allocation';
+import { BASELINE_AP_MACRO_SCARCITY } from './seeds/ap-macro-u1-scarcity';
+import { BASELINE_AP_MACRO_BUSINESS_CYCLE } from './seeds/ap-macro-u2-business-cycle';
+import { BASELINE_AP_MACRO_CIRCULAR_FLOW_GDP } from './seeds/ap-macro-u2-circular-flow-gdp';
+import { BASELINE_AP_MACRO_COSTS_OF_INFLATION } from './seeds/ap-macro-u2-costs-of-inflation';
+import { BASELINE_AP_MACRO_GDP_LIMITATIONS } from './seeds/ap-macro-u2-gdp-limitations';
+import { BASELINE_AP_MACRO_PRICE_INDICES_INFLATION } from './seeds/ap-macro-u2-price-indices-inflation';
+import { BASELINE_AP_MACRO_REAL_VS_NOMINAL_GDP } from './seeds/ap-macro-u2-real-vs-nominal-gdp';
+import { BASELINE_AP_MACRO_UNEMPLOYMENT } from './seeds/ap-macro-u2-unemployment';
+import { BASELINE_AP_MACRO_AGGREGATE_DEMAND } from './seeds/ap-macro-u3-aggregate-demand';
+import { BASELINE_AP_MACRO_AUTOMATIC_STABILIZERS } from './seeds/ap-macro-u3-automatic-stabilizers';
+import { BASELINE_AP_MACRO_CHANGES_AD_AS_SHORT_RUN } from './seeds/ap-macro-u3-changes-ad-as-short-run';
+import { BASELINE_AP_MACRO_EQUILIBRIUM_AD_AS } from './seeds/ap-macro-u3-equilibrium-ad-as';
+import { BASELINE_AP_MACRO_FISCAL_POLICY } from './seeds/ap-macro-u3-fiscal-policy';
+import { BASELINE_AP_MACRO_LONG_RUN_AGGREGATE_SUPPLY } from './seeds/ap-macro-u3-long-run-aggregate-supply';
+import { BASELINE_AP_MACRO_LONG_RUN_SELF_ADJUSTMENT } from './seeds/ap-macro-u3-long-run-self-adjustment';
+import { BASELINE_AP_MACRO_MULTIPLIERS } from './seeds/ap-macro-u3-multipliers';
+import { BASELINE_AP_MACRO_SHORT_RUN_AGGREGATE_SUPPLY } from './seeds/ap-macro-u3-short-run-aggregate-supply';
+import { BASELINE_AP_MACRO_CROWDING_OUT_LONG_RUN } from './seeds/ap-macro-u5-crowding-out-long-run';
+import { BASELINE_AP_MACRO_DEFICITS_DEBT } from './seeds/ap-macro-u5-deficits-debt';
+import { BASELINE_AP_MACRO_ECONOMIC_GROWTH } from './seeds/ap-macro-u5-economic-growth';
+import { BASELINE_AP_MACRO_FISCAL_MONETARY_SHORT_RUN } from './seeds/ap-macro-u5-fiscal-monetary-short-run';
+import { BASELINE_AP_MACRO_MONEY_GROWTH_INFLATION } from './seeds/ap-macro-u5-money-growth-inflation';
+import { BASELINE_AP_MACRO_PHILLIPS_CURVE } from './seeds/ap-macro-u5-phillips-curve';
+import { BASELINE_AP_MACRO_PUBLIC_POLICY_GROWTH } from './seeds/ap-macro-u5-public-policy-growth';
+import { BASELINE_AP_MACRO_BALANCE_OF_PAYMENTS } from './seeds/ap-macro-u6-balance-of-payments';
+import { BASELINE_AP_MACRO_EXCHANGE_RATES } from './seeds/ap-macro-u6-exchange-rates';
+import { BASELINE_AP_MACRO_FX_DETERMINANTS } from './seeds/ap-macro-u6-fx-determinants';
+import { BASELINE_AP_MACRO_FX_EFFECTS_ON_ECONOMY } from './seeds/ap-macro-u6-fx-effects-on-economy';
+import { BASELINE_AP_MACRO_FX_MARKET } from './seeds/ap-macro-u6-fx-market';
+import { BASELINE_AP_MACRO_TRADE_CAPITAL_FLOWS } from './seeds/ap-macro-u6-trade-capital-flows';
+import { BASELINE_AP_PSYCH_RESEARCH_METHODS } from './seeds/ap-psych-u0-research-methods';
+import { BASELINE_AP_PSYCH_BRAIN_STRUCTURES } from './seeds/ap-psych-u1-brain-structures';
+import { BASELINE_AP_PSYCH_CONSCIOUSNESS_SLEEP } from './seeds/ap-psych-u1-consciousness-sleep';
+import { BASELINE_AP_PSYCH_NERVOUS_ENDOCRINE } from './seeds/ap-psych-u1-nervous-endocrine';
+import { BASELINE_AP_PSYCH_NEURONS_NEUROTRANSMITTERS } from './seeds/ap-psych-u1-neurons-neurotransmitters';
+import { BASELINE_AP_PSYCH_SENSATION_PERCEPTION } from './seeds/ap-psych-u1-sensation-perception';
+import { BASELINE_AP_PSYCH_INTELLIGENCE } from './seeds/ap-psych-u2-intelligence';
+import { BASELINE_AP_PSYCH_MEMORY_FORGETTING } from './seeds/ap-psych-u2-memory-forgetting';
+import { BASELINE_AP_PSYCH_MEMORY_MODELS } from './seeds/ap-psych-u2-memory-models';
+import { BASELINE_AP_PSYCH_MEMORY_STORAGE_RETRIEVAL } from './seeds/ap-psych-u2-memory-storage-retrieval';
+import { BASELINE_AP_PSYCH_THINKING_LANGUAGE } from './seeds/ap-psych-u2-thinking-language';
+import { BASELINE_AP_PSYCH_CLASSICAL_CONDITIONING } from './seeds/ap-psych-u3-classical-conditioning';
+import { BASELINE_AP_PSYCH_COGNITIVE_DEVELOPMENT } from './seeds/ap-psych-u3-cognitive-development';
+import { BASELINE_AP_PSYCH_DEVELOPMENTAL_THEMES_METHODS } from './seeds/ap-psych-u3-developmental-themes-methods';
+import { BASELINE_AP_PSYCH_GENDER_SEXUAL_ORIENTATION } from './seeds/ap-psych-u3-gender-sexual-orientation';
+import { BASELINE_AP_PSYCH_OBSERVATIONAL_LEARNING } from './seeds/ap-psych-u3-observational-learning';
+import { BASELINE_AP_PSYCH_OPERANT_CONDITIONING } from './seeds/ap-psych-u3-operant-conditioning';
+import { BASELINE_AP_PSYCH_SOCIAL_EMOTIONAL_MORAL } from './seeds/ap-psych-u3-social-emotional-moral';
+import { BASELINE_AP_PSYCH_ATTRIBUTION_ATTITUDES } from './seeds/ap-psych-u4-attribution-attitudes';
+import { BASELINE_AP_PSYCH_EMOTION } from './seeds/ap-psych-u4-emotion';
+import { BASELINE_AP_PSYCH_MOTIVATION } from './seeds/ap-psych-u4-motivation';
+import { BASELINE_AP_PSYCH_PERSONALITY_ASSESSMENT } from './seeds/ap-psych-u4-personality-assessment';
+import { BASELINE_AP_PSYCH_PERSONALITY_THEORIES } from './seeds/ap-psych-u4-personality-theories';
+import { BASELINE_AP_PSYCH_PREJUDICE_STEREOTYPES } from './seeds/ap-psych-u4-prejudice-stereotypes';
+import { BASELINE_AP_PSYCH_SOCIAL_INFLUENCE } from './seeds/ap-psych-u4-social-influence';
+import { BASELINE_AP_PSYCH_ANXIETY_DISORDERS } from './seeds/ap-psych-u5-anxiety-disorders';
+import { BASELINE_AP_PSYCH_CLASSIFYING_DISORDERS } from './seeds/ap-psych-u5-classifying-disorders';
+import { BASELINE_AP_PSYCH_MOOD_DISORDERS } from './seeds/ap-psych-u5-mood-disorders';
+import { BASELINE_AP_PSYCH_POSITIVE_PSYCHOLOGY } from './seeds/ap-psych-u5-positive-psychology';
+import { BASELINE_AP_PSYCH_SCHIZO_PERSONALITY } from './seeds/ap-psych-u5-schizo-personality';
+import { BASELINE_AP_PSYCH_STRESS_HEALTH } from './seeds/ap-psych-u5-stress-health';
+import { BASELINE_AP_PSYCH_THERAPY } from './seeds/ap-psych-u5-therapy';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -288,6 +397,110 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES,
   BASELINE_AP_STATS_SLOPE_CI,
   BASELINE_AP_STATS_SLOPE_TEST,
+  // --- AP parity build 2026-07-10: Macro / Env Sci / Psych baselines ---
+  BASELINE_AP_ENVSCI_CARBON_WATER_CYCLES,
+  BASELINE_AP_ENVSCI_ECOSYSTEMS_BIOMES,
+  BASELINE_AP_ENVSCI_FOOD_WEBS,
+  BASELINE_AP_ENVSCI_NITROGEN_PHOSPHORUS_CYCLES,
+  BASELINE_AP_ENVSCI_PRODUCTIVITY_ENERGY_FLOW,
+  BASELINE_AP_ENVSCI_BIODIVERSITY_ISLAND_BIOGEO,
+  BASELINE_AP_ENVSCI_DISRUPTIONS_SUCCESSION,
+  BASELINE_AP_ENVSCI_TOLERANCE_ADAPTATIONS,
+  BASELINE_AP_ENVSCI_AGE_STRUCTURE_FERTILITY,
+  BASELINE_AP_ENVSCI_CARRYING_CAPACITY_GROWTH,
+  BASELINE_AP_ENVSCI_DEMOGRAPHIC_TRANSITION,
+  BASELINE_AP_ENVSCI_SURVIVORSHIP_R_K,
+  BASELINE_AP_ENVSCI_ATMOSPHERE_WIND,
+  BASELINE_AP_ENVSCI_CLIMATE_ENSO,
+  BASELINE_AP_ENVSCI_PLATE_TECTONICS_SOIL,
+  BASELINE_AP_ENVSCI_WATERSHEDS_SOLAR,
+  BASELINE_AP_ENVSCI_AGRICULTURE,
+  BASELINE_AP_ENVSCI_COMMONS_FISHING_FOOTPRINT,
+  BASELINE_AP_ENVSCI_FORESTRY_MINING,
+  BASELINE_AP_ENVSCI_URBANIZATION_WATER,
+  BASELINE_AP_ENVSCI_ENERGY_CONSERVATION,
+  BASELINE_AP_ENVSCI_ENERGY_OVERVIEW_FOSSIL,
+  BASELINE_AP_ENVSCI_NUCLEAR_BIOMASS,
+  BASELINE_AP_ENVSCI_RENEWABLES,
+  BASELINE_AP_ENVSCI_ACID_RAIN,
+  BASELINE_AP_ENVSCI_AIR_POLLUTION_SOURCES,
+  BASELINE_AP_ENVSCI_AIR_QUALITY_MITIGATION,
+  BASELINE_AP_ENVSCI_SMOG_INVERSION,
+  BASELINE_AP_ENVSCI_EUTROPHICATION_THERMAL,
+  BASELINE_AP_ENVSCI_SOLID_WASTE,
+  BASELINE_AP_ENVSCI_TOXICS_POPS_BIOMAG,
+  BASELINE_AP_ENVSCI_WATER_POLLUTION_SOURCES,
+  BASELINE_AP_ENVSCI_BIODIVERSITY_THREATS,
+  BASELINE_AP_ENVSCI_GREENHOUSE_CLIMATE,
+  BASELINE_AP_ENVSCI_OCEAN_CHANGES,
+  BASELINE_AP_ENVSCI_OZONE,
+  BASELINE_AP_MACRO_COMPARATIVE_ADVANTAGE,
+  BASELINE_AP_MACRO_COST_BENEFIT,
+  BASELINE_AP_MACRO_MARGINAL_ANALYSIS_CONSUMER,
+  BASELINE_AP_MACRO_PPC,
+  BASELINE_AP_MACRO_RESOURCE_ALLOCATION,
+  BASELINE_AP_MACRO_SCARCITY,
+  BASELINE_AP_MACRO_BUSINESS_CYCLE,
+  BASELINE_AP_MACRO_CIRCULAR_FLOW_GDP,
+  BASELINE_AP_MACRO_COSTS_OF_INFLATION,
+  BASELINE_AP_MACRO_GDP_LIMITATIONS,
+  BASELINE_AP_MACRO_PRICE_INDICES_INFLATION,
+  BASELINE_AP_MACRO_REAL_VS_NOMINAL_GDP,
+  BASELINE_AP_MACRO_UNEMPLOYMENT,
+  BASELINE_AP_MACRO_AGGREGATE_DEMAND,
+  BASELINE_AP_MACRO_AUTOMATIC_STABILIZERS,
+  BASELINE_AP_MACRO_CHANGES_AD_AS_SHORT_RUN,
+  BASELINE_AP_MACRO_EQUILIBRIUM_AD_AS,
+  BASELINE_AP_MACRO_FISCAL_POLICY,
+  BASELINE_AP_MACRO_LONG_RUN_AGGREGATE_SUPPLY,
+  BASELINE_AP_MACRO_LONG_RUN_SELF_ADJUSTMENT,
+  BASELINE_AP_MACRO_MULTIPLIERS,
+  BASELINE_AP_MACRO_SHORT_RUN_AGGREGATE_SUPPLY,
+  BASELINE_AP_MACRO_CROWDING_OUT_LONG_RUN,
+  BASELINE_AP_MACRO_DEFICITS_DEBT,
+  BASELINE_AP_MACRO_ECONOMIC_GROWTH,
+  BASELINE_AP_MACRO_FISCAL_MONETARY_SHORT_RUN,
+  BASELINE_AP_MACRO_MONEY_GROWTH_INFLATION,
+  BASELINE_AP_MACRO_PHILLIPS_CURVE,
+  BASELINE_AP_MACRO_PUBLIC_POLICY_GROWTH,
+  BASELINE_AP_MACRO_BALANCE_OF_PAYMENTS,
+  BASELINE_AP_MACRO_EXCHANGE_RATES,
+  BASELINE_AP_MACRO_FX_DETERMINANTS,
+  BASELINE_AP_MACRO_FX_EFFECTS_ON_ECONOMY,
+  BASELINE_AP_MACRO_FX_MARKET,
+  BASELINE_AP_MACRO_TRADE_CAPITAL_FLOWS,
+  BASELINE_AP_PSYCH_RESEARCH_METHODS,
+  BASELINE_AP_PSYCH_BRAIN_STRUCTURES,
+  BASELINE_AP_PSYCH_CONSCIOUSNESS_SLEEP,
+  BASELINE_AP_PSYCH_NERVOUS_ENDOCRINE,
+  BASELINE_AP_PSYCH_NEURONS_NEUROTRANSMITTERS,
+  BASELINE_AP_PSYCH_SENSATION_PERCEPTION,
+  BASELINE_AP_PSYCH_INTELLIGENCE,
+  BASELINE_AP_PSYCH_MEMORY_FORGETTING,
+  BASELINE_AP_PSYCH_MEMORY_MODELS,
+  BASELINE_AP_PSYCH_MEMORY_STORAGE_RETRIEVAL,
+  BASELINE_AP_PSYCH_THINKING_LANGUAGE,
+  BASELINE_AP_PSYCH_CLASSICAL_CONDITIONING,
+  BASELINE_AP_PSYCH_COGNITIVE_DEVELOPMENT,
+  BASELINE_AP_PSYCH_DEVELOPMENTAL_THEMES_METHODS,
+  BASELINE_AP_PSYCH_GENDER_SEXUAL_ORIENTATION,
+  BASELINE_AP_PSYCH_OBSERVATIONAL_LEARNING,
+  BASELINE_AP_PSYCH_OPERANT_CONDITIONING,
+  BASELINE_AP_PSYCH_SOCIAL_EMOTIONAL_MORAL,
+  BASELINE_AP_PSYCH_ATTRIBUTION_ATTITUDES,
+  BASELINE_AP_PSYCH_EMOTION,
+  BASELINE_AP_PSYCH_MOTIVATION,
+  BASELINE_AP_PSYCH_PERSONALITY_ASSESSMENT,
+  BASELINE_AP_PSYCH_PERSONALITY_THEORIES,
+  BASELINE_AP_PSYCH_PREJUDICE_STEREOTYPES,
+  BASELINE_AP_PSYCH_SOCIAL_INFLUENCE,
+  BASELINE_AP_PSYCH_ANXIETY_DISORDERS,
+  BASELINE_AP_PSYCH_CLASSIFYING_DISORDERS,
+  BASELINE_AP_PSYCH_MOOD_DISORDERS,
+  BASELINE_AP_PSYCH_POSITIVE_PSYCHOLOGY,
+  BASELINE_AP_PSYCH_SCHIZO_PERSONALITY,
+  BASELINE_AP_PSYCH_STRESS_HEALTH,
+  BASELINE_AP_PSYCH_THERAPY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
