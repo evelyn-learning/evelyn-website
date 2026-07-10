@@ -22,7 +22,7 @@ import {
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
-import { renderTeacherIntroDirective, renderTeacherStyleReminder, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,
@@ -924,7 +924,13 @@ export function VoiceTutorRealtime({
   // (style must persist all session; the T1 judge kept scoring
   // style-consistent 4/5 "not strongly distinctive beyond the opening").
   // null ⇒ flag off / no persona / diagnostic session ⇒ never attached.
-  const teacherStyleReminderRef = useRef<string | null>(null);
+  // Holds the PERSONA (not a prebuilt string) because the reminder is now
+  // rebuilt per turn: catchphrases are offered only every Nth turn (see
+  // CATCHPHRASE_TURN_INTERVAL — a prebuilt string would offer them always).
+  const teacherStylePersonaRef = useRef<TeacherPersonaWire | null>(null);
+  /** Counts style-reminder turns, i.e. brain turns after the opening
+   *  directive retires. Drives the catchphrase interval. */
+  const teacherStyleTurnRef = useRef(0);
   // Task B3 review fix: session-scoped one-shot latch. buildInstructions'
   // effect (below) re-runs mid-session whenever studentPreferences changes
   // (e.g. the in-session humor/pacing chip), which would otherwise re-arm
@@ -6858,9 +6864,14 @@ export function VoiceTutorRealtime({
         // persona / diagnostic ⇒ ref is null ⇒ field stays undefined ⇒
         // request byte-identical.
         let styleReminder: string | undefined;
-        if (TUTOR_PEDAGOGY_OPENER && teacherStyleReminderRef.current && !openingDirective) {
-          styleReminder = teacherStyleReminderRef.current;
-          console.log('[teacher-style] attaching per-turn style reminder (opening directive not riding)');
+        if (TUTOR_PEDAGOGY_OPENER && teacherStylePersonaRef.current && !openingDirective) {
+          const turn = teacherStyleTurnRef.current++;
+          styleReminder = renderTeacherStyleReminder(teacherStylePersonaRef.current, {
+            brainTurnIndex: turn,
+          }) ?? undefined;
+          if (styleReminder) {
+            console.log(`[teacher-style] attaching per-turn style reminder (turn ${turn}, catchphrases ${turn % CATCHPHRASE_TURN_INTERVAL === 0 ? 'offered' : 'withheld'})`);
+          }
         }
 
         // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
@@ -11946,10 +11957,8 @@ export function VoiceTutorRealtime({
             // Diagnostic sessions stay outside the persona theatrics —
             // same targetKind gate as the completion gate above. null
             // (no persona / no audible style markers) ⇒ never attached.
-            teacherStyleReminderRef.current =
-              teacherPersona && sig.targetKind !== 'diagnostic'
-                ? renderTeacherStyleReminder(teacherPersona)
-                : null;
+            teacherStylePersonaRef.current =
+              teacherPersona && sig.targetKind !== 'diagnostic' ? teacherPersona : null;
             openingTurnArmedRef.current = true;
           }
         }

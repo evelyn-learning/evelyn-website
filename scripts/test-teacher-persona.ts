@@ -17,6 +17,7 @@ import {
   teacherFirstName,
   resolveInitialTeacherId,
   renderTeacherStyleReminder,
+  CATCHPHRASE_TURN_INTERVAL,
   type TeacherPersonaWire,
 } from '../src/lib/tutor/ai/teacher-persona';
 import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
@@ -77,7 +78,6 @@ function main() {
     assert.match(block, /Questioning: QUESTIONING-PROSE/);
     assert.match(block, /Encouragement: ENCOURAGEMENT-PROSE/);
     assert.match(block, /Humor level: medium/);
-    assert.match(block, /CATCH-ONE \/ CATCH-TWO/);
     assert.match(block, /DOMAIN-A \/ DOMAIN-B/);
     assert.match(block, /When the student makes an error: ERROR-RESPONSE-PROSE/);
     assert.match(block, /Formality: formal/);
@@ -160,25 +160,48 @@ function main() {
   // catchphrases, ≤3 analogy domains) + the audibility line. Judge kept
   // scoring style-consistent 4/5 ("not strongly distinctive beyond the
   // opening") once the opening directive retired.
-  test('style reminder: distills pace + catchphrases + analogy domains with the audibility line', () => {
-    const r = renderTeacherStyleReminder(FULL_PERSONA);
+  test('style reminder: distills pace + analogy domains with the audibility line', () => {
+    const r = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: 1 });
     assert.ok(r, 'full persona yields a reminder');
     assert.match(r!, /Stay unmistakably Dr\. Test Teacher this turn/);
     assert.match(r!, /brisk/);
-    assert.ok(r!.includes('"CATCH-ONE"') && r!.includes('"CATCH-TWO"'), 'both catchphrases quoted');
     assert.ok(r!.includes('DOMAIN-A') && r!.includes('DOMAIN-B'), 'analogy domains listed');
     assert.match(r!, /never generic, never scripted/);
   });
 
-  // Live-run iteration (2026-07-04 T1 run 1): listing the catchphrases every
-  // turn made the brain repeat "look at that, you did it!" verbatim in
-  // back-to-back exchanges — judge: "feels slightly formulaic". The
-  // catchphrase bit must carry its own anti-repetition guard.
-  test('style reminder: catchphrases carry the seasoning + no-back-to-back guard', () => {
-    const r = renderTeacherStyleReminder(FULL_PERSONA)!;
-    assert.match(r, /seasoning/);
-    assert.match(r, /at most one per turn/);
+  // Catchphrase rationing (2026-07-10, session-1783693044096). Asking the
+  // model to self-ration ("at most one per turn, never twice in a row")
+  // failed twice in production: with two catchphrases it simply alternated,
+  // reaching 72% / 76% of turns (both in 15 of 25). Ration the INVITATION
+  // instead — the phrases are only visible on every Nth turn.
+  test('style reminder: catchphrases offered only on interval turns', () => {
+    const on = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: 0 })!;
+    assert.ok(on.includes('"CATCH-ONE"'), 'turn 0 offers catchphrases');
+    for (const turn of [1, 2, 3]) {
+      const off = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: turn })!;
+      assert.ok(!off.includes('CATCH-ONE'), `turn ${turn} must not mention catchphrases`);
+      assert.ok(!off.toLowerCase().includes('catchphrase'), `turn ${turn} must not name the concept either`);
+    }
+    const onAgain = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: CATCHPHRASE_TURN_INTERVAL })!;
+    assert.ok(onAgain.includes('"CATCH-ONE"'), 'the interval turn offers them again');
+  });
+
+  test('style reminder: an offered catchphrase is at most one, never repeated back-to-back', () => {
+    const r = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: 0 })!;
+    assert.match(r, /at most one/);
     assert.match(r, /never the same one twice in a row/);
+  });
+
+  test('style reminder: still renders (pace/domains) on non-interval turns', () => {
+    const off = renderTeacherStyleReminder(FULL_PERSONA, { brainTurnIndex: 2 });
+    assert.ok(off, 'non-interval turns still carry pace + analogy domains');
+    assert.match(off!, /brisk/);
+  });
+
+  test('persona block: catchphrases are NOT in the always-on identity block', () => {
+    const block = renderTeacherPersonaBlock(FULL_PERSONA);
+    assert.ok(!block.includes('CATCH-ONE'), 'identity block must not list catchphrases');
+    assert.ok(block.includes('DOMAIN-A'), 'analogy domains still render');
   });
 
   test('style reminder: caps at 2 catchphrases and 3 analogy domains', () => {
@@ -190,7 +213,7 @@ function main() {
         analogyDomains: ['D1', 'D2', 'D3', 'D4-OVERFLOW'],
       },
     };
-    const r = renderTeacherStyleReminder(crowded)!;
+    const r = renderTeacherStyleReminder(crowded, { brainTurnIndex: 0 })!;
     assert.ok(r.includes('"C1"') && r.includes('"C2"'), 'first two catchphrases kept');
     assert.ok(!r.includes('C3-OVERFLOW'), 'third catchphrase dropped');
     assert.ok(r.includes('D3'), 'first three domains kept');
