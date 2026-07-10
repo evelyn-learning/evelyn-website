@@ -39,7 +39,7 @@ export const SEED_AP_ENGLANG_U1_RHETORICAL_SITUATION: LessonPlan = {
     },
   ],
   prerequisites: [],
-  followUps: ['apenglang.claim-thesis', 'apenglang.evidence-commentary'],
+  followUps: ['apenglang.reading-for-claim', 'apenglang.evidence-commentary'],
   estimatedMinutes: 21,
   segments: [
     {
