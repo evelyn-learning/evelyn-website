@@ -79,6 +79,7 @@
     "test:pedagogy-b6": "npx tsx scripts/test-opening-behavior.ts",
     "test:pedagogy-b2": "npx tsx scripts/test-opening-wiring.ts",
     "test:pedagogy-b3": "npx tsx scripts/test-opener-fallback.ts",
+    "test:pedagogy-posed-problem": "npx tsx scripts/test-posed-problem-clause.ts",
     "test:pedagogy-board-truth": "npx tsx scripts/test-board-truth-clause.ts",
     "test:pedagogy-c1": "npx tsx scripts/test-plan-seed-framing.ts",
     "test:pedagogy-c2": "npx tsx scripts/test-completion-gate.ts",
