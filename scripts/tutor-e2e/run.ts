@@ -218,15 +218,21 @@ async function main() {
 
     const runTurn = async (t: ScenarioTurn, kind: string, i: number) => {
       const label = `${kind}-${i}`;
-      if (t.trigger) {
+      const fireTrigger = async () => {
         log(`trigger ${t.trigger}(${t.triggerArg ?? ''})`);
-        await page.evaluate(({ trig, arg }) => (window as unknown as Record<string, (a?: string) => void>)[trig]?.(arg), { trig: t.trigger, arg: t.triggerArg });
+        await page.evaluate(({ trig, arg }) => (window as unknown as Record<string, (a?: string) => void>)[trig]?.(arg), { trig: t.trigger!, arg: t.triggerArg });
+      };
+      if (t.trigger && !t.triggerDelayMs) await fireTrigger();
+      let delayedTrigger: Promise<void> | null = null;
+      if (t.trigger && t.triggerDelayMs) {
+        delayedTrigger = (async () => { await sleep(t.triggerDelayMs!); await fireTrigger(); })();
       }
       if (t.say) {
         const before = (await getState()).turnsCompleted;
         log(`${label} say: ${t.say.slice(0, 80)}`);
         await page.evaluate((text) => window.__tutorSendText(text), t.say);
         await waitForTurn(before, t.timeoutMs ?? 150_000, t.say);
+        await delayedTrigger;
       }
       await sleep(SETTLE_MS); // let buffered renders flush + paint
       await shot(label);
@@ -271,6 +277,18 @@ async function main() {
     } else {
       i = 0;
       for (const t of scenario.testTurns) { await runTurn(t, 'test', i++); }
+    }
+
+    if (typeof scenario.reloadAfterTurn === 'number') {
+      log('resume check: hard reload');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForFunction(() => typeof window.__tutorTestState === 'function', { timeout: 30_000 }).catch(() => null);
+      await sleep(2000);
+      const cont = page.getByRole('button', { name: /continue lesson/i }).first();
+      if (await cont.isVisible().catch(() => false)) await cont.click();
+      await shot('resume-immediate');
+      await sleep(3000);
+      await shot('resume-settled');
     }
 
     // Export PDF (best-effort — capture the download).
