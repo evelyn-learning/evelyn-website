@@ -78,7 +78,9 @@ export function strokeOutline(spine: Pt[], baseWidth: number, seed: string): str
     nx /= nl;
     ny /= nl;
     const t = cum[i] / total;
-    // Wobble: ±12% of baseWidth on the half-width, per point, seeded.
+    // Wobble: noise ∈ [-0.12, 0.12] is added to the unitless widthFactor
+    // (taper) BEFORE the /2 below, so its effective magnitude on the
+    // half-width is ~half that: ~±6% of baseWidth, per point, seeded.
     const noise = (rng() - 0.5) * 0.24;
     const half = Math.max(0.4, (baseWidth * (widthFactor(t) + noise)) / 2);
     left.push({ x: pts[i].x + nx * half, y: pts[i].y + ny * half });

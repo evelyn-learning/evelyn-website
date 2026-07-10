@@ -875,6 +875,15 @@ export function WhiteboardCanvas({
     }
   });
 
+  // Animate-once for scribble marks (ticks/highlights), same rationale as
+  // seenAnimIdsRef above: ScribbleOverlays lives inside the page subtree
+  // (key={currentIndex}), so it remounts on every page switch — a local
+  // ref there would replay every mark's 400ms wipe on flip-back. Declared
+  // here (survives page remounts) and threaded down as a prop, mirroring
+  // how items get their animate-once state from the parent instead of
+  // from state local to the remounting subtree.
+  const seenMarkSeedsRef = useRef<Set<string>>(new Set());
+
   // Scribble and scrollTo commands don't render as their own board items —
   // they overlay / navigate. Split them out so the main loop renders real
   // content, and the overlays attach by targetItemIndex (1-indexed).
@@ -1411,7 +1420,7 @@ export function WhiteboardCanvas({
             data-wb-item-id={(renderableCommands[0] as any).id ?? undefined}
           >
             <CommandRenderer command={renderableCommands[0]} />
-            <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} />
+            <ScribbleOverlays scribbles={scribbles.filter((s) => scribbleMatchesItem(s, renderableCommands[0], 1))} seenMarkSeeds={seenMarkSeedsRef} />
             {onStudentMark && isIframeCommand(renderableCommands[0]) && (
               <div
                 className="absolute inset-0 z-10"
@@ -1450,7 +1459,7 @@ export function WhiteboardCanvas({
                     data-wb-item-id={(cmd as any).id ?? undefined}
                   >
                     <CommandRenderer command={cmd} />
-                    <ScribbleOverlays scribbles={overlays} />
+                    <ScribbleOverlays scribbles={overlays} seenMarkSeeds={seenMarkSeedsRef} />
                     {onStudentMark && isIframeCommand(cmd) && (
                       <div
                         className="absolute inset-0 z-10"
@@ -1845,21 +1854,26 @@ function scribbleMatchesItem(
   return s.targetItemIndex === idx1;
 }
 
-function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
+function ScribbleOverlays({ scribbles, seenMarkSeeds }: { scribbles: ScribbleCmd[]; seenMarkSeeds: React.MutableRefObject<Set<string>> }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   // Phase 2: animate each mark on ONCE (WAAPI on the mark's <g>). Marks
   // re-render whenever the scribbles array changes; the seen-set keys on
-  // the mark's content seed so re-renders never replay. Kill-recovery
-  // removes the scribble command entirely → the node unmounts with its
-  // animation — no finishAll wiring needed (unlike items, marks cannot
-  // outlive their command). Note: two scribbles CAN share a seed (e.g. a
-  // re-emitted tick after kill-recovery targets the same feature) — the
-  // second one is intentionally skipped (no re-animation), not replayed.
-  const seenMarkSeedsRef = useRef<Set<string>>(new Set());
+  // `${shape}:${seed}` (shape + the mark's content seed) so re-renders
+  // never replay AND a tick/highlight sharing a target's seed still get
+  // independent animations. The ref itself lives in the parent
+  // WhiteboardCanvas (seenMarkSeedsRef, passed down as this prop) rather
+  // than locally, because ScribbleOverlays remounts on every page switch
+  // (page wrapper is key={currentIndex}) — a local ref would replay every
+  // mark's wipe on flip-back. Two cases can collide on the SAME key
+  // (same shape + same target): a re-emitted tick after kill-recovery
+  // re-targets the same feature — the second one is intentionally
+  // skipped (no re-animation), not replayed. A different shape on the
+  // same target (e.g. a highlight added after a tick) now gets its own
+  // key and animates normally.
   const handMarks = drawOnEnabled();
   const animateMark = (el: SVGGElement | null, seed: string) => {
-    if (!el || !handMarks || seenMarkSeedsRef.current.has(seed)) return;
-    seenMarkSeedsRef.current.add(seed);
+    if (!el || !handMarks || seenMarkSeeds.current.has(seed)) return;
+    seenMarkSeeds.current.add(seed);
     el.animate(
       [
         { opacity: 0, clipPath: 'inset(0 100% 0 0)' },
@@ -2150,6 +2164,13 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
         // so old session state + cached brain calls keep working.
         const isHighlight = s.shape === 'highlight';
         const seed = `${s.targetFeature ?? s.target ?? 'mark'}`;
+        // Seen-set key ONLY — must stay separate from `seed` above, which
+        // feeds strokeOutline's wobble RNG and must stay stable per-target
+        // for PDF export lockstep (same target → same hand-wobble shape
+        // regardless of which mark drew it). Keying on shape too means a
+        // tick and a highlight on the same target no longer share an
+        // animate-once slot.
+        const seenKey = `${s.shape}:${seed}`;
 
         let mark: React.ReactNode;
         if (isHighlight) {
@@ -2229,7 +2250,7 @@ function ScribbleOverlays({ scribbles }: { scribbles: ScribbleCmd[] }) {
           }
         }
 
-        return <g key={i} ref={(el) => animateMark(el, seed)}>{mark}</g>;
+        return <g key={i} ref={(el) => animateMark(el, seenKey)}>{mark}</g>;
       })}
     </svg>
   );

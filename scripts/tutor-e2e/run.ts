@@ -225,7 +225,13 @@ async function main() {
       if (t.trigger && !t.triggerDelayMs) await fireTrigger();
       let delayedTrigger: Promise<void> | null = null;
       if (t.trigger && t.triggerDelayMs) {
-        delayedTrigger = (async () => { await sleep(t.triggerDelayMs!); await fireTrigger(); })();
+        // Catch here so a throw/timeout in the awaited waitForTurn below
+        // doesn't leave this floating promise to reject unhandled and mask
+        // the real failure. Note: if the turn completes before
+        // triggerDelayMs elapses, the trigger fires post-turn (by design —
+        // scenarios must calibrate triggerDelayMs against expected turn
+        // duration).
+        delayedTrigger = (async () => { await sleep(t.triggerDelayMs!); await fireTrigger(); })().catch((e) => log(`delayed trigger failed: ${(e as Error).message}`));
       }
       if (t.say) {
         const before = (await getState()).turnsCompleted;
