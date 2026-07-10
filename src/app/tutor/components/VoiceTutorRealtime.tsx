@@ -91,6 +91,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
@@ -4569,6 +4570,22 @@ export function VoiceTutorRealtime({
         cmdWithId._duplicateOf = existing.itemId;
         console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
         onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        // The brain re-showed this figure because it's about to narrate it.
+        // Dropping the duplicate is right; leaving the student on another
+        // page is not (session-1783693044096: the tutor described the
+        // photosynthesis diagram while the student sat two pages away).
+        // Scroll to it — but never yank the view for a same-page repeat.
+        if (shouldScrollToDedupedItem({
+          itemPageTitle: existing.pageTitle,
+          currentPageTitle: catalogRef.current.getCurrentPageTitle(),
+        })) {
+          onWhiteboardCommand([{
+            action: 'scrollTo',
+            target: 'item',
+            targetId: existing.itemId,
+          } as unknown as WhiteboardCommand]);
+          onDebugEvent?.('dedup_scroll_to_existing', `${existing.itemId} on "${existing.pageTitle}"`);
+        }
         // Whiteboard kill-recovery (B): a deferred ("revising") render that the
         // retry just re-emitted identically dedup-dropped right here — that's
         // the CONFIRM signal. Keep the original (drop it from the pending set
