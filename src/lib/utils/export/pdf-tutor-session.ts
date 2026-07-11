@@ -1399,21 +1399,44 @@ async function drawWhiteboardVisual(
     // segment-drawing logic in jsPDF. Falls back to drawGeometryVisual
     // when capture returns null (no DOM, off-screen render failed, etc.).
     try {
-      const { captureCommandSvg, captureCommandRaster, drawCapturedSvg, svgContainsExoticGlyphs } = await import('./whiteboard-capture');
+      const { captureCommandSvg, captureCommandRaster, drawCapturedSvg, overlayScribbles, svgContainsExoticGlyphs } = await import('./whiteboard-capture');
       const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
-      const svgString = await captureCommandSvg(whiteboardCmd);
+      let svgString = await captureCommandSvg(whiteboardCmd);
       if (svgString) {
         // Geometry diagrams routinely contain π, √, Greek letters in
         // angle labels — same exotic-glyph check the generic fallback
         // uses, so unit-circle-style labeling routes through raster.
         if (svgContainsExoticGlyphs(svgString)) {
-          const raster = await captureCommandRaster(whiteboardCmd);
+          // Raster sub-case: scribbles bake via captureCommandRaster's own
+          // overlayScribbles re-mount; inkNotes deliberately do NOT (the
+          // raster path never receives notes — see the scoping comment in
+          // captureCommandRaster). Notes targeting an exotic-glyph
+          // geometry stay on the export loop's after-figure caption
+          // fallback (bakedNoteTextsOut untouched → unbakedNotes fires).
+          const raster = await captureCommandRaster(whiteboardCmd, scribbles);
           if (raster && raster.dataUrl) {
             const heightMm = (raster.heightPx / raster.widthPx) * width;
             pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
             return y + heightMm + 2;
           }
         } else {
+          // 2026-07-11 user round (follow-up): geometry figures are the
+          // FLAGSHIP note target, yet this dedicated branch predated the
+          // note-bake wiring and threaded neither scribbles nor inkNotes —
+          // so every note targeting a showGeometry item fell to a caption
+          // line and no gate scenario ever showed a baked note. Mirror the
+          // generic vector fallback below exactly: bake both overlays into
+          // the captured SVG and report bakedTexts so the export loop's
+          // multiset-consume marks the source handwrites (and its
+          // after-figure caption fallback still rescues any that fail
+          // feature resolution here).
+          if ((scribbles && scribbles.length > 0) || (inkNotes && inkNotes.length > 0)) {
+            const baked = overlayScribbles(svgString, scribbles, inkNotes);
+            svgString = baked.svg;
+            if (bakedNoteTextsOut && baked.bakedTexts.length > 0) {
+              bakedNoteTextsOut.push(...baked.bakedTexts);
+            }
+          }
           const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
           if (consumed > 0) return y + consumed + 2;
         }
@@ -1421,6 +1444,8 @@ async function drawWhiteboardVisual(
     } catch (err) {
       console.warn('[pdf-tutor-session] Geometry capture failed, using legacy text path:', err);
     }
+    // Legacy jsPDF text path — no SVG to bake into; stamped notes fall to
+    // the export loop's after-figure caption fallback (no content loss).
     return drawGeometryVisual(pdf, cmd, x, y, width);
   }
 
