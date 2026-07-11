@@ -33,11 +33,17 @@ export interface ToolDefinition {
   };
 }
 
-/** SmoothDraw Phase 3: on-board ink notes. Read at CALL time (not module
- *  init) so unit tests can toggle process.env; in the browser bundle
- *  Next.js inlines the env var, making this a constant. */
+/** SmoothDraw Phase 3: on-board ink notes. DEFAULT ON since the
+ *  2026-07-11 live legibility gate passed — `near` resolves through the
+ *  catalog and notes render on-board via InkNotesOverlay unless
+ *  explicitly turned off. `NEXT_PUBLIC_TUTOR_INK_NOTES=off` is the
+ *  no-deploy rollback lever (same precedent as the noise-nag kill
+ *  switch): flip the env var and redeploy to fall back to a no-notes
+ *  board, no code change required. Read at CALL time (not module init)
+ *  so unit tests can toggle process.env; in the browser bundle Next.js
+ *  inlines the env var, making this a constant. */
 export function inkNotesEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_TUTOR_INK_NOTES === 'true';
+  return process.env.NEXT_PUBLIC_TUTOR_INK_NOTES !== 'off';
 }
 
 /**
@@ -1859,7 +1865,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'tutor_handwrite',
-    description: 'Write a short hand-written note. With `near`, the note lands on the board beside its target; without it, in the margin. ≤80 chars. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). Without `near`, notes collect in the page\'s notes area in emission order. Use sparingly — 1-2 handwrites per turn at most. Notes reset on each new_page.',
+    description: 'Write a short hand-written note. With `near`, the note lands on the board beside its target; without it, in the margin. ≤80 chars. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). Without `near`, notes collect in the page margin in emission order. Use sparingly — 1-2 handwrites per turn at most. Notes reset on each new_page.',
     parameters: {
       type: 'object',
       properties: {
@@ -2764,14 +2770,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
   if (funcName === 'tutor_handwrite') {
     const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';
     if (!text) return null;
-    // Post-redesign: handwrite is a pure text-into-strip command. The
-    // `position` / `margin` fields are accepted-but-ignored so in-flight
-    // brain calls during system-prompt cache turnover don't crash. The
-    // orchestrator strips these silently before rendering.
+    // Post-redesign: handwrite is a pure text note command (formerly fed
+    // the now-deleted AnnotationStrip; now on-board via InkNotesOverlay).
+    // The `position` / `margin` fields are accepted-but-ignored so
+    // in-flight brain calls during system-prompt cache turnover don't
+    // crash. The orchestrator strips these silently before rendering.
     //
-    // SmoothDraw Phase 3: `near` rides through ONLY when the ink-notes
-    // flag is on — flag-off, the command is byte-identical to today's
-    // (the orchestrator's stripping loop is the second half of this gate).
+    // SmoothDraw Phase 3: `near` rides through by default (ink notes are
+    // ON by default post-legibility-gate) — the kill switch
+    // (`NEXT_PUBLIC_TUTOR_INK_NOTES=off`) drops it here, mirroring the
+    // orchestrator's stripping loop, the second half of this gate.
     const cmd: WhiteboardCommand = { action: 'handwrite', text, ...(typeof funcArgs.color === 'string' ? { color: funcArgs.color } : {}) };
     if (inkNotesEnabled() && typeof funcArgs.near === 'string' && funcArgs.near.trim()) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

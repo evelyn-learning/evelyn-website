@@ -4938,11 +4938,11 @@ export function VoiceTutorRealtime({
     // prompt cache turns over. Silently strip any legacy fields so the
     // strip renderer sees only `{ action, text, color }`.
     //
-    // SmoothDraw Phase 3 (flag `NEXT_PUBLIC_TUTOR_INK_NOTES`): when the
-    // flag is on and the command carries a `near` string, resolve it
-    // through the same catalog tutor_scribble uses instead of stripping
-    // it. Flag off, `near` is stripped exactly like the legacy fields
-    // below — behavior at the command level is unchanged from today.
+    // SmoothDraw Phase 3 (default ON post-legibility-gate; kill switch
+    // `NEXT_PUBLIC_TUTOR_INK_NOTES=off`): when ink notes are enabled and
+    // the command carries a `near` string, resolve it through the same
+    // catalog tutor_scribble uses instead of stripping it. Kill switch
+    // on, `near` is stripped exactly like the legacy fields below.
     for (const cmd of processed) {
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

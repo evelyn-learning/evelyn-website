@@ -1,16 +1,21 @@
 /**
  * Tick-render ship-gate for the scribble + handwrite redesign
- * (2026-05-13). Verifies the new tool surface + renderer changes:
+ * (2026-05-13), extended for the SmoothDraw Phase 3 close (2026-07-11
+ * legibility gate — AnnotationStrip retired, on-board ink notes are now
+ * the default board behavior). Verifies the tool surface + renderer:
  *
  *   1. tutor_scribble maps to a scribble command with the new shape
  *      vocabulary (tick / highlight). Legacy values (circle /
  *      underline / box / arrow) remap to tick. Default is tick.
- *   2. tutor_handwrite maps to a text-only handwrite command — `near`
- *      / `position` / `margin` fields are stripped from the schema
- *      but accepted-and-ignored if a stale brain still emits them.
- *   3. The live WhiteboardCanvas renderer source contains the tick
- *      SVG path generator + the AnnotationStrip component. Old
- *      HandwriteOverlays is gone.
+ *   2. tutor_handwrite maps to a handwrite command — legacy `position`
+ *      / `margin` fields are always stripped (accepted-and-ignored if a
+ *      stale brain still emits them). `near` rides through by DEFAULT
+ *      (ink notes default ON post-gate); `NEXT_PUBLIC_TUTOR_INK_NOTES=off`
+ *      is the kill switch that drops it, mirroring the old flag-off
+ *      behavior.
+ *   3. The live WhiteboardCanvas renderer source contains the tick SVG
+ *      path generator. The AnnotationStrip component is GONE — deleted,
+ *      not flag-gated. Old HandwriteOverlays is gone too.
  *   4. The PDF capture source uses the same tick anchor formula
  *      (just inside the feature's right edge, vertically centered,
  *      with bold stroke — sized for visibility, 2026-05-13 tweak).
@@ -91,18 +96,23 @@ if (handwrite && handwrite.action === 'handwrite') {
     expect(!('margin' in anyCmd), 'handwrite should NOT carry margin');
 }
 
-// (b) Stale brain emitting near/position/margin — fields silently dropped.
+// (b) Legacy `position`/`margin` fields are ALWAYS stripped (pre-2026-05-13
+// schema), regardless of the ink-notes kill switch. Test this under the
+// kill switch ON — the degraded-rollback state where a stale `near` is
+// ALSO expected to drop, mirroring pre-P3-close flag-off behavior.
+process.env.NEXT_PUBLIC_TUTOR_INK_NOTES = 'off';
 const staleCall = mapFunctionCallToCommand('tutor_handwrite', {
     text: 'note',
     near: 'the term',
     position: 'above',
     margin: 'right',
 });
+delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
 expect(staleCall !== null, 'stale-shape handwrite should still map');
 if (staleCall && staleCall.action === 'handwrite') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const anyCmd = staleCall as any;
-    expect(!('near' in anyCmd), 'stale near silently dropped');
+    expect(!('near' in anyCmd), 'kill-switch near silently dropped');
     expect(!('position' in anyCmd), 'stale position silently dropped');
     expect(!('margin' in anyCmd), 'stale margin silently dropped');
 }
@@ -117,18 +127,20 @@ if (colored && colored.action === 'handwrite') {
     eq(colored.color, '#16a34a', 'handwrite.color preserved');
 }
 
-// (e) SmoothDraw P3: with the ink-notes flag ON, `near` rides the command.
-process.env.NEXT_PUBLIC_TUTOR_INK_NOTES = 'true';
+// (e) SmoothDraw P3 close: ink notes default ON — env UNSET carries `near`.
+delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
 const inkNote = mapFunctionCallToCommand('tutor_handwrite', { text: 'a = 3 here', near: 'the vertex' });
-expect(inkNote !== null, 'flag-on handwrite maps');
+expect(inkNote !== null, 'default-on handwrite maps');
 if (inkNote && inkNote.action === 'handwrite') {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((inkNote as any).near === 'the vertex', 'flag-on handwrite carries near');
+    expect((inkNote as any).near === 'the vertex', 'default-on (env unset) handwrite carries near');
 }
-delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
+// Kill switch: NEXT_PUBLIC_TUTOR_INK_NOTES='off' drops near again.
+process.env.NEXT_PUBLIC_TUTOR_INK_NOTES = 'off';
 const offAgain = mapFunctionCallToCommand('tutor_handwrite', { text: 'x', near: 'y' });
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-expect(offAgain !== null && !('near' in (offAgain as any)), 'flag-off drops near again');
+expect(offAgain !== null && !('near' in (offAgain as any)), 'kill switch (=off) drops near');
+delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
 
 // ── 3. WhiteboardCanvas renderer source (static check) ─────────
 
@@ -137,9 +149,10 @@ const wbSource = readFileSync(
     'utf8',
 );
 
-// AnnotationStrip component exists.
-expect(wbSource.includes('function AnnotationStrip('), 'WhiteboardCanvas defines AnnotationStrip');
-expect(wbSource.includes('<AnnotationStrip'), 'AnnotationStrip is rendered inside the page wrapper');
+// AnnotationStrip is deleted (SmoothDraw P3 close, 2026-07-11 gate) — on-
+// board ink notes (InkNotesOverlay) are the sole note-rendering path now.
+expect(!wbSource.includes('function AnnotationStrip('), 'AnnotationStrip should be deleted');
+expect(!wbSource.includes('<AnnotationStrip'), 'AnnotationStrip should not be rendered anywhere');
 
 // HandwriteOverlays is gone.
 expect(!wbSource.includes('function HandwriteOverlays'), 'HandwriteOverlays should be removed');

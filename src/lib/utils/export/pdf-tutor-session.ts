@@ -1329,9 +1329,12 @@ async function drawWhiteboardVisual(
   }
 
   if (cmd.action === 'handwrite' && cmd.text) {
-    // Post-redesign (2026-05-13): handwrites are strip entries — a
-    // simple colored bullet + line of text. No box, no border, no
-    // anchor hint. Matches the live AnnotationStrip styling.
+    // Fallback caption line for a note that isn't baked onto its target's
+    // captured figure (a plain margin note, or a target-stamped note whose
+    // target isn't in this export) — a simple colored bullet + line of
+    // text. No box, no border, no anchor hint. Historically matched the
+    // live AnnotationStrip's styling (deleted in SmoothDraw P3); this PDF
+    // caption line lives on as the margin-note presentation.
     //
     // SmoothDraw P3 (task 5): a note the export loop already baked into
     // its target item's captured SVG (see the fallback branch below +

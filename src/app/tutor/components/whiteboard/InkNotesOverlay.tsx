@@ -3,11 +3,14 @@
 /**
  * SmoothDraw Phase 3 — on-board tutor notes.
  *
- * Replaces the AnnotationStrip (flag TUTOR_INK_NOTES): tutor_handwrite
- * text and tutor_scribble labels render as hand-written notes placed
- * BESIDE their targets. All spatial decisions come from the pure slot
- * engine (ink-placement.ts); this component only measures the DOM and
- * paints. Placement runs in command order and registers each result
+ * Default board behavior since the 2026-07-11 legibility gate (kill switch
+ * `NEXT_PUBLIC_TUTOR_INK_NOTES=off`, gated via inkNotesEnabled() at the
+ * WhiteboardCanvas mount site): tutor_handwrite text and tutor_scribble
+ * labels render as hand-written notes placed BESIDE their targets. This
+ * is the ONLY place tutor notes render — the AnnotationStrip it replaced
+ * is deleted, not a fallback. All spatial decisions come from the pure
+ * slot engine (ink-placement.ts); this component only measures the DOM
+ * and paints. Placement runs in command order and registers each result
  * into the occupied set, so later notes cannot collide with earlier
  * ones. Unresolved targets place in the margin column (silent — the
  * round-7 philosophy).

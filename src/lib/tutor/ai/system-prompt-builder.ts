@@ -16,7 +16,6 @@ import { renderAnalogiesBlock } from '@/lib/tutor/pedagogy/analogies';
 import { renderHumorBlock, resolveHumorCeiling, type HumorLevel } from '@/lib/tutor/pedagogy/humor';
 import type { StudentPreferences, PartnerPolicy } from '@/lib/tutor/student-profile/types';
 import { renderCatalogForPrompt } from '@/lib/tutor/diagrams/catalog/manifest';
-import { inkNotesEnabled } from '@/app/tutor/hooks/toolDefinitions';
 import { resolveToolSubjects, type CatalogSubject } from './tool-subject-taxonomy';
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
@@ -327,57 +326,6 @@ The anchor APPEARS as you speak it. You neither ANNOUNCE it (the banned process-
  *  decision. Subject-agnostic. Design: project_tutor_work_queue (P3). */
 const ANSWER_EQUIVALENCE_SENTINEL = '__ANSWER_EQUIVALENCE_SENTINEL__';
 const ANSWER_EQUIVALENCE_RULE = `**Check equivalence before judging a volunteered answer wrong.** When a student offers a result, first decide whether it is EQUIVALENT to the target in VALUE or MEANING — not just identical in form. A different algebraic form, a paraphrase, a synonymous term, or a correct answer stated AHEAD of the step you expected all count as RIGHT, not "not quite." If it IS equivalent: affirm in a short clause and advance — do NOT re-derive what they nailed or impose steps they skipped (you MAY briefly OFFER to show the steps, but default to moving on). If you genuinely CANNOT tell whether it's equivalent: do NOT assert "not quite" and do NOT rubber-stamp it either — ask them to show a step or clarify, which both checks their reasoning and avoids mis-judging. This does NOT apply to an answer with a REAL error (a wrong value, an arithmetic slip): that still takes the wrong-answer path below.`;
-
-/** SmoothDraw Phase 3 — tutor_handwrite spatial-anchor prose. The flag-off
- *  sentence below (a 2026-05-13 strip-era statement that handwrites have no
- *  spatial fields) directly CONTRADICTS the flag-on tool docstring, which
- *  documents \`near\` — the 2026-07-11 gate saw the brain use \`near\` on one
- *  turn and drop it the next (defect C). Swapped in buildSystemPrompt only
- *  when inkNotesEnabled(); flag off ⇒ prompt byte-identical to today.
- *  Cache-safe: NEXT_PUBLIC_ env is a deployment constant, stable across
- *  every session. Generic on purpose — no subject-specific examples. */
-const HANDWRITE_NO_NEAR_SENTENCE =
-  'There is NO `near`, `position`, or `margin` field; the note has no spatial anchor.';
-const HANDWRITE_NEAR_SENTENCE =
-  'A note may carry a `near` field (same target grammar as tutor_scribble) to land hand-written on the board beside that target — the runtime computes the placement; omit `near` for a general note (margin).';
-
-/** SmoothDraw P3 follow-up — the remaining strip-era prose for handwrite/
- *  scribble words. Same pattern as the pair above: each [flag-off, flag-on]
- *  swap fires only under inkNotesEnabled(); flag off ⇒ prompt byte-identical.
- *  The 2026-07-11 re-run's brain narrated the label as "now in the strip"
- *  while it correctly rendered on-board — these four sentences were still
- *  telling it labels/notes live in an annotation strip. Generic wording
- *  only — no subject-specific examples. */
-const INK_NOTES_STRIP_PROSE_SWAPS: Array<[string, string]> = [
-  // tutor_scribble label sentence (the re-run's mis-narration source).
-  [
-    'If you pass a short `label`, it appears in the page\'s annotation strip below the diagram as "{feature} → {label}" — NOT on the diagram itself. Don\'t try to position the label. The strip is the home for words; the diagram only gets the tick.',
-    'If you pass a short `label`, it renders as a short hand-written note beside the marked feature — the runtime computes the placement; don\'t try to position it.',
-  ],
-  // tutor_handwrite paragraph opener (its stale `near` sentence is handled
-  // by HANDWRITE_NO_NEAR_SENTENCE above).
-  [
-    '**tutor_handwrite adds a self-contained line to the page\'s annotation strip.** The strip sits below the rendered items and accumulates teacher notes as the page progresses; it resets on each new_page.',
-    '**tutor_handwrite writes a short hand-written note on the board.** Notes accumulate as the page progresses and reset on each new_page.',
-  ],
-  // Example comment in the tutor_scribble usage block.
-  [
-    'tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + "trendline → best fit" in the strip',
-    'tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + a short hand-written "best fit" note beside the trendline',
-  ],
-  // Labels paragraph in the scribble reference section.
-  [
-    `**Labels go in the strip, not on the diagram.** A scribble with a
-\`label\` adds "{feature} → {label}" to the page's annotation strip in
-the scribble's color. Keep labels short — a few words. A scribble
-without a label is just a tick, no strip entry.`,
-    `**Labels render beside the feature.** A scribble with a
-\`label\` renders it as a short hand-written note beside the marked
-feature in the scribble's color — the runtime computes the placement.
-Keep labels short — a few words. A scribble without a label is just
-a tick, no note.`,
-  ],
-];
 
 /**
  * Base tutor personality and guidelines
@@ -1177,9 +1125,9 @@ Display options (display: { ... }):
 
 **Scribble proactively against on-board content.** Whenever your spoken response confirms / corrects / discusses / points at content that is ADDRESSABLE as a feature in the current boardSnapshot, emit a tutor_scribble against that feature in the SAME response. The whiteboard exists to anchor your speech in something the student can SEE — verbal direction without a visible mark leaves them scanning the chart to guess. "Point at X" / "show me Y" requests REQUIRE a scribble (verbal "there it is" without the call is a FAILURE). Affirming a student answer that maps to a feature defaults to a scribble. Walking through several features = one scribble per feature, not just the last. If a feature isn't in the snapshot, either REPHRASE to avoid claiming a mark or pick a related feature that conveys the same idea — never fake a scribble with words, and never re-emit show_* with the same structural axes hoping to "fill in" content (the orchestrator dedups it and you'll see a <deduplicated_renders> advisory next turn).
 
-**tutor_scribble draws a small ✓ tick next to a feature.** Default shape; minimal visual mark. Use one or two per turn. If you pass a short \`label\`, it appears in the page's annotation strip below the diagram as "{feature} → {label}" — NOT on the diagram itself. Don't try to position the label. The strip is the home for words; the diagram only gets the tick. The other shape value is \`highlight\` (semi-transparent fill over the feature's region) — use when you want to call out a whole row, column, or cell, not just point at it.
+**tutor_scribble draws a small ✓ tick next to a feature.** Default shape; minimal visual mark. Use one or two per turn. If you pass a short \`label\`, it renders as a short hand-written note beside the marked feature — the runtime computes the placement; don't try to position it. The other shape value is \`highlight\` (semi-transparent fill over the feature's region) — use when you want to call out a whole row, column, or cell, not just point at it.
 
-**tutor_handwrite adds a self-contained line to the page's annotation strip.** The strip sits below the rendered items and accumulates teacher notes as the page progresses; it resets on each new_page. Use full self-contained sentences — "Legislative makes laws", "Density = mass / volume", "You said: free elections" — not fragments like "makes laws". There is NO \`near\`, \`position\`, or \`margin\` field; the note has no spatial anchor. Use sparingly — 1-2 handwrites per turn at most.
+**tutor_handwrite writes a short hand-written note on the board.** Notes accumulate as the page progresses and reset on each new_page. Use full self-contained sentences — "Legislative makes laws", "Density = mass / volume", "You said: free elections" — not fragments like "makes laws". A note may carry a \`near\` field (same target grammar as tutor_scribble) to land hand-written on the board beside that target — the runtime computes the placement; omit \`near\` for a general note (margin). Use sparingly — 1-2 handwrites per turn at most.
 
 **tutor_scribble takes ONE addressing parameter: 'target'.** No ids,
 no coordinates, no region, no page. You pass a single string naming
@@ -1187,7 +1135,7 @@ the feature; the client resolves it deterministically against the
 session catalog and places the tick at exactly the right spot. Example:
 
   tutor_scribble({ target: "point A" })                          // tick next to point A
-  tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + "trendline → best fit" in the strip
+  tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + a short hand-written "best fit" note beside the trendline
   tutor_scribble({ target: "row 3", shape: "highlight" })        // semi-transparent fill over row 3
 
 **Where 'target' comes from.** Every show_* tool_result includes a
@@ -1232,10 +1180,11 @@ Every show_* tool_result returns a 'features' array with the exact target string
 - tick (default): small ✓ just past the feature's right edge.
 - highlight: semi-transparent fill over the feature's bbox.
 
-**Labels go in the strip, not on the diagram.** A scribble with a
-\`label\` adds "{feature} → {label}" to the page's annotation strip in
-the scribble's color. Keep labels short — a few words. A scribble
-without a label is just a tick, no strip entry.
+**Labels render beside the feature.** A scribble with a
+\`label\` renders it as a short hand-written note beside the marked
+feature in the scribble's color — the runtime computes the placement.
+Keep labels short — a few words. A scribble without a label is just
+a tick, no note.
 
 **If a target doesn't resolve,** the tool_result carries the current
 feature list and a miss reason. Re-read that list, pick the correct
@@ -1504,18 +1453,22 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
       : '',
   );
 
-  // SmoothDraw P3 — reconcile the handwrite prose with the flag-on tool
-  // docstring (see HANDWRITE_NO_NEAR_SENTENCE's doc comment). Flag off ⇒
-  // no replace ⇒ byte-identical prompt. NOTE: the prompt is SESSION-STATIC —
-  // an already-running session keeps the old prose; only fresh sessions see
-  // this. Server-side build reads the env at request time, so no restart is
-  // needed for new sessions in dev.
-  if (inkNotesEnabled()) {
-    prompt = prompt.replace(HANDWRITE_NO_NEAR_SENTENCE, HANDWRITE_NEAR_SENTENCE);
-    for (const [from, to] of INK_NOTES_STRIP_PROSE_SWAPS) {
-      prompt = prompt.replace(from, to);
-    }
-  }
+  // SmoothDraw P3 close (2026-07-11 legibility gate passed): the handwrite/
+  // scribble prose above now states on-board placement (`near`, notes beside
+  // targets) as the BASE wording — no swap machinery needed, since on-board
+  // notes are the default. There used to be a runtime prompt.replace() pair
+  // here gated on inkNotesEnabled() that swapped strip-era sentences for
+  // on-board ones; both sentence pairs and the swap loop are deleted now
+  // that on-board wording IS the source text.
+  //
+  // Kill-switch note (`NEXT_PUBLIC_TUTOR_INK_NOTES=off`): the prompt keeps
+  // this on-board wording even with the switch off — there's no cheap way
+  // to un-swap prose the way the deleted machinery could re-swap it, and the
+  // strip it would need to describe no longer exists. A brain describing
+  // notes-beside-targets while the live board renders none is an accepted
+  // degraded-rollback state (the kill switch is a no-deploy visual-only
+  // lever, not a supported alternate mode) — not something this builder
+  // needs to paper over.
 
   // Answer-equivalence recognition — stops the "not quite" false-reject of a
   // correct-but-different-form / ahead-of-step answer (P3). Spliced in only when

@@ -925,15 +925,16 @@ export function WhiteboardCanvas({
   // Outer host for the Phase-2 pen overlay + ink SVG — one level up from
   // pageWrapperRef, wrapping it PLUS the surrounding p-4 padding gutter.
   // The page wrapper's own box ends at the bottom of its last in-flow
-  // child (the AnnotationStrip, when present); the padding around it
-  // lives OUTSIDE that box on the scroll container. A pen overlay scoped
-  // to pageWrapperRef alone leaves that padding gutter (and any margin
-  // between the wrapper and the scroll container's edge) unreachable —
-  // hit live 2026-07-05: a student's stroke just past the annotation
-  // strip's text didn't register. Hosting the overlay here instead (this
-  // div owns the padding) extends coverage to the full scrollable page
-  // content while leaving point NORMALIZATION untouched (still computed
-  // against pageWrapperRef below — see penPoint).
+  // child (historically the AnnotationStrip, when present — deleted in
+  // SmoothDraw P3); the padding around it lives OUTSIDE that box on the
+  // scroll container. A pen overlay scoped to pageWrapperRef alone
+  // leaves that padding gutter (and any margin between the wrapper and
+  // the scroll container's edge) unreachable — hit live 2026-07-05: a
+  // student's stroke just past the (then strip-rendered) note text
+  // didn't register. Hosting the overlay here instead (this div owns
+  // the padding) extends coverage to the full scrollable page content
+  // while leaving point NORMALIZATION untouched (still computed against
+  // pageWrapperRef below — see penPoint).
   const pageOuterRef = useRef<HTMLDivElement | null>(null);
   const tapStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const [pings, setPings] = useState<{ id: number; pageIndex: number; x: number; y: number }[]>([]);
@@ -996,8 +997,12 @@ export function WhiteboardCanvas({
         out.push({ ...norm(featEl.getBoundingClientRect()), itemIndex, itemId, feature });
       });
     });
-    // AnnotationStrip entries (teacher notes below the item) live outside
-    // any [data-wb-item-index] scope, so they're collected separately.
+    // Any [data-wb-note] element living directly inside the wrapper
+    // (outside any [data-wb-item-index] scope) is collected separately
+    // here. Historically the AnnotationStrip populated this scope; it's
+    // deleted in SmoothDraw P3 and tutor notes now mount on pageOuterRef
+    // (see the scan below), so this loop is currently a defensive no-op —
+    // kept in case any future in-wrapper note UI reuses the attribute.
     // itemIndex 0 is a synthetic page-level slot — there is no real item
     // 0 (the loop above skips falsy itemIndex), so this can't collide
     // with a real item's rect.
@@ -1011,16 +1016,15 @@ export function WhiteboardCanvas({
         label: noteEl.getAttribute('data-wb-note-text') || undefined,
       });
     });
-    // SmoothDraw P3: InkNotesOverlay's notes (flag on) mount on the
-    // SIBLING host pageOuterRef, not inside pageWrapperRef (see
-    // pageOuterRef's doc comment above) — the wrapper-scoped scan just
-    // above can't see them. Scan pageOuterRef too, deduped against the
-    // wrapper scan by element identity (a Set) so nothing doubles up if a
-    // note element were ever reachable from both — e.g. the flag-off
-    // AnnotationStrip case, where pageOuterRef.querySelectorAll would
-    // otherwise re-find the SAME [data-wb-note] elements the wrapper scan
-    // just collected, since pageWrapperRef is itself a descendant of
-    // pageOuterRef.
+    // SmoothDraw P3: InkNotesOverlay's notes mount on the SIBLING host
+    // pageOuterRef, not inside pageWrapperRef (see pageOuterRef's doc
+    // comment above) — the wrapper-scoped scan just above can't see them.
+    // Scan pageOuterRef too, deduped against the wrapper scan by element
+    // identity (a Set) so nothing doubles up if a note element were ever
+    // reachable from both — pageWrapperRef is itself a descendant of
+    // pageOuterRef, so a naive pageOuterRef.querySelectorAll would
+    // otherwise re-find any [data-wb-note] elements the wrapper scan
+    // already collected.
     //
     // Honest scope: this scan makes overlay notes positioned WITHIN the
     // wrapper's box resolvable to taps. Notes placed out in the outer
@@ -1553,18 +1557,6 @@ export function WhiteboardCanvas({
             <p className="text-xs text-gray-400 italic">✏️ Tutor is preparing something…</p>
           </div>
         )}
-        {/* Annotation strip: per-page running list of teacher notes built
-            from tutor_scribble labels + tutor_handwrite text. Replaces
-            the old position-based on-diagram annotations — gives a
-            stable home for words and frees the brain from spatial
-            reasoning entirely. Resets on page nav (each page has its
-            own commands).
-            SmoothDraw P3: on-board notes replace the strip under the flag.
-            The strip component stays in the tree flag-off; its DELETION is
-            deferred until the live legibility gate passes (spec §5). */}
-        {inkNotesEnabled()
-          ? null
-          : <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />}
         {/* Fix 2: filter by page — a ping still in its 2s life at the
             moment of a page nav would otherwise render at the same
             normalized coords on the newly-current page. */}
@@ -1583,13 +1575,20 @@ export function WhiteboardCanvas({
         {inkNotesEnabled() && noteOverflowPx > 0 && (
           <div style={{ height: noteOverflowPx }} aria-hidden="true" />
         )}
-        {/* SmoothDraw P3: on-board tutor notes (replaces AnnotationStrip
-            under the flag — see its render site above). Hosted on
+        {/* SmoothDraw P3 (closed 2026-07-11): on-board tutor notes are the
+            default board behavior — this mount replaces the deleted
+            AnnotationStrip entirely, not a variant beside it. Hosted on
             pageOuterRef, same as the student-ink SVG right below, so the
             note slot engine measures against the same coordinate space
             (see InkNotesOverlay's + pageOuterRef's doc comments) and
             gutter placement works. Placement's page rect measures from
-            pageWrapperRef (contentRef) — spacer-independent. */}
+            pageWrapperRef (contentRef) — spacer-independent.
+            Kill switch (`NEXT_PUBLIC_TUTOR_INK_NOTES=off`, inkNotesEnabled()
+            false): this mount is the ONLY place tutor notes render — with
+            the strip gone, kill-switch=off means tutor_scribble labels and
+            tutor_handwrite text appear NOWHERE on the live board. That is
+            accepted rollback behavior (spec §5): the kill switch restores a
+            no-notes board, not strip-era notes. */}
         {inkNotesEnabled() && (
           <InkNotesOverlay
             hostRef={pageOuterRef}
@@ -1601,8 +1600,7 @@ export function WhiteboardCanvas({
         )}
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
             Hosted on pageOuterRef (not the page wrapper) so ink painted in
-            the padding gutter around the wrapper — or on the annotation
-            strip right at the wrapper's bottom edge — still renders; see
+            the padding gutter around the wrapper still renders; see
             pageOuterRef's doc comment. No viewBox — SVG user units equal
             OUTER-relative CSS px, the same space `penPoint` captures in
             (see its comment), so ink stays put at the spot the student
@@ -1925,7 +1923,8 @@ function StudentInputBar({ onStudentInput }: { onStudentInput: (type: 'text' | '
  * just past the feature's right edge) + `highlight` (semi-transparent
  * fill over the feature's bbox). Legacy shapes circle / underline /
  * box / arrow silently render as `tick`. Labels no longer paint on
- * the diagram — they move to the per-page AnnotationStrip below.
+ * the diagram — they render on-board beside their target via
+ * InkNotesOverlay (SmoothDraw P3).
  */
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
 type ResolvedRegion = { x: number; y: number; w: number; h: number };
@@ -2438,202 +2437,6 @@ function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq
     v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
   if (norm(s) === norm(e)) return true;
   return null;
-}
-
-/**
- * Per-page annotation strip. Sits inside the page wrapper at the bottom
- * of the rendered items. Holds the running list of teacher notes built
- * from:
- *   - tutor_scribble commands that carry a `label` — entry is
- *     `{feature display name} → {label}` in the scribble's color.
- *   - tutor_handwrite commands — entry is the full text in the
- *     handwrite's color.
- *
- * Replaces the position-based on-diagram annotation layer
- * (HandwriteOverlays + label-on-scribble) shipped through 2026-05-13.
- * The brain no longer positions anything; the strip is the home for
- * all words. Strip resets on page nav because each page has its own
- * commands. Empty strip renders nothing — no reserved space.
- */
-type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
-
-const SCRIBBLE_DEFAULT_COLOR = '#3b82f6';
-const HANDWRITE_DEFAULT_COLOR = '#a16207';
-
-/** Friendly display name for the strip composition rule
- *  "{feature display name} → {label}". Prefers the feature's first
- *  human label, falls back to the canonical data-feature value if
- *  no labels are registered.
- *
- *  Critical: scopes the DOM lookup to the SCRIBBLE'S TARGET ITEM
- *  (`[data-wb-item-index="N"]`) so that when multiple items on the
- *  same page share a structural feature name (e.g. two
- *  hierarchy_pyramids both have `data-feature="tier-1"`), we read
- *  the friendly label from the RIGHT one. Without this scope the
- *  query returned the first matching DOM element in document order
- *  — the older/upper item won, so the strip displayed labels from
- *  the wrong figure (observed 2026-05-13 session #14 image #46:
- *  scribble targeted Producers in the energy pyramid, but the strip
- *  rendered "All Living Things → ..." from the classification
- *  pyramid that happened to appear earlier on the same page). */
-function featureDisplayName(scribble: ScribbleCmd, pageContainer: HTMLElement | null): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const displayHint = (scribble as any)._displayName as string | undefined;
-  if (displayHint && displayHint.trim()) return displayHint.trim();
-  const tf = scribble.targetFeature;
-  if (!tf) return scribble.target || 'feature';
-  if (pageContainer) {
-    const safe = tf.replace(/"/g, '\\"');
-    const itemIdx = scribble.targetItemIndex;
-    // Narrow the search to the item the scribble actually targets.
-    // Fall back to the whole page if the scope can't be found (very
-    // first render before refs settle, or item index not stamped).
-    const scope = typeof itemIdx === 'number'
-      ? (pageContainer.querySelector(`[data-wb-item-index="${itemIdx}"]`) ?? pageContainer)
-      : pageContainer;
-    const el = scope.querySelector(`[data-feature="${safe}"]`);
-    const labelAttr = el?.getAttribute('data-feature-label');
-    if (labelAttr && labelAttr.trim()) return labelAttr.trim();
-  }
-  return tf;
-}
-
-function AnnotationStrip({
-  scribbles,
-  handwrites,
-}: {
-  scribbles: ScribbleCmd[];
-  handwrites: HandwriteCmd[];
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  // Filter scribbles to only those carrying a label — unlabelled
-  // scribbles draw a tick on the diagram and contribute nothing here
-  // (locked decision #7).
-  const labelledScribbles = scribbles.filter((s) => !!(s.label && s.label.trim()));
-  if (labelledScribbles.length === 0 && handwrites.length === 0) return null;
-  return (
-    <div
-      ref={containerRef}
-      aria-label="annotation strip"
-      className="mt-4 pt-2 border-t border-dashed border-gray-200"
-      style={{ pointerEvents: 'none' }}
-    >
-      <div className="space-y-1" style={{
-        // Hand-written feel: Caveat + Kalam (already loaded for the
-        // app via next/font in layout.tsx) match the original
-        // sticky-note handwrite styling, just without the card chrome.
-        // 22px because cursive fonts read less dense than sans-serif —
-        // 18px Caveat was still cramped next to surrounding sans-serif
-        // (2026-05-13 session #11 feedback).
-        fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
-        fontSize: 22,
-        lineHeight: 1.3,
-      }}>
-        {labelledScribbles.map((s, i) => {
-          const color = s.color || SCRIBBLE_DEFAULT_COLOR;
-          const name = featureDisplayName(s, containerRef.current?.parentElement ?? null);
-          return (
-            <StripEntry
-              key={`s-${i}-${s.targetFeature ?? s.target ?? 'na'}`}
-              color={color}
-              boldText={name}
-              tailText={` → ${s.label}`}
-              tailOpacity={0.85}
-            />
-          );
-        })}
-        {handwrites.map((h, i) => {
-          const color = h.color || HANDWRITE_DEFAULT_COLOR;
-          return (
-            <StripEntry
-              key={`h-${i}-${h.text.slice(0, 24)}`}
-              color={color}
-              boldText=""
-              tailText={h.text}
-              tailOpacity={1}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Single strip entry. Renders the color dot immediately, then types
- *  the text left-to-right at ~30ms/char to simulate hand-writing.
- *  Stable key in the parent ensures each entry's animation fires only
- *  once on mount — subsequent re-renders preserve the typewriter state.
- *
- *  2026-05-13 session #11 feedback: entries appeared instantly, breaking
- *  the "tutor is writing this" illusion. The reveal animation gives
- *  the strip a sense of being annotated in real time, matching the
- *  Caveat font + ✓-tick "live tutor" framing. */
-function StripEntry({
-  color,
-  boldText,
-  tailText,
-  tailOpacity,
-}: {
-  color: string;
-  boldText: string;
-  tailText: string;
-  tailOpacity: number;
-}) {
-  const full = boldText + tailText;
-  const [revealed, setRevealed] = useState(0);
-  // Live refs for current full + position. featureDisplayName's DOM
-  // lookup falls back to canonical on the FIRST render (parent ref
-  // not yet populated) and extends to the friendly name when the
-  // parent re-renders with refs populated. The interval may have
-  // ALREADY CLEARED at the canonical length by the time the friendly
-  // name arrives — the previous closure-only ref fix tracked the
-  // length but didn't restart the interval after it stopped (observed
-  // 2026-05-13 session #14 image #42: "chased → the acti" = 17 chars
-  // = length of "verb → the action" before "verb"→"chased" extension).
-  //
-  // Now: dep on `full`. When full extends after the interval cleared,
-  // the effect re-runs, sees nRef < new full.length, and resumes
-  // from the current position. nRef is a ref so re-entries don't
-  // restart at 0.
-  const fullRef = useRef(full);
-  fullRef.current = full;
-  const nRef = useRef(0);
-  useEffect(() => {
-    if (nRef.current >= full.length) return;
-    const id = window.setInterval(() => {
-      nRef.current += 1;
-      setRevealed(nRef.current);
-      if (nRef.current >= fullRef.current.length) window.clearInterval(id);
-    }, 30);
-    return () => window.clearInterval(id);
-  }, [full]);
-  const boldShown = revealed >= boldText.length ? boldText : full.slice(0, revealed);
-  const tailShown = revealed > boldText.length ? full.slice(boldText.length, revealed) : '';
-  // First-class mark target: the strip's `pointerEvents: none` on its
-  // container only blocks click-through, not rect capture — collectRects
-  // (WhiteboardCanvas) queries [data-wb-note] independent of pointer
-  // events, so a circle/underline over this line resolves to the note's
-  // own text instead of falling through to the page.
-  const noteText = full.length > 80 ? `${full.slice(0, 80)}…` : full;
-  return (
-    <div className="flex items-center gap-2" style={{ color }} data-wb-note="true" data-wb-note-text={noteText}>
-      <span
-        aria-hidden="true"
-        style={{
-          display: 'inline-block',
-          width: 8,
-          height: 8,
-          borderRadius: '50%',
-          backgroundColor: color,
-          flexShrink: 0,
-        }}
-      />
-      <span>
-        {boldText && <span style={{ fontWeight: 600 }}>{boldShown}</span>}
-        {tailShown && <span style={{ opacity: tailOpacity }}>{tailShown}</span>}
-      </span>
-    </div>
-  );
 }
 
 interface CommandRendererProps {
