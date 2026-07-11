@@ -617,24 +617,30 @@ function wrapNoteByChars(text: string, maxChars = 24, maxLines = 4): string[] {
  * Single capture site: feature-anchored note baking is wired ONLY into
  * pdf-tutor-session.ts's direct vector-SVG embed path (the "generic
  * fallback" used by the ~20 Tier-1 structured renderers with no native
- * jsPDF drawer). It is deliberately NOT threaded into this file's
- * `captureCommandRaster` SVG-mode branch (used only for the small
- * RASTER_PREFERRED_ACTIONS allowlist, exotic-glyph diagrams, and the
- * non-SVG HTML-mode fallback via `injectHtmlScribbleOverlay`): those
- * items still get their scribble ticks/highlights unchanged, but a note
- * targeting one of them falls through to the honest margin caption line
- * instead of being baked. Rationale: (1) the vector-SVG path covers the
- * overwhelming majority of feature-anchored-note use cases (geometry,
- * physics, bio diagrams); (2) `injectHtmlScribbleOverlay` is a
- * DOM-measurement implementation (getBoundingClientRect), not the
- * string/data-feature-cx convention this function and `placeNote`
- * assume, so wiring it in is a second, larger change outside this
- * task's minimal-diff scope; (3) captureCommandRaster's public return
- * type (`RasterCapture | null`) has no room for a "what got baked"
- * signal without widening a helper used by several call sites that
- * never pass notes at all (equations, geometry-without-scribbles). A
- * future task can extend RasterCapture if this gap turns out to matter
- * in practice.
+ * jsPDF drawer). Everything that renders through a RASTER path never
+ * gets notes baked and always falls back to the honest margin caption
+ * line — and that set is bigger than the allowlist alone. Explicitly:
+ *   - `showEquation`: short-circuits to captureCommandRaster BEFORE the
+ *     vector path even runs (pdf-tutor-session.ts's showEquation
+ *     branch). Equations DO carry data-feature tags and are a common
+ *     live note target, so this is the most user-visible piece of the
+ *     scope cut, named here on purpose.
+ *   - the RASTER_PREFERRED_ACTIONS allowlist + exotic-glyph diagrams,
+ *   - the non-SVG HTML-mode fallback via `injectHtmlScribbleOverlay`.
+ * All of these still get their scribble ticks/highlights unchanged.
+ * Rationale: (1) the vector-SVG path covers the majority of
+ * feature-anchored-note use cases (geometry, physics, bio diagrams);
+ * (2) `injectHtmlScribbleOverlay` is a DOM-measurement implementation
+ * (getBoundingClientRect), not the string/data-feature-cx convention
+ * this function and `placeNote` assume, so wiring it in is a second,
+ * larger change outside this task's minimal-diff scope; (3)
+ * captureCommandRaster's public return type (`RasterCapture | null`)
+ * has no room for a "what got baked" signal without widening a helper
+ * used by several call sites that never pass notes at all. Equation-
+ * bake via the pre-raster mounted DOM (injectHtmlScribbleOverlay-style
+ * measurement + an HTML note overlay before rasterizing) is the natural
+ * follow-up — deliberately not built until the live legibility gate
+ * shows real note-on-equation usage justifying it.
  */
 export function overlayScribbles(
   svgString: string,

@@ -1988,8 +1988,22 @@ export async function exportTutorSessionPDF(
         // overlayScribbles' doc comment on why text rather than a
         // synthetic id) — mark the source handwrite command so its own
         // render, later in this same loop, skips the caption line.
+        //
+        // Consumed as a MULTISET (each baked text is spent on exactly
+        // ONE source command), not a membership test. A plain
+        // `.includes()` would mark EVERY command sharing the text — so
+        // if two identical-text notes co-target this item and only one
+        // resolved to a feature, the unresolved one would lose its
+        // caption line too: silent content loss. Splicing each match
+        // out keeps marked-command count == actually-baked count.
+        const remainingBaked = [...bakedNoteTexts];
         for (const entry of itemNoteEntries) {
-          if (bakedNoteTexts.includes(entry.text)) {
+          const idx = remainingBaked.indexOf(entry.text);
+          if (idx >= 0) {
+            remainingBaked.splice(idx, 1);
+            // Mutates the live command object (same ref held by React
+            // state) — consistent with the pre-existing __pdfPageTitle
+            // stamping in the page-grouping pre-walk above.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (entry.sourceCmd as any).__pdfNoteBaked = true;
           }
