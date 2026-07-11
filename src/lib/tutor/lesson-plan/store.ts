@@ -1357,6 +1357,9 @@ import { SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE } from './seeds/ap-apworld-u2-ind
 import { SEED_AP_APWORLD_U2_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-trans-saharan-trade';
 import { SEED_AP_APWORLD_U2_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
+import { SEED_AP_APWORLD_U2_DBQ_PRACTICE } from './seeds/ap-apworld-u2-dbq-practice';
+import { SEED_AP_APWORLD_U2_LEQ_PRACTICE } from './seeds/ap-apworld-u2-leq-practice';
+import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-practice';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2678,6 +2681,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U2_TRANS_SAHARAN_TRADE,
   SEED_AP_APWORLD_U2_MONGOL_EMPIRE,
   SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION,
+  SEED_AP_APWORLD_U2_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U2_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U2_SAQ_PRACTICE,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
