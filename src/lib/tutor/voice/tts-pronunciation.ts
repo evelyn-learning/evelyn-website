@@ -232,6 +232,14 @@ export function rewriteForTTS(raw: string): string {
   // Collapse doubled commas (e.g. two adjacent em-dashes both becoming
   // ", ") into a single comma.
   t = t.replace(/,(\s*,)+/g, ',');
+  // Sentence-final vocative comma: Cartesia turns ", Praveen." into an
+  // exaggerated pause before the name (live 2026-07-11). Drop the comma
+  // in SPEECH only — this layer never feeds captions/transcript/PDF, so
+  // the written form keeps correct punctuation. Shape-matched: comma +
+  // capitalized word + terminator. Runs AFTER the em-dash → comma
+  // replacement so "— Praveen." is caught too. Openers ("Hey Praveen,
+  // I'm Sameer") don't match — their comma isn't before name+terminator.
+  t = t.replace(/,\s+([A-Z][a-z]+)([.!?])/g, ' $1$2');
   // Collapse repeated whitespace introduced by replacements.
   t = t.replace(/\s+/g, ' ').trim();
   // If a sentence ends with "?" but has stray spaces before it, fix.

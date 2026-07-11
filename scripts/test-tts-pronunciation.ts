@@ -185,3 +185,26 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('a₀ and a₁ are the coefficients', 'a 0 and a 1 are the coefficients', 'subscript-coefficients');
   console.log('OK — live-session 2026-07-10 regressions (equals + subscripts)');
 }
+
+// Live-session regression 2026-07-11: sentence-final vocative comma made
+// Cartesia over-pause ("locked in for today <pause> Praveen"). The comma
+// before a capitalized sentence-final name is dropped in SPEECH only
+// (captions/transcript keep the written comma — this layer never feeds
+// them). Openers like "Hey Praveen, I'm Sameer" are untouched: their
+// comma sits after the name, not before a name+terminator.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq("That's the full scoreboard locked in for today, Praveen. Five real shortcuts.",
+     "That's the full scoreboard locked in for today Praveen. Five real shortcuts.",
+     'vocative-comma-period');
+  eq('Nice work, Maya!', 'Nice work Maya!', 'vocative-comma-bang');
+  eq('Ready to keep going, Arjun?', 'Ready to keep going Arjun?', 'vocative-comma-question');
+  eq("Hey Praveen, I'm Sameer.", "Hey Praveen, I'm Sameer.", 'opener-comma-after-name-untouched');
+  eq('First, we simplify.', 'First, we simplify.', 'ordinary-clause-comma-untouched');
+  eq('Thanks, everyone!', 'Thanks, everyone!', 'lowercase-after-comma-untouched');
+  console.log('OK — live-session 2026-07-11 regression (vocative comma)');
+}
