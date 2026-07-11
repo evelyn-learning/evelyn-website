@@ -1,5 +1,12 @@
 import { sanitize as baseSanitize } from './pdf-course-export';
 import type jsPDF from 'jspdf';
+// SmoothDraw Phase 3 (task 5): flag gate for baking feature-anchored
+// tutor notes into item captures. Imported from the tutor hooks module
+// (the flag's canonical home since task 2) rather than duplicating a
+// process.env read here — whiteboard-capture.ts already establishes the
+// precedent of this export module reaching into app/tutor for a flag
+// helper (see its `drawOnEnabled` import from useDrawOn.ts).
+import { inkNotesEnabled } from '@/app/tutor/hooks/toolDefinitions';
 
 interface TranscriptMessage {
   id: string;
@@ -1219,6 +1226,19 @@ async function drawWhiteboardVisual(
   pdf: jsPDF, rawCmd: WhiteboardCommandData,
   x: number, y: number, width: number,
   scribbles?: Array<{ shape: 'tick' | 'highlight' | 'circle' | 'underline' | 'arrow' | 'box'; region?: { x: number; y: number; w?: number; h?: number }; targetFeature?: string; color?: string; label?: string }>,
+  // SmoothDraw P3 (task 5): feature-anchored tutor notes targeting THIS
+  // item, resolved by the export loop's pre-pass (notesByTargetId) —
+  // only ever populated when inkNotesEnabled().
+  inkNotes?: Array<{ text: string; color?: string; targetFeature?: string }>,
+  // Out-param: overlayScribbles' `bakedTexts` for THIS item's inkNotes
+  // land here so the export loop can mark the SOURCE handwrite command
+  // (`__pdfNoteBaked`) to skip its own caption line later in the walk.
+  // An out-param rather than widening this function's `Promise<number>`
+  // return — that return value is read as a plain cursor position at
+  // ~15 call sites throughout this file, none of which care about
+  // baked notes; threading a second return value through all of them
+  // for one call site's benefit isn't the minimal change.
+  bakedNoteTextsOut?: string[],
 ): Promise<number> {
   // Normalize: DB format nests command properties under 'data' (e.g., { action: 'showEquation', data: { latex: '...' } }),
   // while live format has them flat (e.g., { action: 'showEquation', latex: '...' }). Flatten for consistent access.
@@ -1276,6 +1296,17 @@ async function drawWhiteboardVisual(
     // Post-redesign (2026-05-13): handwrites are strip entries — a
     // simple colored bullet + line of text. No box, no border, no
     // anchor hint. Matches the live AnnotationStrip styling.
+    //
+    // SmoothDraw P3 (task 5): a note the export loop already baked into
+    // its target item's captured SVG (see the fallback branch below +
+    // overlayScribbles) doesn't need this line too — the item's own
+    // numbered badge above still reads "Handwrite: <text>"
+    // (describeWhiteboardCommand), so the note's content survives in
+    // the list even with the caption line skipped.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (inkNotesEnabled() && (rawCmd as any).__pdfNoteBaked) {
+      return y;
+    }
     const text = String(cmd.text);
     const colorHex = (typeof cmd.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(cmd.color)) ? cmd.color : '#a16207';
     const parsedColor = ((): [number, number, number] => {
@@ -1287,7 +1318,15 @@ async function drawWhiteboardVisual(
     })();
     pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(10);
-    const sanitized = sanitizeForPDF(text);
+    // Flag-on: distinguish a note that STAYED in the margin (no `near`,
+    // an unresolved `near`, or a target on a different item) from one
+    // that got baked beside its feature elsewhere in this export. '→'
+    // (not the brief's literal '↳' — jsPDF's helvetica is WinAnsi-only
+    // and doesn't have that glyph) round-trips through sanitizeForPDF's
+    // LATIN_DIACRITIC_MAP to '->', so no raw non-Latin-1 byte reaches
+    // the PDF text stream.
+    const displayText = inkNotesEnabled() ? `${text} → margin note` : text;
+    const sanitized = sanitizeForPDF(displayText);
     const wrapped = pdf.splitTextToSize(sanitized, width - 6);
     const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
     // Color dot.
@@ -1411,8 +1450,18 @@ async function drawWhiteboardVisual(
           return y + heightMm + 2;
         }
       }
-      if (scribbles && scribbles.length > 0) {
-        svgString = overlayScribbles(svgString, scribbles);
+      if ((scribbles && scribbles.length > 0) || (inkNotes && inkNotes.length > 0)) {
+        // SmoothDraw P3: this is the ONE capture site that bakes
+        // feature-anchored notes — see overlayScribbles' doc comment
+        // (whiteboard-capture.ts) for why the raster paths above
+        // (prefersRaster, exotic-glyph fallback) and the HTML-mode
+        // fallback below don't also receive `inkNotes`. Scribbles
+        // (ticks/highlights) are unaffected either way.
+        const baked = overlayScribbles(svgString, scribbles, inkNotes);
+        svgString = baked.svg;
+        if (bakedNoteTextsOut && baked.bakedTexts.length > 0) {
+          bakedNoteTextsOut.push(...baked.bakedTexts);
+        }
       }
       const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
       if (consumed > 0) return y + consumed + 2;
@@ -1735,6 +1784,47 @@ export async function exportTutorSessionPDF(
       return `${label} (latex: ${latex.length} chars: "${latex.slice(0, 60)}…")`;
     }));
 
+  // SmoothDraw P3 (task 5): pre-pass mapping each resolved `handwrite`
+  // note to the item it targets, mirroring the scribble pre-pass above
+  // (scribblesByTargetId) — EXCEPT a handwrite is a real content item
+  // with its own numbered entry in the list below (unlike `scribble`,
+  // which is a pure meta-action filtered out of dedupedCommands
+  // entirely). So this pass reads `targetId`/`targetFeature` without
+  // removing anything from dedupedCommands; the handwrite's own render
+  // (drawWhiteboardVisual's `handwrite` branch) decides at ITS turn
+  // whether to skip the caption line, based on whether the target
+  // item's render (elsewhere in this same walk) actually baked it —
+  // see `notesByTargetId` below, `itemInkNotes`, and `__pdfNoteBaked`.
+  //
+  // Ordering assumption: this only works cleanly when the target item
+  // appears BEFORE the handwrite that references it in dedupedCommands
+  // — true for the overwhelming majority of sessions (the tutor draws
+  // something, THEN annotates it). If a `near` reference ever precedes
+  // its target in the stream, the handwrite's own entry renders its
+  // caption line as usual (nothing baked yet at that point) even though
+  // the target's later render also bakes the same note — a harmless
+  // double-appearance, not a crash, and consistent with this file's
+  // fail-open philosophy elsewhere (e.g. unresolved `near` → margin).
+  type PdfNoteEntry = { text: string; color?: string; targetFeature: string; sourceCmd: WhiteboardCommandData };
+  const notesByTargetId = new Map<string, PdfNoteEntry[]>();
+  if (inkNotesEnabled()) {
+    for (const cmd of dedupedCommands) {
+      if (cmd.action !== 'handwrite') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = cmd as any;
+      const targetId = typeof c.targetId === 'string' ? c.targetId : undefined;
+      const targetFeature = typeof c.targetFeature === 'string' ? c.targetFeature : undefined;
+      // Both fields are stamped together (or not at all) by the near-
+      // resolution block in VoiceTutorRealtime.tsx — no partial state.
+      if (!targetId || !targetFeature) continue;
+      const text = typeof c.text === 'string' ? c.text : '';
+      if (!text.trim()) continue;
+      const list = notesByTargetId.get(targetId) || [];
+      list.push({ text, color: typeof c.color === 'string' ? c.color : undefined, targetFeature, sourceCmd: cmd });
+      notesByTargetId.set(targetId, list);
+    }
+  }
+
   const addPageIfNeeded = (space: number) => {
     if (y + space > 272) { pdf.addPage(); y = 20; }
   };
@@ -1877,7 +1967,34 @@ export async function exportTutorSessionPDF(
         ...(thisId ? (scribblesByTargetId.get(thisId) || []) : []),
         ...(scribblesByIndex.get(i + 1) || []),
       ];
-      const newY = await drawWhiteboardVisual(pdf, cmd, margin + 4, y, contentWidth - 8, itemScribbles.length > 0 ? itemScribbles : undefined);
+      // SmoothDraw P3: notes targeting THIS item, sourced from the
+      // notesByTargetId pre-pass above. bakedNoteTexts collects what
+      // overlayScribbles actually managed to bake (feature match found)
+      // so the corresponding handwrite command's OWN list entry can
+      // skip its caption line when its turn comes later in this walk.
+      const itemNoteEntries = thisId ? (notesByTargetId.get(thisId) || []) : [];
+      const itemInkNotes = itemNoteEntries.length > 0
+        ? itemNoteEntries.map((n) => ({ text: n.text, color: n.color, targetFeature: n.targetFeature }))
+        : undefined;
+      const bakedNoteTexts: string[] = [];
+      const newY = await drawWhiteboardVisual(
+        pdf, cmd, margin + 4, y, contentWidth - 8,
+        itemScribbles.length > 0 ? itemScribbles : undefined,
+        itemInkNotes,
+        bakedNoteTexts,
+      );
+      if (bakedNoteTexts.length > 0) {
+        // Text-match scoped to THIS item's own note list (see
+        // overlayScribbles' doc comment on why text rather than a
+        // synthetic id) — mark the source handwrite command so its own
+        // render, later in this same loop, skips the caption line.
+        for (const entry of itemNoteEntries) {
+          if (bakedNoteTexts.includes(entry.text)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (entry.sourceCmd as any).__pdfNoteBaked = true;
+          }
+        }
+      }
       if (newY > y) {
         y = newY;
       } else {
