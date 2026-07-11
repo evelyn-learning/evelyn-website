@@ -166,17 +166,17 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
-    "problemText": "The federal budget table shows categorical grants — funds Congress restricts to narrowly defined purposes with compliance requirements attached — making up 84% of federal grants-in-aid dollars in fiscal year 2019. In McCulloch v. Maryland (1819), the Supreme Court held that Congress may use means not explicitly listed in the Constitution, so long as they are a reasonable way to carry out an enumerated power. Applying this reasoning, Congress's authority to attach detailed conditions to categorical grants is best understood as an exercise of —",
+    "problemText": "The federal budget table shows categorical grants — funds Congress restricts to narrowly defined purposes with compliance requirements attached — making up 84% of federal grants-in-aid dollars in fiscal year 2019. Congress's constitutional authority to offer these grants and attach such conditions to them rests most directly on —",
     "choices": [
-      "an enumerated power expressly listed in Article I, Section 8, requiring no further constitutional justification",
-      "inherent authority the president holds independently of Congress and the courts under Article II",
-      "implied power under the Necessary and Proper Clause, advancing Congress's spending and taxing powers",
-      "a reserved power belonging exclusively to the states under the Tenth Amendment"
+      "Congress's Commerce Clause power to directly regulate any activity, economic or not, occurring within the states",
+      "an implied power only, because the Constitution nowhere expressly grants Congress any authority at all to spend federal money",
+      "the enumerated power to tax and spend for the general welfare, placing conditions on funds states accept",
+      "a reserved power that the Tenth Amendment leaves exclusively to the individual state governments"
     ],
     "answer": "C",
     "hints": [
-      "Nothing in Article I, Section 8 explicitly lists a power to 'attach conditions to grants' — so the authority must come from somewhere else, the way chartering a bank did in McCulloch.",
-      "Reserved powers belong to the states, and Article II authority belongs to the president — neither fits a power Congress is exercising over its own spending."
+      "Grants are federal money — start from the enumerated Article I, Section 8 power to lay taxes and spend for the general welfare.",
+      "Conditions ride on money the states voluntarily accept: that is an exercise of the spending power itself, not commerce regulation, not a state's reserved power, and not a power the Constitution forgot to enumerate."
     ]
   },
   {

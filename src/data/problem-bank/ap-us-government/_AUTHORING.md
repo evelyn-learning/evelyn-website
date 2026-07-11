@@ -16,7 +16,7 @@ which collides with an older id.
 |---|---|---|---|
 | `apgov.constitution-ratification` | `AP-APGOV-1.4/1.5` | The Constitutional Convention & ratification debate — Federalist No. 10 vs. Brutus No. 1 on faction and the size of a republic. | 3 |
 | `apgov.separation-of-powers` | `AP-APGOV-1.6` | Separation of powers & checks and balances — Federalist No. 51 on ambition counteracting ambition and internal/external controls on government. | 2 |
-| `apgov.federalism-foundations` | `AP-APGOV-1.7/1.8/1.9` | Federalism — Federalist No. 51's "double security" argument, the federal grants-in-aid data table (fiscal federalism trend + categorical/block split), and applying *McCulloch v. Maryland* (1819) and *United States v. Lopez* (1995). | 5 |
+| `apgov.federalism-foundations` | `AP-APGOV-1.7/1.8/1.9` | Federalism — Federalist No. 51's "double security" argument, the federal grants-in-aid data table (fiscal federalism trend + categorical/block split), the Spending Clause basis of conditional grants, and applying *United States v. Lopez* (1995). | 5 |
 | **Total** | | | **10** |
 
 `apgov.democratic-ideals` (`AP-APGOV-1.1`) has no items in this bank — none
@@ -76,17 +76,24 @@ documents:
 - **Distinguishing federalism from separation of powers** — Federalist 51's "double security" (two governments, then subdivided departments), with branch-of-government and House/Senate distractors targeting the classic federalism/separation-of-powers mix-up (federalism-foundations.mcq.01).
 - **Reading a quantitative trend accurately** — the dollar column rises every interval shown while the outlay-share column peaks in 2010 and eases by 2019, testing whether the student conflates "grew in dollars" with "grew as a share" (federalism-foundations.mcq.02).
 - **Fiscal federalism / grant conditions** — the categorical-vs-block dollar split as evidence of limited state discretion over most federal grant money (federalism-foundations.mcq.03).
-- **Concept application: *McCulloch v. Maryland* (1819)** — applying the implied-powers/Necessary-and-Proper-Clause holding to explain Congress's authority to attach conditions to categorical grants (federalism-foundations.mcq.04).
+- **Constitutional basis of conditional grants** — the enumerated Spending Clause (tax and spend for the general welfare, Art. I §8 cl. 1) as the ground for offering grants with conditions, against Commerce-Clause, freestanding-implied-power, and reserved-power distractors (federalism-foundations.mcq.04).
 - **Concept application: *United States v. Lopez* (1995)** — applying Lopez's Commerce Clause limits to explain why Congress relies on voluntary conditional spending rather than direct regulation (federalism-foundations.mcq.05).
 
 ## Constitutional accuracy notes
 
-- *McCulloch v. Maryland* (1819): held Congress may use means not explicitly
-  enumerated so long as they are a reasonable way to execute an enumerated
-  power (Necessary and Proper Clause / implied powers). mcq.04 applies this
-  general implied-powers logic to conditional-grant authority without
-  asserting a specific later case (e.g., *South Dakota v. Dole*) that isn't
-  in the Unit-1 stimulus set.
+- Conditional grants and the Spending Clause: mainstream doctrine grounds
+  Congress's power to offer grants and attach conditions in the enumerated
+  taxing-and-spending power (Art. I §8 cl. 1, refined by *South Dakota v.
+  Dole* (1987), which is not named in the item since it isn't in the Unit-1
+  stimulus set). mcq.04's first draft instead keyed conditional grants to
+  *McCulloch*'s implied-powers holding — flagged in review as doctrinally
+  soft (the enumerated-power distractor was arguably closer to correct), so
+  the item was rewritten to key cleanly to the Spending Clause, with a
+  freestanding-implied-power distractor (wrong because the spending power IS
+  expressly enumerated), a Commerce-Clause distractor (wrong per *Lopez*'s
+  noneconomic-activity limit and because commerce power is not the grant
+  mechanism), and a reserved-power distractor (wrong — this is a federal
+  power being exercised).
 - *United States v. Lopez* (1995): held the Commerce Clause does not reach
   noneconomic activity (there, gun possession near a school). mcq.05 keeps
   the claim scoped to what Lopez actually held (a Commerce Clause limit) and
@@ -122,7 +129,8 @@ documents:
 
 `npm run seed:problem-bank -- --course=ap-us-government --file=u1.json --dry-run`:
 10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
-on the first pass (no answer-key fixes needed). `npm run lint:passages`
+on the first pass (no answer-key fixes needed) — and again 10/10 after the
+mcq.04 Spending-Clause rewrite. `npm run lint:passages`
 clean (19 passages, including all 4 referenced by this bank). A standalone
 verbatim-substring check confirmed every quoted span inside `problemText`
 (9 quoted spans across the 6 Federalist-10/Brutus-1/Federalist-51 items) is
