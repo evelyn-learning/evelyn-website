@@ -16,6 +16,7 @@ import { renderAnalogiesBlock } from '@/lib/tutor/pedagogy/analogies';
 import { renderHumorBlock, resolveHumorCeiling, type HumorLevel } from '@/lib/tutor/pedagogy/humor';
 import type { StudentPreferences, PartnerPolicy } from '@/lib/tutor/student-profile/types';
 import { renderCatalogForPrompt } from '@/lib/tutor/diagrams/catalog/manifest';
+import { inkNotesEnabled } from '@/app/tutor/hooks/toolDefinitions';
 import { resolveToolSubjects, type CatalogSubject } from './tool-subject-taxonomy';
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
@@ -326,6 +327,19 @@ The anchor APPEARS as you speak it. You neither ANNOUNCE it (the banned process-
  *  decision. Subject-agnostic. Design: project_tutor_work_queue (P3). */
 const ANSWER_EQUIVALENCE_SENTINEL = '__ANSWER_EQUIVALENCE_SENTINEL__';
 const ANSWER_EQUIVALENCE_RULE = `**Check equivalence before judging a volunteered answer wrong.** When a student offers a result, first decide whether it is EQUIVALENT to the target in VALUE or MEANING — not just identical in form. A different algebraic form, a paraphrase, a synonymous term, or a correct answer stated AHEAD of the step you expected all count as RIGHT, not "not quite." If it IS equivalent: affirm in a short clause and advance — do NOT re-derive what they nailed or impose steps they skipped (you MAY briefly OFFER to show the steps, but default to moving on). If you genuinely CANNOT tell whether it's equivalent: do NOT assert "not quite" and do NOT rubber-stamp it either — ask them to show a step or clarify, which both checks their reasoning and avoids mis-judging. This does NOT apply to an answer with a REAL error (a wrong value, an arithmetic slip): that still takes the wrong-answer path below.`;
+
+/** SmoothDraw Phase 3 — tutor_handwrite spatial-anchor prose. The flag-off
+ *  sentence below (a 2026-05-13 strip-era statement that handwrites have no
+ *  spatial fields) directly CONTRADICTS the flag-on tool docstring, which
+ *  documents \`near\` — the 2026-07-11 gate saw the brain use \`near\` on one
+ *  turn and drop it the next (defect C). Swapped in buildSystemPrompt only
+ *  when inkNotesEnabled(); flag off ⇒ prompt byte-identical to today.
+ *  Cache-safe: NEXT_PUBLIC_ env is a deployment constant, stable across
+ *  every session. Generic on purpose — no subject-specific examples. */
+const HANDWRITE_NO_NEAR_SENTENCE =
+  'There is NO `near`, `position`, or `margin` field; the note has no spatial anchor.';
+const HANDWRITE_NEAR_SENTENCE =
+  'A note may carry a `near` field (same target grammar as tutor_scribble) to land hand-written on the board beside that target — the runtime computes the placement; omit `near` for a general note (margin).';
 
 /**
  * Base tutor personality and guidelines
@@ -1451,6 +1465,16 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
       ? `${BOARD_ANCHORED_SPEECH_RULE.replace('__SKETCH_TOOL_CLAUSE__', sketchToolClause)}\n\n`
       : '',
   );
+
+  // SmoothDraw P3 — reconcile the handwrite prose with the flag-on tool
+  // docstring (see HANDWRITE_NO_NEAR_SENTENCE's doc comment). Flag off ⇒
+  // no replace ⇒ byte-identical prompt. NOTE: the prompt is SESSION-STATIC —
+  // an already-running session keeps the old prose; only fresh sessions see
+  // this. Server-side build reads the env at request time, so no restart is
+  // needed for new sessions in dev.
+  if (inkNotesEnabled()) {
+    prompt = prompt.replace(HANDWRITE_NO_NEAR_SENTENCE, HANDWRITE_NEAR_SENTENCE);
+  }
 
   // Answer-equivalence recognition — stops the "not quite" false-reject of a
   // correct-but-different-form / ahead-of-step answer (P3). Spliced in only when
