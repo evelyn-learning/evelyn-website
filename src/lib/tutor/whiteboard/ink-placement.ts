@@ -6,7 +6,10 @@
  * and the measured note size, pick the first fitting slot in a fixed
  * order (right → above → below → left → margin column). The margin
  * column NEVER fails: it clamps into the page's right edge below any
- * occupant. Notes must never overlap content — the 2026-05-13 lesson
+ * occupant, and its x clamps to the left page edge when the note is
+ * wider than the page minus the margin inset (narrow hosts) — width
+ * overflow beyond the page is the caller's concern, since note.w is an
+ * input. Notes must never overlap content — the 2026-05-13 lesson
  * that created the AnnotationStrip; this engine is what makes on-board
  * notes safe enough to retire it.
  *
@@ -68,7 +71,7 @@ export function placeNote(input: {
   // the column. Scan down in note-height steps; if the page is truly
   // full, clamp to the bottom (overlap the least-bad way — never returns
   // failure, the round-7 silent-drop philosophy applied to placement).
-  const x = page.x + page.w - note.w - MARGIN_W;
+  const x = Math.max(page.x, page.x + page.w - note.w - MARGIN_W);
   let y = page.y + MARGIN_W;
   const step = note.h + CLEAR_PAD * 2;
   while (y + note.h <= page.y + page.h) {

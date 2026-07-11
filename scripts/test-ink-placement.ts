@@ -78,6 +78,13 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('same input → identical placement', JSON.stringify(a) === JSON.stringify(b));
 }
 
+// ── margin column stays on-page for narrow hosts ──────────────
+{
+  const narrow: Rect = { x: 0, y: 0, w: 140, h: 400 };
+  const p = placeNote({ target: null, occupied: [], page: narrow, note: { w: 160, h: 40 } });
+  check('over-wide note on narrow page → margin x clamps to page edge', p.slot === 'margin' && p.rect.x >= 0);
+}
+
 // ── rectsOverlap sanity ───────────────────────────────────────
 {
   check('overlap true', rectsOverlap({ x: 0, y: 0, w: 10, h: 10 }, { x: 5, y: 5, w: 10, h: 10 }));
