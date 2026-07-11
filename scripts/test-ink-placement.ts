@@ -85,6 +85,32 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('over-wide note on narrow page → margin x clamps to page edge', p.slot === 'margin' && p.rect.x >= 0);
 }
 
+// ── exhausted margin scan EXTENDS the page (never a fixed clamp) ──
+{
+  // Content fills the whole page: no in-page margin row is clear.
+  const fullContent: Rect = { x: 0, y: 0, w: 800, h: 600 };
+  const occupied: Rect[] = [fullContent];
+  const first = placeNote({ target: null, occupied, page, note });
+  check('full page → margin extension below the page bottom', first.slot === 'margin' && first.rect.y >= page.y + page.h);
+  check('extension does not overlap the content', !rectsOverlap(first.rect, fullContent));
+  occupied.push(first.rect);
+  const second = placeNote({ target: null, occupied, page, note });
+  check('second extension note does not overlap the first', second.slot === 'margin' && !rectsOverlap(first.rect, second.rect));
+  check('extension y grows monotonically', second.rect.y > first.rect.y);
+  occupied.push(second.rect);
+  const third = placeNote({ target: null, occupied, page, note });
+  check('third extension keeps growing', third.rect.y > second.rect.y && !rectsOverlap(third.rect, second.rect));
+  check('extension notes keep the margin column x', Math.abs(first.rect.x - second.rect.x) < 1 && Math.abs(second.rect.x - third.rect.x) < 1);
+}
+{
+  // Occupant OUTSIDE the margin column's x-band must not push the
+  // extension down — only same-band occupants count.
+  const fullContent: Rect = { x: 0, y: 0, w: 800, h: 600 };
+  const farBelowLeft: Rect = { x: 0, y: 900, w: 100, h: 100 }; // left edge, outside the band
+  const p = placeNote({ target: null, occupied: [fullContent, farBelowLeft], page, note });
+  check('out-of-band occupant does not inflate the extension y', p.rect.y < 900);
+}
+
 // ── rectsOverlap sanity ───────────────────────────────────────
 {
   check('overlap true', rectsOverlap({ x: 0, y: 0, w: 10, h: 10 }, { x: 5, y: 5, w: 10, h: 10 }));

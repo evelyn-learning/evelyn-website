@@ -5,11 +5,12 @@
  * target's rect, everything already occupying the page, the page bounds,
  * and the measured note size, pick the first fitting slot in a fixed
  * order (right → above → below → left → margin column). The margin
- * column NEVER fails: it clamps into the page's right edge below any
- * occupant, and its x clamps to the left page edge when the note is
- * wider than the page minus the margin inset (narrow hosts) — width
- * overflow beyond the page is the caller's concern, since note.w is an
- * input. Notes must never overlap content — the 2026-05-13 lesson
+ * column NEVER fails: when no in-page row is clear it EXTENDS the page
+ * downward (below the bottom-most occupant in the column's x-band), and
+ * its x clamps to the left page edge when the note is wider than the
+ * page minus the margin inset (narrow hosts) — width overflow beyond
+ * the page, and growing the host to reveal a downward extension, are
+ * the caller's concern. Notes must never overlap content — the 2026-05-13 lesson
  * that created the AnnotationStrip; this engine is what makes on-board
  * notes safe enough to retire it.
  *
@@ -68,9 +69,16 @@ export function placeNote(input: {
   }
 
   // Margin column: right edge, stacked below whatever already occupies
-  // the column. Scan down in note-height steps; if the page is truly
-  // full, clamp to the bottom (overlap the least-bad way — never returns
-  // failure, the round-7 silent-drop philosophy applied to placement).
+  // the column. Scan down in note-height steps. If the page is truly
+  // full, EXTEND it: place below the page bottom, under the bottom-most
+  // occupant in the margin column's x-band. (The prior fixed
+  // bottom-clamp ignored `occupied`, so any two exhausted-scan notes
+  // landed on identical pixels — the 2026-07-11 gate's turn-2 overlap.
+  // Extension keeps the never-fails philosophy AND the zero-overlap
+  // invariant; the caller grows the host to reveal the extension — see
+  // InkNotesOverlay's overflow spacer.) Monotonic by construction: each
+  // extension note enters `occupied` for its successors, so the next
+  // extension y is strictly greater.
   const x = Math.max(page.x, page.x + page.w - note.w - MARGIN_W);
   let y = page.y + MARGIN_W;
   const step = note.h + CLEAR_PAD * 2;
@@ -79,5 +87,9 @@ export function placeNote(input: {
     if (clear(r, occupied, target)) return { slot: 'margin', rect: r };
     y += step;
   }
-  return { slot: 'margin', rect: { x, y: page.y + page.h - note.h, w: note.w, h: note.h } };
+  const bandBottom = occupied.reduce(
+    (b, o) => (o.x < x + note.w + CLEAR_PAD && o.x + o.w > x - CLEAR_PAD ? Math.max(b, o.y + o.h) : b),
+    page.y + page.h,
+  );
+  return { slot: 'margin', rect: { x, y: bandBottom + CLEAR_PAD, w: note.w, h: note.h } };
 }

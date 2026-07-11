@@ -105,8 +105,10 @@ function targetRect(
 
 export function InkNotesOverlay({
   hostRef,
+  contentRef,
   notes,
   labeledScribbles,
+  onOverflowChange,
 }: {
   // Deviation from the task-3 brief: the brief types this
   // `React.RefObject<HTMLElement | null>`. WhiteboardCanvas's
@@ -114,8 +116,25 @@ export function InkNotesOverlay({
   // `useRef<HTMLDivElement | null>(null)`, so this is narrowed to match
   // exactly rather than the looser `HTMLElement`.
   hostRef: React.RefObject<HTMLDivElement | null>;
+  /** The page CONTENT wrapper (WhiteboardCanvas's pageWrapperRef) — the
+   *  placement page rect is measured from THIS box, not the host's.
+   *  The host also contains the overflow spacer this component drives
+   *  (via onOverflowChange); measuring the host would make placement a
+   *  function of its own output (spacer grows host → next placement
+   *  sees a taller page → different slots → different overflow → …).
+   *  The wrapper's box is spacer-independent — the spacer is a SIBLING
+   *  rendered after it — so placement stays a pure function of content.
+   *  Optional: when absent, falls back to the host box (pre-spacer
+   *  behavior). */
+  contentRef?: React.RefObject<HTMLDivElement | null>;
   notes: HandwriteCmd[];
   labeledScribbles: ScribbleCmd[];
+  /** Reports how far (px) the lowest note extends BELOW the content
+   *  wrapper's bottom edge (0 when everything fits). The host renders
+   *  an in-flow spacer of this height after the wrapper so extended
+   *  margin notes (see ink-placement's exhausted-scan extension) are
+   *  scrollable instead of clipped. */
+  onOverflowChange?: (px: number) => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>([]);
   const [hostW, setHostW] = useState(0);
@@ -147,7 +166,18 @@ export function InkNotesOverlay({
     if (!host) return;
     const hostBox = host.getBoundingClientRect();
     if (hostBox.width === 0) return;
-    const page: Rect = { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
+    // Page rect for the slot engine, in host-relative px. Prefer the
+    // content wrapper's box (spacer-independent — see the contentRef
+    // prop doc); fall back to the host box when no wrapper is passed.
+    const contentBox = contentRef?.current?.getBoundingClientRect();
+    const page: Rect = contentBox && contentBox.width > 0
+      ? {
+          x: contentBox.left - hostBox.left,
+          y: contentBox.top - hostBox.top,
+          w: contentBox.width,
+          h: Math.max(contentBox.height, 1),
+        }
+      : { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
     const toHostRect = (el: Element): Rect => {
       const b = el.getBoundingClientRect();
       return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
@@ -197,7 +227,15 @@ export function InkNotesOverlay({
     }
     setEntries(next);
     setHostW(hostBox.width);
-  }, [sources, hostRef, hostW]);
+    // Report how far the lowest note extends below the page (content)
+    // bottom so the host can grow via an in-flow spacer. Computed
+    // against the same spacer-independent `page` rect placement used,
+    // so this cannot feed back into placement (see contentRef doc).
+    if (onOverflowChange) {
+      const maxBottom = next.reduce((b, e) => Math.max(b, e.placement.rect.y + e.placement.rect.h), 0);
+      onOverflowChange(Math.max(0, Math.ceil(maxBottom - (page.y + page.h))));
+    }
+  }, [sources, hostRef, contentRef, hostW, onOverflowChange]);
 
   // Host width tracking (student-ink pattern): proportional rescale.
   useEffect(() => {

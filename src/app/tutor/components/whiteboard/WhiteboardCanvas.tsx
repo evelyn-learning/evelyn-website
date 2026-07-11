@@ -939,6 +939,20 @@ export function WhiteboardCanvas({
   const [pings, setPings] = useState<{ id: number; pageIndex: number; x: number; y: number }[]>([]);
   const pingIdRef = useRef(0);
 
+  // SmoothDraw P3: height (px) of the in-flow spacer rendered AFTER the
+  // page wrapper so margin notes the slot engine placed BELOW the page
+  // bottom (ink-placement's exhausted-scan extension) are scrollable
+  // instead of clipped — absolutely-positioned notes below the host's
+  // content don't grow the host on their own. No feedback loop: the
+  // overlay measures placement (and this overflow) against the page
+  // WRAPPER's box, which a sibling spacer below it never affects — see
+  // InkNotesOverlay's contentRef doc. Flag-off: overlay absent, spacer
+  // never renders.
+  const [noteOverflowPx, setNoteOverflowPx] = useState(0);
+  const handleNoteOverflow = useCallback((px: number) => {
+    setNoteOverflowPx((prev) => (prev === px ? prev : px));
+  }, []);
+
   // Fix 1 (ink drift on resize/rotation): track the outer host's live
   // CSS width so ink strokes captured at a different width can be
   // rescaled at render time — see the InkStroke doc comment.
@@ -1555,14 +1569,28 @@ export function WhiteboardCanvas({
           />
         ))}
         </div>
+        {/* SmoothDraw P3: in-flow spacer revealing margin notes the slot
+            engine placed BELOW the page bottom (see noteOverflowPx's doc
+            comment above — sibling AFTER the wrapper, so it never feeds
+            back into placement). */}
+        {inkNotesEnabled() && noteOverflowPx > 0 && (
+          <div style={{ height: noteOverflowPx }} aria-hidden="true" />
+        )}
         {/* SmoothDraw P3: on-board tutor notes (replaces AnnotationStrip
             under the flag — see its render site above). Hosted on
             pageOuterRef, same as the student-ink SVG right below, so the
             note slot engine measures against the same coordinate space
             (see InkNotesOverlay's + pageOuterRef's doc comments) and
-            gutter placement works. */}
+            gutter placement works. Placement's page rect measures from
+            pageWrapperRef (contentRef) — spacer-independent. */}
         {inkNotesEnabled() && (
-          <InkNotesOverlay hostRef={pageOuterRef} notes={handwrites} labeledScribbles={scribbles} />
+          <InkNotesOverlay
+            hostRef={pageOuterRef}
+            contentRef={pageWrapperRef}
+            notes={handwrites}
+            labeledScribbles={scribbles}
+            onOverflowChange={handleNoteOverflow}
+          />
         )}
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
             Hosted on pageOuterRef (not the page wrapper) so ink painted in
