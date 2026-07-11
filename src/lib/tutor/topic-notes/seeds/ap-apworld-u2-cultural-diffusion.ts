@@ -63,7 +63,7 @@ export const BASELINE_AP_APWORLD_CULTURAL_DIFFUSION: TopicNotesBaseline = {
       kind: 'event',
       title: 'Buddhism and Neo-Confucianism diffused earlier and eastward',
       content:
-        "Buddhism had earlier spread along the Silk Roads from South Asia into Central Asia, China, and beyond, carried by monks and merchants — an older precedent for the trade-carries-religion pattern. Neo-Confucianism, a revival and reworking of classical Confucian thought blending it with Buddhist and Daoist ideas, flourished in Song China and then spread to Korea, Japan, and Vietnam as those societies adopted Chinese-style bureaucratic governance and civil-service examination culture.",
+        "Buddhism had earlier spread along the Silk Roads from South Asia into Central Asia, China, and beyond, carried by monks and merchants — an older precedent for the trade-carries-religion pattern. Neo-Confucianism, a revival and reworking of classical Confucian thought blending it with Buddhist and Daoist ideas, flourished in Song China and then spread to Korea, Japan, and Vietnam — but adoption varied. Korea and Vietnam adopted Chinese-style bureaucratic governance and civil-service examination culture; Japan absorbed Neo-Confucian thought and culture WITHOUT the examination system, remaining under hereditary, military (samurai) rule through the Kamakura and Ashikaga shogunates (1200-1450).",
     },
     {
       loId: 'apworld.cultural-diffusion',
