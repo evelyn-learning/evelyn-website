@@ -6,7 +6,7 @@ import type jsPDF from 'jspdf';
 // process.env read here — whiteboard-capture.ts already establishes the
 // precedent of this export module reaching into app/tutor for a flag
 // helper (see its `drawOnEnabled` import from useDrawOn.ts).
-import { inkNotesEnabled } from '@/app/tutor/hooks/toolDefinitions';
+import { inkNotesEnabled, linksEnabled } from '@/app/tutor/hooks/toolDefinitions';
 
 interface TranscriptMessage {
   id: string;
@@ -1378,6 +1378,29 @@ async function drawWhiteboardVisual(
     return drawNoteCaptionLine(pdf, displayText, colorHex, x, y, width);
   }
 
+  if (cmd.action === 'link' && (cmd.from || cmd.to)) {
+    // SmoothDraw P4 (task 4): no bake v1 — a link's hand-drawn arrow spans
+    // TWO items (its `from` and `to` targets), but the PDF's Whiteboard
+    // Content section is a linear item stack with no "between item N and
+    // item M" slot to paint an arrow into. This is the same shape of
+    // problem a margin note (handwrite with no `near` target) already
+    // solves above by giving up on placement and falling back to a plain
+    // caption line — so links get the identical fallback, unconditionally,
+    // rather than arbitrarily baking onto just one endpoint's capture.
+    //
+    // fromDisplay/toDisplay use the human `from`/`to` strings the brain
+    // wrote (not the orchestrator-resolved `fromFeature`/`toFeature`
+    // canonical ids) — they read better in a caption meant for a person.
+    const fromDisplay = typeof cmd.from === 'string' ? cmd.from : '';
+    const toDisplay = typeof cmd.to === 'string' ? cmd.to : '';
+    const label = typeof cmd.label === 'string' && cmd.label.trim() ? cmd.label.trim() : '';
+    // '→' round-trips through sanitizeForPDF's LATIN_DIACRITIC_MAP to
+    // '->' (same WinAnsi rationale as the handwrite branch above).
+    const text = `${fromDisplay} → ${toDisplay}${label ? ` — ${label}` : ''}`;
+    const colorHex = typeof cmd.color === 'string' ? cmd.color : '#a16207';
+    return drawNoteCaptionLine(pdf, text, colorHex, x, y, width);
+  }
+
   if (cmd.action === 'showTable' && cmd.headers) {
     return drawTableVisual(
       pdf, cmd.headers as string[], (cmd.rows || []) as string[][],
@@ -1617,6 +1640,8 @@ function describeWhiteboardCommand(rawCmd: WhiteboardCommandData): string {
       return `Note: ${cmd.text || ''}`;
     case 'handwrite':
       return `Handwrite: ${cmd.text || ''}`;
+    case 'link':
+      return `Link: ${cmd.from || ''} → ${cmd.to || ''}`;
     case 'showProblem': {
       const prob = (cmd.problem || {}) as Record<string, unknown>;
       return `Problem: ${prob.title || prob.statement || 'untitled'}`;
@@ -1774,7 +1799,19 @@ export async function exportTutorSessionPDF(
   // bake scribble overlays onto their target item's captured SVG below.
   // scrollTo / newPage / clear / goToPage / removeItems have no PDF
   // representation; discard.
-  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems']);
+  //
+  // SmoothDraw P4 (task 4): `link` is flag-gated, not unconditional like
+  // its scrollTo/newPage/... siblings. Flag-off, it stays in this set —
+  // skipped in the walk exactly like today (byte-identical output; a
+  // stray persisted link from a flag-on session must not resurface just
+  // because someone re-exports it with the flag off). Flag-on, pulling it
+  // OUT of this set lets it flow through the walk below like `handwrite`
+  // does — its own numbered item, rendered via drawWhiteboardVisual's
+  // `link` branch (a caption line; see that branch's no-bake-v1 comment).
+  const META_PDF_ACTIONS = new Set([
+    'scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems',
+    ...(linksEnabled() ? [] : ['link']),
+  ]);
   // Two lookup paths for matching scribbles to target items:
   //   - byId keyed on the stamped id ("showSpringMass-1") — preferred
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
@@ -2287,7 +2324,13 @@ export async function exportTutorSessionPDF(
       // cards (observed 2026-06-22 ear-test: 9 such cards from the [scrollTo,
       // scrollTo, scribble] triples that the auto-scroll-before-scribble path
       // emits). Board-anchored speech's extra scribbling made the gap loud.
+      //
+      // SmoothDraw P4 (task 4): `link` now has a standalone inline render
+      // (drawWhiteboardVisual's `link` branch, a caption line) when the
+      // flag is on — same threading as META_PDF_ACTIONS above, kept in
+      // this set flag-off so a stray persisted link stays fully skipped.
       'scrollTo', 'goToPage', 'openPage', 'scribble', 'highlight',
+      ...(linksEnabled() ? [] : ['link']),
     ]);
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {

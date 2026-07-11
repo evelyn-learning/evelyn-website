@@ -90,7 +90,7 @@ import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/stud
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { InkNotesOverlay } from './InkNotesOverlay';
-import { inkNotesEnabled } from '../../hooks/toolDefinitions';
+import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -674,7 +674,7 @@ export function WhiteboardCanvas({
     const added = commands.slice(prevFollowCountRef.current);
     prevFollowCountRef.current = commands.length;
     const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
     ]);
     // Explicit nav (goToPage / scrollTo) suppresses view-follow ONLY when it is
     // the batch's FINAL visual intent. Order matters: a turn shaped
@@ -749,7 +749,7 @@ export function WhiteboardCanvas({
     // focal-distance graph). A double rAF waits for that switch + remount to
     // commit so the new page's item ids are queryable.
     const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
     ]);
     // Explicit navigation (goToPage / scrollTo) owns its own scroll ONLY when
     // it is the batch's final visual intent — mirror the view-follow effect's
@@ -896,7 +896,7 @@ export function WhiteboardCanvas({
   // lazy, and we guard against pages.length === 0 below.
   const safeCurrentPage = pages[Math.min(currentIndex, Math.max(0, pages.length - 1))] ?? { commands: [] };
   const renderableCommands = useMemo(
-    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
+    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'link' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
     [safeCurrentPage.commands],
   );
   // Kill-recovery phase A: dim style for an item currently flagged revising.
@@ -909,6 +909,23 @@ export function WhiteboardCanvas({
   );
   const handwrites = useMemo(
     () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'handwrite' }> => c.action === 'handwrite'),
+    [safeCurrentPage.commands],
+  );
+  // SmoothDraw P4: hand-drawn arrows between two already-rendered board
+  // features. Mirrors the scribbles/handwrites memos exactly — filtered
+  // once per page-commands change, rendered inside InkNotesOverlay so
+  // arrow labels share its placement/occupied space with notes.
+  // Kill-switch gate (`NEXT_PUBLIC_TUTOR_LINKS=off`, linksEnabled() false):
+  // checked here, not just at emission time, so a resumed session whose
+  // PERSISTED whiteboardCommands already contain stamped `link` commands
+  // (from before the flag flipped off) doesn't resurface arrows on the
+  // live board — same "stray persisted link must not resurface flag-off"
+  // rationale as the PDF exporter's meta-skip sets. Read at call time
+  // (not module init) so this stays a real rollback lever, not a
+  // build-time constant — matches linksEnabled()'s own call-time-read
+  // convention.
+  const links = useMemo(
+    () => (linksEnabled() ? safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'link' }> => c.action === 'link') : []),
     [safeCurrentPage.commands],
   );
 
@@ -1595,6 +1612,7 @@ export function WhiteboardCanvas({
             contentRef={pageWrapperRef}
             notes={handwrites}
             labeledScribbles={scribbles}
+            links={links}
             onOverflowChange={handleNoteOverflow}
           />
         )}

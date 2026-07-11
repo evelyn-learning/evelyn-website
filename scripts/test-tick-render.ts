@@ -19,6 +19,15 @@
  *   4. The PDF capture source uses the same tick anchor formula
  *      (just inside the feature's right edge, vertically centered,
  *      with bold stroke — sized for visibility, 2026-05-13 tweak).
+ *   5. SmoothDraw P4 (task 4): the PDF EXPORT (pdf-tutor-session.ts,
+ *      distinct from the whiteboard-capture.ts tick anchor above) emits
+ *      a caption line per `link` command, flag-gated through both meta-
+ *      skip sets, with the no-bake-v1 rationale documented.
+ *   6. SmoothDraw P4 final-review fixes (2026-07-11): the WhiteboardCanvas
+ *      `links` memo is gated on linksEnabled() (kill-switch protects the
+ *      LIVE render path, not just tool/command mapping + PDF export), and
+ *      the link dedup signature keys on endpoint itemIds so a legitimately
+ *      re-emitted identical link on a redrawn figure still lands.
  *
  * Run with:
  *   TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register \
@@ -80,6 +89,21 @@ const withLabel = mapFunctionCallToCommand('tutor_scribble', { target: 'point A'
 if (withLabel && withLabel.action === 'scribble') {
     eq(withLabel.label, 'here', 'label preserved');
 }
+
+// (g) SmoothDraw P4 close: links default ON — env UNSET maps normally.
+delete process.env.NEXT_PUBLIC_TUTOR_LINKS;
+const link = mapFunctionCallToCommand('tutor_link', { from: 'the equation', to: 'the graph', label: 'same slope' });
+expect(link !== null && link.action === 'link', 'default-on (env unset) link maps');
+if (link && link.action === 'link') {
+    eq(link.from, 'the equation', 'link.from');
+    eq(link.to, 'the graph', 'link.to');
+    eq(link.label, 'same slope', 'link.label');
+}
+expect(mapFunctionCallToCommand('tutor_link', { from: 'x', to: '' }) === null, 'empty endpoint → null');
+// Kill switch: NEXT_PUBLIC_TUTOR_LINKS='off' drops link mapping again.
+process.env.NEXT_PUBLIC_TUTOR_LINKS = 'off';
+expect(mapFunctionCallToCommand('tutor_link', { from: 'a', to: 'b' }) === null, 'kill switch (=off) link drops silently');
+delete process.env.NEXT_PUBLIC_TUTOR_LINKS;
 
 // ── 2. tutor_handwrite surface ─────────────────────────────────
 
@@ -246,6 +270,71 @@ expect(
 expect(
     !orchSource.includes('handwrite near-resolve failed'),
     'old near-resolution warning removed',
+);
+
+// ── 6. PDF export — link caption line (task 4, static check) ───
+
+const pdfExportSource = readFileSync(
+    join(__dirname, '..', 'src/lib/utils/export/pdf-tutor-session.ts'),
+    'utf8',
+);
+// The two meta-skip sets (Task 2's sweep) both thread linksEnabled() so
+// flag-off keeps `link` fully skipped (byte-identical to pre-task-4
+// output) while flag-on lets it flow through the walk like `handwrite`.
+expect(
+    (pdfExportSource.match(/\.\.\.\(linksEnabled\(\) \? \[\] : \['link'\]\)/g) ?? []).length === 2,
+    'both PDF meta-skip sets (META_PDF_ACTIONS, META_PDF_BOOKKEEPING) thread linksEnabled()',
+);
+// The caption branch itself: strip-bullet style via drawNoteCaptionLine,
+// text format `${fromDisplay} → ${toDisplay}${label ? ' — ' + label : ''}`,
+// using the human from/to strings (not resolved fromFeature/toFeature).
+expect(
+    pdfExportSource.includes("if (cmd.action === 'link' && (cmd.from || cmd.to)) {"),
+    'drawWhiteboardVisual has a link branch',
+);
+expect(
+    pdfExportSource.includes('`${fromDisplay} → ${toDisplay}${label ? ` — ${label}` : \'\'}`'),
+    'link caption text format matches the brief (from → to — label)',
+);
+expect(
+    pdfExportSource.includes('no bake v1'),
+    'link branch documents the no-bake-v1 rationale (arrows span two items; PDF is a linear item stack)',
+);
+// describeWhiteboardCommand gets a matching badge case so the numbered
+// item above the caption doesn't fall to the generic "Command: link".
+expect(
+    pdfExportSource.includes("case 'link':\n      return `Link: ${cmd.from || ''} → ${cmd.to || ''}`;"),
+    'describeWhiteboardCommand has a link case',
+);
+
+// ── 7. WhiteboardCanvas links memo — kill-switch gates live render ─
+// (final-review finding 1, 2026-07-11): the `links` memo must call
+// linksEnabled() so a resumed session with persisted `link` commands
+// doesn't resurface arrows once NEXT_PUBLIC_TUTOR_LINKS=off — mirrors
+// the PDF exporter's meta-skip gating checked in section 6 above.
+expect(
+    /const links = useMemo\(\s*\(\) => \(linksEnabled\(\) \? safeCurrentPage\.commands\.filter/.test(wbSource),
+    'WhiteboardCanvas links memo is gated on linksEnabled() (kill-switch protects the live render path)',
+);
+expect(
+    wbSource.includes("import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';"),
+    'WhiteboardCanvas imports linksEnabled from toolDefinitions',
+);
+
+// ── 8. Link dedup signature keys on endpoint itemIds ────────────
+// (final-review finding 2, 2026-07-11): the scribble dedup (section
+// above, VoiceTutorRealtime.tsx) deliberately includes itemId in its
+// signature so the same mark re-emitted on a FRESH diagram (redrawn
+// figure → new item id) still lands. The link dedup must do the same —
+// otherwise evolve-in-place / kill-recovery / clear replacing a figure
+// silently and permanently drops a legitimately re-emitted identical
+// link. No existing unit suite exercises either dedup signature by
+// invocation (both live inside the orchestrator's tool-call reducer,
+// not a standalone helper), so this is a static source check,
+// consistent with the scribble dedup having none either.
+expect(
+    orchSource.includes('p.fromFeature === f.canonical && p.fromId === f.itemId && p.toFeature === t.canonical && p.toId === t.itemId'),
+    'link dedup signature includes endpoint itemIds (fromId/toId), not just canonical+label',
 );
 
 // ── Report ──

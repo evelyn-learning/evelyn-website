@@ -4,6 +4,7 @@
  * Spec: docs/superpowers/specs/2026-07-10-smoothdraw-draw-on-board-design.md §5
  */
 import { placeNote, rectsOverlap, type Rect } from '../src/lib/tutor/whiteboard/ink-placement';
+import { arrowSpine } from '../src/lib/tutor/whiteboard/hand-stroke';
 
 let passed = 0;
 let failed = 0;
@@ -109,6 +110,60 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   const farBelowLeft: Rect = { x: 0, y: 900, w: 100, h: 100 }; // left edge, outside the band
   const p = placeNote({ target: null, occupied: [fullContent, farBelowLeft], page, note });
   check('out-of-band occupant does not inflate the extension y', p.rect.y < 900);
+}
+
+// ── SmoothDraw P4: arrow labels place beside their own waist ──────
+// Regression for the self-collision defect: an arrow label's 24×24
+// midpoint target sits INSIDE its own arrow's padded bbox, so with
+// that bbox in `occupied` every near slot collided and the label
+// ALWAYS fell to margin (proven on all diagonal seeds). The overlay
+// now carves the OWN arrow's bbox out of the label's occupied set
+// (ownerArrowKey); these cases mirror that assembly exactly.
+{
+  const labelNote = { w: 120, h: 30 };
+  const pad6 = (spine: Array<{ x: number; y: number }>): Rect => {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of spine) {
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y > maxY) maxY = p.y;
+    }
+    return { x: minX - 6, y: minY - 6, w: maxX - minX + 12, h: maxY - minY + 12 };
+  };
+  const midTarget = (spine: Array<{ x: number; y: number }>): Rect => {
+    const mid = spine[Math.floor(spine.length / 2)];
+    return { x: mid.x - 12, y: mid.y - 12, w: 24, h: 24 };
+  };
+
+  // Horizontal ~300px arrow between two endpoint cards.
+  const hFrom: Rect = { x: 40, y: 250, w: 100, h: 60 };
+  const hTo: Rect = { x: 440, y: 250, w: 100, h: 60 };
+  const hSpine = arrowSpine(hFrom, hTo, 'endpoint-a->endpoint-b');
+  check('horizontal arrow spine is non-empty', hSpine.length > 0);
+  {
+    // Own-arrow bbox EXCLUDED (the fix-1 carve) → label sits beside the waist.
+    const p = placeNote({ target: midTarget(hSpine), occupied: [hFrom, hTo], page, note: labelNote });
+    check('horizontal arrow label places beside the waist (not margin)', p.slot !== 'margin');
+  }
+
+  // 45° diagonal ~280px arrow — the empirically-margined class.
+  const dFrom: Rect = { x: 40, y: 40, w: 100, h: 60 };
+  const dTo: Rect = { x: 240, y: 240, w: 100, h: 60 };
+  const dSpine = arrowSpine(dFrom, dTo, 'corner-a->corner-b');
+  check('diagonal arrow spine is non-empty', dSpine.length > 0);
+  {
+    const p = placeNote({ target: midTarget(dSpine), occupied: [dFrom, dTo], page, note: labelNote });
+    check('diagonal arrow label places beside the waist (not margin)', p.slot !== 'margin');
+  }
+
+  // A DIFFERENT note (not the arrow's label) keeps the arrow bbox in
+  // occupied and must still dodge it.
+  {
+    const bbox = pad6(hSpine);
+    const p = placeNote({ target: hFrom, occupied: [hTo, bbox], page, note: { w: 160, h: 40 } });
+    check('other note with arrow bbox occupied still dodges the arrow', !rectsOverlap(p.rect, bbox));
+  }
 }
 
 // ── rectsOverlap sanity ───────────────────────────────────────
