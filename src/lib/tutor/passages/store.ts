@@ -15,6 +15,14 @@ import { PASSAGE_APUSH_FEDERALIST_10 } from './seeds/apush-federalist-10';
 import { PASSAGE_APUSH_BRUTUS_1 } from './seeds/apush-brutus-1';
 import { PASSAGE_APUSH_CONSTITUTION_PREAMBLE } from './seeds/apush-constitution-preamble';
 import { PASSAGE_APUSH_JOIN_OR_DIE } from './seeds/apush-join-or-die';
+// AP World Unit-2 (Networks of Exchange) DBQ documents
+import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
+import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
+import { PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY } from './seeds/apworld-marco-polo-paper-money';
+import { PASSAGE_APWORLD_IBN_BATTUTA_KILWA } from './seeds/apworld-ibn-battuta-kilwa';
+import { PASSAGE_APWORLD_MANSA_MUSA } from './seeds/apworld-mansa-musa';
+import { PASSAGE_APWORLD_BLACK_DEATH } from './seeds/apworld-black-death';
+import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -27,6 +35,13 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BRUTUS_1,
   PASSAGE_APUSH_CONSTITUTION_PREAMBLE,
   PASSAGE_APUSH_JOIN_OR_DIE,
+  PASSAGE_APWORLD_MARCO_POLO_KINSAY,
+  PASSAGE_APWORLD_MARCO_POLO_YAM,
+  PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
+  PASSAGE_APWORLD_IBN_BATTUTA_KILWA,
+  PASSAGE_APWORLD_MANSA_MUSA,
+  PASSAGE_APWORLD_BLACK_DEATH,
+  PASSAGE_APWORLD_CATALAN_ATLAS,
 ];
 
 export const passageById = new Map<string, Passage>(
