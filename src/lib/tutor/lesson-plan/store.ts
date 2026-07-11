@@ -1363,6 +1363,9 @@ import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-pract
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
+import { SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1-constitution-ratification';
+import { SEED_AP_APGOV_U1_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
+import { SEED_AP_APGOV_U1_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2689,6 +2692,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U2_SAQ_PRACTICE,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
+  SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
+  SEED_AP_APGOV_U1_SEPARATION_OF_POWERS,
+  SEED_AP_APGOV_U1_FEDERALISM,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
