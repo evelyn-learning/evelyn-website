@@ -255,6 +255,18 @@ export function InkNotesOverlay({
       host.querySelectorAll('[data-wb-item-id]').forEach((item) => {
         itemEntries.push({ el: item, rect: toHostRect(item) });
       });
+      // 2026-07-11 user round: a live note struck the "EQUATION"
+      // item-separator label — that dashed row sits BETWEEN item rects (see
+      // WhiteboardCanvas's data-wb-sep), so it was outside every
+      // [data-wb-item-id] rect above and placeNote had no reason to dodge
+      // it. Collect separator rows into occupied too, alongside the item
+      // rects (not swapped for feature rects — they're never a note's own
+      // target, so the itemEntries carve-out logic below doesn't apply).
+      const sepRects: Rect[] = [];
+      host.querySelectorAll('[data-wb-sep]').forEach((sep) => {
+        const r = toHostRect(sep);
+        if (r.w > 0 || r.h > 0) sepRects.push(r);
+      });
       // Rects of notes already placed this pass — every later note dodges
       // every earlier one regardless of which item it targets.
       const placedRects: Rect[] = [];
@@ -285,6 +297,7 @@ export function InkNotesOverlay({
             occupied.push(entry.rect);
           }
         }
+        occupied.push(...sepRects);
         occupied.push(...placedRects);
         const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
         placedRects.push(placement.rect);
@@ -361,6 +374,14 @@ export function InkNotesOverlay({
               fontSize: 22,
               lineHeight: `${NOTE_LINE_H}px`,
               color: e.color,
+              // 2026-07-11 user round: notes placed beside content can cross
+              // axis/grid lines and lose legibility. A solid multi-pass white
+              // halo (4 cardinal offsets + 2 soft blur passes) keeps note
+              // text readable over any background without moving placement.
+              // PDF lockstep: whiteboard-capture.ts's note-bake path paints
+              // the SVG equivalent (paint-order="stroke" + white stroke) on
+              // the baked <text> — see that file's comment referencing here.
+              textShadow: '0 1px 2px #fff, 0 -1px 2px #fff, 1px 0 2px #fff, -1px 0 2px #fff, 0 0 4px #fff, 0 0 6px #fff',
             }}
           >
             {e.lines.map((l, i) => <div key={i}>{l}</div>)}

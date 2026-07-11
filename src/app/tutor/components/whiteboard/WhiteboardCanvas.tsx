@@ -1503,7 +1503,14 @@ export function WhiteboardCanvas({
               return (
                 <div key={key} className={itemEnterClass(cmd)}>
                   {i > 0 && (
-                    <div className="flex items-center gap-2 py-1">
+                    // 2026-07-11 user round: a live note struck the "EQUATION"
+                    // item-separator label — this row sits BETWEEN item rects
+                    // (which InkNotesOverlay's occupied set collects), not
+                    // inside either one, so it was invisible to placement and
+                    // notes could land right on top of the micro-label text.
+                    // data-wb-sep marks it so InkNotesOverlay can add it to
+                    // occupied too (see that file's occupied-collection block).
+                    <div className="flex items-center gap-2 py-1" data-wb-sep="1">
                       <div className="flex-1 border-t border-dashed border-gray-200" />
                       <span className="text-[10px] text-gray-400 uppercase tracking-wide flex-shrink-0">
                         {getCommandTypeLabel(cmd.action)}

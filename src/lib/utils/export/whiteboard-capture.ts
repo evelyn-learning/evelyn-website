@@ -831,6 +831,20 @@ export function overlayScribbles(
         textEl.setAttribute('font-family', 'Caveat, Kalam, cursive');
         textEl.setAttribute('font-size', String(fontSize));
         textEl.setAttribute('fill', color);
+        // 2026-07-11 user round: PDF lockstep with InkNotesOverlay's live
+        // white text-shadow halo (see that file's note div `textShadow` —
+        // this comment references it and vice versa) — notes crossing
+        // axis/grid lines in the exported PDF need the same legibility
+        // fix. SVG has no text-shadow, so `paint-order="stroke"` + a white
+        // stroke behind the fill approximates the halo. stroke-width ~3 at
+        // the reference 22px live font size, scaled by the same
+        // `fontSize` factor this block already uses for the note's own
+        // font-size (so the halo stays proportional at any capture size).
+        const noteStrokeWidth = fontSize * (3 / 22);
+        textEl.setAttribute('paint-order', 'stroke');
+        textEl.setAttribute('stroke', '#ffffff');
+        textEl.setAttribute('stroke-width', String(noteStrokeWidth));
+        textEl.setAttribute('stroke-linejoin', 'round');
         lines.forEach((line, li) => {
           const tspan = doc.createElementNS(SVG_NS, 'tspan');
           tspan.setAttribute('x', String(placement.rect.x));

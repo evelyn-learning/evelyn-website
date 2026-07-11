@@ -120,6 +120,11 @@ const LATIN_DIACRITIC_MAP: Record<string, string> = {
   '×': 'x', '÷': '/', '±': '+/-', '∞': 'inf', '≈': '~=', '≠': '!=', '≤': '<=', '≥': '>=',
   '→': '->', '←': '<-', '⇒': '=>', '∑': 'Sum', '∏': 'Product', '∫': 'Integral',
   '∂': 'd', '∇': 'del', '√': 'sqrt', '∝': ' proportional to ',
+  // Geometry relation symbols. Without these, "OA ⊥ OB" sanitized to
+  // "OA ? OB" (2026-07-11 user session PDF) via the catch-all non-Latin-1
+  // strip below — these live in the map instead so they transliterate to
+  // readable words like the other math symbols above.
+  '⊥': ' perp ', '∥': ' parallel ', '∠': 'angle ',
   // Unicode minus sign (U+2212). Distinct from ASCII hyphen-minus (U+002D)
   // and from en-dash. Catalog renderers (showProblem, showEquation labels)
   // emit U+2212 in problem text — without this map, "5x − 2y = 8" sanitized
@@ -1218,6 +1223,37 @@ function drawGeometryVisual(
   return y + height + 2;
 }
 
+// 2026-07-11 user round (stream-order caption fix): a note-caption line — a
+// colored dot + wrapped text — is now painted from TWO call sites: the
+// handwrite's own walk position (true margin notes, or stamped notes whose
+// target never appears in this export) AND, new in this round, right after
+// a stamped note's TARGET item when the bake attempt there didn't succeed
+// (see the export loop's `unbakedNotes` block). Both need byte-identical
+// styling, so the paint logic is factored here; `displayText` arrives fully
+// formed (suffix decision lives in each caller — see the honesty rule in
+// the handwrite branch below) so this stays a pure paint routine.
+function drawNoteCaptionLine(pdf: jsPDF, displayText: string, colorHex: string, x: number, y: number, width: number): number {
+  const safeColorHex = (typeof colorHex === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(colorHex)) ? colorHex : '#a16207';
+  const parsedColor = ((): [number, number, number] => {
+    const h = safeColorHex.replace('#', '');
+    const n = h.length === 3
+      ? [h[0] + h[0], h[1] + h[1], h[2] + h[2]]
+      : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
+    return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
+  })();
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  const sanitized = sanitizeForPDF(displayText);
+  const wrapped = pdf.splitTextToSize(sanitized, width - 6);
+  const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
+  // Color dot.
+  pdf.setFillColor(...parsedColor);
+  pdf.circle(x + 1.8, y + 2.4, 1.1, 'F');
+  pdf.setTextColor(...parsedColor);
+  pdf.text(wrapped, x + 5.5, y + 3);
+  return y + wrappedLines * 4.4 + 2;
+}
+
 // Draw a visual representation of a whiteboard command. Returns new y position.
 // scribbles is an optional list of annotation commands targeting THIS item
 // (their targetItemIndex matches the 1-indexed position on screen). When
@@ -1303,39 +1339,40 @@ async function drawWhiteboardVisual(
     // numbered badge above still reads "Handwrite: <text>"
     // (describeWhiteboardCommand), so the note's content survives in
     // the list even with the caption line skipped.
+    //
+    // 2026-07-11 user round (defect: ALL notes fell to caption lines, no
+    // bakes) — the OLD comment here said this only worked cleanly when the
+    // target item appears BEFORE the handwrite in the stream, and accepted
+    // a "harmless double-appearance" otherwise. In the user's real session
+    // the target routinely came AFTER, so __pdfNoteBaked was never set by
+    // the time THIS position was reached and every stamped note printed
+    // its (wrongly-suffixed) caption here regardless of what the target's
+    // render did later. Fix: the pre-pass below (notesByTargetId) now also
+    // stamps `__pdfNoteDeferred` on every handwrite whose target exists
+    // ANYWHERE in this export — suppress the in-place caption unconditionally
+    // when either flag is set; resolution (bake, or an honest fallback
+    // caption printed right after the target item) happens in the export
+    // loop when the TARGET's render is processed, independent of stream
+    // order. See the loop's `unbakedNotes` block.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (inkNotesEnabled() && (rawCmd as any).__pdfNoteBaked) {
+    const rc = rawCmd as any;
+    if (inkNotesEnabled() && (rc.__pdfNoteBaked || rc.__pdfNoteDeferred)) {
       return y;
     }
     const text = String(cmd.text);
-    const colorHex = (typeof cmd.color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(cmd.color)) ? cmd.color : '#a16207';
-    const parsedColor = ((): [number, number, number] => {
-      const h = colorHex.replace('#', '');
-      const n = h.length === 3
-        ? [h[0] + h[0], h[1] + h[1], h[2] + h[2]]
-        : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
-      return [parseInt(n[0], 16), parseInt(n[1], 16), parseInt(n[2], 16)];
-    })();
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    // Flag-on: distinguish a note that STAYED in the margin (no `near`,
-    // an unresolved `near`, or a target on a different item) from one
-    // that got baked beside its feature elsewhere in this export. '→'
-    // (not the brief's literal '↳' — jsPDF's helvetica is WinAnsi-only
-    // and doesn't have that glyph) round-trips through sanitizeForPDF's
-    // LATIN_DIACRITIC_MAP to '->', so no raw non-Latin-1 byte reaches
-    // the PDF text stream.
-    const displayText = inkNotesEnabled() ? `${text} → margin note` : text;
-    const sanitized = sanitizeForPDF(displayText);
-    const wrapped = pdf.splitTextToSize(sanitized, width - 6);
-    const wrappedLines = Array.isArray(wrapped) ? wrapped.length : 1;
-    // Color dot.
-    pdf.setFillColor(...parsedColor);
-    pdf.circle(x + 1.8, y + 2.4, 1.1, 'F');
-    pdf.setTextColor(...parsedColor);
-    pdf.text(wrapped, x + 5.5, y + 3);
-    const lineH = wrappedLines * 4.4 + 2;
-    return y + lineH;
+    const colorHex = typeof cmd.color === 'string' ? cmd.color : '#a16207';
+    // Suffix honesty (2026-07-11 user round): '→ margin note' asserts the
+    // note never had a target — true only when NO target stamp exists at
+    // all (this branch is only reached, with a stamp present, when the
+    // stamped target isn't in this export at all — see notesByTargetId's
+    // existence guard). A stamped-but-unresolved note is not that; no
+    // suffix. '→' (not the brief's literal '↳' — jsPDF's helvetica is
+    // WinAnsi-only and doesn't have that glyph) round-trips through
+    // sanitizeForPDF's LATIN_DIACRITIC_MAP to '->', so no raw non-Latin-1
+    // byte reaches the PDF text stream.
+    const hasTargetStamp = typeof rc.targetId === 'string' && rc.targetId && typeof rc.targetFeature === 'string' && rc.targetFeature;
+    const displayText = (inkNotesEnabled() && !hasTargetStamp) ? `${text} → margin note` : text;
+    return drawNoteCaptionLine(pdf, displayText, colorHex, x, y, width);
   }
 
   if (cmd.action === 'showTable' && cmd.headers) {
@@ -1662,6 +1699,12 @@ export async function exportTutorSessionPDF(
   for (const cmd of dedupedAll) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (cmd as any).__pdfNoteBaked;
+    // 2026-07-11 user round: __pdfNoteDeferred is the companion stamp (see
+    // notesByTargetId's pre-pass below) that suppresses a stamped note's
+    // in-place caption while its target's render is pending resolution in
+    // THIS walk — same staleness risk as __pdfNoteBaked above, so it gets
+    // the same start-of-export clear.
+    delete (cmd as any).__pdfNoteDeferred;
   }
 
   // Rollback pre-pass: a 'removeItems' command lists the stamped ids of
@@ -1811,18 +1854,34 @@ export async function exportTutorSessionPDF(
   // item's render (elsewhere in this same walk) actually baked it —
   // see `notesByTargetId` below, `itemInkNotes`, and `__pdfNoteBaked`.
   //
-  // Ordering assumption: this only works cleanly when the target item
-  // appears BEFORE the handwrite that references it in dedupedCommands
-  // — true for the overwhelming majority of sessions (the tutor draws
-  // something, THEN annotates it). If a `near` reference ever precedes
-  // its target in the stream, the handwrite's own entry renders its
-  // caption line as usual (nothing baked yet at that point) even though
-  // the target's later render also bakes the same note — a harmless
-  // double-appearance, not a crash, and consistent with this file's
-  // fail-open philosophy elsewhere (e.g. unresolved `near` → margin).
+  // 2026-07-11 user round (stream-order fix): the ORIGINAL version of this
+  // pre-pass only worked cleanly when the target item appeared BEFORE the
+  // handwrite that references it in dedupedCommands, and fell back to a
+  // "harmless double-appearance" caption otherwise. In the user's real
+  // session that fallback fired for EVERY note — brain ordering routinely
+  // puts the annotating handwrite before the figure it targets — so every
+  // note fell to its in-place caption and NONE baked, even though most
+  // targets did eventually render. Fix: existence, not stream position,
+  // now decides fate. `existingIds` is every id that WILL render as an
+  // item in this export, regardless of walk order; a note whose targetId
+  // is in that set gets `__pdfNoteDeferred` stamped onto its source
+  // handwrite command (suppressing its in-place caption unconditionally —
+  // see the handwrite branch in drawWhiteboardVisual above), and its fate
+  // (baked, or an honest fallback caption) is decided in the export loop
+  // when the TARGET's render is processed — which may come before or
+  // after this handwrite's own position. A note whose target does NOT
+  // exist anywhere in this export is left alone entirely (no stamp, no
+  // entry in the map below) and keeps its normal in-place caption — spec
+  // (b)'s "notes whose target does not exist keep their in-place caption".
   type PdfNoteEntry = { text: string; color?: string; targetFeature: string; sourceCmd: WhiteboardCommandData };
   const notesByTargetId = new Map<string, PdfNoteEntry[]>();
   if (inkNotesEnabled()) {
+    const existingIds = new Set<string>();
+    for (const cmd of dedupedCommands) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const id = (cmd as any).id;
+      if (typeof id === 'string' && id) existingIds.add(id);
+    }
     for (const cmd of dedupedCommands) {
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1834,9 +1893,11 @@ export async function exportTutorSessionPDF(
       if (!targetId || !targetFeature) continue;
       const text = typeof c.text === 'string' ? c.text : '';
       if (!text.trim()) continue;
+      if (!existingIds.has(targetId)) continue; // target not in this export → plain margin note (spec b)
       const list = notesByTargetId.get(targetId) || [];
       list.push({ text, color: typeof c.color === 'string' ? c.color : undefined, targetFeature, sourceCmd: cmd });
       notesByTargetId.set(targetId, list);
+      c.__pdfNoteDeferred = true;
     }
   }
 
@@ -1998,6 +2059,13 @@ export async function exportTutorSessionPDF(
         itemInkNotes,
         bakedNoteTexts,
       );
+      // 2026-07-11 user round: tracks which of itemNoteEntries actually got
+      // baked this pass, so the unbaked remainder (below) each get an
+      // honest fallback caption printed right here — immediately after the
+      // item they targeted — rather than silently vanishing (their
+      // in-place caption at the handwrite's own position was suppressed by
+      // __pdfNoteDeferred in the pre-pass, regardless of stream order).
+      const bakedEntries = new Set<PdfNoteEntry>();
       if (bakedNoteTexts.length > 0) {
         // Text-match scoped to THIS item's own note list (see
         // overlayScribbles' doc comment on why text rather than a
@@ -2021,6 +2089,7 @@ export async function exportTutorSessionPDF(
             // stamping in the page-grouping pre-walk above.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (entry.sourceCmd as any).__pdfNoteBaked = true;
+            bakedEntries.add(entry);
           }
         }
       }
@@ -2051,6 +2120,23 @@ export async function exportTutorSessionPDF(
           if (prob.statement) {
             drawWrappedText(String(prob.statement), margin + 8, textAreaWidth - 4, { size: 8, color: [55, 65, 81] });
           }
+        }
+      }
+
+      // 2026-07-11 user round — deferred-caption fallback: every entry in
+      // itemNoteEntries that did NOT bake (feature resolution failed, or
+      // this item's action has no bake path at all) still needs its
+      // content to survive somewhere — print it now, right after the item
+      // it targeted (y is already resolved to this item's true bottom
+      // here, past the if/else above). No "→ margin note" suffix (spec:
+      // that phrase is reserved for notes with NO target stamp — see the
+      // honesty comment in the handwrite branch of drawWhiteboardVisual);
+      // this note DID have a real target, it just didn't render there.
+      const unbakedNotes = itemNoteEntries.filter((n) => !bakedEntries.has(n));
+      if (unbakedNotes.length > 0) {
+        addPageIfNeeded(unbakedNotes.length * 8 + 2);
+        for (const n of unbakedNotes) {
+          y = drawNoteCaptionLine(pdf, n.text, n.color || '#a16207', margin + 4, y, contentWidth - 8);
         }
       }
 
