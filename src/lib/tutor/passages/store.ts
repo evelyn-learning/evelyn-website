@@ -23,6 +23,9 @@ import { PASSAGE_APWORLD_IBN_BATTUTA_KILWA } from './seeds/apworld-ibn-battuta-k
 import { PASSAGE_APWORLD_MANSA_MUSA } from './seeds/apworld-mansa-musa';
 import { PASSAGE_APWORLD_BLACK_DEATH } from './seeds/apworld-black-death';
 import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
+// AP Gov Unit-1 (Foundations of American Democracy) documents
+import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
+import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -42,6 +45,8 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_MANSA_MUSA,
   PASSAGE_APWORLD_BLACK_DEATH,
   PASSAGE_APWORLD_CATALAN_ATLAS,
+  PASSAGE_APGOV_FEDERALIST_51,
+  PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
 ];
 
 export const passageById = new Map<string, Passage>(
