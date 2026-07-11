@@ -1,6 +1,6 @@
 /**
  * AP World History: Modern — Unit 2 SAQ Practice: a full three-part Short
- * Answer Question (AP World FRQ 1-3, the SAQ format).
+ * Answer Question (AP World Section I Part B, the SAQ format — not an FRQ).
  *
  * No stimulus: this SAQ does NOT quote or reference a document, so it does
  * NOT set `passageId` (the gotcha — a passageId is only appropriate when the

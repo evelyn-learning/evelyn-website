@@ -134,7 +134,7 @@ export const BASELINE_AP_APWORLD_SILK_ROADS: TopicNotesBaseline = {
     { content: 'The Mongols SECURED and INTENSIFIED Silk Road trade via Pax Mongolica; they did not INVENT it. This is the #1 tested misconception for this topic.', kind: 'trap' },
     { content: 'Keep the two causal strands distinct on FRQs: commercial innovation (caravanserai, bills of exchange, paper money) lowered cost/risk; Pax Mongolica lowered danger. Name both, don\'t blend them into one vague "trade got better" claim.', kind: 'tip' },
     { content: 'Bills of exchange and Yuan paper money are different things: bills of exchange moved wealth between merchants across cities; paper money was a state-issued domestic currency. Don\'t conflate them on an SAQ.', kind: 'tip' },
-    { content: 'Treat Marco Polo\'s superlative language ("finest and noblest in the world") as evidence of impression, not precise measurement, when weighing source reliability.', kind: 'tip' },
+    { content: 'Treat Marco Polo\'s superlative language (a crowd "so vast that no one would believe it possible") as evidence of impression, not precise measurement, when weighing source reliability.', kind: 'tip' },
     { content: 'Luxury goods (silk, porcelain, spices) moved overland because their high value-to-bulk ratio justified a months-long journey — a useful line when explaining WHY certain goods (not others) traveled the Silk Roads.', kind: 'tip' },
   ],
 };
