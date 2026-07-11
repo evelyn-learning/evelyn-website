@@ -103,7 +103,13 @@ type NoteEntry = {
 
 /** SmoothDraw P4: a measured arrow ready to render. `spine` is in
  *  host-px, computed once per measuring pass (same cadence as notes).
- *  Rescaled proportionally on host-width change, mirroring NoteEntry. */
+ *  On host-width change the render applies an SVG `scale()` transform
+ *  — unlike notes (which rescale POSITION only, keeping their text
+ *  size), this scales position AND stroke size. That divergence is
+ *  transient and cosmetic: the width change re-runs the measuring
+ *  effect, which recomputes spines from freshly-measured endpoint
+ *  rects at the new width and resets hostW — the transform is only a
+ *  stopgap between the resize frame and that remeasure. */
 type ArrowEntry = {
   key: string;
   spine: Pt[];
@@ -124,6 +130,15 @@ type NoteSource = {
   /** SmoothDraw P4: arrow labels supply this instead of targetId/
    *  targetFeature — bypasses the DOM lookup in targetRect(). */
   explicitTarget?: Rect;
+  /** SmoothDraw P4: set on arrow-label sources — the key of the arrow
+   *  this label belongs to. The per-source occupied assembly SKIPS that
+   *  arrow's padded bbox (same class of carve as defect A's own-item
+   *  swap in the loop below): the label's midpoint target sits INSIDE
+   *  its own arrow's bbox, so without the carve every right/above/
+   *  below/left slot beside the waist collides with the arrow's own
+   *  rect and the label always degrades to the margin column (proven
+   *  on all diagonal seeds). Everyone ELSE still dodges every arrow. */
+  ownerArrowKey?: string;
 };
 
 /** Resolve a note's target rect (host-relative px): prefer the feature's
@@ -340,6 +355,7 @@ export function InkNotesOverlay({
             text: link.label,
             color,
             explicitTarget: { x: mid.x - 12, y: mid.y - 12, w: 24, h: 24 },
+            ownerArrowKey: key,
           });
         }
       }
@@ -380,7 +396,12 @@ export function InkNotesOverlay({
           }
         }
         occupied.push(...sepRects);
-        occupied.push(...arrowRects);
+        // Arrow bboxes block every source EXCEPT the arrow's own label
+        // (the ownerArrowKey carve — see the NoteSource doc above).
+        // arrowRects is index-aligned with linkArrows by construction.
+        for (let i = 0; i < arrowRects.length; i++) {
+          if (linkArrows[i].key !== src.ownerArrowKey) occupied.push(arrowRects[i]);
+        }
         occupied.push(...placedRects);
         const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
         placedRects.push(placement.rect);
