@@ -46,10 +46,16 @@ export function inkNotesEnabled(): boolean {
   return process.env.NEXT_PUBLIC_TUTOR_INK_NOTES !== 'off';
 }
 
-/** SmoothDraw P4: hand-drawn arrows. Dark until the user feel gate passes;
- *  the close-out flips this to kill-switch (!== 'off'). Call-time read. */
+/** SmoothDraw P4: hand-drawn link arrows. DEFAULT ON since the 2026-07-11
+ *  user feel gate passed — `tutor_link` is offered to the brain and arrows
+ *  render on-board unless explicitly turned off.
+ *  `NEXT_PUBLIC_TUTOR_LINKS=off` is the no-deploy rollback lever (same
+ *  precedent as ink-notes' kill switch): flip the env var and redeploy to
+ *  fall back to no-arrows, no code change required. Read at CALL time (not
+ *  module init) so unit tests can toggle process.env; in the browser bundle
+ *  Next.js inlines the env var, making this a constant. */
 export function linksEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_TUTOR_LINKS === 'true';
+  return process.env.NEXT_PUBLIC_TUTOR_LINKS !== 'off';
 }
 
 /**

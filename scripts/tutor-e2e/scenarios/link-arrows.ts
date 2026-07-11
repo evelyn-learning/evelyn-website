@@ -2,8 +2,8 @@ import type { Scenario } from '../types';
 
 /**
  * SmoothDraw Phase-4 gate: hand-drawn arrows. FRESH SESSION required (new
- * tool in the prompt). Requires NEXT_PUBLIC_TUTOR_LINKS=true (+ the P1-3
- * defaults) in .env.local and a dev-server restart. TUTOR_E2E_VIDEO=1.
+ * tool in the prompt). Links are DEFAULT ON (+ the P1-3 defaults) in
+ * .env.local; set NEXT_PUBLIC_TUTOR_LINKS=off to disable. TUTOR_E2E_VIDEO=1.
  */
 const scenario: Scenario = {
   name: 'link-arrows',
