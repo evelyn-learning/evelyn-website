@@ -1350,6 +1350,9 @@ import { SEED_AP_APUSH_U3_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic'
 import { SEED_AP_APUSH_U3_DBQ_PRACTICE } from './seeds/ap-apush-u3-dbq-practice';
 import { SEED_AP_APUSH_U3_LEQ_PRACTICE } from './seeds/ap-apush-u3-leq-practice';
 import { SEED_AP_APUSH_U3_SAQ_PRACTICE } from './seeds/ap-apush-u3-saq-practice';
+// AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
+// plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
+import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2665,6 +2668,8 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U3_DBQ_PRACTICE,
   SEED_AP_APUSH_U3_LEQ_PRACTICE,
   SEED_AP_APUSH_U3_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-2 Vertical Slice content plans.
+  SEED_AP_APWORLD_U2_SILK_ROADS,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
