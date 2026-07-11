@@ -65,6 +65,9 @@ function measureNote(text: string): { lines: string[]; w: number; h: number } {
 
 type NoteEntry = {
   key: string;
+  /** Full original note text (pre-wrap) — the student-marks label source
+   *  for data-wb-note-text; NOT the wrapped/ellipsized display lines. */
+  text: string;
   lines: string[];
   color: string;
   placement: Placement;
@@ -153,7 +156,7 @@ export function InkNotesOverlay({
       // above/below/left slots naturally sit outside it.
       const placement = placeNote({ target: t, occupied, page, note: { w: m.w, h: m.h } });
       occupied.push(placement.rect);
-      next.push({ key: src.key, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
+      next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
     }
     setEntries(next);
     setHostW(hostBox.width);
@@ -190,7 +193,14 @@ export function InkNotesOverlay({
           <div
             key={e.key}
             ref={(el) => animateIn(el, e.key)}
-            data-wb-note
+            // Student-marks parity with the AnnotationStrip entries
+            // (WhiteboardCanvas collectRects): data-wb-note registers the
+            // note as a first-class mark target, data-wb-note-text is the
+            // label a student mark on this note resolves to — the tutor's
+            // original words (strip's exact 80-char cap), not the
+            // wrapped/ellipsized display lines.
+            data-wb-note="true"
+            data-wb-note-text={e.text.length > 80 ? `${e.text.slice(0, 80)}…` : e.text}
             style={{
               position: 'absolute',
               left: e.placement.rect.x * scale,
