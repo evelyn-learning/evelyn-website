@@ -27,7 +27,7 @@ export const BASELINE_AP_APUSH_NEW_REPUBLIC: TopicNotesBaseline = {
       kind: 'event',
       title: "Washington's precedents",
       content:
-        'As the first president (1789), Washington\'s choices became unwritten norms: he created an executive Cabinet (Secretary of State, Treasury, War, Attorney General) though the Constitution does not require one; he voluntarily stepped down after two terms, a norm that held over 150 years until FDR; and he insisted on the modest title "Mr. President" rather than anything resembling royalty.',
+        'As the first president (1789), Washington\'s choices became unwritten norms: he created an executive Cabinet (Secretary of State, Treasury, War, Attorney General) though the Constitution does not require one; he voluntarily stepped down after two terms, a norm that held for nearly 150 years, until Franklin Roosevelt won a third term in 1940; and he insisted on the modest title "Mr. President" rather than anything resembling royalty.',
     },
     {
       loId: 'apush.new-republic',
