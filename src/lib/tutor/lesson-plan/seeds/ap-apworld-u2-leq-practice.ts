@@ -1,6 +1,6 @@
 /**
  * AP World History: Modern — Unit 2 LEQ Practice: the full Long Essay
- * Question (AP World FRQ 2/3 — the LEQ).
+ * Question (AP World FRQ 2/3/4 — the LEQ).
  *
  * Unlike the DBQ, the LEQ gives NO documents — the student argues entirely
  * from their own historical knowledge of the period. This plan intentionally
@@ -40,7 +40,7 @@ export const SEED_AP_APWORLD_U2_LEQ_PRACTICE: LessonPlan = {
       kind: 'hook',
       goal: 'Make the stakes of a timed, full LEQ essay concrete before the student sits down to write one, and flag the key difference from the DBQ: there are no documents — every piece of evidence has to come from what the student already knows.',
       script:
-        "You've now studied how the Mongol Empire conquered, administered, and connected huge stretches of Eurasia, and how that connectivity spread technology, ideas, and disease. Today you put that knowledge to the test in the Long Essay Question — FRQ 2 or 3 on the AP World History exam, scored on the authentic 6-point rubric: Thesis (1), Contextualization (1), Evidence (2), and Analysis and Reasoning (2). Here's the big difference from a DBQ: there are NO documents. Every piece of evidence in your essay has to come from your own knowledge of the period. You write the whole essay and get scored the way an AP reader would score it.",
+        "You've now studied how the Mongol Empire conquered, administered, and connected huge stretches of Eurasia, and how that connectivity spread technology, ideas, and disease. Today you put that knowledge to the test in the Long Essay Question — FRQ 2, 3, or 4 on the AP World History exam, scored on the authentic 6-point rubric: Thesis (1), Contextualization (1), Evidence (2), and Analysis and Reasoning (2). Here's the big difference from a DBQ: there are NO documents. Every piece of evidence in your essay has to come from your own knowledge of the period. You write the whole essay and get scored the way an AP reader would score it.",
       estimatedMinutes: 2,
     },
     {
