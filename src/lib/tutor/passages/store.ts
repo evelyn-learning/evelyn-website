@@ -26,6 +26,12 @@ import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
+// AP Gov Unit-2 (Interactions Among Branches of Government) documents
+import { PASSAGE_APGOV_ARTICLES_CONFEDERATION } from './seeds/apgov-articles-confederation';
+import { PASSAGE_APGOV_FEDERALIST_70 } from './seeds/apgov-federalist-70';
+import { PASSAGE_APGOV_FEDERALIST_78 } from './seeds/apgov-federalist-78';
+import { PASSAGE_APGOV_CONGRESS_DEMOGRAPHICS_TABLE } from './seeds/apgov-congress-demographics-table';
+import { PASSAGE_APGOV_MARBURY_OPINION } from './seeds/apgov-marbury-opinion';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -47,6 +53,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_CATALAN_ATLAS,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
+  PASSAGE_APGOV_ARTICLES_CONFEDERATION,
+  PASSAGE_APGOV_FEDERALIST_70,
+  PASSAGE_APGOV_FEDERALIST_78,
+  PASSAGE_APGOV_CONGRESS_DEMOGRAPHICS_TABLE,
+  PASSAGE_APGOV_MARBURY_OPINION,
 ];
 
 export const passageById = new Map<string, Passage>(
