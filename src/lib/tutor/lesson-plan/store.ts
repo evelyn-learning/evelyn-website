@@ -1366,6 +1366,10 @@ import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democrat
 import { SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1-constitution-ratification';
 import { SEED_AP_APGOV_U1_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
 import { SEED_AP_APGOV_U1_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
+import { SEED_AP_APGOV_U1_FRQ_CONCEPT_APPLICATION } from './seeds/ap-apgov-u1-frq-concept-application';
+import { SEED_AP_APGOV_U1_FRQ_QUANTITATIVE } from './seeds/ap-apgov-u1-frq-quantitative';
+import { SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON } from './seeds/ap-apgov-u1-frq-scotus-comparison';
+import { SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u1-frq-argument-essay';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2695,6 +2699,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
   SEED_AP_APGOV_U1_SEPARATION_OF_POWERS,
   SEED_AP_APGOV_U1_FEDERALISM,
+  SEED_AP_APGOV_U1_FRQ_CONCEPT_APPLICATION,
+  SEED_AP_APGOV_U1_FRQ_QUANTITATIVE,
+  SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON,
+  SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
