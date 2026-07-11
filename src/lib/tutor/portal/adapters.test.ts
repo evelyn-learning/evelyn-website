@@ -12,7 +12,7 @@
  * Run: npm run test:adapters-passage
  */
 import { strict as assert } from 'node:assert';
-import { resolveGradeItem } from './adapters';
+import { resolveGradeItem, resolvePassageText } from './adapters';
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void): void {
@@ -40,6 +40,22 @@ test('resolveGradeItem leaves passageText undefined for a segment with no passag
   const item = resolveGradeItem(ITEM_WITHOUT_PASSAGE);
   assert.ok(item, 'expected item to resolve');
   assert.equal(item!.passageText, undefined);
+});
+
+// Task 1 (APUSH Period-3 slice): 'document' packet label (Document 1..N) for
+// DBQ document packets vs. the default 'source' label (Source A/B/C) used by
+// Eng Lang Synthesis. Back-compat: no packetLabel arg -> 'source' (unchanged).
+test('document packet labels Document 1..N', () => {
+  const ids = ['evelyn.passage.henry-give-me-liberty.v1']; // real seeded passage
+  const out = resolvePassageText(undefined, [ids[0], ids[0]], 'document');
+  assert.ok(out && out.includes('Document 1') && out.includes('Document 2'), 'expected Document N labels');
+  assert.ok(!out!.includes('Source A'), 'should not use Source labels for document style');
+});
+
+test('source packet still labels Source A/B/C (back-compat)', () => {
+  const id = 'evelyn.passage.henry-give-me-liberty.v1';
+  const out = resolvePassageText(undefined, [id, id]); // no packetLabel -> source
+  assert.ok(out && out.includes('Source A') && out.includes('Source B'), 'expected Source labels by default');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

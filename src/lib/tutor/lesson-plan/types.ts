@@ -197,6 +197,10 @@ export interface SegmentTryYourself extends SegmentBase {
    *  synthesizes. Resolved passages are concatenated + labeled Source A/B/C for
    *  the grader. Use instead of (or alongside) passageId for synthesis tasks. */
   passageIds?: string[];
+  /** Label style for a multi-source/document packet in the grader prompt:
+   *  'document' → "Document 1..N" (APUSH DBQ); default/'source' → "Source A/B/C"
+   *  (Eng Lang Synthesis). Back-compat: undefined behaves as 'source'. */
+  packetLabel?: 'source' | 'document';
   /** Marks this segment as deliberately off-topic relative to the rest
    *  of the plan. Test plans use this to bait the runtime's relevance
    *  checks. The orchestrator MUST refuse to render an offTopic segment

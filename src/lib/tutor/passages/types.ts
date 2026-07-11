@@ -13,7 +13,7 @@ export interface Passage {
   /** Canonical public-domain source (Wikisource/Gutenberg/archives). */
   sourceUrl: string;
   license: 'public-domain';
-  genre: 'speech' | 'essay' | 'letter' | 'sermon' | 'pamphlet' | 'memoir';
+  genre: 'speech' | 'essay' | 'letter' | 'sermon' | 'pamphlet' | 'memoir' | 'document' | 'political-cartoon' | 'constitution';
   /** Paragraph-delimited full text (\n\n between paragraphs). AP-typical
    *  excerpt length ~600-800 words to keep grader prompts affordable. */
   fullText: string;
