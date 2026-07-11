@@ -12,8 +12,8 @@ const scenario: Scenario = {
   seedTurns: [],
   testTurns: [
     {
-      say: 'Draw the triangle with vertices (0,0), (6,0) and (0,3), then draw an arrow from vertex B to vertex A labeled "the hypotenuse runs here".',
-      watchFor: 'Curved hand-drawn arrow from B to A with barbed head at A; label beside the arrow waist, not overlapping the figure; arrow wipes on.',
+      say: 'Draw the triangle with vertices (0,0), (6,0) and (0,3), then draw an arrow from the vertex at (6,0) to the vertex at (0,3) labeled "the hypotenuse runs here".',
+      watchFor: 'Curved hand-drawn arrow from the (6,0) vertex to the (0,3) vertex with barbed head at (0,3); label beside the arrow waist, not overlapping the figure; arrow wipes on.',
       timeoutMs: 150_000,
     },
     {
