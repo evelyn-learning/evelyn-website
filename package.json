@@ -39,6 +39,7 @@
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
+    "test:ink-placement": "npx tsx scripts/test-ink-placement.ts",
     "test:process-tool-call": "npx tsx scripts/test-process-tool-call.ts",
     "test:timeline": "npx tsx scripts/test-timeline-spacing.ts",
     "test:render-tools": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/tutor-render-harness/run.ts",
