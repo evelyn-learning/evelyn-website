@@ -24,10 +24,34 @@ import { placeNote, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
 
-const NOTE_FONT = '22px var(--font-caveat), var(--font-kalam), cursive';
 const NOTE_MAX_W = 240;
 const NOTE_LINE_H = 26;
 const AMBER = '#a16207';
+
+// Canvas font strings cannot contain `var(...)` — CanvasRenderingContext2D's
+// font parser only accepts concrete family names, so assigning
+// `ctx.font = '22px var(--font-caveat), var(--font-kalam), cursive'`
+// silently no-ops (invalid value ignored, prior/default font kept) and
+// measurement ran at the canvas default (~10px sans-serif) — placement
+// rects roughly HALF the size of the rendered note, breaking the overlap
+// invariant placeNote is supposed to guarantee. next/font registers its
+// hashed family names ONLY reachable via these CSS custom properties (a
+// literal 'Caveat' would not match the loaded font), so resolve the vars
+// via getComputedStyle once and cache the concrete font string.
+let resolvedNoteFont: string | null = null;
+function noteFont(): string {
+  if (resolvedNoteFont) return resolvedNoteFont;
+  try {
+    const cs = getComputedStyle(document.documentElement);
+    const fams = ['--font-caveat', '--font-kalam']
+      .map((v) => cs.getPropertyValue(v).trim())
+      .filter(Boolean);
+    resolvedNoteFont = `22px ${[...fams, 'cursive'].join(', ')}`;
+  } catch {
+    resolvedNoteFont = '22px cursive';
+  }
+  return resolvedNoteFont;
+}
 
 // Deviation from the task-3 brief: the brief measures via a
 // `declare namespace measureNote { let _c: ... }` merged onto the
@@ -44,7 +68,7 @@ function measureNote(text: string): { lines: string[]; w: number; h: number } {
   const canvas = measureCanvas ?? (measureCanvas = document.createElement('canvas'));
   const ctx = canvas.getContext('2d');
   if (!ctx) return { lines: [text], w: NOTE_MAX_W, h: NOTE_LINE_H };
-  ctx.font = NOTE_FONT;
+  ctx.font = noteFont();
   const words = text.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = '';
@@ -141,8 +165,12 @@ export function InkNotesOverlay({
   const animatedRef = useRef<Set<string>>(new Set());
 
   // Source list in command order: handwrites, then labelled scribbles —
-  // each with its stamped target (if any). Key on content so re-renders
-  // and page flips never replace placements.
+  // each with its stamped target (if any). Key on content so React's
+  // reconciliation (and the animateIn wipe-on, gated by animatedRef)
+  // treats identical notes as the SAME element across re-renders — this
+  // only stabilizes animation/identity, not placement: a page flip
+  // changes `sources` (different page's commands) and the placement
+  // effect below recomputes from scratch every time regardless.
   const sources = React.useMemo(() => {
     const s: Array<{ key: string; text: string; color: string; targetId?: string; targetFeature?: string }> = [];
     notes.forEach((n, i) => {
@@ -159,83 +187,131 @@ export function InkNotesOverlay({
     return s;
   }, [notes, labeledScribbles]);
 
+  // Refit measurement once web fonts finish loading — the very first
+  // placement pass can run before Caveat/Kalam are ready (canvas falls
+  // back to whatever font WAS resolved, e.g. a system serif), producing
+  // rects sized off the wrong glyph metrics. `document.fonts.ready`
+  // resolves once, so this bumps `fontsReady` (a dep of the placement
+  // effect below) exactly once to force a recompute with true metrics.
+  const [fontsReady, setFontsReady] = useState(0);
+  useEffect(() => {
+    let live = true;
+    if (typeof document === 'undefined' || !document.fonts?.ready) return;
+    document.fonts.ready.then(() => {
+      if (live) setFontsReady((v) => v + 1);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+
   // Measure + place after layout. Re-runs when sources change and when
   // the host resizes (ResizeObserver below bumps hostW).
   useLayoutEffect(() => {
-    const host = hostRef.current;
-    if (!host) return;
-    const hostBox = host.getBoundingClientRect();
-    if (hostBox.width === 0) return;
-    // Page rect for the slot engine, in host-relative px. Prefer the
-    // content wrapper's box (spacer-independent — see the contentRef
-    // prop doc); fall back to the host box when no wrapper is passed.
-    const contentBox = contentRef?.current?.getBoundingClientRect();
-    const page: Rect = contentBox && contentBox.width > 0
-      ? {
-          x: contentBox.left - hostBox.left,
-          y: contentBox.top - hostBox.top,
-          w: contentBox.width,
-          h: Math.max(contentBox.height, 1),
+    let raf1 = 0;
+    let raf2 = 0;
+    let cancelled = false;
+
+    // Entrance animations (wb-page-enter-* translateX, wb-item-enter —
+    // see WhiteboardCanvas) can still be mid-transform when this effect
+    // first fires; getBoundingClientRect bakes in whatever transform is
+    // live at read time, so measuring immediately can freeze offset
+    // placements relative to where targets end up once the animation
+    // settles. Defer the actual measure/place to a double rAF — same
+    // precedent as WhiteboardCanvas's scrollToNewest/runInPageScrolls —
+    // so paint has a couple of frames to catch up before we read boxes.
+    // Honest caveat: a 280ms page-slide is NOT fully settled after two
+    // frames (~33ms) — this is a cheap skew reducer, not a full
+    // settle-gate. Placements recompute again on the next
+    // sources/hostW/fontsReady change, and a page flip changes `sources`
+    // itself (new page's commands), so the flip case recomputes anyway.
+    const measureAndPlace = () => {
+      if (cancelled) return;
+      const host = hostRef.current;
+      if (!host) return;
+      const hostBox = host.getBoundingClientRect();
+      if (hostBox.width === 0) return;
+      // Page rect for the slot engine, in host-relative px. Prefer the
+      // content wrapper's box (spacer-independent — see the contentRef
+      // prop doc); fall back to the host box when no wrapper is passed.
+      const contentBox = contentRef?.current?.getBoundingClientRect();
+      const page: Rect = contentBox && contentBox.width > 0
+        ? {
+            x: contentBox.left - hostBox.left,
+            y: contentBox.top - hostBox.top,
+            w: contentBox.width,
+            h: Math.max(contentBox.height, 1),
+          }
+        : { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
+      const toHostRect = (el: Element): Rect => {
+        const b = el.getBoundingClientRect();
+        return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
+      };
+      // Occupied set starts with every rendered item's rect — notes must
+      // dodge CONTENT first, then each other. Keep the ELEMENT alongside
+      // each rect: a note targeting a feature INSIDE an item needs that
+      // item's whole-card rect swapped for finer-granularity rects (below).
+      const itemEntries: Array<{ el: Element; rect: Rect }> = [];
+      host.querySelectorAll('[data-wb-item-id]').forEach((item) => {
+        itemEntries.push({ el: item, rect: toHostRect(item) });
+      });
+      // Rects of notes already placed this pass — every later note dodges
+      // every earlier one regardless of which item it targets.
+      const placedRects: Rect[] = [];
+      const next: NoteEntry[] = [];
+      for (const src of sources) {
+        const m = measureNote(src.text);
+        const t = targetRect(host, src.targetId, src.targetFeature);
+        // Defect A of the 2026-07-11 gate: a feature (say, vertex O) lives
+        // INSIDE its item's card, so every right/above/below/left slot
+        // beside it overlaps the card's own bounding rect — with that rect
+        // in `occupied`, placeNote could NEVER sit beside an interior
+        // feature and every near-targeted note silently degraded to the
+        // margin column. Fix: for the note's own CONTAINING item, replace
+        // the whole-card rect with the rects of its [data-feature]
+        // descendants — the real content within the card the note must
+        // dodge — so the note may use the card's whitespace beside its
+        // target. All OTHER items still block via their whole rect, and
+        // placeNote's target carve-out keeps the note off the target
+        // itself.
+        const occupied: Rect[] = [];
+        for (const entry of itemEntries) {
+          if (t?.itemEl && entry.el === t.itemEl) {
+            entry.el.querySelectorAll('[data-feature]').forEach((f) => {
+              const r = toHostRect(f);
+              if (r.w > 0 || r.h > 0) occupied.push(r);
+            });
+          } else {
+            occupied.push(entry.rect);
+          }
         }
-      : { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
-    const toHostRect = (el: Element): Rect => {
-      const b = el.getBoundingClientRect();
-      return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
-    };
-    // Occupied set starts with every rendered item's rect — notes must
-    // dodge CONTENT first, then each other. Keep the ELEMENT alongside
-    // each rect: a note targeting a feature INSIDE an item needs that
-    // item's whole-card rect swapped for finer-granularity rects (below).
-    const itemEntries: Array<{ el: Element; rect: Rect }> = [];
-    host.querySelectorAll('[data-wb-item-id]').forEach((item) => {
-      itemEntries.push({ el: item, rect: toHostRect(item) });
-    });
-    // Rects of notes already placed this pass — every later note dodges
-    // every earlier one regardless of which item it targets.
-    const placedRects: Rect[] = [];
-    const next: NoteEntry[] = [];
-    for (const src of sources) {
-      const m = measureNote(src.text);
-      const t = targetRect(host, src.targetId, src.targetFeature);
-      // Defect A of the 2026-07-11 gate: a feature (say, vertex O) lives
-      // INSIDE its item's card, so every right/above/below/left slot
-      // beside it overlaps the card's own bounding rect — with that rect
-      // in `occupied`, placeNote could NEVER sit beside an interior
-      // feature and every near-targeted note silently degraded to the
-      // margin column. Fix: for the note's own CONTAINING item, replace
-      // the whole-card rect with the rects of its [data-feature]
-      // descendants — the real content within the card the note must
-      // dodge — so the note may use the card's whitespace beside its
-      // target. All OTHER items still block via their whole rect, and
-      // placeNote's target carve-out keeps the note off the target
-      // itself.
-      const occupied: Rect[] = [];
-      for (const entry of itemEntries) {
-        if (t?.itemEl && entry.el === t.itemEl) {
-          entry.el.querySelectorAll('[data-feature]').forEach((f) => {
-            const r = toHostRect(f);
-            if (r.w > 0 || r.h > 0) occupied.push(r);
-          });
-        } else {
-          occupied.push(entry.rect);
-        }
+        occupied.push(...placedRects);
+        const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+        placedRects.push(placement.rect);
+        next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
       }
-      occupied.push(...placedRects);
-      const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
-      placedRects.push(placement.rect);
-      next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
-    }
-    setEntries(next);
-    setHostW(hostBox.width);
-    // Report how far the lowest note extends below the page (content)
-    // bottom so the host can grow via an in-flow spacer. Computed
-    // against the same spacer-independent `page` rect placement used,
-    // so this cannot feed back into placement (see contentRef doc).
-    if (onOverflowChange) {
-      const maxBottom = next.reduce((b, e) => Math.max(b, e.placement.rect.y + e.placement.rect.h), 0);
-      onOverflowChange(Math.max(0, Math.ceil(maxBottom - (page.y + page.h))));
-    }
-  }, [sources, hostRef, contentRef, hostW, onOverflowChange]);
+      setEntries(next);
+      setHostW(hostBox.width);
+      // Report how far the lowest note extends below the page (content)
+      // bottom so the host can grow via an in-flow spacer. Computed
+      // against the same spacer-independent `page` rect placement used,
+      // so this cannot feed back into placement (see contentRef doc).
+      if (onOverflowChange) {
+        const maxBottom = next.reduce((b, e) => Math.max(b, e.placement.rect.y + e.placement.rect.h), 0);
+        onOverflowChange(Math.max(0, Math.ceil(maxBottom - (page.y + page.h))));
+      }
+    };
+
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(measureAndPlace);
+    });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [sources, hostRef, contentRef, hostW, fontsReady, onOverflowChange]);
 
   // Host width tracking (student-ink pattern): proportional rescale.
   useEffect(() => {

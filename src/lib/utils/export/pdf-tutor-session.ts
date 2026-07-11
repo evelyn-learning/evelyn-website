@@ -1649,6 +1649,21 @@ export async function exportTutorSessionPDF(
     return true;
   });
 
+  // Stale-stamp pre-pass: __pdfNoteBaked is written onto the LIVE command
+  // objects (same refs held by React state — see the mutation note near
+  // its write site below), so a stamp from an EARLIER export survives on
+  // the object across a second export call within the same session. If
+  // the second export's own notesByTargetId pre-pass doesn't re-bake that
+  // note (e.g. evolve-in-place changed the target item so the feature no
+  // longer resolves), the stale `true` still suppresses the handwrite's
+  // caption line — the note silently vanishes from that PDF even though
+  // it was never baked into THIS export's render. Clear every stamp
+  // before this export does any marking of its own.
+  for (const cmd of dedupedAll) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (cmd as any).__pdfNoteBaked;
+  }
+
   // Rollback pre-pass: a 'removeItems' command lists the stamped ids of
   // renders the orchestrator pulled off the live board after a killed
   // brain attempt. The parent whiteboardCommands array is append-only,
