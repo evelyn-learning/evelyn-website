@@ -341,6 +341,44 @@ const HANDWRITE_NO_NEAR_SENTENCE =
 const HANDWRITE_NEAR_SENTENCE =
   'A note may carry a `near` field (same target grammar as tutor_scribble) to land hand-written on the board beside that target — the runtime computes the placement; omit `near` for a general note (margin).';
 
+/** SmoothDraw P3 follow-up — the remaining strip-era prose for handwrite/
+ *  scribble words. Same pattern as the pair above: each [flag-off, flag-on]
+ *  swap fires only under inkNotesEnabled(); flag off ⇒ prompt byte-identical.
+ *  The 2026-07-11 re-run's brain narrated the label as "now in the strip"
+ *  while it correctly rendered on-board — these four sentences were still
+ *  telling it labels/notes live in an annotation strip. Generic wording
+ *  only — no subject-specific examples. */
+const INK_NOTES_STRIP_PROSE_SWAPS: Array<[string, string]> = [
+  // tutor_scribble label sentence (the re-run's mis-narration source).
+  [
+    'If you pass a short `label`, it appears in the page\'s annotation strip below the diagram as "{feature} → {label}" — NOT on the diagram itself. Don\'t try to position the label. The strip is the home for words; the diagram only gets the tick.',
+    'If you pass a short `label`, it renders as a short hand-written note beside the marked feature — the runtime computes the placement; don\'t try to position it.',
+  ],
+  // tutor_handwrite paragraph opener (its stale `near` sentence is handled
+  // by HANDWRITE_NO_NEAR_SENTENCE above).
+  [
+    '**tutor_handwrite adds a self-contained line to the page\'s annotation strip.** The strip sits below the rendered items and accumulates teacher notes as the page progresses; it resets on each new_page.',
+    '**tutor_handwrite writes a short hand-written note on the board.** Notes accumulate as the page progresses and reset on each new_page.',
+  ],
+  // Example comment in the tutor_scribble usage block.
+  [
+    'tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + "trendline → best fit" in the strip',
+    'tutor_scribble({ target: "the trendline", label: "best fit" }) // tick + a short hand-written "best fit" note beside the trendline',
+  ],
+  // Labels paragraph in the scribble reference section.
+  [
+    `**Labels go in the strip, not on the diagram.** A scribble with a
+\`label\` adds "{feature} → {label}" to the page's annotation strip in
+the scribble's color. Keep labels short — a few words. A scribble
+without a label is just a tick, no strip entry.`,
+    `**Labels render beside the feature.** A scribble with a
+\`label\` renders it as a short hand-written note beside the marked
+feature in the scribble's color — the runtime computes the placement.
+Keep labels short — a few words. A scribble without a label is just
+a tick, no note.`,
+  ],
+];
+
 /**
  * Base tutor personality and guidelines
  */
@@ -1474,6 +1512,9 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // needed for new sessions in dev.
   if (inkNotesEnabled()) {
     prompt = prompt.replace(HANDWRITE_NO_NEAR_SENTENCE, HANDWRITE_NEAR_SENTENCE);
+    for (const [from, to] of INK_NOTES_STRIP_PROSE_SWAPS) {
+      prompt = prompt.replace(from, to);
+    }
   }
 
   // Answer-equivalence recognition — stops the "not quite" false-reject of a
