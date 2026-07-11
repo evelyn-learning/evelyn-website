@@ -23,8 +23,8 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('right slot sits beside the target', p.rect.x > target.x + target.w && Math.abs((p.rect.y + p.rect.h / 2) - (target.y + target.h / 2)) < note.h);
 }
 {
-  // Block the right slot → falls to above.
-  const blocker: Rect = { x: target.x + target.w + 2, y: target.y - 20, w: 300, h: 120 };
+  // Block ONLY the right slot (y-band matches the target, so above/below stay clear).
+  const blocker: Rect = { x: target.x + target.w + 2, y: target.y, w: 300, h: 60 };
   const p = placeNote({ target, occupied: [blocker], page, note });
   check('right blocked → above', p.slot === 'above');
   check('above sits over the target', p.rect.y + p.rect.h <= target.y);
