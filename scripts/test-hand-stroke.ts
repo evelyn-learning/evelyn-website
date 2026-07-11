@@ -112,6 +112,13 @@ const spine: Pt[] = [{ x: 10, y: 50 }, { x: 40, y: 80 }, { x: 90, y: 20 }];
   const b: Rect4 = { x: 20, y: 20, w: 100, h: 100 };
   check('overlapping rects → empty spine', arrowSpine(a, b, 's').length === 0);
 }
+{
+  // Elongated rects that overlap while both centers sit OUTSIDE each other
+  // (reviewer repro) — must be empty, not a backwards spine.
+  const a: Rect4 = { x: 0, y: 0, w: 500, h: 10 };
+  const b: Rect4 = { x: 400, y: -5, w: 500, h: 20 };
+  check('elongated overlapping rects → empty spine', arrowSpine(a, b, 'probe').length === 0);
+}
 
 // ── arrow heads ───────────────────────────────────────────────
 {

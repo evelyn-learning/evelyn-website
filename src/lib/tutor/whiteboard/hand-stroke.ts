@@ -153,11 +153,9 @@ function edgeExit(rect: Rect4, toward: Pt, pad: number): Pt | null {
 export function arrowSpine(from: Rect4, to: Rect4, seed: string): Pt[] {
   const toC = { x: to.x + to.w / 2, y: to.y + to.h / 2 };
   const fromC = { x: from.x + from.w / 2, y: from.y + from.h / 2 };
-  // Reject if either center lies within the other rect (overlap/containment).
-  if ((toC.x >= from.x && toC.x <= from.x + from.w && toC.y >= from.y && toC.y <= from.y + from.h) ||
-      (fromC.x >= to.x && fromC.x <= to.x + to.w && fromC.y >= to.y && fromC.y <= to.y + to.h)) {
-    return [];
-  }
+  // Reject any AABB intersection (covers containment AND elongated overlaps
+  // where both centers sit outside the other rect).
+  if (from.x < to.x + to.w && from.x + from.w > to.x && from.y < to.y + to.h && from.y + from.h > to.y) return [];
   const a = edgeExit(from, toC, 4);
   const b = edgeExit(to, fromC, 4);
   if (!a || !b) return [];
