@@ -32,7 +32,12 @@ import type { LessonPlan } from '../types';
 import { AP_PACING_THRESHOLDS, AP_SOURCE } from './_ap-shared';
 
 export const SEED_AP_APGOV_U1_FEDERALISM: LessonPlan = {
-  id: 'evelyn.ap.apgov.federalism.v1',
+  // NOTE: id/LO use the "federalism-foundations" slug (not plain
+  // "federalism") because the legacy NCSS plan ap-gov-federalism.ts already
+  // claims LO `apgov.federalism`, and plansForLoId (portal/adapters.ts)
+  // pools plans by LO id with no curriculum scoping — a shared id would mix
+  // the legacy item into this Unit-1 sequence.
+  id: 'evelyn.ap.apgov.federalism-foundations.v1',
   title: 'U1.7-1.9 Federalism: Powers, Amendments, Clauses & Grants',
   curriculum: 'AP',
   grade: '12',
@@ -41,7 +46,7 @@ export const SEED_AP_APGOV_U1_FEDERALISM: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apgov.federalism',
+      id: 'apgov.federalism-foundations',
       description:
         'Explain the division of enumerated, reserved, and concurrent powers between national and state governments; the roles of the Tenth and Fourteenth Amendments and the Commerce, Necessary and Proper, and Supremacy Clauses; the holdings of McCulloch v. Maryland (1819) and United States v. Lopez (1995); and the difference between categorical and block grants.',
       standard: 'AP-APGOV-1.7/1.8/1.9',
@@ -69,7 +74,7 @@ export const SEED_AP_APGOV_U1_FEDERALISM: LessonPlan = {
         'RESERVED POWERS: powers the Constitution neither grants to the national government nor denies to the states are reserved to the states (or the people), per the Tenth Amendment — e.g. establishing public schools, regulating purely intrastate commerce, marriage and family law, running elections, and the general "police power" over health, safety, and welfare.',
         'CONCURRENT POWERS: powers exercised by BOTH levels of government simultaneously — e.g. the power to tax, to borrow money, to establish courts, and to build and maintain roads.',
         'THE TENTH AMENDMENT (1791): "The powers not delegated to the United States by the Constitution, nor prohibited by it to the States, are reserved to the States respectively, or to the people." This is the textual anchor for reserved powers — part of the Bill of Rights promised during the ratification debate covered earlier in this unit.',
-        'THE FOURTEENTH AMENDMENT (1868): its Due Process and Equal Protection Clauses have, over time, been used by the Supreme Court to apply most Bill of Rights protections against STATE governments too, not just the federal government — a process known as selective incorporation. This gradually shifted the federal-state balance from the Constitution\'s original design, in which the Bill of Rights constrained only the national government.',
+        'THE FOURTEENTH AMENDMENT (1868): its DUE PROCESS CLAUSE has, over time, been used by the Supreme Court to apply most Bill of Rights protections against STATE governments too, not just the federal government — a process known as selective incorporation. This gradually shifted the federal-state balance from the Constitution\'s original design, in which the Bill of Rights constrained only the national government. (The Fourteenth Amendment also contains the EQUAL PROTECTION CLAUSE — a separate guarantee that states may not deny any person the equal protection of the laws; it is its own doctrine, not the mechanism of incorporation.)',
         'THREE KEY CLAUSES: the COMMERCE CLAUSE (Article I, §8) grants Congress power to regulate commerce among the states — broad, but not unlimited (see Lopez below); the NECESSARY AND PROPER CLAUSE (the "Elastic Clause," Article I, §8) lets Congress make laws "necessary and proper" for carrying out its enumerated powers — the textual basis for IMPLIED powers not explicitly listed; the SUPREMACY CLAUSE (Article VI) makes the Constitution and valid federal law "the supreme Law of the Land," so a state law that genuinely conflicts with valid federal law must yield.',
         'McCULLOCH V. MARYLAND (1819) — EXPANDED FEDERAL POWER: Congress chartered the Second Bank of the United States, even though banking is not among its enumerated powers. Maryland then tried to tax the Bank\'s Maryland branch. The Supreme Court (Chief Justice Marshall) held (1) Congress had the IMPLIED power to charter the Bank under the Necessary and Proper Clause, and (2) Maryland could NOT tax the Bank, because the Supremacy Clause bars states from taxing or otherwise interfering with a legitimate federal institution. The ruling expanded federal power on both fronts.',
         'UNITED STATES V. LOPEZ (1995) — LIMITED FEDERAL POWER: Congress had passed the Gun-Free School Zones Act, making it a federal crime to carry a gun near a school, justified under the Commerce Clause. The Supreme Court held the Act EXCEEDED Congress\'s commerce power — possessing a gun near a school is not itself economic activity that substantially affects interstate commerce. Lopez was the first major decision in decades to limit the Commerce Clause, confirming that even Congress\'s broadest enumerated power has real limits, and that reserved state powers still matter.',
@@ -201,7 +206,7 @@ export const SEED_AP_APGOV_U1_FEDERALISM: LessonPlan = {
         'Enumerated powers belong to the national government explicitly (Article I, §8); reserved powers belong to the states via the Tenth Amendment; concurrent powers (like taxing) are exercised by both levels at once.',
         'Three key clauses: the Commerce Clause (interstate commerce), the Necessary and Proper Clause (implied powers), and the Supremacy Clause (valid federal law wins over conflicting state law).',
         'McCulloch v. Maryland (1819) EXPANDED federal power: it upheld Congress\'s implied power to charter a national bank and barred Maryland from taxing it under the Supremacy Clause. United States v. Lopez (1995) LIMITED federal power: it struck down the Gun-Free School Zones Act because carrying a gun near a school is not itself commerce.',
-        'The Fourteenth Amendment\'s Due Process and Equal Protection Clauses have gradually applied most Bill of Rights protections against the states too (selective incorporation), reshaping the federal-state balance over time.',
+        'The Fourteenth Amendment\'s Due Process Clause has gradually applied most Bill of Rights protections against the states too (selective incorporation), reshaping the federal-state balance over time — its Equal Protection Clause is a separate, distinct guarantee, not the incorporation mechanism.',
         'In the described 1990-2019 grants table, real grant DOLLARS rose every interval ($256B -> $692B), but grants\' SHARE of federal outlays peaked in 2010 (17.6%) and eased by 2019 (16.2%) — don\'t conflate the two trends. Categorical grants ($581B, 84%) dominate block grants ($111B, 16%) in FY2019, meaning the federal government keeps significant control over how that money gets spent.',
       ],
       estimatedMinutes: 2,

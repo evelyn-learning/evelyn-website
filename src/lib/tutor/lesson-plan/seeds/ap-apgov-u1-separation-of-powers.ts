@@ -44,7 +44,7 @@ export const SEED_AP_APGOV_U1_SEPARATION_OF_POWERS: LessonPlan = {
     },
   ],
   prerequisites: ['apgov.constitution-ratification'],
-  followUps: ['apgov.federalism'],
+  followUps: ['apgov.federalism-foundations'],
   estimatedMinutes: 22,
   segments: [
     {
