@@ -233,6 +233,14 @@ import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-t
 import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
 
+// AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
+// Unit-1 Vertical Slice content plans (democratic ideals through
+// federalism). FRQ-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APGOV_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
+import { BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1-constitution-ratification';
+import { BASELINE_AP_APGOV_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
+import { BASELINE_AP_APGOV_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -400,6 +408,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
   BASELINE_AP_APWORLD_MONGOL_EMPIRE,
   BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
+  BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
+  BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
+  BASELINE_AP_APGOV_FEDERALISM,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
