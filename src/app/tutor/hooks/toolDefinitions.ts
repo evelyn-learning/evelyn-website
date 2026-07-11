@@ -1859,12 +1859,12 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'tutor_handwrite',
-    description: 'Write a short hand-written note. With `near`, the note lands on the board beside its target; without it, in the margin. ≤80 chars. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). The note has no spatial anchor — it lands in the strip in the order it was emitted. Use sparingly — 1-2 handwrites per turn at most. Strip resets on each new_page.',
+    description: 'Write a short hand-written note. With `near`, the note lands on the board beside its target; without it, in the margin. ≤80 chars. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). Without `near`, notes collect in the page\'s notes area in emission order. Use sparingly — 1-2 handwrites per turn at most. Notes reset on each new_page.',
     parameters: {
       type: 'object',
       properties: {
-        text: { type: 'string', description: 'The full self-contained text to add to the page\'s annotation strip. Plain text only; LaTeX / markdown does not render.' },
-        color: { type: 'string', description: 'CSS color for the strip entry. Defaults to amber ("#a16207"). Use green for affirmation, red for warnings.' },
+        text: { type: 'string', description: 'The full self-contained note text. Plain text only; LaTeX / markdown does not render.' },
+        color: { type: 'string', description: 'CSS color for the note. Defaults to amber ("#a16207"). Use green for affirmation, red for warnings.' },
         near: { type: 'string', description: 'Optional: the feature or item this note is about (same target grammar as tutor_scribble). When provided, the note is hand-written on the board BESIDE that target at a position the runtime computes — never overlapping content. Omit for a general note (margin).' },
       },
       required: ['text'],
