@@ -55,7 +55,7 @@ export const BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION: TopicNotesBaseline = {
       kind: 'cause',
       title: 'the new-tax sequence',
       content:
-        'The Sugar Act (1764), Stamp Act (1765), Townshend Acts (1767), and Tea Act (1773) each taxed colonists directly, without their consent, to raise revenue rather than merely regulate trade — a sharp break from the self-taxation colonists had grown used to through their own assemblies.',
+        'Parliament\'s post-1763 measures differed in kind: the Sugar Act (1764) and Townshend Acts (1767) were EXTERNAL duties on imported goods, while the Stamp Act (1765) was a DIRECT INTERNAL tax on printed materials — the type colonists rejected most fiercely. The Tea Act (1773) added NO new tax; it kept the existing Townshend tea duty but gave the East India Company a monopoly on direct sales, undercutting colonial merchants and triggering the Boston Tea Party. The common objection: Parliament taxing colonists for revenue without their consent — a break from the self-taxation they had run through their own assemblies.',
     },
     {
       loId: 'apush.causes-of-revolution',
