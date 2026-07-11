@@ -1406,36 +1406,33 @@ async function drawWhiteboardVisual(
         // Geometry diagrams routinely contain π, √, Greek letters in
         // angle labels — same exotic-glyph check the generic fallback
         // uses, so unit-circle-style labeling routes through raster.
-        if (svgContainsExoticGlyphs(svgString)) {
-          // Raster sub-case: scribbles bake via captureCommandRaster's own
-          // overlayScribbles re-mount; inkNotes deliberately do NOT (the
-          // raster path never receives notes — see the scoping comment in
-          // captureCommandRaster). Notes targeting an exotic-glyph
-          // geometry stay on the export loop's after-figure caption
-          // fallback (bakedNoteTextsOut untouched → unbakedNotes fires).
-          const raster = await captureCommandRaster(whiteboardCmd, scribbles);
+        // 2026-07-11 round 3: note-carrying geometry MUST rasterize —
+        // round 2 baked notes into the SVG and handed it to svg2pdf, whose
+        // WinAnsi built-in fonts have no Caveat (serif output) and no √/²
+        // (user PDF: `√45` → `"45`). captureCommandRaster bakes both
+        // overlays into the mounted SVG and rasterizes IN THE BROWSER
+        // (loaded webfonts + full Unicode). localBaked propagates to
+        // bakedNoteTextsOut only when the raster actually landed, so a
+        // raster failure keeps the caption rescue honest.
+        const geoExotic = svgContainsExoticGlyphs(svgString);
+        if (geoExotic || (inkNotes && inkNotes.length > 0)) {
+          const localBaked: string[] = [];
+          const raster = await captureCommandRaster(whiteboardCmd, scribbles, inkNotes, localBaked);
           if (raster && raster.dataUrl) {
+            if (bakedNoteTextsOut && localBaked.length > 0) bakedNoteTextsOut.push(...localBaked);
             const heightMm = (raster.heightPx / raster.widthPx) * width;
             pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
             return y + heightMm + 2;
           }
-        } else {
-          // 2026-07-11 user round (follow-up): geometry figures are the
-          // FLAGSHIP note target, yet this dedicated branch predated the
-          // note-bake wiring and threaded neither scribbles nor inkNotes —
-          // so every note targeting a showGeometry item fell to a caption
-          // line and no gate scenario ever showed a baked note. Mirror the
-          // generic vector fallback below exactly: bake both overlays into
-          // the captured SVG and report bakedTexts so the export loop's
-          // multiset-consume marks the source handwrites (and its
-          // after-figure caption fallback still rescues any that fail
-          // feature resolution here).
-          if ((scribbles && scribbles.length > 0) || (inkNotes && inkNotes.length > 0)) {
-            const baked = overlayScribbles(svgString, scribbles, inkNotes);
-            svgString = baked.svg;
-            if (bakedNoteTextsOut && baked.bakedTexts.length > 0) {
-              bakedNoteTextsOut.push(...baked.bakedTexts);
-            }
+          // Raster failed → notes stay unbaked (captions rescue below).
+          // Non-exotic SVG may still embed as vector; exotic must NOT
+          // (svg2pdf mangles the glyphs — pre-round-3 behavior kept).
+        }
+        if (!geoExotic) {
+          // Vector embed: scribble ticks/highlights only (pure paths —
+          // the 2026-07-11 follow-up's flagship-target fix, svg2pdf-safe).
+          if (scribbles && scribbles.length > 0) {
+            svgString = overlayScribbles(svgString, scribbles).svg;
           }
           const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
           if (consumed > 0) return y + consumed + 2;
@@ -1489,14 +1486,29 @@ async function drawWhiteboardVisual(
     const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
     const prefersRaster = RASTER_PREFERRED_ACTIONS.has(String(cmd.action));
 
-    // Fast-path: known raster-preferred action — skip the SVG probe.
-    if (prefersRaster) {
-      const raster = await captureCommandRaster(whiteboardCmd, scribbles);
+    // 2026-07-11 round 3: any raster capture may also bake notes now (the
+    // raster path is the ONLY note-safe pipeline — svg2pdf's WinAnsi fonts
+    // rendered baked notes serif and mangled √/²; see overlayScribbles'
+    // routing doc in whiteboard-capture.ts). Shared embed helper so every
+    // raster site propagates localBaked → bakedNoteTextsOut only on an
+    // ACTUALLY-landed raster (a failed raster must leave notes unbaked so
+    // the export loop's after-figure caption rescue stays honest).
+    const tryRaster = async (): Promise<number | null> => {
+      const localBaked: string[] = [];
+      const raster = await captureCommandRaster(whiteboardCmd, scribbles, inkNotes, localBaked);
       if (raster && raster.dataUrl) {
+        if (bakedNoteTextsOut && localBaked.length > 0) bakedNoteTextsOut.push(...localBaked);
         const heightMm = (raster.heightPx / raster.widthPx) * width;
         pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
         return y + heightMm + 2;
       }
+      return null;
+    };
+
+    // Fast-path: known raster-preferred action — skip the SVG probe.
+    if (prefersRaster) {
+      const r = await tryRaster();
+      if (r !== null) return r;
     }
 
     // SVG path (default) — probe for exotic glyphs AFTER we have the SVG so
@@ -1504,26 +1516,17 @@ async function drawWhiteboardVisual(
     // renderers not in the static allowlist.
     let svgString = await captureCommandSvg(whiteboardCmd);
     if (svgString) {
-      if (svgContainsExoticGlyphs(svgString)) {
-        const raster = await captureCommandRaster(whiteboardCmd, scribbles);
-        if (raster && raster.dataUrl) {
-          const heightMm = (raster.heightPx / raster.widthPx) * width;
-          pdf.addImage(raster.dataUrl, 'PNG', x, y, width, heightMm);
-          return y + heightMm + 2;
-        }
+      // Exotic glyphs OR pending notes both force raster (round 3): the
+      // vector embed can't render either faithfully.
+      if (svgContainsExoticGlyphs(svgString) || (inkNotes && inkNotes.length > 0)) {
+        const r = await tryRaster();
+        if (r !== null) return r;
       }
-      if ((scribbles && scribbles.length > 0) || (inkNotes && inkNotes.length > 0)) {
-        // SmoothDraw P3: this is the ONE capture site that bakes
-        // feature-anchored notes — see overlayScribbles' doc comment
-        // (whiteboard-capture.ts) for why the raster paths above
-        // (prefersRaster, exotic-glyph fallback) and the HTML-mode
-        // fallback below don't also receive `inkNotes`. Scribbles
-        // (ticks/highlights) are unaffected either way.
-        const baked = overlayScribbles(svgString, scribbles, inkNotes);
-        svgString = baked.svg;
-        if (bakedNoteTextsOut && baked.bakedTexts.length > 0) {
-          bakedNoteTextsOut.push(...baked.bakedTexts);
-        }
+      // Vector embed: scribble ticks/highlights only (pure paths,
+      // svg2pdf-safe). Notes reaching here mean the raster attempt above
+      // failed — they stay unbaked and the caption rescue covers them.
+      if (scribbles && scribbles.length > 0) {
+        svgString = overlayScribbles(svgString, scribbles).svg;
       }
       const consumed = await drawCapturedSvg(pdf, svgString, x, y, width);
       if (consumed > 0) return y + consumed + 2;
@@ -1534,12 +1537,8 @@ async function drawWhiteboardVisual(
     // card. Observed 2026-04-29 grammar-mechanics session: a comparison
     // table command rendered as just "Diagram: comparison_table -
     // Present vs. Past Tense" with no visual underneath.
-    const rasterFallback = await captureCommandRaster(whiteboardCmd, scribbles);
-    if (rasterFallback && rasterFallback.dataUrl) {
-      const heightMm = (rasterFallback.heightPx / rasterFallback.widthPx) * width;
-      pdf.addImage(rasterFallback.dataUrl, 'PNG', x, y, width, heightMm);
-      return y + heightMm + 2;
-    }
+    const r = await tryRaster();
+    if (r !== null) return r;
   } catch (err) {
     console.warn('[pdf-tutor-session] Whiteboard capture fallback failed:', err);
   }

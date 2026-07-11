@@ -25,6 +25,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { drawOnEnabled } from '@/app/tutor/components/whiteboard/useDrawOn';
 import { placeNote, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
+import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
 
 const CAPTURE_WIDTH_PX = 760;   // matches the whiteboard's nominal width
 const CAPTURE_PADDING_PX = 16;  // matches the renderer's inner padding
@@ -199,22 +200,28 @@ export interface RasterCapture {
 export async function captureCommandRaster(
   command: WhiteboardCommand,
   scribbles?: ScribbleInput[],
+  // 2026-07-11 round 3: feature-anchored notes now bake through THIS
+  // raster path (not the vector path) — the browser rasterizer is the
+  // only pipeline that renders them with the loaded Caveat webfont and
+  // full Unicode; svg2pdf's WinAnsi fonts mangled both (see
+  // overlayScribbles' routing doc). bakedNoteTextsOut mirrors the
+  // out-param convention in pdf-tutor-session.ts's drawWhiteboardVisual.
+  inkNotes?: InkNoteInput[],
+  bakedNoteTextsOut?: string[],
 ): Promise<RasterCapture | null> {
   return withMountedCommand(command, async (_cmd, container) => {
-    // If scribbles requested, enrich the mounted SVG first so the rasterizer
+    // If overlays requested, enrich the mounted SVG first so the rasterizer
     // captures the marks along with the underlying diagram.
-    if (scribbles && scribbles.length > 0) {
+    if ((scribbles && scribbles.length > 0) || (inkNotes && inkNotes.length > 0)) {
       const svgWithFeatures = container.querySelector('svg [data-feature]')?.closest('svg');
       if (svgWithFeatures) {
-        // SVG-mode item: bake scribbles into the SVG string and re-mount.
+        // SVG-mode item: bake overlays into the SVG string and re-mount.
         if (!svgWithFeatures.getAttribute('xmlns')) svgWithFeatures.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         const original = new XMLSerializer().serializeToString(svgWithFeatures);
-        // SmoothDraw P3: this raster path never receives inkNotes — see
-        // overlayScribbles' doc comment for why feature-anchored note
-        // baking is scoped to the direct vector-SVG path in
-        // pdf-tutor-session.ts instead. Scribbles (ticks/highlights)
-        // still bake here exactly as before.
-        const { svg: enriched } = overlayScribbles(original, scribbles);
+        const { svg: enriched, bakedTexts } = overlayScribbles(original, scribbles, inkNotes);
+        if (bakedNoteTextsOut && bakedTexts.length > 0) {
+          bakedNoteTextsOut.push(...bakedTexts);
+        }
         if (enriched !== original) {
           try {
             const doc = new DOMParser().parseFromString(enriched, 'image/svg+xml');
@@ -227,11 +234,14 @@ export async function captureCommandRaster(
             console.warn('[whiteboard-capture] Failed to re-mount enriched SVG:', err);
           }
         }
-      } else {
+      } else if (scribbles && scribbles.length > 0) {
         // HTML-mode item (KaTeX equation, table, problem card, ...).
         // Inject an absolutely-positioned SVG overlay over the rendered
         // element so html2canvas captures the marks together with the
-        // content. Mirrors the live ScribbleOverlays HTML path.
+        // content. Mirrors the live ScribbleOverlays HTML path. Notes
+        // never bake on HTML-mode items (no data-feature SVG to resolve
+        // against — see overlayScribbles' routing doc); they keep the
+        // caption fallback.
         injectHtmlScribbleOverlay(container, scribbles);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       }
@@ -614,33 +624,22 @@ function wrapNoteByChars(text: string, maxChars = 24, maxLines = 4): string[] {
  * text collision would only mis-attribute a bake within that same
  * item's own note list, an edge case not worth a synthetic id for.
  *
- * Single capture site: feature-anchored note baking is wired ONLY into
- * pdf-tutor-session.ts's direct vector-SVG embed path (the "generic
- * fallback" used by the ~20 Tier-1 structured renderers with no native
- * jsPDF drawer). Everything that renders through a RASTER path never
- * gets notes baked and always falls back to the honest margin caption
- * line — and that set is bigger than the allowlist alone. Explicitly:
- *   - `showEquation`: short-circuits to captureCommandRaster BEFORE the
- *     vector path even runs (pdf-tutor-session.ts's showEquation
- *     branch). Equations DO carry data-feature tags and are a common
- *     live note target, so this is the most user-visible piece of the
- *     scope cut, named here on purpose.
- *   - the RASTER_PREFERRED_ACTIONS allowlist + exotic-glyph diagrams,
- *   - the non-SVG HTML-mode fallback via `injectHtmlScribbleOverlay`.
- * All of these still get their scribble ticks/highlights unchanged.
- * Rationale: (1) the vector-SVG path covers the majority of
- * feature-anchored-note use cases (geometry, physics, bio diagrams);
- * (2) `injectHtmlScribbleOverlay` is a DOM-measurement implementation
- * (getBoundingClientRect), not the string/data-feature-cx convention
- * this function and `placeNote` assume, so wiring it in is a second,
- * larger change outside this task's minimal-diff scope; (3)
- * captureCommandRaster's public return type (`RasterCapture | null`)
- * has no room for a "what got baked" signal without widening a helper
- * used by several call sites that never pass notes at all. Equation-
- * bake via the pre-raster mounted DOM (injectHtmlScribbleOverlay-style
- * measurement + an HTML note overlay before rasterizing) is the natural
- * follow-up — deliberately not built until the live legibility gate
- * shows real note-on-equation usage justifying it.
+ * Note-bake routing (2026-07-11 round 3 — REVERSED from the original
+ * "vector path only" scope): an SVG string carrying baked notes must be
+ * RASTERIZED in the browser (captureCommandRaster), never handed to
+ * svg2pdf/drawCapturedSvg. svg2pdf renders <text> with jsPDF's built-in
+ * WinAnsi fonts — no Caveat (baked notes came out serif) and no Unicode
+ * beyond Latin-1 (the user's "√(6² + 3²)" note baked as `"(6² + 3²)`;
+ * √ mangled). The browser rasterizer lays the SVG out with the page's
+ * loaded webfonts and full Unicode, so both problems vanish. Callers in
+ * pdf-tutor-session.ts enforce the routing: items with pending inkNotes
+ * go through captureCommandRaster (which threads them into this
+ * function); the vector path only ever receives scribble ticks/
+ * highlights (pure paths, no <text> — svg2pdf-safe). Still without a
+ * bake path: the non-SVG HTML-mode fallback (injectHtmlScribbleOverlay —
+ * DOM-measurement based, not this string/data-feature convention) and
+ * `showEquation` (short-circuits to raster before any note lookup);
+ * both keep the honest caption fallback.
  */
 export function overlayScribbles(
   svgString: string,
@@ -856,11 +855,26 @@ export function overlayScribbles(
         // color-filled copy on top. stroke-width fontSize*0.25 (≈5.5px at
         // the 22px live reference — thick enough to halo, thin enough to
         // never swallow glyphs since the clean fill paints over it).
+        // 2026-07-11 round 3 — two rendering contracts for this text:
+        //   RAW text, ALWAYS. `lines` comes straight from note.text with
+        //   no sanitizeForPDF/toWinAnsiSafe pass — those maps exist for
+        //   jsPDF CAPTION text (WinAnsi-only built-in fonts; see
+        //   drawNoteCaptionLine in pdf-tutor-session.ts, which keeps
+        //   sanitizing). This SVG is rasterized BY THE BROWSER
+        //   (captureCommandRaster), which renders √/²/π natively —
+        //   sanitizing here would degrade correct output.
+        //   Fonts: the family list is RESOLVED via the shared note-font
+        //   module — next/font's hashed families are unreachable through
+        //   the literal 'Caveat, Kalam' names (same class of bug as
+        //   InkNotesOverlay's canvas noteFont; round-3 user PDF showed
+        //   baked notes in serif). Capture runs in-browser with the page
+        //   fonts loaded, so the resolved names rasterize correctly.
+        const noteFontFamily = resolveNoteFontFamilies();
         const mkNoteText = (): Element => {
           const t = doc.createElementNS(SVG_NS, 'text');
           t.setAttribute('x', String(placement.rect.x));
           t.setAttribute('y', String(placement.rect.y + fontSize));
-          t.setAttribute('font-family', 'Caveat, Kalam, cursive');
+          t.setAttribute('font-family', noteFontFamily);
           t.setAttribute('font-size', String(fontSize));
           lines.forEach((line, li) => {
             const tspan = doc.createElementNS(SVG_NS, 'tspan');

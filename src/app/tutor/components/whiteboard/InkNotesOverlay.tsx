@@ -20,6 +20,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { placeNote, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
+import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
 
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
@@ -38,18 +39,14 @@ const AMBER = '#a16207';
 // hashed family names ONLY reachable via these CSS custom properties (a
 // literal 'Caveat' would not match the loaded font), so resolve the vars
 // via getComputedStyle once and cache the concrete font string.
+// 2026-07-11 round 3: the var-resolution itself moved to the shared
+// note-font module — whiteboard-capture's PDF note bake hit the same
+// hashed-family class of bug (baked notes rendered serif) and now
+// resolves through the same helper.
 let resolvedNoteFont: string | null = null;
 function noteFont(): string {
   if (resolvedNoteFont) return resolvedNoteFont;
-  try {
-    const cs = getComputedStyle(document.documentElement);
-    const fams = ['--font-caveat', '--font-kalam']
-      .map((v) => cs.getPropertyValue(v).trim())
-      .filter(Boolean);
-    resolvedNoteFont = `22px ${[...fams, 'cursive'].join(', ')}`;
-  } catch {
-    resolvedNoteFont = '22px cursive';
-  }
+  resolvedNoteFont = `22px ${resolveNoteFontFamilies()}`;
   return resolvedNoteFont;
 }
 

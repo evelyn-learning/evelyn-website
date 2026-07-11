@@ -12928,6 +12928,17 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         {onEndSession && (
           <button
             onClick={async () => {
+              // 2026-07-11 round 3 (user report): End/Pause mid-speech
+              // navigated to the summary while the current TTS sentence
+              // kept playing — onEndSession → stage change → unmount →
+              // useOpenAIRealtime.disconnect(), which cleared the QUEUE
+              // but never stopped the PLAYING AudioBufferSourceNode.
+              // Hard-stop speech FIRST (same pair the handleRef's
+              // stopSpeaking exposes; fire-and-forget — clearSpeechQueue's
+              // Promise drain semantics are for callers that need to await
+              // the bridge, which an end-tap doesn't).
+              try { void realtime.clearSpeechQueue(); } catch {}
+              try { realtime.interrupt(); } catch {}
               // Instant end — no recap delay, no spinner. Finalize
               // recording and commit profile in the background; the
               // student sees the summary page immediately.

@@ -2052,6 +2052,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       wsRef.current = null;
     }
 
+    // Hard-stop the PLAYING AudioBufferSourceNode. 2026-07-11 (user
+    // report): this teardown cleared the queue below but never stopped
+    // the in-flight source — an End/Pause tap (unmount → this disconnect)
+    // navigated away while the current TTS sentence played to the end of
+    // its buffer. interrupt() and pause() both already stop it; disconnect
+    // is the only teardown that didn't. (Pure WebAudio stop — does not
+    // touch clearSpeechQueue's Promise-drain bridge machinery.)
+    if (playbackSourceRef.current) {
+      try { playbackSourceRef.current.stop(); } catch { /* may already be stopped */ }
+      playbackSourceRef.current = null;
+    }
+
     // Clear audio queue
     audioQueueRef.current = [];
     isPlayingRef.current = false;
