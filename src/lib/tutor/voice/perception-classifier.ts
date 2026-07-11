@@ -29,9 +29,11 @@ export type PerceptionVerdict =
   | 'drop_self_voice'
   /** Empty transcript or pure non-speech noise. Drop. */
   | 'noise'
-  /** Short ack ("uh", "okay", "mhm"). Drop in 'thinking'/'speaking' to
-   *  avoid false-positive barge-ins; in 'listening' a filler still gets
-   *  classified as filler (no new turn). */
+  /** Short hesitation ("uh", "um") in any state, or a short ack ("okay",
+   *  "mhm") while the tutor is speaking/thinking (avoids false-positive
+   *  barge-ins). In 'listening' an ACK is the student's answer and
+   *  classifies as new_turn instead (2026-07-11 fix — Stage 4 made
+   *  perception the sole input path, so filler-in-listening = silent drop). */
   | 'filler'
   /** Real student speech during 'listening' — proceed to brain. */
   | 'new_turn'
@@ -92,11 +94,27 @@ export interface HeuristicResult {
 
 // ── Lexicons ──────────────────────────────────────────────────────────
 
-const FILLER_TOKENS = new Set<string>([
+/** Hesitations — carry no meaning in ANY state; short utterances made only
+ *  of these always drop as filler. */
+const HESITATION_TOKENS = new Set<string>([
   '', 'uh', 'um', 'umm', 'er', 'erm', 'hmm', 'hm',
-  'ok', 'okay', 'yeah', 'yep', 'yup', 'mhm', 'mhmm',
-  'mm', 'mmm', 'ah', 'oh', 'right',
+  'mm', 'mmm', 'ah', 'oh',
 ]);
+
+/** Acknowledgements — backchannel while the tutor is speaking/thinking
+ *  (drop as filler: defence layer 3, false-barge-in protection), but a
+ *  real ANSWER while the tutor is listening ("shall we move on?" →
+ *  "yeah, okay"). Since Stage 4 made the perception WS the sole input
+ *  authority, a filler verdict in 'listening' is a silent drop — so these
+ *  must classify as new_turn there (live regression 2026-07-11: "Yeah,
+ *  okay." ignored 3× in a row). */
+const ACK_TOKENS = new Set<string>([
+  'ok', 'okay', 'yeah', 'yep', 'yup', 'mhm', 'mhmm', 'right',
+]);
+
+function inFillerLexicon(tok: string): boolean {
+  return HESITATION_TOKENS.has(tok) || ACK_TOKENS.has(tok);
+}
 
 const BARGE_IN_TRIGGERS = [
   'stop', 'wait', 'no,', 'no.', 'actually', 'hold on', 'but ', 'i mean',
@@ -226,17 +244,26 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     };
   }
 
-  // 2. Filler tokens. A single-token utterance from the filler set drops.
-  if (wordCount === 1 && FILLER_TOKENS.has(tokens[0])) {
-    return { verdict: 'filler', reason: `filler token "${tokens[0]}"`, selfVoiceScore };
-  }
-  // Two-token fillers like "okay okay", "yeah yeah" — both filler tokens.
-  if (wordCount === 2 && tokens.every((t) => FILLER_TOKENS.has(t))) {
-    return { verdict: 'filler', reason: 'filler bigram', selfVoiceScore };
+  const state = input.productionState;
+
+  // 2. Filler tokens — state-aware (2026-07-11). While the tutor is
+  // LISTENING (or 'connected'), an utterance containing an acknowledgement
+  // is the student's answer and falls through to the state branch below
+  // (→ new_turn, which the perception direct-dispatch path fires as a
+  // brain turn). Pure hesitations drop in every state; acknowledgements
+  // during speaking/processing/transient states drop as before.
+  if (wordCount <= 2 && tokens.every(inFillerLexicon)) {
+    const isListening = state === 'listening' || state === 'connected';
+    const pureHesitation = tokens.every((t) => HESITATION_TOKENS.has(t));
+    if (pureHesitation || !isListening) {
+      const reason = wordCount === 1 ? `filler token "${tokens[0]}"` : 'filler bigram';
+      return { verdict: 'filler', reason, selfVoiceScore };
+    }
+    // Listening + at least one acknowledgement token ("yeah", "um yeah",
+    // "yeah okay") — a real answer; fall through to the state branch.
   }
 
   // 3. State-dependent verdicts.
-  const state = input.productionState;
 
   if (state === 'speaking') {
     // Defence layer 3 — raise the barge-in bar while TTS is playing.
