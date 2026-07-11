@@ -199,7 +199,7 @@ import {
 const isBoardRenderCommand = (c: unknown): boolean => {
   const a = String((c as { action?: string })?.action ?? '');
   if (BOARD_RENDER_META_ACTIONS.has(a)) return false;
-  return a.startsWith('show') || ['scribble', 'handwrite', 'tutorHandwrite', 'drawVector', 'annotate', 'highlight'].includes(a);
+  return a.startsWith('show') || ['scribble', 'link', 'handwrite', 'tutorHandwrite', 'drawVector', 'annotate', 'highlight'].includes(a);
 };
 // A show_sketch REQUEST = the doodle hasn't been generated yet (no primitives).
 // Once the doodler resolves, primitives are mutated on and it's a normal render.
@@ -2580,7 +2580,7 @@ export function VoiceTutorRealtime({
       'showEquation', 'showCode', 'showTable', 'showSvgDiagram',
     ]);
     const DEDUP_META_ACTIONS = new Set([
-      'newPage', 'clear', 'goToPage', 'scribble', 'scrollTo',
+      'newPage', 'clear', 'goToPage', 'scribble', 'link', 'scrollTo',
       'highlight', 'drawVector', 'annotate',
     ]);
     const isStructuralVisual = (action: string): boolean =>
@@ -4448,7 +4448,7 @@ export function VoiceTutorRealtime({
     // 2a session (the gov_branches "Legislative" circle that vanished
     // despite catalog success).
     const META_ACTIONS = new Set([
-      'newPage', 'clear', 'goToPage', 'scribble', 'scrollTo',
+      'newPage', 'clear', 'goToPage', 'scribble', 'link', 'scrollTo',
       'advanceLesson', 'markSegmentComplete',
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
@@ -4972,6 +4972,34 @@ export function VoiceTutorRealtime({
       if ('targetPageIndex' in cmdAny) delete cmdAny.targetPageIndex;
       if ('targetPageTitle' in cmdAny) delete cmdAny.targetPageTitle;
     }
+
+    // SmoothDraw P4: resolve link endpoints through the catalog. Both must
+    // resolve or the arrow drops SILENTLY (round-7 — soft pedagogy aid).
+    // Cross-turn dedup: an identical from→to(+label) already on the page is
+    // a re-emission habit, not a new arrow — drop it silently too.
+    for (const cmd of processed) {
+      if (cmd.action !== 'link') continue;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = cmd as any;
+      const f = catalogRef.current.resolveTarget(c.from);
+      const t = catalogRef.current.resolveTarget(c.to);
+      if (!f.ok || !t.ok || (f.canonical === t.canonical && f.itemId === t.itemId)) {
+        c._linkRejected = true;
+        onDebugEvent?.('link_dropped', `${c.from} -> ${c.to} (${!f.ok ? 'from-miss' : !t.ok ? 'to-miss' : 'self-link'})`);
+        continue;
+      }
+      const dupe = whiteboardCommandsRef.current.some((prev) => {
+        if ((prev as { action?: string }).action !== 'link') return false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const p = prev as any;
+        return p.fromFeature === f.canonical && p.toFeature === t.canonical && (p.label ?? '') === (c.label ?? '');
+      });
+      if (dupe) { c._linkRejected = true; onDebugEvent?.('link_dropped', 'duplicate'); continue; }
+      c.fromFeature = f.canonical; c.fromId = f.itemId;
+      c.toFeature = t.canonical; c.toId = t.itemId;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    processed = processed.filter((cmd) => !(cmd as any)._linkRejected);
 
     // Auto-inject scrollTo before any scribble that doesn't have one.
     // The tutor sometimes emits tutor_scribble without tutor_scroll_whiteboard

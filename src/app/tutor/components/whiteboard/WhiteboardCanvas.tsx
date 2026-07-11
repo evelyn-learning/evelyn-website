@@ -674,7 +674,7 @@ export function WhiteboardCanvas({
     const added = commands.slice(prevFollowCountRef.current);
     prevFollowCountRef.current = commands.length;
     const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
     ]);
     // Explicit nav (goToPage / scrollTo) suppresses view-follow ONLY when it is
     // the batch's FINAL visual intent. Order matters: a turn shaped
@@ -749,7 +749,7 @@ export function WhiteboardCanvas({
     // focal-distance graph). A double rAF waits for that switch + remount to
     // commit so the new page's item ids are queryable.
     const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'scrollTo', 'handwrite',
+      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
     ]);
     // Explicit navigation (goToPage / scrollTo) owns its own scroll ONLY when
     // it is the batch's final visual intent — mirror the view-follow effect's
@@ -896,7 +896,7 @@ export function WhiteboardCanvas({
   // lazy, and we guard against pages.length === 0 below.
   const safeCurrentPage = pages[Math.min(currentIndex, Math.max(0, pages.length - 1))] ?? { commands: [] };
   const renderableCommands = useMemo(
-    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
+    () => safeCurrentPage.commands.filter((c) => c.action !== 'scribble' && c.action !== 'link' && c.action !== 'scrollTo' && c.action !== 'handwrite'),
     [safeCurrentPage.commands],
   );
   // Kill-recovery phase A: dim style for an item currently flagged revising.

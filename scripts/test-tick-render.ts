@@ -81,6 +81,19 @@ if (withLabel && withLabel.action === 'scribble') {
     eq(withLabel.label, 'here', 'label preserved');
 }
 
+// (g) SmoothDraw P4: tutor_link mapping (flag-gated).
+process.env.NEXT_PUBLIC_TUTOR_LINKS = 'true';
+const link = mapFunctionCallToCommand('tutor_link', { from: 'the equation', to: 'the graph', label: 'same slope' });
+expect(link !== null && link.action === 'link', 'flag-on link maps');
+if (link && link.action === 'link') {
+    eq(link.from, 'the equation', 'link.from');
+    eq(link.to, 'the graph', 'link.to');
+    eq(link.label, 'same slope', 'link.label');
+}
+expect(mapFunctionCallToCommand('tutor_link', { from: 'x', to: '' }) === null, 'empty endpoint → null');
+delete process.env.NEXT_PUBLIC_TUTOR_LINKS;
+expect(mapFunctionCallToCommand('tutor_link', { from: 'a', to: 'b' }) === null, 'flag-off link drops silently');
+
 // ── 2. tutor_handwrite surface ─────────────────────────────────
 
 // (a) Pure text-only call.

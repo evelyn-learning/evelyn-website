@@ -46,10 +46,28 @@ export function inkNotesEnabled(): boolean {
   return process.env.NEXT_PUBLIC_TUTOR_INK_NOTES !== 'off';
 }
 
+/** SmoothDraw P4: hand-drawn arrows. Dark until the user feel gate passes;
+ *  the close-out flips this to kill-switch (!== 'off'). Call-time read. */
+export function linksEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_TUTOR_LINKS === 'true';
+}
+
 /**
  * All whiteboard tools available to the AI tutor.
  * These are the canonical definitions — convert to platform-specific
  * format using toOpenAITools() or toGeminiTools().
+ *
+ * NOTE on the `tutor_link` entry below: unlike `linksEnabled()`'s other
+ * call sites (checked fresh per call), the conditional spread here runs
+ * ONCE at module-init time — this array is a module-scope const. In the
+ * browser bundle Next.js inlines NEXT_PUBLIC_* env vars at build time, so
+ * that's already a compile-time constant; server-side, process.env is
+ * read once when the module first loads and does not change within a
+ * running process. Both give the same effective answer as a call-time
+ * read here would, so this is not a staleness risk — just noting the
+ * asymmetry with the flag-off check inside mapFunctionCallToCommand,
+ * which IS evaluated per call (and is what actually protects against a
+ * stale brain still emitting tutor_link after a mid-session flag flip).
  */
 export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   {
@@ -1839,6 +1857,21 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
 
+  ...(linksEnabled() ? [{
+    name: 'tutor_link',
+    description: 'Draw a hand-drawn arrow between two things already on the board — for connections, causation, and "this leads to that" moments. Both endpoints use the same target grammar as tutor_scribble (feature or item names visible on the board). Optional short label rides the arrow. Both endpoints must already be rendered; if either cannot be found the arrow is skipped silently, so only reference things you can see in the board state.',
+    parameters: {
+      type: 'object',
+      properties: {
+        from: { type: 'string', description: 'Source feature/item (same grammar as tutor_scribble target).' },
+        to: { type: 'string', description: 'Destination feature/item. The arrowhead lands here.' },
+        label: { type: 'string', description: 'Optional ≤6-word label, hand-written beside the arrow.' },
+        color: { type: 'string', description: 'CSS color. Defaults to amber (#a16207).' },
+      },
+      required: ['from', 'to'],
+    },
+  } as ToolDefinition] : []),
+
   {
     name: 'list_whiteboard_features',
     description: 'Look up the authoritative list of feature names currently on the whiteboard. Call this if you want to scribble but the original show_* tool_results have rolled out of your context. Returns every feature across every rendered item, with the exact names to pass as `target` in tutor_scribble. (To see a COLLAPSED page\'s detail, navigate to it with go_to_page — it expands once you are viewing it.)',
@@ -2756,6 +2789,17 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       // pages. Resolved (fail-open) in the orchestrator's resolveTarget call.
       page: typeof funcArgs.page === 'number' ? funcArgs.page : undefined,
     };
+  }
+
+  if (funcName === 'tutor_link') {
+    if (!linksEnabled()) return null; // stale brain flag-off — silent
+    const from = typeof funcArgs.from === 'string' ? funcArgs.from.trim() : '';
+    const to = typeof funcArgs.to === 'string' ? funcArgs.to.trim() : '';
+    if (!from || !to) return null;
+    const cmd: WhiteboardCommand = { action: 'link', from, to };
+    if (typeof funcArgs.label === 'string' && funcArgs.label.trim()) cmd.label = funcArgs.label.trim();
+    if (typeof funcArgs.color === 'string' && funcArgs.color.trim()) cmd.color = funcArgs.color.trim();
+    return cmd;
   }
 
   if (funcName === 'tutor_scroll_whiteboard') {

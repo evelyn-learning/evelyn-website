@@ -1774,7 +1774,7 @@ export async function exportTutorSessionPDF(
   // bake scribble overlays onto their target item's captured SVG below.
   // scrollTo / newPage / clear / goToPage / removeItems have no PDF
   // representation; discard.
-  const META_PDF_ACTIONS = new Set(['scribble', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems']);
+  const META_PDF_ACTIONS = new Set(['scribble', 'link', 'scrollTo', 'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems']);
   // Two lookup paths for matching scribbles to target items:
   //   - byId keyed on the stamped id ("showSpringMass-1") — preferred
   //   - byIndex keyed on the 1-indexed PDF item position — fallback for
@@ -2287,7 +2287,7 @@ export async function exportTutorSessionPDF(
       // cards (observed 2026-06-22 ear-test: 9 such cards from the [scrollTo,
       // scrollTo, scribble] triples that the auto-scroll-before-scribble path
       // emits). Board-anchored speech's extra scribbling made the gap loud.
-      'scrollTo', 'goToPage', 'openPage', 'scribble', 'highlight',
+      'scrollTo', 'goToPage', 'openPage', 'scribble', 'link', 'highlight',
     ]);
     if (msg.whiteboardCommands && msg.whiteboardCommands.length > 0) {
       for (const cmd of msg.whiteboardCommands) {

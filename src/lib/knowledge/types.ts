@@ -707,6 +707,36 @@ export type WhiteboardCommand =
       label?: string;
     }
   | {
+      // SmoothDraw P4: a hand-drawn arrow connecting two EXISTING items
+      // already on the board — the tutor equivalent of drawing a line
+      // between two things to show a connection or "leads to" relation.
+      // Renders as an SVG overlay, like `scribble`; does not redraw
+      // either endpoint. Tutor-facing addressing: `from`/`to` use the
+      // same target grammar as tutor_scribble's `target`. The
+      // orchestrator resolves both through the WhiteboardCatalog and
+      // stamps the `*Feature`/`*Id` fields below before it reaches the
+      // renderer — those stamps are populated by the resolver, not the
+      // tutor, and are present only when BOTH endpoints resolved
+      // (all-or-nothing; otherwise the command is dropped silently).
+      action: 'link';
+      /** TUTOR-SUPPLIED: raw target grammar string for the arrow's tail. */
+      from: string;
+      /** TUTOR-SUPPLIED: raw target grammar string for the arrow's head. */
+      to: string;
+      /** Optional short label rendered beside the arrow. */
+      label?: string;
+      /** CSS color. Defaults to amber ("#a16207"). */
+      color?: string;
+      /** Resolver output — canonical data-feature name of the tail. */
+      fromFeature?: string;
+      /** Resolver output — id of the item owning the tail feature. */
+      fromId?: string;
+      /** Resolver output — canonical data-feature name of the head. */
+      toFeature?: string;
+      /** Resolver output — id of the item owning the head feature. */
+      toId?: string;
+    }
+  | {
       // Bring an item into view so the tutor can reference it without
       // redrawing. Tutor passes a single `target` string — same shape as
       // tutor_scribble. The handler resolves it via the WhiteboardCatalog
