@@ -1,0 +1,192 @@
+[
+  {
+    "id": "apenglang.the-synthesis-task.mcq.01",
+    "loId": "apenglang.the-synthesis-task",
+    "cedCode": "AP-ENGLANG-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes what a synthesis essay requires a writer to do, distinct from a research report that simply surveys what several sources say?",
+    "choices": [
+      "Select the single most persuasive source among those provided and restate its argument as the essay's own conclusion",
+      "Read several sources on one shared, debatable issue and build an original position that uses them as evidence",
+      "List each source's main point in turn and note where the sources agree or disagree, without committing to a stance",
+      "Summarize the historical background of each source's author before analyzing what the sources argue"
+    ],
+    "answer": "B",
+    "hints": [
+      "A synthesis essay is scored on the writer's OWN argument, not on how thoroughly every source got mentioned.",
+      "Rule out any option that never asks the writer to take a position of their own."
+    ]
+  },
+  {
+    "id": "apenglang.the-synthesis-task.mcq.02",
+    "loId": "apenglang.the-synthesis-task",
+    "cedCode": "AP-ENGLANG-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writing task asks: \"Read the two sources below on whether social media has been beneficial to teenagers, then write an essay that develops your own position, using the sources as support.\" A student instead plans to write one paragraph summarizing what each source says and a closing paragraph noting that people disagree. Which best explains why this plan fails the task as assigned?",
+    "choices": [
+      "The plan fails because it skips a formal title page with full citations for both sources",
+      "The plan uses too few paragraphs to cover both sources, and the introduction falls short of the expected length",
+      "The plan quotes each source too many times, making the essay's use of evidence look disorganized to a reader",
+      "The task asks for the student's own defensible position; the plan only reports each source's content without ever taking a stance"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare what the prompt actually asks for (\"develops your own position\") against what the plan delivers (a report of two sources plus an observation that they disagree).",
+      "Noticing that sources disagree is not the same as arguing what that disagreement means."
+    ]
+  },
+  {
+    "id": "apenglang.citing-attributing-sources.mcq.01",
+    "loId": "apenglang.citing-attributing-sources",
+    "cedCode": "AP-ENGLANG-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis source is labeled: Source B, a city planner, writes, \"Removing street parking to add bike lanes cuts local retail revenue within the first year.\" Which sentence in a student's essay correctly attributes and grammatically integrates this idea?",
+    "choices": [
+      "As Source B's city planner warns, removing street parking for bike lanes \"cuts local retail revenue within the first year,\" a cost that planners rarely mention up front",
+      "\"Removing street parking to add bike lanes cuts local retail revenue within the first year.\" This proves bike lanes are bad policy for any city considering the change",
+      "According to Source A, removing street parking to add bike lanes cuts local retail revenue within the first year, a claim worth taking seriously",
+      "Removing street parking to add bike lanes is well known to cut local retail revenue within the first year, regardless of a city's specific circumstances"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check three things: is the source named in a lead-in, is the quotation exact, and is it grammatically stitched into one sentence rather than standing alone?",
+      "One option credits the idea to the wrong source letter — watch the label carefully."
+    ]
+  },
+  {
+    "id": "apenglang.citing-attributing-sources.mcq.02",
+    "loId": "apenglang.citing-attributing-sources",
+    "cedCode": "AP-ENGLANG-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's draft reads: \"Bike lanes reduce nearby retail revenue in year one. This shows bike-lane expansion needs a revenue-loss offset built into city budgets.\" The first sentence paraphrases a claim from Source B but never says so. Which revision best fixes the missing attribution?",
+    "choices": [
+      "\"Bike lanes reduce nearby retail revenue in year one.\" This shows bike-lane expansion needs a revenue-loss offset built into city budgets",
+      "Bike lanes reduce nearby retail revenue in year one, according to some studies that have looked into the issue over the past several years",
+      "As Source B's city planner reports, bike lanes reduce nearby retail revenue in year one — evidence that expansion plans need a built-in revenue-loss offset",
+      "It is often said that bike lanes reduce nearby retail revenue in year one, though no particular source is ever named for the claim"
+    ],
+    "answer": "C",
+    "hints": [
+      "Paraphrase needs attribution too, even without quotation marks — adding quote marks alone does not name a source.",
+      "Look for the option that names the specific source, not just a vague 'some studies' or 'it is said.'"
+    ]
+  },
+  {
+    "id": "apenglang.position-across-sources.mcq.01",
+    "loId": "apenglang.position-across-sources",
+    "cedCode": "AP-ENGLANG-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt provides: Source A: \"Standardized tests give every applicant an identical, objective measure to be judged by.\" Source B: \"Test-prep coaching that costs thousands of dollars means the 'objective' score mostly measures a family's bank account.\" Which thesis takes the most defensible position ACROSS both sources, rather than simply repeating one side?",
+    "choices": [
+      "Source A argues standardized tests are objective, while Source B argues they are not",
+      "A test billed as an objective measure stops being one once unequal access to coaching lets wealth, not ability, decide the score",
+      "Standardized tests are the fairest tool available for judging every college applicant on equal footing",
+      "Whether standardized tests are fair or unfair depends entirely on one's perspective on the issue"
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the strip test: remove the source references from each option — does a real, arguable claim survive?",
+      "Rule out any option that only restates what one source says, and any option that just names disagreement without taking a side."
+    ]
+  },
+  {
+    "id": "apenglang.position-across-sources.mcq.02",
+    "loId": "apenglang.position-across-sources",
+    "cedCode": "AP-ENGLANG-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's draft thesis reads: \"Some people think homework helps students learn, and other sources think it just adds stress, so it really just depends on the student.\" Which revision converts this into a defensible, arguable position rather than a description of disagreement?",
+    "choices": [
+      "Homework helps learning only when its length is matched to a subject's actual practice needs; past that point, it adds stress without adding retention",
+      "It is hard to say for certain whether homework helps or hurts, since reasonable people disagree about its value",
+      "Sources disagree on whether homework helps or hurts, and both sides make valid points worth considering",
+      "Homework has both benefits and drawbacks, as shown by the differing sources provided"
+    ],
+    "answer": "A",
+    "hints": [
+      "A defensible position commits to a claim a reader could argue against; \"it depends\" has no real opposite to push back on.",
+      "Look for the option that states a specific mechanism (what makes homework help vs. hurt), not just that both effects exist."
+    ]
+  },
+  {
+    "id": "apenglang.integrating-evidence.mcq.01",
+    "loId": "apenglang.integrating-evidence",
+    "cedCode": "AP-ENGLANG-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student drafts: \"Source A says urban gardens increase neighborhood property values. Source B also discusses gardens, noting that garden upkeep often falls on volunteer labor that eventually burns out. Both sources talk about community gardens.\" Which revision replaces this book-report paragraph with one that integrates both sources as evidence for a single claim?",
+    "choices": [
+      "Source A discusses property values from gardens, and then Source B discusses volunteer burnout, so both angles are worth knowing",
+      "Urban gardens are a clear net benefit to neighborhoods because they increase nearby property values",
+      "Community gardens are a complicated issue that involves both benefits and costs for a neighborhood",
+      "Community gardens raise property values only as long as someone keeps tending them, so a value gain that Source A celebrates is fragile precisely because Source B shows the volunteer labor sustaining it tends to burn out"
+    ],
+    "answer": "D",
+    "hints": [
+      "The delete test: in a book-report paragraph, any sentence can be removed without weakening an argument, because there isn't one — look for the option where removing either source's detail would actually weaken the claim.",
+      "The winning revision states a claim first and then uses each source's detail to support that same claim, rather than narrating each source in turn."
+    ]
+  },
+  {
+    "id": "apenglang.integrating-evidence.mcq.02",
+    "loId": "apenglang.integrating-evidence",
+    "cedCode": "AP-ENGLANG-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft paragraph reads: \"Source A reports that reducing lunch periods to twenty minutes doesn't affect how much food students eat. Source B reports that students who eat lunch in under twenty minutes make significantly more trips to the nurse's office with stomachaches. The schools have short lunch periods.\" Which revision most effectively integrates both sources as evidence for one claim, rather than narrating each source in turn?",
+    "choices": [
+      "Both Source A and Source B examine twenty-minute lunch periods, one from a food-quantity angle and the other from a health angle",
+      "Rushed lunch periods clearly damage student health, as the spike in nurse visits shows",
+      "A twenty-minute lunch period may not shrink how much food students eat, but Source B's spike in stomachache visits suggests it changes how safely they eat it — the real cost isn't quantity, it's the body's ability to handle a rushed meal",
+      "Source A's finding about food quantity and Source B's finding about stomachaches are both relevant considerations for schools to weigh"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the option that states one claim and uses BOTH sources' details as proof for it, rather than listing what each source found.",
+      "A paragraph that just says both findings are 'relevant' or 'worth knowing' has no claim of its own yet."
+    ]
+  },
+  {
+    "id": "apenglang.synthesis-line-of-reasoning.mcq.01",
+    "loId": "apenglang.synthesis-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's thesis is: \"A city's ban on single-use plastic bags succeeds only when paired with an affordable, accessible alternative.\" Which roadmap sentence for the essay's body paragraphs is organized by REASON rather than by source?",
+    "choices": [
+      "This essay will first examine what Source A says about the ban, then what Source B says about it, and finally what Source C adds",
+      "The ban must first change habits at the point of sale, then survive the cost burden on low-income shoppers, and finally hold up against enforcement gaps that let large retailers ignore it",
+      "Paragraph one will cover the city council's report, paragraph two will cover the retailer survey, and paragraph three will cover the consumer interviews",
+      "This essay will look at several different viewpoints on the plastic bag ban before reaching a conclusion"
+    ],
+    "answer": "B",
+    "hints": [
+      "A by-reason roadmap names the logical steps of the ARGUMENT, not which source gets covered in which paragraph.",
+      "Organizing by source, even when the sources are named clearly, tends to collapse an essay back into a source-by-source summary."
+    ]
+  },
+  {
+    "id": "apenglang.synthesis-line-of-reasoning.mcq.02",
+    "loId": "apenglang.synthesis-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis essay argues that food-delivery apps have reshaped small-restaurant economics. Paragraph 2 has just shown that delivery apps expand a restaurant's reach beyond its neighborhood. Which transition sentence best opens paragraph 3 by connecting to a NEXT REASON, rather than announcing a switch to a new source?",
+    "choices": [
+      "That expanded reach comes at a cost, though, once the delivery platform's commission is subtracted from every new order it brings in",
+      "Turning now to Source C, which surveyed restaurant owners directly about delivery fees, a different picture emerges",
+      "As shown above, delivery apps expand a restaurant's reach beyond its neighborhood",
+      "Restaurants have used many different marketing strategies over the past decade to attract new customers"
+    ],
+    "answer": "A",
+    "hints": [
+      "A strong transition connects the reasoning of paragraph 2 to a new, escalating point — it does not announce which source is coming up next.",
+      "Rule out the option that just restates paragraph 2's point without moving the argument forward."
+    ]
+  }
+]

@@ -1,0 +1,173 @@
+[
+  {
+    "id": "apenglang.reasoning-and-paragraphing.mcq.01",
+    "loId": "apenglang.reasoning-and-paragraphing",
+    "cedCode": "AP-ENGLANG-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's body paragraph opens with the sentence \"This paragraph is about how our school picked its new mascot.\" Which revision best turns this into an effective topic sentence?",
+    "choices": [
+      "This paragraph is about how our school picked its new mascot, a decision made several years ago.",
+      "Mascots have been a meaningful part of school spirit at many schools for decades.",
+      "The mascot-selection process reveals whose voices the administration actually listens to when a decision affects the whole student body.",
+      "In the paragraph that follows, more details about the mascot-selection process will be given."
+    ],
+    "answer": "C",
+    "hints": [
+      "A topic sentence must make a claim the paragraph goes on to support, not just name a subject.",
+      "Ask: does this sentence assert something a reader could disagree with, or does it only announce a topic?"
+    ]
+  },
+  {
+    "id": "apenglang.reasoning-and-paragraphing.mcq.02",
+    "loId": "apenglang.reasoning-and-paragraphing",
+    "cedCode": "AP-ENGLANG-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph opens with the topic sentence \"The new attendance policy is unfair to students who have long commutes,\" but the paragraph then also argues, linked by \"In addition,\" that the cafeteria menu needs more vegetarian options. Which revision best fixes this paragraph's structure?",
+    "choices": [
+      "Split the paragraph into two paragraphs, each opening with its own topic sentence — one on the attendance policy, one on the cafeteria menu.",
+      "Replace \"In addition\" with \"Furthermore\" so the two ideas connect more smoothly.",
+      "Delete the topic sentence about the attendance policy so the paragraph can focus only on the cafeteria menu.",
+      "Add one more sentence at the end that introduces a third, related complaint about school policy."
+    ],
+    "answer": "A",
+    "hints": [
+      "A transition word can make two sentences read smoothly without making them the same idea.",
+      "Ask whether the paragraph's job can be stated in a single sentence without joining two unrelated claims with \"and.\""
+    ]
+  },
+  {
+    "id": "apenglang.unity-and-coherence.mcq.01",
+    "loId": "apenglang.unity-and-coherence",
+    "cedCode": "AP-ENGLANG-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph argues that the school's new phone policy has improved focus in class. Its four sentences are: (1) \"Since the policy took effect, teachers report noticeably fewer distracted students during lectures.\" (2) \"Test scores in first-period classes have also risen slightly this semester.\" (3) \"Phones have been a controversial topic in schools nationwide for over a decade.\" (4) \"Even students who once relied on phones for note-taking have adapted by using paper notebooks instead.\" Which sentence should be cut to preserve the paragraph's unity?",
+    "choices": [
+      "\"Since the policy took effect, teachers report noticeably fewer distracted students during lectures.\"",
+      "\"Even students who once relied on phones for note-taking have adapted by using paper notebooks instead.\"",
+      "\"Test scores in first-period classes have also risen slightly this semester.\"",
+      "\"Phones have been a controversial topic in schools nationwide for over a decade.\""
+    ],
+    "answer": "D",
+    "hints": [
+      "Trace each sentence back to the paragraph's claim about improved focus at this school — does it support that specific claim?",
+      "A sentence about a nationwide, general controversy is not automatically evidence for a specific claim about this school's policy."
+    ]
+  },
+  {
+    "id": "apenglang.unity-and-coherence.mcq.02",
+    "loId": "apenglang.unity-and-coherence",
+    "cedCode": "AP-ENGLANG-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph's topic sentence claims that the school's volunteer-hour requirement pushes students toward shallow, resume-driven service. One body sentence reads: \"Some students who complete their hours end up finding causes they genuinely care about long after the requirement ends.\" A peer suggests fixing the paragraph by rewording this sentence to sound more critical of the requirement. Which revision best addresses the actual problem with this sentence?",
+    "choices": [
+      "Reword the sentence with harsher language criticizing the requirement, while keeping its content the same.",
+      "Cut the sentence entirely, since it supports the opposite of the paragraph's claim rather than merely needing sharper wording.",
+      "Add a transition word before the sentence so it connects more smoothly to the sentences around it.",
+      "Move the sentence to the very end of the paragraph so it can serve as a concluding thought."
+    ],
+    "answer": "B",
+    "hints": [
+      "A digression is a problem with WHAT a sentence is doing there, not how it is phrased.",
+      "Ask whether this sentence, however it's worded, actually supports the paragraph's stated claim."
+    ]
+  },
+  {
+    "id": "apenglang.unity-and-coherence.mcq.03",
+    "loId": "apenglang.unity-and-coherence",
+    "cedCode": "AP-ENGLANG-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph's topic sentence claims that the school's new locker-assignment lottery is unfair. One body sentence reads: \"Students have used school lockers to store books and coats for generations.\" A student defends keeping this sentence by saying it's still about lockers, so it belongs in the paragraph. Which response best explains why this sentence still breaks the paragraph's unity?",
+    "choices": [
+      "Being about the same general subject (lockers) is not the same as supporting the paragraph's specific claim about the lottery's unfairness.",
+      "The sentence is factually inaccurate, and inaccurate sentences always break a paragraph's unity regardless of their subject.",
+      "The sentence uses passive voice throughout, and passive constructions inherently weaken any paragraph's persuasive force.",
+      "The sentence is grammatically disconnected from the sentence that follows it, so the two sentences do not flow smoothly together."
+    ],
+    "answer": "A",
+    "hints": [
+      "The test for unity is not \"is this about the same subject\" but \"does this support the paragraph's specific claim.\"",
+      "A true, on-topic sentence can still be a digression if it answers a different question than the paragraph is asking."
+    ]
+  },
+  {
+    "id": "apenglang.transitions-cohesion.mcq.01",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Draft: \"Standardized tests often fail to capture creativity or critical thinking. Therefore, they can still provide a useful, consistent measure for comparing schools across a large district.\" Which revision best fixes the logical relationship signaled by \"Therefore\"?",
+    "choices": [
+      "Keep \"Therefore,\" since the second sentence is a direct result of the first.",
+      "Replace \"Therefore\" with \"For instance,\" since the second sentence gives a specific example of the first.",
+      "Replace \"Therefore\" with \"Similarly,\" since both sentences make the same point about testing.",
+      "Replace \"Therefore\" with an \"even though\" construction that signals a concession — the second sentence holds despite the problem named in the first, not because of it."
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Therefore\" claims the second idea follows logically from the first — check whether that's really the relationship here.",
+      "The second sentence acknowledges a problem and then argues a benefit persists despite it — that's a concession, not a consequence."
+    ]
+  },
+  {
+    "id": "apenglang.transitions-cohesion.mcq.02",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Draft: \"The town council spent months gathering public comment on the new bike lanes. ___, they installed the lanes exactly as originally proposed, without a single change.\" Which transition best fills the blank, given that the outcome contradicts what all that public comment would lead a reader to expect?",
+    "choices": [
+      "Yet — signals a contrast between the extensive public input and an outcome that ignored it.",
+      "As a result — signals that the installation follows naturally from the months of public comment.",
+      "In the meantime — signals that two things are happening on the same timeline.",
+      "Similarly — signals that the two sentences describe comparable situations."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what relationship actually holds between \"gathering public comment\" and \"no changes were made.\"",
+      "A transition should announce the logical relationship that's really there, not just any smooth-sounding connector."
+    ]
+  },
+  {
+    "id": "apenglang.organizing-for-effect.mcq.01",
+    "loId": "apenglang.organizing-for-effect",
+    "cedCode": "AP-ENGLANG-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is drafting an essay arguing that a school's mentorship program should be expanded, using these three points: (1) \"Students paired with an upperclassman mentor report feeling more supported at school.\" (2) \"Critics worry that expansion will overburden teachers, but the mentors are volunteers who set their own limited hours.\" (3) \"The program already has a concrete recruiting plan ready to bring in the additional mentors expansion would require.\" Which order of these three points, presented as topic sentences in that sequence, best builds toward a climax that leaves the reader with no remaining objection to expansion?",
+    "choices": [
+      "(3), then (1), then (2)",
+      "(2), then (3), then (1)",
+      "(1), then (2), then (3)",
+      "(3), then (2), then (1)"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start with evidence the program works, then remove the reader's likely objection, then close with why acting on it is easy.",
+      "Ask what would be lost if these three points were shuffled into a different order — the strongest closing point should make expansion feel immediately achievable."
+    ]
+  },
+  {
+    "id": "apenglang.organizing-for-effect.mcq.02",
+    "loId": "apenglang.organizing-for-effect",
+    "cedCode": "AP-ENGLANG-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student drafts a persuasive essay's conclusion first — \"The school must extend the library's hours immediately\" — and plans to place this sentence at the very beginning of the essay, before presenting any evidence, reasoning that the boldest claim should come first to grab attention. Which revision of this organizing decision is best supported by the principle that order itself produces a rhetorical effect?",
+    "choices": [
+      "Keep the claim first, since a bold opening claim is always more persuasive than one that arrives after supporting points.",
+      "Move the claim to the end, after presenting evidence of need and refuting the cost objection, so it lands as an earned conclusion.",
+      "Repeat the claim at both the beginning and the end of the essay so that no reader can miss it.",
+      "Remove the claim from the essay entirely and let the evidence imply the conclusion without ever stating it directly."
+    ],
+    "answer": "B",
+    "hints": [
+      "Directness is not the same as persuasiveness — ask what the audience needs to hear before they'll accept the conclusion.",
+      "A claim placed after the evidence and the rebuttal lands as earned; the same claim placed first lands as an unsupported demand."
+    ]
+  }
+]

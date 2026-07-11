@@ -1,0 +1,202 @@
+[
+  {
+    "id": "apworld.silk-roads.mcq.01",
+    "loId": "apworld.silk-roads",
+    "cedCode": "AP-APWORLD-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-kinsay.v1",
+    "problemText": "In The Travels, Marco Polo describes the Chinese city of Kinsay (Hangzhou) around 1300, writing that on every market-day \"all those squares are thronged and crammed with purchasers, and with the traders who have brought in stores of provisions by land or water\". This description is best used as evidence that —",
+    "choices": [
+      "Chinese commercial cities declined sharply once they came under Mongol rule after 1200",
+      "Kinsay was a hub of sustained large-scale commerce in the Silk Roads network",
+      "Overland caravan trade had entirely replaced maritime shipping into Chinese ports by 1300",
+      "Foreign merchants were formally barred from trading directly in major Yuan-era Chinese cities"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what the sheer scale of buying and selling in Kinsay's markets, described on an ordinary market day, reveals about China's place in Afro-Eurasian trade networks around 1300.",
+      "Rule out any answer describing decline, isolation, or the disappearance of overland trade — the passage describes routine, thriving commerce."
+    ]
+  },
+  {
+    "id": "apworld.silk-roads.mcq.02",
+    "loId": "apworld.silk-roads",
+    "cedCode": "AP-APWORLD-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-kinsay.v1",
+    "problemText": "Marco Polo, a Venetian merchant, writes that Kinsay's markets were so crowded that \"no one would believe it possible that victuals enough could be provided for their consumption\" unless they saw the scene themselves. This phrasing most directly reflects which point about Marco Polo's perspective as a source?",
+    "choices": [
+      "He assumed European readers lacked a comparable frame of reference for such scale",
+      "He served as a Mongol tax official reporting Kinsay's market revenue to Kublai Khan",
+      "He had never personally traveled to Kinsay and relied entirely on secondhand rumors",
+      "He wrote the passage as a private diary entry never intended for any audience"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice Marco Polo frames the market's scale as something readers would need to see with their own eyes to believe.",
+      "Think about who Marco Polo was writing for — a European audience with no direct experience of a city like Kinsay."
+    ]
+  },
+  {
+    "id": "apworld.indian-ocean-trade.mcq.01",
+    "loId": "apworld.indian-ocean-trade",
+    "cedCode": "AP-APWORLD-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-ibn-battuta-kilwa.v1",
+    "problemText": "Ibn Battuta describes the East African coastal town he calls \"Kulwa\" (Kilwa) around 1330: \"Kulwa is a very fine and substantially built town, and all its buildings are of wood.\" This description is best used as evidence for which development in the Indian Ocean trade network, 1200-1450?",
+    "choices": [
+      "The decline of East African coastal trade following Portuguese arrival in the region",
+      "The dominance of overland caravan routes over all Indian Ocean maritime commerce by 1300",
+      "The wealth port cities on the Indian Ocean network's African terminus had accumulated",
+      "The abandonment of Swahili coastal cities entirely in favor of inland farming settlements"
+    ],
+    "answer": "C",
+    "hints": [
+      "Kilwa sits at the East African end of the Indian Ocean network — think about what generated a 'fine and substantially built' town there.",
+      "Rule out answers describing decline or land-based (not maritime) trade dominance."
+    ]
+  },
+  {
+    "id": "apworld.indian-ocean-trade.mcq.02",
+    "loId": "apworld.indian-ocean-trade",
+    "cedCode": "AP-APWORLD-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-ibn-battuta-kilwa.v1",
+    "problemText": "Ibn Battuta adds of Kulwa (Kilwa) that \"Its inhabitants are constantly engaged in military expeditions, for their country is contiguous to the heathen Zanj.\" This detail is best explained by which historical situation facing Swahili coast city-states in this period?",
+    "choices": [
+      "Kilwa's rulers had converted to Christianity and fought religious wars against Muslim neighbors",
+      "Mongol expansion had pushed nomadic raiders as far south as the East African coast",
+      "European colonial administrations of the sixteenth century required Swahili cities to maintain large standing armies",
+      "Wealthy cities like Kilwa bordered non-Muslim inland peoples and had to defend their wealth"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what wealthy coastal trading cities would need to defend against non-Muslim inland neighbors.",
+      "'Zanj' refers to non-Muslim African peoples inland from the coast, not a European power."
+    ]
+  },
+  {
+    "id": "apworld.trans-saharan-trade.mcq.01",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-mansa-musa.v1",
+    "problemText": "Al-Umari reports that during Mansa Musa's 1324 stop in Cairo, the Cairenes \"exchanged gold until they depressed its value in Egypt and caused its price to fall.\" This effect is best explained by which cause?",
+    "choices": [
+      "Egyptian merchants had discovered a new gold mine near Cairo shortly before Mansa Musa's arrival",
+      "Mansa Musa distributed such an enormous quantity of gold that Cairo's supply suddenly increased",
+      "The Mamluk government deliberately devalued its currency to reduce Mali's political influence in Egypt",
+      "Trans-Saharan trade routes had closed, cutting off Cairo's usual gold supply from the south"
+    ],
+    "answer": "B",
+    "hints": [
+      "A sudden crash in gold's price means gold suddenly became much more abundant in Cairo — where did that gold come from?",
+      "Mansa Musa's hajj is famous for the sheer volume of gold he gave away along the way."
+    ]
+  },
+  {
+    "id": "apworld.trans-saharan-trade.mcq.02",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-catalan-atlas.v1",
+    "problemText": "The Catalan Atlas (1375), made by the Majorcan cartographer Abraham Cresques for the king of Aragon, captions its image of Mansa Musa as \"this king is the richest and most noble lord of all this region on account of the abundance of gold that is gathered in his land.\" This caption most directly reflects which point about the map as a historical source?",
+    "choices": [
+      "It shows that Mali's gold wealth was already widely known across Europe by the late 1300s",
+      "It proves that Cresques personally traveled to Mali to verify Mansa Musa's wealth firsthand",
+      "It demonstrates that Aragon and Mali had signed a formal trade treaty guaranteeing gold shipments",
+      "It shows that most European mapmakers of this era considered West Africa unimportant to Mediterranean commerce"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Catalan Atlas was made in Europe, for a European king, decades after Mansa Musa's famous 1324 hajj through Cairo.",
+      "Ask what the caption's emphasis on gold reveals about how Europeans had come to view West Africa."
+    ]
+  },
+  {
+    "id": "apworld.mongol-empire.mcq.01",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-yam.v1",
+    "problemText": "Marco Polo describes the Great Khan's messengers finding \"at every twenty-five miles of the journey a station which they call Yamb, or, as we should say, the Horse-Post-House.\" This relay system most directly contributed to which development across Mongol-controlled Eurasia, 1200-1450?",
+    "choices": [
+      "The permanent unification of the four khanates under a single Mongol emperor after 1260",
+      "The replacement of overland Silk Roads trade with Indian Ocean maritime routes",
+      "Mass conversion of the Mongol elite to Christianity spread by traveling missionaries",
+      "The Pax Mongolica's relative safety and speed of long-distance communication across the empire"
+    ],
+    "answer": "D",
+    "hints": [
+      "A relay of fresh horses and lodging every 25 miles is built for speed and reliability of communication over enormous distances.",
+      "Connect the yam system to the broader Pax Mongolica idea covered in this unit."
+    ]
+  },
+  {
+    "id": "apworld.mongol-empire.mcq.02",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-yam.v1",
+    "problemText": "Marco Polo adds that at yam stations, messengers \"find all the rooms furnished with fine beds and all other necessary articles in rich silk\". Read alongside accounts of the extreme violence Mongol armies used against resisting cities, this description of yam-station comfort best illustrates which point about the Mongol Empire?",
+    "choices": [
+      "Mongol rulers spent lavishly on messengers while leaving the general population without resources",
+      "The yam system existed only in regions the Mongols had not yet fully conquered",
+      "The same empire capable of brutal conquest also invested heavily in effective, pragmatic administration",
+      "Mongol administrators imported all luxury goods from conquered Song China rather than producing them locally"
+    ],
+    "answer": "C",
+    "hints": [
+      "Contrast the violence of Mongol conquest with the investment shown in comfortable, well-supplied relay stations.",
+      "The question is about what kind of empire the Mongols built after conquest, not about the conquest itself."
+    ]
+  },
+  {
+    "id": "apworld.cultural-diffusion.mcq.01",
+    "loId": "apworld.cultural-diffusion",
+    "cedCode": "AP-APWORLD-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-paper-money.v1",
+    "problemText": "Marco Polo reports that Yuan paper money was \"issued with as much solemnity and authority as if they were of pure gold or silver\", with officials' seals stamped on every sheet. Carried back to Europe, this account of Chinese paper currency best illustrates which broader pattern in the period 1200-1450?",
+    "choices": [
+      "Trade networks carried not just goods but also knowledge of commercial technologies across regions",
+      "European merchants had already adopted paper currency well before contact with Yuan China",
+      "The Mongols quickly suppressed all pre-existing Chinese financial practices they encountered after conquest",
+      "Silver and gold coinage had been fully abandoned across Afro-Eurasia by the late 1200s"
+    ],
+    "answer": "A",
+    "hints": [
+      "Paper money is a commercial technology, not a good like silk or gold — think about what else besides goods moved along trade networks.",
+      "Marco Polo is reporting something novel to him back to a European audience."
+    ]
+  },
+  {
+    "id": "apworld.cultural-diffusion.mcq.02",
+    "loId": "apworld.cultural-diffusion",
+    "cedCode": "AP-APWORLD-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-black-death.v1",
+    "problemText": "Boccaccio writes that the plague reaching Florence in 1348 \"had had its origin some years before in the East\" before, as he writes, it \"had spread into the West.\" This account is best explained by which cause?",
+    "choices": [
+      "Deliberate biological warfare waged by Mongol armies against Italian city-states",
+      "A sudden collapse of Silk Roads trade that stranded infected merchants in Italian ports",
+      "The same well-traveled trade routes that carried goods across Afro-Eurasia also carried disease",
+      "An independent outbreak of disease that arose separately and simultaneously within Florence itself"
+    ],
+    "answer": "C",
+    "hints": [
+      "The unit's key point is that the same routes carrying goods across Afro-Eurasia could carry disease too — think about what physically enabled the plague's westward spread.",
+      "Rule out any answer involving deliberate human action (warfare) or a coincidental, unconnected outbreak."
+    ]
+  }
+]

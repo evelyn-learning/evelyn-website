@@ -50,6 +50,8 @@ export interface IProblemBank extends Document {
   /** OPTIONAL CED code (e.g. AP-Stats "AP-STATS-1.10", most-specific topic
    *  level). Tagged on LO-aligned ingested content alongside `loId`. */
   cedCode?: string;
+  /** Optional shared stimulus passage this prompt analyzes (passages/store). */
+  passageId?: string;
   /** Canonical problem statement, ready for show_problem. May
    *  contain LaTeX; markdown allowed. */
   problemText: string;
@@ -93,6 +95,7 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     loId: { type: String },
     topicId: { type: String },
     cedCode: { type: String },
+    passageId: { type: String, required: false },
     problemText: { type: String, required: true },
     answer: { type: String, required: true },
     hints: [{ type: String }],

@@ -1,0 +1,385 @@
+[
+  {
+    "id": "apenglang.rhetorical-situation.mcq.01",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "In the opening line \"Fellow-citizens, pardon me, allow me to ask, why am I called upon to speak here to-day?\", Douglass's question primarily works to —",
+    "choices": [
+      "lighten the mood with a modest joke about the discomfort of public speaking before a large festive crowd",
+      "set up a detailed and orderly summary of the historical events that eventually led to the drafting of the Declaration of Independence",
+      "call attention to his own uneasy standing as an invited speaker whose relationship to the day being celebrated is itself in doubt",
+      "orient the listeners by describing the physical arrangement of the hall and the platform from which he now speaks"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice that Douglass questions his own right to be on this stage before he says anything else.",
+      "Think about which element of the rhetorical situation — speaker, audience, purpose, or context — this opening move foregrounds."
+    ]
+  },
+  {
+    "id": "apenglang.audience-context.mcq.01",
+    "loId": "apenglang.audience-context",
+    "cedCode": "AP-ENGLANG-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass asks his largely white, mostly sympathetic audience: \"Are the great principles of political freedom and of natural justice, embodied in that Declaration of Independence, extended to us?\" Posing this as a question rather than a flat statement primarily —",
+    "choices": [
+      "requests specific factual information about the Declaration that Douglass himself genuinely does not yet possess",
+      "invites the audience to confront, within their own professed values, a contradiction they would prefer to leave unexamined",
+      "flatters the audience's existing patriotism by affirming that the founding principles clearly extend to every single person",
+      "shifts the responsibility for answering the moral question onto future historians rather than the listeners seated before him"
+    ],
+    "answer": "B",
+    "hints": [
+      "Douglass already knows the answer — so why ask instead of simply telling them?",
+      "Consider what a direct question demands of a listener that a flat assertion does not."
+    ]
+  },
+  {
+    "id": "apenglang.reading-for-claim.mcq.01",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "The sentence \"This Fourth of July is yours, not mine. You may rejoice, I must mourn.\" most directly supports which claim?",
+    "choices": [
+      "The liberties and ideals celebrated on Independence Day do not extend equally to enslaved Americans as they do to free citizens",
+      "Douglass privately holds a general personal distaste for patriotic holidays and for public celebrations of nearly every kind throughout the year",
+      "Slavery had in fact already been abolished nationwide by the time Douglass delivered these particular remarks to the crowd",
+      "The audience ought to abandon the celebration of national holidays entirely and replace them all with days of mourning"
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on the contrast between 'yours' and 'mine' — whose independence is actually being celebrated?"
+    ]
+  },
+  {
+    "id": "apenglang.evidence-commentary.mcq.01",
+    "loId": "apenglang.evidence-commentary",
+    "cedCode": "AP-ENGLANG-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass writes, \"your celebration is a sham; your boasted liberty, an unholy license.\" This string of parallel accusations functions as evidence for his claim primarily by —",
+    "choices": [
+      "supplying precise statistical data about the exact number of enslaved people held across all of the celebrating states that year",
+      "offering a fair counterargument in the nation's defense that Douglass intends to concede and then gently refute",
+      "citing the specific legal statute governing slavery in order to ground the accusation in documented federal law",
+      "rapidly accumulating parallel indictments so that each mirrored phrase intensifies the last, hammering the charge of national hypocrisy"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the grammatical pattern: 'your X, [negative] Y' repeated. What effect does repeating that pattern have on the reader?"
+    ]
+  },
+  {
+    "id": "apenglang.defensible-thesis.mcq.01",
+    "loId": "apenglang.defensible-thesis",
+    "cedCode": "AP-ENGLANG-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Which of the following thesis statements about this excerpt is most defensible — that is, makes an arguable claim supported by the text rather than merely restating a fact?",
+    "choices": [
+      "Frederick Douglass delivered this address to an audience in Rochester, New York, on the fifth day of July in 1852",
+      "Through sustained rhetorical questions and stark antithesis, Douglass exposes the hypocrisy of celebrating national liberty in a nation that still enslaves millions",
+      "Over the course of the excerpt, Douglass refers several times to the Declaration of Independence and the principles set down within it",
+      "The passage is composed of a number of unusually long sentences, several of which stretch across many successive clauses"
+    ],
+    "answer": "B",
+    "hints": [
+      "A defensible thesis makes a claim someone could reasonably argue against — a date or a topic mention cannot be argued with."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-situation.mcq.02",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass exclaims, \"Would to God, both for your sakes and ours, that an affirmative answer could be truthfully returned to these questions!\" This exclamation, addressed directly to the audience early in the speech, most clearly reveals which element of the rhetorical situation?",
+    "choices": [
+      "It reveals Douglass's particular religious denomination and the specific church community to which he personally belonged",
+      "It reveals the physical location and the architecture of the hall in which the address is being delivered to the crowd",
+      "It reveals the exact calendar date on which Douglass sat down to compose and revise the full text of this speech",
+      "It reveals the exigence: the urgent problem driving the speech is precisely that no affirmative answer can truthfully be returned"
+    ],
+    "answer": "D",
+    "hints": [
+      "The exigence is the problem or urgency that calls a piece of writing or speech into being.",
+      "Ask what Douglass wishes were true, and why the fact that it isn't true is the whole reason he is speaking."
+    ]
+  },
+  {
+    "id": "apenglang.audience-context.mcq.02",
+    "loId": "apenglang.audience-context",
+    "cedCode": "AP-ENGLANG-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass asks, \"For who is there so cold, that a nation's sympathy could not warm him?\" By posing this and similar questions about universal human feeling before revealing his own answer, Douglass primarily —",
+    "choices": [
+      "proves that every single listener seated in the room already fully agrees with the argument he is about to make",
+      "offers a courteous apology for taking up so much of the audience's valuable time on a festive national holiday",
+      "builds common ground with values the audience proudly claims before turning those very values against their present complacency",
+      "introduces a substantial body of statistical evidence about shifts in national public opinion toward the institution of slavery"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice he is describing feelings his audience would proudly claim to have — before pivoting to why those feelings haven't extended to enslaved people."
+    ]
+  },
+  {
+    "id": "apenglang.evidence-commentary.mcq.02",
+    "loId": "apenglang.evidence-commentary",
+    "cedCode": "AP-ENGLANG-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "The sentence \"You may rejoice, I must mourn.\" is short and grammatically balanced (two brief clauses, mirrored structure). This parallel structure primarily serves to —",
+    "choices": [
+      "sharpen the contrast between the audience's celebration and Douglass's grief so that the divide between them becomes impossible to miss",
+      "deliberately confuse the members of the audience about which of the two speakers is actually delivering the line at this particular moment",
+      "quietly suggest that Douglass secretly hopes he is mistaken and that the audience will prove his own grief unfounded",
+      "provide a smooth grammatical transition into an entirely unrelated topic that Douglass takes up in the following paragraph"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read the two clauses side by side — what word changes, and what does that single change emphasize?"
+    ]
+  },
+  {
+    "id": "apenglang.reading-for-claim.mcq.02",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass calls the crowd's \"shouts of liberty and equality\" a \"hollow mockery.\" Identifying these shouts as a \"hollow mockery\" most directly supports which claim?",
+    "choices": [
+      "That Douglass fundamentally opposes the concepts of liberty and equality and regards them as unworthy national ideals",
+      "That members of the audience are literally jeering at and mocking Douglass to his face as he stands and speaks",
+      "That liberty and equality are inherently contradictory ideas that no nation anywhere on earth could ever truly manage to uphold at once",
+      "That the language of liberty and equality, as voiced by a slaveholding nation, has been emptied of its meaning for the enslaved"
+    ],
+    "answer": "D",
+    "hints": [
+      "'Hollow' describes something whose outer form remains but whose substance is missing. What substance is Douglass saying is missing here, and for whom?"
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-situation.mcq.03",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass opens by addressing the crowd as \"Fellow-citizens\" while later insisting \"This Fourth of July is yours, not mine.\" Read together, this opening address is best understood as —",
+    "choices": [
+      "an ironic gesture that draws pointed attention to the very citizenship that Douglass and enslaved people are in fact denied",
+      "a sincere and wholly untroubled claim of full civic belonging that Douglass shares equally with everyone gathered in the hall before him",
+      "a simple formal greeting, conventional to public addresses, that carries no argumentative weight or deeper implication at all",
+      "a specific reference to the naturalization papers through which Douglass had formally secured his legal citizenship years earlier"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether 'fellow-citizens' can really describe Douglass's legal and social status in 1852, given what he says two paragraphs later."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-situation.mcq.04",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry opens, \"Mr. President, it is natural to man to indulge in the illusions of hope. We are apt to shut our eyes against a painful truth, and listen to the song of that siren till she transforms us into beasts.\" This extended metaphor comparing false hope to a mythological siren's song primarily functions to —",
+    "choices": [
+      "praise his fellow delegates for the optimism they have shown about the prospect of reconciliation with Great Britain",
+      "warn his fellow delegates that yielding to comforting hope, instead of facing painful facts, will steadily degrade their judgment",
+      "recount, in vivid and specific detail, an actual perilous sea voyage that Henry himself once undertook and barely survived",
+      "argue that the study of Greek mythology ought to hold a central place in the schooling and curriculum of the colonies"
+    ],
+    "answer": "B",
+    "hints": [
+      "A siren's song is famous for sounding pleasant while leading sailors to ruin — map that onto 'illusions of hope.'"
+    ]
+  },
+  {
+    "id": "apenglang.reading-for-claim.mcq.03",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry states, \"I have but one lamp by which my feet are guided, and that is the lamp of experience. I know of no way of judging of the future but by the past.\" This statement most directly supports which claim about Henry's argumentative method?",
+    "choices": [
+      "That Henry openly admits he cannot support his argument with any real evidence at all and is merely guessing at future outcomes",
+      "That Henry relies solely on heated emotional appeals to fear rather than on any form of reasoning from evidence",
+      "That Henry grounds his prediction of continued British hostility in the documented record of past events rather than in mere speculation",
+      "That Henry claims a kind of supernatural foresight allowing him to perceive future events that remain hidden from other men"
+    ],
+    "answer": "C",
+    "hints": [
+      "A 'lamp of experience' is a metaphor for a method — ask what kind of evidence that method points toward."
+    ]
+  },
+  {
+    "id": "apenglang.evidence-commentary.mcq.03",
+    "loId": "apenglang.evidence-commentary",
+    "cedCode": "AP-ENGLANG-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry lists, \"We have petitioned; we have remonstrated; we have supplicated; we have prostrated ourselves before the throne.\" This anaphoric list of past actions functions as evidence for Henry's larger claim primarily by —",
+    "choices": [
+      "cataloging every peaceful, deferential option already exhausted, so that fighting now appears the last recourse rather than a rash first choice",
+      "proving that Parliament had ultimately granted nearly every single one of the colonists' formal requests once they had been respectfully submitted",
+      "demonstrating that the colonists had in fact never once attempted to contact the British government through any available channel",
+      "showing that Henry personally traveled overseas and negotiated the colonists' grievances with the king in a private royal audience"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count how many different peaceful verbs Henry stacks up in a row, and ask what that repetition is building toward."
+    ]
+  },
+  {
+    "id": "apenglang.defensible-thesis.mcq.02",
+    "loId": "apenglang.defensible-thesis",
+    "cedCode": "AP-ENGLANG-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Which of the following thesis statements about this excerpt is most defensible — arguable and specific rather than a bare summary?",
+    "choices": [
+      "Patrick Henry delivered this particular speech before a large assembly of elected delegates gathered together in the colony of Virginia in 1775",
+      "Over the course of the excerpt, Henry makes reference to God and to divine providence on several separate occasions",
+      "Escalating anaphora, unanswered rhetorical questions, and a stark closing antithesis convert Henry's exhausted peaceful appeals into a moral case for armed resistance",
+      "The speech runs to a considerable length and reads throughout as a notably persuasive and stirring piece of public oratory"
+    ],
+    "answer": "C",
+    "hints": [
+      "A defensible thesis names specific rhetorical choices and the effect they build toward, not just that the speech happened or is 'persuasive.'"
+    ]
+  },
+  {
+    "id": "apenglang.audience-context.mcq.03",
+    "loId": "apenglang.audience-context",
+    "cedCode": "AP-ENGLANG-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry says, \"They tell us, sir, that we are weak; unable to cope with so formidable an adversary.\" By first voicing this objection in the words of unnamed opponents before refuting it, Henry primarily —",
+    "choices": [
+      "openly admits that his own argument for resistance has already collapsed and cannot answer the objection that has been raised",
+      "insults and dismisses as cowardly traitors those delegates who happen to hold this view of the colonies' weakness",
+      "abruptly changes the subject to an entirely unrelated matter in order to avoid having to answer the objection at all",
+      "anticipates and directly answers a doubt that Henry assumes some undecided delegates in his own audience privately share"
+    ],
+    "answer": "D",
+    "hints": [
+      "This move — raising the other side's best objection before you answer it — is a classic way of managing a skeptical, undecided audience."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-situation.mcq.05",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry asks, \"Will it be the next week, or the next year?\" and \"Shall we gather strength by irresolution and inaction?\" Addressed to an assembly actively debating whether to prepare for war, this rapid series of questions primarily serves which purpose in this specific context?",
+    "choices": [
+      "to quiz the assembled delegates on their detailed knowledge of European military history and of past campaigns waged long ago against Britain",
+      "to press the still-undecided delegates in the room to see that continued delay is itself a losing strategy, not a neutral option",
+      "to entertain the audience with a burst of rhetorical flourish that has little real bearing on the vote actually before them",
+      "to formally request that each delegate submit a written response to these questions before the session is allowed to end"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember this is a real deliberative body about to vote — the questions are aimed at people who haven't yet decided."
+    ]
+  },
+  {
+    "id": "apenglang.reading-for-claim.mcq.04",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry states, \"Three millions of people, armed in the holy cause of liberty, and in such a country as that which we possess, are invincible by any force which our enemy can send against us.\" This statement most directly supports which claim?",
+    "choices": [
+      "That the colonists can already field far more trained soldiers than the whole of Britain's standing professional army combined",
+      "That the war against Britain has in effect already been fought and decisively won by the assembled colonial forces",
+      "That the colonists' combination of numbers, righteous cause, and favorable terrain gives them a realistic chance of military success",
+      "That Henry personally opposes any resort to armed force and urges the delegates instead to seek a peaceful settlement"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the three factors Henry stacks together — population, cause, and country — and ask what conclusion he draws from combining them."
+    ]
+  },
+  {
+    "id": "apenglang.evidence-commentary.mcq.04",
+    "loId": "apenglang.evidence-commentary",
+    "cedCode": "AP-ENGLANG-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry says, \"There is a just God who presides over the destinies of nations, and who will raise up friends to fight our battles for us.\" This appeal to divine providence functions rhetorically primarily by —",
+    "choices": [
+      "supplying a religious warrant that reframes the colonists' apparent weakness as survivable, since a just cause can expect providential aid",
+      "providing concrete statistical proof that several specific foreign nations have already pledged to send their troops and supplies",
+      "functioning as an entirely unrelated digression that has very little real bearing on the actual logic of Henry's argument for war",
+      "quietly retracting Henry's earlier claim that the colonists are strong, conceding instead that they cannot realistically hope to win"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what work this claim about God is doing right after Henry has just addressed the objection that the colonists are 'weak.'"
+    ]
+  },
+  {
+    "id": "apenglang.audience-context.mcq.04",
+    "loId": "apenglang.audience-context",
+    "cedCode": "AP-ENGLANG-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry declares, \"Gentlemen may cry, Peace, Peace — but there is no peace.\" This echoes a biblical warning against false prophets of peace, delivered to an assembly steeped in religious rhetoric. This allusion primarily works to —",
+    "choices": [
+      "prove to the assembly that open war between the colonies and Britain had in fact already broken out several weeks earlier",
+      "cast delegates still hoping for reconciliation as deceived in the way scripture warns against, lending Henry's warning added moral authority",
+      "quietly suggest that Henry is himself an ordained member of the clergy addressing his own congregation directly from the pulpit",
+      "contradict Henry's earlier insistence that fighting is necessary, offering instead a late and hopeful path toward a peaceful settlement"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider why borrowing a familiar biblical warning would land harder with an audience raised on that same scripture than an ordinary factual claim would."
+    ]
+  },
+  {
+    "id": "apenglang.defensible-thesis.mcq.03",
+    "loId": "apenglang.defensible-thesis",
+    "cedCode": "AP-ENGLANG-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry closes, \"Is life so dear, or peace so sweet, as to be purchased at the price of chains and slavery? Forbid it, Almighty God! I know not what course others may take; but as for me, give me liberty, or give me death!\" Which thesis statement about this closing passage is most defensible?",
+    "choices": [
+      "Henry brings his lengthy speech to a close by simply reciting a widely known and frequently quoted line of stirring patriotic verse",
+      "Henry makes clear his settled belief that the institution of slavery should be permitted to continue on in the colonies",
+      "Henry reveals that he remains genuinely uncertain and inwardly divided about his own position on the question of independence",
+      "Henry's closing rhetorical question, invocation of God, and personal declaration stake his own resolve as proof that liberty is worth risking death"
+    ],
+    "answer": "D",
+    "hints": [
+      "A defensible thesis explains HOW the specific rhetorical moves (question, invocation, declaration) work together to build an effect — not just that the line is famous."
+    ]
+  }
+]

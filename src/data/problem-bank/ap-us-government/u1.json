@@ -1,0 +1,202 @@
+[
+  {
+    "id": "apgov.constitution-ratification.mcq.01",
+    "loId": "apgov.constitution-ratification",
+    "cedCode": "AP-APGOV-1.4/1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-federalist-10.v1",
+    "problemText": "In Federalist No. 10 (1787), James Madison writes that a faction is a group of citizens \"united and actuated by some common impulse of passion, or of interest, adverse to the rights of other citizens, or to the permanent and aggregate interests of the community.\" Madison's central worry in this definition is best described as concern that —",
+    "choices": [
+      "a minority faction could seize permanent control of the national government through a violent coup",
+      "state governments would refuse to send delegates to the Constitutional Convention",
+      "narrow group interests could override the rights of others or the public good",
+      "foreign nations would exploit factions to install a monarchy in the United States"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the two things Madison says a faction's impulse is 'adverse to' — the rights of other citizens, and the community's shared interests.",
+      "Rule out any answer describing a coup, a convention boycott, or foreign monarchy — none of those appear in Madison's definition."
+    ]
+  },
+  {
+    "id": "apgov.constitution-ratification.mcq.02",
+    "loId": "apgov.constitution-ratification",
+    "cedCode": "AP-APGOV-1.4/1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-brutus-1.v1",
+    "problemText": "Brutus No. 1 (1787), an Anti-Federalist essay, warns that \"History furnishes no example of a free republic, any thing like the extent of the United States.\" This claim most directly reflects the Anti-Federalist position that —",
+    "choices": [
+      "a republic spanning so vast a territory could not preserve free government",
+      "the new Constitution granted the president too little authority over foreign affairs",
+      "history offered no precedent at all for any form of representative government",
+      "the thirteen states were too small individually ever to resist British reconquest"
+    ],
+    "answer": "A",
+    "hints": [
+      "Brutus is pointing to the sheer size of the United States as the problem, not any single institution or power.",
+      "Brutus concedes small republics (Greek, Roman) existed — the objection is specifically about extending a republic over so large a territory."
+    ]
+  },
+  {
+    "id": "apgov.constitution-ratification.mcq.03",
+    "loId": "apgov.constitution-ratification",
+    "cedCode": "AP-APGOV-1.4/1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-brutus-1.v1",
+    "problemText": "In Federalist No. 10, Madison argues an extended republic best controls faction, since citizens are less likely to be \"united and actuated by some common impulse of passion, or of interest\" across a large territory. Brutus No. 1 responds by pointing to the ancient world, warning that once the Greek and Roman republics grew too large, \"their governments were changed from that of free governments to those of the most tyrannical that ever existed in the world.\" Compared to Madison, Brutus's argument about the size of a republic —",
+    "choices": [
+      "reaches the same conclusion, that a large republic best protects liberty by diluting the power of any single faction",
+      "does not address the size of the republic at all, focusing only on judicial power",
+      "agrees with Madison but argues Congress, not the size of the republic, is the true safeguard against faction",
+      "reaches the opposite conclusion: extending a republic's territory too far tends to destroy free government rather than protect it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Madison treats a large territory as the cure for faction; ask what Brutus says a large territory does to free government instead.",
+      "Brutus is an Anti-Federalist essay opposing ratification — expect it to directly contradict a core Federalist argument, not restate or sidestep it."
+    ]
+  },
+  {
+    "id": "apgov.separation-of-powers.mcq.01",
+    "loId": "apgov.separation-of-powers",
+    "cedCode": "AP-APGOV-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-51.v1",
+    "problemText": "In Federalist No. 51 (1788), James Madison writes, \"Ambition must be made to counteract ambition.\" This statement most directly expresses which constitutional design principle?",
+    "choices": [
+      "judicial review, allowing federal courts to strike down unconstitutional acts of state legislatures",
+      "checks and balances, giving each branch tools to resist encroachment by the others",
+      "federalism, dividing government power between the national government and the individual state governments",
+      "popular sovereignty, requiring elected officials to win their offices directly from the voters"
+    ],
+    "answer": "B",
+    "hints": [
+      "Madison wants one branch's self-interest to actively resist another branch's overreach — that is a description of a mechanism, not a source of legal authority.",
+      "Rule out federalism (national vs. state), judicial review (courts vs. legislatures), and elections (voters vs. officials) — none of those is 'ambition counteracting ambition' within one government."
+    ]
+  },
+  {
+    "id": "apgov.separation-of-powers.mcq.02",
+    "loId": "apgov.separation-of-powers",
+    "cedCode": "AP-APGOV-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-51.v1",
+    "problemText": "Federalist No. 51 continues, \"If men were angels, no Government would be necessary. If angels were to govern men, neither external nor internal controls on Government would be necessary.\" Madison offers this reasoning to justify which conclusion?",
+    "choices": [
+      "Most citizens are so virtuous that legal restraints on officials are rarely necessary",
+      "Because angels do not exist, republican government can never realistically be sustained in practice",
+      "Human nature cannot be changed, so a strong monarchy is the only workable government",
+      "Government power must be limited by formal checks, not trust in official virtue"
+    ],
+    "answer": "D",
+    "hints": [
+      "Madison's 'if men were angels' is a hypothetical he immediately rejects — people and officials are not angels.",
+      "The conclusion should follow logically from 'people are not perfectly virtuous,' not assert something about monarchy or the impossibility of republics."
+    ]
+  },
+  {
+    "id": "apgov.federalism-foundations.mcq.01",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-51.v1",
+    "problemText": "Federalist No. 51 explains that \"the power surrendered by the People is first divided between two distinct Governments, and then the portion allotted to each, subdivided among distinct and separate departments. Hence a double security arises to the rights of the People.\" The \"two distinct Governments\" in this \"double security\" argument refer to —",
+    "choices": [
+      "the House of Representatives and the Senate",
+      "the Federalist and Anti-Federalist political factions",
+      "the national government and the state governments",
+      "the executive branch and the judicial branch"
+    ],
+    "answer": "C",
+    "hints": [
+      "Madison describes power being divided first, and only afterward subdivided again among departments — that first division is the federalism layer, not the separation-of-powers layer.",
+      "Rule out any answer naming branches or houses of one government — the passage is describing two separate governments, national and state."
+    ]
+  },
+  {
+    "id": "apgov.federalism-foundations.mcq.02",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
+    "problemText": "A federal budget data table shows total grants-in-aid to state and local governments, measured in constant (inflation-adjusted) dollars, rising every year sampled: from roughly 256 billion in 1990, to 416 billion in 2000, to 680 billion in 2010, to 692 billion in 2019. Over that same span, grants-in-aid as a percentage of total federal outlays rose from 10.8% in 1990 to a peak of 17.6% in 2010, before easing to 16.2% by 2019. Which statement is best supported by this data?",
+    "choices": [
+      "Inflation-adjusted grant dollars rose throughout, while the grants' share of outlays peaked in 2010, not 2019",
+      "Both the inflation-adjusted grant dollars and the grants' share of federal outlays rose without interruption across the whole period",
+      "Grants-in-aid outlays only became a meaningfully large share of the total federal budget sometime after the year 2010",
+      "Inflation-adjusted grant dollars fell after 2010, even though the grants' share of federal outlays kept rising through 2019"
+    ],
+    "answer": "A",
+    "hints": [
+      "Track the dollar figures and the percentage figures as two separate trends — one rises every year shown, the other does not.",
+      "The percentage column rises, then falls back slightly by 2019 — find the single year given as its highest point."
+    ]
+  },
+  {
+    "id": "apgov.federalism-foundations.mcq.03",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
+    "problemText": "The same federal budget table reports that of the 692 billion dollars in federal grants-in-aid outlays in fiscal year 2019, about 581 billion dollars (84%) came as categorical grants — funds restricted to narrowly defined purposes and often carrying matching or compliance requirements — while about 111 billion dollars (16%) came as block grants, which give states broader discretion over how funds are spent. This breakdown best supports which conclusion about federal grants-in-aid in 2019?",
+    "choices": [
+      "States had complete legal discretion over how every federal grant dollar they received was spent",
+      "Most federal grant dollars carried federally defined conditions, leaving states comparatively little spending discretion",
+      "The federal government provided no grant funding to state or local governments in 2019",
+      "Block grants made up a larger total dollar value than categorical grants in fiscal year 2019"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the two dollar figures directly — one type of grant is roughly five times larger than the other.",
+      "Categorical grants come with compliance requirements attached; ask what that means for how much discretion states have over most of the money."
+    ]
+  },
+  {
+    "id": "apgov.federalism-foundations.mcq.04",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
+    "problemText": "The federal budget table shows categorical grants — funds Congress restricts to narrowly defined purposes with compliance requirements attached — making up 84% of federal grants-in-aid dollars in fiscal year 2019. Congress's constitutional authority to offer these grants and attach such conditions to them rests most directly on —",
+    "choices": [
+      "Congress's Commerce Clause power to directly regulate any activity, economic or not, occurring within the states",
+      "an implied power only, because the Constitution nowhere expressly grants Congress any authority at all to spend federal money",
+      "the enumerated power to tax and spend for the general welfare, placing conditions on funds states accept",
+      "a reserved power that the Tenth Amendment leaves exclusively to the individual state governments"
+    ],
+    "answer": "C",
+    "hints": [
+      "Grants are federal money — start from the enumerated Article I, Section 8 power to lay taxes and spend for the general welfare.",
+      "Conditions ride on money the states voluntarily accept: that is an exercise of the spending power itself, not commerce regulation, not a state's reserved power, and not a power the Constitution forgot to enumerate."
+    ]
+  },
+  {
+    "id": "apgov.federalism-foundations.mcq.05",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federal-grants-table.v1",
+    "problemText": "The federal budget table shows that federal grants-in-aid to state and local governments reached 692 billion dollars in fiscal year 2019, the large majority delivered as categorical grants with conditions attached, rather than through direct federal regulation of state governments. In United States v. Lopez (1995), the Supreme Court held that Congress's power under the Commerce Clause does not extend to regulating activity, like carrying a gun near a school, that is not itself economic. Given Lopez's limits on direct federal regulation under the Commerce Clause, Congress's heavy reliance on conditional grants-in-aid instead of direct regulation is best explained by which reasoning?",
+    "choices": [
+      "Lopez eliminated Congress's spending power entirely, so grants-in-aid became the only tool of federal influence left after 1995",
+      "Conditional spending lets Congress shape state policy beyond the Commerce Clause's reach, since states may freely decline the funds",
+      "The Necessary and Proper Clause was struck down in Lopez, forcing Congress to rely solely on treaties with individual states",
+      "States are constitutionally required to accept any federal grant offered to them, no matter its attached conditions or cost"
+    ],
+    "answer": "B",
+    "hints": [
+      "Lopez limits one specific power (the Commerce Clause) — it says nothing about Congress's separate spending power.",
+      "Grants-in-aid are voluntary: states can decline federal money and its conditions, which is exactly what makes conditional spending a distinct tool from direct regulation."
+    ]
+  }
+]

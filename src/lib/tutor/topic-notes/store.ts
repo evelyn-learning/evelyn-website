@@ -171,6 +171,76 @@ import { BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES } from './seeds/ap-st
 import { BASELINE_AP_STATS_SLOPE_CI } from './seeds/ap-stats-u9-slope-ci';
 import { BASELINE_AP_STATS_SLOPE_TEST } from './seeds/ap-stats-u9-slope-test';
 
+// AP English Language & Composition Unit 1 (CED 1.1–1.5) — the foundational
+// rhetorical-analysis sequence (calibration unit for the AP Eng Lang
+// vertical slice). FRQ-practice plan deferred (pure practice → no theory).
+import { BASELINE_AP_ENGLANG_RHETORICAL_SITUATION } from './seeds/ap-englang-u1-rhetorical-situation';
+import { BASELINE_AP_ENGLANG_READING_FOR_CLAIM } from './seeds/ap-englang-u1-reading-for-claim';
+import { BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defensible-thesis';
+import { BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
+import { BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
+// AP English Language Units 2-9 (Phase 2 fan-out) — topic-notes baselines
+import { BASELINE_AP_ENGLANG_BUILDING_AN_ARGUMENT } from './seeds/ap-englang-u2-building-an-argument';
+import { BASELINE_AP_ENGLANG_COUNTERARGUMENT_REBUTTAL } from './seeds/ap-englang-u2-counterargument-rebuttal';
+import { BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS } from './seeds/ap-englang-u2-intros-conclusions';
+import { BASELINE_AP_ENGLANG_LINE_OF_REASONING_ARGUMENT } from './seeds/ap-englang-u2-line-of-reasoning-argument';
+import { BASELINE_AP_ENGLANG_SELECTING_EVIDENCE } from './seeds/ap-englang-u2-selecting-evidence';
+import { BASELINE_AP_ENGLANG_CITING_ATTRIBUTING_SOURCES } from './seeds/ap-englang-u3-citing-attributing-sources';
+import { BASELINE_AP_ENGLANG_INTEGRATING_EVIDENCE } from './seeds/ap-englang-u3-integrating-evidence';
+import { BASELINE_AP_ENGLANG_POSITION_ACROSS_SOURCES } from './seeds/ap-englang-u3-position-across-sources';
+import { BASELINE_AP_ENGLANG_SYNTHESIS_LINE_OF_REASONING } from './seeds/ap-englang-u3-synthesis-line-of-reasoning';
+import { BASELINE_AP_ENGLANG_THE_SYNTHESIS_TASK } from './seeds/ap-englang-u3-the-synthesis-task';
+import { BASELINE_AP_ENGLANG_ANALYZING_LINE_OF_REASONING } from './seeds/ap-englang-u4-analyzing-line-of-reasoning';
+import { BASELINE_AP_ENGLANG_DICTION_AND_TONE } from './seeds/ap-englang-u4-diction-and-tone';
+import { BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS_ANALYSIS } from './seeds/ap-englang-u4-intros-conclusions-analysis';
+import { BASELINE_AP_ENGLANG_METHODS_OF_DEVELOPMENT } from './seeds/ap-englang-u4-methods-of-development';
+import { BASELINE_AP_ENGLANG_ORGANIZING_FOR_EFFECT } from './seeds/ap-englang-u5-organizing-for-effect';
+import { BASELINE_AP_ENGLANG_REASONING_AND_PARAGRAPHING } from './seeds/ap-englang-u5-reasoning-and-paragraphing';
+import { BASELINE_AP_ENGLANG_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-transitions-cohesion';
+import { BASELINE_AP_ENGLANG_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
+import { BASELINE_AP_ENGLANG_ANALYZING_STYLE } from './seeds/ap-englang-u6-analyzing-style';
+import { BASELINE_AP_ENGLANG_DICTION_CONNOTATION_TONE } from './seeds/ap-englang-u6-diction-connotation-tone';
+import { BASELINE_AP_ENGLANG_FIGURATIVE_LANGUAGE_SCHEMES } from './seeds/ap-englang-u6-figurative-language-schemes';
+import { BASELINE_AP_ENGLANG_SYNTAX_FOR_EFFECT } from './seeds/ap-englang-u6-syntax-for-effect';
+import { BASELINE_AP_ENGLANG_COMPLEX_REASONING } from './seeds/ap-englang-u7-complex-reasoning';
+import { BASELINE_AP_ENGLANG_NUANCE_QUALIFICATION_CONCESSION } from './seeds/ap-englang-u7-nuance-qualification-concession';
+import { BASELINE_AP_ENGLANG_RHETORICAL_RISK } from './seeds/ap-englang-u7-rhetorical-risk';
+import { BASELINE_AP_ENGLANG_SITUATING_IN_CONTEXT } from './seeds/ap-englang-u7-situating-in-context';
+import { BASELINE_AP_ENGLANG_COMPETING_PERSPECTIVES } from './seeds/ap-englang-u8-competing-perspectives';
+import { BASELINE_AP_ENGLANG_QUALIFYING_WITH_SOURCES } from './seeds/ap-englang-u8-qualifying-with-sources';
+import { BASELINE_AP_ENGLANG_SOPHISTICATION_IN_SYNTHESIS } from './seeds/ap-englang-u8-sophistication-in-synthesis';
+import { BASELINE_AP_ENGLANG_SOURCE_CREDIBILITY_BIAS } from './seeds/ap-englang-u8-source-credibility-bias';
+import { BASELINE_AP_ENGLANG_MCQ_READING_STRATEGY } from './seeds/ap-englang-u9-mcq-reading-strategy';
+import { BASELINE_AP_ENGLANG_MCQ_WRITING_EDITING } from './seeds/ap-englang-u9-mcq-writing-editing';
+import { BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION } from './seeds/ap-englang-u9-revision-and-sophistication';
+import { BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u9-timed-writing-strategy';
+
+// AP US History Unit 3 (CED 3.2, 3.3, 3.9, 3.10, 3.11) — Period-3 Vertical
+// Slice content plans (causes of Revolution through the New Republic).
+// DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
+import { BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
+import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
+import { BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
+import { BASELINE_AP_APUSH_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
+
+// AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
+// plans (Mongol Empire through cultural/technological/biological diffusion).
+// DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
+import { BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE } from './seeds/ap-apworld-u2-indian-ocean-trade';
+import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-trans-saharan-trade';
+import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
+import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
+
+// AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
+// Unit-1 Vertical Slice content plans (democratic ideals through
+// federalism). FRQ-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APGOV_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
+import { BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1-constitution-ratification';
+import { BASELINE_AP_APGOV_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
+import { BASELINE_AP_APGOV_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -288,6 +358,60 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_STATS_CHOOSING_CATEGORICAL_PROCEDURES,
   BASELINE_AP_STATS_SLOPE_CI,
   BASELINE_AP_STATS_SLOPE_TEST,
+  BASELINE_AP_ENGLANG_RHETORICAL_SITUATION,
+  BASELINE_AP_ENGLANG_READING_FOR_CLAIM,
+  BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS,
+  BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY,
+  BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT,
+  // AP English Language Units 2-9 baselines
+  BASELINE_AP_ENGLANG_BUILDING_AN_ARGUMENT,
+  BASELINE_AP_ENGLANG_COUNTERARGUMENT_REBUTTAL,
+  BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS,
+  BASELINE_AP_ENGLANG_LINE_OF_REASONING_ARGUMENT,
+  BASELINE_AP_ENGLANG_SELECTING_EVIDENCE,
+  BASELINE_AP_ENGLANG_CITING_ATTRIBUTING_SOURCES,
+  BASELINE_AP_ENGLANG_INTEGRATING_EVIDENCE,
+  BASELINE_AP_ENGLANG_POSITION_ACROSS_SOURCES,
+  BASELINE_AP_ENGLANG_SYNTHESIS_LINE_OF_REASONING,
+  BASELINE_AP_ENGLANG_THE_SYNTHESIS_TASK,
+  BASELINE_AP_ENGLANG_ANALYZING_LINE_OF_REASONING,
+  BASELINE_AP_ENGLANG_DICTION_AND_TONE,
+  BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS_ANALYSIS,
+  BASELINE_AP_ENGLANG_METHODS_OF_DEVELOPMENT,
+  BASELINE_AP_ENGLANG_ORGANIZING_FOR_EFFECT,
+  BASELINE_AP_ENGLANG_REASONING_AND_PARAGRAPHING,
+  BASELINE_AP_ENGLANG_TRANSITIONS_COHESION,
+  BASELINE_AP_ENGLANG_UNITY_AND_COHERENCE,
+  BASELINE_AP_ENGLANG_ANALYZING_STYLE,
+  BASELINE_AP_ENGLANG_DICTION_CONNOTATION_TONE,
+  BASELINE_AP_ENGLANG_FIGURATIVE_LANGUAGE_SCHEMES,
+  BASELINE_AP_ENGLANG_SYNTAX_FOR_EFFECT,
+  BASELINE_AP_ENGLANG_COMPLEX_REASONING,
+  BASELINE_AP_ENGLANG_NUANCE_QUALIFICATION_CONCESSION,
+  BASELINE_AP_ENGLANG_RHETORICAL_RISK,
+  BASELINE_AP_ENGLANG_SITUATING_IN_CONTEXT,
+  BASELINE_AP_ENGLANG_COMPETING_PERSPECTIVES,
+  BASELINE_AP_ENGLANG_QUALIFYING_WITH_SOURCES,
+  BASELINE_AP_ENGLANG_SOPHISTICATION_IN_SYNTHESIS,
+  BASELINE_AP_ENGLANG_SOURCE_CREDIBILITY_BIAS,
+  BASELINE_AP_ENGLANG_MCQ_READING_STRATEGY,
+  BASELINE_AP_ENGLANG_MCQ_WRITING_EDITING,
+  BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION,
+  BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY,
+  BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION,
+  BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS,
+  BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
+  BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION,
+  BASELINE_AP_APUSH_NEW_REPUBLIC,
+  BASELINE_AP_APWORLD_SILK_ROADS,
+  BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
+  BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
+  BASELINE_AP_APWORLD_MONGOL_EMPIRE,
+  BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
+  BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
+  BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
+  BASELINE_AP_APGOV_FEDERALISM,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));

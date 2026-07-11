@@ -1292,6 +1292,84 @@ import { SEED_SAT_RW_GRAMMAR_AGREEMENT } from './seeds/sat-rw-grammar-agreement'
 import { SEED_SAT_RW_GRAMMAR_STRUCTURE } from './seeds/sat-rw-grammar-structure';
 import { SEED_SAT_RW_RHETORICAL_SYNTHESIS } from './seeds/sat-rw-rhetorical-synthesis';
 import { SEED_SAT_RW_TRANSITIONS } from './seeds/sat-rw-transitions';
+// AP English Language & Composition — Vertical Slice initiative (Unit 1).
+// See docs/superpowers/specs/2026-07-10-ap-eng-lang-design.md.
+import { SEED_AP_ENGLANG_U1_RHETORICAL_SITUATION } from './seeds/ap-englang-u1-rhetorical-situation';
+import { SEED_AP_ENGLANG_U1_READING_FOR_CLAIM } from './seeds/ap-englang-u1-reading-for-claim';
+import { SEED_AP_ENGLANG_U1_DEFENSIBLE_THESIS } from './seeds/ap-englang-u1-defensible-thesis';
+import { SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY } from './seeds/ap-englang-u1-evidence-commentary';
+import { SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT } from './seeds/ap-englang-u1-audience-context';
+import { SEED_AP_ENGLANG_U1_FRQ_PRACTICE } from './seeds/ap-englang-u1-frq-practice';
+// AP English Language Units 2-5 (Phase 2 fan-out) — content plans
+// AP English Language Units 6-9 (Phase 2 fan-out) — content plans
+// AP English Language FRQ-practice plans (Argument/Synthesis/RA)
+import { SEED_AP_ENGLANG_U2_FRQ_PRACTICE } from './seeds/ap-englang-u2-frq-practice';
+import { SEED_AP_ENGLANG_U3_FRQ_PRACTICE } from './seeds/ap-englang-u3-frq-practice';
+import { SEED_AP_ENGLANG_U4_FRQ_PRACTICE } from './seeds/ap-englang-u4-frq-practice';
+import { SEED_AP_ENGLANG_U6_ANALYZING_STYLE } from './seeds/ap-englang-u6-analyzing-style';
+import { SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE } from './seeds/ap-englang-u6-diction-connotation-tone';
+import { SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES } from './seeds/ap-englang-u6-figurative-language-schemes';
+import { SEED_AP_ENGLANG_U6_SYNTAX_FOR_EFFECT } from './seeds/ap-englang-u6-syntax-for-effect';
+import { SEED_AP_ENGLANG_U7_COMPLEX_REASONING } from './seeds/ap-englang-u7-complex-reasoning';
+import { SEED_AP_ENGLANG_U7_NUANCE_QUALIFICATION_CONCESSION } from './seeds/ap-englang-u7-nuance-qualification-concession';
+import { SEED_AP_ENGLANG_U7_RHETORICAL_RISK } from './seeds/ap-englang-u7-rhetorical-risk';
+import { SEED_AP_ENGLANG_U7_SITUATING_IN_CONTEXT } from './seeds/ap-englang-u7-situating-in-context';
+import { SEED_AP_ENGLANG_U8_COMPETING_PERSPECTIVES } from './seeds/ap-englang-u8-competing-perspectives';
+import { SEED_AP_ENGLANG_U8_QUALIFYING_WITH_SOURCES } from './seeds/ap-englang-u8-qualifying-with-sources';
+import { SEED_AP_ENGLANG_U8_SOPHISTICATION_IN_SYNTHESIS } from './seeds/ap-englang-u8-sophistication-in-synthesis';
+import { SEED_AP_ENGLANG_U8_SOURCE_CREDIBILITY_BIAS } from './seeds/ap-englang-u8-source-credibility-bias';
+import { SEED_AP_ENGLANG_U9_MCQ_READING_STRATEGY } from './seeds/ap-englang-u9-mcq-reading-strategy';
+import { SEED_AP_ENGLANG_U9_MCQ_WRITING_EDITING } from './seeds/ap-englang-u9-mcq-writing-editing';
+import { SEED_AP_ENGLANG_U9_REVISION_AND_SOPHISTICATION } from './seeds/ap-englang-u9-revision-and-sophistication';
+import { SEED_AP_ENGLANG_U9_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u9-timed-writing-strategy';
+import { SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT } from './seeds/ap-englang-u2-building-an-argument';
+import { SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL } from './seeds/ap-englang-u2-counterargument-rebuttal';
+import { SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS } from './seeds/ap-englang-u2-intros-conclusions';
+import { SEED_AP_ENGLANG_U2_LINE_OF_REASONING_ARGUMENT } from './seeds/ap-englang-u2-line-of-reasoning-argument';
+import { SEED_AP_ENGLANG_U2_SELECTING_EVIDENCE } from './seeds/ap-englang-u2-selecting-evidence';
+import { SEED_AP_ENGLANG_U3_CITING_ATTRIBUTING_SOURCES } from './seeds/ap-englang-u3-citing-attributing-sources';
+import { SEED_AP_ENGLANG_U3_INTEGRATING_EVIDENCE } from './seeds/ap-englang-u3-integrating-evidence';
+import { SEED_AP_ENGLANG_U3_POSITION_ACROSS_SOURCES } from './seeds/ap-englang-u3-position-across-sources';
+import { SEED_AP_ENGLANG_U3_SYNTHESIS_LINE_OF_REASONING } from './seeds/ap-englang-u3-synthesis-line-of-reasoning';
+import { SEED_AP_ENGLANG_U3_THE_SYNTHESIS_TASK } from './seeds/ap-englang-u3-the-synthesis-task';
+import { SEED_AP_ENGLANG_U4_ANALYZING_LINE_OF_REASONING } from './seeds/ap-englang-u4-analyzing-line-of-reasoning';
+import { SEED_AP_ENGLANG_U4_DICTION_AND_TONE } from './seeds/ap-englang-u4-diction-and-tone';
+import { SEED_AP_ENGLANG_U4_INTROS_CONCLUSIONS_ANALYSIS } from './seeds/ap-englang-u4-intros-conclusions-analysis';
+import { SEED_AP_ENGLANG_U4_METHODS_OF_DEVELOPMENT } from './seeds/ap-englang-u4-methods-of-development';
+import { SEED_AP_ENGLANG_U5_ORGANIZING_FOR_EFFECT } from './seeds/ap-englang-u5-organizing-for-effect';
+import { SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING } from './seeds/ap-englang-u5-reasoning-and-paragraphing';
+import { SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-transitions-cohesion';
+import { SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
+// AP US History — Period-3 Vertical Slice initiative (calibration plan).
+// See docs/superpowers/specs/2026-07-10-ap-us-history-design.md.
+import { SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
+import { SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
+import { SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
+import { SEED_AP_APUSH_U3_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
+import { SEED_AP_APUSH_U3_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
+import { SEED_AP_APUSH_U3_DBQ_PRACTICE } from './seeds/ap-apush-u3-dbq-practice';
+import { SEED_AP_APUSH_U3_LEQ_PRACTICE } from './seeds/ap-apush-u3-leq-practice';
+import { SEED_AP_APUSH_U3_SAQ_PRACTICE } from './seeds/ap-apush-u3-saq-practice';
+// AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
+// plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
+import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
+import { SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE } from './seeds/ap-apworld-u2-indian-ocean-trade';
+import { SEED_AP_APWORLD_U2_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-trans-saharan-trade';
+import { SEED_AP_APWORLD_U2_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
+import { SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
+import { SEED_AP_APWORLD_U2_DBQ_PRACTICE } from './seeds/ap-apworld-u2-dbq-practice';
+import { SEED_AP_APWORLD_U2_LEQ_PRACTICE } from './seeds/ap-apworld-u2-leq-practice';
+import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-practice';
+// AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
+// plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
+import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
+import { SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1-constitution-ratification';
+import { SEED_AP_APGOV_U1_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
+import { SEED_AP_APGOV_U1_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
+import { SEED_AP_APGOV_U1_FRQ_CONCEPT_APPLICATION } from './seeds/ap-apgov-u1-frq-concept-application';
+import { SEED_AP_APGOV_U1_FRQ_QUANTITATIVE } from './seeds/ap-apgov-u1-frq-quantitative';
+import { SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON } from './seeds/ap-apgov-u1-frq-scotus-comparison';
+import { SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u1-frq-argument-essay';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2552,6 +2630,79 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_SAT_RW_GRAMMAR_STRUCTURE,
   SEED_SAT_RW_RHETORICAL_SYNTHESIS,
   SEED_SAT_RW_TRANSITIONS,
+  SEED_AP_ENGLANG_U1_RHETORICAL_SITUATION,
+  SEED_AP_ENGLANG_U1_READING_FOR_CLAIM,
+  SEED_AP_ENGLANG_U1_DEFENSIBLE_THESIS,
+  SEED_AP_ENGLANG_U1_EVIDENCE_COMMENTARY,
+  SEED_AP_ENGLANG_U1_AUDIENCE_CONTEXT,
+  SEED_AP_ENGLANG_U1_FRQ_PRACTICE,
+  // AP English Language Units 2-5 content plans
+  // AP English Language Units 6-9 content plans
+  // AP English Language FRQ-practice plans
+  SEED_AP_ENGLANG_U2_FRQ_PRACTICE,
+  SEED_AP_ENGLANG_U3_FRQ_PRACTICE,
+  SEED_AP_ENGLANG_U4_FRQ_PRACTICE,
+  SEED_AP_ENGLANG_U6_ANALYZING_STYLE,
+  SEED_AP_ENGLANG_U6_DICTION_CONNOTATION_TONE,
+  SEED_AP_ENGLANG_U6_FIGURATIVE_LANGUAGE_SCHEMES,
+  SEED_AP_ENGLANG_U6_SYNTAX_FOR_EFFECT,
+  SEED_AP_ENGLANG_U7_COMPLEX_REASONING,
+  SEED_AP_ENGLANG_U7_NUANCE_QUALIFICATION_CONCESSION,
+  SEED_AP_ENGLANG_U7_RHETORICAL_RISK,
+  SEED_AP_ENGLANG_U7_SITUATING_IN_CONTEXT,
+  SEED_AP_ENGLANG_U8_COMPETING_PERSPECTIVES,
+  SEED_AP_ENGLANG_U8_QUALIFYING_WITH_SOURCES,
+  SEED_AP_ENGLANG_U8_SOPHISTICATION_IN_SYNTHESIS,
+  SEED_AP_ENGLANG_U8_SOURCE_CREDIBILITY_BIAS,
+  SEED_AP_ENGLANG_U9_MCQ_READING_STRATEGY,
+  SEED_AP_ENGLANG_U9_MCQ_WRITING_EDITING,
+  SEED_AP_ENGLANG_U9_REVISION_AND_SOPHISTICATION,
+  SEED_AP_ENGLANG_U9_TIMED_WRITING_STRATEGY,
+  SEED_AP_ENGLANG_U2_BUILDING_AN_ARGUMENT,
+  SEED_AP_ENGLANG_U2_COUNTERARGUMENT_REBUTTAL,
+  SEED_AP_ENGLANG_U2_INTROS_CONCLUSIONS,
+  SEED_AP_ENGLANG_U2_LINE_OF_REASONING_ARGUMENT,
+  SEED_AP_ENGLANG_U2_SELECTING_EVIDENCE,
+  SEED_AP_ENGLANG_U3_CITING_ATTRIBUTING_SOURCES,
+  SEED_AP_ENGLANG_U3_INTEGRATING_EVIDENCE,
+  SEED_AP_ENGLANG_U3_POSITION_ACROSS_SOURCES,
+  SEED_AP_ENGLANG_U3_SYNTHESIS_LINE_OF_REASONING,
+  SEED_AP_ENGLANG_U3_THE_SYNTHESIS_TASK,
+  SEED_AP_ENGLANG_U4_ANALYZING_LINE_OF_REASONING,
+  SEED_AP_ENGLANG_U4_DICTION_AND_TONE,
+  SEED_AP_ENGLANG_U4_INTROS_CONCLUSIONS_ANALYSIS,
+  SEED_AP_ENGLANG_U4_METHODS_OF_DEVELOPMENT,
+  SEED_AP_ENGLANG_U5_ORGANIZING_FOR_EFFECT,
+  SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING,
+  SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION,
+  SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE,
+  // AP US History — Period-3 Vertical Slice content plans.
+  SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION,
+  SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS,
+  SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION,
+  SEED_AP_APUSH_U3_CONSTITUTION_RATIFICATION,
+  SEED_AP_APUSH_U3_NEW_REPUBLIC,
+  SEED_AP_APUSH_U3_DBQ_PRACTICE,
+  SEED_AP_APUSH_U3_LEQ_PRACTICE,
+  SEED_AP_APUSH_U3_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-2 Vertical Slice content plans.
+  SEED_AP_APWORLD_U2_SILK_ROADS,
+  SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
+  SEED_AP_APWORLD_U2_TRANS_SAHARAN_TRADE,
+  SEED_AP_APWORLD_U2_MONGOL_EMPIRE,
+  SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION,
+  SEED_AP_APWORLD_U2_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U2_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U2_SAQ_PRACTICE,
+  // AP US Government & Politics — Unit-1 Vertical Slice content plans.
+  SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
+  SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
+  SEED_AP_APGOV_U1_SEPARATION_OF_POWERS,
+  SEED_AP_APGOV_U1_FEDERALISM,
+  SEED_AP_APGOV_U1_FRQ_CONCEPT_APPLICATION,
+  SEED_AP_APGOV_U1_FRQ_QUANTITATIVE,
+  SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON,
+  SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,

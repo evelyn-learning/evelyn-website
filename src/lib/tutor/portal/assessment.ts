@@ -153,7 +153,13 @@ async function gradePoints(
   if (fmt === 'frq' || fmt === 'free') {
     const graded = await gradeFreeResponse(
       { studentId: '', itemId: '', response },
-      { itemId: '', rubric: key.rubric, expectedAnswer: key.expectedAnswer, modelResponse: key.modelResponse },
+      {
+        itemId: '',
+        rubric: key.rubric,
+        expectedAnswer: key.expectedAnswer,
+        modelResponse: key.modelResponse,
+        passageText: key.passageText,
+      },
       deps,
     );
     const feedback = graded.parts.map((p) => p.feedback).filter(Boolean).join(' ') || undefined;

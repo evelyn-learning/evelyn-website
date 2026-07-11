@@ -1,0 +1,173 @@
+[
+  {
+    "id": "apenglang.source-credibility-bias.mcq.01",
+    "loId": "apenglang.source-credibility-bias",
+    "cedCode": "AP-ENGLANG-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a synthesis essay on rent-control policy and considers citing an op-ed titled \"Why Rent Control Fails,\" written by the president of a landlords' association and published in a regional business magazine last month. Which statement best evaluates this source's credibility for the essay?",
+    "choices": [
+      "Because the author has an obvious financial stake in the outcome, the source is too biased to cite and should be excluded from the essay entirely",
+      "The author's professional stake predicts a slant toward property-owner interests, but the source can still be cited as evidence of how landlords frame the debate, with that stake named explicitly",
+      "Because the piece appeared in a business magazine rather than a peer-reviewed academic journal, it carries no evidentiary value regardless of its actual content",
+      "Because the op-ed was published so recently, it is automatically more reliable than any older source addressing the same policy question"
+    ],
+    "answer": "B",
+    "hints": [
+      "Every source has a stake; the question is how that stake should shape its use, not whether to throw it out.",
+      "Consider what naming the author's position lets a reader do that simply excluding the source does not."
+    ]
+  },
+  {
+    "id": "apenglang.source-credibility-bias.mcq.02",
+    "loId": "apenglang.source-credibility-bias",
+    "cedCode": "AP-ENGLANG-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A source is a memoir written in 1990 by a retired factory worker, recalling in vivid detail a specific conversation that took place on the shop floor fifty years earlier, in 1940. Which statement best evaluates this source's limitations for a synthesis essay?",
+    "choices": [
+      "Because fifty years passed before the memoir was written, any quoted conversation should be treated as reconstructed from memory rather than verbatim, even though the memoir remains valuable testimony about the worker's experience",
+      "Because the account was written from memory decades after the events it describes, none of its claims about factory life can be trusted at all",
+      "Because a memoir is a personal account, it is inherently more objective than a newspaper report published at the time the events occurred",
+      "Because the worker lived through the events firsthand, every quotation in the memoir should be cited as the worker's exact words from 1940"
+    ],
+    "answer": "A",
+    "hints": [
+      "Transmission (how a text reached us) is a separate question from whether the source is worth citing at all.",
+      "A fifty-year gap affects confidence in exact wording without erasing the testimony's overall value."
+    ]
+  },
+  {
+    "id": "apenglang.source-credibility-bias.mcq.03",
+    "loId": "apenglang.source-credibility-bias",
+    "cedCode": "AP-ENGLANG-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's synthesis-essay draft reads: \"The company's own sustainability report says pollution has decreased, so I can't use it as evidence.\" Which revision best reflects a sophisticated understanding of source credibility?",
+    "choices": [
+      "\"The company's own sustainability report says pollution has decreased, and this claim can be accepted at face value since companies are legally required to report accurately.\"",
+      "\"The company's own sustainability report says pollution has decreased, which proves that no further evidence about the company's environmental record is needed.\"",
+      "\"The company's own sustainability report says pollution has decreased, but because any company-produced document is automatically unusable as evidence, this claim will not appear in the essay.\"",
+      "\"The company's own sustainability report says pollution has decreased; because the company benefits from appearing environmentally responsible, that claim should be weighed against independent monitoring data rather than dismissed outright.\""
+    ],
+    "answer": "D",
+    "hints": [
+      "The original draft commits the naive-bias trap: dismissing a source entirely because it has an interested author.",
+      "Look for the revision that names the stake AND still finds a defensible way to use the source."
+    ]
+  },
+  {
+    "id": "apenglang.competing-perspectives.mcq.01",
+    "loId": "apenglang.competing-perspectives",
+    "cedCode": "AP-ENGLANG-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft paragraph handles two competing nutrition experts by writing: \"One expert argues a low-carb diet is best for long-term health, while another argues a low-fat diet is superior. Because the first expert's article was more convincing to me, I will only discuss that view and leave the second expert out of my essay entirely.\" Which revision best corrects how this draft handles the competing sources?",
+    "choices": [
+      "\"...since experts who disagree can never both be right, this essay will cite whichever one is quoted more often elsewhere.\"",
+      "\"...because two credible experts cannot genuinely disagree, one of them must not actually be a real expert.\"",
+      "\"...the disagreement may dissolve once each recommendation is read in context: the first expert studies athletic performance and the second studies general cardiovascular risk, so each conclusion likely holds within its own population.\"",
+      "\"...the second expert's study will be mentioned in a footnote so that it does not need to be addressed in the body of the essay.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "The original draft commits the false-choice trap: picking a side and dropping the disagreeing source.",
+      "Look for the revision that reconciles the disagreement by noticing each source may be right about a different scope or population."
+    ]
+  },
+  {
+    "id": "apenglang.competing-perspectives.mcq.02",
+    "loId": "apenglang.competing-perspectives",
+    "cedCode": "AP-ENGLANG-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student summarizes an opposing historian's view as: \"This historian claims the strike succeeded because of union unity, full stop, and ignores every other factor.\" The historian's actual article states that unity was the single most decisive advantage strikers had, compared with earlier failed strikes, though it also briefly notes that an unusually mild winter reduced strikebreakers' resolve. Which statement best evaluates the student's summary?",
+    "choices": [
+      "The summary straw-mans the historian's position by dropping the acknowledged winter factor and inflating \"most decisive\" into an absolute, all-or-nothing claim",
+      "The summary is fair, since a historian's main argument should always be treated as their only argument",
+      "The summary strengthens the essay, since exaggerating an opposing view makes that view easier to refute",
+      "The summary is unnecessary, since competing historical interpretations should never be mentioned in a synthesis essay"
+    ],
+    "answer": "A",
+    "hints": [
+      "Test the summary against the source's actual wording: would the historian recognize this as a fair restatement of their claim?",
+      "Notice what the summary quietly drops from the historian's original, qualified argument."
+    ]
+  },
+  {
+    "id": "apenglang.qualifying-with-sources.mcq.01",
+    "loId": "apenglang.qualifying-with-sources",
+    "cedCode": "AP-ENGLANG-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's thesis is: \"Remote work increases employee productivity.\" Which sentence uses a source to QUALIFY this claim rather than simply support it?",
+    "choices": [
+      "A workplace study found that employees working from home completed tasks 15% faster, confirming that remote work increases productivity",
+      "A workplace study found that employees working from home completed tasks 15% faster, though a separate survey found this gain largely disappeared for employees with young children at home, suggesting the benefit depends on a worker's home circumstances",
+      "A workplace study found that employees working from home completed tasks 15% faster, and every major company should therefore adopt permanent remote work policies",
+      "A workplace study found that employees working from home completed tasks 15% faster, a finding echoed by three additional studies conducted last year"
+    ],
+    "answer": "B",
+    "hints": [
+      "Supporting a claim just piles on evidence for it; qualifying a claim narrows its scope or adds a condition.",
+      "Look for the sentence that names a specific limit on when or for whom the productivity gain holds."
+    ]
+  },
+  {
+    "id": "apenglang.qualifying-with-sources.mcq.02",
+    "loId": "apenglang.qualifying-with-sources",
+    "cedCode": "AP-ENGLANG-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's overclaiming thesis reads: \"Social media has permanently destroyed genuine human connection.\" A source reports that a 2019 survey found heavy social-media users had LOWER loneliness than non-users when the platform was used mainly for messaging close friends, but higher loneliness when used mainly for passive scrolling. Which revised thesis best QUALIFIES the original claim using this source, without abandoning it?",
+    "choices": [
+      "\"Social media has, in fact, strengthened human connection for everyone who uses it regularly.\"",
+      "\"Social media has permanently destroyed genuine human connection, a conclusion this survey fully confirms.\"",
+      "\"Because this survey complicates the claim, no argument about social media's effect on connection can be made.\"",
+      "\"Social media's effect on genuine connection is not uniformly destructive; the survey suggests it depends on how the platform is used, undermining connection through passive scrolling but supporting it through direct messaging.\""
+    ],
+    "answer": "D",
+    "hints": [
+      "A qualified thesis keeps its core claim standing while narrowing how far it applies — it is not a full retraction.",
+      "Check whether each option still makes a real, arguable claim after accounting for the survey's finding."
+    ]
+  },
+  {
+    "id": "apenglang.sophistication-in-synthesis.mcq.01",
+    "loId": "apenglang.sophistication-in-synthesis",
+    "cedCode": "AP-ENGLANG-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis essay already cites three sources on the decline of local newspapers, each discussed competently in its own paragraph. To earn the \"sophistication\" point, a student adds one concluding sentence. Which sentence best demonstrates genuine sophistication rather than mere decoration?",
+    "choices": [
+      "\"In summation, it is abundantly clear, as evinced by the aforementioned sources, that local newspapers face myriad multifaceted challenges.\"",
+      "\"A fourth source, a 2022 industry report, further confirms that advertising revenue has declined, adding one more data point to the pattern already established.\"",
+      "\"Read individually, each source names a separate cause of decline — but read together across three decades, they trace a single pattern: each collapsing revenue source pushed newsrooms to cut the very local reporting that first justified subscriber loyalty, accelerating the next source of collapse.\"",
+      "\"Each of the three sources cited above makes a valid and well-supported point about local newspaper decline.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Sophistication is a specific stand-back move, not fancier vocabulary or an extra source.",
+      "Ask which sentence could NOT have been written after reading only one of the three sources."
+    ]
+  },
+  {
+    "id": "apenglang.sophistication-in-synthesis.mcq.02",
+    "loId": "apenglang.sophistication-in-synthesis",
+    "cedCode": "AP-ENGLANG-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student claims their essay's final sentence — \"This source shows that public trust in institutions has fallen\" — earns the AP rubric's sophistication point because it uses the word \"multifaceted\" and cites a fourth source. Which statement best evaluates this claim?",
+    "choices": [
+      "The student is correct, since sophistication is earned by citing additional sources and using elevated vocabulary",
+      "The student is incorrect: the sentence could have been written after reading only one source, so it does not perform the stand-back move sophistication requires, regardless of vocabulary or source count",
+      "The student is correct, since any concluding sentence in a synthesis essay automatically satisfies the sophistication requirement",
+      "The student is incorrect, but only because the fourth source should have been introduced earlier in the essay rather than at the end"
+    ],
+    "answer": "B",
+    "hints": [
+      "Test the sentence against a single question: could it have been written from just one source?",
+      "Sophistication requires the sources to be shown in relation to each other, not decorated individually."
+    ]
+  }
+]

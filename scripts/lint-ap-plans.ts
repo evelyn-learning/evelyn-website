@@ -26,7 +26,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
-const AP_COURSE_SLUGS = ['macro', 'calcbc', 'stats', 'envsci', 'psych', 'research'] as const;
+const AP_COURSE_SLUGS = ['macro', 'calcbc', 'stats', 'envsci', 'psych', 'research', 'englang', 'apush', 'apworld', 'apgov'] as const;
 const idPattern = new RegExp(`^evelyn\\.ap\\.(${AP_COURSE_SLUGS.join('|')})\\.[a-z0-9-]+\\.v\\d+$`);
 
 interface LintError {
@@ -165,7 +165,7 @@ function validatePlan(plan: LessonPlan): void {
 function main(): void {
   const allPlans = loadAllPlans();
 
-  // In-scope = id matches new convention (evelyn.ap.<one of 6 courses>.<slug>.v<N>).
+  // In-scope = id matches new convention (evelyn.ap.<one of the AP_COURSE_SLUGS>.<slug>.v<N>).
   // Out-of-scope ap-* plans (ap-world, ap-bio, ap-gov, etc.) are NOT linted —
   // they are guard-railed in Q10d.
   const inScope = allPlans.filter((p) => idPattern.test(p.id));
@@ -180,7 +180,7 @@ function main(): void {
   const oldFormat = inScope.filter((p) => !newFormat.includes(p));
 
   console.log(`Loaded ${allPlans.length} seed plans.`);
-  console.log(`  In-scope (6 AP courses, new id pattern): ${inScope.length}`);
+  console.log(`  In-scope (${AP_COURSE_SLUGS.length} AP courses, new id pattern): ${inScope.length}`);
   console.log(`  New-format (will be lint-validated):     ${newFormat.length}`);
   console.log(`  Old-format (queued for deletion):        ${oldFormat.length}`);
   console.log('');

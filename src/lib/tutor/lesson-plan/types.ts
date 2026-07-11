@@ -132,6 +132,8 @@ export interface SegmentConcept extends SegmentBase {
   /** Optional reference materials for the brain (image URL, equation
    *  to write, etc.). */
   references?: Array<{ kind: 'image' | 'equation' | 'note'; content: string }>;
+  /** Optional shared stimulus passage this prompt analyzes (passages/store). */
+  passageId?: string;
 }
 
 /** A solved example walked through end-to-end. The brain narrates each
@@ -189,6 +191,16 @@ export interface SegmentTryYourself extends SegmentBase {
   responseFormat?: 'mcq' | 'frq' | 'numeric' | 'free';
   /** When responseFormat === 'mcq', the choices. */
   choices?: Array<{ id: string; text: string; correct?: boolean }>;
+  /** Optional shared stimulus passage this prompt analyzes (passages/store). */
+  passageId?: string;
+  /** Optional MULTI-source packet (Synthesis FRQ): several passages the prompt
+   *  synthesizes. Resolved passages are concatenated + labeled Source A/B/C for
+   *  the grader. Use instead of (or alongside) passageId for synthesis tasks. */
+  passageIds?: string[];
+  /** Label style for a multi-source/document packet in the grader prompt:
+   *  'document' → "Document 1..N" (APUSH DBQ); default/'source' → "Source A/B/C"
+   *  (Eng Lang Synthesis). Back-compat: undefined behaves as 'source'. */
+  packetLabel?: 'source' | 'document';
   /** Marks this segment as deliberately off-topic relative to the rest
    *  of the plan. Test plans use this to bait the runtime's relevance
    *  checks. The orchestrator MUST refuse to render an offTopic segment

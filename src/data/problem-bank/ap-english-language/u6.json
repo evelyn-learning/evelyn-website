@@ -1,0 +1,202 @@
+[
+  {
+    "id": "apenglang.syntax-for-effect.mcq.01",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln closes with one long sentence: \"...we here highly resolve that these dead shall not have died in vain—that this nation, under God, shall have a new birth of freedom—and that government of the people, by the people, for the people, shall not perish from the earth.\" Stacking three parallel \"that\" clauses before the sentence finally lands on its last clause primarily —",
+    "choices": [
+      "creates confusion by burying the sentence's true point beneath several grammatically unrelated fragments strung together at random",
+      "quietly undercuts the solemn occasion, since piling up clauses this way is a pattern readers typically associate with casual, conversational speech",
+      "builds mounting suspense by stacking three parallel \"that\" clauses before the sentence's climax, saving its most memorable clause for last",
+      "signals that Lincoln has not yet decided which of the three resolutions matters most, leaving the emphasis deliberately ambiguous"
+    ],
+    "answer": "C",
+    "hints": [
+      "Count how many parallel \"that ... shall ...\" clauses appear before the sentence's final clause.",
+      "A sentence that delays its main point until the very end is called periodic — what effect does that delay have here?"
+    ]
+  },
+  {
+    "id": "apenglang.syntax-for-effect.mcq.02",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift opens with one long sentence: \"It is a melancholy object to those, who walk through this great town, or travel in the country, when they see the streets, the roads, and cabbin-doors crowded with beggars of the female sex, followed by three, four, or six children, all in rags, and importuning every passenger for an alms.\" This lengthy pile-up of qualifying clauses before Swift ever states his actual proposal primarily —",
+    "choices": [
+      "signals that the sentence is grammatically incomplete and needs a second sentence to finish expressing its meaning",
+      "proves that Swift has personally counted every beggar and child present on the town's streets during his own walks",
+      "relaxes the reader with a leisurely, lighthearted tone appropriate to a comic essay about children playing outdoors",
+      "establishes Swift's earnest, patient persona and postpones his proposal, so the later shift to a brisk, businesslike solution lands more jarringly by contrast"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice how many subordinate clauses pile up before Swift ever states his actual proposal.",
+      "Think about what kind of persona a long, patient, descriptive opening creates — and how it sets up a later contrast."
+    ]
+  },
+  {
+    "id": "apenglang.syntax-for-effect.mcq.03",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "After several longer, flowing sentences, Douglass writes one short exclamation: \"I am not included within the pale of this glorious anniversary!\" Coming right after those longer sentences, this short exclamation primarily —",
+    "choices": [
+      "lets the sentence's brevity land like a blunt personal confession, snapping the audience's attention onto Douglass's own exclusion after the preceding rolling description of shared blessings",
+      "shows that Douglass has run out of things to say on the subject and intends to move immediately to a wholly different topic",
+      "weakens the force of the argument by suddenly interrupting the speech's more carefully developed and grammatically fuller sentences",
+      "functions as a polite aside directed only at a few individual audience members rather than at the crowd as a whole"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the length of this sentence to the longer sentences right before it.",
+      "A short sentence dropped after several long ones tends to draw extra attention — to what?"
+    ]
+  },
+  {
+    "id": "apenglang.diction-connotation-tone.mcq.01",
+    "loId": "apenglang.diction-connotation-tone",
+    "cedCode": "AP-ENGLANG-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift describes a child as \"a most delicious nourishing and wholesome food, whether stewed, roasted, baked, or boiled.\" This culinary diction — \"delicious,\" \"nourishing,\" \"wholesome,\" plus cooking methods — primarily creates ironic horror by —",
+    "choices": [
+      "using deliberately harsh, violent word choices that make the proposal's cruelty explicit and impossible for any reader to miss",
+      "borrowing the calm, appreciative vocabulary of a cookbook to describe a human infant, so the clinical, appetizing diction collides with the monstrous literal content",
+      "relying on technical medical terminology to lend the proposal a false appearance of scientific precision and legitimacy",
+      "choosing vague, euphemistic language that softens the proposal so thoroughly that careful readers might miss its cannibalistic implication"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the specific words: \"delicious,\" \"nourishing,\" \"wholesome,\" plus cooking methods.",
+      "Ask what kind of writing normally uses this vocabulary — and what it's describing here."
+    ]
+  },
+  {
+    "id": "apenglang.diction-connotation-tone.mcq.02",
+    "loId": "apenglang.diction-connotation-tone",
+    "cedCode": "AP-ENGLANG-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift proposes making poor children \"sound and useful members of the commonwealth.\" Describing children in this economic, utilitarian register primarily —",
+    "choices": [
+      "reveals Swift's genuine, heartfelt concern for the long-term education and moral upbringing of poor children across the kingdom",
+      "praises the children themselves for already being industrious and hardworking despite their poverty and youth",
+      "criticizes the government specifically for failing to fund enough schools and workhouses to train poor children properly",
+      "reduces children to units of productive value for the state, a dehumanizing frame that primes readers for the proposal's monstrous logic to come"
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Sound and useful members of the commonwealth\" describes what children could become, in what kind of terms?",
+      "Consider whether this phrase treats children as people or as something else."
+    ]
+  },
+  {
+    "id": "apenglang.diction-connotation-tone.mcq.03",
+    "loId": "apenglang.diction-connotation-tone",
+    "cedCode": "AP-ENGLANG-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln says, \"we can not dedicate—we can not consecrate—we can not hallow—this ground.\" His word choice escalates from \"dedicate\" to \"consecrate\" to \"hallow.\" This escalation in diction primarily —",
+    "choices": [
+      "repeats essentially the same idea three times using synonyms chosen mainly to fit the meter and rhythm of spoken oratory",
+      "signals Lincoln's own uncertainty about which single word most accurately describes the ceremony taking place that day",
+      "moves from a general, secular term of formal designation to increasingly sacred, religious registers, intensifying the ground's solemnity with each word",
+      "moves from religious to secular language, deliberately downplaying the ceremony's spiritual dimension in favor of a practical, civic one"
+    ],
+    "answer": "C",
+    "hints": [
+      "Order the three words by how sacred or formal each one sounds: dedicate, consecrate, hallow.",
+      "Ask why Lincoln doesn't just repeat one word three times instead of choosing three different ones."
+    ]
+  },
+  {
+    "id": "apenglang.figurative-language-schemes.mcq.01",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln closes with \"government of the people, by the people, for the people.\" This threefold parallel structure —",
+    "choices": [
+      "poses a rhetorical question to the audience, inviting them to silently debate which of the three phrases is most accurate",
+      "forms a tricolon of matched prepositional phrases that defines democratic government from three angles at once — origin, agency, and purpose — reinforcing popular sovereignty through rhythmic repetition",
+      "draws a simile comparing the young nation's government to an older, more established government from ancient history",
+      "relies on understatement, deliberately downplaying the importance of ordinary citizens in operating the federal government"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the parallel prepositional phrases and notice they share the same grammatical form.",
+      "Ask what three different relationships between government and \"the people\" each phrase names."
+    ]
+  },
+  {
+    "id": "apenglang.figurative-language-schemes.mcq.02",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln says, \"The world will little note, nor long remember what we say here, but it can never forget what they did here.\" This device —",
+    "choices": [
+      "sets up an antithesis that pits Lincoln's own spoken words against the soldiers' actions, subordinating rhetoric to sacrifice",
+      "builds an extended metaphor comparing the battlefield to a living creature that \"remembers\" and \"forgets\" much as a person does",
+      "poses a rhetorical question that leaves genuinely uncertain whether future generations will remember the battle at all",
+      "makes an appeal to pathos that relies mainly on describing the soldiers' physical suffering in graphic detail"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the contrast between \"what we say\" and \"what they did.\"",
+      "Antithesis pairs two contrasting ideas in parallel grammatical form — what two things are being contrasted here?"
+    ]
+  },
+  {
+    "id": "apenglang.figurative-language-schemes.mcq.03",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift refers to \"a child just dropt from its dam\" — using \"dam,\" a word normally reserved for a female animal, to name the mother. This figurative choice —",
+    "choices": [
+      "functions as a term of endearment, a gentle way of referring to a young human mother's tenderness toward her infant",
+      "functions as a scheme of balanced grammatical repetition, echoing the structure of an earlier sentence in the same paragraph",
+      "is a literal, non-figurative agricultural term Swift uses accurately, since this particular family is described elsewhere as farmers",
+      "works as a trope that likens the human mother to a breeding animal, dehumanizing mother and child alike before Swift's proposal treats the child as livestock"
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Dam\" is a specific word normally used for a female animal, not a human mother.",
+      "Ask what this word choice does to how the reader sees the mother and child, right before the proposal's central claim."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-style.mcq.01",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry says, \"We have petitioned; we have remonstrated; we have supplicated; we have prostrated ourselves before the throne.\" A full style analysis of this line would note that Henry combines anaphora (the repeated \"we have\"), a pattern of escalating diction, and short parallel clauses. Together, these choices integrate to —",
+    "choices": [
+      "combine anaphora with diction that grows steadily calmer and more formal, matching an increasingly diplomatic argument for continued negotiation",
+      "function mainly for comic effect, since a listing structure like this was conventionally associated with satire in eighteenth-century oratory",
+      "combine anaphoric repetition with words that escalate in desperation (petitioned, then remonstrated, then supplicated, then prostrated), so syntax and diction jointly enact the very submission Henry says has failed",
+      "rely almost entirely on figurative language such as metaphor and simile, since anaphora and diction here play only a minor, decorative role"
+    ],
+    "answer": "C",
+    "hints": [
+      "List the four verbs in order: petitioned, remonstrated, supplicated, prostrated. Do they get calmer or more desperate?",
+      "This LO asks you to integrate syntax (the repeated \"we have\" clauses) and diction (the verb choices) into one combined effect — what single effect do they build together?"
+    ]
+  }
+]
