@@ -11,7 +11,7 @@ export const PASSAGE_APWORLD_MANSA_MUSA: Passage = {
   title: 'al-Umari on Mansa Musa in Cairo',
   author: 'al-Umari (Cairo, c. 1340)',
   year: 1340,
-  sourceUrl: 'https://sourcebooks.fordham.edu/source/1354-mansamusa.asp',
+  sourceUrl: 'https://worldhistorycommons.org/al-umaris-account-mansa-musas-visit-cairo',
   license: 'public-domain',
   genre: 'document',
   fullText:

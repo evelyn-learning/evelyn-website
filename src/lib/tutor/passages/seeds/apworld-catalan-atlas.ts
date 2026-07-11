@@ -11,7 +11,7 @@ export const PASSAGE_APWORLD_CATALAN_ATLAS: Passage = {
   title: 'The Catalan Atlas — Mansa Musa (political map, 1375)',
   author: 'Abraham Cresques (Majorca)',
   year: 1375,
-  sourceUrl: 'https://www.bnf.fr/en/catalan-atlas',
+  sourceUrl: 'https://en.wikipedia.org/wiki/Catalan_Atlas',
   license: 'public-domain',
   genre: 'political-cartoon',
   fullText:

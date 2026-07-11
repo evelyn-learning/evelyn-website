@@ -11,11 +11,11 @@ export const PASSAGE_APWORLD_MARCO_POLO_KINSAY: Passage = {
   title: 'The Travels of Marco Polo — the City of Kinsay',
   author: 'Marco Polo (Yule translation)',
   year: 1300,
-  sourceUrl: 'https://sourcebooks.fordham.edu/source/polo-kinsay.asp',
+  sourceUrl: 'https://www.gutenberg.org/ebooks/12410',
   license: 'public-domain',
   genre: 'document',
   fullText:
-    'The city is beyond dispute the finest and the noblest in the world. The number and wealth of the merchants, and the amount of goods that passed through their hands, were so enormous that no man could form a just estimate thereof. The market-places were thronged and crammed with purchasers, and with the traders who had brought in stores of provisions by land or water; and all was kept in order.',
+    'The crowd of people that you meet here at all hours, passing this way and that on their different errands, is so vast that no one would believe it possible that victuals enough could be provided for their consumption, unless they should see how, on every market-day, all those squares are thronged and crammed with purchasers, and with the traders who have brought in stores of provisions by land or water; and everything they bring in is disposed of.',
   lineNumbered: true,
-  wordCount: 71,
+  wordCount: 79,
 };
