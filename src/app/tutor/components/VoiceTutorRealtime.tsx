@@ -4977,6 +4977,13 @@ export function VoiceTutorRealtime({
     // resolve or the arrow drops SILENTLY (round-7 — soft pedagogy aid).
     // Cross-turn dedup: an identical from→to(+label) already on the page is
     // a re-emission habit, not a new arrow — drop it silently too.
+    //
+    // v1 exclusions (deliberate): links get NO auto-scroll injection, NO
+    // cross-page relocation (the scribble relocate in WhiteboardCanvas), and
+    // do NOT feed the context-detector's Signal A — links carry no
+    // page-position stamps (only from/to Feature+Id), and v1 renders arrows
+    // only when both endpoints measure on the current page's DOM. A future
+    // cross-page arrow story would need page stamps on both endpoints first.
     for (const cmd of processed) {
       if (cmd.action !== 'link') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

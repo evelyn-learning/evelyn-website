@@ -1870,7 +1870,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       },
       required: ['from', 'to'],
     },
-  } as ToolDefinition] : []),
+  } satisfies ToolDefinition] : []),
 
   {
     name: 'list_whiteboard_features',
