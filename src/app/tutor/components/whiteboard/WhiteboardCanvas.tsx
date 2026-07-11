@@ -911,6 +911,14 @@ export function WhiteboardCanvas({
     () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'handwrite' }> => c.action === 'handwrite'),
     [safeCurrentPage.commands],
   );
+  // SmoothDraw P4: hand-drawn arrows between two already-rendered board
+  // features. Mirrors the scribbles/handwrites memos exactly — filtered
+  // once per page-commands change, rendered inside InkNotesOverlay so
+  // arrow labels share its placement/occupied space with notes.
+  const links = useMemo(
+    () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'link' }> => c.action === 'link'),
+    [safeCurrentPage.commands],
+  );
 
   // Refs to each rendered item so scrollTo can bring them into view
   // (via scrollElementIntoContainer — see its doc comment above).
@@ -1595,6 +1603,7 @@ export function WhiteboardCanvas({
             contentRef={pageWrapperRef}
             notes={handwrites}
             labeledScribbles={scribbles}
+            links={links}
             onOverflowChange={handleNoteOverflow}
           />
         )}

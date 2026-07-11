@@ -24,9 +24,11 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { placeNote, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
+import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
 
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
+type LinkCmd = Extract<WhiteboardCommand, { action: 'link' }>;
 
 const NOTE_MAX_W = 240;
 const NOTE_LINE_H = 26;
@@ -99,6 +101,31 @@ type NoteEntry = {
   hostW: number;
 };
 
+/** SmoothDraw P4: a measured arrow ready to render. `spine` is in
+ *  host-px, computed once per measuring pass (same cadence as notes).
+ *  Rescaled proportionally on host-width change, mirroring NoteEntry. */
+type ArrowEntry = {
+  key: string;
+  spine: Pt[];
+  color: string;
+  hostW: number;
+};
+
+/** Shared shape for the placement `sources` list: either a DOM-target
+ *  note (targetId/targetFeature, resolved via targetRect) or an arrow
+ *  label whose target is a literal rect (the spine midpoint) rather
+ *  than a queryable element. */
+type NoteSource = {
+  key: string;
+  text: string;
+  color: string;
+  targetId?: string;
+  targetFeature?: string;
+  /** SmoothDraw P4: arrow labels supply this instead of targetId/
+   *  targetFeature — bypasses the DOM lookup in targetRect(). */
+  explicitTarget?: Rect;
+};
+
 /** Resolve a note's target rect (host-relative px): prefer the feature's
  *  element, fall back to the whole item, else null (margin). Mirrors the
  *  ScribbleOverlays / student-marks measurement conventions. Also returns
@@ -132,6 +159,7 @@ export function InkNotesOverlay({
   contentRef,
   notes,
   labeledScribbles,
+  links,
   onOverflowChange,
 }: {
   // Deviation from the task-3 brief: the brief types this
@@ -153,6 +181,9 @@ export function InkNotesOverlay({
   contentRef?: React.RefObject<HTMLDivElement | null>;
   notes: HandwriteCmd[];
   labeledScribbles: ScribbleCmd[];
+  /** SmoothDraw P4: hand-drawn arrows. Measured + placed in the SAME
+   *  pass as notes so labels share one placement/occupied space. */
+  links: LinkCmd[];
   /** Reports how far (px) the lowest note extends BELOW the content
    *  wrapper's bottom edge (0 when everything fits). The host renders
    *  an in-flow spacer of this height after the wrapper so extended
@@ -161,6 +192,7 @@ export function InkNotesOverlay({
   onOverflowChange?: (px: number) => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>([]);
+  const [arrows, setArrows] = useState<ArrowEntry[]>([]);
   const [hostW, setHostW] = useState(0);
   const animatedRef = useRef<Set<string>>(new Set());
 
@@ -172,7 +204,7 @@ export function InkNotesOverlay({
   // changes `sources` (different page's commands) and the placement
   // effect below recomputes from scratch every time regardless.
   const sources = React.useMemo(() => {
-    const s: Array<{ key: string; text: string; color: string; targetId?: string; targetFeature?: string }> = [];
+    const s: NoteSource[] = [];
     notes.forEach((n, i) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const a = n as any;
@@ -267,13 +299,63 @@ export function InkNotesOverlay({
         const r = toHostRect(sep);
         if (r.w > 0 || r.h > 0) sepRects.push(r);
       });
+      // SmoothDraw P4: measure arrows BEFORE notes place. Both endpoints
+      // must resolve to live rects on THIS page's DOM (targetRect returns
+      // null when a stamped feature/item isn't currently rendered — the
+      // other page, or a kill-recovered item) — missing either endpoint
+      // or an empty spine (overlapping/too-close rects) skips the arrow
+      // silently, same round-7 philosophy as scribble/handwrite misses.
+      // Each spine's padded bbox goes into `occupied` so notes dodge the
+      // arrow's path; a link's label (if any) becomes a placement source
+      // of its own, targeting a literal rect at the spine midpoint (no
+      // DOM element — see the NoteSource.explicitTarget doc).
+      const linkArrows: ArrowEntry[] = [];
+      const arrowRects: Rect[] = [];
+      const arrowLabelSources: NoteSource[] = [];
+      for (const link of links) {
+        if (!link.fromFeature || !link.toFeature) continue;
+        const fromT = targetRect(host, link.fromId, link.fromFeature);
+        const toT = targetRect(host, link.toId, link.toFeature);
+        if (!fromT || !toT) continue;
+        const spine = arrowSpine(fromT.rect, toT.rect, `${link.fromFeature}->${link.toFeature}`);
+        if (spine.length === 0) continue;
+        const key = `link:${link.fromFeature}->${link.toFeature}`;
+        const color = link.color || AMBER;
+        linkArrows.push({ key, spine, color, hostW: hostBox.width });
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const p of spine) {
+          if (p.x < minX) minX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y > maxY) maxY = p.y;
+        }
+        arrowRects.push({ x: minX - 6, y: minY - 6, w: maxX - minX + 12, h: maxY - minY + 12 });
+        if (link.label && link.label.trim()) {
+          const mid = spine[Math.floor(spine.length / 2)];
+          arrowLabelSources.push({
+            key: `al-${key}`,
+            text: link.label,
+            color,
+            explicitTarget: { x: mid.x - 12, y: mid.y - 12, w: 24, h: 24 },
+          });
+        }
+      }
       // Rects of notes already placed this pass — every later note dodges
       // every earlier one regardless of which item it targets.
       const placedRects: Rect[] = [];
       const next: NoteEntry[] = [];
-      for (const src of sources) {
+      // Arrow labels flow through the SAME placement loop as handwrite/
+      // scribble notes, appended after scribble labels (command order),
+      // so they get identical backdrop/animation/occupied treatment.
+      const allSources = [...sources, ...arrowLabelSources];
+      for (const src of allSources) {
         const m = measureNote(src.text);
-        const t = targetRect(host, src.targetId, src.targetFeature);
+        const t = src.explicitTarget
+          ? { rect: src.explicitTarget, itemEl: null as Element | null }
+          : targetRect(host, src.targetId, src.targetFeature);
         // Defect A of the 2026-07-11 gate: a feature (say, vertex O) lives
         // INSIDE its item's card, so every right/above/below/left slot
         // beside it overlaps the card's own bounding rect — with that rect
@@ -298,12 +380,14 @@ export function InkNotesOverlay({
           }
         }
         occupied.push(...sepRects);
+        occupied.push(...arrowRects);
         occupied.push(...placedRects);
         const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
         placedRects.push(placement.rect);
         next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
       }
       setEntries(next);
+      setArrows(linkArrows);
       setHostW(hostBox.width);
       // Report how far the lowest note extends below the page (content)
       // bottom so the host can grow via an in-flow spacer. Computed
@@ -324,7 +408,7 @@ export function InkNotesOverlay({
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
     };
-  }, [sources, hostRef, contentRef, hostW, fontsReady, onOverflowChange]);
+  }, [sources, links, hostRef, contentRef, hostW, fontsReady, onOverflowChange]);
 
   // Host width tracking (student-ink pattern): proportional rescale.
   useEffect(() => {
@@ -348,9 +432,60 @@ export function InkNotesOverlay({
     );
   };
 
-  if (entries.length === 0) return null;
+  // SmoothDraw P4: draw-on wipe for an arrow's <g>, once per arrow key —
+  // SAME animatedRef Set as animateIn (key namespaces don't collide:
+  // notes use hw-/sl-/al- prefixes, arrows use `link:`). Direction
+  // follows the spine's dominant axis (the bigger of |dx|/|dy| between
+  // its first and last point) so a left-to-right arrow wipes on from
+  // the left, a bottom-to-top arrow wipes on from the bottom, etc. —
+  // reads as the hand "drawing" the arrow toward its head.
+  const animateArrowIn = (el: SVGGElement | null, key: string, spine: Pt[]) => {
+    if (!el || animatedRef.current.has(key) || spine.length < 2) return;
+    animatedRef.current.add(key);
+    const start = spine[0];
+    const end = spine[spine.length - 1];
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    let from: string;
+    let to: string;
+    if (Math.abs(dx) >= Math.abs(dy)) {
+      if (dx > 0) { from = 'inset(0 100% 0 0)'; to = 'inset(0 0% 0 0)'; } // wipe from left
+      else { from = 'inset(0 0 0 100%)'; to = 'inset(0 0 0 0%)'; }       // wipe from right
+    } else if (dy > 0) { from = 'inset(0 0 100% 0)'; to = 'inset(0 0 0% 0)'; } // wipe from top
+    else { from = 'inset(100% 0 0 0)'; to = 'inset(0% 0 0 0)'; }              // wipe from bottom
+    el.animate(
+      [{ opacity: 0, clipPath: from }, { opacity: 1, clipPath: to }],
+      { duration: 500, easing: 'ease-out', fill: 'backwards' },
+    );
+  };
+
+  if (entries.length === 0 && arrows.length === 0) return null;
   return (
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 6 }} aria-label="tutor notes">
+      {/* SmoothDraw P4: arrow layer. Rendered ahead of the notes below
+          (paint order — arbitrary choice, no overlap by construction
+          since arrow bboxes are in the notes' `occupied` set) inside the
+          SAME pointer-events-none root as notes. */}
+      {arrows.length > 0 && (
+        <svg className="absolute inset-0 pointer-events-none overflow-visible" aria-hidden="true">
+          {arrows.map((a) => {
+            const scale = a.hostW > 0 && hostW > 0 ? hostW / a.hostW : 1;
+            const [b1, b2] = arrowHeads(a.spine, 12);
+            return (
+              <g key={a.key} ref={(el) => animateArrowIn(el, a.key, a.spine)} transform={`scale(${scale})`}>
+                <path d={strokeOutline(a.spine, 7, `${a.key}-halo`)} fill="white" fillOpacity={0.95} />
+                <path d={strokeOutline(a.spine, 4.5, a.key)} fill={a.color} />
+                {[b1, b2].map((barb, i) => (
+                  <React.Fragment key={i}>
+                    <path d={strokeOutline(barb, 7, `${a.key}-b${i}-halo`)} fill="white" fillOpacity={0.95} />
+                    <path d={strokeOutline(barb, 4.5, `${a.key}-b${i}`)} fill={a.color} />
+                  </React.Fragment>
+                ))}
+              </g>
+            );
+          })}
+        </svg>
+      )}
       {entries.map((e) => {
         const scale = e.hostW > 0 && hostW > 0 ? hostW / e.hostW : 1;
         return (
