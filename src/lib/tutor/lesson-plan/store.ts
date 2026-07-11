@@ -1347,6 +1347,9 @@ import { SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revol
 import { SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
 import { SEED_AP_APUSH_U3_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
 import { SEED_AP_APUSH_U3_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
+import { SEED_AP_APUSH_U3_DBQ_PRACTICE } from './seeds/ap-apush-u3-dbq-practice';
+import { SEED_AP_APUSH_U3_LEQ_PRACTICE } from './seeds/ap-apush-u3-leq-practice';
+import { SEED_AP_APUSH_U3_SAQ_PRACTICE } from './seeds/ap-apush-u3-saq-practice';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2659,6 +2662,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION,
   SEED_AP_APUSH_U3_CONSTITUTION_RATIFICATION,
   SEED_AP_APUSH_U3_NEW_REPUBLIC,
+  SEED_AP_APUSH_U3_DBQ_PRACTICE,
+  SEED_AP_APUSH_U3_LEQ_PRACTICE,
+  SEED_AP_APUSH_U3_SAQ_PRACTICE,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
