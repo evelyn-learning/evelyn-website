@@ -1,0 +1,202 @@
+[
+  {
+    "id": "apush.causes-of-revolution.mcq.01",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-join-or-die.v1",
+    "problemText": "Benjamin Franklin's 1754 cartoon shows a snake cut into eight segments labeled by colony, captioned \"JOIN, or DIE,\" drawing on the folk belief that a severed snake could recover if rejoined before sunset. Originally published during the French and Indian War, this image was revived as a political symbol in the 1760s and 1770s primarily because it —",
+    "choices": [
+      "warned colonists that reuniting with Britain was the only path to economic prosperity",
+      "proved that the colonies had already formed a permanent political union under the Continental Congress",
+      "captured the argument that the colonies needed to unite in common cause, now against imperial taxation and control rather than the French",
+      "mocked the British Parliament's inability to pass effective legislation regarding colonial trade"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what threat the colonies faced in the 1760s-1770s, compared to the threat they faced in 1754.",
+      "The cartoon's core message is about unity in the face of a common danger — only the danger changed."
+    ]
+  },
+  {
+    "id": "apush.causes-of-revolution.mcq.02",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-common-sense.v1",
+    "problemText": "In Common Sense (January 1776), Thomas Paine writes, \"Freedom hath been hunted round the globe... O! receive the fugitive, and prepare in time an asylum for mankind.\" This appeal reflects which development in the imperial crisis leading to independence?",
+    "choices": [
+      "Growing colonial conviction, after a decade of parliamentary taxation and armed conflict at Lexington and Concord, that America's cause was a universal one transcending mere loyalty to Britain",
+      "Widespread colonial enthusiasm for restoring the exact terms of the pre-1763 relationship with Great Britain",
+      "The colonies' formal declaration of war against France following the end of the Seven Years' War",
+      "Colonial support for maintaining monarchy but replacing George III with a more sympathetic ruler"
+    ],
+    "answer": "A",
+    "hints": [
+      "Paine published this pamphlet months after Lexington and Concord, when many colonists still hoped for reconciliation.",
+      "Notice that Paine frames American liberty as a refuge for 'mankind,' not just for British subjects."
+    ]
+  },
+  {
+    "id": "apush.revolutionary-ideals.mcq.01",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-declaration.v1",
+    "problemText": "The Declaration of Independence states that governments are \"instituted among Men, deriving their just powers from the consent of the governed.\" This claim draws most directly on which Enlightenment idea?",
+    "choices": [
+      "Mercantilist theory that colonies exist to enrich the mother country",
+      "Thomas Hobbes's argument that only an all-powerful sovereign can prevent a state of perpetual war",
+      "The doctrine of the divine right of kings, holding that monarchs answer to God alone",
+      "John Locke's social-contract theory that legitimate political authority rests on the agreement of the governed"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask where political power comes from in this sentence — from a monarch, or from the people themselves?",
+      "This is the same philosopher whose ideas about natural rights (life, liberty, property) shaped the Declaration's opening."
+    ]
+  },
+  {
+    "id": "apush.revolutionary-ideals.mcq.02",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Patrick Henry declares, \"give me liberty, or give me death!\" while the Declaration of Independence asserts that among unalienable rights are \"Life, Liberty and the pursuit of Happiness.\" Both statements most directly reflect which shared revolutionary-era idea?",
+    "choices": [
+      "That political authority should rest exclusively with a hereditary aristocracy",
+      "That liberty is a natural right worth risking life itself to secure",
+      "That economic self-sufficiency mattered more to the colonists than political rights",
+      "That the colonies should remain part of the British Empire under a reformed constitution"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both speakers set liberty against the alternative of death or the loss of self-government.",
+      "Think about what makes liberty a 'natural right' rather than a privilege granted by a king."
+    ]
+  },
+  {
+    "id": "apush.articles-of-confederation.mcq.01",
+    "loId": "apush.articles-of-confederation",
+    "cedCode": "AP-APUSH-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-constitution-preamble.v1",
+    "problemText": "The Preamble to the Constitution states its purpose is \"to form a more perfect Union\" and \"provide for the common defence.\" This phrasing most directly reflects criticism of which prior arrangement?",
+    "choices": [
+      "The Articles of Confederation, whose weak central government could not adequately unify the states or fund a common defense",
+      "The British colonial administration prior to 1763",
+      "The system of royal governors appointed to each individual colony",
+      "The Continental Army's command structure during the Revolutionary War"
+    ],
+    "answer": "A",
+    "hints": [
+      "'More perfect Union' implies improving upon an existing union — which national government existed right before the Constitution?",
+      "Recall that the Confederation Congress could not levy taxes or compel states to fund a national defense."
+    ]
+  },
+  {
+    "id": "apush.articles-of-confederation.mcq.02",
+    "loId": "apush.articles-of-confederation",
+    "cedCode": "AP-APUSH-3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-declaration.v1",
+    "problemText": "The Declaration of Independence lists a long train of grievances against a king who, in the colonists' view, wielded unchecked executive power. This experience most directly caused the framers of the Articles of Confederation (1781) to —",
+    "choices": [
+      "create a strong national executive modeled closely on the British monarchy",
+      "establish a national army answerable directly to Congress rather than to the states",
+      "deliberately design a national government with no independent executive and only limited powers, reserving most authority to the states",
+      "abolish state governments entirely in favor of a single unified national government"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what the framers of 1781 were most afraid of repeating, given what they had just declared independence from.",
+      "The Articles created a Congress with no president and no power to tax — a deliberate reaction, not an oversight."
+    ]
+  },
+  {
+    "id": "apush.constitution-ratification.mcq.01",
+    "loId": "apush.constitution-ratification",
+    "cedCode": "AP-APUSH-3.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-federalist-10.v1",
+    "problemText": "In Federalist No. 10 (1787), James Madison defines a faction as \"a number of citizens... united and actuated by some common impulse of passion, or of interest, adverse to... the permanent and aggregate interests of the community.\" Madison's point of view in this definition is best described as —",
+    "choices": [
+      "an Anti-Federalist's fear that a strong national government would itself become a tyrannical faction",
+      "a British loyalist's argument that colonial assemblies were incapable of self-government",
+      "a Democratic-Republican's defense of states' rights against federal encroachment",
+      "a Federalist's concern that unchecked factions could threaten minority rights and the common good under the new Constitution"
+    ],
+    "answer": "D",
+    "hints": [
+      "Madison wrote the Federalist essays to persuade states to ratify the Constitution he had helped draft.",
+      "Ask whose interests Madison worries a faction might trample — and why he thinks the new Constitution's structure could help."
+    ]
+  },
+  {
+    "id": "apush.constitution-ratification.mcq.02",
+    "loId": "apush.constitution-ratification",
+    "cedCode": "AP-APUSH-3.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-brutus-1.v1",
+    "problemText": "Brutus No. 1 (1787) warns, \"History furnishes no example of a free republic, any thing like the extent of the United States,\" pointing to the fall of the Grecian and Roman republics after they \"extended their conquests over large territories.\" Compared to Madison's argument in Federalist No. 10 that a large republic best controls the dangers of faction, Brutus's argument most directly —",
+    "choices": [
+      "agrees that a large territory strengthens republican government by diluting the influence of any single faction",
+      "reaches the opposite conclusion, holding that a free republic cannot be sustained over so vast a territory as the United States",
+      "focuses on the same issue of factions but concludes that only a monarchy can control them",
+      "ignores the size of the republic entirely, focusing instead on the question of representation in the Senate"
+    ],
+    "answer": "B",
+    "hints": [
+      "Madison says size is the cure for faction; ask what Brutus says size does to a republic's survival.",
+      "Brutus is an Anti-Federalist essay opposing ratification — expect it to contradict a core Federalist argument."
+    ]
+  },
+  {
+    "id": "apush.new-republic.mcq.01",
+    "loId": "apush.new-republic",
+    "cedCode": "AP-APUSH-3.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-constitution-preamble.v1",
+    "problemText": "The Preamble to the Constitution pledges that the new government would \"insure domestic Tranquility\" and \"promote the general Welfare.\" Which development in the 1790s most directly tested this pledge?",
+    "choices": [
+      "The Louisiana Purchase, which peacefully doubled the size of the United States",
+      "The ratification of the Bill of Rights, which added protections for individual liberties",
+      "The Whiskey Rebellion, in which western Pennsylvania farmers violently resisted a federal excise tax, prompting Washington to lead a federal militia to suppress it",
+      "The Marbury v. Madison decision, which established the principle of judicial review"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for an event in the 1790s (not the 1800s) that directly challenged whether the new government could keep 'domestic Tranquility.'",
+      "This event tested whether the federal government could enforce its own tax laws against armed resistance."
+    ]
+  },
+  {
+    "id": "apush.new-republic.mcq.02",
+    "loId": "apush.new-republic",
+    "cedCode": "AP-APUSH-3.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-federalist-10.v1",
+    "problemText": "In Federalist No. 10, Madison defines a faction as a group \"united and actuated by some common impulse of passion, or of interest, adverse to... the permanent and aggregate interests of the community,\" and argues the Constitution's structure would control such factions. Which development in the new republic of the 1790s complicates Madison's confidence?",
+    "choices": [
+      "The peaceful transfer of power from Washington to Adams in 1797, proving Madison's structure worked exactly as intended",
+      "The Whiskey Rebellion, which showed that factions posed no real threat to the new government",
+      "The Alien and Sedition Acts, which eliminated political disagreement entirely within the new republic",
+      "The emergence of the Federalist and Democratic-Republican parties, organized political factions that Madison's generation had hoped the Constitution would prevent"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what formed around Hamilton's and Jefferson's rival visions during Washington's administration.",
+      "Madison hoped the Constitution's structure would prevent durable national factions — did it succeed by the late 1790s?"
+    ]
+  }
+]
