@@ -77,8 +77,15 @@ type NoteEntry = {
 
 /** Resolve a note's target rect (host-relative px): prefer the feature's
  *  element, fall back to the whole item, else null (margin). Mirrors the
- *  ScribbleOverlays / student-marks measurement conventions. */
-function targetRect(host: HTMLElement, targetId?: string, targetFeature?: string): Rect | null {
+ *  ScribbleOverlays / student-marks measurement conventions. Also returns
+ *  the CONTAINING item element, so the placement loop can swap that
+ *  item's whole-card rect out of the occupied set (see the loop below —
+ *  the 2026-07-11 gate's defect A). */
+function targetRect(
+  host: HTMLElement,
+  targetId?: string,
+  targetFeature?: string,
+): { rect: Rect; itemEl: Element | null } | null {
   const hostBox = host.getBoundingClientRect();
   let el: Element | null = null;
   if (targetId) {
@@ -90,7 +97,10 @@ function targetRect(host: HTMLElement, targetId?: string, targetFeature?: string
   if (!el) return null;
   const b = el.getBoundingClientRect();
   if (b.width === 0 && b.height === 0) return null;
-  return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
+  return {
+    rect: { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height },
+    itemEl: el.closest('[data-wb-item-id]'),
+  };
 }
 
 export function InkNotesOverlay({
@@ -138,24 +148,51 @@ export function InkNotesOverlay({
     const hostBox = host.getBoundingClientRect();
     if (hostBox.width === 0) return;
     const page: Rect = { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
+    const toHostRect = (el: Element): Rect => {
+      const b = el.getBoundingClientRect();
+      return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
+    };
     // Occupied set starts with every rendered item's rect — notes must
-    // dodge CONTENT first, then each other.
-    const occupied: Rect[] = [];
+    // dodge CONTENT first, then each other. Keep the ELEMENT alongside
+    // each rect: a note targeting a feature INSIDE an item needs that
+    // item's whole-card rect swapped for finer-granularity rects (below).
+    const itemEntries: Array<{ el: Element; rect: Rect }> = [];
     host.querySelectorAll('[data-wb-item-id]').forEach((item) => {
-      const b = item.getBoundingClientRect();
-      occupied.push({ x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height });
+      itemEntries.push({ el: item, rect: toHostRect(item) });
     });
+    // Rects of notes already placed this pass — every later note dodges
+    // every earlier one regardless of which item it targets.
+    const placedRects: Rect[] = [];
     const next: NoteEntry[] = [];
     for (const src of sources) {
       const m = measureNote(src.text);
       const t = targetRect(host, src.targetId, src.targetFeature);
-      // A feature rect INSIDE an item is fine to sit beside — carve the
-      // feature out of the occupied test by passing it as the target;
-      // the whole-item rects in `occupied` still block slots that would
-      // cover OTHER content. When the target IS a whole item, the right/
-      // above/below/left slots naturally sit outside it.
-      const placement = placeNote({ target: t, occupied, page, note: { w: m.w, h: m.h } });
-      occupied.push(placement.rect);
+      // Defect A of the 2026-07-11 gate: a feature (say, vertex O) lives
+      // INSIDE its item's card, so every right/above/below/left slot
+      // beside it overlaps the card's own bounding rect — with that rect
+      // in `occupied`, placeNote could NEVER sit beside an interior
+      // feature and every near-targeted note silently degraded to the
+      // margin column. Fix: for the note's own CONTAINING item, replace
+      // the whole-card rect with the rects of its [data-feature]
+      // descendants — the real content within the card the note must
+      // dodge — so the note may use the card's whitespace beside its
+      // target. All OTHER items still block via their whole rect, and
+      // placeNote's target carve-out keeps the note off the target
+      // itself.
+      const occupied: Rect[] = [];
+      for (const entry of itemEntries) {
+        if (t?.itemEl && entry.el === t.itemEl) {
+          entry.el.querySelectorAll('[data-feature]').forEach((f) => {
+            const r = toHostRect(f);
+            if (r.w > 0 || r.h > 0) occupied.push(r);
+          });
+        } else {
+          occupied.push(entry.rect);
+        }
+      }
+      occupied.push(...placedRects);
+      const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+      placedRects.push(placement.rect);
       next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
     }
     setEntries(next);
