@@ -19,6 +19,10 @@
  *   4. The PDF capture source uses the same tick anchor formula
  *      (just inside the feature's right edge, vertically centered,
  *      with bold stroke — sized for visibility, 2026-05-13 tweak).
+ *   5. SmoothDraw P4 (task 4): the PDF EXPORT (pdf-tutor-session.ts,
+ *      distinct from the whiteboard-capture.ts tick anchor above) emits
+ *      a caption line per `link` command, flag-gated through both meta-
+ *      skip sets, with the no-bake-v1 rationale documented.
  *
  * Run with:
  *   TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register \
@@ -259,6 +263,41 @@ expect(
 expect(
     !orchSource.includes('handwrite near-resolve failed'),
     'old near-resolution warning removed',
+);
+
+// ── 6. PDF export — link caption line (task 4, static check) ───
+
+const pdfExportSource = readFileSync(
+    join(__dirname, '..', 'src/lib/utils/export/pdf-tutor-session.ts'),
+    'utf8',
+);
+// The two meta-skip sets (Task 2's sweep) both thread linksEnabled() so
+// flag-off keeps `link` fully skipped (byte-identical to pre-task-4
+// output) while flag-on lets it flow through the walk like `handwrite`.
+expect(
+    (pdfExportSource.match(/\.\.\.\(linksEnabled\(\) \? \[\] : \['link'\]\)/g) ?? []).length === 2,
+    'both PDF meta-skip sets (META_PDF_ACTIONS, META_PDF_BOOKKEEPING) thread linksEnabled()',
+);
+// The caption branch itself: strip-bullet style via drawNoteCaptionLine,
+// text format `${fromDisplay} → ${toDisplay}${label ? ' — ' + label : ''}`,
+// using the human from/to strings (not resolved fromFeature/toFeature).
+expect(
+    pdfExportSource.includes("if (cmd.action === 'link' && (cmd.from || cmd.to)) {"),
+    'drawWhiteboardVisual has a link branch',
+);
+expect(
+    pdfExportSource.includes('`${fromDisplay} → ${toDisplay}${label ? ` — ${label}` : \'\'}`'),
+    'link caption text format matches the brief (from → to — label)',
+);
+expect(
+    pdfExportSource.includes('no bake v1'),
+    'link branch documents the no-bake-v1 rationale (arrows span two items; PDF is a linear item stack)',
+);
+// describeWhiteboardCommand gets a matching badge case so the numbered
+// item above the caption doesn't fall to the generic "Command: link".
+expect(
+    pdfExportSource.includes("case 'link':\n      return `Link: ${cmd.from || ''} → ${cmd.to || ''}`;"),
+    'describeWhiteboardCommand has a link case',
 );
 
 // ── Report ──
