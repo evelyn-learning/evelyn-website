@@ -1340,6 +1340,9 @@ import { SEED_AP_ENGLANG_U5_ORGANIZING_FOR_EFFECT } from './seeds/ap-englang-u5-
 import { SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING } from './seeds/ap-englang-u5-reasoning-and-paragraphing';
 import { SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-transitions-cohesion';
 import { SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
+// AP US History — Period-3 Vertical Slice initiative (calibration plan).
+// See docs/superpowers/specs/2026-07-10-ap-us-history-design.md.
+import { SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2646,6 +2649,8 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING,
   SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION,
   SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE,
+  // AP US History — Period-3 Vertical Slice content plans.
+  SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
