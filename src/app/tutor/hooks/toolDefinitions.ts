@@ -33,6 +33,13 @@ export interface ToolDefinition {
   };
 }
 
+/** SmoothDraw Phase 3: on-board ink notes. Read at CALL time (not module
+ *  init) so unit tests can toggle process.env; in the browser bundle
+ *  Next.js inlines the env var, making this a constant. */
+export function inkNotesEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_TUTOR_INK_NOTES === 'true';
+}
+
 /**
  * All whiteboard tools available to the AI tutor.
  * These are the canonical definitions — convert to platform-specific
@@ -1852,12 +1859,13 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'tutor_handwrite',
-    description: 'Add a self-contained commentary line to the current page\'s annotation strip — the running list of teacher notes that sits below the rendered items. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). The note has no spatial anchor — it lands in the strip in the order it was emitted. Use sparingly — 1-2 handwrites per turn at most. Strip resets on each new_page.',
+    description: 'Write a short hand-written note. With `near`, the note lands on the board beside its target; without it, in the margin. ≤80 chars. Use for short reminders ("Legislative makes laws"), capturing student wording verbatim ("you said: free elections"), inline definitions, or short causation notes ("Because particles are spread out, gases compress easily"). Distinct from `annotate` (a boxed text card on the board) and `tutor_scribble` (which marks an EXISTING feature on the diagram).\n\nWrite full self-contained sentences ("Legislative makes laws"), not fragments ("makes laws"). Without `near`, notes collect in the page\'s notes area in emission order. Use sparingly — 1-2 handwrites per turn at most. Notes reset on each new_page.',
     parameters: {
       type: 'object',
       properties: {
-        text: { type: 'string', description: 'The full self-contained text to add to the page\'s annotation strip. Plain text only; LaTeX / markdown does not render.' },
-        color: { type: 'string', description: 'CSS color for the strip entry. Defaults to amber ("#a16207"). Use green for affirmation, red for warnings.' },
+        text: { type: 'string', description: 'The full self-contained note text. Plain text only; LaTeX / markdown does not render.' },
+        color: { type: 'string', description: 'CSS color for the note. Defaults to amber ("#a16207"). Use green for affirmation, red for warnings.' },
+        near: { type: 'string', description: 'Optional: the feature or item this note is about (same target grammar as tutor_scribble). When provided, the note is hand-written on the board BESIDE that target at a position the runtime computes — never overlapping content. Omit for a general note (margin).' },
       },
       required: ['text'],
     },
@@ -2757,14 +2765,19 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';
     if (!text) return null;
     // Post-redesign: handwrite is a pure text-into-strip command. The
-    // `near` / `position` / `margin` fields are accepted-but-ignored so
-    // in-flight brain calls during system-prompt cache turnover don't
-    // crash. The orchestrator strips these silently before rendering.
-    return {
-      action: 'handwrite',
-      text,
-      color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
-    };
+    // `position` / `margin` fields are accepted-but-ignored so in-flight
+    // brain calls during system-prompt cache turnover don't crash. The
+    // orchestrator strips these silently before rendering.
+    //
+    // SmoothDraw Phase 3: `near` rides through ONLY when the ink-notes
+    // flag is on — flag-off, the command is byte-identical to today's
+    // (the orchestrator's stripping loop is the second half of this gate).
+    const cmd: WhiteboardCommand = { action: 'handwrite', text, ...(typeof funcArgs.color === 'string' ? { color: funcArgs.color } : {}) };
+    if (inkNotesEnabled() && typeof funcArgs.near === 'string' && funcArgs.near.trim()) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (cmd as any).near = funcArgs.near.trim();
+    }
+    return cmd;
   }
   if (funcName === 'advance_lesson') {
     return { action: 'advanceLesson', to: String(funcArgs.to ?? 'next'), reason: funcArgs.reason };

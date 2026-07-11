@@ -89,6 +89,8 @@ import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
+import { InkNotesOverlay } from './InkNotesOverlay';
+import { inkNotesEnabled } from '../../hooks/toolDefinitions';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -937,6 +939,20 @@ export function WhiteboardCanvas({
   const [pings, setPings] = useState<{ id: number; pageIndex: number; x: number; y: number }[]>([]);
   const pingIdRef = useRef(0);
 
+  // SmoothDraw P3: height (px) of the in-flow spacer rendered AFTER the
+  // page wrapper so margin notes the slot engine placed BELOW the page
+  // bottom (ink-placement's exhausted-scan extension) are scrollable
+  // instead of clipped — absolutely-positioned notes below the host's
+  // content don't grow the host on their own. No feedback loop: the
+  // overlay measures placement (and this overflow) against the page
+  // WRAPPER's box, which a sibling spacer below it never affects — see
+  // InkNotesOverlay's contentRef doc. Flag-off: overlay absent, spacer
+  // never renders.
+  const [noteOverflowPx, setNoteOverflowPx] = useState(0);
+  const handleNoteOverflow = useCallback((px: number) => {
+    setNoteOverflowPx((prev) => (prev === px ? prev : px));
+  }, []);
+
   // Fix 1 (ink drift on resize/rotation): track the outer host's live
   // CSS width so ink strokes captured at a different width can be
   // rescaled at render time — see the InkStroke doc comment.
@@ -985,7 +1001,9 @@ export function WhiteboardCanvas({
     // itemIndex 0 is a synthetic page-level slot — there is no real item
     // 0 (the loop above skips falsy itemIndex), so this can't collide
     // with a real item's rect.
+    const noteEls = new Set<Element>();
     wrapper.querySelectorAll<HTMLElement>('[data-wb-note]').forEach((noteEl) => {
+      noteEls.add(noteEl);
       out.push({
         ...norm(noteEl.getBoundingClientRect()),
         itemIndex: 0,
@@ -993,6 +1011,49 @@ export function WhiteboardCanvas({
         label: noteEl.getAttribute('data-wb-note-text') || undefined,
       });
     });
+    // SmoothDraw P3: InkNotesOverlay's notes (flag on) mount on the
+    // SIBLING host pageOuterRef, not inside pageWrapperRef (see
+    // pageOuterRef's doc comment above) — the wrapper-scoped scan just
+    // above can't see them. Scan pageOuterRef too, deduped against the
+    // wrapper scan by element identity (a Set) so nothing doubles up if a
+    // note element were ever reachable from both — e.g. the flag-off
+    // AnnotationStrip case, where pageOuterRef.querySelectorAll would
+    // otherwise re-find the SAME [data-wb-note] elements the wrapper scan
+    // just collected, since pageWrapperRef is itself a descendant of
+    // pageOuterRef.
+    //
+    // Honest scope: this scan makes overlay notes positioned WITHIN the
+    // wrapper's box resolvable to taps. Notes placed out in the outer
+    // padding gutter ARE visible to the scan, but taps landing there
+    // never reach the mark pointer handlers in the first place — tap
+    // capture (handleMarkPointerDown/Up) is wired on pageWrapperRef and
+    // item descendants only; the Phase-2b re-host to pageOuterRef moved
+    // the PEN overlay, not tap capture. Widening tap capture to
+    // pageOuterRef is a tracked follow-up decision for the student-marks
+    // system (trade-off: gutter taps would then also start resolving as
+    // page-level marks), not fixed here.
+    //
+    // Coordinate space: `norm()` above normalizes any DOMRect against
+    // wRect (pageWrapperRef's viewport box) regardless of which subtree
+    // supplied it — getBoundingClientRect() always returns
+    // viewport-absolute coordinates, so reusing the same wRect-based
+    // `norm()` for outer-host rects yields the identical wrapper-relative
+    // [0,1] space the rest of collectRects already uses; no separate
+    // conversion is needed. Flag-off: the overlay never mounts, so this
+    // scan finds nothing new and behavior is byte-identical to before.
+    const outer = pageOuterRef.current;
+    if (outer && outer !== wrapper) {
+      outer.querySelectorAll<HTMLElement>('[data-wb-note]').forEach((noteEl) => {
+        if (noteEls.has(noteEl)) return;
+        noteEls.add(noteEl);
+        out.push({
+          ...norm(noteEl.getBoundingClientRect()),
+          itemIndex: 0,
+          feature: 'teacher-note',
+          label: noteEl.getAttribute('data-wb-note-text') || undefined,
+        });
+      });
+    }
     return out;
   }, []);
 
@@ -1490,8 +1551,13 @@ export function WhiteboardCanvas({
             the old position-based on-diagram annotations — gives a
             stable home for words and frees the brain from spatial
             reasoning entirely. Resets on page nav (each page has its
-            own commands). */}
-        <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />
+            own commands).
+            SmoothDraw P3: on-board notes replace the strip under the flag.
+            The strip component stays in the tree flag-off; its DELETION is
+            deferred until the live legibility gate passes (spec §5). */}
+        {inkNotesEnabled()
+          ? null
+          : <AnnotationStrip scribbles={scribbles} handwrites={handwrites} />}
         {/* Fix 2: filter by page — a ping still in its 2s life at the
             moment of a page nav would otherwise render at the same
             normalized coords on the newly-current page. */}
@@ -1503,6 +1569,29 @@ export function WhiteboardCanvas({
           />
         ))}
         </div>
+        {/* SmoothDraw P3: in-flow spacer revealing margin notes the slot
+            engine placed BELOW the page bottom (see noteOverflowPx's doc
+            comment above — sibling AFTER the wrapper, so it never feeds
+            back into placement). */}
+        {inkNotesEnabled() && noteOverflowPx > 0 && (
+          <div style={{ height: noteOverflowPx }} aria-hidden="true" />
+        )}
+        {/* SmoothDraw P3: on-board tutor notes (replaces AnnotationStrip
+            under the flag — see its render site above). Hosted on
+            pageOuterRef, same as the student-ink SVG right below, so the
+            note slot engine measures against the same coordinate space
+            (see InkNotesOverlay's + pageOuterRef's doc comments) and
+            gutter placement works. Placement's page rect measures from
+            pageWrapperRef (contentRef) — spacer-independent. */}
+        {inkNotesEnabled() && (
+          <InkNotesOverlay
+            hostRef={pageOuterRef}
+            contentRef={pageWrapperRef}
+            notes={handwrites}
+            labeledScribbles={scribbles}
+            onOverflowChange={handleNoteOverflow}
+          />
+        )}
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
             Hosted on pageOuterRef (not the page wrapper) so ink painted in
             the padding gutter around the wrapper — or on the annotation

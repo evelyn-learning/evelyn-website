@@ -19,7 +19,7 @@ import {
   type ProductionStateForClassifier,
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
-import { mapFunctionCallToCommand, WHITEBOARD_TOOLS } from '../hooks/toolDefinitions';
+import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
@@ -4931,21 +4931,43 @@ export function VoiceTutorRealtime({
     processed = processed.filter((c) => !(c as any)._scribbleRejected);
 
     // Post-redesign (2026-05-13): tutor_handwrite is now a pure
-    // text-into-strip command — no more `near` / `position` / `margin`
+    // text-into-strip command — no more `position` / `margin`
     // resolution, no more central-pin escape, no more PDF vs live
     // asymmetry. The schema dropped these fields, but a stale brain
     // may continue emitting them for a few sessions until the system-
     // prompt cache turns over. Silently strip any legacy fields so the
     // strip renderer sees only `{ action, text, color }`.
+    //
+    // SmoothDraw Phase 3 (flag `NEXT_PUBLIC_TUTOR_INK_NOTES`): when the
+    // flag is on and the command carries a `near` string, resolve it
+    // through the same catalog tutor_scribble uses instead of stripping
+    // it. Flag off, `near` is stripped exactly like the legacy fields
+    // below — behavior at the command level is unchanged from today.
     for (const cmd of processed) {
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdAny = cmd as any;
-      if ('near' in cmdAny) delete cmdAny.near;
+      // Legacy spatial fields are ALWAYS stripped (pre-2026-05-13 brains).
       if ('position' in cmdAny) delete cmdAny.position;
       if ('margin' in cmdAny) delete cmdAny.margin;
-      if ('targetId' in cmdAny) delete cmdAny.targetId;
-      if ('targetFeature' in cmdAny) delete cmdAny.targetFeature;
+      if (inkNotesEnabled() && typeof cmdAny.near === 'string' && cmdAny.near.trim()) {
+        // SmoothDraw P3: resolve `near` through the catalog exactly like
+        // scribble targets. Failure is SILENT (round-7): the note keeps
+        // no target stamp and the overlay places it in the margin column.
+        const res = catalogRef.current.resolveTarget(cmdAny.near);
+        if (res.ok) {
+          cmdAny.targetFeature = res.canonical;
+          cmdAny.targetId = res.itemId;
+        } else {
+          delete cmdAny.targetFeature;
+          delete cmdAny.targetId;
+        }
+        delete cmdAny.near; // resolved (or margin) — the raw string never renders
+      } else {
+        if ('near' in cmdAny) delete cmdAny.near;
+        if ('targetId' in cmdAny) delete cmdAny.targetId;
+        if ('targetFeature' in cmdAny) delete cmdAny.targetFeature;
+      }
       if ('targetItemIndex' in cmdAny) delete cmdAny.targetItemIndex;
       if ('targetPageIndex' in cmdAny) delete cmdAny.targetPageIndex;
       if ('targetPageTitle' in cmdAny) delete cmdAny.targetPageTitle;

@@ -24,6 +24,7 @@
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { drawOnEnabled } from '@/app/tutor/components/whiteboard/useDrawOn';
+import { placeNote, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 
 const CAPTURE_WIDTH_PX = 760;   // matches the whiteboard's nominal width
 const CAPTURE_PADDING_PX = 16;  // matches the renderer's inner padding
@@ -208,7 +209,12 @@ export async function captureCommandRaster(
         // SVG-mode item: bake scribbles into the SVG string and re-mount.
         if (!svgWithFeatures.getAttribute('xmlns')) svgWithFeatures.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
         const original = new XMLSerializer().serializeToString(svgWithFeatures);
-        const enriched = overlayScribbles(original, scribbles);
+        // SmoothDraw P3: this raster path never receives inkNotes — see
+        // overlayScribbles' doc comment for why feature-anchored note
+        // baking is scoped to the direct vector-SVG path in
+        // pdf-tutor-session.ts instead. Scribbles (ticks/highlights)
+        // still bake here exactly as before.
+        const { svg: enriched } = overlayScribbles(original, scribbles);
         if (enriched !== original) {
           try {
             const doc = new DOMParser().parseFromString(enriched, 'image/svg+xml');
@@ -538,21 +544,116 @@ export interface ScribbleInput {
 }
 
 /**
- * Bake scribble annotations directly into a captured SVG string by
- * appending overlay shapes. The input coordinate space for scribble
- * regions is 0–1 (fractions of the target item); we scale to the SVG's
- * viewBox extent so the marks land in the right place after svg2pdf
- * embeds it. Returns a new SVG string; the original is not mutated.
+ * SmoothDraw Phase 3 (task 5) — a feature-anchored tutor note as it
+ * appears in a `handwrite` WhiteboardCommand once its `near` string has
+ * been resolved to a canonical `targetFeature` (see VoiceTutorRealtime's
+ * near-resolution block). Narrowed for this helper, mirroring
+ * ScribbleInput. Notes without a `targetFeature`, or whose `targetFeature`
+ * doesn't match any `data-feature` element in the item being captured,
+ * are NOT baked — `overlayScribbles` reports back only the ones it did
+ * bake (see `bakedTexts` below) so the caller knows to keep the
+ * existing caption-line rendering for everything else.
+ */
+export interface InkNoteInput {
+  text: string;
+  color?: string;
+  targetFeature?: string;
+}
+
+/** Greedy word-wrap by character count (~24 chars/line), capped at 4
+ *  lines with a trailing ellipsis on overflow. This is the documented
+ *  approximation for note text baked into an SVG STRING — unlike the
+ *  live InkNotesOverlay (measureNote in InkNotesOverlay.tsx), this
+ *  pipeline never touches a mounted canvas 2d context, so there's no
+ *  ctx.measureText available to wrap by actual glyph width. */
+function wrapNoteByChars(text: string, maxChars = 24, maxLines = 4): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = '';
+  for (const word of words) {
+    const probe = line ? `${line} ${word}` : word;
+    if (probe.length <= maxChars || !line) {
+      line = probe;
+    } else {
+      lines.push(line);
+      line = word;
+      if (lines.length === maxLines) break;
+    }
+  }
+  if (lines.length < maxLines && line) lines.push(line);
+  else if (line && lines.length === maxLines) {
+    lines[maxLines - 1] = `${lines[maxLines - 1].slice(0, Math.max(0, maxChars - 1))}…`;
+  }
+  return lines.length > 0 ? lines : [''];
+}
+
+/**
+ * Bake scribble annotations AND (SmoothDraw P3) feature-anchored tutor
+ * notes directly into a captured SVG string by appending overlay shapes.
+ * The input coordinate space for scribble regions is 0–1 (fractions of
+ * the target item); we scale to the SVG's viewBox extent so the marks
+ * land in the right place after svg2pdf embeds it. Returns a new SVG
+ * string plus the list of note texts that were actually baked; the
+ * original SVG string is not mutated.
  *
  * Rendering rules mirror the on-screen ScribbleOverlays component in
  * WhiteboardCanvas.tsx so the PDF visually matches the live session.
+ *
+ * Return shape: `{ svg, bakedTexts }` rather than widening this into an
+ * out-param, because both of this function's call sites (here and in
+ * pdf-tutor-session.ts) already sit at a natural assignment point
+ * (`svgString = overlayScribbles(...)` / `const enriched = ...`) — an
+ * object destructure is a one-line change at each, and it keeps the
+ * "did it bake" signal attached to its own SVG-mutation call instead of
+ * threaded through a side-channel array the way the OUTER
+ * drawWhiteboardVisual → export-loop hop is (see `bakedNoteTextsOut` in
+ * pdf-tutor-session.ts, where widening the return type would have meant
+ * touching ~15 call sites that only care about the `number` cursor).
+ * `bakedTexts` matches by note TEXT, not identity — the caller passes
+ * only the small set of notes it just supplied for THIS item, so a
+ * text collision would only mis-attribute a bake within that same
+ * item's own note list, an edge case not worth a synthetic id for.
+ *
+ * Single capture site: feature-anchored note baking is wired ONLY into
+ * pdf-tutor-session.ts's direct vector-SVG embed path (the "generic
+ * fallback" used by the ~20 Tier-1 structured renderers with no native
+ * jsPDF drawer). Everything that renders through a RASTER path never
+ * gets notes baked and always falls back to the honest margin caption
+ * line — and that set is bigger than the allowlist alone. Explicitly:
+ *   - `showEquation`: short-circuits to captureCommandRaster BEFORE the
+ *     vector path even runs (pdf-tutor-session.ts's showEquation
+ *     branch). Equations DO carry data-feature tags and are a common
+ *     live note target, so this is the most user-visible piece of the
+ *     scope cut, named here on purpose.
+ *   - the RASTER_PREFERRED_ACTIONS allowlist + exotic-glyph diagrams,
+ *   - the non-SVG HTML-mode fallback via `injectHtmlScribbleOverlay`.
+ * All of these still get their scribble ticks/highlights unchanged.
+ * Rationale: (1) the vector-SVG path covers the majority of
+ * feature-anchored-note use cases (geometry, physics, bio diagrams);
+ * (2) `injectHtmlScribbleOverlay` is a DOM-measurement implementation
+ * (getBoundingClientRect), not the string/data-feature-cx convention
+ * this function and `placeNote` assume, so wiring it in is a second,
+ * larger change outside this task's minimal-diff scope; (3)
+ * captureCommandRaster's public return type (`RasterCapture | null`)
+ * has no room for a "what got baked" signal without widening a helper
+ * used by several call sites that never pass notes at all. Equation-
+ * bake via the pre-raster mounted DOM (injectHtmlScribbleOverlay-style
+ * measurement + an HTML note overlay before rasterizing) is the natural
+ * follow-up — deliberately not built until the live legibility gate
+ * shows real note-on-equation usage justifying it.
  */
-export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]): string {
-  if (!scribbles || scribbles.length === 0) return svgString;
+export function overlayScribbles(
+  svgString: string,
+  scribbles?: ScribbleInput[],
+  inkNotes?: InkNoteInput[],
+): { svg: string; bakedTexts: string[] } {
+  const hasScribbles = !!scribbles && scribbles.length > 0;
+  const hasNotes = !!inkNotes && inkNotes.length > 0;
+  if (!hasScribbles && !hasNotes) return { svg: svgString, bakedTexts: [] };
   try {
     const doc = new DOMParser().parseFromString(svgString, 'image/svg+xml');
     const svg = doc.documentElement;
-    if (!svg || svg.nodeName.toLowerCase() !== 'svg') return svgString;
+    if (!svg || svg.nodeName.toLowerCase() !== 'svg') return { svg: svgString, bakedTexts: [] };
 
     const { width: vw, height: vh } = parseSvgDimensions(svgString);
     const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -578,8 +679,8 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
       };
     };
 
-    for (let i = 0; i < scribbles.length; i++) {
-      const s = scribbles[i];
+    for (let i = 0; hasScribbles && i < (scribbles as ScribbleInput[]).length; i++) {
+      const s = (scribbles as ScribbleInput[])[i];
       const color = s.color || '#f59e0b';
       const resolved = s.targetFeature ? resolveFeature(s.targetFeature) : null;
       const rxFrac = resolved ? resolved.x : 0.35;
@@ -669,10 +770,83 @@ export function overlayScribbles(svgString: string, scribbles: ScribbleInput[]):
 
       svg.appendChild(group);
     }
-    return new XMLSerializer().serializeToString(svg);
+
+    // SmoothDraw P3 (task 5): bake feature-anchored notes. Runs AFTER the
+    // scribbles loop so a note and a tick on the same feature both land
+    // (order doesn't matter — they occupy different visual channels,
+    // ticks corner-anchored vs notes slot-placed outside the target).
+    const bakedTexts: string[] = [];
+    if (hasNotes) {
+      for (const note of inkNotes as InkNoteInput[]) {
+        if (!note.text || !note.text.trim()) continue;
+        // No targetFeature (unresolved `near`, or flag-off never sets one)
+        // → this is a margin note; the caller keeps its caption line.
+        if (!note.targetFeature) continue;
+        const resolvedFrac = resolveFeature(note.targetFeature);
+        // Doesn't match a data-feature element on THIS item's SVG — the
+        // note's target lives on a different item (or nowhere). Silent,
+        // round-7 style: caller falls back to the caption line.
+        if (!resolvedFrac) continue;
+
+        const targetRectPx: Rect = {
+          x: resolvedFrac.x * vw,
+          y: resolvedFrac.y * vh,
+          w: resolvedFrac.w * vw,
+          h: resolvedFrac.h * vh,
+        };
+        const lines = wrapNoteByChars(note.text);
+        // Font-size scaled the same way the scribble tick above is
+        // (`Math.max(floor, fraction * min(vw,vh))`) — a smaller fraction
+        // because this sizes a multi-line text block, not one glyph.
+        const fontSize = Math.max(10, Math.min(vw, vh) * 0.045);
+        const lineH = fontSize * 1.2;
+        // No canvas measureText in this string pipeline (see
+        // wrapNoteByChars) — approximate glyph width ONLY for the note's
+        // placement box; the visual wrap already happened above by
+        // character count.
+        const longestLine = Math.max(...lines.map((l) => l.length), 1);
+        const noteW = Math.min(longestLine * fontSize * 0.52, vw * 0.6);
+        const noteH = lines.length * lineH + fontSize * 0.3;
+
+        const placement = placeNote({
+          target: targetRectPx,
+          // Per the task-5 brief: place each note against the item's OWN
+          // viewBox with an empty occupied set. Multiple notes baked into
+          // the SAME item in one call can therefore overlap each other —
+          // accepted for this scope (a captured item typically carries at
+          // most one or two co-targeting notes). The live overlay
+          // (InkNotesOverlay) is the one that accumulates `occupied`
+          // across notes, because it places every note on a page in one
+          // pass; this per-item bake call has no equivalent cross-note
+          // view.
+          occupied: [],
+          page: { x: 0, y: 0, w: vw, h: vh },
+          note: { w: noteW, h: noteH },
+        });
+
+        const color = note.color || '#a16207';
+        const textEl = doc.createElementNS(SVG_NS, 'text');
+        textEl.setAttribute('x', String(placement.rect.x));
+        textEl.setAttribute('y', String(placement.rect.y + fontSize));
+        textEl.setAttribute('font-family', 'Caveat, Kalam, cursive');
+        textEl.setAttribute('font-size', String(fontSize));
+        textEl.setAttribute('fill', color);
+        lines.forEach((line, li) => {
+          const tspan = doc.createElementNS(SVG_NS, 'tspan');
+          tspan.setAttribute('x', String(placement.rect.x));
+          if (li > 0) tspan.setAttribute('dy', String(lineH));
+          tspan.textContent = line;
+          textEl.appendChild(tspan);
+        });
+        svg.appendChild(textEl);
+        bakedTexts.push(note.text);
+      }
+    }
+
+    return { svg: new XMLSerializer().serializeToString(svg), bakedTexts };
   } catch (err) {
     console.warn('[whiteboard-capture] overlayScribbles failed; returning original SVG:', err);
-    return svgString;
+    return { svg: svgString, bakedTexts: [] };
   }
 }
 

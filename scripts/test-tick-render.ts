@@ -117,6 +117,19 @@ if (colored && colored.action === 'handwrite') {
     eq(colored.color, '#16a34a', 'handwrite.color preserved');
 }
 
+// (e) SmoothDraw P3: with the ink-notes flag ON, `near` rides the command.
+process.env.NEXT_PUBLIC_TUTOR_INK_NOTES = 'true';
+const inkNote = mapFunctionCallToCommand('tutor_handwrite', { text: 'a = 3 here', near: 'the vertex' });
+expect(inkNote !== null, 'flag-on handwrite maps');
+if (inkNote && inkNote.action === 'handwrite') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((inkNote as any).near === 'the vertex', 'flag-on handwrite carries near');
+}
+delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
+const offAgain = mapFunctionCallToCommand('tutor_handwrite', { text: 'x', near: 'y' });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+expect(offAgain !== null && !('near' in (offAgain as any)), 'flag-off drops near again');
+
 // ── 3. WhiteboardCanvas renderer source (static check) ─────────
 
 const wbSource = readFileSync(
