@@ -56,7 +56,7 @@ export const SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION: LessonPlan = {
       kind: 'concept',
       goal: 'Explain how the end of salutary neglect, new taxation, and Enlightenment ideas combined to cause the Revolution.',
       keyIdeas: [
-        "SALUTARY NEGLECT: Britain's roughly century-long policy (through the early 1700s) of loosely enforcing trade and tax laws in the colonies, letting colonial assemblies handle most day-to-day governance. Colonists grew accustomed to real self-government even while remaining British subjects.",
+        "SALUTARY NEGLECT: Britain's long-standing policy — in place through the colonial era and intensifying under early-1700s ministers like Robert Walpole — of loosely enforcing trade and tax laws in the colonies, letting colonial assemblies handle most day-to-day governance. It remained largely unbroken until 1763, so colonists grew accustomed to real self-government even while remaining British subjects.",
         'THE TURNING POINT: the French and Indian War (1754–1763) left Britain with a massive war debt and new North American territory to defend. Parliament decided the colonies should help pay for their own defense — ending salutary neglect and asserting direct control for the first time in generations.',
         "NEW TAXES, NEW ANGER: the Sugar Act (1764), Stamp Act (1765), Townshend Acts (1767), and Tea Act (1773) each taxed colonists directly, without their consent, to raise revenue rather than merely regulate trade. Colonists had grown used to controlling their own taxation through their own assemblies.",
         "\"NO TAXATION WITHOUT REPRESENTATION\": the core colonial objection was NOT that taxes were too high — it was that Parliament, in which colonists had no elected representatives, had no legitimate authority to tax them at all. This was a constitutional argument about WHO gets to make the rules, not just a complaint about money.",
@@ -100,7 +100,7 @@ export const SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION: LessonPlan = {
       problem:
         "Analyze this excerpt from Thomas Paine's Common Sense (1776), published to convince ordinary colonists that independence — not reconciliation — was the answer: \"O ye that love mankind! Ye that dare oppose, not only the tyranny, but the tyrant, stand forth! Every spot of the old world is overrun with oppression. Freedom hath been hunted round the globe... O! receive the fugitive, and prepare in time an asylum for mankind.\" What is Paine arguing, and how does it reflect the causes of the Revolution?",
       steps: [
-        'SOURCE IT FIRST. Who, when, why? Thomas Paine, January 1776 — after a year of fighting had already begun (Lexington and Concord, April 1775) but before the Declaration. Paine is writing to persuade colonists still hoping for reconciliation with Britain that full independence is the only option.',
+        'SOURCE IT FIRST. Who, when, why? Thomas Paine, January 1776 — after nine months of fighting had already begun (Lexington and Concord, April 1775) but before the Declaration. Paine is writing to persuade colonists still hoping for reconciliation with Britain that full independence is the only option.',
         'IDENTIFY THE CLAIM. Paine is not arguing about a specific tax. He reframes the whole conflict: America is not a rebellious colony, but the last refuge for liberty itself — "freedom hath been hunted round the globe" out of the Old World, and only America can give it "an asylum."',
         'CONNECT TO THE ENLIGHTENMENT CAUSE. This is the natural-rights argument in action: Paine treats liberty as a universal human inheritance ("that love mankind"), not a privilege Britain grants and can withdraw. That is exactly the philosophical move described in the concept — reframing a tax dispute as a defense of a universal right.',
         'CONNECT TO THE POLITICAL CAUSE. By calling George III "the tyrant" rather than blaming Parliament or specific ministers, Paine goes further than most earlier colonial writing — he indicts the monarchy itself, not just particular policies, which is why Common Sense is often credited with turning colonial anger over taxation into a demand for full separation.',
@@ -117,7 +117,6 @@ export const SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION: LessonPlan = {
       problem:
         "SAQ practice. (a) Briefly describe ONE cause of the American Revolution. (b) Briefly explain ONE piece of specific historical evidence that supports your answer to (a). (c) Briefly explain ONE way the ideas that drove the Revolution differed from earlier colonial political thinking (before 1763).",
       responseFormat: 'frq',
-      passageId: 'evelyn.passage.apush-common-sense.v1',
       rubric: {
         parts: [
           {
