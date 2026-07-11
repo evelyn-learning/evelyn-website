@@ -124,3 +124,76 @@ export function highlightBand(
     width,
   };
 }
+
+export type Rect4 = { x: number; y: number; w: number; h: number };
+
+/** Where the center-to-center line exits `rect`, pushed `pad` px outward.
+ *  Returns null when the other center is inside this rect. */
+function edgeExit(rect: Rect4, toward: Pt, pad: number): Pt | null {
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + rect.h / 2;
+  const dx = toward.x - cx;
+  const dy = toward.y - cy;
+  if (dx === 0 && dy === 0) return null;
+  // Slab test: smallest t where the ray leaves the rect.
+  const tx = dx !== 0 ? (dx > 0 ? (rect.x + rect.w - cx) / dx : (rect.x - cx) / dx) : Infinity;
+  const ty = dy !== 0 ? (dy > 0 ? (rect.y + rect.h - cy) / dy : (rect.y - cy) / dy) : Infinity;
+  const t = Math.min(tx, ty);
+  if (!isFinite(t) || t <= 0) return null;
+  const len = Math.hypot(dx, dy);
+  const tPad = t + pad / len;
+  return { x: cx + dx * tPad, y: cy + dy * tPad };
+}
+
+/** SmoothDraw P4: curved hand-arrow spine between two feature rects.
+ *  Anchors at each rect's nearest edge (4px outside), bows the chord by a
+ *  seeded perpendicular offset (12% of distance, clamped 8..40px), and
+ *  samples the quadratic into ~12+ points so strokeOutline can wobble it.
+ *  Overlapping/contained rects → empty spine (no meaningful arrow). */
+export function arrowSpine(from: Rect4, to: Rect4, seed: string): Pt[] {
+  const toC = { x: to.x + to.w / 2, y: to.y + to.h / 2 };
+  const fromC = { x: from.x + from.w / 2, y: from.y + from.h / 2 };
+  // Reject if either center lies within the other rect (overlap/containment).
+  if ((toC.x >= from.x && toC.x <= from.x + from.w && toC.y >= from.y && toC.y <= from.y + from.h) ||
+      (fromC.x >= to.x && fromC.x <= to.x + to.w && fromC.y >= to.y && fromC.y <= to.y + to.h)) {
+    return [];
+  }
+  const a = edgeExit(from, toC, 4);
+  const b = edgeExit(to, fromC, 4);
+  if (!a || !b) return [];
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 24) return []; // rects touch/overlap — an arrow would be noise
+  const rng = mulberry32(fnv1a(seed));
+  const bow = Math.min(40, Math.max(8, dist * 0.12)) * (rng() > 0.5 ? 1 : -1) * (0.75 + rng() * 0.5);
+  const nx = -dy / dist;
+  const ny = dx / dist;
+  const ctrl = { x: (a.x + b.x) / 2 + nx * bow, y: (a.y + b.y) / 2 + ny * bow };
+  const n = Math.max(12, Math.round(dist / 14));
+  const out: Pt[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const u = 1 - t;
+    out.push({
+      x: u * u * a.x + 2 * u * t * ctrl.x + t * t * b.x,
+      y: u * u * a.y + 2 * u * t * ctrl.y + t * t * b.y,
+    });
+  }
+  return out;
+}
+
+/** Two barb spines for the arrowhead, anchored at the spine tip and swept
+ *  back ±~150° from the end tangent. */
+export function arrowHeads(spine: Pt[], size: number): [Pt[], Pt[]] {
+  if (spine.length < 2) return [[], []];
+  const tip = spine[spine.length - 1];
+  const prev = spine[spine.length - 2];
+  const ang = Math.atan2(tip.y - prev.y, tip.x - prev.x);
+  const barb = (offset: number): Pt[] => [
+    { x: tip.x, y: tip.y },
+    { x: tip.x + Math.cos(ang + offset) * size, y: tip.y + Math.sin(ang + offset) * size },
+  ];
+  const SPREAD = Math.PI - Math.PI / 6; // 150°
+  return [barb(SPREAD), barb(-SPREAD)];
+}
