@@ -1000,16 +1000,28 @@ export function WhiteboardCanvas({
     // SmoothDraw P3: InkNotesOverlay's notes (flag on) mount on the
     // SIBLING host pageOuterRef, not inside pageWrapperRef (see
     // pageOuterRef's doc comment above) — the wrapper-scoped scan just
-    // above can't see them, so student marks on an on-board note would
-    // silently fail to resolve. Scan pageOuterRef too, deduped against
-    // the wrapper scan by element identity (a Set) so nothing doubles up
-    // if a note element were ever reachable from both — e.g. the flag-off
+    // above can't see them. Scan pageOuterRef too, deduped against the
+    // wrapper scan by element identity (a Set) so nothing doubles up if a
+    // note element were ever reachable from both — e.g. the flag-off
     // AnnotationStrip case, where pageOuterRef.querySelectorAll would
     // otherwise re-find the SAME [data-wb-note] elements the wrapper scan
     // just collected, since pageWrapperRef is itself a descendant of
-    // pageOuterRef. Coordinate space: `norm()` above normalizes any
-    // DOMRect against wRect (pageWrapperRef's viewport box) regardless of
-    // which subtree supplied it — getBoundingClientRect() always returns
+    // pageOuterRef.
+    //
+    // Honest scope: this scan makes overlay notes positioned WITHIN the
+    // wrapper's box resolvable to taps. Notes placed out in the outer
+    // padding gutter ARE visible to the scan, but taps landing there
+    // never reach the mark pointer handlers in the first place — tap
+    // capture (handleMarkPointerDown/Up) is wired on pageWrapperRef and
+    // item descendants only; the Phase-2b re-host to pageOuterRef moved
+    // the PEN overlay, not tap capture. Widening tap capture to
+    // pageOuterRef is a tracked follow-up decision for the student-marks
+    // system (trade-off: gutter taps would then also start resolving as
+    // page-level marks), not fixed here.
+    //
+    // Coordinate space: `norm()` above normalizes any DOMRect against
+    // wRect (pageWrapperRef's viewport box) regardless of which subtree
+    // supplied it — getBoundingClientRect() always returns
     // viewport-absolute coordinates, so reusing the same wRect-based
     // `norm()` for outer-host rects yields the identical wrapper-relative
     // [0,1] space the rest of collectRects already uses; no separate
