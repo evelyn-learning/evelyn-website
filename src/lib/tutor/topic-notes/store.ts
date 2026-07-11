@@ -224,6 +224,15 @@ import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3
 import { BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
 import { BASELINE_AP_APUSH_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
 
+// AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
+// plans (Mongol Empire through cultural/technological/biological diffusion).
+// DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
+import { BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE } from './seeds/ap-apworld-u2-indian-ocean-trade';
+import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-trans-saharan-trade';
+import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
+import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -386,6 +395,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
   BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APUSH_NEW_REPUBLIC,
+  BASELINE_AP_APWORLD_SILK_ROADS,
+  BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
+  BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
+  BASELINE_AP_APWORLD_MONGOL_EMPIRE,
+  BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
