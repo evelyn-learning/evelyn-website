@@ -8,7 +8,8 @@ export interface Passage {
   id: string;
   title: string;
   author: string;
-  /** Publication/delivery year (must be public-domain: pre-1929). */
+  /** Publication/delivery year. Must be public domain — pre-1929, or exempt
+   *  from copyright regardless of year (US government works, 17 USC §105). */
   year: number;
   /** Canonical public-domain source (Wikisource/Gutenberg/archives). */
   sourceUrl: string;

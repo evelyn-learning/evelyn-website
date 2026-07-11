@@ -30,8 +30,18 @@ import * as fs from 'fs';
 import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
 import { ProblemBank } from '../src/models/ProblemBank';
+import { resolvePassage } from '../src/lib/tutor/passages/store';
 
 const VERIFIER_MODEL = 'claude-sonnet-5';
+// Display names for the verify prompt (fall back to the dir name if unlisted).
+const COURSE_NAMES: Record<string, string> = {
+  'ap-statistics': 'AP Statistics',
+  'ap-calculus-bc': 'AP Calculus BC',
+  'ap-english-language': 'AP English Language and Composition',
+  'ap-us-history': 'AP US History',
+  'ap-world-history': 'AP World History: Modern',
+  'ap-us-government': 'AP US Government and Politics',
+};
 // topic/topicId are derived from the --course dir name at upsert (the course
 // dir matches the engine topic, e.g. ap-statistics, ap-calculus-bc).
 const SOURCE = { name: 'Evelyn (original)' };
@@ -96,6 +106,9 @@ function validate(item: SeedItem, seenIds: Set<string>): string[] {
   } else {
     errs.push(`unsupported responseFormat ${(item as { responseFormat?: string }).responseFormat}`);
   }
+  if (item.passageId && !resolvePassage(item.passageId)) {
+    errs.push(`passageId '${item.passageId}' not in the passage registry`);
+  }
   // KaTeX $-digit trap (currency renderer) — warn, don't fail.
   const re = /\$(\d)/;
   if (re.test(item.problemText)) errs.push('WARN problemText has $<digit> (currency/KaTeX trap)');
@@ -144,14 +157,20 @@ function numericMatch(expected: string, got: string): boolean {
   return Math.abs(a - b) <= tol;
 }
 
-async function verifyItem(anthropic: Anthropic, item: SeedItem): Promise<VerifyResult> {
+async function verifyItem(anthropic: Anthropic, item: SeedItem, courseName: string): Promise<VerifyResult> {
   const isMcq = item.responseFormat === 'mcq';
   const choicesBlock = isMcq
     ? '\n' + item.choices!.map((c, i) => `${LETTERS[i]}. ${c}`).join('\n')
     : '';
+  // Passage-based items (humanities courses) can't be solved from the stem
+  // alone — feed the verifier the same stimulus the student sees.
+  const passage = item.passageId ? resolvePassage(item.passageId) : undefined;
+  const passageBlock = passage
+    ? `Stimulus — ${passage.title} (${passage.author}, ${passage.year}):\n${passage.fullText}\n\n`
+    : '';
   const instruction = isMcq
-    ? 'Solve this AP Statistics multiple-choice question independently. Respond with ONLY a JSON object: {"answer":"<letter A-E>"}.'
-    : 'Solve this AP Statistics question independently. Respond with ONLY a JSON object: {"answer":"<numeric value only, no units>"}.';
+    ? `Solve this ${courseName} multiple-choice question independently. Respond with ONLY a JSON object: {"answer":"<letter A-E>"}.`
+    : `Solve this ${courseName} question independently. Respond with ONLY a JSON object: {"answer":"<numeric value only, no units>"}.`;
 
   // Newer body fields (adaptive thinking, output_config.effort) aren't in the
   // installed SDK's types but serialize over the wire — cast to bypass TS.
@@ -161,8 +180,8 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem): Promise<VerifyR
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
     system:
-      'You are an expert AP exam grader (math, calculus, statistics) verifying an answer key. Solve from scratch; do not assume the provided key is correct. Output only the requested JSON.',
-    messages: [{ role: 'user', content: `${instruction}\n\nQuestion:\n${item.problemText}${choicesBlock}` }],
+      `You are an expert ${courseName} exam grader verifying an answer key. Solve from scratch; do not assume the provided key is correct. Output only the requested JSON.`,
+    messages: [{ role: 'user', content: `${instruction}\n\n${passageBlock}Question:\n${item.problemText}${choicesBlock}` }],
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const msg = (await anthropic.messages.create(params as any)) as { content: Array<{ type: string; text?: string }> };
@@ -251,12 +270,13 @@ async function main() {
       process.exit(1);
     }
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const courseName = COURSE_NAMES[opts.course] ?? opts.course;
     console.log(`\nVerifying ${items.length} items via ${VERIFIER_MODEL} (concurrency ${opts.concurrency})...`);
     let done = 0;
     const verdicts = await runPool(items, opts.concurrency, async (item) => {
       let r: VerifyResult;
       try {
-        r = await verifyItem(anthropic, item);
+        r = await verifyItem(anthropic, item, courseName);
       } catch (e) {
         r = { ok: false, modelAnswer: '', note: `ERROR ${(e as Error).message}` };
       }
