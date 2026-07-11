@@ -50,7 +50,7 @@ Period-3 documents:
 
 - **Sourcing / point of view** — Madison's stance in Federalist 10 (constitution-ratification.mcq.01); Locke's social-contract theory behind the Declaration (revolutionary-ideals.mcq.01).
 - **Contextualization** — Join-or-Die's revival in the 1760s-70s imperial crisis (causes-of-revolution.mcq.01); Common Sense's appeal after Lexington and Concord (causes-of-revolution.mcq.02).
-- **Causation** — colonial fear of unchecked executive power shaping the weak Articles of Confederation (articles-of-confederation.mcq.02); Preamble language as a rebuke of the Articles' weaknesses (articles-of-confederation.mcq.01).
+- **Causation** — the Declaration preamble's consent-of-the-governed principle plus revolutionary distrust of concentrated power shaping the deliberately weak Articles of Confederation executive (articles-of-confederation.mcq.02 — stem quotes only the seeded preamble line and frames the grievance history as outside knowledge, so the stimulus matches the seeded excerpt); Preamble language as a rebuke of the Articles' weaknesses (articles-of-confederation.mcq.01).
 - **Comparison** — Brutus No. 1 vs. Federalist No. 10 on republic size and faction (constitution-ratification.mcq.02); Henry vs. the Declaration on natural-rights liberty (revolutionary-ideals.mcq.02).
 - **Continuity/change** — the Whiskey Rebellion testing the new government's promise of domestic tranquility (new-republic.mcq.01); the rise of Federalist/Democratic-Republican parties despite Madison's Federalist 10 hopes (new-republic.mcq.02).
 
@@ -60,8 +60,12 @@ Period-3 documents:
 - Correct-answer letters distributed non-cyclically across all 10 items:
   A=2, B=2, C=3, D=3. Sequence: `CADBACDBCD` — not all-A, not a repeating
   ABCD pattern (the known "everything keys to A" trap from earlier banks).
-- Choice lengths kept comparable per item; the correct answer is not
-  systematically the longest option.
+- Choice lengths equalized per item (word-count checked): in a first draft
+  the correct answer was the longest/tied-longest option in 9 of 10 items (a
+  test-wiseness exploit); a revision shortened correct choices and enriched
+  distractors so the correct answer is now the longest in **0 of 10** items
+  (each item has at least one distractor of equal-or-greater length).
+  Verify: `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-history/u3.json'); for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); console.log(i.id, w[ci]===Math.max(...w));}"`.
 - All stems and choices are ORIGINAL — written for this bank, quoting only
   short phrases from public-domain Period-3 documents (never transcribed
   wholesale from a real AP exam). `license: 'internal-original'` per
@@ -70,6 +74,7 @@ Period-3 documents:
 ## Verification
 
 `npm run seed:problem-bank -- --course=ap-us-history --file=u3.json --dry-run`:
-10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
-on the first pass (no fixes required). `npm run lint:passages` clean (10
-passages resolve, including all 7 referenced by this bank).
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected
+— both on the initial draft and after the choice-length / AoC-stem revision.
+`npm run lint:passages` clean (10 passages resolve, including all 7 referenced
+by this bank).
