@@ -2074,8 +2074,23 @@ export async function exportTutorSessionPDF(
       // so the corresponding handwrite command's OWN list entry can
       // skip its caption line when its turn comes later in this walk.
       const itemNoteEntries = thisId ? (notesByTargetId.get(thisId) || []) : [];
-      const itemInkNotes = itemNoteEntries.length > 0
-        ? itemNoteEntries.map((n) => ({ text: n.text, color: n.color, targetFeature: n.targetFeature }))
+      // 2026-07-11 round 2: labeled scribbles join the note bake. Live,
+      // a scribble label flows through InkNotesOverlay identically to a
+      // handwrite note, but the PDF only ever gave it the strip-mirror
+      // caption line (user session: "point-a -> the far corner" as a
+      // caption while the live board showed the label beside the corner).
+      // Eligibility mirrors overlayScribbles' own requirement: a
+      // targetFeature to resolve against (labels without one keep their
+      // strip line as before). Scribbles have no walk position of their
+      // own (filtered out of dedupedCommands), so no __pdfNoteDeferred
+      // machinery is needed — the strip-mirror block below IS their
+      // caption fallback, and it now skips the ones that baked.
+      const bakeableScribbleLabels = itemScribbles.filter((s) => s.label && s.label.trim() && s.targetFeature);
+      const itemInkNotes = (itemNoteEntries.length > 0 || bakeableScribbleLabels.length > 0)
+        ? [
+            ...itemNoteEntries.map((n) => ({ text: n.text, color: n.color, targetFeature: n.targetFeature })),
+            ...bakeableScribbleLabels.map((s) => ({ text: s.label as string, color: s.color, targetFeature: s.targetFeature })),
+          ]
         : undefined;
       const bakedNoteTexts: string[] = [];
       const newY = await drawWhiteboardVisual(
@@ -2091,6 +2106,12 @@ export async function exportTutorSessionPDF(
       // in-place caption at the handwrite's own position was suppressed by
       // __pdfNoteDeferred in the pre-pass, regardless of stream order).
       const bakedEntries = new Set<PdfNoteEntry>();
+      // 2026-07-11 round 2: baked scribble labels, consumed from the same
+      // multiset AFTER the handwrite entries (handwrites first keeps the
+      // pre-existing marking behavior byte-identical when no scribble
+      // labels are in play). A scribble in this set skips its strip-mirror
+      // caption line below.
+      const bakedScribbleLabels = new Set<ScribbleShape>();
       if (bakedNoteTexts.length > 0) {
         // Text-match scoped to THIS item's own note list (see
         // overlayScribbles' doc comment on why text rather than a
@@ -2115,6 +2136,13 @@ export async function exportTutorSessionPDF(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (entry.sourceCmd as any).__pdfNoteBaked = true;
             bakedEntries.add(entry);
+          }
+        }
+        for (const s of bakeableScribbleLabels) {
+          const idx = remainingBaked.indexOf(s.label as string);
+          if (idx >= 0) {
+            remainingBaked.splice(idx, 1);
+            bakedScribbleLabels.add(s);
           }
         }
       }
@@ -2167,10 +2195,11 @@ export async function exportTutorSessionPDF(
 
       // Post-redesign annotation strip mirror: for any scribble on this
       // item that carries a label, emit a single colored-bullet line.
-      // Labels no longer paint on the diagram itself (the SVG bake only
-      // draws the tick / highlight), so without this mirror the PDF
-      // would lose the brain's verbal annotations.
-      const labelledScribbles = itemScribbles.filter((s) => s.label && s.label.trim());
+      // 2026-07-11 round 2: labels CAN now paint on the diagram itself
+      // (bakeableScribbleLabels above) — a label that baked skips its
+      // mirror line here; this block remains the caption fallback for
+      // labels with no targetFeature or whose feature didn't resolve.
+      const labelledScribbles = itemScribbles.filter((s) => s.label && s.label.trim() && !bakedScribbleLabels.has(s));
       if (labelledScribbles.length > 0) {
         addPageIfNeeded(labelledScribbles.length * 5 + 2);
         for (const s of labelledScribbles) {

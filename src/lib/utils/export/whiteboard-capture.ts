@@ -825,33 +825,62 @@ export function overlayScribbles(
         });
 
         const color = note.color || '#a16207';
-        const textEl = doc.createElementNS(SVG_NS, 'text');
-        textEl.setAttribute('x', String(placement.rect.x));
-        textEl.setAttribute('y', String(placement.rect.y + fontSize));
-        textEl.setAttribute('font-family', 'Caveat, Kalam, cursive');
-        textEl.setAttribute('font-size', String(fontSize));
+        // 2026-07-11 round 2 (user PDF: baked note rendered as solid white
+        // blobs): round 1 used `paint-order="stroke"` + a white stroke on
+        // the SAME <text> element — the SVG→raster/svg2pdf pipeline either
+        // ignores paint-order (stroke painted OVER fill) or the stroke
+        // swallowed the glyphs at item-viewBox font scale. Replaced with
+        // the codebase's PROVEN dual-element halo pattern (see the tick
+        // halo above: separate white copy UNDER the colored copy — no
+        // paint-order reliance anywhere in that path, verified in prod
+        // PDFs).
+        //
+        // Layer 1 — soft white backdrop rect behind the whole text block:
+        // PDF lockstep with InkNotesOverlay's live note `background:
+        // rgba(255,255,255,0.72)` + 4px radius/x-padding (that file's
+        // note div references this site and vice versa). Proportions are
+        // anchored to the live 22px reference font, scaled by this bake
+        // site's own fontSize.
+        const notePadX = fontSize * (4 / 22);
+        const backdrop = doc.createElementNS(SVG_NS, 'rect');
+        backdrop.setAttribute('x', String(placement.rect.x - notePadX));
+        backdrop.setAttribute('y', String(placement.rect.y));
+        backdrop.setAttribute('width', String(noteW + notePadX * 2));
+        backdrop.setAttribute('height', String(noteH));
+        backdrop.setAttribute('rx', String(notePadX));
+        backdrop.setAttribute('fill', '#ffffff');
+        backdrop.setAttribute('fill-opacity', '0.72');
+        backdrop.setAttribute('stroke', 'none');
+        svg.appendChild(backdrop);
+        // Layers 2+3 — dual <text>: white-stroked halo copy first, clean
+        // color-filled copy on top. stroke-width fontSize*0.25 (≈5.5px at
+        // the 22px live reference — thick enough to halo, thin enough to
+        // never swallow glyphs since the clean fill paints over it).
+        const mkNoteText = (): Element => {
+          const t = doc.createElementNS(SVG_NS, 'text');
+          t.setAttribute('x', String(placement.rect.x));
+          t.setAttribute('y', String(placement.rect.y + fontSize));
+          t.setAttribute('font-family', 'Caveat, Kalam, cursive');
+          t.setAttribute('font-size', String(fontSize));
+          lines.forEach((line, li) => {
+            const tspan = doc.createElementNS(SVG_NS, 'tspan');
+            tspan.setAttribute('x', String(placement.rect.x));
+            if (li > 0) tspan.setAttribute('dy', String(lineH));
+            tspan.textContent = line;
+            t.appendChild(tspan);
+          });
+          return t;
+        };
+        const haloText = mkNoteText();
+        haloText.setAttribute('fill', '#ffffff');
+        haloText.setAttribute('stroke', '#ffffff');
+        haloText.setAttribute('stroke-width', String(fontSize * 0.25));
+        haloText.setAttribute('stroke-linejoin', 'round');
+        haloText.setAttribute('opacity', '0.95');
+        svg.appendChild(haloText);
+        const textEl = mkNoteText();
         textEl.setAttribute('fill', color);
-        // 2026-07-11 user round: PDF lockstep with InkNotesOverlay's live
-        // white text-shadow halo (see that file's note div `textShadow` —
-        // this comment references it and vice versa) — notes crossing
-        // axis/grid lines in the exported PDF need the same legibility
-        // fix. SVG has no text-shadow, so `paint-order="stroke"` + a white
-        // stroke behind the fill approximates the halo. stroke-width ~3 at
-        // the reference 22px live font size, scaled by the same
-        // `fontSize` factor this block already uses for the note's own
-        // font-size (so the halo stays proportional at any capture size).
-        const noteStrokeWidth = fontSize * (3 / 22);
-        textEl.setAttribute('paint-order', 'stroke');
-        textEl.setAttribute('stroke', '#ffffff');
-        textEl.setAttribute('stroke-width', String(noteStrokeWidth));
-        textEl.setAttribute('stroke-linejoin', 'round');
-        lines.forEach((line, li) => {
-          const tspan = doc.createElementNS(SVG_NS, 'tspan');
-          tspan.setAttribute('x', String(placement.rect.x));
-          if (li > 0) tspan.setAttribute('dy', String(lineH));
-          tspan.textContent = line;
-          textEl.appendChild(tspan);
-        });
+        textEl.setAttribute('stroke', 'none');
         svg.appendChild(textEl);
         bakedTexts.push(note.text);
       }

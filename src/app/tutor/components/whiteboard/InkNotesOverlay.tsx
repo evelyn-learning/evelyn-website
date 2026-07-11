@@ -374,13 +374,20 @@ export function InkNotesOverlay({
               fontSize: 22,
               lineHeight: `${NOTE_LINE_H}px`,
               color: e.color,
-              // 2026-07-11 user round: notes placed beside content can cross
-              // axis/grid lines and lose legibility. A solid multi-pass white
-              // halo (4 cardinal offsets + 2 soft blur passes) keeps note
-              // text readable over any background without moving placement.
-              // PDF lockstep: whiteboard-capture.ts's note-bake path paints
-              // the SVG equivalent (paint-order="stroke" + white stroke) on
-              // the baked <text> — see that file's comment referencing here.
+              // 2026-07-11 round 2: notes crossing axis/grid lines. The
+              // round-1 text-shadow halo alone was too weak where a line
+              // passes through the text MIDLINE (user session: "the far
+              // corner" visibly struck through by the x-axis) — the soft
+              // white backdrop is the guarantee; the shadow stays layered
+              // under it to feather glyph edges. Placement unchanged
+              // (measureNote's box already carries +8px slack ≈ the 2×4px
+              // padding). PDF lockstep: whiteboard-capture.ts's note-bake
+              // path paints the SVG equivalent (white 0.72-opacity rounded
+              // rect + dual-text halo) — see that file's comment
+              // referencing here.
+              background: 'rgba(255,255,255,0.72)',
+              borderRadius: 4,
+              padding: '0 4px',
               textShadow: '0 1px 2px #fff, 0 -1px 2px #fff, 1px 0 2px #fff, -1px 0 2px #fff, 0 0 4px #fff, 0 0 6px #fff',
             }}
           >
