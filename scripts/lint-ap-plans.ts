@@ -26,7 +26,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
-const AP_COURSE_SLUGS = ['macro', 'calcbc', 'stats', 'envsci', 'psych', 'research', 'englang', 'apush', 'apworld'] as const;
+const AP_COURSE_SLUGS = ['macro', 'calcbc', 'stats', 'envsci', 'psych', 'research', 'englang', 'apush', 'apworld', 'apgov'] as const;
 const idPattern = new RegExp(`^evelyn\\.ap\\.(${AP_COURSE_SLUGS.join('|')})\\.[a-z0-9-]+\\.v\\d+$`);
 
 interface LintError {
