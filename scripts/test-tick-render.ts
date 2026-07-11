@@ -23,6 +23,11 @@
  *      distinct from the whiteboard-capture.ts tick anchor above) emits
  *      a caption line per `link` command, flag-gated through both meta-
  *      skip sets, with the no-bake-v1 rationale documented.
+ *   6. SmoothDraw P4 final-review fixes (2026-07-11): the WhiteboardCanvas
+ *      `links` memo is gated on linksEnabled() (kill-switch protects the
+ *      LIVE render path, not just tool/command mapping + PDF export), and
+ *      the link dedup signature keys on endpoint itemIds so a legitimately
+ *      re-emitted identical link on a redrawn figure still lands.
  *
  * Run with:
  *   TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register \
@@ -300,6 +305,36 @@ expect(
 expect(
     pdfExportSource.includes("case 'link':\n      return `Link: ${cmd.from || ''} → ${cmd.to || ''}`;"),
     'describeWhiteboardCommand has a link case',
+);
+
+// ── 7. WhiteboardCanvas links memo — kill-switch gates live render ─
+// (final-review finding 1, 2026-07-11): the `links` memo must call
+// linksEnabled() so a resumed session with persisted `link` commands
+// doesn't resurface arrows once NEXT_PUBLIC_TUTOR_LINKS=off — mirrors
+// the PDF exporter's meta-skip gating checked in section 6 above.
+expect(
+    /const links = useMemo\(\s*\(\) => \(linksEnabled\(\) \? safeCurrentPage\.commands\.filter/.test(wbSource),
+    'WhiteboardCanvas links memo is gated on linksEnabled() (kill-switch protects the live render path)',
+);
+expect(
+    wbSource.includes("import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';"),
+    'WhiteboardCanvas imports linksEnabled from toolDefinitions',
+);
+
+// ── 8. Link dedup signature keys on endpoint itemIds ────────────
+// (final-review finding 2, 2026-07-11): the scribble dedup (section
+// above, VoiceTutorRealtime.tsx) deliberately includes itemId in its
+// signature so the same mark re-emitted on a FRESH diagram (redrawn
+// figure → new item id) still lands. The link dedup must do the same —
+// otherwise evolve-in-place / kill-recovery / clear replacing a figure
+// silently and permanently drops a legitimately re-emitted identical
+// link. No existing unit suite exercises either dedup signature by
+// invocation (both live inside the orchestrator's tool-call reducer,
+// not a standalone helper), so this is a static source check,
+// consistent with the scribble dedup having none either.
+expect(
+    orchSource.includes('p.fromFeature === f.canonical && p.fromId === f.itemId && p.toFeature === t.canonical && p.toId === t.itemId'),
+    'link dedup signature includes endpoint itemIds (fromId/toId), not just canonical+label',
 );
 
 // ── Report ──

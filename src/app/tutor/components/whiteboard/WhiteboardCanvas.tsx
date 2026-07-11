@@ -90,7 +90,7 @@ import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/stud
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { InkNotesOverlay } from './InkNotesOverlay';
-import { inkNotesEnabled } from '../../hooks/toolDefinitions';
+import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -915,8 +915,17 @@ export function WhiteboardCanvas({
   // features. Mirrors the scribbles/handwrites memos exactly — filtered
   // once per page-commands change, rendered inside InkNotesOverlay so
   // arrow labels share its placement/occupied space with notes.
+  // Kill-switch gate (`NEXT_PUBLIC_TUTOR_LINKS=off`, linksEnabled() false):
+  // checked here, not just at emission time, so a resumed session whose
+  // PERSISTED whiteboardCommands already contain stamped `link` commands
+  // (from before the flag flipped off) doesn't resurface arrows on the
+  // live board — same "stray persisted link must not resurface flag-off"
+  // rationale as the PDF exporter's meta-skip sets. Read at call time
+  // (not module init) so this stays a real rollback lever, not a
+  // build-time constant — matches linksEnabled()'s own call-time-read
+  // convention.
   const links = useMemo(
-    () => safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'link' }> => c.action === 'link'),
+    () => (linksEnabled() ? safeCurrentPage.commands.filter((c): c is Extract<WhiteboardCommand, { action: 'link' }> => c.action === 'link') : []),
     [safeCurrentPage.commands],
   );
 

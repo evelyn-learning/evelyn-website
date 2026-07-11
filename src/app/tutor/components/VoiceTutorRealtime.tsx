@@ -4995,11 +4995,17 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('link_dropped', `${c.from} -> ${c.to} (${!f.ok ? 'from-miss' : !t.ok ? 'to-miss' : 'self-link'})`);
         continue;
       }
+      // itemId is part of the key, same rationale as the scribble dedup
+      // above: the same link legitimately re-emitted after its endpoint
+      // item was replaced (evolve-in-place / kill-recovery / clear
+      // redraws a figure under a fresh itemId) must still land, not be
+      // silently dropped forever because an old, now-gone item shared
+      // the canonical+label signature.
       const dupe = whiteboardCommandsRef.current.some((prev) => {
         if ((prev as { action?: string }).action !== 'link') return false;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = prev as any;
-        return p.fromFeature === f.canonical && p.toFeature === t.canonical && (p.label ?? '') === (c.label ?? '');
+        return p.fromFeature === f.canonical && p.fromId === f.itemId && p.toFeature === t.canonical && p.toId === t.itemId && (p.label ?? '') === (c.label ?? '');
       });
       if (dupe) { c._linkRejected = true; onDebugEvent?.('link_dropped', 'duplicate'); continue; }
       c.fromFeature = f.canonical; c.fromId = f.itemId;
