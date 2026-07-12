@@ -106,7 +106,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.apush-codex-mendoza.v1",
-    "problemText": "The Codex Mendoza, commissioned around 1541 by Viceroy Antonio de Mendoza, records the tribute — bundles of woven cotton mantles, quilted cotton warrior costumes, and loads of maize — that conquered provinces of the former Aztec empire owed under Spanish colonial rule. That a Spanish viceroy commissioned this detailed tribute record most directly illustrates —",
+    "problemText": "The Codex Mendoza, commissioned around 1541 by Viceroy Antonio de Mendoza, records the tribute — bundles of woven cotton mantles, quilted cotton warrior costumes, and loads of maize — that conquered provinces owed their Aztec rulers, compiled to inform Spanish colonial administration. That a Spanish viceroy commissioned this detailed tribute record most directly illustrates —",
     "choices": [
       "how Spanish colonial administration extracted resources from Native peoples by adapting existing tribute structures",
       "how the Spanish Crown replaced every indigenous form of taxation with an entirely new European system",
@@ -147,10 +147,10 @@
     "responseFormat": "mcq",
     "problemText": "Before 1492, the Mississippian center of Cahokia (near present-day St. Louis) reached a population estimated as high as 10,000-20,000 people, supported by intensive floodplain maize agriculture, while Pacific Northwest maritime societies built large, socially stratified communities without practicing any agriculture at all. Together, these two societies serve as evidence against which claim about pre-contact North America?",
     "choices": [
-      "that Native American societies obtained food primarily through long-distance trade rather than local production",
+      "that Mississippian and Pacific Northwest peoples were unified under a single political authority",
       "that Mississippian and Pacific Northwest societies shared an identical political structure based on the potlatch",
       "that pre-1492 North America was a sparsely populated wilderness shared by one uniform Native culture",
-      "that every pre-1492 Native society in North America depended on irrigated agriculture in an arid environment"
+      "that Mississippian and Pacific Northwest societies both first emerged only in the centuries just before European contact"
     ],
     "answer": "C",
     "hints": [
