@@ -24,14 +24,14 @@ export const BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS: TopicNotesBaseline = {
   theory: [
     {
       loId: 'apworld.culture-rights-migration',
-      kind: 'event',
+      kind: 'definition',
       title: 'the Universal Declaration of Human Rights (1948)',
       content:
         'Adopted by the UN General Assembly after WWII\'s atrocities, the UDHR proclaimed rights belonging to "all members of the human family" — a genuinely new claim that rights are universal, not granted solely at each government\'s discretion. Not legally binding alone, but foundational to later binding treaties and rights movements.',
     },
     {
       loId: 'apworld.culture-rights-migration',
-      kind: 'framework',
+      kind: 'definition',
       title: 'global popular culture flows in multiple directions',
       content:
         "Bollywood (India) reaches large audiences across South Asia and beyond; K-pop (South Korea) became a global phenomenon; football, rooted across Europe, Latin America, Africa, and Asia, became the world's most followed sport. Cultural globalization moved outward from many centers, not one.",

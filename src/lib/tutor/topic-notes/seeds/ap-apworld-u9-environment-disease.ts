@@ -30,7 +30,7 @@ export const BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE: TopicNotesBaseline = {
     },
     {
       loId: 'apworld.environment-disease',
-      kind: 'event',
+      kind: 'definition',
       title: 'the 1918 influenza pandemic',
       content:
         'Beginning in 1918 and worsened by troop movements late in WWI, this pandemic killed an estimated tens of millions worldwide within about two years — among the deadliest disease events in recorded history, before effective antiviral treatment or a vaccine existed.',

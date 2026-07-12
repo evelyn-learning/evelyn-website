@@ -23,7 +23,7 @@ export const BASELINE_AP_APWORLD_U8_DECOLONIZATION: TopicNotesBaseline = {
   theory: [
     {
       loId: 'apworld.decolonization-wave',
-      kind: 'cause',
+      kind: 'definition',
       title: 'why decolonization accelerated after 1945',
       content:
         "WWII left Britain and France economically exhausted and militarily overextended, undermining their ability to hold overseas territory by force; wartime rhetoric about self-determination and the new UN's founding principles made colonial rule harder to justify; decades-old nationalist movements within the colonies had grown stronger and more organized.",
@@ -79,7 +79,7 @@ export const BASELINE_AP_APWORLD_U8_DECOLONIZATION: TopicNotesBaseline = {
     },
     {
       loId: 'apworld.decolonization-wave',
-      kind: 'event',
+      kind: 'definition',
       title: 'the 1960 "Year of Africa" (UN membership data)',
       content:
         'UN membership rose from 51 (1945) to 189 (2000), rising every interval. The single largest one-year jump was 1960 (82 -> 99, +17), 16 of the 17 new members newly independent African states (the 17th, Cyprus) — quantitative evidence of decolonization\'s accelerating pace.',

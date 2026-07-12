@@ -825,9 +825,10 @@ two non-stimulus items omit it entirely, per plan.
 - **Life-expectancy anchor discipline:** both items key to the unit's
   specified unambiguous anchors — Asia's +32-year gain as the largest of
   the three regions shown (`environment-disease.mcq.01`), and the
-  starting-point-vs.-gain reasoning explaining why Africa's smaller
-  absolute gain (a real +25 years) still leaves it behind Europe's smaller
-  +17-year gain (`environment-disease.mcq.02`). No item claims a figure
+  starting-point-vs.-gain reasoning explaining why Africa's larger
+  absolute gain (a real +25 years, versus Europe's +17) still leaves it
+  behind Europe, since Africa started from a much lower 1950 base
+  (`environment-disease.mcq.02`). No item claims a figure
   outside the seeded 46→73 (world), 37→62 (Africa), 42→74 (Asia), 62→79
   (Europe) set.
 - **ICT internet-data-gap discipline:** `technology-communication.mcq.01`
