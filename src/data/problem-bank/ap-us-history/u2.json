@@ -1,0 +1,161 @@
+[
+  {
+    "id": "apush.colonial-regions.mcq.01",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-winthrop-charity.v1",
+    "problemText": "In \"A Model of Christian Charity\" (1630), delivered as a sermon aboard the ship Arbella before Massachusetts Bay's Puritan settlers had even landed, John Winthrop tells them, \"We are entered into Covenant with Him for this worke,\" warning that if they fail to keep it, \"the Lord will surely breake out in wrathe against us.\" This framing most directly reflects which feature of the New England colonial model, in contrast to the Chesapeake?",
+    "choices": [
+      "A joint-stock investment venture chartered specifically to locate gold deposits, much like Spanish expeditions farther south",
+      "A community covenant, where success or failure was read as God's judgment rather than profit",
+      "A tobacco-exporting economy built on headright land grants and imported indentured servant labor",
+      "A royal colony ruled directly by a Crown-appointed governor with no locally elected assembly"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice there's no mention of land grants, crops, or investor profits anywhere in this passage.",
+      "Ask what the colonists risk if they 'neglect the observation of these articles' — money, or God's favor?"
+    ]
+  },
+  {
+    "id": "apush.colonial-regions.mcq.02",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-winthrop-charity.v1",
+    "problemText": "Winthrop continues in the same 1630 sermon: \"For wee must consider that wee shall be as a citty upon a hill. The eies of all people are uppon us.\" This image most directly conveys Winthrop's belief that —",
+    "choices": [
+      "New England's conduct would be watched by the world as a verdict on the whole venture",
+      "Massachusetts Bay's tobacco exports would soon rival the Chesapeake's growing cash-crop economy",
+      "Puritan magistrates intended to extend full religious toleration to any dissenters who arrived",
+      "New England colonists had already secured a lasting, formal peace treaty with every neighboring Native nation"
+    ],
+    "answer": "A",
+    "hints": [
+      "The 'citty upon a hill' image is about being watched and judged, not about trade or diplomacy.",
+      "Ask who is doing the watching in 'the eies of all people are uppon us' — investors, or the wider world?"
+    ]
+  },
+  {
+    "id": "apush.colonial-regions.mcq.03",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-mayflower-compact.v1",
+    "problemText": "Signed aboard the Mayflower in 1620 before landing at Cape Cod — outside the bounds of their original Virginia Company charter — the Mayflower Compact has its signers \"covenant and combine ourselves together into a civil Body Politick\" and promise to \"enact, constitute, and frame, such just and equal Laws... as shall be thought most meet and convenient for the general Good of the Colony.\" This document is most significant as an early example of —",
+    "choices": [
+      "Colonists submitting entirely to a Crown-appointed governor's authority over the settlement",
+      "A joint-stock company charter guaranteeing investors a fixed share of future colonial profits",
+      "A formal declaration severing all political and economic ties between the Plymouth settlers and the English Crown and Parliament",
+      "Settlers covenanting among themselves to form a government and obey self-made laws where no charter applied"
+    ],
+    "answer": "D",
+    "hints": [
+      "The compact was signed before the ship even reached land — think about why that timing mattered.",
+      "Look at the verbs: 'covenant and combine ourselves,' 'enact, constitute, and frame' — who is doing the governing here?"
+    ]
+  },
+  {
+    "id": "apush.colonial-regions.mcq.04",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-bacon-declaration.v1",
+    "problemText": "Nathaniel Bacon's 1676 \"Declaration of the People\" accuses Virginia's royal governor of \"haveing upon specious pretences of publiqe works raised greate unjust taxes upon the Comonality for the advancement of private favorites,\" and of having \"protected, favoured, and Imboldned the Indians against his Majesties loyall subjects,\" failing to defend the frontier. This rebellion most directly exposed which vulnerability in the Chesapeake's colonial labor system?",
+    "choices": [
+      "An enslaved workforce petitioning colonial courts for legal recognition of hereditary freedom",
+      "A permanent military alliance between Virginia's colonial government and neighboring Native nations against frontier settlers",
+      "Masses of landless, land-hungry former servants and frontier settlers whose grievances could turn violent",
+      "A shortage of English migrants willing to settle anywhere in Virginia after 1676"
+    ],
+    "answer": "C",
+    "hints": [
+      "Bacon accuses the governor of favoritism in taxation and failing to defend the frontier — think about who bore those costs.",
+      "This is the same unrest the colonial-regions plan connects to the later shift toward enslaved labor — consider why."
+    ]
+  },
+  {
+    "id": "apush.transatlantic-economy.mcq.01",
+    "loId": "apush.transatlantic-economy",
+    "cedCode": "AP-APUSH-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Parliament's Navigation Acts (1651, 1660) required colonial trade to travel on English or colonial-built ships and routed certain \"enumerated\" goods like tobacco through England — yet for decades colonial customs offices were thinly staffed, oversight from London was slow, and New England merchants smuggling with the French and Dutch West Indies went largely unpunished. This decades-long gap between the law on paper and enforcement in practice was the direct origin of —",
+    "choices": [
+      "The policy later known as salutary neglect",
+      "The Halfway Covenant adopted by New England's Puritan churches to address declining membership",
+      "The headright system granting fifty acres of land for sponsoring a settler's passage to Virginia",
+      "The Stono Rebellion of 1739 near the Stono River in South Carolina"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what happens when a law exists on paper but customs officers rarely enforce it for decades.",
+      "This pattern of loose enforcement has a specific name used throughout the unit — recall it."
+    ]
+  },
+  {
+    "id": "apush.slavery-colonies.mcq.01",
+    "loId": "apush.slavery-colonies",
+    "cedCode": "AP-APUSH-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-equiano.v1",
+    "problemText": "In his 1789 \"Interesting Narrative,\" Olaudah Equiano recalls that \"the first object which saluted my eyes when I arrived on the coast was the sea, and a slave ship,\" and that he \"was immediately handled and tossed up to see if I were sound by some of the crew.\" Published in Britain amid the parliamentary debate over abolishing the slave trade, this firsthand account is most valuable to historians as evidence of —",
+    "choices": [
+      "The exact total number of captives transported during the entire era of the Middle Passage",
+      "The specific daily food rations provided to enslaved laborers on Chesapeake tobacco plantations",
+      "The precise legal statute Parliament used to formally abolish the British slave trade in 1807",
+      "The dehumanizing inspection of captive Africans as cargo, from someone who lived through it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Equiano's word 'handled' describes treatment usually applied to livestock or cargo, not people.",
+      "This account was published in 1789, during Britain's parliamentary debate over the slave trade — think about how it was used."
+    ]
+  },
+  {
+    "id": "apush.slavery-colonies.mcq.02",
+    "loId": "apush.slavery-colonies",
+    "cedCode": "AP-APUSH-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-equiano.v1",
+    "problemText": "Equiano continues his account: seeing \"a multitude of black people of every description chained together, every one of their countenances expressing dejection and sorrow,\" he writes that he was \"quite overpowered with horror and anguish\" and \"fell motionless on the deck and fainted.\" This passage is best used by historians as evidence of —",
+    "choices": [
+      "The average life expectancy of enslaved people who survived the Middle Passage crossing",
+      "The specific navigational route this particular ship sailed across the Atlantic",
+      "The psychological terror and confinement enslaved Africans experienced firsthand aboard slave ships",
+      "The formal legal process colonial legislatures used to codify slave codes into statute"
+    ],
+    "answer": "C",
+    "hints": [
+      "Equiano is describing his own emotional and physical reaction, not the ship's route or cargo manifest.",
+      "'Overpowered with horror and anguish' and 'fainted' describe a person's lived experience, not a statistic."
+    ]
+  },
+  {
+    "id": "apush.colonial-society.mcq.01",
+    "loId": "apush.colonial-society",
+    "cedCode": "AP-APUSH-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-edwards-sinners.v1",
+    "problemText": "Preaching to an ordinary congregation at Enfield in 1741, Jonathan Edwards warns that \"the God that holds you over the pit of hell, much as one holds a spider or some loathsome insect over the fire, abhors you,\" before adding that \"Christ has flung the door of mercy wide open\" to \"poor sinners.\" This sermon's vivid, emotionally urgent style, addressed to a broad mixed audience rather than trained clergy, most directly reflects —",
+    "choices": [
+      "The Enlightenment's emphasis on calm, reasoned, empirical argument as the path to religious truth",
+      "The First Great Awakening's mass, emotionally urgent call to individual conversion",
+      "An official Anglican liturgy used uniformly across all thirteen colonies' established churches",
+      "The print culture spread by colonial newspapers such as Franklin's Pennsylvania Gazette"
+    ],
+    "answer": "B",
+    "hints": [
+      "Edwards is not appealing to calm reasoning or evidence here — notice the vivid, frightening imagery instead.",
+      "This sermon was preached to an ordinary mixed congregation, not delivered as a scholarly treatise."
+    ]
+  }
+]

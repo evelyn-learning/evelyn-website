@@ -184,3 +184,127 @@ Period-3 documents:
 — both on the initial draft and after the choice-length / AoC-stem revision.
 `npm run lint:passages` clean (10 passages resolve, including all 7 referenced
 by this bank).
+
+## Unit 2: British North American Colonies (Period 2, ~1607–1754)
+
+Stimulus-based MCQ bank (`u2.json`) keyed to the five Period-2 primary source
+documents seeded in `src/lib/tutor/passages/seeds/apush-{winthrop-charity,
+mayflower-compact,bacon-declaration,equiano,edwards-sinners}.ts`, and to the
+four Period-2 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apush-u2-{colonial-regions,
+transatlantic-economy,slavery-colonies,colonial-society}.ts`). `cedCode`
+mirrors each LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u2.json |
+|---|---|---|---|
+| `apush.colonial-regions` | `AP-APUSH-2.2` | New England covenant-community model vs. Chesapeake profit motive; Mayflower Compact self-government; Bacon's Rebellion and the labor-system vulnerability it exposed. | 4 |
+| `apush.transatlantic-economy` | `AP-APUSH-2.4` | Mercantilism, the Navigation Acts, and the loose-enforcement origin of salutary neglect. | 1 |
+| `apush.slavery-colonies` | `AP-APUSH-2.6` | The Middle Passage's dehumanizing conditions, documented through Equiano's firsthand testimony. | 2 |
+| `apush.colonial-society` | `AP-APUSH-2.7` | The First Great Awakening's mass, emotional preaching style, contrasted with the Enlightenment. | 1 |
+| **Total** | | | **8** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus item anchors to one of the five Period-2 passage seeds via
+`passageId` (for grouping/render); the eighth item (the Navigation Acts /
+salutary-neglect item) is intentionally non-stimulus, per the Period-2 block's
+composition (`winthrop 2, mayflower 1, bacon 1, equiano 2, edwards 1,
+non-stimulus transatlantic-economy 1`):
+
+- `evelyn.passage.apush-winthrop-charity.v1` — Winthrop, *A Model of Christian Charity* (1630) — 2 items
+- `evelyn.passage.apush-mayflower-compact.v1` — The Mayflower Compact (1620) — 1 item
+- `evelyn.passage.apush-bacon-declaration.v1` — Bacon, *Declaration of the People* (1676) — 1 item
+- `evelyn.passage.apush-equiano.v1` — Equiano, *The Interesting Narrative* (1789) — 2 items
+- `evelyn.passage.apush-edwards-sinners.v1` — Edwards, *Sinners in the Hands of an Angry God* (1741) — 1 item
+- (no passage) — non-stimulus item testing `transatlantic-economy` via the
+  Navigation Acts' loose enforcement, already covered in that content plan —
+  1 item
+
+## LO-assignment call: Bacon's Declaration → `colonial-regions`
+
+The period block leaves the Bacon item's LO to author judgment
+("bacon→colonial-regions or transatlantic-economy, your call"). Assigned to
+`colonial-regions` (`AP-APUSH-2.2`) because that is the content plan that
+actually teaches Bacon's Rebellion in depth — it appears as a full key idea
+("BACON'S REBELLION (1676) AND THE SHIFT IN LABOR") and a defined vocabulary
+term in `ap-apush-u2-colonial-regions.ts`, whereas the
+`transatlantic-economy` plan never mentions Bacon at all. This does mean
+`colonial-regions` carries 4 of the bank's 8 items (Winthrop x2, Mayflower,
+Bacon) while `transatlantic-economy` and `colonial-society` each carry only
+the 1 item specified by the period block; every LO still clears the ≥1-item
+floor.
+
+## Document-fidelity notes specific to this bank
+
+- The Winthrop items quote only the seed's own Hanover-transcription
+  early-modern orthography — "citty upon a hill," "eies," "uppon" — never the
+  modernized "city upon a hill" (per the period block's edition-trap note).
+- The Equiano items are limited to the seed's own inspection/confinement/fear
+  content ("handled and tossed up to see if I were sound," "chained
+  together... dejection and sorrow," "overpowered with horror and anguish...
+  fainted") in a measured, exam-neutral tone — no graphic content beyond what
+  the seed itself contains, consistent with the passage seed's own
+  "MEASURED SELECTION FOR RESTRAINT" note.
+- The Edwards item quotes "flung the door of mercy wide open" verbatim (not
+  "thrown"), matching the seed and the colonial-society content plan's own
+  fidelity note.
+- The Bacon item quotes only the declaration's opening grievance clauses
+  (unjust taxation for "private favorites," Berkeley "protected, favoured,
+  and Imboldned the Indians against his Majesties loyall subjects") — no
+  claims beyond what the seeded excerpt contains.
+- The transatlantic-economy item is non-stimulus by design (per the period
+  block) and tests the Navigation Acts' loose enforcement / salutary-neglect
+  origin using facts already established in `ap-apush-u2-
+  transatlantic-economy.ts`'s concept and misconception-check segments — no
+  new claims introduced.
+
+## Historical-reasoning skills tested
+
+- **Sourcing / point of view** — reading Winthrop's covenant framing as a
+  founding sermon addressed to settlers who had not yet landed
+  (colonial-regions.mcq.01, .02); reading Equiano's 1789 narrative as
+  testimony shaped for a British abolition-debate audience
+  (slavery-colonies.mcq.01).
+- **Contextualization** — the Mayflower Compact's self-government arising
+  specifically because the Pilgrims landed outside their chartered territory
+  (colonial-regions.mcq.03); the Navigation Acts' loose enforcement as the
+  specific origin of salutary neglect (transatlantic-economy.mcq.01).
+- **Causation** — Bacon's Rebellion exposing the Chesapeake's structural
+  reliance on a growing population of landless former servants, a
+  vulnerability that accelerated the shift to enslaved labor
+  (colonial-regions.mcq.04, directly testing the period block's labor-system
+  fidelity).
+- **Complexity / measured reading of testimony** — Equiano's firsthand
+  account of dehumanizing inspection and psychological terror as evidence of
+  lived experience, not of trade statistics or legal procedure
+  (slavery-colonies.mcq.01, .02).
+- **Comparison** — Edwards's emotionally urgent Awakening preaching style
+  directly contrasted with Enlightenment reason (colonial-society.mcq.01),
+  testing the period block's "Enlightenment and Awakening were the same
+  impulse" misconception.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×1, 2×4, 3×2, 4×1 (spread: `2,1,2,4,3,2,3,2`).
+- Correct-answer letters distributed non-cyclically across all 8 items:
+  A=2, B=2, C=2, D=2. Sequence: `BADCADCB` — not all-A, not a repeating
+  ABCD pattern.
+- Choice lengths checked by word count: the correct answer is the longest
+  (tied-longest) option in only **1 of 8** items (colonial-regions.mcq.02,
+  where the correct choice ties the longest distractor at 16 words), within
+  the 0–2/8 target. Verify: `npx tsx -e "const a=require('./src/data/
+  problem-bank/ap-us-history/u2.json'); for(const i of a){const
+  w=i.choices.map(c=>c.split(/\\s+/).length); const
+  ci='ABCD'.indexOf(i.answer); console.log(i.id,
+  w[ci]===Math.max(...w));}"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short phrases from the public-domain Period-2 documents (never transcribed
+  wholesale from a real AP exam). `license: 'internal-original'` per
+  `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-history --file=u2.json --dry-run`:
+8/8 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
+on the first draft. `npm run lint:passages` clean (40 passages resolve,
+including all 5 referenced by this bank).
