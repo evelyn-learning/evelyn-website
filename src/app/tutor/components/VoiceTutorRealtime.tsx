@@ -12895,6 +12895,20 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // full text.
             realtime.clearSpeechQueue();
             realtime.interrupt();
+            // Typed-FIRST-message start parity (2026-07-12): a student who
+            // never taps the mic and opens the session by typing here got a
+            // clock stuck at 0:00 and an unarmed demo hard-stop cap — the
+            // 2026-07-10 parity fix covered only the external
+            // handleRef.sendTextMessage path, not this in-session form.
+            // Mirror its guard: stamp once, first real message only. The
+            // submit is also a user gesture, so unlock TTS audio here the
+            // way the mic-tap start does (iOS queues audio silently until
+            // some gesture calls resume()).
+            if (voiceSessionStartedAtMsRef.current === null) {
+              voiceSessionStartedAtMsRef.current = Date.now();
+              onSessionStartedRef.current?.();
+              realtime.unlockAudio();
+            }
             // Send to AI. input.value was already cleared at the top of
             // this handler before the plan-from-text await so the box
             // empties immediately on submit, not at end of flow.
