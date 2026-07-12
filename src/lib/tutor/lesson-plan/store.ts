@@ -1370,6 +1370,11 @@ import { SEED_AP_APGOV_U1_FRQ_CONCEPT_APPLICATION } from './seeds/ap-apgov-u1-fr
 import { SEED_AP_APGOV_U1_FRQ_QUANTITATIVE } from './seeds/ap-apgov-u1-frq-quantitative';
 import { SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON } from './seeds/ap-apgov-u1-frq-scotus-comparison';
 import { SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u1-frq-argument-essay';
+import { SEED_AP_APGOV_U2_CONGRESS } from './seeds/ap-apgov-u2-congress';
+import { SEED_AP_APGOV_U2_PRESIDENCY } from './seeds/ap-apgov-u2-presidency';
+import { SEED_AP_APGOV_U2_JUDICIARY } from './seeds/ap-apgov-u2-judiciary';
+import { SEED_AP_APGOV_U2_BUREAUCRACY } from './seeds/ap-apgov-u2-bureaucracy';
+import { SEED_AP_APGOV_U2_CHECKS_IN_PRACTICE } from './seeds/ap-apgov-u2-checks-in-practice';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2703,6 +2708,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APGOV_U1_FRQ_QUANTITATIVE,
   SEED_AP_APGOV_U1_FRQ_SCOTUS_COMPARISON,
   SEED_AP_APGOV_U1_FRQ_ARGUMENT_ESSAY,
+  // AP US Government & Politics — Unit-2 Vertical Slice content plans.
+  SEED_AP_APGOV_U2_CONGRESS,
+  SEED_AP_APGOV_U2_PRESIDENCY,
+  SEED_AP_APGOV_U2_JUDICIARY,
+  SEED_AP_APGOV_U2_BUREAUCRACY,
+  SEED_AP_APGOV_U2_CHECKS_IN_PRACTICE,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
