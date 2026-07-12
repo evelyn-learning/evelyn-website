@@ -218,6 +218,9 @@ import { BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u
 // AP US History Unit 3 (CED 3.2, 3.3, 3.9, 3.10, 3.11) — Period-3 Vertical
 // Slice content plans (causes of Revolution through the New Republic).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APUSH_NATIVE_SOCIETIES } from './seeds/ap-apush-u1-native-societies';
+import { BASELINE_AP_APUSH_COLUMBIAN_EXCHANGE } from './seeds/ap-apush-u1-columbian-exchange';
+import { BASELINE_AP_APUSH_SPANISH_COLONIZATION } from './seeds/ap-apush-u1-spanish-colonization';
 import { BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 import { BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
 import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
@@ -434,6 +437,9 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_ENGLANG_MCQ_WRITING_EDITING,
   BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION,
   BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY,
+  BASELINE_AP_APUSH_NATIVE_SOCIETIES,
+  BASELINE_AP_APUSH_COLUMBIAN_EXCHANGE,
+  BASELINE_AP_APUSH_SPANISH_COLONIZATION,
   BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION,
   BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS,
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,

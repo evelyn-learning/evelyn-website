@@ -1342,6 +1342,9 @@ import { SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION } from './seeds/ap-englang-u5-t
 import { SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-unity-and-coherence';
 // AP US History — Period-3 Vertical Slice initiative (calibration plan).
 // See docs/superpowers/specs/2026-07-10-ap-us-history-design.md.
+import { SEED_AP_APUSH_U1_NATIVE_SOCIETIES } from './seeds/ap-apush-u1-native-societies';
+import { SEED_AP_APUSH_U1_COLUMBIAN_EXCHANGE } from './seeds/ap-apush-u1-columbian-exchange';
+import { SEED_AP_APUSH_U1_SPANISH_COLONIZATION } from './seeds/ap-apush-u1-spanish-colonization';
 import { SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 import { SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
 import { SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
@@ -2709,6 +2712,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_ENGLANG_U5_REASONING_AND_PARAGRAPHING,
   SEED_AP_ENGLANG_U5_TRANSITIONS_COHESION,
   SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE,
+  // AP US History — Period-1 fan-out content plans.
+  SEED_AP_APUSH_U1_NATIVE_SOCIETIES,
+  SEED_AP_APUSH_U1_COLUMBIAN_EXCHANGE,
+  SEED_AP_APUSH_U1_SPANISH_COLONIZATION,
   // AP US History — Period-3 Vertical Slice content plans.
   SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION,
   SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS,
