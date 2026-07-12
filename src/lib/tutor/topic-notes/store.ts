@@ -297,6 +297,14 @@ import { BASELINE_AP_APWORLD_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-mari
 import { BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE } from './seeds/ap-apworld-u4-atlantic-slave-trade';
 import { BASELINE_AP_APWORLD_RESISTANCE } from './seeds/ap-apworld-u4-resistance';
 
+// AP World History Unit 5 (CED 5.1, 5.2, 5.2, 5.3-5.6, 5.7-5.11) — Unit-5
+// fan-out content plans (Revolutions, 1750-1900).
+import { BASELINE_AP_APWORLD_ENLIGHTENMENT } from './seeds/ap-apworld-u5-enlightenment';
+import { BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-atlantic-revolutions';
+import { BASELINE_AP_APWORLD_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';
+import { BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION } from './seeds/ap-apworld-u5-industrial-revolution';
+import { BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY } from './seeds/ap-apworld-u5-industrial-society';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -549,6 +557,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_MARITIME_EMPIRES,
   BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE,
   BASELINE_AP_APWORLD_RESISTANCE,
+  BASELINE_AP_APWORLD_ENLIGHTENMENT,
+  BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS,
+  BASELINE_AP_APWORLD_NATIONALISM,
+  BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION,
+  BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,

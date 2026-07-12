@@ -1437,6 +1437,13 @@ import { SEED_AP_APWORLD_U4_RESISTANCE } from './seeds/ap-apworld-u4-resistance'
 import { SEED_AP_APWORLD_U4_DBQ_PRACTICE } from './seeds/ap-apworld-u4-dbq-practice';
 import { SEED_AP_APWORLD_U4_LEQ_PRACTICE } from './seeds/ap-apworld-u4-leq-practice';
 import { SEED_AP_APWORLD_U4_SAQ_PRACTICE } from './seeds/ap-apworld-u4-saq-practice';
+// AP World History: Modern — Unit-5 fan-out content plans (Revolutions,
+// 1750-1900). See .superpowers/sdd/unit-5-block.md.
+import { SEED_AP_APWORLD_U5_ENLIGHTENMENT } from './seeds/ap-apworld-u5-enlightenment';
+import { SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-atlantic-revolutions';
+import { SEED_AP_APWORLD_U5_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';
+import { SEED_AP_APWORLD_U5_INDUSTRIAL_REVOLUTION } from './seeds/ap-apworld-u5-industrial-revolution';
+import { SEED_AP_APWORLD_U5_INDUSTRIAL_SOCIETY } from './seeds/ap-apworld-u5-industrial-society';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2881,6 +2888,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U4_DBQ_PRACTICE,
   SEED_AP_APWORLD_U4_LEQ_PRACTICE,
   SEED_AP_APWORLD_U4_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-5 fan-out content plans.
+  SEED_AP_APWORLD_U5_ENLIGHTENMENT,
+  SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS,
+  SEED_AP_APWORLD_U5_NATIONALISM,
+  SEED_AP_APWORLD_U5_INDUSTRIAL_REVOLUTION,
+  SEED_AP_APWORLD_U5_INDUSTRIAL_SOCIETY,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
