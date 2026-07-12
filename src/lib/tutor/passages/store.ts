@@ -38,6 +38,9 @@ import { PASSAGE_APGOV_BROWN_OPINION } from './seeds/apgov-brown-opinion';
 import { PASSAGE_APGOV_TINKER_OPINION } from './seeds/apgov-tinker-opinion';
 // AP Gov Unit-4 (American Political Ideologies and Beliefs) documents
 import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-table';
+// AP Gov Unit-5 (Political Participation) documents
+import { PASSAGE_APGOV_TURNOUT_AGE_TABLE } from './seeds/apgov-turnout-age-table';
+import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-united-opinion';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -68,6 +71,8 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_BROWN_OPINION,
   PASSAGE_APGOV_TINKER_OPINION,
   PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
+  PASSAGE_APGOV_TURNOUT_AGE_TABLE,
+  PASSAGE_APGOV_CITIZENS_UNITED_OPINION,
 ];
 
 export const passageById = new Map<string, Passage>(
