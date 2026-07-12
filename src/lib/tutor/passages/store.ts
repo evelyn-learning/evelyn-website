@@ -55,6 +55,15 @@ import { PASSAGE_APWORLD_BOLIVAR_JAMAICA } from './seeds/apworld-bolivar-jamaica
 import { PASSAGE_APWORLD_COMMUNIST_MANIFESTO } from './seeds/apworld-communist-manifesto';
 import { PASSAGE_APWORLD_WOLLSTONECRAFT } from './seeds/apworld-wollstonecraft';
 import { PASSAGE_APWORLD_SADLER_TESTIMONY } from './seeds/apworld-sadler-testimony';
+// AP World Unit-8 (Cold War & Decolonization) documents
+import { PASSAGE_APWORLD_JFK_CUBA } from './seeds/apworld-jfk-cuba';
+import { PASSAGE_APWORLD_UDHR } from './seeds/apworld-udhr';
+import { PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE } from './seeds/apworld-un-membership-table';
+import { PASSAGE_APWORLD_BERLIN_WALL_VISUAL } from './seeds/apworld-berlin-wall-visual';
+// AP World Unit-9 (Globalization) documents
+import { PASSAGE_APWORLD_LIFE_EXPECTANCY_TABLE } from './seeds/apworld-life-expectancy-table';
+import { PASSAGE_APWORLD_ICT_TABLE } from './seeds/apworld-ict-table';
+import { PASSAGE_APWORLD_TRADE_CONTAINER_TABLE } from './seeds/apworld-trade-container-table';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
@@ -162,6 +171,13 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_COMMUNIST_MANIFESTO,
   PASSAGE_APWORLD_WOLLSTONECRAFT,
   PASSAGE_APWORLD_SADLER_TESTIMONY,
+  PASSAGE_APWORLD_JFK_CUBA,
+  PASSAGE_APWORLD_UDHR,
+  PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE,
+  PASSAGE_APWORLD_BERLIN_WALL_VISUAL,
+  PASSAGE_APWORLD_LIFE_EXPECTANCY_TABLE,
+  PASSAGE_APWORLD_ICT_TABLE,
+  PASSAGE_APWORLD_TRADE_CONTAINER_TABLE,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
   PASSAGE_APGOV_ARTICLES_CONFEDERATION,
