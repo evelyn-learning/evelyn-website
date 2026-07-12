@@ -260,6 +260,13 @@ import { BASELINE_AP_APGOV_PRESS_ASSEMBLY_ARMS } from './seeds/ap-apgov-u3-press
 import { BASELINE_AP_APGOV_DUE_PROCESS } from './seeds/ap-apgov-u3-due-process';
 import { BASELINE_AP_APGOV_CIVIL_RIGHTS } from './seeds/ap-apgov-u3-civil-rights';
 
+// AP US Government & Politics Unit 4 (CED 4.1-4.4, 4.5, 4.6-4.9) — Unit-4
+// Vertical Slice content plans (public-opinion walk: socialization/opinion
+// formation, measuring public opinion via polling, and ideology/policy).
+import { BASELINE_AP_APGOV_SOCIALIZATION_OPINION } from './seeds/ap-apgov-u4-socialization';
+import { BASELINE_AP_APGOV_PUBLIC_OPINION_MEASUREMENT } from './seeds/ap-apgov-u4-polling';
+import { BASELINE_AP_APGOV_IDEOLOGY_POLICY } from './seeds/ap-apgov-u4-ideology-policy';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -440,6 +447,9 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APGOV_PRESS_ASSEMBLY_ARMS,
   BASELINE_AP_APGOV_DUE_PROCESS,
   BASELINE_AP_APGOV_CIVIL_RIGHTS,
+  BASELINE_AP_APGOV_SOCIALIZATION_OPINION,
+  BASELINE_AP_APGOV_PUBLIC_OPINION_MEASUREMENT,
+  BASELINE_AP_APGOV_IDEOLOGY_POLICY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
