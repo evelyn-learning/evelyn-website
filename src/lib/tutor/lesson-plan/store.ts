@@ -1352,6 +1352,9 @@ import { SEED_AP_APUSH_U2_COLONIAL_REGIONS } from './seeds/ap-apush-u2-colonial-
 import { SEED_AP_APUSH_U2_TRANSATLANTIC_ECONOMY } from './seeds/ap-apush-u2-transatlantic-economy';
 import { SEED_AP_APUSH_U2_SLAVERY_COLONIES } from './seeds/ap-apush-u2-slavery-colonies';
 import { SEED_AP_APUSH_U2_COLONIAL_SOCIETY } from './seeds/ap-apush-u2-colonial-society';
+import { SEED_AP_APUSH_U2_DBQ_PRACTICE } from './seeds/ap-apush-u2-dbq-practice';
+import { SEED_AP_APUSH_U2_LEQ_PRACTICE } from './seeds/ap-apush-u2-leq-practice';
+import { SEED_AP_APUSH_U2_SAQ_PRACTICE } from './seeds/ap-apush-u2-saq-practice';
 import { SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 import { SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
 import { SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
@@ -2731,6 +2734,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U2_TRANSATLANTIC_ECONOMY,
   SEED_AP_APUSH_U2_SLAVERY_COLONIES,
   SEED_AP_APUSH_U2_COLONIAL_SOCIETY,
+  SEED_AP_APUSH_U2_DBQ_PRACTICE,
+  SEED_AP_APUSH_U2_LEQ_PRACTICE,
+  SEED_AP_APUSH_U2_SAQ_PRACTICE,
   // AP US History — Period-3 Vertical Slice content plans.
   SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION,
   SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS,
