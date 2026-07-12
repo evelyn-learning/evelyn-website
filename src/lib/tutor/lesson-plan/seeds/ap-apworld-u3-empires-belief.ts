@@ -129,7 +129,7 @@ export const SEED_AP_APWORLD_U3_EMPIRES_BELIEF_SYSTEMS: LessonPlan = {
             scoringCriteria:
               "Full credit (1): explains a specific, accurate way ONE ruler narrowed or reversed a tolerance policy — e.g. Aurangzeb's reimposition of the jizya in 1679, reversing Akbar's sulh-i-kul. No credit for a vague or disconnected claim.",
             modelResponse:
-              "Aurangzeb reversed his grandfather Akbar's policy of sulh-i-kul by reimposing the jizya tax on non-Muslims in 1679 and pursuing more orthodox Sunni religious policies, showing that Mughal tolerance was not fixed across the dynasty.",
+              "Aurangzeb reversed his great-grandfather Akbar's policy of sulh-i-kul by reimposing the jizya tax on non-Muslims in 1679 and pursuing more orthodox Sunni religious policies, showing that Mughal tolerance was not fixed across the dynasty.",
           },
           {
             criterionId: 'c',
