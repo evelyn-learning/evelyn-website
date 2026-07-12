@@ -15,6 +15,12 @@ import { PASSAGE_APUSH_FEDERALIST_10 } from './seeds/apush-federalist-10';
 import { PASSAGE_APUSH_BRUTUS_1 } from './seeds/apush-brutus-1';
 import { PASSAGE_APUSH_CONSTITUTION_PREAMBLE } from './seeds/apush-constitution-preamble';
 import { PASSAGE_APUSH_JOIN_OR_DIE } from './seeds/apush-join-or-die';
+// APUSH Period-4 (1800-1848) documents
+import { PASSAGE_APUSH_JEFFERSON_INAUGURAL } from './seeds/apush-jefferson-inaugural';
+import { PASSAGE_APUSH_MONROE_DOCTRINE } from './seeds/apush-monroe-doctrine';
+import { PASSAGE_APUSH_JACKSON_BANK_VETO } from './seeds/apush-jackson-bank-veto';
+import { PASSAGE_APUSH_SENECA_FALLS } from './seeds/apush-seneca-falls';
+import { PASSAGE_APUSH_GARRISON_LIBERATOR } from './seeds/apush-garrison-liberator';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -53,6 +59,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BRUTUS_1,
   PASSAGE_APUSH_CONSTITUTION_PREAMBLE,
   PASSAGE_APUSH_JOIN_OR_DIE,
+  PASSAGE_APUSH_JEFFERSON_INAUGURAL,
+  PASSAGE_APUSH_MONROE_DOCTRINE,
+  PASSAGE_APUSH_JACKSON_BANK_VETO,
+  PASSAGE_APUSH_SENECA_FALLS,
+  PASSAGE_APUSH_GARRISON_LIBERATOR,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
