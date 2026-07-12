@@ -233,6 +233,13 @@ import { BASELINE_AP_APUSH_CIVIL_RIGHTS } from './seeds/ap-apush-u8-civil-rights
 import { BASELINE_AP_APUSH_SIXTIES_VIETNAM } from './seeds/ap-apush-u8-sixties-vietnam';
 import { BASELINE_AP_APUSH_SEVENTIES } from './seeds/ap-apush-u8-seventies';
 
+// AP US History Unit 9 (CED 9.2-9.3, 9.4-9.5, 9.6) — Period-9 fan-out
+// content plans (1980-present: conservative resurgence through the
+// present day).
+import { BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE } from './seeds/ap-apush-u9-conservative-resurgence';
+import { BASELINE_AP_APUSH_GLOBALIZATION } from './seeds/ap-apush-u9-globalization';
+import { BASELINE_AP_APUSH_SINCE_2001 } from './seeds/ap-apush-u9-since-2001';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -453,6 +460,9 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_CIVIL_RIGHTS,
   BASELINE_AP_APUSH_SIXTIES_VIETNAM,
   BASELINE_AP_APUSH_SEVENTIES,
+  BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE,
+  BASELINE_AP_APUSH_GLOBALIZATION,
+  BASELINE_AP_APUSH_SINCE_2001,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,

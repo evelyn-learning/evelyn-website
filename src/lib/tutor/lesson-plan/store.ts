@@ -1359,6 +1359,10 @@ import { SEED_AP_APUSH_U8_SEVENTIES } from './seeds/ap-apush-u8-seventies';
 import { SEED_AP_APUSH_U8_DBQ_PRACTICE } from './seeds/ap-apush-u8-dbq-practice';
 import { SEED_AP_APUSH_U8_LEQ_PRACTICE } from './seeds/ap-apush-u8-leq-practice';
 import { SEED_AP_APUSH_U8_SAQ_PRACTICE } from './seeds/ap-apush-u8-saq-practice';
+// AP US History — Period-9 fan-out (1980-present) content plans.
+import { SEED_AP_APUSH_U9_CONSERVATIVE_RESURGENCE } from './seeds/ap-apush-u9-conservative-resurgence';
+import { SEED_AP_APUSH_U9_GLOBALIZATION } from './seeds/ap-apush-u9-globalization';
+import { SEED_AP_APUSH_U9_SINCE_2001 } from './seeds/ap-apush-u9-since-2001';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2736,6 +2740,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U8_DBQ_PRACTICE,
   SEED_AP_APUSH_U8_LEQ_PRACTICE,
   SEED_AP_APUSH_U8_SAQ_PRACTICE,
+  // AP US History — Period-9 fan-out content plans.
+  SEED_AP_APUSH_U9_CONSERVATIVE_RESURGENCE,
+  SEED_AP_APUSH_U9_GLOBALIZATION,
+  SEED_AP_APUSH_U9_SINCE_2001,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
