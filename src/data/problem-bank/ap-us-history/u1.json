@@ -1,0 +1,161 @@
+[
+  {
+    "id": "apush.columbian-exchange.mcq.01",
+    "loId": "apush.columbian-exchange",
+    "cedCode": "AP-APUSH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-columbus-letter.v1",
+    "problemText": "In his 1493 letter to Luis de Santángel, Christopher Columbus describes the islanders he encountered as \"guileless, and so liberal of all they have that no one would believe it.\" Paired with his description of Española's fertile land and gold-bearing rivers in the same letter, this characterization of the people mattered chiefly because it —",
+    "choices": [
+      "framed the land and the people as resources ready for colonization",
+      "confirmed to European readers that the islanders had already converted to Catholicism before Columbus arrived",
+      "proved that Columbus had negotiated a formal, lasting peace treaty with the islands' rulers",
+      "warned Spanish investors that further voyages to the islands would likely prove unprofitable"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice that Columbus published this account to convince backers, like Luis de Santángel, to keep funding voyages.",
+      "Read the description of the people alongside the description of the land — both are framed the same way."
+    ]
+  },
+  {
+    "id": "apush.columbian-exchange.mcq.02",
+    "loId": "apush.columbian-exchange",
+    "cedCode": "AP-APUSH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-columbus-letter.v1",
+    "problemText": "Columbus's 1493 letter to Luis de Santángel describes Española's harbors and rivers, \"most of them bearing gold,\" as surpassing \"anything that would be believed by one who had not seen them.\" This letter shaped later European colonization primarily because it —",
+    "choices": [
+      "was addressed directly to King Ferdinand and Queen Isabella, who personally financed the voyage",
+      "was suppressed by the Spanish Crown to prevent rival powers from learning of the discovery",
+      "was printed and circulated across Europe within months, building support for further voyages",
+      "accurately catalogued the exact quantities of gold Columbus's crew had already collected"
+    ],
+    "answer": "C",
+    "hints": [
+      "The letter was addressed to a royal treasury official, not the monarchs themselves — think about what happened to it after that.",
+      "Ask whether this passage reads like a private report or something meant for a wide audience."
+    ]
+  },
+  {
+    "id": "apush.spanish-colonization.mcq.01",
+    "loId": "apush.spanish-colonization",
+    "cedCode": "AP-APUSH-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-las-casas.v1",
+    "problemText": "Bartolomé de las Casas describes how, after conquest, Spanish colonists \"divided among themselves the Young Men, Women, and Children reserved... one obtained thirty, another forty, to this Man one hundred were disposed, to the other two hundred,\" then sent the men to the mines \"to dig and bring away the Gold\" while the women worked the fields. This passage documents the operation of which Spanish colonial system?",
+    "choices": [
+      "The repartimiento, a system of rotational labor drafts administered directly by colonial officials",
+      "The casta system, which classified colonial society by ancestry and birthplace",
+      "The Valladolid debate, a formal Crown-convened argument over Native treatment",
+      "The encomienda, granting colonists the right to demand Native labor and tribute"
+    ],
+    "answer": "D",
+    "hints": [
+      "This system grants fixed numbers of people to individual named colonists — that is different from a rotating labor draft run by officials.",
+      "Recall which labor system came first, before the Crown shifted toward rotational drafts."
+    ]
+  },
+  {
+    "id": "apush.spanish-colonization.mcq.02",
+    "loId": "apush.spanish-colonization",
+    "cedCode": "AP-APUSH-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-las-casas.v1",
+    "problemText": "In \"A Brief Account of the Destruction of the Indies,\" Las Casas rejects Spain's official justifications for colonization, writing that the Spaniards came \"not for the Honour of God... nor to serve the King, as they falsely boast and pretend to do,\" but \"stimulated and goaded on by insatiable Avarice and Ambition, that they might for ever Domineer, Command, and Tyrannize over the West-Indians.\" This passage is best used as evidence of —",
+    "choices": [
+      "the final abolition of the encomienda system as a direct result of Las Casas's writings",
+      "an internal Spanish debate over colonization, not proof his advocacy ended forced Native labor",
+      "a consensus among Spanish colonists that conquest could never be morally justified",
+      "the Spanish Crown's official position that colonization existed solely to enrich the royal treasury"
+    ],
+    "answer": "B",
+    "hints": [
+      "Las Casas's advocacy led to real but partial reform (the New Laws, 1542) — did it end forced labor entirely?",
+      "This passage is a Spanish churchman arguing against Spain's own official rationale — think about what that shows about Spanish opinion, not what it changed by itself."
+    ]
+  },
+  {
+    "id": "apush.native-societies.mcq.01",
+    "loId": "apush.native-societies",
+    "cedCode": "AP-APUSH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-cortes-tenochtitlan.v1",
+    "problemText": "In his 1520 letter to Charles V, Hernán Cortés describes Tenochtitlan's great market as \"twice as large as that of Salamanca,\" with \"more than sixty thousand souls, buying and selling\" there daily. Coming from the Spanish conqueror who would help destroy the city the following year, this description is most valuable to historians as evidence that —",
+    "choices": [
+      "Cortés intended his letters to convince Charles V to abandon further conquest in the Americas",
+      "Native economies relied entirely on subsistence agriculture with no organized trade or markets",
+      "Tenochtitlan's population and trade networks were smaller than contemporary Spanish accounts assumed",
+      "pre-conquest Mesoamerican societies had built large, economically sophisticated urban centers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what kind of city could support a market with tens of thousands of daily buyers and sellers.",
+      "This account comes from the very man who conquered the city — consider why his description is still useful evidence."
+    ]
+  },
+  {
+    "id": "apush.spanish-colonization.mcq.03",
+    "loId": "apush.spanish-colonization",
+    "cedCode": "AP-APUSH-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-codex-mendoza.v1",
+    "problemText": "The Codex Mendoza, commissioned around 1541 by Viceroy Antonio de Mendoza, records the tribute — bundles of woven cotton mantles, quilted cotton warrior costumes, and loads of maize — that conquered provinces of the former Aztec empire owed under Spanish colonial rule. That a Spanish viceroy commissioned this detailed tribute record most directly illustrates —",
+    "choices": [
+      "how Spanish colonial administration extracted resources from Native peoples by adapting existing tribute structures",
+      "how the Spanish Crown replaced every indigenous form of taxation with an entirely new European system",
+      "how the Valladolid debate persuaded Spain to abolish tribute demands on conquered provinces",
+      "how the encomienda system was formally abolished once the Codex Mendoza was completed"
+    ],
+    "answer": "A",
+    "hints": [
+      "The tribute categories recorded (cotton mantles, feathers, maize) are the same kinds of goods Aztec rulers had already been collecting before the conquest.",
+      "Ask why a Spanish colonial official would want a careful record of what provinces already owed in tribute."
+    ]
+  },
+  {
+    "id": "apush.spanish-colonization.mcq.04",
+    "loId": "apush.spanish-colonization",
+    "cedCode": "AP-APUSH-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-hakluyt-western-planting.v1",
+    "problemText": "In \"A Discourse Concerning Western Planting\" (1584), Richard Hakluyt argues that Spain and Portugal's overseas discoveries had given them \"so many honest wayes to set them on worke, as they rather wante men then meanes to ymploye them,\" while England, lacking colonies, \"cannot deliver our commonwealthe from multitudes of loyterers and idle vagabondes.\" Hakluyt's argument here most directly illustrates that —",
+    "choices": [
+      "English colonization was organized around the same encomienda-style labor grants Spain used in the Americas",
+      "European powers pursued colonization for varied motives, not one shared model",
+      "Spain and Portugal had eliminated poverty at home entirely because of their overseas colonies",
+      "English colonization began only after the Valladolid debate settled the treatment of Native peoples"
+    ],
+    "answer": "B",
+    "hints": [
+      "Hakluyt is comparing England's problem with idle, unemployed people to how Spain and Portugal supposedly solved the same problem.",
+      "This motive (employment) is different from Spain's encomienda-style labor extraction — European colonizers did not all colonize for the same reasons or in the same way."
+    ]
+  },
+  {
+    "id": "apush.native-societies.mcq.02",
+    "loId": "apush.native-societies",
+    "cedCode": "AP-APUSH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Before 1492, the Mississippian center of Cahokia (near present-day St. Louis) reached a population estimated as high as 10,000-20,000 people, supported by intensive floodplain maize agriculture, while Pacific Northwest maritime societies built large, socially stratified communities without practicing any agriculture at all. Together, these two societies serve as evidence against which claim about pre-contact North America?",
+    "choices": [
+      "that Native American societies obtained food primarily through long-distance trade rather than local production",
+      "that Mississippian and Pacific Northwest societies shared an identical political structure based on the potlatch",
+      "that pre-1492 North America was a sparsely populated wilderness shared by one uniform Native culture",
+      "that every pre-1492 Native society in North America depended on irrigated agriculture in an arid environment"
+    ],
+    "answer": "C",
+    "hints": [
+      "One of these societies farmed intensively; the other had no agriculture at all — what does that difference already disprove about a single 'Native culture'?",
+      "Think about the two-part myth this unit pushes back on: an empty continent, and one shared way of life."
+    ]
+  }
+]

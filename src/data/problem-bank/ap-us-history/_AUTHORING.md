@@ -1,5 +1,111 @@
 # AP US History — Problem Bank Authoring Notes
 
+## Unit 1: Contact and Conquest, the Americas (Period 1, ~1491–1607)
+
+Stimulus-based MCQ bank (`u1.json`) keyed to the five Period-1 primary/visual
+source documents seeded in `src/lib/tutor/passages/seeds/apush-{columbus-letter,
+las-casas,cortes-tenochtitlan,codex-mendoza,hakluyt-western-planting}.ts`, and
+to the three Period-1 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apush-u1-{native-societies,
+columbian-exchange,spanish-colonization}.ts`). `cedCode` mirrors each LO's
+`standard` field exactly.
+
+| loId | cedCode | Topic | # items in u1.json |
+|---|---|---|---|
+| `apush.native-societies` | `AP-APUSH-1.2` | Native American societies before European contact (diversity, adaptation to environment; no "empty wilderness"/uniform-culture). | 2 |
+| `apush.columbian-exchange` | `AP-APUSH-1.4` | The Columbian Exchange (bidirectional crop/animal/disease transfer; Columbus's letter as Europe's first widely circulated framing of the encounter). | 2 |
+| `apush.spanish-colonization` | `AP-APUSH-1.6` | Spanish colonial labor systems (encomienda, repartimiento), the casta hierarchy, and internal Spanish debate (Valladolid) over Native treatment. | 4 |
+| **Total** | | | **8** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus item anchors to one of the five Period-1 passage seeds via
+`passageId` (for grouping/render); the eighth item is intentionally
+non-stimulus (tests `native-societies` directly, no document referenced in
+the stem):
+
+- `evelyn.passage.apush-columbus-letter.v1` — Columbus, letter to Luis de Santángel (1493) — 2 items
+- `evelyn.passage.apush-las-casas.v1` — Las Casas, *A Brief Account of the Destruction of the Indies* (1542) — 2 items
+- `evelyn.passage.apush-cortes-tenochtitlan.v1` — Cortés, Second Letter to Charles V, on Tenochtitlan (1520) — 1 item
+- `evelyn.passage.apush-codex-mendoza.v1` — Codex Mendoza, tribute section (c. 1541, described visual) — 1 item
+- `evelyn.passage.apush-hakluyt-western-planting.v1` — Hakluyt, *A Discourse Concerning Western Planting* (1584) — 1 item
+- (no passage) — non-stimulus item testing `native-societies` via Cahokia + Pacific Northwest facts already in the content plan — 1 item
+
+## Document-fidelity notes specific to this bank
+
+- The Columbus item stems quote only the seed's own phrasing — "guileless,
+  and so liberal of all they have that no one would believe it" (NOT
+  "artless and generous," which is not in the seeded excerpt).
+- The Hakluyt item tests ONLY the seeded employment-of-idle-men motive
+  (Spain/Portugal's discoveries absorbed their "idle" population; England
+  still suffers "multitudes of loyterers and idle vagabondes" despite harsh
+  statutes) — Hakluyt's other historically real motives (commodities,
+  countering Spain, spreading religion) are NOT in this excerpt and are not
+  tested here, matching the fidelity note already established in
+  `ap-apush-u1-dbq-practice.ts`.
+- The Codex Mendoza item uses only facts already in the seed's own
+  description (commissioned c. 1541 by Viceroy Antonio de Mendoza; tribute
+  categories — cotton mantles, quilted cotton warrior costumes, maize); no
+  new claims about the manuscript are introduced.
+- The Cortés and Codex Mendoza items are not wired as a `concept.passageId`
+  in any Period-1 content plan (only Columbus → `columbian-exchange` and
+  Las Casas → `spanish-colonization` are); they are assigned to LOs by
+  subject matter: Cortés's description of Tenochtitlan's pre-conquest scale
+  tests `native-societies` (evidence of complex, populous Mesoamerican
+  urban civilization, read critically against its author's own role as
+  conqueror); the Codex Mendoza's Spanish-commissioned tribute record tests
+  `spanish-colonization` (colonial administration extracting resources via
+  adapted, pre-existing indigenous tribute structures).
+
+## Historical-reasoning skills tested
+
+- **Sourcing / point of view** — reading Columbus's letter as promotional
+  framing for further colonization, not a neutral travel account
+  (columbian-exchange.mcq.01, .02); using Cortés's own account, despite his
+  role as conqueror, as evidence of Tenochtitlan's scale
+  (native-societies.mcq.01).
+- **Contextualization / causation** — the encomienda's mechanics as
+  described by Las Casas (spanish-colonization.mcq.01); Spain's own internal
+  moral debate over colonization, culminating at Valladolid, as the correct
+  reading of Las Casas's rhetoric — not proof his advocacy ended forced
+  labor (spanish-colonization.mcq.02, the "Las Casas ended the encomienda"
+  misconception from the period block).
+- **Continuity/change** — Spanish colonial administration adapting existing
+  Aztec tribute structures rather than inventing an entirely new system
+  (spanish-colonization.mcq.03).
+- **Comparison** — Hakluyt's English employment-of-idle-men motive against
+  Spain's extractive encomienda model, directly testing the "all Europeans
+  colonized the same way" misconception from the period block
+  (spanish-colonization.mcq.04).
+- **Complexity / periodization** — Cahokia's intensive agriculture versus
+  Pacific Northwest societies with no agriculture at all, both refuting the
+  "empty wilderness, one uniform culture" misconception
+  (native-societies.mcq.02).
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×2, 2×2, 3×3, 4×1 (spread: `2,3,2,4,1,3,3,1`).
+- Correct-answer letters distributed non-cyclically across all 8 items:
+  A=2, B=2, C=2, D=2. Sequence: `ACDBDABC` — not all-A, not a repeating
+  ABCD pattern.
+- Choice lengths checked by word count: in a first draft the correct
+  answer was the longest option in 4 of 8 items; a revision shortened the
+  correct choices in items 1, 3, 4, and 7 (and lengthened one distractor in
+  item 3) so the correct answer is now the longest in **0 of 8** items.
+  Verify: `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-history/u1.json'); for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); console.log(i.id, w[ci]===Math.max(...w));}"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short phrases from public-domain Period-1 documents (never transcribed
+  wholesale from a real AP exam). `license: 'internal-original'` per
+  `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-history --file=u1.json --dry-run`:
+8/8 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
+on the first draft (after the choice-length revision above). `npm run
+lint:passages` clean (35 passages resolve, including all 5 referenced by
+this bank).
+
 ## Unit 3: The American Revolution & the Early Republic (Period 3, ~1754–1800)
 
 Stimulus-based MCQ bank (`u3.json`) keyed to the six Period-3 primary/visual
