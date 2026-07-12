@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apworld.empires-administration.mcq.01",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-busbecq-suleiman.v1",
+    "problemText": "The Habsburg ambassador Ogier Ghiselin de Busbecq, writing from the Ottoman court of Suleiman the Magnificent in 1555, generalized from the Sultan's guard assembly: \"No distinction is attached to birth among the Turks; the deference to be paid to a man is measured by the position he holds in the public service.\" This statement is best used as evidence that Ottoman administrative advancement —",
+    "choices": [
+      "required a European ambassador's formal sponsorship before any promotion could occur",
+      "was restricted to descendants of the founding Osmanli dynasty alone",
+      "was based on demonstrated service and merit rather than hereditary noble status",
+      "operated in practice almost identically to the hereditary aristocratic systems of contemporary Christian Europe"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice this is the Habsburg ambassador Busbecq describing what he observed at the Ottoman court, not a Christian European court he is praising.",
+      "Rule out any answer requiring an ambassador's sponsorship, dynastic descent, or identical European-style hereditary rank — the passage explicitly denies that birth determines office."
+    ]
+  },
+  {
+    "id": "apworld.empires-administration.mcq.02",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-busbecq-suleiman.v1",
+    "problemText": "Busbecq continues, of the same Ottoman promotion system: \"Those who receive the highest offices from the Sultan are for the most part the sons of shepherds or herdsmen, and so far from being ashamed of their parentage, they actually glory in it, and consider it a matter of boasting that they owe nothing to the accident of birth\" — an admiring observation from an outsider describing an unfamiliar court to European readers. This detail about low-born officials' pride in their origins is best used as evidence of which point about the Ottoman devshirme-recruited elite?",
+    "choices": [
+      "It highlights, by contrast with hereditary nobility in Europe, how far Ottoman office could be separated from noble birth",
+      "It proves that shepherds and herdsmen outnumbered hereditary nobles among the entire Ottoman population",
+      "It shows that Busbecq personally selected these low-born officials for their court positions",
+      "It confirms that the Ottoman sultan formally abolished the practice of recruiting slave-soldiers once devshirme-recruited officials reached the highest ranks of the court"
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on what 'sons of shepherds or herdsmen' reaching the 'highest offices' tells you about how detached Ottoman office-holding was from noble birth, by contrast with hereditary aristocracies elsewhere.",
+      "Rule out any answer requiring Busbecq to have personally chosen these officials, or claiming devshirme recruitment was formally abolished — the passage describes admiration, not a change in policy."
+    ]
+  },
+  {
+    "id": "apworld.empires-administration.mcq.03",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-bernier-mughal.v1",
+    "problemText": "François Bernier, physician at the Mughal court under Aurangzeb, wrote to his patron Colbert that \"the Great Mogol constitutes himself heir of all the Omrahs, or lords, and likewise of the Mansebdars, or inferior lords, who are in his pay\" — meaning the crown itself, not each noble's own family, inherited a noble's estate at his death. This practice is best used as evidence that Mughal elite wealth —",
+    "choices": [
+      "passed automatically to each noble's eldest son, exactly as in contemporary hereditary European aristocracies",
+      "was permanently confiscated the moment any noble was appointed to office, before he could ever use it",
+      "belonged to independent merchant guilds rather than to titled nobles serving the emperor",
+      "remained ultimately dependent on imperial favor rather than becoming a permanently inheritable, independent noble estate"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key detail is that the crown itself — not the noble's own family — became 'heir' of a noble's estate at his death.",
+      "Rule out any answer describing automatic inheritance by an eldest son or instant confiscation at appointment — the passage describes inheritance at death, contingent on continued imperial favor."
+    ]
+  },
+  {
+    "id": "apworld.empires-administration.mcq.04",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-bernier-mughal.v1",
+    "problemText": "Bernier further claims that the Mughal emperor \"is proprietor of every acre of land in the kingdom, excepting, perhaps, some houses and gardens\" that his subjects were sometimes permitted to trade among themselves, and concludes that the emperor therefore commands an immense revenue and incalculable wealth. This claim of near-total crown land ownership is best used as evidence for which point about Mughal administration?",
+    "choices": [
+      "Ordinary subjects under Mughal law were legally forbidden from ever owning or trading any personal property whatsoever",
+      "Centralized crown claims over land revenue, not hereditary estates, were the empire's primary source of elite wealth",
+      "The Mughal treasury depended entirely on international trade rather than on land-based revenue",
+      "Bernier personally audited the imperial treasury's accounts to confirm the emperor's total wealth"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Every acre of land in the kingdom' being the emperor's own property is the core claim — think about what that means for where elite wealth ultimately came from.",
+      "Rule out any answer banning ordinary subjects from all property, or centering trade instead of land revenue — Bernier's claim is specifically about land."
+    ]
+  },
+  {
+    "id": "apworld.empires-administration.mcq.05",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-peter-decrees.v1",
+    "problemText": "The contemporary biographer Jean Rousset de Missy recorded that Tsar Peter I \"ordered that gentlemen, merchants, and other subjects, except priests and peasants, should each pay a tax of one hundred rubles a year if they wished to keep their beards; the commoners had to pay one kopek each.\" As reported in this biographical account — not a surviving text of Peter's own decree — the graduated beard tax is best used as evidence that Peter's westernization program —",
+    "choices": [
+      "used financial pressure, scaled by social rank, to compel the nobility and merchants toward European appearance",
+      "applied only to Orthodox priests, who alone were required to pay the tax to keep their beards",
+      "was recorded exclusively in Peter's own surviving handwritten decrees, with no independent contemporary account",
+      "eliminated all social distinctions in tsarist Russia by taxing every subject at an identical flat rate"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember the source: Rousset de Missy's later biographical account, not a surviving text of Peter's own decree.",
+      "Notice the tax is graduated by social rank (gentlemen and merchants vs. commoners) — that scaling is the point, not a flat universal tax."
+    ]
+  },
+  {
+    "id": "apworld.empires-administration.mcq.06",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-peter-decrees.v1",
+    "problemText": "The same account continues: Rousset de Missy describes Peter as having \"issued an ordinance abolishing that costume, commanding all the boyars [i.e., the nobles] and all those who had positions at court to dress after the French fashion\" — again, the biographer's report of the tsar's action, not Peter's own decree text. Paired with the beard tax, this dress ordinance is best used as evidence that Peter's state —",
+    "choices": [
+      "abandoned all traditional Russian court customs voluntarily, without any formal ordinances or taxes",
+      "left the boyars entirely free to choose their own traditional dress, without any formal court expectation whatsoever",
+      "used formal ordinances aimed at courtiers and nobles to compel visible, outward markers of westernization",
+      "required French fashion only for merchants, exempting the boyars and the court entirely"
+    ],
+    "answer": "C",
+    "hints": [
+      "Pair this with the beard tax: both are formal ordinances the biographer says targeted courtiers and nobles specifically.",
+      "Rule out any answer describing voluntary abandonment of custom or complete boyar freedom — the account describes a mandate, not a choice."
+    ]
+  },
+  {
+    "id": "apworld.empires-belief-systems.mcq.01",
+    "loId": "apworld.empires-belief-systems",
+    "cedCode": "AP-APWORLD-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-taj-mahal.v1",
+    "problemText": "The Taj Mahal complex at Agra (1632-1653), a mausoleum Shah Jahan built for his wife Mumtaz Mahal, employed a workforce estimated at more than 20,000 masons, marble-workers, mosaicists, and calligraphers over more than two decades, at a contemporary cost estimated near 32 million rupees, with a garden layout drawn from Quranic descriptions of paradise. These facts about the Taj Mahal are best used as evidence that —",
+    "choices": [
+      "the Mughal treasury was too depleted by military campaigns to fund a standing army during this period",
+      "Mughal architecture during Shah Jahan's reign rejected all Persian artistic influence in favor of a purely local style",
+      "religious architecture in the Mughal Empire was funded entirely through voluntary donations rather than the imperial treasury",
+      "Mughal emperors used costly, religiously symbolic monuments as a deliberate display of dynastic wealth and legitimacy"
+    ],
+    "answer": "D",
+    "hints": [
+      "Focus on scale — workforce size, cost, and religiously symbolic garden design — as a deliberate display, not as evidence about army funding or donation practices.",
+      "Rule out any answer about rejecting Persian influence — the Mughal court's garden and calligraphic traditions were themselves Persianate."
+    ]
+  },
+  {
+    "id": "apworld.empires-belief-systems.mcq.02",
+    "loId": "apworld.empires-belief-systems",
+    "cedCode": "AP-APWORLD-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-kangxi-edict.v1",
+    "problemText": "Wang Yupu's later colloquial exposition of Kangxi's 1670 Sacred Edict maxim on duteousness and subordination, in F. W. Baller's translation, elaborates: \"Your parents looked upon your face, listened to your voice. Did you laugh? they were pleased; did you cry? they were sad; did you toddle? step by step they followed you.\" This vivid exposition of parental devotion — Wang Yupu's later exposition of the maxim, not Kangxi's own original 1670 wording — is best used as evidence that Qing political legitimacy rested partly on —",
+    "choices": [
+      "Kangxi's personal diary entries describing his own childhood memories of his parents",
+      "Confucian filial piety, extended by analogy from family obligation to obedience toward the state",
+      "a legal requirement that all Qing subjects financially compensate their parents for childhood expenses",
+      "an entirely new moral philosophy that Kangxi invented independently of earlier Confucian tradition"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember this is Wang Yupu's later colloquial exposition of Kangxi's maxim, in Baller's translation — not Kangxi's own 1670 wording or a private diary.",
+      "Think about the analogy the exposition builds: obligation to parents as a model for a different kind of obligation elsewhere in Qing society."
+    ]
+  },
+  {
+    "id": "apworld.empires-expansion.mcq.01",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Historians sometimes label the Ottoman, Safavid, Mughal, and Qing empires \"gunpowder empires\" because each used cannon and firearms in territorial expansion and consolidation — the Ottoman capture of Constantinople in 1453 by breaching its walls with massive siege cannon is often cited as the defining case. Which statement best evaluates this label as a complete explanation of these empires' rise?",
+    "choices": [
+      "It is fully and completely accurate: without gunpowder artillery weapons, none of these four empires could ever have expanded or held their conquered territory",
+      "It is inaccurate altogether, since none of these empires actually deployed gunpowder weapons before 1750",
+      "It captures a real factor in siege warfare but overstates its role: administrative institutions and cavalry forces mattered as much",
+      "It applies only to the Qing Dynasty, since the other three empires expanded solely through negotiated alliances"
+    ],
+    "answer": "C",
+    "hints": [
+      "The 'gunpowder empires' label captures something real about siege warfare, but the question asks whether it is a *complete* explanation.",
+      "Rule out any answer requiring ALL of the explanation to rest on guns alone, or that denies gunpowder weapons were used at all."
+    ]
+  },
+  {
+    "id": "apworld.empires-expansion.mcq.02",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Between 1450 and 1750, land-based Eurasian empires expanded and governed new territory using more than weaponry alone: many transitioned mounted cavalry forces toward musket-equipped infantry over time, and built salaried bureaucracies, garrisoned strongholds, and revenue-collection systems to administer conquered land long after the fighting ended. Which example best illustrates why administrative capacity, not weaponry, explains an empire's ability to sustain its expansion?",
+    "choices": [
+      "The Ottoman devshirme system trained recruits for salaried administrative and military service that continued governing conquered provinces for generations",
+      "Newly conquered provinces were left entirely self-governing, without any imperial officials, tax collectors, or garrisons",
+      "Empires relied only on the personal loyalty and charisma of individual conquering generals, with absolutely no bureaucratic institutions at all",
+      "Empires depended solely on continually importing new artillery from European manufacturers to control conquered provinces"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the example that shows recruits being trained for ongoing administrative and military roles, not just used in one battle.",
+      "Rule out any answer describing no administration at all, or attributing sustained control to imported artillery alone — those restate the 'guns alone' misconception."
+    ]
+  }
+]

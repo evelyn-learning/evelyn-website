@@ -161,3 +161,128 @@ World History source-analysis skills against the Unit-2 documents:
 this bank). A standalone script confirmed every quoted span inside
 `problemText` is a verbatim substring of its passage's seeded `fullText`
 (0 mismatches).
+
+## Unit 3: Land-Based Empires, c. 1450-1750 (CED Unit 3)
+
+Stimulus-based MCQ bank (`u3.json`) keyed to the five Unit-3 primary/visual
+source documents seeded in `src/lib/tutor/passages/seeds/apworld-*.ts` and to
+the three Unit-3 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apworld-u3-*.ts`). `cedCode` mirrors each
+LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u3.json |
+|---|---|---|---|
+| `apworld.empires-administration` | `AP-APWORLD-3.2` | Ottoman merit-based devshirme promotion (Busbecq); Mughal crown ownership of land and elite estates (Bernier); Peter the Great's westernization ordinances (beard tax, French dress). | 6 |
+| `apworld.empires-belief-systems` | `AP-APWORLD-3.3` | Monumental architecture as Mughal imperial/religious legitimacy (Taj Mahal); Confucian filial piety as Qing political orthodoxy (Sacred Edict). | 2 |
+| `apworld.empires-expansion` | `AP-APWORLD-3.1` | The "gunpowder empires" thesis and its limits; administrative capacity (not weaponry alone) as the basis of sustained territorial control. | 2 |
+| **Total** | | | **10** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus item anchors to one of the five Unit-3 passage seeds via
+`passageId`; two items are non-stimulus (no `passageId` — content-recall
+items testing the empires-expansion LO's key facts/misconceptions directly,
+per the Unit-3 block's composition: "non-stimulus expansion 2"):
+
+- `evelyn.passage.apworld-busbecq-suleiman.v1` — Ogier Ghiselin de Busbecq, *Turkish Letters* (1555), on merit-based advancement at Suleiman's Ottoman court — 2 items
+- `evelyn.passage.apworld-bernier-mughal.v1` — François Bernier, *Travels in the Mogul Empire* (1656-68), on the Mughal crown's ownership of land and inheritance of nobles' estates — 2 items
+- `evelyn.passage.apworld-peter-decrees.v1` — Jean Rousset de Missy's contemporary *Life of Peter the Great*, on the beard tax and French-dress ordinance — 2 items
+- `evelyn.passage.apworld-taj-mahal.v1` — the Taj Mahal (visual/monument document, described facts only — no quoted text) — 1 item
+- `evelyn.passage.apworld-kangxi-edict.v1` — Wang Yupu's colloquial exposition (trans. Baller) of Kangxi's 1670 Sacred Edict maxim on filial duty — 1 item
+- No passage (non-stimulus, content-recall items testing the empires-expansion LO's key facts/misconceptions directly) — 2 items: `apworld.empires-expansion.mcq.01` (the "gunpowder empires" label as an incomplete explanation), `apworld.empires-expansion.mcq.02` (administrative capacity, not weaponry, as the basis of sustained control)
+
+## Attribution discipline (controller-flagged traps for this unit)
+
+- **The Peter the Great items are layered-attribution traps.** The seeded
+  passage is Jean Rousset de Missy's *contemporary biographical account* of
+  Peter's reforms (as anthologized by J. H. Robinson and hosted by the
+  Fordham sourcebook) — no raw text of Peter's own ukases survives at that
+  source. Both stems (`empires-administration.mcq.05`, `.mcq.06`)
+  explicitly attribute the quoted wording to "the contemporary biographer
+  Jean Rousset de Missy" / "the biographer's report of the tsar's action,"
+  and never present it as Peter's own decree text. `.mcq.05`'s distractor C
+  ("was recorded exclusively in Peter's own surviving handwritten decrees")
+  directly tests whether a student collapses this distinction.
+- **The Kangxi item is a layered-attribution trap.** The seeded passage is
+  Wang Yupu's later colloquial exposition ("Direct Explanation") of Kangxi's
+  1670 Sacred Edict maxim, in F. W. Baller's 1892 translation — not Kangxi's
+  own original 1670 wording. `empires-belief-systems.mcq.02`'s stem
+  attributes the quoted wording to "Wang Yupu's later colloquial exposition
+  ... in F. W. Baller's translation" and explicitly flags "not Kangxi's own
+  original 1670 wording"; distractor A ("Kangxi's personal diary entries")
+  tests the same collapse.
+- **The Taj Mahal item quotes nothing.** Per the passage seed's own
+  documentation, this is a described-visual entry with no verbatim source
+  text and "no verbatim-fidelity risk" — the stem states only the described
+  facts (dates, workforce, cost, garden iconography) with no quotation
+  marks.
+- **Kinship check:** no item in this bank references Shah Jahan's parentage,
+  so the Akbar-is-grandfather (not father) trap flagged in the task brief
+  does not arise here; `empires-belief-systems.mcq.01` describes only the
+  Taj Mahal's own facts (Shah Jahan as builder, Mumtaz Mahal as the
+  mausoleum's subject), consistent with the passage seed.
+
+## Historical-reasoning skills tested
+
+- **Sourcing / point of view** — Busbecq as a Habsburg ambassador describing
+  an unfamiliar court's meritocratic promotion system with evident admiration
+  (`empires-administration.mcq.01`, `.mcq.02`); Bernier as the Mughal court's
+  own physician reporting to a European patron on crown land ownership
+  (`.mcq.03`, `.mcq.04`); the two-layer sourcing of the Peter items (a later
+  biographer's account, not Peter's own words) and the Kangxi item (a later
+  colloquial exposition, not Kangxi's own words).
+- **Contextualization** — devshirme-recruited officials' low birth as
+  evidence of a non-hereditary Ottoman elite (`empires-administration.mcq.02`);
+  the Taj Mahal's scale and cost as a display of Mughal dynastic/religious
+  legitimacy (`empires-belief-systems.mcq.01`); the 1453 fall of Constantinople
+  as a limited illustration of the "gunpowder empires" thesis
+  (`empires-expansion.mcq.01`).
+- **Causation / comparison** — the beard tax and dress ordinance as parallel
+  instruments of Peter's state-directed westernization
+  (`empires-administration.mcq.05`, `.mcq.06`); Confucian filial piety as an
+  analogy extended to political obedience under the Qing
+  (`empires-belief-systems.mcq.02`).
+- **Misconception correction (real AP traps)** — "European-style hereditary
+  aristocracy was the universal elite model" is directly refuted by the
+  Busbecq merit-based-promotion items and the Bernier crown-inheritance items
+  (`empires-administration.mcq.01`, `.03`); "gunpowder alone explains the
+  empires' rise" is directly refuted by both non-stimulus expansion items,
+  which test administrative capacity and the cavalry-to-musket transition as
+  co-equal factors (`empires-expansion.mcq.01`, `.mcq.02`).
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 spread: 1x1, 2x4, 3x4, 4x1.
+- Correct-answer letters distributed non-cyclically across all 10 items:
+  A=3, B=2, C=3, D=2. Sequence: `CADBACDBCA` — not all one letter, not a
+  repeating ABCD pattern.
+- Choice lengths word-count checked (script below): initial draft had the
+  correct choice as the unique longest option in 5 of 10 items; revised
+  distractor/correct-choice lengths (lengthening a distractor in each
+  flagged item, e.g. `empires-administration.mcq.01`'s option D, `.mcq.04`'s
+  option A, `.mcq.06`'s option B, and both `empires-expansion` items' first
+  distractor) so the correct answer is the **unique longest in 0 of 10
+  items** after revision. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-world-history/u3.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from public-domain Unit-3 documents (never
+  transcribed wholesale from a real AP exam). `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+- Quotes are closed with a straight `"` immediately after the verbatim span
+  with no added period/comma inside the quotation marks unless the source
+  itself punctuates the excerpt at that exact point (e.g.
+  `empires-administration.mcq.01`'s quote ends mid-sentence at a real source
+  period; `.mcq.02`, `.mcq.03`, `.mcq.04`, and `.mcq.06`'s quotes close with
+  no trailing punctuation, matching the seed's own ellipsis/comma
+  continuation at that cut point, with connective prose supplied outside the
+  quotation marks instead of splicing two quoted spans together).
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-world-history --file=u3.json --dry-run`:
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (75 passages, including all 5 new Unit-3
+passages referenced by this bank). A standalone script confirmed every
+quoted span inside `problemText` is a verbatim substring of its passage's
+seeded `fullText` (0 mismatches, 7 quoted spans checked across 7
+stimulus-anchored items; the Taj Mahal item quotes nothing by design).
