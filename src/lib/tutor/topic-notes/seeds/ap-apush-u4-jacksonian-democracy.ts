@@ -92,7 +92,7 @@ export const BASELINE_AP_APUSH_JACKSONIAN_DEMOCRACY: TopicNotesBaseline = {
       example: {
         problem: 'Why was Jackson\'s Bank veto message politically effective?',
         solution:
-          'Jackson framed the Bank as an "artificial distinction" granting exclusive privilege to the already rich and powerful, at the expense of "the humble members of society — the farmers, mechanics, and laborers." This turned a complex monetary-policy dispute into a simple populist referendum, which helped make the veto a central, winning issue in his 1832 reelection.',
+          'Jackson framed the Bank as an "artificial distinction" granting exclusive privilege to the already rich and powerful, at the expense of "the humble members of society-the farmers, mechanics, and laborers". This turned a complex monetary-policy dispute into a simple populist referendum, which helped make the veto a central, winning issue in his 1832 reelection.',
       },
       relatedLoIds: ['apush.jacksonian-democracy'],
     },
