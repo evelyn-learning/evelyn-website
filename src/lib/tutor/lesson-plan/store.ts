@@ -1390,6 +1390,10 @@ import { SEED_AP_APGOV_U3_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u3-frq-arg
 import { SEED_AP_APGOV_U4_SOCIALIZATION } from './seeds/ap-apgov-u4-socialization';
 import { SEED_AP_APGOV_U4_POLLING } from './seeds/ap-apgov-u4-polling';
 import { SEED_AP_APGOV_U4_IDEOLOGY_POLICY } from './seeds/ap-apgov-u4-ideology-policy';
+import { SEED_AP_APGOV_U4_FRQ_CONCEPT_APPLICATION } from './seeds/ap-apgov-u4-frq-concept-application';
+import { SEED_AP_APGOV_U4_FRQ_QUANTITATIVE } from './seeds/ap-apgov-u4-frq-quantitative';
+import { SEED_AP_APGOV_U4_FRQ_SCOTUS_COMPARISON } from './seeds/ap-apgov-u4-frq-scotus-comparison';
+import { SEED_AP_APGOV_U4_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u4-frq-argument-essay';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2744,6 +2748,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APGOV_U4_SOCIALIZATION,
   SEED_AP_APGOV_U4_POLLING,
   SEED_AP_APGOV_U4_IDEOLOGY_POLICY,
+  SEED_AP_APGOV_U4_FRQ_CONCEPT_APPLICATION,
+  SEED_AP_APGOV_U4_FRQ_QUANTITATIVE,
+  SEED_AP_APGOV_U4_FRQ_SCOTUS_COMPARISON,
+  SEED_AP_APGOV_U4_FRQ_ARGUMENT_ESSAY,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
