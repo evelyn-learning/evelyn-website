@@ -672,3 +672,248 @@ checked programmatically) — no literary quoting is needed for this
 described-data-table stimulus. A corpus-wide id-uniqueness check across
 `u1.json`, `u2.json`, `u3.json`, and `u4.json` found 0 duplicate ids among
 the combined 47 items.
+
+## Unit 5: Political Participation (CED Unit 5)
+
+Stimulus-based MCQ bank (`u5.json`, 15 items) keyed to the two Unit-5
+primary/data source documents seeded in
+`src/lib/tutor/passages/seeds/apgov-{turnout-age-table,citizens-united-opinion}.ts`
+and to the five Unit-5 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apgov-u5-{voting,parties,interest-groups,elections,media}.ts`).
+`cedCode` mirrors each LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u5.json |
+|---|---|---|---|
+| `apgov.voting-rights-behavior` | `AP-APGOV-5.1/5.2` | Voting rights & voter behavior — the CPS reported-turnout-by-age data table (2000-2020) and the 15th/19th/24th/26th Amendments plus the Voting Rights Act of 1965 (poll-tax ban, VRA-vs-19th-Amendment distinction). | 3 |
+| `apgov.political-parties` | `AP-APGOV-5.3/5.4/5.5` | Political parties — core party functions (mobilization, platform, recruitment), the winner-take-all structural barrier facing third parties, and realignment/critical elections (1932). | 3 |
+| `apgov.interest-groups` | `AP-APGOV-5.6/5.7` | Interest groups — the free-rider problem and selective incentives, lobbying strategies (drafting legislation, testimony), and iron triangles vs. issue networks. | 3 |
+| `apgov.elections-campaign-finance` | `AP-APGOV-5.8/5.9/5.10/5.11` | Elections & campaign finance — the 12th Amendment's rewrite of the Electoral College, *Citizens United v. FEC* (2010, corporate political speech and the independent-expenditure/anti-corruption reasoning), and PACs vs. super PACs. | 4 |
+| `apgov.media-linkage` | `AP-APGOV-5.12/5.13` | The media as a linkage institution — agenda setting and horse-race coverage. | 2 |
+| **Total** | | | **15** |
+
+Per the Task 20 brief's own topic list, only agenda setting and horse-race
+coverage are tested for `apgov.media-linkage` — media consolidation and
+filter bubbles appear only as vocabulary-accurate wrong-choice distractors
+in those two items, not as their own correct-answer items, since the brief
+names only "media agenda-setting" as this LO's required topic (matching the
+Unit-1 bank's precedent of one LO — `apgov.democratic-ideals` — receiving 0
+items where the seeded stimulus set didn't call for it). Similarly, the
+voting-rights-behavior LO's rational-choice/retrospective/prospective/
+party-line voting-behavior models (also part of that LO's own content plan)
+are not tested here, since the brief's required topic list for this LO is
+the turnout-table set plus amendments/VRA only.
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus-anchored item anchors to one of the two Unit-5 passage seeds
+via `passageId` (for grouping/render), per the Task 20 brief's instruction
+that `passageId` is used only for these two registered U5 stimuli:
+
+- `evelyn.passage.apgov-turnout-age-table.v1` — Census Bureau CPS Voting and
+  Registration Supplement, Table A-1, reported turnout by age group across
+  four presidential elections (2000, 2008, 2016, 2020) — 2 items
+  (voting-rights-behavior.mcq.01–02).
+- `evelyn.passage.apgov-citizens-united-opinion.v1` — Justice Kennedy's
+  majority opinion in *Citizens United v. FEC* (2010) — 2 items
+  (elections-campaign-finance.mcq.02–03).
+
+The remaining 11 items are non-stimulus (no `passageId`), since no seeded
+Unit-5 document speaks to amendments/VRA, party functions/third parties,
+free riders/lobbying, the Electoral College/12th Amendment, PACs vs. super
+PACs (tested as a standalone application item, downstream of but not
+quoting the Citizens United excerpt), or media agenda setting/horse-race
+coverage.
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as the Unit-1–4 banks: every stem inlines the specific short
+quoted document line (a verbatim substring of the seeded `fullText`,
+confirmed programmatically — see Verification below) or, for the
+turnout-table set, the specific numeric figures tested, directly in the
+stem, before asking the AP Gov reasoning question. No `$<digit>`
+currency/KaTeX-trap figures appear anywhere in this bank (all turnout-table
+figures are plain percentages, e.g. "48.0%", never written with a leading
+`$`).
+
+## AP Gov reasoning skills tested
+
+- **Reading a two-series quantitative trend accurately** — confirming that
+  65-and-over turnout led 18-24 turnout in all four elections shown, against
+  a "gap widened every interval" distractor that contradicts the 2000-to-2008
+  narrowing and a "both groups declined 2008-to-2016" distractor that
+  contradicts the 65+ group's slight rise that same span
+  (voting-rights-behavior.mcq.01); **narrowed-not-closed reasoning** — the
+  2016-to-2020 gap fell from 29.0 to 23.9 points because of an 8.6-point
+  youth-turnout surge, but did not close, since the 65+ group also rose over
+  the same span — tested against a "gap closed entirely" overstatement and a
+  spurious "cannot be determined without registration counts" distractor
+  (voting-rights-behavior.mcq.02).
+- **Distinguishing which amendment/law addressed which barrier** — the 24th
+  Amendment's poll-tax ban, tested against the 15th (race) and 19th (sex)
+  Amendments as real-but-wrong amendments, and against the Voting Rights Act
+  of 1965 mischaracterized as "a constitutional amendment" (it is a federal
+  law) — the VRA-is-not-an-amendment / VRA-addresses-race-not-sex distinction
+  the Task 20 brief calls out (voting-rights-behavior.mcq.03).
+- **Party functions, applied** — canvassing/phone-banking get-out-the-vote
+  activity identified as mobilization, against recruitment/platform/
+  ballot-access distractors (political-parties.mcq.01).
+- **Third-party structural barriers** — a minor party's steady 7% vote share
+  producing zero seats under winner-take-all, against a proportional-
+  representation distractor (the literal opposite rule) and two real-but-
+  wrong Unit-5 vocabulary terms (political-parties.mcq.02).
+- **Realignment/critical elections** — the 1932 shift's *persistence* through
+  1936 and 1940 (not just its size) as what makes it a realigning critical
+  election, against party-line voting, prospective voting, and issue network
+  as real-but-wrong distractors (political-parties.mcq.03).
+- **The free-rider problem and selective incentives, applied** — a
+  members-only legal-consulting benefit identified as a selective incentive
+  countering free-riding on a shared tax exemption (interest-groups.mcq.01).
+- **Lobbying strategies, applied** — drafting model legislation and
+  committee testimony both identified as lobbying strategies
+  (interest-groups.mcq.02).
+- **Iron triangles vs. issue networks** — a decades-long, three-participant
+  farm-subsidy alliance identified as an iron triangle, against issue network
+  (the direct structural opposite) and pluralism/selective-incentive
+  distractors (interest-groups.mcq.03).
+- **The Electoral College's post-Founding fix** — the 12th Amendment's
+  separate-ballot requirement, adopted after the 1800 Jefferson-Burr tie,
+  tested against the 17th/25th/22nd Amendments as real-but-unrelated
+  distractors (elections-campaign-finance.mcq.01).
+- **Citizens United's corporate-speech reasoning** — political speech "does
+  not lose First Amendment protection 'simply because its source is a
+  corporation'" tested against an overstated "greater protection than
+  individuals" distractor and two fabricated-precondition distractors
+  (disclosure; congressional regulation) (elections-campaign-finance.mcq.02).
+- **Citizens United's anti-corruption/independent-expenditure reasoning** —
+  the "absence of prearrangement and coordination" as what removes the quid
+  pro quo corruption risk, tested against a false "independent expenditures
+  are dollar-capped" distractor (they are unlimited — the opposite of what
+  Citizens United holds) and a false "individuals only, never corporations"
+  distractor (elections-campaign-finance.mcq.03) — the bank's hardest item
+  (difficulty 4), since it requires recognizing that the *lack of
+  coordination itself* is the doctrinal reason, not an unrelated procedural
+  or dollar-limit fact.
+- **PACs vs. super PACs, applied downstream of Citizens United** — a
+  committee that spends unlimited sums independently but may not contribute
+  directly to or coordinate with a candidate identified as a super PAC,
+  against a traditional-PAC distractor (which correctly describes
+  contribution *limits* that do not apply to the committee in the stem) and
+  two fabricated regulatory-exemption distractors
+  (elections-campaign-finance.mcq.04).
+- **Agenda setting vs. adjacent media concepts** — an outlet's coverage
+  choice raising an issue's perceived importance (without pushing an
+  opinion) identified as agenda setting, against horse-race coverage, filter
+  bubble, and media consolidation as real-but-wrong Unit-5 media terms
+  (media-linkage.mcq.01); **horse-race coverage specifically** — a
+  who's-winning/poll-movement debate lead identified as horse-race coverage,
+  against a too-generic "agenda setting in general" distractor and two
+  unrelated-fact distractors (no ownership change or viewer-selective-
+  exposure pattern is described) (media-linkage.mcq.02).
+
+## Constitutional / policy accuracy notes
+
+- Turnout-table figures (18-24: 32.3/44.3/39.4/48.0%; 65+: 67.6/68.1/68.4/
+  71.9% for 2000/2008/2016/2020) are the real published Census Bureau CPS
+  Table A-1 figures, reproduced exactly from the seeded passage's `fullText`
+  description (verified programmatically — no numeric drift). No item claims
+  the 2016-to-2020 youth surge closed the age gap — every item that touches
+  it states the gap narrowed (29.0 to 23.9 points) without closing, since the
+  65+ group's turnout also rose over the same span, consistent with the
+  passage's own closing paragraph and the voting-rights-behavior content
+  plan's worked example.
+- The Voting Rights Act of 1965 is tested throughout as a federal **law**,
+  never as a constitutional amendment, and as addressing **racial**
+  discrimination in voting specifically — never conflated with the 19th
+  Amendment's sex-based women's-suffrage guarantee (the VRA-≠-women's-
+  suffrage distinction the Task 20 brief calls out is preserved: no item
+  attributes women's suffrage to the VRA or attributes racial-discrimination
+  remedies to the 19th Amendment).
+- The 12th Amendment (1804) is tested only for what it actually did —
+  requiring electors to cast separate ballots for President and Vice
+  President, replacing Article II's original single-ballot design after the
+  1800 Jefferson-Burr crisis — consistent with the elections-campaign-finance
+  content plan; no item claims the 12th Amendment changed elector
+  apportionment, state-level winner-take-all rules, or the 270-vote majority
+  threshold, none of which it altered.
+- *Citizens United v. FEC* (2010) is tested only via the two lines of
+  reasoning actually present in the seeded excerpt (corporate political
+  speech retains First Amendment protection; independent expenditures'
+  absence of coordination removes the quid pro quo corruption risk that
+  justifies limiting direct contributions) — consistent with that passage's
+  own docblock. No item attributes the *Buckley v. Valeo* citation inside the
+  excerpt to a separate, independently quoted holding; *Buckley* is not named
+  in any item, since the excerpt only quotes language *from* Buckley within
+  the Citizens United opinion itself, per the passage's own docblock.
+- Super PACs are tested, throughout, as permitted to raise and spend
+  **unlimited** sums on **independent** expenditures, while remaining
+  **barred** from direct contributions to candidates and from coordinating
+  with a campaign — the core distinction the Task 20 brief flags as an
+  accuracy constraint. No item claims a dollar cap on independent
+  expenditures (elections-campaign-finance.mcq.03's B distractor is
+  deliberately wrong for exactly this reason) or that super PACs may
+  contribute directly to candidates.
+- Agenda setting is tested as shaping *which issues* the public perceives as
+  important, explicitly distinguished from dictating a specific opinion on
+  those issues — consistent with the media-linkage content plan's own
+  misconception check; no item conflates agenda setting with persuasion
+  toward a particular conclusion.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×3, 2×8, 3×3, 4×1.
+- Correct-answer letters distributed non-cyclically across all 15 items:
+  A=3, B=4, C=4, D=4 (the least-common letter, A, is still 20% — well under
+  the 40% single-letter cap). Sequence: `CADBCDABDCBADCB` — not all one
+  letter, not a repeating ABCD/period-4 pattern. Checked programmatically: no
+  repeated 4-letter (or shorter) window and no back-to-back repeated letter
+  anywhere in the 15-item sequence.
+- Choice lengths equalized per item (word-count checked, correct answer NOT
+  the systematically longest option — the length-tell trap): the first draft
+  had the correct choice as the unique longest option in 9 of 15 items
+  (voting-rights-behavior.mcq.01/.02, political-parties.mcq.02/.03,
+  interest-groups.mcq.03, elections-campaign-finance.mcq.01/.03/.04,
+  media-linkage.mcq.01); each of those nine items had a distractor lengthened
+  and/or the correct choice trimmed (content/meaning unchanged — e.g.
+  elections-campaign-finance.mcq.03's correct choice and its "individuals
+  only" distractor were brought to an exact 21-word tie, which is not counted
+  as a violation since the correct answer is no longer the *unique* longest)
+  so that after revision the correct answer is the **unique longest in 0 of
+  15 items**. Verify:
+  `node -e "const a=require('./src/data/problem-bank/ap-us-government/u5.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.trim().split(/\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from the public-domain Citizens United opinion
+  (never transcribed wholesale from a real AP exam). `license:
+  'internal-original'` per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-government --file=u5.json --dry-run`:
+
+```
+Loaded 15 items from ap-us-government/u5.json
+Validation OK. Formats: {"mcq":15}
+
+Verifying 15 items via claude-sonnet-5 (concurrency 6)...
+  ...10/15
+
+Verify: 15/15 passed, 0 rejected.
+
+[dry-run] Would upsert 15 verified items. No DB write.
+```
+
+15/15 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0
+rejected, on the first pass (no answer-key fixes needed — the answer-letter
+distribution and choice-length rebalancing described above were done before
+this dry-run and changed only *which position* holds each correct answer
+and the *word count* of distractor/correct text, never the underlying
+correct answer itself, so a single dry-run after those edits sufficed).
+`npm run lint:passages`: `✅ passages lint clean (30 passages)` — includes
+both passages referenced by this bank. A standalone verbatim-substring check
+confirmed each of the three quoted spans inside `problemText` (one
+corporate-speech quote, one anti-corruption/independent-expenditure quote,
+both from the Citizens United excerpt) is an exact substring of the
+passage's seeded `fullText` (0 mismatches, checked programmatically); the
+turnout-table items (2 items) inline numeric figures rather than literary
+quotes, confirmed as a direct numeric match against the seeded description
+instead. A corpus-wide id-uniqueness check across `u1.json` through
+`u5.json` found 0 duplicate ids among the combined 62 items.

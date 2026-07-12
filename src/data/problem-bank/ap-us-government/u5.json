@@ -1,0 +1,291 @@
+[
+  {
+    "id": "apgov.voting-rights-behavior.mcq.01",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-turnout-age-table.v1",
+    "problemText": "The U.S. Census Bureau's Current Population Survey reports the following presidential-election turnout rates: for ages 18-24, 32.3% in 2000, 44.3% in 2008, 39.4% in 2016, and 48.0% in 2020; for ages 65 and older, 67.6% in 2000, 68.1% in 2008, 68.4% in 2016, and 71.9% in 2020. Which statement accurately describes this pattern?",
+    "choices": [
+      "Reported turnout among 18-to-24-year-olds exceeded reported turnout among voters 65 and older in 2020",
+      "The turnout gap between the two age groups widened in every successive election shown, without exception",
+      "In every one of the four elections shown, 65-and-older turnout was higher than 18-to-24 turnout",
+      "Reported turnout declined for both age groups between 2008 and 2016, before rising again in 2020"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the 65+ column against the 18-24 column in each of the four years separately, rather than assuming a single trend describes every pair of years.",
+      "Rule out the widening-gap claim (compute each year's gap: 35.3, 23.8, 29.0, 23.9 points — it does not widen every time) and the both-declined claim (the 65+ figure rises slightly from 68.1% to 68.4% between 2008 and 2016; only the 18-24 figure falls)."
+    ]
+  },
+  {
+    "id": "apgov.voting-rights-behavior.mcq.02",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-turnout-age-table.v1",
+    "problemText": "Reported turnout among 18-to-24-year-olds rose from 39.4% in 2016 to 48.0% in 2020, an 8.6-percentage-point increase. Over that same span, reported turnout among voters 65 and older also rose, from 68.4% to 71.9%. Which statement best describes what happened to the turnout gap between these two groups from 2016 to 2020?",
+    "choices": [
+      "The gap narrowed, from 29.0 to 23.9 points, but did not close, since the older group's turnout also rose",
+      "The gap closed entirely, since the younger group's 8.6-point increase fully caught up to the older group's 2020 turnout rate",
+      "The gap widened, since a rise in youth turnout alone cannot narrow a preexisting turnout gap",
+      "The gap cannot be determined without also knowing the total number of registered voters in each age group"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute both gaps directly: 68.4% minus 39.4% for 2016, and 71.9% minus 48.0% for 2020.",
+      "Rule out 'closed entirely' (23.9 points is still a real, nonzero gap) and 'cannot be determined' (both figures given are already turnout RATES, so no additional population count is needed to subtract one percentage from another)."
+    ]
+  },
+  {
+    "id": "apgov.voting-rights-behavior.mcq.03",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following bans the use of a poll tax as a condition for voting in federal elections?",
+    "choices": [
+      "The 15th Amendment (1870), which prohibits denying the right to vote on account of race, color, or previous condition of servitude",
+      "The 19th Amendment (1920), which prohibits denying the right to vote on account of sex",
+      "The Voting Rights Act of 1965, a constitutional amendment that outlawed literacy tests nationwide",
+      "The 24th Amendment (1964), which bans poll taxes as a condition of voting in federal elections"
+    ],
+    "answer": "D",
+    "hints": [
+      "Match each choice to the SPECIFIC barrier it addresses — race, sex, or poll taxes — rather than assuming any major voting-rights measure will do.",
+      "The Voting Rights Act of 1965 is a federal law, not a constitutional amendment — rule out that choice on that basis alone, even setting aside that it targeted literacy tests, not poll taxes specifically."
+    ]
+  },
+  {
+    "id": "apgov.political-parties.mcq.01",
+    "loId": "apgov.political-parties",
+    "cedCode": "AP-APGOV-5.3/5.4/5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A political party organizes door-to-door canvassing and phone banks aimed at getting its registered supporters to the polls on election day. Which core party function does this best illustrate?",
+    "choices": [
+      "Candidate recruitment, since canvassers often ask supporters to run for local office",
+      "Mobilization, organizing supporters to actually turn out and vote on election day",
+      "Platform development, formally stating the party's positions on major issues",
+      "Ballot access, meeting a state's signature and filing requirements to appear on the ballot"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what the canvassing and phone banks are actually trying to accomplish — recruiting candidates, stating positions, or getting existing supporters to the polls.",
+      "Rule out platform development (no positions are being stated here) and ballot access (nothing here involves qualifying for the ballot)."
+    ]
+  },
+  {
+    "id": "apgov.political-parties.mcq.02",
+    "loId": "apgov.political-parties",
+    "cedCode": "AP-APGOV-5.3/5.4/5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A minor party consistently wins 7% of the vote in a state's legislative elections, year after year, but has never won a single seat, because the state — like most states — awards each legislative seat entirely to whichever candidate finishes first in that district. This structural feature is best described as —",
+    "choices": [
+      "proportional representation, in which a party's seat share roughly matches its vote share",
+      "the elite critique, the view that political influence and resources are concentrated among a relatively small, well-resourced set of groups",
+      "winner-take-all, in which the seat goes entirely to the district's first-place finisher, with none awarded for a strong-but-not-first-place showing",
+      "a critical election, a rare election that produces a lasting realignment of party coalitions"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice that the party's steady 7% support translates into zero seats — ask which electoral rule produces that specific mismatch between vote share and seats.",
+      "Rule out proportional representation (the opposite rule, where 7% of votes would yield roughly 7% of seats) and the elite critique / critical election (real Unit-5 terms, but neither describes an electoral seat-allocation rule)."
+    ]
+  },
+  {
+    "id": "apgov.political-parties.mcq.03",
+    "loId": "apgov.political-parties",
+    "cedCode": "AP-APGOV-5.3/5.4/5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Political scientists point to the 1932 election as a 'critical election,' chiefly because the shift of working-class and urban voters into the Democratic coalition that year persisted through the following elections (1936, 1940) rather than reversing. This kind of lasting shift in which groups of voters support which party is called —",
+    "choices": [
+      "party-line voting, the practice of choosing a party's candidates across an entire ballot based mainly on party identification rather than each race's specifics",
+      "an issue network, a broad, shifting web of policy actors engaging on a single issue",
+      "prospective voting, evaluating candidates based on their proposed future policies",
+      "a realignment, a durable reshuffling of party coalitions that persists beyond the single election that produced it"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key clue is durability — the shift persisted through 1936 and 1940 rather than reversing in the very next election.",
+      "Rule out party-line and prospective voting (both describe an individual voter's choice in a single election, not a lasting shift in coalitions) and issue network (a policy-actor web, not an electoral-coalition shift)."
+    ]
+  },
+  {
+    "id": "apgov.interest-groups.mcq.01",
+    "loId": "apgov.interest-groups",
+    "cedCode": "AP-APGOV-5.6/5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An industry trade association successfully lobbies for a tax exemption that benefits every firm in the industry, whether or not the firm pays dues to the association. To keep itself funded despite this, the association offers members-only legal consulting services that non-members cannot access. This members-only consulting service is an example of —",
+    "choices": [
+      "a selective incentive, a member-only benefit offered to counteract the free-rider problem",
+      "an amicus curiae brief, a 'friend of the court' filing by a party not directly involved in a case",
+      "the elite critique, the view that interest-group influence is concentrated among a well-resourced few",
+      "an iron triangle, a stable three-way alliance among a committee, an agency, and an interest group"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what problem the members-only consulting service is designed to solve, given that the tax exemption itself benefits members and non-members alike.",
+      "Rule out amicus curiae brief (a court filing, not a membership benefit), elite critique (a theory about influence, not a specific benefit), and iron triangle (a policy relationship among a committee/agency/group, not a member perk)."
+    ]
+  },
+  {
+    "id": "apgov.interest-groups.mcq.02",
+    "loId": "apgov.interest-groups",
+    "cedCode": "AP-APGOV-5.6/5.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An interest group drafts specific model legislative language for a sympathetic member of Congress to introduce as a bill, and separately sends a representative to testify at a congressional committee hearing on the same issue. These two activities both illustrate —",
+    "choices": [
+      "the free-rider problem, in which non-members benefit from a group's lobbying without paying dues",
+      "lobbying strategies interest groups use to influence legislation directly",
+      "media agenda setting, shaping which issues the public sees as important",
+      "the incumbency advantage, the higher reelection rate of sitting officeholders"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both activities are aimed directly at influencing a bill's content and its hearing record — ask which broad category of interest-group activity that falls under.",
+      "Rule out the free-rider problem (about funding, not activity type), media agenda setting (a media concept), and incumbency advantage (about officeholders' reelection, not group strategy)."
+    ]
+  },
+  {
+    "id": "apgov.interest-groups.mcq.03",
+    "loId": "apgov.interest-groups",
+    "cedCode": "AP-APGOV-5.6/5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For decades, one congressional committee, one federal agency, and one dominant interest group have worked together consistently on farm-subsidy policy — the committee reliably funds and protects the agency's programs, the agency administers them favorably to the group's members, and the group backs committee members' reelection campaigns. This stable three-way alliance is best described as —",
+    "choices": [
+      "an issue network, a much broader and more fluid, constantly shifting web of policy actors with no single stable alliance controlling outcomes",
+      "pluralism, the theory that political power is spread across many competing interest groups",
+      "a selective incentive, a member-only benefit used to counteract the free-rider problem",
+      "an iron triangle, a mutually reinforcing three-way relationship among a committee, an agency, and an interest group"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice the scenario names exactly three stable, mutually reinforcing participants — one committee, one agency, one group — not a large or shifting set of actors.",
+      "Rule out issue network (the opposite: many actors, no stable alliance) and pluralism / selective incentives (real Unit-5 terms, but neither names this specific three-way alliance)."
+    ]
+  },
+  {
+    "id": "apgov.elections-campaign-finance.mcq.01",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Under the original text of Article II, each elector cast two votes for President, with no separate ballot for Vice President — the runner-up simply became Vice President. After the tied 1800 election between Thomas Jefferson and his own running mate, Aaron Burr, had to be resolved by the House of Representatives, which constitutional change fixed this design by requiring electors to cast separate ballots for President and Vice President?",
+    "choices": [
+      "The 17th Amendment, requiring direct popular election of U.S. senators",
+      "The 25th Amendment, establishing detailed procedures for presidential succession, temporary disability, and permanent incapacity determinations",
+      "The 12th Amendment, requiring electors to cast separate ballots for President and Vice President",
+      "The 22nd Amendment, limiting presidents to two elected terms"
+    ],
+    "answer": "C",
+    "hints": [
+      "The fix specifically targeted how electors cast their ballots for President versus Vice President — narrow down to the amendment addressing that exact mechanism.",
+      "Rule out the 17th (senators), 25th (succession/disability), and 22nd (term limits) — each is a real amendment, but none touches how electors vote for President versus Vice President."
+    ]
+  },
+  {
+    "id": "apgov.elections-campaign-finance.mcq.02",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-citizens-united-opinion.v1",
+    "problemText": "In its opinion in Citizens United v. FEC (2010), the Supreme Court wrote that political speech \"does not lose First Amendment protection 'simply because its source is a corporation.'\" What is the Court's reasoning here?",
+    "choices": [
+      "Corporations receive greater First Amendment protection for political speech than individual citizens do",
+      "A speaker's corporate identity does not strip its political speech of First Amendment protection",
+      "Corporate political speech is protected only if the corporation first discloses all of its individual donors",
+      "The First Amendment applies to a corporation's speech only once Congress has directly regulated that corporation"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on what the quoted sentence denies — that speech loses protection 'simply because its source is a corporation' — not on any claim about MORE protection than individuals receive.",
+      "Rule out the disclosure-precondition choice (no disclosure requirement is mentioned in this reasoning) and the congressional-regulation choice (the quote says nothing about regulation being a precondition for First Amendment coverage)."
+    ]
+  },
+  {
+    "id": "apgov.elections-campaign-finance.mcq.03",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-citizens-united-opinion.v1",
+    "problemText": "The Citizens United opinion also states: \"The absence of prearrangement and coordination of an expenditure with the candidate or his agent not only undermines the value of the expenditure to the candidate, but also alleviates the danger that expenditures will be given as a quid pro quo for improper commitments from the candidate.\" According to this reasoning, why does an INDEPENDENT expenditure not create the same corruption risk as a direct campaign contribution?",
+    "choices": [
+      "Because it is not coordinated with the candidate, it removes the direct exchange that could create a quid pro quo arrangement",
+      "Because federal law caps independent expenditures at a small dollar amount, unlike direct contributions",
+      "Because the Federal Election Commission must approve every independent expenditure in advance",
+      "Because independent expenditures may legally be made only by individual private citizens acting alone, never by corporations, unions, or other organizations"
+    ],
+    "answer": "A",
+    "hints": [
+      "The quoted reasoning turns on the word 'coordination' — ask what changes about the corruption risk once an expenditure is NOT arranged with the candidate.",
+      "Rule out the dollar-cap choice (independent expenditures are not capped at all — that is exactly what Citizens United permits) and the individuals-only choice (the case is specifically about ALLOWING corporations and unions to make such expenditures, not barring them)."
+    ]
+  },
+  {
+    "id": "apgov.elections-campaign-finance.mcq.04",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A political committee raises and spends unlimited sums of money on advertisements supporting a candidate, but federal law forbids it from contributing any of that money directly to the candidate's campaign or coordinating its ad strategy with the campaign's staff. This type of political committee is best described as —",
+    "choices": [
+      "a traditional PAC, which may contribute directly to candidates subject to federal contribution limits",
+      "a party committee, which is exempt from all federal contribution limits",
+      "a 501(c)(4) social-welfare advocacy nonprofit, which is legally required under federal law to publicly disclose the identity of all of its individual donors",
+      "a super PAC, which may spend unlimited sums independently but may not contribute directly to or coordinate with a candidate"
+    ],
+    "answer": "D",
+    "hints": [
+      "Match the two defining features in the stem — unlimited spending but a ban on direct contributions and coordination — to the one type of committee that has both features at once.",
+      "Rule out traditional PAC (contribution limits apply, unlike this committee) and party committee (not exempt from all limits); the donor-disclosure claim about 501(c)(4) advocacy groups is also inaccurate."
+    ]
+  },
+  {
+    "id": "apgov.media-linkage.mcq.01",
+    "loId": "apgov.media-linkage",
+    "cedCode": "AP-APGOV-5.12/5.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A media outlet devotes extensive coverage to a new environmental regulation, and polls afterward show a sharp rise in the share of the public naming environmental policy as one of the nation's most important problems — even though the outlet's coverage never told viewers to support or oppose the regulation itself. This best illustrates —",
+    "choices": [
+      "horse-race coverage, emphasizing who is winning an election rather than policy substance",
+      "a filter bubble, the effect of repeatedly being shown content that reinforces a viewer's already-existing political views",
+      "agenda setting, the media's power to influence which issues the public sees as important",
+      "media consolidation, the trend of fewer, larger corporations owning more news outlets"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the outlet changed WHICH issue the public rated as important, without ever pushing a specific opinion on that issue.",
+      "Rule out horse-race coverage (no election or 'who's winning' framing appears here), filter bubble (this is about one outlet's effect on the whole public, not a single viewer's narrowed exposure), and media consolidation (no ownership change is described)."
+    ]
+  },
+  {
+    "id": "apgov.media-linkage.mcq.02",
+    "loId": "apgov.media-linkage",
+    "cedCode": "AP-APGOV-5.12/5.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A news outlet's debate coverage leads with a headline about which candidate 'won' the exchange and how overnight polls shifted afterward, devoting only a brief mention to either candidate's policy proposals. This coverage is best described as —",
+    "choices": [
+      "agenda setting in general, since the outlet simply chose which debate to cover",
+      "horse-race coverage, emphasizing who is winning and campaign strategy over policy substance",
+      "media consolidation, reflecting a single corporate owner's editorial decision",
+      "a filter bubble, reflecting a viewer's own selective exposure to this one outlet"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the SPECIFIC framing described — who 'won' and how polls moved — not just the general fact that the outlet chose what to cover.",
+      "Rule out media consolidation (no ownership fact is given) and filter bubble (this describes the outlet's own coverage choice, not a single viewer's pattern of exposure)."
+    ]
+  }
+]
