@@ -75,6 +75,17 @@ import { PASSAGE_APUSH_WILSON_WAR_MESSAGE } from './seeds/apush-wilson-war-messa
 import { PASSAGE_APUSH_FDR_FIRST_INAUGURAL } from './seeds/apush-fdr-first-inaugural';
 import { PASSAGE_APUSH_FOUR_FREEDOMS } from './seeds/apush-four-freedoms';
 import { PASSAGE_APUSH_EO_9066 } from './seeds/apush-eo-9066';
+// APUSH Period-8 (1945-1980) DBQ documents
+import { PASSAGE_APUSH_TRUMAN_DOCTRINE } from './seeds/apush-truman-doctrine';
+import { PASSAGE_APUSH_EISENHOWER_FAREWELL } from './seeds/apush-eisenhower-farewell';
+import { PASSAGE_APUSH_JFK_INAUGURAL } from './seeds/apush-jfk-inaugural';
+import { PASSAGE_APUSH_LBJ_GREAT_SOCIETY } from './seeds/apush-lbj-great-society';
+// APUSH Period-9 (1980-present) DBQ documents
+import { PASSAGE_APUSH_REAGAN_INAUGURAL } from './seeds/apush-reagan-inaugural';
+import { PASSAGE_APUSH_REAGAN_BRANDENBURG } from './seeds/apush-reagan-brandenburg';
+import { PASSAGE_APUSH_BUSH_SEPT_2001 } from './seeds/apush-bush-sept-2001';
+import { PASSAGE_APUSH_OBAMA_INAUGURAL } from './seeds/apush-obama-inaugural';
+import { PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE } from './seeds/apush-immigration-origins-table';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -135,6 +146,15 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_FDR_FIRST_INAUGURAL,
   PASSAGE_APUSH_FOUR_FREEDOMS,
   PASSAGE_APUSH_EO_9066,
+  PASSAGE_APUSH_TRUMAN_DOCTRINE,
+  PASSAGE_APUSH_EISENHOWER_FAREWELL,
+  PASSAGE_APUSH_JFK_INAUGURAL,
+  PASSAGE_APUSH_LBJ_GREAT_SOCIETY,
+  PASSAGE_APUSH_REAGAN_INAUGURAL,
+  PASSAGE_APUSH_REAGAN_BRANDENBURG,
+  PASSAGE_APUSH_BUSH_SEPT_2001,
+  PASSAGE_APUSH_OBAMA_INAUGURAL,
+  PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE,
 ];
 
 export const passageById = new Map<string, Passage>(
