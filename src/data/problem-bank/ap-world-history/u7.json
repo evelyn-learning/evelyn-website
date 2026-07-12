@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apworld.wwi-global.mcq.01",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-fourteen-points.v1",
+    "problemText": "In his Fourteen Points address to Congress (January 1918), President Wilson's Point I opens: \"Open covenants of peace, openly arrived at, after which there shall be no private international understandings of any kind but diplomacy shall proceed always frankly and in the public view.\" This point is best understood as a direct response to which feature of the prewar European system that helped escalate a regional Balkan crisis into World War I?",
+    "choices": [
+      "the assassination of Archduke Franz Ferdinand at Sarajevo, the immediate trigger rather than an underlying cause",
+      "the German army's invasion of neutral Belgium in August 1914, which drew Britain into the war",
+      "the secret alliance treaties that helped escalate a regional Balkan crisis into a continental war",
+      "the mandate system that the Treaty of Versailles established over former German and Ottoman territories"
+    ],
+    "answer": "C",
+    "hints": [
+      "Point I targets 'private international understandings' — think about which prewar arrangement historians blame for turning a regional Balkan crisis into a continental war within about five weeks.",
+      "Rule out the assassination at Sarajevo (the immediate trigger, not what Point I targets) and the postwar mandate system (a later, separate issue covered by other items in this unit)."
+    ]
+  },
+  {
+    "id": "apworld.wwi-global.mcq.02",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-fourteen-points.v1",
+    "problemText": "Wilson's Fourteen Points (1918), Point V, states that in adjusting colonial claims after the war, \"the interests of the populations concerned must have equal weight with the equitable claims of the government whose title is to be determined.\" Which choice best states the principle this sentence commits Wilson to?",
+    "choices": [
+      "that a colonized population's own interests should carry equal weight with the claims of its governing power",
+      "that every colonized territory would receive full political independence immediately once the war ended",
+      "that decisions about colonial claims would be made exclusively by a vote among the colonizing governments themselves",
+      "that Germany alone, as punishment for the war, would be required to surrender all of its colonial claims"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at exactly whose interests are said to carry 'equal weight' — the populations concerned, not just the claiming government.",
+      "This is a promise about HOW colonial claims would be adjusted (equal weighing), not a promise of immediate independence — don't overread the principle."
+    ]
+  },
+  {
+    "id": "apworld.wwi-global.mcq.03",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-versailles.v1",
+    "problemText": "Article 231 of the Treaty of Versailles (1919) — commonly called the War Guilt Clause — states that \"Germany accepts the responsibility of Germany and her allies for causing all the loss and damage to which the Allied and Associated Governments and their nationals have been subjected\" during the war. This clause served as the treaty's legal basis for which postwar demand on Germany?",
+    "choices": [
+      "the permanent demilitarization of the Rhineland region along Germany's western border",
+      "the reparations payments the treaty subsequently required Germany to pay the victorious Allied powers",
+      "the mandate system that assigned former German colonies to Allied powers acting as trustees",
+      "the redrawing of Germany's eastern border to create the newly independent state of Poland"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Responsibility... for causing all the loss and damage' is the legal peg historians cite for a specific financial demand on Germany after the war.",
+      "Rule out Article 22's mandate system — that is a separate clause in a separate part of the same treaty (Part I, not Part VIII, where Article 231 sits)."
+    ]
+  },
+  {
+    "id": "apworld.wwi-global.mcq.04",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-versailles.v1",
+    "problemText": "Article 22 of the Covenant of the League of Nations, incorporated as Part I of the Treaty of Versailles (1919), describes former German and Ottoman territories as inhabited by \"peoples not yet able to stand by themselves under the strenuous conditions of the modern world,\" and assigns their government to Allied powers so that, in the treaty's words, \"this tutelage should be exercised by them as Mandatories on behalf of the League.\" Compared with Wilson's Fourteen Points promise that colonized populations' interests would carry equal weight with the claims of any governing power, Article 22's mandate language is best described as —",
+    "choices": [
+      "a faithful implementation of Wilson's equal-weighing principle, applied and enforced through League of Nations diplomatic oversight",
+      "a punishment imposed only on Germany itself, with no application to any former Ottoman territory whatsoever",
+      "a temporary measure that ended all foreign administration of former German and Ottoman territories within five years",
+      "a guardianship arrangement that extended Allied imperial administration over the same territories under new legal terminology"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare 'equal weight with the equitable claims of the government' (Wilson's Point V) to 'tutelage... exercised... as Mandatories' (Article 22) — one treats local interests as a factor to weigh, the other assigns guardianship over supposedly incapable peoples.",
+      "Mandates went chiefly to Britain and France over former German colonies AND former Ottoman territories (e.g. Iraq, Palestine, Syria) — rule out any answer limiting this to Germany alone or claiming it matched Wilson's promise."
+    ]
+  },
+  {
+    "id": "apworld.wwi-global.mcq.05",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-wwi-propaganda-visual.v1",
+    "problemText": "A described WWI-era Indian Army recruitment poster (Times Press, Bombay, catalogued by the Imperial War Museums) shows \"a full-length Indian soldier in British Indian Army uniform, rifle held with bayonet fixed, standing in front of a large red-toned outline map of India\" — and \"A separate printed paper strip is pasted along the bottom edge of the sheet\", letting the same base design be reissued with a locally translated caption across British India's many linguistic regions, part of a recruitment drive that \"by the 1918 armistice had contributed more than 1.3 million men to Allied forces overseas, without the political self-determination promised elsewhere in wartime Allied propaganda\". This poster and recruitment record are best used as evidence that —",
+    "choices": [
+      "British India's colonial manpower was recruited on a mass scale without a matching grant of political self-rule",
+      "the Times Press produced a single, untranslated poster design identical across every linguistic region of British India",
+      "World War I was fought exclusively among European powers, entirely on European soil, with no other regions involved",
+      "the poster proves Indian nationalist leaders had already won a formal British promise of postwar independence by 1918"
+    ],
+    "answer": "A",
+    "hints": [
+      "The 1.3-million-man contribution and the phrase 'without the political self-determination promised' point to the colonial-manpower-without-political-return pattern covered earlier in this unit.",
+      "The poster's regional-language caption strips and India's massive troop contribution are direct evidence AGAINST treating World War I as a purely European conflict."
+    ]
+  },
+  {
+    "id": "apworld.interwar-world.mcq.01",
+    "loId": "apworld.interwar-world",
+    "cedCode": "AP-APWORLD-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-depression-table.v1",
+    "problemText": "A described data table of Great Depression indicators reports that \"the gold value of world trade fell by roughly 66 percent between 1929 and 1934, to about one-third of its 1929 level,\" a collapse the table attributes to falling commodity prices \"on which many colonial and Latin American economies depended for export earnings, not merely a decline in industrial-country demand.\" This row of the table is best used as evidence against which claim?",
+    "choices": [
+      "that world trade grew steadily during the early 1930s because of new international tariff-reduction agreements",
+      "that commodity prices for rubber, coffee, copper, and wheat rose sharply worldwide throughout the early 1930s",
+      "that the Great Depression's effects were confined mainly to industrialized economies such as the United States and Germany",
+      "that the Great Depression began with a banking crisis in Latin America before later spreading to the United States"
+    ],
+    "answer": "C",
+    "hints": [
+      "The row explicitly ties world trade's collapse to commodity-exporting 'colonial and Latin American economies' — not only to industrial powers like the US and Germany.",
+      "Rule out any answer describing rising trade or a Latin-American-origin crisis — the table describes a single US-centered contraction whose commodity-price effects then hit those economies hard."
+    ]
+  },
+  {
+    "id": "apworld.interwar-world.mcq.02",
+    "loId": "apworld.interwar-world",
+    "cedCode": "AP-APWORLD-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-depression-table.v1",
+    "problemText": "The same data table reports that United States unemployment \"rose from about 3 percent in 1929 to 24.9 percent in 1933,\" while German unemployment \"rose to about 30 percent by 1932 (roughly 5.3 to 6 million workers), a rate that exceeded the American figure and reflected Germany's particular exposure to the withdrawal of short-term American loans after 1929.\" Read together, these two rows are best used as evidence that —",
+    "choices": [
+      "German unemployment remained consistently below the American rate throughout the entire Great Depression period",
+      "a single US-centered credit contraction was transmitted through trade and finance into a second major industrial economy",
+      "the United States and Germany experienced entirely separate and unrelated economic crises during the early 1930s",
+      "German unemployment resulted mainly from the earlier, unrelated hyperinflation crisis of 1923, not from the American crash"
+    ],
+    "answer": "B",
+    "hints": [
+      "German unemployment (about 30%) actually EXCEEDED the US rate (24.9%) — rule out any answer claiming Germany's rate stayed lower throughout.",
+      "The passage explicitly links Germany's unemployment to 'the withdrawal of short-term American loans after 1929' — a direct transmission mechanism, not two unrelated national crises."
+    ]
+  },
+  {
+    "id": "apworld.wwii-global.mcq.01",
+    "loId": "apworld.wwii-global",
+    "cedCode": "AP-APWORLD-7.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-four-freedoms.v1",
+    "problemText": "In his January 1941 address to Congress, President Roosevelt declares: \"The first is freedom of speech and expression—everywhere in the world\". Later in the same address, he defines freedom from fear as a reduction of armaments so thorough \"that no nation will be in a position to commit an act of physical aggression against any neighbor—anywhere in the world\". Delivered nearly a year before Pearl Harbor, FDR's freedom from fear is best read as a direct response to which development already covered in this unit?",
+    "choices": [
+      "the formal United States declaration of war against Japan following the attack on Pearl Harbor",
+      "the New Deal's substantial expansion of the American federal government's role in managing the domestic economy",
+      "the mandate system that the Treaty of Versailles established over former German and Ottoman territories in 1919",
+      "the decade's earlier, unanswered aggressions in Manchuria, Ethiopia, and the Sudetenland that preceded the war"
+    ],
+    "answer": "D",
+    "hints": [
+      "The speech was delivered in January 1941 — nearly a year before Pearl Harbor and formal US entry into the war — so it cannot be responding to a declaration of war that hadn't happened yet.",
+      "'No nation... aggression against any neighbor' directly answers the decade's own unanswered aggressions (Manchuria, Ethiopia, the Sudetenland), not the earlier Versailles mandate issue from a previous topic in this unit."
+    ]
+  },
+  {
+    "id": "apworld.wwii-global.mcq.02",
+    "loId": "apworld.wwii-global",
+    "cedCode": "AP-APWORLD-7.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Japan invaded Manchuria in 1931, establishing the puppet state of Manchukuo, and began a full-scale war against China in 1937 following the Marco Polo Bridge Incident — both years before Germany's invasion of Poland in September 1939, the conventional date historians use for World War II's start in Europe. This chronology is best used as evidence against which claim?",
+    "choices": [
+      "that the League of Nations formally authorized and endorsed Japan's 1931 invasion of Manchuria",
+      "that Germany and Japan jointly planned a single, coordinated invasion timetable beginning as early as 1931",
+      "that World War II began in 1939 as a single, universal starting point for every region of the world",
+      "that Japan's war against China began only after the United States entered the war following Pearl Harbor in December 1941"
+    ],
+    "answer": "C",
+    "hints": [
+      "Manchuria (1931) and the full war with China (1937) both predate Pearl Harbor (December 1941) by years — the Asia-Pacific war did not begin with US entry into the war.",
+      "1939 marks the conventional start of the war in Europe specifically, not a universal global starting date — this chronology is the clearest counterexample."
+    ]
+  },
+  {
+    "id": "apworld.conflict-legacies.mcq.01",
+    "loId": "apworld.conflict-legacies",
+    "cedCode": "AP-APWORLD-7.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historians point to the Wannsee Conference (January 1942), where senior Nazi officials coordinated the bureaucratic machinery of the Holocaust; the Khmer Rouge regime's own documented administrative structure directing Cambodia's 1975-1979 killings; and years of documented extremist propaganda and organized militia training preceding Rwanda's 1994 genocide. Together, this evidence most directly refutes which claim about twentieth-century genocides?",
+    "choices": [
+      "that these three genocides all occurred within the very same single decade of the twentieth century",
+      "that mass killings of this kind erupt spontaneously from pre-existing hatred rather than documented planning",
+      "that the Nuremberg Trials formally tried the organizers of all three genocides described in this passage",
+      "that international law took timely and effective action to prevent any of these three genocides before they began"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each piece of evidence documents ADVANCE planning (a conference, an administrative structure, organized propaganda and training) — direct evidence against treating genocide as sudden, unplanned violence.",
+      "Rule out claims about international law's effectiveness or shared timing — the cited evidence specifically targets the 'spontaneous eruption' misconception, not those other claims."
+    ]
+  }
+]

@@ -180,3 +180,116 @@ resistance.ts`), so it carries no `passageId`:
 this bank). A standalone script confirmed every quoted span inside
 `problemText` is a verbatim substring of its passage's seeded `fullText`
 (0 mismatches).
+
+## Unit 7: Global Conflict, c. 1900–present (CED Unit 7)
+
+Stimulus-based MCQ bank (`u7.json`) keyed to five Unit-7 passage seeds
+(`src/lib/tutor/passages/seeds/apworld-{fourteen-points,versailles,wwi-
+propaganda-visual,depression-table}.ts` plus the cross-course REUSE
+`apush-four-freedoms.ts`) plus two non-stimulus items, and to the four
+Unit-7 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apworld-u7-*.ts`). `cedCode` mirrors
+each LO's `standard` field exactly. Composition matches the plan block
+(`.superpowers/sdd/unit-7-block.md`, "MCQs (10)"): fourteen-points 2,
+versailles 2, propaganda-visual 1, depression-table 2, four-freedoms 1,
+non-stimulus wwii + legacies 2.
+
+| loId | cedCode | Topic | # items in u7.json |
+|---|---|---|---|
+| `apworld.wwi-global` | `AP-APWORLD-7.2` | WWI's MAIN causes and alliance cascade, total war, colonial manpower, the Fourteen Points vs. the Versailles mandate system (Article 22). | 5 |
+| `apworld.interwar-world` | `AP-APWORLD-7.4` | The Great Depression's global transmission via trade collapse (world-trade/unemployment data table). | 2 |
+| `apworld.wwii-global` | `AP-APWORLD-7.7` | The aggression sequence (Manchuria 1931 onward), FDR's Four Freedoms as universal war aims. | 2 |
+| `apworld.conflict-legacies` | `AP-APWORLD-7.8` | Documented state/organizational planning behind 20th-century genocides (Wannsee, Angkar, Interahamwe). | 1 |
+| **Total** | | | **10** |
+
+Note: the wwi-global LO carries three different passages (fourteen-points,
+versailles, and the propaganda-visual poster) totaling 5 items — all three
+passages are wired to the same `wwi-global` content plan
+(`ap-apworld-u7-wwi.ts`), so they share one LO/cedCode per the LO table,
+mirroring how Unit 6's `imperial-expansion` LO carried two passages
+(kipling + berlin-act) for 3 items.
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus item anchors to one of the five Unit-7 passage seeds via
+`passageId`; the two non-stimulus items (WWII aggression-sequence
+chronology, and the legacies state-planning item) carry no `passageId`,
+mirroring Unit 6's non-stimulus imperial-resistance item:
+
+- `evelyn.passage.apworld-fourteen-points.v1` — Wilson's Fourteen Points, Points I and V (1918) — 2 items
+- `evelyn.passage.apworld-versailles.v1` — Treaty of Versailles, Articles 231 and 22 (1919) — 2 items
+- `evelyn.passage.apworld-wwi-propaganda-visual.v1` — Indian Army recruitment poster (described visual, c.1914-1918) — 1 item
+- `evelyn.passage.apworld-depression-table.v1` — Great Depression indicators (data table, 1929-1934) — 2 items
+- `evelyn.passage.apush-four-freedoms.v1` — FDR, Four Freedoms speech (1941, cross-course reuse from APUSH) — 1 item
+- (no passage) — non-stimulus item on the WWII aggression sequence (Manchuria 1931 vs. the 1939 "universal start" misconception) — 1 item
+- (no passage) — non-stimulus item on documented genocide planning (Wannsee/Angkar/Interahamwe vs. the "spontaneous eruption" misconception) — 1 item
+
+## Unit-7-specific authoring traps handled
+
+- **The poster's translated caption is never quoted as verbatim.** The
+  propaganda-visual passage's `fullText` is itself a factual DESCRIPTION of
+  the poster (production method, imagery, IWM cataloguing), not a
+  transcription of its Hindi/Urdu caption — wwi-global.mcq.05 quotes only
+  the passage's own descriptive sentences (soldier/map imagery, the
+  paper-strip production method, the 1.3-million-man recruitment figure),
+  never the caption's "sense" paraphrase, per the controller instruction.
+- **Article 22 is Covenant/Part I, not the reparations sections.**
+  wwi-global.mcq.04 states this explicitly (Article 22 sits in Part I of
+  the treaty, distinct from Article 231's Part VIII/"General Provisions"),
+  matching the passage's own doc comment; wwi-global.mcq.03's distractor
+  baits conflating the two articles.
+- **Four Freedoms scope wording quoted precisely.** wwii-global.mcq.01
+  quotes "everywhere in the world" for freedom of speech and "anywhere in
+  the world" for freedom from fear, exactly as seeded — never swapping the
+  two words between freedoms.
+- **Depression anchor figures used exactly as seeded.** interwar-world
+  items quote "roughly 66 percent... to about one-third of its 1929
+  level" (world trade), "24.9 percent in 1933" (US unemployment), and
+  "about 30 percent by 1932" (German unemployment) — no rounding drift
+  from the passage's stated figures.
+- **"WWI was purely European" misconception** — wwi-global.mcq.05 runs
+  this exact claim as a distractor ("World War I was fought exclusively
+  among European powers... with no other regions involved"), refuted by
+  the poster's evidence of mass colonial recruitment.
+- **"The Depression affected only industrial countries" misconception** —
+  interwar-world.mcq.01's correct answer is precisely this claim, framed
+  as the claim the data table's trade-collapse row refutes.
+- **"WWII began in 1939 everywhere" misconception** — the sole
+  non-stimulus WWII item (wwii-global.mcq.02) tests this directly: Japan's
+  1931 Manchuria invasion and 1937 war with China as the clear
+  counterexample, with a distractor baiting the companion "Asia's war
+  began only after Pearl Harbor" misreading.
+- **"Genocides are spontaneous eruptions" misconception** — the sole
+  non-stimulus legacies item (conflict-legacies.mcq.01) tests this
+  directly: the Wannsee Conference, Angkar, and the Interahamwe's
+  documented planning as evidence against spontaneity, per the plan
+  block's instruction to test this point factually.
+- **Zero-quote copyright discipline preserved.** No item in this bank
+  quotes Gandhi, Ho Chi Minh, or May Fourth material (none of the three is
+  wired to a passage in the Unit-7 content-plan set, so none is
+  MCQ-eligible in this bank) — all quoted spans come only from the five
+  registered public-domain/US-government passages.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1–4 mixed: 1×1, 2×4, 3×4, 4×1 (mirrors the Unit-6 spread).
+- Correct-answer letters distributed non-cyclically across all 10 items:
+  A=2, B=3, C=3, D=2. Sequence: `CABDACBDCB` — not all one letter, not a
+  repeating ABCD pattern.
+- Choice lengths checked per item (word-count, correct answer NOT the
+  systematically longest option): correct answer is the **unique longest
+  in 0 of 10 items**. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-world-history/u7.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from public-domain/US-government Unit-7 documents
+  (never transcribed wholesale from a real AP exam). `license:
+  'internal-original'` per `scripts/seed-problem-bank.ts`.
+
+## Verification (Unit 7)
+
+`npm run seed:problem-bank -- --course=ap-world-history --file=u7.json --dry-run`:
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (76 passages, including all 5 referenced by
+this bank). A standalone script confirmed every quoted span inside
+`problemText` is a verbatim substring of its passage's seeded `fullText`
+(0 mismatches).
