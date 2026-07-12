@@ -226,11 +226,11 @@
     "problemText": "In Shaw v. Reno (1993), the Supreme Court held that a North Carolina congressional district drawn in an unusually shaped configuration to increase Black voting power could be challenged under the Equal Protection Clause if race was the predominant factor in drawing its boundaries. This ruling establishes that —",
     "choices": [
       "states may never consider race in any way whatsoever when drawing congressional districts",
-      "redistricting plans relying predominantly on race face strict judicial scrutiny under the Fourteenth Amendment",
       "Congress alone, not the courts, has final authority to review the shape of congressional districts",
-      "congressional redistricting is a political matter courts may never review under any circumstances"
+      "congressional redistricting is a political matter courts may never review under any circumstances",
+      "redistricting plans relying predominantly on race face strict judicial scrutiny under the Fourteenth Amendment"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
       "The Court's holding centers on race being the 'predominant factor,' triggering a specific level of constitutional review — name that review standard.",
       "Rule out 'never consider race at all,' 'Congress alone reviews districts,' and 'courts may never review' — Shaw v. Reno is itself a Supreme Court decision reviewing a district's shape."
@@ -245,11 +245,11 @@
     "problemText": "When Congress passes a law giving a federal agency, such as the Environmental Protection Agency, broad authority to work out regulatory details, the agency typically implements that authority through a rulemaking process that includes —",
     "choices": [
       "holding a nationwide popular referendum before any rule can be issued",
-      "submitting the rule directly to the Supreme Court for pre-approval",
+      "publishing a proposed rule and taking public comment before it takes effect",
       "requiring a two-thirds vote of the Senate before the rule can be proposed",
-      "publishing a proposed rule and taking public comment before it takes effect"
+      "submitting the rule directly to the Supreme Court for pre-approval"
     ],
-    "answer": "D",
+    "answer": "B",
     "hints": [
       "Federal rulemaking has a well-known public step between a rule being proposed and it becoming final — recall what that step is called.",
       "Rule out a national referendum, Supreme Court pre-approval, and a Senate supermajority — none of those is part of the standard rulemaking process."

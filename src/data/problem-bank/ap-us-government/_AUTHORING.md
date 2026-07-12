@@ -263,10 +263,19 @@ percentages, confirmed numerically identical to the seeded `fullText`.
 
 - Difficulty 1–4 mixed: 1×2, 2×7, 3×4, 4×2.
 - Correct-answer letters distributed non-cyclically across all 15 items:
-  A=4, B=3, C=4, D=4. Sequence: `ACDBDACBDCABDAC` — not all one letter, not a
-  repeating ABCD/period-4 pattern (no repeated 4-letter (or shorter) window,
-  no back-to-back repeated letter; checked programmatically alongside the
-  choice-length pass below).
+  A=4, B=3, C=4, D=4. Sequence: `ACDBDACBDCADBAC` — not all one letter, not a
+  repeating ABCD/period-4 pattern. The first draft's sequence
+  (`ACDBDACBDCABDAC`) had congress-structure.mcq.05 and
+  bureaucracy-accountability.mcq.01 keyed to B and D respectively, which
+  produced a repeated 4-letter window (`BDAC` at both positions 4–7 and
+  12–15) — caught by the programmatic window check below, not by eye. Fixed
+  by reordering those two items' `choices` arrays (content unchanged, only
+  which position holds the correct answer) so mcq.05 keys to D and
+  bureaucracy-accountability.mcq.01 keys to B; re-ran the Sonnet verify gate
+  after the swap (still 15/15, since reordering the same four choices did
+  not change what's correct). No repeated 4-letter (or shorter) window and
+  no back-to-back repeated letter in the shipped sequence; checked
+  programmatically alongside the choice-length pass below.
 - Choice lengths equalized per item (word-count checked, correct answer NOT
   the systematically longest option — the length-tell trap): several items'
   first-draft correct choice was the unique longest option (the Fed-70
@@ -285,7 +294,9 @@ percentages, confirmed numerically identical to the seeded `fullText`.
 
 `npm run seed:problem-bank -- --course=ap-us-government --file=u2.json --dry-run`:
 15/15 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
-on the first pass (no answer-key fixes needed). A standalone verbatim-
+on the first pass (no answer-key content was wrong) — and again 15/15 after
+the answer-letter-cycle fix (reordering two items' `choices` arrays, per the
+Difficulty & answer-key hygiene note above). A standalone verbatim-
 substring check confirmed every quoted span inside `problemText` (12 quoted
 spans across the Federalist-70/Federalist-78/Marbury items) is an exact
 substring of its passage's seeded `fullText` (0 mismatches); the
