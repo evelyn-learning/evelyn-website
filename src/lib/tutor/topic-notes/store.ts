@@ -280,6 +280,15 @@ import { BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE } from './seeds/ap-apush-u9-c
 import { BASELINE_AP_APUSH_GLOBALIZATION } from './seeds/ap-apush-u9-globalization';
 import { BASELINE_AP_APUSH_SINCE_2001 } from './seeds/ap-apush-u9-since-2001';
 
+// AP World History Unit 1 (CED 1.1-1.2, 1.3, 1.4-1.5, 1.6) — Unit-1 fan-out
+// content plans (East Asia through medieval Europe). FRQ-practice plans
+// deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_EAST_ASIA_SONG } from './seeds/ap-apworld-u1-east-asia-song';
+import { BASELINE_AP_APWORLD_DAR_AL_ISLAM } from './seeds/ap-apworld-u1-dar-al-islam';
+import { BASELINE_AP_APWORLD_SOUTH_SOUTHEAST_ASIA } from './seeds/ap-apworld-u1-south-southeast-asia';
+import { BASELINE_AP_APWORLD_AMERICAS_AFRICA_STATES } from './seeds/ap-apworld-u1-americas-africa';
+import { BASELINE_AP_APWORLD_MEDIEVAL_EUROPE } from './seeds/ap-apworld-u1-medieval-europe';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -531,6 +540,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE,
   BASELINE_AP_APUSH_GLOBALIZATION,
   BASELINE_AP_APUSH_SINCE_2001,
+  BASELINE_AP_APWORLD_EAST_ASIA_SONG,
+  BASELINE_AP_APWORLD_DAR_AL_ISLAM,
+  BASELINE_AP_APWORLD_SOUTH_SOUTHEAST_ASIA,
+  BASELINE_AP_APWORLD_AMERICAS_AFRICA_STATES,
+  BASELINE_AP_APWORLD_MEDIEVAL_EUROPE,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
