@@ -1,0 +1,194 @@
+[
+  {
+    "id": "apgov.socialization-opinion.mcq.01",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-ideology-age-table.v1",
+    "problemText": "Gallup's 2021 polling on political ideology by age reports conservative self-identification of 23% among adults ages 18-29, 33% ages 30-49, 43% ages 50-64, and 45% ages 65 and older — rising at every age-group interval shown. Political-socialization research most commonly explains this kind of steady age gradient as evidence of —",
+    "choices": [
+      "a lifecycle (aging) effect, in which the same individuals personally grow more conservative as they age",
+      "a measurement error unique to telephone polling that inflates conservative responses among older respondents",
+      "a permanent, irreversible shift toward conservatism expected to keep increasing in every future election",
+      "a generational (cohort) effect, in which each age group's outlook reflects its own formative era"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question asks what research MOST COMMONLY attributes this steady rise to — not merely which explanation is logically possible.",
+      "Rule out measurement error (nothing in the figures suggests a polling flaw) and an 'irreversible future shift' (the data describes a single-year snapshot, not a forecast)."
+    ]
+  },
+  {
+    "id": "apgov.socialization-opinion.mcq.02",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-ideology-age-table.v1",
+    "problemText": "The same Gallup 2021 data table reports liberal self-identification of 34% among adults ages 18-29, 25% ages 30-49, 19% ages 50-64, and 21% ages 65 and older. Which statement best describes this trend?",
+    "choices": [
+      "Liberal identification falls at every age-group interval shown, mirroring the conservative rise exactly",
+      "Liberal identification falls through the 50-64 age group, then ticks up slightly among the oldest respondents",
+      "Liberal identification is higher among the oldest age group than among any other age group shown",
+      "Liberal identification remains essentially flat across all four age groups, never varying by more than two points"
+    ],
+    "answer": "B",
+    "hints": [
+      "Track all four figures in order — 34, 25, 19, 21 — and notice the last step moves the wrong direction to be a perfect mirror of the conservative rise.",
+      "Rule out 'falls at every interval' (21% is higher than 19%, a rise), 'flat' (the range spans 34 minus 19, a 15-point swing), and 'highest among oldest' (34% for the youngest group is higher)."
+    ]
+  },
+  {
+    "id": "apgov.socialization-opinion.mcq.03",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A teenager's parents routinely discuss their preferred political party at the dinner table, and by age sixteen the teenager identifies with that same party without having independently researched its platform. This scenario most directly illustrates the influence of which agent of political socialization?",
+    "choices": [
+      "Family, typically the earliest and strongest influence shaping party identification before independent evaluation",
+      "Peers, whose influence on political attitudes matters most only after other agents have already receded",
+      "Media, since a private dinner-table conversation functions the same way as a televised broadcast",
+      "Religion, since party identification is primarily transmitted through formal religious teaching and doctrine"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask who is doing the influencing and when in life it happens — before independent evaluation, inside the home.",
+      "Rule out peers (their influence typically grows later, not through parental conversation), media (a private conversation is not a broadcast), and religion (no religious content appears anywhere in the scenario)."
+    ]
+  },
+  {
+    "id": "apgov.socialization-opinion.mcq.04",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A civics textbook defines one American core political value as the belief that every person should have a fair chance to succeed through their own effort, while explicitly noting this value does not require that everyone end up with equal income or wealth. Which core American value does this definition describe?",
+    "choices": [
+      "Individualism, a value that requires government to guarantee an equal outcome for every single citizen",
+      "Limited government, a value that forbids any government role in expanding opportunity for citizens",
+      "Equality of opportunity, distinct from a guarantee that everyone ends up with an equal outcome",
+      "Free enterprise, a value defined entirely by the absence of any income inequality nationwide"
+    ],
+    "answer": "C",
+    "hints": [
+      "The definition explicitly separates 'a fair chance to succeed' from 'an equal outcome' — match that same separation to its own named value.",
+      "Rule out the other three choices — each redefines individualism, limited government, or free enterprise using the equal-outcome language the stem just rejected; none of the three real core values is defined that way."
+    ]
+  },
+  {
+    "id": "apgov.public-opinion-measurement.mcq.01",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Poll X and Poll Y use identical, properly random sampling methods to survey the same population. Poll X surveys 400 respondents; Poll Y surveys 1,600 respondents. Without calculating an exact figure, which poll would be expected to report the smaller margin of error, and why?",
+    "choices": [
+      "Poll X, because a smaller sample size always produces a smaller and more precise margin of error automatically",
+      "Neither poll, because margin of error depends only on how the questions were worded, not on sample size",
+      "Both polls would report identical margins of error, since each poll used the exact same random sampling method",
+      "Poll Y, because margin of error shrinks as sample size grows, with the square root of sample size"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both polls are equally random — sample size is the only variable that differs, so ask which direction a larger n moves the margin of error.",
+      "Rule out 'smaller sample = smaller margin of error' (backwards), 'depends only on wording' (wording affects bias, not the size-margin relationship), and 'identical' (quadrupling n from 400 to 1,600 is exactly the kind of change that shrinks margin of error)."
+    ]
+  },
+  {
+    "id": "apgov.public-opinion-measurement.mcq.02",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Poll A surveys 500 people selected through proper random sampling of the target population. Poll B surveys 50,000 people who voluntarily clicked a link on a website. Which poll would be expected to more accurately reflect the true population value, and why?",
+    "choices": [
+      "Poll A, because random selection, not sample size, is what makes a sample representative of the population",
+      "Poll B, because a sample of 50,000 people is always more accurate than a sample of 500",
+      "Poll B, because self-selected respondents are generally more motivated to answer every question honestly",
+      "Neither poll can be evaluated without first knowing each respondent's political party in advance"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare what actually makes a sample representative: how it was selected, not how many people are in it.",
+      "Rule out 'bigger is always more accurate' and 'more motivated to answer honestly' — both ignore the self-selection bias that undermines Poll B's 50,000 respondents; no poll requires advance knowledge of respondents' party."
+    ]
+  },
+  {
+    "id": "apgov.public-opinion-measurement.mcq.03",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A phone survey asks respondents, \"Would it change your opinion of the candidate to know they were investigated for wrongdoing, even though no charges were ever filed?\" The survey is not designed to record or report any aggregate results. Which type of poll is this?",
+    "choices": [
+      "A benchmark poll, establishing an early baseline reading before a campaign's advertising and events begin",
+      "A push poll, a persuasion tactic disguised as a survey rather than genuine opinion research",
+      "A tracking poll, repeated at frequent intervals to measure short-term movement in public opinion",
+      "An exit poll, surveying voters immediately after they leave the polling place to vote"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the survey is not designed to record or report results at all — that is the giveaway that its real purpose is something other than genuine measurement.",
+      "Rule out benchmark, tracking, and exit polls — each is a genuine research method that DOES record and report results; none matches a leading, unverified accusation with no reporting purpose."
+    ]
+  },
+  {
+    "id": "apgov.ideology-policy.mcq.01",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A voter states, \"Businesses should be permitted to operate with as little regulation as possible, and government has no legitimate role regulating what adults do in their personal lives, whether that involves marriage, drug use, or anything else.\" Which ideological orientation does this statement best match?",
+    "choices": [
+      "Conservative, which favors limited government economically alongside a more traditional approach to social policy",
+      "Liberal, which favors an active government role in both economic and social regulation alike",
+      "Moderate, a residual category for voters who lack any coherent set of political beliefs",
+      "Libertarian, which favors minimal government across economic policy and personal or lifestyle policy alike"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check both halves of the statement — minimal business regulation AND no regulation of personal life — against which single orientation combines both at once.",
+      "Rule out conservative (it does not favor hands-off government on personal/lifestyle questions) and liberal (it does not favor minimal economic regulation); moderate is not a coherent ideological orientation in this framework at all."
+    ]
+  },
+  {
+    "id": "apgov.ideology-policy.mcq.02",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Facing a recession, Congress and the President enact a temporary increase in government spending on public-works projects and a temporary tax cut for middle-income households, intending to increase overall demand in the economy. Which approach does this action reflect?",
+    "choices": [
+      "The supply-side approach, cutting taxes on business investment to expand the economy's productive capacity",
+      "Monetary policy, since increasing government spending directly changes the size of the money supply",
+      "The Keynesian approach, actively managing aggregate demand through government spending and tax changes",
+      "A change in reserve requirements, since higher spending requires banks to hold larger reserves"
+    ],
+    "answer": "C",
+    "hints": [
+      "The stem's own language — spending and tax changes aimed at boosting demand — points to one of the two named fiscal approaches, not the other.",
+      "Rule out the two monetary-policy distractors: government spending and tax changes are fiscal actions taken by Congress and the President, not tools that adjust the money supply or bank reserve requirements."
+    ]
+  },
+  {
+    "id": "apgov.ideology-policy.mcq.03",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In response to the same recession, the Federal Reserve separately lowers the discount rate and purchases government securities on the open market. A commentator claims the President ordered the Federal Reserve to take this action. Which statement correctly evaluates the commentator's claim?",
+    "choices": [
+      "The claim is accurate, since the President directly sets the discount rate as fiscal policy",
+      "The claim is inaccurate; the Fed's structural independence means its own governors make these decisions",
+      "The claim is accurate, since Congress must formally approve every open-market operation in advance",
+      "The claim is inaccurate because the discount rate and open-market operations are fiscal policy tools"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask who actually makes discount-rate and open-market-operations decisions — an elected official, or the Fed's own governors — and recall why the Fed's governors serve long, staggered terms.",
+      "Rule out both 'accurate' choices (neither the President nor Congress directly controls a specific Fed decision) and the last choice, which mislabels genuinely monetary tools as fiscal policy."
+    ]
+  }
+]

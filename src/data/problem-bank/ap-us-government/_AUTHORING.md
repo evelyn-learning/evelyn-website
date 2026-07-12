@@ -466,3 +466,209 @@ Tinker, 3 from Brown) is an exact substring of its passage's seeded
 a direct numeric match against the seeded description instead. A
 corpus-wide id-uniqueness check across `u1.json`, `u2.json`, and `u3.json`
 found 0 duplicate ids among the combined 37 items.
+
+## Unit 4: American Political Ideologies and Beliefs (CED Unit 4)
+
+Stimulus-based MCQ bank (`u4.json`, 10 items) keyed to the single Unit-4
+primary/data source document seeded in
+`src/lib/tutor/passages/seeds/apgov-ideology-age-table.ts` and to the three
+Unit-4 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apgov-u4-{socialization,polling,ideology-policy}.ts`).
+`cedCode` mirrors each LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u4.json |
+|---|---|---|---|
+| `apgov.socialization-opinion` | `AP-APGOV-4.1/4.2/4.3/4.4` | Political socialization & public opinion — the Gallup 2021 ideology-by-age data table (generational/cohort vs. lifecycle/aging effects), agents of socialization (family), and core American values (equality of opportunity vs. equality of outcome). | 4 |
+| `apgov.public-opinion-measurement` | `AP-APGOV-4.5` | Measuring public opinion — margin of error and the ~1/sqrt(n) sample-size relationship (compute-free reasoning, no arithmetic), random sampling vs. raw sample size (representativeness), and poll types (push polls as manipulation, not research). | 3 |
+| `apgov.ideology-policy` | `AP-APGOV-4.6/4.7/4.8/4.9` | Ideology & policy — the liberal/conservative/libertarian orientations, Keynesian vs. supply-side fiscal policy, and monetary policy (the Fed's tools and structural independence) distinguished from fiscal policy. | 3 |
+| **Total** | | | **10** |
+
+## Anchoring documents (stimulus sets)
+
+Only one item set anchors to a passage via `passageId` (for
+grouping/render), per the Task 15 brief's instruction that `passageId` is
+used only for the ideology table:
+
+- `evelyn.passage.apgov-ideology-age-table.v1` — Gallup's 2021 calendar-year
+  polling report, "U.S. Political Ideology Steady; Conservatives, Moderates
+  Tie" (news.gallup.com/poll/388988) — a described data table of
+  self-reported ideology by age group — 2 items
+  (socialization-opinion.mcq.01–02). Every reference to this table anywhere
+  in `u4.json` attributes the figures to **Gallup**, never to ANES (per the
+  Unit-4 content-plan docblock's explicit warning and the `bbf9ce3`
+  misattribution fix that predates this bank).
+
+The remaining 8 items are non-stimulus (no `passageId`): agents of
+socialization and core American values
+(socialization-opinion.mcq.03–04), sample-size/margin-of-error and
+random-sampling-vs-size reasoning plus poll types
+(public-opinion-measurement.mcq.01–03), and ideological-orientation
+classification plus fiscal-vs-monetary-policy classification
+(ideology-policy.mcq.01–03) — none of these topics is covered by the single
+seeded Unit-4 passage.
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as the Unit-1/2/3 banks: every stem inlines the specific figures
+or scenario needed to answer directly, before asking the AP Gov reasoning
+question. For the ideology-table set, the exact age-bracket percentages
+tested (conservative: 23% / 33% / 43% / 45% for ages 18-29 / 30-49 / 50-64 /
+65+; liberal: 34% / 25% / 19% / 21% for the same four age groups) are
+inlined verbatim in the stem and are numerically identical to the seeded
+passage's `fullText` description (confirmed programmatically — no numeric
+drift). No `$<digit>` currency/KaTeX-trap figures appear anywhere in this
+bank (no dollar amounts anywhere in the Unit-4 content).
+
+## AP Gov reasoning skills tested
+
+- **Reading a quantitative trend and its causal interpretation** — the
+  conservative share rising at every age-group interval (23% -> 33% -> 43%
+  -> 45%) read against the generational/cohort-vs-lifecycle/aging
+  distinction, per the passage's own closing-paragraph attribution to a
+  generational effect (socialization-opinion.mcq.01); the liberal share's
+  **non-monotonic** trend (34% -> 25% -> 19%, then ticking UP to 21% for
+  65+) — deliberately not a mirror image of the conservative rise, testing
+  whether a student reads all four figures rather than assuming symmetry
+  (socialization-opinion.mcq.02).
+- **Agents of socialization, applied** — a dinner-table party-identification
+  scenario testing FAMILY as the earliest/strongest agent, against
+  peers/media/religion distractors built from the same scenario's surface
+  details (socialization-opinion.mcq.03).
+- **Core American values, distinguished** — equality of opportunity vs.
+  equality of outcome, tested against distractors that redefine
+  individualism, limited government, and free enterprise using the
+  outcome-based language the correct definition explicitly rejects
+  (socialization-opinion.mcq.04).
+- **Compute-free margin-of-error reasoning** — comparing a 400- vs.
+  1,600-respondent poll (both equally random) to test the ~1/sqrt(n)
+  relationship conceptually, with no arithmetic required
+  (public-opinion-measurement.mcq.01); comparing a smaller random sample
+  against a much larger self-selected (non-random) sample to test that
+  random selection, not raw size, drives representativeness — the
+  1936-Literary-Digest-style reasoning from the Unit-4 polling plan's own
+  hook and misconception check (public-opinion-measurement.mcq.02).
+- **Poll-type identification** — a leading, unverified-accusation phone
+  script with no reporting purpose, identified as a push poll (a
+  persuasion tactic, not research), against benchmark/tracking/exit-poll
+  distractors that are each genuine research methods
+  (public-opinion-measurement.mcq.03).
+- **Ideological-orientation classification** — a voter statement combining
+  minimal economic regulation AND no regulation of personal/lifestyle
+  choices, identified as libertarian (the combination of both dimensions at
+  once), against conservative/liberal/moderate distractors each missing one
+  half of the combination (ideology-policy.mcq.01).
+- **Fiscal policy, Keynesian vs. supply-side** — a spending-increase/
+  tax-cut demand-management action classified as Keynesian, against a
+  supply-side distractor (the *other* fiscal approach, not a wrong branch
+  of government) and two monetary-policy-conflation distractors
+  (ideology-policy.mcq.02).
+- **Monetary policy and Fed independence** — evaluating a claim that the
+  President "ordered" a discount-rate cut and open-market purchase,
+  correctly identified as inaccurate because the Fed's structurally
+  independent governors (not the President or Congress) make these
+  decisions, against distractors that either wrongly affirm presidential/
+  congressional control or correctly reject the claim for the wrong reason
+  (mislabeling monetary tools as fiscal) (ideology-policy.mcq.03).
+
+## Constitutional / policy accuracy notes
+
+- Gallup 2021 ideology-by-age figures (23%/33%/43%/45% conservative and
+  34%/25%/19%/21% liberal for ages 18-29/30-49/50-64/65+) are the real
+  published Gallup figures, reproduced exactly from the seeded passage's
+  `fullText` description (verified programmatically — no numeric drift).
+  Every item and this document attributes the table to **Gallup**, never
+  ANES.
+- The generational (cohort) vs. lifecycle (aging) distinction is tested
+  consistent with the Unit-4 socialization plan and the passage's own
+  closing paragraph, which attributes the age gradient MORE to a
+  generational effect than a pure lifecycle effect — no item in this bank
+  claims the opposite attribution.
+- Margin of error is tested as scaling roughly with the square root of
+  sample size (quadrupling n roughly halves MoE), consistent with the
+  Unit-4 polling plan's `1/sqrt(n)` framing; both MoE items are
+  **compute-free** — no arithmetic is required or possible from the stem
+  alone, only conceptual reasoning about direction and mechanism, per the
+  Task 15 brief's instruction.
+- Random sampling, not raw sample size, is tested as the determinant of
+  representativeness, consistent with the polling plan's 1936 Literary
+  Digest / Gallup illustration (not itself quoted in this bank, since no
+  item needs the historical anecdote to be answerable from its own stem).
+- Push polls are tested as a persuasion tactic disguised as research, never
+  as a legitimate poll type — consistent with the polling plan's own
+  framing.
+- Fiscal policy (taxing and spending, controlled by Congress and the
+  President) and monetary policy (the money supply and interest rates,
+  controlled by the independent Federal Reserve) are kept strictly
+  distinct across every item that touches either one — no item attributes
+  a fiscal tool (spending, taxes) to the Fed, or a monetary tool (the
+  discount rate, open-market operations, reserve requirements) to Congress
+  or the President, consistent with the Unit-4 ideology-policy plan's own
+  misconception check.
+- The Federal Reserve's structural independence (long, staggered governor
+  terms) is tested as meaning neither the President nor Congress directly
+  controls a specific Fed decision — ideology-policy.mcq.03's distractors
+  are built to catch both an overstated "President ordered it" claim and a
+  correct rejection reached for the wrong reason (mislabeling monetary
+  tools as fiscal).
+- Liberal, conservative, and libertarian orientations are each described
+  neutrally, matching the ideology-policy plan's own BALANCE NOTE; no item
+  ranks one orientation as correct or treats "moderate" as a coherent
+  fourth orientation (ideology-policy.mcq.01's moderate distractor is
+  wrong specifically because it mischaracterizes moderate as "a residual
+  category... without a coherent set of beliefs," which the Unit-4
+  socialization plan's own misconception check explicitly rejects).
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×1, 2×6, 3×2, 4×1.
+- Correct-answer letters distributed non-cyclically across all 10 items:
+  A=2, B=3, C=2, D=3. Sequence: `DBACDABDCB` — not all one letter, under the
+  40% single-letter cap, and not a repeating ABCD/period-4 pattern. Checked
+  programmatically: no repeated 4-letter (or shorter) window and no
+  back-to-back repeated letter anywhere in the 10-item sequence.
+- Choice lengths equalized per item (word-count checked, correct answer NOT
+  the systematically longest option — the length-tell trap): the first
+  draft had the correct choice as the unique longest option in 5 of 10 items
+  (socialization-opinion.mcq.01/.04, public-opinion-measurement.mcq.01/.03,
+  ideology-policy.mcq.01); each of those five items had its correct choice
+  shortened and/or a distractor lengthened by 1-2 words (content/meaning
+  unchanged) so that after revision the correct answer is the **unique
+  longest in 0 of 10 items** (several items now have a tied maximum across
+  two or more choices, which is not counted as a violation). Verify:
+  `node -e "const a=require('./src/data/problem-bank/ap-us-government/u4.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.trim().split(/\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank; the only
+  quoted-figure content is the Gallup ideology-table percentages (facts,
+  not copyrightable expression), never transcribed wholesale from a real AP
+  exam. `license: 'internal-original'` per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-government --file=u4.json --dry-run`:
+
+```
+Loaded 10 items from ap-us-government/u4.json
+Validation OK. Formats: {"mcq":10}
+
+Verifying 10 items via claude-sonnet-5 (concurrency 6)...
+  ...10/10
+
+Verify: 10/10 passed, 0 rejected.
+
+[dry-run] Would upsert 10 verified items. No DB write.
+```
+
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0
+rejected, on the first pass (no answer-key fixes needed — the answer-letter
+distribution and choice-length rebalancing described above were done before
+this dry-run and changed only *which position* holds each correct answer
+and the *word count* of distractor/correct text, never the underlying
+correct answer itself, so a single dry-run after those edits sufficed).
+`npm run lint:passages`: `✅ passages lint clean (28 passages)` — includes
+the one passage referenced by this bank. The ideology-table percentages
+inlined in `problemText` (conservative 23/33/43/45, liberal 34/25/19/21
+across the four age groups) were confirmed as a direct numeric match
+against the seeded passage's `fullText` description (0 mismatches,
+checked programmatically) — no literary quoting is needed for this
+described-data-table stimulus. A corpus-wide id-uniqueness check across
+`u1.json`, `u2.json`, `u3.json`, and `u4.json` found 0 duplicate ids among
+the combined 47 items.
