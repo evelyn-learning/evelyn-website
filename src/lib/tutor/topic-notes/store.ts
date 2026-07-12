@@ -224,6 +224,15 @@ import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3
 import { BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
 import { BASELINE_AP_APUSH_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
 
+// AP US History Unit 6 (CED 6.2-6.3, 6.4-6.6, 6.7, 6.8-6.10, 6.11-6.13) —
+// Period-6 fan-out content plans (the West/New South through Gilded Age
+// politics and Populism, 1865-1898).
+import { BASELINE_AP_APUSH_THE_WEST } from './seeds/ap-apush-u6-the-west';
+import { BASELINE_AP_APUSH_INDUSTRIALIZATION } from './seeds/ap-apush-u6-industrialization';
+import { BASELINE_AP_APUSH_LABOR } from './seeds/ap-apush-u6-labor';
+import { BASELINE_AP_APUSH_IMMIGRATION_URBANIZATION } from './seeds/ap-apush-u6-immigration-urbanization';
+import { BASELINE_AP_APUSH_GILDED_POLITICS_POPULISM } from './seeds/ap-apush-u6-gilded-politics-populism';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -439,6 +448,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
   BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APUSH_NEW_REPUBLIC,
+  BASELINE_AP_APUSH_THE_WEST,
+  BASELINE_AP_APUSH_INDUSTRIALIZATION,
+  BASELINE_AP_APUSH_LABOR,
+  BASELINE_AP_APUSH_IMMIGRATION_URBANIZATION,
+  BASELINE_AP_APUSH_GILDED_POLITICS_POPULISM,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
