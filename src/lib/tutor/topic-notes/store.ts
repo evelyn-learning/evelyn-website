@@ -233,6 +233,16 @@ import { BASELINE_AP_APUSH_LABOR } from './seeds/ap-apush-u6-labor';
 import { BASELINE_AP_APUSH_IMMIGRATION_URBANIZATION } from './seeds/ap-apush-u6-immigration-urbanization';
 import { BASELINE_AP_APUSH_GILDED_POLITICS_POPULISM } from './seeds/ap-apush-u6-gilded-politics-populism';
 
+// AP US History Unit 7 (CED 7.2-7.3, 7.4-7.5, 7.6-7.8, 7.9-7.10, 7.11-7.12,
+// 7.13-7.15) — Period-7 fan-out content plans (American imperialism through
+// World War II, 1890-1945).
+import { BASELINE_AP_APUSH_IMPERIALISM } from './seeds/ap-apush-u7-imperialism';
+import { BASELINE_AP_APUSH_PROGRESSIVISM } from './seeds/ap-apush-u7-progressivism';
+import { BASELINE_AP_APUSH_WWI } from './seeds/ap-apush-u7-wwi';
+import { BASELINE_AP_APUSH_TWENTIES } from './seeds/ap-apush-u7-twenties';
+import { BASELINE_AP_APUSH_DEPRESSION_NEW_DEAL } from './seeds/ap-apush-u7-depression-newdeal';
+import { BASELINE_AP_APUSH_WWII } from './seeds/ap-apush-u7-wwii';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -453,6 +463,12 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_LABOR,
   BASELINE_AP_APUSH_IMMIGRATION_URBANIZATION,
   BASELINE_AP_APUSH_GILDED_POLITICS_POPULISM,
+  BASELINE_AP_APUSH_IMPERIALISM,
+  BASELINE_AP_APUSH_PROGRESSIVISM,
+  BASELINE_AP_APUSH_WWI,
+  BASELINE_AP_APUSH_TWENTIES,
+  BASELINE_AP_APUSH_DEPRESSION_NEW_DEAL,
+  BASELINE_AP_APUSH_WWII,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
