@@ -45,6 +45,12 @@ import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
 import { PASSAGE_APWORLD_TOKUGAWA_EDICT } from './seeds/apworld-tokugawa-edict';
 import { PASSAGE_APWORLD_POTOSI_SILVER_TABLE } from './seeds/apworld-potosi-silver-table';
 import { PASSAGE_APWORLD_ZHENG_HE_VISUAL } from './seeds/apworld-zheng-he-visual';
+// AP World Unit-5 (Revolutions) documents
+import { PASSAGE_APWORLD_RIGHTS_OF_MAN } from './seeds/apworld-rights-of-man';
+import { PASSAGE_APWORLD_BOLIVAR_JAMAICA } from './seeds/apworld-bolivar-jamaica';
+import { PASSAGE_APWORLD_COMMUNIST_MANIFESTO } from './seeds/apworld-communist-manifesto';
+import { PASSAGE_APWORLD_WOLLSTONECRAFT } from './seeds/apworld-wollstonecraft';
+import { PASSAGE_APWORLD_SADLER_TESTIMONY } from './seeds/apworld-sadler-testimony';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
@@ -127,6 +133,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_TOKUGAWA_EDICT,
   PASSAGE_APWORLD_POTOSI_SILVER_TABLE,
   PASSAGE_APWORLD_ZHENG_HE_VISUAL,
+  PASSAGE_APWORLD_RIGHTS_OF_MAN,
+  PASSAGE_APWORLD_BOLIVAR_JAMAICA,
+  PASSAGE_APWORLD_COMMUNIST_MANIFESTO,
+  PASSAGE_APWORLD_WOLLSTONECRAFT,
+  PASSAGE_APWORLD_SADLER_TESTIMONY,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
   PASSAGE_APGOV_ARTICLES_CONFEDERATION,
