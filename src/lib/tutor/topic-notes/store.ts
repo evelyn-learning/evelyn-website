@@ -296,6 +296,14 @@ import { BASELINE_AP_APWORLD_U8_DECOLONIZATION } from './seeds/ap-apworld-u8-dec
 import { BASELINE_AP_APWORLD_U8_NEW_STATES } from './seeds/ap-apworld-u8-new-states';
 import { BASELINE_AP_APWORLD_U8_END_COLD_WAR } from './seeds/ap-apworld-u8-end-cold-war';
 
+// AP World History Unit 9 (CED 9.1-9.3, 9.4-9.5, 9.6-9.7, 9.8-9.9) —
+// Unit-9 fan-out content plans (global economy through culture/rights/
+// migration).
+import { BASELINE_AP_APWORLD_U9_GLOBAL_ECONOMY } from './seeds/ap-apworld-u9-global-economy';
+import { BASELINE_AP_APWORLD_U9_TECHNOLOGY } from './seeds/ap-apworld-u9-technology';
+import { BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE } from './seeds/ap-apworld-u9-environment-disease';
+import { BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS } from './seeds/ap-apworld-u9-culture-rights';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -547,6 +555,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_U8_DECOLONIZATION,
   BASELINE_AP_APWORLD_U8_NEW_STATES,
   BASELINE_AP_APWORLD_U8_END_COLD_WAR,
+  BASELINE_AP_APWORLD_U9_GLOBAL_ECONOMY,
+  BASELINE_AP_APWORLD_U9_TECHNOLOGY,
+  BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE,
+  BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,

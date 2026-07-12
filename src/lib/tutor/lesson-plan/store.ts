@@ -1436,6 +1436,12 @@ import { SEED_AP_APWORLD_U8_END_COLD_WAR } from './seeds/ap-apworld-u8-end-cold-
 import { SEED_AP_APWORLD_U8_DBQ_PRACTICE } from './seeds/ap-apworld-u8-dbq-practice';
 import { SEED_AP_APWORLD_U8_LEQ_PRACTICE } from './seeds/ap-apworld-u8-leq-practice';
 import { SEED_AP_APWORLD_U8_SAQ_PRACTICE } from './seeds/ap-apworld-u8-saq-practice';
+// AP World History: Modern — Unit-9 fan-out content plans (global economy,
+// technology/communication, environment/disease, culture/rights/migration).
+import { SEED_AP_APWORLD_U9_GLOBAL_ECONOMY } from './seeds/ap-apworld-u9-global-economy';
+import { SEED_AP_APWORLD_U9_TECHNOLOGY } from './seeds/ap-apworld-u9-technology';
+import { SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE } from './seeds/ap-apworld-u9-environment-disease';
+import { SEED_AP_APWORLD_U9_CULTURE_RIGHTS } from './seeds/ap-apworld-u9-culture-rights';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2879,6 +2885,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U8_DBQ_PRACTICE,
   SEED_AP_APWORLD_U8_LEQ_PRACTICE,
   SEED_AP_APWORLD_U8_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-9 fan-out content plans.
+  SEED_AP_APWORLD_U9_GLOBAL_ECONOMY,
+  SEED_AP_APWORLD_U9_TECHNOLOGY,
+  SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE,
+  SEED_AP_APWORLD_U9_CULTURE_RIGHTS,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
