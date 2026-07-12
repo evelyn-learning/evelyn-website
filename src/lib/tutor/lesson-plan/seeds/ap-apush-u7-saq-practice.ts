@@ -44,7 +44,7 @@ export const SEED_AP_APUSH_U7_SAQ_PRACTICE: LessonPlan = {
     'apush.wwi',
     'apush.twenties',
     'apush.depression-new-deal',
-    'apush.wwii',
+    'apush.wwii-era',
   ],
   followUps: [],
   estimatedMinutes: 24,

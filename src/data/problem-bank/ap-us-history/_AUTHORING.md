@@ -502,7 +502,7 @@ gettysburg 1, non-stimulus reconstruction 2.
 | `apush.sectional-crisis` | `AP-APUSH-5.4` | The Sectional Crisis — Compromise of 1850/Fugitive Slave Act, *Uncle Tom's Cabin*, Kansas-Nebraska Act/Bleeding Kansas, *Dred Scott*, Lincoln-Douglas debates, John Brown's raid. | 1 |
 | `apush.secession-civil-war` | `AP-APUSH-5.7` | Secession and the Civil War — the 1860 election, secession's stated logic, Union/Confederate advantages, total war, the home front. | 3 |
 | `apush.emancipation` | `AP-APUSH-5.9` | Emancipation — the Emancipation Proclamation's scope and limits, Black military service, the Gettysburg Address's reframing of the war's purpose, the 13th Amendment. | 3 |
-| `apush.reconstruction` | `AP-APUSH-5.10` | Reconstruction — Presidential vs. Radical/Congressional Reconstruction, the Reconstruction Amendments, Black officeholding, sharecropping, the KKK/Redemption, the Compromise of 1877. | 2 |
+| `apush.reconstruction-era` | `AP-APUSH-5.10` | Reconstruction — Presidential vs. Radical/Congressional Reconstruction, the Reconstruction Amendments, Black officeholding, sharecropping, the KKK/Redemption, the Compromise of 1877. | 2 |
 | **Total** | | | **10** |
 
 ### Controller override on LO assignment (every-LO-≥1 rule)
@@ -695,7 +695,7 @@ twenties 1 = 12 total).
 | `apush.wwi` | `AP-APUSH-7.6` | World War I (Wilson's idealist war message vs. the punitive Treaty of Versailles). | 2 |
 | `apush.twenties` | `AP-APUSH-7.9` | The 1920s (uneven prosperity — the persistent farm depression). | 1 |
 | `apush.depression-new-deal` | `AP-APUSH-7.11` | The Great Depression and the New Deal (FDR's First Inaugural — "fear itself" and "action, and action now"). | 2 |
-| `apush.wwii` | `AP-APUSH-7.13` | World War II (the Four Freedoms; EO 9066's race-neutral text vs. its group-specific application). | 3 |
+| `apush.wwii-era` | `AP-APUSH-7.13` | World War II (the Four Freedoms; EO 9066's race-neutral text vs. its group-specific application). | 3 |
 | **Total** | | | **12** |
 
 ## Anchoring documents (stimulus sets)

@@ -40,7 +40,7 @@ export const SEED_AP_APUSH_U5_EMANCIPATION: LessonPlan = {
     },
   ],
   prerequisites: ['apush.secession-civil-war'],
-  followUps: ['apush.reconstruction'],
+  followUps: ['apush.reconstruction-era'],
   estimatedMinutes: 22,
   segments: [
     {

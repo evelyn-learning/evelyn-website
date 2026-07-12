@@ -30,7 +30,7 @@ export const SEED_AP_APUSH_U7_WWII: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apush.wwii',
+      id: 'apush.wwii-era',
       description:
         'Explain the path from American neutrality through Lend-Lease to Pearl Harbor and U.S. entry into World War II; explain home-front mobilization and Japanese American internment; and explain wartime military strategy and the debate over the atomic-bomb decision.',
       standard: 'AP-APUSH-7.13',

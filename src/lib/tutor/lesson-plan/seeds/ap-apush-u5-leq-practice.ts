@@ -36,7 +36,7 @@ export const SEED_AP_APUSH_U5_LEQ_PRACTICE: LessonPlan = {
     'apush.sectional-crisis',
     'apush.secession-civil-war',
     'apush.emancipation',
-    'apush.reconstruction',
+    'apush.reconstruction-era',
   ],
   followUps: [],
   estimatedMinutes: 48,

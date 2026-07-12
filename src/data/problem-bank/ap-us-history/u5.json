@@ -160,8 +160,8 @@
     ]
   },
   {
-    "id": "apush.reconstruction.mcq.01",
-    "loId": "apush.reconstruction",
+    "id": "apush.reconstruction-era.mcq.01",
+    "loId": "apush.reconstruction-era",
     "cedCode": "AP-APUSH-5.10",
     "difficulty": 2,
     "responseFormat": "mcq",
@@ -179,8 +179,8 @@
     ]
   },
   {
-    "id": "apush.reconstruction.mcq.02",
-    "loId": "apush.reconstruction",
+    "id": "apush.reconstruction-era.mcq.02",
+    "loId": "apush.reconstruction-era",
     "cedCode": "AP-APUSH-5.10",
     "difficulty": 2,
     "responseFormat": "mcq",

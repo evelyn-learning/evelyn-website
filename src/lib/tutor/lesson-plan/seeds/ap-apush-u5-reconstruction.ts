@@ -27,7 +27,7 @@ export const SEED_AP_APUSH_U5_RECONSTRUCTION: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apush.reconstruction',
+      id: 'apush.reconstruction-era',
       description:
         'Explain the differences between Presidential and Radical/Congressional Reconstruction, the 13th, 14th, and 15th Amendments, the Freedmen\'s Bureau, Black officeholding, the sharecropping and crop-lien system, Ku Klux Klan violence and Redemption, and the Compromise of 1877, and evaluate competing historical interpretations of why Reconstruction did not secure lasting racial equality.',
       standard: 'AP-APUSH-5.10',

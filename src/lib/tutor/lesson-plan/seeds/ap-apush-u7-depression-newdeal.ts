@@ -39,7 +39,7 @@ export const SEED_AP_APUSH_U7_DEPRESSION_NEW_DEAL: LessonPlan = {
     },
   ],
   prerequisites: ['apush.twenties'],
-  followUps: ['apush.wwii'],
+  followUps: ['apush.wwii-era'],
   estimatedMinutes: 22,
   segments: [
     {
