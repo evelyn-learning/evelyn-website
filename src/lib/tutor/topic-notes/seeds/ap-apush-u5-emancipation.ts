@@ -84,7 +84,7 @@ export const BASELINE_AP_APUSH_EMANCIPATION: TopicNotesBaseline = {
       kind: 'event',
       title: 'the war\'s purpose reframed; the Gettysburg Address (Nov. 1863)',
       content:
-        'Emancipation transformed the Union\'s stated war aim from reunion alone to reunion plus emancipation. Lincoln\'s Gettysburg Address, delivered at a Union cemetery dedication ten months after the Proclamation, reframed the war around a "new birth of freedom" for the nation.',
+        'Emancipation transformed the Union\'s stated war aim from reunion alone to reunion plus emancipation. Lincoln\'s Gettysburg Address, delivered at a Union cemetery dedication ten months after the Proclamation, reframed the war as a moment for the nation\'s renewal and recommitment to freedom.',
     },
     {
       loId: 'apush.emancipation',
