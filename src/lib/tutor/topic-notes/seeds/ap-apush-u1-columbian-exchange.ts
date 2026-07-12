@@ -55,7 +55,7 @@ export const BASELINE_AP_APUSH_COLUMBIAN_EXCHANGE: TopicNotesBaseline = {
       kind: 'framework',
       title: 'directionality: Eastern Hemisphere → Americas',
       content:
-        'Wheat, horses, and cattle (along with pigs and sugar cane) moved west into the Americas. Horses in particular transformed how many Native peoples hunted, traveled, and made war in the generations after their introduction — an animal absent from the Americas before contact.',
+        'Wheat, horses, and cattle (along with pigs and sugar cane) moved west into the Americas. Horses in particular transformed how many Native peoples hunted, traveled, and made war in the generations after their introduction — an animal absent from the Americas for roughly ten thousand years before contact.',
     },
     {
       loId: 'apush.columbian-exchange',

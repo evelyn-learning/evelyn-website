@@ -6,10 +6,13 @@ import type { Passage } from '../types';
  * Doctrine, asserting that chronic wrongdoing by a Western Hemisphere
  * nation "may force the United States ... to the exercise of an
  * international police power." US-government work (17 USC §105); public
- * domain regardless of date. Verbatim excerpt in three contiguous spans
- * from the same paragraph, joined with ellipses (the elided sentence is a
- * transitional clause about a country's "hearty friendship" that adds no
- * substantive claim), transcribed from The American Presidency Project's
+ * domain regardless of date. Verbatim excerpt in two contiguous spans
+ * from the same paragraph, joined with a single ellipsis (the elided
+ * material is several intervening sentences, including the "hearty
+ * friendship" line and a no-interference qualifier — that a nation which
+ * "keeps order and pays its obligations" "need fear no interference from
+ * the United States" — that add color but no additional substantive
+ * claim), transcribed from The American Presidency Project's
  * full-text transcript of the message. Note: attribute to this excerpt
  * only the corollary/police-power claim it contains — the message's later
  * discussion of Santo Domingo and customs receivership (unseeded) is the

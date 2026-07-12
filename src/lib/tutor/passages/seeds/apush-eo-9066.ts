@@ -9,7 +9,7 @@ import type { Passage } from '../types';
  * date. Verbatim excerpt, a single contiguous span, transcribed from the
  * National Archives milestone-documents transcript. Historical context,
  * presented factually and without embellishment: military commanders
- * used this authority to exclude and forcibly relocate roughly 122,000
+ * used this authority to exclude and forcibly relocate roughly 120,000
  * Japanese Americans — the majority US citizens — from West Coast
  * military areas into inland incarceration ("relocation") centers; the
  * order's constitutionality was upheld by the Supreme Court in Korematsu

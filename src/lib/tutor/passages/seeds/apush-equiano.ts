@@ -10,7 +10,7 @@ import type { Passage } from '../types';
  * SELECTION FOR RESTRAINT: this excerpt conveys terror, confinement, and
  * dehumanizing conditions (being handled and inspected like cargo, chained
  * captives, overpowering horror) entirely through Equiano's own
- * psychological account, and stops short of the sermon's/narrative's later,
+ * psychological account, and stops short of the narrative's later,
  * more graphic passages describing flogging, death, and bodily suffering
  * elsewhere in this chapter — deliberately excluded to keep the passage
  * exam-neutral while still conveying the reality of the Middle Passage. Each

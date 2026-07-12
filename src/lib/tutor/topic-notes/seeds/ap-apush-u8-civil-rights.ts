@@ -25,7 +25,7 @@ export const BASELINE_AP_APUSH_CIVIL_RIGHTS: TopicNotesBaseline = {
   theory: [
     {
       loId: 'apush.civil-rights-movement',
-      kind: 'event',
+      kind: 'definition',
       title: 'Brown v. Board of Education (1954)',
       content:
         'The Supreme Court ruled segregated public schools violate the Fourteenth Amendment\'s Equal Protection Clause, rejecting "separate but equal" (Plessy v. Ferguson, 1896) as "inherently unequal." Brown established the constitutional PRINCIPLE but did not by itself desegregate a single classroom — implementation faced years of resistance.',

@@ -4,10 +4,12 @@ import type { Passage } from '../types';
  * William Jennings Bryan, "Cross of Gold" speech, closing debate on the
  * money plank at the Democratic National Convention, Chicago, July 9,
  * 1896. APUSH Period-6 document — the speech's famous closing lines.
- * Verbatim public-domain excerpt: the opening sentence of the final
- * paragraph plus its closing sentences, with the middle of that paragraph
- * (about 150 words restating the free-silver argument) elided and marked
- * by an ellipsis; each side verified as a contiguous span of the source.
+ * Verbatim public-domain excerpt: the opening sentence of the penultimate
+ * paragraph ("My friends, we declare...") plus the closing sentences of the
+ * final paragraph (the "crown of thorns"/"cross of gold" lines), with the
+ * intervening material (about 150 words restating the free-silver argument)
+ * elided and marked by an ellipsis; each side verified as a contiguous span
+ * of the source.
  * Transcribed from Wikisource.
  */
 export const PASSAGE_APUSH_CROSS_OF_GOLD: Passage = {
