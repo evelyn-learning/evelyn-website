@@ -1425,6 +1425,9 @@ import { SEED_AP_APWORLD_U1_DAR_AL_ISLAM } from './seeds/ap-apworld-u1-dar-al-is
 import { SEED_AP_APWORLD_U1_SOUTH_SOUTHEAST_ASIA } from './seeds/ap-apworld-u1-south-southeast-asia';
 import { SEED_AP_APWORLD_U1_AMERICAS_AFRICA_STATES } from './seeds/ap-apworld-u1-americas-africa';
 import { SEED_AP_APWORLD_U1_MEDIEVAL_EUROPE } from './seeds/ap-apworld-u1-medieval-europe';
+import { SEED_AP_APWORLD_U1_DBQ_PRACTICE } from './seeds/ap-apworld-u1-dbq-practice';
+import { SEED_AP_APWORLD_U1_LEQ_PRACTICE } from './seeds/ap-apworld-u1-leq-practice';
+import { SEED_AP_APWORLD_U1_SAQ_PRACTICE } from './seeds/ap-apworld-u1-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2867,6 +2870,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U1_SOUTH_SOUTHEAST_ASIA,
   SEED_AP_APWORLD_U1_AMERICAS_AFRICA_STATES,
   SEED_AP_APWORLD_U1_MEDIEVAL_EUROPE,
+  SEED_AP_APWORLD_U1_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U1_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U1_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
