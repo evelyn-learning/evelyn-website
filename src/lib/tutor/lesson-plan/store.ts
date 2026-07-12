@@ -1364,7 +1364,7 @@ import { SEED_AP_APUSH_U3_DBQ_PRACTICE } from './seeds/ap-apush-u3-dbq-practice'
 import { SEED_AP_APUSH_U3_LEQ_PRACTICE } from './seeds/ap-apush-u3-leq-practice';
 import { SEED_AP_APUSH_U3_SAQ_PRACTICE } from './seeds/ap-apush-u3-saq-practice';
 // AP US History — Period-4 fan-out (1800-1848). Content plans + notes.
-// See .superpowers/sdd/period-4-block.md.
+// See docs/superpowers/plans/2026-07-11-apush-periods-fanout.md (Period 4 block).
 import { SEED_AP_APUSH_U4_JEFFERSON_ERA } from './seeds/ap-apush-u4-jefferson-era';
 import { SEED_AP_APUSH_U4_MARKET_REVOLUTION } from './seeds/ap-apush-u4-market-revolution';
 import { SEED_AP_APUSH_U4_JACKSONIAN_DEMOCRACY } from './seeds/ap-apush-u4-jacksonian-democracy';
