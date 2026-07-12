@@ -1434,6 +1434,9 @@ import { SEED_AP_APWORLD_U6_IMPERIAL_RESISTANCE } from './seeds/ap-apworld-u6-im
 import { SEED_AP_APWORLD_U6_ECONOMIC_IMPERIALISM } from './seeds/ap-apworld-u6-economic-imperialism';
 import { SEED_AP_APWORLD_U6_GLOBAL_MIGRATION } from './seeds/ap-apworld-u6-global-migration';
 import { SEED_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-reform-responses';
+import { SEED_AP_APWORLD_U6_DBQ_PRACTICE } from './seeds/ap-apworld-u6-dbq-practice';
+import { SEED_AP_APWORLD_U6_LEQ_PRACTICE } from './seeds/ap-apworld-u6-leq-practice';
+import { SEED_AP_APWORLD_U6_SAQ_PRACTICE } from './seeds/ap-apworld-u6-saq-practice';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2875,6 +2878,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U6_ECONOMIC_IMPERIALISM,
   SEED_AP_APWORLD_U6_GLOBAL_MIGRATION,
   SEED_AP_APWORLD_U6_REFORM_RESPONSES,
+  SEED_AP_APWORLD_U6_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U6_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U6_SAQ_PRACTICE,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
