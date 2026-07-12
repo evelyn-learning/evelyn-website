@@ -297,6 +297,13 @@ import { BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM } from './seeds/ap-apworld-
 import { BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION } from './seeds/ap-apworld-u6-global-migration';
 import { BASELINE_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-reform-responses';
 
+// AP World History Unit 7 (CED 7.1-7.9) — WWI, interwar crisis, WWII,
+// conflict legacies, 1900-present.
+import { BASELINE_AP_APWORLD_U7_WWI } from './seeds/ap-apworld-u7-wwi';
+import { BASELINE_AP_APWORLD_U7_INTERWAR } from './seeds/ap-apworld-u7-interwar';
+import { BASELINE_AP_APWORLD_U7_WWII } from './seeds/ap-apworld-u7-wwii';
+import { BASELINE_AP_APWORLD_U7_LEGACIES } from './seeds/ap-apworld-u7-legacies';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -549,6 +556,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM,
   BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION,
   BASELINE_AP_APWORLD_U6_REFORM_RESPONSES,
+  BASELINE_AP_APWORLD_U7_WWI,
+  BASELINE_AP_APWORLD_U7_INTERWAR,
+  BASELINE_AP_APWORLD_U7_WWII,
+  BASELINE_AP_APWORLD_U7_LEGACIES,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,

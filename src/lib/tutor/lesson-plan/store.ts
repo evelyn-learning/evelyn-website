@@ -1437,6 +1437,12 @@ import { SEED_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-refor
 import { SEED_AP_APWORLD_U6_DBQ_PRACTICE } from './seeds/ap-apworld-u6-dbq-practice';
 import { SEED_AP_APWORLD_U6_LEQ_PRACTICE } from './seeds/ap-apworld-u6-leq-practice';
 import { SEED_AP_APWORLD_U6_SAQ_PRACTICE } from './seeds/ap-apworld-u6-saq-practice';
+// AP World History: Modern — Unit 7 content plans (WWI, interwar, WWII,
+// conflict legacies), 1900-present.
+import { SEED_AP_APWORLD_U7_WWI } from './seeds/ap-apworld-u7-wwi';
+import { SEED_AP_APWORLD_U7_INTERWAR } from './seeds/ap-apworld-u7-interwar';
+import { SEED_AP_APWORLD_U7_WWII } from './seeds/ap-apworld-u7-wwii';
+import { SEED_AP_APWORLD_U7_LEGACIES } from './seeds/ap-apworld-u7-legacies';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2881,6 +2887,11 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U6_DBQ_PRACTICE,
   SEED_AP_APWORLD_U6_LEQ_PRACTICE,
   SEED_AP_APWORLD_U6_SAQ_PRACTICE,
+  // AP World History: Modern — Unit 7 content plans.
+  SEED_AP_APWORLD_U7_WWI,
+  SEED_AP_APWORLD_U7_INTERWAR,
+  SEED_AP_APWORLD_U7_WWII,
+  SEED_AP_APWORLD_U7_LEGACIES,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
