@@ -1366,6 +1366,9 @@ import { SEED_AP_APUSH_U7_WWI } from './seeds/ap-apush-u7-wwi';
 import { SEED_AP_APUSH_U7_TWENTIES } from './seeds/ap-apush-u7-twenties';
 import { SEED_AP_APUSH_U7_DEPRESSION_NEW_DEAL } from './seeds/ap-apush-u7-depression-newdeal';
 import { SEED_AP_APUSH_U7_WWII } from './seeds/ap-apush-u7-wwii';
+import { SEED_AP_APUSH_U7_DBQ_PRACTICE } from './seeds/ap-apush-u7-dbq-practice';
+import { SEED_AP_APUSH_U7_LEQ_PRACTICE } from './seeds/ap-apush-u7-leq-practice';
+import { SEED_AP_APUSH_U7_SAQ_PRACTICE } from './seeds/ap-apush-u7-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2750,6 +2753,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U7_TWENTIES,
   SEED_AP_APUSH_U7_DEPRESSION_NEW_DEAL,
   SEED_AP_APUSH_U7_WWII,
+  SEED_AP_APUSH_U7_DBQ_PRACTICE,
+  SEED_AP_APUSH_U7_LEQ_PRACTICE,
+  SEED_AP_APUSH_U7_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
