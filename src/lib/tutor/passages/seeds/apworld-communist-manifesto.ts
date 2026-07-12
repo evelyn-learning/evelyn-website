@@ -7,7 +7,7 @@ import type { Passage } from '../types';
  * as a primary-source response to the same conditions documented in the
  * Sadler Committee testimony. Excerpt covers the bourgeoisie's own creation
  * of the modern proletariat as a wage-dependent "commodity" class, then
- * (one paragraph elided, marked) the closing call to revolutionary action
+ * (the intervening body of the Manifesto elided, marked) the closing call to revolutionary action
  * and "WORKING MEN OF ALL COUNTRIES, UNITE!" Verbatim public-domain text
  * from Samuel Moore's authorized 1888 English translation (edited by
  * Engels), the standard PD English edition, Project Gutenberg #61; italic
