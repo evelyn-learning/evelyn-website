@@ -15,6 +15,12 @@ import { PASSAGE_APUSH_FEDERALIST_10 } from './seeds/apush-federalist-10';
 import { PASSAGE_APUSH_BRUTUS_1 } from './seeds/apush-brutus-1';
 import { PASSAGE_APUSH_CONSTITUTION_PREAMBLE } from './seeds/apush-constitution-preamble';
 import { PASSAGE_APUSH_JOIN_OR_DIE } from './seeds/apush-join-or-die';
+// APUSH Period-1 (1491-1607) DBQ documents
+import { PASSAGE_APUSH_COLUMBUS_LETTER } from './seeds/apush-columbus-letter';
+import { PASSAGE_APUSH_LAS_CASAS } from './seeds/apush-las-casas';
+import { PASSAGE_APUSH_CORTES_TENOCHTITLAN } from './seeds/apush-cortes-tenochtitlan';
+import { PASSAGE_APUSH_CODEX_MENDOZA } from './seeds/apush-codex-mendoza';
+import { PASSAGE_APUSH_HAKLUYT_WESTERN_PLANTING } from './seeds/apush-hakluyt-western-planting';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -53,6 +59,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BRUTUS_1,
   PASSAGE_APUSH_CONSTITUTION_PREAMBLE,
   PASSAGE_APUSH_JOIN_OR_DIE,
+  PASSAGE_APUSH_COLUMBUS_LETTER,
+  PASSAGE_APUSH_LAS_CASAS,
+  PASSAGE_APUSH_CORTES_TENOCHTITLAN,
+  PASSAGE_APUSH_CODEX_MENDOZA,
+  PASSAGE_APUSH_HAKLUYT_WESTERN_PLANTING,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
