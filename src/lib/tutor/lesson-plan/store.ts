@@ -1345,6 +1345,9 @@ import { SEED_AP_ENGLANG_U5_UNITY_AND_COHERENCE } from './seeds/ap-englang-u5-un
 import { SEED_AP_APUSH_U1_NATIVE_SOCIETIES } from './seeds/ap-apush-u1-native-societies';
 import { SEED_AP_APUSH_U1_COLUMBIAN_EXCHANGE } from './seeds/ap-apush-u1-columbian-exchange';
 import { SEED_AP_APUSH_U1_SPANISH_COLONIZATION } from './seeds/ap-apush-u1-spanish-colonization';
+import { SEED_AP_APUSH_U1_DBQ_PRACTICE } from './seeds/ap-apush-u1-dbq-practice';
+import { SEED_AP_APUSH_U1_LEQ_PRACTICE } from './seeds/ap-apush-u1-leq-practice';
+import { SEED_AP_APUSH_U1_SAQ_PRACTICE } from './seeds/ap-apush-u1-saq-practice';
 import { SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 import { SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
 import { SEED_AP_APUSH_U3_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
@@ -2716,6 +2719,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U1_NATIVE_SOCIETIES,
   SEED_AP_APUSH_U1_COLUMBIAN_EXCHANGE,
   SEED_AP_APUSH_U1_SPANISH_COLONIZATION,
+  SEED_AP_APUSH_U1_DBQ_PRACTICE,
+  SEED_AP_APUSH_U1_LEQ_PRACTICE,
+  SEED_AP_APUSH_U1_SAQ_PRACTICE,
   // AP US History — Period-3 Vertical Slice content plans.
   SEED_AP_APUSH_U3_CAUSES_OF_REVOLUTION,
   SEED_AP_APUSH_U3_REVOLUTIONARY_IDEALS,
