@@ -1438,6 +1438,11 @@ import { SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cul
 import { SEED_AP_APWORLD_U2_DBQ_PRACTICE } from './seeds/ap-apworld-u2-dbq-practice';
 import { SEED_AP_APWORLD_U2_LEQ_PRACTICE } from './seeds/ap-apworld-u2-leq-practice';
 import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-practice';
+// AP World History: Modern — Unit-3 fan-out content plans (Land-Based
+// Empires, 1450-1750).
+import { SEED_AP_APWORLD_U3_EMPIRES_EXPANSION } from './seeds/ap-apworld-u3-empires-expansion';
+import { SEED_AP_APWORLD_U3_EMPIRES_ADMINISTRATION } from './seeds/ap-apworld-u3-empires-administration';
+import { SEED_AP_APWORLD_U3_EMPIRES_BELIEF_SYSTEMS } from './seeds/ap-apworld-u3-empires-belief';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2882,6 +2887,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U2_DBQ_PRACTICE,
   SEED_AP_APWORLD_U2_LEQ_PRACTICE,
   SEED_AP_APWORLD_U2_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-3 fan-out content plans.
+  SEED_AP_APWORLD_U3_EMPIRES_EXPANSION,
+  SEED_AP_APWORLD_U3_EMPIRES_ADMINISTRATION,
+  SEED_AP_APWORLD_U3_EMPIRES_BELIEF_SYSTEMS,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,

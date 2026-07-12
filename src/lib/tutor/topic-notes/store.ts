@@ -298,6 +298,13 @@ import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-t
 import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
 
+// AP World History Unit 3 (CED 3.1, 3.2, 3.3-3.4) — Unit-3 fan-out content
+// plans (Land-Based Empires: expansion, administration, belief systems).
+// FRQ-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_EMPIRES_EXPANSION } from './seeds/ap-apworld-u3-empires-expansion';
+import { BASELINE_AP_APWORLD_EMPIRES_ADMINISTRATION } from './seeds/ap-apworld-u3-empires-administration';
+import { BASELINE_AP_APWORLD_EMPIRES_BELIEF_SYSTEMS } from './seeds/ap-apworld-u3-empires-belief';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -550,6 +557,9 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
   BASELINE_AP_APWORLD_MONGOL_EMPIRE,
   BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APWORLD_EMPIRES_EXPANSION,
+  BASELINE_AP_APWORLD_EMPIRES_ADMINISTRATION,
+  BASELINE_AP_APWORLD_EMPIRES_BELIEF_SYSTEMS,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
