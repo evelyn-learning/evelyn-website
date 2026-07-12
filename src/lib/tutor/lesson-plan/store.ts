@@ -1379,6 +1379,10 @@ import { SEED_AP_APGOV_U2_FRQ_CONCEPT_APPLICATION } from './seeds/ap-apgov-u2-fr
 import { SEED_AP_APGOV_U2_FRQ_QUANTITATIVE } from './seeds/ap-apgov-u2-frq-quantitative';
 import { SEED_AP_APGOV_U2_FRQ_SCOTUS_COMPARISON } from './seeds/ap-apgov-u2-frq-scotus-comparison';
 import { SEED_AP_APGOV_U2_FRQ_ARGUMENT_ESSAY } from './seeds/ap-apgov-u2-frq-argument-essay';
+import { SEED_AP_APGOV_U3_RELIGION_SPEECH } from './seeds/ap-apgov-u3-religion-speech';
+import { SEED_AP_APGOV_U3_PRESS_ASSEMBLY_ARMS } from './seeds/ap-apgov-u3-press-assembly-arms';
+import { SEED_AP_APGOV_U3_DUE_PROCESS } from './seeds/ap-apgov-u3-due-process';
+import { SEED_AP_APGOV_U3_CIVIL_RIGHTS } from './seeds/ap-apgov-u3-civil-rights';
 // QA harness — test-* plans for systematic browser exercising of tutor
 // surfaces. Not production content. Safe to remove together; ids and
 // titles are prefixed with `test-` / `[TEST]` for easy identification.
@@ -2722,6 +2726,10 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APGOV_U2_FRQ_QUANTITATIVE,
   SEED_AP_APGOV_U2_FRQ_SCOTUS_COMPARISON,
   SEED_AP_APGOV_U2_FRQ_ARGUMENT_ESSAY,
+  SEED_AP_APGOV_U3_RELIGION_SPEECH,
+  SEED_AP_APGOV_U3_PRESS_ASSEMBLY_ARMS,
+  SEED_AP_APGOV_U3_DUE_PROCESS,
+  SEED_AP_APGOV_U3_CIVIL_RIGHTS,
   // QA harness — test-* plans (see import block at top of file).
   SEED_TEST_K2_MATH_COMPARING_NUMBERS,
   SEED_TEST_G5_SCI_CARBON_CYCLE,
