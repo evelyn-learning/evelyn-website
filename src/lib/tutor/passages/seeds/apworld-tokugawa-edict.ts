@@ -1,49 +1,59 @@
 import type { Passage } from '../types';
 
 /**
- * Tokugawa Iemitsu, "Closed Country Edict of 1635" (the third of the
- * Tokugawa sakoku/seclusion edicts), addressed to the two governors (bugyō)
- * of Nagasaki. AP World Unit-4 document — no Japanese ships/subjects abroad,
- * a ban on Christian teaching, and regulation of foreign trade.
+ * CONVERTED TO A DESCRIBED DOCUMENT (2026-07-12 controller fix). The prior
+ * version of this seed quoted an "unattributed" English rendering of the
+ * 1635 Closed Country Edict fetched from a course-reader page linked off
+ * Fordham's East Asian History Sourcebook. On review, clauses 1-3 of that
+ * quoted text matched David J. Lu's translation in "Japan: A Documentary
+ * History" (M.E. Sharpe, 1997, (c) 2001) word-for-word — a translation that
+ * is currently under copyright, not public domain. No pre-1929 (or
+ * otherwise verifiably public-domain) English translation of this edict
+ * could be confirmed: 19th/early-20th-century Japanology sources were not
+ * located with a matching, checkable rendering, and every other modern
+ * English translation encountered is likewise a copyrighted secondary work.
+ * Quoting any of them under `license: 'public-domain'` would misrepresent
+ * their copyright status.
  *
- * Provenance: this is the sole Tokugawa-1635 entry in the Internet History
- * Sourcebooks Project's East Asian History Sourcebook
- * (sourcebooks.fordham.edu/eastasia/eastasiasbook.asp, link text "Closed
- * Country Edict"), which points to a course-reader page ("The Seclusion of
- * Japan," World History, Sara Watts) reproducing the edict text; Fordham's
- * own index also lists an archive.org backup of that page, used here as the
- * stable sourceUrl. Fetched live (curl, 2026-07) from the original
- * http://users.wfu.edu/watts/w03_Japancl.html — still online and identical
- * to the archived copy at fetch time. The page does not itself name a
- * translator. Clauses 1-3 read identically to the (separately, and
- * currently copyrighted) David J. Lu translation in "Japan: A Documentary
- * History" (M. E. Sharpe, 1997, (c) 2001), but clause 4's wording differs
- * ("the teachings of the [Catholic] priests" here vs. Lu's "the teachings
- * of padres (Christianity)"), confirming this is a distinct, unattributed
- * rendering rather than a reproduction of Lu's copyrighted text.
+ * Per this fan-out's sanctioned fallback for exactly this situation
+ * (mirrors `apworld-zheng-he-visual.ts` and `apworld-potosi-silver-table.ts`
+ * in this same worktree), the seed is now a DESCRIBED DOCUMENT: fullText is
+ * original prose, written for this project, that describes the edict's
+ * content and context rather than quoting or paraphrasing any specific
+ * translator's wording. `genre: 'political-cartoon'` is used here only
+ * because it is this codebase's described-stimulus type slot (see the two
+ * seeds above for the same convention); it is not a claim that the
+ * underlying document is visual.
  *
- * Two contiguous spans joined by an ellipsis: (1) clauses 1-4, covering the
- * ban on Japanese going/returning abroad and the order to investigate
- * Christian teaching; (2) clause 9, a trade-regulation clause (no single
- * trading city may monopolize a foreign ship's merchandise). Both spans
- * verified programmatically as contiguous substrings of the fetched page
- * (HTML tags and entities stripped, whitespace normalized; footnote
- * superscript markers on clauses 6-8, which fall in the elided span, are
- * not quoted). Clause numbering is retained as in the source, since the
- * edict is itself a numbered list of provisions.
+ * Facts covered below (verified against the archived course-reader page,
+ * used only as a factual reference, and against standard secondary
+ * accounts of the 1635 edict and the sakoku policy): issued 1635 by the
+ * Tokugawa shogunate to the Nagasaki commissioners (bugyō); forbade
+ * Japanese ships and subjects from traveling abroad; ordered death for any
+ * Japanese subject who returned from overseas; banned Christianity and
+ * ordered rewards for informants who exposed missionaries and converts;
+ * restricted foreign trade to a small number of designated, closely
+ * supervised ports; and was one step in the broader sakoku policy that, by
+ * 1641, confined European trade to the Dutch at Dejima in Nagasaki harbor.
+ *
+ * WARNING TO DOWNSTREAM TASKS: do not quote or closely paraphrase any
+ * published translation of this edict (Lu's or any other) anywhere this
+ * passage is used — no quotation marks around any edict language, in this
+ * file or in any lesson-plan segment, MCQ stem, or essay prompt that
+ * references it. Treat the edict only through this described-document
+ * summary.
  */
 export const PASSAGE_APWORLD_TOKUGAWA_EDICT: Passage = {
   id: 'evelyn.passage.apworld-tokugawa-edict.v1',
-  title: 'Closed Country Edict of 1635',
-  author: 'Tokugawa Iemitsu (shogunate edict)',
+  title: 'Closed Country Edict of 1635 (described document)',
+  author: 'Tokugawa shogunate (Edo bakufu)',
   year: 1635,
   sourceUrl:
     'https://web.archive.org/web/20230305000400/http://users.wfu.edu/watts/w03_Japancl.html',
   license: 'public-domain',
-  genre: 'document',
+  genre: 'political-cartoon',
   fullText:
-    '1. Japanese ships are strictly forbidden to leave for foreign countries. 2. No Japanese is permitted to go abroad. If there is anyone who attempts to do so secretly, he must be executed. The ship so involved must be impounded and its owner arrested, and the matter must be reported to the higher authority. 3. If any Japanese returns from overseas after residing there, he must be put to death. 4. If there is any place where the teachings of the [Catholic] priests is practiced, the two of you must order a thorough investigation.\n\n' +
-    '… 9. No single trading city shall be permitted to purchase all the merchandise brought by foreign ships.',
-  lineNumbered: true,
-  wordCount: 112,
+    "[DOCUMENT — description] A description of the Closed Country Edict of 1635, one of a series of directives the Tokugawa shogunate (Edo bakufu) issued to the two magistrates (bugyō) responsible for the port city of Nagasaki, tightening the shogunate's control over Japan's contact with the outside world. The edict forbade Japanese ships from sailing to foreign countries and forbade Japanese subjects from traveling abroad at all, closing off the outward movement that earlier decades of overseas trade and settlement had allowed. It further directed that any Japanese subject who had gone abroad and later returned to Japan be put to death, treating re-entry after residence overseas as itself a capital offense, regardless of the traveler's original intentions. The edict renewed and strengthened the shogunate's ban on Christianity, directing local officials to investigate thoroughly wherever the religion was suspected of being practiced, and it established rewards meant to encourage informants to come forward and expose missionaries and Japanese converts alike, turning suppression of the faith into a matter of active, incentivized surveillance rather than passive prohibition. Foreign trade itself was not ended outright, but it was narrowed and concentrated: incoming merchant ships were to be confined to a small number of designated ports, where their cargoes, crews, and dealings with Japanese merchants could be closely supervised by shogunate officials rather than allowed to spread freely along the coast. This edict was one step in the broader sakoku policy, often glossed in English as Japan's closed-country policy, that unfolded over the following years; by 1641 the shogunate had carried the process to its logical end, expelling the Portuguese and confining the last permitted European trading presence, the Dutch East India Company, to the small artificial island of Dejima in Nagasaki harbor, where its ships and personnel could be watched continuously and kept apart from the Japanese population at large.",
+  lineNumbered: false,
+  wordCount: 307,
 };
