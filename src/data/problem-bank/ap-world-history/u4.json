@@ -1,0 +1,240 @@
+[
+  {
+    "id": "apworld.maritime-exploration.mcq.01",
+    "loId": "apworld.maritime-exploration",
+    "cedCode": "AP-APWORLD-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-columbus-letter.v1",
+    "problemText": "In his 1493 letter to Luis de Santángel announcing the first voyage, Columbus writes that once the islanders' fear had passed, \"they are guileless, and so liberal of all they have that no one would believe it who had not seen it.\" This description is best used as evidence of —",
+    "choices": [
+      "the islanders' military strength deterring any further Spanish exploration of the region",
+      "Columbus's framing of the islanders in terms useful to colonial ambitions",
+      "the existence of widespread indigenous literacy across the Caribbean before 1492",
+      "the immediate mass conversion of every islander to Christianity upon first contact"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask who Columbus was writing to and why he might emphasize the islanders' generosity and lack of guile.",
+      "Rule out any answer describing military resistance, literacy, or conversion — none of those appear in this passage."
+    ]
+  },
+  {
+    "id": "apworld.maritime-exploration.mcq.02",
+    "loId": "apworld.maritime-exploration",
+    "cedCode": "AP-APWORLD-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-zheng-he-visual.v1",
+    "problemText": "A scale-comparison illustration shows Zheng He's 1405 fleet — 317 ships, including 62 treasure ships, with a crew estimated between 20,000 and 32,000 — financed directly by the Ming imperial court, set alongside a 15th-century Iberian caravel typically documented at roughly 65 to 100 feet in length. This comparison most directly supports which claim about early-fifteenth-century Ming and Iberian maritime activity?",
+    "choices": [
+      "Iberian caravels carried more crew per ship than Zheng He's treasure ships",
+      "the Ming court lacked the shipbuilding technology available to Iberian shipwrights",
+      "Zheng He's voyages were financed by private merchant investors rather than the state",
+      "Ming China committed far greater resources to overseas voyages than any European monarch"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the fleet-wide numbers (317 ships, up to 32,000 crew) against a single caravel's scale, and ask who paid for each.",
+      "The passage states the voyages were financed directly by the Ming imperial court — think about what that implies about state commitment."
+    ]
+  },
+  {
+    "id": "apworld.maritime-exploration.mcq.03",
+    "loId": "apworld.maritime-exploration",
+    "cedCode": "AP-APWORLD-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-zheng-he-visual.v1",
+    "problemText": "Historians disagree sharply over the size of Zheng He's largest treasure ships: traditional figures derived from the Ming shi describe them as roughly 440 feet long by 180 feet wide, while many modern scholars propose considerably smaller reconstructions of as little as roughly 170 to 250 feet in length. A student writing about this discrepancy for an AP World History response should —",
+    "choices": [
+      "present the dimensions as a genuinely disputed range rather than asserting a single figure as settled fact",
+      "use only the smaller modern estimate, since older sources are always less reliable than newer ones",
+      "omit any mention of ship size, since disagreement among historians means the ships' scale cannot be discussed at all",
+      "use only the traditional 440-foot figure, since it appears in an account closer to the Ming dynasty itself"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the two figures differ by close to a factor of two — that is a real, unresolved scholarly disagreement, not a simple factual error to correct.",
+      "Think about how a careful historian handles a range of published estimates rather than picking a favorite number."
+    ]
+  },
+  {
+    "id": "apworld.columbian-exchange-global.mcq.01",
+    "loId": "apworld.columbian-exchange-global",
+    "cedCode": "AP-APWORLD-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-potosi-silver-table.v1",
+    "problemText": "A data table of registered silver output shows that Spanish America produced approximately 136,000 metric tons of silver between 1550 and 1800 — on the order of 80 percent of the world's documented silver output over that span. This figure is best used as evidence that —",
+    "choices": [
+      "Potosí city alone accounted for all registered silver output in the Americas after 1550",
+      "world silver production declined sharply once Spanish colonization of the Americas began",
+      "Spanish America dominated world silver production for two and a half centuries",
+      "Ming China's silver mines produced more metal than Spanish America's during this period"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the 80-percent figure as describing all of Spanish America's output, not any single mining district.",
+      "Rule out any answer implying decline or a rival source outproducing Spanish America — the table shows the opposite."
+    ]
+  },
+  {
+    "id": "apworld.columbian-exchange-global.mcq.02",
+    "loId": "apworld.columbian-exchange-global",
+    "cedCode": "AP-APWORLD-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-potosi-silver-table.v1",
+    "problemText": "The same table attributes approximately 18,000 metric tons of registered silver, produced between 1574 and 1735, specifically to Potosí city — a smaller figure than the roughly 136,000-metric-ton total credited to all of Spanish America over 1550-1800. This relationship between the two figures shows that —",
+    "choices": [
+      "Potosí city and Spanish America as a whole produced identical quantities of silver over the same years",
+      "the 136,000-metric-ton hemispheric figure represents silver mined exclusively at Potosí",
+      "Potosí city's output was one substantial contributor within a much larger, hemisphere-wide silver industry",
+      "Potosí city's silver output exceeded the total production of the rest of Spanish America combined"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the two totals directly: 18,000 metric tons is a fraction of 136,000 metric tons, not the whole of it.",
+      "Notice the two figures also cover different, only partly overlapping date ranges (1574-1735 versus 1550-1800)."
+    ]
+  },
+  {
+    "id": "apworld.columbian-exchange-global.mcq.03",
+    "loId": "apworld.columbian-exchange-global",
+    "cedCode": "AP-APWORLD-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-potosi-silver-table.v1",
+    "problemText": "Historians estimate that somewhere between 30 and 40 percent of all American silver production, cumulatively, flowed onward to China, chiefly via the Manila galleon route established in 1571. A careful reader of this estimate should describe the China-bound share as —",
+    "choices": [
+      "exactly 35 percent, splitting the difference between the two cited figures",
+      "roughly a third to two-fifths of total output, since estimates genuinely diverge",
+      "a negligible share, since most American silver went only to Spain",
+      "more than half of all American silver production, cumulatively, over the period"
+    ],
+    "answer": "B",
+    "hints": [
+      "The table presents 30-40 percent as a range because scholars genuinely disagree, not because the true value is a single unstated number.",
+      "Rule out any answer that turns the range into one false-precise figure or contradicts the stated 30-40 percent bound."
+    ]
+  },
+  {
+    "id": "apworld.resistance-accommodation.mcq.01",
+    "loId": "apworld.resistance-accommodation",
+    "cedCode": "AP-APWORLD-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-tokugawa-edict.v1",
+    "problemText": "A series of Tokugawa shogunate directives culminating in 1635 barred Japanese subjects from traveling abroad, ordered severe punishment for anyone who returned to Japan after living overseas, intensified enforcement against Christianity through rewards for informants, and narrowed foreign trade to a small number of closely supervised ports rather than banning it outright. This set of policies is best interpreted as evidence that —",
+    "choices": [
+      "the Tokugawa shogunate actively managed contact terms rather than passively accepting them",
+      "Japan had been militarily conquered by a European power by the 1630s",
+      "the shogunate sought to end all foreign trade permanently, including with the Dutch",
+      "Japanese merchants had already abandoned overseas trade voluntarily before these directives were issued"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the directives narrowed and supervised trade rather than eliminating it outright — that is a policy choice, not a surrender.",
+      "Rule out any answer implying conquest, total trade elimination, or voluntary merchant withdrawal — none of those match the directives described."
+    ]
+  },
+  {
+    "id": "apworld.resistance-accommodation.mcq.02",
+    "loId": "apworld.resistance-accommodation",
+    "cedCode": "AP-APWORLD-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-tokugawa-edict.v1",
+    "problemText": "By 1641, the broader policy that began with the 1630s directives had narrowed permitted European trade in Japan to a single case: Dutch merchants, confined to the small artificial island of Dejima in Nagasaki harbor, where their activities could be closely watched. This outcome is best explained by which point about Tokugawa policy?",
+    "choices": [
+      "the Dutch had militarily defeated the Portuguese fleet for control of Japanese trade",
+      "the shogunate lacked the naval capacity to expel European traders entirely",
+      "Christianity was legally protected for Dutch merchants residing at Dejima",
+      "the shogunate chose continued, supervised contact with one partner over eliminating foreign trade"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask why the shogunate kept one narrow channel open at all, instead of expelling every European trader.",
+      "Rule out any answer describing military defeat, incapacity, or a religious exemption — none of those are part of the described policy."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-slave-trade.mcq.01",
+    "loId": "apworld.atlantic-slave-trade",
+    "cedCode": "AP-APWORLD-4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-equiano.v1",
+    "problemText": "Olaudah Equiano recalls that when he was carried aboard a slave ship, he \"was immediately handled and tossed up to see if I were sound by some of the crew.\" This description is best used as evidence that —",
+    "choices": [
+      "Equiano was examined by a ship's physician on board to treat a suspected existing illness",
+      "captives were inspected and appraised by the crew as if they were cargo or livestock",
+      "enslaved Africans aboard the ship were permitted to freely select their own sleeping positions",
+      "the crew of the ship mistook Equiano for a free passenger rather than a captive"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the verbs 'handled and tossed up to see if I were sound' — that is the language of appraising an object or animal, not a person.",
+      "Rule out any answer describing medical care, free choice, or mistaken identity — none of those match the passage."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-slave-trade.mcq.02",
+    "loId": "apworld.atlantic-slave-trade",
+    "cedCode": "AP-APWORLD-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-equiano.v1",
+    "problemText": "Equiano describes seeing, aboard the same ship, \"a multitude of black people of every description chained together, every one of their countenances expressing dejection and sorrow\", an experience that left him \"overpowered with horror and anguish\". This firsthand account is most directly evidence for which historical point about the Middle Passage?",
+    "choices": [
+      "most captives transported through the Middle Passage were destined for British North America",
+      "enslaved Africans were transported in family groups that remained together throughout the voyage",
+      "slave ships typically carried far more crew members than captives held below deck",
+      "captives experienced the Middle Passage as a terrifying, confined ordeal before the voyage"
+    ],
+    "answer": "D",
+    "hints": [
+      "Equiano's account here describes his reaction to boarding and confinement, not the trade's destinations or crew ratios.",
+      "Fewer than 5 percent of enslaved Africans transported across the Atlantic went to British North America — rule out that answer on scale grounds alone."
+    ]
+  },
+  {
+    "id": "apworld.maritime-empires.mcq.01",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Dutch East India Company (VOC), chartered in 1602, founded Batavia on Java in 1619 as an administrative headquarters and extended its control primarily through fortified coastal trading posts and naval dominance over shipping lanes, rather than through direct rule over the Indonesian archipelago's inland population. This pattern is best classified as —",
+    "choices": [
+      "a territorial empire comparable in structure to Spain's colonial administration in the Americas",
+      "a fully independent Javanese kingdom with no European involvement",
+      "a trading-post empire, extracting wealth by controlling commerce rather than by administering territory",
+      "a religious mission established primarily to convert the archipelago's population to Christianity"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what the VOC actually controlled — ports and shipping lanes, or the archipelago's inland population and land.",
+      "Contrast this with Spain's approach in the Americas, which relied on direct territorial administration."
+    ]
+  },
+  {
+    "id": "apworld.maritime-empires.mcq.02",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Unlike the Dutch VOC's trading-post approach in Asia, Spain administered its American colonies through direct territorial control, granting colonizers rights to indigenous labor and tribute under the encomienda system, which gradually gave way to large private estates under the hacienda system. Which generalization about European maritime empires before 1750 is best supported by contrasting these two cases?",
+    "choices": [
+      "Spanish America was the exception to a broader pattern of trading-post, not territorial, maritime empires",
+      "most European maritime empires in Asia before 1750 were territorial conquests, like Spain's empire in the Americas",
+      "the Dutch VOC and Spain used identical labor systems to extract wealth from their colonies",
+      "mercantilism applied to Spain's American colonies but not to the Dutch VOC's Asian trading posts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which case — the VOC's trading posts or Spain's territorial rule — was the more typical pattern among European maritime empires before 1750.",
+      "Rule out any answer claiming the two systems were identical, or that mercantilism applied to only one of them — both were mercantilist, but structured differently."
+    ]
+  }
+]
