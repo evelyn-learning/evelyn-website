@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apworld.east-asia-song.mcq.01",
+    "loId": "apworld.east-asia-song",
+    "cedCode": "AP-APWORLD-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-khan-court.v1",
+    "problemText": "Marco Polo describes the palace of Kublai Khan, the Mongol founder of China's Yuan Dynasty, at Cambaluc: the hall could \"dine 6000 people\" and the building was \"so vast, so rich, and so beautiful, that no man on earth could design anything superior to it.\" This description is best used as evidence that —",
+    "choices": [
+      "The Mongol Yuan Dynasty preserved the civil-service examination system fully intact from Song times, unchanged after 1279",
+      "Song China's commercial economy collapsed entirely once the Mongols completed their conquest in 1279",
+      "Yuan rule continued the same scale of centralized Chinese imperial grandeur Song China had built, despite being a foreign dynasty",
+      "Kublai Khan built his palace using techniques and materials borrowed entirely from Mongol steppe architecture, with no continuity from Chinese imperial tradition"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice this is the Yuan court under Kublai Khan, a Mongol ruler — not a Song emperor — even though the scale of the palace echoes centuries of Chinese imperial tradition.",
+      "Rule out any answer describing economic collapse, an unchanged exam system, or a total break from earlier Chinese building traditions — the passage is about continuity of scale under new, foreign rule."
+    ]
+  },
+  {
+    "id": "apworld.east-asia-song.mcq.02",
+    "loId": "apworld.east-asia-song",
+    "cedCode": "AP-APWORLD-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-marco-polo-khan-court.v1",
+    "problemText": "Marco Polo adds that the palace roof's colors were \"fixed with a varnish so fine and exquisite that they shine like crystal, and lend a resplendent lustre to the Palace as seen for a great way round.\" Writing for a European audience with no comparable frame of reference, this vivid, admiring description is best explained by which point about Marco Polo as a historical source?",
+    "choices": [
+      "He was a technically trained architect providing a precise structural assessment of Yuan-era construction methods",
+      "He wrote as an impressed foreign merchant conveying an outsider's admiration, not delivering a technical architectural verdict",
+      "He served as a Yuan court official whose official duties required him to praise the palace in writing",
+      "He was quoting an earlier Song Dynasty account of the same palace rather than describing what he personally observed"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about who Marco Polo was — a Venetian merchant, not an architect or a Yuan official — describing something new to him for readers back home.",
+      "Rule out any answer that turns Polo into a technical expert or an official mouthpiece — his language here is the color of personal amazement."
+    ]
+  },
+  {
+    "id": "apworld.east-asia-song.mcq.03",
+    "loId": "apworld.east-asia-song",
+    "cedCode": "AP-APWORLD-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Song Dynasty's civil-service examination system tested candidates on mastery of the Confucian classics and, in principle, was open to any male subject regardless of birth. Which statement best captures how this system actually functioned in practice?",
+    "choices": [
+      "It was open equally to men and women of every social class, with the state fully subsidizing all exam preparation",
+      "It restricted government office exclusively to hereditary aristocratic families, with the exam serving only a ceremonial function",
+      "It was a meritocratic ideal that somewhat expanded mobility, but in practice favored wealthy families able to afford classical education",
+      "It was abolished entirely once the Mongols completed their conquest of China in 1279, and was never restored afterward"
+    ],
+    "answer": "C",
+    "hints": [
+      "Separate the exam system's formal, in-principle openness from how much it actually cost, in time and money, to prepare for it.",
+      "The Yuan did suspend the exams after 1279 — but they partially restored a version of them in 1315, so 'never restored' overstates the change."
+    ]
+  },
+  {
+    "id": "apworld.dar-al-islam.mcq.01",
+    "loId": "apworld.dar-al-islam",
+    "cedCode": "AP-APWORLD-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In 1258, Mongol forces sacked Baghdad and executed the last Abbasid caliph who resided there, ending a roughly five-century-old political and religious center. Historians characterize this event as ending which of the following?",
+    "choices": [
+      "All Muslim political authority anywhere in the Dar al-Islam, since no Muslim-ruled state successfully resisted the Mongols afterward",
+      "The ulama's shared madrasa curriculum and Sufi religious networks, which depended entirely on the Baghdad caliph's continued rule",
+      "The spread of Islam into South and Southeast Asia, which had relied exclusively on the Abbasid caliphate's direct political sponsorship",
+      "Baghdad's own run as a political and religious capital — not the Dar al-Islam's broader coherence, which had many other centers of power by then"
+    ],
+    "answer": "D",
+    "hints": [
+      "Political power in the Dar al-Islam had already fragmented into regional sultanates — Seljuk, Mamluk, Delhi — well before 1258; the Mamluks even defeated the Mongols in 1260.",
+      "Keep the fall of ONE institution in Baghdad analytically separate from the ulama, madrasa, and Sufi networks that connected Muslims across political boundaries."
+    ]
+  },
+  {
+    "id": "apworld.south-southeast-asia.mcq.01",
+    "loId": "apworld.south-southeast-asia",
+    "cedCode": "AP-APWORLD-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-ibn-battuta-delhi.v1",
+    "problemText": "Ibn Battuta describes his reception at the court of Sultan Muhammad ibn Tughluq of Delhi: after appointing him qadi (judge), the Sultan bestowed on him \"a dress of honour, and a horse furnished with an ornamented saddle\" along with a salary \"drawn from the treasury.\" This account is best used as evidence that the Delhi Sultanate —",
+    "choices": [
+      "relied on lavish court patronage — robes, mounts, salaried appointments — to recruit foreign-born scholars into its service",
+      "restricted every administrative office and government appointment exclusively to native-born Hindu subjects, excluding foreign Muslim travelers entirely",
+      "had no functioning royal treasury at all and compensated its officials only through ceremonial gifts rather than any real ongoing salary",
+      "required foreign travelers to renounce their homelands permanently before receiving any court appointment"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice what the Sultan actually gave Ibn Battuta: a robe, a horse, and a paid appointment — think about what that combination was meant to secure.",
+      "Rule out any answer claiming the sultanate excluded foreigners or had no real treasury — the passage shows the opposite."
+    ]
+  },
+  {
+    "id": "apworld.south-southeast-asia.mcq.02",
+    "loId": "apworld.south-southeast-asia",
+    "cedCode": "AP-APWORLD-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-ibn-battuta-delhi.v1",
+    "problemText": "Ibn Battuta describes Sultan Muhammad ibn Tughluq as \"one of the most bountiful and splendidly munificent men\" yet also \"one of the most impetuous and inexorable: and very seldom indeed did it happen, that pardon followed his anger.\" This portrait of a single, dramatic ruler is best used as evidence for which point about the Delhi Sultanate?",
+    "choices": [
+      "Islam had spread across the Indian subcontinent primarily through the Sultan's military campaigns rather than through merchants and Sufi teachers",
+      "The Sultan's generosity and anger were recorded identically by every foreign visitor to his court",
+      "The Delhi Sultanate's Hindu-majority population held equal political power alongside its Turkic Muslim rulers",
+      "Political authority in the sultanate rested heavily on the sultan's unpredictable personal favor rather than on fixed, impersonal legal procedure"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what it means for a single ruler's mood to swing between extreme generosity and merciless anger, with 'seldom' any pardon.",
+      "This item is about the nature of the Sultan's personal power, not about how Islam spread or about Hindu-Muslim power-sharing."
+    ]
+  },
+  {
+    "id": "apworld.americas-africa-states.mcq.01",
+    "loId": "apworld.americas-africa-states",
+    "cedCode": "AP-APWORLD-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-cortes-tenochtitlan.v1",
+    "problemText": "In his 1520 letter to Charles V, the Spanish conquistador Hernán Cortés describes the Mexica capital, Tenochtitlan: \"There is one square, twice as large as that of Salamanca, all surrounded by arcades, where there are daily more than sixty thousand souls, buying and selling\" This description is best used as evidence that —",
+    "choices": [
+      "the Mexica were an isolated, loosely organized society with no significant markets or large-scale trade before European contact",
+      "Cortés found Tenochtitlan's markets smaller and less developed than those of contemporary Spanish cities",
+      "Tenochtitlan supported large-scale, sustained commercial activity befitting the capital of a powerful, centrally organized tribute empire",
+      "Spanish soldiers had already destroyed Tenochtitlan's marketplace by the time Cortés wrote this letter"
+    ],
+    "answer": "C",
+    "hints": [
+      "Sixty thousand people buying and selling daily in one square alone is evidence of the scale of commerce a capital city like Tenochtitlan supported.",
+      "Rule out any answer describing the Mexica as isolated, primitive, or already destroyed — Cortés is describing a thriving city he personally observed."
+    ]
+  },
+  {
+    "id": "apworld.americas-africa-states.mcq.02",
+    "loId": "apworld.americas-africa-states",
+    "cedCode": "AP-APWORLD-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-catalan-atlas.v1",
+    "problemText": "The Catalan Atlas (1375), made by the Majorcan cartographer Abraham Cresques for the king of Aragon, captions its image of the Mali ruler Mansa Musa: \"this king is the richest and most noble lord of all this region on account of the abundance of gold that is gathered in his land.\" Made decades after Mansa Musa's 1324 hajj, this caption most directly —",
+    "choices": [
+      "confirms, independently of any African source, that Mali's wealth and power were already recognized abroad",
+      "proves that Cresques personally traveled to Mali's court to interview Mansa Musa about his kingdom's finances",
+      "shows that Aragon's king had negotiated a formal treaty guaranteeing annual gold shipments from Mali",
+      "demonstrates that Mali's rulers commissioned the map themselves to advertise their wealth to Europe"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Atlas was made by a European cartographer for a European king, decades after the hajj — think about what that tells you about Mali's reputation outside Africa.",
+      "Rule out any answer requiring Cresques to have visited Mali himself or a formal Aragon-Mali treaty — the caption is evidence of reputation, not diplomacy."
+    ]
+  },
+  {
+    "id": "apworld.medieval-europe.mcq.01",
+    "loId": "apworld.medieval-europe",
+    "cedCode": "AP-APWORLD-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-magna-carta.v1",
+    "problemText": "Magna Carta (1215), clause 12, states: \"No scutage not aid shall be imposed on our kingdom, unless by common counsel of our kingdom\" This clause is best used as evidence that Magna Carta —",
+    "choices": [
+      "eliminated the English monarchy entirely in favor of rule by an assembly of barons",
+      "limited the king's power to levy certain taxes without his barons' consent",
+      "granted ordinary peasants the right to vote on all new royal taxes",
+      "abolished the feudal practice of scutage altogether, for any reason"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Unless by common counsel of our kingdom' is a procedural limit on the king's power to tax, not an abolition of the monarchy.",
+      "Note the clause still permits scutage/aid in named cases (ransom, knighting the eldest son, marrying the eldest daughter) — it limits, rather than abolishes, the practice."
+    ]
+  },
+  {
+    "id": "apworld.medieval-europe.mcq.02",
+    "loId": "apworld.medieval-europe",
+    "cedCode": "AP-APWORLD-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-magna-carta.v1",
+    "problemText": "Magna Carta further provides: \"No freemen shall be taken or imprisoned or disseised or exiled or in any way destroyed, nor will we go upon him nor send upon him, except by the lawful judgment of his peers or by the law of the land.\" and \"To no one will we sell, to no one will we refuse or delay, right or justice.\" These clauses are best interpreted as —",
+    "choices": [
+      "a limit on arbitrary royal justice for free subjects, not a grant of democracy to the whole population",
+      "a full establishment of representative democracy in which all English subjects, including serfs, could vote",
+      "a permanent transfer of all judicial authority from the king to the Catholic Church",
+      "proof that thirteenth-century England had already abolished the feudal system entirely"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the clause protects 'freemen' specifically — medieval England still had a large unfree (serf) population outside this protection.",
+      "Rule out any answer describing full democracy, church takeover of justice, or the end of feudalism — the clause limits royal power over free subjects, nothing more."
+    ]
+  }
+]
