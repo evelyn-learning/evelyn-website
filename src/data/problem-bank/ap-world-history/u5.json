@@ -1,0 +1,240 @@
+[
+  {
+    "id": "apworld.enlightenment.mcq.01",
+    "loId": "apworld.enlightenment",
+    "cedCode": "AP-APWORLD-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-wollstonecraft.v1",
+    "problemText": "Mary Wollstonecraft defines individual education (1792) as \"such an attention to a child as will slowly sharpen the senses, form the temper, regulate the passions, as they begin to ferment, and set the understanding to work before the body arrives at maturity\" so that a child may undertake \"the important task of learning to think and reason.\" This definition centers education on —",
+    "choices": [
+      "preparing a child to embrace universal democracy, a goal Enlightenment thinkers broadly championed",
+      "cultivating a child's senses and understanding so the child learns to think and reason",
+      "memorizing religious catechism by rote, without engaging the child's own independent judgment at all",
+      "preparing a child exclusively for a specific trade or occupation, without any broader intellectual aim"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on Wollstonecraft's own phrase: setting \"the understanding to work\" so the child learns \"to think and reason.\"",
+      "Rule out any answer about universal democracy — many Enlightenment thinkers actually feared it — or about rote memorization or trade training, neither of which this definition describes."
+    ]
+  },
+  {
+    "id": "apworld.enlightenment.mcq.02",
+    "loId": "apworld.enlightenment",
+    "cedCode": "AP-APWORLD-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-wollstonecraft.v1",
+    "problemText": "Wollstonecraft writes, \"it is a farce to call any being virtuous whose virtues do not result from the exercise of its own reason. This was Rousseau's opinion respecting men: I extend it to women, and confidently assert that they have been drawn out of their sphere by false refinement, and not by an endeavour to acquire masculine qualities.\" Her argumentative move here is best described as —",
+    "choices": [
+      "rejecting Rousseau's standard for virtue entirely and arguing virtue has nothing to do with reason",
+      "arguing that women naturally lack the capacity for reason that men possess",
+      "taking Rousseau's own standard for virtue in men and applying that same standard to women",
+      "arguing women should adopt masculine qualities rather than pursue their own form of education"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice she names Rousseau directly and says \"I extend it to women\" — she is applying his own premise, not discarding it.",
+      "Rule out any answer claiming she abandons reason as the basis of virtue, denies women's capacity for reason, or recommends \"masculine qualities\" — she explicitly denies that last claim."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.01",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-APWORLD-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-rights-of-man.v1",
+    "problemText": "The Declaration of the Rights of Man and of the Citizen (1789) proclaims, \"Men are born and remain free and equal in rights\" and defines the aim of political association as securing \"liberty, property, security, and resistance to oppression.\" Given the actual history of the French Revolution, this proclamation is best read as —",
+    "choices": [
+      "a legally binding guarantee that immediately extended full political rights to French women and to men without property",
+      "an abstract, universal proclamation whose practical application still excluded women and the propertyless from full political rights",
+      "a purely religious statement asserting that all political rights come directly from divine authority alone",
+      "a treaty between France and its Caribbean colonies formally ending slavery throughout the entire French empire"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether proclaiming rights in universal language guarantees those rights were applied universally in practice.",
+      "Rule out any answer describing a religious basis for rights or an immediate 1789 change to property qualifications or slavery — neither happened that year."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.02",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-APWORLD-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-rights-of-man.v1",
+    "problemText": "Article 3 of the Declaration of the Rights of Man and of the Citizen (1789) states, \"The principle of all sovereignty resides essentially in the nation. No body nor individual may exercise any authority which does not proceed directly from the nation.\" This article most directly rejects which basis for political authority?",
+    "choices": [
+      "authority derived from a monarch's divine right rather than from the nation itself",
+      "authority derived from popular elections held at fixed, regularly scheduled intervals",
+      "authority derived from a written constitution ratified by a popular referendum vote",
+      "authority derived from a national legislature's simple majority vote on ordinary legislation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what kind of authority does NOT \"proceed directly from the nation\" under the monarchy this declaration was written against.",
+      "The other three options describe modern representative mechanisms this article does not address, not the basis of authority it explicitly rejects."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.03",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-APWORLD-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-bolivar-jamaica.v1",
+    "problemText": "In the Jamaica Letter (1815), quoted here in Guillermo A. Sherwell's 1921 English rendering, Simón Bolívar writes that Spanish Americans were \"never viceroys or governors except by very extraordinary reasons; archbishops and bishops, seldom; ambassadors, never\". A student citing this exact wording in an AP World History response should describe it as —",
+    "choices": [
+      "Bolívar's own words in their original Spanish, unaltered by any translator",
+      "a colonial official's report on conditions in Spanish America, written for the Spanish crown",
+      "a summary of Bolívar's views composed by a modern historian long after his death",
+      "Bolívar's argument as rendered into English by Sherwell in 1921, not Bolívar's original-language wording"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall which named translator and year this passage's seed attributes the English wording to.",
+      "Rule out any answer treating this as untranslated Spanish, a crown official's report, or a later historian's summary — it is Bolívar's argument in a named 1921 English translation."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.04",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-APWORLD-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-bolivar-jamaica.v1",
+    "problemText": "Bolívar's Jamaica Letter (1815) catalogs offices closed to Spanish Americans under colonial rule, from \"never viceroys or governors except by very extraordinary reasons\" down to, in his words, \"neither magistrates nor financiers, and hardly merchants\". This grievance is best read as evidence that —",
+    "choices": [
+      "the Atlantic Revolutions, including the French Declaration's proclamation of equal rights, extended identical rights to colonial subjects everywhere",
+      "Bolívar's central grievance in this letter was religious persecution suffered under Spanish colonial rule",
+      "the Atlantic Revolutions drew different lines around who counted as free and equal, not one uniform standard",
+      "Bolívar's central grievance in this letter was excessive taxation imposed on colonial trade goods"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare this catalog of specific offices to the French Declaration's abstract \"liberty, property, security\" language — these are two different kinds of claims.",
+      "Rule out any answer describing religion or taxation, or claiming the revolutions extended identical rights everywhere — the latter is a common misconception this excerpt itself argues against."
+    ]
+  },
+  {
+    "id": "apworld.nationalism-unification.mcq.01",
+    "loId": "apworld.nationalism-unification",
+    "cedCode": "AP-APWORLD-5.2b",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Italian unification (1861, with Rome added in 1870) combined Camillo di Cavour's diplomatic alliance with France against Austria (1859) with Giuseppe Garibaldi's volunteer conquest of Sicily and southern Italy (1860), which Garibaldi then ceded to the Piedmontese crown. German unification (1871) was instead driven almost entirely by Otto von Bismarck's engineering of three successive wars, against Denmark, Austria, and France. This comparison best supports which point about nineteenth-century unification?",
+    "choices": [
+      "Italy and Germany had existed as unified nation-states since the medieval period and simply reasserted old borders",
+      "both unifications relied entirely on peaceful federation among willing states and involved no wars at all",
+      "Italian unification combined top-down diplomacy with a popular volunteer movement; German unification was almost entirely top-down",
+      "Garibaldi retained personal rule over his southern Italian conquests rather than ceding them to the Piedmontese crown"
+    ],
+    "answer": "C",
+    "hints": [
+      "Contrast who drove each process — a mix of Cavour and Garibaldi in Italy's case, versus almost entirely Bismarck in Germany's case.",
+      "Rule out any answer treating either nation as an ancient, reasserted unit, or claiming unification required no war — both relied on deliberate war-making, and most 19th-century nation-states were recent constructions, not ancient ones."
+    ]
+  },
+  {
+    "id": "apworld.industrial-revolution.mcq.01",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Britain's early factories introduced steam-powered spinning and weaving machinery, concentrating wage laborers under one roof on machine-paced shifts in place of the earlier home-based \"putting-out\" system. A student who assumes this shift immediately improved most industrial workers' living standards is overlooking which point?",
+    "choices": [
+      "conditions for many workers were harsh in the factory system's early decades; sustained improvement came later, through reform and organizing",
+      "factory work was entirely voluntary, so no worker would have remained in a job that failed to improve their own circumstances",
+      "the earlier putting-out system had already provided workers with markedly higher wages and shorter hours than factories ever did",
+      "railroads quickly eliminated the need for factory labor within a decade of the first steam-powered textile mills"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the difference between industrialization's long-run effect on living standards and its effect on workers in the first factory generation.",
+      "Rule out any answer treating factory work as fully voluntary, treating the putting-out system as clearly better, or claiming railroads eliminated factory labor — none of those are accurate."
+    ]
+  },
+  {
+    "id": "apworld.industrial-society.mcq.01",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-communist-manifesto.v1",
+    "problemText": "In the Communist Manifesto's opening class analysis (1848, Moore's 1888 translation), Marx and Engels write that industrial laborers \"must sell themselves piece-meal, are a commodity, like every other article of commerce, and are consequently exposed to all the vicissitudes of competition, to all the fluctuations of the market.\" This claim is best described as —",
+    "choices": [
+      "an argument that wage labor structurally reduces workers to a commodity subject to market forces",
+      "a description of factory owners voluntarily shielding their workers from all market competition",
+      "a claim that the proletariat already fully controlled the means of production by 1848",
+      "a claim that medieval guild regulations, rather than markets, set industrial workers' wages"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the direct comparison: laborers \"are a commodity, like every other article of commerce.\"",
+      "Rule out any answer describing owner protection, worker control of production, or guild wage-setting — none of those appear in this excerpt."
+    ]
+  },
+  {
+    "id": "apworld.industrial-society.mcq.02",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-communist-manifesto.v1",
+    "problemText": "The Communist Manifesto's closing lines (1848) declare, \"The Communists disdain to conceal their views and aims. They openly declare that their ends can be attained only by the forcible overthrow of all existing social conditions\", ending with \"WORKING MEN OF ALL COUNTRIES, UNITE!\" Compared with the era's trade-union bargaining and factory-act reform efforts, this closing call is best classified as —",
+    "choices": [
+      "an argument for gradual reform of factory conditions through existing parliamentary channels",
+      "a proposal for small, voluntary cooperative communities as an alternative to industrial capitalism",
+      "a petition asking factory employers to raise wages through peaceful collective bargaining",
+      "a call for the proletariat to overthrow the existing social system by force"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read \"forcible overthrow of all existing social conditions\" literally — that is neither reform nor bargaining.",
+      "Distinguish this revolutionary call from trade-union bargaining, factory-act reform, or utopian-socialist community-building — treating all three as the same response is a common mistake."
+    ]
+  },
+  {
+    "id": "apworld.industrial-society.mcq.03",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-sadler-testimony.v1",
+    "problemText": "Matthew Crabtree testifies before the Sadler Committee (1832) that his hours in ordinary times ran \"From 6 in the morning to 8 at night. Fourteen hours\" and that when trade was brisk his hours ran \"From 5 in the morning to 9 in the evening. Sixteen hours\". This testimony shows that —",
+    "choices": [
+      "this child laborer's hours were capped by law at a maximum of ten hours per day",
+      "this child laborer worked no more than eight hours a day under any circumstance",
+      "this child laborer received extra overtime wages whenever trade was brisk",
+      "this child laborer's workdays stretched to fourteen or sixteen hours depending on how brisk trade was"
+    ],
+    "answer": "D",
+    "hints": [
+      "Add up the stated start and end times for each period Crabtree describes.",
+      "Rule out any answer describing a legal cap, an eight-hour limit, or overtime pay — none of those appear in this testimony."
+    ]
+  },
+  {
+    "id": "apworld.industrial-society.mcq.04",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-sadler-testimony.v1",
+    "problemText": "Asked whether he felt fatigued after a day's labour, Crabtree testifies, \"Very much so\", and states that after returning home the family had no time \"to receive instruction from them\", so that, in his own words, \"All that we did when we got home was to get the little bit of supper that was provided for us and go to bed immediately.\" This testimony is best used as evidence that —",
+    "choices": [
+      "this child laborer had ample leisure time each evening to spend with family",
+      "this child laborer arrived home too exhausted for anything beyond supper and sleep",
+      "this child laborer received daily instruction from parents after returning from the mill",
+      "this child laborer's fatigue occurred only on the days when trade was brisk"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the testimony states there was no time for parental instruction, and the child went \"to bed immediately\" after supper.",
+      "Rule out any answer describing ample leisure, daily parental instruction, or fatigue limited to brisk-trade days — this exchange describes the ordinary schedule too."
+    ]
+  }
+]
