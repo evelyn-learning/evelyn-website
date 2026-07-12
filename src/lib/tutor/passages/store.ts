@@ -86,6 +86,12 @@ import { PASSAGE_APUSH_REAGAN_BRANDENBURG } from './seeds/apush-reagan-brandenbu
 import { PASSAGE_APUSH_BUSH_SEPT_2001 } from './seeds/apush-bush-sept-2001';
 import { PASSAGE_APUSH_OBAMA_INAUGURAL } from './seeds/apush-obama-inaugural';
 import { PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE } from './seeds/apush-immigration-origins-table';
+// AP World Unit-6 (1750-1900, Consequences of Industrialization) documents
+import { PASSAGE_APWORLD_WHITE_MANS_BURDEN } from './seeds/apworld-white-mans-burden';
+import { PASSAGE_APWORLD_LIN_ZEXU } from './seeds/apworld-lin-zexu';
+import { PASSAGE_APWORLD_BERLIN_ACT } from './seeds/apworld-berlin-act';
+import { PASSAGE_APWORLD_INDENTURE_TABLE } from './seeds/apworld-indenture-table';
+import { PASSAGE_APWORLD_MEIJI_CHARTER_OATH } from './seeds/apworld-meiji-charter-oath';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -155,6 +161,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BUSH_SEPT_2001,
   PASSAGE_APUSH_OBAMA_INAUGURAL,
   PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE,
+  PASSAGE_APWORLD_WHITE_MANS_BURDEN,
+  PASSAGE_APWORLD_LIN_ZEXU,
+  PASSAGE_APWORLD_BERLIN_ACT,
+  PASSAGE_APWORLD_INDENTURE_TABLE,
+  PASSAGE_APWORLD_MEIJI_CHARTER_OATH,
 ];
 
 export const passageById = new Map<string, Passage>(
