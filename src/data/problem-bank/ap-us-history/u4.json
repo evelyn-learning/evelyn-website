@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apush.jefferson-era.mcq.01",
+    "loId": "apush.jefferson-era",
+    "cedCode": "AP-APUSH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-jefferson-inaugural.v1",
+    "problemText": "In his First Inaugural Address (1801), Thomas Jefferson declared, \"We are all Republicans, we are all Federalists.\" Jefferson's purpose in this statement was primarily to —",
+    "choices": [
+      "demand that all Federalists convert to his own party before taking public office",
+      "minimize partisan division, framing the divisive election as a return to shared national union",
+      "announce a formal merger of the Federalist and Democratic-Republican parties into one organization",
+      "warn Federalists that continued opposition would be treated as an act of treason against the union"
+    ],
+    "answer": "B",
+    "hints": [
+      "Jefferson had just won a bitterly contested election against the Federalists; ask what tone he wanted to set upon taking office.",
+      "Notice he says this right after arguing that those who opposed him should be tolerated, not silenced."
+    ]
+  },
+  {
+    "id": "apush.jefferson-era.mcq.02",
+    "loId": "apush.jefferson-era",
+    "cedCode": "AP-APUSH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-jefferson-inaugural.v1",
+    "problemText": "Jefferson's First Inaugural Address describes his ideal as \"a wise and frugal Government, which shall restrain men from injuring one another, shall leave them otherwise free to regulate their own pursuits of industry and improvement, and shall not take from the mouth of labor the bread it has earned.\" This statement of governing philosophy is most directly complicated by which action Jefferson himself took as president?",
+    "choices": [
+      "signing the Alien and Sedition Acts, which criminalized criticism of federal officials during his predecessor's term",
+      "chartering the Second Bank of the United States in 1816 to regulate state currency and credit",
+      "declaring the 1807 embargo on American shipping unconstitutional and asking Congress to repeal it at once",
+      "purchasing the Louisiana Territory from France with no explicit constitutional basis for the acquisition"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask which of these events actually happened during Jefferson's own presidency (1801-1809), not before or after it.",
+      "This event required setting aside strict-constructionist principles for a strategic opportunity Jefferson judged too valuable to pass up."
+    ]
+  },
+  {
+    "id": "apush.jefferson-era.mcq.03",
+    "loId": "apush.jefferson-era",
+    "cedCode": "AP-APUSH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-monroe-doctrine.v1",
+    "problemText": "In his 1823 annual message to Congress, President Monroe declared that the American continents \"are henceforth not to be considered as subjects for future colonization by any European powers.\" This statement, later called the Monroe Doctrine, most directly reflected —",
+    "choices": [
+      "postwar American nationalism asserting a U.S. interest in limiting European influence in the hemisphere",
+      "a formal military alliance between the United States and the newly independent Latin American republics",
+      "an agreement between the United States and Britain to jointly colonize remaining unclaimed American territory",
+      "Jefferson's strict-constructionist objection to the federal government exercising undefined foreign-policy powers"
+    ],
+    "answer": "A",
+    "hints": [
+      "This came after the War of 1812, during the 'Era of Good Feelings' — think about the mood of the country at the time.",
+      "Monroe was not proposing that Europe and the United States jointly colonize the Americas; he was asserting the opposite."
+    ]
+  },
+  {
+    "id": "apush.jacksonian-democracy.mcq.01",
+    "loId": "apush.jacksonian-democracy",
+    "cedCode": "AP-APUSH-4.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-jackson-bank-veto.v1",
+    "problemText": "In his 1832 message vetoing the recharter of the Second Bank of the United States, Andrew Jackson wrote, \"It is to be regretted that the rich and powerful too often bend the acts of government to their selfish purposes.\" This statement reflects Jackson's broader argument that the Bank —",
+    "choices": [
+      "had already been ruled unconstitutional by the Supreme Court in McCulloch v. Maryland",
+      "posed no real economic threat and was vetoed only to embarrass his rival Henry Clay",
+      "functioned as a government-granted privilege benefiting a wealthy financial elite over ordinary Americans",
+      "was too financially weak an institution to regulate the nation's currency and credit effectively"
+    ],
+    "answer": "C",
+    "hints": [
+      "Jackson is not arguing that all distinctions in wealth are wrong — he says such distinctions 'will always exist.' Look for what specifically he objects to.",
+      "Recall what the Supreme Court actually decided about the Bank's constitutionality in McCulloch v. Maryland (1819)."
+    ]
+  },
+  {
+    "id": "apush.jacksonian-democracy.mcq.02",
+    "loId": "apush.jacksonian-democracy",
+    "cedCode": "AP-APUSH-4.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-jackson-bank-veto.v1",
+    "problemText": "Jackson's Bank Veto Message names \"the humble members of society-the farmers, mechanics, and laborers\" as the Americans harmed by the Bank's privileges. This populist framing proved politically effective chiefly because it —",
+    "choices": [
+      "convinced Congress to grant the Bank an early recharter despite Jackson's own stated objection",
+      "persuaded farmers, mechanics, and laborers to found their own chartered banking institutions",
+      "demonstrated that the Second Bank of the United States had already gone bankrupt before the veto",
+      "turned a complex financial dispute into a moral contest between ordinary Americans and an entrenched elite"
+    ],
+    "answer": "D",
+    "hints": [
+      "The veto became a central issue in Jackson's 1832 reelection campaign against Henry Clay — ask why that framing rallied voters.",
+      "Think about who Jackson names as harmed by the Bank's structure versus who benefits from it."
+    ]
+  },
+  {
+    "id": "apush.reform-awakening.mcq.01",
+    "loId": "apush.reform-awakening",
+    "cedCode": "AP-APUSH-4.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-seneca-falls.v1",
+    "problemText": "The 1848 Declaration of Sentiments opens, \"We hold these truths to be self-evident; that all men and women are created equal... deriving their just powers from the consent of the governed.\" The authors' choice to echo this specific language so closely was intended to argue that —",
+    "choices": [
+      "women required an entirely new set of natural rights distinct from those claimed by the Founders",
+      "women's exclusion from full citizenship betrayed principles Americans already claimed to hold as self-evident",
+      "the Seneca Falls Convention rejected the Founders' revolutionary principles as outdated",
+      "Congress should formally rewrite the Declaration of Independence to include women by statute"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare this opening almost word-for-word to the Declaration of Independence — what is the one change?",
+      "Ask why reformers would want to reuse the Founders' own revered words instead of writing something entirely new."
+    ]
+  },
+  {
+    "id": "apush.reform-awakening.mcq.02",
+    "loId": "apush.reform-awakening",
+    "cedCode": "AP-APUSH-4.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-seneca-falls.v1",
+    "problemText": "The Declaration of Sentiments continues, \"He has never permitted her to exercise her inalienable right to the elective franchise. He has compelled her to submit to laws, in the formation of which she had no voice.\" This list of specific, itemized wrongs directly parallels —",
+    "choices": [
+      "the Declaration of Independence's list of grievances against King George III",
+      "the Bill of Rights' enumeration of specific individual liberties protected from federal power",
+      "the Missouri Compromise's line dividing free and slave territory in the Louisiana Purchase",
+      "the Second Bank of the United States charter's list of specific banking privileges"
+    ],
+    "answer": "A",
+    "hints": [
+      "This is the second half of the document's borrowed structure — the first half was the 'created equal' preamble.",
+      "Which Founding document lists specific wrongs committed by a ruler, one after another?"
+    ]
+  },
+  {
+    "id": "apush.slavery-south.mcq.01",
+    "loId": "apush.slavery-south",
+    "cedCode": "AP-APUSH-4.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-garrison-liberator.v1",
+    "problemText": "William Lloyd Garrison opened The Liberator (January 1831) by declaring, \"I am in earnest -- I will not equivocate -- I will not excuse -- I will not retreat a single inch -- AND I WILL BE HEARD\" in the cause of immediate emancipation. Garrison's uncompromising tone reflected a position best described as —",
+    "choices": [
+      "colonization, calling for freed Black Americans to be gradually relocated to Africa over decades",
+      "gradualism, proposing that slavery be phased out region by region over the following century",
+      "immediatism, demanding immediate and uncompensated emancipation rather than a gradual approach",
+      "compensated emancipation, in which the federal government would pay slaveholders for freeing enslaved people"
+    ],
+    "answer": "C",
+    "hints": [
+      "Garrison explicitly rejects 'moderation' — contrast this with the older gradual-emancipation and colonization approaches to ending slavery.",
+      "This same year (1831) also saw Nat Turner's Rebellion in Virginia, deepening Southern fears of a coordinated threat to slavery."
+    ]
+  },
+  {
+    "id": "apush.market-revolution.mcq.01",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Erie Canal, completed in 1825, linked the Hudson River to Lake Erie and sharply cut the cost of shipping goods between the Midwest and New York City. This development most directly enabled —",
+    "choices": [
+      "the Second Bank of the United States to open its first branch office west of the Appalachians",
+      "Midwestern farmers to shift from subsistence farming toward growing cash crops for distant markets",
+      "New Orleans to overtake New York City as the nation's busiest Atlantic seaport",
+      "Congress to fund the canal directly through a constitutional amendment authorizing internal improvements"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens to a farmer's incentives once shipping goods to a distant city becomes fast and cheap.",
+      "The canal made New York City a more dominant Atlantic port, not less dominant."
+    ]
+  },
+  {
+    "id": "apush.market-revolution.mcq.02",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "By the 1840s, the Northeast had extensive canal and rail networks and a growing factory workforce, while the rural South remained overwhelmingly oriented around plantation agriculture worked by enslaved labor. This regional contrast shows that the Market Revolution —",
+    "choices": [
+      "bypassed the South entirely, leaving the region completely outside the era's market economy",
+      "had already ended by the 1840s, having finished transforming the entire nation uniformly",
+      "affected only free states, since slave states were legally barred from interstate commerce",
+      "transformed regions along different tracks rather than industrializing the whole country evenly"
+    ],
+    "answer": "D",
+    "hints": [
+      "The South was still deeply tied to international markets — through cotton exports — just not through wage-factory labor.",
+      "Ask what varied between regions: transportation access and existing economic structure, not simple regional character."
+    ]
+  }
+]

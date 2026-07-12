@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apush.manifest-destiny.mcq.01",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-osullivan-annexation.v1",
+    "problemText": "In his 1845 essay \"Annexation,\" John L. O'Sullivan complained that European powers were \"checking the fulfilment of our manifest destiny to overspread the continent allotted by Providence for the free development of our yearly multiplying millions.\" O'Sullivan's phrase \"manifest destiny\" expressed the belief that —",
+    "choices": [
+      "Mexico held the sole rightful claim to govern the territory of Texas",
+      "American territorial expansion across the continent was divinely ordained and therefore inevitable",
+      "the United States should seek European approval before annexing any new territory",
+      "Providence intended the United States to remain confined to its original thirteen states"
+    ],
+    "answer": "B",
+    "hints": [
+      "O'Sullivan frames expansion as something 'allotted by Providence,' not something requiring anyone else's permission.",
+      "Ask what work the phrase 'manifest destiny' was doing politically in 1845 — justifying opposition to expansion, or justifying expansion itself?"
+    ]
+  },
+  {
+    "id": "apush.sectional-crisis.mcq.01",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Frederick Douglass delivered \"What to the Slave Is the Fourth of July?\" in Rochester, New York, in 1852 — two years after Congress passed the Fugitive Slave Act as part of the Compromise of 1850, requiring Northerners to assist in capturing escaped enslaved people. In the speech, Douglass asked, \"What, to the American slave, is your Fourth of July? I answer: a day that reveals to him, more than all other days in the year, the gross injustice and cruelty to which he is the constant victim.\" Read in this context, Douglass's speech is best understood as evidence that —",
+    "choices": [
+      "the sectional crisis over slavery was increasingly framed as a moral indictment of national hypocrisy",
+      "most Northerners in 1852 had already concluded that only immediate, uncompensated abolition was an acceptable national policy",
+      "the Fugitive Slave Act had ended organized Black opposition to slavery in the North",
+      "Douglass believed the Fourth of July should be abolished entirely as a national holiday"
+    ],
+    "answer": "A",
+    "hints": [
+      "Douglass isn't rejecting American ideals — he's arguing the nation isn't living up to its own stated principles.",
+      "Consider the timing: this speech follows directly on the Fugitive Slave Act's intensifying effect on the sectional conflict over slavery."
+    ]
+  },
+  {
+    "id": "apush.secession-civil-war.mcq.01",
+    "loId": "apush.secession-civil-war",
+    "cedCode": "AP-APUSH-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "In the same 1852 speech, Douglass told his audience, \"This Fourth of July is yours, not mine. You may rejoice, I must mourn.\" He went on to call the nation's \"boasted liberty, an unholy license\". A historian citing this speech as evidence in an argument about the causes of secession would most likely use it to support the claim that —",
+    "choices": [
+      "the North and South agreed on the meaning of American liberty but disagreed only over tariff policy",
+      "abolitionists like Douglass supported the South's secession as a means of separating from slavery",
+      "the Civil War could have been avoided entirely had Congress simply repealed the Fugitive Slave Act",
+      "slavery, not tariff rivalry, was the fault line dividing North and South before secession"
+    ],
+    "answer": "D",
+    "hints": [
+      "Douglass is describing a fundamental moral divide over slavery, not a dispute over trade policy.",
+      "Douglass was an abolitionist who supported the Union cause against the Confederacy, not secession."
+    ]
+  },
+  {
+    "id": "apush.secession-civil-war.mcq.02",
+    "loId": "apush.secession-civil-war",
+    "cedCode": "AP-APUSH-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-sc-secession.v1",
+    "problemText": "South Carolina's December 1860 Declaration of the Immediate Causes of Secession stated that the non-slaveholding states \"have assume the right of deciding upon the propriety of our domestic institutions; and have denied the rights of property established in fifteen of the States and recognized by the Constitution ; they have denounced as sinful the institution of slavery\". This passage, in the convention's own words, most directly undercuts the later claim that —",
+    "choices": [
+      "South Carolina's secession convention explicitly named slavery as a central grievance",
+      "Northern states had criticized slavery as morally wrong before 1860",
+      "South Carolina seceded mainly over tariffs, not slavery",
+      "South Carolina considered slaveholding a form of constitutionally protected property"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the document itself names 'the institution of slavery,' not tariffs, as the grievance.",
+      "Ask which of these four statements the excerpt actually contradicts, versus which ones it confirms."
+    ]
+  },
+  {
+    "id": "apush.secession-civil-war.mcq.03",
+    "loId": "apush.secession-civil-war",
+    "cedCode": "AP-APUSH-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-sc-secession.v1",
+    "problemText": "The same South Carolina declaration also accused Northern states of having \"encouraged and assisted thousands of our slaves to leave their homes\" and of inciting those who remained \"to servile insurrection.\" These grievances most directly refer to —",
+    "choices": [
+      "Northern states organizing a formal military invasion of South Carolina before secession",
+      "Northern aid to escaping enslaved people, and Southern fears of insurrection",
+      "the Republican Party's 1860 platform calling for the immediate, nationwide abolition of slavery",
+      "the Freedmen's Bureau's efforts to relocate formerly enslaved people to Northern cities after the war"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what specific Northern activity actually helped enslaved people escape bondage before the war.",
+      "The Freedmen's Bureau did not exist until after emancipation — this document was written in December 1860."
+    ]
+  },
+  {
+    "id": "apush.emancipation.mcq.01",
+    "loId": "apush.emancipation",
+    "cedCode": "AP-APUSH-5.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-emancipation-proclamation.v1",
+    "problemText": "The Emancipation Proclamation (January 1, 1863) opens by restating that enslaved people in still-rebelling areas \"shall be then, thenceforward, and forever free\" — language recalling Lincoln's September 1862 preliminary proclamation. Later in the same document, Lincoln writes, \"I do order and declare that all persons held as slaves within said designated States, and parts of States, are, and henceforward shall be free\". Which clause is the document's actual operative legal act, executing emancipation as of January 1, 1863?",
+    "choices": [
+      "the clause \"shall be then, thenceforward, and forever free,\" because it appears first in the document",
+      "neither clause is legally operative; the Proclamation had no binding legal effect of any kind",
+      "both clauses are equally operative, since they use nearly identical emancipation language",
+      "the \"I do order and declare\" clause — the language that actually commands the act"
+    ],
+    "answer": "D",
+    "hints": [
+      "The opening clause restates a promise already made back in September 1862 — read for which clause actually commands ('order and declare') the act.",
+      "Position in the document (appearing first vs. later) is not what makes a legal clause operative — the specific commanding language is."
+    ]
+  },
+  {
+    "id": "apush.emancipation.mcq.02",
+    "loId": "apush.emancipation",
+    "cedCode": "AP-APUSH-5.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-emancipation-proclamation.v1",
+    "problemText": "Lincoln justified the Emancipation Proclamation by calling it \"a fit and necessary war measure for suppressing said rebellion\", and, in the document's closing lines, an act \"warranted by the Constitution, upon military necessity\". This specific legal framing means the Proclamation —",
+    "choices": [
+      "rested on the president's wartime commander-in-chief power, not a permanent constitutional abolition of slavery",
+      "immediately and permanently freed every enslaved person in the United States, including those in the loyal border states",
+      "required ratification by two-thirds of the states before taking any legal effect",
+      "did not take legal effect until the Confederacy formally surrendered in 1865"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the phrases 'war measure' and 'military necessity' — this is a different legal basis than a constitutional amendment.",
+      "This wartime legal basis is exactly why abolitionists later pushed for the 13th Amendment."
+    ]
+  },
+  {
+    "id": "apush.emancipation.mcq.03",
+    "loId": "apush.emancipation",
+    "cedCode": "AP-APUSH-5.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "In the Gettysburg Address (November 1863), delivered ten months after the Emancipation Proclamation, Lincoln declared that the war's dead had died so \"that this nation, under God, shall have a new birth of freedom—and that government of the people, by the people, for the people, shall not perish from the earth.\" Compared with Lincoln's public rhetoric earlier in the war, this passage most clearly shows —",
+    "choices": [
+      "Lincoln abandoning the goal of restoring the Union in favor of pursuing emancipation alone",
+      "Lincoln announcing new peace terms intended to end the war immediately",
+      "the war's purpose reframed from reunion alone to reunion plus renewed national freedom",
+      "Lincoln reversing the Emancipation Proclamation he had issued ten months earlier"
+    ],
+    "answer": "C",
+    "hints": [
+      "Lincoln is not choosing between reunion and freedom — he is linking them together as one purpose.",
+      "Think about how this rhetoric builds on, rather than reverses, the Emancipation Proclamation from ten months earlier."
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.01",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-APUSH-5.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Under Presidential Reconstruction (1865-66), former Confederate states regained representation in Congress after meeting only a minimal loyalty-oath requirement, with no federal guarantee of formerly enslaved people's civil or political rights. Restored Southern legislatures responded by passing Black Codes restricting freedpeople's labor contracts and movement. Congress's subsequent Reconstruction Acts of 1867, which placed the South under military districts and required states to ratify the 14th Amendment and grant Black male suffrage before readmission, represented —",
+    "choices": [
+      "an extension of Presidential Reconstruction's loyalty-oath policy, adding federal troops for enforcement only",
+      "a rejection of Presidential Reconstruction's leniency in favor of federal conditions on readmission",
+      "a compromise negotiated jointly by Congress and President Johnson to govern the readmission process together",
+      "the first Reconstruction plan attempted, coming before Presidential Reconstruction had been tried"
+    ],
+    "answer": "B",
+    "hints": [
+      "Congress acted in direct response to the Black Codes that Presidential Reconstruction's leniency had allowed to happen.",
+      "This was a conflict between President Johnson and Congress, not a jointly negotiated plan."
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.02",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-APUSH-5.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "With large-scale land redistribution to formerly enslaved people largely rejected by Congress, most freedpeople and many poor White farmers in the postwar South instead became sharecroppers, renting land for a share of the crop and borrowing supplies against future harvests under the crop-lien system. This arrangement is best understood as —",
+    "choices": [
+      "a deliberate federal policy that guaranteed every formerly enslaved family forty acres of its own land",
+      "full economic independence for freedpeople, since sharecropping ended all ties to former slaveholders",
+      "a system used exclusively by former Confederate soldiers rather than by formerly enslaved people",
+      "legal freedom paired with continuing economic dependency that often trapped tenant families in debt"
+    ],
+    "answer": "D",
+    "hints": [
+      "Sharecroppers were legally free; consider what the crop-lien system's debt cycle did to their real economic independence.",
+      "'Forty acres and a mule' was proposed but never delivered as durable federal policy — most land stayed with former owners."
+    ]
+  }
+]

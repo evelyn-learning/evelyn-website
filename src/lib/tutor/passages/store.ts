@@ -27,6 +27,12 @@ import { PASSAGE_APUSH_WINTHROP_CHARITY } from './seeds/apush-winthrop-charity';
 import { PASSAGE_APUSH_BACON_DECLARATION } from './seeds/apush-bacon-declaration';
 import { PASSAGE_APUSH_EQUIANO } from './seeds/apush-equiano';
 import { PASSAGE_APUSH_EDWARDS_SINNERS } from './seeds/apush-edwards-sinners';
+// APUSH Period-4 (1800-1848) documents
+import { PASSAGE_APUSH_JEFFERSON_INAUGURAL } from './seeds/apush-jefferson-inaugural';
+import { PASSAGE_APUSH_MONROE_DOCTRINE } from './seeds/apush-monroe-doctrine';
+import { PASSAGE_APUSH_JACKSON_BANK_VETO } from './seeds/apush-jackson-bank-veto';
+import { PASSAGE_APUSH_SENECA_FALLS } from './seeds/apush-seneca-falls';
+import { PASSAGE_APUSH_GARRISON_LIBERATOR } from './seeds/apush-garrison-liberator';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -53,6 +59,10 @@ import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-tab
 // AP Gov Unit-5 (Political Participation) documents
 import { PASSAGE_APGOV_TURNOUT_AGE_TABLE } from './seeds/apgov-turnout-age-table';
 import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-united-opinion';
+// APUSH Period-5 (1844-1877) documents
+import { PASSAGE_APUSH_OSULLIVAN_ANNEXATION } from './seeds/apush-osullivan-annexation';
+import { PASSAGE_APUSH_SC_SECESSION } from './seeds/apush-sc-secession';
+import { PASSAGE_APUSH_EMANCIPATION_PROCLAMATION } from './seeds/apush-emancipation-proclamation';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -75,6 +85,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BACON_DECLARATION,
   PASSAGE_APUSH_EQUIANO,
   PASSAGE_APUSH_EDWARDS_SINNERS,
+  PASSAGE_APUSH_JEFFERSON_INAUGURAL,
+  PASSAGE_APUSH_MONROE_DOCTRINE,
+  PASSAGE_APUSH_JACKSON_BANK_VETO,
+  PASSAGE_APUSH_SENECA_FALLS,
+  PASSAGE_APUSH_GARRISON_LIBERATOR,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
@@ -95,6 +110,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
   PASSAGE_APGOV_TURNOUT_AGE_TABLE,
   PASSAGE_APGOV_CITIZENS_UNITED_OPINION,
+  PASSAGE_APUSH_OSULLIVAN_ANNEXATION,
+  PASSAGE_APUSH_SC_SECESSION,
+  PASSAGE_APUSH_EMANCIPATION_PROCLAMATION,
 ];
 
 export const passageById = new Map<string, Passage>(
