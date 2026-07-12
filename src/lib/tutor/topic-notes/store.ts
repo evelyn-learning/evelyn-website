@@ -251,6 +251,15 @@ import { BASELINE_AP_APGOV_JUDICIARY_INDEPENDENCE } from './seeds/ap-apgov-u2-ju
 import { BASELINE_AP_APGOV_BUREAUCRACY_ACCOUNTABILITY } from './seeds/ap-apgov-u2-bureaucracy';
 import { BASELINE_AP_APGOV_CHECKS_IN_PRACTICE } from './seeds/ap-apgov-u2-checks-in-practice';
 
+// AP US Government & Politics Unit 3 (CED 3.1-3.4, 3.5-3.6, 3.7-3.9,
+// 3.10-3.13) — Unit-3 Vertical Slice content plans (civil liberties and
+// civil rights walk: religion/speech, press/assembly/arms, due
+// process/incorporation, and equal protection/civil rights).
+import { BASELINE_AP_APGOV_RELIGION_SPEECH } from './seeds/ap-apgov-u3-religion-speech';
+import { BASELINE_AP_APGOV_PRESS_ASSEMBLY_ARMS } from './seeds/ap-apgov-u3-press-assembly-arms';
+import { BASELINE_AP_APGOV_DUE_PROCESS } from './seeds/ap-apgov-u3-due-process';
+import { BASELINE_AP_APGOV_CIVIL_RIGHTS } from './seeds/ap-apgov-u3-civil-rights';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -427,6 +436,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APGOV_JUDICIARY_INDEPENDENCE,
   BASELINE_AP_APGOV_BUREAUCRACY_ACCOUNTABILITY,
   BASELINE_AP_APGOV_CHECKS_IN_PRACTICE,
+  BASELINE_AP_APGOV_RELIGION_SPEECH,
+  BASELINE_AP_APGOV_PRESS_ASSEMBLY_ARMS,
+  BASELINE_AP_APGOV_DUE_PROCESS,
+  BASELINE_AP_APGOV_CIVIL_RIGHTS,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
