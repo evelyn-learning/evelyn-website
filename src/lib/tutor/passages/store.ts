@@ -21,6 +21,12 @@ import { PASSAGE_APUSH_LAS_CASAS } from './seeds/apush-las-casas';
 import { PASSAGE_APUSH_CORTES_TENOCHTITLAN } from './seeds/apush-cortes-tenochtitlan';
 import { PASSAGE_APUSH_CODEX_MENDOZA } from './seeds/apush-codex-mendoza';
 import { PASSAGE_APUSH_HAKLUYT_WESTERN_PLANTING } from './seeds/apush-hakluyt-western-planting';
+// APUSH Period-2 (1607-1754) DBQ documents
+import { PASSAGE_APUSH_MAYFLOWER_COMPACT } from './seeds/apush-mayflower-compact';
+import { PASSAGE_APUSH_WINTHROP_CHARITY } from './seeds/apush-winthrop-charity';
+import { PASSAGE_APUSH_BACON_DECLARATION } from './seeds/apush-bacon-declaration';
+import { PASSAGE_APUSH_EQUIANO } from './seeds/apush-equiano';
+import { PASSAGE_APUSH_EDWARDS_SINNERS } from './seeds/apush-edwards-sinners';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -64,6 +70,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_CORTES_TENOCHTITLAN,
   PASSAGE_APUSH_CODEX_MENDOZA,
   PASSAGE_APUSH_HAKLUYT_WESTERN_PLANTING,
+  PASSAGE_APUSH_MAYFLOWER_COMPACT,
+  PASSAGE_APUSH_WINTHROP_CHARITY,
+  PASSAGE_APUSH_BACON_DECLARATION,
+  PASSAGE_APUSH_EQUIANO,
+  PASSAGE_APUSH_EDWARDS_SINNERS,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
