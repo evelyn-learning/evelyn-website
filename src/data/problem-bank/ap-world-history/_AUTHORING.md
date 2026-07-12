@@ -174,3 +174,127 @@ this bank). A standalone script confirmed every quoted span inside
 `problemText` is a verbatim substring of its passage's seeded `fullText`
 (0 mismatches), and every stated UN-membership figure is a verbatim/accurate
 match against the described table's seeded `fullText`.
+
+## Unit 9: 1900–Present (Globalization, CED Unit 9)
+
+Stimulus-based MCQ bank (`u9.json`) keyed to five Unit-9 documents — three
+new described data-table seeds plus two REUSEs (`evelyn.passage.apworld-udhr.v1`
+from Unit 8, `evelyn.passage.apush-bush-sept-2001.v1` cross-course from the
+APUSH catalog) — and to the four Unit-9 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apworld-u9-*.ts`). `cedCode` mirrors
+each LO's `standard` field exactly. Composition follows the unit's planned
+MCQ spec exactly: life-expectancy 2, ict 1, trade-table 1, udhr 1, bush 1,
+non-stimulus global-economy + technology 2.
+
+| loId | cedCode | Topic | # items in u9.json |
+|---|---|---|---|
+| `apworld.global-economy` | `AP-APWORLD-9.1` | The globalizing economy — Bretton Woods, GATT/WTO, multinational supply chains, China's reform era, the Asian Tigers, financial crises. | 2 |
+| `apworld.technology-communication` | `AP-APWORLD-9.4` | Technology, communication, and health — the Green Revolution, medical advances, jet travel, internet/mobile leapfrogging. | 2 |
+| `apworld.environment-disease` | `AP-APWORLD-9.6` | Population, disease, and the environment — the demographic transition, twentieth-century epidemics, climate change, global life expectancy. | 2 |
+| `apworld.culture-rights-migration` | `AP-APWORLD-9.8` | Global culture, human rights, and migration — the UDHR, multidirectional cultural flows, the post-9/11 security-vs-rights debate. | 2 |
+| **Total** | | | **8** |
+
+## Anchoring documents (stimulus sets)
+
+Six of eight items anchor to a Unit-9 passage seed via `passageId`; the
+remaining two (`apworld.global-economy.mcq.02`, `apworld.technology-communication.mcq.02`)
+are non-stimulus items testing content-plan material directly, per the
+unit's planned MCQ composition, and omit `passageId`:
+
+- `evelyn.passage.apworld-life-expectancy-table.v1` — described data table, world/regional life expectancy 1950 vs. 2019 (UN WPP) — 2 items (one keyed to the unambiguous "largest gain" anchor — Asia +32 years — never an ambiguous framing; one to the starting-point-vs.-gain reasoning behind Africa remaining furthest behind despite a real 25-year gain)
+- `evelyn.passage.apworld-ict-table.v1` — described data table, global mobile subscriptions and Internet use 1990–2020 (ITU) — 1 item (leapfrogging inference from the mobile-vs.-internet growth gap; internet figures used ONLY from 2005 onward, per the seed's own documented data-gap before that year — never implying an earlier global internet-use figure)
+- `evelyn.passage.apworld-trade-container-table.v1` — described data table, world container throughput vs. merchandise export value 1980–2020 (UNCTAD/WTO) — 1 item (physical-volume vs. nominal-dollar reliability, with the post-2010 flattening scoping note)
+- `evelyn.passage.apworld-udhr.v1` — the Universal Declaration of Human Rights, Preamble/Articles 1–2 class excerpt (REUSE from Unit 8) — 1 item (a new anchor from this bank's Unit-8 items: the Preamble's "barbarous acts" clause read as historical context for the Declaration, contextualization skill)
+- `evelyn.passage.apush-bush-sept-2001.v1` — Bush's September 20, 2001 address to Congress (cross-course REUSE from the APUSH catalog) — 1 item (quotes only the first paragraph's closing sentence, entirely within one contiguous segment, never crossing the seed's internal elision)
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as Units 2 and 8 and the AP US History / AP English Language
+banks: the verify-at-ingest gate solves each item from `problemText` alone,
+so every stimulus item inlines the specific quoted line, or (for the three
+described data tables) the specific real figures needed to answer, without
+requiring the referenced passage to be loaded. `passageId` is still set on
+every stimulus item for stimulus-set grouping/full-document rendering; the
+two non-stimulus items omit it entirely, per plan.
+
+## Compliance notes specific to Unit 9
+
+- **Life-expectancy anchor discipline:** both items key to the unit's
+  specified unambiguous anchors — Asia's +32-year gain as the largest of
+  the three regions shown (`environment-disease.mcq.01`), and the
+  starting-point-vs.-gain reasoning explaining why Africa's smaller
+  absolute gain (a real +25 years) still leaves it behind Europe's smaller
+  +17-year gain (`environment-disease.mcq.02`). No item claims a figure
+  outside the seeded 46→73 (world), 37→62 (Africa), 42→74 (Asia), 62→79
+  (Europe) set.
+- **ICT internet-data-gap discipline:** `technology-communication.mcq.01`
+  states internet-use figures ONLY from 2005 onward (15.6%/28.4%/39.9%/
+  60.1%), matching the seed's documented absence of a reliable global
+  aggregate before 2005 — the item never implies a 1990 or 2000
+  internet-use figure exists. Mobile-subscription figures (11M/738M/5.29B/
+  8.26B for 1990/2000/2010/2020) are stated separately and correctly.
+- **Trade-table scoping:** `global-economy.mcq.01` states both the physical
+  (36M→792M TEU, ~22×) and nominal-dollar ($1.97T→$17.73T, ~9×) series and
+  scopes the dollar figure honestly as "current (not inflation-adjusted)
+  US dollars," per the seed's documented distinction.
+- **UDHR excerpt class:** `culture-rights-migration.mcq.01` quotes only from
+  the Preamble/Articles 1–2 class excerpt actually seeded (the "barbarous
+  acts" Preamble clause and Article 1's universal-equality clause) — no
+  quotation from any article outside the seeded excerpt.
+- **Bush single-segment discipline:** `culture-rights-migration.mcq.02`
+  quotes only "night fell on a different world, a world where freedom
+  itself is under attack" — the final sentence of the seed's first
+  paragraph, entirely before the seed's paragraph-break elision. No item
+  bridges this paragraph with the second (the Muslims/Islam paragraph) or
+  crosses the "..." elision inside the second paragraph.
+- **Zero-quote copyright rule:** `global-economy.mcq.02` (Deng Xiaoping's
+  reform era, described via China's reform outcomes) and
+  `technology-communication.mcq.02` (Norman Borlaug's Green Revolution,
+  described via its documented effects) name no post-1928 figure's quoted
+  words — both items are entirely original prose built from documented
+  facts.
+- **Real-misconception distractors:** `global-economy.mcq.02` directly
+  tests the unit's flagged misconception ("globalization is only
+  Westernization") by making the one-directional-Western-flow option the
+  targeted-false claim and keying the multidirectional-supply-chain
+  evidence as the correct answer choice. `technology-communication.mcq.02`
+  similarly targets "technology diffuses evenly" as the false claim
+  undermined by the Green Revolution's uneven reach and smallpox
+  eradication's decades-long campaign.
+- **Non-partisan tone:** the 9/11 item (`culture-rights-migration.mcq.02`)
+  is framed entirely around the historical security-vs-rights tension
+  Bush's own address opened, with no judgment offered on the merits of any
+  security policy; the UDHR item is framed as historical contextualization,
+  not a present-day rights argument.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1–4 spread: 1×1, 2×3, 3×3, 4×1.
+- Correct-answer letters distributed non-cyclically across all 8 items:
+  A=2, B=2, C=2, D=2. Sequence: `BDACDBCA` — not all one letter, not a
+  repeating ABCD pattern, and not a repeating 4-item block (`BDAC` vs.
+  `DBCA` differ in order).
+- Choice lengths checked (word-count), correct answer NOT the systematically
+  longest option: correct is the unique longest choice in **2 of 8** items
+  (`global-economy.mcq.01`, `culture-rights-migration.mcq.02`), within the
+  0–2/file allowance. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-world-history/u9.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL, quoting only short verbatim phrases
+  (or, for the three described-data-table stimuli, real stated figures)
+  from the public-domain Unit-9 documents. `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-world-history --file=u9.json --dry-run`:
+8/8 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+(One non-blocking `WARN problemText has $<digit> (currency/KaTeX trap)` on
+`global-economy.mcq.01`, from the real `$1.97 trillion`/`$17.73 trillion`
+export-value figures — expected and harmless per the script's own comment,
+"warn, don't fail.")
+`npm run lint:passages` clean (74 passages, including all 5 referenced by
+this bank). A standalone script confirmed every quoted span inside
+`problemText` (the two UDHR quotes, the one Bush quote) is a verbatim
+substring of its passage's seeded `fullText` (0 mismatches), and every
+stated life-expectancy/ICT/trade figure is a verbatim/accurate match
+against its described table's seeded `fullText`.
