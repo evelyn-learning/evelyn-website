@@ -41,6 +41,11 @@ import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-tab
 // AP Gov Unit-5 (Political Participation) documents
 import { PASSAGE_APGOV_TURNOUT_AGE_TABLE } from './seeds/apgov-turnout-age-table';
 import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-united-opinion';
+// APUSH Period-8 (1945-1980) DBQ documents
+import { PASSAGE_APUSH_TRUMAN_DOCTRINE } from './seeds/apush-truman-doctrine';
+import { PASSAGE_APUSH_EISENHOWER_FAREWELL } from './seeds/apush-eisenhower-farewell';
+import { PASSAGE_APUSH_JFK_INAUGURAL } from './seeds/apush-jfk-inaugural';
+import { PASSAGE_APUSH_LBJ_GREAT_SOCIETY } from './seeds/apush-lbj-great-society';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -73,6 +78,10 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
   PASSAGE_APGOV_TURNOUT_AGE_TABLE,
   PASSAGE_APGOV_CITIZENS_UNITED_OPINION,
+  PASSAGE_APUSH_TRUMAN_DOCTRINE,
+  PASSAGE_APUSH_EISENHOWER_FAREWELL,
+  PASSAGE_APUSH_JFK_INAUGURAL,
+  PASSAGE_APUSH_LBJ_GREAT_SOCIETY,
 ];
 
 export const passageById = new Map<string, Passage>(
