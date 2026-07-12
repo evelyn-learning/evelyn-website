@@ -221,6 +221,10 @@ import { BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY } from './seeds/ap-englang-u
 import { BASELINE_AP_APUSH_NATIVE_SOCIETIES } from './seeds/ap-apush-u1-native-societies';
 import { BASELINE_AP_APUSH_COLUMBIAN_EXCHANGE } from './seeds/ap-apush-u1-columbian-exchange';
 import { BASELINE_AP_APUSH_SPANISH_COLONIZATION } from './seeds/ap-apush-u1-spanish-colonization';
+import { BASELINE_AP_APUSH_COLONIAL_REGIONS } from './seeds/ap-apush-u2-colonial-regions';
+import { BASELINE_AP_APUSH_TRANSATLANTIC_ECONOMY } from './seeds/ap-apush-u2-transatlantic-economy';
+import { BASELINE_AP_APUSH_SLAVERY_COLONIES } from './seeds/ap-apush-u2-slavery-colonies';
+import { BASELINE_AP_APUSH_COLONIAL_SOCIETY } from './seeds/ap-apush-u2-colonial-society';
 import { BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION } from './seeds/ap-apush-u3-causes-of-revolution';
 import { BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS } from './seeds/ap-apush-u3-revolutionary-ideals';
 import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3-articles-of-confederation';
@@ -440,6 +444,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_NATIVE_SOCIETIES,
   BASELINE_AP_APUSH_COLUMBIAN_EXCHANGE,
   BASELINE_AP_APUSH_SPANISH_COLONIZATION,
+  BASELINE_AP_APUSH_COLONIAL_REGIONS,
+  BASELINE_AP_APUSH_TRANSATLANTIC_ECONOMY,
+  BASELINE_AP_APUSH_SLAVERY_COLONIES,
+  BASELINE_AP_APUSH_COLONIAL_SOCIETY,
   BASELINE_AP_APUSH_CAUSES_OF_REVOLUTION,
   BASELINE_AP_APUSH_REVOLUTIONARY_IDEALS,
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
