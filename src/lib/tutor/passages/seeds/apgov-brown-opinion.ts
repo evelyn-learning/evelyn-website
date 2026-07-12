@@ -16,7 +16,7 @@ import type { Passage } from '../types';
  * the Cornell Legal Information Institute's full-text transcript of 347
  * U.S. 483 (which preserves the official U.S. Reports pagination, e.g.
  * "[347 U.S. 494]"), cross-checked against the National Archives'
- * milestone-documents summary and a FindLaw mirror of the same opinion.
+ * milestone-documents summary.
  */
 export const PASSAGE_APGOV_BROWN_OPINION: Passage = {
   id: 'evelyn.passage.apgov-brown-opinion.v1',
