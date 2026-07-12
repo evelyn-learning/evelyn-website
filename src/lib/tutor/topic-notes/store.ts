@@ -241,6 +241,16 @@ import { BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION } from './seeds/ap-apgov-u1
 import { BASELINE_AP_APGOV_SEPARATION_OF_POWERS } from './seeds/ap-apgov-u1-separation-of-powers';
 import { BASELINE_AP_APGOV_FEDERALISM } from './seeds/ap-apgov-u1-federalism';
 
+// AP US Government & Politics Unit 2 (CED 2.1-2.3, 2.4-2.7, 2.8-2.11,
+// 2.12-2.14, 2.15) — Unit-2 Vertical Slice content plans (institutional
+// walk across Congress, the Presidency, the Judiciary, the Bureaucracy,
+// and cross-branch policy-making in practice).
+import { BASELINE_AP_APGOV_CONGRESS_STRUCTURE } from './seeds/ap-apgov-u2-congress';
+import { BASELINE_AP_APGOV_PRESIDENCY_POWER } from './seeds/ap-apgov-u2-presidency';
+import { BASELINE_AP_APGOV_JUDICIARY_INDEPENDENCE } from './seeds/ap-apgov-u2-judiciary';
+import { BASELINE_AP_APGOV_BUREAUCRACY_ACCOUNTABILITY } from './seeds/ap-apgov-u2-bureaucracy';
+import { BASELINE_AP_APGOV_CHECKS_IN_PRACTICE } from './seeds/ap-apgov-u2-checks-in-practice';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -412,6 +422,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
   BASELINE_AP_APGOV_FEDERALISM,
+  BASELINE_AP_APGOV_CONGRESS_STRUCTURE,
+  BASELINE_AP_APGOV_PRESIDENCY_POWER,
+  BASELINE_AP_APGOV_JUDICIARY_INDEPENDENCE,
+  BASELINE_AP_APGOV_BUREAUCRACY_ACCOUNTABILITY,
+  BASELINE_AP_APGOV_CHECKS_IN_PRACTICE,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
