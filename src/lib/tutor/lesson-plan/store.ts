@@ -1357,6 +1357,9 @@ import { SEED_AP_APUSH_U4_MARKET_REVOLUTION } from './seeds/ap-apush-u4-market-r
 import { SEED_AP_APUSH_U4_JACKSONIAN_DEMOCRACY } from './seeds/ap-apush-u4-jacksonian-democracy';
 import { SEED_AP_APUSH_U4_REFORM_AWAKENING } from './seeds/ap-apush-u4-reform-awakening';
 import { SEED_AP_APUSH_U4_SLAVERY_SOUTH } from './seeds/ap-apush-u4-slavery-south';
+import { SEED_AP_APUSH_U4_DBQ_PRACTICE } from './seeds/ap-apush-u4-dbq-practice';
+import { SEED_AP_APUSH_U4_LEQ_PRACTICE } from './seeds/ap-apush-u4-leq-practice';
+import { SEED_AP_APUSH_U4_SAQ_PRACTICE } from './seeds/ap-apush-u4-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2731,6 +2734,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U4_JACKSONIAN_DEMOCRACY,
   SEED_AP_APUSH_U4_REFORM_AWAKENING,
   SEED_AP_APUSH_U4_SLAVERY_SOUTH,
+  SEED_AP_APUSH_U4_DBQ_PRACTICE,
+  SEED_AP_APUSH_U4_LEQ_PRACTICE,
+  SEED_AP_APUSH_U4_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
