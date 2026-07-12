@@ -1442,6 +1442,9 @@ import { SEED_AP_APWORLD_U9_GLOBAL_ECONOMY } from './seeds/ap-apworld-u9-global-
 import { SEED_AP_APWORLD_U9_TECHNOLOGY } from './seeds/ap-apworld-u9-technology';
 import { SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE } from './seeds/ap-apworld-u9-environment-disease';
 import { SEED_AP_APWORLD_U9_CULTURE_RIGHTS } from './seeds/ap-apworld-u9-culture-rights';
+import { SEED_AP_APWORLD_U9_DBQ_PRACTICE } from './seeds/ap-apworld-u9-dbq-practice';
+import { SEED_AP_APWORLD_U9_LEQ_PRACTICE } from './seeds/ap-apworld-u9-leq-practice';
+import { SEED_AP_APWORLD_U9_SAQ_PRACTICE } from './seeds/ap-apworld-u9-saq-practice';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2890,6 +2893,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U9_TECHNOLOGY,
   SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE,
   SEED_AP_APWORLD_U9_CULTURE_RIGHTS,
+  SEED_AP_APWORLD_U9_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U9_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U9_SAQ_PRACTICE,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
