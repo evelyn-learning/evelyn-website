@@ -41,6 +41,12 @@ import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-tab
 // AP Gov Unit-5 (Political Participation) documents
 import { PASSAGE_APGOV_TURNOUT_AGE_TABLE } from './seeds/apgov-turnout-age-table';
 import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-united-opinion';
+// APUSH Period-6 (1865-1898) DBQ documents
+import { PASSAGE_APUSH_CARNEGIE_WEALTH } from './seeds/apush-carnegie-wealth';
+import { PASSAGE_APUSH_OMAHA_PLATFORM } from './seeds/apush-omaha-platform';
+import { PASSAGE_APUSH_CHINESE_EXCLUSION } from './seeds/apush-chinese-exclusion';
+import { PASSAGE_APUSH_IMMIGRATION_TABLE } from './seeds/apush-immigration-table';
+import { PASSAGE_APUSH_CROSS_OF_GOLD } from './seeds/apush-cross-of-gold';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -73,6 +79,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
   PASSAGE_APGOV_TURNOUT_AGE_TABLE,
   PASSAGE_APGOV_CITIZENS_UNITED_OPINION,
+  PASSAGE_APUSH_CARNEGIE_WEALTH,
+  PASSAGE_APUSH_OMAHA_PLATFORM,
+  PASSAGE_APUSH_CHINESE_EXCLUSION,
+  PASSAGE_APUSH_IMMIGRATION_TABLE,
+  PASSAGE_APUSH_CROSS_OF_GOLD,
 ];
 
 export const passageById = new Map<string, Passage>(
