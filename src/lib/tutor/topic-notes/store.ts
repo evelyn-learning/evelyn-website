@@ -289,6 +289,14 @@ import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-t
 import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
 
+// AP World History Unit 4 (CED 4.1-4.2, 4.3, 4.4-4.5, 4.4/4.6, 4.7-4.8) —
+// Unit-4 fan-out content plans (Transoceanic Interconnections, 1450-1750).
+import { BASELINE_AP_APWORLD_MARITIME_EXPLORATION } from './seeds/ap-apworld-u4-maritime-exploration';
+import { BASELINE_AP_APWORLD_COLUMBIAN_EXCHANGE } from './seeds/ap-apworld-u4-columbian-exchange';
+import { BASELINE_AP_APWORLD_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-maritime-empires';
+import { BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE } from './seeds/ap-apworld-u4-atlantic-slave-trade';
+import { BASELINE_AP_APWORLD_RESISTANCE } from './seeds/ap-apworld-u4-resistance';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -536,6 +544,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
   BASELINE_AP_APWORLD_MONGOL_EMPIRE,
   BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APWORLD_MARITIME_EXPLORATION,
+  BASELINE_AP_APWORLD_COLUMBIAN_EXCHANGE,
+  BASELINE_AP_APWORLD_MARITIME_EMPIRES,
+  BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE,
+  BASELINE_AP_APWORLD_RESISTANCE,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,

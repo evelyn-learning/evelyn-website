@@ -1427,6 +1427,13 @@ import { SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cul
 import { SEED_AP_APWORLD_U2_DBQ_PRACTICE } from './seeds/ap-apworld-u2-dbq-practice';
 import { SEED_AP_APWORLD_U2_LEQ_PRACTICE } from './seeds/ap-apworld-u2-leq-practice';
 import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-practice';
+// AP World History: Modern — Unit-4 fan-out content plans (Transoceanic
+// Interconnections, 1450-1750). See .superpowers/sdd/unit-4-block.md.
+import { SEED_AP_APWORLD_U4_MARITIME_EXPLORATION } from './seeds/ap-apworld-u4-maritime-exploration';
+import { SEED_AP_APWORLD_U4_COLUMBIAN_EXCHANGE } from './seeds/ap-apworld-u4-columbian-exchange';
+import { SEED_AP_APWORLD_U4_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-maritime-empires';
+import { SEED_AP_APWORLD_U4_ATLANTIC_SLAVE_TRADE } from './seeds/ap-apworld-u4-atlantic-slave-trade';
+import { SEED_AP_APWORLD_U4_RESISTANCE } from './seeds/ap-apworld-u4-resistance';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2862,6 +2869,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U2_DBQ_PRACTICE,
   SEED_AP_APWORLD_U2_LEQ_PRACTICE,
   SEED_AP_APWORLD_U2_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-4 fan-out content plans.
+  SEED_AP_APWORLD_U4_MARITIME_EXPLORATION,
+  SEED_AP_APWORLD_U4_COLUMBIAN_EXCHANGE,
+  SEED_AP_APWORLD_U4_MARITIME_EMPIRES,
+  SEED_AP_APWORLD_U4_ATLANTIC_SLAVE_TRADE,
+  SEED_AP_APWORLD_U4_RESISTANCE,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,
