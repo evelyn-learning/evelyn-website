@@ -1360,6 +1360,12 @@ import { SEED_AP_APUSH_U4_SLAVERY_SOUTH } from './seeds/ap-apush-u4-slavery-sout
 import { SEED_AP_APUSH_U4_DBQ_PRACTICE } from './seeds/ap-apush-u4-dbq-practice';
 import { SEED_AP_APUSH_U4_LEQ_PRACTICE } from './seeds/ap-apush-u4-leq-practice';
 import { SEED_AP_APUSH_U4_SAQ_PRACTICE } from './seeds/ap-apush-u4-saq-practice';
+// AP US History Period-5 fan-out (1844-1877).
+import { SEED_AP_APUSH_U5_MANIFEST_DESTINY } from './seeds/ap-apush-u5-manifest-destiny';
+import { SEED_AP_APUSH_U5_SECTIONAL_CRISIS } from './seeds/ap-apush-u5-sectional-crisis';
+import { SEED_AP_APUSH_U5_SECESSION_CIVIL_WAR } from './seeds/ap-apush-u5-secession-civil-war';
+import { SEED_AP_APUSH_U5_EMANCIPATION } from './seeds/ap-apush-u5-emancipation';
+import { SEED_AP_APUSH_U5_RECONSTRUCTION } from './seeds/ap-apush-u5-reconstruction';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2737,6 +2743,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U4_DBQ_PRACTICE,
   SEED_AP_APUSH_U4_LEQ_PRACTICE,
   SEED_AP_APUSH_U4_SAQ_PRACTICE,
+  // AP US History Period-5 fan-out (1844-1877) content plans.
+  SEED_AP_APUSH_U5_MANIFEST_DESTINY,
+  SEED_AP_APUSH_U5_SECTIONAL_CRISIS,
+  SEED_AP_APUSH_U5_SECESSION_CIVIL_WAR,
+  SEED_AP_APUSH_U5_EMANCIPATION,
+  SEED_AP_APUSH_U5_RECONSTRUCTION,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,

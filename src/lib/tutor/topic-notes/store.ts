@@ -232,6 +232,14 @@ import { BASELINE_AP_APUSH_JACKSONIAN_DEMOCRACY } from './seeds/ap-apush-u4-jack
 import { BASELINE_AP_APUSH_REFORM_AWAKENING } from './seeds/ap-apush-u4-reform-awakening';
 import { BASELINE_AP_APUSH_SLAVERY_SOUTH } from './seeds/ap-apush-u4-slavery-south';
 
+// AP US History Unit 5 (CED 5.2-5.3, 5.4-5.6, 5.7-5.8, 5.9, 5.10-5.11) —
+// Period-5 content plans (manifest destiny through Reconstruction, 1844-1877).
+import { BASELINE_AP_APUSH_MANIFEST_DESTINY } from './seeds/ap-apush-u5-manifest-destiny';
+import { BASELINE_AP_APUSH_SECTIONAL_CRISIS } from './seeds/ap-apush-u5-sectional-crisis';
+import { BASELINE_AP_APUSH_SECESSION_CIVIL_WAR } from './seeds/ap-apush-u5-secession-civil-war';
+import { BASELINE_AP_APUSH_EMANCIPATION } from './seeds/ap-apush-u5-emancipation';
+import { BASELINE_AP_APUSH_RECONSTRUCTION } from './seeds/ap-apush-u5-reconstruction';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -452,6 +460,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_JACKSONIAN_DEMOCRACY,
   BASELINE_AP_APUSH_REFORM_AWAKENING,
   BASELINE_AP_APUSH_SLAVERY_SOUTH,
+  BASELINE_AP_APUSH_MANIFEST_DESTINY,
+  BASELINE_AP_APUSH_SECTIONAL_CRISIS,
+  BASELINE_AP_APUSH_SECESSION_CIVIL_WAR,
+  BASELINE_AP_APUSH_EMANCIPATION,
+  BASELINE_AP_APUSH_RECONSTRUCTION,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
