@@ -83,3 +83,94 @@ World History source-analysis skills against the Unit-2 documents:
 this bank). A standalone script confirmed every quoted span inside
 `problemText` is a verbatim substring of its passage's seeded `fullText`
 (0 mismatches).
+
+## Unit 8: 1945–Present (Cold War & Decolonization, CED Unit 8)
+
+Stimulus-based MCQ bank (`u8.json`) keyed to five Unit-8 documents —
+one REUSE from the APUSH bank (`evelyn.passage.apush-truman-doctrine.v1`,
+cross-course document reuse) plus four new AP World seeds — and to the four
+Unit-8 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apworld-u8-*.ts`). `cedCode` mirrors
+each LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u8.json |
+|---|---|---|---|
+| `apworld.cold-war-global` | `AP-APWORLD-8.1` | The Cold War as a global conflict — containment, the Cuban Missile Crisis, nuclear-age crisis management. | 3 |
+| `apworld.decolonization` | `AP-APWORLD-8.5` | Decolonization and the postwar international order — the UDHR's universalist claims, UN membership growth. | 4 |
+| `apworld.end-cold-war` | `AP-APWORLD-8.9` | The end of the Cold War — the Berlin Wall's rise and fall, the internal causes of Soviet collapse. | 2 |
+| `apworld.new-states` | `AP-APWORLD-8.7` | New states' development paths — the Non-Aligned Movement as a "third path." | 1 |
+| **Total** | | | **10** |
+
+## Anchoring documents (stimulus sets)
+
+Six of ten items anchor to a Unit-8 passage seed via `passageId`; the
+remaining two (`apworld.end-cold-war.mcq.02`, `apworld.new-states.mcq.01`)
+are non-stimulus items testing content-plan material directly, per the
+unit's planned MCQ composition, and omit `passageId`:
+
+- `evelyn.passage.apush-truman-doctrine.v1` — Truman, on the containment commitment (cross-course REUSE from the APUSH bank) — 1 item
+- `evelyn.passage.apworld-jfk-cuba.v1` — Kennedy, the October 1962 Cuban Missile Crisis quarantine address — 2 items (one quote per non-adjacent excerpted span, never spanning the elision)
+- `evelyn.passage.apworld-udhr.v1` — the Universal Declaration of Human Rights, Preamble/Articles 1-2 class excerpt — 2 items
+- `evelyn.passage.apworld-un-membership-table.v1` — described data table, UN membership growth 1945-2000 — 2 items (one keyed to the unambiguous 1960 single-year +17 jump, never an ambiguous "largest decade" framing; one to the overall 51-to-189 long-run trend)
+- `evelyn.passage.apworld-berlin-wall-visual.v1` — described photograph set, the Berlin Wall 1961-1989 — 1 item
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as Unit 2 and the AP US History / AP English Language banks: the
+verify-at-ingest gate solves each item from `problemText` alone, so every
+stimulus item inlines the specific quoted line, or (for the described data
+table / visual) the specific real figures or facts, needed to answer —
+without requiring the referenced passage to be loaded. `passageId` is still
+set on every stimulus item for stimulus-set grouping/full-document
+rendering; the two non-stimulus items omit it entirely, per plan.
+
+## Compliance notes specific to Unit 8
+
+- **JFK non-adjacent spans:** the Cuban Missile Crisis passage's seeded
+  `fullText` elides two gaps (marked `. . .`) between three quoted
+  paragraphs. Each of the two JFK items quotes verbatim from exactly one
+  paragraph — never a span crossing an elision.
+- **UN-table anchor discipline:** `decolonization.mcq.03` keys to the
+  1960 single-year jump (82 -> 99, +17 members, 16 of 17 newly independent
+  African states) — the unit's specified unambiguous anchor. No item keys
+  an ambiguous "largest decade" framing.
+- **UDHR excerpt class:** both UDHR items quote only from the Preamble/
+  Articles 1-2 class excerpt actually seeded (Article 1's universal-equality
+  clause; Article 2's non-distinction-by-territorial-status clause) — no
+  quotation from any article outside the seeded excerpt.
+- **Zero-quote copyright rule:** `new-states.mcq.01` names the 1955 Bandung
+  Conference and tests the Non-Aligned Movement, but quotes no text from
+  Nehru, Nkrumah, Gandhi, Nasser, or any Bandung-associated figure — the
+  item is entirely original prose.
+- **Real-misconception distractors:** `end-cold-war.mcq.02` directly tests
+  the unit's flagged misconception ("the West simply won") by making the
+  single-cause "NATO military defeat" option a distractor and keying the
+  internal-causes (Gorbachev reforms, Afghanistan, Eastern European reform
+  movements) option as correct. `new-states.mcq.01` similarly distractors
+  the "everyone picked a superpower" misconception against the correct
+  non-alignment answer.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 spread: 1x2, 2x5, 3x2, 4x1.
+- Correct-answer letters distributed non-cyclically across all 10 items:
+  A=3, B=2, C=2, D=3. Sequence: `BACDBADCAD` — not all one letter, not a
+  repeating ABCD pattern.
+- Choice lengths checked (word-count), correct answer NOT the systematically
+  longest option: correct is the unique longest choice in **1 of 10** items
+  (`new-states.mcq.01`), within the 0-2/file allowance. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-world-history/u8.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL, quoting only short verbatim phrases
+  (or, for the two described-document stimuli, real stated figures/facts)
+  from the public-domain Unit-8 documents. `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-world-history --file=u8.json --dry-run`:
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (71 passages, including all 5 referenced by
+this bank). A standalone script confirmed every quoted span inside
+`problemText` is a verbatim substring of its passage's seeded `fullText`
+(0 mismatches), and every stated UN-membership figure is a verbatim/accurate
+match against the described table's seeded `fullText`.
