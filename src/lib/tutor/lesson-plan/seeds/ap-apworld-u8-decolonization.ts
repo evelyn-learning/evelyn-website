@@ -30,7 +30,7 @@ export const SEED_AP_APWORLD_U8_DECOLONIZATION: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apworld.decolonization',
+      id: 'apworld.decolonization-wave',
       description:
         'Explain the causes and varied paths of decolonization after 1945 — negotiated, violent, and Cold-War-entangled — including India/Pakistan\'s partition, Ghana\'s and Algeria\'s contrasting independence movements, and the Suez Crisis as a marker of European imperial decline.',
       standard: 'AP-APWORLD-8.5',

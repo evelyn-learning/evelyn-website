@@ -75,7 +75,7 @@ export const SEED_AP_APWORLD_U8_DBQ_PRACTICE: LessonPlan = {
   ],
   prerequisites: [
     'apworld.cold-war-global',
-    'apworld.decolonization',
+    'apworld.decolonization-wave',
     'apworld.new-states',
     'apworld.end-cold-war',
   ],

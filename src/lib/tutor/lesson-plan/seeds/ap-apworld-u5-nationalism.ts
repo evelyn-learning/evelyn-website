@@ -34,7 +34,7 @@ export const SEED_AP_APWORLD_U5_NATIONALISM: LessonPlan = {
       standard: 'AP-APWORLD-5.2b',
     },
   ],
-  prerequisites: ['apworld.atlantic-revolutions'],
+  prerequisites: ['apworld.atlantic-revolutions-era'],
   followUps: ['apworld.industrial-revolution'],
   estimatedMinutes: 22,
   segments: [

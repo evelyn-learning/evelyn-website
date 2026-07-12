@@ -22,77 +22,77 @@ export const BASELINE_AP_APWORLD_U8_DECOLONIZATION: TopicNotesBaseline = {
   sources: [{ type: 'plan', planId: 'evelyn.ap.apworld.decolonization.v1' }],
   theory: [
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'cause',
       title: 'why decolonization accelerated after 1945',
       content:
         "WWII left Britain and France economically exhausted and militarily overextended, undermining their ability to hold overseas territory by force; wartime rhetoric about self-determination and the new UN's founding principles made colonial rule harder to justify; decades-old nationalist movements within the colonies had grown stronger and more organized.",
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: 'India/Pakistan partition (August 1947)',
       content:
         'Britain granted independence to British India but partitioned it into India (Hindu-majority) and Pakistan (Muslim-majority) along largely religious lines. Measured estimates: roughly one million deaths and about fifteen million displaced in communal violence and mass migration — the era\'s largest single population transfer.',
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: "Gandhi and Nehru in India's independence movement",
       content:
         "Mohandas Gandhi led decades of mass, deliberately nonviolent civil-disobedience campaigns against British rule, building the nationalist pressure that made continued British control increasingly untenable. Jawaharlal Nehru, a close political ally within the Indian National Congress, became independent India's first Prime Minister.",
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: "Ghana's negotiated path (1957)",
       content:
         'Under Kwame Nkrumah, the Gold Coast pursued independence primarily through political organizing, strikes, and negotiation with Britain rather than sustained armed conflict — becoming Ghana in 1957, the first sub-Saharan African colony to gain independence, and a model other movements looked to.',
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: "Algeria's violent path (1954-1962)",
       content:
         "France treated Algeria as an integral part of French territory, with a large settler population resisting concessions. The FLN waged a prolonged, brutal war for independence, achieved in 1962 only after severe costs on both sides.",
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: 'Kenya (Mau Mau uprising) and Indonesia',
       content:
         "Kenya: the Mau Mau uprising (1950s) was an armed anti-colonial rebellion against British rule and settler land policy, suppressed forcefully (including mass detention) before independence in 1963. Indonesia: nationalists declared independence in 1945 after Japan's WWII occupation ended Dutch control; the Netherlands resisted before international pressure secured recognition in 1949.",
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: "Vietnam's Cold-War-entangled path",
       content:
         'Vietnamese nationalists defeated France at Dien Bien Phu (1954), ending French colonial control — but the country was then divided, and the North-South conflict became one of the Cold War\'s defining proxy wars, showing decolonization and superpower rivalry could be inseparable.',
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: 'the Suez Crisis (1956)',
       content:
         "After Nasser nationalized the Suez Canal, Britain, France, and Israel intervened militarily to retake it, but US and Soviet pressure forced their withdrawal — publicly demonstrating Britain and France could no longer act as independent great powers, a symbolic marker of imperial decline.",
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'event',
       title: 'the 1960 "Year of Africa" (UN membership data)',
       content:
         'UN membership rose from 51 (1945) to 189 (2000), rising every interval. The single largest one-year jump was 1960 (82 -> 99, +17), 16 of the 17 new members newly independent African states (the 17th, Cyprus) — quantitative evidence of decolonization\'s accelerating pace.',
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'framework',
       title: 'same cause, different paths',
       content:
         'The SAME broad cause (weakened empires + rising nationalism + a less colonialism-tolerant order) produced sharply different processes depending on whether the colonial power was willing to negotiate, whether a settler population resisted concessions, and whether a Cold War superpower saw strategic stakes.',
     },
     {
-      loId: 'apworld.decolonization',
+      loId: 'apworld.decolonization-wave',
       kind: 'trap',
       title: 'a membership count shows outcome, not process',
       content:
@@ -116,7 +116,7 @@ export const BASELINE_AP_APWORLD_U8_DECOLONIZATION: TopicNotesBaseline = {
         solution:
           'The 1960 spike is strong quantitative confirmation that African decolonization accelerated dramatically around 1960 (the "Year of Africa"). It cannot show HOW each of those 16 states achieved independence — some negotiated, like Ghana\'s neighbors; others involved more violence. A count is evidence of outcome, not process.',
       },
-      relatedLoIds: ['apworld.decolonization'],
+      relatedLoIds: ['apworld.decolonization-wave'],
     },
   ],
   pointers: [

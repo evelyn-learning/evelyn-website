@@ -38,7 +38,7 @@ export const SEED_AP_APWORLD_U8_COLD_WAR: LessonPlan = {
     },
   ],
   prerequisites: [],
-  followUps: ['apworld.decolonization'],
+  followUps: ['apworld.decolonization-wave'],
   estimatedMinutes: 22,
   segments: [
     {

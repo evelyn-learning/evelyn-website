@@ -33,7 +33,7 @@ export const SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS: LessonPlan = {
   locale: 'en',
   los: [
     {
-      id: 'apworld.atlantic-revolutions',
+      id: 'apworld.atlantic-revolutions-era',
       description:
         'Explain the sequence, mutual influences, and divergences among the American, French, Haitian, and Latin American revolutions (1776-1826), including the distinctive role of enslaved self-liberation in Haiti and creole leadership in Latin America.',
       standard: 'AP-APWORLD-5.2',

@@ -205,7 +205,7 @@ each LO's `standard` field exactly.
 | loId | cedCode | Topic | # items in u8.json |
 |---|---|---|---|
 | `apworld.cold-war-global` | `AP-APWORLD-8.1` | The Cold War as a global conflict — containment, the Cuban Missile Crisis, nuclear-age crisis management. | 3 |
-| `apworld.decolonization` | `AP-APWORLD-8.5` | Decolonization and the postwar international order — the UDHR's universalist claims, UN membership growth. | 4 |
+| `apworld.decolonization-wave` | `AP-APWORLD-8.5` | Decolonization and the postwar international order — the UDHR's universalist claims, UN membership growth. | 4 |
 | `apworld.end-cold-war` | `AP-APWORLD-8.9` | The end of the Cold War — the Berlin Wall's rise and fall, the internal causes of Soviet collapse. | 2 |
 | `apworld.new-states` | `AP-APWORLD-8.7` | New states' development paths — the Non-Aligned Movement as a "third path." | 1 |
 | **Total** | | | **10** |
@@ -430,7 +430,7 @@ LO's `standard` field exactly.
 | loId | cedCode | Topic | # items in u5.json |
 |---|---|---|---|
 | `apworld.enlightenment` | `AP-APWORLD-5.1` | Natural rights/social contract extended (unevenly) to women's education (Wollstonecraft). | 2 |
-| `apworld.atlantic-revolutions` | `AP-APWORLD-5.2` | French universalist rights language (Rights of Man) vs. creole colonial-office grievances (Bolívar's Jamaica Letter). | 4 |
+| `apworld.atlantic-revolutions-era` | `AP-APWORLD-5.2` | French universalist rights language (Rights of Man) vs. creole colonial-office grievances (Bolívar's Jamaica Letter). | 4 |
 | `apworld.nationalism-unification` | `AP-APWORLD-5.2b` | Italian (Cavour/Garibaldi) vs. German (Bismarck) unification (non-stimulus). | 1 |
 | `apworld.industrial-revolution` | `AP-APWORLD-5.3` | Why Britain industrialized first; factory-system living standards (non-stimulus). | 1 |
 | `apworld.industrial-society` | `AP-APWORLD-5.7` | Class formation and the spectrum of responses: Sadler-testimony conditions and Marx/Engels's revolutionary analysis. | 4 |

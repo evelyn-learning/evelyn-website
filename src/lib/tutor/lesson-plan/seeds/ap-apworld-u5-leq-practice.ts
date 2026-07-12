@@ -37,7 +37,7 @@ export const SEED_AP_APWORLD_U5_LEQ_PRACTICE: LessonPlan = {
   ],
   prerequisites: [
     'apworld.enlightenment',
-    'apworld.atlantic-revolutions',
+    'apworld.atlantic-revolutions-era',
     'apworld.nationalism-unification',
     'apworld.industrial-revolution',
     'apworld.industrial-society',

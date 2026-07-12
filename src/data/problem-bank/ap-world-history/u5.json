@@ -40,8 +40,8 @@
     ]
   },
   {
-    "id": "apworld.atlantic-revolutions.mcq.01",
-    "loId": "apworld.atlantic-revolutions",
+    "id": "apworld.atlantic-revolutions-era.mcq.01",
+    "loId": "apworld.atlantic-revolutions-era",
     "cedCode": "AP-APWORLD-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
@@ -60,8 +60,8 @@
     ]
   },
   {
-    "id": "apworld.atlantic-revolutions.mcq.02",
-    "loId": "apworld.atlantic-revolutions",
+    "id": "apworld.atlantic-revolutions-era.mcq.02",
+    "loId": "apworld.atlantic-revolutions-era",
     "cedCode": "AP-APWORLD-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
@@ -80,8 +80,8 @@
     ]
   },
   {
-    "id": "apworld.atlantic-revolutions.mcq.03",
-    "loId": "apworld.atlantic-revolutions",
+    "id": "apworld.atlantic-revolutions-era.mcq.03",
+    "loId": "apworld.atlantic-revolutions-era",
     "cedCode": "AP-APWORLD-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
@@ -100,8 +100,8 @@
     ]
   },
   {
-    "id": "apworld.atlantic-revolutions.mcq.04",
-    "loId": "apworld.atlantic-revolutions",
+    "id": "apworld.atlantic-revolutions-era.mcq.04",
+    "loId": "apworld.atlantic-revolutions-era",
     "cedCode": "AP-APWORLD-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",

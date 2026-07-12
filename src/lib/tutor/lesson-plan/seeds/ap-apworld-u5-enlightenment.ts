@@ -35,7 +35,7 @@ export const SEED_AP_APWORLD_U5_ENLIGHTENMENT: LessonPlan = {
     },
   ],
   prerequisites: [],
-  followUps: ['apworld.atlantic-revolutions'],
+  followUps: ['apworld.atlantic-revolutions-era'],
   estimatedMinutes: 22,
   segments: [
     {

@@ -36,7 +36,7 @@ export const SEED_AP_APWORLD_U8_NEW_STATES: LessonPlan = {
       standard: 'AP-APWORLD-8.7',
     },
   ],
-  prerequisites: ['apworld.decolonization'],
+  prerequisites: ['apworld.decolonization-wave'],
   followUps: ['apworld.end-cold-war'],
   estimatedMinutes: 23,
   segments: [
