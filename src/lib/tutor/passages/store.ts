@@ -32,6 +32,10 @@ import { PASSAGE_APGOV_FEDERALIST_70 } from './seeds/apgov-federalist-70';
 import { PASSAGE_APGOV_FEDERALIST_78 } from './seeds/apgov-federalist-78';
 import { PASSAGE_APGOV_CONGRESS_DEMOGRAPHICS_TABLE } from './seeds/apgov-congress-demographics-table';
 import { PASSAGE_APGOV_MARBURY_OPINION } from './seeds/apgov-marbury-opinion';
+// AP Gov Unit-3 (Civil Liberties and Civil Rights) documents
+import { PASSAGE_APGOV_CIVIL_RIGHTS_FILINGS_TABLE } from './seeds/apgov-civil-rights-filings-table';
+import { PASSAGE_APGOV_BROWN_OPINION } from './seeds/apgov-brown-opinion';
+import { PASSAGE_APGOV_TINKER_OPINION } from './seeds/apgov-tinker-opinion';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -58,6 +62,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_FEDERALIST_78,
   PASSAGE_APGOV_CONGRESS_DEMOGRAPHICS_TABLE,
   PASSAGE_APGOV_MARBURY_OPINION,
+  PASSAGE_APGOV_CIVIL_RIGHTS_FILINGS_TABLE,
+  PASSAGE_APGOV_BROWN_OPINION,
+  PASSAGE_APGOV_TINKER_OPINION,
 ];
 
 export const passageById = new Map<string, Passage>(
