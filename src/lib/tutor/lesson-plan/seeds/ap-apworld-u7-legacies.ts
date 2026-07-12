@@ -12,8 +12,7 @@
  * try_yourself = a 3-point SAQ-style short-answer.
  *
  * NO wired passage — this topic is deliberately left unanchored to a
- * specific primary source in the Unit-7 content-plan set (see
- * docs/superpowers/sdd/unit-7-block.md). The UDHR itself is wired to MCQs
+ * specific primary source in the Unit-7 content-plan set. The UDHR itself is wired to MCQs
  * in a later task, not here. All atrocities are described factually, one
  * line of scale each, with zero graphic detail.
  */

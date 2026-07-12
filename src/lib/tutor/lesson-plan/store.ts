@@ -1447,7 +1447,7 @@ import { SEED_AP_APWORLD_U3_DBQ_PRACTICE } from './seeds/ap-apworld-u3-dbq-pract
 import { SEED_AP_APWORLD_U3_LEQ_PRACTICE } from './seeds/ap-apworld-u3-leq-practice';
 import { SEED_AP_APWORLD_U3_SAQ_PRACTICE } from './seeds/ap-apworld-u3-saq-practice';
 // AP World History: Modern — Unit-4 fan-out content plans (Transoceanic
-// Interconnections, 1450-1750). See .superpowers/sdd/unit-4-block.md.
+// Interconnections, 1450-1750).
 import { SEED_AP_APWORLD_U4_MARITIME_EXPLORATION } from './seeds/ap-apworld-u4-maritime-exploration';
 import { SEED_AP_APWORLD_U4_COLUMBIAN_EXCHANGE } from './seeds/ap-apworld-u4-columbian-exchange';
 import { SEED_AP_APWORLD_U4_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-maritime-empires';
@@ -1457,7 +1457,7 @@ import { SEED_AP_APWORLD_U4_DBQ_PRACTICE } from './seeds/ap-apworld-u4-dbq-pract
 import { SEED_AP_APWORLD_U4_LEQ_PRACTICE } from './seeds/ap-apworld-u4-leq-practice';
 import { SEED_AP_APWORLD_U4_SAQ_PRACTICE } from './seeds/ap-apworld-u4-saq-practice';
 // AP World History: Modern — Unit-5 fan-out content plans (Revolutions,
-// 1750-1900). See .superpowers/sdd/unit-5-block.md.
+// 1750-1900).
 import { SEED_AP_APWORLD_U5_ENLIGHTENMENT } from './seeds/ap-apworld-u5-enlightenment';
 import { SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-atlantic-revolutions';
 import { SEED_AP_APWORLD_U5_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';

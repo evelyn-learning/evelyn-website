@@ -182,8 +182,8 @@ Stimulus-based MCQ bank (`u6.json`) keyed to five Unit-6 passage seeds
 indenture-table,meiji-charter-oath}.ts`) plus one non-stimulus item, and to
 the five Unit-6 content lesson-plan LOs
 (`src/lib/tutor/lesson-plan/seeds/ap-apworld-u6-*.ts`). `cedCode` mirrors each
-LO's `standard` field exactly. Composition matches the plan block
-(`docs/superpowers/sdd/unit-6-block.md`, "MCQs (10)"): kipling 2, lin-zexu 2,
+LO's `standard` field exactly. Composition matches the plan-block spec
+("MCQs (10)"): kipling 2, lin-zexu 2,
 berlin-act 1, indenture-table 2, charter-oath 2, non-stimulus resistance 1.
 
 | loId | cedCode | Topic | # items in u6.json |
@@ -602,8 +602,8 @@ propaganda-visual,depression-table}.ts` plus the cross-course REUSE
 `apush-four-freedoms.ts`) plus two non-stimulus items, and to the four
 Unit-7 content lesson-plan LOs
 (`src/lib/tutor/lesson-plan/seeds/ap-apworld-u7-*.ts`). `cedCode` mirrors
-each LO's `standard` field exactly. Composition matches the plan block
-(`.superpowers/sdd/unit-7-block.md`, "MCQs (10)"): fourteen-points 2,
+each LO's `standard` field exactly. Composition matches the plan-block spec
+("MCQs (10)"): fourteen-points 2,
 versailles 2, propaganda-visual 1, depression-table 2, four-freedoms 1,
 non-stimulus wwii + legacies 2.
 

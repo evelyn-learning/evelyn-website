@@ -10,8 +10,7 @@
  * another failed?); try_yourself = a 3-point SAQ-style short-answer.
  *
  * NO wired passage — this topic is deliberately left unanchored to a
- * specific primary source in the Unit-6 content-plan set (see
- * docs/superpowers/sdd/unit-6-block.md). All events described here are
+ * specific primary source in the Unit-6 content-plan set. All events described here are
  * authored, measured summaries, not passage-quoted.
  */
 
