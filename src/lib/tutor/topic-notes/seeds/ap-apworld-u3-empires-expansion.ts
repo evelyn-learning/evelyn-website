@@ -33,7 +33,7 @@ export const BASELINE_AP_APWORLD_EMPIRES_EXPANSION: TopicNotesBaseline = {
       kind: 'definition',
       title: 'siege artillery',
       content:
-        "Large gunpowder cannon built or deployed specifically to breach fortified walls, as in the Ottoman bombardment of Constantinople's Theodosian Walls in 1453 — cannon that had turned back besiegers for a thousand years.",
+        "Large gunpowder cannon built or deployed specifically to breach fortified walls, as in the Ottoman bombardment of Constantinople's Theodosian Walls in 1453 — cannon brought down walls that had turned back besiegers for a thousand years.",
     },
     {
       loId: 'apworld.empires-expansion',
