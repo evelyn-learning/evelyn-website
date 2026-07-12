@@ -224,6 +224,14 @@ import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3
 import { BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
 import { BASELINE_AP_APUSH_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
 
+// AP US History Unit 4 (CED 4.2-4.4, 4.5-4.7, 4.8-4.9, 4.10-4.11, 4.12-4.13)
+// — Period-4 content plans (jefferson-era through slavery-south, 1800-1848).
+import { BASELINE_AP_APUSH_JEFFERSON_ERA } from './seeds/ap-apush-u4-jefferson-era';
+import { BASELINE_AP_APUSH_MARKET_REVOLUTION } from './seeds/ap-apush-u4-market-revolution';
+import { BASELINE_AP_APUSH_JACKSONIAN_DEMOCRACY } from './seeds/ap-apush-u4-jacksonian-democracy';
+import { BASELINE_AP_APUSH_REFORM_AWAKENING } from './seeds/ap-apush-u4-reform-awakening';
+import { BASELINE_AP_APUSH_SLAVERY_SOUTH } from './seeds/ap-apush-u4-slavery-south';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -439,6 +447,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
   BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APUSH_NEW_REPUBLIC,
+  BASELINE_AP_APUSH_JEFFERSON_ERA,
+  BASELINE_AP_APUSH_MARKET_REVOLUTION,
+  BASELINE_AP_APUSH_JACKSONIAN_DEMOCRACY,
+  BASELINE_AP_APUSH_REFORM_AWAKENING,
+  BASELINE_AP_APUSH_SLAVERY_SOUTH,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,

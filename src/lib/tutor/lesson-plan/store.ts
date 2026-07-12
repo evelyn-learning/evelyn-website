@@ -1350,6 +1350,13 @@ import { SEED_AP_APUSH_U3_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic'
 import { SEED_AP_APUSH_U3_DBQ_PRACTICE } from './seeds/ap-apush-u3-dbq-practice';
 import { SEED_AP_APUSH_U3_LEQ_PRACTICE } from './seeds/ap-apush-u3-leq-practice';
 import { SEED_AP_APUSH_U3_SAQ_PRACTICE } from './seeds/ap-apush-u3-saq-practice';
+// AP US History — Period-4 fan-out (1800-1848). Content plans + notes.
+// See .superpowers/sdd/period-4-block.md.
+import { SEED_AP_APUSH_U4_JEFFERSON_ERA } from './seeds/ap-apush-u4-jefferson-era';
+import { SEED_AP_APUSH_U4_MARKET_REVOLUTION } from './seeds/ap-apush-u4-market-revolution';
+import { SEED_AP_APUSH_U4_JACKSONIAN_DEMOCRACY } from './seeds/ap-apush-u4-jacksonian-democracy';
+import { SEED_AP_APUSH_U4_REFORM_AWAKENING } from './seeds/ap-apush-u4-reform-awakening';
+import { SEED_AP_APUSH_U4_SLAVERY_SOUTH } from './seeds/ap-apush-u4-slavery-south';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2718,6 +2725,12 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U3_DBQ_PRACTICE,
   SEED_AP_APUSH_U3_LEQ_PRACTICE,
   SEED_AP_APUSH_U3_SAQ_PRACTICE,
+  // AP US History — Period-4 content plans (1800-1848).
+  SEED_AP_APUSH_U4_JEFFERSON_ERA,
+  SEED_AP_APUSH_U4_MARKET_REVOLUTION,
+  SEED_AP_APUSH_U4_JACKSONIAN_DEMOCRACY,
+  SEED_AP_APUSH_U4_REFORM_AWAKENING,
+  SEED_AP_APUSH_U4_SLAVERY_SOUTH,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
