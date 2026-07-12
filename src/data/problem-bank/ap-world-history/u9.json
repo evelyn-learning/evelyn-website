@@ -1,0 +1,160 @@
+[
+  {
+    "id": "apworld.environment-disease.mcq.01",
+    "loId": "apworld.environment-disease",
+    "cedCode": "AP-APWORLD-9.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-life-expectancy-table.v1",
+    "problemText": "A data table adapted from the UN Population Division's World Population Prospects shows life expectancy at birth rising, between 1950 and 2019, as follows: World 46 to 73 years (a gain of about 27 years); Africa 37 to 62 years (a gain of about 25 years); Asia 42 to 74 years (a gain of about 32 years); Europe 62 to 79 years (a gain of about 17 years). Which region gained the MOST years of life expectancy over this period?",
+    "choices": [
+      "Africa, whose 25-year gain, from a 1950 starting point of about 37 years, was the smallest gain of the three regions shown",
+      "Asia, rising from about 42 to about 74 years — a gain of about 32 years, the largest shown",
+      "Europe, whose already-high 1950 starting point of 62 years made its comparatively large 17-year gain possible without much difficulty",
+      "The world average, which by definition must reflect a larger overall gain than any single region taken alone"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare each region's ending figure to its own 1950 starting figure — subtract to find each region's gain, then compare the three gains directly.",
+      "Rule out any answer citing the world average or Europe — the world figure isn't a region, and Europe's 17-year gain is the smallest of the three shown, not the largest."
+    ]
+  },
+  {
+    "id": "apworld.environment-disease.mcq.02",
+    "loId": "apworld.environment-disease",
+    "cedCode": "AP-APWORLD-9.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-life-expectancy-table.v1",
+    "problemText": "Between 1950 and 2019, Africa's life expectancy rose from about 37 to about 62 years (a gain of about 25 years), while Europe's rose from about 62 to about 79 years (a gain of about 17 years) — a SMALLER numerical gain than Africa's. Yet Europe's 2019 figure (79) remains well above Africa's (62). Which statement best explains this pattern?",
+    "choices": [
+      "The life-expectancy figures reported for Africa must simply be unreliable or mismeasured for the year 1950",
+      "Europe's total population fell sharply after 1950, which mechanically raised its measured life expectancy figure",
+      "Africa's 25-year gain came entirely from one country, while Europe's 17-year gain was spread evenly across the region",
+      "A region's ranking reflects both its gain and its 1950 starting point, not the gain alone"
+    ],
+    "answer": "D",
+    "hints": [
+      "A region's 2019 ranking depends on where it started as well as how much it gained — check each region's STARTING figure before assuming the bigger gain must finish ahead.",
+      "Rule out any answer treating a smaller numerical gain as evidence of unreliable data or a shrinking population — Europe's higher finish reflects its much higher 1950 starting point, nothing more unusual."
+    ]
+  },
+  {
+    "id": "apworld.technology-communication.mcq.01",
+    "loId": "apworld.technology-communication",
+    "cedCode": "AP-APWORLD-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-ict-table.v1",
+    "problemText": "A data table combining two ITU-tracked indicators shows worldwide mobile-cellular subscriptions rising from about 11 million in 1990 to about 738 million in 2000, about 5.29 billion in 2010, and about 8.26 billion in 2020. The same table's Internet-use row, using 2005 as its earliest year because no reliable single global aggregate exists before then, shows Internet use rising from 15.6% of the world's population in 2005 to 28.4% in 2010, 39.9% in 2015, and 60.1% in 2020. Mobile subscriptions passed one per person worldwide years before Internet use reached even half the world's population. This gap is best read as evidence for which pattern?",
+    "choices": [
+      "\"Leapfrogging\" — many countries adopted mobile networks directly, without first building fixed telephone-line infrastructure, letting mobile technology spread faster",
+      "Mobile phones and Internet access spread at the same pace everywhere, differing only in which year each indicator's tracking began",
+      "Internet use could not have existed anywhere before 2005, since the earliest reliable global figure dates only to that year",
+      "Wealthier countries adopted mobile phones only after their fixed telephone-line networks had already reached full saturation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare when each row's growth accelerates — mobile subscriptions already passed one-per-person by the mid-2010s, well before internet use reached even half the population — and think about what routes let mobile phones spread that fast.",
+      "Rule out any claim that the technologies spread at the same pace, or that the Internet didn't exist before 2005 — the table's 2005 start date reflects a gap in reliable global reporting, not the absence of earlier internet use."
+    ]
+  },
+  {
+    "id": "apworld.global-economy.mcq.01",
+    "loId": "apworld.global-economy",
+    "cedCode": "AP-APWORLD-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-trade-container-table.v1",
+    "problemText": "A data table shows world container port throughput rising from about 36 million TEU in 1980 to about 792 million TEU in 2020 (roughly a 22-fold increase), while world merchandise exports in current (not inflation-adjusted) US dollars rose from about $1.97 trillion to about $17.73 trillion over the same span (roughly a 9-fold increase), with the dollar figure flattening somewhat after 2010 even as container volume kept climbing. Which indicator more reliably shows how much the PHYSICAL volume of world trade grew, and why?",
+    "choices": [
+      "The dollar figure, because export value in current dollars directly counts the number of goods shipped, without any price distortion",
+      "Neither indicator is reliable, since both figures are limited to trade conducted in US dollars only",
+      "Container throughput, because it counts physical cargo units and is unaffected by the price and currency swings behind the dollar figure",
+      "The dollar figure, because its 9-fold increase is a larger absolute number of trillions than the container figure's 22-fold increase"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask which measure counts physical goods directly versus which measure mixes physical volume together with price and currency effects.",
+      "Rule out any answer favoring the dollar figure — a larger absolute number of trillions doesn't mean more physical goods moved, and both figures track worldwide trade, not only dollar-denominated trade."
+    ]
+  },
+  {
+    "id": "apworld.culture-rights-migration.mcq.01",
+    "loId": "apworld.culture-rights-migration",
+    "cedCode": "AP-APWORLD-9.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-udhr.v1",
+    "problemText": "The Universal Declaration of Human Rights' preamble states that \"disregard and contempt for human rights have resulted in barbarous acts which have outraged the conscience of mankind,\" before proclaiming, in Article 1, that \"all human beings are born free and equal in dignity and rights.\" Read together, these two clauses are best understood as responding to which immediate historical context?",
+    "choices": [
+      "The overthrow of colonial governments across Asia and Africa, which the UDHR was written specifically to formalize",
+      "A binding wartime treaty among the Allied powers that the UDHR merely restated in different language",
+      "The founding of the United Nations in San Francisco in 1945, an event the preamble describes directly",
+      "The atrocities of World War II, which prompted the United Nations to proclaim this declaration"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the two clauses as cause and effect: what 'barbarous acts' had 'outraged the conscience of mankind' by 1948, prompting a universal declaration of equal dignity?",
+      "Rule out any answer describing a binding treaty or decolonization specifically — the preamble's language points to a very recent, global catastrophe, and the Declaration itself is a non-binding proclamation, not a treaty."
+    ]
+  },
+  {
+    "id": "apworld.culture-rights-migration.mcq.02",
+    "loId": "apworld.culture-rights-migration",
+    "cedCode": "AP-APWORLD-9.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-bush-sept-2001.v1",
+    "problemText": "In his September 20, 2001 address to Congress, President Bush declared that the September 11 attacks meant \"night fell on a different world, a world where freedom itself is under attack.\" Framing the attacks in this sweeping way — as an attack on \"freedom itself,\" not only on the United States — served which purpose in the security-vs-rights debate this address opened?",
+    "choices": [
+      "It limited the US response to a narrow law-enforcement investigation targeting only the individuals directly responsible for the attacks",
+      "It justified treating the response as a broad, sustained security effort, later paired with an explicit effort to distinguish terrorists from Muslims generally",
+      "It formally declared war against a specific named foreign government under existing constitutional procedures",
+      "It announced the immediate suspension of all diplomatic relations between the United States and every Muslim-majority country"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that Bush frames the attack as being on 'freedom itself,' not just on the United States — think about what scale of response that broader framing supports.",
+      "Rule out any answer describing a narrow, individual-focused response or a formal declaration of war against a named government — neither matches the sweeping, open-ended framing of this line."
+    ]
+  },
+  {
+    "id": "apworld.global-economy.mcq.02",
+    "loId": "apworld.global-economy",
+    "cedCode": "AP-APWORLD-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "By the 2000s, capital, components, and finished goods were flowing among Asian, European, American, and other economies in complex, multidirectional supply chains — for example, China's post-1978 market reforms turned it into a major exporter TO the West, while the Asian Tigers (South Korea, Taiwan, Singapore, Hong Kong) built export industries that reshaped global manufacturing from the 1960s onward. This pattern is best read as evidence against which claim about economic globalization after 1945?",
+    "choices": [
+      "That the 1997 Asian financial crisis began with currency collapses in Thailand",
+      "That the World Trade Organization, established in 1995, replaced the General Agreement on Tariffs and Trade",
+      "That globalization after 1945 mainly meant Western capital and goods flowing outward, one direction only",
+      "That the Bretton Woods conference of 1944 created the International Monetary Fund and the World Bank"
+    ],
+    "answer": "C",
+    "hints": [
+      "Trace where capital and manufactured goods actually moved — into China and the Asian Tigers as well as out of them — before deciding whether 'flowing outward from the West' is an accurate one-line summary.",
+      "Rule out any answer restating an accurate but unrelated fact (the WTO's founding, Bretton Woods, or the 1997 crisis) — the question asks what the described pattern undermines, not what else is true."
+    ]
+  },
+  {
+    "id": "apworld.technology-communication.mcq.02",
+    "loId": "apworld.technology-communication",
+    "cedCode": "AP-APWORLD-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The high-yield crop varieties of the Green Revolution (1940s-1960s) reached some regions and crops far more than others, and smallpox eradication — certified in 1980 — required the World Health Organization decades of sustained, coordinated vaccination campaigning even after an effective vaccine already existed. Together, these two examples are best read as evidence against which claim?",
+    "choices": [
+      "That new technology spreads to every region at roughly the same pace and by the same route once it exists",
+      "That the Green Revolution increased crop yields across parts of Asia and Latin America from the 1940s through the 1960s",
+      "That smallpox was the first human disease ever eradicated worldwide through deliberate public-health action",
+      "That expanded irrigation and synthetic fertilizer use accompanied the high-yield crop varieties of the Green Revolution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether the Green Revolution and smallpox eradication reached every place at the same time and by the same method, or unevenly and only after extended effort.",
+      "Rule out any answer restating an accurate but unrelated fact about the Green Revolution or smallpox eradication — the question asks which broader CLAIM the two examples undermine."
+    ]
+  }
+]

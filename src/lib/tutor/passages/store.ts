@@ -33,6 +33,10 @@ import { PASSAGE_APUSH_MONROE_DOCTRINE } from './seeds/apush-monroe-doctrine';
 import { PASSAGE_APUSH_JACKSON_BANK_VETO } from './seeds/apush-jackson-bank-veto';
 import { PASSAGE_APUSH_SENECA_FALLS } from './seeds/apush-seneca-falls';
 import { PASSAGE_APUSH_GARRISON_LIBERATOR } from './seeds/apush-garrison-liberator';
+// AP World Unit-1 (The Global Tapestry) DBQ documents
+import { PASSAGE_APWORLD_MARCO_POLO_KHAN_COURT } from './seeds/apworld-marco-polo-khan-court';
+import { PASSAGE_APWORLD_IBN_BATTUTA_DELHI } from './seeds/apworld-ibn-battuta-delhi';
+import { PASSAGE_APWORLD_MAGNA_CARTA } from './seeds/apworld-magna-carta';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -41,6 +45,25 @@ import { PASSAGE_APWORLD_IBN_BATTUTA_KILWA } from './seeds/apworld-ibn-battuta-k
 import { PASSAGE_APWORLD_MANSA_MUSA } from './seeds/apworld-mansa-musa';
 import { PASSAGE_APWORLD_BLACK_DEATH } from './seeds/apworld-black-death';
 import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
+// AP World Unit-4 (Transoceanic Interconnections) documents
+import { PASSAGE_APWORLD_TOKUGAWA_EDICT } from './seeds/apworld-tokugawa-edict';
+import { PASSAGE_APWORLD_POTOSI_SILVER_TABLE } from './seeds/apworld-potosi-silver-table';
+import { PASSAGE_APWORLD_ZHENG_HE_VISUAL } from './seeds/apworld-zheng-he-visual';
+// AP World Unit-5 (Revolutions) documents
+import { PASSAGE_APWORLD_RIGHTS_OF_MAN } from './seeds/apworld-rights-of-man';
+import { PASSAGE_APWORLD_BOLIVAR_JAMAICA } from './seeds/apworld-bolivar-jamaica';
+import { PASSAGE_APWORLD_COMMUNIST_MANIFESTO } from './seeds/apworld-communist-manifesto';
+import { PASSAGE_APWORLD_WOLLSTONECRAFT } from './seeds/apworld-wollstonecraft';
+import { PASSAGE_APWORLD_SADLER_TESTIMONY } from './seeds/apworld-sadler-testimony';
+// AP World Unit-8 (Cold War & Decolonization) documents
+import { PASSAGE_APWORLD_JFK_CUBA } from './seeds/apworld-jfk-cuba';
+import { PASSAGE_APWORLD_UDHR } from './seeds/apworld-udhr';
+import { PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE } from './seeds/apworld-un-membership-table';
+import { PASSAGE_APWORLD_BERLIN_WALL_VISUAL } from './seeds/apworld-berlin-wall-visual';
+// AP World Unit-9 (Globalization) documents
+import { PASSAGE_APWORLD_LIFE_EXPECTANCY_TABLE } from './seeds/apworld-life-expectancy-table';
+import { PASSAGE_APWORLD_ICT_TABLE } from './seeds/apworld-ict-table';
+import { PASSAGE_APWORLD_TRADE_CONTAINER_TABLE } from './seeds/apworld-trade-container-table';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
@@ -86,6 +109,23 @@ import { PASSAGE_APUSH_REAGAN_BRANDENBURG } from './seeds/apush-reagan-brandenbu
 import { PASSAGE_APUSH_BUSH_SEPT_2001 } from './seeds/apush-bush-sept-2001';
 import { PASSAGE_APUSH_OBAMA_INAUGURAL } from './seeds/apush-obama-inaugural';
 import { PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE } from './seeds/apush-immigration-origins-table';
+// AP World Unit-3 (Land-Based Empires) DBQ documents
+import { PASSAGE_APWORLD_BUSBECQ_SULEIMAN } from './seeds/apworld-busbecq-suleiman';
+import { PASSAGE_APWORLD_BERNIER_MUGHAL } from './seeds/apworld-bernier-mughal';
+import { PASSAGE_APWORLD_PETER_DECREES } from './seeds/apworld-peter-decrees';
+import { PASSAGE_APWORLD_TAJ_MAHAL } from './seeds/apworld-taj-mahal';
+import { PASSAGE_APWORLD_KANGXI_EDICT } from './seeds/apworld-kangxi-edict';
+// AP World Unit-6 (1750-1900, Consequences of Industrialization) documents
+import { PASSAGE_APWORLD_WHITE_MANS_BURDEN } from './seeds/apworld-white-mans-burden';
+import { PASSAGE_APWORLD_LIN_ZEXU } from './seeds/apworld-lin-zexu';
+import { PASSAGE_APWORLD_BERLIN_ACT } from './seeds/apworld-berlin-act';
+import { PASSAGE_APWORLD_INDENTURE_TABLE } from './seeds/apworld-indenture-table';
+import { PASSAGE_APWORLD_MEIJI_CHARTER_OATH } from './seeds/apworld-meiji-charter-oath';
+// AP World Unit-7 (1900-present, Global Conflict) documents
+import { PASSAGE_APWORLD_FOURTEEN_POINTS } from './seeds/apworld-fourteen-points';
+import { PASSAGE_APWORLD_VERSAILLES } from './seeds/apworld-versailles';
+import { PASSAGE_APWORLD_WWI_PROPAGANDA_VISUAL } from './seeds/apworld-wwi-propaganda-visual';
+import { PASSAGE_APWORLD_DEPRESSION_TABLE } from './seeds/apworld-depression-table';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -113,6 +153,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_JACKSON_BANK_VETO,
   PASSAGE_APUSH_SENECA_FALLS,
   PASSAGE_APUSH_GARRISON_LIBERATOR,
+  PASSAGE_APWORLD_MARCO_POLO_KHAN_COURT,
+  PASSAGE_APWORLD_IBN_BATTUTA_DELHI,
+  PASSAGE_APWORLD_MAGNA_CARTA,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
@@ -120,6 +163,21 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_MANSA_MUSA,
   PASSAGE_APWORLD_BLACK_DEATH,
   PASSAGE_APWORLD_CATALAN_ATLAS,
+  PASSAGE_APWORLD_TOKUGAWA_EDICT,
+  PASSAGE_APWORLD_POTOSI_SILVER_TABLE,
+  PASSAGE_APWORLD_ZHENG_HE_VISUAL,
+  PASSAGE_APWORLD_RIGHTS_OF_MAN,
+  PASSAGE_APWORLD_BOLIVAR_JAMAICA,
+  PASSAGE_APWORLD_COMMUNIST_MANIFESTO,
+  PASSAGE_APWORLD_WOLLSTONECRAFT,
+  PASSAGE_APWORLD_SADLER_TESTIMONY,
+  PASSAGE_APWORLD_JFK_CUBA,
+  PASSAGE_APWORLD_UDHR,
+  PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE,
+  PASSAGE_APWORLD_BERLIN_WALL_VISUAL,
+  PASSAGE_APWORLD_LIFE_EXPECTANCY_TABLE,
+  PASSAGE_APWORLD_ICT_TABLE,
+  PASSAGE_APWORLD_TRADE_CONTAINER_TABLE,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
   PASSAGE_APGOV_ARTICLES_CONFEDERATION,
@@ -155,6 +213,20 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BUSH_SEPT_2001,
   PASSAGE_APUSH_OBAMA_INAUGURAL,
   PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE,
+  PASSAGE_APWORLD_BUSBECQ_SULEIMAN,
+  PASSAGE_APWORLD_BERNIER_MUGHAL,
+  PASSAGE_APWORLD_PETER_DECREES,
+  PASSAGE_APWORLD_TAJ_MAHAL,
+  PASSAGE_APWORLD_KANGXI_EDICT,
+  PASSAGE_APWORLD_WHITE_MANS_BURDEN,
+  PASSAGE_APWORLD_LIN_ZEXU,
+  PASSAGE_APWORLD_BERLIN_ACT,
+  PASSAGE_APWORLD_INDENTURE_TABLE,
+  PASSAGE_APWORLD_MEIJI_CHARTER_OATH,
+  PASSAGE_APWORLD_FOURTEEN_POINTS,
+  PASSAGE_APWORLD_VERSAILLES,
+  PASSAGE_APWORLD_WWI_PROPAGANDA_VISUAL,
+  PASSAGE_APWORLD_DEPRESSION_TABLE,
 ];
 
 export const passageById = new Map<string, Passage>(

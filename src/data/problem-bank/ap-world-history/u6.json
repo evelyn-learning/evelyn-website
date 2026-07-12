@@ -1,0 +1,201 @@
+[
+  {
+    "id": "apworld.imperial-expansion.mcq.01",
+    "loId": "apworld.imperial-expansion",
+    "cedCode": "AP-APWORLD-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-white-mans-burden.v1",
+    "problemText": "Rudyard Kipling's 1899 poem \"The White Man's Burden\", urging the United States to take up colonial rule in the Philippines, describes the colonized subjects it addresses as \"Your new-caught, sullen peoples,\" in need of foreign rule. AP World History courses present this poem to students primarily as evidence of —",
+    "choices": [
+      "a formal declaration of war already approved by the United States Congress in 1899",
+      "the paternalistic \"civilizing mission\" argument used to justify empire",
+      "an ethnographic survey documenting Filipino political opinion in 1899",
+      "a private diplomatic cable never intended for public circulation"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the poem addresses American readers, urging them to \"take up\" a burden — it is a call to action aimed at the colonizing public, not a report from the colonized.",
+      "The poem is studied as a primary source OF an imperial ideology (the civilizing mission), not as a neutral or accurate description of the peoples it discusses."
+    ]
+  },
+  {
+    "id": "apworld.imperial-expansion.mcq.02",
+    "loId": "apworld.imperial-expansion",
+    "cedCode": "AP-APWORLD-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-white-mans-burden.v1",
+    "problemText": "In the same poem, Kipling instructs colonizers: \"To seek another's profit,\" \"And work another's gain.\" — framing colonial rule as undertaken for the colonized subjects' benefit rather than the colonizer's own. A historian analyzing this claim against the broader economic record of European and American imperialism in this period would most likely note that —",
+    "choices": [
+      "this claim is ideology obscuring the real economic benefits colonizers extracted from colonized regions",
+      "the claim is confirmed by the poem's own admission that imperial rule was consistently unprofitable for every colonizing power",
+      "the claim reflects a policy formally adopted at the 1919 Paris Peace Conference",
+      "the claim describes an arrangement colonized peoples had themselves proposed to colonizing governments"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether a poem written to persuade colonizers to \"take up\" empire is likely to give an objective account of who actually profited from it.",
+      "Rule out any answer treating the poem's self-description as settled historical fact rather than as the ideology it is being studied as."
+    ]
+  },
+  {
+    "id": "apworld.economic-imperialism.mcq.01",
+    "loId": "apworld.economic-imperialism",
+    "cedCode": "AP-APWORLD-6.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-lin-zexu.v1",
+    "problemText": "In his 1839 letter to Queen Victoria, the Qing commissioner Lin Zexu argues that because opium \"is prohibited with the utmost strictness and severity\" inside Britain, \"you ought not to have the injurious drug transferred to another country\". This argument is best characterized as —",
+    "choices": [
+      "a formal declaration of war against Britain over the opium trade",
+      "a demand for reparations for damage already caused by the First Opium War",
+      "an appeal to Britain's own ban on opium to argue against exporting it abroad",
+      "an offer to legalize opium production within China in exchange for lower British tariffs"
+    ],
+    "answer": "C",
+    "hints": [
+      "Lin points to a rule Britain already applies to itself, then asks why that same rule should not extend to what Britain sells abroad.",
+      "The letter predates the First Opium War (1839, before fighting began) — rule out any answer describing a response to a war that had not yet happened."
+    ]
+  },
+  {
+    "id": "apworld.economic-imperialism.mcq.02",
+    "loId": "apworld.economic-imperialism",
+    "cedCode": "AP-APWORLD-6.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-lin-zexu.v1",
+    "problemText": "Lin Zexu also tells Queen Victoria that Chinese exports like tea and rhubarb are \"things which your foreign countries could not exist a single day without\". Written in 1839, before the First Opium War, this claim most directly reflects which historical situation?",
+    "choices": [
+      "Qing officials' confidence in China's economic leverage over Britain before military defeat forced unequal treaties",
+      "a trade agreement already granting British merchants extraterritorial legal rights in Canton",
+      "the fact that China had already been formally divided into European colonial spheres of influence by 1839",
+      "Britain's total naval and military dominance over the Qing dynasty, already established by 1839"
+    ],
+    "answer": "A",
+    "hints": [
+      "The letter comes BEFORE the First Opium War — China had not yet suffered the military defeats that produced the unequal treaties and extraterritoriality.",
+      "China remained a sovereign Qing state throughout this period under informal imperialism — it was never formally colonized the way parts of Africa or India were."
+    ]
+  },
+  {
+    "id": "apworld.imperial-expansion.mcq.03",
+    "loId": "apworld.imperial-expansion",
+    "cedCode": "AP-APWORLD-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-berlin-act.v1",
+    "problemText": "Article 34 of the 1885 General Act of the Berlin Conference requires that a power claiming new African coastal territory \"shall accompany the respective act with a notification thereof, addressed to the other Signatory Powers of the present Act\". This clause is best understood as establishing which principle among the fourteen signatory powers (which included the Ottoman Empire) for recognizing a new colonial claim in Africa?",
+    "choices": [
+      "that all fourteen signatory powers, including the Ottoman Empire, had to unanimously approve any new claim before it took effect",
+      "that a new claim required the written consent of the African rulers whose territory was being claimed",
+      "an outright ban on any signatory power acquiring further African territory after 1885",
+      "formal notification to the other European signatory powers, with no requirement of consent from any African government"
+    ],
+    "answer": "D",
+    "hints": [
+      "The clause is addressed to \"the other Signatory Powers\" — read carefully for who is being notified, and who is conspicuously absent from that requirement.",
+      "This is the 'effective occupation' rule: European powers recognized each other's claims among themselves, without African governments party to the agreement."
+    ]
+  },
+  {
+    "id": "apworld.global-migration.mcq.01",
+    "loId": "apworld.global-migration",
+    "cedCode": "AP-APWORLD-6.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-indenture-table.v1",
+    "problemText": "A data table of INDIAN indentured emigration only (excluding Chinese indenture and smaller streams to Malaya, the Seychelles, and East Africa) to six British colonies, 1834-1917, reports: \"British Mauritius, 453,063; British Guiana, 238,909; Trinidad and Tobago, 147,596; British Jamaica, 36,412; Colony of Natal (South Africa), 152,184; Colony of Fiji, 60,965\" — a combined 1,089,129 laborers, of which Mauritius and British Guiana together account for roughly 64 percent. This concentration in Mauritius and British Guiana is best explained by —",
+    "choices": [
+      "those two colonies recruiting laborers exclusively from China rather than India",
+      "early, large-scale plantation demand in Indian Ocean and Caribbean colonies after 1833 abolition of slavery",
+      "a British colonial policy banning Indian indenture recruitment everywhere except Mauritius and Guiana",
+      "these six totals representing the complete worldwide scale of unfree Asian labor migration in this period"
+    ],
+    "answer": "B",
+    "hints": [
+      "This table covers Indian indenture only, to six named destinations — it is not a total for all unfree Asian labor migration worldwide.",
+      "Indenture recruitment expanded to replace enslaved plantation labor after Britain abolished slavery in 1833 — think about which sugar colonies needed that labor earliest and at the largest scale."
+    ]
+  },
+  {
+    "id": "apworld.global-migration.mcq.02",
+    "loId": "apworld.global-migration",
+    "cedCode": "AP-APWORLD-6.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-indenture-table.v1",
+    "problemText": "The same table of Indian indentured emigration, 1834-1917, notes that \"Fiji, where indenture began only in 1879, about 13 percent as many\" workers arrived as in Mauritius. Why did Fiji receive markedly fewer Indian indentured laborers than Mauritius over the full 1834-1917 period?",
+    "choices": [
+      "Fiji's colonial government prohibited Indian indenture recruitment until 1917",
+      "Mauritius's sugar industry collapsed after 1879 and redirected its remaining laborers to Fiji",
+      "Fiji recruited its plantation labor exclusively from China rather than from India",
+      "Fiji began recruiting decades after Mauritius, leaving far less cumulative recruiting time"
+    ],
+    "answer": "D",
+    "hints": [
+      "Mauritius began recruiting Indian indentured labor soon after the 1833 abolition of slavery; Fiji's recruitment did not begin until 1879 — a difference of decades.",
+      "This table counts only Indian indenture — think in terms of total recruiting TIME available to each colony, not a change in which country workers came from."
+    ]
+  },
+  {
+    "id": "apworld.reform-responses.mcq.01",
+    "loId": "apworld.reform-responses",
+    "cedCode": "AP-APWORLD-6.4b",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-meiji-charter-oath.v1",
+    "problemText": "Article 1 of the 1868 Charter Oath, issued by the new Meiji government, states: \"A deliberative assembly shall be formed, and all measures decided by public opinion.\" In the context of Japan's reform program after the fall of the Tokugawa shogunate, this article is best read as —",
+    "choices": [
+      "a declaration abolishing the office of emperor entirely",
+      "an announcement that Japan had adopted an exact copy of the British parliamentary system in 1868",
+      "a general commitment to consultative, public decision-making, without yet specifying a fixed constitutional structure",
+      "the extension of voting rights to all adult subjects regardless of status"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Oath was issued in 1868, over two decades before Japan's actual 1889 constitution — it sets a broad principle, not a detailed institutional design.",
+      "Rule out any answer describing a specific, already-completed constitutional system rather than a stated intention."
+    ]
+  },
+  {
+    "id": "apworld.reform-responses.mcq.02",
+    "loId": "apworld.reform-responses",
+    "cedCode": "AP-APWORLD-6.4b",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-meiji-charter-oath.v1",
+    "problemText": "Article 5 of the Charter Oath declares: \"Wisdom and ability should be sought after in all quarters of the world for the purpose of firmly establishing the foundations of the empire.\" This article is best read as evidence of which broader pattern in Meiji Japan's reform program?",
+    "choices": [
+      "a rejection of all foreign knowledge in favor of preserving indigenous tradition unchanged",
+      "openness to useful outside knowledge as part of a selective, state-directed modernization, not wholesale westernization",
+      "a plan for Japan to colonize other Asian states specifically to acquire their technical knowledge",
+      "proof that Japan had already abandoned the emperor system by 1868"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Sought after in all quarters of the world\" signals openness to outside knowledge, but the article frames this as serving Japan's own foundations, not replacing Japanese institutions wholesale.",
+      "Meiji Japan is often misdescribed as simply 'westernizing' — the actual program selectively adapted foreign knowledge within a distinctly Japanese political frame."
+    ]
+  },
+  {
+    "id": "apworld.imperial-resistance.mcq.01",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "At the Battle of Adwa (1896), Emperor Menelik II's Ethiopian forces decisively defeated an invading Italian army, forcing Italy to formally recognize Ethiopian independence. Historians cite Adwa as the clearest counterexample to which generalization about resistance to imperial expansion, 1750-1900?",
+    "choices": [
+      "that resistance movements which failed to preserve independence, like the Sepoy Rebellion of 1857, had no lasting effect on imperial governance",
+      "that European powers only attempted to invade regions that lacked any organized indigenous government",
+      "that resistance to imperial expansion never succeeded in preserving a threatened state's formal independence",
+      "that resistance to imperial expansion always succeeded whenever it relied on conventional military tactics"
+    ],
+    "answer": "C",
+    "hints": [
+      "Adwa is significant because Ethiopia's victory forced a European power to formally back off — think about which broad claim that single fact disproves.",
+      "Most resistance movements in this period, including the Sepoy Rebellion, were eventually suppressed, but 'always failed' overstates a real pattern into a false absolute — Adwa is the clean counterexample."
+    ]
+  }
+]

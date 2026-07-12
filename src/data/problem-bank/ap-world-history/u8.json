@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apworld.cold-war-global.mcq.01",
+    "loId": "apworld.cold-war-global",
+    "cedCode": "AP-APWORLD-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-truman-doctrine.v1",
+    "problemText": "In his March 1947 address to Congress, President Truman declared, \"I believe that it must be the policy of the United States to support free peoples who are resisting attempted subjugation by armed minorities or by outside pressures.\" This commitment most directly established which Cold War policy?",
+    "choices": [
+      "A policy of isolation, withdrawing US involvement from postwar European affairs entirely",
+      "A policy of containment, committing US aid to governments resisting communist-backed pressure",
+      "A joint US-Soviet security pact guaranteeing mutual non-interference in Third World conflicts",
+      "A policy of rollback, committing US troops to invade and liberate any state under Soviet influence"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what kind of support to 'free peoples... resisting... outside pressures' actually commits the United States to, short of invasion or withdrawal.",
+      "Rule out any answer describing direct invasion (rollback), isolation, or cooperation with the Soviet Union — the passage commits to aiding others against pressure, a middle course."
+    ]
+  },
+  {
+    "id": "apworld.cold-war-global.mcq.02",
+    "loId": "apworld.cold-war-global",
+    "cedCode": "AP-APWORLD-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-jfk-cuba.v1",
+    "problemText": "In his October 22, 1962 address on the Cuban Missile Crisis, President Kennedy stated that \"a series of offensive missile sites is now in preparation on that imprisoned island. The purpose of these bases can be none other than to provide a nuclear strike capability against the Western Hemisphere.\" This description is best understood in the context of which broader Cold War dynamic?",
+    "choices": [
+      "The nuclear arms race, where missile placement near rival territory raised the stakes of direct superpower confrontation",
+      "A formal disarmament treaty signed earlier in 1962 that had already ended superpower nuclear competition",
+      "A regional dispute confined to Cuba and the United States, unconnected to Soviet nuclear strategy",
+      "The final and complete resolution of all Cold War tensions between the two superpowers, achieved entirely through this single address"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about why missiles capable of striking 'the Western Hemisphere' mattered so much for US strategy — what broader nuclear dynamic made any such buildup this dangerous?",
+      "Rule out any answer describing an ending or resolution — this address comes near the crisis's peak tension, not its aftermath."
+    ]
+  },
+  {
+    "id": "apworld.cold-war-global.mcq.03",
+    "loId": "apworld.cold-war-global",
+    "cedCode": "AP-APWORLD-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-jfk-cuba.v1",
+    "problemText": "In the same October 1962 address, Kennedy announced that \"a strict quarantine on all offensive military equipment under shipment to Cuba is being initiated. All ships of any kind bound for Cuba from whatever nation or port will, if found to contain cargoes of offensive weapons, be turned back.\" Kennedy's choice of a naval quarantine, rather than a declared war or invasion, best illustrates which point about Cold War-era crisis management between the superpowers?",
+    "choices": [
+      "The United States lacked any naval forces capable of enforcing a blockade around Cuba in 1962",
+      "International law barred the United States from taking any action at all against Soviet shipments",
+      "Superpowers sometimes chose calibrated, limited measures to signal resolve while avoiding direct military escalation",
+      "The quarantine functioned as a purely symbolic gesture with no military enforcement mechanism"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the quarantine stops and inspects ships rather than declaring war outright — what does that middle-ground choice suggest about managing a nuclear-armed rival?",
+      "Rule out answers claiming the US had no real capability or that the measure was symbolic — the quarantine was a real, enforceable naval action."
+    ]
+  },
+  {
+    "id": "apworld.decolonization-wave.mcq.01",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-udhr.v1",
+    "problemText": "Article 1 of the Universal Declaration of Human Rights (1948) states that \"all human beings are born free and equal in dignity and rights. They are endowed with reason and conscience and should act towards one another in a spirit of brotherhood.\" This universalist claim provided which kind of resource to anti-colonial independence movements after World War II?",
+    "choices": [
+      "A binding legal mechanism that automatically dissolved all colonial governments upon the Declaration's adoption",
+      "A statement whose claims applied only to citizens of the 51 UN member states existing in 1948",
+      "A treaty obligating colonial powers to grant independence within a fixed five-year deadline",
+      "A universalist language of inherent human equality that independence movements could invoke against colonial rule"
+    ],
+    "answer": "D",
+    "hints": [
+      "The UDHR is a declaration of principle, not a treaty with enforcement power — think about what kind of argument, rather than what kind of legal mechanism, it supplied.",
+      "Rule out any answer describing automatic legal effect or a fixed deadline — the Declaration proclaims a standard, it does not itself dissolve governments or set timelines."
+    ]
+  },
+  {
+    "id": "apworld.decolonization-wave.mcq.02",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-udhr.v1",
+    "problemText": "Article 2 of the UDHR further specifies that \"no distinction shall be made on the basis of the political, jurisdictional or international status of the country or territory to which a person belongs, whether it be independent, trust, non-self-governing or under any other limitation of sovereignty.\" This clause most directly extended the Declaration's claims to which population?",
+    "choices": [
+      "Only diplomatic personnel serving in international organizations after 1945",
+      "People living under colonial or trusteeship administration, not yet self-governing in 1948",
+      "Refugees displaced specifically by the Second World War in Europe",
+      "Only the citizens of the founding 51 UN member states named in the Charter"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the clause explicitly names territories that are 'non-self-governing' or under a 'limitation of sovereignty' — who lived under exactly that kind of status in 1948?",
+      "Rule out answers limiting the clause to full UN member citizens — the whole point of naming 'trust' and 'non-self-governing' territories is to reach beyond them."
+    ]
+  },
+  {
+    "id": "apworld.decolonization-wave.mcq.03",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-un-membership-table.v1",
+    "problemText": "The UN's own published membership roster shows total membership rising from 82 to 99 states in 1960 alone — a single-year jump of 17 new members, 16 of them newly independent African states. This single-year jump is best explained by which development?",
+    "choices": [
+      "A wave of African decolonization that produced numerous new sovereign states admitted together",
+      "A merger of several existing UN member states into a smaller number of regional federations",
+      "The founding conference that originally established the United Nations in 1945",
+      "A one-time rule restricting UN admission to African states during 1960 alone"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sixteen of the seventeen new members in 1960 were newly independent African states — what wave of political change produced that many new sovereign states in a single year?",
+      "Rule out the founding-conference answer — that happened in 1945, fifteen years before this jump, and 'restricting admission' contradicts the figures, which show growth, not exclusion."
+    ]
+  },
+  {
+    "id": "apworld.decolonization-wave.mcq.04",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-un-membership-table.v1",
+    "problemText": "The same UN roster shows total membership growing from 51 original members in 1945 to 189 members by 2000, with Africa and Asia together supplying most of the new members admitted through the 1960s. This overall long-run pattern is best used as evidence for which historical process?",
+    "choices": [
+      "A steady decline in the number of independent states recognized worldwide after 1945",
+      "The replacement of colonial empires with a smaller number of larger regional unions",
+      "A one-time surge of new members concentrated entirely in the years immediately after 1945",
+      "The long-term expansion of the international state system as colonial territories achieved sovereign independence"
+    ],
+    "answer": "D",
+    "hints": [
+      "Membership nearly quadrupled over 55 years, with Africa and Asia supplying most new members through the 1960s — what long-run process, not a single moment, does that reflect?",
+      "Rule out 'decline' and 'immediately after 1945' — the figures show growth continuing steadily for decades, not a single early spike or a shrinking total."
+    ]
+  },
+  {
+    "id": "apworld.end-cold-war.mcq.01",
+    "loId": "apworld.end-cold-war",
+    "cedCode": "AP-APWORLD-8.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apworld-berlin-wall-visual.v1",
+    "problemText": "A set of photographs from the Berlin Wall's history shows East German soldiers and police \"laying rolls of barbed wire and building the first crude barrier across streets and rail lines dividing East and West Berlin, sealing the border overnight\" in August 1961, and later shows \"crowds of East and West Berliners standing atop the Wall near the Brandenburg Gate the night border guards opened the crossings\" in November 1989. Together, these two described photographs are best used as evidence for which broader point about the end of the Cold War?",
+    "choices": [
+      "West Germany built the Wall in 1961 specifically to prevent West Berliners from moving east",
+      "East and West Berlin remained fully sealed from each other until German reunification in 1990",
+      "The same wall that once sealed the Cold War divide could later be undone from within",
+      "The Wall's 1989 opening resulted specifically from a coordinated, large-scale NATO military operation launched against East German border posts"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the same physical wall appears in both photographs — first sealing the border, then opened by the very guards who once enforced it. What does that reversal suggest about authority in East Germany by 1989?",
+      "Rule out any answer crediting NATO military action or claiming the border stayed sealed until 1990 — the second photograph shows crowds crossing freely in November 1989."
+    ]
+  },
+  {
+    "id": "apworld.end-cold-war.mcq.02",
+    "loId": "apworld.end-cold-war",
+    "cedCode": "AP-APWORLD-8.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Between 1989 and 1991, the Soviet Union's political system collapsed and the state itself dissolved. Historians increasingly emphasize that this outcome resulted from which combination of causes, rather than from external Western pressure alone?",
+    "choices": [
+      "Internal economic strain from Gorbachev-era reforms, the costly war in Afghanistan, and independent reform movements in Eastern Europe",
+      "A single decisive military defeat inflicted by NATO conventional forces in direct combat across Eastern Europe",
+      "A sudden and unexpected currency collapse in the United States that abruptly ended all Cold War-era foreign aid programs",
+      "The formal annexation of Soviet territory by Western European governments after 1989"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what was happening inside the Soviet system itself in the late 1980s — reform efforts, a costly war, and movements in Eastern Europe outside Moscow's control — rather than only what the West was doing.",
+      "Rule out any answer describing a military defeat or a foreign annexation — no NATO invasion or Western seizure of Soviet territory ever occurred."
+    ]
+  },
+  {
+    "id": "apworld.new-states.mcq.01",
+    "loId": "apworld.new-states",
+    "cedCode": "AP-APWORLD-8.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Many newly independent states after 1945, meeting at conferences such as the 1955 Bandung Conference, sought to avoid formal alliance with either Cold War superpower. This stance is best described as —",
+    "choices": [
+      "A secret defense pact binding all attending states to the Soviet Union",
+      "Formal NATO membership extended to newly independent African and Asian states",
+      "A single, mandatory policy requiring every newly independent state to adopt an identical economic development model",
+      "Non-alignment, rejecting formal Cold War bloc membership, though foreign policies varied considerably among member states in practice"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what stance a state takes when it deliberately avoids joining either superpower's bloc, rather than joining one side (NATO or a Soviet pact) outright.",
+      "Rule out any answer claiming a single shared economic model or a secret alliance — non-alignment was a foreign-policy stance, and its member states pursued quite different development paths."
+    ]
+  }
+]

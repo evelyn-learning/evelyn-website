@@ -1417,6 +1417,17 @@ import { SEED_AP_APUSH_U9_SINCE_2001 } from './seeds/ap-apush-u9-since-2001';
 import { SEED_AP_APUSH_U9_DBQ_PRACTICE } from './seeds/ap-apush-u9-dbq-practice';
 import { SEED_AP_APUSH_U9_LEQ_PRACTICE } from './seeds/ap-apush-u9-leq-practice';
 import { SEED_AP_APUSH_U9_SAQ_PRACTICE } from './seeds/ap-apush-u9-saq-practice';
+// AP World History: Modern — Unit-1 fan-out content plans (The Global
+// Tapestry: East Asia, Dar al-Islam, South/Southeast Asia, the Americas &
+// Africa, medieval Europe).
+import { SEED_AP_APWORLD_U1_EAST_ASIA_SONG } from './seeds/ap-apworld-u1-east-asia-song';
+import { SEED_AP_APWORLD_U1_DAR_AL_ISLAM } from './seeds/ap-apworld-u1-dar-al-islam';
+import { SEED_AP_APWORLD_U1_SOUTH_SOUTHEAST_ASIA } from './seeds/ap-apworld-u1-south-southeast-asia';
+import { SEED_AP_APWORLD_U1_AMERICAS_AFRICA_STATES } from './seeds/ap-apworld-u1-americas-africa';
+import { SEED_AP_APWORLD_U1_MEDIEVAL_EUROPE } from './seeds/ap-apworld-u1-medieval-europe';
+import { SEED_AP_APWORLD_U1_DBQ_PRACTICE } from './seeds/ap-apworld-u1-dbq-practice';
+import { SEED_AP_APWORLD_U1_LEQ_PRACTICE } from './seeds/ap-apworld-u1-leq-practice';
+import { SEED_AP_APWORLD_U1_SAQ_PRACTICE } from './seeds/ap-apworld-u1-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -1427,6 +1438,71 @@ import { SEED_AP_APWORLD_U2_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cul
 import { SEED_AP_APWORLD_U2_DBQ_PRACTICE } from './seeds/ap-apworld-u2-dbq-practice';
 import { SEED_AP_APWORLD_U2_LEQ_PRACTICE } from './seeds/ap-apworld-u2-leq-practice';
 import { SEED_AP_APWORLD_U2_SAQ_PRACTICE } from './seeds/ap-apworld-u2-saq-practice';
+// AP World History: Modern — Unit-3 fan-out content plans (Land-Based
+// Empires, 1450-1750).
+import { SEED_AP_APWORLD_U3_EMPIRES_EXPANSION } from './seeds/ap-apworld-u3-empires-expansion';
+import { SEED_AP_APWORLD_U3_EMPIRES_ADMINISTRATION } from './seeds/ap-apworld-u3-empires-administration';
+import { SEED_AP_APWORLD_U3_EMPIRES_BELIEF_SYSTEMS } from './seeds/ap-apworld-u3-empires-belief';
+import { SEED_AP_APWORLD_U3_DBQ_PRACTICE } from './seeds/ap-apworld-u3-dbq-practice';
+import { SEED_AP_APWORLD_U3_LEQ_PRACTICE } from './seeds/ap-apworld-u3-leq-practice';
+import { SEED_AP_APWORLD_U3_SAQ_PRACTICE } from './seeds/ap-apworld-u3-saq-practice';
+// AP World History: Modern — Unit-4 fan-out content plans (Transoceanic
+// Interconnections, 1450-1750).
+import { SEED_AP_APWORLD_U4_MARITIME_EXPLORATION } from './seeds/ap-apworld-u4-maritime-exploration';
+import { SEED_AP_APWORLD_U4_COLUMBIAN_EXCHANGE } from './seeds/ap-apworld-u4-columbian-exchange';
+import { SEED_AP_APWORLD_U4_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-maritime-empires';
+import { SEED_AP_APWORLD_U4_ATLANTIC_SLAVE_TRADE } from './seeds/ap-apworld-u4-atlantic-slave-trade';
+import { SEED_AP_APWORLD_U4_RESISTANCE } from './seeds/ap-apworld-u4-resistance';
+import { SEED_AP_APWORLD_U4_DBQ_PRACTICE } from './seeds/ap-apworld-u4-dbq-practice';
+import { SEED_AP_APWORLD_U4_LEQ_PRACTICE } from './seeds/ap-apworld-u4-leq-practice';
+import { SEED_AP_APWORLD_U4_SAQ_PRACTICE } from './seeds/ap-apworld-u4-saq-practice';
+// AP World History: Modern — Unit-5 fan-out content plans (Revolutions,
+// 1750-1900).
+import { SEED_AP_APWORLD_U5_ENLIGHTENMENT } from './seeds/ap-apworld-u5-enlightenment';
+import { SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-atlantic-revolutions';
+import { SEED_AP_APWORLD_U5_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';
+import { SEED_AP_APWORLD_U5_INDUSTRIAL_REVOLUTION } from './seeds/ap-apworld-u5-industrial-revolution';
+import { SEED_AP_APWORLD_U5_INDUSTRIAL_SOCIETY } from './seeds/ap-apworld-u5-industrial-society';
+import { SEED_AP_APWORLD_U5_DBQ_PRACTICE } from './seeds/ap-apworld-u5-dbq-practice';
+import { SEED_AP_APWORLD_U5_LEQ_PRACTICE } from './seeds/ap-apworld-u5-leq-practice';
+import { SEED_AP_APWORLD_U5_SAQ_PRACTICE } from './seeds/ap-apworld-u5-saq-practice';
+// AP World History: Modern — Unit 6 content plans (imperialism, resistance,
+// economic imperialism, migration, reform), 1750-1900.
+import { SEED_AP_APWORLD_U6_IMPERIAL_EXPANSION } from './seeds/ap-apworld-u6-imperial-expansion';
+import { SEED_AP_APWORLD_U6_IMPERIAL_RESISTANCE } from './seeds/ap-apworld-u6-imperial-resistance';
+import { SEED_AP_APWORLD_U6_ECONOMIC_IMPERIALISM } from './seeds/ap-apworld-u6-economic-imperialism';
+import { SEED_AP_APWORLD_U6_GLOBAL_MIGRATION } from './seeds/ap-apworld-u6-global-migration';
+import { SEED_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-reform-responses';
+import { SEED_AP_APWORLD_U6_DBQ_PRACTICE } from './seeds/ap-apworld-u6-dbq-practice';
+import { SEED_AP_APWORLD_U6_LEQ_PRACTICE } from './seeds/ap-apworld-u6-leq-practice';
+import { SEED_AP_APWORLD_U6_SAQ_PRACTICE } from './seeds/ap-apworld-u6-saq-practice';
+// AP World History: Modern — Unit 7 content plans (WWI, interwar, WWII,
+// conflict legacies), 1900-present.
+import { SEED_AP_APWORLD_U7_WWI } from './seeds/ap-apworld-u7-wwi';
+import { SEED_AP_APWORLD_U7_INTERWAR } from './seeds/ap-apworld-u7-interwar';
+import { SEED_AP_APWORLD_U7_WWII } from './seeds/ap-apworld-u7-wwii';
+import { SEED_AP_APWORLD_U7_LEGACIES } from './seeds/ap-apworld-u7-legacies';
+import { SEED_AP_APWORLD_U7_DBQ_PRACTICE } from './seeds/ap-apworld-u7-dbq-practice';
+import { SEED_AP_APWORLD_U7_LEQ_PRACTICE } from './seeds/ap-apworld-u7-leq-practice';
+import { SEED_AP_APWORLD_U7_SAQ_PRACTICE } from './seeds/ap-apworld-u7-saq-practice';
+// AP World History: Modern — Unit-8 fan-out content plans (Cold War,
+// decolonization, new states, end of the Cold War).
+import { SEED_AP_APWORLD_U8_COLD_WAR } from './seeds/ap-apworld-u8-cold-war';
+import { SEED_AP_APWORLD_U8_DECOLONIZATION } from './seeds/ap-apworld-u8-decolonization';
+import { SEED_AP_APWORLD_U8_NEW_STATES } from './seeds/ap-apworld-u8-new-states';
+import { SEED_AP_APWORLD_U8_END_COLD_WAR } from './seeds/ap-apworld-u8-end-cold-war';
+import { SEED_AP_APWORLD_U8_DBQ_PRACTICE } from './seeds/ap-apworld-u8-dbq-practice';
+import { SEED_AP_APWORLD_U8_LEQ_PRACTICE } from './seeds/ap-apworld-u8-leq-practice';
+import { SEED_AP_APWORLD_U8_SAQ_PRACTICE } from './seeds/ap-apworld-u8-saq-practice';
+// AP World History: Modern — Unit-9 fan-out content plans (global economy,
+// technology/communication, environment/disease, culture/rights/migration).
+import { SEED_AP_APWORLD_U9_GLOBAL_ECONOMY } from './seeds/ap-apworld-u9-global-economy';
+import { SEED_AP_APWORLD_U9_TECHNOLOGY } from './seeds/ap-apworld-u9-technology';
+import { SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE } from './seeds/ap-apworld-u9-environment-disease';
+import { SEED_AP_APWORLD_U9_CULTURE_RIGHTS } from './seeds/ap-apworld-u9-culture-rights';
+import { SEED_AP_APWORLD_U9_DBQ_PRACTICE } from './seeds/ap-apworld-u9-dbq-practice';
+import { SEED_AP_APWORLD_U9_LEQ_PRACTICE } from './seeds/ap-apworld-u9-leq-practice';
+import { SEED_AP_APWORLD_U9_SAQ_PRACTICE } from './seeds/ap-apworld-u9-saq-practice';
 // AP US Government & Politics — Unit-1 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-11-ap-us-government-design.md.
 import { SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS } from './seeds/ap-apgov-u1-democratic-ideals';
@@ -2853,6 +2929,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U9_DBQ_PRACTICE,
   SEED_AP_APUSH_U9_LEQ_PRACTICE,
   SEED_AP_APUSH_U9_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-1 fan-out content plans.
+  SEED_AP_APWORLD_U1_EAST_ASIA_SONG,
+  SEED_AP_APWORLD_U1_DAR_AL_ISLAM,
+  SEED_AP_APWORLD_U1_SOUTH_SOUTHEAST_ASIA,
+  SEED_AP_APWORLD_U1_AMERICAS_AFRICA_STATES,
+  SEED_AP_APWORLD_U1_MEDIEVAL_EUROPE,
+  SEED_AP_APWORLD_U1_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U1_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U1_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
@@ -2862,6 +2947,64 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APWORLD_U2_DBQ_PRACTICE,
   SEED_AP_APWORLD_U2_LEQ_PRACTICE,
   SEED_AP_APWORLD_U2_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-3 fan-out content plans.
+  SEED_AP_APWORLD_U3_EMPIRES_EXPANSION,
+  SEED_AP_APWORLD_U3_EMPIRES_ADMINISTRATION,
+  SEED_AP_APWORLD_U3_EMPIRES_BELIEF_SYSTEMS,
+  SEED_AP_APWORLD_U3_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U3_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U3_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-4 fan-out content plans.
+  SEED_AP_APWORLD_U4_MARITIME_EXPLORATION,
+  SEED_AP_APWORLD_U4_COLUMBIAN_EXCHANGE,
+  SEED_AP_APWORLD_U4_MARITIME_EMPIRES,
+  SEED_AP_APWORLD_U4_ATLANTIC_SLAVE_TRADE,
+  SEED_AP_APWORLD_U4_RESISTANCE,
+  SEED_AP_APWORLD_U4_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U4_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U4_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-5 fan-out content plans.
+  SEED_AP_APWORLD_U5_ENLIGHTENMENT,
+  SEED_AP_APWORLD_U5_ATLANTIC_REVOLUTIONS,
+  SEED_AP_APWORLD_U5_NATIONALISM,
+  SEED_AP_APWORLD_U5_INDUSTRIAL_REVOLUTION,
+  SEED_AP_APWORLD_U5_INDUSTRIAL_SOCIETY,
+  SEED_AP_APWORLD_U5_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U5_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U5_SAQ_PRACTICE,
+  // AP World History: Modern — Unit 6 content plans.
+  SEED_AP_APWORLD_U6_IMPERIAL_EXPANSION,
+  SEED_AP_APWORLD_U6_IMPERIAL_RESISTANCE,
+  SEED_AP_APWORLD_U6_ECONOMIC_IMPERIALISM,
+  SEED_AP_APWORLD_U6_GLOBAL_MIGRATION,
+  SEED_AP_APWORLD_U6_REFORM_RESPONSES,
+  SEED_AP_APWORLD_U6_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U6_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U6_SAQ_PRACTICE,
+  // AP World History: Modern — Unit 7 content plans.
+  SEED_AP_APWORLD_U7_WWI,
+  SEED_AP_APWORLD_U7_INTERWAR,
+  SEED_AP_APWORLD_U7_WWII,
+  SEED_AP_APWORLD_U7_LEGACIES,
+  SEED_AP_APWORLD_U7_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U7_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U7_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-8 fan-out content plans.
+  SEED_AP_APWORLD_U8_COLD_WAR,
+  SEED_AP_APWORLD_U8_DECOLONIZATION,
+  SEED_AP_APWORLD_U8_NEW_STATES,
+  SEED_AP_APWORLD_U8_END_COLD_WAR,
+  SEED_AP_APWORLD_U8_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U8_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U8_SAQ_PRACTICE,
+  // AP World History: Modern — Unit-9 fan-out content plans.
+  SEED_AP_APWORLD_U9_GLOBAL_ECONOMY,
+  SEED_AP_APWORLD_U9_TECHNOLOGY,
+  SEED_AP_APWORLD_U9_ENVIRONMENT_DISEASE,
+  SEED_AP_APWORLD_U9_CULTURE_RIGHTS,
+  SEED_AP_APWORLD_U9_DBQ_PRACTICE,
+  SEED_AP_APWORLD_U9_LEQ_PRACTICE,
+  SEED_AP_APWORLD_U9_SAQ_PRACTICE,
   // AP US Government & Politics — Unit-1 Vertical Slice content plans.
   SEED_AP_APGOV_U1_DEMOCRATIC_IDEALS,
   SEED_AP_APGOV_U1_CONSTITUTION_RATIFICATION,

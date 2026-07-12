@@ -280,6 +280,15 @@ import { BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE } from './seeds/ap-apush-u9-c
 import { BASELINE_AP_APUSH_GLOBALIZATION } from './seeds/ap-apush-u9-globalization';
 import { BASELINE_AP_APUSH_SINCE_2001 } from './seeds/ap-apush-u9-since-2001';
 
+// AP World History Unit 1 (CED 1.1-1.2, 1.3, 1.4-1.5, 1.6) — Unit-1 fan-out
+// content plans (East Asia through medieval Europe). FRQ-practice plans
+// deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_EAST_ASIA_SONG } from './seeds/ap-apworld-u1-east-asia-song';
+import { BASELINE_AP_APWORLD_DAR_AL_ISLAM } from './seeds/ap-apworld-u1-dar-al-islam';
+import { BASELINE_AP_APWORLD_SOUTH_SOUTHEAST_ASIA } from './seeds/ap-apworld-u1-south-southeast-asia';
+import { BASELINE_AP_APWORLD_AMERICAS_AFRICA_STATES } from './seeds/ap-apworld-u1-americas-africa';
+import { BASELINE_AP_APWORLD_MEDIEVAL_EUROPE } from './seeds/ap-apworld-u1-medieval-europe';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -288,6 +297,56 @@ import { BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE } from './seeds/ap-apworld-u2-in
 import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-trans-saharan-trade';
 import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
+
+// AP World History Unit 3 (CED 3.1, 3.2, 3.3-3.4) — Unit-3 fan-out content
+// plans (Land-Based Empires: expansion, administration, belief systems).
+// FRQ-practice plans deferred (pure practice → no theory).
+import { BASELINE_AP_APWORLD_EMPIRES_EXPANSION } from './seeds/ap-apworld-u3-empires-expansion';
+import { BASELINE_AP_APWORLD_EMPIRES_ADMINISTRATION } from './seeds/ap-apworld-u3-empires-administration';
+import { BASELINE_AP_APWORLD_EMPIRES_BELIEF_SYSTEMS } from './seeds/ap-apworld-u3-empires-belief';
+// AP World History Unit 4 (CED 4.1-4.2, 4.3, 4.4-4.5, 4.4/4.6, 4.7-4.8) —
+// Unit-4 fan-out content plans (Transoceanic Interconnections, 1450-1750).
+import { BASELINE_AP_APWORLD_MARITIME_EXPLORATION } from './seeds/ap-apworld-u4-maritime-exploration';
+import { BASELINE_AP_APWORLD_COLUMBIAN_EXCHANGE } from './seeds/ap-apworld-u4-columbian-exchange';
+import { BASELINE_AP_APWORLD_MARITIME_EMPIRES } from './seeds/ap-apworld-u4-maritime-empires';
+import { BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE } from './seeds/ap-apworld-u4-atlantic-slave-trade';
+import { BASELINE_AP_APWORLD_RESISTANCE } from './seeds/ap-apworld-u4-resistance';
+
+// AP World History Unit 5 (CED 5.1, 5.2, 5.2, 5.3-5.6, 5.7-5.11) — Unit-5
+// fan-out content plans (Revolutions, 1750-1900).
+import { BASELINE_AP_APWORLD_ENLIGHTENMENT } from './seeds/ap-apworld-u5-enlightenment';
+import { BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-atlantic-revolutions';
+import { BASELINE_AP_APWORLD_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';
+import { BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION } from './seeds/ap-apworld-u5-industrial-revolution';
+import { BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY } from './seeds/ap-apworld-u5-industrial-society';
+// AP World History Unit 6 (CED 6.1-6.7) — imperialism, resistance, economic
+// imperialism, migration, reform, 1750-1900.
+import { BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION } from './seeds/ap-apworld-u6-imperial-expansion';
+import { BASELINE_AP_APWORLD_U6_IMPERIAL_RESISTANCE } from './seeds/ap-apworld-u6-imperial-resistance';
+import { BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM } from './seeds/ap-apworld-u6-economic-imperialism';
+import { BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION } from './seeds/ap-apworld-u6-global-migration';
+import { BASELINE_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-reform-responses';
+
+// AP World History Unit 7 (CED 7.1-7.9) — WWI, interwar crisis, WWII,
+// conflict legacies, 1900-present.
+import { BASELINE_AP_APWORLD_U7_WWI } from './seeds/ap-apworld-u7-wwi';
+import { BASELINE_AP_APWORLD_U7_INTERWAR } from './seeds/ap-apworld-u7-interwar';
+import { BASELINE_AP_APWORLD_U7_WWII } from './seeds/ap-apworld-u7-wwii';
+import { BASELINE_AP_APWORLD_U7_LEGACIES } from './seeds/ap-apworld-u7-legacies';
+// AP World History Unit 8 (CED 8.1-8.4, 8.5-8.6, 8.7-8.8, 8.9-8.10) —
+// Unit-8 fan-out content plans (Cold War through the end of the Cold War).
+import { BASELINE_AP_APWORLD_U8_COLD_WAR } from './seeds/ap-apworld-u8-cold-war';
+import { BASELINE_AP_APWORLD_U8_DECOLONIZATION } from './seeds/ap-apworld-u8-decolonization';
+import { BASELINE_AP_APWORLD_U8_NEW_STATES } from './seeds/ap-apworld-u8-new-states';
+import { BASELINE_AP_APWORLD_U8_END_COLD_WAR } from './seeds/ap-apworld-u8-end-cold-war';
+
+// AP World History Unit 9 (CED 9.1-9.3, 9.4-9.5, 9.6-9.7, 9.8-9.9) —
+// Unit-9 fan-out content plans (global economy through culture/rights/
+// migration).
+import { BASELINE_AP_APWORLD_U9_GLOBAL_ECONOMY } from './seeds/ap-apworld-u9-global-economy';
+import { BASELINE_AP_APWORLD_U9_TECHNOLOGY } from './seeds/ap-apworld-u9-technology';
+import { BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE } from './seeds/ap-apworld-u9-environment-disease';
+import { BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS } from './seeds/ap-apworld-u9-culture-rights';
 
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
@@ -531,11 +590,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_CONSERVATIVE_RESURGENCE,
   BASELINE_AP_APUSH_GLOBALIZATION,
   BASELINE_AP_APUSH_SINCE_2001,
+  BASELINE_AP_APWORLD_EAST_ASIA_SONG,
+  BASELINE_AP_APWORLD_DAR_AL_ISLAM,
+  BASELINE_AP_APWORLD_SOUTH_SOUTHEAST_ASIA,
+  BASELINE_AP_APWORLD_AMERICAS_AFRICA_STATES,
+  BASELINE_AP_APWORLD_MEDIEVAL_EUROPE,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
   BASELINE_AP_APWORLD_MONGOL_EMPIRE,
   BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APWORLD_EMPIRES_EXPANSION,
+  BASELINE_AP_APWORLD_EMPIRES_ADMINISTRATION,
+  BASELINE_AP_APWORLD_EMPIRES_BELIEF_SYSTEMS,
+  BASELINE_AP_APWORLD_MARITIME_EXPLORATION,
+  BASELINE_AP_APWORLD_COLUMBIAN_EXCHANGE,
+  BASELINE_AP_APWORLD_MARITIME_EMPIRES,
+  BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE,
+  BASELINE_AP_APWORLD_RESISTANCE,
+  BASELINE_AP_APWORLD_ENLIGHTENMENT,
+  BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS,
+  BASELINE_AP_APWORLD_NATIONALISM,
+  BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION,
+  BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY,
+  BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION,
+  BASELINE_AP_APWORLD_U6_IMPERIAL_RESISTANCE,
+  BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM,
+  BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION,
+  BASELINE_AP_APWORLD_U6_REFORM_RESPONSES,
+  BASELINE_AP_APWORLD_U7_WWI,
+  BASELINE_AP_APWORLD_U7_INTERWAR,
+  BASELINE_AP_APWORLD_U7_WWII,
+  BASELINE_AP_APWORLD_U7_LEGACIES,
+  BASELINE_AP_APWORLD_U8_COLD_WAR,
+  BASELINE_AP_APWORLD_U8_DECOLONIZATION,
+  BASELINE_AP_APWORLD_U8_NEW_STATES,
+  BASELINE_AP_APWORLD_U8_END_COLD_WAR,
+  BASELINE_AP_APWORLD_U9_GLOBAL_ECONOMY,
+  BASELINE_AP_APWORLD_U9_TECHNOLOGY,
+  BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE,
+  BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
