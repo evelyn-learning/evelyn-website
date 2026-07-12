@@ -1356,6 +1356,9 @@ import { SEED_AP_APUSH_U8_POSTWAR_SOCIETY } from './seeds/ap-apush-u8-postwar-so
 import { SEED_AP_APUSH_U8_CIVIL_RIGHTS } from './seeds/ap-apush-u8-civil-rights';
 import { SEED_AP_APUSH_U8_SIXTIES_VIETNAM } from './seeds/ap-apush-u8-sixties-vietnam';
 import { SEED_AP_APUSH_U8_SEVENTIES } from './seeds/ap-apush-u8-seventies';
+import { SEED_AP_APUSH_U8_DBQ_PRACTICE } from './seeds/ap-apush-u8-dbq-practice';
+import { SEED_AP_APUSH_U8_LEQ_PRACTICE } from './seeds/ap-apush-u8-leq-practice';
+import { SEED_AP_APUSH_U8_SAQ_PRACTICE } from './seeds/ap-apush-u8-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2730,6 +2733,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U8_CIVIL_RIGHTS,
   SEED_AP_APUSH_U8_SIXTIES_VIETNAM,
   SEED_AP_APUSH_U8_SEVENTIES,
+  SEED_AP_APUSH_U8_DBQ_PRACTICE,
+  SEED_AP_APUSH_U8_LEQ_PRACTICE,
+  SEED_AP_APUSH_U8_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
