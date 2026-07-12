@@ -306,3 +306,163 @@ description instead. `npm run lint:passages` was not re-run standalone for
 this task (out of scope for Task 5), but all four `passageId`s referenced by
 this bank resolved successfully through `resolvePassage()` during the seed
 script's own validation pass (0 "not in the passage registry" errors).
+
+## Unit 3: Civil Liberties and Civil Rights (CED Unit 3)
+
+Stimulus-based MCQ bank (`u3.json`, 12 items) keyed to the three Unit-3
+primary/data source documents seeded in
+`src/lib/tutor/passages/seeds/apgov-{brown-opinion,tinker-opinion,civil-rights-filings-table}.ts`
+and to the four Unit-3 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apgov-u3-{religion-speech,press-assembly-arms,due-process,civil-rights}.ts`).
+`cedCode` mirrors each LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u3.json |
+|---|---|---|---|
+| `apgov.religion-speech-liberties` | `AP-APGOV-3.1/3.2/3.3/3.4` | First Amendment religion & speech — *Tinker v. Des Moines* (1969, symbolic student speech, substantial-disruption standard), *Engel v. Vitale* (1962, Establishment Clause), *Wisconsin v. Yoder* (1972, Free Exercise Clause). | 4 |
+| `apgov.press-assembly-arms` | `AP-APGOV-3.5/3.6` | Press, assembly, and the Second Amendment — *New York Times Co. v. United States* (1971, prior restraint), *McDonald v. Chicago* (2010, Second Amendment incorporation). | 2 |
+| `apgov.due-process-incorporation` | `AP-APGOV-3.7/3.8/3.9` | Due process & selective incorporation — *Gideon v. Wainwright* (1963, Sixth Amendment right to counsel), the case-by-case nature of selective incorporation itself. | 2 |
+| `apgov.civil-rights-equality` | `AP-APGOV-3.10/3.11/3.12/3.13` | Civil rights & Equal Protection — *Brown v. Board of Education* (1954, "inherently unequal"), the civil-rights case-filings data table (1964-2020). | 4 |
+| **Total** | | | **12** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus-anchored item anchors to one of the three Unit-3 passage seeds
+via `passageId` (for grouping/render):
+
+- `evelyn.passage.apgov-tinker-opinion.v1` — Justice Fortas's opinion in *Tinker v. Des Moines* (1969) — the "schoolhouse gate" sentence and the "undifferentiated fear" / "materially and substantially interfere" substantial-disruption standard — 2 items (religion-speech-liberties.mcq.01-02)
+- `evelyn.passage.apgov-brown-opinion.v1` — Chief Justice Warren's opinion in *Brown v. Board of Education* (1954) — the "generates a feeling of inferiority" psychological-harm finding and the "'separate but equal' has no place... inherently unequal" / Fourteenth Amendment equal-protection conclusion — 2 items (civil-rights-equality.mcq.01-02)
+- `evelyn.passage.apgov-civil-rights-filings-table.v1` — BJS/AOUSC civil-rights case-filings data table, 1964-2020 (709 / 18,922 / 43,278 peak / 32,865 / 41,044) — 2 items (civil-rights-equality.mcq.03-04)
+
+6 non-stimulus items (no `passageId`, since no seeded Unit-3 document speaks
+to these topics) round out the bank: *Engel v. Vitale* and *Wisconsin v.
+Yoder* (religion-speech-liberties.mcq.03-04), *New York Times Co. v. United
+States* and *McDonald v. Chicago* (press-assembly-arms.mcq.01-02), and
+*Gideon v. Wainwright* plus the case-by-case nature of selective
+incorporation itself (due-process-incorporation.mcq.01-02). Per the Task 10
+brief, **zero sentences from MLK's "Letter from Birmingham Jail" are quoted
+anywhere in this bank** (it remains under copyright; the LO's own content
+plan, `ap-apgov-u3-civil-rights.ts`, likewise describes the Letter's
+argument entirely in its own words with zero quoted sentences) — no item in
+`u3.json` tests the Letter at all, since the Task 10 brief's required
+non-stimulus topic list for this LO covers Brown/filings-table only.
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as the Unit-1/Unit-2 banks: every stem inlines the specific short
+quoted document line (a verbatim substring of the seeded `fullText`,
+confirmed programmatically — see Verification below) or, for the
+filings-table set, the specific numeric figures tested, directly in the
+stem, before asking the AP Gov reasoning question — belt-and-suspenders
+given the passage-fed verify gate, and required regardless for the six
+non-stimulus items, which have no passage to fall back on.
+
+No `$<digit>` currency/KaTeX-trap figures appear anywhere in this bank (all
+filings-table figures are plain integers, e.g. "43,278", never written with
+a leading `$`).
+
+## AP Gov reasoning skills tested
+
+- **Foundational student-speech doctrine** — the "schoolhouse gate" sentence as the baseline rule that First Amendment protection follows students into public schools (religion-speech-liberties.mcq.01); the substantial-disruption standard's rejection of "undifferentiated fear" in favor of a concrete showing of material/substantial interference (religion-speech-liberties.mcq.02).
+- **Distinguishing the two religion clauses** — Engel v. Vitale's Establishment Clause holding that government may not compose or sponsor prayer for students regardless of voluntariness or brevity (religion-speech-liberties.mcq.03), contrasted with Yoder's Free Exercise Clause exemption of the Amish from a neutral, generally applicable compulsory-schooling law (religion-speech-liberties.mcq.04) — distractors on each item are built from the *other* clause's vocabulary to test whether students conflate the two.
+- **Prior restraint doctrine** — NYT v. US's "heavy presumption against constitutionality" standard for stopping publication in advance, distinguished from an absolute-immunity misreading (press-assembly-arms.mcq.01).
+- **Second Amendment incorporation** — McDonald v. Chicago's use of the Fourteenth Amendment's Due Process Clause (not Equal Protection, not an Article I/VI clause) to bind state and local gun laws (press-assembly-arms.mcq.02).
+- **Selective incorporation, applied and as a pattern** — Gideon v. Wainwright's incorporation of the Sixth Amendment right to counsel via the Due Process Clause (due-process-incorporation.mcq.01); using the ~50-year gap between Gideon (1963) and McDonald (2010) as evidence that incorporation proceeds right-by-right rather than all at once (due-process-incorporation.mcq.02).
+- **Brown's reasoning, in two stages** — the psychological/social harm ("feeling of inferiority") identified independent of any facilities gap (civil-rights-equality.mcq.01), then the "inherently unequal" conclusion and its Equal Protection basis, tested against a distractor that would require proof of unequal resources (civil-rights-equality.mcq.02).
+- **Reading a non-monotonic quantitative trend accurately** — the filings table's 1997 peak (43,278), 2006 dip (32,865), and partial-but-incomplete 2020 rebound (41,044), ruling out "increased every year," "declined continuously," and "2020 was the all-time high" distractors that each contradict at least one pair of the five given figures (civil-rights-equality.mcq.03); **historical causation** — the ~61-fold 1964-to-1997 growth explained by new civil-rights statutes expanding available federal causes of action, not by courts/states restricting access (civil-rights-equality.mcq.04).
+
+## Constitutional accuracy notes
+
+- *Schenck v. United States* (1919) is not tested as good law anywhere in
+  this bank — no item keys a correct answer to Schenck's "clear and present
+  danger" test as the standard courts currently apply. Schenck is not quoted
+  or cited in `u3.json` at all (the Unit-3 content plan's own misconception
+  check already covers Schenck's narrowing by *Brandenburg v. Ohio*
+  directly; this MCQ bank instead tests Tinker's separate, school-specific
+  substantial-disruption standard on its own terms).
+- Selective incorporation is tested, throughout, as running through the
+  Fourteenth Amendment's **Due Process Clause** — never the Equal Protection
+  Clause — consistent with the Unit-1 federalism plan, the Unit-3
+  press-assembly-arms and due-process plans, and *McDonald*'s and *Gideon*'s
+  actual holdings. civil-rights-equality.mcq.02's Due-Process-Clause
+  distractor (choice D) is deliberately wrong for the opposite reason: Brown
+  itself rests on **Equal Protection**, not Due Process — the two
+  Fourteenth-Amendment clauses are kept doctrinally distinct across every
+  item that touches either one.
+  press-assembly-arms.mcq.02's distractors (Equal Protection, Necessary and
+  Proper, Supremacy) are each a real constitutional clause that plays no
+  role in *McDonald*'s actual incorporation reasoning.
+- *Gideon v. Wainwright* (1963): Sixth Amendment right to counsel,
+  incorporated via Due Process; the bank does not claim Gideon incorporated
+  any other right or was a total-incorporation ruling.
+- *Brown v. Board of Education* (1954): tested only via the exact excerpted
+  reasoning in the seeded passage (the psychological-harm finding and the
+  "inherently unequal"/Equal Protection conclusion) — the bank does not
+  attribute the enforcement history (massive resistance) to any MCQ item in
+  this bank (that history is covered in the Unit-3 civil-rights plan's own
+  worked example/FRQ material, not retested here as an MCQ).
+- Civil-rights filings figures (709/1964, 18,922/1990, 43,278/1997 peak,
+  32,865/2006, 41,044/2020) are the real published AOUSC/BJS figures,
+  reproduced exactly from the seeded passage's `fullText` description
+  (verified programmatically — no numeric drift). No item claims 2020
+  surpassed the 1997 peak (it did not: 41,044 < 43,278).
+- MLK's "Letter from Birmingham Jail" (1963): still under copyright; this
+  bank contains **zero quoted sentences** from the Letter and no MCQ item
+  tests it — consistent with the Unit-3 civil-rights content plan's own
+  copyright-driven convention of describing the Letter's argument entirely
+  in original prose.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×2, 2×6, 3×3, 4×1.
+- Correct-answer letters distributed non-cyclically across all 12 items:
+  A=3, B=3, C=3, D=3. Sequence: `BDACDACBACDB` — perfectly even across all
+  four letters (25% each, under the 40% cap), not all one letter, and not a
+  repeating ABCD/period-4 pattern. Checked programmatically: no repeated
+  4-letter (or shorter) window and no back-to-back repeated letter anywhere
+  in the 12-item sequence.
+- Choice lengths equalized per item (word-count checked, correct answer NOT
+  the systematically longest option — the length-tell trap): the first
+  draft had the correct choice as the unique longest option in 6 of 12 items
+  (religion-speech-liberties.mcq.03, press-assembly-arms.mcq.02,
+  due-process-incorporation.mcq.01, civil-rights-equality.mcq.02/.03/.04);
+  each of those six items had its correct choice shortened and/or a
+  distractor lengthened (content/meaning unchanged) so that after revision
+  the correct answer is the **unique longest in 0 of 12 items**. Verify:
+  `node -e "const a=require('./src/data/problem-bank/ap-us-government/u3.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.trim().split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from public-domain Unit-3 documents (Tinker and
+  Brown; never MLK's still-copyrighted Letter, and never transcribed
+  wholesale from a real AP exam). `license: 'internal-original'` per
+  `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-government --file=u3.json --dry-run`:
+
+```
+Loaded 12 items from ap-us-government/u3.json
+Validation OK. Formats: {"mcq":12}
+
+Verifying 12 items via claude-sonnet-5 (concurrency 6)...
+  ...10/12
+
+Verify: 12/12 passed, 0 rejected.
+
+[dry-run] Would upsert 12 verified items. No DB write.
+```
+
+12/12 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0
+rejected, on the first pass (no answer-key fixes needed — the answer-letter
+reshuffles and choice-length rebalancing described above were done before
+this dry-run and changed only *which position* holds each correct answer
+and the *word count* of distractor/correct text, never the underlying
+correct answer itself, so a single dry-run after those edits sufficed).
+`npm run lint:passages`: `✅ passages lint clean (27 passages)` — includes
+all three passages referenced by this bank. A standalone verbatim-substring
+check confirmed every quoted span inside `problemText` (3 quoted spans from
+Tinker, 3 from Brown) is an exact substring of its passage's seeded
+`fullText` (0 mismatches, checked programmatically); the filings-table items
+(2 items) inline numeric figures rather than literary quotes, confirmed as
+a direct numeric match against the seeded description instead. A
+corpus-wide id-uniqueness check across `u1.json`, `u2.json`, and `u3.json`
+found 0 duplicate ids among the combined 37 items.

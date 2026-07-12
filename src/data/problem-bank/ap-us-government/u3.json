@@ -1,0 +1,236 @@
+[
+  {
+    "id": "apgov.religion-speech-liberties.mcq.01",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-tinker-opinion.v1",
+    "problemText": "In Tinker v. Des Moines Independent Community School District (1969), Justice Abe Fortas writes for the Court, \"It can hardly be argued that either students or teachers shed their constitutional rights to freedom of speech or expression at the schoolhouse gate.\" This sentence establishes which principle?",
+    "choices": [
+      "Public school officials may restrict any student speech that offends a majority of parents",
+      "First Amendment speech protection follows students and teachers into the public school setting",
+      "Only teachers, not students, retain constitutional free-speech rights while on school grounds",
+      "Students forfeit their free-speech rights for the duration of the school day"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Schoolhouse gate\" is a metaphor for the boundary of the school — ask what the Court says does NOT happen at that boundary.",
+      "Rule out any choice limiting the right to only teachers, or claiming students lose the right at school — the sentence says the opposite of both."
+    ]
+  },
+  {
+    "id": "apgov.religion-speech-liberties.mcq.02",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-tinker-opinion.v1",
+    "problemText": "The Tinker opinion continues: the Court rejects \"undifferentiated fear or apprehension of disturbance\" as a basis for restricting student speech, and instead requires a showing that the conduct would \"materially and substantially interfere with the requirements of appropriate discipline in the operation of the school.\" Applying this standard, a school could constitutionally punish a student's silent protest only if it —",
+    "choices": [
+      "offended the personal political views of a majority of the school board",
+      "was reported to make one or more teachers feel generally uncomfortable",
+      "addressed a topic that was actively being debated in Congress at the time",
+      "would concretely and substantially disrupt the school's ability to maintain discipline"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Court explicitly rejects \"undifferentiated fear\" as enough — ask which choice instead matches the concrete standard it requires.",
+      "Rule out board opinions, teacher discomfort, and the topic's national salience — none of those is \"material and substantial interference with discipline.\""
+    ]
+  },
+  {
+    "id": "apgov.religion-speech-liberties.mcq.03",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Engel v. Vitale (1962), the Supreme Court struck down a New York school board's practice of having students recite a short, nondenominational prayer each morning, even though reciting the prayer was voluntary and students could remain silent. The Court's holding rests on which reasoning?",
+    "choices": [
+      "Government may not compose or sponsor a prayer for students, regardless of length",
+      "A prayer violates the Constitution only if it names one specific religious denomination",
+      "Voluntary recitation of a government-written prayer cures any Establishment Clause concern",
+      "School prayer is constitutional whenever a majority of parents approve of it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Engel turns on WHO wrote and organized the prayer, not on how the prayer was worded or whether recitation was required.",
+      "Rule out choices that treat voluntariness, denominational wording, or parental approval as curing the problem — Engel rejected exactly that reasoning."
+    ]
+  },
+  {
+    "id": "apgov.religion-speech-liberties.mcq.04",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Wisconsin v. Yoder (1972), the Supreme Court held that Wisconsin's compulsory school-attendance law could not be applied to Amish parents who refused to send their children to school past the eighth grade, reasoning that the Amish families' sincere religious objection outweighed the state's interest in universal education. This holding is best classified as —",
+    "choices": [
+      "an Establishment Clause ruling barring government from promoting the Amish faith",
+      "an Equal Protection ruling requiring all religious groups to follow identical rules",
+      "a Free Exercise Clause exemption from an otherwise neutral, generally applicable law",
+      "a Due Process ruling incorporating the Sixth Amendment against the states"
+    ],
+    "answer": "C",
+    "hints": [
+      "Yoder is about a law BURDENING a family's religious practice, not about government promoting or favoring a religion — that distinction sorts the Establishment/Free-Exercise choices.",
+      "Rule out Equal Protection and the Sixth Amendment — neither concept appears in Yoder's reasoning at all."
+    ]
+  },
+  {
+    "id": "apgov.press-assembly-arms.mcq.01",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In New York Times Co. v. United States (1971), the federal government sought a court order to stop the Times and the Washington Post from publishing the classified \"Pentagon Papers,\" arguing publication would harm national security. The Supreme Court refused to block publication. Which doctrine explains why the government lost?",
+    "choices": [
+      "The First Amendment bars any lawsuit against a newspaper for any reason whatsoever",
+      "Classified information automatically loses its protection once a single copy has been leaked",
+      "Courts may never review a government request to block a newspaper from publishing",
+      "Prior restraint on the press carries a heavy presumption against constitutionality here unmet"
+    ],
+    "answer": "D",
+    "hints": [
+      "The government was asking a court to stop publication BEFORE it happened — that specific kind of request has its own doctrinal name and its own high bar.",
+      "Rule out absolute-immunity claims and \"courts can never review\" claims — the Court DID review the request; it just held the heavy burden wasn't met."
+    ]
+  },
+  {
+    "id": "apgov.press-assembly-arms.mcq.02",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In McDonald v. Chicago (2010), the Supreme Court held that the Second Amendment's individual right to keep and bear arms applies to state and local governments, striking down Chicago's handgun ban. Which constitutional mechanism did the Court use to reach this result?",
+    "choices": [
+      "The Due Process Clause of the Fourteenth Amendment, via selective incorporation",
+      "The Equal Protection Clause of the Fourteenth Amendment, not Due Process",
+      "The Necessary and Proper Clause found in Article I of the Constitution",
+      "The Supremacy Clause found in Article VI of the Constitution"
+    ],
+    "answer": "A",
+    "hints": [
+      "McDonald extends a Bill of Rights guarantee to the states — that is the job of one specific Fourteenth Amendment clause, not Equal Protection.",
+      "Rule out Article I and Article VI clauses — neither is the incorporation mechanism used anywhere in this unit."
+    ]
+  },
+  {
+    "id": "apgov.due-process-incorporation.mcq.01",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Gideon v. Wainwright (1963), Clarence Gideon was denied a court-appointed lawyer in a Florida felony case because Florida at the time provided free counsel only in capital cases; representing himself, he was convicted. The Supreme Court held that the Sixth Amendment right to counsel —",
+    "choices": [
+      "applies only in federal courts and never binds any state criminal proceeding at all",
+      "requires the state to appoint counsel only for defendants facing a possible death sentence",
+      "is a fundamental right incorporated against the states via the Due Process Clause",
+      "was created directly by the Fourteenth Amendment's Equal Protection Clause instead"
+    ],
+    "answer": "C",
+    "hints": [
+      "Gideon's whole point is making a FEDERAL Bill of Rights guarantee bind a STATE court — ask which choice describes that move.",
+      "Rule out \"federal courts only\" and \"capital cases only\" — both contradict the very holding that Gideon (a state, non-capital case) established."
+    ]
+  },
+  {
+    "id": "apgov.due-process-incorporation.mcq.02",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Selective incorporation has extended the Sixth Amendment right to counsel to the states in Gideon v. Wainwright (1963) and the Second Amendment right to keep and bear arms to the states in McDonald v. Chicago (2010) — decided nearly fifty years apart. This pattern shows that incorporation —",
+    "choices": [
+      "incorporated the entire Bill of Rights automatically the moment the Fourteenth Amendment was ratified",
+      "happens right by right, in separate cases, not in one single all-at-once ruling",
+      "applies only to rights that a state legislature has voluntarily agreed to adopt",
+      "was completed once and for all when Gideon was decided in 1963"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two rights, two different amendments, decided decades apart — ask what that gap in time itself tells you about how incorporation works.",
+      "Rule out \"automatic,\" \"legislature-adopted,\" and \"completed in 1963\" — each is contradicted by McDonald happening separately, and later."
+    ]
+  },
+  {
+    "id": "apgov.civil-rights-equality.mcq.01",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-brown-opinion.v1",
+    "problemText": "In Brown v. Board of Education (1954), Chief Justice Earl Warren writes that separating children \"solely because of their race generates a feeling of inferiority as to their status in the community that may affect their hearts and minds in a way unlikely ever to be undone.\" This passage identifies which kind of harm from segregation?",
+    "choices": [
+      "A psychological and social harm independent of any gap in physical facilities",
+      "A financial harm caused by unequal school funding formulas",
+      "A procedural harm from the school board's failure to hold a public hearing",
+      "A harm limited strictly to students who transfer schools mid-year"
+    ],
+    "answer": "A",
+    "hints": [
+      "\"Feeling of inferiority\" and \"hearts and minds\" describe an internal, psychological effect — not a dollars-and-facilities problem.",
+      "Rule out funding, hearings, and mid-year transfers — none of those appears anywhere in the quoted language."
+    ]
+  },
+  {
+    "id": "apgov.civil-rights-equality.mcq.02",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-brown-opinion.v1",
+    "problemText": "Brown v. Board of Education (1954) concludes, \"We conclude that in the field of public education the doctrine of \\\"separate but equal\\\" has no place. Separate educational facilities are inherently unequal.\" The excerpt adds that segregation \"[D]eprived of the equal protection of the laws guaranteed by the Fourteenth Amendment.\" Which statement best describes the Court's conclusion?",
+    "choices": [
+      "Segregated schools violate Equal Protection only if their facilities are provably unequal in quality",
+      "The ruling limits Plessy v. Ferguson to cases involving graduate and professional schools only",
+      "\"Separate but equal\" is rejected outright, and segregation itself is the constitutional harm",
+      "The Fourteenth Amendment's Due Process Clause, not Equal Protection, supplies this holding's basis"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Court says separate facilities are \"inherently\" unequal — ask what \"inherently\" tells you about whether resource parity matters at all.",
+      "Rule out choices requiring proof of unequal resources, limiting the holding to graduate schools, or naming the wrong Fourteenth Amendment clause — the excerpt names Equal Protection specifically."
+    ]
+  },
+  {
+    "id": "apgov.civil-rights-equality.mcq.03",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-civil-rights-filings-table.v1",
+    "problemText": "A civil rights case-filings table for U.S. district courts reports 709 cases in 1964, 18,922 in 1990, a series peak of 43,278 in 1997, 32,865 in 2006, and 41,044 in 2020. Which statement is best supported by these figures?",
+    "choices": [
+      "Filings increased in every single year shown, from 1964 straight through 2020",
+      "Filings declined continuously after 1964 and never again reached half the 1990 total",
+      "Filings in 2020 surpassed 1997, making 2020 the historic high point of the series",
+      "Filings peaked in 1997, eased by 2006, and stayed far above 1964 levels"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare only the five given years in order — 1997's figure is higher than both 2006's and 2020's.",
+      "Rule out \"every year increased,\" \"declined continuously,\" and \"2020 was the historic high\" — each is contradicted by comparing at least two of the five given figures directly."
+    ]
+  },
+  {
+    "id": "apgov.civil-rights-equality.mcq.04",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-civil-rights-filings-table.v1",
+    "problemText": "The same filings table shows civil rights case filings grew from 709 in 1964 to 43,278 at their 1997 peak — an increase of roughly sixty-one-fold — before easing to 32,865 by 2006 and running at 41,044 in 2020. This long-run pattern is best explained by which historical development?",
+    "choices": [
+      "Congress repeatedly narrowed the causes of action available to civil rights plaintiffs after 1964",
+      "New civil rights statutes after 1964 gave individuals additional federal causes of action",
+      "Federal courts began refusing to hear civil rights cases after the 1997 peak",
+      "State courts gained exclusive jurisdiction over civil rights claims beginning in 1990"
+    ],
+    "answer": "B",
+    "hints": [
+      "Filings can only grow this much if plaintiffs gained MORE legal grounds to sue, not fewer — ask which choice matches an expansion, not a restriction.",
+      "Rule out \"narrowed,\" \"refusing to hear,\" and \"state courts gained exclusive jurisdiction\" — each would produce falling federal filings, the opposite of the growth shown."
+    ]
+  }
+]
