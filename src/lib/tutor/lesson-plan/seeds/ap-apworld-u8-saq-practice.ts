@@ -71,20 +71,20 @@ export const SEED_AP_APWORLD_U8_SAQ_PRACTICE: LessonPlan = {
       id: 'try-full-saq',
       kind: 'try_yourself',
       problem:
-        'Use the table below to answer parts (a), (b), and (c).\n(a) Identify the decade in the table during which United Nations membership grew the most dramatically.\n(b) Explain ONE specific historical development behind the growth you identified in part (a).\n(c) Explain ONE way in which the arrival of the new members described in the table changed the agenda of the United Nations.',
+        'Use the table below to answer parts (a), (b), and (c).\n(a) Identify the year in which United Nations membership grew by the largest number of new members in a single year, according to the table.\n(b) Explain ONE specific historical development behind the growth you identified in part (a).\n(c) Explain ONE way in which the arrival of the new members described in the table changed the agenda of the United Nations.',
       responseFormat: 'frq',
       passageId: 'evelyn.passage.apworld-un-membership-table.v1',
       expectedAnswer:
-        '(a) The table shows the most dramatic growth in the 1960s: membership rose from 99 members in 1960 to 127 by 1970, an increase of 28, and that decade opened with the single largest one-year jump the table describes at all — from 82 to 99 members in 1960 alone, a rise of 17 in a single year. (b) That growth was driven by decolonization in Africa: the table itself notes that 16 of the 17 states admitted in 1960 were newly independent African states, part of a wave in which French and British colonies across sub-Saharan Africa achieved independence in rapid succession as the European colonial powers, weakened since the Second World War, could no longer sustain their empires against rising nationalist movements. (c) The arrival of dozens of newly independent African and Asian member states shifted the UN General Assembly\'s agenda toward anti-colonial and self-determination concerns — most concretely in the General Assembly\'s 1960 Declaration on the Granting of Independence to Colonial Countries and Peoples, which declared that the subjection of peoples to alien rule violates human rights — reflecting that new members now had the votes to push decolonization and, later, economic development onto the agenda alongside the Cold War security issues that had dominated the UN\'s first fifteen years.',
+        '(a) According to the table, United Nations membership grew by the largest number of new members in a single year in 1960, when membership rose from 82 to 99 members — an increase of 17 in one year, the largest single-year jump the table describes at any point. (b) That growth was driven by decolonization in Africa: the table itself notes that 16 of the 17 states admitted in 1960 were newly independent African states — most of them former French colonies, along with Nigeria (British) and Somalia — part of a wave in which colonies across sub-Saharan Africa achieved independence in rapid succession as the European colonial powers, weakened since the Second World War, could no longer sustain their empires against rising nationalist movements. (c) The arrival of dozens of newly independent African and Asian member states shifted the UN General Assembly\'s agenda toward anti-colonial and self-determination concerns — most concretely in the General Assembly\'s 1960 Declaration on the Granting of Independence to Colonial Countries and Peoples, which declared that the subjection of peoples to alien rule violates human rights — reflecting that new members now had the votes to push decolonization and, later, economic development onto the agenda alongside the Cold War security issues that had dominated the UN\'s first fifteen years.',
       rubric: {
         parts: [
           {
             criterionId: 'a',
             maxPoints: 1,
             scoringCriteria:
-              'Full credit (1/1): briefly and accurately identifies the 1960s (or equivalently, 1960 to 1970) as the decade of most dramatic UN membership growth in the table, citing at least one of its own figures (the rise from 99 to 127 members across the decade, and/or the single largest one-year jump the table describes, +17 in 1960 alone). No credit (0/1) for a vague answer with no table figure, or a decade the table does not support.',
+              'Full credit (1/1): briefly and accurately identifies 1960 as the year of the largest single-year increase in UN membership shown in the table, citing the table\'s own figures (membership rising from 82 to 99 members, an increase of 17 in that one year). No credit (0/1) for a vague answer with no table figure, or a year the table does not support.',
             modelResponse:
-              'The table shows the most dramatic growth in the 1960s: membership rose from 99 members in 1960 to 127 by 1970, a rise of 28 — and that decade opened with the single largest one-year jump described anywhere in the table, from 82 to 99 members in 1960 alone.',
+              'According to the table, the largest single-year increase in UN membership came in 1960, when membership rose from 82 to 99 members — an increase of 17 new members in that one year alone, the largest one-year jump the table describes.',
           },
           {
             criterionId: 'b',
@@ -92,7 +92,7 @@ export const SEED_AP_APWORLD_U8_SAQ_PRACTICE: LessonPlan = {
             scoringCriteria:
               'Full credit (1/1): briefly explains ONE specific, accurate historical development connected to the growth identified in part (a) — e.g. the wave of African decolonization reflected in the table\'s own note that 16 of the 17 states admitted in 1960 were newly independent African states. No credit (0/1) for a vague statement with no specific, accurate historical development, or one not connected to the growth in part (a).',
             modelResponse:
-              'That growth was driven by decolonization in Africa: the table notes that 16 of the 17 states admitted in 1960 were newly independent African states, part of a wave in which French and British colonies across sub-Saharan Africa achieved independence in rapid succession as the European colonial powers, weakened since World War II, could no longer sustain their empires against rising nationalist movements.',
+              'That growth was driven by decolonization in Africa: the table notes that 16 of the 17 states admitted in 1960 were newly independent African states — most of them former French colonies, along with Nigeria (British) and Somalia — part of a wave in which colonies across sub-Saharan Africa achieved independence in rapid succession as the European colonial powers, weakened since World War II, could no longer sustain their empires against rising nationalist movements.',
           },
           {
             criterionId: 'c',
@@ -106,7 +106,7 @@ export const SEED_AP_APWORLD_U8_SAQ_PRACTICE: LessonPlan = {
       },
       hints: [
         'Each part just needs a specific, accurate fact — you don\'t need a thesis or an introduction.',
-        'For part (a), cite an actual number from the table (a membership total or a change between two points), not just a decade name.',
+        'For part (a), cite an actual number from the table (the specific year and the size of that year\'s jump), not just a year with no figure attached.',
         '"Briefly explain" means going one step past the fact: connect it to WHY it matters to the question asked.',
         'Answer each part independently — if you\'re unsure on (a), you can still earn full credit on (b) and (c).',
       ],
