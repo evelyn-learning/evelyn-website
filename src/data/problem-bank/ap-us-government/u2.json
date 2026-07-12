@@ -166,7 +166,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.apgov-congress-demographics-table.v1",
-    "problemText": "The same data table reports that in 2021, the 147 women serving in Congress made up about 27% of the chamber's 535 voting members, even though women were about 50.8% of the total U.S. population per the 2020 Census. This comparison best supports which conclusion?",
+    "problemText": "The same data table reports that in 2021, the 147 women serving in Congress made up about 27% of Congress, even though women were about 50.8% of the total U.S. population per the 2020 Census. This comparison best supports which conclusion?",
     "choices": [
       "Women's share of Congress now exceeds their share of the U.S. population",
       "Congress and the U.S. population are demographically identical in every respect",

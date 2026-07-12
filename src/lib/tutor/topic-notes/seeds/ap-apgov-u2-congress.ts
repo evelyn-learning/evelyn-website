@@ -106,7 +106,7 @@ export const BASELINE_AP_APGOV_CONGRESS_STRUCTURE: TopicNotesBaseline = {
       kind: 'event',
       title: 'women in Congress, 1961-2021 (CRS Report R43244)',
       content:
-        'Described data table adapted from a Congressional Research Service report: the total number of women in Congress (out of 535 voting Members) rose from 20 (1961) to 23 (1981) to 74 (2001) to 147 (2021) — growth was SLIGHT through 1981, then accelerated sharply after the 1990s. In 2021, that 147 was about 27% of Congress\'s 535 voting seats, far below women\'s roughly 50.8% share of the U.S. population per the 2020 Census — numeric growth over time and demographic proportionality are two different things.',
+        'Described data table adapted from a Congressional Research Service report: the total number of women in Congress (out of 535 voting Members) rose from 20 (1961) to 23 (1981) to 74 (2001) to 147 (2021) — growth was SLIGHT through 1981, then accelerated sharply after the 1990s. In 2021, women\'s congressional share was about 27%, far below women\'s roughly 50.8% share of the U.S. population per the 2020 Census — numeric growth over time and demographic proportionality are two different things.',
     },
   ],
   methods: [
@@ -140,7 +140,7 @@ export const BASELINE_AP_APGOV_CONGRESS_STRUCTURE: TopicNotesBaseline = {
       ],
       example: {
         problem:
-          'Women in Congress rose from 20 (1961) to 147 (2021) out of 535 seats, while making up about 50.8% of the U.S. population in 2020. What does this show?',
+          'Women in Congress rose from 20 (1961) to 147 (2021), while making up about 50.8% of the U.S. population in 2020. What does this show?',
         solution:
           'The number grew slightly through 1981, then accelerated sharply after the 1990s, reaching about 27% of seats by 2021 — but that 27% remains far below the 50.8% population share, so growth over time has not closed the proportionality gap.',
       },
