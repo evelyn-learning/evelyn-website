@@ -169,3 +169,103 @@ its own question).
 10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
 `npm run lint:passages` clean (35 passages resolve, including all 5
 referenced by this bank). `npx tsc --noEmit`: 0 errors.
+
+## Unit 7: 1890–1945 (Period 7)
+
+Stimulus-based MCQ bank (`u7.json`) keyed to the five Period-7 primary
+document seeds in `src/lib/tutor/passages/seeds/apush-{roosevelt-corollary,
+wilson-war-message,fdr-first-inaugural,four-freedoms,eo-9066}.ts`, and to the
+six Period-7 content lesson-plan LOs (`src/lib/tutor/lesson-plan/seeds/
+ap-apush-u7-*.ts`). `cedCode` mirrors each LO's `standard` field exactly.
+Composition follows the period spec block (corollary 2, wilson 2,
+fdr-inaugural 2, four-freedoms 1, eo-9066 2, non-stimulus progressivism 2 +
+twenties 1 = 12 total).
+
+| loId | cedCode | Topic | # items in u7.json |
+|---|---|---|---|
+| `apush.imperialism` | `AP-APUSH-7.2` | American Imperialism (the Roosevelt Corollary's "international police power," the Platt Amendment). | 2 |
+| `apush.progressivism` | `AP-APUSH-7.4` | The Progressive Movement (Square Deal vs. New Freedom; NAWSA/National Woman's Party suffrage strategy). | 2 |
+| `apush.wwi` | `AP-APUSH-7.6` | World War I (Wilson's idealist war message vs. the punitive Treaty of Versailles). | 2 |
+| `apush.twenties` | `AP-APUSH-7.9` | The 1920s (uneven prosperity — the persistent farm depression). | 1 |
+| `apush.depression-new-deal` | `AP-APUSH-7.11` | The Great Depression and the New Deal (FDR's First Inaugural — "fear itself" and "action, and action now"). | 2 |
+| `apush.wwii` | `AP-APUSH-7.13` | World War II (the Four Freedoms; EO 9066's race-neutral text vs. its group-specific application). | 3 |
+| **Total** | | | **12** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus item anchors to one of the five Period-7 passage seeds via
+`passageId` (for grouping/render); the three non-stimulus items
+(progressivism ×2, twenties ×1) intentionally omit `passageId` — no seeded
+passage is wired to either content plan (both plans' worked examples are
+document-free comparative analyses, per the Period-7 block spec):
+
+- `evelyn.passage.apush-roosevelt-corollary.v1` — TR, Fourth Annual Message to Congress (1904) — 2 items
+- `evelyn.passage.apush-wilson-war-message.v1` — Wilson, war message to Congress (1917) — 2 items
+- `evelyn.passage.apush-fdr-first-inaugural.v1` — FDR, First Inaugural Address (1933) — 2 items
+- `evelyn.passage.apush-four-freedoms.v1` — FDR, Four Freedoms speech (1941) — 1 item
+- `evelyn.passage.apush-eo-9066.v1` — Executive Order 9066 (1942) — 2 items
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as Units 3 and 6: every stem inlines the specific short quoted
+line it questions, directly in the stem, before asking the
+historical-reasoning question. Quoted spans are verbatim contiguous
+substrings of the seeded `fullText`. Two passages in this unit carry a
+non-adjacency gotcha that this bank respects: the Roosevelt Corollary's
+seeded excerpt has one elision (a transitional sentence about a country's
+"hearty friendship"), so imperialism.mcq.01 quotes only from the span after
+the ellipsis and imperialism.mcq.02 quotes the full sentence that follows it
+in the same span — neither item bridges across the ellipsis. The FDR First
+Inaugural's seeded excerpt is two non-adjacent spans from different
+paragraphs ("fear itself" ... "action, and action now"); depression-new-
+deal.mcq.01 quotes only the first span and .mcq.02 quotes only the second —
+never combined into one bridged quote, and neither item quotes or attributes
+"bold, persistent experimentation" (that phrase is from FDR's 1932
+Oglethorpe University address, not this inaugural, as the passage seed and
+content plan both flag). The EO 9066 items quote only the order's operative
+authorization language, matching the passage's own scope (it excludes the
+National Archives' surrounding background essay).
+
+## Historical-reasoning skills tested
+
+- **Sourcing / point of view** — the Roosevelt Corollary transforming the Monroe Doctrine from exclusion into intervention (imperialism.mcq.01); Wilson's war message framing U.S. entry as a disinterested moral cause rather than retaliation (wwi.mcq.01).
+- **Contextualization** — the Platt Amendment as the standard of U.S.-supervised order Roosevelt held up for the Caribbean (imperialism.mcq.02); the Four Freedoms speech's universal war-aims framing nearly a year before Pearl Harbor (wwii.mcq.01).
+- **Causation** — Wilson's idealistic "safe for democracy" framing setting up the later gap with the punitive Treaty of Versailles (wwi.mcq.02, the bank's sole difficulty-4 item); FDR's "fear itself" psychological diagnosis paired with the later "action, and action now" call anticipating the Hundred Days (depression-new-deal.mcq.01/.02).
+- **Comparison** — Roosevelt's Square Deal (regulate) vs. Wilson's New Freedom (break up) as evidence of Progressivism's internal diversity, not a single agenda (progressivism.mcq.01); NAWSA's dual-track strategy vs. the National Woman's Party's direct action, both converging on the 19th Amendment (progressivism.mcq.02).
+- **Close textual reading (source vs. application)** — EO 9066's formally race-neutral "any or all persons" text against its group-specific application to Japanese Americans (wwii.mcq.02); the citizenship status of those actually removed under it (wwii.mcq.03).
+- **Continuity/uneven change** — the persistent 1920s farm depression as a genuine exception to consumer-economy prosperity (twenties.mcq.01).
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×2 (depression-new-deal.mcq.01, progressivism.mcq.02),
+  2×5 (imperialism.mcq.01, wwi.mcq.01, wwii.mcq.01, wwii.mcq.03,
+  twenties.mcq.01), 3×4 (imperialism.mcq.02, depression-new-deal.mcq.02,
+  wwii.mcq.02, progressivism.mcq.01), 4×1 (wwi.mcq.02, the Wilson-vs-
+  Versailles item — the bank's hardest).
+- Correct-answer letters distributed non-cyclically across all 12 items:
+  A=3, B=3, C=3, D=3. Sequence: `ACBDCADBADCB` — not all-A, not a repeating
+  ABCD block.
+- Choice lengths checked by word count per item: an initial draft had the
+  correct answer as the longest/tied-longest option in 6 of 12 items; a
+  revision lengthened distractors (never shortened correct answers' content)
+  so the correct answer is now the longest in **0 of 12** items. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-history/u7.json'); for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); console.log(i.id, w[ci]===Math.max(...w));}"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from the five public-domain Period-7 US-government
+  documents (never transcribed wholesale from a real AP exam). `license:
+  'internal-original'` per `scripts/seed-problem-bank.ts`.
+- Real-misconception distractors used per the plan constraints: the New
+  Deal did NOT end the Depression (depression-new-deal.mcq.02, matching the
+  content plan's own misconception check — wartime mobilization did);
+  the U.S. did NOT fight WWI from 1914 (wwi.mcq.02 — entry was April 1917);
+  internment did NOT target only non-citizens (wwii.mcq.03 — most of the
+  ~120,000 removed were U.S. citizens); Progressivism was NOT a single
+  unified movement (progressivism.mcq.01, matching that content plan's own
+  misconception check).
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-history --file=u7.json --dry-run`:
+12/12 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (40 passages resolve, including all 5
+referenced by this bank). `npx tsc --noEmit`: 0 errors.

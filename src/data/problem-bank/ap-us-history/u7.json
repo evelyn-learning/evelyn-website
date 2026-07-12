@@ -1,0 +1,239 @@
+[
+  {
+    "id": "apush.imperialism.mcq.01",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-roosevelt-corollary.v1",
+    "problemText": "In his Fourth Annual Message to Congress (December 1904), Theodore Roosevelt wrote that \"the adherence of the United States to the Monroe Doctrine may force the United States, however reluctantly, in flagrant cases of such wrongdoing or impotence, to the exercise of an international police power.\" Compared to the original 1823 Monroe Doctrine, which warned European powers against further colonization or intervention in the Western Hemisphere, this \"Roosevelt Corollary\" argument —",
+    "choices": [
+      "transforms a doctrine of keeping European powers OUT into a doctrine asserting the United States' own right to intervene",
+      "restates the original Monroe Doctrine's purpose without adding anything new to U.S. policy",
+      "renounces the Monroe Doctrine entirely in favor of full European oversight of Latin American affairs",
+      "applies only to Cuba specifically, exempting every other Western Hemisphere nation entirely from potential U.S. intervention under this newly asserted doctrine"
+    ],
+    "answer": "A",
+    "hints": [
+      "The original Monroe Doctrine (1823) was about excluding European powers, not the U.S. intervening itself.",
+      "Ask whether Roosevelt is describing a purely defensive policy or an assertive new power the U.S. is claiming for itself."
+    ]
+  },
+  {
+    "id": "apush.imperialism.mcq.02",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-roosevelt-corollary.v1",
+    "problemText": "The same 1904 message continues: \"If every country washed by the Caribbean Sea would show the progress in stable and just civilization which with the aid of the Platt amendment Cuba has shown since our troops left the island, and which so many of the republics in both Americas are constantly and brilliantly showing, all question of interference by this Nation with their affairs would be at an end.\" This passage treats the Platt Amendment (1901) as —",
+    "choices": [
+      "a treaty between full and complete equals that gave Cuba precisely the same sovereignty as any other fully independent nation",
+      "an agreement Roosevelt regretted imposing on Cuba and hoped to repeal immediately",
+      "evidence that U.S.-supervised order, not full Cuban self-government, was the standard other Caribbean nations should meet to avoid intervention",
+      "a purely economic arrangement concerning sugar tariffs, unrelated to U.S. military or political oversight"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall what the Platt Amendment actually did: it authorized U.S. intervention in Cuban affairs and secured a naval base at Guantanamo Bay.",
+      "Ask whether Roosevelt is holding up full Cuban independence as the model, or a form of U.S.-supervised stability."
+    ]
+  },
+  {
+    "id": "apush.wwi.mcq.01",
+    "loId": "apush.wwi",
+    "cedCode": "AP-APUSH-7.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-wilson-war-message.v1",
+    "problemText": "In his April 2, 1917 war message to Congress, Woodrow Wilson declared: \"We have no selfish ends to serve. We desire no conquest, no dominion. We seek no indemnities for ourselves, no material compensation for the sacrifices we shall freely make.\" This framing presents U.S. entry into World War I chiefly as —",
+    "choices": [
+      "a war fought purely in retaliation for the German sinking of the Lusitania passenger liner in 1915",
+      "a disinterested moral cause for \"the rights of mankind,\" not a war for territory or payment",
+      "a defensive alliance obligation triggered automatically by a formal U.S. treaty with France",
+      "a limited economic dispute over unpaid war loans the U.S. had extended to the Allies"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice Wilson explicitly denies seeking conquest, dominion, or material compensation.",
+      "Ask what kind of justification remains once territorial and financial motives are ruled out."
+    ]
+  },
+  {
+    "id": "apush.wwi.mcq.02",
+    "loId": "apush.wwi",
+    "cedCode": "AP-APUSH-7.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-wilson-war-message.v1",
+    "problemText": "The same address states: \"The world must be made safe for democracy. Its peace must be planted upon the tested foundations of political liberty.\" Given that the United States did not declare war until April 1917, nearly three years after the war began in Europe, this sweeping idealistic language is best understood as —",
+    "choices": [
+      "proof that the United States had actually been fighting since the war's outbreak in 1914, only declaring war formally later",
+      "a promise that was fully realized by the Treaty of Versailles' final terms",
+      "language directed solely at the German public, with no domestic persuasive purpose in the United States",
+      "rhetoric that set a moral standard the punitive, reparations-heavy Treaty of Versailles (1919) would fall well short of"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall that the actual Treaty of Versailles imposed harsh reparations and a war-guilt clause on Germany.",
+      "The idea that the U.S. fought from 1914 confuses the war's European outbreak with America's later, 1917 entry."
+    ]
+  },
+  {
+    "id": "apush.depression-new-deal.mcq.01",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-fdr-first-inaugural.v1",
+    "problemText": "In his First Inaugural Address (March 4, 1933), Franklin Roosevelt said: \"the only thing we have to fear is fear itself—nameless, unreasoning, unjustified terror which paralyzes needed efforts to convert retreat into advance.\" Roosevelt's central claim here is that —",
+    "choices": [
+      "the Depression's deepest immediate problem was economic collapse alone, with no psychological dimension at all",
+      "no specific federal policy could help until private banks first restored themselves without government involvement",
+      "paralyzing public fear and terror, not economic conditions alone, was itself blocking recovery efforts",
+      "Congress, not the presidency, bore full responsibility for ending the nation's fear and restoring confidence"
+    ],
+    "answer": "C",
+    "hints": [
+      "Focus on the words 'fear' and 'paralyzes' — what is fear doing to recovery efforts, according to Roosevelt?",
+      "This is a claim about psychology as much as economics."
+    ]
+  },
+  {
+    "id": "apush.depression-new-deal.mcq.02",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-fdr-first-inaugural.v1",
+    "problemText": "Later in the same address — after an ellipsis marking a separate passage, not the sentence immediately following the first — Roosevelt said: \"This Nation is asking for action, and action now. Our greatest primary task is to put people to work.\" This call for immediate federal action, delivered in March 1933, most directly anticipates —",
+    "choices": [
+      "the burst of \"Hundred Days\" relief and recovery legislation, though the Depression itself persisted until World War II mobilization",
+      "the burst of \"Hundred Days\" relief and recovery legislation that fully and permanently ended the Great Depression within the year",
+      "a policy Roosevelt would not actually implement until his second term, after the 1936 election",
+      "a purely rhetorical flourish with no connection to any specific legislation that followed"
+    ],
+    "answer": "A",
+    "hints": [
+      "The New Deal provided real relief and reform, but unemployment remained high through the 1930s.",
+      "Recall what historians identify as the actual cause of full economic recovery — wartime spending, not New Deal programs alone."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.01",
+    "loId": "apush.wwii",
+    "cedCode": "AP-APUSH-7.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-four-freedoms.v1",
+    "problemText": "In his January 6, 1941 address to Congress, FDR named a world \"founded upon four essential human freedoms,\" including \"freedom from want\" and \"freedom from fear—which, translated into world terms, means a world-wide reduction of armaments.\" Delivered nearly a year before Pearl Harbor, this speech is best understood as —",
+    "choices": [
+      "a formal declaration of war against the Axis powers, issued several months before the attack on Pearl Harbor",
+      "a purely domestic economic-recovery program addressing only unemployment problems inside the continental United States",
+      "a direct response to the Pearl Harbor attack, composed specifically to rally public opinion afterward",
+      "a statement of universal Allied war aims delivered before formal U.S. entry into the war"
+    ],
+    "answer": "D",
+    "hints": [
+      "Note the date — January 1941 — nearly a year before Pearl Harbor (December 1941).",
+      "This speech looks outward, framing a moral case for the Allied cause, not a declaration of war or a domestic program."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.02",
+    "loId": "apush.wwii",
+    "cedCode": "AP-APUSH-7.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-eo-9066.v1",
+    "problemText": "Executive Order 9066 (February 19, 1942) authorized the Secretary of War \"to prescribe military areas in such places and of such extent as he or the appropriate Military Commander may determine, from which any or all persons may be excluded.\" The order's own text —",
+    "choices": [
+      "explicitly names Japanese Americans specifically as the exact group subject to exclusion under the precise terms of this particular military order",
+      "grants formally race-neutral authority over \"any or all persons,\" which military commanders then applied specifically to Japanese Americans",
+      "limits exclusion authority to enemy aliens who were not U.S. citizens",
+      "requires an individual hearing before any person may be excluded from a designated military area"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look closely at the order's own wording — does it name any ethnic or national group by name?",
+      "The gap between this neutral wording and how the authority was actually used is the key point."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.03",
+    "loId": "apush.wwii",
+    "cedCode": "AP-APUSH-7.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-eo-9066.v1",
+    "problemText": "Acting under Executive Order 9066's authorization to exclude \"any or all persons\" from designated military areas, commanders removed roughly 120,000 Japanese Americans from the West Coast into inland incarceration camps during World War II. Which statement about who was removed is accurate?",
+    "choices": [
+      "the large majority of those removed were U.S. citizens, targeted by ancestry rather than citizenship status",
+      "only first-generation Japanese immigrants ineligible for U.S. citizenship were ever removed; American-born citizens of Japanese ancestry were fully exempt",
+      "German and Italian nationals were removed in equally large numbers under the same order",
+      "removal applied equally to all recent immigrant groups from any Axis nation, citizen or not"
+    ],
+    "answer": "A",
+    "hints": [
+      "Many of those incarcerated were Nisei — American-born children of Japanese immigrants, and therefore already U.S. citizens.",
+      "Contrast this with the more limited, individualized measures applied to German and Italian nationals."
+    ]
+  },
+  {
+    "id": "apush.progressivism.mcq.01",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Theodore Roosevelt's Square Deal distinguished \"good\" trusts from \"bad\" trusts and favored federal regulation of big business, while Woodrow Wilson's New Freedom treated concentrated economic power itself as the problem and favored restoring competition by breaking it up (the Clayton Antitrust Act, the Federal Trade Commission). This disagreement between two Progressive presidents shows that —",
+    "choices": [
+      "Roosevelt and Wilson actually pursued identical antitrust policy, differing only in campaign rhetoric",
+      "Progressivism was a single, unified movement with one agreed program for regulating the economy",
+      "only one of the two men, Wilson, can accurately be described as a genuine Progressive reformer in this particular comparison",
+      "Progressivism was a diverse coalition whose members could disagree sharply on how, not just whether, government should act"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both leaders agreed government should act on big business — but ask what they disagreed about.",
+      "This is direct evidence against treating Progressivism as one coherent, single-agenda movement."
+    ]
+  },
+  {
+    "id": "apush.progressivism.mcq.02",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The National American Woman Suffrage Association (NAWSA), led by Carrie Chapman Catt, pursued a combined state-by-state and federal-amendment strategy, while Alice Paul's National Woman's Party used more confrontational direct-action tactics, including picketing the White House. Both contributed to the ratification of —",
+    "choices": [
+      "the 17th Amendment (1913), establishing direct election of U.S. senators",
+      "the 18th Amendment (1919), establishing national Prohibition",
+      "the 19th Amendment (1920), guaranteeing women's suffrage",
+      "the 16th Amendment (1913), authorizing a federal income tax"
+    ],
+    "answer": "C",
+    "hints": [
+      "NAWSA and the National Woman's Party were both suffrage organizations.",
+      "Recall which amendment specifically guaranteed women the right to vote."
+    ]
+  },
+  {
+    "id": "apush.twenties.mcq.01",
+    "loId": "apush.twenties",
+    "cedCode": "AP-APUSH-7.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Radio, Hollywood film, mass-produced automobiles bought on installment credit, and rising real wages for many workers are all genuine features of the 1920s consumer economy. Given that American farmers experienced a prolonged agricultural depression throughout the same decade, once crop prices collapsed as European farms resumed production after World War I, the most accurate description of 1920s prosperity is that it was —",
+    "choices": [
+      "shared evenly across every region and occupation in the United States",
+      "real but uneven, with American farmers a major exception excluded from the decade's gains",
+      "entirely absent, since the whole decade was actually a continuous economic depression",
+      "limited strictly to Southern states, while Northern industrial workers saw no economic gains at all"
+    ],
+    "answer": "B",
+    "hints": [
+      "The 1920s did see genuine industrial and consumer growth — the question is whether that growth reached everyone.",
+      "Recall that farmers suffered a depression roughly a decade before the rest of the country did."
+    ]
+  }
+]
