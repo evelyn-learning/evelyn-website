@@ -90,6 +90,12 @@ import { PASSAGE_APUSH_REAGAN_BRANDENBURG } from './seeds/apush-reagan-brandenbu
 import { PASSAGE_APUSH_BUSH_SEPT_2001 } from './seeds/apush-bush-sept-2001';
 import { PASSAGE_APUSH_OBAMA_INAUGURAL } from './seeds/apush-obama-inaugural';
 import { PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE } from './seeds/apush-immigration-origins-table';
+// AP World Unit-3 (Land-Based Empires) DBQ documents
+import { PASSAGE_APWORLD_BUSBECQ_SULEIMAN } from './seeds/apworld-busbecq-suleiman';
+import { PASSAGE_APWORLD_BERNIER_MUGHAL } from './seeds/apworld-bernier-mughal';
+import { PASSAGE_APWORLD_PETER_DECREES } from './seeds/apworld-peter-decrees';
+import { PASSAGE_APWORLD_TAJ_MAHAL } from './seeds/apworld-taj-mahal';
+import { PASSAGE_APWORLD_KANGXI_EDICT } from './seeds/apworld-kangxi-edict';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -162,6 +168,11 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_BUSH_SEPT_2001,
   PASSAGE_APUSH_OBAMA_INAUGURAL,
   PASSAGE_APUSH_IMMIGRATION_ORIGINS_TABLE,
+  PASSAGE_APWORLD_BUSBECQ_SULEIMAN,
+  PASSAGE_APWORLD_BERNIER_MUGHAL,
+  PASSAGE_APWORLD_PETER_DECREES,
+  PASSAGE_APWORLD_TAJ_MAHAL,
+  PASSAGE_APWORLD_KANGXI_EDICT,
 ];
 
 export const passageById = new Map<string, Passage>(
