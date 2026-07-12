@@ -1,0 +1,200 @@
+[
+  {
+    "id": "apush.industrialization-big-business.mcq.01",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-carnegie-wealth.v1",
+    "problemText": "In \"Wealth\" (1889), Andrew Carnegie writes that after providing modestly for his dependents, the man of wealth must treat \"all surplus revenues which come to him simply as trust funds, which he is called upon to administer... the man of wealth thus becoming the mere agent and trustee for his poorer brethren.\" This argument is best characterized as —",
+    "choices": [
+      "a Social Darwinist claim that the wealthy earned their fortune through fair competition and owe society nothing further",
+      "a call for the federal government to seize surplus fortunes and redistribute them directly to the poor",
+      "a duty-to-redistribute argument: the wealthy must administer surplus wealth, during their lifetime, for the community's benefit",
+      "a warning that concentrated wealth should be broken up by antitrust courts before it grows further"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the words 'duty' and 'trustee' — this is not a claim that the wealthy owe society nothing.",
+      "Ask whether Carnegie is describing a voluntary private choice or a strict, binding obligation."
+    ]
+  },
+  {
+    "id": "apush.industrialization-big-business.mcq.02",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-carnegie-wealth.v1",
+    "problemText": "Carnegie's \"Wealth\" (1889) argues the wealthy are \"strictly bound as a matter of duty to administer\" their surplus wealth \"for the community,\" rather than simply keeping it as a mark of having won fair competition. Compared to Social Darwinism, which held that the wealthy earned their position through \"survival of the fittest\" and owed society nothing further, Carnegie's argument —",
+    "choices": [
+      "agrees competition fairly produced fortunes, but adds a duty to redistribute the surplus",
+      "restates Social Darwinism's own logic in only slightly different words, since both defend the inequality produced by industrial competition",
+      "contradicts Social Darwinism by denying industrial competition ever produced legitimate winners",
+      "rejects Social Darwinism entirely, arguing government regulation—not private philanthropy—should redistribute fortunes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Carnegie's essay does defend inequality earned through competition earlier in the piece — the question is what he adds on top of that.",
+      "Look for the option that keeps competition's legitimacy but adds an additional voluntary obligation."
+    ]
+  },
+  {
+    "id": "apush.gilded-politics-populism.mcq.01",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-omaha-platform.v1",
+    "problemText": "The Populist Party's Omaha Platform (1892) opens: \"we meet in the midst of a nation brought to the verge of moral, political, and material ruin. Corruption dominates the ballot-box, the Legislatures, the Congress, and touches even the ermine of the bench.\" This preamble is best understood as —",
+    "choices": [
+      "a narrow complaint about the personal integrity of one corrupt federal judge, unrelated to the platform's broader economic demands",
+      "an endorsement of the existing two-party system's ability to reform itself without new parties",
+      "a demand for a constitutional amendment abolishing the Supreme Court's power of judicial review",
+      "a claim that the nation's entire political system, not merely economic policy, had failed ordinary farmers and workers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Note how many institutions the preamble names as corrupted — the ballot box, legislatures, Congress, even the courts.",
+      "Ask whether this reads as a narrow policy critique, or a claim about systemic failure across the whole government."
+    ]
+  },
+  {
+    "id": "apush.gilded-politics-populism.mcq.02",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-omaha-platform.v1",
+    "problemText": "The Omaha Platform (1892) also demands \"free and unlimited coinage of silver and gold at the present legal ratio of 16 to 1.\" This demand was intended chiefly to —",
+    "choices": [
+      "abolish paper currency entirely in favor of gold and silver coins",
+      "expand the money supply and ease debt-burdened farmers' repayment terms under deflation",
+      "tie the U.S. dollar permanently to the British pound sterling",
+      "fund the sub-treasury plan's proposed network of new government-run farm warehouses through a coinage tax"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall why debt-burdened farmers favored an expanded money supply.",
+      "Free silver was expected to cause inflation — ask who benefits from inflation when repaying old debts."
+    ]
+  },
+  {
+    "id": "apush.immigration-urbanization.mcq.01",
+    "loId": "apush.immigration-urbanization",
+    "cedCode": "AP-APUSH-6.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-chinese-exclusion.v1",
+    "problemText": "The Chinese Exclusion Act (1882) states that \"the coming of Chinese laborers to the United States be, and the same is hereby, suspended\" for ten years, and that it \"shall not be lawful for any Chinese laborer... to remain within the United States\" after a ninety-day grace period. Compared to the social prejudice Southern and Eastern European \"new immigrants\" faced in the same decades, this Act shows that nativism in this period —",
+    "choices": [
+      "targeted specific groups with sharply different intensity, reaching its harshest form against Chinese immigrants",
+      "applied with roughly equal legal force against every immigrant group, European and Asian alike",
+      "was overturned by the courts almost immediately as an unconstitutional restriction on immigration",
+      "was aimed exclusively at Asian immigrants, while European immigrant groups faced no organized hostility at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "No comparable federal law banned any single European nationality's immigration in this period.",
+      "Ask whether this is a claim about binding legal force, or about informal social prejudice."
+    ]
+  },
+  {
+    "id": "apush.immigration-urbanization.mcq.02",
+    "loId": "apush.immigration-urbanization",
+    "cedCode": "AP-APUSH-6.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-immigration-table.v1",
+    "problemText": "A U.S. immigration data table shows total immigrants admitted by decade: 1861–1870 — about 2.3 million; 1871–1880 — about 2.8 million; 1881–1890 — about 5.2 million; 1891–1900 — about 3.7 million. Based on these figures, total immigration to the United States —",
+    "choices": [
+      "rose every decade without exception from the 1860s through the 1890s",
+      "declined steadily across all four decades shown",
+      "peaked in the 1880s before falling back in the 1890s",
+      "remained roughly flat across all four decades shown"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the 1880s figure to both the decade before it and the decade after it.",
+      "'Peaked' means the highest point, even if later figures still exceed the earliest decades."
+    ]
+  },
+  {
+    "id": "apush.immigration-urbanization.mcq.03",
+    "loId": "apush.immigration-urbanization",
+    "cedCode": "AP-APUSH-6.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-immigration-table.v1",
+    "problemText": "The same table reports that, as a share of that decade's European immigration specifically, Southern and Eastern European arrivals (Italy, Austria-Hungary, Russia) rose from roughly 16 percent in the 1880s to roughly 43 percent in the 1890s, while Northern and Western European arrivals fell from roughly 76 percent to roughly 46 percent of European immigration over the same span. These percentages most directly support which conclusion?",
+    "choices": [
+      "Southern and Eastern Europeans became a majority of all immigrants to the United States by the 1890s, including non-European arrivals",
+      "Total immigration from Europe increased in the 1890s compared to the 1880s",
+      "Northern and Western European immigration to the United States ceased entirely by the 1890s",
+      "Within European immigration specifically, sending regions shifted decisively toward Southern and Eastern Europe between the 1880s and 1890s"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice the phrase 'share of European immigration' — these percentages describe a slice of Europe's total, not all immigration to the U.S.",
+      "Rule out any option making a claim about total immigration, including non-European arrivals, rather than the European share alone."
+    ]
+  },
+  {
+    "id": "apush.gilded-politics-populism.mcq.03",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-cross-of-gold.v1",
+    "problemText": "Closing the debate over the money plank at the 1896 Democratic National Convention, William Jennings Bryan declared: \"we will answer their demand for a gold standard by saying to them: You shall not press down upon the brow of labor this crown of thorns, you shall not crucify mankind upon a cross of gold.\" This speech most directly reflects which political division of 1896?",
+    "choices": [
+      "protective tariffs, favored by Northern manufacturers, against free trade, favored by Southern planters",
+      "free silver, favored by debt-burdened farmers, against the gold standard, favored by creditors and financiers",
+      "civil-service reform, favored by reformers, against patronage, favored by party bosses",
+      "government ownership of railroads, favored by Populists, against private railroad ownership, favored by all Republicans and Democrats alike"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Cross of gold' is a direct rhetorical attack on which currency standard?",
+      "Recall who supported free silver (debtors) and who supported the gold standard (creditors) in 1896."
+    ]
+  },
+  {
+    "id": "apush.labor-movement.mcq.01",
+    "loId": "apush.labor-movement",
+    "cedCode": "AP-APUSH-6.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Unlike the Knights of Labor, which organized skilled and unskilled workers broadly around a wide reform agenda (an eight-hour day, ending child labor, cooperative ownership), the American Federation of Labor, founded in 1886 under Samuel Gompers, organized workers exclusively through craft-specific unions of skilled workers and pursued a narrower \"bread-and-butter\" strategy. This organizational difference helps explain why —",
+    "choices": [
+      "the Knights of Labor and the American Federation of Labor pursued essentially identical goals and differed only in their public-relations strategy",
+      "the AFL avoided using strikes entirely, relying solely on political lobbying to win concessions",
+      "the AFL's narrower structure gave it more bargaining leverage and less exposure to backlash from any single incident",
+      "the Knights of Labor's broad membership made it immune to the Haymarket bombing's fallout in 1886"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall what happened to the Knights of Labor's membership after the Haymarket bombing (1886), despite the Knights' own policy favoring arbitration.",
+      "Ask which organization's narrower structure made it easier to hold together around concrete, achievable goals."
+    ]
+  },
+  {
+    "id": "apush.the-west-new-south.mcq.01",
+    "loId": "apush.the-west-new-south",
+    "cedCode": "AP-APUSH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Homestead-claim filings in Dakota Territory were low in the early 1870s but rose sharply once railroad branch lines reached an area, closely tracking railroad construction through the early 1880s. This pattern most directly illustrates —",
+    "choices": [
+      "that settlers reached the Great Plains almost entirely through their own individual initiative, without any federal or railroad company involvement",
+      "that the transcontinental railroad's completion in 1869 ended further westward settlement of the Great Plains",
+      "that the Dawes Act (1887) caused settlers to abandon homestead claims already filed in Dakota Territory",
+      "that the Homestead Act and subsidized railroads worked together as one settlement policy, displacing Plains nations already there"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what made land access to distant 'open' territory practically possible for settlers, beyond the Homestead Act alone.",
+      "The word 'empty' is a trap — remember whose land these homestead claims were being filed on."
+    ]
+  }
+]

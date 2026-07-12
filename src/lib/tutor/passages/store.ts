@@ -63,6 +63,18 @@ import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-un
 import { PASSAGE_APUSH_OSULLIVAN_ANNEXATION } from './seeds/apush-osullivan-annexation';
 import { PASSAGE_APUSH_SC_SECESSION } from './seeds/apush-sc-secession';
 import { PASSAGE_APUSH_EMANCIPATION_PROCLAMATION } from './seeds/apush-emancipation-proclamation';
+// APUSH Period-6 (1865-1898) DBQ documents
+import { PASSAGE_APUSH_CARNEGIE_WEALTH } from './seeds/apush-carnegie-wealth';
+import { PASSAGE_APUSH_OMAHA_PLATFORM } from './seeds/apush-omaha-platform';
+import { PASSAGE_APUSH_CHINESE_EXCLUSION } from './seeds/apush-chinese-exclusion';
+import { PASSAGE_APUSH_IMMIGRATION_TABLE } from './seeds/apush-immigration-table';
+import { PASSAGE_APUSH_CROSS_OF_GOLD } from './seeds/apush-cross-of-gold';
+// APUSH Period-7 (1890-1945) DBQ documents
+import { PASSAGE_APUSH_ROOSEVELT_COROLLARY } from './seeds/apush-roosevelt-corollary';
+import { PASSAGE_APUSH_WILSON_WAR_MESSAGE } from './seeds/apush-wilson-war-message';
+import { PASSAGE_APUSH_FDR_FIRST_INAUGURAL } from './seeds/apush-fdr-first-inaugural';
+import { PASSAGE_APUSH_FOUR_FREEDOMS } from './seeds/apush-four-freedoms';
+import { PASSAGE_APUSH_EO_9066 } from './seeds/apush-eo-9066';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -113,6 +125,16 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_OSULLIVAN_ANNEXATION,
   PASSAGE_APUSH_SC_SECESSION,
   PASSAGE_APUSH_EMANCIPATION_PROCLAMATION,
+  PASSAGE_APUSH_CARNEGIE_WEALTH,
+  PASSAGE_APUSH_OMAHA_PLATFORM,
+  PASSAGE_APUSH_CHINESE_EXCLUSION,
+  PASSAGE_APUSH_IMMIGRATION_TABLE,
+  PASSAGE_APUSH_CROSS_OF_GOLD,
+  PASSAGE_APUSH_ROOSEVELT_COROLLARY,
+  PASSAGE_APUSH_WILSON_WAR_MESSAGE,
+  PASSAGE_APUSH_FDR_FIRST_INAUGURAL,
+  PASSAGE_APUSH_FOUR_FREEDOMS,
+  PASSAGE_APUSH_EO_9066,
 ];
 
 export const passageById = new Map<string, Passage>(

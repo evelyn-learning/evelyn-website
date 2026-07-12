@@ -1382,6 +1382,25 @@ import { SEED_AP_APUSH_U5_RECONSTRUCTION } from './seeds/ap-apush-u5-reconstruct
 import { SEED_AP_APUSH_U5_DBQ_PRACTICE } from './seeds/ap-apush-u5-dbq-practice';
 import { SEED_AP_APUSH_U5_LEQ_PRACTICE } from './seeds/ap-apush-u5-leq-practice';
 import { SEED_AP_APUSH_U5_SAQ_PRACTICE } from './seeds/ap-apush-u5-saq-practice';
+// AP US History — Period-6 fan-out (1865-1898).
+import { SEED_AP_APUSH_U6_THE_WEST } from './seeds/ap-apush-u6-the-west';
+import { SEED_AP_APUSH_U6_INDUSTRIALIZATION } from './seeds/ap-apush-u6-industrialization';
+import { SEED_AP_APUSH_U6_LABOR } from './seeds/ap-apush-u6-labor';
+import { SEED_AP_APUSH_U6_IMMIGRATION_URBANIZATION } from './seeds/ap-apush-u6-immigration-urbanization';
+import { SEED_AP_APUSH_U6_GILDED_POLITICS_POPULISM } from './seeds/ap-apush-u6-gilded-politics-populism';
+import { SEED_AP_APUSH_U6_DBQ_PRACTICE } from './seeds/ap-apush-u6-dbq-practice';
+import { SEED_AP_APUSH_U6_LEQ_PRACTICE } from './seeds/ap-apush-u6-leq-practice';
+import { SEED_AP_APUSH_U6_SAQ_PRACTICE } from './seeds/ap-apush-u6-saq-practice';
+// AP US History — Period-7 fan-out (1890-1945).
+import { SEED_AP_APUSH_U7_IMPERIALISM } from './seeds/ap-apush-u7-imperialism';
+import { SEED_AP_APUSH_U7_PROGRESSIVISM } from './seeds/ap-apush-u7-progressivism';
+import { SEED_AP_APUSH_U7_WWI } from './seeds/ap-apush-u7-wwi';
+import { SEED_AP_APUSH_U7_TWENTIES } from './seeds/ap-apush-u7-twenties';
+import { SEED_AP_APUSH_U7_DEPRESSION_NEW_DEAL } from './seeds/ap-apush-u7-depression-newdeal';
+import { SEED_AP_APUSH_U7_WWII } from './seeds/ap-apush-u7-wwii';
+import { SEED_AP_APUSH_U7_DBQ_PRACTICE } from './seeds/ap-apush-u7-dbq-practice';
+import { SEED_AP_APUSH_U7_LEQ_PRACTICE } from './seeds/ap-apush-u7-leq-practice';
+import { SEED_AP_APUSH_U7_SAQ_PRACTICE } from './seeds/ap-apush-u7-saq-practice';
 // AP World History: Modern — Unit-2 Vertical Slice initiative (calibration
 // plan). See docs/superpowers/specs/2026-07-10-ap-world-history-design.md.
 import { SEED_AP_APWORLD_U2_SILK_ROADS } from './seeds/ap-apworld-u2-silk-roads';
@@ -2783,6 +2802,25 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_AP_APUSH_U5_DBQ_PRACTICE,
   SEED_AP_APUSH_U5_LEQ_PRACTICE,
   SEED_AP_APUSH_U5_SAQ_PRACTICE,
+  // AP US History — Period-6 fan-out content plans.
+  SEED_AP_APUSH_U6_THE_WEST,
+  SEED_AP_APUSH_U6_INDUSTRIALIZATION,
+  SEED_AP_APUSH_U6_LABOR,
+  SEED_AP_APUSH_U6_IMMIGRATION_URBANIZATION,
+  SEED_AP_APUSH_U6_GILDED_POLITICS_POPULISM,
+  SEED_AP_APUSH_U6_DBQ_PRACTICE,
+  SEED_AP_APUSH_U6_LEQ_PRACTICE,
+  SEED_AP_APUSH_U6_SAQ_PRACTICE,
+  // AP US History — Period-7 fan-out content plans.
+  SEED_AP_APUSH_U7_IMPERIALISM,
+  SEED_AP_APUSH_U7_PROGRESSIVISM,
+  SEED_AP_APUSH_U7_WWI,
+  SEED_AP_APUSH_U7_TWENTIES,
+  SEED_AP_APUSH_U7_DEPRESSION_NEW_DEAL,
+  SEED_AP_APUSH_U7_WWII,
+  SEED_AP_APUSH_U7_DBQ_PRACTICE,
+  SEED_AP_APUSH_U7_LEQ_PRACTICE,
+  SEED_AP_APUSH_U7_SAQ_PRACTICE,
   // AP World History: Modern — Unit-2 Vertical Slice content plans.
   SEED_AP_APWORLD_U2_SILK_ROADS,
   SEED_AP_APWORLD_U2_INDIAN_OCEAN_TRADE,
