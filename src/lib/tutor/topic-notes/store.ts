@@ -267,6 +267,16 @@ import { BASELINE_AP_APGOV_SOCIALIZATION_OPINION } from './seeds/ap-apgov-u4-soc
 import { BASELINE_AP_APGOV_PUBLIC_OPINION_MEASUREMENT } from './seeds/ap-apgov-u4-polling';
 import { BASELINE_AP_APGOV_IDEOLOGY_POLICY } from './seeds/ap-apgov-u4-ideology-policy';
 
+// AP US Government & Politics Unit 5 (CED 5.1-5.2, 5.3-5.5, 5.6-5.7,
+// 5.8-5.11, 5.12-5.13) — Unit-5 Vertical Slice content plans (the
+// linkage-institutions walk: voting rights/behavior, political parties,
+// interest groups, elections/campaign finance, and the media).
+import { BASELINE_AP_APGOV_VOTING_RIGHTS_BEHAVIOR } from './seeds/ap-apgov-u5-voting';
+import { BASELINE_AP_APGOV_POLITICAL_PARTIES } from './seeds/ap-apgov-u5-parties';
+import { BASELINE_AP_APGOV_INTEREST_GROUPS } from './seeds/ap-apgov-u5-interest-groups';
+import { BASELINE_AP_APGOV_ELECTIONS_CAMPAIGN_FINANCE } from './seeds/ap-apgov-u5-elections';
+import { BASELINE_AP_APGOV_MEDIA_LINKAGE } from './seeds/ap-apgov-u5-media';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -450,6 +460,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APGOV_SOCIALIZATION_OPINION,
   BASELINE_AP_APGOV_PUBLIC_OPINION_MEASUREMENT,
   BASELINE_AP_APGOV_IDEOLOGY_POLICY,
+  BASELINE_AP_APGOV_VOTING_RIGHTS_BEHAVIOR,
+  BASELINE_AP_APGOV_POLITICAL_PARTIES,
+  BASELINE_AP_APGOV_INTEREST_GROUPS,
+  BASELINE_AP_APGOV_ELECTIONS_CAMPAIGN_FINANCE,
+  BASELINE_AP_APGOV_MEDIA_LINKAGE,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
