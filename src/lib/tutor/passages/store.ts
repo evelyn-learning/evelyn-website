@@ -36,6 +36,8 @@ import { PASSAGE_APGOV_MARBURY_OPINION } from './seeds/apgov-marbury-opinion';
 import { PASSAGE_APGOV_CIVIL_RIGHTS_FILINGS_TABLE } from './seeds/apgov-civil-rights-filings-table';
 import { PASSAGE_APGOV_BROWN_OPINION } from './seeds/apgov-brown-opinion';
 import { PASSAGE_APGOV_TINKER_OPINION } from './seeds/apgov-tinker-opinion';
+// AP Gov Unit-4 (American Political Ideologies and Beliefs) documents
+import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-table';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -65,6 +67,7 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_CIVIL_RIGHTS_FILINGS_TABLE,
   PASSAGE_APGOV_BROWN_OPINION,
   PASSAGE_APGOV_TINKER_OPINION,
+  PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
 ];
 
 export const passageById = new Map<string, Passage>(
