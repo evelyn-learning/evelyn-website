@@ -41,6 +41,10 @@ import { PASSAGE_APWORLD_IBN_BATTUTA_KILWA } from './seeds/apworld-ibn-battuta-k
 import { PASSAGE_APWORLD_MANSA_MUSA } from './seeds/apworld-mansa-musa';
 import { PASSAGE_APWORLD_BLACK_DEATH } from './seeds/apworld-black-death';
 import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
+// AP World Unit-4 (Transoceanic Interconnections) documents
+import { PASSAGE_APWORLD_TOKUGAWA_EDICT } from './seeds/apworld-tokugawa-edict';
+import { PASSAGE_APWORLD_POTOSI_SILVER_TABLE } from './seeds/apworld-potosi-silver-table';
+import { PASSAGE_APWORLD_ZHENG_HE_VISUAL } from './seeds/apworld-zheng-he-visual';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
@@ -120,6 +124,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_MANSA_MUSA,
   PASSAGE_APWORLD_BLACK_DEATH,
   PASSAGE_APWORLD_CATALAN_ATLAS,
+  PASSAGE_APWORLD_TOKUGAWA_EDICT,
+  PASSAGE_APWORLD_POTOSI_SILVER_TABLE,
+  PASSAGE_APWORLD_ZHENG_HE_VISUAL,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
   PASSAGE_APGOV_ARTICLES_CONFEDERATION,
