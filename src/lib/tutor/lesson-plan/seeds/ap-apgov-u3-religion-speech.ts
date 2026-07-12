@@ -151,17 +151,17 @@ export const SEED_AP_APGOV_U3_RELIGION_SPEECH: LessonPlan = {
       estimatedMinutes: 5,
     },
     {
-      id: 'misconception-first-amendment-private-actors',
+      id: 'misconception-schenck-still-governs',
       kind: 'misconception_check',
       question:
-        'True or false: the First Amendment protects an employee from being fired by their PRIVATE employer for something the employee said publicly.',
+        'True or false: the "clear and present danger" test from Schenck v. United States (1919) is still the standard the Supreme Court applies today to decide when speech can be restricted.',
       commonErrors: [
         {
           answer: 'true',
           misconception:
-            'Treating "freedom of speech" as a general social norm that applies to any consequence for speech, rather than recognizing the First Amendment as a constitutional restriction specifically on GOVERNMENT action.',
+            'Assuming a famous, frequently cited case must still state current law, rather than recognizing that Schenck\'s test was a starting point later NARROWED by subsequent decisions — most significantly Brandenburg v. Ohio (1969), decided the same year as Tinker.',
           correctsTo:
-            "FALSE. The First Amendment restrains GOVERNMENT action — Congress, and (via the Fourteenth Amendment) state and local governments — not private individuals or private employers. A private employer disciplining or firing an employee over public statements does not involve government action, so it raises no First Amendment claim, regardless of how the speech would be treated if a government entity had punished it. The Engel, Yoder, Schenck, and Tinker cases in this lesson all involve GOVERNMENT actors (a public school board, a state compulsory-attendance law, a federal prosecution, a public school district) — that is precisely why they are First Amendment cases at all.",
+            'FALSE. Schenck\'s "clear and present danger" test (1919) is no longer the governing speech-restriction standard. It was significantly NARROWED by later cases, most importantly Brandenburg v. Ohio (1969), which requires speech to be directed to inciting, and likely to incite, IMMINENT lawless action before it can be restricted — a much more speech-protective standard than Schenck\'s original "clear and present danger" language. Separately, for the school setting specifically, Tinker v. Des Moines (also 1969) supplies its own doctrine — the substantial-disruption standard — which is not a version of the Schenck test at all, but an independent framework for student expression in schools. Citing Schenck alone as if it still controlled either general speech restrictions or school speech would be citing outdated doctrine on both counts.',
         },
       ],
       estimatedMinutes: 2,
