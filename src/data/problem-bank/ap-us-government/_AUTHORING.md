@@ -147,3 +147,151 @@ Gov / constitutional-law knowledge doesn't depend on the system prompt's
 subject label), so no item's key needed revision on account of this
 mismatch. Flagged here per the Task 7 brief's caveat, not because any item
 actually misfired.
+
+## Unit 2: Interactions Among Branches of Government (CED Unit 2)
+
+Stimulus-based MCQ bank (`u2.json`, 15 items) keyed to the four Unit-2
+primary/data source documents seeded in
+`src/lib/tutor/passages/seeds/apgov-{federalist-70,federalist-78,marbury-opinion,congress-demographics-table}.ts`
+and to the five Unit-2 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apgov-u2-{congress,presidency,judiciary,bureaucracy,checks-in-practice}.ts`).
+`cedCode` mirrors each LO's `standard` field exactly. By design, the script's
+course-aware verify persona (`COURSE_NAMES['ap-us-government']` = "AP US
+Government and Politics", added on the `ba11d4f` fix commit ahead of this
+bank) and the passage-fed verify gate (the verifier receives the full
+`fullText` of any item's `passageId`, not just the stem) both apply here —
+see Verification below.
+
+| loId | cedCode | Topic | # items in u2.json |
+|---|---|---|---|
+| `apgov.congress-structure` | `AP-APGOV-2.1/2.2/2.3` | Congress: structure, standing committees, the Senate filibuster/cloture, the women-in-Congress demographics table (descriptive representation), and *Shaw v. Reno* (racial gerrymandering, Equal Protection). | 5 |
+| `apgov.presidency-power` | `AP-APGOV-2.4/2.5/2.6/2.7` | The presidency — Federalist No. 70 on energy in the executive (unity, the plurality/accountability objection). | 3 |
+| `apgov.judiciary-independence` | `AP-APGOV-2.8/2.9/2.10/2.11` | The federal judiciary — Federalist No. 78 (least dangerous branch, life tenure) and *Marbury v. Madison* (judicial review reasoning, including a Federalist-78-vs-Marbury comparison item). | 4 |
+| `apgov.bureaucracy-accountability` | `AP-APGOV-2.12/2.13/2.14` | The bureaucracy — notice-and-comment rulemaking; congressional oversight tools (hearings, funding threats). | 2 |
+| `apgov.checks-in-practice` | `AP-APGOV-2.15` | Policy-making across branches — the War Powers Resolution (1973) as a congressional check on presidential war power. | 1 |
+| **Total** | | | **15** |
+
+## Anchoring documents (stimulus sets)
+
+Each stimulus-anchored item anchors to one of the four Unit-2 passage seeds
+via `passageId` (for grouping/render):
+
+- `evelyn.passage.apgov-federalist-70.v1` — Hamilton, *Federalist No. 70*, on energy in the executive (unity, duration, support, powers; the plurality-destroys-accountability objection) — 3 items (presidency-power.mcq.01–03)
+- `evelyn.passage.apgov-federalist-78.v1` — Hamilton, *Federalist No. 78*, on the judiciary as "least dangerous," "neither FORCE nor WILL," and life tenure — 3 items (judiciary-independence.mcq.01–02 solo; mcq.04 paired, `passageId` set to Marbury since the item's reasoning question centers on Marbury's holding)
+- `evelyn.passage.apgov-marbury-opinion.v1` — Marshall's opinion in *Marbury v. Madison* (1803) — the "say what the law is" and "law repugnant to the constitution is void" reasoning — 2 items (judiciary-independence.mcq.03 solo; mcq.04 paired)
+- `evelyn.passage.apgov-congress-demographics-table.v1` — CRS "Women in Congress" data table, 1961–2021 — 2 items (congress-structure.mcq.01–02)
+
+5 non-stimulus items (no `passageId`, since no seeded Unit-2 document speaks
+to these topics) round out the bank: standing committees and the Senate
+filibuster/cloture threshold (congress-structure.mcq.03–04), *Shaw v. Reno*
+(congress-structure.mcq.05), notice-and-comment rulemaking and congressional
+oversight of agencies (bureaucracy-accountability.mcq.01–02), and the War
+Powers Resolution (checks-in-practice.mcq.01).
+
+Item `apgov.judiciary-independence.mcq.04` quotes both Federalist 78 and
+Marbury in the same stem (a theory-into-holding comparison item, same
+pattern as the Unit-1 bank's Federalist-10/Brutus-1 comparison item); each
+quoted span (from both Federalist 78 and Marbury) is independently a
+verbatim substring of its own passage's `fullText` (confirmed
+programmatically — see Verification below), even though only the Marbury
+passage is fed to the verify gate via `passageId`.
+
+## Authoring rule: self-contained stems (controller override)
+
+Same rule as the Unit-1 bank: every stem inlines the specific short quoted
+document line (a verbatim substring of the seeded `fullText`) or, for the
+demographics-table set, the specific numeric figures tested, directly in the
+stem, before asking the AP Gov reasoning question. This is now belt-and-
+suspenders rather than strictly required — the verify gate is passage-fed as
+of the `ba11d4f` fix (the verifier receives the full stimulus text for any
+item with a `passageId`) — but self-contained stems remain the authoring
+convention because the *student* sees the stem before optionally expanding
+the full stimulus, and because the five non-stimulus items in this bank have
+no passage to fall back on regardless.
+
+No `$<digit>` currency/KaTeX-trap figures appear anywhere in this bank (no
+dollar amounts in the Unit-2 stimulus set), so the WARN case that required
+special handling in the Unit-1 federal-grants-table set does not arise here;
+the demographics-table figures (20/1961, 23/1981, 74/2001, 147/2021, 27%
+2021 congressional share, 50.8% population share) are plain integers/
+percentages, confirmed numerically identical to the seeded `fullText`.
+
+## AP Gov reasoning skills tested
+
+- **Comprehension of argument** — Hamilton's claim that executive energy protects against foreign attack and secures steady law administration (presidency-power.mcq.01); the unity-vs-plurality contrast ("one man" vs. "any greater number") as the basis for a unitary executive (presidency-power.mcq.02); the plurality-conceals-faults objection as an accountability argument (presidency-power.mcq.03).
+- **Distinguishing branch characteristics** — "neither FORCE nor WILL, but merely judgment" as the reason the judiciary is "least dangerous," contrasted with the "sword" (executive) and "purse" (legislature) vocabulary from the same essay (judiciary-independence.mcq.01); permanency in office as insulation from short-term political pressure, not a pension or reelection mechanism (judiciary-independence.mcq.02).
+- **Foundational judicial-review reasoning** — Marshall's "say what the law is" as the core interpretive function of courts (judiciary-independence.mcq.03); **theory-to-holding comparison** — Federalist 78's argument that unconstitutional acts are void versus Marbury's actual holding, testing whether a student can see Marbury as converting Hamilton's essay-level theory into binding Supreme Court doctrine rather than rejecting or ignoring it (judiciary-independence.mcq.04).
+- **Reading a quantitative trend accurately** — the accelerating-after-1981 shape of the women-in-Congress data, ruling out "declined," "not until after 2001," and "doubled every decade" distractors that each contradict the given figures (congress-structure.mcq.01); **descriptive representation gap** — the 27%-of-Congress vs. 50.8%-of-population comparison (congress-structure.mcq.02).
+- **Institutional/procedural knowledge** — standing committees as the gatekeeping stage for most bills (congress-structure.mcq.03); the Senate cloture/filibuster vote threshold (congress-structure.mcq.04); notice-and-comment rulemaking (bureaucracy-accountability.mcq.01); congressional oversight tools — hearings and funding threats — as the accountability mechanism over agencies, distinguished from executive orders, court rulings, and state law as distractors (bureaucracy-accountability.mcq.02).
+- **Concept application: *Shaw v. Reno* (1993)** — race-as-predominant-factor triggering strict Equal Protection scrutiny of a congressional district's shape (congress-structure.mcq.05).
+- **Concept application: the War Powers Resolution (1973)** — reading the 48-hour notification and 60–90-day withdrawal deadlines as Congress reasserting its constitutional role against expanding presidential war power, not transferring war power to the Supreme Court or the UN (checks-in-practice.mcq.01).
+
+## Constitutional accuracy notes
+
+- Federalist No. 70's four ingredients of executive energy (unity, duration,
+  adequate support, competent powers) and the unity/plurality argument are
+  quoted and tested as written; no claim in this bank extends Hamilton's
+  argument to a specific modern power dispute he didn't address.
+- Federalist No. 78's "least dangerous branch" and life-tenure arguments are
+  tested as Hamilton's own reasoning (an essay, not binding law), kept
+  distinct from Marbury's actual holding — mcq.04 is deliberately built to
+  test that distinction (essay-level theory vs. binding Supreme Court
+  doctrine) rather than conflating the two documents.
+- *Marbury v. Madison* (1803): Marshall's "say what the law is" and
+  "a law repugnant to the constitution is void" language is the founding
+  statement of judicial review; the bank does not attribute the *specific*
+  term "judicial review" to Marshall (he doesn't use that phrase in this
+  excerpt) — the items test the reasoning, not a label.
+- *Shaw v. Reno* (1993): held that a race-predominant redistricting plan is
+  subject to strict scrutiny under the Equal Protection Clause; the bank's
+  distractors are built to catch two common overcorrections — "race can
+  never be considered at all" (false; Shaw applies strict scrutiny, not a
+  categorical ban) and "courts may never review redistricting" (false and
+  self-contradicting, since Shaw is itself such a review).
+- The War Powers Resolution (1973): a statute, not a constitutional
+  amendment; presidents of both parties have disputed its binding force in
+  practice, but the item tests only what the statute's own text requires
+  (48-hour notification, 60–90-day withdrawal absent congressional
+  authorization) and its institutional purpose (reasserting Congress's
+  Article I war-related authority), not its contested enforceability.
+- Women-in-Congress figures (20/1961, 23/1981, 74/2001, 147/2021; 27% of 535
+  seats in 2021; 50.8% of the 2020 Census population) are the real published
+  CRS Report R43244 figures, reproduced exactly from the seeded passage's
+  `fullText` description (verified programmatically — no numeric drift).
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1–4 mixed: 1×2, 2×7, 3×4, 4×2.
+- Correct-answer letters distributed non-cyclically across all 15 items:
+  A=4, B=3, C=4, D=4. Sequence: `ACDBDACBDCABDAC` — not all one letter, not a
+  repeating ABCD/period-4 pattern (no repeated 4-letter (or shorter) window,
+  no back-to-back repeated letter; checked programmatically alongside the
+  choice-length pass below).
+- Choice lengths equalized per item (word-count checked, correct answer NOT
+  the systematically longest option — the length-tell trap): several items'
+  first-draft correct choice was the unique longest option (the Fed-70
+  plurality item, the Marbury "say what the law is" item, both demographics-
+  table items, the committees/filibuster/Shaw v. Reno items, both
+  bureaucracy items, and the War Powers item each needed a length trim or a
+  distractor lengthened); after revision the correct answer is the **unique
+  longest in 0 of 15 items**. Verify:
+  `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-government/u2.json'); let n=0; for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); if(w[ci]===Math.max(...w)&&w.filter(x=>x===Math.max(...w)).length===1)n++;} console.log('correctIsUniqueLongest', n+'/'+a.length);"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short verbatim phrases from public-domain Unit-2 documents (never
+  transcribed wholesale from a real AP exam). `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-government --file=u2.json --dry-run`:
+15/15 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected,
+on the first pass (no answer-key fixes needed). A standalone verbatim-
+substring check confirmed every quoted span inside `problemText` (12 quoted
+spans across the Federalist-70/Federalist-78/Marbury items) is an exact
+substring of its passage's seeded `fullText` (0 mismatches); the
+demographics-table items (2 items) inline numeric figures rather than
+literary quotes, confirmed as a direct numeric match against the seeded
+description instead. `npm run lint:passages` was not re-run standalone for
+this task (out of scope for Task 5), but all four `passageId`s referenced by
+this bank resolved successfully through `resolvePassage()` during the seed
+script's own validation pass (0 "not in the passage registry" errors).

@@ -1,0 +1,296 @@
+[
+  {
+    "id": "apgov.presidency-power.mcq.01",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-70.v1",
+    "problemText": "In Federalist No. 70 (1788), Alexander Hamilton writes, \"Energy in the Executive is a leading character in the definition of good Government. It is essential to the protection of the community against foreign attacks; it is not less essential to the steady administration of the laws.\" According to this passage, executive energy matters chiefly because it —",
+    "choices": [
+      "protects the community from external threats and keeps the laws administered consistently",
+      "guarantees that the president will always be reelected to a second term",
+      "eliminates the need for a legislative branch to write the laws in the first place",
+      "allows the executive to overrule Supreme Court decisions whenever it disagrees with them"
+    ],
+    "answer": "A",
+    "hints": [
+      "Hamilton names two things executive energy protects: the community from foreign attacks, and what else — decide which choice restates the second one.",
+      "Rule out any answer about reelection, abolishing Congress, or overruling courts — none of those appear in this passage."
+    ]
+  },
+  {
+    "id": "apgov.presidency-power.mcq.02",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-70.v1",
+    "problemText": "Federalist No. 70 lists the four ingredients of executive energy — unity, duration, an adequate provision for its support, and competent powers — then adds, \"That unity is conducive to energy, will not be disputed. Decision, activity, secrecy, and despatch, will generally characterize the proceedings of one man, in a much more eminent degree than the proceedings of any greater number.\" Hamilton uses this claim to argue that executive energy is best served by —",
+    "choices": [
+      "dividing executive authority among several co-equal officers so that no one person holds too much power",
+      "lengthening the president's term so that elections are held less frequently",
+      "a single executive rather than a plural or council-style executive",
+      "requiring the executive to secure Senate approval before taking any action at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "Hamilton contrasts 'one man' with 'any greater number' — decide which side of that contrast he says has more decision, activity, secrecy, and dispatch.",
+      "This passage is about unity (the first ingredient), not about term length or a Senate check — rule those choices out."
+    ]
+  },
+  {
+    "id": "apgov.presidency-power.mcq.03",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-70.v1",
+    "problemText": "Federalist No. 70 also warns, \"one of the weightiest objections to a plurality in the Executive ... is, that it tends to conceal faults, and destroy responsibility.\" Hamilton's objection here rests on the concern that a plural executive would make it harder for citizens to —",
+    "choices": [
+      "amend the Constitution through the formal Article V process",
+      "elect a president through the Electoral College system",
+      "select federal judges through the Senate confirmation process",
+      "hold one official clearly accountable for a bad decision"
+    ],
+    "answer": "D",
+    "hints": [
+      "'Destroy responsibility' means it becomes harder to pin blame on any one person — ask which choice matches that idea directly.",
+      "Rule out Article V amendments, the Electoral College, and judicial confirmations — none of those is what a plural executive 'conceals.'"
+    ]
+  },
+  {
+    "id": "apgov.judiciary-independence.mcq.01",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-78.v1",
+    "problemText": "In Federalist No. 78 (1788), Hamilton writes that \"the judiciary, from the nature of its functions, will always be the least dangerous to the political rights of the Constitution,\" adding that it \"may truly be said to have neither FORCE nor WILL, but merely judgment; and must ultimately depend upon the aid of the Executive arm even for the efficacy of its judgments.\" Hamilton calls the judiciary \"least dangerous\" mainly because, unlike Congress or the president, the courts —",
+    "choices": [
+      "are elected directly by the people every two years",
+      "have no independent power to enforce their own rulings",
+      "can override any act of Congress without any legal justification",
+      "control the federal government's power to tax and spend"
+    ],
+    "answer": "B",
+    "hints": [
+      "Hamilton says the judiciary has 'neither FORCE nor WILL, but merely judgment' — ask what that means the courts lack, compared to Congress (which 'commands the purse') and the president (who 'holds the sword').",
+      "Rule out elections, overriding Congress, and taxing/spending — those describe other branches' powers, not the judiciary's weakness."
+    ]
+  },
+  {
+    "id": "apgov.judiciary-independence.mcq.02",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-78.v1",
+    "problemText": "Federalist No. 78 continues, \"nothing can contribute so much to its firmness and independence as permanency in office; this quality may therefore be justly regarded as an indispensable ingredient in its constitution.\" Hamilton is arguing that permanent tenure (life tenure during good behavior) for federal judges chiefly serves to —",
+    "choices": [
+      "guarantee judges a pension after they choose to retire from the bench",
+      "prevent the Senate from ever holding confirmation hearings for judges",
+      "allow judges to run for elected office once their term expires",
+      "shield judicial decisions from short-term political pressure"
+    ],
+    "answer": "D",
+    "hints": [
+      "'Firmness and independence' is the goal Hamilton links to 'permanency in office' — ask what judges being independent protects them from.",
+      "Rule out pensions, Senate confirmation, and running for office — none of those is what 'permanency in office' is meant to secure."
+    ]
+  },
+  {
+    "id": "apgov.judiciary-independence.mcq.03",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-marbury-opinion.v1",
+    "problemText": "In Marbury v. Madison (1803), Chief Justice John Marshall writes, \"It is emphatically the province and duty of the judicial department to say what the law is. Those who apply the rule to particular cases, must of necessity expound and interpret that rule.\" This statement is best understood as an assertion that —",
+    "choices": [
+      "interpreting the law in individual cases is a core judicial-branch function",
+      "Congress alone has final authority to interpret the meaning of its own statutes",
+      "state courts, not federal courts, hold the ultimate power to interpret the Constitution",
+      "the president may reinterpret a law whenever enforcing it in a particular case"
+    ],
+    "answer": "A",
+    "hints": [
+      "Marshall says courts 'expound and interpret' the rule when applying it to particular cases — match that directly to one choice.",
+      "Rule out Congress, state courts, and the president — Marshall's claim is specifically about the judicial department's role."
+    ]
+  },
+  {
+    "id": "apgov.judiciary-independence.mcq.04",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-marbury-opinion.v1",
+    "problemText": "Federalist No. 78 (1788) argues that \"No Legislative act, therefore, contrary to the Constitution, can be valid,\" and that judges have a \"duty it must be to declare all Acts contrary to the manifest tenor of the Constitution void.\" Fifteen years later, in Marbury v. Madison (1803), Chief Justice Marshall reasons that when \"both the law and the constitution apply to a particular case,\" the court must decide \"which of these conflicting rules governs the case,\" concluding that \"a law repugnant to the constitution is void.\" Compared to Hamilton's Federalist 78 argument, Marshall's Marbury opinion —",
+    "choices": [
+      "rejects Hamilton's theory entirely, holding instead that Congress is the final judge of a law's constitutionality",
+      "addresses an unrelated question, since Marbury concerns only the Court's own jurisdiction and not judicial review",
+      "converts Hamilton's theoretical argument for judicial review into a binding holding of the Supreme Court",
+      "limits judicial review to cases in which Congress itself requests the Court's opinion in advance"
+    ],
+    "answer": "C",
+    "hints": [
+      "Federalist 78 is an unofficial essay arguing what courts should do; Marbury is an actual Supreme Court decision — ask what kind of relationship that makes between the two.",
+      "Rule out 'rejects,' 'unrelated,' and 'limited to Congress's request' — Marshall's reasoning tracks Hamilton's argument closely rather than contradicting or ignoring it."
+    ]
+  },
+  {
+    "id": "apgov.congress-structure.mcq.01",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-congress-demographics-table.v1",
+    "problemText": "A Congressional Research Service data table reports the total number of women serving in the U.S. Congress in four selected years: 20 in 1961 (87th Congress), 23 in 1981 (97th Congress), 74 in 2001 (107th Congress), and 147 in 2021 (117th Congress). Which statement is best supported by this data?",
+    "choices": [
+      "The number of women serving in Congress declined steadily across every year shown, from 1961 through 2021",
+      "Women's numbers in Congress grew slightly from 1961 to 1981, then rose sharply in later decades",
+      "Women did not begin serving in the United States Congress until sometime after the year 2001",
+      "The number of women in Congress exactly doubled during each decade shown, from 1961 through 2021"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the 1961-to-1981 change (20 to 23) with the 1981-to-2001 change (23 to 74) — one jump is much bigger than the other.",
+      "Rule out 'declined,' 'not until after 2001,' and 'doubled every decade' — the figures given contradict each of those."
+    ]
+  },
+  {
+    "id": "apgov.congress-structure.mcq.02",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-congress-demographics-table.v1",
+    "problemText": "The same data table reports that in 2021, the 147 women serving in Congress made up about 27% of the chamber's 535 voting members, even though women were about 50.8% of the total U.S. population per the 2020 Census. This comparison best supports which conclusion?",
+    "choices": [
+      "Women's share of Congress now exceeds their share of the U.S. population",
+      "Congress and the U.S. population are demographically identical in every respect",
+      "The 2020 Census found that men make up 27% of the United States population",
+      "Women remain significantly underrepresented in Congress relative to their share of the population"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the two percentages directly: 27% of Congress versus 50.8% of the population — one is far smaller than the other.",
+      "Rule out 'exceeds,' 'identical,' and any claim about men's share of the population — none of those matches the two figures given."
+    ]
+  },
+  {
+    "id": "apgov.congress-structure.mcq.03",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Most bills introduced in Congress are referred to a standing committee before ever reaching a floor vote. This committee stage matters most because standing committees typically —",
+    "choices": [
+      "are required by the Constitution to approve every bill unanimously before it can be debated",
+      "automatically pass every bill referred to them within twenty-four hours of its introduction",
+      "hold hearings and decide whether a bill dies in committee or reaches the floor",
+      "consist entirely of members from the president's political party, regardless of election results"
+    ],
+    "answer": "C",
+    "hints": [
+      "Committees are where most bills actually die or get shaped — ask which choice describes that gatekeeping role.",
+      "Rule out any answer inventing a constitutional unanimity requirement, a 24-hour deadline, or single-party membership — none of those describes how standing committees work."
+    ]
+  },
+  {
+    "id": "apgov.congress-structure.mcq.04",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the Senate, a filibuster allows a minority of senators to delay or block a vote on a bill through extended debate. Ending a filibuster typically requires which of the following?",
+    "choices": [
+      "a cloture vote, usually needing sixty senators to agree",
+      "a unanimous vote of all one hundred senators to proceed",
+      "a simple majority vote in the House of Representatives instead",
+      "a formal request submitted directly to the Supreme Court"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Senate rule for ending extended debate has a specific name and vote threshold — recall what that threshold is.",
+      "Rule out a unanimous 100-vote requirement, a House vote, and a Supreme Court request — a filibuster is a Senate-only procedure ended by a specific Senate vote."
+    ]
+  },
+  {
+    "id": "apgov.congress-structure.mcq.05",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In Shaw v. Reno (1993), the Supreme Court held that a North Carolina congressional district drawn in an unusually shaped configuration to increase Black voting power could be challenged under the Equal Protection Clause if race was the predominant factor in drawing its boundaries. This ruling establishes that —",
+    "choices": [
+      "states may never consider race in any way whatsoever when drawing congressional districts",
+      "redistricting plans relying predominantly on race face strict judicial scrutiny under the Fourteenth Amendment",
+      "Congress alone, not the courts, has final authority to review the shape of congressional districts",
+      "congressional redistricting is a political matter courts may never review under any circumstances"
+    ],
+    "answer": "B",
+    "hints": [
+      "The Court's holding centers on race being the 'predominant factor,' triggering a specific level of constitutional review — name that review standard.",
+      "Rule out 'never consider race at all,' 'Congress alone reviews districts,' and 'courts may never review' — Shaw v. Reno is itself a Supreme Court decision reviewing a district's shape."
+    ]
+  },
+  {
+    "id": "apgov.bureaucracy-accountability.mcq.01",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When Congress passes a law giving a federal agency, such as the Environmental Protection Agency, broad authority to work out regulatory details, the agency typically implements that authority through a rulemaking process that includes —",
+    "choices": [
+      "holding a nationwide popular referendum before any rule can be issued",
+      "submitting the rule directly to the Supreme Court for pre-approval",
+      "requiring a two-thirds vote of the Senate before the rule can be proposed",
+      "publishing a proposed rule and taking public comment before it takes effect"
+    ],
+    "answer": "D",
+    "hints": [
+      "Federal rulemaking has a well-known public step between a rule being proposed and it becoming final — recall what that step is called.",
+      "Rule out a national referendum, Supreme Court pre-approval, and a Senate supermajority — none of those is part of the standard rulemaking process."
+    ]
+  },
+  {
+    "id": "apgov.bureaucracy-accountability.mcq.02",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Congress holds federal agencies accountable through tools such as authorization and appropriations hearings, confirmation of top agency officials, and the threat of budget cuts. Which of the following best illustrates this kind of congressional oversight of the bureaucracy?",
+    "choices": [
+      "a House committee questioning officials and threatening to cut an agency's funding",
+      "the president issuing an executive order that creates a brand-new federal agency",
+      "a federal court striking down an agency rule as exceeding its statutory authority",
+      "a state legislature passing a law that regulates a federal agency's internal staffing"
+    ],
+    "answer": "A",
+    "hints": [
+      "Oversight here specifically means Congress using its hearing and funding powers over an agency — match that to one choice directly.",
+      "Rule out a presidential executive order, a court ruling, and a state legislature's law — none of those is Congress exercising oversight over a federal agency."
+    ]
+  },
+  {
+    "id": "apgov.checks-in-practice.mcq.01",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The War Powers Resolution (1973) requires the president to notify Congress within 48 hours of committing U.S. armed forces to hostilities and to withdraw those forces within 60 to 90 days unless Congress authorizes continued action. This law is best understood as an attempt by Congress to —",
+    "choices": [
+      "transfer its power to declare war permanently to the Supreme Court",
+      "eliminate the president's constitutional role as commander in chief entirely",
+      "reassert Congress's constitutional role against expanding presidential war power",
+      "require the United Nations to approve any use of U.S. military force"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Resolution imposes a notification deadline and a withdrawal deadline on the president — ask which branch's power that constrains and which branch's role it protects.",
+      "Rule out transferring war power to the Supreme Court, eliminating the commander-in-chief role, and a United Nations approval requirement — none of those is what the War Powers Resolution actually does."
+    ]
+  }
+]
