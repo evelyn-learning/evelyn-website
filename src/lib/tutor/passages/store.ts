@@ -47,6 +47,10 @@ import { PASSAGE_APGOV_IDEOLOGY_AGE_TABLE } from './seeds/apgov-ideology-age-tab
 // AP Gov Unit-5 (Political Participation) documents
 import { PASSAGE_APGOV_TURNOUT_AGE_TABLE } from './seeds/apgov-turnout-age-table';
 import { PASSAGE_APGOV_CITIZENS_UNITED_OPINION } from './seeds/apgov-citizens-united-opinion';
+// APUSH Period-5 (1844-1877) documents
+import { PASSAGE_APUSH_OSULLIVAN_ANNEXATION } from './seeds/apush-osullivan-annexation';
+import { PASSAGE_APUSH_SC_SECESSION } from './seeds/apush-sc-secession';
+import { PASSAGE_APUSH_EMANCIPATION_PROCLAMATION } from './seeds/apush-emancipation-proclamation';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -84,6 +88,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APGOV_IDEOLOGY_AGE_TABLE,
   PASSAGE_APGOV_TURNOUT_AGE_TABLE,
   PASSAGE_APGOV_CITIZENS_UNITED_OPINION,
+  PASSAGE_APUSH_OSULLIVAN_ANNEXATION,
+  PASSAGE_APUSH_SC_SECESSION,
+  PASSAGE_APUSH_EMANCIPATION_PROCLAMATION,
 ];
 
 export const passageById = new Map<string, Passage>(
