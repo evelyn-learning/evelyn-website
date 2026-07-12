@@ -1,0 +1,199 @@
+[
+  {
+    "id": "apush.cold-war-origins.mcq.01",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-truman-doctrine.v1",
+    "problemText": "In an address to Congress on March 12, 1947, President Truman declared, \"I believe that it must be the policy of the United States to support free peoples who are resisting attempted subjugation by armed minorities or by outside pressures.\" Truman delivered this statement to justify emergency financial aid specifically to Greece and Turkey, yet the sentence itself never names either country. This rhetorical choice most directly reflects which broader development in postwar US foreign policy?",
+    "choices": [
+      "A shift away from economic aid toward relying solely on military assistance as the primary tool of American diplomacy",
+      "Congress's growing insistence that all future foreign aid bypass presidential approval",
+      "The transformation of a specific aid request into an open-ended doctrine of global containment",
+      "A temporary wartime alliance renewed to jointly occupy former Axis territories"
+    ],
+    "answer": "C",
+    "hints": [
+      "Truman is asking Congress for money for two specific countries, but notice he never names them in this sentence.",
+      "Ask what stating a commitment in universal terms, rather than country-specific terms, allows future presidents to do."
+    ]
+  },
+  {
+    "id": "apush.cold-war-origins.mcq.02",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-truman-doctrine.v1",
+    "problemText": "In the same March 1947 address, Truman declared: \"At the present moment in world history nearly every nation must choose between alternative ways of life,\" immediately contrasting a way of life \"based upon the will of the majority\" with a second \"based upon the will of a minority forcibly imposed upon the majority.\" Truman's decision to frame Greek and Turkish aid in these binary, ideological terms, rather than as a strictly regional dispute, most directly reflects which Cold War strategy?",
+    "choices": [
+      "Containment — resisting Communist expansion through economic and political support for threatened nations",
+      "Rollback — actively invading and overthrowing existing Communist governments in Eastern Europe",
+      "Massive retaliation — relying primarily on the threat of nuclear weapons to deter Soviet aggression",
+      "Détente — negotiating arms-control agreements directly with the Soviet leadership"
+    ],
+    "answer": "A",
+    "hints": [
+      "This 1947 speech predates any policy built specifically around nuclear deterrence or negotiated arms control with Moscow.",
+      "Ask whether Truman is describing an effort to stop Communism from spreading, or an effort to eliminate it where it already exists."
+    ]
+  },
+  {
+    "id": "apush.cold-war-origins.mcq.03",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-eisenhower-farewell.v1",
+    "problemText": "In his Farewell Address, January 17, 1961, President Eisenhower warned, \"In the councils of government, we must guard against the acquisition of unwarranted influence, whether sought or unsought, by the military-industrial complex.\" Coming from a former five-star general who had just spent eight years as president, this warning most directly reflects Eisenhower's concern that —",
+    "choices": [
+      "Congress had failed to appropriate sufficient funds for national defense throughout the 1950s",
+      "the Soviet Union's launch of Sputnik had proven American weapons technology inferior",
+      "NATO's European allies were not contributing what US planners considered a fair share of collective defense spending",
+      "permanent Cold War military spending had created a powerful new domestic interest group"
+    ],
+    "answer": "D",
+    "hints": [
+      "Eisenhower is not complaining that defense spending is too LOW — read carefully what he says the danger actually is.",
+      "\"Unwarranted influence\" points to a concern about domestic power and lobbying, not about foreign military capability."
+    ]
+  },
+  {
+    "id": "apush.sixties-vietnam.mcq.01",
+    "loId": "apush.sixties-vietnam",
+    "cedCode": "AP-APUSH-8.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-jfk-inaugural.v1",
+    "problemText": "In his Inaugural Address, January 20, 1961, President Kennedy pledged, \"Let every nation know, whether it wishes us well or ill, that we shall pay any price, bear any burden, meet any hardship, support any friend, oppose any foe, in order to assure the survival and the success of liberty.\" This pledge most directly signaled that the incoming Kennedy administration intended to —",
+    "choices": [
+      "withdraw gradually from Cold War commitments overseas in favor of domestic priorities",
+      "continue and even intensify the global anti-Communist commitments of containment-era foreign policy",
+      "seek a formal peace treaty ending the Korean War through direct negotiation with the government of China",
+      "rely primarily on the Marshall Plan model of economic-only aid, without military commitments"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Pay any price, bear any burden... oppose any foe\" is a pledge of expansive commitment, not retreat.",
+      "This language extends, rather than reverses, the open-ended global commitment first announced in the Truman Doctrine."
+    ]
+  },
+  {
+    "id": "apush.sixties-vietnam.mcq.02",
+    "loId": "apush.sixties-vietnam",
+    "cedCode": "AP-APUSH-8.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-lbj-great-society.v1",
+    "problemText": "In his commencement address at the University of Michigan, May 22, 1964, President Johnson declared, \"The Great Society rests on abundance and liberty for all. It demands an end to poverty and racial injustice, to which we are totally committed in our time. But that is just the beginning.\" The phrase \"just the beginning\" most directly signals that Johnson's vision for the Great Society was —",
+    "choices": [
+      "limited strictly to a single piece of anti-poverty legislation, the Economic Opportunity Act",
+      "focused only on ending racial discrimination in the South, apart from any economic policy",
+      "broader than poverty and racial injustice alone, encompassing education, culture, and community life",
+      "contingent on first winning reelection later that year before any programs could be proposed"
+    ],
+    "answer": "C",
+    "hints": [
+      "Johnson names poverty and racial injustice, then immediately says that is \"just the beginning\" — ask what comes after that phrase.",
+      "The actual Great Society legislative program (Medicare, ESEA, immigration reform) matches a vision broader than poverty policy alone."
+    ]
+  },
+  {
+    "id": "apush.sixties-vietnam.mcq.03",
+    "loId": "apush.sixties-vietnam",
+    "cedCode": "AP-APUSH-8.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-lbj-great-society.v1",
+    "problemText": "Later in the same 1964 address, Johnson added that \"the Great Society is not a safe harbor, a resting place, a final objective, a finished work. It is a challenge constantly renewed, beckoning us toward a destiny where the meaning of our lives matches the marvelous products of our labor.\" This closing framing most directly suggests that Johnson intended the Great Society to be understood as —",
+    "choices": [
+      "a fixed set of programs that, once enacted, would require no further legislative action",
+      "a short-term emergency measure to be phased out once the immediate poverty crisis ended",
+      "a purely symbolic vision with no specific legislative program attached to it",
+      "an open-ended, ongoing national commitment rather than a finite checklist to complete"
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Not a safe harbor, a resting place, a final objective, a finished work\" is Johnson explicitly rejecting the idea of a fixed endpoint.",
+      "\"A challenge constantly renewed\" describes an ongoing commitment, not a program that gets completed and then stops."
+    ]
+  },
+  {
+    "id": "apush.civil-rights-movement.mcq.01",
+    "loId": "apush.civil-rights-movement",
+    "cedCode": "AP-APUSH-8.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-brown-opinion.v1",
+    "problemText": "In Brown v. Board of Education (1954), the Supreme Court concluded that segregating children \"solely because of their race generates a feeling of inferiority as to their status in the community that may affect their hearts and minds in a way unlikely ever to be undone,\" and therefore held that \"the doctrine of \\\"separate but equal\\\" has no place\" in public education. Historians treat this 1954 ruling as only the BEGINNING of the civil rights movement, rather than its conclusion, primarily because —",
+    "choices": [
+      "the ruling addressed only public education, not enforcement or other forms of discrimination",
+      "Chief Justice Warren explicitly limited the ruling's application to the state of Kansas alone",
+      "the Court simultaneously struck down all federal, state, and private forms of racial discrimination nationwide",
+      "Congress immediately passed the Civil Rights Act of 1964 in direct response to the ruling"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what the ruling covers (public education) versus everything it says nothing about (buses, lunch counters, voting, employment).",
+      "Little Rock (1957) required federal troops three years after Brown — a ruling that fully changed practice on its own would not have needed that."
+    ]
+  },
+  {
+    "id": "apush.postwar-society.mcq.01",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During the 1950s, the same federal loan-guarantee agencies (FHA and VA) that made suburban homeownership newly affordable for millions of veteran families also routinely rated racially mixed and Black neighborhoods as poor credit risks, denying mortgage guarantees there — a practice known as redlining. This pattern shows that postwar American prosperity was —",
+    "choices": [
+      "equally distributed across the population once the GI Bill took effect nationwide",
+      "real but unevenly distributed, built in part through policies that excluded Black families",
+      "entirely a myth manufactured by 1950s television and advertising with no basis in fact",
+      "limited exclusively to veterans, with no effect on the broader civilian housing market"
+    ],
+    "answer": "B",
+    "hints": [
+      "The same agencies that built real middle-class wealth through subsidized loans also denied that same benefit along racial lines — both facts are true at once.",
+      "Rule out the option claiming prosperity was a total myth: the GI Bill and suburban growth were genuinely real, just unevenly distributed."
+    ]
+  },
+  {
+    "id": "apush.postwar-society.mcq.02",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Despite the general economic boom of the 1950s, observers at the time noted that poverty remained widespread in places largely absent from television's dominant image of suburban abundance — including inner cities left behind by suburban flight, Appalachia, and among many rural and elderly Americans. This observation most directly complicates which claim about the 1950s?",
+    "choices": [
+      "That the GI Bill funded college tuition and low-interest home loans for veterans",
+      "That the Sunbelt's population grew rapidly due to defense spending and air conditioning",
+      "That the interstate highway system was justified partly on Cold War defense grounds",
+      "That postwar prosperity reached essentially all Americans fairly equally across the population"
+    ],
+    "answer": "D",
+    "hints": [
+      "The GI Bill, the Sunbelt, and the interstate highway system are all real, accurate developments the observation does not contradict.",
+      "Ask which claim assumes prosperity was universal — that is the one the persistence of poverty directly challenges."
+    ]
+  },
+  {
+    "id": "apush.seventies-crisis.mcq.01",
+    "loId": "apush.seventies-crisis",
+    "cedCode": "AP-APUSH-8.14",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "President Nixon pursued détente with the Soviet Union, including the SALT I arms-control agreement of 1972, while at the same time continuing US military involvement in Vietnam and expanding defense and covert operations elsewhere in the world. This combination shows that détente in the early 1970s was best understood as —",
+    "choices": [
+      "a permanent end to Cold War competition between the United States and the Soviet Union",
+      "a unilateral American disarmament policy adopted regardless of Soviet military behavior",
+      "a managed easing of tension with the USSR, not a general Cold War retreat",
+      "a policy reversal that immediately ended all US military commitments in Southeast Asia"
+    ],
+    "answer": "C",
+    "hints": [
+      "If détente had ended Cold War competition outright, continued US fighting in Vietnam and expanded defense spending elsewhere would be hard to explain.",
+      "Détente applied specifically to managing the relationship with the USSR (and, via the China opening, its Communist rival) — not to disengaging from the Cold War everywhere at once."
+    ]
+  }
+]

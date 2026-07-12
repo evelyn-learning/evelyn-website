@@ -78,3 +78,83 @@ Period-3 documents:
 — both on the initial draft and after the choice-length / AoC-stem revision.
 `npm run lint:passages` clean (10 passages resolve, including all 7 referenced
 by this bank).
+
+## Unit 8: The Cold War, the Sixties, and the 1970s (Period 8, ~1945–1980)
+
+Stimulus-based MCQ bank (`u8.json`) keyed to the four new Period-8 primary
+source documents seeded in `src/lib/tutor/passages/seeds/apush-{truman-doctrine,
+eisenhower-farewell,jfk-inaugural,lbj-great-society}.ts`, plus ONE REUSED
+document (`apgov-brown-opinion.ts`, seeded for AP Gov Unit 3 — not re-seeded
+here), and to the five Period-8 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apush-u8-*.ts`). `cedCode` mirrors each
+LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u8.json |
+|---|---|---|---|
+| `apush.cold-war-origins` | `AP-APUSH-8.2` | Origins of the Cold War — containment, Truman Doctrine, Eisenhower's military-industrial-complex warning. | 3 |
+| `apush.sixties-vietnam` | `AP-APUSH-8.11` | JFK's New Frontier through LBJ's Great Society and the Vietnam War. | 3 |
+| `apush.civil-rights-movement` | `AP-APUSH-8.9` | The civil rights movement — Brown v. Board of Education as its doctrinal spark. | 1 |
+| `apush.postwar-society` | `AP-APUSH-8.4` | Postwar prosperity and its uneven distribution (redlining, persistent poverty). | 2 |
+| `apush.seventies-crisis` | `AP-APUSH-8.14` | Nixon-era détente as a managed Cold War tactic, not a general disengagement. | 1 |
+| **Total** | | | **10** |
+
+## Anchoring documents (stimulus sets)
+
+Seven of the ten items anchor to a Period-8 passage seed via `passageId` (for
+grouping/render); the remaining three (`postwar-society` ×2,
+`seventies-crisis` ×1) are non-stimulus items per the period spec, covering
+LOs without a wired passage:
+
+- `evelyn.passage.apush-truman-doctrine.v1` — Truman, Address to Congress (Truman Doctrine, March 1947) — 2 items
+- `evelyn.passage.apush-eisenhower-farewell.v1` — Eisenhower, Farewell Address ("military-industrial complex," 1961) — 1 item
+- `evelyn.passage.apush-jfk-inaugural.v1` — JFK, Inaugural Address (1961) — 1 item
+- `evelyn.passage.apush-lbj-great-society.v1` — LBJ, Remarks at the University of Michigan ("the Great Society," 1964) — 2 items
+- `evelyn.passage.apgov-brown-opinion.v1` — Warren, opinion in *Brown v. Board of Education* (1954, REUSED from AP Gov Unit 3) — 1 item
+
+## Historical-reasoning skills tested
+
+Same authentic AP US History source-analysis skills as the Unit-3 bank,
+applied to Period-8 Cold War/civil-rights-era material:
+
+- **Sourcing / point of view** — Eisenhower (a former five-star general) warning about the military-industrial complex he himself had presided over (cold-war-origins.mcq.03).
+- **Contextualization** — Truman's binary "two ways of life" framing as the rhetorical vehicle for containment (cold-war-origins.mcq.02); JFK's "pay any price" pledge as continuity with, not a break from, containment-era commitments (sixties-vietnam.mcq.01).
+- **Causation** — Truman's universal phrasing converting a narrow Greece/Turkey aid request into an open-ended doctrine (cold-war-origins.mcq.01); redlining alongside the GI Bill/FHA loans producing an unevenly distributed boom (postwar-society.mcq.01).
+- **Comparison / synthesis** — reconciling Nixon's détente with continued Vietnam fighting and expanded defense spending (seventies-crisis.mcq.01); Johnson's "just the beginning" and "not a...finished work" lines showing the Great Society's scope and open-endedness (sixties-vietnam.mcq.02, .03).
+- **Continuity/change** — Brown v. Board as the doctrinal spark of a decade-long movement rather than its conclusion, given what the ruling did and did not reach (civil-rights-movement.mcq.01); persistent poverty complicating the "prosperity reached everyone" claim (postwar-society.mcq.02).
+
+## Historical accuracy / sensitivity notes
+
+- No MLK material (speeches, "Letter from Birmingham Jail") is quoted or
+  referenced anywhere in this bank — the civil-rights item anchors solely to
+  the reused *Brown* opinion excerpt, consistent with the plan's zero-quote
+  rule for still-copyrighted King works.
+- The `apush.sixties-vietnam` items test JFK's inaugural rhetoric and LBJ's
+  Great Society vision rather than Vietnam War combat detail directly,
+  matching the plan's measured tone on the era's most sensitive material.
+- Détente item (`seventies-crisis.mcq.01`) deliberately tests the same
+  "détente ended the Cold War" misconception flagged in the content plan's
+  own `misconception_check` segment, reframed as an MCQ reasoning task.
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×1, 2×4, 3×3, 4×2.
+- Correct-answer letters distributed non-cyclically across all 10 items:
+  A=2, B=2, C=3, D=3. Sequence: `CADBCDABDC` — not all-A, not a repeating
+  ABCD pattern.
+- Choice lengths checked with the same word-count script as Unit 3: in a
+  first draft, `cold-war-origins.mcq.01`'s correct answer TIED for longest
+  with a distractor (14 words each); one distractor was lengthened (kept
+  plausible in content) to break the tie. Final result: the correct answer
+  is the (strict, non-tied) longest option in **0 of 10** items.
+  Verify: `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-history/u8.json'); for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); console.log(i.id, w[ci]===Math.max(...w));}"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short phrases from the seeded public-domain Period-8 documents (never
+  transcribed wholesale from a real AP exam). `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-history --file=u8.json --dry-run`:
+10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (34 passages resolve, including all 5 referenced
+by this bank — 4 new Period-8 passages plus the reused `apgov-brown-opinion`).
