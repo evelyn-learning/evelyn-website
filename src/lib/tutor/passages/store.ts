@@ -41,6 +41,11 @@ import { PASSAGE_APWORLD_IBN_BATTUTA_KILWA } from './seeds/apworld-ibn-battuta-k
 import { PASSAGE_APWORLD_MANSA_MUSA } from './seeds/apworld-mansa-musa';
 import { PASSAGE_APWORLD_BLACK_DEATH } from './seeds/apworld-black-death';
 import { PASSAGE_APWORLD_CATALAN_ATLAS } from './seeds/apworld-catalan-atlas';
+// AP World Unit-8 (Cold War & Decolonization) documents
+import { PASSAGE_APWORLD_JFK_CUBA } from './seeds/apworld-jfk-cuba';
+import { PASSAGE_APWORLD_UDHR } from './seeds/apworld-udhr';
+import { PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE } from './seeds/apworld-un-membership-table';
+import { PASSAGE_APWORLD_BERLIN_WALL_VISUAL } from './seeds/apworld-berlin-wall-visual';
 // AP Gov Unit-1 (Foundations of American Democracy) documents
 import { PASSAGE_APGOV_FEDERALIST_51 } from './seeds/apgov-federalist-51';
 import { PASSAGE_APGOV_FEDERAL_GRANTS_TABLE } from './seeds/apgov-federal-grants-table';
@@ -120,6 +125,10 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_MANSA_MUSA,
   PASSAGE_APWORLD_BLACK_DEATH,
   PASSAGE_APWORLD_CATALAN_ATLAS,
+  PASSAGE_APWORLD_JFK_CUBA,
+  PASSAGE_APWORLD_UDHR,
+  PASSAGE_APWORLD_UN_MEMBERSHIP_TABLE,
+  PASSAGE_APWORLD_BERLIN_WALL_VISUAL,
   PASSAGE_APGOV_FEDERALIST_51,
   PASSAGE_APGOV_FEDERAL_GRANTS_TABLE,
   PASSAGE_APGOV_ARTICLES_CONFEDERATION,
