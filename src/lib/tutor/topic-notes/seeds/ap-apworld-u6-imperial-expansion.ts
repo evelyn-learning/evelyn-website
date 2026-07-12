@@ -111,7 +111,7 @@ export const BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION: TopicNotesBaseline = {
         problem:
           'Analyze the Berlin Act\'s Article 5 (free trade in the Congo basin) and Articles 34-35 ("effective occupation"). What does this reveal, and what can it NOT tell you?',
         solution:
-          'Historical context: signed 1885 by fourteen European/American governments plus the Ottoman Empire; no African government present. Purpose: to regulate competition AMONG signatories (free trade rule, notification-and-real-presence requirement for new claims). Scope: the document cannot show African consent or participation, since no African polity was party to it. Connecting to cause: "effective occupation" explains why the Scramble accelerated so sharply after 1885 — unbacked claims no longer held against rivals.',
+          'Historical context: signed 1885 by fourteen powers including the Ottoman Empire; no African government present. Purpose: to regulate competition AMONG signatories (free trade rule, notification-and-real-presence requirement for new claims). Scope: the document cannot show African consent or participation, since no African polity was party to it. Connecting to cause: "effective occupation" explains why the Scramble accelerated so sharply after 1885 — unbacked claims no longer held against rivals.',
       },
       relatedLoIds: ['apworld.imperial-expansion'],
     },
