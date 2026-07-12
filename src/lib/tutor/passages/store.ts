@@ -106,6 +106,17 @@ import { PASSAGE_APWORLD_BERNIER_MUGHAL } from './seeds/apworld-bernier-mughal';
 import { PASSAGE_APWORLD_PETER_DECREES } from './seeds/apworld-peter-decrees';
 import { PASSAGE_APWORLD_TAJ_MAHAL } from './seeds/apworld-taj-mahal';
 import { PASSAGE_APWORLD_KANGXI_EDICT } from './seeds/apworld-kangxi-edict';
+// AP World Unit-6 (1750-1900, Consequences of Industrialization) documents
+import { PASSAGE_APWORLD_WHITE_MANS_BURDEN } from './seeds/apworld-white-mans-burden';
+import { PASSAGE_APWORLD_LIN_ZEXU } from './seeds/apworld-lin-zexu';
+import { PASSAGE_APWORLD_BERLIN_ACT } from './seeds/apworld-berlin-act';
+import { PASSAGE_APWORLD_INDENTURE_TABLE } from './seeds/apworld-indenture-table';
+import { PASSAGE_APWORLD_MEIJI_CHARTER_OATH } from './seeds/apworld-meiji-charter-oath';
+// AP World Unit-7 (1900-present, Global Conflict) documents
+import { PASSAGE_APWORLD_FOURTEEN_POINTS } from './seeds/apworld-fourteen-points';
+import { PASSAGE_APWORLD_VERSAILLES } from './seeds/apworld-versailles';
+import { PASSAGE_APWORLD_WWI_PROPAGANDA_VISUAL } from './seeds/apworld-wwi-propaganda-visual';
+import { PASSAGE_APWORLD_DEPRESSION_TABLE } from './seeds/apworld-depression-table';
 
 export const SEED_PASSAGES: Passage[] = [
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
@@ -191,6 +202,15 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APWORLD_PETER_DECREES,
   PASSAGE_APWORLD_TAJ_MAHAL,
   PASSAGE_APWORLD_KANGXI_EDICT,
+  PASSAGE_APWORLD_WHITE_MANS_BURDEN,
+  PASSAGE_APWORLD_LIN_ZEXU,
+  PASSAGE_APWORLD_BERLIN_ACT,
+  PASSAGE_APWORLD_INDENTURE_TABLE,
+  PASSAGE_APWORLD_MEIJI_CHARTER_OATH,
+  PASSAGE_APWORLD_FOURTEEN_POINTS,
+  PASSAGE_APWORLD_VERSAILLES,
+  PASSAGE_APWORLD_WWI_PROPAGANDA_VISUAL,
+  PASSAGE_APWORLD_DEPRESSION_TABLE,
 ];
 
 export const passageById = new Map<string, Passage>(

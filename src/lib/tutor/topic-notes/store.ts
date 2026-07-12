@@ -319,6 +319,20 @@ import { BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS } from './seeds/ap-apworld-u5-
 import { BASELINE_AP_APWORLD_NATIONALISM } from './seeds/ap-apworld-u5-nationalism';
 import { BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION } from './seeds/ap-apworld-u5-industrial-revolution';
 import { BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY } from './seeds/ap-apworld-u5-industrial-society';
+// AP World History Unit 6 (CED 6.1-6.7) — imperialism, resistance, economic
+// imperialism, migration, reform, 1750-1900.
+import { BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION } from './seeds/ap-apworld-u6-imperial-expansion';
+import { BASELINE_AP_APWORLD_U6_IMPERIAL_RESISTANCE } from './seeds/ap-apworld-u6-imperial-resistance';
+import { BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM } from './seeds/ap-apworld-u6-economic-imperialism';
+import { BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION } from './seeds/ap-apworld-u6-global-migration';
+import { BASELINE_AP_APWORLD_U6_REFORM_RESPONSES } from './seeds/ap-apworld-u6-reform-responses';
+
+// AP World History Unit 7 (CED 7.1-7.9) — WWI, interwar crisis, WWII,
+// conflict legacies, 1900-present.
+import { BASELINE_AP_APWORLD_U7_WWI } from './seeds/ap-apworld-u7-wwi';
+import { BASELINE_AP_APWORLD_U7_INTERWAR } from './seeds/ap-apworld-u7-interwar';
+import { BASELINE_AP_APWORLD_U7_WWII } from './seeds/ap-apworld-u7-wwii';
+import { BASELINE_AP_APWORLD_U7_LEGACIES } from './seeds/ap-apworld-u7-legacies';
 
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
@@ -585,6 +599,15 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_NATIONALISM,
   BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION,
   BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY,
+  BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION,
+  BASELINE_AP_APWORLD_U6_IMPERIAL_RESISTANCE,
+  BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM,
+  BASELINE_AP_APWORLD_U6_GLOBAL_MIGRATION,
+  BASELINE_AP_APWORLD_U6_REFORM_RESPONSES,
+  BASELINE_AP_APWORLD_U7_WWI,
+  BASELINE_AP_APWORLD_U7_INTERWAR,
+  BASELINE_AP_APWORLD_U7_WWII,
+  BASELINE_AP_APWORLD_U7_LEGACIES,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
