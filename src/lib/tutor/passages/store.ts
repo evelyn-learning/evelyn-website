@@ -33,6 +33,10 @@ import { PASSAGE_APUSH_MONROE_DOCTRINE } from './seeds/apush-monroe-doctrine';
 import { PASSAGE_APUSH_JACKSON_BANK_VETO } from './seeds/apush-jackson-bank-veto';
 import { PASSAGE_APUSH_SENECA_FALLS } from './seeds/apush-seneca-falls';
 import { PASSAGE_APUSH_GARRISON_LIBERATOR } from './seeds/apush-garrison-liberator';
+// AP World Unit-1 (The Global Tapestry) DBQ documents
+import { PASSAGE_APWORLD_MARCO_POLO_KHAN_COURT } from './seeds/apworld-marco-polo-khan-court';
+import { PASSAGE_APWORLD_IBN_BATTUTA_DELHI } from './seeds/apworld-ibn-battuta-delhi';
+import { PASSAGE_APWORLD_MAGNA_CARTA } from './seeds/apworld-magna-carta';
 // AP World Unit-2 (Networks of Exchange) DBQ documents
 import { PASSAGE_APWORLD_MARCO_POLO_KINSAY } from './seeds/apworld-marco-polo-kinsay';
 import { PASSAGE_APWORLD_MARCO_POLO_YAM } from './seeds/apworld-marco-polo-yam';
@@ -113,6 +117,9 @@ export const SEED_PASSAGES: Passage[] = [
   PASSAGE_APUSH_JACKSON_BANK_VETO,
   PASSAGE_APUSH_SENECA_FALLS,
   PASSAGE_APUSH_GARRISON_LIBERATOR,
+  PASSAGE_APWORLD_MARCO_POLO_KHAN_COURT,
+  PASSAGE_APWORLD_IBN_BATTUTA_DELHI,
+  PASSAGE_APWORLD_MAGNA_CARTA,
   PASSAGE_APWORLD_MARCO_POLO_KINSAY,
   PASSAGE_APWORLD_MARCO_POLO_YAM,
   PASSAGE_APWORLD_MARCO_POLO_PAPER_MONEY,
