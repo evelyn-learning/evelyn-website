@@ -158,3 +158,85 @@ applied to Period-8 Cold War/civil-rights-era material:
 10/10 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
 `npm run lint:passages` clean (34 passages resolve, including all 5 referenced
 by this bank — 4 new Period-8 passages plus the reused `apgov-brown-opinion`).
+
+## Unit 9: The Reagan Era to the Present (Period 9, ~1980–present)
+
+Stimulus-based MCQ bank (`u9.json`) keyed to the five new Period-9 primary
+source documents seeded in `src/lib/tutor/passages/seeds/apush-{reagan-inaugural,
+reagan-brandenburg,bush-sept-2001,obama-inaugural,immigration-origins-table}.ts`,
+and to the three Period-9 content lesson-plan LOs
+(`src/lib/tutor/lesson-plan/seeds/ap-apush-u9-*.ts`). `cedCode` mirrors each
+LO's `standard` field exactly.
+
+| loId | cedCode | Topic | # items in u9.json |
+|---|---|---|---|
+| `apush.conservative-resurgence` | `AP-APUSH-9.2` | The conservative resurgence — Reagan's anti-government diagnosis of the stagflation era and the Cold War endgame (glasnost/perestroika, Brandenburg Gate challenge). | 3 |
+| `apush.america-since-2001` | `AP-APUSH-9.6` | America since 2001 — the September 11 attacks and their historical framing; the 2008 financial crisis. | 2 |
+| `apush.globalization-tech` | `AP-APUSH-9.4` | Globalization and technology — post-1965 immigration demographics (data-table analysis) and NAFTA-era trade liberalization. | 3 |
+| **Total** | | | **8** |
+
+## Anchoring documents (stimulus sets)
+
+Seven of the eight items anchor to a Period-9 passage seed via `passageId`
+(for grouping/render); the remaining one (`globalization-tech.mcq.03`, NAFTA)
+is a non-stimulus item per the period spec, covering the LO with original
+factual content not tied to a specific seeded document:
+
+- `evelyn.passage.apush-reagan-inaugural.v1` — Reagan, First Inaugural Address (1981, "government is not the solution...government is the problem") — 2 items
+- `evelyn.passage.apush-reagan-brandenburg.v1` — Reagan, Remarks at the Brandenburg Gate ("tear down this wall," 1987) — 1 item
+- `evelyn.passage.apush-bush-sept-2001.v1` — G.W. Bush, Address to Congress on September 11 (September 20, 2001) — 1 item
+- `evelyn.passage.apush-obama-inaugural.v1` — Obama, First Inaugural Address (2009, crisis-and-renewal framing) — 1 item
+- `evelyn.passage.apush-immigration-origins-table.v1` — DHS Yearbook of Immigration Statistics data table (lawful-permanent-resident admissions by region of origin, 1960s vs. 2000s) — 2 items
+
+## Historical-reasoning skills tested
+
+Same authentic AP US History source-analysis skills as the Unit-3 and Unit-8
+banks, applied to Period-9 (1980–present) material:
+
+- **Sourcing / point of view** — Reagan's anti-government diagnosis read against the stagflation-era crisis it responds to (conservative-resurgence.mcq.01); Reagan's "government by an elite group" framing read as a rejection of technocratic/administrative governance rather than a specific institution (conservative-resurgence.mcq.02).
+- **Contextualization** — "reform and openness" in Moscow situated as Gorbachev's own glasnost/perestroika program, not a Western initiative (conservative-resurgence.mcq.03); Bush's "one Sunday in 1941" comparison situated as historical framing of September 11's unprecedented nature, not a literal 1941 reenactment (america-since-2001.mcq.01); Obama's crisis language dated precisely to the January 2009 address to identify the 2008 financial crisis (america-since-2001.mcq.02).
+- **Causation** — the Immigration and Nationality Act of 1965 identified as the specific legal cause of the shift documented in the DHS lawful-permanent-resident table (globalization-tech.mcq.01); NAFTA's simultaneous regional job losses and export gains used as evidence for unevenly distributed trade-liberalization effects, not a uniform national effect (globalization-tech.mcq.03).
+- **Quantitative/data-table scoping** — reasoning about what a table scoped to lawful-permanent-resident admissions specifically can and cannot tell you (temporary visas and refugees fall outside its scope) (globalization-tech.mcq.02) — the same document-fidelity discipline as the AP Gov federal-grants-table item.
+
+## Historical accuracy / sensitivity notes
+
+- The September 11 item (`america-since-2001.mcq.01`) quotes only the first,
+  measured, non-graphic segment of the seeded Bush excerpt (the "act of war...
+  freedom itself is under attack" framing) and does not draw on either of the
+  excerpt's other two non-adjacent segments (the message to Muslims
+  worldwide), consistent with the plan's non-partisan, factual, non-graphic
+  treatment of this material.
+- The immigration-table items state their scoping explicitly in the stem
+  ("LAWFUL PERMANENT RESIDENT status," i.e., green-card admissions) per the
+  passage's own docblock — no claim is generalized beyond that scope to
+  temporary visas, refugees/asylees, or unauthorized immigration.
+- All items test historical facts (what a document says, what a table shows,
+  what caused a documented shift) rather than political judgments; distractors
+  are factually wrong (a different law, a different crisis, a different Cold
+  War term), never framed as ideologically "wrong."
+
+## Difficulty & answer-key hygiene
+
+- Difficulty 1-4 mixed: 1×1, 2×3, 3×3, 4×1.
+- Correct-answer letters distributed non-cyclically across all 8 items:
+  A=2, B=2, C=2, D=2. Sequence: `CABDCADB` — not all-A, not a repeating
+  ABCD pattern.
+- Choice lengths checked with the same word-count script as Units 3 and 8:
+  in a first draft, 5 of 8 items had the correct answer tied-or-strictly
+  longest; distractors were lengthened (kept plausible in content, e.g. the
+  Supreme Court judicial-review distractor in conservative-resurgence.mcq.02,
+  the savings-and-loan distractor in america-since-2001.mcq.02) and correct
+  answers trimmed where needed. Final result: the correct answer is the
+  longest option in **0 of 8** items.
+  Verify: `npx tsx -e "const a=require('./src/data/problem-bank/ap-us-history/u9.json'); for(const i of a){const w=i.choices.map(c=>c.split(/\\s+/).length); const ci='ABCD'.indexOf(i.answer); console.log(i.id, w[ci]===Math.max(...w));}"`.
+- All stems and choices are ORIGINAL — written for this bank, quoting only
+  short phrases from the seeded public-domain Period-9 documents (never
+  transcribed wholesale from a real AP exam). `license: 'internal-original'`
+  per `scripts/seed-problem-bank.ts`.
+
+## Verification
+
+`npm run seed:problem-bank -- --course=ap-us-history --file=u9.json --dry-run`:
+8/8 passed Sonnet (`claude-sonnet-5`) independent-solve verify, 0 rejected.
+`npm run lint:passages` clean (39 passages resolve, including all 5 referenced
+by this bank).

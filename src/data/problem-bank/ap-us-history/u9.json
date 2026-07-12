@@ -1,0 +1,161 @@
+[
+  {
+    "id": "apush.conservative-resurgence.mcq.01",
+    "loId": "apush.conservative-resurgence",
+    "cedCode": "AP-APUSH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-reagan-inaugural.v1",
+    "problemText": "In his First Inaugural Address, January 20, 1981, delivered amid the era's high inflation and unemployment, President Reagan declared, \"In this present crisis, government is not the solution to our problem; government is the problem.\" This statement most directly reflects which broader development in American conservative politics of the period?",
+    "choices": [
+      "A bipartisan consensus, shared equally by both major parties, that the federal government's overall size should be sharply reduced",
+      "A continuation of the Great Society-era confidence that expanded federal programs could resolve most economic problems",
+      "The conservative argument that expanding government had itself become a cause of the era's economic troubles",
+      "A one-time rhetorical flourish with no connection to any specific tax, spending, or regulatory policy that followed"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice Reagan is not criticizing one program — he is diagnosing government itself as a cause of the crisis.",
+      "This diagnosis was followed by specific policies (tax cuts, deregulation, efforts to slow federal spending growth), so rule out the option calling it disconnected from any policy."
+    ]
+  },
+  {
+    "id": "apush.conservative-resurgence.mcq.02",
+    "loId": "apush.conservative-resurgence",
+    "cedCode": "AP-APUSH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-reagan-inaugural.v1",
+    "problemText": "Later in the same address, Reagan warned against the belief \"that society has become too complex to be managed by self-rule, that government by an elite group is superior to government for, by, and of the people.\" Reagan uses the phrase \"government by an elite group\" here to characterize which idea he was arguing against?",
+    "choices": [
+      "The belief that modern problems had grown too complex for ordinary citizens to govern without trained administrators",
+      "The Supreme Court's long-established constitutional authority to review and, when necessary, strike down acts of Congress as unconstitutional",
+      "Foreign governments' use of protective tariffs to shield their own domestic industries from competition",
+      "The seniority system historically used to select committee chairs in the US Congress"
+    ],
+    "answer": "A",
+    "hints": [
+      "Reagan contrasts \"self-rule\" with \"government by an elite group\" — ask what kind of governing arrangement he is rejecting.",
+      "Rule out the options about foreign trade policy or congressional procedure — neither matches a contrast between self-rule and rule by unelected experts."
+    ]
+  },
+  {
+    "id": "apush.conservative-resurgence.mcq.03",
+    "loId": "apush.conservative-resurgence",
+    "cedCode": "AP-APUSH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-reagan-brandenburg.v1",
+    "problemText": "In his June 12, 1987, remarks at the Brandenburg Gate, Reagan noted, \"We hear much from Moscow about a new policy of reform and openness,\" pointing to released political prisoners and unjammed foreign broadcasts as evidence, before challenging, \"Mr. Gorbachev, tear down this wall!\" The Moscow policies Reagan references here refer most directly to which Soviet program?",
+    "choices": [
+      "The Brezhnev Doctrine's assertion of Soviet authority over Eastern Bloc governments",
+      "Gorbachev's glasnost (openness) and perestroika (restructuring) reforms",
+      "The Warsaw Pact's formal joint military-command structure",
+      "The Marshall Plan's economic-aid program for noncommunist Western Europe"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Reform and openness,\" released prisoners, and unjammed broadcasts describe policy changes originating IN Moscow under its own leader, not a Western program.",
+      "The Marshall Plan and Brezhnev Doctrine are both real Cold War terms, but neither describes a change of policy coming out of Moscow under Gorbachev specifically."
+    ]
+  },
+  {
+    "id": "apush.america-since-2001.mcq.01",
+    "loId": "apush.america-since-2001",
+    "cedCode": "AP-APUSH-9.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-bush-sept-2001.v1",
+    "problemText": "In his September 20, 2001, address to Congress, President Bush stated that Americans \"have known wars -- but for the past 136 years, they have been wars on foreign soil, except for one Sunday in 1941,\" before declaring that after September 11, \"night fell on a different world, a world where freedom itself is under attack.\" Bush's reference to \"one Sunday in 1941\" (Pearl Harbor) most directly served to —",
+    "choices": [
+      "announce a formal congressional declaration of war against a specific foreign nation, as occurred in December 1941",
+      "commemorate the anniversary of the attack on Pearl Harbor rather than address the events of September 11",
+      "argue that the civilian casualties of the two attacks were identical in scale and character",
+      "frame September 11 as a rare direct strike on American soil comparable to Pearl Harbor"
+    ],
+    "answer": "D",
+    "hints": [
+      "Bush is drawing a historical comparison to explain why September 11 felt unprecedented, not literally re-enacting the 1941 declaration of war.",
+      "The passage does not compare casualty counts — it compares how rarely an attack has reached American soil itself."
+    ]
+  },
+  {
+    "id": "apush.america-since-2001.mcq.02",
+    "loId": "apush.america-since-2001",
+    "cedCode": "AP-APUSH-9.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-obama-inaugural.v1",
+    "problemText": "In his January 20, 2009, Inaugural Address, President Obama described an economy \"badly weakened, a consequence of greed and irresponsibility on the part of some,\" adding that \"homes have been lost, jobs shed, businesses shuttered.\" This description most directly refers to which event?",
+    "choices": [
+      "the stagflation and oil shocks of the 1970s",
+      "the dot-com stock-market decline of 2000-2001",
+      "the 2008 financial crisis and the recession it triggered",
+      "the savings and loan crisis of the late 1980s and early 1990s"
+    ],
+    "answer": "C",
+    "hints": [
+      "Homes lost and businesses shuttered, described right at the start of a January 2009 address, points to the most recent economic collapse, not an earlier one.",
+      "The date of the address (January 2009) rules out any crisis from the 1970s-1980s or the earlier 2000-2001 dot-com decline."
+    ]
+  },
+  {
+    "id": "apush.globalization-tech.mcq.01",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-immigration-origins-table.v1",
+    "problemText": "A Department of Homeland Security table of persons obtaining LAWFUL PERMANENT RESIDENT status (\"green cards\") by region of last residence shows Europe's share falling from about 35 percent in the 1960s to about 13 percent in the 2000s, while Asia's share rose from about 11 percent to about 34 percent over the same span. Which piece of legislation is most directly credited as the legal cause enabling this shift in lawful permanent immigration?",
+    "choices": [
+      "The Immigration and Nationality Act of 1965, which abolished the national-origins quota system favoring Europe",
+      "The Immigration Reform and Control Act of 1986, which addressed employer sanctions and unauthorized immigration",
+      "The 1943 repeal of the Chinese Exclusion Act, which set a small annual quota for Chinese immigrants",
+      "The National Origins Act of 1924, which established quotas favoring northern and western Europe"
+    ],
+    "answer": "A",
+    "hints": [
+      "The correct law must REMOVE a European preference, not create or narrowly adjust one — that rules out the 1924 Act and the narrow 1943 repeal.",
+      "The 1986 law targeted unauthorized immigration and employer practices, not the national-origins admission formula itself."
+    ]
+  },
+  {
+    "id": "apush.globalization-tech.mcq.02",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-immigration-origins-table.v1",
+    "problemText": "The same DHS table shows Latin America's share of lawful-permanent-resident admissions rising only modestly, from about 39 percent in the 1960s to about 41 percent in the 2000s, while Asia's share nearly tripled over the same span. Because this table counts ONLY persons who obtained lawful permanent resident status, which of the following can it NOT tell us directly?",
+    "choices": [
+      "The approximate percentage-point change in Europe's overall share of admissions recorded between the two time periods",
+      "Which single region contributed the largest share of admissions in the 2000s",
+      "The approximate total number of lawful permanent residents admitted in each decade",
+      "How many people held temporary visas or were admitted as refugees in either period"
+    ],
+    "answer": "D",
+    "hints": [
+      "The table's scope is explicitly lawful PERMANENT resident admissions only — ask which option describes a different immigration category entirely.",
+      "Totals, region shares, and period-to-period share changes are all things this specific table directly reports; temporary visas and refugee admissions are handled through separate channels it does not cover."
+    ]
+  },
+  {
+    "id": "apush.globalization-tech.mcq.03",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "NAFTA, which took effect in 1994, eliminated most tariffs on trade among the United States, Canada, and Mexico. In the years that followed, the industrial Midwest and Northeast (\"Rust Belt\") experienced sustained manufacturing-job losses even as many US exporters gained expanded access to Canadian and Mexican markets. This combination of outcomes is best used by historians as evidence for which point about trade liberalization in this period?",
+    "choices": [
+      "That free-trade agreements produced no measurable change in either manufacturing employment or export volumes",
+      "That trade liberalization's effects were real but unevenly distributed, producing both regional losses and export gains",
+      "That manufacturing employment in the Midwest and Northeast first began declining only after NAFTA took effect in 1994",
+      "That NAFTA caused an across-the-board increase in consumer prices throughout the United States"
+    ],
+    "answer": "B",
+    "hints": [
+      "The passage names both a loss (manufacturing jobs) and a gain (expanded export access) happening at the same time — look for the option that accounts for both facts.",
+      "Deindustrialization was a longer-run trend predating 1994, so rule out the option claiming it started only after NAFTA."
+    ]
+  }
+]
