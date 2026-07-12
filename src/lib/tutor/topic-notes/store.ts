@@ -289,6 +289,13 @@ import { BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE } from './seeds/ap-apworld-u2-t
 import { BASELINE_AP_APWORLD_MONGOL_EMPIRE } from './seeds/ap-apworld-u2-mongol-empire';
 import { BASELINE_AP_APWORLD_CULTURAL_DIFFUSION } from './seeds/ap-apworld-u2-cultural-diffusion';
 
+// AP World History Unit 8 (CED 8.1-8.4, 8.5-8.6, 8.7-8.8, 8.9-8.10) —
+// Unit-8 fan-out content plans (Cold War through the end of the Cold War).
+import { BASELINE_AP_APWORLD_U8_COLD_WAR } from './seeds/ap-apworld-u8-cold-war';
+import { BASELINE_AP_APWORLD_U8_DECOLONIZATION } from './seeds/ap-apworld-u8-decolonization';
+import { BASELINE_AP_APWORLD_U8_NEW_STATES } from './seeds/ap-apworld-u8-new-states';
+import { BASELINE_AP_APWORLD_U8_END_COLD_WAR } from './seeds/ap-apworld-u8-end-cold-war';
+
 // AP US Government & Politics Unit 1 (CED 1.1-1.3, 1.4-1.5, 1.6, 1.7-1.9) —
 // Unit-1 Vertical Slice content plans (democratic ideals through
 // federalism). FRQ-practice plans deferred (pure practice → no theory).
@@ -536,6 +543,10 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
   BASELINE_AP_APWORLD_MONGOL_EMPIRE,
   BASELINE_AP_APWORLD_CULTURAL_DIFFUSION,
+  BASELINE_AP_APWORLD_U8_COLD_WAR,
+  BASELINE_AP_APWORLD_U8_DECOLONIZATION,
+  BASELINE_AP_APWORLD_U8_NEW_STATES,
+  BASELINE_AP_APWORLD_U8_END_COLD_WAR,
   BASELINE_AP_APGOV_DEMOCRATIC_IDEALS,
   BASELINE_AP_APGOV_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APGOV_SEPARATION_OF_POWERS,
