@@ -224,6 +224,15 @@ import { BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION } from './seeds/ap-apush-u3
 import { BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION } from './seeds/ap-apush-u3-constitution-ratification';
 import { BASELINE_AP_APUSH_NEW_REPUBLIC } from './seeds/ap-apush-u3-new-republic';
 
+// AP US History Unit 8 (CED 8.2-8.3, 8.4-8.6, 8.7-8.8/8.11-8.13, 8.9-8.10,
+// 8.14-8.15) — Period-8 fan-out content plans (1945-1980: Cold War origins
+// through the crises of the 1970s).
+import { BASELINE_AP_APUSH_COLD_WAR } from './seeds/ap-apush-u8-cold-war';
+import { BASELINE_AP_APUSH_POSTWAR_SOCIETY } from './seeds/ap-apush-u8-postwar-society';
+import { BASELINE_AP_APUSH_CIVIL_RIGHTS } from './seeds/ap-apush-u8-civil-rights';
+import { BASELINE_AP_APUSH_SIXTIES_VIETNAM } from './seeds/ap-apush-u8-sixties-vietnam';
+import { BASELINE_AP_APUSH_SEVENTIES } from './seeds/ap-apush-u8-seventies';
+
 // AP World History Unit 2 (CED 2.1-2.4, 2.6) — Unit-2 Vertical Slice content
 // plans (Mongol Empire through cultural/technological/biological diffusion).
 // DBQ/LEQ/SAQ essay-practice plans deferred (pure practice → no theory).
@@ -439,6 +448,11 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_APUSH_ARTICLES_OF_CONFEDERATION,
   BASELINE_AP_APUSH_CONSTITUTION_RATIFICATION,
   BASELINE_AP_APUSH_NEW_REPUBLIC,
+  BASELINE_AP_APUSH_COLD_WAR,
+  BASELINE_AP_APUSH_POSTWAR_SOCIETY,
+  BASELINE_AP_APUSH_CIVIL_RIGHTS,
+  BASELINE_AP_APUSH_SIXTIES_VIETNAM,
+  BASELINE_AP_APUSH_SEVENTIES,
   BASELINE_AP_APWORLD_SILK_ROADS,
   BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE,
   BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE,
