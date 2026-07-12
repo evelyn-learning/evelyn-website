@@ -23,7 +23,7 @@ export const PASSAGE_APWORLD_IBN_BATTUTA_DELHI: Passage = {
   id: 'evelyn.passage.apworld-ibn-battuta-delhi.v1',
   title: 'The Travels of Ibn Battuta — At the Delhi Court of Sultan Muhammad ibn Tughluq',
   author: 'Ibn Battuta (Samuel Lee translation)',
-  year: 1829,
+  year: 1355,
   sourceUrl: 'https://archive.org/details/b28406084',
   license: 'public-domain',
   genre: 'document',
