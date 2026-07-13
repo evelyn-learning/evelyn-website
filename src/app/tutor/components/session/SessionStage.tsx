@@ -151,6 +151,14 @@ export default function SessionStage(props: SessionStageProps) {
     document.addEventListener('pointerdown', onPointerDown);
     return () => document.removeEventListener('pointerdown', onPointerDown);
   }, [switcherOpen]);
+  // Fullscreen capability (effect-set: document is not available in SSR).
+  const [canFullscreen, setCanFullscreen] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const doc = document as any;
+    setCanFullscreen(Boolean(doc.fullscreenEnabled || doc.webkitFullscreenEnabled));
+  }, []);
+
   const toggleFullscreen = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const el = stageRef.current as any;
@@ -317,14 +325,19 @@ export default function SessionStage(props: SessionStageProps) {
           )}
           <ToolBtn active={tool === 'text'} title="Text note" onClick={() => setTool(tool === 'text' ? null : 'text')}><span className="font-bold text-sm">Aa</span></ToolBtn>
           <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
-          {/* Fullscreen — iOS Safari (iPhone) has no Fullscreen API on
-              non-video elements, so the button is a dead no-op there. Show it
-              only md+ (desktop / iPad, where webkit fullscreen works).
-              md:contents keeps the divider+button in the cluster's flex flow. */}
-          <div className="hidden md:contents">
-            <div className="w-6 h-px bg-slate-200 my-0.5" />
-            <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
-          </div>
+          {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
+              `hidden md:` gate also hid it inside the portal's <768px embed
+              iframe (the iframe's own viewport is what md: measures), which
+              is exactly where students need it. document.fullscreenEnabled
+              is false on iPhone Safari (no Fullscreen API on non-video
+              elements) and false in an iframe without allowfullscreen, so
+              the dead-no-op cases stay hidden automatically. */}
+          {canFullscreen && (
+            <>
+              <div className="w-6 h-px bg-slate-200 my-0.5" />
+              <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+            </>
+          )}
         </div>
       </div>
 

@@ -239,11 +239,16 @@ export default function TutorSession(props: TutorSessionProps) {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setPacingMenuOpen(false);
     };
+    // In the portal embed, a click on the PARENT page never reaches this
+    // document — but it does steal focus, so window blur is the signal.
+    const onBlur = () => setPacingMenuOpen(false);
     document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('blur', onBlur);
     return () => {
       document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('blur', onBlur);
     };
   }, [pacingMenuOpen]);
 
