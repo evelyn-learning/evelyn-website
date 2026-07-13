@@ -6,6 +6,7 @@ import {
   type PolarGraphFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/math-calculus';
 import { smoothPath } from './_smoothPath';
+import { texToSvgText } from '@/lib/tutor/whiteboard/svg-label';
 
 const COLOR_AXIS = '#1f2937';
 const COLOR_GRID = '#e5e7eb';
@@ -14,7 +15,11 @@ const COLOR_SHADE = '#5eead4';
 const COLOR_HL = '#dc2626';
 
 export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
-  const { curve, shadeRegion, highlightPoint, rMax, showAxes, exprLabel, title } = figure;
+  const { curve, shadeRegion, highlightPoint, rMax, showAxes, title } = figure;
+  // SVG <text> can't host KaTeX — plainify LaTeX-ish labels to Unicode
+  // (\cos\theta → cosθ) instead of showing raw backslash commands.
+  const exprLabel = figure.exprLabel ? texToSvgText(figure.exprLabel) : figure.exprLabel;
+  const hlLabel = highlightPoint?.label ? texToSvgText(highlightPoint.label) : highlightPoint?.label;
   const N = polarGraphFeatureNames;
 
   const W = 480;
@@ -102,7 +107,7 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
         {highlightPoint && (
           <g
             data-feature={N.highlightPoint}
-            data-feature-label={highlightPoint.label || 'highlight point'}
+            data-feature-label={hlLabel || 'highlight point'}
             data-feature-cx={xAt(highlightPoint.x) / W}
             data-feature-cy={yAt(highlightPoint.y) / H}
             data-feature-w={36 / W}
@@ -110,7 +115,7 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
           >
             <circle cx={xAt(highlightPoint.x)} cy={yAt(highlightPoint.y)} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
             <text x={xAt(highlightPoint.x) + 8} y={yAt(highlightPoint.y) - 8} fontSize={11} fill={COLOR_HL} fontWeight={600}>
-              {highlightPoint.label ?? `(r=${Number(highlightPoint.r.toFixed(2))}, θ=${Number(highlightPoint.theta.toFixed(2))})`}
+              {hlLabel ?? `(r=${Number(highlightPoint.r.toFixed(2))}, θ=${Number(highlightPoint.theta.toFixed(2))})`}
             </text>
           </g>
         )}

@@ -17,7 +17,7 @@
  * (onTranscriptUpdate / onWhiteboardCommand / onMilestone / onEndSession).
  */
 
-import { useState, useCallback, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import Script from 'next/script';
 import { Play } from 'lucide-react';
 import { TranscriptView } from '../TranscriptView';
@@ -225,6 +225,27 @@ export default function TutorSession(props: TutorSessionProps) {
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
+
+  // Close the adjust-lesson menu on outside click / Escape — without this
+  // the only way to dismiss it was toggling the ⋯ button again (observed
+  // live 2026-07-13).
+  useEffect(() => {
+    if (!pacingMenuOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (pacingMenuRef.current && !pacingMenuRef.current.contains(e.target as Node)) {
+        setPacingMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPacingMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [pacingMenuOpen]);
 
   const {
     preferences: studentPreferencesForChip,
