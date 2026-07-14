@@ -191,17 +191,18 @@ export default function SessionStage(props: SessionStageProps) {
         .ss-cap{animation:ss-cap .4s ease both}
       `}</style>
 
-      {/* Full-bleed grid background — behind every row (height-responsive
-          layout: the rows below are a flex column, so the board flexes to fill
-          and the dock/caption never overlap it, even in a ~600px iframe). */}
+      {/* Full-bleed grid background — behind every row. */}
       <div className="absolute inset-0 ss-grid z-0 pointer-events-none" />
 
-      {/* ===== Board area (flex row — fills between the top bar and the dock) ===== */}
+      {/* ===== Board area (flex row — fills everything below the top bar; the
+              caption+dock bar FLOATS over its bottom edge, translucent, so the
+              board keeps the full height even in a ~600px iframe) ===== */}
       <div className="relative z-10 flex-1 min-h-0 order-2">
         {/* The board CONTENT sits in a centered, readable column (word problems
-            / prose shouldn't stretch edge-to-edge). The area already sits
-            between the top-bar and dock rows, so only small padding is needed
-            (plus clearance for the floating switcher when shown). */}
+            / prose shouldn't stretch edge-to-edge). Only small padding is
+            needed (plus clearance for the floating switcher when shown) — the
+            bottom is deliberately NOT padded to clear the floating bar: ink
+            may run behind it and stay readable through the 40% surface. */}
         <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : 'pt-2'} pb-2 px-2 sm:px-0 flex justify-center`}>
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
@@ -210,9 +211,10 @@ export default function SessionStage(props: SessionStageProps) {
           <div className={`w-full max-w-3xl h-full ${boardEmpty ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
         </div>
 
-        {/* presence overlay when the board is empty */}
+        {/* presence overlay when the board is empty. pb clears the floating
+            caption+dock bar so the starter chips never sit under it. */}
         {boardEmpty && (
-          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 py-4 overflow-y-auto pointer-events-none">
+          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 pt-4 pb-32 overflow-y-auto pointer-events-none">
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
                 <Target className="w-4 h-4" /> {objective}
@@ -407,47 +409,6 @@ export default function SessionStage(props: SessionStageProps) {
       {tool === 'draw' && <DrawPad onClose={() => setTool(null)} onSubmit={(d) => { onStudentInput('drawing', d); setTool(null); }} />}
       {tool === 'text' && <TextNote onClose={() => setTool(null)} onSubmit={(t) => { onStudentInput('text', t); setTool(null); }} />}
 
-      {/* ===== TUTOR PANEL — ONE cohesive card above the dock holding the
-              Caption Strip (ticker, scrolls to the trailing question) and the
-              Quick Actions row. Anchored at a fixed bottom offset so it never
-              bobs; chips fade in/out WITHIN the card (one element, not two
-              separate popping boxes). Drawn-board only — the empty board shows
-              the big presence caption instead. ===== */}
-      {/* Caption strip sits just above the dock. The dock is TALLER on phones
-          (the text input wraps to its own row below md, ~150px) than on desktop
-          (one ~80px row), so the from-bottom offset is larger below md to clear
-          it — otherwise the caption tucks behind the dock and the tutor's live
-          sentence is hidden. Both honor the bottom safe-area inset. */}
-      {/* This gate is load-bearing for CaptionTicker's poll probe: the ticker
-          must not mount before VoiceTutorRealtime's handle-population effect
-          has run. Today that's guaranteed because liveCaption is empty until
-          the first transcript entry, which can only exist after the first
-          commit. If this gate is ever removed, add a re-probe to CaptionTicker. */}
-      {liveCaption && (
-        <div className="relative z-30 shrink-0 order-3 mx-auto mb-1.5 w-[min(96vw,640px)] px-2">
-          <div className="ss-cap w-full rounded-2xl bg-white/95 backdrop-blur border border-slate-200 shadow-lg overflow-hidden">
-            {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
-                transcript). Single thin line so the panel never crowds. The
-                Quick-Actions chips (Skip / I'm stuck / quick answers) are HIDDEN
-                for now per 2026-06-24 ear-test (the panel got too busy, Images
-                16/17) — flip SHOW_QUICK_ACTIONS to bring them back. `quickActions`
-                still flows in so re-enabling is a one-line change. */}
-            <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50/70 transition-colors">
-              <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
-              <CaptionTicker text={liveCaption} getSpoken={getSpokenCaption} />
-              {voiceState === 'speaking'
-                ? <MicMeter level={0} speaking />
-                : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
-            </button>
-            {SHOW_QUICK_ACTIONS && quickActions && (
-              <div className="flex justify-center px-3 py-2 border-t border-slate-100">
-                {quickActions}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ===== Transcript toggle ===== */}
       <button onClick={() => setDrawerOpen(true)} className="hidden md:inline-flex absolute bottom-4 left-3 z-40 items-center gap-2 rounded-full bg-white border border-slate-200 shadow-md px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
         <MessageSquareText className="w-4 h-4 text-slate-500" />
@@ -455,9 +416,44 @@ export default function SessionStage(props: SessionStageProps) {
         {transcriptCount > 0 && <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">{transcriptCount}</span>}
       </button>
 
-      {/* ===== Voice dock (flex row — sits below the board, never over it) ===== */}
-      <div className="relative z-30 shrink-0 order-4 mx-auto mb-[calc(0.5rem_+_env(safe-area-inset-bottom))] w-[min(96vw,640px)] px-2">
-        <div className="rounded-[24px] bg-white/95 backdrop-blur-md border border-slate-200 shadow-2xl px-2 sm:px-3 py-1.5">
+      {/* ===== FLOATING TUTOR BAR — the Caption Strip and the voice dock in
+              ONE translucent card OVERLAYING the board's bottom edge. They
+              were two stacked flex rows below the board, which starved the
+              board of height in laptop-sized iframes (2026-07-14 APUSH live
+              test) — now the board row runs to the stage bottom and its ink
+              stays readable through the 40%-white surface. Deliberately
+              translucent at ALL times (product call, 2026-07-14) — no
+              idle-fade behavior. Honors the bottom safe-area inset. ===== */}
+      <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
+        <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
+          <div className="rounded-[24px] bg-white/40 backdrop-blur-md border border-slate-200 shadow-2xl overflow-hidden">
+          {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
+              transcript). Single thin line so the bar never crowds. The
+              Quick-Actions chips (Skip / I'm stuck / quick answers) are HIDDEN
+              for now per 2026-06-24 ear-test — flip SHOW_QUICK_ACTIONS to
+              bring them back; `quickActions` still flows in. */}
+          {/* This gate is load-bearing for CaptionTicker's poll probe: the ticker
+              must not mount before VoiceTutorRealtime's handle-population effect
+              has run. Today that's guaranteed because liveCaption is empty until
+              the first transcript entry, which can only exist after the first
+              commit. If this gate is ever removed, add a re-probe to CaptionTicker. */}
+          {liveCaption && (
+            <div className="ss-cap border-b border-slate-200/70">
+              <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-white/50 transition-colors">
+                <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
+                <CaptionTicker text={liveCaption} getSpoken={getSpokenCaption} />
+                {voiceState === 'speaking'
+                  ? <MicMeter level={0} speaking />
+                  : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
+              </button>
+              {SHOW_QUICK_ACTIONS && quickActions && (
+                <div className="flex justify-center px-3 py-2 border-t border-slate-100">
+                  {quickActions}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="px-2 sm:px-3 py-1.5">
           {/* "Being heard" status row — lives in the dock, next to the mic, so
               the caption strip above stays free for the tutor's question. Shows
               the live mic meter + the perception states the mic button doesn't
@@ -478,7 +474,9 @@ export default function SessionStage(props: SessionStageProps) {
               </>)}
             </div>
           )}
-          {voiceInput}
+            {voiceInput}
+          </div>
+          </div>
         </div>
       </div>
 
