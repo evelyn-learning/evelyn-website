@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Ta
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import ReplayPlayer from "../components/ReplayPlayer";
 import ExportSessionPDFButton from "../components/ExportSessionPDFButton";
+import SpokenTranscript from "../components/SpokenTranscript";
 
 interface SessionPageProps {
   params: Promise<{ sessionId: string }>;
@@ -153,37 +154,8 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
           hasAudio={session.hasAudio}
         />
 
-        {/* Static Transcript */}
-        <div className="rounded-xl bg-white shadow overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">Full Transcript</h2>
-          </div>
-          <div className="px-6 py-4 max-h-[600px] overflow-y-auto space-y-3">
-            {(session.transcript || []).length === 0 ? (
-              <p className="text-gray-400 text-sm">No transcript entries.</p>
-            ) : (
-              session.transcript.map((entry: { role: string; text: string; timestamp: string; pedagogicalIntent?: string }, i: number) => (
-                <div key={i} className={`flex ${entry.role === 'student' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[75%] rounded-xl px-4 py-2 text-sm ${
-                    entry.role === 'student'
-                      ? 'bg-blue-500 text-white'
-                      : entry.role === 'system'
-                      ? 'bg-yellow-50 text-yellow-800 border border-yellow-200'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-medium opacity-70 uppercase">{entry.role}</span>
-                      <span className="text-[10px] opacity-50">
-                        {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap">{entry.text}</p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {/* Static Transcript (with spoken-form / TTS audit toggle) */}
+        <SpokenTranscript transcript={session.transcript || []} />
       </main>
     </div>
   );
