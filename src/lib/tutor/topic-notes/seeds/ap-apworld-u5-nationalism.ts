@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_NATIONALISM: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.nationalism-unification.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 5,
   cedTopic: '5.2',
   cedTitle: 'Nationalism and National Unification',

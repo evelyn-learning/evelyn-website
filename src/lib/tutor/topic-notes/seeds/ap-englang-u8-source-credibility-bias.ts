@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SOURCE_CREDIBILITY_BIAS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.source-credibility-bias.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 8,
   cedTopic: '8.1',
   cedTitle: 'Evaluating Source Credibility and Bias',

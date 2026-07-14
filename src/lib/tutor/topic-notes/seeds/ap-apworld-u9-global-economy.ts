@@ -11,7 +11,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U9_GLOBAL_ECONOMY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.global-economy.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 9,
   cedTopic: '9.1-9.3',
   cedTitle: 'The Globalizing Economy',

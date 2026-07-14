@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_COUNTERARGUMENT_REBUTTAL: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.counterargument-rebuttal.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 2,
   cedTopic: '2.4',
   cedTitle: 'Counterargument, Concession, and Rebuttal',

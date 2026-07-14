@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_FIGURATIVE_LANGUAGE_SCHEMES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.figurative-language-schemes.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 6,
   cedTopic: '6.3',
   cedTitle: 'Figurative Language and Rhetorical Schemes',

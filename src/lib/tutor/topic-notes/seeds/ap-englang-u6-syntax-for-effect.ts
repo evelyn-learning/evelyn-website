@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SYNTAX_FOR_EFFECT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.syntax-for-effect.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 6,
   cedTopic: '6.1',
   cedTitle: 'Syntax and Sentence Variety for Effect',

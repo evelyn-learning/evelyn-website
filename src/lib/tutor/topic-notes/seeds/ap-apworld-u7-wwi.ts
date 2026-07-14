@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U7_WWI: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.wwi-global.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 7,
   cedTopic: '7.1-7.3',
   cedTitle: 'World War I as a Global War',

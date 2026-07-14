@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U7_INTERWAR: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.interwar-world.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 7,
   cedTopic: '7.4-7.6',
   cedTitle: 'The Great Depression and the Interwar Crisis',

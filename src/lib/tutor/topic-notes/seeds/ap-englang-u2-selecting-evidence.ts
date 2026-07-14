@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SELECTING_EVIDENCE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.selecting-evidence.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 2,
   cedTopic: '2.2',
   cedTitle: 'Selecting and Sequencing Evidence',

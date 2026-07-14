@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_TRANSITIONS_COHESION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.transitions-cohesion.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 5,
   cedTopic: '5.3',
   cedTitle: 'Transitions and Cohesion',

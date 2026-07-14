@@ -15,7 +15,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_RESISTANCE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.resistance-accommodation.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 4,
   cedTopic: '4.7-4.8',
   cedTitle: 'Resistance and Accommodation',

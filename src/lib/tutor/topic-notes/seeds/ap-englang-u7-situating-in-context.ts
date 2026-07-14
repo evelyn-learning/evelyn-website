@@ -20,7 +20,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SITUATING_IN_CONTEXT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.situating-in-context.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 7,
   cedTopic: '7.3',
   cedTitle: 'Situating an Argument in a Broader Context',

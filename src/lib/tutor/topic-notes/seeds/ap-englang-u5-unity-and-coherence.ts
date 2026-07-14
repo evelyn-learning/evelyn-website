@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_UNITY_AND_COHERENCE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.unity-and-coherence.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 5,
   cedTopic: '5.2',
   cedTitle: 'Unity and Coherence',

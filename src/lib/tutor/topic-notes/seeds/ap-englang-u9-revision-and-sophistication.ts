@@ -16,7 +16,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_REVISION_AND_SOPHISTICATION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.revision-and-sophistication.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 9,
   cedTopic: '9.4',
   cedTitle: 'Revision and Earning the Sophistication Point',

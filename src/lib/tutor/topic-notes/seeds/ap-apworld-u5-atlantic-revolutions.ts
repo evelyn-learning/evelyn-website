@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_ATLANTIC_REVOLUTIONS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.atlantic-revolutions.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 5,
   cedTopic: '5.2',
   cedTitle: 'The Atlantic Revolutions',

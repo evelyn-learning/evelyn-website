@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_ORGANIZING_FOR_EFFECT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.organizing-for-effect.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 5,
   cedTopic: '5.4',
   cedTitle: 'Organizing an Argument for Effect',

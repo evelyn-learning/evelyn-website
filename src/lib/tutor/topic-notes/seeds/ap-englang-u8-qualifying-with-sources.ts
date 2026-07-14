@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_QUALIFYING_WITH_SOURCES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.qualifying-with-sources.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 8,
   cedTopic: '8.3',
   cedTitle: 'Qualifying a Position with Sources',

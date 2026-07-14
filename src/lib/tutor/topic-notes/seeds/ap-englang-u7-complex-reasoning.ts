@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_COMPLEX_REASONING: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.complex-reasoning.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 7,
   cedTopic: '7.2',
   cedTitle: 'Complex Reasoning and Implication',

@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_TRANS_SAHARAN_TRADE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.trans-saharan-trade.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 2,
   cedTopic: '2.4',
   cedTitle: 'The Trans-Saharan Trade Network',

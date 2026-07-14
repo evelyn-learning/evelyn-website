@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_MARITIME_EMPIRES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.maritime-empires.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 4,
   cedTopic: '4.4-4.5',
   cedTitle: 'Maritime Trading Empires',

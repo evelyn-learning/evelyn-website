@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_ENLIGHTENMENT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.enlightenment.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 5,
   cedTopic: '5.1',
   cedTitle: 'The Enlightenment',

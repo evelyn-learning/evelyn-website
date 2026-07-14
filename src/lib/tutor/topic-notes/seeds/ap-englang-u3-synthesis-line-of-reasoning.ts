@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SYNTHESIS_LINE_OF_REASONING: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.synthesis-line-of-reasoning.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 3,
   cedTopic: '3.5',
   cedTitle: 'Line of Reasoning with Multiple Sources',

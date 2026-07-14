@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_EVIDENCE_COMMENTARY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.evidence-commentary.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 1,
   cedTopic: '1.4',
   cedTitle: 'Evidence and Commentary',

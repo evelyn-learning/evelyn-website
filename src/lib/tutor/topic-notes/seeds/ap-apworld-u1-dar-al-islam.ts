@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_DAR_AL_ISLAM: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.dar-al-islam.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 1,
   cedTopic: '1.2',
   cedTitle: 'Developments in Dar al-Islam',

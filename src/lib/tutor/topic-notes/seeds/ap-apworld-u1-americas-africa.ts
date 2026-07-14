@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_AMERICAS_AFRICA_STATES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.americas-africa-states.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 1,
   cedTopic: '1.4-1.5',
   cedTitle: 'State Building in the Americas and Africa',

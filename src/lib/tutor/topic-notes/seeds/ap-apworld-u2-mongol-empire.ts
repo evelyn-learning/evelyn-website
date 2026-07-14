@@ -14,7 +14,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_MONGOL_EMPIRE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.mongol-empire.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 2,
   cedTopic: '2.1',
   cedTitle: 'The Mongol Empire and the Making of the Modern World',

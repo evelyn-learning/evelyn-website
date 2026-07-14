@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_ATLANTIC_SLAVE_TRADE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.atlantic-slave-trade.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 4,
   cedTopic: '4.4/4.6',
   cedTitle: 'The Atlantic Slave Trade',

@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_CITING_ATTRIBUTING_SOURCES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.citing-attributing-sources.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 3,
   cedTopic: '3.2',
   cedTitle: 'Citing and Attributing Sources',

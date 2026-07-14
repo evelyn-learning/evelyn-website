@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_METHODS_OF_DEVELOPMENT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.methods-of-development.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 4,
   cedTopic: '4.1',
   cedTitle: 'Methods of Development',

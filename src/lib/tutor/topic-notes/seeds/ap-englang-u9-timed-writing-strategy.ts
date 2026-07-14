@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_TIMED_WRITING_STRATEGY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.timed-writing-strategy.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 9,
   cedTopic: '9.1',
   cedTitle: 'Timed-Writing Strategy for the Three FRQs',

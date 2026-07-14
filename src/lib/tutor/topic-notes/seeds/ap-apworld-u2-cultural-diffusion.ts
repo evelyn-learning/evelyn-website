@@ -14,7 +14,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_CULTURAL_DIFFUSION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.cultural-diffusion.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 2,
   cedTopic: '2.6',
   cedTitle: 'Cultural, Technological, and Biological Diffusion Along Trade Routes',

@@ -14,7 +14,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_COLUMBIAN_EXCHANGE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.columbian-exchange-global.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 4,
   cedTopic: '4.3',
   cedTitle: 'The Columbian Exchange',

@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_MARITIME_EXPLORATION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.maritime-exploration.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 4,
   cedTopic: '4.1-4.2',
   cedTitle: 'Technology and the Age of Exploration',

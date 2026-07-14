@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_SOPHISTICATION_IN_SYNTHESIS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.sophistication-in-synthesis.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 8,
   cedTopic: '8.4',
   cedTitle: 'Sophistication in Synthesis',

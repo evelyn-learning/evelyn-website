@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U8_DECOLONIZATION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.decolonization.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 8,
   cedTopic: '8.5-8.6',
   cedTitle: 'Decolonization',

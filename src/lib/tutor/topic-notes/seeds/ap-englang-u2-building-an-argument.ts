@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_BUILDING_AN_ARGUMENT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.building-an-argument.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 2,
   cedTopic: '2.1',
   cedTitle: 'Building an Argument',

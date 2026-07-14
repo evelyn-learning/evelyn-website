@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U7_LEGACIES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.conflict-legacies.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 7,
   cedTopic: '7.8-7.9',
   cedTitle: 'Legacies of Total War: Atrocities, Refugees, and Human Rights',

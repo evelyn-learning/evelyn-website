@@ -14,7 +14,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_SOUTH_SOUTHEAST_ASIA: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.south-southeast-asia.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 1,
   cedTopic: '1.3',
   cedTitle: 'Developments in South and Southeast Asia',

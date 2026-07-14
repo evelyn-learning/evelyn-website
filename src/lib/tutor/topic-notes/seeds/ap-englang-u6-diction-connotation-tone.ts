@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_DICTION_CONNOTATION_TONE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.diction-connotation-tone.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 6,
   cedTopic: '6.2',
   cedTitle: 'Diction, Connotation, and Tone',

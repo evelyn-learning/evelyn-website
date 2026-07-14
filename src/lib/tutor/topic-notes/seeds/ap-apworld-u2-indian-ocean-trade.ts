@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_INDIAN_OCEAN_TRADE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.indian-ocean-trade.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 2,
   cedTopic: '2.3',
   cedTitle: 'The Indian Ocean Trade Network',

@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_THE_SYNTHESIS_TASK: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.the-synthesis-task.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 3,
   cedTopic: '3.1',
   cedTitle: 'The Synthesis Task',

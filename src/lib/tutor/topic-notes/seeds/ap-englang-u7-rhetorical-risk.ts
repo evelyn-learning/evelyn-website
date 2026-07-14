@@ -21,7 +21,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_RHETORICAL_RISK: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.rhetorical-risk.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 7,
   cedTopic: '7.4',
   cedTitle: 'Rhetorical Risk and Control of Style',

@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_AUDIENCE_CONTEXT: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.audience-context.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 1,
   cedTopic: '1.5',
   cedTitle: 'Audience and Context',

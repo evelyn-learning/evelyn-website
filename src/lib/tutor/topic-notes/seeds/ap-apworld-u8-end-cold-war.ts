@@ -11,7 +11,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U8_END_COLD_WAR: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.end-cold-war.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 8,
   cedTopic: '8.9-8.10',
   cedTitle: 'The End of the Cold War',

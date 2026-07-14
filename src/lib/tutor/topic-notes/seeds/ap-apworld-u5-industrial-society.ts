@@ -15,7 +15,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_INDUSTRIAL_SOCIETY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.industrial-society.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 5,
   cedTopic: '5.7-5.11',
   cedTitle: 'Industrial Society',

@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_DEFENSIBLE_THESIS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.defensible-thesis.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 1,
   cedTopic: '1.3',
   cedTitle: 'Writing a Defensible Thesis',

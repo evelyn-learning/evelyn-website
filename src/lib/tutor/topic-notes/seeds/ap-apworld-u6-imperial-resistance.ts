@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U6_IMPERIAL_RESISTANCE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.imperial-resistance.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 6,
   cedTopic: '6.3',
   cedTitle: 'Resistance to Imperialism',

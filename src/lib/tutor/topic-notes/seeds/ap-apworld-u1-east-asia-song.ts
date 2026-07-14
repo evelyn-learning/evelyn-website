@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_EAST_ASIA_SONG: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.east-asia-song.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 1,
   cedTopic: '1.1',
   cedTitle: 'Developments in East Asia',

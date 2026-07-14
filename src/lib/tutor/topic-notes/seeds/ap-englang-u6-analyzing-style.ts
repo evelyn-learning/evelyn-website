@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_ANALYZING_STYLE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.analyzing-style.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 6,
   cedTopic: '6.4',
   cedTitle: 'Analyzing Style in Rhetorical Analysis',

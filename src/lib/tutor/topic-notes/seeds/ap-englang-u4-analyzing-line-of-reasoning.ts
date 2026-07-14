@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_ANALYZING_LINE_OF_REASONING: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.analyzing-line-of-reasoning.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 4,
   cedTopic: '4.4',
   cedTitle: 'Analyzing a Line of Reasoning',

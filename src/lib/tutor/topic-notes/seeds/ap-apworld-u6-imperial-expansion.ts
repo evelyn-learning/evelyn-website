@@ -15,7 +15,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U6_IMPERIAL_EXPANSION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.imperial-expansion.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 6,
   cedTopic: '6.1-6.2',
   cedTitle: 'Ideologies and Tools of Imperial Expansion',

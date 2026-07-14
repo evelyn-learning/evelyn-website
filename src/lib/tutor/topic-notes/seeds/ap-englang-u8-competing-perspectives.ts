@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_COMPETING_PERSPECTIVES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.competing-perspectives.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 8,
   cedTopic: '8.2',
   cedTitle: 'Synthesizing Competing Perspectives',

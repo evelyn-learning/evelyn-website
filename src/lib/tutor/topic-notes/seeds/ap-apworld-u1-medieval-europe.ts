@@ -11,7 +11,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_MEDIEVAL_EUROPE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.medieval-europe.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 1,
   cedTopic: '1.6',
   cedTitle: 'Developments in Medieval Europe',

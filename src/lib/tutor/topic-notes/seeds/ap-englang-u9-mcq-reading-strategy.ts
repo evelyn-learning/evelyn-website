@@ -19,7 +19,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_MCQ_READING_STRATEGY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.mcq-reading-strategy.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 9,
   cedTopic: '9.2',
   cedTitle: 'MCQ Reading (Rhetorical Analysis) Strategy',

@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_RHETORICAL_SITUATION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.rhetorical-situation.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 1,
   cedTopic: '1.1',
   cedTitle: 'Rhetorical Situation',

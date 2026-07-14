@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U8_NEW_STATES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.new-states.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 8,
   cedTopic: '8.7-8.8',
   cedTitle: 'New States and Development Strategies',

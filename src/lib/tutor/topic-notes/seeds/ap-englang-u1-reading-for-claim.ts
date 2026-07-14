@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_READING_FOR_CLAIM: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.reading-for-claim.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 1,
   cedTopic: '1.2',
   cedTitle: "Reading for the Writer's Claim",

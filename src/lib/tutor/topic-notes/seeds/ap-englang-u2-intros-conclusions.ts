@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_INTROS_CONCLUSIONS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.intros-conclusions.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 2,
   cedTopic: '2.5',
   cedTitle: 'Introductions and Conclusions',

@@ -20,7 +20,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_NUANCE_QUALIFICATION_CONCESSION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.nuance-qualification-concession.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 7,
   cedTopic: '7.1',
   cedTitle: 'Nuance, Qualification, and Concession',

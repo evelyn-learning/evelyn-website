@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U9_CULTURE_RIGHTS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.culture-rights-migration.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 9,
   cedTopic: '9.8-9.9',
   cedTitle: 'Global Culture, Human Rights, and Migration',

@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_POSITION_ACROSS_SOURCES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.position-across-sources.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 3,
   cedTopic: '3.3',
   cedTitle: 'Taking a Position Across Sources',

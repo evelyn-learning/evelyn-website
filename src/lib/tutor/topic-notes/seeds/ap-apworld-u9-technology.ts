@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U9_TECHNOLOGY: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.technology-communication.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 9,
   cedTopic: '9.4-9.5',
   cedTitle: 'Technology, Communication, and Health',

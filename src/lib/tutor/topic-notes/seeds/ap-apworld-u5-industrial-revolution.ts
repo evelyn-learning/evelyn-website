@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_INDUSTRIAL_REVOLUTION: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.industrial-revolution.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 5,
   cedTopic: '5.3-5.6',
   cedTitle: 'The Industrial Revolution',

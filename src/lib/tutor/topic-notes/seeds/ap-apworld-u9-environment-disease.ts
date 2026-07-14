@@ -12,7 +12,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U9_ENVIRONMENT_DISEASE: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.environment-disease.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 9,
   cedTopic: '9.6-9.7',
   cedTitle: 'Population, Disease, and the Environment',

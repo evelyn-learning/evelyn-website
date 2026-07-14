@@ -18,7 +18,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_ENGLANG_REASONING_AND_PARAGRAPHING: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.englang.reasoning-and-paragraphing.v1',
-  course: 'AP English Language',
+  course: 'AP English Language & Composition',
   cedUnit: 5,
   cedTopic: '5.1',
   cedTitle: 'Reasoning and Paragraphing',

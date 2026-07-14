@@ -14,7 +14,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_SILK_ROADS: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.silk-roads.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 2,
   cedTopic: '2.2',
   cedTitle: 'The Silk Roads',

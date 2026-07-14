@@ -17,7 +17,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U6_REFORM_RESPONSES: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.reform-responses.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 6,
   cedTopic: '6.2/6.4',
   cedTitle: 'Reform Responses to Imperial Pressure',

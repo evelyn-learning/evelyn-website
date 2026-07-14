@@ -13,7 +13,7 @@ import type { TopicNotesBaseline } from '../types';
 
 export const BASELINE_AP_APWORLD_U6_ECONOMIC_IMPERIALISM: TopicNotesBaseline = {
   baselineId: 'evelyn.ap.apworld.economic-imperialism.v1',
-  course: 'AP World History',
+  course: 'AP World History: Modern',
   cedUnit: 6,
   cedTopic: '6.4-6.6',
   cedTitle: 'Economic Imperialism and Informal Empire',
