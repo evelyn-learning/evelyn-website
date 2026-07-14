@@ -327,11 +327,25 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // input through the brain). The embed only mirrors transcript/whiteboard via
   // TutorSession's callbacks for saveSession + the session_ended counts.
 
-  // Save session to DB
-  const saveSession = useCallback((status: 'completed' | 'abandoned') => {
+  // Save session to DB. 'active' = periodic flush (no endedAt/status);
+  // 'completed'/'abandoned' add the end-of-session summary fields.
+  //
+  // Transcript + whiteboard ride EVERY save, periodic flushes included.
+  // They were previously persisted only by the final save, and that save is
+  // fragile: beforeunload doesn't fire on tab-kill/laptop-sleep, sendBeacon
+  // silently refuses payloads over the UA's ~64KB quota, and a plain fetch
+  // is aborted when the parent navigates the iframe away. Observed
+  // 2026-07-13: a 47-minute Crimsora session recorded $2.43 of brain cost
+  // (cost rides the small progress checkpoints) but ZERO transcript.
+  // Mirrors the /tutor page's periodic-flush fix from 2026-04-29.
+  const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned') => {
     const now = new Date();
     const duration = Math.round((now.getTime() - sessionStartRef.current.getTime()) / 1000);
-    const payload = {
+    // Slim base: everything except transcript/whiteboard — always fits the
+    // sendBeacon/keepalive body quota, so the end-of-session facts
+    // (endedAt, duration, counts, cost) survive even when the full payload
+    // can't be delivered.
+    const basePayload = {
       sessionId,
       subject,
       topic,
@@ -345,27 +359,15 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       studentName: studentName || undefined,
       studentId: config?.student_id || undefined,
       startedAt: sessionStartRef.current.toISOString(),
-      endedAt: now.toISOString(),
       duration,
       messageCount: transcript.length,
       whiteboardItemCount: whiteboardCommands.length,
-      status,
-      transcript: transcript.map(t => ({
-        role: t.role,
-        text: t.text,
-        timestamp: t.timestamp.toISOString(),
-        ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
-        ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
-      })),
-      whiteboardCommands: whiteboardCommands.map(cmd => ({
-        action: cmd.action,
-        data: { ...cmd, action: undefined },
-        timestamp: now.toISOString(),
-      })),
+      ...(status !== 'active' ? { endedAt: now.toISOString(), status } : {}),
       // A1: token/cost telemetry + covered topics (were always 0/empty for
       // embed sessions — this is what makes Sonnet-5 cost tracking visible).
       ...brainUsageTotals(),
       ...(() => {
+        if (status === 'active') return {};
         const summary = sessionHandleRef.current?.getSessionSummary?.();
         return {
           ...(summary?.topicsCovered?.length ? { topicsCovered: summary.topicsCovered } : {}),
@@ -373,13 +375,70 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         };
       })(),
     };
+    const payload = {
+      ...basePayload,
+      ...(transcript.length > 0 ? {
+        transcript: transcript.map(t => ({
+          role: t.role,
+          text: t.text,
+          timestamp: t.timestamp.toISOString(),
+          ...(t.whiteboardCommands?.length ? { whiteboardCommands: t.whiteboardCommands } : {}),
+          ...(t.pedagogicalIntent ? { pedagogicalIntent: t.pedagogicalIntent } : {}),
+        })),
+      } : {}),
+      ...(whiteboardCommands.length > 0 ? {
+        whiteboardCommands: whiteboardCommands.map(cmd => ({
+          action: cmd.action,
+          data: { ...cmd, action: undefined },
+          timestamp: now.toISOString(),
+        })),
+      } : {}),
+    };
+    const body = JSON.stringify(payload);
+
+    if (status === 'active') {
+      fetch('/api/tutor/session-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+      }).catch(() => {});
+      return;
+    }
+
     if (status === 'abandoned') {
-      navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(payload));
+      // sendBeacon returns false (and sends NOTHING) when the payload
+      // exceeds the UA's in-flight quota (~64KB) — exactly how the
+      // 47-minute transcript vanished on 2026-07-13. Fall back to the slim
+      // summary, which always fits; the transcript itself is already in the
+      // DB courtesy of the periodic flush above.
+      if (!navigator.sendBeacon('/api/tutor/session-usage', body)) {
+        navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(basePayload));
+      }
+      return;
+    }
+
+    // completed: keepalive lets the save outlive the parent navigating the
+    // iframe away mid-request (two such nginx 499 aborts observed
+    // 2026-07-13) — but keepalive bodies share sendBeacon's ~64KB quota, so
+    // an oversized payload goes as slim-keepalive + full best-effort fetch.
+    if (new Blob([body]).size <= 60_000) {
+      fetch('/api/tutor/session-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        keepalive: true,
+      }).catch(() => {});
     } else {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(basePayload),
+        keepalive: true,
+      }).catch(() => {});
+      fetch('/api/tutor/session-usage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
       }).catch(() => {});
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands]);
@@ -548,6 +607,26 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [sessionEnded, saveSession]);
+
+  // Periodic active flush every 30s while the session runs, so an abnormal
+  // end (tab kill, sleep, dropped final save) loses at most 30s of trailing
+  // turns instead of the whole transcript.
+  //
+  // CRITICAL: the interval reads saveSession through a ref with a stable
+  // effect dep list. saveSession's deps include `transcript`, so every turn
+  // re-creates it — depending on it directly would tear down and recreate
+  // the interval, restarting its 30s clock, and during an active
+  // conversation the timer would never fire (same trap the /tutor page
+  // documents).
+  const saveSessionRef = useRef(saveSession);
+  useEffect(() => {
+    saveSessionRef.current = saveSession;
+  }, [saveSession]);
+  useEffect(() => {
+    if (sessionEnded) return;
+    const interval = setInterval(() => saveSessionRef.current('active'), 30_000);
+    return () => clearInterval(interval);
+  }, [sessionEnded]);
 
   // Session ended view
   if (sessionEnded) {

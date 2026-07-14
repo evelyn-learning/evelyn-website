@@ -90,6 +90,24 @@ export async function POST(request: NextRequest) {
     // Append to file (creates if doesn't exist)
     await fs.appendFile(filePath, buffer);
 
+    // Mark hasAudio as soon as audio exists, not only on finalize — sessions
+    // that never finalize (tab killed, laptop sleep) used to leave their
+    // audio on disk but invisible to the admin UI (2026-07-13: a 47-minute
+    // session had 259MB of audio and hasAudio:false). Chunks flush every
+    // ~30s: the first two chunks cover the insert race where chunk 0 lands
+    // before the TutorSession doc exists; the modulo re-set is a backstop.
+    if (chunkIndex < 2 || chunkIndex % 10 === 0) {
+      try {
+        await connectDB();
+        await TutorSession.updateOne(
+          { sessionId: safeId },
+          { $set: { hasAudio: true } }
+        );
+      } catch (dbErr) {
+        console.error('[session-audio] Failed to update hasAudio:', dbErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       chunkIndex,
