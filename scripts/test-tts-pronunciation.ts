@@ -208,3 +208,43 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('Thanks, everyone!', 'Thanks, everyone!', 'lowercase-after-comma-untouched');
   console.log('OK — live-session 2026-07-11 regression (vocative comma)');
 }
+
+// Live-session regression 2026-07-13: "SD" (standard deviation) voiced as
+// "South Dakota" by the Cartesia normalizer. Expand the stats acronym while
+// preserving GENUINE state abbreviations (year-preceded / comma-preceded).
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('The mean is 100 and the SD is 15.', 'The mean is 100 and the standard deviation is 15.', 'sd-singular');
+  eq('The value is 2 SDs above the mean.', 'The value is 2 standard deviations above the mean.', 'sd-plural');
+  eq('Wechsler scoring (mean=100, SD=15) is standard.', 'Wechsler scoring (mean equals 100, standard deviation equals 15) is standard.', 'sd-after-number-comma');
+  eq('68% within 1 SD; 95% within 2 SD.', '68% within 1 standard deviation; 95% within 2 standard deviation.', 'sd-empirical-rule');
+  // Genuine state abbreviation: year-preceded ("1890 SD" = South Dakota,
+  // Wounded Knee) must be left for Cartesia to voice as the state.
+  eq('the Wounded Knee massacre in 1890 SD ended it.', 'the Wounded Knee massacre in 1890 SD ended it.', 'sd-year-preceded-is-state');
+  eq('The band played in Pierre, SD last night.', 'The band played in Pierre, SD last night.', 'sd-comma-preceded-is-state');
+  eq('USD is the currency code.', 'USD is the currency code.', 'sd-inside-usd-untouched');
+  console.log('OK — live-session 2026-07-13 regression (SD → standard deviation)');
+}
+
+// Math notation gaps (2026-07-13 audit): comparison/operator glyphs,
+// superscript squared/cubed, degree sign.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('We need p ≤ 0.05 to reject.', 'We need p less than or equal to 0.05 to reject.', 'leq');
+  eq('Require n ≥ 30 for the CLT.', 'Require n greater than or equal to 30 for the CLT.', 'geq');
+  eq('So 0.167 ≠ 0.20 here.', 'So 0.167 not equal to 0.20 here.', 'neq');
+  eq('The mean is 200 ± 2(25).', 'The mean is 200 plus or minus 2(25).', 'plus-minus');
+  eq('The area is x² plus y².', 'The area is x squared plus why squared.', 'superscript-squared');
+  eq('Volume scales with r³.', 'Volume scales with r cubed.', 'superscript-cubed');
+  eq('Wichita, KS is at 38°N.', 'Wichita, KS is at 38 degrees N.', 'degree-latitude');
+  eq('Reaction A peaks at 60°C.', 'Reaction A peaks at 60 degrees C.', 'degree-celsius');
+  console.log('OK — math notation gaps 2026-07-13 (operators, superscripts, degree)');
+}

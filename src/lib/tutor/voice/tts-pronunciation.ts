@@ -65,6 +65,17 @@ const PUNCTUATION_REPLACEMENTS: Replacement[] = [
   { pattern: /–/g, replacement: ', ' },          // en-dash → comma pause
 ];
 
+/** Math comparison / operator glyphs. Cartesia voices these as their glyph
+ *  name or drops them; the "=" rule in rewriteForTTS deliberately leaves
+ *  these distinct code points alone, so expand them here. */
+const MATH_OPERATOR_REPLACEMENTS: Replacement[] = [
+  { pattern: /\s*≤\s*/g, replacement: ' less than or equal to ' },
+  { pattern: /\s*≥\s*/g, replacement: ' greater than or equal to ' },
+  { pattern: /\s*≠\s*/g, replacement: ' not equal to ' },
+  { pattern: /\s*≈\s*/g, replacement: ' approximately ' },
+  { pattern: /\s*±\s*/g, replacement: ' plus or minus ' },
+];
+
 /** Slash-pair whitelist — curated option/direction pairs where "/" is
  *  read aloud as "or" ("opens left/right" → "opens left or right").
  *  Deliberately a short, exact list: fractions ("3/4") and ratios
@@ -159,6 +170,7 @@ const ALL_REPLACEMENTS: Replacement[] = [
   ...MATH_FUNC_REPLACEMENTS,
   ...GREEK_REPLACEMENTS,
   ...PUNCTUATION_REPLACEMENTS,
+  ...MATH_OPERATOR_REPLACEMENTS,
   ...SLASH_PAIR_REPLACEMENTS,
   ...EMDASH_REPLACEMENTS,
   ...LETTER_RESPELLING_REPLACEMENTS,
@@ -203,6 +215,25 @@ function rewriteDerivatives(t: string): string {
 }
 
 /**
+ * Domain acronyms the Cartesia text normalizer expands into US state names.
+ * Confirmed live 2026-07-13: "SD" (standard deviation) voiced as "South
+ * Dakota" in a stats session. The fix expands the acronym to its spoken
+ * term, guarded so GENUINE state abbreviations survive — a state code is
+ * preceded by a 4-digit year ("1890 SD" = Wounded Knee) or a "Placename, XX"
+ * comma ("Pierre, SD"), and the stats term never is; plural "SDs" is always
+ * the stats term. The comma guard requires a Capitalized word before the
+ * comma so stats phrasings like "mean=100, SD=15" (number before the comma)
+ * still expand. This is the home for other guarded domain-acronym
+ * expansions if more surface (see the mispronunciation audit).
+ */
+function rewriteDomainAcronyms(t: string): string {
+  // "SD"/"SDs" → "standard deviation(s)" unless it reads as a state code
+  // (preceded by "<year> " or "Placename, ").
+  t = t.replace(/(?<!\d{4}\s)(?<![A-Z][a-z]+,\s)\bSD(s?)\b/g, (_m, s: string) => `standard deviation${s}`);
+  return t;
+}
+
+/**
  * Apply all pronunciation rewrites + punctuation normalizations.
  * Order matters within sections (longer matches first — "arcsin"
  * before "sin"); TRIG_REPLACEMENTS is ordered accordingly above.
@@ -215,6 +246,10 @@ export function rewriteForTTS(raw: string): string {
   // single quotes are untouched (contractions).
   t = t.replace(/["“”]/g, '');
   t = rewriteDerivatives(t);
+  // Domain acronyms Cartesia expands as state names ("SD" → "South Dakota").
+  // Runs before comma/number normalization so its state-code guard can still
+  // see "1890 SD" / ", SD".
+  t = rewriteDomainAcronyms(t);
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
   // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
   // glyphs) and "==" (never appears in tutor speech).
@@ -226,6 +261,12 @@ export function rewriteForTTS(raw: string): string {
     '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
   };
   t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch}`);
+  // Superscript squared/cubed: Cartesia drops or mis-voices "x²"/"cm²".
+  // Only ²/³ are handled — higher superscripts are rare and their spoken
+  // form ("to the fourth") is ambiguous with ordinals.
+  t = t.replace(/²/g, ' squared').replace(/³/g, ' cubed');
+  // Degree sign: "38°N" → "38 degrees N", "60°C" → "60 degrees C".
+  t = t.replace(/°/g, ' degrees ');
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = t.replace(pattern, replacement);
   }
