@@ -8,7 +8,7 @@
  * a single real-time WebSocket connection to OpenAI.
  */
 
-import { useState, useCallback, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useCallback, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
@@ -462,6 +462,11 @@ interface VoiceTutorRealtimeProps {
    *  background, so the island variant adds none of its own. (Flag-gated host;
    *  default keeps every legacy caller byte-identical.) */
   dockVariant?: 'default' | 'island';
+  /** One-line merged bar (2026-07-14): when set, the dock renders this node
+   *  (the live caption ticker, composed by TutorSession) in place of the
+   *  state-text block next to the mic — [mic][caption][input][mute][end].
+   *  The mic button's color/pulse still conveys the voice state. */
+  captionSlot?: ReactNode;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -539,6 +544,7 @@ export function VoiceTutorRealtime({
   sessionWrapMinutes,
   maxDurationExplicit = false,
   dockVariant = 'default',
+  captionSlot,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
@@ -12741,14 +12747,20 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             {stateUI.icon}
           </button>
 
-          {/* State text — hidden on mobile to free room for the input.
-              The mic button itself + its color/pulse already convey state. */}
-          <div className="hidden md:block min-w-0">
-            <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
-            {stateUI.subtext && (
-              <p className="text-xs text-gray-500 truncate">{stateUI.subtext}</p>
-            )}
-          </div>
+          {/* Caption slot (one-line merged bar) replaces the state text when
+              provided; otherwise the legacy state text, hidden on mobile to
+              free room for the input. The mic button's color/pulse conveys
+              state either way. */}
+          {captionSlot ? (
+            <div className="flex-1 min-w-0">{captionSlot}</div>
+          ) : (
+            <div className="hidden md:block min-w-0">
+              <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
+              {stateUI.subtext && (
+                <p className="text-xs text-gray-500 truncate">{stateUI.subtext}</p>
+              )}
+            </div>
+          )}
         </>
       )}
 

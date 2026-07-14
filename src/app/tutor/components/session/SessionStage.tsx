@@ -20,7 +20,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2,
-  MessageSquareText, X, Target, Upload, ArrowDown, ChevronUp,
+  MessageSquareText, X, Target, Upload, ArrowDown,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 
@@ -99,7 +99,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
-    voiceState, micLevelRef, listeningHint, started = false, liveCaption, getSpokenCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
+    voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
     boardPenActive, onToggleBoardPen,
   } = props;
@@ -131,6 +131,16 @@ export default function SessionStage(props: SessionStageProps) {
   // session start was disorienting (it dimmed the whole stage). The nudge
   // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // The dock caption (rendered inside VoiceTutorRealtime via captionSlot —
+  // composed in TutorSession, two levels up from this component's slots)
+  // opens the transcript drawer through this window-event bridge: the drawer
+  // state lives here and threading a callback up-and-back-down would tangle
+  // the slot composition.
+  useEffect(() => {
+    const open = () => setDrawerOpen(true);
+    window.addEventListener('evelyn:open-transcript', open);
+    return () => window.removeEventListener('evelyn:open-transcript', open);
+  }, []);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
@@ -426,55 +436,40 @@ export default function SessionStage(props: SessionStageProps) {
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
       <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
         <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
-          <div className="rounded-[24px] bg-white/40 backdrop-blur-md border border-slate-200 shadow-2xl overflow-hidden">
-          {/* CAPTION STRIP — the tutor's last sentence/question (tap → full
-              transcript). Single thin line so the bar never crowds. The
-              Quick-Actions chips (Skip / I'm stuck / quick answers) are HIDDEN
-              for now per 2026-06-24 ear-test — flip SHOW_QUICK_ACTIONS to
-              bring them back; `quickActions` still flows in. */}
-          {/* This gate is load-bearing for CaptionTicker's poll probe: the ticker
-              must not mount before VoiceTutorRealtime's handle-population effect
-              has run. Today that's guaranteed because liveCaption is empty until
-              the first transcript entry, which can only exist after the first
-              commit. If this gate is ever removed, add a re-probe to CaptionTicker. */}
-          {liveCaption && (
-            <div className="ss-cap border-b border-slate-200/70">
-              <button type="button" onClick={() => setDrawerOpen(true)} title="Open transcript" className="w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-white/50 transition-colors">
-                <div className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-white bg-gradient-to-br ${ORB_STYLE[voiceState]}`}><Sparkles className="w-4 h-4" /></div>
-                <CaptionTicker text={liveCaption} getSpoken={getSpokenCaption} />
-                {voiceState === 'speaking'
-                  ? <MicMeter level={0} speaking />
-                  : <ChevronUp className="w-4 h-4 shrink-0 text-slate-300" />}
-              </button>
-              {SHOW_QUICK_ACTIONS && quickActions && (
-                <div className="flex justify-center px-3 py-2 border-t border-slate-100">
-                  {quickActions}
-                </div>
-              )}
-            </div>
-          )}
-          <div className="px-2 sm:px-3 py-1.5">
-          {/* "Being heard" status row — lives in the dock, next to the mic, so
-              the caption strip above stays free for the tutor's question. Shows
-              the live mic meter + the perception states the mic button doesn't
-              convey (Hearing you / Got that / didn't catch / Muted). The row
-              keeps a FIXED height once started so the dock never grows/shrinks
-              (and overlaps the caption) as the status appears/disappears. */}
-          {started && (
-            <div className="flex items-center justify-center gap-2 h-5">
-              {(voiceState === 'listening' || voiceState === 'hearing' || voiceState === 'processing' || voiceState === 'muted' || listeningHint === 'didnt-catch') && (<>
-                {voiceState !== 'muted' && <MicMeter level={micLevel} speaking={false} />}
-                {(() => {
-                  if (listeningHint === 'didnt-catch') return <span className="text-xs font-medium text-amber-600">Didn’t catch that — mind repeating?</span>;
-                  if (voiceState === 'hearing') return <span className="text-xs font-medium text-blue-600">Hearing you…</span>;
-                  if (voiceState === 'processing') return <span className="text-xs font-medium text-amber-600">Got that — one sec…</span>;
-                  if (voiceState === 'muted') return <span className="text-xs font-medium text-slate-500">Muted — tap the mic to talk</span>;
-                  return <span className="text-xs font-medium text-slate-400">Listening…</span>;
-                })()}
-              </>)}
-            </div>
-          )}
+          {/* ONE-LINE bar: the caption rides INSIDE the dock as VTR's
+              captionSlot ([mic][caption][input][mute][end] — composed in
+              TutorSession), so there is no separate caption strip. Kept
+              genuinely see-through: /40 white + a barely-there blur (blur-md
+              frosted it to near-solid over the white board sheet). */}
+          <div className="rounded-[24px] bg-white/40 backdrop-blur-[2px] border border-slate-200/80 shadow-lg overflow-hidden">
+          <div className="px-2 sm:px-3 py-1">
             {voiceInput}
+            {/* "Being heard" status row — UNDER the textbox (2026-07-14 ask).
+                Shows the live mic meter + the perception states the mic button
+                doesn't convey (Hearing you / Got that / didn't catch / Muted).
+                FIXED height once started so the bar never grows/shrinks as the
+                status appears/disappears. */}
+            {started && (
+              <div className="flex items-center justify-center gap-2 h-5">
+                {(voiceState === 'listening' || voiceState === 'hearing' || voiceState === 'processing' || voiceState === 'muted' || listeningHint === 'didnt-catch') && (<>
+                  {voiceState !== 'muted' && <MicMeter level={micLevel} speaking={false} />}
+                  {(() => {
+                    if (listeningHint === 'didnt-catch') return <span className="text-xs font-medium text-amber-600">Didn’t catch that — mind repeating?</span>;
+                    if (voiceState === 'hearing') return <span className="text-xs font-medium text-blue-600">Hearing you…</span>;
+                    if (voiceState === 'processing') return <span className="text-xs font-medium text-amber-600">Got that — one sec…</span>;
+                    if (voiceState === 'muted') return <span className="text-xs font-medium text-slate-500">Muted — tap the mic to talk</span>;
+                    return <span className="text-xs font-medium text-slate-400">Listening…</span>;
+                  })()}
+                </>)}
+              </div>
+            )}
+            {/* Quick-Actions chips (Skip / I'm stuck / quick answers) — HIDDEN
+                per 2026-06-24 ear-test; flip SHOW_QUICK_ACTIONS to restore. */}
+            {SHOW_QUICK_ACTIONS && quickActions && (
+              <div className="flex justify-center px-3 py-2 border-t border-slate-100">
+                {quickActions}
+              </div>
+            )}
           </div>
           </div>
         </div>
@@ -512,7 +507,7 @@ export default function SessionStage(props: SessionStageProps) {
  *  that fit the available width, ending on a complete word (so nothing is cut
  *  mid-word and the end never slides under the waveform). */
 let _capMeasureCanvas: HTMLCanvasElement | null = null;
-function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: () => SpokenCaption | null }) {
+export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: () => SpokenCaption | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const [display, setDisplay] = useState('');
   // How many characters of `text` are "revealed" so far (typewriter mode). A
@@ -628,7 +623,7 @@ function formatBoardTitle(t: string | undefined): string {
 /** A small VU meter. When `speaking` (tutor) the bars run a decorative wave;
  *  otherwise the bar heights track `level` (0..1) — the student's live mic
  *  amplitude — so they can SEE they're being heard. `large` = presence size. */
-function MicMeter({ level, speaking, large = false }: { level: number; speaking: boolean; large?: boolean }) {
+export function MicMeter({ level, speaking, large = false }: { level: number; speaking: boolean; large?: boolean }) {
   const variance = large ? [0.55, 0.85, 1, 0.7, 0.95, 0.6, 0.8] : [0.6, 1, 0.72, 0.9];
   const barW = large ? 'w-1.5' : 'w-1';
   return (

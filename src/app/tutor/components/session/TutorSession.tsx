@@ -26,7 +26,7 @@ import { WhiteboardCanvas } from '../whiteboard';
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
 import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
-import SessionStage, { type VoiceState } from './SessionStage';
+import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
@@ -426,6 +426,39 @@ export default function TutorSession(props: TutorSessionProps) {
     />
   );
 
+  // --- Derived presence/caption (computed BEFORE the dock so the caption can
+  //     ride inside it as VTR's captionSlot — the one-line merged bar) ---
+  const lastTutorEntry = [...transcript].reverse().find((t) => t.role === 'tutor');
+  const lastEntry = transcript[transcript.length - 1];
+  const started = transcript.length > 0 || liveVoiceState !== 'idle';
+  const derivedVoiceState: VoiceState =
+    isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
+  const voiceState: VoiceState =
+    liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
+  const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
+  // Caption word-sync: stable poll getter for the CaptionTicker. Reads the
+  // engine handle imperatively — no React state churn at poll frequency.
+  const getSpokenCaption = useCallback((): SpokenCaption | null => {
+    return realtimeHandleRef.current?.getSpokenCaption?.() ?? null;
+  }, [realtimeHandleRef]);
+  // Dock caption (2026-07-14 one-line bar): the tutor's live sentence sits
+  // INSIDE the voice dock, replacing VTR's state-text block. Tap → transcript
+  // drawer, via the window event bridge (the drawer state lives in
+  // SessionStage, two composition levels down from the VTR element).
+  // Mount-gated on liveCaption — load-bearing for CaptionTicker's poll probe
+  // (must not mount before VTR's handle-population effect has run).
+  const dockCaptionEl = liveCaption ? (
+    <button
+      type="button"
+      title="Open transcript"
+      onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
+      className="w-full min-w-0 flex items-center gap-2 text-left"
+    >
+      <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
+      {voiceState === 'speaking' && <MicMeter level={0} speaking />}
+    </button>
+  ) : undefined;
+
   const voiceInputEl = (
     <>
       {voiceTrouble && (
@@ -451,6 +484,7 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}
         lessonPlanId={selectedLessonPlanId || undefined}
+        captionSlot={dockCaptionEl}
         voice={voice}
         onTranscriptUpdate={handleVoiceTranscriptUpdate}
         onWhiteboardCommand={handleVoiceWhiteboardCommand}
@@ -572,20 +606,6 @@ export default function TutorSession(props: TutorSessionProps) {
     </div>
   );
 
-  // --- Derived presence/caption/quick-actions ---
-  const lastTutorEntry = [...transcript].reverse().find((t) => t.role === 'tutor');
-  const lastEntry = transcript[transcript.length - 1];
-  const started = transcript.length > 0 || liveVoiceState !== 'idle';
-  const derivedVoiceState: VoiceState =
-    isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
-  const voiceState: VoiceState =
-    liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
-  const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
-  // Caption word-sync: stable poll getter for the CaptionTicker. Reads the
-  // engine handle imperatively — no React state churn at poll frequency.
-  const getSpokenCaption = useCallback((): SpokenCaption | null => {
-    return realtimeHandleRef.current?.getSpokenCaption?.() ?? null;
-  }, [realtimeHandleRef]);
   const objective = (() => {
     if (!lessonProgress.plan) return undefined;
     const segId = lessonProgress.currentSegmentId || '';
