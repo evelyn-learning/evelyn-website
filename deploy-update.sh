@@ -21,17 +21,25 @@ rsync -avz --progress \
     --exclude 'node_modules' \
     --exclude '.next' \
     --exclude '.git' \
+    --exclude '.claude' \
     --exclude '.env.local' \
+    --exclude '.env.local.*' \
     --exclude '*.log' \
     ./ $SERVER:$DEPLOY_PATH/
 
-# Build and restart
+# Build and restart.
+# set -e INSIDE the remote block is load-bearing: without it a failed
+# `npm run build` (seen 2026-07-14: ENOTEMPTY on a stale .next) still
+# restarted pm2 against the now-deleted build — crash loop — and the script
+# reported "Deployment complete!". Now any remote failure aborts the deploy
+# and the old process keeps serving the previous build.
 echo -e "${YELLOW}Building and restarting...${NC}"
 ssh $SERVER << ENDSSH
+set -e
 cd $DEPLOY_PATH
 npm ci --production=false
 npm run build
-pm2 restart $APP_NAME
+pm2 restart $APP_NAME --update-env
 ENDSSH
 
 echo -e "${GREEN}Deployment complete!${NC}"
