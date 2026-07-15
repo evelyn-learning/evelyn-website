@@ -41,13 +41,27 @@ export function stripLatexForTitle(t: string | undefined): string {
   // Bare (unbraced) sub/superscript markers: x^2 / y_1 -> "x 2" / "y 1".
   s = s.replace(/[_^]([A-Za-z0-9])/g, ' $1');
 
+  // Delimiter sizing commands: \left, \right, \big, \Big, \bigg, \Bigg and
+  // their variants (\bigl, \bigr, \bigm, etc.) are pure sizing with no
+  // semantic content — strip them entirely, not turned into words.
+  s = s.replace(/\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, '');
+
   // Any remaining bare \command names — strip the backslash, keep the
-  // word: \pi -> pi, \theta -> theta, \left -> left.
+  // word: \pi -> pi, \theta -> theta.
   s = s.replace(/\\([a-zA-Z]+)/g, '$1');
+
+  // Escaped braces (\{ and \}) are literal brace characters — preserve them
+  // by replacing with placeholders, then restore after removing LaTeX delimiters.
+  s = s.replace(/\\{/g, '«');
+  s = s.replace(/\\}/g, '»');
 
   // Leftover braces (from commands this pass didn't specifically target)
   // and stray backslashes — drop the punctuation, keep the content.
   s = s.replace(/[{}\\]/g, '');
+
+  // Restore literal braces from escaped sequences.
+  s = s.replace(/«/g, '{');
+  s = s.replace(/»/g, '}');
 
   // Collapse whitespace introduced above (and any that was already there).
   return s.replace(/\s+/g, ' ').trim();

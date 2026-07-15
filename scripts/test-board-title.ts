@@ -44,6 +44,33 @@ assert.strictEqual(
   'braced superscript becomes a space'
 );
 
+// --- Delimiter sizing commands (\left, \right, \big family) ----------
+assert.strictEqual(
+  stripLatexForTitle('lim_{x→0} \\left(\\frac{\\sin x}{x}\\right)'),
+  'lim x→0 (sin x/x)',
+  '\\left and \\right are pure sizing commands — strip them entirely, not to words'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\big( x \\big)'),
+  '( x )',
+  '\\big is a sizing command — strip it outright'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\Big[ \\frac{a}{b} \\Big]'),
+  '[ a/b ]',
+  '\\Big is a sizing variant — strip it outright'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\bigg\\{ \\sin x \\bigg\\}'),
+  '{ sin x }',
+  '\\bigg is a sizing variant — strip it outright'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\bigl| x \\bigr|'),
+  '| x |',
+  '\\bigl and \\bigr variants — strip them outright'
+);
+
 // --- Other backslash commands ("drop \command names sensibly") ------
 assert.strictEqual(
   stripLatexForTitle('\\sqrt{x} plus \\pi'),
