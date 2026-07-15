@@ -119,6 +119,20 @@ export const RENDER_SYNC_STALL_MS = 6000;
 // original anchor===0 gate never fired (observed 2026-06-22 ear-test, Console4).
 // Bounded so mid-turn step renders (anchor ≥ 2) are never held/delayed.
 export const RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR = 1;
+// Turn-length cap (2026-07-15, round-7 design, user-approved). Two layers,
+// both about UNANCHORED MONOLOGUE cadence — deliberately not a content cap,
+// so it's subject-agnostic (essay walkthroughs anchor excerpts on the board
+// the way proofs anchor equations; languages are short-turn dialogic anyway):
+//  1. prompt rule (voice-cadence.ts): ≤ TURN_CAP_SOFT_SENTENCES in a row
+//     without a board anchor or a hand-back;
+//  2. next-turn corrective (VoiceTutorRealtime turn-ok site): a turn over
+//     TURN_CAP_HARD_SENTENCES with ZERO whiteboard actions plants a
+//     [cadence note] that rides into the next brain call. Post-stream retry
+//     would re-narrate a turn the student already heard — hence next-turn.
+// Per-turn `turn_length` telemetry always emits for per-subject tuning.
+export const TUTOR_TURN_CAP = process.env.NEXT_PUBLIC_TUTOR_TURN_CAP !== 'off';
+export const TURN_CAP_SOFT_SENTENCES = 4;
+export const TURN_CAP_HARD_SENTENCES = 8;
 // Validate-before-speak (Pillar 2 of the robustness track,
 // project_tutor_validate_before_speak). Rolling micro-hold: after the
 // first clean tool opens the gate, subsequent sentences stay BUFFERED

@@ -123,6 +123,9 @@ import {
   RENDER_SYNC_STALL_MS,
   RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR,
   VALIDATE_BEFORE_SPEAK_CAP_MS,
+  TUTOR_TURN_CAP,
+  TURN_CAP_SOFT_SENTENCES,
+  TURN_CAP_HARD_SENTENCES,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   WHITEBOARD_INTENT_PATTERNS,
@@ -1766,6 +1769,12 @@ export function VoiceTutorRealtime({
   // End/Pause teardown — assigned every render below (see the assignment near
   // handleContinueRotation) and read by both the dock button and handleRef.
   const endSessionNowRef = useRef<() => Promise<void>>(async () => {});
+  // Turn-length cap (2026-07-15): when a finished turn exceeded the hard cap
+  // with zero whiteboard actions, this holds a [cadence note] that rides into
+  // the NEXT brain call's transcript and is then cleared. Next-turn (not
+  // retry) because enforcement runs post-stream — a retry would re-narrate a
+  // turn the student already heard.
+  const pendingCadenceNoteRef = useRef<string | null>(null);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -6652,6 +6661,13 @@ export function VoiceTutorRealtime({
         ? [...priorHistory, ...opts.injectedHistoryTail]
         : priorHistory;
       let runTranscript = transcript;
+      // Turn-length cap: deliver the pending cadence corrective with this
+      // turn's input (same "[… — not from the student]" convention as the
+      // validator feedback below), then clear it — one corrective per lapse.
+      if (TUTOR_TURN_CAP && pendingCadenceNoteRef.current) {
+        runTranscript = `${pendingCadenceNoteRef.current}\n\n${runTranscript}`;
+        pendingCadenceNoteRef.current = null;
+      }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
       // Number of sentences actually dispatched to TTS this turn. Tracks
@@ -9803,6 +9819,24 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      // Turn-length telemetry (always) + cap corrective (flag-gated). The cap
+      // is on UNANCHORED monologue: sentences with zero whiteboard actions —
+      // subject-agnostic by design (2026-07-15, user-approved). Telemetry
+      // feeds per-subject threshold tuning from real sessions.
+      onDebugEvent?.('turn_length', `${totalSentenceCount} sentence(s) · ${totalToolNamesSeen.length} tool call(s)`, {
+        sentences: totalSentenceCount,
+        toolCalls: totalToolNamesSeen.length,
+        subject,
+      });
+      if (TUTOR_TURN_CAP && totalSentenceCount > TURN_CAP_HARD_SENTENCES && totalToolNamesSeen.length === 0) {
+        pendingCadenceNoteRef.current =
+          `[cadence note — not from the student] Your previous turn ran ${totalSentenceCount} spoken sentences ` +
+          `with no whiteboard action — too long to follow by ear. From this turn on: at most ` +
+          `${TURN_CAP_SOFT_SENTENCES} sentences in a row before you either anchor what you're saying on the ` +
+          `board or hand the turn back to the student.`;
+        console.warn(`[brain-orchestrator] turn cap: ${totalSentenceCount} sentences, 0 tools — cadence note planted`);
+        onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · 0 tool calls — cadence note planted for next turn`);
+      }
       // Opener-recency (part A): capture THIS session's opener record once,
       // on the opener turn. openingTurnPendingRef is still armed here — it's
       // consumed unconditionally in the finally below, but the finally can't

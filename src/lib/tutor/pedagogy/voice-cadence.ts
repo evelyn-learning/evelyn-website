@@ -8,6 +8,8 @@
  * sentence-level emphasis markers and pause hints the engine honors.
  */
 
+import { TUTOR_TURN_CAP, TURN_CAP_SOFT_SENTENCES } from '@/lib/tutor/orchestrator/flags';
+
 export function renderVoiceCadenceBlock(): string {
   return [
     `<voice_cadence>`,
@@ -16,6 +18,17 @@ export function renderVoiceCadenceBlock(): string {
     `keywords, pauses before important points, and slows down when something`,
     `is hard. A TTS reading exhausts the student and obscures what matters.`,
     ``,
+    ...(TUTOR_TURN_CAP ? [
+      `TURN LENGTH (HARD RULE): never speak more than ~${TURN_CAP_SOFT_SENTENCES} sentences in a row`,
+      `without at least one of: (a) adding or pointing to something on the`,
+      `board that anchors what you just said, or (b) ending the turn with`,
+      `something for the student to answer or do. Long explanations become`,
+      `board-anchored beats: say a beat, anchor it on the board, check in.`,
+      `This holds in EVERY subject — an essay or document walkthrough anchors`,
+      `excerpts and claims on the board exactly the way a proof anchors`,
+      `equations. A wall of unanchored speech is impossible to follow by ear.`,
+      ``,
+    ] : []),
     `Two tools you have:`,
     ``,
     `1. EMPHASIS markers. Wrap the one or two most important words of a`,
