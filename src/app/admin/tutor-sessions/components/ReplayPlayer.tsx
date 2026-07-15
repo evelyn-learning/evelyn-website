@@ -94,6 +94,56 @@ function pcm16ToFloat32(arrayBuffer: ArrayBuffer): Float32Array {
   return float32;
 }
 
+// Stream a fetch response, reporting cumulative bytes received as chunks
+// arrive (onProgress), and return the fully assembled body once done. A raw
+// PCM16 session-audio track runs tens of MB, so the previous single
+// `resp.arrayBuffer()` await left the "Audio loading…" pill static for the
+// entire ~1min download. response.body may be absent in environments without
+// streaming fetch (older Safari, some test runners) — fall back to the
+// non-streaming path there.
+async function readWithProgress(
+  resp: Response,
+  onProgress: (bytesReceived: number) => void,
+): Promise<ArrayBuffer> {
+  if (!resp.body) return resp.arrayBuffer();
+  const reader = resp.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value && value.byteLength > 0) {
+      chunks.push(value);
+      received += value.byteLength;
+      onProgress(received);
+    }
+  }
+  const merged = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return merged.buffer;
+}
+
+interface AudioLoadProgress {
+  loadedBytes: number;
+  /** null ⇒ at least one track's Content-Length was absent (e.g. chunked
+   *  transfer) — fall back to cumulative-only display. */
+  totalBytes: number | null;
+}
+
+function formatAudioProgress({ loadedBytes, totalBytes }: AudioLoadProgress): string {
+  const loadedMB = Math.round(loadedBytes / 1_000_000);
+  if (totalBytes != null && totalBytes > 0) {
+    const totalMB = Math.max(loadedMB, Math.round(totalBytes / 1_000_000));
+    return `Audio loading… ${loadedMB}/${totalMB}MB`;
+  }
+  if (loadedBytes > 0) return `Audio loading… ${loadedMB}MB`;
+  return 'Audio loading…';
+}
+
 export default function ReplayPlayer({
   transcript,
   whiteboardCommands,
@@ -124,6 +174,24 @@ export default function ReplayPlayer({
   const setAudioStateBoth = useCallback((s: AudioState) => {
     audioStateRef.current = s;
     setAudioState(s);
+  }, []);
+  // Download progress for the "Audio loading…" pill — combined across the
+  // student + tutor fetches (see loadAudio / readWithProgress above).
+  const [audioProgress, setAudioProgress] = useState<AudioLoadProgress>({ loadedBytes: 0, totalBytes: null });
+  const audioProgressBytesRef = useRef({ student: 0, tutor: 0 });
+  const audioProgressTotalsRef = useRef<{ student: number | null; tutor: number | null }>({ student: null, tutor: null });
+  // Throttle re-renders to whole-MB granularity — chunk callbacks can fire
+  // hundreds of times over an 80MB download and the pill only shows MB.
+  const lastReportedMBRef = useRef(-1);
+  const reportProgress = useCallback(() => {
+    const { student, tutor } = audioProgressBytesRef.current;
+    const loaded = student + tutor;
+    const { student: sTotal, tutor: tTotal } = audioProgressTotalsRef.current;
+    const total = sTotal != null && tTotal != null ? sTotal + tTotal : null;
+    const loadedMB = Math.floor(loaded / 1_000_000);
+    if (loadedMB === lastReportedMBRef.current) return;
+    lastReportedMBRef.current = loadedMB;
+    setAudioProgress({ loadedBytes: loaded, totalBytes: total });
   }, []);
   const [studentMuted, setStudentMuted] = useState(false);
   const [tutorMuted, setTutorMuted] = useState(false);
@@ -363,6 +431,10 @@ export default function ReplayPlayer({
     if (!sessionId) { setAudioStateBoth('none'); return; }
     if (audioStateRef.current === 'loading' || audioStateRef.current === 'ready') return;
     setAudioStateBoth('loading');
+    audioProgressBytesRef.current = { student: 0, tutor: 0 };
+    audioProgressTotalsRef.current = { student: null, tutor: null };
+    lastReportedMBRef.current = -1;
+    setAudioProgress({ loadedBytes: 0, totalBytes: null });
     try {
       const tokenParam = audioToken ? `&token=${encodeURIComponent(audioToken)}` : '';
       const [studentResp, tutorResp] = await Promise.all([
@@ -371,31 +443,49 @@ export default function ReplayPlayer({
       ]);
       const intHeader = (resp: Response, name: string, fallback: number) =>
         parseInt(resp.headers.get(name) || String(fallback), 10) || fallback;
+      const contentLength = (resp: Response): number | null => {
+        const raw = resp.headers.get('content-length');
+        const n = raw ? parseInt(raw, 10) : NaN;
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
 
-      if (studentResp.ok) {
-        const buf = await studentResp.arrayBuffer();
-        if (buf.byteLength > 0) {
-          studentRawRef.current = {
-            float32: pcm16ToFloat32(buf),
-            sampleRate: intHeader(studentResp, 'X-Sample-Rate', 24000),
-          };
-        }
+      // Seed totals (and paint the pill once) before the — potentially
+      // minutes-long — streaming reads below start.
+      audioProgressTotalsRef.current = {
+        student: studentResp.ok ? contentLength(studentResp) : 0,
+        tutor: tutorResp.ok ? contentLength(tutorResp) : 0,
+      };
+      reportProgress();
+
+      const readTrack = (resp: Response, track: 'student' | 'tutor') =>
+        readWithProgress(resp, (bytesReceived) => {
+          audioProgressBytesRef.current[track] = bytesReceived;
+          reportProgress();
+        });
+
+      const [studentBuf, tutorBuf] = await Promise.all([
+        studentResp.ok ? readTrack(studentResp, 'student') : Promise.resolve(null),
+        tutorResp.ok ? readTrack(tutorResp, 'tutor') : Promise.resolve(null),
+      ]);
+
+      if (studentBuf && studentBuf.byteLength > 0) {
+        studentRawRef.current = {
+          float32: pcm16ToFloat32(studentBuf),
+          sampleRate: intHeader(studentResp, 'X-Sample-Rate', 24000),
+        };
       }
-      if (tutorResp.ok) {
-        const buf = await tutorResp.arrayBuffer();
-        if (buf.byteLength > 0) {
-          tutorRawRef.current = {
-            float32: pcm16ToFloat32(buf),
-            sampleRate: intHeader(tutorResp, 'X-Sample-Rate', 24000),
-          };
-        }
+      if (tutorBuf && tutorBuf.byteLength > 0) {
+        tutorRawRef.current = {
+          float32: pcm16ToFloat32(tutorBuf),
+          sampleRate: intHeader(tutorResp, 'X-Sample-Rate', 24000),
+        };
       }
       setAudioStateBoth(studentRawRef.current || tutorRawRef.current ? 'ready' : 'none');
     } catch (err) {
       console.error('[ReplayPlayer] Audio load error:', err);
       setAudioStateBoth('error');
     }
-  }, [sessionId, audioToken, setAudioStateBoth]);
+  }, [sessionId, audioToken, setAudioStateBoth, reportProgress]);
 
   // Audio: start playback from offset.
   // Async because the AudioContext may be born `suspended` (autoplay policy)
@@ -700,7 +790,9 @@ export default function ReplayPlayer({
             {/* Audio status pill */}
             <div className="flex items-center gap-2 border-l pl-3 ml-2">
               {audioState === 'loading' && (
-                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">Audio loading…</span>
+                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">
+                  {formatAudioProgress(audioProgress)}
+                </span>
               )}
               {audioState === 'none' && (
                 <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-400">No audio recorded</span>
