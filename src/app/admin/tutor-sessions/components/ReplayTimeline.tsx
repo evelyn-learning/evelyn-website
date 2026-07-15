@@ -43,15 +43,26 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
   const [showAllEvents, setShowAllEvents] = useState(false);
   const laneRef = useRef<HTMLDivElement>(null);
 
+  // Guard note: `!(totalDurationMs > 0)` — NOT `totalDurationMs <= 0`. For a
+  // NaN totalDurationMs (a malformed-session edge case; see ab39e4a7's
+  // marker-side "NaN% guard"), `x <= 0` and `x > 0` are BOTH false, so the
+  // old `<= 0` guard here let a click through (computing `onSeek(pct * NaN)`)
+  // while progressPct's `> 0` guard below froze the handle at 0% — two
+  // guards that silently disagreed only when the shared value was NaN. Using
+  // the same `> 0` test (negated) as the render guard means this component's
+  // own "is totalDurationMs usable" check can never diverge from itself.
+  // (ReplayPlayer additionally now guarantees totalDurationMs itself is never
+  // NaN/≤0 — see buildCompressedTimeline's `totalMs` — so this is defense in
+  // depth, not the only fix.)
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (!barRef.current || totalDurationMs <= 0) return;
+    if (!barRef.current || !(totalDurationMs > 0)) return;
     const rect = barRef.current.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     onSeek(pct * totalDurationMs);
   }, [totalDurationMs, onSeek]);
 
   const handleDrag = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.buttons !== 1 || !barRef.current || totalDurationMs <= 0) return;
+    if (e.buttons !== 1 || !barRef.current || !(totalDurationMs > 0)) return;
     const rect = barRef.current.getBoundingClientRect();
     const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     onSeek(pct * totalDurationMs);
