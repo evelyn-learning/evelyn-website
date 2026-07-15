@@ -136,7 +136,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
         ))}
 
         <div
-          className="absolute top-0 left-0 h-full bg-blue-500/30 rounded-l-full transition-[width] duration-75"
+          className="absolute top-0 left-0 h-full bg-blue-500/30 rounded-l-full"
           style={{ width: `${progressPct}%` }}
         />
 
@@ -162,7 +162,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
         })}
 
         <div
-          className="absolute top-0 h-full w-0.5 bg-blue-600 transition-[left] duration-75"
+          className="absolute top-0 h-full w-0.5 bg-blue-600"
           style={{ left: `${progressPct}%` }}
         >
           <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-blue-600 border-2 border-white shadow" />
