@@ -168,6 +168,14 @@ export interface RealtimeConfig {
    */
   onTtsPlaybackProgress?: (event: 'sentence-start' | 'drain') => void;
   /**
+   * TTS delivery trouble (2026-07-15, follow-up to the mid-turn wedge fix):
+   * 'retrying' fires when a sentence's TTS fetch failed and is being
+   * re-attempted; 'skipped' when it failed terminally and playback moved on
+   * without that sentence. Callers surface a transient "audio hiccup" notice
+   * so the gap doesn't read as the tutor being stuck.
+   */
+  onTtsIssue?: (kind: 'retrying' | 'skipped') => void;
+  /**
    * Relay mode — when set, Realtime is used purely as STT + TTS. The hook
    * suppresses Realtime's own response generation (no auto-`response.create`
    * on student transcript completion) and hands the transcript to the caller
@@ -574,7 +582,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     useRealtimeV2 = false,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, relayMode,
+    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
   // so the Realtime model behaves as a transport layer, not a tutor.
@@ -750,6 +758,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // playNextAudio can fire it without re-creating on every render.
   const onTtsPlaybackProgressRef = useRef(onTtsPlaybackProgress);
   onTtsPlaybackProgressRef.current = onTtsPlaybackProgress;
+  const onTtsIssueRef = useRef(onTtsIssue);
+  onTtsIssueRef.current = onTtsIssue;
   const pendingDispatchSentenceRef = useRef<string | null>(null);
   const responseIdToSentenceRef = useRef<Map<string, string>>(new Map());
   // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
@@ -2499,7 +2509,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // get 2 more tries with short backoff; 4xx fails fast (a bad request
       // won't get better).
       for (let attempt = 0; attempt < 3; attempt++) {
-        if (attempt > 0) await new Promise((r) => setTimeout(r, 250 * attempt));
+        if (attempt > 0) {
+          onTtsIssueRef.current?.('retrying');
+          await new Promise((r) => setTimeout(r, 250 * attempt));
+        }
         try {
           const res = await fetch(url, {
             method: 'POST',
@@ -2561,6 +2574,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // would — dispatch the next queued sentence, or fire 'drain' and
         // return to listening when nothing is left.
         console.warn(`[Realtime] TTS terminally failed — skipping sentence: "${trimmed.slice(0, 60)}"`);
+        onTtsIssueRef.current?.('skipped');
         if (!isPlayingRef.current) playNextAudio();
         return;
       }

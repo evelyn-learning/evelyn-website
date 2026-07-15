@@ -565,6 +565,9 @@ export function VoiceTutorRealtime({
   // whiteboard command or after a short timeout.
   const [whiteboardStatus, setWhiteboardStatus] = useState<string | null>(null);
   const whiteboardStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Transient "audio hiccup" notice (TTS retry/skip) — see onTtsIssue below.
+  const [ttsNotice, setTtsNotice] = useState<string | null>(null);
+  const ttsNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -10813,6 +10816,13 @@ export function VoiceTutorRealtime({
     onStateChange,
     onStudentAudioChunk: audioRecordEnabled ? audioRecorder.pushStudentChunk : undefined,
     onTutorAudioChunk: audioRecordEnabled ? audioRecorder.pushTutorChunk : undefined,
+    // Audio-hiccup visibility (2026-07-15): a mid-turn TTS retry/skip used to
+    // read as the tutor silently freezing. Transient dock notice, auto-clears.
+    onTtsIssue: (kind) => {
+      setTtsNotice(kind === 'retrying' ? 'Audio hiccup — retrying…' : 'Audio hiccup — skipped a line (it’s in the transcript)');
+      if (ttsNoticeTimerRef.current) clearTimeout(ttsNoticeTimerRef.current);
+      ttsNoticeTimerRef.current = setTimeout(() => setTtsNotice(null), kind === 'retrying' ? 4000 : 6000);
+    },
     // Render↔speech sync: drive the buffered-render flush off TTS playback.
     // 'sentence-start' = a new sentence's audio began (the prior one
     // completed) → release renders anchored to that prior sentence.
@@ -12831,6 +12841,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             Wrap up
           </button>
         </div>
+      )}
+
+      {/* Audio-hiccup notice (transient — TTS retry/skip; see onTtsIssue) */}
+      {ttsNotice && (
+        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex items-center gap-1.5 flex-shrink-0">
+          <Loader2 className="w-3 h-3 animate-spin" />
+          {ttsNotice}
+        </span>
       )}
 
       {/* Whiteboard status toast (transient — e.g. "Re-rendering problem…") */}
