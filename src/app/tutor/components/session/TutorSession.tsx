@@ -51,15 +51,22 @@ const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
 // board while the student thinks/answers. Kill switch, same pattern as above.
 const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
 
-/** Fallback question gist when the LLM gist call fails or hasn't landed yet:
- *  the turn's LAST question sentence, capped at a word boundary. */
-function deriveQuestionGist(text: string): string | null {
-  const questions = text.match(/[^.!?\n]{4,}\?/g);
+/** The turn's LAST question sentence, COMPLETE (round-4 feedback: a mid-cut
+ *  ellipsis gist is useless). Used as the fallback when the LLM gist call
+ *  fails, and as the probe source for spoken-reveal timing. Returns null when
+ *  there's no question or it's too long to pin whole. */
+function lastQuestionSentence(text: string): string | null {
+  const questions = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1').match(/[^.!?\n]{4,}\?/g);
   const last = questions?.[questions.length - 1]?.trim();
-  if (!last) return null;
-  if (last.length <= 90) return last;
-  const cut = last.slice(0, 90);
-  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+  if (!last || last.length > 220) return null;
+  return last;
+}
+
+/** Loose normalization for matching the caption-sync reveal against the
+ *  question sentence (display text and spoken text differ in punctuation
+ *  and markdown). */
+function normalizeSpoken(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9 ]+/g, '').replace(/\s+/g, ' ').trim();
 }
 
 // Student whiteboard marks (Phase 1): tap-to-point. Default OFF.
@@ -493,42 +500,72 @@ export default function TutorSession(props: TutorSessionProps) {
     <span className={`block truncate text-xs font-medium ${dockStatus.cls}`}>{dockStatus.text}</span>
   );
 
-  // --- Q pin (2026-07-14): pin the gist of the tutor's question while the
-  //     student thinks/answers. Lifecycle: appears when the tutor's turn is
-  //     audibly done (voiceState leaves speaking/thinking) and the turn ends
-  //     in a question; persists through the student's turn; disappears the
-  //     moment the next turn starts composing ('thinking') — i.e. just
-  //     before the tutor speaks again. Gist = Haiku via
-  //     /api/tutor/question-gist (preserves $...$ LaTeX, rendered through
-  //     InlineMathText), with the turn's last "?" sentence as an instant
-  //     fallback while the call is in flight or if it fails.
+  // --- Q pin v2 (2026-07-15 round-4): pin the gist of the tutor's question.
+  //     LLM-FIRST: the gist is fetched as soon as the turn TEXT is final
+  //     (audio still playing — Haiku returns in ~200ms, long before the
+  //     question sentence is reached), so the mid-cut ellipsis fallback that
+  //     round-4 flagged never flashes. The complete last-"?"-sentence is the
+  //     fallback ONLY when the API call fails. Reveal timing: the pin appears
+  //     when the question sentence starts being SPOKEN (caption-sync poll
+  //     matches its opening words) — or at audio end as the backstop —
+  //     persists through the student's turn, and disappears when the next
+  //     turn starts composing.
   const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
+  const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
   const tutorTurnDone = started && voiceState !== 'speaking' && voiceState !== 'thinking';
+  // Streaming entries (`tutor-streaming-*`) update text token-by-token; only
+  // fetch once the turn is finalized so the gist sees the whole turn.
+  const lastTutorFinal = lastTutorEntry && !lastTutorEntry.id.startsWith('tutor-streaming') ? lastTutorEntry : null;
+
   useEffect(() => {
-    if (!TUTOR_QUESTION_PIN || !tutorTurnDone) return;
-    const entry = lastTutorEntry;
+    if (!TUTOR_QUESTION_PIN) return;
+    const entry = lastTutorFinal;
     if (!entry || !entry.text || !entry.text.includes('?')) return;
     if (pinFetchedTurnRef.current === entry.id) return;
     pinFetchedTurnRef.current = entry.id;
-    const fallback = deriveQuestionGist(entry.text);
-    if (!fallback) return;
-    setQuestionPin({ turnId: entry.id, gist: fallback });
     void fetch('/api/tutor/question-gist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ turnText: entry.text }),
     })
-      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`gist ${r.status}`))))
       .then((d) => {
         const gist = typeof d?.gist === 'string' ? d.gist.trim() : '';
-        // Swap in only while this turn is still the pinned one.
-        if (gist) setQuestionPin((cur) => (cur && cur.turnId === entry.id ? { turnId: entry.id, gist } : cur));
+        // gist === '' means the model judged the turn's "?" conversational
+        // plumbing (a repeat-request / mishear) — deliberately NO pin then.
+        if (gist) setQuestionPin({ turnId: entry.id, gist });
       })
-      .catch(() => {});
-  }, [tutorTurnDone, lastTutorEntry]);
+      .catch(() => {
+        const fallback = lastQuestionSentence(entry.text);
+        if (fallback) setQuestionPin({ turnId: entry.id, gist: fallback });
+      });
+  }, [lastTutorFinal]);
+
+  // Reveal: poll the caption-sync audio-locked reveal while this turn is
+  // speaking; when the question sentence's opening words have been spoken,
+  // show the pin. Audio end (tutorTurnDone) is the backstop for engines
+  // without caption sync.
+  useEffect(() => {
+    if (!questionPin || pinShownForTurn === questionPin.turnId) return;
+    if (questionPin.turnId !== lastTutorFinal?.id) return;
+    if (tutorTurnDone) { setPinShownForTurn(questionPin.turnId); return; }
+    if (voiceState !== 'speaking') return;
+    const q = lastQuestionSentence(lastTutorFinal.text) ?? questionPin.gist;
+    const probe = normalizeSpoken(q).slice(0, 16);
+    if (!probe) return;
+    const id = setInterval(() => {
+      const c = getSpokenCaption();
+      if (c?.live && normalizeSpoken(c.text).includes(probe)) {
+        setPinShownForTurn(questionPin.turnId);
+      }
+    }, 300);
+    return () => clearInterval(id);
+  }, [questionPin, pinShownForTurn, tutorTurnDone, voiceState, lastTutorFinal, getSpokenCaption]);
+
   const questionPinEl =
-    TUTOR_QUESTION_PIN && questionPin && tutorTurnDone && questionPin.turnId === lastTutorEntry?.id ? (
+    TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId &&
+    lastTutorEntry?.id === questionPin.turnId && voiceState !== 'thinking' ? (
       <button
         type="button"
         onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
@@ -536,7 +573,7 @@ export default function TutorSession(props: TutorSessionProps) {
         className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left"
       >
         <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-amber-400 text-white text-[10px] font-bold">Q</span>
-        <span className="min-w-0 truncate text-sm font-medium text-amber-900"><InlineMathText text={questionPin.gist} /></span>
+        <span className="min-w-0 text-sm font-medium leading-snug text-amber-900"><InlineMathText text={questionPin.gist} /></span>
       </button>
     ) : undefined;
 

@@ -27,12 +27,13 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const SYSTEM = `You extract the question a tutor just asked a student.
+const SYSTEM = `You extract the question a tutor just asked a student, for a small reminder card pinned over the whiteboard while the student thinks.
 
-Reply with ONLY the question, restated in at most 12 words, ending with "?".
-Keep the student-facing essence (what they must answer), drop the preamble.
+Reply with ONLY the question, rephrased as ONE complete, self-contained, natural-sounding question of at most 14 words, ending with "?". Never cut a question off — rephrase it shorter instead. Keep the student-facing essence: exactly what they must answer or decide. Drop preamble, context recaps, and scaffolding.
 Preserve any inline $...$ LaTeX EXACTLY as written — do not convert or drop it.
-If the turn asks the student nothing, reply with exactly: NONE`;
+
+Reply with exactly NONE when the turn's only question is conversational plumbing rather than something worth pinning: asking the student to repeat or rephrase themselves ("could you say that again?"), reacting to a mishear, or a rhetorical aside the student isn't meant to answer.
+Choice prompts ARE real questions — pin them (e.g. "Want another at this level, something harder, or move on?").`;
 
 export async function POST(req: NextRequest) {
   try {

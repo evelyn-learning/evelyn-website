@@ -308,7 +308,10 @@ export function SessionControls({
               title="Export session as PDF"
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
+              {/* Icon-only below xl (2026-07-15): the labels crowded the header
+                  and truncated the lesson title to "U1.6 S..." on laptops —
+                  the title is what the student needs; tooltips carry these. */}
+              <span className="hidden xl:inline">{isExporting ? 'Exporting...' : 'Export PDF'}</span>
             </button>
           )}
 
@@ -319,7 +322,7 @@ export function SessionControls({
             title="Upload homework photo"
           >
             <Camera className="w-4 h-4" />
-            <span className="hidden sm:inline">Upload Problem</span>
+            <span className="hidden xl:inline">Upload Problem</span>
           </button>
 
           {/* End session lives in the bottom control row (VoiceTutorRealtime)
