@@ -248,3 +248,25 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('Reaction A peaks at 60°C.', 'Reaction A peaks at 60 degrees C.', 'degree-celsius');
   console.log('OK — math notation gaps 2026-07-13 (operators, superscripts, degree)');
 }
+
+// Live-session 2026-07-15 regressions: ALL-CAPS emphasis read as initialism
+// ("OUT" → "O U T"), and inconsistent coefficient respelling ("a, b, c" →
+// "a, bee, c" — our own \bb\b rule).
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('The energy moves OUT of the cell.', 'The energy moves out of the cell.', 'caps-out');
+  eq('That is NOT the same thing.', 'That is not the same thing.', 'caps-not');
+  eq('EVERY term matters here.', 'every term matters here.', 'caps-every');
+  // Known-collision caps stay untouched (chemistry NO, US history US, AD/AS model).
+  eq('NO is a signaling molecule.', 'NO is a signaling molecule.', 'caps-no-untouched');
+  eq('The US entered the war.', 'The US entered the war.', 'caps-us-untouched');
+  eq('Identify the coefficients a, b, c in the quadratic.', 'Identify the coefficients ay, bee, see in the quadratic.', 'abc-list');
+  eq('Find a, b, and c first.', 'Find ay, bee, and see first.', 'abc-list-and');
+  eq('Then b and c are both negative.', 'Then bee and see are both negative.', 'b-and-c');
+  eq('Here c equals 9.', 'Here see equals 9.', 'c-equals');
+  console.log('OK — live-session 2026-07-15 regressions (caps emphasis, a/b/c lists)');
+}

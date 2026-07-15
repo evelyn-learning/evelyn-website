@@ -158,6 +158,15 @@ const A_VARIABLE_REPLACEMENTS: Replacement[] = [
 
 const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   ...A_VARIABLE_REPLACEMENTS,
+  // Coefficient lists "a, b, c" / "a, b, and c" respell CONSISTENTLY —
+  // live 2026-07-15 (quadratics): the standalone \bb\b rule below produced
+  // "a, bee, c" (b respelled, a and c not), which sounds like a mistake.
+  // MUST run before the standalone \bb\b rule (it would consume the b).
+  { pattern: /\ba\s*,\s*b\s*,\s*and\s+c\b/gi, replacement: 'ay, bee, and see' },
+  { pattern: /\ba\s*,\s*b\s*,\s*c\b/gi, replacement: 'ay, bee, see' },
+  { pattern: /\bb\s+and\s+c\b/g, replacement: 'bee and see' },
+  // "c represents/denotes/equals…" — same anchored contexts as 'a'.
+  { pattern: /\bc\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'see' },
   { pattern: /\by\b(?!['’])/g, replacement: 'why' },  // (?!') guards contractions like y'all
   { pattern: /\bb\b(?!['’])/g, replacement: 'bee' },
   { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
@@ -238,6 +247,20 @@ function rewriteDomainAcronyms(t: string): string {
  * Order matters within sections (longer matches first — "arcsin"
  * before "sin"); TRIG_REPLACEMENTS is ordered accordingly above.
  */
+/** ALL-CAPS emphasis words Cartesia reads as initialisms ("OUT" → "O U T",
+ *  live 2026-07-15 biology session). The brain writes caps for emphasis;
+ *  audio carries no visual emphasis, so lowercase them for speech. A
+ *  WHITELIST on purpose: blanket lowercasing would break genuine
+ *  initialisms, and known collisions (US, IT, NO=nitric oxide, AD/AS,
+ *  ERA, SAT/ACT) are deliberately absent. */
+const CAPS_EMPHASIS_WORDS = new RegExp(
+  '\\b(OUT|NOT|ALL|ONE|BOTH|EVERY|NEVER|ALWAYS|ONLY|SAME|EACH|MOST|NONE|VERY' +
+  '|ANY|MUST|WHY|HOW|WHAT|WHERE|WHEN|YES|AND|BUT|ARE|WAS|WILL|CAN|DOES|DID' +
+  '|THE|THIS|THAT|INSIDE|OUTSIDE|BEFORE|AFTER|WITH|WITHOUT|MORE|LESS|SAME' +
+  '|EXACTLY|OPPOSITE|TOGETHER|WITHIN|BECAUSE|INTO|FROM|BOTH|HALF|TWICE)\\b',
+  'g',
+);
+
 export function rewriteForTTS(raw: string): string {
   let t = raw;
   // Double quotes (straight + curly) are stripped outright: after a
@@ -245,6 +268,9 @@ export function rewriteForTTS(raw: string): string {
   // quotation marks add nothing audible elsewhere. Apostrophes /
   // single quotes are untouched (contractions).
   t = t.replace(/["“”]/g, '');
+  // Caps-emphasis → lowercase (see CAPS_EMPHASIS_WORDS). Runs early so
+  // later rules see normal-case words.
+  t = t.replace(CAPS_EMPHASIS_WORDS, (m) => m.toLowerCase());
   t = rewriteDerivatives(t);
   // Domain acronyms Cartesia expands as state names ("SD" → "South Dakota").
   // Runs before comma/number normalization so its state-code guard can still

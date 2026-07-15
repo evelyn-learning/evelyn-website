@@ -212,6 +212,27 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     if (nearBottom) el.scrollTop = el.scrollHeight;
   }, [transcript, picker]);
 
+  // Q-pin deep link (2026-07-15): the pin's click carries the tutor entry id
+  // on the 'evelyn:open-transcript' event; scroll that entry into view once
+  // the drawer has opened (the drawer is display:none while closed on
+  // phones, so the scroll must wait a beat for it to become visible) and
+  // flash it so the eye lands on the right bubble.
+  const [flashEntryId, setFlashEntryId] = useState<string | null>(null);
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const entryId = (e as CustomEvent<{ entryId?: string }>).detail?.entryId;
+      if (!entryId) return;
+      setTimeout(() => {
+        const target = containerRef.current?.querySelector(`[data-entry-id="${CSS.escape(entryId)}"]`);
+        target?.scrollIntoView({ block: 'start' });
+        setFlashEntryId(entryId);
+        setTimeout(() => setFlashEntryId(null), 2000);
+      }, 180);
+    };
+    window.addEventListener('evelyn:open-transcript', onOpen);
+    return () => window.removeEventListener('evelyn:open-transcript', onOpen);
+  }, []);
+
   // Progressive hint under the typing-dots while the brain is composing.
   // Most turns finish in 2-7s; if it takes longer, fade in a soft
   // "still thinking…" reassurance, then a recovery hint near the
@@ -360,9 +381,12 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     return (
     <div
       key={entry.id}
-      className={`flex gap-3 transition-opacity duration-300 ${
+      data-entry-id={entry.id}
+      className={`flex gap-3 transition-all duration-300 ${
         entry.role === 'student' ? 'flex-row-reverse' : ''
-      } ${entry.revising ? 'opacity-40 italic' : ''}`}
+      } ${entry.revising ? 'opacity-40 italic' : ''} ${
+        entry.id === flashEntryId ? 'rounded-xl ring-2 ring-amber-300 bg-amber-50/60' : ''
+      }`}
     >
       {/* Avatar */}
       <div

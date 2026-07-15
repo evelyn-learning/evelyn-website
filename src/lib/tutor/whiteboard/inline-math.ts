@@ -86,7 +86,11 @@ export function decodeHtmlEntities(s: string): string {
 // Split a string into alternating plain-text and math segments.
 // Math is anything between matched single $...$ that doesn't include whitespace-only
 // content, doesn't span across a newline, and passes the looksLikeMath check.
-export function segment(text: string): Array<{ kind: 'text' | 'math'; body: string }> {
+/** `forceMath` (2026-07-15, Q pin): skip the currency guard — every balanced
+ *  $...$ pair is math. For contexts where the text comes from a prompt that
+ *  guarantees $...$ means LaTeX (the question-gist route), where the guard's
+ *  conservatism otherwise leaves simple math like "$2 - x$" as literal text. */
+export function segment(text: string, forceMath = false): Array<{ kind: 'text' | 'math'; body: string }> {
   if (!text) return [];
   const out: Array<{ kind: 'text' | 'math'; body: string }> = [];
   let i = 0;
@@ -119,7 +123,7 @@ export function segment(text: string): Array<{ kind: 'text' | 'math'; body: stri
     // opening $ as a literal character and resume scanning AFTER it (do
     // NOT consume the closing $, which may pair legitimately with a
     // later $ later in the string).
-    if (!looksLikeMath(inner)) {
+    if (!forceMath && !looksLikeMath(inner)) {
       out.push({ kind: 'text', body: text.slice(i, dollar + 1) });
       i = dollar + 1;
       continue;

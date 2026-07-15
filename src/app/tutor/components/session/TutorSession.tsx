@@ -522,7 +522,6 @@ export default function TutorSession(props: TutorSessionProps) {
   const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
   const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
-  const tutorTurnDone = started && voiceState !== 'speaking' && voiceState !== 'thinking';
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -556,13 +555,16 @@ export default function TutorSession(props: TutorSessionProps) {
 
   // Reveal: poll the caption-sync audio-locked reveal while this turn is
   // speaking; when the question sentence's opening words have been spoken,
-  // show the pin. Audio end (tutorTurnDone) is the backstop for engines
-  // without caption sync.
+  // show the pin. In EVERY other voice state, mark it shown immediately —
+  // round-6 found a hole where a gist landing after speech ended but during
+  // 'thinking'/'hearing' (fast student answers) never got marked and the
+  // pin silently skipped a turn. Marking is separate from display: the
+  // render gate below still hides it once the turn goes stale or the next
+  // turn is composing.
   useEffect(() => {
     if (!questionPin || pinShownForTurn === questionPin.turnId) return;
     if (questionPin.turnId !== lastTutorFinal?.id) return;
-    if (tutorTurnDone) { setPinShownForTurn(questionPin.turnId); return; }
-    if (voiceState !== 'speaking') return;
+    if (voiceState !== 'speaking') { setPinShownForTurn(questionPin.turnId); return; }
     const q = lastQuestionSentence(lastTutorFinal.text) ?? questionPin.gist;
     const probe = normalizeSpoken(q).slice(0, 16);
     if (!probe) return;
@@ -573,19 +575,19 @@ export default function TutorSession(props: TutorSessionProps) {
       }
     }, 300);
     return () => clearInterval(id);
-  }, [questionPin, pinShownForTurn, tutorTurnDone, voiceState, lastTutorFinal, getSpokenCaption]);
+  }, [questionPin, pinShownForTurn, voiceState, lastTutorFinal, getSpokenCaption]);
 
   const questionPinEl =
     TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId &&
     lastTutorEntry?.id === questionPin.turnId && voiceState !== 'thinking' ? (
       <button
         type="button"
-        onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
+        onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }))}
         title="The tutor's question — tap for the full transcript"
         className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left"
       >
         <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-amber-400 text-white text-[10px] font-bold">Q</span>
-        <span className="min-w-0 text-sm font-medium leading-snug text-amber-900"><InlineMathText text={questionPin.gist} /></span>
+        <span className="min-w-0 text-sm font-medium leading-snug text-amber-900"><InlineMathText text={questionPin.gist} forceMath /></span>
       </button>
     ) : undefined;
 

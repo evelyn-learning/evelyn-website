@@ -33,6 +33,9 @@ import { segment, autoWrapUnicodeMath, decodeHtmlEntities } from '@/lib/tutor/wh
 interface InlineMathTextProps {
   text: string;
   className?: string;
+  /** Skip the currency guard — every balanced $...$ pair renders as math.
+   *  For trusted-source contexts (Q pin gists) where $ always means LaTeX. */
+  forceMath?: boolean;
 }
 
 function Math({ latex }: { latex: string }) {
@@ -57,8 +60,8 @@ function Math({ latex }: { latex: string }) {
   return <span ref={ref} className="inline-block align-baseline" />;
 }
 
-export function InlineMathText({ text, className = '' }: InlineMathTextProps) {
-  const parts = segment(autoWrapUnicodeMath(decodeHtmlEntities(text)));
+export function InlineMathText({ text, className = '', forceMath = false }: InlineMathTextProps) {
+  const parts = segment(autoWrapUnicodeMath(decodeHtmlEntities(text)), forceMath);
   return (
     <span className={`whitespace-pre-wrap ${className}`}>
       {parts.map((p, i) =>
