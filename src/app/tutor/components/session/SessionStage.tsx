@@ -43,6 +43,15 @@ export interface SessionStageProps {
   beats?: ReactNode;             // <LessonPlanProgress/> (restyled host)
   controls?: ReactNode;          // <SessionControls/> (timer / end / upload)
   adaptiveMenu?: ReactNode;      // the pacing ⋯ menu element
+  /** R1 (2026-07-14): End/Pause moved OUT of the dock into the header's
+   *  right cluster — session-level control, conventional spot, and far from
+   *  the textbox where accidental taps happen. Composed by TutorSession
+   *  (must run VTR's full endSession teardown via handleRef). */
+  endControl?: ReactNode;
+  /** Q pin (2026-07-14): gist of the tutor's current question, pinned
+   *  top-center over the board after the tutor stops speaking, cleared when
+   *  the next turn starts. Composed by TutorSession (owns the gist state). */
+  questionPin?: ReactNode;
   // presence
   voiceState: VoiceState;
   /** Live student-mic amplitude (0..1) in a ref, polled here for the "being
@@ -98,7 +107,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
     boardPenActive, onToggleBoardPen,
@@ -301,15 +310,13 @@ export default function SessionStage(props: SessionStageProps) {
             {/* beats (desktop) */}
             {hasPlan && beats && <div className="hidden lg:flex mx-auto min-w-0 max-w-[46%] overflow-x-auto">{beats}</div>}
             <div className="shrink-0 ml-auto flex items-center gap-1.5 sm:gap-2.5">
-              {/* Transcript trigger lives in the top bar on phones (below md):
-                  the bottom-left floating chip below would otherwise sit on top
-                  of the dock's full-width text input row and clip its
-                  placeholder. The floating chip stays for md+ where the dock is
-                  a narrow centered island and the two never collide. */}
+              {/* Transcript trigger — header icon at ALL sizes (R1 2026-07-14;
+                  the old md+ bottom-left floating chip covered board ink and
+                  is gone). */}
               <button
                 onClick={() => setDrawerOpen(true)}
                 title="Transcript"
-                className="md:hidden relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"
+                className="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"
               >
                 <MessageSquareText className="w-5 h-5" />
                 {transcriptCount > 0 && (
@@ -318,6 +325,7 @@ export default function SessionStage(props: SessionStageProps) {
               </button>
               <div className="hidden sm:block">{controls}</div>
               {adaptiveMenu}
+              {endControl}
             </div>
           </div>
         </div>
@@ -419,12 +427,14 @@ export default function SessionStage(props: SessionStageProps) {
       {tool === 'draw' && <DrawPad onClose={() => setTool(null)} onSubmit={(d) => { onStudentInput('drawing', d); setTool(null); }} />}
       {tool === 'text' && <TextNote onClose={() => setTool(null)} onSubmit={(t) => { onStudentInput('text', t); setTool(null); }} />}
 
-      {/* ===== Transcript toggle ===== */}
-      <button onClick={() => setDrawerOpen(true)} className="hidden md:inline-flex absolute bottom-4 left-3 z-40 items-center gap-2 rounded-full bg-white border border-slate-200 shadow-md px-3.5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-        <MessageSquareText className="w-4 h-4 text-slate-500" />
-        <span className="hidden sm:inline">Transcript</span>
-        {transcriptCount > 0 && <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">{transcriptCount}</span>}
-      </button>
+      {/* ===== Question pin — gist of the tutor's current ask, top-center
+              over the board (drops below the page switcher when shown). An
+              overlay, so it never collides with board ink. ===== */}
+      {questionPin && (
+        <div className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)]`}>
+          {questionPin}
+        </div>
+      )}
 
       {/* ===== FLOATING TUTOR BAR — the Caption Strip and the voice dock in
               ONE translucent card OVERLAYING the board's bottom edge. They
@@ -436,33 +446,16 @@ export default function SessionStage(props: SessionStageProps) {
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
       <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
         <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
-          {/* ONE-LINE bar: the caption rides INSIDE the dock as VTR's
-              captionSlot ([mic][caption][input][mute][end] — composed in
-              TutorSession), so there is no separate caption strip. Kept
-              genuinely see-through: /40 white + a barely-there blur (blur-md
-              frosted it to near-solid over the white board sheet). */}
-          <div className="rounded-[24px] bg-white/40 backdrop-blur-[2px] border border-slate-200/80 shadow-lg overflow-hidden">
-          <div className="px-2 sm:px-3 py-1">
+          {/* ONE-LINE slim bar (R1 2026-07-14): [mic][caption][input][send]
+              [mute] — the caption rides inside the dock as VTR's captionSlot
+              (composed in TutorSession; it doubles as the mic-state line when
+              there's no caption). End/Pause lives in the header. NO blur —
+              blur is what made board text behind the bar unreadable; plain
+              65% white keeps it legible. Board ink can always be scrolled
+              fully above the bar (WhiteboardCanvas scroll headroom). */}
+          <div className="rounded-[24px] bg-white/65 border border-slate-200/80 shadow-lg overflow-hidden">
+          <div className="px-2 sm:px-3 py-0.5">
             {voiceInput}
-            {/* "Being heard" status row — UNDER the textbox (2026-07-14 ask).
-                Shows the live mic meter + the perception states the mic button
-                doesn't convey (Hearing you / Got that / didn't catch / Muted).
-                FIXED height once started so the bar never grows/shrinks as the
-                status appears/disappears. */}
-            {started && (
-              <div className="flex items-center justify-center gap-2 h-5">
-                {(voiceState === 'listening' || voiceState === 'hearing' || voiceState === 'processing' || voiceState === 'muted' || listeningHint === 'didnt-catch') && (<>
-                  {voiceState !== 'muted' && <MicMeter level={micLevel} speaking={false} />}
-                  {(() => {
-                    if (listeningHint === 'didnt-catch') return <span className="text-xs font-medium text-amber-600">Didn’t catch that — mind repeating?</span>;
-                    if (voiceState === 'hearing') return <span className="text-xs font-medium text-blue-600">Hearing you…</span>;
-                    if (voiceState === 'processing') return <span className="text-xs font-medium text-amber-600">Got that — one sec…</span>;
-                    if (voiceState === 'muted') return <span className="text-xs font-medium text-slate-500">Muted — tap the mic to talk</span>;
-                    return <span className="text-xs font-medium text-slate-400">Listening…</span>;
-                  })()}
-                </>)}
-              </div>
-            )}
             {/* Quick-Actions chips (Skip / I'm stuck / quick answers) — HIDDEN
                 per 2026-06-24 ear-test; flip SHOW_QUICK_ACTIONS to restore. */}
             {SHOW_QUICK_ACTIONS && quickActions && (

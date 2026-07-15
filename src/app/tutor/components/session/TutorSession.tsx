@@ -19,7 +19,8 @@
 
 import { useState, useCallback, useEffect, useRef, type ComponentProps, type MutableRefObject, type ReactNode } from 'react';
 import Script from 'next/script';
-import { Play } from 'lucide-react';
+import { Play, LogOut } from 'lucide-react';
+import { InlineMathText } from '../whiteboard/InlineMathText';
 import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
@@ -46,6 +47,20 @@ type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['
 // Default ON; 'off' restores the legacy fixed-rate typewriter. claude-brain
 // only by construction (the handle returns null on other engines).
 const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
+// Q pin (2026-07-14): gist of the tutor's current question pinned over the
+// board while the student thinks/answers. Kill switch, same pattern as above.
+const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
+
+/** Fallback question gist when the LLM gist call fails or hasn't landed yet:
+ *  the turn's LAST question sentence, capped at a word boundary. */
+function deriveQuestionGist(text: string): string | null {
+  const questions = text.match(/[^.!?\n]{4,}\?/g);
+  const last = questions?.[questions.length - 1]?.trim();
+  if (!last) return null;
+  if (last.length <= 90) return last;
+  const cut = last.slice(0, 90);
+  return `${cut.slice(0, cut.lastIndexOf(' '))}…`;
+}
 
 // Student whiteboard marks (Phase 1): tap-to-point. Default OFF.
 const TUTOR_STUDENT_MARKS =
@@ -445,8 +460,19 @@ export default function TutorSession(props: TutorSessionProps) {
   // INSIDE the voice dock, replacing VTR's state-text block. Tap → transcript
   // drawer, via the window event bridge (the drawer state lives in
   // SessionStage, two composition levels down from the VTR element).
-  // Mount-gated on liveCaption — load-bearing for CaptionTicker's poll probe
-  // (must not mount before VTR's handle-population effect has run).
+  // CaptionTicker is mount-gated on liveCaption — load-bearing for its poll
+  // probe (must not mount before VTR's handle-population effect has run).
+  // With no caption yet, the slot doubles as the mic-state line (R1: the old
+  // status row under the textbox is gone); once a caption exists, muted state
+  // shows as a small MUTED chip beside it.
+  const dockStatus =
+    listeningHint === 'didnt-catch' ? { text: 'Didn’t catch that — mind repeating?', cls: 'text-amber-600' }
+    : voiceState === 'muted' ? { text: 'Muted — tap the mic to talk', cls: 'text-slate-500' }
+    : voiceState === 'hearing' ? { text: 'Hearing you…', cls: 'text-blue-600' }
+    : voiceState === 'processing' ? { text: 'Got that — one sec…', cls: 'text-amber-600' }
+    : voiceState === 'thinking' ? { text: 'Thinking…', cls: 'text-slate-400' }
+    : started ? { text: 'Listening…', cls: 'text-slate-400' }
+    : { text: 'Tap the mic to start', cls: 'text-slate-500' };
   const dockCaptionEl = liveCaption ? (
     <button
       type="button"
@@ -454,8 +480,81 @@ export default function TutorSession(props: TutorSessionProps) {
       onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
       className="w-full min-w-0 flex items-center gap-2 text-left"
     >
+      {voiceState === 'muted' && (
+        <span className="shrink-0 rounded bg-red-50 px-1 py-0.5 text-[10px] font-bold text-red-500">MUTED</span>
+      )}
+      {listeningHint === 'didnt-catch' && (
+        <span className="shrink-0 text-xs font-medium text-amber-600">Didn’t catch that —</span>
+      )}
       <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
       {voiceState === 'speaking' && <MicMeter level={0} speaking />}
+    </button>
+  ) : (
+    <span className={`block truncate text-xs font-medium ${dockStatus.cls}`}>{dockStatus.text}</span>
+  );
+
+  // --- Q pin (2026-07-14): pin the gist of the tutor's question while the
+  //     student thinks/answers. Lifecycle: appears when the tutor's turn is
+  //     audibly done (voiceState leaves speaking/thinking) and the turn ends
+  //     in a question; persists through the student's turn; disappears the
+  //     moment the next turn starts composing ('thinking') — i.e. just
+  //     before the tutor speaks again. Gist = Haiku via
+  //     /api/tutor/question-gist (preserves $...$ LaTeX, rendered through
+  //     InlineMathText), with the turn's last "?" sentence as an instant
+  //     fallback while the call is in flight or if it fails.
+  const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
+  const pinFetchedTurnRef = useRef<string | null>(null);
+  const tutorTurnDone = started && voiceState !== 'speaking' && voiceState !== 'thinking';
+  useEffect(() => {
+    if (!TUTOR_QUESTION_PIN || !tutorTurnDone) return;
+    const entry = lastTutorEntry;
+    if (!entry || !entry.text || !entry.text.includes('?')) return;
+    if (pinFetchedTurnRef.current === entry.id) return;
+    pinFetchedTurnRef.current = entry.id;
+    const fallback = deriveQuestionGist(entry.text);
+    if (!fallback) return;
+    setQuestionPin({ turnId: entry.id, gist: fallback });
+    void fetch('/api/tutor/question-gist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ turnText: entry.text }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const gist = typeof d?.gist === 'string' ? d.gist.trim() : '';
+        // Swap in only while this turn is still the pinned one.
+        if (gist) setQuestionPin((cur) => (cur && cur.turnId === entry.id ? { turnId: entry.id, gist } : cur));
+      })
+      .catch(() => {});
+  }, [tutorTurnDone, lastTutorEntry]);
+  const questionPinEl =
+    TUTOR_QUESTION_PIN && questionPin && tutorTurnDone && questionPin.turnId === lastTutorEntry?.id ? (
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
+        title="The tutor's question — tap for the full transcript"
+        className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left"
+      >
+        <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-amber-400 text-white text-[10px] font-bold">Q</span>
+        <span className="min-w-0 truncate text-sm font-medium text-amber-900"><InlineMathText text={questionPin.gist} /></span>
+      </button>
+    ) : undefined;
+
+  // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
+  // endSession = TTS hard-stop + recording finalize + final profile commit)
+  // — calling onEndSession directly would skip the final transcript commit.
+  const endControlEl = onEndSession ? (
+    <button
+      onClick={() => {
+        const h = realtimeHandleRef.current;
+        if (h?.endSession) h.endSession();
+        else onEndSession();
+      }}
+      title="End or pause — your progress is saved, resume anytime"
+      className="flex shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+    >
+      <LogOut className="w-3.5 h-3.5" />
+      <span className="hidden sm:inline">End / Pause</span>
     </button>
   ) : undefined;
 
@@ -485,6 +584,7 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionGoal={sessionGoal}
         lessonPlanId={selectedLessonPlanId || undefined}
         captionSlot={dockCaptionEl}
+        hideEndButton
         voice={voice}
         onTranscriptUpdate={handleVoiceTranscriptUpdate}
         onWhiteboardCommand={handleVoiceWhiteboardCommand}
@@ -654,6 +754,8 @@ export default function TutorSession(props: TutorSessionProps) {
         beats={beatsEl}
         controls={controlsEl}
         adaptiveMenu={adaptiveMenuEl}
+        endControl={endControlEl}
+        questionPin={questionPinEl}
         voiceState={voiceState}
         micLevelRef={micLevelRef}
         listeningHint={listeningHint}

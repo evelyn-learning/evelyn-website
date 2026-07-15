@@ -1474,7 +1474,11 @@ export function WhiteboardCanvas({
         // driven), so wheel-scrolling must keep working while pen is on.
         // Touch stays safe without a lock too — the pen overlay below sets
         // touchAction: 'none', so a touch-drag draws instead of scrolling.
-        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
+        // pb-32 (minimal chrome only): scroll HEADROOM = the floating voice
+        // bar's height + margin, so the last board item can always be
+        // scrolled fully ABOVE the bar and read 100% clearly (2026-07-14
+        // live test: bottom ink was permanently stuck under the dock).
+        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden pb-32' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* p-4 padding lives HERE (moved off the scroll container) so this

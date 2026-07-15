@@ -467,6 +467,10 @@ interface VoiceTutorRealtimeProps {
    *  state-text block next to the mic — [mic][caption][input][mute][end].
    *  The mic button's color/pulse still conveys the voice state. */
   captionSlot?: ReactNode;
+  /** R1 dock (2026-07-14): suppress the dock's own End/Pause button — the
+   *  host renders its own (header) control via handleRef.endSession, which
+   *  runs the same full teardown. */
+  hideEndButton?: boolean;
 }
 
 // Map our voice IDs to OpenAI voices
@@ -545,6 +549,7 @@ export function VoiceTutorRealtime({
   maxDurationExplicit = false,
   dockVariant = 'default',
   captionSlot,
+  hideEndButton = false,
 }: VoiceTutorRealtimeProps) {
   const [isMicMuted, setIsMicMuted] = useState(false);
   // Sync mirror of isMicMuted for the perception onTranscript callback,
@@ -1755,6 +1760,9 @@ export function VoiceTutorRealtime({
   // Ref populated later so handleResponseDone (defined above handleContinueRotation)
   // can trigger a silent rotation when the banner is ignored.
   const continueRotationRef = useRef<(() => Promise<void>) | null>(null);
+  // End/Pause teardown — assigned every render below (see the assignment near
+  // handleContinueRotation) and read by both the dock button and handleRef.
+  const endSessionNowRef = useRef<() => Promise<void>>(async () => {});
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -11825,6 +11833,7 @@ export function VoiceTutorRealtime({
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         resumeContinue: () => resumeContinueRef.current(),
+        endSession: () => { void endSessionNowRef.current(); },
         getSpokenCaption: () => {
           if (!claudeBrainMode) return null;
           return captionSyncRef.current.poll(realtime.getSpokenProgress());
@@ -12461,6 +12470,27 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Expose the rotation handler to the response-done callback via ref so
   // auto-rotation at 58 min can fire without a forward-reference problem.
   continueRotationRef.current = handleContinueRotation;
+  // End/Pause teardown, shared by the dock's own button and the handleRef's
+  // endSession (header control). Ref-assigned every render (same pattern as
+  // continueRotationRef) so the handleRef effect — whose deps don't include
+  // onEndSession/audioRecorder — never captures a stale closure.
+  // 2026-07-11 round 3 (user report): End/Pause mid-speech must hard-stop
+  // the PLAYING AudioBufferSourceNode, not just the queue — hence
+  // clearSpeechQueue + interrupt before anything else.
+  endSessionNowRef.current = async () => {
+    try { void realtime.clearSpeechQueue(); } catch {}
+    try { realtime.interrupt(); } catch {}
+    // Instant end — no recap delay, no spinner. Finalize recording and
+    // commit profile in the background; the student sees the summary
+    // page immediately.
+    if (audioRecordEnabled) {
+      try { await audioRecorder.finalize(); } catch {}
+    }
+    // final: carries the transcript + generates the session summary
+    // (intermediate flushes already persisted deltas incrementally).
+    void commitSessionToProfile({ final: true });
+    onEndSession?.();
+  };
   // Expose "ensure muted" to the brain orchestrator (defined above toggleMicMute)
   // for the "mute me" voice command. Mutes only if not already muted.
   muteMicRef.current = () => { if (!isMicMutedRef.current) toggleMicMute(); };
@@ -12688,7 +12718,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const isIsland = dockVariant === 'island';
 
   return (
-    <div className={`voice-tutor-realtime flex items-center flex-wrap py-2 px-2 ${isIsland ? 'gap-2 sm:gap-2.5' : 'gap-2 sm:gap-3'}`}>
+    <div className={`voice-tutor-realtime flex items-center flex-wrap ${isIsland ? 'py-1 px-1 gap-2 sm:gap-2.5' : 'py-2 px-2 gap-2 sm:gap-3'}`}>
       {/* Connection indicator — hide on mobile to save horizontal room.
           The island dock drops it entirely: the presence orb + mic state
           already convey "connected", and a redundant pill clutters the
@@ -12728,8 +12758,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           )}
           */}
 
-          {/* Main mic button — the HERO control. Larger + raised in the
-              island dock so it reads as the primary thing to tap. */}
+          {/* Main mic button — the HERO control. The island dock keeps it
+              compact (R1 slim bar, 2026-07-14) — the color/pulse carries the
+              state, not the size. */}
           <button
             onClick={handleMicClick}
             disabled={isDisabled}
@@ -12737,7 +12768,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             className={`
               relative rounded-full text-white flex-shrink-0
               transition-all duration-200 flex items-center justify-center
-              ${isIsland ? 'w-14 h-14 shadow-lg' : 'w-12 h-12'}
+              ${isIsland ? 'w-10 h-10 shadow-md' : 'w-12 h-12'}
               ${stateUI.color}
               ${isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}
               ${stateUI.pulse ? 'animate-pulse' : ''}
@@ -12992,31 +13023,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           </button>
         )}
 
-        {onEndSession && (
+        {onEndSession && !hideEndButton && (
           <button
-            onClick={async () => {
-              // 2026-07-11 round 3 (user report): End/Pause mid-speech
-              // navigated to the summary while the current TTS sentence
-              // kept playing — onEndSession → stage change → unmount →
-              // useOpenAIRealtime.disconnect(), which cleared the QUEUE
-              // but never stopped the PLAYING AudioBufferSourceNode.
-              // Hard-stop speech FIRST (same pair the handleRef's
-              // stopSpeaking exposes; fire-and-forget — clearSpeechQueue's
-              // Promise drain semantics are for callers that need to await
-              // the bridge, which an end-tap doesn't).
-              try { void realtime.clearSpeechQueue(); } catch {}
-              try { realtime.interrupt(); } catch {}
-              // Instant end — no recap delay, no spinner. Finalize
-              // recording and commit profile in the background; the
-              // student sees the summary page immediately.
-              if (audioRecordEnabled) {
-                try { await audioRecorder.finalize(); } catch {}
-              }
-              // final: carries the transcript + generates the session summary
-              // (intermediate flushes already persisted deltas incrementally).
-              void commitSessionToProfile({ final: true });
-              onEndSession();
-            }}
+            onClick={() => { void endSessionNowRef.current(); }}
             // Ending is non-destructive now: the session checkpoint (transcript
             // + whiteboard + position) is saved, so the student can resume from
             // the summary screen or a reload. Label reflects the dual role.

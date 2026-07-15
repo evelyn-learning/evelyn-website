@@ -43,6 +43,13 @@ export interface RealtimeHandle {
    *  whiteboard. Resolution + buffering + brain transport happen inside the
    *  engine. No-op when the flag is off or the engine is not claude-brain. */
   pushStudentMark: (ev: StudentMarkEvent) => void;
+  /** End/Pause the session with the FULL teardown the dock's own End button
+   *  runs (hard-stop TTS, finalize audio recording, final profile commit,
+   *  then onEndSession). Added 2026-07-14 for the header End/Pause control —
+   *  callers must use this rather than calling onEndSession directly, or the
+   *  final transcript commit is skipped. Optional: legacy handle producers
+   *  may not implement it; fall back to onEndSession if absent. */
+  endSession?: () => void;
 }
 
 /** Pedagogical milestones the runtime reports via `onMilestone`, fired once
