@@ -31,6 +31,7 @@
     "test:energy-bars-scope": "npx tsx scripts/test-energy-bars-scope.ts",
     "test:dedup-scroll": "npx tsx scripts/test-dedup-scroll.ts",
     "test:board-map": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-board-map.ts",
+    "test:board-title": "npx tsx scripts/test-board-title.ts",
     "test:resume-seed": "npx tsx scripts/test-resume-seed-guard.ts",
     "test:tutor-reactions": "npx tsx scripts/test-tutor-reactions.ts",
     "test:content-variety": "npx tsx scripts/test-content-variety.ts",

@@ -23,6 +23,7 @@ import {
   MessageSquareText, X, Target, Upload, ArrowDown,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
+import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 
 export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
 
@@ -605,12 +606,14 @@ export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: (
   );
 }
 
-/** Tidy a board-page title for the switcher: trim + collapse whitespace.
+/** Tidy a board-page title for the switcher: strip raw LaTeX the brain
+ *  sometimes emits without $ delimiters (stripLatexForTitle — see
+ *  board-title.ts), then trim + collapse whitespace.
  *  (Stage prefixes — "Hook:", "Concept:", "Try:" … — would need the segment
- *  KIND plumbed onto the page title; not available here yet, so this is a
- *  no-op normalizer that's the hook for that future enrichment.) */
+ *  KIND plumbed onto the page title; not available here yet. This remains
+ *  the hook point for that future enrichment.) */
 function formatBoardTitle(t: string | undefined): string {
-  return (t || '').replace(/\s+/g, ' ').trim();
+  return stripLatexForTitle(t);
 }
 
 /** A small VU meter. When `speaking` (tutor) the bars run a decorative wave;
