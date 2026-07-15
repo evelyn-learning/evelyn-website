@@ -53,6 +53,32 @@ function formatTime(ms: number): string {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
+/** One conversation bubble (tutor left / student right, wall-clock stamp).
+ *  Shared by the replay modal's progressive-reveal pane and the student
+ *  replay page's static full-transcript view — keep the styling in sync by
+ *  keeping it HERE. suppressHydrationWarning on the time: the static page
+ *  server-renders it, and toLocaleTimeString legitimately differs between
+ *  the server's timezone and the viewer's. */
+export function TranscriptBubble({ entry }: { entry: { role: string; text: string; timestamp: string } }) {
+  return (
+    <div className={`flex ${entry.role === 'student' ? 'justify-end' : 'justify-start'}`}>
+      <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
+        entry.role === 'student'
+          ? 'bg-blue-500 text-white'
+          : 'bg-gray-100 text-gray-800'
+      }`}>
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-[10px] font-semibold opacity-60 uppercase">{entry.role}</span>
+          <span className="text-[10px] opacity-40" suppressHydrationWarning>
+            {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </span>
+        </div>
+        <p className="whitespace-pre-wrap leading-relaxed">{entry.text}</p>
+      </div>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Compressed monotonic timeline (2026-07-15).
 //
@@ -68,33 +94,43 @@ function formatTime(ms: number): string {
 // scrubber, speaker strip, debug markers — uses this SAME compressed
 // coordinate system.
 //
-// Audio note: the recorded PCM tracks run on REAL elapsed time (sample 0 =
-// session start), so playback maps compressed → real when scheduling a
-// source, and re-seeks the sources whenever the playhead crosses the end of a
-// capped gap (a "skip point") so speech after a long silence stays aligned.
-// For resumed sessions the post-resume audio was never aligned to the first
-// attempt's origin anyway (replay audio there was already broken), so the
-// mapping is best-effort by design; non-resumed sessions with no capped gaps
-// get an identity mapping and behave exactly as before.
+// Audio note: the PCM tracks' coordinate system depends on whether the
+// session was resumed. useAudioRecorder aligns sample 0 with startedAt and
+// silence-pads to wall offsets, so a single-attempt track runs on WALL time:
+// playback maps compressed → wall when scheduling a source and re-seeks the
+// sources at every capped gap's end so speech after a long silence stays
+// aligned. A RESUMED session's attempts each APPEND to the same .pcm16 with
+// T0 re-anchored to the new attempt's start, so that file is concatenated
+// ACTIVE time with no wall gap — wall-clock offsets overshoot the buffer
+// (live-tested 2026-07-15: 13min wall vs ~4min audio → every seek landed
+// past the track's end → total silence). There the compressed playhead
+// itself is the closest available approximation of buffer time, used
+// directly with no re-seeks. buildCompressedTimeline picks the mode per
+// session and exposes it via toAudio() / audioReseekEndsMs.
 // ---------------------------------------------------------------------------
 
 const GAP_CAP_MS = 8_000;
 // Minimum run-out after the last item so the final reveal isn't glued to the
 // scrubber's end; the real trailing gap is honored up to GAP_CAP_MS.
 const MIN_TAIL_MS = 3_000;
+// Items ending this far past the recorded `duration` can only mean startedAt
+// belongs to an EARLIER attempt than duration — i.e. the session was paused
+// and resumed. Slack absorbs flush/finalize timing around a normal close.
+const RESUME_DETECT_SLACK_MS = 60_000;
 
 interface CompressedTimeline {
   /** Replay length in compressed ms. */
   totalMs: number;
-  /** Compressed offsets at which a capped (skipped) gap ENDS — the audio
-   *  re-seek points. */
-  skipEndsMs: number[];
   /** Wall-clock offset (ms from startedAt) → compressed offset. NaN input
    *  clamps to the END of the timeline (defensive end-anchor: a late item is
    *  recoverable, an unreachable one is not); negatives clamp to 0. */
   toCompressed: (realMs: number) => number;
-  /** Compressed offset → wall-clock offset, for seeking the audio tracks. */
-  toReal: (compressedMs: number) => number;
+  /** Compressed offset → audio-buffer offset (ms). Wall-clock mapping for
+   *  single-attempt sessions, identity for resumed ones — see Audio note. */
+  toAudio: (compressedMs: number) => number;
+  /** Compressed offsets where tick() must re-seek live audio sources (the
+   *  ends of capped gaps — wall-clock tracks only; empty for resumed). */
+  audioReseekEndsMs: number[];
 }
 
 function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: number): CompressedTimeline {
@@ -156,7 +192,17 @@ function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: number): Co
     return real[i] + t * (real[i + 1] - real[i]);
   };
 
-  return { totalMs, skipEndsMs, toCompressed, toReal };
+  // Audio coordinate mode — see the Audio note in the block comment above.
+  // Single attempt ⇒ tracks run on wall time: map compressed → wall and
+  // re-seek at capped-gap ends (exact; preserves pre-compression behavior).
+  // Resumed ⇒ tracks are concatenated active time: the compressed playhead
+  // is the best proxy for buffer time, so use it as-is and never re-seek
+  // (playhead and buffer then advance in lockstep by construction).
+  const resumed = lastReal > realEndMs + RESUME_DETECT_SLACK_MS;
+  const toAudio = (compressedMs: number): number => (resumed ? compressedMs : toReal(compressedMs));
+  const audioReseekEndsMs = resumed ? [] : skipEndsMs;
+
+  return { totalMs, toCompressed, toAudio, audioReseekEndsMs };
 }
 
 // Decode raw PCM16 ArrayBuffer into a Float32Array (sample-rate independent).
@@ -260,14 +306,26 @@ export default function ReplayPlayer({
     return allTimestamps.length > 0 ? Math.max(...allTimestamps) - startMs + 2000 : 60000;
   }, [duration, endedAt, startMs, transcript, whiteboardCommands, debugEvents]);
 
-  // Whether stored whiteboard timestamps are real capture times. Pre-
-  // 2026-07-15 embeds stamped every command at SAVE time, so the whole array
-  // shares one timestamp — those sessions get transcript-derived timing in
-  // sortedWb below and their WB entries must NOT anchor the compressed
-  // timeline (one bogus save-time stamp would masquerade as an item).
-  const wbTimesDistinct = useMemo(() => {
+  // Whether stored whiteboard timestamps are trustworthy CAPTURE times.
+  // Two data generations exist:
+  //   - capture-stamped (embeds from 2026-07-15 on): every mirror batch is
+  //     stamped at append time — many distinct values, ~one per tutor turn.
+  //   - save-stamped (legacy): the periodic flush stamped the WHOLE array
+  //     with `now`, and each flush $set-replaces it wholesale, so the stored
+  //     stamps collapse onto one (or a couple of) flush moments clustered at
+  //     the END of the session. Treating those as item times pins every
+  //     command to the scrubber's final seconds — live-tested 2026-07-15 as
+  //     "Whiteboard 0 / 50 items" at every reachable playhead position (the
+  //     old `allSameTimestamp` check passed a single stray second stamp).
+  // So require genuine spread — every stamp parseable and at least one
+  // distinct time per 10 commands — before trusting them; anything less
+  // falls back to transcript-derived timing in sortedWb, which reveals each
+  // item at the message that produced it.
+  const wbTimesUsable = useMemo(() => {
     const wbTimes = whiteboardCommands.map(w => new Date(w.timestamp).getTime());
-    return wbTimes.length > 0 && !(wbTimes.length > 1 && new Set(wbTimes).size <= 1);
+    if (wbTimes.length === 0 || wbTimes.some(t => !Number.isFinite(t))) return false;
+    const distinct = new Set(wbTimes).size;
+    return distinct > 1 && distinct >= Math.ceil(wbTimes.length / 10);
   }, [whiteboardCommands]);
 
   // The one compressed coordinate system every offset below maps through.
@@ -275,10 +333,10 @@ export default function ReplayPlayer({
     const realOffsets = [
       ...transcript.map(t => new Date(t.timestamp).getTime() - startMs),
       ...debugEvents.map(d => new Date(d.timestamp).getTime() - startMs),
-      ...(wbTimesDistinct ? whiteboardCommands.map(w => new Date(w.timestamp).getTime() - startMs) : []),
+      ...(wbTimesUsable ? whiteboardCommands.map(w => new Date(w.timestamp).getTime() - startMs) : []),
     ];
     return buildCompressedTimeline(realOffsets, realEndMs);
-  }, [transcript, debugEvents, whiteboardCommands, wbTimesDistinct, startMs, realEndMs]);
+  }, [transcript, debugEvents, whiteboardCommands, wbTimesUsable, startMs, realEndMs]);
 
   const totalDurationMs = compressedTimeline.totalMs;
 
@@ -305,14 +363,6 @@ export default function ReplayPlayer({
     return events.sort((a, b) => a.offsetMs - b.offsetMs);
   }, [transcript, whiteboardCommands, debugEvents, startMs, compressedTimeline]);
 
-  // Convert stored whiteboard entries back to WhiteboardCommand format
-  const wbAsCommands = useMemo<WhiteboardCommand[]>(() => {
-    return whiteboardCommands.map(entry => {
-      const cmd = { action: entry.action, ...entry.data };
-      return cmd as unknown as WhiteboardCommand;
-    });
-  }, [whiteboardCommands]);
-
   // Sorted transcript entries for progressive reveal (compressed offsets —
   // toCompressed is monotonic, so sorting by real timestamp keeps the offset
   // array ascending for applyTime's early-break scan)
@@ -324,7 +374,7 @@ export default function ReplayPlayer({
 
   // Build whiteboard commands with timing — derive from transcript if DB timestamps are identical
   const sortedWb = useMemo(() => {
-    if (wbTimesDistinct) {
+    if (wbTimesUsable) {
       // Timestamps are real capture times — use them directly
       const sorted = [...whiteboardCommands].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
       wbOffsetsRef.current = sorted.map(w => compressedTimeline.toCompressed(new Date(w.timestamp).getTime() - startMs));
@@ -358,7 +408,7 @@ export default function ReplayPlayer({
       Math.round((totalDurationMs * (i + 1)) / (whiteboardCommands.length + 1))
     );
     return whiteboardCommands.map(entry => ({ action: entry.action, ...entry.data } as unknown as WhiteboardCommand));
-  }, [whiteboardCommands, transcript, startMs, totalDurationMs, wbTimesDistinct, compressedTimeline]);
+  }, [whiteboardCommands, transcript, startMs, totalDurationMs, wbTimesUsable, compressedTimeline]);
 
   // Apply current time to visible counts using pre-computed offset arrays
   const applyTime = useCallback((timeMs: number) => {
@@ -378,11 +428,11 @@ export default function ReplayPlayer({
     setVisibleWbCount(wCount);
   }, []); // No deps — reads from refs
 
-  // Store totalDurationMs / skip points in refs so tick doesn't need deps
+  // Store totalDurationMs / re-seek points in refs so tick doesn't need deps
   const totalDurationMsRef = useRef(totalDurationMs);
   totalDurationMsRef.current = totalDurationMs;
-  const skipEndsRef = useRef<number[]>([]);
-  skipEndsRef.current = compressedTimeline.skipEndsMs;
+  const audioReseekEndsRef = useRef<number[]>([]);
+  audioReseekEndsRef.current = compressedTimeline.audioReseekEndsMs;
 
   // Animation loop — stable reference, reads everything from refs
   const tick = useCallback((now: number) => {
@@ -405,14 +455,15 @@ export default function ReplayPlayer({
     setCurrentTimeMs(newTime);
     applyTime(newTime);
 
-    // Compressed timeline: crossing the END of a capped gap means the audio
-    // sources (which run on REAL elapsed time) just played only the first 8s
-    // of a much longer silence — re-seek them at the mapped real offset so
-    // speech after the gap stays aligned. Skip points are rare (one per
-    // pause/resume or long silence), so a linear scan per frame is fine.
+    // Wall-clock audio tracks only (audioReseekEndsMs is empty for resumed
+    // sessions): crossing the END of a capped gap means the sources just
+    // played only the first 8s of a longer recorded silence — re-seek them
+    // at the mapped wall offset so speech after the gap stays aligned.
+    // Re-seek points are rare (one per long silence), so a linear scan per
+    // frame is fine.
     if (clockAnchorCtxRef.current !== null) {
-      for (const skipEnd of skipEndsRef.current) {
-        if (prevTime < skipEnd && skipEnd <= newTime) {
+      for (const reseekEnd of audioReseekEndsRef.current) {
+        if (prevTime < reseekEnd && reseekEnd <= newTime) {
           startAudioPlaybackRef.current(newTime, speedRef.current);
           break;
         }
@@ -522,14 +573,14 @@ export default function ReplayPlayer({
     try { studentSourceRef.current?.stop(); } catch {}
     try { tutorSourceRef.current?.stop(); } catch {}
 
-    // Schedule a track at the REAL buffer offset for the compressed timeline
+    // Schedule a track at the buffer offset for the compressed timeline
     // position `offsetMs` (origin offset is always 0 — capture-side
     // leading-silence padding already aligns sample 0 with session start —
-    // so there is no future-scheduling case to handle here). The tracks run
-    // on wall-clock elapsed time while the replay runs on the compressed
-    // timeline, hence the toReal() mapping; tick() re-seeks at every capped
-    // gap's end to keep the two clocks aligned across skips.
-    const bufferOffsetSec = compressedTimeline.toReal(offsetMs) / 1000;
+    // so there is no future-scheduling case to handle here). toAudio() maps
+    // compressed → wall time for single-attempt tracks (tick() then re-seeks
+    // at every capped gap's end) and is the identity for resumed sessions'
+    // concatenated active-time tracks — see the Audio note up top.
+    const bufferOffsetSec = compressedTimeline.toAudio(offsetMs) / 1000;
     const scheduleTrack = (
       buffer: AudioBuffer | null,
       gain: GainNode | null,
@@ -699,21 +750,7 @@ export default function ReplayPlayer({
                 <p className="text-gray-400 text-sm text-center py-8">Press play to start replay...</p>
               )}
               {visibleMessages.map((entry, i) => (
-                <div key={i} className={`flex ${entry.role === 'student' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm animate-in fade-in slide-in-from-bottom-1 duration-300 ${
-                    entry.role === 'student'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-semibold opacity-60 uppercase">{entry.role}</span>
-                      <span className="text-[10px] opacity-40">
-                        {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap leading-relaxed">{entry.text}</p>
-                  </div>
-                </div>
+                <TranscriptBubble key={i} entry={entry} />
               ))}
               <div ref={chatEndRef} />
             </div>
@@ -722,9 +759,13 @@ export default function ReplayPlayer({
           {/* Right: Whiteboard */}
           <div className="w-1/2 flex flex-col">
             <div className="px-4 py-2 border-b bg-gray-50 flex items-center justify-between">
+              {/* Denominator is sortedWb (the REPLAYABLE set), not the raw
+                  store — legacy fallback timing can carry fewer items than
+                  are stored, and "0 / 50" with a max reveal of 6 reads as
+                  broken rather than approximate. */}
               <h3 className="text-sm font-medium text-gray-700">
                 Whiteboard
-                <span className="ml-2 text-xs text-gray-400">{visibleWbCount} / {wbAsCommands.length} items</span>
+                <span className="ml-2 text-xs text-gray-400">{visibleWbCount} / {sortedWb.length} items</span>
               </h3>
             </div>
             <div className="flex-1 overflow-y-auto">
