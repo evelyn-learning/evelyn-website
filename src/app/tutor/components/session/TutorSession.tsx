@@ -472,15 +472,24 @@ export default function TutorSession(props: TutorSessionProps) {
   // With no caption yet, the slot doubles as the mic-state line (R1: the old
   // status row under the textbox is gone); once a caption exists, muted state
   // shows as a small MUTED chip beside it.
-  const dockStatus =
+  // Round-5 feedback: the state cues ("Hearing you…", "Thinking…") must stay
+  // visible even when a caption exists — they're how the student knows the
+  // tutor isn't stuck. Transient perception/composition states REPLACE the
+  // caption for their duration; while the tutor speaks, a SPEAKING chip +
+  // waveform ride alongside the caption; muted keeps the MUTED chip.
+  const statusOverride =
     listeningHint === 'didnt-catch' ? { text: 'Didn’t catch that — mind repeating?', cls: 'text-amber-600' }
-    : voiceState === 'muted' ? { text: 'Muted — tap the mic to talk', cls: 'text-slate-500' }
     : voiceState === 'hearing' ? { text: 'Hearing you…', cls: 'text-blue-600' }
     : voiceState === 'processing' ? { text: 'Got that — one sec…', cls: 'text-amber-600' }
     : voiceState === 'thinking' ? { text: 'Thinking…', cls: 'text-slate-400' }
+    : null;
+  const dockStatus =
+    voiceState === 'muted' ? { text: 'Muted — tap the mic to talk', cls: 'text-slate-500' }
     : started ? { text: 'Listening…', cls: 'text-slate-400' }
     : { text: 'Tap the mic to start', cls: 'text-slate-500' };
-  const dockCaptionEl = liveCaption ? (
+  const dockCaptionEl = statusOverride ? (
+    <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
+  ) : liveCaption ? (
     <button
       type="button"
       title="Open transcript"
@@ -490,8 +499,8 @@ export default function TutorSession(props: TutorSessionProps) {
       {voiceState === 'muted' && (
         <span className="shrink-0 rounded bg-red-50 px-1 py-0.5 text-[10px] font-bold text-red-500">MUTED</span>
       )}
-      {listeningHint === 'didnt-catch' && (
-        <span className="shrink-0 text-xs font-medium text-amber-600">Didn’t catch that —</span>
+      {voiceState === 'speaking' && (
+        <span className="shrink-0 rounded bg-emerald-50 px-1 py-0.5 text-[10px] font-bold text-emerald-600">SPEAKING</span>
       )}
       <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
       {voiceState === 'speaking' && <MicMeter level={0} speaking />}
@@ -514,9 +523,12 @@ export default function TutorSession(props: TutorSessionProps) {
   const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
   const tutorTurnDone = started && voiceState !== 'speaking' && voiceState !== 'thinking';
-  // Streaming entries (`tutor-streaming-*`) update text token-by-token; only
-  // fetch once the turn is finalized so the gist sees the whole turn.
-  const lastTutorFinal = lastTutorEntry && !lastTutorEntry.id.startsWith('tutor-streaming') ? lastTutorEntry : null;
+  // Streaming entries update text sentence-by-sentence; only fetch once the
+  // turn is finalized so the gist sees the whole turn. Finalization is the
+  // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
+  // id on purpose (see TranscriptEntry.streaming doc), which is why an
+  // id-prefix check here silently killed every pin (round-5 regression).
+  const lastTutorFinal = lastTutorEntry && !lastTutorEntry.streaming ? lastTutorEntry : null;
 
   useEffect(() => {
     if (!TUTOR_QUESTION_PIN) return;
