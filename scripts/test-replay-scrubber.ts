@@ -78,6 +78,21 @@ check('resumed session (large gap, duration spans only the latest attempt): tota
 
 console.log('\nclick <-> render position-math invariant (ReplayTimeline\'s own formulas)');
 
+/**
+ * WARNING: These tests re-implement local copies of the formulas/guards from
+ * src/app/admin/tutor-sessions/components/ReplayTimeline.tsx rather than
+ * importing them directly. This is necessary because ReplayTimeline.tsx
+ * transitively imports WhiteboardCanvas → KaTeX CSS, which breaks tsx/ts-node
+ * parsing (SyntaxError on `katex.min.css`).
+ *
+ * LIMITATION: These tests do NOT regression-lock the shipped component's
+ * behavior by themselves — they assert the mirrored math is self-consistent,
+ * but drift between the mirror and ReplayTimeline.tsx will NOT be detected
+ * automatically. If ReplayTimeline's guards or position formulas change,
+ * update the mirror below to match; the `buildCompressedTimeline` tests do
+ * lock down that function at the source (importable without CSS).
+ */
+
 // Mirrors ReplayTimeline.tsx exactly:
 //   render:      progressPct = totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0
 //   click:       onSeek(pct * totalDurationMs)   where pct = clickFraction in [0,1]
