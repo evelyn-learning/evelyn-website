@@ -2488,31 +2488,43 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return promise;
     }
     const promise = (async (): Promise<Float32Array | null> => {
-      try {
-        const useCartesia = ttsProviderRef.current === 'cartesia';
-        const url = useCartesia ? '/api/tutor/tts-cartesia' : '/api/tutor/tts-openai';
-        const body = useCartesia
-          ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current }
-          : { text: trimmed };
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          console.error(`[Realtime] ${useCartesia ? 'cartesia' : 'openai-mini'} TTS fetch failed:`, res.status);
-          return null;
+      const useCartesia = ttsProviderRef.current === 'cartesia';
+      const url = useCartesia ? '/api/tutor/tts-cartesia' : '/api/tutor/tts-openai';
+      const body = useCartesia
+        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current }
+        : { text: trimmed };
+      // Bounded retry (2026-07-15 incident): a single mid-session transient
+      // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
+      // with no second attempt and wedged the turn. Network faults and 5xx
+      // get 2 more tries with short backoff; 4xx fails fast (a bad request
+      // won't get better).
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 250 * attempt));
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          if (!res.ok) {
+            console.error(`[Realtime] ${useCartesia ? 'cartesia' : 'openai-mini'} TTS fetch failed (attempt ${attempt + 1}):`, res.status);
+            if (res.status < 500) return null;
+            continue;
+          }
+          const buf = await res.arrayBuffer();
+          return new Float32Array(buf);
+        } catch (err) {
+          if ((err as { name?: string })?.name === 'AbortError') return null;
+          console.error(`[Realtime] TTS error (attempt ${attempt + 1}):`, err);
         }
-        const buf = await res.arrayBuffer();
-        return new Float32Array(buf);
-      } catch (err) {
-        if ((err as { name?: string })?.name !== 'AbortError') {
-          console.error('[Realtime] TTS error:', err);
-        }
-        return null;
       }
+      return null;
     })();
     cache.set(trimmed, promise);
+    // A failed sentence must not be cached as permanently failed — evict it
+    // so a later dispatch of the same text gets a fresh fetch (the old code
+    // cached the rejected result forever).
+    void promise.then((r) => { if (r === null) cache.delete(trimmed); });
     return promise;
   }, []);
 
@@ -2539,6 +2551,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       if (!float32) {
         speakTextInFlightRef.current = false;
+        // Terminal TTS failure for THIS sentence (fetch layer already
+        // retried). 2026-07-15 incident: a bare return here orphaned the
+        // remaining queued sentences and left state stuck at 'processing' —
+        // the perception checkpoint then swallowed the student's next
+        // utterance and the voice loop stayed wedged until a typed message
+        // force-cleared it. Instead: skip the failed sentence and let
+        // playNextAudio run the SAME advance/drain logic a finished chunk
+        // would — dispatch the next queued sentence, or fire 'drain' and
+        // return to listening when nothing is left.
+        console.warn(`[Realtime] TTS terminally failed — skipping sentence: "${trimmed.slice(0, 60)}"`);
+        if (!isPlayingRef.current) playNextAudio();
         return;
       }
       onTutorAudioChunk?.(float32);

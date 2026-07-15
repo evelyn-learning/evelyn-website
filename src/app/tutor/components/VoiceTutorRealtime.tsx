@@ -11106,6 +11106,25 @@ export function VoiceTutorRealtime({
       console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+      // Checkpoint watchdog (2026-07-15 TTS-wedge incident): a checkpoint is
+      // only ever cleared inside applyPerceptionVerdict — if its verdict
+      // never arrives (e.g. input_audio_buffer.cleared with no transcript),
+      // it gates BOTH direct-dispatch paths below forever and voice wedges
+      // while typed input still works. A checkpoint this old can no longer
+      // get a legitimate verdict (perception latency tops out well under
+      // this); clear it so the CURRENT utterance dispatches normally.
+      {
+        const cp = perceptionInterruptCheckpointRef.current;
+        const ageMs = cp ? Date.now() - cp.cancelledAt : 0;
+        if (cp && ageMs > 20000) {
+          console.warn(`[PERCEPTION] stale checkpoint cleared by watchdog (age=${ageMs}ms)`);
+          onDebugEvent?.('perception_checkpoint_stale_cleared', `age=${ageMs}ms`);
+          perceptionInterruptCheckpointRef.current = null;
+          // The arm site paused the render buffer pending the verdict —
+          // un-pause so buffered renders aren't stuck too.
+          renderBufferPausedRef.current = false;
+        }
+      }
       // "Being heard" indicator: a transcript ARRIVED for the student's
       // utterance, so it wasn't lost — resolve the "got that — one sec…" window
       // (whether it now dispatches or gets classified as noise). This is what

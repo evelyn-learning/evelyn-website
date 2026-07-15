@@ -38,6 +38,11 @@ ssh $SERVER << ENDSSH
 set -e
 cd $DEPLOY_PATH
 npm ci --production=false
+# Clean build every time: incremental next builds on this server keep dying
+# with ENOTEMPTY rmdir on stale .next/server/app/blog/*.segments dirs (hit
+# twice 2026-07-14/15). The running pm2 process keeps serving through the
+# ~2.5min rebuild; set -e above means a failed build never restarts pm2.
+rm -rf .next
 npm run build
 pm2 restart $APP_NAME --update-env
 ENDSSH
