@@ -13,6 +13,7 @@
 
 import React from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels } from '@/lib/tutor/whiteboard/label-deoverlap';
 import { MAP_BACKGROUND_PATHS, MAP_BACKGROUND_BBOXES } from './map-backgrounds.generated';
 
 export interface MapPin {
@@ -334,6 +335,36 @@ export default function MapRenderer({
   // hand-drawn one if a preset isn't in the generated file.
   const bgPath = MAP_BACKGROUND_PATHS[background] ?? LEGACY_BACKGROUND_PATHS[background];
 
+  // Pin dot positions, hoisted so the label texts can be de-overlapped as a
+  // group. Pins for nearby cities (LLM-supplied coords, no collision
+  // awareness) otherwise draw their labels on top of each other. Only the
+  // TEXT is nudged (vertically) — the pin dot stays at its true location.
+  const pinPts = pins.map((pin) => {
+    const bbox = MAP_BACKGROUND_BBOXES[background];
+    let normX: number;
+    let normY: number;
+    if (pin.lat != null && pin.lon != null && bbox) {
+      [normX, normY] = projectLatLon(pin.lat, pin.lon, bbox);
+    } else {
+      normX = pin.x ?? 50;
+      normY = pin.y ?? 50;
+    }
+    const [px, py] = normToSvg(normX, normY);
+    return { px, py };
+  });
+  const pinLabelPos = deoverlapLabels(
+    pinPts.map(({ px, py }, i) => ({
+      x: px + 10,
+      y: py + 4,
+      text: pins[i].label || '',
+      fontSize: 12,
+      anchor: 'start' as const,
+    })),
+    { width: SVG_WIDTH, height: SVG_HEIGHT },
+    // fontWeight 600 glyphs run a bit wider than the default estimate.
+    { charWidth: 0.62, pad: 2, baseline: 'alphabetic', edgePad: 2 },
+  );
+
   return (
     <div className="map-renderer">
       {title && (
@@ -421,21 +452,11 @@ export default function MapRenderer({
           return null;
         })}
 
-        {/* Pins */}
+        {/* Pins. Positions were projected above (lat/lon preferred, same
+            formula the background was generated with, so pins sit on the
+            right country regardless of preset; normalized x/y fallback). */}
         {pins.map((pin, i) => {
-          const bbox = MAP_BACKGROUND_BBOXES[background];
-          // Prefer lat/lon when provided — projected with the same formula
-          // the background was generated with, so pins sit on the right
-          // country regardless of preset. Fall back to normalized x/y.
-          let normX: number;
-          let normY: number;
-          if (pin.lat != null && pin.lon != null && bbox) {
-            [normX, normY] = projectLatLon(pin.lat, pin.lon, bbox);
-          } else {
-            normX = pin.x ?? 50;
-            normY = pin.y ?? 50;
-          }
-          const [px, py] = normToSvg(normX, normY);
+          const { px, py } = pinPts[i];
           const color = pin.color || '#dc2626';
           const pinName = pin.label ? `pin-${featSlug(pin.label)}` : `pin-${i + 1}`;
           return (
@@ -443,8 +464,8 @@ export default function MapRenderer({
               {/* Pin shape: circle with small triangle tail */}
               <circle cx={px} cy={py} r={6} fill={color} stroke="#fff" strokeWidth={2} />
               <text
-                x={px + 10}
-                y={py + 4}
+                x={pinLabelPos[i].x}
+                y={pinLabelPos[i].y}
                 fontSize={12}
                 fontWeight={600}
                 fill="#1f2937"

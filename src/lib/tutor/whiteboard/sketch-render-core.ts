@@ -16,6 +16,7 @@ import {
   type SketchPrimitive,
 } from './sketch-schema';
 import { feat, shortLabelSlug } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels } from './label-deoverlap';
 
 export const ROUGH_OPTS = { roughness: 1.1, bowing: 1 } as const;
 const DEFAULT_SW = 1; // in 0..100 units
@@ -1218,19 +1219,21 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
 } {
   const gen = rough.generator();
   const drawn: { paths: PathInfo[] }[] = [];
-  const labels: LabelSpec[] = [];
+  // Labels are collected raw first, then run through the shared de-overlap
+  // pass (doodler coords carry no cross-label collision awareness — observed
+  // 2026-07-14: three captions at identical coords composited into mush), and
+  // only THEN get their feat() attrs, so scribble targeting sees final coords.
+  const pending: {
+    x: number; y: number; text: string; fontSize: number;
+    anchor: 'start' | 'middle' | 'end'; color?: SketchColor; slugIdx: number;
+  }[] = [];
   const pushLabel = (
     lx: number, ly: number, text: string, i: number,
     fontSize = 5, anchor: 'start' | 'middle' | 'end' = 'middle', color?: SketchColor,
   ) => {
     const w = estLabelWidth(text, fontSize);
-    const slug = shortLabelSlug(text) || `label-${i}`;
     const { x, y } = clampLabelPos(lx, ly, w, fontSize, anchor);
-    labels.push({
-      x, y, text, fontSize, anchor,
-      fill: hex(color),
-      feature: feat(slug, { cx: x, cy: y, w, h: fontSize * 1.2 }, SKETCH_VIEWBOX),
-    });
+    pending.push({ x, y, text, fontSize, anchor, color, slugIdx: i });
   };
   primitives.forEach((p, i) => {
     if (p.type === 'label') {
@@ -1373,6 +1376,21 @@ export function buildSketchPaths(primitives: SketchPrimitive[]): {
       if (p.inputLabel) pushLabel(p.x + g.barW / 2, p.y - 4, p.inputLabel, i, 4.0, 'middle', p.stroke);
       g.bands.forEach((b, bi) => pushLabel(g.outX1 + g.barW + 2, b.outTop + b.outH / 2, b.label, i * 100 + bi, 3.8, 'start', p.stroke));
     }
+  });
+  // De-overlap colliding labels (vertical nudges only; non-colliding labels
+  // are untouched), then attach feat() attrs at the FINAL positions. The
+  // width/anchor estimation params mirror estLabelWidth above.
+  const spaced = deoverlapLabels(pending, SKETCH_VIEWBOX, {
+    charWidth: 0.55, minWidth: 8, pad: 1.2, baseline: 'middle', edgePad: 1,
+  });
+  const labels: LabelSpec[] = spaced.map((l) => {
+    const w = estLabelWidth(l.text, l.fontSize);
+    const slug = shortLabelSlug(l.text) || `label-${l.slugIdx}`;
+    return {
+      x: l.x, y: l.y, text: l.text, fontSize: l.fontSize, anchor: l.anchor,
+      fill: hex(l.color),
+      feature: feat(slug, { cx: l.x, cy: l.y, w, h: l.fontSize * 1.2 }, SKETCH_VIEWBOX),
+    };
   });
   return { drawn, labels };
 }
