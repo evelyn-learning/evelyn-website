@@ -28,18 +28,40 @@ export function stripLatexForTitle(t: string | undefined): string {
   let s = t || '';
   if (!s) return '';
 
+  // Strip stray $ delimiters (defensive).
+  s = s.replace(/\$/g, '');
+
   s = resolveFractions(s);
 
+  // Special-case \sqrt to preserve grouping and render as symbol:
+  // \sqrt{x} -> √x (single token, no parens)
+  // \sqrt{x+1} -> √(x+1) (multiple tokens, parens preserve grouping)
+  // \sqrt[3]{x} -> ∛x (cube root symbol)
+  // \sqrt[n]{X} -> n√(X) (other roots with index notation)
+  s = s.replace(/\\sqrt\[(\w+)\]\{([^{}]*)\}/g, (_, index, content) => {
+    if (index === '3') return `∛${content}`;
+    // For other indices, use n√(X) style
+    return `${index}√(${content})`;
+  });
+  s = s.replace(/\\sqrt\{([^{}]*)\}/g, (_, content) => {
+    // Single token doesn't need parens
+    if (/^\w+$/.test(content)) return `√${content}`;
+    return `√(${content})`;
+  });
+
+  // Symbol commands: map specific commands to their Unicode symbols
+  // before the generic bare-command pass, so they're not converted to words.
+  s = s.replace(/\\pm\b/g, '±');
+  s = s.replace(/\\infty\b/g, '∞');
+
   // Other \command{arg} forms ("drop \command names sensibly") — keep the
-  // braced content, drop the command name: \sqrt{x} -> x, \text{Hi} -> Hi.
+  // braced content, drop the command name: \text{Hi} -> Hi.
+  // (Note: \sqrt is already handled above, so we won't re-process it here.)
   s = s.replace(/\\[a-zA-Z]+\{([^{}]*)\}/g, '$1');
 
   // Braced sub/superscript groups: _{x→0} / ^{10} -> a leading space plus
   // the bare content ("lim_{x→0}" -> "lim x→0").
   s = s.replace(/[_^]\{([^{}]*)\}/g, ' $1');
-
-  // Bare (unbraced) sub/superscript markers: x^2 / y_1 -> "x 2" / "y 1".
-  s = s.replace(/[_^]([A-Za-z0-9])/g, ' $1');
 
   // Delimiter sizing commands: \left, \right, \big, \Big, \bigg, \Bigg and
   // their variants (\bigl, \bigr, \bigm, etc.) are pure sizing with no
@@ -47,8 +69,14 @@ export function stripLatexForTitle(t: string | undefined): string {
   s = s.replace(/\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, '');
 
   // Any remaining bare \command names — strip the backslash, keep the
-  // word: \pi -> pi, \theta -> theta.
+  // word: \pi -> pi, \theta -> theta. Run this BEFORE bare marker stripping
+  // so that x^\pi gets converted to x^pi, and then the marker rule can strip the ^.
   s = s.replace(/\\([a-zA-Z]+)/g, '$1');
+
+  // Bare (unbraced) sub/superscript markers: x^2 / y_1 / x^pi -> "x 2" / "y 1" / "x pi".
+  // Extended character class from [A-Za-z0-9] to \S (any non-whitespace) to handle
+  // symbol commands like \infty that convert to ∞.
+  s = s.replace(/[_^](\S)/g, ' $1');
 
   // Escaped braces (\{ and \}) are literal brace characters — preserve them
   // by replacing with placeholders, then restore after removing LaTeX delimiters.

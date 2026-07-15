@@ -74,8 +74,8 @@ assert.strictEqual(
 // --- Other backslash commands ("drop \command names sensibly") ------
 assert.strictEqual(
   stripLatexForTitle('\\sqrt{x} plus \\pi'),
-  'x plus pi',
-  '\\sqrt{x} drops the command name and keeps the braced content; bare \\pi keeps just the word'
+  '√x plus pi',
+  '\\sqrt{x} renders as √x (symbol with single token); bare \\pi keeps just the word'
 );
 assert.strictEqual(
   stripLatexForTitle('\\theta and \\alpha'),
@@ -110,5 +110,68 @@ assert.strictEqual(
 // --- undefined / empty passthrough --------------------------------------
 assert.strictEqual(stripLatexForTitle(undefined), '', 'undefined input returns empty string');
 assert.strictEqual(stripLatexForTitle(''), '', 'empty input returns empty string');
+
+// --- FINAL-REVIEW FIX WAVE: 1. Semantic bug: \sqrt grouping ----------------
+assert.strictEqual(
+  stripLatexForTitle('Solve \\sqrt{x+1} = 3'),
+  'Solve √(x+1) = 3',
+  '\\sqrt{x+1} should preserve grouping with parens, not drop braces to "x+1"'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\sqrt{x}'),
+  '√x',
+  '\\sqrt{x} with single token should become √x (no parens needed)'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\sqrt[3]{x}'),
+  '∛x',
+  '\\sqrt[3]{x} should become ∛x (cube root)'
+);
+assert.strictEqual(
+  stripLatexForTitle('\\sqrt[n]{X}'),
+  'n√(X)',
+  '\\sqrt[n]{X} for other n should become n√(X)'
+);
+
+// --- FINAL-REVIEW FIX WAVE: 2. Symbol commands (\pm, \infty) ---------------
+assert.strictEqual(
+  stripLatexForTitle('x = 2 \\pm 1'),
+  'x = 2 ± 1',
+  '\\pm should render as ± symbol'
+);
+assert.strictEqual(
+  stripLatexForTitle('lim_{x→\\infty} f(x)'),
+  'lim x→∞ f(x)',
+  '\\infty should render as ∞ symbol'
+);
+
+// --- FINAL-REVIEW FIX WAVE: 3. Marker survives command superscripts ---------
+assert.strictEqual(
+  stripLatexForTitle('x^\\pi'),
+  'x pi',
+  'x^\\pi should handle \\pi first, then strip the marker'
+);
+assert.strictEqual(
+  stripLatexForTitle('x^\\infty'),
+  'x ∞',
+  'x^\\infty converts \\infty to ∞ first, then strips the marker'
+);
+assert.strictEqual(
+  stripLatexForTitle('y_\\theta'),
+  'y theta',
+  'y_\\theta should handle \\theta first, then strip the marker'
+);
+
+// --- FINAL-REVIEW FIX WAVE: 4. Strip stray $ characters -------------------
+assert.strictEqual(
+  stripLatexForTitle('$x = 2$'),
+  'x = 2',
+  'stray $ delimiters should be stripped'
+);
+assert.strictEqual(
+  stripLatexForTitle('text$inner$text'),
+  'textinnertext',
+  'interior $ characters should be stripped'
+);
 
 console.log('All stripLatexForTitle tests passed.');
