@@ -272,7 +272,12 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // engine's TutorSession.sessionId are the same. Else legacy mint.
   const [sessionId] = useState(() => config.session_id || `embed-${Date.now()}`);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
-  const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
+  // Each mirrored command carries its CAPTURE time. Stamping happens once, at
+  // mirror-append, and the same stamp rides every subsequent save — stamping
+  // at save time (pre-2026-07-15) collapsed the whole board onto the latest
+  // periodic flush's `now`, which left replays with zero real WB timing and
+  // forced ReplayPlayer's transcript-derived fallback.
+  const [whiteboardCommands, setWhiteboardCommands] = useState<{ cmd: WhiteboardCommand; capturedAt: string }[]>([]);
   // Guards the mirror above against a replayed resume seed (TutorSession/VTR
   // remount while this page persists) — see resume-seed.ts. Same lifetime as
   // the mirror: both live for this embed page instance.
@@ -387,10 +392,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         })),
       } : {}),
       ...(whiteboardCommands.length > 0 ? {
-        whiteboardCommands: whiteboardCommands.map(cmd => ({
+        whiteboardCommands: whiteboardCommands.map(({ cmd, capturedAt }) => ({
           action: cmd.action,
           data: { ...cmd, action: undefined },
-          timestamp: now.toISOString(),
+          // Capture time, NOT save time (`now`): the replay reconstructs WB
+          // timing from these stamps, and same-stamped arrays break it for
+          // paused-and-resumed sessions (2026-07-15 replay fix).
+          timestamp: capturedAt,
         })),
       } : {}),
     };
@@ -705,7 +713,12 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {
           if (!acceptWhiteboardBatch(resumeSeedGuardRef.current, meta)) return;
-          setWhiteboardCommands((prev) => [...prev, ...cmds]);
+          // Capture time stamped at append (batch-mates share one stamp —
+          // they arrived in the same turn). A resume-seed batch gets the
+          // resume moment, which is where its items belong on the timeline
+          // of THIS attempt.
+          const capturedAt = new Date().toISOString();
+          setWhiteboardCommands((prev) => [...prev, ...cmds.map((cmd) => ({ cmd, capturedAt }))]);
         }}
         onLessonProgressChange={(p) => {
           planRef.current = p.plan;
