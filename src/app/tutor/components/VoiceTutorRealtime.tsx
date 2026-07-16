@@ -10176,7 +10176,19 @@ export function VoiceTutorRealtime({
           return;
         }
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
-        speakTextRef.current?.('Sorry, could you say that again?');
+        // Typed turns get a text reply (a spoken "say that again" both
+        // blames the student and makes no sense for text input) — same
+        // modality split as the brainUnavailable path above.
+        if (currentTurnTypedRef.current) {
+          const msg = "Hmm, I didn't come up with anything for that — mind rephrasing?";
+          transcriptRef.current = [
+            ...transcriptRef.current,
+            { id: `tutor-fallback-${Date.now()}`, role: 'tutor' as const, text: msg, timestamp: new Date() },
+          ];
+          onTranscriptUpdate([...transcriptRef.current]);
+        } else {
+          speakTextRef.current?.('Sorry, could you say that again?');
+        }
         return;
       }
 

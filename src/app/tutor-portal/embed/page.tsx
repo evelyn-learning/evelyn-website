@@ -215,7 +215,11 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const level = config.level;
   const topic = config.topic || '';
   const studentName = config.student_name || '';
-  const sessionGoal: SessionGoal = config.session_goal || 'practice';
+  // Default to 'concept-review' when the token omits the field: X2 made
+  // 'practice' inject a strong no-new-teaching mandate every turn, so an
+  // accidental missing field must NOT silently flip lessons into practice
+  // mode (the portal always sends the field; sandbox/QA mints may not).
+  const sessionGoal: SessionGoal = config.session_goal || 'concept-review';
   const inputMode: InputMode = config.input_mode || 'voice';
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   const openAIVoice: OpenAIVoice = (config.voice as OpenAIVoice) || 'coral';
