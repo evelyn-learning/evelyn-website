@@ -24,9 +24,13 @@ interface ReplayTimelineProps {
   /** Task W2: short inline audio-load/buffering fragment (e.g. "loading
    *  12/45MB" or "buffering") rendered next to the current time, replacing
    *  the standalone pill ReplayPlayer's controls row used to show. `null`/
-   *  undefined (idle/ready/none/error — or the plain student-facing replay
+   *  undefined (idle/ready/none — or the plain student-facing replay
    *  page, which never threads this prop) renders nothing extra. */
   audioStatusText?: string | null;
+  /** Optional callback for retrying failed audio loads. Provided only when
+   *  audioStatusText === "audio failed". When defined, renders as clickable
+   *  retry link instead of plain text. */
+  onAudioRetry?: () => void;
 }
 
 function formatTime(ms: number): string {
@@ -44,7 +48,7 @@ const CATEGORY_ICONS: Record<EventCategory['key'], typeof MicOff> = {
   error: AlertTriangle,
 };
 
-export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs, onSeek, audioStatusText }: ReplayTimelineProps) {
+export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs, onSeek, audioStatusText, onAudioRetry }: ReplayTimelineProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const laneRef = useRef<HTMLDivElement>(null);
@@ -156,7 +160,16 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
       <div className="flex justify-between items-center text-[11px] text-gray-400 font-mono px-0.5">
         <span className="truncate">
           {formatTime(currentTimeMs)}
-          {audioStatusText && <span className="text-amber-500"> · {audioStatusText}</span>}
+          {audioStatusText && audioStatusText === 'audio failed' && onAudioRetry ? (
+            <span className="text-amber-500"> · {audioStatusText} — <button
+              onClick={onAudioRetry}
+              className="underline hover:text-amber-600 transition-colors"
+            >
+              retry
+            </button></span>
+          ) : audioStatusText ? (
+            <span className="text-amber-500"> · {audioStatusText}</span>
+          ) : null}
         </span>
         {debugEvents.length > 0 && (
           <button

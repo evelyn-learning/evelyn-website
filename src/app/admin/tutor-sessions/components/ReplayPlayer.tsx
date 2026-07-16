@@ -184,6 +184,8 @@ function formatInlineAudioStatus(
   { loadedBytes, totalBytes }: AudioLoadProgress,
 ): string | null {
   if (state === 'buffering') return 'buffering';
+  if (state === 'none') return 'no audio';
+  if (state === 'error') return 'audio failed';
   if (state !== 'loading') return null;
   const loadedMB = Math.round(loadedBytes / 1_000_000);
   if (totalBytes != null && totalBytes > 0) {
@@ -1322,6 +1324,7 @@ export default function ReplayPlayer({
             currentTimeMs={currentTimeMs}
             onSeek={seek}
             audioStatusText={formatInlineAudioStatus(audioState, audioProgress)}
+            onAudioRetry={audioState === 'error' ? () => { setAudioStateBoth('idle'); loadAudio(); } : undefined}
           />
 
           <div className="flex items-center gap-2">
