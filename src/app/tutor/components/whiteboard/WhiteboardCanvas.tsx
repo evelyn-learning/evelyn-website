@@ -16,6 +16,7 @@ import { SketchRenderer } from './SketchRenderer';
 import { SketchFallbackCard } from './SketchFallbackCard';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
+import { computeTryYourselfVerdict } from './tryYourselfAnswer';
 import EarlyMathRenderer from './EarlyMathRenderer';
 import PhonicsRenderer from './PhonicsRenderer';
 import GraphicOrganizerRenderer from './GraphicOrganizerRenderer';
@@ -2532,70 +2533,20 @@ function TryYourselfWithBrainHookup(props: {
       choices={props.choices}
       hints={props.hints}
       onSubmit={(answer) => {
-        // The renderer already runs a format-aware comparison locally;
-        // we re-derive the same flag here so the parent gets the trio.
-        const isCorrect = props.expectedAnswer
-          ? compareAnswer(answer, props.expectedAnswer, props.responseFormat)
-          : null;
+        // Shared decision seam (src/app/tutor/components/whiteboard/
+        // tryYourselfAnswer.ts) — the SAME function TryYourselfRenderer
+        // uses for its own ✓/✗ affordance and verdict text, so what's
+        // relayed to the brain here can never disagree with what the
+        // student sees on the card. For mcq this resolves by OPTION
+        // IDENTITY (choices[].correct, or label-vs-expectedAnswer
+        // fallback) rather than comparing the submitted choice id
+        // against free-text expectedAnswer directly — see that module's
+        // header comment for the bug this replaced.
+        const isCorrect = computeTryYourselfVerdict(answer, props.expectedAnswer, props.responseFormat, props.choices);
         ctx.onTryYourselfAnswer?.(answer, props.expectedAnswer, isCorrect);
       }}
     />
   );
-}
-
-/** Same comparator as TryYourselfRenderer's matchesAnswer — duplicated
- *  here so the bridge can decide correct/incorrect without forcing
- *  every renderer to expose the result. Keep in sync with that file. */
-/** Compare submitted vs expected answer. Returns:
- *   true  — strings/numerics definitively match
- *   false — definitively don't match (only used when we have a reliable signal)
- *   null  — can't tell (FRQ with non-trivial expected, or anything where
- *           string normalization is hopeless). Caller MUST treat null
- *           as "let the brain judge" — don't pre-assert a verdict.
- *
- * Why this returns null for most FRQ cases: free-response answers are
- * routinely written in algebraically-equivalent-but-textually-different
- * forms. The 2026-04-29 pre-calc session showed expected
- * "sin 225° = −√2/2, cos 225° = −√2/2; Q3; reference angle 45°" vs
- * submitted "sin 225=cos 225 = - 1/ root 2, quadrant 3, ref angle 45 deg"
- * — algebraically identical (-1/√2 = -√2/2), but no string normalization
- * can match them. The string-compare verdict was "doesn't match" → the
- * brain saw the pre-judgment in its prompt and HAD to fight against it
- * to tell the student "your value is actually correct, just a different
- * form". Returning null here drops the pre-judgment so the brain can
- * judge equivalence without bias. */
-function compareAnswer(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
-  const s = submitted.trim();
-  const e = expected.trim();
-  if (!s || !e) return null;
-  const tryParse = (v: string): number | null => {
-    const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
-    if (cleaned === '') return null;
-    const frac = cleaned.match(/^(-?\d+)\/(-?\d+)$/);
-    if (frac) {
-      const num = Number(frac[1]); const den = Number(frac[2]);
-      if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) return num / den;
-      return null;
-    }
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : null;
-  };
-  const sn = tryParse(s); const en = tryParse(e);
-  // Numeric / MCQ: pure-string comparison is reliable.
-  if (sn !== null && en !== null) return Math.abs(sn - en) < 1e-9;
-  if (format === 'numeric') return null; // numeric expected couldn't parse — defer to brain
-  if (format === 'mcq') {
-    const norm = (v: string) =>
-      v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
-    return norm(s) === norm(e);
-  }
-  // FRQ (or undefined format): string normalization is unreliable — defer
-  // to the brain rather than asserting a wrong verdict. Only a strict
-  // post-normalization equality returns true; any difference returns null.
-  const norm = (v: string) =>
-    v.toLowerCase().replace(/^[a-z]\s*=\s*/, '').replace(/\s+/g, ' ').trim();
-  if (norm(s) === norm(e)) return true;
-  return null;
 }
 
 interface CommandRendererProps {

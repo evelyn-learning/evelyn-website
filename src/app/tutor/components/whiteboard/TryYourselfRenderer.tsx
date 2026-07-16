@@ -19,67 +19,18 @@
 import { useState } from 'react';
 import { stripRedundantChoiceLabel } from './choiceLabel';
 import { InlineMathText } from './InlineMathText';
+import {
+  matchesAnswerStrict,
+  resolveMcqCorrectChoice,
+  computeTryYourselfVerdict,
+  type Choice,
+} from './tryYourselfAnswer';
 
-/** Compare a student's typed answer against the expected answer with
- *  format-aware tolerance:
- *  - numeric: parse both sides as numbers; "024" matches "24", "0.5" matches "1/2".
- *  - mcq: case-insensitive, trim, collapse internal whitespace.
- *  - frq: returns TRISTATE — true (string-equal after normalization),
- *    false (numeric mismatch only), or null (undecidable; defer to the
- *    brain). String mismatches in FRQ space are too unreliable to assert
- *    "wrong" — students write "sin" when expected is "sin(θ)", "1/√2"
- *    when expected is "√2/2", etc. The brain reads the marker and
- *    judges algebraic equivalence.
- *
- *  Returning null in the FRQ branch keeps the renderer from showing
- *  "Not quite. Expected: X" when the answer is plausibly correct in a
- *  different form.
- */
-export function matchesAnswerStrict(submitted: string, expected: string, format: 'mcq' | 'frq' | 'numeric' | undefined): boolean | null {
-  const s = submitted.trim();
-  const e = expected.trim();
-  if (!s || !e) return null;
-  // Numeric path: try to parse and compare values, including simple fractions.
-  const tryParse = (v: string): number | null => {
-    const cleaned = v.replace(/,/g, '').replace(/\s+/g, '');
-    if (cleaned === '') return null;
-    const frac = cleaned.match(/^(-?\d+)\/(-?\d+)$/);
-    if (frac) {
-      const num = Number(frac[1]);
-      const den = Number(frac[2]);
-      if (Number.isFinite(num) && Number.isFinite(den) && den !== 0) return num / den;
-      return null;
-    }
-    const n = Number(cleaned);
-    return Number.isFinite(n) ? n : null;
-  };
-  const sn = tryParse(s);
-  const en = tryParse(e);
-  if (sn !== null && en !== null) {
-    return Math.abs(sn - en) < 1e-9;
-  }
-  const norm = (v: string) =>
-    v.toLowerCase()
-      .replace(/^[a-z]\s*=\s*/, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  if (format === 'numeric') {
-    // Format said numeric but parsing failed — strict string equality.
-    return norm(s) === norm(e);
-  }
-  if (format === 'mcq') {
-    return norm(s) === norm(e);
-  }
-  // FRQ: only assert TRUE on exact normalized match; otherwise undecidable.
-  if (norm(s) === norm(e)) return true;
-  return null;
-}
-
-interface Choice {
-  id: string;
-  text: string;
-  correct?: boolean;
-}
+// matchesAnswerStrict / resolveMcqCorrectChoice / computeTryYourselfVerdict
+// now live in ./tryYourselfAnswer.ts (a plain .ts module, importable from a
+// bare `tsx` test run without pulling in InlineMathText's katex CSS import).
+// Re-exported here for compatibility with any existing imports of this file.
+export { matchesAnswerStrict };
 
 interface TryYourselfRendererProps {
   title?: string;
@@ -112,9 +63,16 @@ export function TryYourselfRenderer({
     onSubmit?.(answer.trim());
   };
 
-  const isCorrect = submitted && expectedAnswer
-    ? matchesAnswerStrict(submitted, expectedAnswer, responseFormat)
+  // The SAME resolved choice drives the row ✓ affordance, the verdict
+  // text, and (via WhiteboardCanvas's onTryYourselfAnswer relay) what the
+  // brain is told — see tryYourselfAnswer.ts for the bug this fixes.
+  const mcqCorrectChoice = responseFormat === 'mcq' ? resolveMcqCorrectChoice(choices, expectedAnswer) : undefined;
+  const isCorrect = submitted
+    ? computeTryYourselfVerdict(submitted, expectedAnswer, responseFormat, choices)
     : null;
+  // mcq can resolve a verdict purely from choices[].correct even when no
+  // expectedAnswer text was authored; frq/numeric still require expectedAnswer.
+  const hasVerdictSignal = responseFormat === 'mcq' ? (expectedAnswer != null || !!mcqCorrectChoice) : expectedAnswer != null;
 
   return (
     <div className="my-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-lg max-w-xl">
@@ -127,7 +85,12 @@ export function TryYourselfRenderer({
         <div className="space-y-2">
           {choices.map((c) => {
             const isPick = submitted === c.id || submitted === c.text;
-            const correctMark = submitted ? (c.correct ? '✓' : (isPick ? '✗' : '')) : '';
+            // Mark the row using the SAME resolved choice as the verdict
+            // text below — not the raw per-choice `c.correct` flag, which
+            // can be absent while resolveMcqCorrectChoice still infers the
+            // correct option from expectedAnswer.
+            const isMarkedCorrect = !!mcqCorrectChoice && mcqCorrectChoice.id === c.id;
+            const correctMark = submitted ? (isMarkedCorrect ? '✓' : (isPick ? '✗' : '')) : '';
             return (
               <button
                 key={c.id}
@@ -135,7 +98,7 @@ export function TryYourselfRenderer({
                 onClick={() => submit(c.id)}
                 className={`block w-full text-left px-3 py-2 rounded border transition ${
                   submitted
-                    ? c.correct
+                    ? isMarkedCorrect
                       ? 'bg-green-50 border-green-400'
                       : isPick
                       ? 'bg-red-50 border-red-400'
@@ -198,14 +161,14 @@ export function TryYourselfRenderer({
           or no expected answer), don't assert wrong/right — show a
           neutral "submitted, the tutor will respond" hint and defer to
           the brain. */}
-      {submitted && expectedAnswer != null && (
+      {submitted && hasVerdictSignal && (
         <div className={`mt-3 text-sm font-medium ${
           isCorrect === true ? 'text-green-700'
           : isCorrect === false ? 'text-red-700'
           : 'text-gray-600'
         }`}>
           {isCorrect === true ? '✓ Correct!'
-          : isCorrect === false ? <>Not quite. Expected: <InlineMathText text={expectedAnswer} /></>
+          : isCorrect === false ? <>Not quite. Expected: <InlineMathText text={mcqCorrectChoice?.text ?? expectedAnswer ?? ''} /></>
           : 'Submitted — the tutor is reviewing your answer.'}
         </div>
       )}
