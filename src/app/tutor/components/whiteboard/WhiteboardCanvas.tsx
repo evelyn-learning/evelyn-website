@@ -94,7 +94,7 @@ import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { InkNotesOverlay } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
-import { shouldFollowNewRender } from '@/lib/tutor/whiteboard/view-follow';
+import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -335,8 +335,14 @@ export function WhiteboardCanvas({
   // actions do (see the brief's "define interacted honestly").
   const lastInteractionAtRef = useRef<number | null>(null);
   const markInteraction = useCallback(() => {
+    // Replay (chrome='replay') never reads lastInteractionAtRef — its
+    // view-follow branch below is unconditional chase-newest, byte-identical
+    // to pre-X5 behavior — so marking an interaction from a reviewer's scrub
+    // click (goPrev/goToPage's page-pill share this same header with 'full')
+    // would be a pure no-op write. Skip it there.
+    if (chrome === 'replay') return;
     lastInteractionAtRef.current = Date.now();
-  }, []);
+  }, [chrome]);
   // Surfaces "new content landed on page N but the anti-yank grace held the
   // view" so a host can show a subtle affordance (SessionStage's switcher).
   // Cleared once the student reaches that page (see the effect right below)
@@ -542,10 +548,31 @@ export function WhiteboardCanvas({
     return () => { delete (window as any).__tutorFinishDrawOn; };
   }, [finishAll]);
 
-  // Handle goToPage navigation: find the target page by title
+  // Handle goToPage navigation: find the target page by title.
+  //
+  // Task X5 fix-wave (Finding 1): this used to re-scan the FULL commands
+  // array on every commands.length change and unconditionally re-apply
+  // whichever goToPage was last in the ENTIRE history — with no "already
+  // processed" guard, unlike its scrollTo/view-follow siblings (flagged as
+  // a Concern in the original X5 report). That let a stale nav from turn N
+  // silently win the render race in an unrelated later commit: whenever
+  // the view-follow effect below held the view (anti-yank grace, or its
+  // own trailing-nav check), THIS effect was still re-asserting turn N's
+  // old goToPage target every single time — pinning the view away from a
+  // brand-new render in turn N+3 even though nothing in turn N+3 itself
+  // navigated anywhere (the user's incident shape: answer revealed on page
+  // 3, view stuck on page 2). `lastProcessedGoToIndexRef` scopes this to
+  // goToPage commands added since the last run, exactly like
+  // `lastScrollIndexRef` below — a nav is applied ONCE, when it's new.
+  const lastProcessedGoToIndexRef = useRef(-1);
   useEffect(() => {
-    const lastGoTo = [...commands].reverse().find((cmd) => cmd.action === 'goToPage');
-    if (lastGoTo && lastGoTo.action === 'goToPage') {
+    const pendingGoTos = commands
+      .map((cmd, i) => ({ cmd, i }))
+      .filter((x) => x.cmd.action === 'goToPage' && x.i > lastProcessedGoToIndexRef.current);
+    if (pendingGoTos.length === 0) return;
+    lastProcessedGoToIndexRef.current = pendingGoTos[pendingGoTos.length - 1].i;
+    const lastGoTo = pendingGoTos[pendingGoTos.length - 1].cmd;
+    if (lastGoTo.action === 'goToPage') {
       // Title is the primary handle (the orchestrator translates a Board Map
       // page number → title before this runs). Fall back to the page number
       // as an index only if no title matched.
@@ -743,16 +770,10 @@ export function WhiteboardCanvas({
     // new content (2026-07-08 session portal-9549e3af: "I'm seeing an example
     // of students commuting" while the tutor discussed a different figure). If
     // a teaching render comes AFTER the last nav, the render is what the turn
-    // ends on — follow it.
-    let lastNav = -1;
-    let lastRender = -1;
-    for (let k = added.length - 1; k >= 0; k--) {
-      const a = added[k].action;
-      if (lastNav < 0 && (a === 'goToPage' || a === 'scrollTo')) lastNav = k;
-      if (lastRender < 0 && !META.has(a)) lastRender = k;
-      if (lastNav >= 0 && lastRender >= 0) break;
-    }
-    if (lastNav >= 0 && lastNav > lastRender) return;
+    // ends on — follow it. Order-only decision lifted to the pure, tested
+    // `trailingNavSuppressesFollow` (view-follow.ts) — see its doc comment for
+    // why `added` (never the full commands log) is the only safe input here.
+    if (trailingNavSuppressesFollow(added.map((c) => c.action))) return;
     for (let k = added.length - 1; k >= 0; k--) {
       const c = added[k];
       if (META.has(c.action)) continue;
@@ -778,7 +799,10 @@ export function WhiteboardCanvas({
             });
         if (follow) {
           setCurrentIndex(target);
-          setPendingFollowIndex(null);
+          // Only clear the badge for the page IT was surfacing — a follow
+          // to some OTHER page (e.g. page 7) must not silently dismiss an
+          // unrelated still-unseen pending badge (e.g. page 5's).
+          setPendingFollowIndex((prev) => (prev !== null && target === prev ? null : prev));
         } else if (target !== cur) {
           // Anti-yank grace held the view — surface the affordance so a
           // host can hint that new content landed elsewhere.

@@ -9,7 +9,7 @@
  *
  * Run: npx tsx scripts/test-view-follow.ts
  */
-import { shouldFollowNewRender } from '../src/lib/tutor/whiteboard/view-follow';
+import { shouldFollowNewRender, trailingNavSuppressesFollow } from '../src/lib/tutor/whiteboard/view-follow';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {
@@ -67,6 +67,58 @@ check(
 check(
   'custom graceMs respected',
   shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 2_000, now: NOW, graceMs: 1_000 }),
+  true,
+);
+
+// --- trailingNavSuppressesFollow: the order-only "does the batch's trailing
+// nav win over the newest render" call, lifted out of WhiteboardCanvas's
+// view-follow effect (Task X5 fix-wave, Finding 1). ---
+
+// A batch containing ONLY a fresh render (no nav at all in THIS slice) must
+// never be suppressed — this is the wiring-level guarantee that closes the
+// cross-turn incident shape: as long as the caller correctly scopes
+// `addedActions` to commands added since its own last-processed watermark
+// (never the full history), a stale nav from an earlier, already-processed
+// turn cannot appear here to silently pin a later turn's brand-new reveal.
+check(
+  'batch with only a new render, no nav in this slice → does not suppress',
+  trailingNavSuppressesFollow(['render']),
+  false,
+);
+
+// goToPage/scrollTo BEFORE the render in the same batch — the render is the
+// batch's final visual intent → follow it (2026-06-19 Img13 shape, and the
+// straightforward turn-order case the original design targeted).
+check(
+  'nav precedes render in the batch → does not suppress (render wins)',
+  trailingNavSuppressesFollow(['goToPage', 'render']),
+  false,
+);
+
+// render THEN a trailing nav — the nav is the batch's final visual intent,
+// and the scrollTo/goToPage-handling effect already positioned the view
+// there → suppress (legitimate same-batch case the X5 order-check exists
+// for).
+check(
+  'render precedes a trailing nav in the batch → suppresses (nav wins)',
+  trailingNavSuppressesFollow(['render', 'goToPage']),
+  true,
+);
+
+// The exact regression shape from the 2026-07-08 portal-9549e3af session:
+// scrollTo(earlier figure) … scribble (meta, ignored) … NEW render. The
+// render is what the turn ends on → follow it.
+check(
+  'scrollTo(earlier figure) … scribble … NEW render → does not suppress',
+  trailingNavSuppressesFollow(['scrollTo', 'scribble', 'render']),
+  false,
+);
+
+// A nav with nothing to follow at all (no render in the slice) — suppression
+// is moot but the function should still report the order honestly.
+check(
+  'nav-only batch, no render present → reports suppress (nothing to follow anyway)',
+  trailingNavSuppressesFollow(['goToPage']),
   true,
 );
 

@@ -43,3 +43,53 @@ export function shouldFollowNewRender(args: {
   if (lastInteractionAt != null && now - lastInteractionAt < graceMs) return false;
   return true;
 }
+
+/** Actions that render nothing new by themselves — bookkeeping/markers, not
+ *  teaching content. Mirrors WhiteboardCanvas's own META set. */
+const DEFAULT_META_ACTIONS = new Set([
+  'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
+]);
+const DEFAULT_NAV_ACTIONS = new Set(['goToPage', 'scrollTo']);
+
+/**
+ * Does this batch of newly-added command actions end on an explicit nav
+ * (goToPage / scrollTo) that lands AFTER the newest teaching render in the
+ * SAME batch? If so, the scrollTo/goToPage-handling effects already
+ * positioned the view to the nav's target — following the render too would
+ * fight that explicit, more-recent intent (2026-07-08 session
+ * portal-9549e3af: a turn shaped [scrollTo(earlier figure) … scribble …
+ * NEW render] used to leave the view parked on the earlier page).
+ *
+ * Order-only: whichever of {newest nav, newest render} occurs LATER in
+ * `addedActions` wins. A nav that precedes the render (or isn't present at
+ * all) never suppresses.
+ *
+ * Task X5 fix-wave (Finding 1): this function must only ever be called
+ * with the SLICE of actions added since the caller's own last-processed
+ * watermark (see WhiteboardCanvas's `prevFollowCountRef`) — never the full
+ * command log. A batch containing only a fresh render (no nav in THIS
+ * slice) can never be suppressed here, by construction: a stale nav from
+ * an earlier, already-processed turn is not part of `addedActions` and so
+ * cannot silently pin a later turn's brand-new reveal (the user's
+ * incident: a try-yourself ANSWER revealed on page 3 while the student's
+ * view stayed parked on page 2, with nothing in that turn navigating
+ * anywhere). Scoping the watermark correctly is the caller's job; this
+ * function is the pure "given this slice, does the trailing nav win" call,
+ * kept separate so the order logic is script-testable without mounting
+ * React.
+ */
+export function trailingNavSuppressesFollow(
+  addedActions: readonly string[],
+  navActions: ReadonlySet<string> = DEFAULT_NAV_ACTIONS,
+  metaActions: ReadonlySet<string> = DEFAULT_META_ACTIONS,
+): boolean {
+  let lastNav = -1;
+  let lastRender = -1;
+  for (let k = addedActions.length - 1; k >= 0; k--) {
+    const a = addedActions[k];
+    if (lastNav < 0 && navActions.has(a)) lastNav = k;
+    if (lastRender < 0 && !metaActions.has(a)) lastRender = k;
+    if (lastNav >= 0 && lastRender >= 0) break;
+  }
+  return lastNav >= 0 && lastNav > lastRender;
+}
