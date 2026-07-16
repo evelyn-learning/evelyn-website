@@ -23,6 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { shouldForceReconnectOnWatchdog } from '@/lib/tutor/voice/perception-watchdog';
+import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 
 export type PerceptionState =
   | 'disabled'
@@ -90,10 +91,19 @@ export interface UsePerceptionWSResult {
   /** Mute/unmute the perception mic. Wired to the student mute button so
    *  muting actually stops input now that perception owns the mic (Stage 4). */
   setMuted: (muted: boolean) => void;
+  /** Recent mic-energy frames (scaled 0..1 level + Date.now() timestamp),
+   *  pruned to the last ~1.5s. Feeds the sustained-energy barge-in gate
+   *  (Task V1) so the stage-3 kill can require sustained mic energy before
+   *  aborting the tutor during TTS. Returns a snapshot copy. */
+  getEnergyWindow: () => BargeInFrame[];
 }
 
 const PERCEPTION_SAMPLE_RATE = 24000;
 const TRANSCRIPTION_WATCHDOG_MS = 12000;
+// How much mic-energy history the barge-in gate keeps. Comfortably exceeds the
+// sustain window (400ms) so a full run is always visible; bounded so the ring
+// never grows unbounded (~18 frames at the ~85ms cadence).
+const ENERGY_WINDOW_MS = 1500;
 
 interface ResamplerState { phase: number; carry: number | null }
 
@@ -202,6 +212,11 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   // transcribing ambient sound (observed: train announcements fired brain
   // turns while "muted"). When true, onaudioprocess stops appending audio.
   const mutedRef = useRef<boolean>(false);
+  // Rolling mic-energy window (Task V1). Each onaudioprocess frame pushes its
+  // scaled level + Date.now(); pruned to the last ENERGY_WINDOW_MS. Read by the
+  // sustained-energy barge-in gate to decide whether a 'speaking'-state
+  // speech_started is a real barge-in (sustained) or a short TTS echo blip.
+  const energyWindowRef = useRef<BargeInFrame[]>([]);
   const sessionUpdateSentRef = useRef<boolean>(false);
   const perceptionT0Ref = useRef<number>(0);
   const speechStartedAtRef = useRef<number>(0);
@@ -234,6 +249,22 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     }
   }, []);
 
+  // Append one mic-energy frame and prune the window to ENERGY_WINDOW_MS.
+  // Stable (no deps) so startMic's long-lived onaudioprocess closure can call
+  // it without re-instantiating.
+  const pushEnergyFrame = useCallback((energy: number) => {
+    const now = Date.now();
+    const w = energyWindowRef.current;
+    w.push({ tMs: now, energy });
+    const cutoff = now - ENERGY_WINDOW_MS;
+    while (w.length > 0 && w[0].tMs < cutoff) w.shift();
+  }, []);
+
+  // Snapshot copy of the current energy window for the barge-in gate.
+  const getEnergyWindow = useCallback((): BargeInFrame[] => {
+    return energyWindowRef.current.slice();
+  }, []);
+
   const teardownMic = useCallback(() => {
     if (processorRef.current) {
       try { processorRef.current.disconnect(); } catch {}
@@ -243,6 +274,9 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       mediaStreamRef.current = null;
     }
+    // Drop stale energy history so a later re-start can't read pre-teardown
+    // frames as a live barge-in.
+    energyWindowRef.current = [];
   }, []);
 
   const teardownWS = useCallback(() => {
@@ -328,7 +362,12 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
         // Muted: don't forward audio to the perception transcriber, and report
         // a flat level so the "being heard" meter goes calm.
-        if (mutedRef.current) { try { onMicLevelRef.current?.(0); } catch {} return; }
+        if (mutedRef.current) {
+          try { onMicLevelRef.current?.(0); } catch {}
+          // Record silence so a gate armed just before mute reads quiet.
+          pushEnergyFrame(0);
+          return;
+        }
         const inputData = e.inputBuffer.getChannelData(0);
         // Live mic amplitude (RMS) for the "being heard" indicator. Cheap over
         // 4096 samples; this processor fires ~12×/sec so no extra throttle is
@@ -336,7 +375,11 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
         let sumSq = 0;
         for (let i = 0; i < inputData.length; i++) sumSq += inputData[i] * inputData[i];
         const rms = Math.sqrt(sumSq / inputData.length);
-        try { onMicLevelRef.current?.(Math.min(1, rms * 6)); } catch {}
+        const level = Math.min(1, rms * 6);
+        try { onMicLevelRef.current?.(level); } catch {}
+        // Feed the sustained-energy barge-in gate (Task V1). Same scaled level
+        // the "being heard" meter uses, so ENERGY_THRESHOLD is calibrated on it.
+        pushEnergyFrame(level);
         const resampled = captureRate === PERCEPTION_SAMPLE_RATE
           ? inputData
           : resampleLinear(inputData, captureRate, PERCEPTION_SAMPLE_RATE, resamplerState);
@@ -362,7 +405,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       onErrorRef.current?.(e);
       setState('error');
     }
-  }, [logPrefix, setState]);
+  }, [logPrefix, setState, pushEnergyFrame]);
 
   const handleMessage = useCallback((evt: MessageEvent) => {
     let data: { type?: string; [k: string]: unknown };
@@ -630,5 +673,5 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     console.warn(`${logPrefix} mic ${muted ? 'muted' : 'unmuted'}`);
   }, [logPrefix]);
 
-  return { state, connect, disconnect, setMuted };
+  return { state, connect, disconnect, setMuted, getEnergyWindow };
 }

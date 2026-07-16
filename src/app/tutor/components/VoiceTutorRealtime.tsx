@@ -127,7 +127,12 @@ import {
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
+  BARGEIN_SUSTAIN_MS,
+  BARGEIN_ENERGY_THRESHOLD,
+  BARGEIN_GATE_POLL_MS,
+  BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
+import { shouldFireBargeInKill } from '@/lib/tutor/voice/bargein-gate';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -1028,6 +1033,20 @@ export function VoiceTutorRealtime({
   const resumeSpeakTextRef = useRef<((sentences: string[]) => void) | null>(null);
   // Resume-from-cut (P5): read the in-flight sentence's played fraction at cut time.
   const getCurrentSentenceFractionRef = useRef<(() => number) | null>(null);
+  // Sustained-energy barge-in gate (Task V1). getPerceptionEnergyWindowRef is
+  // wired to usePerceptionWS.getEnergyWindow (OpenAI perception only); null when
+  // the Ink2 hook owns the mic (no energy window → gate falls back to instant).
+  // bargeInGateTimerRef holds the poll that waits out the sustain window before
+  // a 'speaking'-state speech_started is allowed to fire the stage-3 kill.
+  const getPerceptionEnergyWindowRef = useRef<(() => { tMs: number; energy: number }[]) | null>(null);
+  const bargeInGateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Never leak the sustain-gate poll past unmount.
+  useEffect(() => () => {
+    if (bargeInGateTimerRef.current) {
+      clearInterval(bargeInGateTimerRef.current);
+      bargeInGateTimerRef.current = null;
+    }
+  }, []);
   // Stage 4 regression fix (2026-06-16): drive the 'processing' ("Thinking…")
   // indicator from the brain orchestrator. realtime is defined later in
   // render order, so reach it through a ref (same pattern as the queue refs).
@@ -11578,32 +11597,38 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
         return;
       }
-      if ((canStage2 || canStage3) && !perceptionInterruptCheckpointRef.current) {
+      // ── The stage-2/3 kill body, extracted so it can fire EITHER instantly
+      // (non-'speaking' states — today's behavior) OR deferred behind the
+      // sustained-energy gate (Task V1, 'speaking' only). Reads live refs, so
+      // deferral is safe. All guards (checkpoint / ctx / cancel-storm breaker)
+      // live inside and are evaluated at ACTUAL fire time — cancel-storm
+      // semantics unchanged, and a gate that never passes records NO cancel.
+      const runPerceptionKill = (cancelStage: 'processing' | 'speaking') => {
+        if (perceptionInterruptCheckpointRef.current) return;
         const ctx = lastBrainCallContextRef.current;
         // For Stage 3 'speaking' cancels, the brain may already have
         // finished emitting (just TTS playing out the queue) — ctx is
         // still set from the most recent brain call so RESTORE/MERGE
         // have an anchor. brain abort below is a no-op if not in flight.
         if (!ctx) {
-          console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (prod=${prodState})`);
+          console.warn(`[PERCEPTION] cancel skipped: no lastBrainCallContext (stage=${cancelStage})`);
           return;
         }
         // Cancel-storm breaker: see retro-cancel site. Without this, a
         // student re-speaking into silence aborts every nascent reply
         // and no turn ever completes (session-1783615559112).
         if (!cancelStormRef.current.allowCancel(Date.now())) {
-          console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, prod=${prodState})`);
-          onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${prodState}`);
+          console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
+          onDebugEvent?.('perception_cancel_storm_suppressed', `stage=${cancelStage}`);
           return;
         }
-        const cancelStage: 'processing' | 'speaking' = canStage3 ? 'speaking' : 'processing';
-        const stageLabel = canStage3 ? 'STAGE-3' : 'STAGE-2';
+        const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
         console.warn(
-          `[PERCEPTION] ${stageLabel} cancel: aborting in '${prodState}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
+          `[PERCEPTION] ${stageLabel} cancel: aborting in '${cancelStage}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
         );
         onDebugEvent?.(
-          canStage3 ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
-          `prev=${prodState}`,
+          cancelStage === 'speaking' ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
+          `stage=${cancelStage}`,
         );
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
@@ -11647,10 +11672,79 @@ export function VoiceTutorRealtime({
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
+      };
+      // A fresh onset supersedes any pending sustain gate.
+      if (bargeInGateTimerRef.current) {
+        clearInterval(bargeInGateTimerRef.current);
+        bargeInGateTimerRef.current = null;
+      }
+      // Stage 2 ('processing'): INSTANT kill — unchanged, no energy gate. The
+      // brain is only thinking (no TTS to echo), so there is nothing for the
+      // tutor's own voice to trigger; today's fast cancel stands.
+      if (canStage2) {
+        runPerceptionKill('processing');
+        return;
+      }
+      // Stage 3 ('speaking'): SUSTAINED-ENERGY GATE (Task V1). The tutor's TTS
+      // echoes into the mic and fires this speech_started; killing here on the
+      // raw onset cuts the tutor off on its own voice (session portal-81f2b582).
+      // Echo bursts are short/playback-correlated; a genuine barge-in is
+      // sustained. So poll the energy window and only kill once mic energy has
+      // stayed above threshold for ≥ BARGEIN_SUSTAIN_MS. If sustain is never met
+      // the speech_started is treated as if it never fired for KILL purposes —
+      // later transcript classification (V2/V3) still proceeds independently.
+      if (canStage3) {
+        const getWindow = getPerceptionEnergyWindowRef.current;
+        if (!getWindow) {
+          // No energy signal available (Ink2 owns the mic) → preserve prior
+          // instant behavior rather than silently disabling barge-in.
+          runPerceptionKill('speaking');
+          return;
+        }
+        const gateStartedAt = Date.now();
+        const speechStartMs = gateStartedAt; // onset in the Date.now() domain
+        onDebugEvent?.('perception_bargein_gate_armed', `sustain=${BARGEIN_SUSTAIN_MS}ms`);
+        bargeInGateTimerRef.current = setInterval(() => {
+          const now = Date.now();
+          // Abandon the gate if the tutor has stopped talking (nothing left to
+          // interrupt) or the safety cap elapsed (never leak a live interval).
+          if (productionStateRef.current !== 'speaking' || now - gateStartedAt > BARGEIN_GATE_MAX_MS) {
+            if (bargeInGateTimerRef.current) {
+              clearInterval(bargeInGateTimerRef.current);
+              bargeInGateTimerRef.current = null;
+            }
+            return;
+          }
+          const fire = shouldFireBargeInKill({
+            state: 'speaking',
+            speechStartMs,
+            nowMs: now,
+            frames: getWindow(),
+            energyThreshold: BARGEIN_ENERGY_THRESHOLD,
+            sustainMs: BARGEIN_SUSTAIN_MS,
+          });
+          if (fire) {
+            if (bargeInGateTimerRef.current) {
+              clearInterval(bargeInGateTimerRef.current);
+              bargeInGateTimerRef.current = null;
+            }
+            onDebugEvent?.('perception_bargein_gate_passed', `latencyMs=${now - gateStartedAt}`);
+            runPerceptionKill('speaking');
+          }
+        }, BARGEIN_GATE_POLL_MS);
+        return;
       }
   }, [onDebugEvent, perceptionStage, realtime]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+      // Task V1: the utterance ended — if a sustained-energy barge-in gate is
+      // still pending, the onset never sustained (echo blip / brief noise), so
+      // cancel it. The gate's own energy check would reach the same verdict; this
+      // just stops the poll promptly.
+      if (bargeInGateTimerRef.current) {
+        clearInterval(bargeInGateTimerRef.current);
+        bargeInGateTimerRef.current = null;
+      }
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
       // "Being heard" indicator: student stopped. Enter the "Got that — one
@@ -11721,6 +11815,10 @@ export function VoiceTutorRealtime({
     onError: perceptionOnError,
   });
   const perception = TUTOR_STT_ENGINE_INK2 ? perceptionInk2 : perceptionWS;
+  // Task V1: feed the sustained-energy barge-in gate from the OpenAI perception
+  // hook's energy window. Ink2 has no window → null → gate falls back to today's
+  // instant kill (no regression on that path).
+  getPerceptionEnergyWindowRef.current = TUTOR_STT_ENGINE_INK2 ? null : perceptionWS.getEnergyWindow;
   // Reference for lint cleanliness; explicit read so a future stage that
   // surfaces a status pill / closes barge-in gaps has something to consume.
   void perception.state;

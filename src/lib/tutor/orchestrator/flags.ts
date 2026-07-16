@@ -141,6 +141,30 @@ export const TURN_CAP_HARD_SENTENCES = 8;
 // next-turn enforcement point as the sentence cap (post-stream; retry
 // would re-narrate a turn the student already heard).
 export const TURN_CAP_WORDS = 110;
+// Sustained-energy barge-in gate (2026-07-15, echo fix layer 1 — Task V1).
+// ROOT CAUSE (session portal-81f2b582): the tutor's own TTS echoes into the
+// mic, the perception VAD fires speech_started, and the stage-3 kill aborts
+// the tutor mid-sentence on its OWN echo. Echo bursts are SHORT and correlated
+// with playback; a genuine student barge-in is SUSTAINED. So DURING 'speaking'
+// ONLY, the kill is withheld until mic energy stays above BARGEIN_ENERGY_
+// THRESHOLD continuously for BARGEIN_SUSTAIN_MS. Every other production state
+// keeps today's INSTANT kill (latency added only during TTS). Pure decision in
+// src/lib/tutor/voice/bargein-gate.ts (test:bargein-gate). V2/V3 add the
+// transcript self-voice classification layer on top; this is only the gate.
+//   - SUSTAIN_MS: the added latency a real barge-in pays during TTS. Sized so a
+//     "wait, stop" clears it easily while short echo bursts never do. Kept ≤ the
+//     ~500ms global barge-in budget.
+//   - ENERGY_THRESHOLD: operates on the SCALED 0..1 "being heard" mic level
+//     usePerceptionWS emits (onMicLevel = min(1, rms*6)); normal speech lands
+//     mid-range (~0.5), calm ambient near 0. Set clear of the ambient floor.
+//   - GATE_POLL_MS: how often the wiring re-evaluates the growing energy window
+//     while a speaking-onset waits out the sustain window.
+//   - GATE_MAX_MS: safety cap so a pending gate never leaks a live interval if
+//     speech_stopped / a state change is somehow missed.
+export const BARGEIN_SUSTAIN_MS = 400;
+export const BARGEIN_ENERGY_THRESHOLD = 0.15;
+export const BARGEIN_GATE_POLL_MS = 50;
+export const BARGEIN_GATE_MAX_MS = 5000;
 // Validate-before-speak (Pillar 2 of the robustness track,
 // project_tutor_validate_before_speak). Rolling micro-hold: after the
 // first clean tool opens the gate, subsequent sentences stay BUFFERED
