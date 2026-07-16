@@ -17,6 +17,8 @@ import { strict as assert } from 'node:assert';
 import {
   shouldFireBargeInKill,
   shouldFireDeferredBargeInKill,
+  shouldDrainAfterOrphanedFetch,
+  shouldFireSpeakingWatchdog,
   type BargeInFrame,
 } from '../src/lib/tutor/voice/bargein-gate';
 import { BARGEIN_SUSTAIN_MS } from '../src/lib/tutor/orchestrator/flags';
@@ -209,6 +211,101 @@ function main() {
     assert.equal(
       shouldFireDeferredBargeInKill({ state: 'speaking', speechStopped: false, elapsedMs: SUSTAIN, sustainMs: SUSTAIN }),
       true, 'fires by exactly sustainMs');
+  });
+
+  // ── Task X3 fix-wave (review finding 2): orphaned-fetch drain guard ──
+  console.log('\nOrphaned-fetch drain guard — shouldDrainAfterOrphanedFetch\n');
+
+  test('true wedge shape (all four false/empty, clearSpeechQueue already reset them) → drain', () => {
+    const drain = shouldDrainAfterOrphanedFetch({
+      isPlaying: false,
+      audioQueueLen: 0,
+      speakTextInFlight: false,
+      speakTextQueueLen: 0,
+    });
+    assert.equal(drain, true, 'the confirmed wedge shape must drain to idle');
+  });
+
+  test('new-turn mid-fetch shape (new dispatch in flight, next sentence queued) → NO drain', () => {
+    const drain = shouldDrainAfterOrphanedFetch({
+      isPlaying: false,
+      audioQueueLen: 0,
+      speakTextInFlight: true,
+      speakTextQueueLen: 1,
+    });
+    assert.equal(drain, false, 'an orphaned fetch resolving mid a NEW dispatch must not hijack it');
+  });
+
+  test('new-turn mid-fetch shape (in flight, no further sentences queued) → NO drain', () => {
+    const drain = shouldDrainAfterOrphanedFetch({
+      isPlaying: false,
+      audioQueueLen: 0,
+      speakTextInFlight: true,
+      speakTextQueueLen: 0,
+    });
+    assert.equal(drain, false, 'a live in-flight dispatch alone must block the drain');
+  });
+
+  test('audio already queued (chunk arrived, about to play) → NO drain', () => {
+    const drain = shouldDrainAfterOrphanedFetch({
+      isPlaying: false,
+      audioQueueLen: 1,
+      speakTextInFlight: false,
+      speakTextQueueLen: 0,
+    });
+    assert.equal(drain, false, 'a queued chunk means playback is not actually stranded');
+  });
+
+  test('a source is playing → NO drain (onended owns the transition)', () => {
+    const drain = shouldDrainAfterOrphanedFetch({
+      isPlaying: true,
+      audioQueueLen: 0,
+      speakTextInFlight: false,
+      speakTextQueueLen: 0,
+    });
+    assert.equal(drain, false, 'while something is playing its own onended must own the transition');
+  });
+
+  // ── Task X3 fix-wave (review finding 2): stuck-SPEAKING watchdog ──
+  console.log('\nStuck-SPEAKING watchdog — shouldFireSpeakingWatchdog\n');
+
+  test("speaking + silent past threshold (9s vs 8s) → fire", () => {
+    const fire = shouldFireSpeakingWatchdog({
+      state: 'speaking', isPlaying: false, silentForMs: 9000, thresholdMs: 8000,
+    });
+    assert.equal(fire, true, 'a genuinely stranded speaking pipeline past threshold must fire');
+  });
+
+  test("processing + 9s → NO fire (the 'processing'-pin variant is a different wedge, not covered here)", () => {
+    // A terminal TTS-fetch failure pins production state at 'processing', not
+    // 'speaking' — that variant is already self-healing via the `!float32`
+    // branch in sendOneSpeakTextViaOpenAITTS, which calls playNextAudio
+    // itself. This watchdog is scoped to 'speaking' only, by design.
+    const fire = shouldFireSpeakingWatchdog({
+      state: 'processing', isPlaying: false, silentForMs: 9000, thresholdMs: 8000,
+    });
+    assert.equal(fire, false, "the 'processing'-pin variant must not be caught by this watchdog");
+  });
+
+  test('speaking + still playing → NO fire (not actually stranded)', () => {
+    const fire = shouldFireSpeakingWatchdog({
+      state: 'speaking', isPlaying: true, silentForMs: 9000, thresholdMs: 8000,
+    });
+    assert.equal(fire, false, 'audio resumed since the clock started must not fire');
+  });
+
+  test('speaking + silent but under threshold → NO fire', () => {
+    const fire = shouldFireSpeakingWatchdog({
+      state: 'speaking', isPlaying: false, silentForMs: 7999, thresholdMs: 8000,
+    });
+    assert.equal(fire, false, 'under-threshold silence must not fire early');
+  });
+
+  test('speaking + silent exactly at threshold → fire (boundary, >=)', () => {
+    const fire = shouldFireSpeakingWatchdog({
+      state: 'speaking', isPlaying: false, silentForMs: 8000, thresholdMs: 8000,
+    });
+    assert.equal(fire, true, 'silentForMs === thresholdMs fires');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

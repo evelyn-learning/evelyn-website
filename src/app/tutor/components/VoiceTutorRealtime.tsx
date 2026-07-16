@@ -11779,6 +11779,18 @@ export function VoiceTutorRealtime({
           // BARGEIN_SUSTAIN_MS while the tutor is still 'speaking', the same
           // stage-3 kill fires. A short self-echo blip ends (speech_stopped ~264ms
           // in the live capture) well before that and is disarmed.
+          //
+          // Known asymmetry vs. V1's energy gate (X3 fix-wave, findings 3+4;
+          // documented, accepted as-is): this timer measures TIME between VAD
+          // events, not energy level. A sustained LOW-energy sound that Ink2's
+          // own VAD holds "in speech" for the full window (e.g. quiet
+          // background chatter, a fan, a soft continuous hum) reaches
+          // BARGEIN_SUSTAIN_MS and kills — where V1's energy gate would have
+          // required that same duration ABOVE `BARGEIN_ENERGY_THRESHOLD` and
+          // would not fire on a merely-sustained-but-quiet signal. No energy
+          // window exists on the Ink2 path to gate on, so this is the accepted
+          // trade-off: still bounded to BARGEIN_SUSTAIN_MS latency, still far
+          // better than the prior instant kill, just less selective than V1.
           const armedAt = Date.now();
           onDebugEvent?.('perception_bargein_deferred_armed', `sustain=${BARGEIN_SUSTAIN_MS}ms (ink2, no energy window)`);
           bargeInDeferredKillRef.current = setTimeout(() => {

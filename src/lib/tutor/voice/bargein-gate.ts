@@ -150,3 +150,87 @@ export function shouldFireDeferredBargeInKill(input: DeferredBargeInGateInput): 
   // Sustained through the window while still speaking → real barge-in.
   return input.elapsedMs >= input.sustainMs;
 }
+
+/**
+ * Orphaned-fetch drain guard (Task X3 fix-wave, finding 1 — review of the
+ * epoch-guard branch at `useOpenAIRealtime.ts`'s `sendOneSpeakTextViaOpenAITTS`).
+ *
+ * ROOT CAUSE this closes: the original fix drained on `!isPlaying &&
+ * audioQueueLen === 0` alone. That shape is ALSO true for an entirely
+ * legitimate in-progress turn: sentence K's chunk hasn't arrived yet
+ * (`isPlaying` still false, pre-first-chunk), a NEW dispatch is in flight
+ * (`speakTextInFlightRef` true) with sentence M+1 already queued
+ * (`speakTextQueueRef` non-empty) — an orphaned PRE-KILL fetch (epoch
+ * mismatch) resolving during exactly that mid-fetch window would wrongly
+ * fire `playNextAudio()` and hijack dispatch, reordering/overlapping
+ * sentences. The wedge this guards against instead has ALL FOUR of these
+ * false/empty at once: `clearSpeechQueue` (the barge-in that bumped the
+ * epoch) resets `speakTextInFlightRef` to false and empties
+ * `speakTextQueueRef` as part of the SAME kill that invalidated this
+ * dispatch, so in the true wedge there is nothing else in flight or queued
+ * to hijack — draining is safe. Requiring all four closes the reorder race
+ * while still draining the real wedge.
+ *
+ * Pure: no React, no refs — script-testable.
+ */
+export interface OrphanedFetchDrainInput {
+  /** Is a client-side audio source currently playing? */
+  isPlaying: boolean;
+  /** Number of decoded chunks waiting in the playback queue. */
+  audioQueueLen: number;
+  /** Is a NEW TTS fetch (a different dispatch than the orphaned one) in flight? */
+  speakTextInFlight: boolean;
+  /** Number of sentences queued behind that in-flight dispatch. */
+  speakTextQueueLen: number;
+}
+
+export function shouldDrainAfterOrphanedFetch(input: OrphanedFetchDrainInput): boolean {
+  return (
+    !input.isPlaying &&
+    input.audioQueueLen === 0 &&
+    !input.speakTextInFlight &&
+    input.speakTextQueueLen === 0
+  );
+}
+
+/**
+ * Stuck-'speaking' watchdog fire decision (Task X3 fix-wave, finding 2 —
+ * review of the defensive watchdog in `useOpenAIRealtime.ts`).
+ *
+ * The interval's own tick re-derives "stranded" (`state === 'speaking' &&
+ * !isPlaying && audioQueueLen === 0`) to start/hold the `silentForMs` clock;
+ * this predicate is the fire-time decision once that clock has been running,
+ * re-checking `state`/`isPlaying` defensively at the moment of the check
+ * against the threshold so a late recovery (audio resumed between ticks)
+ * cannot still fire on a stale elapsed value.
+ *
+ * NOTE — the 'processing'-pin variant is a DIFFERENT wedge shape and is NOT
+ * covered by this watchdog: a terminal TTS-fetch failure pins production
+ * state at `'processing'` (see `sendOneSpeakTextViaOpenAITTS`'s `!float32`
+ * branch), never `'speaking'`, so `state !== 'speaking'` always returns
+ * false here. That variant is already handled at its own site — the
+ * `!float32` branch skips the failed sentence and drives `playNextAudio`
+ * itself rather than relying on any watchdog.
+ *
+ * Pure: no React, no refs, no `Date.now()` — script-testable.
+ */
+export interface SpeakingWatchdogInput {
+  /** Production state at the moment of the check. */
+  state: string;
+  /** Is a client-side audio source currently playing? */
+  isPlaying: boolean;
+  /** How long the pipeline has continuously looked stranded (ms). */
+  silentForMs: number;
+  /** Required stranded duration before the watchdog is allowed to fire. */
+  thresholdMs: number;
+}
+
+export function shouldFireSpeakingWatchdog(input: SpeakingWatchdogInput): boolean {
+  // Only 'speaking' can wedge this way. The 'processing'-pin variant
+  // (terminal TTS failure) is a separate shape covered elsewhere — see note
+  // above.
+  if (input.state !== 'speaking') return false;
+  // Audio resumed since the clock started — not stranded anymore.
+  if (input.isPlaying) return false;
+  return input.silentForMs >= input.thresholdMs;
+}

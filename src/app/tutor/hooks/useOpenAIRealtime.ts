@@ -14,6 +14,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDefinition } from './toolDefinitions';
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // OpenAI Realtime voice options
@@ -2736,7 +2737,26 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // queue is empty, drive the drain-to-idle explicitly so the turn always
         // ends cleanly. (When a source IS still playing, its onended owns the
         // transition — leave it alone.)
-        if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
+        //
+        // Fix-wave (X3 review, finding 1): the naive `!isPlaying &&
+        // audioQueueLen === 0` check ALSO matches a legitimate new-turn
+        // mid-fetch window (a NEW dispatch in flight with the next sentence
+        // already queued, chunk just not arrived yet) — an orphaned pre-kill
+        // fetch resolving in THAT window would wrongly hijack dispatch and
+        // reorder/overlap sentences. Gate on all four via the pure predicate;
+        // in the TRUE wedge all four are false/empty at once, because
+        // clearSpeechQueue (the barge-in that bumped the epoch and produced
+        // this orphaned fetch) resets speakTextInFlightRef and empties
+        // speakTextQueueRef as part of the SAME kill — nothing else is in
+        // flight or queued to hijack, so draining is safe.
+        if (
+          shouldDrainAfterOrphanedFetch({
+            isPlaying: isPlayingRef.current,
+            audioQueueLen: audioQueueRef.current.length,
+            speakTextInFlight: speakTextInFlightRef.current,
+            speakTextQueueLen: speakTextQueueRef.current.length,
+          })
+        ) {
           playNextAudio();
         }
         return;
@@ -3012,6 +3032,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // nothing will advance it, so force a clean drain. clearSpeechQueue bumps the
   // epoch (invalidating any parked fetch) and empties the queues; playNextAudio
   // then runs its empty-queue branch → 'drain' + return to listening/connected.
+  // Fix-wave (X3 review, finding 4): this watchdog is scoped to the
+  // 'speaking' + empty-pipeline strand ONLY. A DIFFERENT wedge variant pins
+  // production state at 'processing' instead — a terminal TTS-fetch failure
+  // (see `sendOneSpeakTextViaOpenAITTS`'s `!float32` branch a few hundred
+  // lines up) — and is NOT covered here (`shouldFireSpeakingWatchdog` returns
+  // false whenever `state !== 'speaking'`, by design). That variant is
+  // already self-healing: the `!float32` branch skips the failed sentence and
+  // calls `playNextAudio` itself, so no watchdog is needed for it.
   useEffect(() => {
     const id = setInterval(() => {
       const stranded =
@@ -3027,9 +3055,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         strandedSpeakingSinceRef.current = now;
         return;
       }
-      if (now - strandedSpeakingSinceRef.current >= STUCK_SPEAKING_WATCHDOG_MS) {
+      const silentForMs = now - strandedSpeakingSinceRef.current;
+      if (
+        shouldFireSpeakingWatchdog({
+          state: stateRef.current,
+          isPlaying: isPlayingRef.current,
+          silentForMs,
+          thresholdMs: STUCK_SPEAKING_WATCHDOG_MS,
+        })
+      ) {
         console.warn(
-          `[Realtime] stuck-SPEAKING watchdog: 'speaking' with empty audio pipeline for ${now - strandedSpeakingSinceRef.current}ms — forcing drain-to-idle`,
+          `[Realtime] stuck-SPEAKING watchdog: 'speaking' with empty audio pipeline for ${silentForMs}ms — forcing drain-to-idle`,
         );
         strandedSpeakingSinceRef.current = null;
         void clearSpeechQueue();
