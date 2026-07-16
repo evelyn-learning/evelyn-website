@@ -50,6 +50,31 @@ check(
   'What is the slope of this line?',
 );
 
+// X8 review (I2): the emphasis-strip regex ate asterisks INSIDE $...$ math
+// spans — "$x*y*z$" (literal multiplication inside math delimiters) lost
+// its asterisks and became "$xyz$". Fix: split on $...$ spans first, strip
+// emphasis only outside them, then reassemble.
+check(
+  'math span with literal asterisks preserved untouched',
+  stripMarkdownEmphasis('$x*y*z$'),
+  '$x*y*z$',
+);
+check(
+  'emphasis outside math still stripped',
+  stripMarkdownEmphasis('*in order to* isolate the variable'),
+  'in order to isolate the variable',
+);
+check(
+  'mixed sentence: math preserved, surrounding emphasis stripped',
+  stripMarkdownEmphasis('Solve $x*y*z$ using *substitution* to isolate x.'),
+  'Solve $x*y*z$ using substitution to isolate x.',
+);
+check(
+  'two math spans with an emphasis span between them',
+  stripMarkdownEmphasis('Compare $a*b$ and *carefully* $c*d$ here.'),
+  'Compare $a*b$ and carefully $c*d$ here.',
+);
+
 // --- lastQuestionSentence (fallback path) ------------------------------
 check(
   'fallback strips emphasis before extracting the question',

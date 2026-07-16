@@ -18,12 +18,29 @@
  * can't drift apart again.
  */
 
-/** Strip *italic* / **bold** markdown emphasis, keeping the wrapped text.
- *  Content must start with a letter (same gate as the TTS layer's
+/** Content must start with a letter (same gate as the TTS layer's
  *  MD_EMPHASIS_REPLACEMENTS in tts-pronunciation.ts) so bare multiplication
  *  ("2*3*4") is never touched. */
+const EMPHASIS_RE = /\*{1,2}([A-Za-z][^*]{0,60}?)\*{1,2}/g;
+
+/** A $...$ math span. Content must not itself contain "$" or a newline —
+ *  same shape as the TTS layer's dollar-math handling. */
+const DOLLAR_MATH_RE = /\$[^$\n]*\$/g;
+
+/** Strip *italic* / **bold** markdown emphasis, keeping the wrapped text.
+ *
+ *  X8 review (I2): the emphasis regex used to run over the whole string
+ *  unconditionally, so asterisks used as literal multiplication INSIDE a
+ *  $...$ math span ("$x*y*z$") were eaten too, mangling the math
+ *  ("$xyz$"). Math spans are never markdown emphasis — split the string
+ *  on $...$ first, strip emphasis only in the surrounding prose, then
+ *  reassemble the (untouched) math spans back in place. */
 export function stripMarkdownEmphasis(s: string): string {
-  return s.replace(/\*{1,2}([A-Za-z][^*]{0,60}?)\*{1,2}/g, '$1');
+  const mathSpans = s.match(DOLLAR_MATH_RE) ?? [];
+  const prose = s.split(DOLLAR_MATH_RE);
+  return prose
+    .map((part) => part.replace(EMPHASIS_RE, '$1'))
+    .reduce((out, part, i) => out + part + (mathSpans[i] ?? ''), '');
 }
 
 /** The turn's LAST question sentence, COMPLETE (round-4 feedback: a

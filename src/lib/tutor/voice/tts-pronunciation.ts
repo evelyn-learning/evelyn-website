@@ -431,6 +431,16 @@ function rewriteDerivatives(t: string): string {
  * Covers I through XX (Article/Amendment/Section numbers rarely exceed
  * this in AP Gov/US History content; extend the map if a higher one shows
  * up live, e.g. Amendment XXVII).
+ *
+ * X8 REVIEW FIX (C1, critical): this used to run with the 'gi' flag, so a
+ * LOWERCASE keyword-shaped word (e.g. "section" as an ordinary noun)
+ * immediately before a bare "I" (the pronoun) matched the citation shape
+ * and converted it — "The section I wrote" -> "the section one wrote"
+ * (verified live; high-frequency tutoring phrase). The keyword must now
+ * match its literal Title-Case spelling, or an EXPLICIT ALL-CAPS variant
+ * (a genuine all-caps citation, e.g. "ARTICLE II" in emphasized text) —
+ * no blanket case-insensitivity. Any other casing (e.g. "aRTICLE") is
+ * left untouched by design; it isn't a shape real citation text takes.
  */
 const ROMAN_NUMERAL_WORDS: Record<string, string> = {
   I: 'one', II: 'two', III: 'three', IV: 'four', V: 'five',
@@ -439,13 +449,43 @@ const ROMAN_NUMERAL_WORDS: Record<string, string> = {
   XVI: 'sixteen', XVII: 'seventeen', XVIII: 'eighteen', XIX: 'nineteen', XX: 'twenty',
 };
 const ROMAN_NUMERAL_KEYWORDS = 'Article|Title|Section|Amendment|Chapter|Act|Part';
+const ROMAN_NUMERAL_KEYWORDS_ALLCAPS = 'ARTICLE|TITLE|SECTION|AMENDMENT|CHAPTER|ACT|PART';
+const ROMAN_NUMERAL_ALL_KEYS_SRC = Object.keys(ROMAN_NUMERAL_WORDS).join('|');
+// X8 REVIEW FIX (I1, important): elided-keyword lists ("Amendment I, II,
+// and III") used to convert only the first numeral, leaving the rest of
+// the list ("II, and III") unconverted mid-sentence. CONTINUATION numerals
+// in the same comma/and list now convert too — but NEVER a bare "I": if a
+// continuation slot is the bare pronoun-shaped "I", it's indistinguishable
+// from "Article II, I mean the free speech one..." (a real utterance
+// shape), so the list-continuation scan simply stops there rather than
+// guessing. Excluding "I" from this set is what implements that.
+const ROMAN_NUMERAL_CONTINUATION_KEYS_SRC = Object.keys(ROMAN_NUMERAL_WORDS)
+  .filter((key) => key !== 'I')
+  .join('|');
 const ROMAN_NUMERAL_RE = new RegExp(
-  `\\b(${ROMAN_NUMERAL_KEYWORDS})\\s+(${Object.keys(ROMAN_NUMERAL_WORDS).join('|')})\\b`,
-  'gi',
+  `\\b(${ROMAN_NUMERAL_KEYWORDS}|${ROMAN_NUMERAL_KEYWORDS_ALLCAPS})\\s+(${ROMAN_NUMERAL_ALL_KEYS_SRC})` +
+    // Each continuation item is separated either by a comma (optionally
+    // with a trailing "and ", e.g. ", and III") or, with no Oxford comma
+    // at all, a bare " and " ("Section IV and V").
+    `((?:\\s*,\\s*(?:and\\s+)?(?:${ROMAN_NUMERAL_CONTINUATION_KEYS_SRC})|\\s+and\\s+(?:${ROMAN_NUMERAL_CONTINUATION_KEYS_SRC}))*)\\b`,
+  'g',
+);
+// Word-boundary-wrapped so this (used for a plain global replace with no
+// trailing assertion of its own) can't partially match a longer numeral
+// token's prefix (e.g. "X" matching inside "XV") — the \b on both sides
+// forces the regex engine to backtrack to the correct, longer alternative.
+const ROMAN_NUMERAL_CONTINUATION_RE = new RegExp(
+  `\\b(?:${ROMAN_NUMERAL_CONTINUATION_KEYS_SRC})\\b`,
+  'g',
 );
 function rewriteRomanNumerals(t: string): string {
-  return t.replace(ROMAN_NUMERAL_RE, (_m, keyword: string, numeral: string) =>
-    `${keyword} ${ROMAN_NUMERAL_WORDS[numeral.toUpperCase()]}`);
+  return t.replace(ROMAN_NUMERAL_RE, (_m, keyword: string, firstNumeral: string, continuation: string) => {
+    let out = `${keyword} ${ROMAN_NUMERAL_WORDS[firstNumeral]}`;
+    if (continuation) {
+      out += continuation.replace(ROMAN_NUMERAL_CONTINUATION_RE, (numeral: string) => ROMAN_NUMERAL_WORDS[numeral]);
+    }
+    return out;
+  });
 }
 
 /**

@@ -437,3 +437,81 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Task X8 (roman numeral citations, legal "v.")');
 }
+
+// X8 review (C1): case-insensitivity broke the never-bare-I invariant.
+// ROMAN_NUMERAL_RE used to run with the 'gi' flag, so a LOWERCASE
+// keyword-shaped word immediately before a bare "I" (the pronoun) matched
+// the citation pattern and converted it — "The section I wrote" became
+// "the section one wrote" (verified live). Fix: the keyword must match its
+// literal Title-Case spelling (or an explicit ALL-CAPS variant) — no
+// blanket case-insensitivity.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  // The exact live false-positive: lowercase "section" + bare "I" (pronoun)
+  // must NEVER be treated as a citation.
+  eq('The section I wrote needs edits.',
+     'The section I wrote needs edits.',
+     'c1-lowercase-section-bare-i-untouched');
+  eq("Let's part I guess.",
+     "Let's part I guess.",
+     'c1-lowercase-part-bare-i-untouched');
+  eq('the amendment I mentioned earlier is important.',
+     'the amendment I mentioned earlier is important.',
+     'c1-lowercase-amendment-bare-i-untouched');
+  // Title-Case keyword still converts (existing behavior preserved).
+  eq('Article I establishes the legislative branch.',
+     'Article one establishes the legislative branch.',
+     'c1-titlecase-still-converts');
+  // ALL-CAPS keyword variant: explicitly supported and tested (documented
+  // choice — convert, matching the shape of a genuine all-caps citation
+  // rather than case-insensitive matching of arbitrary case).
+  eq('ARTICLE II covers the executive branch.',
+     'ARTICLE two covers the executive branch.',
+     'c1-allcaps-keyword-converts');
+  eq('AMENDMENT XIV guarantees equal protection.',
+     'AMENDMENT fourteen guarantees equal protection.',
+     'c1-allcaps-amendment-converts');
+  // Mixed / lowercase keyword spellings other than Title-Case or ALL-CAPS
+  // are NOT converted — only the two explicit shapes are supported.
+  eq('aRTICLE II covers the executive branch.',
+     'aRTICLE II covers the executive branch.',
+     'c1-mixed-case-keyword-untouched');
+
+  console.log('OK — X8 review C1 (capitalized roman-numeral gate)');
+}
+
+// X8 review (I1): elided-keyword lists. "Amendment I, II, and III" only
+// converted the first numeral (I) — II and III, in the same comma/and
+// list, were left unconverted. Fix: convert CONTINUATION numerals in the
+// same list too (II..XX only — a bare continuation "I" is NEVER converted,
+// since it's indistinguishable from the pronoun).
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  eq('Amendment I, II, and III were ratified together.',
+     'Amendment one, two, and three were ratified together.',
+     'i1-elided-list-converts-continuations');
+  eq('Article I, II, III, and IV set up the three branches and elections.',
+     'Article one, two, three, and four set up the three branches and elections.',
+     'i1-elided-list-four-items');
+  eq('Section IV and V cover succession and vacancies.',
+     'Section four and five cover succession and vacancies.',
+     'i1-elided-list-no-oxford-comma');
+  // Documented choice: a bare "I" is NEVER treated as a continuation
+  // numeral (pronoun ambiguity) — the list-continuation scan stops there,
+  // even though it costs the (rare) numerals after it.
+  eq('Article II, I, and III were debated at length.',
+     'Article two, I, and III were debated at length.',
+     'i1-bare-i-continuation-never-converts');
+
+  console.log('OK — X8 review I1 (elided roman-numeral list continuations)');
+}
