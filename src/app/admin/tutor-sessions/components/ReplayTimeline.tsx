@@ -90,6 +90,13 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
   }, [seekFromClientX]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    // Defense: if setPointerCapture failed silently (try/catch in handlePointerDown),
+    // a mouse release outside the bar leaves isDraggingRef true. Bail if we see a
+    // mouse with no buttons pressed (stale drag state, not a real drag).
+    if (e.pointerType === 'mouse' && e.buttons === 0) {
+      isDraggingRef.current = false;
+      return;
+    }
     if (!isDraggingRef.current) return;
     e.preventDefault();
     seekFromClientX(e.clientX);
@@ -184,6 +191,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
               className="absolute top-0.5 -translate-x-1/2 group"
               style={{ left: `${(ev.offsetMs / totalDurationMs) * 100}%` }}
               onClick={(e) => { e.stopPropagation(); onSeek(ev.offsetMs); }}
+              onPointerDown={(e) => e.stopPropagation()}
               title={`${ev.data.type}: ${(ev.data.message as string) || ''}`}
             >
               <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${ev.category.color}`}>
