@@ -202,6 +202,21 @@ export default function TutorSession(props: TutorSessionProps) {
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
   } = props;
 
+  // Task E8: SessionStage's mobile "expand" button lives deep in this
+  // component's slot tree and keeps its own expanded/collapsed local state.
+  // That state must reset whenever the session ends (so it can't desync if
+  // the student re-enters) — but every end path (End/Pause button, VTR- or
+  // SessionControls-driven end incl. the demo time-limit auto-stop, header
+  // back-nav) ultimately calls this one `onEndSession` prop. Wrapping it
+  // ONCE here, at its single entry boundary, reaches every path below
+  // without touching each call site's own teardown logic. Mirrors the
+  // 'evelyn:open-transcript' window-event bridge already used to reach
+  // SessionStage from up here.
+  const handleEndSession = useCallback((reason?: 'time_limit') => {
+    window.dispatchEvent(new Event('evelyn:session-ending'));
+    onEndSession(reason);
+  }, [onEndSession]);
+
   // --- Session-view state (owned here) ---
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
@@ -594,12 +609,12 @@ export default function TutorSession(props: TutorSessionProps) {
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
   // endSession = TTS hard-stop + recording finalize + final profile commit)
   // — calling onEndSession directly would skip the final transcript commit.
-  const endControlEl = onEndSession ? (
+  const endControlEl = (
     <button
       onClick={() => {
         const h = realtimeHandleRef.current;
         if (h?.endSession) h.endSession();
-        else onEndSession();
+        else handleEndSession();
       }}
       title="End or pause — your progress is saved, resume anytime"
       className="flex shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
@@ -607,7 +622,7 @@ export default function TutorSession(props: TutorSessionProps) {
       <LogOut className="w-3.5 h-3.5" />
       <span className="hidden sm:inline">End / Pause</span>
     </button>
-  ) : undefined;
+  );
 
   const voiceInputEl = (
     <>
@@ -644,7 +659,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onDebugEvent={onDebugEvent}
         onError={(err) => setError(err.message)}
         onTranscriptionStatus={handleTranscriptionStatus}
-        onEndSession={onEndSession}
+        onEndSession={handleEndSession}
         onMilestone={onMilestone}
         onTrackInteraction={onTrackInteraction}
         handleRef={realtimeHandleRef}
@@ -689,7 +704,7 @@ export default function TutorSession(props: TutorSessionProps) {
       sessionId={sessionId}
       startedAtMs={voiceStartedAtMs}
       maxDuration={sessionMaxMinutes}
-      onEndSession={onEndSession}
+      onEndSession={handleEndSession}
       onUploadHomework={onUploadHomework ?? (() => {})}
       transcript={transcript}
       whiteboardCommands={whiteboardCommands}
@@ -822,7 +837,7 @@ export default function TutorSession(props: TutorSessionProps) {
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}
         quickActions={quickActionsEl}
         onStudentInput={handleStudentInput}
-        onBack={onEndSession}
+        onBack={handleEndSession}
         boardPenActive={boardPenActive}
         onToggleBoardPen={studentMarksOn ? () => setBoardPenActive((v) => !v) : undefined}
       />

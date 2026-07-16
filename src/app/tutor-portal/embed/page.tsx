@@ -608,6 +608,28 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     }, '*');
   }, [saveSession, sessionId, transcript, whiteboardCommands.length]);
 
+  // Task E8: mobile "expand" mode. The portal (task P6) owns the visual
+  // growth — this iframe just relays the tap. SessionStage (deep inside
+  // TutorSession's slot tree) owns the rail button and its own
+  // expanded/collapsed state, and reaches this postMessage sender the same
+  // way its transcript button already reaches SessionStage from up here
+  // ('evelyn:open-transcript'), just running the other direction: a window
+  // event SessionStage dispatches, relayed here to window.parent. Fixed
+  // cross-repo contract with portal task P6 — do not rename either message.
+  useEffect(() => {
+    const relay = (type: 'evelyn:expand' | 'evelyn:collapse') => () => {
+      window.parent.postMessage({ type }, '*');
+    };
+    const onExpand = relay('evelyn:expand');
+    const onCollapse = relay('evelyn:collapse');
+    window.addEventListener('evelyn:expand', onExpand);
+    window.addEventListener('evelyn:collapse', onCollapse);
+    return () => {
+      window.removeEventListener('evelyn:expand', onExpand);
+      window.removeEventListener('evelyn:collapse', onCollapse);
+    };
+  }, []);
+
   // Save as abandoned on page unload
   useEffect(() => {
     if (sessionEnded) return;

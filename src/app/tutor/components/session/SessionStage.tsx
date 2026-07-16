@@ -19,7 +19,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2,
+  ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
   MessageSquareText, X, Target, Upload, ArrowDown,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
@@ -177,6 +177,49 @@ export default function SessionStage(props: SessionStageProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const doc = document as any;
     setCanFullscreen(Boolean(doc.fullscreenEnabled || doc.webkitFullscreenEnabled));
+  }, []);
+
+  // Mobile "expand" mode (Task E8): the Fullscreen API is unavailable on
+  // iPhone Safari (no Fullscreen API on non-video elements) and inside an
+  // iframe lacking allowfullscreen — exactly where the embed runs. There the
+  // PORTAL does the growing (iframe → fixed inset-0), not the browser; this
+  // rail button just asks it to, over the fixed cross-repo contract with
+  // portal task P6 ({type:'evelyn:expand'|'evelyn:collapse'} on the same
+  // channel as evelyn:progress/evelyn:session_ended). `canFullscreen` is
+  // already mutually exclusive with this (see `canExpand` below), so exactly
+  // one of the two rail buttons ever shows.
+  //
+  // SessionStage has no explicit "embed vs standalone" prop — its whole
+  // layout IS the embed/minimal-chrome layout (there's no other mode this
+  // component renders), and the standalone /tutor route is never iframed in
+  // production (only /tutor-portal/embed is — see EngineSelector.tsx, which
+  // iframes /embed, not /tutor). So `!canFullscreen && iframed` alone
+  // correctly scopes the button to the embed without a separate flag.
+  const [iframed, setIframed] = useState(false);
+  useEffect(() => {
+    try { setIframed(window.self !== window.top); } catch { setIframed(true); }
+  }, []);
+  const [expanded, setExpanded] = useState(false);
+  const canExpand = !canFullscreen && iframed;
+
+  // The postMessage sender (with its target-origin handling) lives in
+  // tutor-portal/embed/page.tsx — two composition levels up from this deeply
+  // nested stage. A window event is the same bridge already used to reach
+  // SessionStage FROM up there ('evelyn:open-transcript'); here it runs the
+  // other direction, and the embed page relays it out to window.parent.
+  const requestExpand = () => { window.dispatchEvent(new Event('evelyn:expand')); setExpanded(true); };
+  const requestCollapse = () => { window.dispatchEvent(new Event('evelyn:collapse')); setExpanded(false); };
+
+  // Session end must reset this local state so it can't desync if the
+  // student re-enters — belt-and-suspenders: a normal embed end already
+  // unmounts SessionStage outright (dropping this state with it), but
+  // TutorSession fires this window event at its single onEndSession choke
+  // point regardless of how the session ended, so this stays correct even if
+  // that assumption ever changes.
+  useEffect(() => {
+    const reset = () => setExpanded(false);
+    window.addEventListener('evelyn:session-ending', reset);
+    return () => window.removeEventListener('evelyn:session-ending', reset);
   }, []);
 
   const toggleFullscreen = () => {
@@ -357,6 +400,18 @@ export default function SessionStage(props: SessionStageProps) {
             <>
               <div className="w-6 h-px bg-slate-200 my-0.5" />
               <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+            </>
+          )}
+          {/* Mobile expand (Task E8) — shown only where the native Fullscreen
+              API can't run (see canExpand above); mutually exclusive with the
+              button above. Toggles to a collapse affordance while expanded;
+              the portal owns the actual visual growth. */}
+          {canExpand && (
+            <>
+              <div className="w-6 h-px bg-slate-200 my-0.5" />
+              <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={expanded ? requestCollapse : requestExpand}>
+                {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
+              </ToolBtn>
             </>
           )}
         </div>
