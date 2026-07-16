@@ -300,6 +300,11 @@ function TutorPage() {
   const [paceBias, setPaceBias] = useState(0);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Task W4: "Speak slower" TTS toggle — SEPARATE from paceBias above
+  // (paceBias/"Slow down" changes explain depth; this only changes TTS
+  // synthesis speed). Mirrored from VoiceTutorRealtime's internal state via
+  // onSpeakingRateChange so the ⋯ menu item can render its ✓ state.
+  const [speakingRate, setSpeakingRate] = useState<'slow' | 'normal'>('normal');
   // Voice Perception Q9 (2026-06-16): true for ~300ms after a perception
   // cancel fires. Drives the yellow-flash on the typed-input area to give
   // the student a visible "I heard you" signal even before the classifier
@@ -2423,6 +2428,28 @@ function TutorPage() {
                               );
                             });
                         })()}
+                        <div className="my-1 border-t border-gray-100" />
+                        <div className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Voice</div>
+                        {/* Task W4: "Speak slower" TTS toggle — a SEPARATE
+                            knob from "Slow down" above (that one asks for
+                            more explanation depth; this one only slows the
+                            synthesized audio). Sticky ✓ state mirrors the
+                            Humor pattern above. */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
+                            setPacingMenuOpen(false);
+                          }}
+                          className={`block w-full text-left px-3 py-1.5 ${
+                            speakingRate === 'slow'
+                              ? 'text-blue-700 bg-blue-50 font-medium'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
+                        >
+                          <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span>
+                          {' '}Speak slower
+                        </button>
                       </div>
                     </>
                   )}
@@ -2657,6 +2684,7 @@ function TutorPage() {
                     if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
                     paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
                   }}
+                  onSpeakingRateChange={setSpeakingRate}
                   onInterruptedChange={setIsPerceptionInterrupted}
                   onBeforeTypedSubmit={handleBeforeTypedSubmit}
                   onProposePlanSwap={handleProposePlanSwap}

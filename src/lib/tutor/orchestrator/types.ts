@@ -29,6 +29,11 @@ export interface RealtimeHandle {
    *  cues like "slow down" / "faster" go through the boredom-cue
    *  regex inside callBrainOnce and call stepPaceBias internally. */
   stepPaceBias: (delta: -1 | 1) => void;
+  /** Task W4: set the "Speak slower" TTS toggle. SEPARATE knob from
+   *  stepPaceBias above — this only changes HTTP-TTS synthesis speed
+   *  (Cartesia/OpenAI-mini), not depth/verbosity. Wired to the ⋯ menu's
+   *  "Speak slower" item (sticky ✓ state, mirrors the Humor pattern). */
+  setSpeakingRate: (rate: 'slow' | 'normal') => void;
   /** Caption word-sync: poll the audio-locked caption reveal. Returns null
    *  when unsupported (non-claude-brain engines) — caller falls back to the
    *  legacy typewriter. live:false = supported but nothing being spoken

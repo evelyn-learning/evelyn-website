@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, voiceId } = body as { text?: string; voiceId?: string };
+    const { text, voiceId, speed } = body as { text?: string; voiceId?: string; speed?: string | number };
 
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({ error: 'Text is required' }), {
@@ -52,10 +52,26 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Task W4 (speak-slower toggle): Cartesia's Sonic models expose speed via
+    // `voice.__experimental_controls.speed` — either one of its own tuned
+    // preset labels ('slowest' | 'slow' | 'normal' | 'fast' | 'fastest') or a
+    // raw relative number in [-1.0, 1.0]. This route is a thin pass-through:
+    // the caller (useOpenAIRealtime.ts fetchTTSPromise) decides the value
+    // (documented there); we just forward whatever it sends, string or
+    // number, and omit the block entirely when unset so default behavior is
+    // unchanged for every existing call site.
+    const voice: { mode: 'id'; id: string; __experimental_controls?: { speed: string | number } } = {
+      mode: 'id',
+      id: substituteCartesiaVoiceId(voiceId ?? CARTESIA_DEFAULT_VOICE_ID),
+    };
+    if (speed !== undefined) {
+      voice.__experimental_controls = { speed };
+    }
+
     const ttsBody = {
       model_id: 'sonic-3.5',
       transcript: rewriteForTTS(text),
-      voice: { mode: 'id', id: substituteCartesiaVoiceId(voiceId ?? CARTESIA_DEFAULT_VOICE_ID) },
+      voice,
       language: 'en',
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },
     };

@@ -3,6 +3,18 @@
  *
  * Handles streaming TTS using Cartesia Sonic for low-latency voice synthesis.
  * Supports multiple voices and interruption handling.
+ *
+ * DEAD MODULE (confirmed 2026-07-16, Task W4): nothing outside
+ * src/lib/tutor/voice/ imports this file — its only consumers are
+ * ./voice-controller.ts and ./index.ts, and no app route/page/component
+ * imports either of those. The LIVE Cartesia TTS path production actually
+ * uses is src/app/api/tutor/tts-cartesia/route.ts, called from
+ * src/app/tutor/hooks/useOpenAIRealtime.ts's fetchTTSPromise. This module
+ * already threaded a `speed` param through streamTTS/generateTTS/
+ * streamTTSHttp (see TTSRequest.speed below) before that param existed on
+ * the live route — left in place, unmodified, as reference/history rather
+ * than deleted, since deleting it would require also touching its two
+ * (equally dead) importers, out of scope for W4.
  */
 
 import { VoiceConfig, VoiceId, AVAILABLE_VOICES } from '../types';

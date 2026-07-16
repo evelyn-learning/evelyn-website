@@ -236,6 +236,11 @@ export default function TutorSession(props: TutorSessionProps) {
   const [awaitingResume, setAwaitingResume] = useState(false);
   const [paceBias, setPaceBias] = useState(0);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
+  // Task W4: "Speak slower" TTS toggle — SEPARATE from paceBias above
+  // (paceBias/"Slow down" changes explain depth; this only changes TTS
+  // synthesis speed). Mirrored from VoiceTutorRealtime's internal state via
+  // onSpeakingRateChange so the ⋯ menu item can render its ✓ state.
+  const [speakingRate, setSpeakingRate] = useState<'slow' | 'normal'>('normal');
   const [, setIsPerceptionInterrupted] = useState(false);
   const [voiceTrouble, setVoiceTrouble] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -682,6 +687,7 @@ export default function TutorSession(props: TutorSessionProps) {
           if (paceBiasFlashTimeoutRef.current) clearTimeout(paceBiasFlashTimeoutRef.current);
           paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
         }}
+        onSpeakingRateChange={setSpeakingRate}
         onInterruptedChange={setIsPerceptionInterrupted}
         onBeforeTypedSubmit={onBeforeTypedSubmit}
         onProposePlanSwap={onProposePlanSwap}
@@ -777,6 +783,21 @@ export default function TutorSession(props: TutorSessionProps) {
               </button>
             );
           })}
+          <div className="my-1 border-t border-slate-100" />
+          <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Voice</p>
+          {/* Task W4: "Speak slower" TTS toggle — a SEPARATE knob from
+              "Slow down" above (that one asks for more explanation depth;
+              this one only slows the synthesized audio). Sticky ✓ state
+              mirrors the Humor pattern above. */}
+          <button
+            onClick={() => {
+              realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
+              setPacingMenuOpen(false);
+            }}
+            className={`w-full text-left px-3 py-2 rounded-xl ${speakingRate === 'slow' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
+          >
+            <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span> Speak slower
+          </button>
         </div>
       )}
     </div>

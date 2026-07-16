@@ -412,6 +412,11 @@ interface VoiceTutorRealtimeProps {
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
   onPaceBiasChange?: (bias: number) => void;
+  /** Task W4: fires whenever the "Speak slower" TTS toggle changes (menu
+   *  click OR prior-session restore). SEPARATE knob from paceBias/explain-
+   *  pace above — this only affects synthesis speed, not depth/verbosity.
+   *  Parent uses this to render the ✓ state on the menu item. */
+  onSpeakingRateChange?: (rate: 'slow' | 'normal') => void;
   /** Voice Perception Q9 (2026-06-16). Fires true when a perception
    *  cancel fires (yellow-flash window opens) and false ~300ms later
    *  when the window closes. Parent uses this to render a visible
@@ -549,6 +554,7 @@ export function VoiceTutorRealtime({
   onMicLevel,
   onListeningHint,
   onPaceBiasChange,
+  onSpeakingRateChange,
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
@@ -1554,6 +1560,19 @@ export function VoiceTutorRealtime({
   // down / Speed up button clicks (Phase 3) AND matching verbal cues.
   // Resets only on session unmount.
   const paceBiasRef = useRef<number>(0);
+  // Task W4: "Speak slower" TTS toggle. A SEPARATE knob from paceBias above
+  // — this only asks the HTTP-TTS provider (relayMode.speakingRate, read by
+  // useOpenAIRealtime's fetchTTSPromise) to synthesize slower audio; it does
+  // NOT change depth/verbosity the way paceBias does. Modeled as React state
+  // (not a bare ref like paceBiasRef) because relayMode is rebuilt every
+  // render — the nested useOpenAIRealtime call only picks up a new
+  // speakingRate value if THIS component actually re-renders, which a plain
+  // ref mutation would not trigger. speakingRateRef below mirrors the state
+  // purely so persistPacingState (a ref-only closure, see below) can read
+  // the current value without adding state to its dependency array.
+  const [speakingRate, setSpeakingRateState] = useState<'slow' | 'normal'>('normal');
+  const speakingRateRef = useRef<'slow' | 'normal'>('normal');
+  useEffect(() => { speakingRateRef.current = speakingRate; }, [speakingRate]);
   // Set when mark_segment_complete fires AND streak >= 2 at that moment.
   // Renders a "segment-mastered" hint in next-turn student_state block.
   // Cleared on segment change (one-shot signal).
@@ -1620,10 +1639,15 @@ export function VoiceTutorRealtime({
   const paceBiasSetTurnRef = useRef<number>(0);
   const onPaceBiasChangeRef = useRef(onPaceBiasChange);
   useEffect(() => { onPaceBiasChangeRef.current = onPaceBiasChange; }, [onPaceBiasChange]);
+  const onSpeakingRateChangeRef = useRef(onSpeakingRateChange);
+  useEffect(() => { onSpeakingRateChangeRef.current = onSpeakingRateChange; }, [onSpeakingRateChange]);
   // Phase 4: persist pacing state to localStorage so it carries over
   // when the same lesson plan is re-launched. Keyed on plan.id;
   // session-unmount + paceBias-step both call this. No-op when no
   // plan is loaded (free-conversation).
+  // Task W4: speakingRate rides in the SAME evelyn:pacing-v2:<planId> blob
+  // (matches paceBias's persistence choice exactly, per task brief) rather
+  // than a second localStorage key — one read, one write, one TTL.
   const persistPacingState = useCallback(() => {
     try {
       if (typeof window === 'undefined' || !window.localStorage) return;
@@ -1634,6 +1658,7 @@ export function VoiceTutorRealtime({
         paceBias: paceBiasRef.current,
         correctStreakCount: studentStreakRef.current.count,
         incorrectStreakCount: studentIncorrectStreakRef.current.count,
+        speakingRate: speakingRateRef.current,
         savedAt: new Date().toISOString(),
       };
       window.localStorage.setItem(key, JSON.stringify(payload));
@@ -1673,7 +1698,20 @@ export function VoiceTutorRealtime({
     onPaceBiasChangeRef.current?.(to);
     persistPacingState();
   }, [logPacing, persistPacingState]);
-
+  // Task W4: "Speak slower" toggle, set directly (not stepped like
+  // paceBias) — the ⋯ menu item just flips between 'slow' and 'normal'.
+  // setSpeakingRateState triggers a re-render of THIS component so the
+  // relayMode object passed to useOpenAIRealtime is rebuilt with the new
+  // value (see speakingRate state declaration above for why a bare ref
+  // mutation would not be picked up by the nested hook call).
+  const setSpeakingRate = useCallback((rate: 'slow' | 'normal') => {
+    if (speakingRateRef.current === rate) return;
+    speakingRateRef.current = rate;
+    setSpeakingRateState(rate);
+    logPacing(`speaking-rate-set rate=${rate}`);
+    onSpeakingRateChangeRef.current?.(rate);
+    persistPacingState();
+  }, [logPacing, persistPacingState]);
 
   // Monotonic ID counters per action type — stamped onto every rendered
   // whiteboard command so the tutor can reference items it created earlier
@@ -6118,6 +6156,7 @@ export function VoiceTutorRealtime({
                 paceBias?: number;
                 correctStreakCount?: number;
                 incorrectStreakCount?: number;
+                speakingRate?: 'slow' | 'normal';
                 savedAt?: string;
               };
               const ageMs = prior.savedAt ? Date.now() - new Date(prior.savedAt).getTime() : Infinity;
@@ -6136,7 +6175,13 @@ export function VoiceTutorRealtime({
                 if (typeof prior.incorrectStreakCount === 'number' && prior.incorrectStreakCount > 0) {
                   studentIncorrectStreakRef.current = { segId: plan.segments[0].id, count: prior.incorrectStreakCount };
                 }
-                logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
+                // Task W4: restore the "Speak slower" toggle the same way.
+                if (prior.speakingRate === 'slow' || prior.speakingRate === 'normal') {
+                  speakingRateRef.current = prior.speakingRate;
+                  setSpeakingRateState(prior.speakingRate);
+                  onSpeakingRateChangeRef.current?.(prior.speakingRate);
+                }
+                logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} speakingRate=${speakingRateRef.current} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
               } else {
                 logPacing(`prior-session-stale ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}" (skipped resume)`);
                 window.localStorage.removeItem(key);
@@ -10865,6 +10910,7 @@ export function VoiceTutorRealtime({
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
           cartesiaVoiceId,
+          speakingRate,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,
@@ -12025,6 +12071,7 @@ export function VoiceTutorRealtime({
             .sort((a, b) => b.count - a.count),
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
+        setSpeakingRate,
         resumeContinue: () => resumeContinueRef.current(),
         endSession: () => { void endSessionNowRef.current(); },
         getSpokenCaption: () => {
@@ -12089,7 +12136,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
+  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds

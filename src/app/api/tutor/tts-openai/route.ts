@@ -51,11 +51,13 @@ export async function POST(request: NextRequest) {
       voice = 'verse',
       model = 'gpt-4o-mini-tts',
       instructions,
+      speed,
     } = body as {
       text?: string;
       voice?: string;
       model?: string;
       instructions?: string;
+      speed?: number;
     };
 
     if (!text || !text.trim()) {
@@ -72,6 +74,12 @@ export async function POST(request: NextRequest) {
       response_format: 'pcm', // 24kHz mono int16
       instructions: instructions || TUTOR_VOICE_INSTRUCTIONS,
     };
+    // Task W4 (speak-slower toggle): OpenAI's /v1/audio/speech `speed` field
+    // is a flat multiplier, 0.25-4.0, default 1.0. Pass-through only — the
+    // caller (useOpenAIRealtime.ts fetchTTSPromise) picks the actual value.
+    if (typeof speed === 'number') {
+      ttsBody.speed = speed;
+    }
 
     const ttsRes = await fetch(OPENAI_TTS_URL, {
       method: 'POST',

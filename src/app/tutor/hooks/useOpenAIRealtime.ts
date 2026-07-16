@@ -246,6 +246,14 @@ export interface RealtimeConfig {
      *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
      *  cartesia-voice-registry.ts) — this hook just carries it through. */
     cartesiaVoiceId?: string;
+    /** Task W4: per-session "Speak slower" toggle, independent of the
+     *  explain-pace (paceBias) knob. 'slow' asks the HTTP-TTS provider to
+     *  synthesize noticeably slower speech; 'normal' (default, or omitted)
+     *  leaves each provider's own default rate untouched. The concrete
+     *  per-provider value (Cartesia label vs. OpenAI numeric multiplier) is
+     *  chosen in fetchTTSPromise below, not here — this flag only carries
+     *  the student-facing intent. */
+    speakingRate?: 'slow' | 'normal';
   };
 }
 
@@ -856,6 +864,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     cartesiaVoiceIdRef.current = relayMode?.cartesiaVoiceId;
   }, [relayMode?.cartesiaVoiceId]);
+  // Task W4: "Speak slower" toggle. UNLIKE ttsProviderRef/cartesiaVoiceIdRef
+  // above, this is NOT session-static — the ⋯ menu can flip it mid-session.
+  // fetchTTSPromise's cache key below folds this in for exactly that reason.
+  const speakingRateRef = useRef<'slow' | 'normal'>(relayMode?.speakingRate ?? 'normal');
+  useEffect(() => {
+    speakingRateRef.current = relayMode?.speakingRate ?? 'normal';
+  }, [relayMode?.speakingRate]);
   // Both HTTP-based TTS providers (openai-mini, cartesia) share the exact
   // same dispatch/queue/cancel semantics — neither ever produces a Realtime
   // response.created/response.done event, so every place that gates on the
@@ -2574,14 +2589,25 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // and the bytes are usually ready by the time N ends, eliminating the
   // inter-sentence HTTP round-trip gap.
   //
-  // Cartesia migration Phase 2, Task 3: the cache key is the sentence TEXT
-  // only — not provider or voiceId. That's safe because ttsProviderRef and
-  // cartesiaVoiceIdRef are both session-static (set once from relayMode at
-  // mount/prop-change, never mid-sentence-queue), so every cached Promise
-  // in a given session was fetched under the same provider/voice anyway.
+  // Cartesia migration Phase 2, Task 3: the cache key was originally the
+  // sentence TEXT only — not provider or voiceId. That was safe because
+  // ttsProviderRef and cartesiaVoiceIdRef are both session-static (set once
+  // from relayMode at mount/prop-change, never mid-sentence-queue), so every
+  // cached Promise in a given session was fetched under the same
+  // provider/voice anyway.
+  //
+  // Task W4 breaks that assumption for speakingRateRef: the ⋯ menu toggles
+  // it mid-session, so the same invariant does NOT hold for speed. Without
+  // folding it into the key, toggling "Speak slower" and then hitting a
+  // repeated sentence (e.g. "Great job!") would silently replay audio
+  // synthesized at the OLD rate from cache. ttsCacheKey below is the single
+  // place both fetchTTSPromise and its external consumer (below) compute
+  // the key, so they can never drift apart.
+  const ttsCacheKey = useCallback((text: string) => `${speakingRateRef.current}::${text}`, []);
   const fetchTTSPromise = useCallback((trimmed: string): Promise<Float32Array | null> => {
     const cache = ttsPrefetchCacheRef.current;
-    const cached = cache.get(trimmed);
+    const cacheKey = ttsCacheKey(trimmed);
+    const cached = cache.get(cacheKey);
     if (cached) return cached;
     // 'silent' test mode (Crimsora v2 Phase 2E): never touch a TTS API.
     // Resolve a zero-filled PCM buffer sized to a plausible speech duration
@@ -2598,15 +2624,29 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         Math.round(0.1 * 24000), // ≥100ms floor so 'ended' timing stays sane
       );
       const promise = Promise.resolve(new Float32Array(samples));
-      cache.set(trimmed, promise);
+      cache.set(cacheKey, promise);
       return promise;
     }
     const promise = (async (): Promise<Float32Array | null> => {
       const useCartesia = ttsProviderRef.current === 'cartesia';
       const url = useCartesia ? '/api/tutor/tts-cartesia' : '/api/tutor/tts-openai';
+      // Task W4: map the student-facing 'slow' | 'normal' intent to each
+      // provider's own speed contract.
+      //  - Cartesia (sonic-3.5): voice.__experimental_controls.speed takes
+      //    either its own tuned preset label ('slowest'|'slow'|'normal'|
+      //    'fast'|'fastest') or a raw relative number in [-1.0, 1.0]. The
+      //    label 'slow' is Cartesia's own calibrated preset — it reads more
+      //    natural than guessing a numeric offset, so we use it as-is.
+      //  - OpenAI (gpt-4o-mini-tts, /v1/audio/speech): `speed` is a flat
+      //    multiplier, 0.25-4.0, default 1.0. 0.85 was picked as an
+      //    audible-but-not-robotic slowdown — verified via a duration check
+      //    against the dev route (see task-W4-report.md).
+      // 'normal' omits the field entirely so every existing call is
+      // byte-for-byte unchanged when the toggle is off.
+      const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85) : undefined;
       const body = useCartesia
-        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current }
-        : { text: trimmed };
+        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, ...(speed !== undefined ? { speed } : {}) }
+        : { text: trimmed, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
       // with no second attempt and wedged the turn. Network faults and 5xx
@@ -2637,13 +2677,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       return null;
     })();
-    cache.set(trimmed, promise);
+    cache.set(cacheKey, promise);
     // A failed sentence must not be cached as permanently failed — evict it
     // so a later dispatch of the same text gets a fresh fetch (the old code
     // cached the rejected result forever).
-    void promise.then((r) => { if (r === null) cache.delete(trimmed); });
+    void promise.then((r) => { if (r === null) cache.delete(cacheKey); });
     return promise;
-  }, []);
+  }, [ttsCacheKey]);
 
   // Alternative TTS path for relay mode: gpt-4o-mini-tts via HTTP. Returns
   // Float32 PCM at 24kHz, dropped directly into the audio playback queue.
@@ -2658,8 +2698,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     const dispatchEpoch = speakEpochRef.current;
     try {
       const float32 = await fetchTTSPromise(trimmed);
-      // Consume the cache entry now that we're playing it.
-      ttsPrefetchCacheRef.current.delete(trimmed);
+      // Consume the cache entry now that we're playing it. Must use the same
+      // ttsCacheKey() the fetch was stored under (Task W4: the key now folds
+      // in speakingRate) or this delete silently no-ops and the entry never
+      // gets evicted.
+      ttsPrefetchCacheRef.current.delete(ttsCacheKey(trimmed));
       if (dispatchEpoch !== speakEpochRef.current) {
         // Killed mid-fetch. Drop the bytes silently. Don't touch
         // speakTextInFlightRef here — clearSpeechQueue already reset
@@ -2705,7 +2748,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } finally {
       ttsAbortRef.current = null;
     }
-  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise, emitPlaybackStamp]);
+  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise, emitPlaybackStamp, ttsCacheKey]);
   const sendOneSpeakTextViaOpenAITTSRef = useRef(sendOneSpeakTextViaOpenAITTS);
   sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
 
