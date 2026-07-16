@@ -79,6 +79,47 @@ console.log('\n=== No correct flags — fall back to label vs expectedAnswer, to
   check('unflagged: expected-contains-label direction also resolves correct', verdict === true, String(verdict));
 }
 
+console.log('\n=== C1 regression: negated distractor textually contains the expected answer ===');
+{
+  // Reviewer-reported false positive: a NEGATED distractor ("Not a
+  // concurrent power") textually CONTAINS the expected answer
+  // ("Concurrent power") and, being earlier in the array, must not beat
+  // the true exact match later in the array.
+  const choices: Choice[] = [
+    { id: 'A', text: 'Not a concurrent power' },
+    { id: 'B', text: 'Concurrent power' },
+  ];
+  const resolved = resolveMcqCorrectChoice(choices, 'Concurrent power');
+  check('exact match (B) wins over an earlier negated-containment candidate (A)', resolved?.id === 'B', JSON.stringify(resolved));
+  const verdictB = computeTryYourselfVerdict('B', 'Concurrent power', 'mcq', choices);
+  check('picking the true exact match (B) is TRUE', verdictB === true, String(verdictB));
+  const verdictA = computeTryYourselfVerdict('A', 'Concurrent power', 'mcq', choices);
+  check('picking the negated distractor (A) is FALSE, not a false positive', verdictA === false, String(verdictA));
+}
+{
+  // No exact match anywhere — the only containment candidate is negated
+  // relative to an expected answer that itself carries no negation. Must
+  // NOT be treated as a match; correctness is undecidable (null), not a
+  // false "wrong" and not a false "correct".
+  const choices: Choice[] = [
+    { id: 'A', text: 'Not a concurrent power' },
+    { id: 'B', text: 'Judicial review' },
+  ];
+  const resolved = resolveMcqCorrectChoice(choices, 'Concurrent power');
+  check('negated-only containment candidate is excluded when expected has no negation', resolved === undefined, JSON.stringify(resolved));
+}
+{
+  // Negation on BOTH sides: the expected answer itself is a negation
+  // ("Not applicable") and a choice is its own exact match — must still
+  // resolve via the exact-match pass, unaffected by negation exclusion.
+  const choices: Choice[] = [
+    { id: 'A', text: 'Not applicable' },
+    { id: 'B', text: 'Applicable' },
+  ];
+  const resolved = resolveMcqCorrectChoice(choices, 'Not applicable');
+  check('negation-both-sides: exact match on the negated expected answer still resolves', resolved?.id === 'A', JSON.stringify(resolved));
+}
+
 console.log('\n=== Case / whitespace variants ===');
 {
   const choices: Choice[] = [

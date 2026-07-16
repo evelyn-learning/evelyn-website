@@ -92,6 +92,11 @@ export function matchesAnswerStrict(submitted: string, expected: string, format:
     return norm(s) === norm(e);
   }
   if (format === 'mcq') {
+    // M1: this branch is LEGACY-ONLY — reached solely when the caller has
+    // no `choices` array to resolve option identity from (see
+    // computeTryYourselfVerdict). Whenever `choices` are present, option
+    // identity via `resolveMcqCorrectChoice` decides correctness instead;
+    // this bare submitted-vs-expected string compare is never consulted.
     return norm(s) === norm(e);
   }
   // FRQ: only assert TRUE on exact normalized match; otherwise undecidable.
@@ -103,6 +108,19 @@ function normalizeLabel(v: string): string {
   return v.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+// Negation tokens that flip a label's meaning relative to its plain
+// reading. Used only to gate the CONTAINMENT fallback below — a negated
+// distractor ("Not a concurrent power") textually CONTAINS the expected
+// answer ("concurrent power") while meaning the opposite, so it must not
+// be treated as a containment match unless the expected answer is
+// *itself* a negation (in which case an exact match, not containment,
+// is what resolves it — see the negation-both-sides case).
+const NEGATION_TOKENS = [/\bnot\b/, /\bnon-/, /\bnever\b/, /n't\b/, /\bcannot\b/, /\bexcept\b/];
+
+function hasNegation(v: string): boolean {
+  return NEGATION_TOKENS.some((re) => re.test(v));
+}
+
 /** Resolve which MCQ choice counts as "correct" — the ONE decision both
  *  the row ✓ affordance and the verdict text must share.
  *
@@ -110,14 +128,23 @@ function normalizeLabel(v: string): string {
  *   1. A choice explicitly flagged `correct: true` — the brain's
  *      authoritative per-option signal, independent of whatever
  *      `expectedAnswer` text was separately authored.
- *   2. No choice flagged — fall back to matching each choice's label
- *      against `expectedAnswer`, tolerant of one being a
- *      parenthetical-qualified superset of the other (label contains
- *      expected, or expected contains label), case/whitespace-insensitive.
+ *   2. No choice flagged — an EXACT normalized-label match against
+ *      `expectedAnswer`, checked across ALL choices before any
+ *      containment check is attempted. An exact match is a stronger,
+ *      unambiguous signal and must always win regardless of array order.
+ *   3. Still nothing — a containment fallback (label contains expected,
+ *      or expected contains label), tolerant of one being a
+ *      parenthetical-qualified superset of the other. Candidates whose
+ *      label carries a negation token that `expectedAnswer` itself
+ *      lacks are excluded from this pass: a negated distractor ("Not a
+ *      concurrent power") textually contains the expected answer
+ *      ("concurrent power") while meaning the opposite, and previously
+ *      could win the fallback purely by array position — see the 2026-07
+ *      C1 regression (Task X9 review).
  *
  *  Returns undefined when correctness genuinely can't be determined
- *  (no flags, and no choice label lines up with `expectedAnswer`) —
- *  callers must treat that as "defer to the brain", not "wrong".
+ *  (no flags, no exact match, and no non-negated containment candidate)
+ *  — callers must treat that as "defer to the brain", not "wrong".
  */
 export function resolveMcqCorrectChoice(choices: Choice[] | undefined, expectedAnswer: string | undefined): Choice | undefined {
   if (!choices || choices.length === 0) return undefined;
@@ -125,9 +152,22 @@ export function resolveMcqCorrectChoice(choices: Choice[] | undefined, expectedA
   if (flagged) return flagged;
   const exp = expectedAnswer ? normalizeLabel(expectedAnswer) : '';
   if (!exp) return undefined;
+
+  // Pass 1: exact normalized match, checked over every choice before any
+  // containment logic runs. Must win outright over containment candidates
+  // no matter where either sits in the array.
+  const exact = choices.find((c) => normalizeLabel(c.text) === exp);
+  if (exact) return exact;
+
+  // Pass 2: containment fallback, reached only when no choice is an
+  // exact match. Exclude candidates carrying a negation the expected
+  // answer doesn't have.
+  const expNegated = hasNegation(exp);
   return choices.find((c) => {
     const label = normalizeLabel(c.text);
-    return !!label && (label === exp || label.includes(exp) || exp.includes(label));
+    if (!label) return false;
+    if (!expNegated && hasNegation(label)) return false;
+    return label.includes(exp) || exp.includes(label);
   });
 }
 
