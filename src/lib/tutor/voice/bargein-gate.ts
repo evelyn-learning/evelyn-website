@@ -103,3 +103,50 @@ export function shouldFireBargeInKill(input: BargeInGateInput): boolean {
   // instant it has been loud for `sustainMs`.
   return input.nowMs - runStart >= input.sustainMs;
 }
+
+/**
+ * Timer-variant of the sustain gate for the Ink2 STT path (Task X3).
+ *
+ * ROOT CAUSE (session portal-da5b97a6): the energy-window gate above defends
+ * the OpenAI perception path, but the Ink2 hook (`useCartesiaInkWS`) exposes
+ * NO per-frame energy signal, so its 'speaking'-state `speech_started` fell
+ * back to the INSTANT kill — the documented V1 gap. Live console proved a
+ * self-echo `turn.start` fired a STAGE-3 cancel that cut the tutor off, with
+ * `speech_stopped` arriving ~264ms later. A sustain check would have caught it.
+ *
+ * With no energy window, "sustain" is measured purely by TIME between the VAD
+ * events: `speech_started` arms a deferred-kill timer; `speech_stopped` within
+ * `sustainMs` DISARMS it (echo blip / brief noise — the utterance ended before
+ * a genuine barge-in would have); if the timer reaches `sustainMs` while the
+ * tutor is STILL 'speaking' and the utterance has NOT stopped, the kill fires.
+ *
+ * This is the pure decision the timer callback evaluates AT EXPIRY. In wiring,
+ * `speechStopped` is enforced by clearing the timer on `speech_stopped`, so the
+ * callback only runs when it is false; the parameter is kept explicit so the
+ * full semantics are testable and the predicate is honest in isolation.
+ *
+ * Pure: identical output for identical input. No timers, no refs.
+ */
+export interface DeferredBargeInGateInput {
+  /** Production state at timer-expiry evaluation. Kill only fires while the
+   *  tutor is still 'speaking' — if TTS finished naturally there is nothing
+   *  left to interrupt. */
+  state: string;
+  /** Did `speech_stopped` fire before this evaluation? True → the utterance
+   *  ended within the sustain window (echo blip) → never kill. */
+  speechStopped: boolean;
+  /** Milliseconds elapsed since the arming `speech_started` (onset). */
+  elapsedMs: number;
+  /** Required continuous duration before the kill may fire. */
+  sustainMs: number;
+}
+
+export function shouldFireDeferredBargeInKill(input: DeferredBargeInGateInput): boolean {
+  // Tutor stopped talking before sustain met → nothing to interrupt.
+  if (input.state !== 'speaking') return false;
+  // Utterance ended within the sustain window → short echo/noise, not a
+  // genuine barge-in. (In wiring this is enforced by disarming the timer.)
+  if (input.speechStopped) return false;
+  // Sustained through the window while still speaking → real barge-in.
+  return input.elapsedMs >= input.sustainMs;
+}

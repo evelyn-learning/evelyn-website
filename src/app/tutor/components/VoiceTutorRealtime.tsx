@@ -133,7 +133,7 @@ import {
   BARGEIN_GATE_POLL_MS,
   BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
-import { shouldFireBargeInKill } from '@/lib/tutor/voice/bargein-gate';
+import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -1049,11 +1049,21 @@ export function VoiceTutorRealtime({
   // a 'speaking'-state speech_started is allowed to fire the stage-3 kill.
   const getPerceptionEnergyWindowRef = useRef<(() => { tMs: number; energy: number }[]) | null>(null);
   const bargeInGateTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Never leak the sustain-gate poll past unmount.
+  // Task X3: deferred-kill timer for the Ink2 STT path, which has NO energy
+  // window. speech_started arms it; speech_stopped (or a fresh onset) disarms
+  // it; if it reaches BARGEIN_SUSTAIN_MS while still 'speaking' it fires the
+  // same stage-3 kill. This is the sustain gate expressed purely in time (see
+  // shouldFireDeferredBargeInKill) rather than mic energy.
+  const bargeInDeferredKillRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Never leak the sustain-gate timers past unmount.
   useEffect(() => () => {
     if (bargeInGateTimerRef.current) {
       clearInterval(bargeInGateTimerRef.current);
       bargeInGateTimerRef.current = null;
+    }
+    if (bargeInDeferredKillRef.current) {
+      clearTimeout(bargeInDeferredKillRef.current);
+      bargeInDeferredKillRef.current = null;
     }
   }, []);
   // Stage 4 regression fix (2026-06-16): drive the 'processing' ("Thinking…")
@@ -11739,6 +11749,10 @@ export function VoiceTutorRealtime({
         clearInterval(bargeInGateTimerRef.current);
         bargeInGateTimerRef.current = null;
       }
+      if (bargeInDeferredKillRef.current) {
+        clearTimeout(bargeInDeferredKillRef.current);
+        bargeInDeferredKillRef.current = null;
+      }
       // Stage 2 ('processing'): INSTANT kill — unchanged, no energy gate. The
       // brain is only thinking (no TTS to echo), so there is nothing for the
       // tutor's own voice to trigger; today's fast cancel stands.
@@ -11757,9 +11771,34 @@ export function VoiceTutorRealtime({
       if (canStage3) {
         const getWindow = getPerceptionEnergyWindowRef.current;
         if (!getWindow) {
-          // No energy signal available (Ink2 owns the mic) → preserve prior
-          // instant behavior rather than silently disabling barge-in.
-          runPerceptionKill('speaking');
+          // Ink2 owns the mic → NO energy window. Task X3: instead of the
+          // documented V1 fallback (instant kill — which cut the tutor off on
+          // its own echo, session portal-da5b97a6), apply the sustain gate as a
+          // TIME-based deferred-kill timer. speech_stopped (disarm below) or a
+          // fresh onset (supersede above) cancels it; if it survives the full
+          // BARGEIN_SUSTAIN_MS while the tutor is still 'speaking', the same
+          // stage-3 kill fires. A short self-echo blip ends (speech_stopped ~264ms
+          // in the live capture) well before that and is disarmed.
+          const armedAt = Date.now();
+          onDebugEvent?.('perception_bargein_deferred_armed', `sustain=${BARGEIN_SUSTAIN_MS}ms (ink2, no energy window)`);
+          bargeInDeferredKillRef.current = setTimeout(() => {
+            bargeInDeferredKillRef.current = null;
+            // Pure predicate (shouldFireDeferredBargeInKill): fire only if still
+            // 'speaking' and the utterance never stopped. speech_stopped clears
+            // this timer, so speechStopped is false whenever this callback runs.
+            const fire = shouldFireDeferredBargeInKill({
+              state: productionStateRef.current,
+              speechStopped: false,
+              elapsedMs: Date.now() - armedAt,
+              sustainMs: BARGEIN_SUSTAIN_MS,
+            });
+            if (fire) {
+              onDebugEvent?.('perception_bargein_deferred_passed', `latencyMs=${Date.now() - armedAt}`);
+              runPerceptionKill('speaking');
+            } else {
+              onDebugEvent?.('perception_bargein_deferred_abandoned', `prod=${productionStateRef.current}`);
+            }
+          }, BARGEIN_SUSTAIN_MS);
           return;
         }
         const gateStartedAt = Date.now();
@@ -11805,6 +11844,13 @@ export function VoiceTutorRealtime({
       if (bargeInGateTimerRef.current) {
         clearInterval(bargeInGateTimerRef.current);
         bargeInGateTimerRef.current = null;
+      }
+      // Task X3: disarm the Ink2 time-based deferred kill — the utterance ended
+      // before BARGEIN_SUSTAIN_MS, so it was an echo blip / brief noise, not a
+      // sustained barge-in. (Matches the energy gate's speech_stopped disarm.)
+      if (bargeInDeferredKillRef.current) {
+        clearTimeout(bargeInDeferredKillRef.current);
+        bargeInDeferredKillRef.current = null;
       }
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;

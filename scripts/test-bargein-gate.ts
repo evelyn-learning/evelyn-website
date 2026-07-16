@@ -14,7 +14,11 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { shouldFireBargeInKill, type BargeInFrame } from '../src/lib/tutor/voice/bargein-gate';
+import {
+  shouldFireBargeInKill,
+  shouldFireDeferredBargeInKill,
+  type BargeInFrame,
+} from '../src/lib/tutor/voice/bargein-gate';
 import { BARGEIN_SUSTAIN_MS } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
@@ -143,6 +147,68 @@ function main() {
       frames: hum, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
     });
     assert.equal(fire, false, 'below-threshold energy never counts as voice');
+  });
+
+  // ── Task X3: Ink2 time-based deferred-kill variant (no energy window) ──
+  // The Ink2 STT path exposes no per-frame energy, so the sustain gate is
+  // measured purely by TIME between VAD events. This is the decision the
+  // deferred-kill timer evaluates AT EXPIRY (speech_stopped disarms the timer,
+  // so speechStopped is false whenever the callback actually runs — but the
+  // predicate encodes the full semantics and is tested for all inputs).
+  console.log('\nTime-based deferred barge-in gate — shouldFireDeferredBargeInKill\n');
+
+  test('deferred: sustained through the window while speaking → kill', () => {
+    // Timer reached BARGEIN_SUSTAIN_MS, tutor still speaking, no speech_stopped.
+    const fire = shouldFireDeferredBargeInKill({
+      state: 'speaking', speechStopped: false, elapsedMs: SUSTAIN, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, true, 'a sustained barge-in on the Ink2 path must kill');
+  });
+
+  test('deferred: speech_stopped before the window (echo blip) → NO kill', () => {
+    // The 264ms self-echo from the live capture ends before SUSTAIN (350ms).
+    // In wiring this disarms the timer; the predicate must also refuse it.
+    const fire = shouldFireDeferredBargeInKill({
+      state: 'speaking', speechStopped: true, elapsedMs: SUSTAIN, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, false, 'a stopped (echo-blip) utterance must never kill');
+  });
+
+  test('deferred: tutor no longer speaking at expiry → NO kill', () => {
+    // TTS finished naturally during the window — nothing left to interrupt.
+    for (const state of ['listening', 'processing', 'connected', 'idle']) {
+      const fire = shouldFireDeferredBargeInKill({
+        state, speechStopped: false, elapsedMs: SUSTAIN, sustainMs: SUSTAIN,
+      });
+      assert.equal(fire, false, `state='${state}' at expiry must not kill`);
+    }
+  });
+
+  test('deferred: elapsed just under the window → NO kill', () => {
+    const fire = shouldFireDeferredBargeInKill({
+      state: 'speaking', speechStopped: false, elapsedMs: SUSTAIN - 1, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, false, 'under sustainMs must not fire (>= boundary)');
+  });
+
+  test('deferred: exactly the window → kill (boundary, >=)', () => {
+    const fire = shouldFireDeferredBargeInKill({
+      state: 'speaking', speechStopped: false, elapsedMs: SUSTAIN, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, true, 'elapsed == sustainMs fires');
+  });
+
+  test('deferred: added barge-in latency bounded by the sustain constant', () => {
+    // Never fires before sustainMs; fires by sustainMs. Same latency budget as
+    // the energy gate — a genuine Ink2 barge-in pays at most BARGEIN_SUSTAIN_MS.
+    for (let t = 0; t < SUSTAIN; t += 20) {
+      assert.equal(
+        shouldFireDeferredBargeInKill({ state: 'speaking', speechStopped: false, elapsedMs: t, sustainMs: SUSTAIN }),
+        false, `must not fire early at elapsed=${t}ms`);
+    }
+    assert.equal(
+      shouldFireDeferredBargeInKill({ state: 'speaking', speechStopped: false, elapsedMs: SUSTAIN, sustainMs: SUSTAIN }),
+      true, 'fires by exactly sustainMs');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -25,6 +25,18 @@ export type OpenAIVoice = 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'sage'
  *  sentence-start/drain events and caption pacing stay plausibly timed. */
 const SILENT_TTS_SECONDS_PER_WORD = 0.15;
 
+// Task X3 (2026-07-16) stuck-SPEAKING defensive watchdog. Root cause of the
+// live wedge (session portal-da5b97a6) is fixed at the epoch-guard drain in
+// sendOneSpeakTextViaOpenAITTS, but a hung TTS fetch or a missed
+// AudioBufferSource 'ended' could strand the same shape with no recovery. If
+// state sits at 'speaking' with a fully EMPTY audio pipeline (not playing,
+// audio queue empty) for longer than the window, the turn can never advance on
+// its own — force a clean drain back to listening. The window comfortably
+// exceeds any normal inter-sentence fetch gap (prefetched; worst-case bounded
+// retry backoff ~0.75s), so it never fires during healthy playback.
+const STUCK_SPEAKING_WATCHDOG_MS = 8000;
+const STUCK_SPEAKING_WATCHDOG_POLL_MS = 2000;
+
 export interface RealtimeUsage {
   totalTokens: number;
   inputTokens: number;
@@ -819,6 +831,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // turn's audio AND the retry's audio back-to-back — observed
   // 2026-05-04 Linear-Functions session.
   const speakEpochRef = useRef(0);
+  // Task X3: timestamp when the stuck-SPEAKING condition first became true, so
+  // the watchdog fires only after the strand PERSISTS past the window (a normal
+  // inter-sentence gap clears it long before). null = not currently stranded.
+  const strandedSpeakingSinceRef = useRef<number | null>(null);
   // Pre-fetch cache for the openai-mini path. While sentence N is
   // playing, we kick off the HTTP fetch for sentence N+1 in parallel,
   // so its PCM bytes are ready the moment N's audio ends. Without this,
@@ -2707,6 +2723,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // Killed mid-fetch. Drop the bytes silently. Don't touch
         // speakTextInFlightRef here — clearSpeechQueue already reset
         // it, and the next legitimate dispatch will set it again.
+        //
+        // Task X3 (2026-07-16) stuck-SPEAKING wedge (session portal-da5b97a6):
+        // when this parked dispatch was the queue's RESUME point — an
+        // inter-sentence gap, where playNextAudio's empty-queue branch shifted
+        // the next sentence, set isPlaying=false, and dispatched us — a bare
+        // return here STRANDS the state machine. clearSpeechQueue (the barge-in
+        // that bumped the epoch) called stop() on a source that had ALREADY
+        // fired 'ended', so no onended re-runs playNextAudio to drain back to
+        // 'listening'; state pins at 'speaking' with an empty pipeline until the
+        // student manually toggles the mic. If nothing is playing and the audio
+        // queue is empty, drive the drain-to-idle explicitly so the turn always
+        // ends cleanly. (When a source IS still playing, its onended owns the
+        // transition — leave it alone.)
+        if (!isPlayingRef.current && audioQueueRef.current.length === 0) {
+          playNextAudio();
+        }
         return;
       }
       if (!float32) {
@@ -2969,6 +3001,43 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       setTimeout(done, 60);
     });
   }, [isHttpTtsProvider, emitPlaybackStamp]);
+
+  // Task X3 (2026-07-16) defensive stuck-SPEAKING watchdog. The confirmed root
+  // cause (a barge-in's clearSpeechQueue firing during an inter-sentence gap,
+  // whose epoch-guarded resume dispatch then dropped its bytes without draining
+  // to idle) is fixed directly at that dispatch. This is defense-in-depth for
+  // the same OBSERVABLE strand from any other cause (a hung TTS fetch that never
+  // resolves, a browser that drops a source's 'ended'): if state sits at
+  // 'speaking' with a fully empty audio pipeline for longer than the window,
+  // nothing will advance it, so force a clean drain. clearSpeechQueue bumps the
+  // epoch (invalidating any parked fetch) and empties the queues; playNextAudio
+  // then runs its empty-queue branch → 'drain' + return to listening/connected.
+  useEffect(() => {
+    const id = setInterval(() => {
+      const stranded =
+        stateRef.current === 'speaking' &&
+        !isPlayingRef.current &&
+        audioQueueRef.current.length === 0;
+      if (!stranded) {
+        strandedSpeakingSinceRef.current = null;
+        return;
+      }
+      const now = Date.now();
+      if (strandedSpeakingSinceRef.current === null) {
+        strandedSpeakingSinceRef.current = now;
+        return;
+      }
+      if (now - strandedSpeakingSinceRef.current >= STUCK_SPEAKING_WATCHDOG_MS) {
+        console.warn(
+          `[Realtime] stuck-SPEAKING watchdog: 'speaking' with empty audio pipeline for ${now - strandedSpeakingSinceRef.current}ms — forcing drain-to-idle`,
+        );
+        strandedSpeakingSinceRef.current = null;
+        void clearSpeechQueue();
+        playNextAudio();
+      }
+    }, STUCK_SPEAKING_WATCHDOG_POLL_MS);
+    return () => clearInterval(id);
+  }, [clearSpeechQueue, playNextAudio]);
 
   // Voice Perception Stage 3.1 v2 (2026-06-16): snapshot of TTS content
   // the student would have heard if not cut. Now tracked at audio-
