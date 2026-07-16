@@ -997,6 +997,14 @@ export default function ReplayPlayer({
     currentTimeMsRef.current = 0;
     setCurrentTimeMs(0);
     applyTime(0);
+    // Final-review fix wave (2026-07-16, item 3): the unread high-water mark
+    // above only re-syncs while the drawer is OPEN (see the effect above).
+    // Resetting with the drawer closed left it stamped at whatever count was
+    // last seen, which then suppressed the unread badge for transcript
+    // bubbles revealed on the next playthrough (they never exceed a
+    // high-water mark from a previous, now-rewound playthrough). Reset it
+    // here so a fresh playthrough's badge starts from zero.
+    lastSeenTranscriptCountRef.current = 0;
   }, [pause, applyTime]);
 
   const seek = useCallback((timeMs: number) => {

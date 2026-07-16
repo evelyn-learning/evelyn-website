@@ -353,9 +353,9 @@ function scoreSelfVoiceDetailed(
   recentTtsScripts: RecentTtsScript[],
   speechStartedAt: number | undefined,
   now: number,
-): { textScore: number; phonScore: number } {
+): { textScore: number; phonScore: number; textContainmentDominant: boolean } {
   const tTokens = tokenize(transcript);
-  if (tTokens.length === 0) return { textScore: 0, phonScore: 0 };
+  if (tTokens.length === 0) return { textScore: 0, phonScore: 0, textContainmentDominant: false };
   const tSet = new Set(tTokens);
   const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
   const tPhon = phoneticTokens(tTokens);
@@ -367,6 +367,19 @@ function scoreSelfVoiceDetailed(
   const tContentCount = contentTokens(tTokens).length;
   let bestText = 0;
   let bestPhon = 0;
+  // Fix wave (2026-07-16, final review item 1): tracks whether the WINNING
+  // text-score line's max came from containment alone — strictly above both
+  // jaccard and n-gram for that line, not merely tied with them. This is the
+  // known short-answer FP class (KNOWN PRE-EXISTING FALSE POSITIVE comment
+  // above): a short transcript ("Dadu") trivially contained in a long TTS
+  // line ("...Dadu or Karakorum?") where jaccard/n-gram are diluted by the
+  // line's length and never approach containment's 0.9. When jaccard or
+  // n-gram are ALSO ≥0.9 for the winning line (e.g. an exact full-line echo
+  // like "Good question." matching "Good question."), containment isn't
+  // uniquely responsible for the drop, so this stays false and the ordinary
+  // "self-voice score" reason applies — only the narrow containment-only FP
+  // class gets the distinct marker.
+  let bestTextContainmentDominant = false;
   const studentT = speechStartedAt ?? now;
   for (const s of recentTtsScripts) {
     if (!scriptWindowContains(s, studentT, now)) continue;
@@ -436,10 +449,13 @@ function scoreSelfVoiceDetailed(
 
     const textScore = Math.max(j, ngramHit, containment * 0.9);
     const phonScore = Math.max(jPhon, ngramHitPhon, containmentPhon * 0.9);
-    if (textScore > bestText) bestText = textScore;
+    if (textScore > bestText) {
+      bestText = textScore;
+      bestTextContainmentDominant = containment === 1 && j < 0.9 && ngramHit < 0.9;
+    }
     if (phonScore > bestPhon) bestPhon = phonScore;
   }
-  return { textScore: bestText, phonScore: bestPhon };
+  return { textScore: bestText, phonScore: bestPhon, textContainmentDominant: bestTextContainmentDominant };
 }
 
 export function scoreSelfVoice(
@@ -550,7 +566,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   if (wordCount === 0) return { verdict: 'noise', reason: 'empty transcript' };
 
   // 1. Self-voice (defence layers 1+2 — script-cancellation + timing).
-  const { textScore: selfVoiceTextScore, phonScore: selfVoicePhonScore } = scoreSelfVoiceDetailed(
+  const {
+    textScore: selfVoiceTextScore,
+    phonScore: selfVoicePhonScore,
+    textContainmentDominant,
+  } = scoreSelfVoiceDetailed(
     text, input.recentTtsScripts, input.speechStartedAt, input.now,
   );
   const selfVoiceScore = Math.max(selfVoiceTextScore, selfVoicePhonScore);
@@ -563,11 +583,23 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     // sound-alike, not a literal repeated word).
     const phoneticOnly =
       selfVoicePhonScore >= SELF_VOICE_THRESHOLD && selfVoiceTextScore < SELF_VOICE_THRESHOLD;
+    // Final-review fix wave (2026-07-16, item 1): when the drop was reached
+    // via tier-1 TEXT CONTAINMENT specifically — not jaccard/n-gram (see
+    // `textContainmentDominant`'s doc comment) and not the phonetic pass —
+    // mark it distinctly too, with the transcript word count, so prod logs
+    // can count the known short-answer FP class documented above (the
+    // tutor asks "...Dadu or Karakorum?" and the student's exact-echo
+    // 1-word ANSWER "Dadu" trivially contains-matches).
+    const containmentOnly =
+      !phoneticOnly && selfVoiceTextScore >= SELF_VOICE_THRESHOLD && textContainmentDominant;
+    const reason = phoneticOnly
+      ? `phonetic-echo overlap ${selfVoicePhonScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`
+      : containmentOnly
+        ? `self-voice containment (${wordCount}w) ${selfVoiceScore.toFixed(2)}`
+        : `self-voice score ${selfVoiceScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`;
     return {
       verdict: 'drop_self_voice',
-      reason: phoneticOnly
-        ? `phonetic-echo overlap ${selfVoicePhonScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`
-        : `self-voice score ${selfVoiceScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
+      reason,
       selfVoiceScore,
     };
   }

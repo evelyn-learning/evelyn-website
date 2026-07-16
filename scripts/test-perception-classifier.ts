@@ -725,5 +725,92 @@ console.log('\n=== Fix wave finding 3: distinct reason for phonetic-only drops =
   );
 }
 
+// ── Final-review fix wave (2026-07-16): distinct reason for containment-only
+// drops ─────────────────────────────────────────────────────────────────
+// The dominant known FP class in the self-voice matcher (see the KNOWN
+// PRE-EXISTING FALSE POSITIVE comment in perception-classifier.ts): the tutor
+// asks "...Dadu or Karakorum?" and the student's exact-echo 1-word ANSWER
+// "Dadu" trivially contains-matches the script line, even though jaccard/
+// n-gram are diluted by the line's length and never approach containment's
+// 0.9. Item 1 marks this distinctly (with word count) so prod logs can count
+// it separately from ordinary jaccard/n-gram-driven drops and from the
+// phonetic-only pass.
+console.log('\n=== Final-review item 1: distinct reason for containment-only drops ===');
+{
+  const KARAKORUM_SCRIPT = 'was the capital Dadu or Karakorum?';
+  const playStart = 7_000_000;
+  const playEnd = 7_002_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 70, text: KARAKORUM_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const speechStartedAt = playEnd + 500;
+  const now = speechStartedAt + 300;
+
+  {
+    // "Dadu" alone: contained in the (much longer) script line, but jaccard
+    // and n-gram are both diluted well below 0.9 by the line's length — only
+    // containment clears the bar.
+    const r = classifyHeuristic({
+      transcript: 'Dadu',
+      productionState: 'listening',
+      recentTtsScripts: scripts,
+      now,
+      speechStartedAt,
+    });
+    check(
+      '"Dadu" contained in the Karakorum script → drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+    check(
+      'reason string names the containment class distinctly, with word count',
+      /^self-voice containment \(1w\) [\d.]+$/.test(r.reason),
+      `reason="${r.reason}"`,
+    );
+  }
+  {
+    // Regression guard: an exact full-line echo ("Good question.") is
+    // ALSO trivially containment=1, but jaccard/n-gram tie it there too — the
+    // containment marker must NOT fire when it isn't uniquely responsible for
+    // the drop, so this must keep the ordinary "self-voice score" reason.
+    const goodQ: RecentTtsScript[] = [
+      { id: 71, text: 'Good question.', spokenStartedAt: playStart, spokenEndedAt: playEnd },
+    ];
+    const r = classifyHeuristic({
+      transcript: 'Good question.',
+      productionState: 'listening',
+      recentTtsScripts: goodQ,
+      now,
+      speechStartedAt,
+    });
+    check(
+      'jaccard/n-gram-driven full-line echo does NOT carry the containment marker',
+      !r.reason.startsWith('self-voice containment') && r.reason.startsWith('self-voice score'),
+      `reason="${r.reason}"`,
+    );
+  }
+  {
+    // Regression guard: the existing phonetic-only case must still take
+    // priority over the containment marker (it's checked first) — a
+    // phonetic-only drop must never be mislabeled as containment.
+    const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+    const daduScripts: RecentTtsScript[] = [
+      { id: 72, text: DADU_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+    ];
+    const r = classifyHeuristic({
+      transcript: "Badu, what's now Badu?",
+      productionState: 'listening',
+      recentTtsScripts: daduScripts,
+      now,
+      speechStartedAt,
+    });
+    check(
+      'phonetic-only drop keeps its own marker, not the containment one',
+      r.reason.startsWith('phonetic-echo overlap'),
+      `reason="${r.reason}"`,
+    );
+  }
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

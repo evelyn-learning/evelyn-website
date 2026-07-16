@@ -2360,6 +2360,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       playbackSourceRef.current = null;
     }
     audioQueueRef.current = [];
+    // Final-review fix wave (2026-07-16, item 2): clear the parallel label
+    // arrays alongside audioQueueRef, mirroring clearSpeechQueue's handling
+    // (~2816-2820). Left populated, a stale sentence/scriptId at the front
+    // of these arrays would get shifted off and paired with the NEXT fresh
+    // audio chunk pushed after this cut, wrongly 'start'-stamping and
+    // re-opening a window for an old, already-cut sentence.
+    audioQueueSentenceRef.current = [];
+    audioQueueScriptIdRef.current = [];
     isPlayingRef.current = false;
     // V2 self-voice fix wave (2026-07-15): this is a genuine barge-in cut —
     // the sentence WAS audible up to now, same as clearSpeechQueue's drain.
@@ -2398,6 +2406,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       playbackSourceRef.current = null;
     }
     audioQueueRef.current = [];
+    // Final-review fix wave (2026-07-16, item 2): clear the parallel label
+    // arrays alongside audioQueueRef — see interrupt() above for why.
+    audioQueueSentenceRef.current = [];
+    audioQueueScriptIdRef.current = [];
     isPlayingRef.current = false;
     // V2 self-voice fix wave (2026-07-15): close the window on whatever was
     // playing when pause() cut it — see interrupt() above for why.
