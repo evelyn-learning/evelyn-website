@@ -1884,7 +1884,7 @@ function TutorPage() {
   useEffect(() => {
     if (!pacingMenuOpen) return;
     const handler = (e: PointerEvent) => {
-      if (!pacingMenuRef.current?.contains(e.target as Node)) setPacingMenuOpen(false);
+      if (pacingMenuRef.current && !pacingMenuRef.current.contains(e.target as Node)) setPacingMenuOpen(false);
     };
     // Defer so the click that OPENED the menu doesn't immediately close it.
     const id = setTimeout(() => document.addEventListener('pointerdown', handler), 0);
@@ -2287,7 +2287,7 @@ function TutorPage() {
                 setPacingMenuOpen(false);
               };
               return (
-                <div className="relative flex justify-end items-center gap-2 px-2 py-1 border-b border-gray-100">
+                <div ref={pacingMenuRef} className="relative flex justify-end items-center gap-2 px-2 py-1 border-b border-gray-100">
                   {/* Phase 3: paceBias badge. Visible whenever bias ≠ 0
                       so the student knows the Slow down / Speed up
                       clicks took effect (the actual depth shift only
