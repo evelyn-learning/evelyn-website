@@ -20,7 +20,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
-  MessageSquareText, X, Target, Upload, ArrowDown,
+  MessageSquareText, X, Target, Upload, ArrowDown, Wrench,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
@@ -152,6 +152,16 @@ export default function SessionStage(props: SessionStageProps) {
     return () => window.removeEventListener('evelyn:open-transcript', open);
   }, []);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
+  // Tools cluster collapse-to-FAB (Task T1, 2026-07-16): the always-expanded
+  // icon column occluded board content on phones (IMG_7803). Default
+  // collapsed on mount; the FAB expands the SAME column in the SAME
+  // anchored spot (it only grows downward, never shifting position), and
+  // collapses again on a second FAB tap or on launching a tool (Draw /
+  // board-pen / Text note / Camera). Fullscreen and the E8 expand button are
+  // deliberately NOT wired to auto-collapse — their onClick handlers must
+  // stay byte-identical; only their visibility (inside the expanded column)
+  // changes.
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
 
@@ -382,40 +392,55 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Student tools cluster (top-right) ===== */}
       {/* Drop below the board-page switcher when it's shown — the switcher pill
           (top-center, up to 360px wide) otherwise collides with this cluster on
-          narrow screens. Mirrors the board's pt-28/pt-16 padding. */}
+          narrow screens. Mirrors the board's pt-28/pt-16 padding.
+          T1 (2026-07-16): collapsed by default behind a single FAB — the
+          always-open column occluded board content on phones (IMG_7803). The
+          outer anchor (top/right) never moves; the FAB toggles whether the
+          rest of the column renders below it, so expanding never shifts this
+          overlay's position, only grows it downward. */}
       <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
         <div className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
-          <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => setTool(tool === 'draw' ? null : 'draw')}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
-          {onToggleBoardPen && (
-            <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={onToggleBoardPen}>
-              <PenLine className="w-[18px] h-[18px]" />
-            </ToolBtn>
-          )}
-          <ToolBtn active={tool === 'text'} title="Text note" onClick={() => setTool(tool === 'text' ? null : 'text')}><span className="font-bold text-sm">Aa</span></ToolBtn>
-          <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer"><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
-          {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
-              `hidden md:` gate also hid it inside the portal's <768px embed
-              iframe (the iframe's own viewport is what md: measures), which
-              is exactly where students need it. document.fullscreenEnabled
-              is false on iPhone Safari (no Fullscreen API on non-video
-              elements) and false in an iframe without allowfullscreen, so
-              the dead-no-op cases stay hidden automatically. */}
-          {canFullscreen && (
+          <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
+            <Wrench className="w-[18px] h-[18px]" />
+          </ToolBtn>
+          {toolsOpen && (
             <>
               <div className="w-6 h-px bg-slate-200 my-0.5" />
-              <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
-            </>
-          )}
-          {/* Mobile expand (Task E8) — shown only where the native Fullscreen
-              API can't run (see canExpand above); mutually exclusive with the
-              button above. Toggles to a collapse affordance while expanded;
-              the portal owns the actual visual growth. */}
-          {canExpand && (
-            <>
-              <div className="w-6 h-px bg-slate-200 my-0.5" />
-              <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={expanded ? requestCollapse : requestExpand}>
-                {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
-              </ToolBtn>
+              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); setToolsOpen(false); }}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
+              {onToggleBoardPen && (
+                <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); setToolsOpen(false); }}>
+                  <PenLine className="w-[18px] h-[18px]" />
+                </ToolBtn>
+              )}
+              <ToolBtn active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); setToolsOpen(false); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
+              <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={() => setToolsOpen(false)}><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
+              {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
+                  `hidden md:` gate also hid it inside the portal's <768px embed
+                  iframe (the iframe's own viewport is what md: measures), which
+                  is exactly where students need it. document.fullscreenEnabled
+                  is false on iPhone Safari (no Fullscreen API on non-video
+                  elements) and false in an iframe without allowfullscreen, so
+                  the dead-no-op cases stay hidden automatically. Deliberately
+                  NOT wired to auto-collapse the cluster (T1) — untouched. */}
+              {canFullscreen && (
+                <>
+                  <div className="w-6 h-px bg-slate-200 my-0.5" />
+                  <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+                </>
+              )}
+              {/* Mobile expand (Task E8) — shown only where the native Fullscreen
+                  API can't run (see canExpand above); mutually exclusive with the
+                  button above. Toggles to a collapse affordance while expanded;
+                  the portal owns the actual visual growth. onClick is byte-
+                  identical to pre-T1 — only its parent's visibility changed. */}
+              {canExpand && (
+                <>
+                  <div className="w-6 h-px bg-slate-200 my-0.5" />
+                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={expanded ? requestCollapse : requestExpand}>
+                    {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
+                  </ToolBtn>
+                </>
+              )}
             </>
           )}
         </div>
