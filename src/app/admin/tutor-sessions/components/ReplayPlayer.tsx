@@ -272,14 +272,34 @@ export default function ReplayPlayer({
   }, [whiteboardCommands]);
 
   // The one compressed coordinate system every offset below maps through.
+  //
+  // hasAudio ordering note (task E2): the `hasAudio` PROP is a persisted DB
+  // flag known synchronously at render — but the loader's own comment above
+  // (loadAudio, "flag may not be set due to race condition on session end")
+  // says it can be a false negative, and it's never updated to reflect the
+  // actual fetch outcome. The GROUND TRUTH for "audio is really playable" is
+  // `audioState === 'ready'` (set at the end of loadAudio, only once fetched
+  // buffers are non-empty) — but that resolves ASYNCHRONOUSLY, after modal
+  // open, well after this timeline is first built. Rather than trust the
+  // stale prop, we deliberately let audioState feed this memo's deps: it
+  // recomputes (rebuilds) once loading resolves, uncompressing a
+  // single-attempt timeline retroactively when audio turns out to be real.
+  // Before that resolution (idle/loading/error/none), hasAudio is false and
+  // behavior is identical to pre-E2 (compressed) — the same safe default an
+  // audio-less session gets. Known tradeoff: if playback is already under
+  // way the instant loadAudio resolves, totalDurationMs can change under a
+  // live currentTimeMs, which could visibly re-position the handle/reveal —
+  // acceptable here since it only happens once, right as real audio becomes
+  // available, and the resulting position is the MORE correct one.
+  const audioAvailable = audioState === 'ready';
   const compressedTimeline = useMemo(() => {
     const realOffsets = [
       ...transcript.map(t => new Date(t.timestamp).getTime() - startMs),
       ...debugEvents.map(d => new Date(d.timestamp).getTime() - startMs),
       ...(wbTimesUsable ? whiteboardCommands.map(w => new Date(w.timestamp).getTime() - startMs) : []),
     ];
-    return buildCompressedTimeline(realOffsets, realEndMs);
-  }, [transcript, debugEvents, whiteboardCommands, wbTimesUsable, startMs, realEndMs]);
+    return buildCompressedTimeline(realOffsets, realEndMs, { hasAudio: audioAvailable });
+  }, [transcript, debugEvents, whiteboardCommands, wbTimesUsable, startMs, realEndMs, audioAvailable]);
 
   const totalDurationMs = compressedTimeline.totalMs;
 

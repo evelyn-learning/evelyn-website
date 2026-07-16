@@ -76,6 +76,57 @@ check('resumed session (large gap, duration spans only the latest attempt): tota
   }
 });
 
+console.log('\nbuildCompressedTimeline — hasAudio option (task E2)');
+
+check('single-attempt + hasAudio:true: NO gap cap — identity mapping, no re-seeks', () => {
+  // A 60s silence (10_000 -> 70_000) that would normally collapse to the 8s
+  // GAP_CAP_MS. With audio present and no resume, the honest axis is real
+  // time: chat and audio share one axis, so nothing should compress.
+  const offsets = [0, 5_000, 10_000, 70_000, 75_000];
+  const realEndMs = 78_000; // 3s tail past the last item == MIN_TAIL_MS
+  const { totalMs, toCompressed, audioReseekEndsMs } = buildCompressedTimeline(offsets, realEndMs, { hasAudio: true });
+  assert.strictEqual(totalMs, realEndMs, `expected identity total, got ${totalMs}`);
+  assert.strictEqual(audioReseekEndsMs.length, 0, 'no capped gaps means no re-seek points');
+  for (const o of offsets) {
+    assert.strictEqual(toCompressed(o), o, `toCompressed(${o}) should be identity, got ${toCompressed(o)}`);
+  }
+});
+
+check('single-attempt + hasAudio:false (or omitted): today\'s capped behavior is unchanged', () => {
+  // Same offsets/realEndMs as above, but audio-less (or opts omitted) — the
+  // 60s silence must still compress down to the 8s cap, same as before E2.
+  const offsets = [0, 5_000, 10_000, 70_000, 75_000];
+  const realEndMs = 78_000;
+  const withoutOpts = buildCompressedTimeline(offsets, realEndMs);
+  const explicitFalse = buildCompressedTimeline(offsets, realEndMs, { hasAudio: false });
+  for (const { totalMs, toCompressed, audioReseekEndsMs } of [withoutOpts, explicitFalse]) {
+    assert.ok(totalMs < realEndMs, `expected the 60s gap to compress away, got totalMs=${totalMs} (realEndMs=${realEndMs})`);
+    assert.ok(totalMs < 30_000, `expected a small compressed total, got ${totalMs}`);
+    assert.strictEqual(audioReseekEndsMs.length, 1, 'the one capped gap needs exactly one re-seek point');
+    for (const o of offsets) {
+      const c = toCompressed(o);
+      assert.ok(c >= 0 && c <= totalMs, `offset ${o} mapped to ${c}, outside [0, ${totalMs}]`);
+    }
+  }
+});
+
+check('resumed session + hasAudio:true: unchanged from today\'s resumed (capped) behavior', () => {
+  // Same resumed-shape offsets as the "resumed session" totalMs test above.
+  // The structural resumed-replay fix is out of scope this round (global
+  // constraint) — hasAudio must NOT alter resumed-session compression at all.
+  const offsets = [0, 10_000, 20_000, 30_000, 40_000, 600_000, 610_000, 620_000, 630_000, 780_000];
+  const realEndMs = 240_000;
+  const today = buildCompressedTimeline(offsets, realEndMs);
+  const withHasAudio = buildCompressedTimeline(offsets, realEndMs, { hasAudio: true });
+  assert.strictEqual(withHasAudio.totalMs, today.totalMs, 'hasAudio must not change resumed totalMs');
+  assert.deepStrictEqual(withHasAudio.audioReseekEndsMs, today.audioReseekEndsMs, 'hasAudio must not change resumed re-seek points');
+  for (const o of offsets) {
+    assert.strictEqual(withHasAudio.toCompressed(o), today.toCompressed(o), `toCompressed(${o}) diverged for resumed+hasAudio`);
+  }
+  // And still compressed (this is the resumed-session behavior, unchanged).
+  assert.ok(withHasAudio.totalMs < 100_000, `expected the resumed gap to still compress away, got ${withHasAudio.totalMs}`);
+});
+
 console.log('\nclick <-> render position-math invariant (ReplayTimeline\'s own formulas)');
 
 /**

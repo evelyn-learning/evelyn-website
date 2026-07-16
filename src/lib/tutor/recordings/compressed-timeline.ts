@@ -60,24 +60,48 @@ export interface CompressedTimeline {
   audioReseekEndsMs: number[];
 }
 
-export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: number): CompressedTimeline {
+export interface CompressedTimelineOptions {
+  /** True when this session has playable audio AND is single-attempt
+   *  (non-resumed). In that case the honest axis is real time: chat and
+   *  audio inherently share one clock, so the gap cap is disabled entirely
+   *  (compressed timeline == real timeline, no skips, no re-seeks). Audio-less
+   *  sessions and RESUMED sessions (even with audio — the structural fix for
+   *  those is a separate, later round) keep today's capped/compressed
+   *  behavior unconditionally — see the `resumed` check below, which wins
+   *  over `hasAudio` on purpose. Optional and additive so existing callers
+   *  (and E3) are unaffected. */
+  hasAudio?: boolean;
+}
+
+export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: number, opts?: CompressedTimelineOptions): CompressedTimeline {
   // Anchor pairs (real[i], comp[i]), both strictly ascending, seeded with the
   // session origin. Items at or before the origin (clock skew) create no
   // anchor — toCompressed clamps them to 0 instead.
   const sorted = realOffsetsMs.filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+  // Real offsets are cap-independent (they're just the sorted, deduped
+  // timestamps), so build this pass BEFORE deciding whether to cap at all —
+  // the resume check below needs `lastReal` and must NOT itself depend on the
+  // cap that check is about to help choose.
   const real: number[] = [0];
-  const comp: number[] = [0];
-  const skipEndsMs: number[] = [];
   for (const r of sorted) {
-    const prevReal = real[real.length - 1];
-    if (r <= prevReal) continue; // duplicate / pre-origin timestamp
-    const gap = r - prevReal;
-    const c = comp[comp.length - 1] + Math.min(gap, GAP_CAP_MS);
-    if (gap > GAP_CAP_MS) skipEndsMs.push(c);
-    real.push(r);
-    comp.push(c);
+    if (r > real[real.length - 1]) real.push(r); // skip duplicate / pre-origin timestamps
   }
   const lastReal = real[real.length - 1];
+  // Resumed sessions must stay byte-identical to today regardless of
+  // hasAudio (global constraint — the structural resumed-replay fix is a
+  // later round). Only a genuinely single-attempt session with audio gets
+  // the uncapped identity axis.
+  const resumed = lastReal > realEndMs + RESUME_DETECT_SLACK_MS;
+  const gapCapMs = opts?.hasAudio && !resumed ? Infinity : GAP_CAP_MS;
+
+  const comp: number[] = [0];
+  const skipEndsMs: number[] = [];
+  for (let i = 1; i < real.length; i++) {
+    const gap = real[i] - real[i - 1];
+    const c = comp[comp.length - 1] + Math.min(gap, gapCapMs);
+    if (gap > gapCapMs) skipEndsMs.push(c);
+    comp.push(c);
+  }
   const lastComp = comp[comp.length - 1];
   // Tail: honor the real run-out after the last item, bounded to the gap cap.
   // The max() matters for resumed sessions, where realEndMs (duration spans
@@ -85,7 +109,7 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
   // With no items at all there is nothing to compress — keep the real length.
   const rawTotalMs = real.length === 1
     ? Math.max(realEndMs, MIN_TAIL_MS)
-    : lastComp + Math.min(Math.max(realEndMs - lastReal, MIN_TAIL_MS), GAP_CAP_MS);
+    : lastComp + Math.min(Math.max(realEndMs - lastReal, MIN_TAIL_MS), gapCapMs);
   // Guard against a malformed `startedAt`/`endedAt` (NaN dates) propagating
   // into totalMs — the same class of corrupt-data defect ab39e4a7 hit for
   // markers ("NaN% guard"). Every consumer downstream (the handle's render
@@ -111,7 +135,7 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
     const i = lastAtOrBefore(real, realMs);
     if (i === real.length - 1) {
       // Past the last anchor: slope-1 run-out, clamped to the timeline end.
-      return Math.min(comp[i] + Math.min(realMs - real[i], GAP_CAP_MS), totalMs);
+      return Math.min(comp[i] + Math.min(realMs - real[i], gapCapMs), totalMs);
     }
     // Piecewise-linear inside a segment: uncapped gaps keep slope 1, capped
     // gaps map their real span proportionally onto the 8s compressed beat.
@@ -132,8 +156,8 @@ export function buildCompressedTimeline(realOffsetsMs: number[], realEndMs: numb
   // re-seek at capped-gap ends (exact; preserves pre-compression behavior).
   // Resumed ⇒ tracks are concatenated active time: the compressed playhead
   // is the best proxy for buffer time, so use it as-is and never re-seek
-  // (playhead and buffer then advance in lockstep by construction).
-  const resumed = lastReal > realEndMs + RESUME_DETECT_SLACK_MS;
+  // (playhead and buffer then advance in lockstep by construction). `resumed`
+  // was already computed above (it decided gapCapMs) — reused here as-is.
   const toAudio = (compressedMs: number): number => (resumed ? compressedMs : toReal(compressedMs));
   const audioReseekEndsMs = resumed ? [] : skipEndsMs;
 
