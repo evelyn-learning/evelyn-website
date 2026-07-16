@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { Play, Pause, RotateCcw, X, Volume2, VolumeX } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
 import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
+import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '@/lib/tutor/recordings/audio-segments';
 
 interface TranscriptEntry {
   role: string;
@@ -95,17 +96,31 @@ function pcm16ToFloat32(arrayBuffer: ArrayBuffer): Float32Array {
 }
 
 // Stream a fetch response, reporting cumulative bytes received as chunks
-// arrive (onProgress), and return the fully assembled body once done. A raw
+// arrive (onProgress) and — for progressive playback (task E3) — handing each
+// raw byte chunk to `onChunk` as it lands so the caller can decode ~20s audio
+// segments before the whole (tens-of-MB) track finishes downloading. A raw
 // PCM16 session-audio track runs tens of MB, so the previous single
-// `resp.arrayBuffer()` await left the "Audio loading…" pill static for the
-// entire ~1min download. response.body may be absent in environments without
-// streaming fetch (older Safari, some test runners) — fall back to the
-// non-streaming path there.
+// `resp.arrayBuffer()` await left the "Audio loading…" pill static — and
+// playback unavailable — for the entire ~1min download. response.body may be
+// absent in environments without streaming fetch (older Safari, some test
+// runners) — fall back to the non-streaming path, still routing the whole
+// body through onChunk once so the segment builder handles both paths.
+//
+// When onChunk is supplied the caller retains the decoded segments, so we do
+// NOT also accumulate a merged copy here (that would hold the whole track in
+// memory a second time — exactly what progressive playback exists to avoid).
+// Without onChunk the legacy behavior is preserved: accumulate + return the
+// assembled body.
 async function readWithProgress(
   resp: Response,
   onProgress: (bytesReceived: number) => void,
+  onChunk?: (bytes: Uint8Array) => void,
 ): Promise<ArrayBuffer> {
-  if (!resp.body) return resp.arrayBuffer();
+  if (!resp.body) {
+    const buf = await resp.arrayBuffer();
+    onChunk?.(new Uint8Array(buf));
+    return buf;
+  }
   const reader = resp.body.getReader();
   const chunks: Uint8Array[] = [];
   let received = 0;
@@ -113,11 +128,13 @@ async function readWithProgress(
     const { done, value } = await reader.read();
     if (done) break;
     if (value && value.byteLength > 0) {
-      chunks.push(value);
       received += value.byteLength;
       onProgress(received);
+      if (onChunk) onChunk(value);
+      else chunks.push(value);
     }
   }
+  if (onChunk) return new ArrayBuffer(0); // caller retains segments; no merged copy
   const merged = new Uint8Array(received);
   let offset = 0;
   for (const chunk of chunks) {
@@ -126,6 +143,24 @@ async function readWithProgress(
   }
   return merged.buffer;
 }
+
+// Per-track progressive-audio state (task E3). Bytes stream in, get carried to
+// 2-byte (Int16) alignment, buffered until ≥ one segment's worth, then decoded
+// into an AudioContext-owned AudioBuffer. `frontierSec` is how far the track
+// is decoded; `done` marks the stream fully read. See audio-segments.ts.
+interface AudioSegment { startSec: number; durationSec: number; buffer: AudioBuffer }
+interface TrackStream {
+  sampleRate: number;
+  segmentBytes: number;       // bytes per ~20s segment (20 * sampleRate * 2)
+  segments: AudioSegment[];
+  frontierSec: number;
+  done: boolean;
+  carry: number | null;       // dangling odd byte carried across reads
+  pending: Uint8Array[];      // aligned bytes not yet flushed into a segment
+  pendingLen: number;
+}
+
+const SEGMENT_SECONDS = 20;
 
 interface AudioLoadProgress {
   loadedBytes: number;
@@ -165,8 +200,20 @@ export default function ReplayPlayer({
   const [visibleTranscriptCount, setVisibleTranscriptCount] = useState(0);
   const [visibleWbCount, setVisibleWbCount] = useState(0);
 
-  // Audio playback state
-  type AudioState = 'idle' | 'loading' | 'ready' | 'none' | 'error';
+  // Audio playback state.
+  //   idle      — modal not yet opened / load not started.
+  //   loading   — fetching; no playable segment covering the playhead yet.
+  //   ready     — audio confirmed present and a covering segment is available;
+  //               playback proceeds. Oscillates with `buffering` during play.
+  //   buffering — playing, but the playhead has outrun BOTH tracks' downloaded
+  //               frontiers and more is still streaming; playhead is held here
+  //               until a covering segment lands (task E3).
+  //   none      — nothing was recorded (both tracks empty/absent).
+  //   error     — network/exception before any segment decoded (retryable).
+  // NOTE: the E2 timeline rebuild is driven by the SEPARATE `audioConfirmed`
+  // latch below, NOT by this state — so ready↔buffering churn can never flip
+  // the compressed→identity mapping back and forth. See audioConfirmed.
+  type AudioState = 'idle' | 'loading' | 'ready' | 'buffering' | 'none' | 'error';
   const [audioState, setAudioState] = useState<AudioState>('idle');
   // Ref mirror so playback callbacks never read a stale closure — the exact
   // bug that made play-before-load permanently silent (2026-07-04).
@@ -195,18 +242,50 @@ export default function ReplayPlayer({
   }, []);
   const [studentMuted, setStudentMuted] = useState(false);
   const [tutorMuted, setTutorMuted] = useState(false);
+  const studentMutedRef = useRef(false);
+  const tutorMutedRef = useRef(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  // Raw decoded samples + capture sample rate, set during loadAudio. The
-  // playable AudioBuffer is materialized lazily in the shared playback
-  // context the first time we actually start a source.
-  const studentRawRef = useRef<{ float32: Float32Array; sampleRate: number } | null>(null);
-  const tutorRawRef = useRef<{ float32: Float32Array; sampleRate: number } | null>(null);
-  const studentBufferRef = useRef<AudioBuffer | null>(null);
-  const tutorBufferRef = useRef<AudioBuffer | null>(null);
+  // Progressive per-track segment queues (task E3) — replace the old
+  // whole-file raw/buffer refs. Segments are decoded into AudioContext-owned
+  // AudioBuffers as bytes arrive; playback schedules one source at a time per
+  // track and chains the next via `onended`.
+  const studentTrackRef = useRef<TrackStream | null>(null);
+  const tutorTrackRef = useRef<TrackStream | null>(null);
   const studentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const tutorSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const studentGainRef = useRef<GainNode | null>(null);
   const tutorGainRef = useRef<GainNode | null>(null);
+  // Per-track generation counter — bumped whenever a track's source is stopped
+  // or rescheduled, so a stale queued `onended` (from a source we've since
+  // torn down on a seek/hot-attach) can't chain the wrong segment.
+  const studentGenRef = useRef(0);
+  const tutorGenRef = useRef(0);
+  // `waiting` per track: playback wants this track at the current position but
+  // no decoded segment covers it yet (its frontier hasn't reached the
+  // playhead). Cleared when a covering segment lands and hot-attaches.
+  const studentWaitingRef = useRef(false);
+  const tutorWaitingRef = useRef(false);
+  // True once audio is confirmed genuinely present (first segment decoded).
+  // This — NOT audioState — is the single latched trigger for E2's
+  // compressed→identity timeline rebuild (REQUIRED item #2): it flips false→
+  // true exactly once and never reverts, so the identity mapping, once
+  // trusted, stays trusted through any later ready↔buffering churn.
+  const [audioConfirmed, setAudioConfirmed] = useState(false);
+  const audioConfirmedRef = useRef(false);
+  const confirmAudio = useCallback(() => {
+    if (audioConfirmedRef.current) return;
+    audioConfirmedRef.current = true;
+    setAudioConfirmed(true);
+    // First segment decoded ⇒ audio is playable NOW; flip the pill off
+    // "Audio loading…" so "Audio on" + the mute controls appear immediately,
+    // instead of waiting for the whole (tens-of-MB) download to finish.
+    if (audioStateRef.current === 'loading') setAudioStateBoth('ready');
+  }, [setAudioStateBoth]);
+  // True while the playhead is frozen waiting for the frontier to catch up.
+  const bufferingRef = useRef(false);
+  // Compressed-ms position the playhead is frozen at while buffering; playback
+  // resumes once the max downloaded frontier passes it.
+  const bufferingHeldMsRef = useRef(0);
 
   const playingRef = useRef(false);
   const currentTimeMsRef = useRef(0);
@@ -273,25 +352,24 @@ export default function ReplayPlayer({
 
   // The one compressed coordinate system every offset below maps through.
   //
-  // hasAudio ordering note (task E2): the `hasAudio` PROP is a persisted DB
-  // flag known synchronously at render — but the loader's own comment above
+  // hasAudio ordering note (tasks E2 + E3): the `hasAudio` PROP is a persisted
+  // DB flag known synchronously at render — but the loader's own comment
   // (loadAudio, "flag may not be set due to race condition on session end")
   // says it can be a false negative, and it's never updated to reflect the
   // actual fetch outcome. The GROUND TRUTH for "audio is really playable" is
-  // `audioState === 'ready'` (set at the end of loadAudio, only once fetched
-  // buffers are non-empty) — but that resolves ASYNCHRONOUSLY, after modal
-  // open, well after this timeline is first built. Rather than trust the
-  // stale prop, we deliberately let audioState feed this memo's deps: it
-  // recomputes (rebuilds) once loading resolves, uncompressing a
-  // single-attempt timeline retroactively when audio turns out to be real.
-  // Before that resolution (idle/loading/error/none), hasAudio is false and
-  // behavior is identical to pre-E2 (compressed) — the same safe default an
-  // audio-less session gets. Known tradeoff: if playback is already under
-  // way the instant loadAudio resolves, totalDurationMs can change under a
-  // live currentTimeMs, which could visibly re-position the handle/reveal —
-  // acceptable here since it only happens once, right as real audio becomes
-  // available, and the resulting position is the MORE correct one.
-  const audioAvailable = audioState === 'ready';
+  // that we have actually decoded audio bytes for this session — but that
+  // resolves ASYNCHRONOUSLY, after modal open, after this timeline is first
+  // built. So we drive the rebuild off `audioConfirmed`, latched true the
+  // instant the FIRST segment decodes (task E3 progressive load). That is the
+  // earliest moment the identity mapping is trustworthy (single-attempt +
+  // audio present, both now known) — and, being a one-way latch, it fires the
+  // rebuild EXACTLY once and never reverts, even as audioState later churns
+  // ready↔buffering (REQUIRED item #2). Before it, `hasAudio` is false and
+  // behavior is identical to pre-E2 (compressed) — the safe audio-less
+  // default. The one compressed→identity swap it triggers can land mid-
+  // playback; the swap effect below remaps currentTimeMs through the old→new
+  // mappings so the handle/reveal/audio never jump backward (REQUIRED #1).
+  const audioAvailable = audioConfirmed;
   const compressedTimeline = useMemo(() => {
     const realOffsets = [
       ...transcript.map(t => new Date(t.timestamp).getTime() - startMs),
@@ -391,15 +469,33 @@ export default function ReplayPlayer({
     setVisibleWbCount(wCount);
   }, []); // No deps — reads from refs
 
-  // Store totalDurationMs / re-seek points in refs so tick doesn't need deps
+  // Store totalDurationMs / re-seek points / audio mapping in refs so tick
+  // doesn't need deps
   const totalDurationMsRef = useRef(totalDurationMs);
   totalDurationMsRef.current = totalDurationMs;
   const audioReseekEndsRef = useRef<number[]>([]);
   audioReseekEndsRef.current = compressedTimeline.audioReseekEndsMs;
+  const toAudioRef = useRef(compressedTimeline.toAudio);
+  toAudioRef.current = compressedTimeline.toAudio;
+  // Playhead frozen by an in-flight scrub debounce (task E3, Step 5): during a
+  // drag we move only the visual playhead and hold the clock until the trailing
+  // edge commits the audio restart. Distinct from bufferingRef (frontier wait).
+  const seekPendingRef = useRef(false);
 
   // Animation loop — stable reference, reads everything from refs
   const tick = useCallback((now: number) => {
     if (!playingRef.current) return;
+
+    // Frozen states: either the playhead is waiting for the download frontier
+    // to catch up (buffering) or a scrub debounce is in flight. Keep the rAF
+    // heartbeat alive (so a resume/commit can re-render) but do NOT advance —
+    // the clock re-anchors when playback actually resumes, so no buffering /
+    // scrub time leaks into the position.
+    if (bufferingRef.current || seekPendingRef.current) {
+      lastFrameRef.current = now;
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
 
     const delta = now - lastFrameRef.current;
     lastFrameRef.current = now;
@@ -414,16 +510,48 @@ export default function ReplayPlayer({
         : currentTimeMsRef.current + delta * speedRef.current,
       totalDurationMsRef.current,
     );
+
+    // Buffering (task E3): only the PLAYHEAD outrunning BOTH tracks' decoded
+    // frontiers — while more is still streaming — holds. A track whose frontier
+    // simply hasn't reached the playhead yet stays silent on its own (handled
+    // in startTrackSource); it never blocks the other track or the clock.
+    if (audioConfirmedRef.current) {
+      const st = studentTrackRef.current;
+      const tt = tutorTrackRef.current;
+      const maxFrontierSec = Math.max(st?.frontierSec ?? 0, tt?.frontierSec ?? 0);
+      const bufSec = toAudioRef.current(newTime) / 1000;
+      const anyStreaming = (st ? !st.done : false) || (tt ? !tt.done : false);
+      if (bufSec >= maxFrontierSec && anyStreaming) {
+        // Freeze at newTime (never backward) and stop the now-exhausted
+        // sources; onSegmentLanded resumes once the frontier passes here.
+        bufferingRef.current = true;
+        bufferingHeldMsRef.current = newTime;
+        setAudioStateBoth('buffering');
+        currentTimeMsRef.current = newTime;
+        setCurrentTimeMs(newTime);
+        applyTime(newTime);
+        studentGenRef.current++; tutorGenRef.current++;
+        try { studentSourceRef.current?.stop(); } catch {}
+        try { tutorSourceRef.current?.stop(); } catch {}
+        studentSourceRef.current = null; tutorSourceRef.current = null;
+        studentWaitingRef.current = true; tutorWaitingRef.current = true;
+        lastFrameRef.current = now;
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+    }
+
     currentTimeMsRef.current = newTime;
     setCurrentTimeMs(newTime);
     applyTime(newTime);
 
     // Wall-clock audio tracks only (audioReseekEndsMs is empty for resumed
-    // sessions): crossing the END of a capped gap means the sources just
-    // played only the first 8s of a longer recorded silence — re-seek them
-    // at the mapped wall offset so speech after the gap stays aligned.
-    // Re-seek points are rare (one per long silence), so a linear scan per
-    // frame is fine.
+    // sessions AND for single-attempt-with-audio, which E2 leaves uncompressed
+    // — so this scan is effectively dormant whenever audio actually plays; it
+    // remains for the pre-confirm compressed transient): crossing the END of a
+    // capped gap means the sources just played only the first 8s of a longer
+    // recorded silence — re-seek them at the mapped wall offset so speech after
+    // the gap stays aligned. Re-seek points are rare, so a linear scan is fine.
     if (clockAnchorCtxRef.current !== null) {
       for (const reseekEnd of audioReseekEndsRef.current) {
         if (prevTime < reseekEnd && reseekEnd <= newTime) {
@@ -440,13 +568,19 @@ export default function ReplayPlayer({
     }
 
     rafRef.current = requestAnimationFrame(tick);
-  }, [applyTime]); // applyTime has no deps, so tick is stable
+  }, [applyTime, setAudioStateBoth]); // deps have stable identity, so tick is stable
 
   // Audio: load files when modal opens — try regardless of hasAudio flag
-  // (flag may not be set due to race condition on session end)
-  // Distinguishes: ready (≥1 non-empty track), none (both tracks
-  // absent/empty — nothing was recorded), error (network/exception —
-  // retryable via the status pill).
+  // (flag may not be set due to race condition on session end).
+  //
+  // Progressive (task E3): each track's bytes stream in and are decoded into
+  // ~20s AudioBuffer segments as they arrive, so playback can start within a
+  // second or two of the FIRST segment instead of after the whole (tens-of-MB)
+  // download. `audioConfirmed` latches true on the first decoded segment (the
+  // E2 identity-timeline trigger); `onSegmentLanded` hot-attaches / un-buffers
+  // as later segments land. Final states: none (nothing decoded — nothing was
+  // recorded), error (network/exception BEFORE any segment; retryable), else
+  // ready once the first segment lands (set via confirmAudio).
   const loadAudio = useCallback(async () => {
     if (!sessionId) { setAudioStateBoth('none'); return; }
     if (audioStateRef.current === 'loading' || audioStateRef.current === 'ready') return;
@@ -455,6 +589,17 @@ export default function ReplayPlayer({
     audioProgressTotalsRef.current = { student: null, tutor: null };
     lastReportedMBRef.current = -1;
     setAudioProgress({ loadedBytes: 0, totalBytes: null });
+
+    // The decode target context. Created here (loadAudio is reached via the
+    // "Open Session Replay" click, a user gesture) so segment AudioBuffers are
+    // owned by the very context that will play them — the same-context
+    // ownership the old lazy-materialize path was protecting (Safari dislikes
+    // buffers from a closed/foreign context).
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new AudioContext({ sampleRate: 24000 });
+    }
+    const ctx = audioCtxRef.current;
+
     try {
       const tokenParam = audioToken ? `&token=${encodeURIComponent(audioToken)}` : '';
       const [studentResp, tutorResp] = await Promise.all([
@@ -477,44 +622,174 @@ export default function ReplayPlayer({
       };
       reportProgress();
 
-      const readTrack = (resp: Response, track: 'student' | 'tutor') =>
-        readWithProgress(resp, (bytesReceived) => {
-          audioProgressBytesRef.current[track] = bytesReceived;
-          reportProgress();
-        });
+      // Pull exactly `n` (even) bytes off the front of a track's pending queue
+      // into a fresh, standalone ArrayBuffer safe to Int16-cast.
+      const takeBytes = (stream: TrackStream, n: number): ArrayBuffer => {
+        const out = new Uint8Array(n);
+        let filled = 0;
+        while (filled < n && stream.pending.length > 0) {
+          const head = stream.pending[0];
+          const need = n - filled;
+          if (head.length <= need) {
+            out.set(head, filled); filled += head.length; stream.pending.shift();
+          } else {
+            out.set(head.subarray(0, need), filled); filled += need;
+            stream.pending[0] = head.subarray(need);
+          }
+        }
+        stream.pendingLen -= n;
+        return out.buffer;
+      };
 
-      const [studentBuf, tutorBuf] = await Promise.all([
-        studentResp.ok ? readTrack(studentResp, 'student') : Promise.resolve(null),
-        tutorResp.ok ? readTrack(tutorResp, 'tutor') : Promise.resolve(null),
+      // Decode one segment's bytes into a context-owned AudioBuffer, append it,
+      // advance the frontier, confirm audio, and notify the scheduler.
+      const appendSegment = (stream: TrackStream, which: 'student' | 'tutor', bytes: ArrayBuffer) => {
+        const float32 = pcm16ToFloat32(bytes);
+        if (float32.length === 0) return;
+        const buffer = ctx.createBuffer(1, float32.length, stream.sampleRate);
+        buffer.getChannelData(0).set(float32);
+        const startSec = stream.frontierSec;
+        const durationSec = buffer.duration;
+        stream.segments.push({ startSec, durationSec, buffer });
+        stream.frontierSec = startSec + durationSec;
+        confirmAudio();
+        onSegmentLandedRef.current(which);
+      };
+
+      const makeStream = (sampleRate: number): TrackStream => ({
+        sampleRate,
+        segmentBytes: SEGMENT_SECONDS * sampleRate * 2,
+        segments: [], frontierSec: 0, done: false,
+        carry: null, pending: [], pendingLen: 0,
+      });
+
+      const readTrack = (resp: Response, which: 'student' | 'tutor') => {
+        const stream = makeStream(intHeader(resp, 'X-Sample-Rate', 24000));
+        (which === 'student' ? studentTrackRef : tutorTrackRef).current = stream;
+        return readWithProgress(
+          resp,
+          (bytesReceived) => { audioProgressBytesRef.current[which] = bytesReceived; reportProgress(); },
+          (chunk) => {
+            const { data, carry } = alignEvenBytes(stream.carry, chunk);
+            stream.carry = carry;
+            if (data.length > 0) { stream.pending.push(data); stream.pendingLen += data.length; }
+            while (stream.pendingLen >= stream.segmentBytes) {
+              appendSegment(stream, which, takeBytes(stream, stream.segmentBytes));
+            }
+          },
+        ).then(() => {
+          // Flush the tail (even part; a lone carried odd byte is a half-sample
+          // — discard it) as the final segment, then mark the stream complete.
+          const tail = stream.pendingLen - (stream.pendingLen % 2);
+          if (tail > 0) appendSegment(stream, which, takeBytes(stream, tail));
+          stream.done = true;
+        });
+      };
+
+      await Promise.all([
+        studentResp.ok ? readTrack(studentResp, 'student') : Promise.resolve(),
+        tutorResp.ok ? readTrack(tutorResp, 'tutor') : Promise.resolve(),
       ]);
 
-      if (studentBuf && studentBuf.byteLength > 0) {
-        studentRawRef.current = {
-          float32: pcm16ToFloat32(studentBuf),
-          sampleRate: intHeader(studentResp, 'X-Sample-Rate', 24000),
-        };
-      }
-      if (tutorBuf && tutorBuf.byteLength > 0) {
-        tutorRawRef.current = {
-          float32: pcm16ToFloat32(tutorBuf),
-          sampleRate: intHeader(tutorResp, 'X-Sample-Rate', 24000),
-        };
-      }
-      setAudioStateBoth(studentRawRef.current || tutorRawRef.current ? 'ready' : 'none');
+      const decodedAny =
+        (studentTrackRef.current?.segments.length ?? 0) > 0 ||
+        (tutorTrackRef.current?.segments.length ?? 0) > 0;
+      if (!decodedAny) setAudioStateBoth('none');
+      // Cast: the top-of-function guard narrows TS's view of the ref away from
+      // 'loading', but setAudioStateBoth('loading') above set it at runtime.
+      else if ((audioStateRef.current as AudioState) !== 'buffering') setAudioStateBoth('ready');
     } catch (err) {
       console.error('[ReplayPlayer] Audio load error:', err);
-      setAudioStateBoth('error');
+      // Keep whatever decoded already (partial playback beats none); only a
+      // failure BEFORE the first segment is a hard error.
+      if (audioConfirmedRef.current) {
+        if (studentTrackRef.current) studentTrackRef.current.done = true;
+        if (tutorTrackRef.current) tutorTrackRef.current.done = true;
+        if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
+      } else {
+        setAudioStateBoth('error');
+      }
     }
-  }, [sessionId, audioToken, setAudioStateBoth, reportProgress]);
+  }, [sessionId, audioToken, setAudioStateBoth, reportProgress, confirmAudio]);
 
-  // Audio: start playback from offset.
+  // ---- Progressive segment scheduling (task E3) ----
+  // One AudioBufferSourceNode at a time per track; onended chains the next
+  // segment. Per-track refs are bundled here so the schedule helpers can treat
+  // 'student'/'tutor' uniformly. All read from refs, so they stay stable.
+  type TrackKey = 'student' | 'tutor';
+  const trackGroup = useCallback((which: TrackKey) => (
+    which === 'student'
+      ? { stream: studentTrackRef, source: studentSourceRef, gain: studentGainRef, gen: studentGenRef, waiting: studentWaitingRef, mutedRef: studentMutedRef }
+      : { stream: tutorTrackRef, source: tutorSourceRef, gain: tutorGainRef, gen: tutorGenRef, waiting: tutorWaitingRef, mutedRef: tutorMutedRef }
+  ), []);
+
+  const ensureGain = useCallback((ctx: AudioContext, which: TrackKey): GainNode => {
+    const g = trackGroup(which);
+    if (!g.gain.current || g.gain.current.context !== ctx) {
+      const node = ctx.createGain();
+      node.gain.value = g.mutedRef.current ? 0 : 1;
+      node.connect(ctx.destination);
+      g.gain.current = node;
+    }
+    return g.gain.current;
+  }, [trackGroup]);
+
+  // Schedule segment `index` at `offsetSec`, chaining the next on `onended`.
+  // `gen` is captured so a source torn down by a later seek/hot-attach can't
+  // chain a stale segment. Ref-indirect because it recurses through onended.
+  const scheduleSegmentAtRef = useRef<(which: TrackKey, index: number, offsetSec: number, ctx: AudioContext, gen: number) => void>(() => {});
+  const scheduleSegmentAt = useCallback((which: TrackKey, index: number, offsetSec: number, ctx: AudioContext, gen: number) => {
+    const g = trackGroup(which);
+    const stream = g.stream.current;
+    if (!stream || g.gen.current !== gen) return;
+    const seg = stream.segments[index];
+    if (!seg) {
+      // Reached the last decoded segment — resume from the frontier once more
+      // arrives (hot-attach), or this is genuinely the end of the track.
+      g.source.current = null;
+      g.waiting.current = !stream.done;
+      return;
+    }
+    const gain = ensureGain(ctx, which);
+    const source = ctx.createBufferSource();
+    source.buffer = seg.buffer;
+    source.playbackRate.value = speedRef.current; // carries 2x/4x/8x across the chain
+    source.connect(gain);
+    source.onended = () => {
+      if (g.gen.current !== gen || !playingRef.current || bufferingRef.current || seekPendingRef.current) return;
+      scheduleSegmentAtRef.current(which, index + 1, 0, ctx, gen);
+    };
+    source.start(0, offsetSec);
+    g.source.current = source;
+    g.waiting.current = false;
+  }, [trackGroup, ensureGain]);
+  scheduleSegmentAtRef.current = scheduleSegmentAt;
+
+  // (Re)start ONE track at buffer-time `bufferSec`: stop its current source,
+  // bump its generation, and schedule the covering segment — or mark it
+  // waiting if the frontier hasn't reached `bufferSec` yet. Touches only this
+  // track, so a slower track never blocks or restarts the other.
+  const startTrackSource = useCallback((which: TrackKey, bufferSec: number, ctx: AudioContext) => {
+    const g = trackGroup(which);
+    g.gen.current++;
+    const gen = g.gen.current;
+    try { g.source.current?.stop(); } catch {}
+    g.source.current = null;
+    const stream = g.stream.current;
+    if (!stream || stream.segments.length === 0) { g.waiting.current = !(stream?.done ?? true); return; }
+    const hit = findSegmentAt(stream.segments, bufferSec);
+    if (!hit) { g.waiting.current = !stream.done; return; } // past frontier → silent, wait
+    scheduleSegmentAt(which, hit.index, hit.offsetSec, ctx, gen);
+  }, [trackGroup, scheduleSegmentAt]);
+
+  // Audio: start (or restart) both tracks from compressed offset `offsetMs`.
   // Async because the AudioContext may be born `suspended` (autoplay policy)
-  // and we MUST await `resume()` before calling `source.start()`, otherwise
-  // the first play silently drops audio until the next user interaction.
-  const startAudioPlayback = useCallback(async (offsetMs: number, playbackRate: number) => {
-    if (audioStateRef.current !== 'ready') return;
-
-    // Create or resume the shared playback AudioContext
+  // and we MUST await `resume()` before `source.start()`, else the first play
+  // silently drops audio until the next user interaction. Origin offset is
+  // always 0 (capture pads leading silence so sample 0 == session start), so
+  // there is no future-scheduling case. toAudio() maps compressed→buffer time.
+  const startAudioPlayback = useCallback(async (offsetMs: number, _playbackRate: number) => {
+    if (!audioConfirmedRef.current) return; // nothing decoded to play yet
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
       audioCtxRef.current = new AudioContext({ sampleRate: 24000 });
     }
@@ -522,96 +797,95 @@ export default function ReplayPlayer({
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch (err) { console.warn('[ReplayPlayer] AudioContext resume failed', err); }
     }
-
-    // Lazily materialize AudioBuffers in this context the first time we play.
-    // Doing it here (rather than in loadAudio) keeps the buffer's owner context
-    // alive for the entire playback lifecycle and avoids the closed-context
-    // quirks we hit when buffers were decoded in a throwaway temporary context.
-    if (!studentBufferRef.current && studentRawRef.current) {
-      const { float32, sampleRate } = studentRawRef.current;
-      const buf = ctx.createBuffer(1, float32.length, sampleRate);
-      buf.getChannelData(0).set(float32);
-      studentBufferRef.current = buf;
-    }
-    if (!tutorBufferRef.current && tutorRawRef.current) {
-      const { float32, sampleRate } = tutorRawRef.current;
-      const buf = ctx.createBuffer(1, float32.length, sampleRate);
-      buf.getChannelData(0).set(float32);
-      tutorBufferRef.current = buf;
-    }
-
-    // Create gain nodes if needed
-    if (!studentGainRef.current) {
-      studentGainRef.current = ctx.createGain();
-      studentGainRef.current.connect(ctx.destination);
-    }
-    if (!tutorGainRef.current) {
-      tutorGainRef.current = ctx.createGain();
-      tutorGainRef.current.connect(ctx.destination);
-    }
-
-    // Apply mute state
-    studentGainRef.current.gain.value = studentMuted ? 0 : 1;
-    tutorGainRef.current.gain.value = tutorMuted ? 0 : 1;
-
-    // Stop existing sources
-    try { studentSourceRef.current?.stop(); } catch {}
-    try { tutorSourceRef.current?.stop(); } catch {}
-
-    // Schedule a track at the buffer offset for the compressed timeline
-    // position `offsetMs` (origin offset is always 0 — capture-side
-    // leading-silence padding already aligns sample 0 with session start —
-    // so there is no future-scheduling case to handle here). toAudio() maps
-    // compressed → wall time for single-attempt tracks (tick() then re-seeks
-    // at every capped gap's end) and is the identity for resumed sessions'
-    // concatenated active-time tracks — see the Audio note up top.
-    const bufferOffsetSec = compressedTimeline.toAudio(offsetMs) / 1000;
-    const scheduleTrack = (
-      buffer: AudioBuffer | null,
-      gain: GainNode | null,
-    ): AudioBufferSourceNode | null => {
-      if (!buffer || !gain) return null;
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.playbackRate.value = playbackRate;
-      source.connect(gain);
-      if (bufferOffsetSec >= buffer.duration) return null; // past end of track
-      source.start(0, bufferOffsetSec);
-      return source;
-    };
-
-    studentSourceRef.current = scheduleTrack(studentBufferRef.current, studentGainRef.current);
-    tutorSourceRef.current = scheduleTrack(tutorBufferRef.current, tutorGainRef.current);
-
+    const bufferSec = compressedTimeline.toAudio(offsetMs) / 1000;
+    startTrackSource('student', bufferSec, ctx);
+    startTrackSource('tutor', bufferSec, ctx);
     // A4: anchor the master clock at this exact (position, ctx-time) pair.
-    // Valid even when both tracks were past their end — ctx.currentTime is
-    // still the most reliable monotonic clock available.
     clockAnchorMsRef.current = offsetMs;
     clockAnchorCtxRef.current = ctx.currentTime;
-  }, [studentMuted, tutorMuted, compressedTimeline]);
-
-  // HOT-ATTACH (the core bug fix): if audio finishes loading while the
-  // visual replay is already playing, start it at the current position —
-  // previously the user had to rewind/pause+play to get sound.
-  // startAudioPlayback rides a ref so this effect fires ONLY on the
-  // loading→ready transition — with the callback in the dep array, every
-  // mute toggle would recreate it and needlessly restart the sources.
+  }, [compressedTimeline, startTrackSource]);
   const startAudioPlaybackRef = useRef(startAudioPlayback);
   startAudioPlaybackRef.current = startAudioPlayback;
-  useEffect(() => {
-    if (audioState === 'ready' && playingRef.current) {
-      startAudioPlaybackRef.current(currentTimeMsRef.current, speedRef.current);
-    }
-  }, [audioState]);
 
-  // Audio: stop playback
+  // HOT-ATTACH + un-buffer (task E3): called whenever a new segment lands.
+  //  - If buffering, resume once the max frontier passes the frozen playhead.
+  //  - Otherwise, if THIS track was silent (its frontier hadn't reached the
+  //    playhead) and a covering segment just arrived, start only this track —
+  //    the other track keeps playing undisturbed.
+  const onSegmentLanded = useCallback((which: TrackKey) => {
+    if (!playingRef.current) return;
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    if (bufferingRef.current) {
+      const maxFrontierSec = Math.max(studentTrackRef.current?.frontierSec ?? 0, tutorTrackRef.current?.frontierSec ?? 0);
+      const heldBufSec = compressedTimeline.toAudio(bufferingHeldMsRef.current) / 1000;
+      if (maxFrontierSec > heldBufSec) {
+        bufferingRef.current = false;
+        setAudioStateBoth('ready');
+        lastFrameRef.current = performance.now();
+        startAudioPlaybackRef.current(bufferingHeldMsRef.current, speedRef.current);
+      }
+      return;
+    }
+    const g = trackGroup(which);
+    if (!g.waiting.current) return;
+    const bufSec = compressedTimeline.toAudio(currentTimeMsRef.current) / 1000;
+    if (g.stream.current && findSegmentAt(g.stream.current.segments, bufSec)) {
+      startTrackSource(which, bufSec, ctx);
+    }
+  }, [compressedTimeline, trackGroup, startTrackSource, setAudioStateBoth]);
+  const onSegmentLandedRef = useRef(onSegmentLanded);
+  onSegmentLandedRef.current = onSegmentLanded;
+
+  // SWAP-DISCONTINUITY FIX (REQUIRED item #1). When `audioConfirmed` latches
+  // true, E2's memo rebuilds the timeline compressed→identity in the SAME
+  // render. `currentTimeMsRef` still holds an OLD-compressed offset that the
+  // new identity mapping would reinterpret as a (smaller) real offset — a
+  // backward jump of the handle, reveal, and audio. Remap it exactly through
+  // OLD→real→NEW at the swap instant, in a layout effect (before paint) so
+  // nothing flickers. The OLD timeline is single-attempt here (resumed never
+  // uncompresses), so its `toAudio` == its `toReal`, giving real ms; the new
+  // identity `toCompressed` maps that straight back. We fire ONLY on the
+  // false→true edge AND only when totalMs actually changed (a real remap; for
+  // resumed sessions the memo re-runs but the mapping is unchanged, so
+  // toAudio-as-toReal would NOT hold — the totalMs guard skips those).
+  const prevTimelineRef = useRef(compressedTimeline);
+  const prevAudioConfirmedRef = useRef(audioConfirmed);
+  useLayoutEffect(() => {
+    const prevTL = prevTimelineRef.current;
+    const justConfirmed = !prevAudioConfirmedRef.current && audioConfirmed;
+    if (justConfirmed && compressedTimeline.totalMs !== prevTL.totalMs) {
+      const realMs = prevTL.toAudio(currentTimeMsRef.current);
+      const remapped = compressedTimeline.toCompressed(realMs);
+      currentTimeMsRef.current = remapped;
+      setCurrentTimeMs(remapped);
+      applyTime(remapped);
+      if (playingRef.current) startAudioPlaybackRef.current(remapped, speedRef.current);
+    }
+    prevTimelineRef.current = compressedTimeline;
+    prevAudioConfirmedRef.current = audioConfirmed;
+  }, [compressedTimeline, audioConfirmed, applyTime]);
+
+  // Audio: stop playback. Bump both generations so any queued `onended` from a
+  // segment we're stopping mid-flight cannot chain the next one.
   const stopAudioPlayback = useCallback(() => {
+    studentGenRef.current++;
+    tutorGenRef.current++;
     try { studentSourceRef.current?.stop(); } catch {}
     try { tutorSourceRef.current?.stop(); } catch {}
     studentSourceRef.current = null;
     tutorSourceRef.current = null;
+    studentWaitingRef.current = false;
+    tutorWaitingRef.current = false;
     // A4: no live audio ⇒ fall back to frame-delta clock.
     clockAnchorCtxRef.current = null;
+  }, []);
+
+  // Trailing-edge debounce for scrub-driven audio restarts (task E3, Step 5).
+  const seekDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearSeekDebounce = useCallback(() => {
+    if (seekDebounceRef.current) { clearTimeout(seekDebounceRef.current); seekDebounceRef.current = null; }
+    seekPendingRef.current = false;
   }, []);
 
   const play = useCallback(() => {
@@ -620,19 +894,25 @@ export default function ReplayPlayer({
       setCurrentTimeMs(0);
       applyTime(0);
     }
+    bufferingRef.current = false;
+    clearSeekDebounce();
+    if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
     playingRef.current = true;
     setIsPlaying(true);
     lastFrameRef.current = performance.now();
     rafRef.current = requestAnimationFrame(tick);
     startAudioPlayback(currentTimeMsRef.current, speedRef.current);
-  }, [totalDurationMs, tick, applyTime, startAudioPlayback]);
+  }, [totalDurationMs, tick, applyTime, startAudioPlayback, clearSeekDebounce, setAudioStateBoth]);
 
   const pause = useCallback(() => {
     playingRef.current = false;
     setIsPlaying(false);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    bufferingRef.current = false;
+    clearSeekDebounce();
+    if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
     stopAudioPlayback();
-  }, [stopAudioPlayback]);
+  }, [stopAudioPlayback, clearSeekDebounce, setAudioStateBoth]);
 
   const reset = useCallback(() => {
     pause();
@@ -646,12 +926,25 @@ export default function ReplayPlayer({
     currentTimeMsRef.current = clamped;
     setCurrentTimeMs(clamped);
     applyTime(clamped);
-    // If playing, restart audio from new position
-    if (playingRef.current) {
-      stopAudioPlayback();
-      startAudioPlayback(clamped, speedRef.current);
-    }
-  }, [totalDurationMs, applyTime, stopAudioPlayback, startAudioPlayback]);
+    if (!playingRef.current) return;
+    // Debounced audio restart (E1 emits onSeek every pointer move during a
+    // drag). Silence audio + freeze the clock NOW (seekPendingRef makes tick
+    // hold), move only the visual playhead, and commit the actual source
+    // (re)schedule + buffering re-eval on the trailing edge (~150ms after the
+    // last onSeek) so a scrub isn't a storm of source restarts.
+    stopAudioPlayback();
+    seekPendingRef.current = true;
+    if (seekDebounceRef.current) clearTimeout(seekDebounceRef.current);
+    seekDebounceRef.current = setTimeout(() => {
+      seekDebounceRef.current = null;
+      seekPendingRef.current = false;
+      if (!playingRef.current) return;
+      bufferingRef.current = false;
+      if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
+      lastFrameRef.current = performance.now();
+      startAudioPlaybackRef.current(currentTimeMsRef.current, speedRef.current);
+    }, 150);
+  }, [totalDurationMs, applyTime, stopAudioPlayback, setAudioStateBoth]);
 
   const changeSpeed = useCallback((newSpeed: number) => {
     // A4: re-anchor the audio master clock BEFORE the rate changes — the
@@ -668,11 +961,14 @@ export default function ReplayPlayer({
     if (tutorSourceRef.current) tutorSourceRef.current.playbackRate.value = newSpeed;
   }, []);
 
-  // Update gain when mute toggles
+  // Update gain when mute toggles — mirror into the ref so newly scheduled
+  // segment sources pick up the current mute without reading React state.
   useEffect(() => {
+    studentMutedRef.current = studentMuted;
     if (studentGainRef.current) studentGainRef.current.gain.value = studentMuted ? 0 : 1;
   }, [studentMuted]);
   useEffect(() => {
+    tutorMutedRef.current = tutorMuted;
     if (tutorGainRef.current) tutorGainRef.current.gain.value = tutorMuted ? 0 : 1;
   }, [tutorMuted]);
 
@@ -680,6 +976,7 @@ export default function ReplayPlayer({
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (seekDebounceRef.current) clearTimeout(seekDebounceRef.current);
       try { studentSourceRef.current?.stop(); } catch {}
       try { tutorSourceRef.current?.stop(); } catch {}
       audioCtxRef.current?.close();
@@ -825,9 +1122,13 @@ export default function ReplayPlayer({
                   Audio failed — Retry
                 </button>
               )}
-              {audioState === 'ready' && (
+              {(audioState === 'ready' || audioState === 'buffering') && (
                 <>
-                  <span className="rounded-full bg-green-50 px-2 py-1 text-xs text-green-600">Audio on</span>
+                  {audioState === 'buffering' ? (
+                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-600">Buffering…</span>
+                  ) : (
+                    <span className="rounded-full bg-green-50 px-2 py-1 text-xs text-green-600">Audio on</span>
+                  )}
                   <button
                     onClick={() => setStudentMuted(!studentMuted)}
                     className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${

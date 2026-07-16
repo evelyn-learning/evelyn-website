@@ -27,6 +27,7 @@
  */
 import assert from 'node:assert';
 import { buildCompressedTimeline } from '../src/lib/tutor/recordings/compressed-timeline';
+import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '../src/lib/tutor/recordings/audio-segments';
 
 let passed = 0;
 function check(label: string, fn: () => void) {
@@ -203,6 +204,79 @@ check('totalDurationMs from buildCompressedTimeline never breaks the render/clic
     // on the old code (which no longer exists).
     assert.strictEqual(clickGuardOld, renderSaysValid);
   }
+});
+
+console.log('\naudio-segments — alignEvenBytes 2-byte carry (task E3)');
+
+check('even-length chunk with no prior carry passes through untouched', () => {
+  const { data, carry } = alignEvenBytes(null, new Uint8Array([1, 2, 3, 4]));
+  assert.deepStrictEqual([...data], [1, 2, 3, 4]);
+  assert.strictEqual(carry, null);
+});
+
+check('odd-length chunk peels off exactly one trailing carry byte', () => {
+  const { data, carry } = alignEvenBytes(null, new Uint8Array([1, 2, 3]));
+  assert.deepStrictEqual([...data], [1, 2]);
+  assert.strictEqual(carry, 3);
+});
+
+check('a prior carry is prepended before re-checking alignment', () => {
+  // carry=9, incoming odd [1,2,3] → merged [9,1,2,3] is even → no new carry.
+  const { data, carry } = alignEvenBytes(9, new Uint8Array([1, 2, 3]));
+  assert.deepStrictEqual([...data], [9, 1, 2, 3]);
+  assert.strictEqual(carry, null);
+});
+
+check('carry + even incoming becomes odd → one new carry peeled', () => {
+  // carry=9, incoming even [1,2] → merged [9,1,2] odd → data [9,1], carry 2.
+  const { data, carry } = alignEvenBytes(9, new Uint8Array([1, 2]));
+  assert.deepStrictEqual([...data], [9, 1]);
+  assert.strictEqual(carry, 2);
+});
+
+check('lossless invariant: concat(all data) + final carry == original stream, for adversarial odd splits', () => {
+  // A 25-byte stream (odd total) split at deliberately awful boundaries.
+  const original = Array.from({ length: 25 }, (_, i) => i + 1);
+  const splits = [[1, 2, 3], [4], [5, 6], [7, 8, 9, 10, 11], [12], [13, 14, 15, 16], [17], [18, 19], [20, 21, 22, 23, 24, 25]];
+  let carry: number | null = null;
+  const out: number[] = [];
+  for (const chunk of splits) {
+    const r = alignEvenBytes(carry, new Uint8Array(chunk));
+    assert.strictEqual(r.data.length % 2, 0, 'every emitted run must be even-length (safe to Int16-cast)');
+    out.push(...r.data);
+    carry = r.carry;
+  }
+  if (carry !== null) out.push(carry);
+  assert.deepStrictEqual(out, original, 'no byte may be lost or duplicated across odd-boundary splits');
+});
+
+console.log('\naudio-segments — findSegmentAt / frontierSec (task E3)');
+
+// Three contiguous 20s segments: [0,20), [20,40), [40,55).
+const segs: SegmentSpan[] = [
+  { startSec: 0, durationSec: 20 },
+  { startSec: 20, durationSec: 20 },
+  { startSec: 40, durationSec: 15 },
+];
+
+check('finds the covering segment and the intra-segment offset', () => {
+  assert.deepStrictEqual(findSegmentAt(segs, 0), { index: 0, offsetSec: 0 });
+  assert.deepStrictEqual(findSegmentAt(segs, 19.5), { index: 0, offsetSec: 19.5 });
+  assert.deepStrictEqual(findSegmentAt(segs, 20), { index: 1, offsetSec: 0 }); // boundary belongs to the LATER segment
+  assert.deepStrictEqual(findSegmentAt(segs, 45), { index: 2, offsetSec: 5 });
+});
+
+check('negative time and past-frontier time both return null (track silent / past end)', () => {
+  assert.strictEqual(findSegmentAt(segs, -1), null);
+  assert.strictEqual(findSegmentAt(segs, 55), null); // exactly at the frontier is past-end
+  assert.strictEqual(findSegmentAt(segs, 999), null);
+  assert.strictEqual(findSegmentAt([], 0), null); // no segments downloaded yet
+});
+
+check('frontierSec is the end of the last segment (0 when empty)', () => {
+  assert.strictEqual(frontierSec(segs), 55);
+  assert.strictEqual(frontierSec([]), 0);
+  assert.strictEqual(frontierSec([{ startSec: 0, durationSec: 20 }]), 20);
 });
 
 console.log(`\n${passed} checks passed`);
