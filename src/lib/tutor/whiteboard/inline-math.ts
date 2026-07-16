@@ -13,6 +13,8 @@
  * correctly instead of being parsed as a math segment "50 and a 15 movie".
  */
 
+import katex from 'katex';
+
 // Reject candidate math segments that look like prose with currency.
 // Accepted shapes:
 //   1. At least one LaTeX-only signal (backslash command, caret/underscore
@@ -61,6 +63,177 @@ export function autoWrapUnicodeMath(text: string): string {
     const hi = upperA ?? upperB;
     return `$${cmd}_{${lo}}^{${hi}}$`;
   });
+}
+
+// Auto-wrap pre-pass (Task E4, 2026-07-15): lesson-plan seeds and brain
+// narration sometimes write bare LaTeX with NO $...$ delimiters at all
+// (e.g. "Compute lim_{x→0} sin(5x)/(2x)." — ap-calcbc-u1-limits-algebraic-
+// manipulation.ts:95). segment() only splits on $...$, so without this
+// pass the underscore/caret render as literal characters on the card.
+//
+// The heuristic is deliberately conservative: it only wraps a contiguous
+// run of "math-looking" tokens that contains at least one STRONG signal —
+// a backslash command (\frac, \sqrt, ...), a known math-function call or
+// limit pattern (sin(, lim_{...}), or a short (<=2 char) variable with a
+// numeric/braced script (x^2, x_{1}). A run expands outward from that
+// signal through whitespace-single-space-connected neighbor tokens that
+// are plausibly math (contain a digit/operator/paren/bracket char) and
+// are NOT themselves a plain-English word — this stops expansion at
+// ordinary prose ("Compute", "for", "stays") so bare identifiers like
+// snake_case_id or markdown _italics_ (no strong signal anywhere in
+// them) are never touched. Every wrap is validated with
+// katex.renderToString before being committed; a throw falls back to the
+// original raw text untouched — the same safety net InlineMathText's
+// Math component already has for genuine $...$ math (see Math() below).
+//
+// Already-$-delimited regions are treated as opaque and never rescanned,
+// so this pass can never nest a $ inside an existing pair or change any
+// already-working $-delimited card (mirrors segment()'s own dollar
+// pairing so behavior composes cleanly with the currency guard above).
+const MATH_FN_NAMES = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp', 'lim', 'max', 'min', 'arg', 'det', 'dim', 'gcd', 'lcm', 'sinh', 'cosh', 'tanh'];
+const FN_ALT = MATH_FN_NAMES.join('|');
+// Isolated (whole-token, not a substring of a longer word) match of a
+// known math-function name — used to strip fn names before the
+// prose-word check ("using" must not be mistaken for "u" + "sin" + "g").
+const FN_NAME_ISOLATED_RE = new RegExp(`(?<![A-Za-z])(?:${FN_ALT})(?![A-Za-z])`, 'gi');
+// fn name immediately followed by "(" (a call, e.g. "sin(") or "_" (a
+// scripted limit, e.g. "lim_{...}") — underscore counts as a \w char so a
+// plain \b after the name would NOT be a boundary; the lookaheads here
+// are boundary-correct for that case.
+const FN_CALL_OR_SCRIPT_RE = new RegExp(`(?<![A-Za-z])(?:${FN_ALT})[_(]`, 'i');
+// A short (1-2 char) variable immediately followed by ^ or _ and then a
+// digit or a brace group: x^2, x_{1}, y_2. Deliberately excludes a bare
+// letter run after the script marker (x_ray) — that's prose, not math.
+const SHORT_VAR_SCRIPT_RE = /\b[A-Za-z]{1,2}[\^_](?:\{|\d)/;
+const BACKSLASH_CMD_RE = /\\[a-zA-Z]+/;
+const BACKSLASH_CMD_RE_G = /\\[a-zA-Z]+/g;
+// Characters that show up in a bare math run (digits, operators, parens,
+// braces, common unicode math symbols) but never in ordinary English
+// prose words — used to admit a token as a candidate NEIGHBOR of a
+// strong-signal token (never as a seed by itself).
+const MATHY_CHAR_RE = /[0-9+\-*/=<>≤≥≠(){}^_\\²³√π×÷·−]/;
+const TRAILING_PUNCT_RE = /^(.*?)([.,;:!?]+)$/;
+
+function stripTrailingPunct(chunk: string): { core: string; trail: string } {
+  const m = chunk.match(TRAILING_PUNCT_RE);
+  return m ? { core: m[1], trail: m[2] } : { core: chunk, trail: '' };
+}
+
+function chunkIsProseWord(core: string): boolean {
+  // Strip known math-function names AND backslash commands before
+  // checking for a leftover English word — otherwise a LaTeX command
+  // name like "\frac"/"\sqrt" reads as the prose word "frac"/"sqrt" and
+  // wrongly blocks it from joining a run as a neighbor chunk.
+  const stripped = core.replace(FN_NAME_ISOLATED_RE, '').replace(BACKSLASH_CMD_RE_G, '');
+  return /[a-z]{3,}/.test(stripped);
+}
+
+function chunkHasStrongSignal(core: string): boolean {
+  return BACKSLASH_CMD_RE.test(core) || FN_CALL_OR_SCRIPT_RE.test(core) || SHORT_VAR_SCRIPT_RE.test(core);
+}
+
+function chunkIsCandidate(core: string): boolean {
+  if (!core || chunkIsProseWord(core)) return false;
+  return MATHY_CHAR_RE.test(core);
+}
+
+interface Chunk { start: number; core: string; trail: string; }
+
+function tokenizeChunks(plain: string): Chunk[] {
+  const chunks: Chunk[] = [];
+  const re = /\S+/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(plain))) {
+    const { core, trail } = stripTrailingPunct(m[0]);
+    chunks.push({ start: m.index, core, trail });
+  }
+  return chunks;
+}
+
+function isValidLatex(latex: string): boolean {
+  try {
+    katex.renderToString(latex, { throwOnError: true, displayMode: false, strict: false, trust: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Scan a plain-text (no $ in it) span for bare-LaTeX runs and wrap the
+// validated ones in $...$.
+function autoWrapPlainText(plain: string): string {
+  const chunks = tokenizeChunks(plain);
+  if (chunks.length === 0) return plain;
+
+  const candidateOk = chunks.map((c) => chunkIsCandidate(c.core));
+  const strongOk = chunks.map((c) => chunkHasStrongSignal(c.core));
+
+  let result = '';
+  let cursor = 0;
+  let i = 0;
+  // Tracks the highest chunk index already folded into a previous run so
+  // that a second, later seed can't expand backward and re-claim chunks
+  // (and re-emit their text) a prior run already consumed — e.g. two
+  // strong-signal chunks sharing one connector chunk between them
+  // ("\frac{1}{2} + \frac{1}{3}": both \frac chunks are seeds; without
+  // this guard the second seed's left-expansion walks back through "+"
+  // and re-wraps it, duplicating "+" across two overlapping $...$ spans).
+  let lastConsumedHi = -1;
+  while (i < chunks.length) {
+    if (!strongOk[i]) { i++; continue; }
+    let lo = i;
+    while (lo - 1 > lastConsumedHi && candidateOk[lo - 1] && plain.slice(chunks[lo - 1].start + chunks[lo - 1].core.length + chunks[lo - 1].trail.length, chunks[lo].start) === ' ') lo--;
+    let hi = i;
+    while (
+      hi < chunks.length - 1 &&
+      candidateOk[hi + 1] &&
+      plain.slice(chunks[hi].start + chunks[hi].core.length + chunks[hi].trail.length, chunks[hi + 1].start) === ' '
+    ) hi++;
+
+    const runStart = chunks[lo].start;
+    const last = chunks[hi];
+    const runEnd = last.start + last.core.length; // excludes the LAST chunk's trailing punctuation
+    const trailPunct = last.trail;
+    const rawRun = plain.slice(runStart, runEnd);
+
+    if (isValidLatex(rawRun)) {
+      result += plain.slice(cursor, runStart) + `$${rawRun}$` + trailPunct;
+    } else {
+      result += plain.slice(cursor, runEnd + trailPunct.length);
+    }
+    cursor = runEnd + trailPunct.length;
+    lastConsumedHi = hi;
+    i = hi + 1;
+  }
+  result += plain.slice(cursor);
+  return result;
+}
+
+/** Auto-wrap bare (un-delimited) LaTeX runs in $...$ so they reach
+ *  segment()/KaTeX. See the block comment above for the heuristic and
+ *  its false-positive guards. Skips over any already-$-delimited region
+ *  verbatim (opaque passthrough) so it never touches working $ math or
+ *  the currency guard's territory. */
+export function autoWrapLatex(text: string): string {
+  if (!text) return text;
+  const out: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    const dollar = text.indexOf('$', i);
+    if (dollar < 0) { out.push(autoWrapPlainText(text.slice(i))); break; }
+    if (dollar > 0 && text[dollar - 1] === '\\') {
+      out.push(autoWrapPlainText(text.slice(i, dollar - 1)));
+      out.push('\\$');
+      i = dollar + 1;
+      continue;
+    }
+    const close = text.indexOf('$', dollar + 1);
+    if (close < 0) { out.push(autoWrapPlainText(text.slice(i))); break; }
+    out.push(autoWrapPlainText(text.slice(i, dollar)));
+    out.push(text.slice(dollar, close + 1)); // already-delimited — opaque passthrough
+    i = close + 1;
+  }
+  return out.join('');
 }
 
 /** Decode the small set of HTML entities the brain habitually emits

@@ -28,7 +28,7 @@
 import { useEffect, useRef } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { segment, autoWrapUnicodeMath, decodeHtmlEntities } from '@/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities } from '@/lib/tutor/whiteboard/inline-math';
 
 interface InlineMathTextProps {
   text: string;
@@ -61,7 +61,7 @@ function Math({ latex }: { latex: string }) {
 }
 
 export function InlineMathText({ text, className = '', forceMath = false }: InlineMathTextProps) {
-  const parts = segment(autoWrapUnicodeMath(decodeHtmlEntities(text)), forceMath);
+  const parts = segment(autoWrapLatex(autoWrapUnicodeMath(decodeHtmlEntities(text))), forceMath);
   return (
     <span className={`whitespace-pre-wrap ${className}`}>
       {parts.map((p, i) =>

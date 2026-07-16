@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -27,6 +27,16 @@ function mathBodies(text: string): string[] {
 
 function joined(text: string): string {
   return segment(text).map((p) => (p.kind === 'math' ? `⟨${p.body}⟩` : p.body)).join('');
+}
+
+// Un-delimited LaTeX cases run text through the auto-wrap pre-pass first,
+// the same way InlineMathText's real pipeline does.
+function autoMathBodies(text: string): string[] {
+  return segment(autoWrapLatex(text)).filter((p) => p.kind === 'math').map((p) => p.body);
+}
+
+function autoJoined(text: string): string {
+  return segment(autoWrapLatex(text)).map((p) => (p.kind === 'math' ? `⟨${p.body}⟩` : p.body)).join('');
 }
 
 console.log('\n=== Compact relations are math (regression 2026-07-11) ===');
@@ -86,6 +96,68 @@ console.log('\n=== Existing acceptance rules unchanged ===');
 {
   check('unmatched dollar stays literal', mathBodies('a raw $5 alone').length === 0);
   check('empty pair stays literal', mathBodies('empty $$ pair').length === 0);
+}
+
+console.log('\n=== Un-delimited LaTeX auto-wrap (Task E4) ===');
+{
+  // Screenshot repro 1 (ap-calcbc-u1-limits-algebraic-manipulation.ts seed):
+  // authored without any $ delimiters at all.
+  const t = 'Compute lim_{x→0} sin(5x)/(2x).';
+  const m = autoMathBodies(t);
+  check('screenshot 1: exactly one math span', m.length === 1, autoJoined(t));
+  check('screenshot 1: math body is the full limit expression',
+    m[0] === 'lim_{x→0} sin(5x)/(2x)', JSON.stringify(m));
+}
+{
+  const t = 'Compute lim_{x→4} (x² − 16)/(x − 4).';
+  const m = autoMathBodies(t);
+  check('screenshot 2: exactly one math span', m.length === 1, autoJoined(t));
+  check('screenshot 2: math body is the full limit expression',
+    m[0] === 'lim_{x→4} (x² − 16)/(x − 4)', JSON.stringify(m));
+}
+{
+  // Backslash-command signal, no delimiters at all.
+  const t = 'Simplify \\frac{1}{2} + \\frac{1}{3}.';
+  const m = autoMathBodies(t);
+  check('bare backslash command auto-wraps', m.length >= 1, autoJoined(t));
+}
+{
+  // Short-variable + script signal, no delimiters.
+  const t = 'Expand x^2 - 4 completely.';
+  const m = autoMathBodies(t);
+  check('bare x^2 auto-wraps', m.some((b) => b.includes('x^2')), autoJoined(t));
+}
+
+console.log('\n=== Conservative guard: no strong signal → untouched (Task E4) ===');
+{
+  const t = 'I paid $5 for _reasons_';
+  check('currency + markdown italics stay untouched', autoMathBodies(t).length === 0, autoJoined(t));
+  check('autoWrapLatex is a no-op here', autoWrapLatex(t) === t, autoWrapLatex(t));
+}
+{
+  const t = 'snake_case_id stays plain';
+  check('bare snake_case identifier stays untouched', autoMathBodies(t).length === 0, autoJoined(t));
+  check('autoWrapLatex is a no-op here', autoWrapLatex(t) === t, autoWrapLatex(t));
+}
+{
+  const t = 'The report_v2 and draft_final files were merged.';
+  check('snake_case-ish prose stays untouched', autoMathBodies(t).length === 0, autoJoined(t));
+}
+
+console.log('\n=== Already-$-delimited behavior is unchanged by the auto-wrap pre-pass ===');
+{
+  const t = 'Triangle $ABC$ has angle $A = 50°$, angle $B = 70°$, and side $AB = 6$.';
+  check('compact-relation regression case unaffected', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('segment() result identical with/without auto-wrap pass',
+    JSON.stringify(mathBodies(t)) === JSON.stringify(autoMathBodies(t)));
+}
+{
+  const t = 'Maya has $50 and a $15 movie ticket.';
+  check('currency prose unaffected by auto-wrap pass', autoMathBodies(t).length === 0, autoJoined(t));
+}
+{
+  const t = 'Solve $x = 5$ and check $y < 10$.';
+  check('existing $-delimited math unaffected', autoWrapLatex(t) === t, autoWrapLatex(t));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

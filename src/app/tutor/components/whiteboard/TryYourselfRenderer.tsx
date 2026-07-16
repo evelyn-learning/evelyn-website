@@ -18,6 +18,7 @@
 
 import { useState } from 'react';
 import { stripRedundantChoiceLabel } from './choiceLabel';
+import { InlineMathText } from './InlineMathText';
 
 /** Compare a student's typed answer against the expected answer with
  *  format-aware tolerance:
@@ -120,7 +121,7 @@ export function TryYourselfRenderer({
       <div className="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
         {title}
       </div>
-      <div className="text-base text-gray-900 mb-3">{problem}</div>
+      <div className="text-base text-gray-900 mb-3"><InlineMathText text={problem} /></div>
 
       {responseFormat === 'mcq' && choices.length > 0 ? (
         <div className="space-y-2">
@@ -143,7 +144,7 @@ export function TryYourselfRenderer({
                 }`}
               >
                 <span className="font-mono mr-2 text-amber-700">{c.id}.</span>
-                {stripRedundantChoiceLabel(c.text, c.id)}
+                <InlineMathText text={stripRedundantChoiceLabel(c.text, c.id)} />
                 {correctMark && <span className="ml-2 font-bold">{correctMark}</span>}
               </button>
             );
