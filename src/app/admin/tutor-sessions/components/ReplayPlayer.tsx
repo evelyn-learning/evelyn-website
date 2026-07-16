@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
-import { Play, Pause, RotateCcw, X, Volume2, VolumeX, MessageSquareText } from 'lucide-react';
+import { Play, Pause, RotateCcw, X, MessageSquareText } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
@@ -170,14 +170,27 @@ interface AudioLoadProgress {
   totalBytes: number | null;
 }
 
-function formatAudioProgress({ loadedBytes, totalBytes }: AudioLoadProgress): string {
+// Task W2: the standalone "Audio loading…"/"Buffering…" pill (and its
+// Student/Tutor mute buttons + the duplicate time display alongside it) was
+// deleted from the controls row — this now feeds a short inline fragment
+// into ReplayTimeline's time row instead (`· loading 12/45MB` / `· buffering`),
+// so idle/ready/none/error states render nothing here (no new chrome height).
+// Signature takes the state as a literal union rather than importing the
+// component-local `AudioState` alias (declared well below, inside
+// ReplayPlayer) — the two are structurally identical, so this stays a
+// module-level function without a forward reference.
+function formatInlineAudioStatus(
+  state: 'idle' | 'loading' | 'ready' | 'buffering' | 'none' | 'error',
+  { loadedBytes, totalBytes }: AudioLoadProgress,
+): string | null {
+  if (state === 'buffering') return 'buffering';
+  if (state !== 'loading') return null;
   const loadedMB = Math.round(loadedBytes / 1_000_000);
   if (totalBytes != null && totalBytes > 0) {
     const totalMB = Math.max(loadedMB, Math.round(totalBytes / 1_000_000));
-    return `Audio loading… ${loadedMB}/${totalMB}MB`;
+    return `loading ${loadedMB}/${totalMB}MB`;
   }
-  if (loadedBytes > 0) return `Audio loading… ${loadedMB}MB`;
-  return 'Audio loading…';
+  return loadedMB > 0 ? `loading ${loadedMB}MB` : 'loading';
 }
 
 export default function ReplayPlayer({
@@ -1295,84 +1308,36 @@ export default function ReplayPlayer({
           </div>
         </div>
 
-        {/* Controls */}
+        {/* Controls (task W2: thinned to play/pause + restart — the
+            audio-status pill, Student/Tutor mute buttons, and the duplicate
+            time display that used to crowd this row at 390px are gone; the
+            loading/buffering text now lives inline in ReplayTimeline's own
+            time row via `audioStatusText` below. Mute state/gain wiring
+            stays fully intact in code — see studentMuted/tutorMuted and
+            their gain effects above — only the buttons were removed.) */}
         <div className="px-6 py-4 border-t bg-gray-50 space-y-2">
           <ReplayTimeline
             events={timeline}
             totalDurationMs={totalDurationMs}
             currentTimeMs={currentTimeMs}
             onSeek={seek}
+            audioStatusText={formatInlineAudioStatus(audioState, audioProgress)}
           />
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={isPlaying ? pause : play}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              >
-                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
-              </button>
-              <button
-                onClick={reset}
-                className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 transition-colors"
-                title="Reset"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* Audio status pill */}
-            <div className="flex items-center gap-2 border-l pl-3 ml-2">
-              {audioState === 'loading' && (
-                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-500">
-                  {formatAudioProgress(audioProgress)}
-                </span>
-              )}
-              {audioState === 'none' && (
-                <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-400">No audio recorded</span>
-              )}
-              {audioState === 'error' && (
-                <button
-                  onClick={() => { setAudioStateBoth('idle'); loadAudio(); }}
-                  className="rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-100"
-                >
-                  Audio failed — Retry
-                </button>
-              )}
-              {(audioState === 'ready' || audioState === 'buffering') && (
-                <>
-                  {audioState === 'buffering' ? (
-                    <span className="rounded-full bg-amber-50 px-2 py-1 text-xs text-amber-600">Buffering…</span>
-                  ) : (
-                    <span className="rounded-full bg-green-50 px-2 py-1 text-xs text-green-600">Audio on</span>
-                  )}
-                  <button
-                    onClick={() => setStudentMuted(!studentMuted)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                      studentMuted ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'
-                    }`}
-                    title={studentMuted ? 'Unmute student' : 'Mute student'}
-                  >
-                    {studentMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                    Student
-                  </button>
-                  <button
-                    onClick={() => setTutorMuted(!tutorMuted)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                      tutorMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600'
-                    }`}
-                    title={tutorMuted ? 'Unmute tutor' : 'Mute tutor'}
-                  >
-                    {tutorMuted ? <VolumeX className="h-3 w-3" /> : <Volume2 className="h-3 w-3" />}
-                    Tutor
-                  </button>
-                </>
-              )}
-            </div>
-
-            <div className="text-sm text-gray-500 font-mono">
-              {formatTime(currentTimeMs)} / {formatTime(totalDurationMs)}
-            </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={isPlaying ? pause : play}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+            </button>
+            <button
+              onClick={reset}
+              className="p-2 rounded-lg hover:bg-gray-200 text-gray-500 transition-colors"
+              title="Reset"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
