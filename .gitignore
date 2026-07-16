@@ -40,6 +40,10 @@ next-env.d.ts
 # Ketcher bundle (built from: node scripts/build-ketcher.mjs)
 public/ketcher/bundle.*
 
+# Task E8 headless-harness fixture (written at run time by
+# scripts/test-e8-expand-harness.ts, removed on exit — never a deploy asset)
+public/_e8-harness/
+
 # Deploy manifest (regenerated on every deploy by deploy-to-production.sh)
 .deploy-public-manifest
 .deploy-static-manifest

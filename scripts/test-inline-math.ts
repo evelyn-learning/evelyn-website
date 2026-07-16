@@ -207,5 +207,35 @@ console.log('\n=== Bare TeX-special characters defeat validate-or-fallback (Find
   check('double backslash before %: zero math segments', autoMathBodies(t).length === 0, autoJoined(t));
 }
 
+console.log('\n=== Fn-call-only run must NOT inject literal $…$ (Final-review fix wave) ===');
+{
+  // A run whose ONLY strong signal is a math-fn call (no \ ^ _ { } and no
+  // relation) passes isValidLatex (KaTeX renders sin(3x)/(6x) fine) but is
+  // REJECTED by segment()'s looksLikeMath currency guard downstream — so
+  // wrapping it in $…$ makes the dollars render literally on the card:
+  // "Evaluate sin(3x)/(6x) directly." → shows "$sin(3x)/(6x)$". The commit
+  // site must require BOTH isValidLatex AND looksLikeMath, else leave raw.
+  const t = 'Evaluate sin(3x)/(6x) directly.';
+  check('fn-call-only run stays byte-identical (no $ injected)', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('fn-call-only run: zero math segments after auto-wrap', autoMathBodies(t).length === 0, autoJoined(t));
+}
+{
+  const t = 'cos(2x) + 1';
+  check('cos(2x) + 1 stays byte-identical (no $ injected)', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('cos(2x) + 1: zero math segments after auto-wrap', autoMathBodies(t).length === 0, autoJoined(t));
+}
+{
+  // The two original screenshot strings carry `_{`, so looksLikeMath's
+  // LaTeX-signal branch accepts them — they must STILL wrap and segment.
+  const t = 'Compute lim_{x→0} sin(5x)/(2x).';
+  const m = autoMathBodies(t);
+  check('screenshot 1 still wraps (has _{ signal)', m.length === 1 && m[0] === 'lim_{x→0} sin(5x)/(2x)', autoJoined(t));
+}
+{
+  const t = 'Compute lim_{x→4} (x² − 16)/(x − 4).';
+  const m = autoMathBodies(t);
+  check('screenshot 2 still wraps (has _{ signal)', m.length === 1 && m[0] === 'lim_{x→4} (x² − 16)/(x − 4)', autoJoined(t));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

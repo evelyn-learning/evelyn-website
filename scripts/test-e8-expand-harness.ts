@@ -28,13 +28,14 @@
  * it's a throwaway test double, not a production asset.
  */
 import { chromium, type Frame, type Page } from 'playwright';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
+const FIXTURE_DIR = join(__dirname, '..', 'public', '_e8-harness');
+
 function ensureFixture() {
-  const dir = join(__dirname, '..', 'public', '_e8-harness');
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'parent.html'), `<!doctype html><html><body>
+  mkdirSync(FIXTURE_DIR, { recursive: true });
+  writeFileSync(join(FIXTURE_DIR, 'parent.html'), `<!doctype html><html><body>
 <iframe id="f" src="about:blank" style="width:500px;height:900px"></iframe>
 <script>
   window.__messages = [];
@@ -179,15 +180,25 @@ async function scenarioB(browser: import('playwright').Browser) {
   await page.close();
 }
 
+// The fixture lives under public/, which the engine deploy rsyncs — so it
+// must never survive a run. Removed in a finally on every exit path.
+function cleanupFixture() {
+  rmSync(FIXTURE_DIR, { recursive: true, force: true });
+}
+
 async function main() {
   ensureFixture();
-  const browser = await chromium.launch();
-  await scenarioA(browser);
-  await scenarioB(browser);
-  await scenarioC(browser);
-  await browser.close();
+  try {
+    const browser = await chromium.launch();
+    await scenarioA(browser);
+    await scenarioB(browser);
+    await scenarioC(browser);
+    await browser.close();
+  } finally {
+    cleanupFixture();
+  }
   console.log(`\n${failures === 0 ? 'ALL PASSED' : failures + ' FAILURES'}`);
   process.exit(failures === 0 ? 0 : 1);
 }
 
-main().catch((err) => { console.error(err); process.exit(1); });
+main().catch((err) => { console.error(err); cleanupFixture(); process.exit(1); });

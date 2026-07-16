@@ -225,7 +225,20 @@ function autoWrapPlainText(plain: string): string {
     const trailPunct = last.trail;
     const rawRun = plain.slice(runStart, runEnd);
 
-    if (isValidLatex(rawRun)) {
+    // Commit a wrap only when BOTH gates accept the run:
+    //   - isValidLatex: KaTeX renders it (no throw, no silent TeX-special
+    //     truncation).
+    //   - looksLikeMath: segment()'s OWN currency guard will accept it
+    //     downstream.
+    // A run whose only strong signal is a fn-call (e.g. "sin(3x)/(6x)") is
+    // valid LaTeX but has no `\ ^ _ { }` / relation, so looksLikeMath rejects
+    // it — wrapping it in $…$ here would just make segment() strip the math
+    // back out and the dollars render LITERALLY on the card
+    // ("Evaluate sin(3x)/(6x) directly." → "$sin(3x)/(6x)$"). Leave the raw
+    // text untouched in that case. Runs that carry a real LaTeX signal
+    // (lim_{x→0} …, x^2, \frac…) pass looksLikeMath's first branch and still
+    // wrap as before.
+    if (isValidLatex(rawRun) && looksLikeMath(rawRun)) {
       result += plain.slice(cursor, runStart) + `$${rawRun}$` + trailPunct;
     } else {
       result += plain.slice(cursor, runEnd + trailPunct.length);

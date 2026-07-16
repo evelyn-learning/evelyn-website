@@ -555,7 +555,7 @@ export default function ReplayPlayer({
     if (clockAnchorCtxRef.current !== null) {
       for (const reseekEnd of audioReseekEndsRef.current) {
         if (prevTime < reseekEnd && reseekEnd <= newTime) {
-          startAudioPlaybackRef.current(newTime, speedRef.current);
+          startAudioPlaybackRef.current(newTime);
           break;
         }
       }
@@ -695,6 +695,21 @@ export default function ReplayPlayer({
         (studentTrackRef.current?.segments.length ?? 0) > 0 ||
         (tutorTrackRef.current?.segments.length ?? 0) > 0;
       if (!decodedAny) setAudioStateBoth('none');
+      // Normal-completion buffering release (mirror of the catch-path deadlock
+      // fix below): if the buffering hold was entered in the awaited-reader
+      // window and the tail flush appended ZERO new bytes (a track byte-length
+      // that is an exact multiple of the segment size, so readTrack's `.then`
+      // tail flush emits nothing), no onSegmentLanded ever fires after this
+      // point — both streams are now `done` — so nothing else clears the hold
+      // and the playhead freezes until pause/play. Clear it here exactly like
+      // the catch clause: drop the hold, flip the pill, and re-anchor onto the
+      // frame-delta clock (clockAnchorCtxRef = null) so the playhead runs on.
+      else if (bufferingRef.current) {
+        bufferingRef.current = false;
+        setAudioStateBoth('ready');
+        lastFrameRef.current = performance.now();
+        clockAnchorCtxRef.current = null;
+      }
       // Cast: the top-of-function guard narrows TS's view of the ref away from
       // 'loading', but setAudioStateBoth('loading') above set it at runtime.
       else if ((audioStateRef.current as AudioState) !== 'buffering') setAudioStateBoth('ready');
@@ -771,7 +786,25 @@ export default function ReplayPlayer({
     source.connect(gain);
     source.onended = () => {
       if (g.gen.current !== gen || !playingRef.current || bufferingRef.current || seekPendingRef.current) return;
-      scheduleSegmentAtRef.current(which, index + 1, 0, ctx, gen);
+      // Derive the next segment's start offset from the MASTER CLOCK rather
+      // than assuming offset 0. onended fires at EVENT-DISPATCH time — some
+      // latency after the audio actually ended — so scheduling index+1 at
+      // offset 0 (the raw segment boundary) replays that latency's worth of
+      // audio, leaking event-dispatch jitter into audio position at every
+      // ~20s boundary (~180/hr; the error scales with playbackRate) while the
+      // ctx-anchored master clock keeps honest time. Compute the current
+      // buffer position from the same clock tick() uses and start index+1 at
+      // bufSec - seg.startSec (clamped ≥ 0), so the boundary self-corrects.
+      const nextSeg = stream.segments[index + 1];
+      let offsetSec = 0;
+      if (nextSeg) {
+        const compressedMs = clockAnchorCtxRef.current !== null && ctx.state === 'running'
+          ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000 * speedRef.current
+          : currentTimeMsRef.current;
+        const bufSec = toAudioRef.current(compressedMs) / 1000;
+        offsetSec = Math.max(0, bufSec - nextSeg.startSec);
+      }
+      scheduleSegmentAtRef.current(which, index + 1, offsetSec, ctx, gen);
     };
     source.start(0, offsetSec);
     g.source.current = source;
@@ -802,7 +835,7 @@ export default function ReplayPlayer({
   // silently drops audio until the next user interaction. Origin offset is
   // always 0 (capture pads leading silence so sample 0 == session start), so
   // there is no future-scheduling case. toAudio() maps compressed→buffer time.
-  const startAudioPlayback = useCallback(async (offsetMs: number, _playbackRate: number) => {
+  const startAudioPlayback = useCallback(async (offsetMs: number) => {
     if (!audioConfirmedRef.current) return; // nothing decoded to play yet
     if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
       audioCtxRef.current = new AudioContext({ sampleRate: 24000 });
@@ -843,7 +876,7 @@ export default function ReplayPlayer({
         bufferingRef.current = false;
         setAudioStateBoth('ready');
         lastFrameRef.current = performance.now();
-        startAudioPlaybackRef.current(bufferingHeldMsRef.current, speedRef.current);
+        startAudioPlaybackRef.current(bufferingHeldMsRef.current);
       }
       return;
     }
@@ -880,7 +913,7 @@ export default function ReplayPlayer({
       currentTimeMsRef.current = remapped;
       setCurrentTimeMs(remapped);
       applyTime(remapped);
-      if (playingRef.current) startAudioPlaybackRef.current(remapped, speedRef.current);
+      if (playingRef.current) startAudioPlaybackRef.current(remapped);
     }
     prevTimelineRef.current = compressedTimeline;
     prevAudioConfirmedRef.current = audioConfirmed;
@@ -921,7 +954,7 @@ export default function ReplayPlayer({
     setIsPlaying(true);
     lastFrameRef.current = performance.now();
     rafRef.current = requestAnimationFrame(tick);
-    startAudioPlayback(currentTimeMsRef.current, speedRef.current);
+    startAudioPlayback(currentTimeMsRef.current);
   }, [totalDurationMs, tick, applyTime, startAudioPlayback, clearSeekDebounce, setAudioStateBoth]);
 
   const pause = useCallback(() => {
@@ -962,7 +995,7 @@ export default function ReplayPlayer({
       bufferingRef.current = false;
       if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
       lastFrameRef.current = performance.now();
-      startAudioPlaybackRef.current(currentTimeMsRef.current, speedRef.current);
+      startAudioPlaybackRef.current(currentTimeMsRef.current);
     }, 150);
   }, [totalDurationMs, applyTime, stopAudioPlayback, setAudioStateBoth]);
 
