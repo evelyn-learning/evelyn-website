@@ -160,5 +160,44 @@ console.log('\n=== Already-$-delimited behavior is unchanged by the auto-wrap pr
   check('existing $-delimited math unaffected', autoWrapLatex(t) === t, autoWrapLatex(t));
 }
 
+console.log('\n=== Bare TeX-special characters defeat validate-or-fallback (Finding 1, retest round) ===');
+{
+  // KaTeX treats an un-escaped % as a TeX comment: it does NOT throw, it
+  // silently truncates everything after it within the render. Without a
+  // guard, autoWrapLatex's own katex.renderToString({throwOnError:true})
+  // validation passes and the run gets wrapped, then the truncated render
+  // reaches the student — "x^2" with "+ y^2" silently dropped.
+  const t = 'Compute x^2% + y^2 next.';
+  check('bare % run stays untouched (raw text preserved)', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('bare % run: zero math segments after auto-wrap', autoMathBodies(t).length === 0, autoJoined(t));
+}
+{
+  // Percent-stats prose never had a strong signal to begin with (no
+  // backslash/fn-call/short-var-script chunk), so this was already safe —
+  // locked in here as an explicit regression alongside the bug case above.
+  const t = 'Compute 20% + 30% of x.';
+  check('percent-stats prose stays untouched', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('percent-stats prose: zero math segments', autoMathBodies(t).length === 0, autoJoined(t));
+}
+{
+  // Bare # and & are the same class of silent-parse-altering TeX
+  // specials (comment-like / alignment-tab) — guarded the same way even
+  // though KaTeX happens to throw on them outside tabular contexts today.
+  const t = 'Compute x^2# extra stuff.';
+  check('bare # run stays untouched', autoWrapLatex(t) === t, autoWrapLatex(t));
+}
+{
+  const t = 'Compute x^2& more stuff.';
+  check('bare & run stays untouched', autoWrapLatex(t) === t, autoWrapLatex(t));
+}
+{
+  // Escaped \% inside an authored run is the deliberate, correct way to
+  // render a literal percent sign — it must still validate and wrap
+  // normally, not get swept up by the new guard.
+  const t = 'Expand x^2 \\% now.';
+  const m = autoMathBodies(t);
+  check('escaped \\% still wraps and validates normally', m.length === 1 && m[0] === 'x^2 \\%', JSON.stringify(m));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

@@ -150,7 +150,36 @@ function tokenizeChunks(plain: string): Chunk[] {
   return chunks;
 }
 
+// TeX-special characters that alter parsing WITHOUT reliably throwing, so
+// katex.renderToString({throwOnError:true}) is not a sufficient safety net
+// for them on its own. The critical one: an un-escaped `%` starts a TeX
+// comment, so `katex.renderToString('x^2% + y^2', {throwOnError:true})`
+// SUCCEEDS while silently truncating the render to just "x^2" — the
+// content after `%` never reaches the student, with no error to catch.
+// `#` (macro-parameter marker) and `&` (alignment tab) are guarded the
+// same way for defense in depth even though KaTeX happens to throw on
+// them outside tabular/macro contexts today — that's an implementation
+// detail we shouldn't rely on for a silent-content-loss class of bug.
+// An escaped form (`\%`, `\#`, `\&`) is the deliberate, correct way to
+// author a literal character and is NOT flagged: TeX escaping is
+// parity-based (`\\` is a complete "printed backslash" command, so it
+// does NOT itself escape the character after it), so a character is
+// treated as escaped only when preceded by an ODD number of consecutive
+// backslashes.
+const TEX_SPECIAL_CHARS = new Set(['%', '#', '&']);
+function hasUnescapedTexSpecial(s: string): boolean {
+  for (let i = 0; i < s.length; i++) {
+    if (!TEX_SPECIAL_CHARS.has(s[i])) continue;
+    let backslashes = 0;
+    let j = i - 1;
+    while (j >= 0 && s[j] === '\\') { backslashes++; j--; }
+    if (backslashes % 2 === 0) return true; // unescaped
+  }
+  return false;
+}
+
 function isValidLatex(latex: string): boolean {
+  if (hasUnescapedTexSpecial(latex)) return false;
   try {
     katex.renderToString(latex, { throwOnError: true, displayMode: false, strict: false, trust: true });
     return true;

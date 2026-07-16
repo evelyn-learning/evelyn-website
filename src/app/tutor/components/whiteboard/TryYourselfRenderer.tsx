@@ -179,7 +179,7 @@ export function TryYourselfRenderer({
           {hintIdx > 0 && (
             <div className="space-y-1 mb-2">
               {hints.slice(0, hintIdx).map((h, i) => (
-                <div key={i} className="text-gray-700 italic">💡 {h}</div>
+                <div key={i} className="text-gray-700 italic">💡 <InlineMathText text={h} /></div>
               ))}
             </div>
           )}
@@ -205,7 +205,7 @@ export function TryYourselfRenderer({
           : 'text-gray-600'
         }`}>
           {isCorrect === true ? '✓ Correct!'
-          : isCorrect === false ? `Not quite. Expected: ${expectedAnswer}`
+          : isCorrect === false ? <>Not quite. Expected: <InlineMathText text={expectedAnswer} /></>
           : 'Submitted — the tutor is reviewing your answer.'}
         </div>
       )}
