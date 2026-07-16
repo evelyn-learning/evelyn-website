@@ -1695,3 +1695,42 @@ export function buildCharacterWebManifest(figure: CharacterWebFigure): FeatureMa
   });
   return feats;
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// Phase 34 — show_passage (verbosity part 3/3: quotes/definitions go on
+// the board, the tutor speaks only the analytical point). This is a
+// standalone whiteboard tool (like show_annotated_passage / show_try_
+// yourself), NOT a show_diagram catalog kind — no manifest builder here,
+// and it is not registered in catalog/types.ts or catalog/manifest.ts.
+// `solvePassage` lives beside the humanities kinds only for schema-
+// validation convention reuse (throw on invalid, testable in isolation);
+// the dispatch is a top-level `case 'showPassage'` in WhiteboardCanvas.tsx
+// beside `showWorkedExample`, backed by PassageRenderer.tsx.
+// ═══════════════════════════════════════════════════════════════════
+
+export interface PassageFigure {
+  title?: string;
+  source?: string;
+  /** The passage / quote / definition text. May contain inline $…$ math. */
+  text: string;
+  /** Exact substrings of `text` to emphasize (first occurrence each). */
+  highlights?: string[];
+}
+
+/** Validate a show_passage tool call's params. Throws on missing/empty
+ *  `text` (the one required field) so a malformed call surfaces a visible
+ *  error instead of rendering a blank card. */
+export function solvePassage(params: Record<string, unknown>): PassageFigure {
+  if (typeof params.text !== 'string' || !params.text.trim()) {
+    throw new Error('show_passage: text required (the passage/quote/definition text)');
+  }
+  const highlights = Array.isArray(params.highlights)
+    ? (params.highlights as unknown[]).map(String).filter((h) => h.length > 0)
+    : undefined;
+  return {
+    title: typeof params.title === 'string' ? params.title : undefined,
+    source: typeof params.source === 'string' ? params.source : undefined,
+    text: params.text,
+    highlights,
+  };
+}

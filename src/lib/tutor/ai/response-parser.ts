@@ -141,6 +141,7 @@ function isValidWhiteboardCommand(obj: unknown): obj is WhiteboardCommand {
     'showLewis',
     'showPeriodicTable',
     'showAnnotatedPassage',
+    'showPassage',
     'showCallStack',
     'showFlowchart',
     'showManipulative',

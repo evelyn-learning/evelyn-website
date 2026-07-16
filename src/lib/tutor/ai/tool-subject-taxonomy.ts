@@ -67,6 +67,7 @@ const TOOL_SUBJECTS: Record<string, CatalogSubject[]> = {
   show_writing_frame: ['ela'],
   show_graphic_organizer: ['ela', 'social'],
   show_annotated_passage: ['ela', 'social'],
+  show_passage: ['ela', 'social'],
   show_timeline: ['ela', 'social'],
   show_map: ['social', 'earth'],
   // math

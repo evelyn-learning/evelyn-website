@@ -1190,6 +1190,24 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'show_passage',
+    description: 'Put a quote, definition, or short passage ON THE BOARD instead of speaking it in full. Use this whenever you quote a source, give a definition, or reference a passage in ela/ss: call show_passage with the exact text, then SPEAK only your analytical point about it — never read the passage aloud in full. Simpler than show_annotated_passage (no line numbers/margin notes) — use this for a quote/definition; use show_annotated_passage for line-by-line close-reading annotation. `text` may contain inline $…$ math (rare — e.g. a math-adjacent definition).',
+    parameters: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Optional short header, e.g. "Key term" or "From the text".' },
+        source: { type: 'string', description: 'Attribution, e.g. "Frankenstein, Mary Shelley, Chapter 5" or "Federalist No. 10".' },
+        text: { type: 'string', description: 'The passage/quote/definition text, written out in full. Required — this is what renders on the board.' },
+        highlights: {
+          type: 'array',
+          description: 'Exact substrings of `text` to emphasize (first occurrence of each is highlighted). Optional.',
+          items: { type: 'string' },
+        },
+      },
+      required: ['text'],
+    },
+  },
+  {
     name: 'show_call_stack',
     description: 'Call-stack visualization. `frames` lists the oldest frame first (bottom, usually `main`) and the newest call last (top). Each frame shows its signature, argument bindings, locals, and optionally the executing line. `returnValue` marks a frame about to return.',
     parameters: {
@@ -2375,6 +2393,15 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       startLineNumber: funcArgs.startLineNumber,
       highlights: Array.isArray(funcArgs.highlights) ? funcArgs.highlights : [],
       marginNotes: Array.isArray(funcArgs.marginNotes) ? funcArgs.marginNotes : [],
+    } as unknown as WhiteboardCommand;
+  }
+  if (funcName === 'show_passage') {
+    return {
+      action: 'showPassage',
+      title: typeof funcArgs.title === 'string' ? funcArgs.title : undefined,
+      source: typeof funcArgs.source === 'string' ? funcArgs.source : undefined,
+      text: typeof funcArgs.text === 'string' ? funcArgs.text : '',
+      highlights: Array.isArray(funcArgs.highlights) ? funcArgs.highlights.map(String) : undefined,
     } as unknown as WhiteboardCommand;
   }
   if (funcName === 'show_call_stack') {

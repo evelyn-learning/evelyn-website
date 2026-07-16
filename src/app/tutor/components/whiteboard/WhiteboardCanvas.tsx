@@ -42,6 +42,7 @@ import DesmosGraphRenderer from './DesmosGraphRenderer';
 import NumberLineRenderer from './NumberLineRenderer';
 import { CatalogDispatch } from './CatalogDispatch';
 import { solveDiagram, isImplementedKind, DiagramSolverError } from '@/lib/tutor/diagrams/catalog/manifest';
+import { solvePassage } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import GeometryRenderer from './GeometryRenderer';
 import UnitCircleRenderer from './UnitCircleRenderer';
 import FractionBarRenderer from './FractionBarRenderer';
@@ -55,6 +56,7 @@ import CircuitRenderer from './CircuitRenderer';
 import LewisRenderer from './LewisRenderer';
 import PeriodicTableRenderer from './PeriodicTableRenderer';
 import AnnotatedPassageRenderer from './AnnotatedPassageRenderer';
+import PassageRenderer from './PassageRenderer';
 import CallStackRenderer from './CallStackRenderer';
 import FlowchartRenderer from './FlowchartRenderer';
 import ManipulativeRenderer from './ManipulativeRenderer';
@@ -2829,6 +2831,35 @@ function CommandRendererInner({ command }: CommandRendererProps) {
         </div>
       );
 
+    case 'showPassage': {
+      // Defense-in-depth: the tool schema marks `text` required, but a
+      // malformed call (missing/empty text) should surface a visible
+      // error rather than an empty card. Same try/catch-around-a-solver
+      // pattern as showLewisConstructed / showGeometryConstructed above.
+      try {
+        const solved = solvePassage({
+          title: command.title,
+          source: command.source,
+          text: command.text,
+          highlights: command.highlights,
+        });
+        return (
+          <PassageRenderer
+            title={solved.title}
+            source={solved.source}
+            text={solved.text}
+            highlights={solved.highlights}
+          />
+        );
+      } catch (err) {
+        return (
+          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
+            Passage error: {(err as Error).message}
+          </div>
+        );
+      }
+    }
+
     // ── New structured math diagram tools ──
 
     case 'showNumberLine':
@@ -3464,6 +3495,8 @@ export function getCommandTypeLabel(action: string): string {
     case 'showPeriodicTable':
       return 'Periodic Table';
     case 'showAnnotatedPassage':
+      return 'Passage';
+    case 'showPassage':
       return 'Passage';
     case 'showCallStack':
       return 'Call Stack';

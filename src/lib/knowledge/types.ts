@@ -863,6 +863,11 @@ export type WhiteboardCommand =
   | { action: 'showRunCode'; title?: string; code: string; entry?: string; language?: string; tests?: unknown[]; timeoutMs?: number }
   | { action: 'showPeriodicTable'; title?: string; highlight?: Array<{ symbol: string; color?: string; note?: string }>; highlightGroup?: number; highlightPeriod?: number; highlightCategory?: 'alkali' | 'alkaline-earth' | 'transition' | 'post-transition' | 'metalloid' | 'reactive-nonmetal' | 'halogen' | 'noble-gas' | 'lanthanide' | 'actinide'; showMass?: boolean }
   | { action: 'showAnnotatedPassage'; title?: string; source?: string; passage?: string; lines?: string[]; startLineNumber?: number; highlights?: Array<{ line: number; text: string; color?: string; note?: string }>; marginNotes?: Array<{ line: number; text: string }> }
+  // show_passage — verbosity part 3/3: quotes/definitions on the board so
+  // the tutor speaks only the analytical point. Simpler sibling of
+  // showAnnotatedPassage: no line numbers, `highlights` is a flat array
+  // of exact substrings to emphasize (not line + substring pairs).
+  | { action: 'showPassage'; title?: string; source?: string; text: string; highlights?: string[] }
   | { action: 'showCallStack'; title?: string; frames: Array<{ function: string; args?: Record<string, string | number>; locals?: Record<string, string | number>; currentLine?: number; returnValue?: string | number; highlight?: boolean }>; finalReturn?: string | number }
   | { action: 'showFlowchart'; title?: string; nodes: Array<{ id: string; type: 'start' | 'end' | 'process' | 'decision' | 'io'; label: string; x?: number; y?: number }>; edges?: Array<{ from: string; to: string; label?: string }>; layout?: 'top-down' | 'left-right' }
   | { action: 'showManipulative'; title?: string; type: 'base-10' | 'ten-frame' | 'area-model'; base10?: { ones?: number; tens?: number; hundreds?: number; thousands?: number; showTotal?: boolean }; tenFrame?: { count: number; color?: string; label?: string }; areaModel?: { rows: number[]; cols: number[]; showProducts?: boolean; showSum?: boolean; rowLabel?: string; colLabel?: string } }
