@@ -79,6 +79,11 @@ export interface BrainRetryDecisionInput {
   sentencesEmitted: number;
   /** Tool calls already streamed to the client THIS turn (across attempts). */
   toolsEmitted: number;
+  /** Total event-count forwarded to client via send() (sentence + tool-call +
+   *  tool-rejected + pause). Authoritative for the zero-egress guard: if any
+   *  event reached the client, retrying is unsafe (would cause duplication).
+   *  Defaults to sentencesEmitted + toolsEmitted for backwards compat. */
+  emittedToClient?: number;
   /** Retries already performed (0 on the first failure). */
   attempt: number;
   /** Max whole-turn retries. Default 2 (⇒ up to 3 total attempts). */
@@ -104,18 +109,24 @@ const BACKOFF_MS = [1000, 2000];
 /**
  * Decide whether to retry a failed/empty brain turn or fall back honestly.
  *
- * Cardinal safety rule (checked FIRST): if ANY sentence or tool call has
- * already reached the client this turn, NEVER retry — a re-dispatch would
- * double-speak or double-render. This is exactly the partial-stream shape;
- * the observed incident shape is the opposite (zero emitted), which is what
- * makes an automatic retry safe there.
+ * Cardinal safety rule (checked FIRST): if ANY event (sentence, tool-call,
+ * tool-rejected, or pause) has already reached the client this turn, NEVER
+ * retry — a re-dispatch would cause duplication. The emittedToClient counter
+ * is authoritative for this check: it accounts for all event types that send()
+ * forwards. sentencesEmitted/toolsEmitted are informational for logging.
  */
 export function decideBrainRetry(input: BrainRetryDecisionInput): BrainRetryDecision {
   const { errorKind, sentencesEmitted, toolsEmitted, attempt } = input;
   const maxRetries = input.maxRetries ?? 2;
+  // Authoritative egress count: if not provided, fall back to the sum of the
+  // per-type counters (backwards compat for test code). Real route.ts usage
+  // passes the complete emittedToClient count maintained in send().
+  const emittedToClient = input.emittedToClient ?? (sentencesEmitted + toolsEmitted);
 
-  // 1. Never retry a partially-played turn.
-  if (sentencesEmitted > 0 || toolsEmitted > 0) {
+  // 1. Never retry a partially-played turn: if any event reached the client,
+  // a re-dispatch would cause duplication. The emittedToClient counter is the
+  // authoritative measure; sentencesEmitted/toolsEmitted are subsets.
+  if (emittedToClient > 0) {
     return { action: 'fallback', delayMs: 0, reason: 'partial-emitted' };
   }
   // 2. A clean empty stream (no thrown error) is not our retry path.

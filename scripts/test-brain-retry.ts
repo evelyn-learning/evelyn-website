@@ -69,8 +69,8 @@ function check(name: string, cond: boolean): void {
 
 // ── decideBrainRetry: the cardinal safety rule ────────────────────
 {
-  // NEVER retry once ANY content reached the client — even on an
-  // overloaded error mid-stream. Retrying would double-speak / re-render.
+  // NEVER retry once ANY event reached the client — even on an
+  // overloaded error mid-stream. Retrying would cause duplication.
   check(
     'decide: overloaded but 1 sentence already streamed → fallback',
     decideBrainRetry({ errorKind: 'overloaded', sentencesEmitted: 1, toolsEmitted: 0, attempt: 0 }).action === 'fallback',
@@ -80,7 +80,15 @@ function check(name: string, cond: boolean): void {
     decideBrainRetry({ errorKind: 'overloaded', sentencesEmitted: 0, toolsEmitted: 1, attempt: 0 }).action === 'fallback',
   );
   check(
-    'decide: partial-emitted reason is explicit',
+    'decide: tool-rejected sent but sentences=0 tools=0 → fallback (emittedToClient guards)',
+    decideBrainRetry({ errorKind: 'overloaded', sentencesEmitted: 0, toolsEmitted: 0, emittedToClient: 1, attempt: 0 }).action === 'fallback',
+  );
+  check(
+    'decide: partial-emitted reason is explicit (emittedToClient path)',
+    decideBrainRetry({ errorKind: 'transient', sentencesEmitted: 0, toolsEmitted: 0, emittedToClient: 1, attempt: 0 }).reason === 'partial-emitted',
+  );
+  check(
+    'decide: partial-emitted reason is explicit (per-type counters)',
     decideBrainRetry({ errorKind: 'transient', sentencesEmitted: 2, toolsEmitted: 1, attempt: 0 }).reason === 'partial-emitted',
   );
 }

@@ -401,6 +401,11 @@ export async function POST(req: NextRequest) {
       // error) — distinct final-failure signals in the turn log line.
       let turnRetries = 0;
       let gaveUp = false;
+      // Task X10 — egress count: incremented in send() for EVERY event type
+      // forwarded to the client (sentence, tool-call, tool-rejected, pause).
+      // Authoritative for the zero-egress retry guard: if emittedToClient > 0,
+      // any retry would cause duplication.
+      let emittedToClient = 0;
 
       // Once the client disconnects, every subsequent enqueue throws
       // "Invalid state: Controller is already closed." We track that
@@ -420,6 +425,13 @@ export async function POST(req: NextRequest) {
         if (clientGone) return;
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+          // Increment egress counter on ALL event types send() forwards
+          // (sentence, tool-call, tool-rejected, pause, done). Used by the
+          // retry guard to detect: if any event reached the client, retrying
+          // is unsafe. Note: pause alone is inert to user experience (just
+          // timing), but tool-rejected is actionable (can be logged), and
+          // done closes the stream, so all are part of the egress count.
+          emittedToClient++;
         } catch (err) {
           clientGone = true;
           console.warn('[brain.stream] enqueue failed (client gone?):', err);
@@ -571,14 +583,13 @@ export async function POST(req: NextRequest) {
       // Task X10 — bounded whole-turn retry. Wraps the generator so a turn
       // that throws (overloaded_error / transient) BEFORE emitting any
       // content can be re-dispatched from scratch. The cardinal safety
-      // rule (decideBrainRetry): NEVER retry once a sentence or tool call
-      // has already been sent — a re-run would double-speak / double-render.
-      // Because we only retry on the ZERO-emitted shape, re-running is
-      // provably duplication-free: the client received nothing from the
-      // failed attempt, so the fresh attempt's events are the only ones it
-      // sees. `sentenceCount` / `toolNames` are the authoritative
-      // emitted-to-client counters (send() is the single egress), so they
-      // are the correct guard.
+      // rule (decideBrainRetry): NEVER retry once ANY event (sentence,
+      // tool-call, tool-rejected, or pause) has reached the client — a re-run
+      // would cause duplication. Because we only retry on the ZERO-emitted
+      // shape (emittedToClient === 0), re-running is provably duplication-free:
+      // the client received nothing from the failed attempt, so the fresh
+      // attempt's events are the only ones it sees. `emittedToClient` is
+      // maintained in send() and is the authoritative count.
       let turnAttempt = 0;
       try {
         // eslint-disable-next-line no-constant-condition
@@ -714,6 +725,7 @@ export async function POST(req: NextRequest) {
             errorKind,
             sentencesEmitted: sentenceCount,
             toolsEmitted: toolNames.length,
+            emittedToClient,
             attempt: turnAttempt,
             maxRetries: MAX_TURN_RETRIES,
           });
