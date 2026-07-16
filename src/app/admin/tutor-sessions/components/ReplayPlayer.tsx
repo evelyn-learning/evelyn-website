@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
-import { Play, Pause, RotateCcw, X, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, RotateCcw, X, Volume2, VolumeX, MessageSquareText } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
@@ -199,6 +199,29 @@ export default function ReplayPlayer({
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
   const [visibleTranscriptCount, setVisibleTranscriptCount] = useState(0);
   const [visibleWbCount, setVisibleWbCount] = useState(0);
+
+  // Transcript drawer (task R3): the board is now the permanent fixture and
+  // the conversation lives in a slide-in drawer, mirroring SessionStage's
+  // drawer idiom (src/app/tutor/components/session/SessionStage.tsx ~143-153,
+  // 531-553) so replay FEELS like the live session. Closed by default —
+  // opening is an explicit user action, same as the live drawer.
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Unread affordance: badge on the header toggle button counts bubbles that
+  // revealed while the drawer was CLOSED, and clears the instant it opens.
+  // `lastSeenTranscriptCountRef` is the visibleTranscriptCount as of the last
+  // time the drawer was open (or 0 before it's ever been opened) — the effect
+  // below re-syncs it to "now" every render the drawer is open, so it always
+  // reflects what the viewer has actually seen.
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastSeenTranscriptCountRef = useRef(0);
+  useEffect(() => {
+    if (drawerOpen) {
+      lastSeenTranscriptCountRef.current = visibleTranscriptCount;
+      setUnreadCount(0);
+    } else {
+      setUnreadCount(Math.max(0, visibleTranscriptCount - lastSeenTranscriptCountRef.current));
+    }
+  }, [visibleTranscriptCount, drawerOpen]);
 
   // Audio playback state.
   //   idle      — modal not yet opened / load not started.
@@ -1023,10 +1046,14 @@ export default function ReplayPlayer({
     };
   }, []);
 
-  // Auto-scroll chat
+  // Auto-scroll chat (task R3: only meaningful while the drawer is open — the
+  // bubbles keep revealing underneath while it's closed, but there's nothing
+  // to scroll into view; this also fires the instant the drawer opens,
+  // landing on the newest bubble immediately).
   useEffect(() => {
+    if (!drawerOpen) return;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [visibleTranscriptCount]);
+  }, [visibleTranscriptCount, drawerOpen]);
 
   // Scroll containment (task R1): the modal is `fixed inset-0` over whatever
   // hosts it — a long admin table, or (for students) the portal iframe's
@@ -1128,7 +1155,7 @@ export default function ReplayPlayer({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overscroll-contain">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b bg-gray-50">
           <div>
@@ -1137,31 +1164,39 @@ export default function ReplayPlayer({
               {studentName || 'Anonymous'} — {subject}/{topic} — {formatTime(totalDurationMs)} total
             </p>
           </div>
-          <button onClick={() => { pause(); setIsOpen(false); }} className="p-2 hover:bg-gray-200 rounded-lg">
-            <X className="h-5 w-5 text-gray-500" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Transcript drawer toggle (task R3) — chat icon consistent with
+                this header's existing icon buttons; badge shows bubbles that
+                revealed while the drawer was closed and clears on open. */}
+            <button
+              onClick={() => setDrawerOpen((o) => !o)}
+              title="Transcript"
+              className="relative p-2 hover:bg-gray-200 rounded-lg"
+            >
+              <MessageSquareText className="h-5 w-5 text-gray-500" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 inline-flex items-center justify-center min-w-[16px] h-[16px] px-1 rounded-full bg-blue-600 text-white text-[10px] font-bold">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            <button onClick={() => { pause(); setIsOpen(false); }} className="p-2 hover:bg-gray-200 rounded-lg">
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
         </div>
 
-        {/* Main content — two panes */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left: Transcript */}
-          <div className="w-1/2 border-r flex flex-col">
-            <div className="px-4 py-2 border-b bg-gray-50">
-              <h3 className="text-sm font-medium text-gray-700">Conversation</h3>
-            </div>
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 overscroll-contain">
-              {visibleMessages.length === 0 && (
-                <p className="text-gray-400 text-sm text-center py-8">Press play to start replay...</p>
-              )}
-              {visibleMessages.map((entry, i) => (
-                <TranscriptBubble key={i} entry={entry} />
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-          </div>
-
-          {/* Right: Whiteboard */}
-          <div className="w-1/2 flex flex-col">
+        {/* Main content (task R3) — the board is now the permanent, full-width
+            fixture (R2's scale-to-fit scaler measures `wbPaneRef`, which is
+            this whole pane now, and adapts automatically); the conversation
+            moved into a slide-in drawer, toggled from the header button
+            above. This `relative` region is the drawer's positioning
+            context, mirroring SessionStage's `fixed inset-0` stage root
+            (SessionStage.tsx ~256, drawer ~561-583) scoped down to this
+            modal's content box. */}
+        <div className="flex-1 relative overflow-hidden">
+          {/* Whiteboard — fills the content area */}
+          <div className="absolute inset-0 flex flex-col">
             <div className="px-4 py-2 border-b bg-gray-50 flex items-center justify-between">
               {/* Denominator is sortedWb (the REPLAYABLE set), not the raw
                   store — legacy fallback timing can carry fewer items than
@@ -1198,6 +1233,56 @@ export default function ReplayPlayer({
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Transcript drawer backdrop — closes the drawer on backdrop tap,
+              same as SessionStage's ~562. */}
+          {drawerOpen && (
+            <div
+              className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]"
+              onClick={() => setDrawerOpen(false)}
+            />
+          )}
+
+          {/* Transcript drawer — desktop right slide-in, mobile bottom sheet.
+              Classes mirror SessionStage's drawer (~570) almost verbatim:
+              same transform/transition idiom, same closed-state handling
+              (mobile `hidden` removes it from layout entirely rather than
+              relying on an off-screen translate — SessionStage's comment
+              there explains why iOS Safari needs that). Kept ALWAYS mounted
+              (not conditionally rendered on drawerOpen) so bubbles keep
+              revealing underneath while closed and the auto-scroll effect
+              above can act the instant it opens. */}
+          <div
+            className={`absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16%] bottom-0 rounded-t-3xl border-t border-slate-200 md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl md:border-t-0 md:border-l ${
+              drawerOpen
+                ? 'flex translate-y-0 md:translate-x-0'
+                : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'
+            }`}
+          >
+            <div className="md:hidden flex justify-center pt-2.5 shrink-0">
+              <span className="w-10 h-1.5 rounded-full bg-slate-300" />
+            </div>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <MessageSquareText className="w-4 h-4 text-gray-400" /> Transcript
+              </h3>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="grid place-items-center w-8 h-8 rounded-full hover:bg-gray-100 text-gray-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-2">
+              {visibleMessages.length === 0 && (
+                <p className="text-gray-400 text-sm text-center py-8">Press play to start replay...</p>
+              )}
+              {visibleMessages.map((entry, i) => (
+                <TranscriptBubble key={i} entry={entry} />
+              ))}
+              <div ref={chatEndRef} />
             </div>
           </div>
         </div>
