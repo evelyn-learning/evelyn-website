@@ -261,6 +261,69 @@ console.log('\n=== Script buffer: dispatch → playback-stamp lifecycle (V2) ===
     d10.spokenStartedAt === 2_000_000 && d11.spokenStartedAt === 2_006_000,
     `d10=${d10.spokenStartedAt} d11=${d11.spokenStartedAt}`,
   );
+
+  // 'start' arriving after a 'skip' must not resurrect the entry as live —
+  // symmetric with the existing 'end'-after-'skip' guard (fix-wave review
+  // finding 3, 2026-07-15).
+  pushTtsScript(buf, 'This one raced skip vs start.', 20, 3_000_000);
+  applyPlaybackStamp(buf, { scriptId: 20, phase: 'skip', atMs: 3_000_050 });
+  applyPlaybackStamp(buf, { scriptId: 20, phase: 'start', atMs: 3_000_100 });
+  const e20 = buf.find((e) => e.id === 20)!;
+  check(
+    'start after skip stays zeroed',
+    e20.spokenStartedAt === 0 && e20.spokenEndedAt === 0,
+    `start=${e20.spokenStartedAt} end=${e20.spokenEndedAt}`,
+  );
+}
+
+// ── Fix-wave regression: null-end window leaks on drain paths (review
+// finding 1, 2026-07-15) ──────────────────────────────────────────────────
+// V2 stamped 'start' with spokenEndedAt=null (perpetually open until an
+// 'end' closes it). clearSpeechQueue closed it on a barge-in drain, but
+// interrupt()/pause()/disconnect()/reconnect-W4 force-stopped playback
+// WITHOUT closing it — a genuine student utterance arriving after one of
+// those cuts, sharing vocabulary with the cut sentence, would false-match
+// as self-voice and get silently dropped (a regression vs pre-V2). The fix
+// wave adds the same `emitPlaybackStamp(id, 'end')` those four sites now
+// perform; this test proves the CLOSED window (not the null one) is what a
+// real interrupt-path stamp produces, and that it correctly excludes a
+// later student utterance despite high text overlap.
+console.log('\n=== Fix wave: interrupt-path window close rejects a later real utterance ===');
+{
+  const CUT_SENTENCE = 'So the derivative of x squared is two x.';
+  const cutAtMs = 1_000_000;
+  // Student's real, independent answer 3s later happens to share a lot of
+  // vocabulary with the cut sentence (plausible in a math tutoring turn).
+  const studentTranscript = 'the derivative of x squared is two x right';
+  const studentSpeechStart = cutAtMs + 3_000;
+  const now = studentSpeechStart + 500;
+
+  // Simulates the OLD (buggy) behaviour: interrupt() cleared audioQueueRef
+  // but never emitted 'end', so the entry is still live (end=null) — the
+  // window never closes and this later utterance wrongly matches.
+  const staleOpen: RecentTtsScript[] = [
+    { id: 30, text: CUT_SENTENCE, spokenStartedAt: cutAtMs - 500, spokenEndedAt: null },
+  ];
+  const sStaleOpen = scoreSelfVoice(studentTranscript, staleOpen, studentSpeechStart, now);
+  check(
+    'pre-fix: perpetually-open window (end=null) still matches 3s later (documents the regression)',
+    sStaleOpen >= SELF_VOICE_THRESHOLD,
+    `score=${sStaleOpen.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
+  );
+
+  // Fix wave: interrupt()/pause()/disconnect()/reconnect now call
+  // emitPlaybackStamp(currentScriptIdRef.current, 'end') at the cut, via
+  // applyPlaybackStamp — closing the window at cutAtMs.
+  const buf: RecentTtsScript[] = [];
+  const entry = pushTtsScript(buf, CUT_SENTENCE, 31, cutAtMs - 500)!;
+  applyPlaybackStamp(buf, { scriptId: entry.id, phase: 'start', atMs: cutAtMs - 500 });
+  applyPlaybackStamp(buf, { scriptId: entry.id, phase: 'end', atMs: cutAtMs }); // the new interrupt-path stamp
+  const sClosed = scoreSelfVoice(studentTranscript, buf, studentSpeechStart, now);
+  check(
+    'fix: window closed at interrupt time does NOT match the student utterance 3s later',
+    sClosed < SELF_VOICE_THRESHOLD,
+    `score=${sClosed.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
+  );
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

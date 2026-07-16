@@ -186,10 +186,12 @@ function ngrams(tokens: string[], n: number): string[] {
  * window can't echo physically — they've already faded.
  */
 export const TTS_PADDING_LEAD_MS = 200;
-// V2 (2026-07-15): widened from 800ms → 1500ms. With spokenEndedAt now
-// stamped at REAL playback-end, a verbatim echo ("Good question.") whose
-// perception transcript lands up to ~1.5s after the audio faded still
-// falls inside the window and gets dropped by the matcher.
+// 1500ms since introduction — sized to cover perception-transcript latency
+// (the mic→ASR round trip observed for an echoed line), not a value that
+// was ever widened from a smaller default. With spokenEndedAt now stamped
+// at REAL playback-end (V2, 2026-07-15), a verbatim echo ("Good question.")
+// whose perception transcript lands up to ~1.5s after the audio faded
+// still falls inside the window and gets dropped by the matcher.
 export const TTS_PADDING_TRAIL_MS = 1500;
 
 export function scoreSelfVoice(

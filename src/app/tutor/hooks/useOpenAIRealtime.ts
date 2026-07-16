@@ -2007,6 +2007,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     hasAudioInBufferRef.current = false;
+    // V2 self-voice fix wave (2026-07-15): this drain force-stops playback
+    // without going through clearSpeechQueue, so the currently-playing
+    // sentence's window (spokenEndedAt=null, set by the 'start' stamp) was
+    // never closed — it stayed perpetually open until the 60s retention
+    // trim, able to false-match a genuine student utterance that shares
+    // vocabulary with the dead session's last line. Close it here, same as
+    // clearSpeechQueue does for a barge-in cut. The sentence-level queues
+    // (audioQueueScriptIdRef / speakTextScriptIdQueueRef /
+    // pendingDispatchScriptIdRef) aren't cleared on this path, so there's
+    // nothing queued-but-unplayed to skip-stamp.
+    emitPlaybackStamp(currentScriptIdRef.current, 'end');
+    currentScriptIdRef.current = undefined;
     // W3: force a fresh session.update on the next ws.onopen so the
     // reconnected session is re-armed with the BYTE-IDENTICAL frozen
     // config (server_vad + env threshold/silence/prefix +
@@ -2039,7 +2051,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       });
     }, delayMs);
     return true;
-  }, [updateState, onTranscriptionStatus]);
+  }, [updateState, onTranscriptionStatus, emitPlaybackStamp]);
   scheduleReconnectRef.current = scheduleReconnect;
 
   // Fire the ephemeral-token fetch early so it can overlap with
@@ -2141,6 +2153,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     hasAudioInBufferRef.current = false;
+    // V2 self-voice fix wave (2026-07-15): close the perpetually-open
+    // window on whatever sentence was playing when this teardown fires —
+    // see the reconnect-W4 comment above for why (same force-stop-without-
+    // clearSpeechQueue gap).
+    emitPlaybackStamp(currentScriptIdRef.current, 'end');
+    currentScriptIdRef.current = undefined;
 
     // Reset parallel-connect state so the next connect() does a fresh fetch.
     tokenPromiseRef.current = null;
@@ -2148,7 +2166,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     trySendSessionUpdateRef.current = null;
 
     updateState('disconnected');
-  }, [updateState]);
+  }, [updateState, emitPlaybackStamp]);
 
   // Start listening (microphone capture)
   const startListening = useCallback(async () => {
@@ -2343,6 +2361,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
     audioQueueRef.current = [];
     isPlayingRef.current = false;
+    // V2 self-voice fix wave (2026-07-15): this is a genuine barge-in cut —
+    // the sentence WAS audible up to now, same as clearSpeechQueue's drain.
+    // Close its window instead of leaving spokenEndedAt=null (perpetually
+    // open), which would let a real student utterance sharing vocabulary
+    // with the cut sentence false-match as self-voice.
+    emitPlaybackStamp(currentScriptIdRef.current, 'end');
+    currentScriptIdRef.current = undefined;
 
     // Cancel current response
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -2352,7 +2377,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
 
     updateState('connected');
-  }, [updateState]);
+  }, [updateState, emitPlaybackStamp]);
 
   // Pause - stop mic and audio without disconnecting WebSocket
   const pause = useCallback(() => {
@@ -2374,6 +2399,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
     audioQueueRef.current = [];
     isPlayingRef.current = false;
+    // V2 self-voice fix wave (2026-07-15): close the window on whatever was
+    // playing when pause() cut it — see interrupt() above for why.
+    emitPlaybackStamp(currentScriptIdRef.current, 'end');
+    currentScriptIdRef.current = undefined;
 
     // Cancel any in-progress response and clear uncommitted audio
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -2383,7 +2412,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     hasAudioInBufferRef.current = false;
 
     updateState('connected');
-  }, [updateState]);
+  }, [updateState, emitPlaybackStamp]);
 
   // Send text message (for testing or fallback)
   const sendTextMessage = useCallback((text: string) => {

@@ -86,8 +86,13 @@ export function pushTtsScript(
  *    never-heard line can't spuriously match real student speech that happens
  *    to overlap its stale dispatch-time window and share vocabulary.
  *
- * An 'end' arriving for an entry already zeroed by 'skip' is ignored (keeps it
- * zeroed) — defends against a stray end after a drain.
+ * A 'start' or 'end' arriving for an entry already zeroed by 'skip' is
+ * ignored (keeps it zeroed) — defends against a stray stamp after a drain.
+ * Both directions matter: 'end'-after-'skip' would otherwise resurrect a
+ * zeroed entry with a real end-time but a stale start=0 (open-ended garbage
+ * window); 'start'-after-'skip' would otherwise reopen a never-heard line
+ * as live (spokenEndedAt=null) purely because a race let the 'start' event
+ * arrive after the 'skip' that already declared it dead.
  */
 export function applyPlaybackStamp(
   buffer: RecentTtsScript[],
@@ -97,6 +102,9 @@ export function applyPlaybackStamp(
   if (!entry) return false;
   switch (stamp.phase) {
     case 'start':
+      // Don't resurrect a skipped/drained entry as live (symmetric with
+      // the 'end' guard below).
+      if (entry.spokenStartedAt === 0) break;
       entry.spokenStartedAt = stamp.atMs;
       entry.spokenEndedAt = null;
       break;
