@@ -142,18 +142,24 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
 
   return (
     <div className="space-y-1">
-      {/* Time display + lane toggle */}
+      {/* Time display + lane toggle. The toggle (and the debug-category
+          legend chips below) are debug/admin tooling — the student replay
+          page always passes debugEvents=[], so gate both on there being
+          anything to show; admin sessions (non-empty debugEvents) are
+          unaffected. */}
       <div className="flex justify-between items-center text-[11px] text-gray-400 font-mono px-0.5">
         <span>{formatTime(currentTimeMs)}</span>
-        <button
-          onClick={() => setShowAllEvents((v) => !v)}
-          className={`flex items-center gap-1 rounded px-1.5 py-0.5 font-sans text-[10px] font-medium transition-colors ${
-            showAllEvents ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-          }`}
-        >
-          <ListTree className="w-3 h-3" />
-          {showAllEvents ? 'Hide events' : `All events (${debugEvents.length})`}
-        </button>
+        {debugEvents.length > 0 && (
+          <button
+            onClick={() => setShowAllEvents((v) => !v)}
+            className={`flex items-center gap-1 rounded px-1.5 py-0.5 font-sans text-[10px] font-medium transition-colors ${
+              showAllEvents ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            <ListTree className="w-3 h-3" />
+            {showAllEvents ? 'Hide events' : `All events (${debugEvents.length})`}
+          </button>
+        )}
         <span>{formatTime(totalDurationMs)}</span>
       </div>
 
@@ -216,7 +222,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
       <div className="flex flex-wrap gap-3 text-[10px] text-gray-400 px-0.5">
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-blue-100 border border-blue-200" /> Student</span>
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-gray-300" /> Tutor</span>
-        {EVENT_CATEGORIES.map((c) => (
+        {debugEvents.length > 0 && EVENT_CATEGORIES.map((c) => (
           <span key={c.key} className="flex items-center gap-1">
             <span className={`w-2 h-2 rounded-full ${c.color}`} /> {c.label}
           </span>

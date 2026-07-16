@@ -196,7 +196,6 @@ export default function ReplayPlayer({
   const [isOpen, setIsOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
-  const [speed, setSpeed] = useState(1);
   const [visibleTranscriptCount, setVisibleTranscriptCount] = useState(0);
   const [visibleWbCount, setVisibleWbCount] = useState(0);
 
@@ -289,7 +288,6 @@ export default function ReplayPlayer({
 
   const playingRef = useRef(false);
   const currentTimeMsRef = useRef(0);
-  const speedRef = useRef(1);
   const lastFrameRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -300,9 +298,11 @@ export default function ReplayPlayer({
   // playhead/WB drift away from what's heard, and the next pause+play SNAPS
   // audio back to the stale visual position (the reported position jump).
   // Fix: while audio is live, the AudioContext clock IS the master —
-  // position = anchorMs + (ctx.currentTime − anchorCtxTime)·1000·speed; rAF
+  // position = anchorMs + (ctx.currentTime − anchorCtxTime)·1000; rAF
   // becomes just the render heartbeat. Without audio, frame deltas remain
-  // the fallback. Anchors re-set on every play/seek/speed-change.
+  // the fallback. Anchors re-set on every play/seek (playback is always 1x —
+  // task R1 removed the 1x/2x/4x/8x speed control, so there is no longer a
+  // speed-change re-anchor case).
   const clockAnchorMsRef = useRef(0);
   const clockAnchorCtxRef = useRef<number | null>(null); // null ⇒ no audio clock
 
@@ -506,8 +506,8 @@ export default function ReplayPlayer({
     const prevTime = currentTimeMsRef.current;
     const newTime = Math.min(
       clockAnchorCtxRef.current !== null && ctx && ctx.state === 'running'
-        ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000 * speedRef.current
-        : currentTimeMsRef.current + delta * speedRef.current,
+        ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000
+        : currentTimeMsRef.current + delta,
       totalDurationMsRef.current,
     );
 
@@ -782,7 +782,8 @@ export default function ReplayPlayer({
     const gain = ensureGain(ctx, which);
     const source = ctx.createBufferSource();
     source.buffer = seg.buffer;
-    source.playbackRate.value = speedRef.current; // carries 2x/4x/8x across the chain
+    // playbackRate stays at its default (1) — task R1 removed the 1x/2x/4x/8x
+    // speed control, so playback is always real-time.
     source.connect(gain);
     source.onended = () => {
       if (g.gen.current !== gen || !playingRef.current || bufferingRef.current || seekPendingRef.current) return;
@@ -799,7 +800,7 @@ export default function ReplayPlayer({
       let offsetSec = 0;
       if (nextSeg) {
         const compressedMs = clockAnchorCtxRef.current !== null && ctx.state === 'running'
-          ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000 * speedRef.current
+          ? clockAnchorMsRef.current + (ctx.currentTime - clockAnchorCtxRef.current) * 1000
           : currentTimeMsRef.current;
         const bufSec = toAudioRef.current(compressedMs) / 1000;
         offsetSec = Math.max(0, bufSec - nextSeg.startSec);
@@ -999,21 +1000,6 @@ export default function ReplayPlayer({
     }, 150);
   }, [totalDurationMs, applyTime, stopAudioPlayback, setAudioStateBoth]);
 
-  const changeSpeed = useCallback((newSpeed: number) => {
-    // A4: re-anchor the audio master clock BEFORE the rate changes — the
-    // position formula is linear in speed, so a mid-flight speed change
-    // must restart the line from the current position.
-    if (clockAnchorCtxRef.current !== null && audioCtxRef.current) {
-      clockAnchorMsRef.current = currentTimeMsRef.current;
-      clockAnchorCtxRef.current = audioCtxRef.current.currentTime;
-    }
-    speedRef.current = newSpeed;
-    setSpeed(newSpeed);
-    // Update audio playback rate if playing
-    if (studentSourceRef.current) studentSourceRef.current.playbackRate.value = newSpeed;
-    if (tutorSourceRef.current) tutorSourceRef.current.playbackRate.value = newSpeed;
-  }, []);
-
   // Update gain when mute toggles — mirror into the ref so newly scheduled
   // segment sources pick up the current mute without reading React state.
   useEffect(() => {
@@ -1041,6 +1027,22 @@ export default function ReplayPlayer({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [visibleTranscriptCount]);
 
+  // Scroll containment (task R1): the modal is `fixed inset-0` over whatever
+  // hosts it — a long admin table, or (for students) the portal iframe's
+  // page — so exhausting scroll inside a pane chains to the page behind it,
+  // most visibly as iOS Safari's rubber-band overscroll. Lock body scroll
+  // for as long as the modal is open, capturing whatever value was already
+  // there (rather than assuming '') so a host page with its own overflow
+  // setting gets it back intact, and restore it on close/unmount either way.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen]);
+
   // Visible slices
   const visibleMessages = sortedTranscript.slice(0, visibleTranscriptCount);
   const visibleCommands = sortedWb.slice(0, visibleWbCount);
@@ -1058,7 +1060,7 @@ export default function ReplayPlayer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overscroll-contain">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 border-b bg-gray-50">
@@ -1080,7 +1082,7 @@ export default function ReplayPlayer({
             <div className="px-4 py-2 border-b bg-gray-50">
               <h3 className="text-sm font-medium text-gray-700">Conversation</h3>
             </div>
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2 overscroll-contain">
               {visibleMessages.length === 0 && (
                 <p className="text-gray-400 text-sm text-center py-8">Press play to start replay...</p>
               )}
@@ -1103,13 +1105,13 @@ export default function ReplayPlayer({
                 <span className="ml-2 text-xs text-gray-400">{visibleWbCount} / {sortedWb.length} items</span>
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto overscroll-contain">
               {visibleCommands.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   No whiteboard content yet...
                 </div>
               ) : (
-                <WhiteboardCanvas commands={visibleCommands} />
+                <WhiteboardCanvas commands={visibleCommands} chrome="replay" />
               )}
             </div>
           </div>
@@ -1139,22 +1141,6 @@ export default function ReplayPlayer({
               >
                 <RotateCcw className="h-4 w-4" />
               </button>
-            </div>
-
-            <div className="flex items-center gap-1">
-              {[1, 2, 4, 8].map(s => (
-                <button
-                  key={s}
-                  onClick={() => changeSpeed(s)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                    speed === s
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                  }`}
-                >
-                  {s}x
-                </button>
-              ))}
             </div>
 
             {/* Audio status pill */}

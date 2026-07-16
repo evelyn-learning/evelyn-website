@@ -202,8 +202,13 @@ interface WhiteboardCanvasProps {
    *  label · expand · clear · page-nav bar) and the bottom page-label footer.
    *  'minimal' drops both so the full-bleed SessionStage can host its own slim
    *  page switcher (driven by onNavChange) — the board itself becomes pure
-   *  content. (Flag-gated host; default keeps every legacy caller identical.) */
-  chrome?: 'full' | 'minimal';
+   *  content. 'replay' is read-only playback (ReplayPlayer): keeps the header
+   *  (title, item count, page-nav) and the Expand affordance so the replayed
+   *  board can still go fullscreen, but drops Clear/Trash — there is nothing
+   *  to clear in a recording, and its handler resets the live page index, a
+   *  footgun with no place in playback. (Flag-gated host; default keeps every
+   *  legacy caller identical.) */
+  chrome?: 'full' | 'minimal' | 'replay';
   /** Surfaces the internal page navigation state so a host (the SessionStage)
    *  can render its own switcher in 'minimal' chrome. Fires whenever the page
    *  count / current index / titles change. `goTo` is stable. */
@@ -1393,14 +1398,18 @@ export function WhiteboardCanvas({
           >
             {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
-          {/* Clear */}
-          <button
-            onClick={handleClear}
-            className="p-1 rounded hover:bg-gray-200 text-gray-500"
-            title="Clear whiteboard"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {/* Clear — a live-session control; replay ('replay' chrome) has
+              nothing to clear and handleClear's setCurrentIndex(0) reset
+              would be a jarring no-op button on a read-only recording. */}
+          {chrome !== 'replay' && (
+            <button
+              onClick={handleClear}
+              className="p-1 rounded hover:bg-gray-200 text-gray-500"
+              title="Clear whiteboard"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
       {/* Page navigation bar — always visible when multiple pages */}
