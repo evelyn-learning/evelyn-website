@@ -47,7 +47,7 @@ for attempt in 1 2 3; do
   if rm -rf .next; then
     break
   fi
-  if [ $attempt -lt 3 ]; then
+  if [ \$attempt -lt 3 ]; then
     sleep 2
   fi
 done
