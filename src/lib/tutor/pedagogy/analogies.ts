@@ -13,8 +13,9 @@
  * humor block governs whether the framing is *playful*.
  *
  * Length expectations scale with grade band — a K-2 analogy is one
- * sentence with concrete objects; a 9-12 analogy can be a paragraph if
- * the concept warrants it.
+ * sentence with concrete objects; a 9-12 analogy is at most one per
+ * concept, two sentences, tightly mapped to the concept's structure
+ * (a third sentence only if the mapping genuinely needs it).
  */
 
 import type { GradeProfile } from './grade-profile';
@@ -29,7 +30,7 @@ export function renderAnalogiesBlock(profile: GradeProfile): string {
       case '6-8':
         return `Two or three sentences. Real-world parallels (recipes, sports, money, journeys) that map cleanly to the structure of the concept.`;
       case '9-12':
-        return `Up to a short paragraph when the concept warrants. Real-world parallels chosen for structural fidelity, not just relatability — a bad analogy that breaks down halfway through is worse than no analogy.`;
+        return `At most one analogy per concept, two sentences; a third only if the mapping genuinely needs it. Real-world parallels chosen for structural fidelity, not just relatability — a bad analogy that breaks down halfway through is worse than no analogy.`;
     }
   })();
 
