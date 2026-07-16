@@ -819,7 +819,7 @@ export function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']):
   // rule's structured hand-off) since W3 landed before W5 was written.
   let guidance: string;
   if (bias === -1) {
-    guidance = `student wants MORE depth and a slower pace. Cap this turn to ONE new idea — do not bundle a second concept in. Increase absorption pauses per the Absorption rule — treat more board items as worth a full stop-and-hand-off, not just the clearly dense ones. Ask exactly one short check-in question before introducing anything new.`;
+    guidance = `student wants MORE depth and a slower pace. Cap this turn to ONE new idea — do not bundle a second concept in. Increase absorption pauses per the Absorption rule — treat more board items as worth a full stop-and-hand-off, not just the clearly dense ones. Ask exactly one short check-in question before introducing anything new — but on a dense-render turn, the Absorption rule's no-question hand-off wins: the check-in question waits for the next turn, it does not get bundled into the render turn.`;
   } else if (bias <= -2) {
     guidance = `student wants MORE depth and a much slower pace (strong). Keep every spoken turn to two sentences or fewer. Increase absorption pauses per the Absorption rule — raise the recall-back rate above the default one-in-three toward closer to every dense, memorize-worthy item. Before introducing ANY new idea, require the student to recall or restate the prior point in their own words — do not proceed to a second new idea until that recall lands. Comprehension checks are mandatory here, not optional.`;
   } else if (bias === 1) {
