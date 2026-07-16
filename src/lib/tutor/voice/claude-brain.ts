@@ -352,6 +352,17 @@ export type BrainStreamEvent =
       fullText: string;
       /** All tool calls, in emission order. */
       toolCalls: BrainToolCall[];
+      /** Task X10: number of whole-turn retries the stream route performed
+       *  after transient/overloaded failures before this turn resolved.
+       *  Stamped by the route (streamBrainTurn itself never retries at the
+       *  turn level), so it's absent/0 for the direct in-process generator. */
+      retries?: number;
+      /** Task X10: set true by the stream route when the turn FAILED after
+       *  exhausting retries (or hit a non-retryable error) having produced
+       *  ZERO content. Signals the client to render the HONEST "having
+       *  trouble reaching my brain" fallback instead of the mis-blaming
+       *  "could you say that again?" line. Absent on any successful turn. */
+      brainUnavailable?: boolean;
     };
 
 /**

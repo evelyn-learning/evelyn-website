@@ -36,6 +36,12 @@ import {
 } from '@/lib/tutor/voice/problem-generator';
 import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
+import { classifyBrainError, decideBrainRetry } from '@/lib/tutor/voice/brain-retry';
+
+/** Task X10: max whole-turn retries the route performs on a transient /
+ *  overloaded failure that produced ZERO content. Sits on top of the SDK
+ *  client's own 2 fast retries (see brain-retry.ts). 2 ⇒ up to 3 attempts. */
+const MAX_TURN_RETRIES = 2;
 
 export const runtime = 'nodejs';
 
@@ -389,6 +395,12 @@ export async function POST(req: NextRequest) {
       let fullText = '';
       let stopReason = 'unknown';
       const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+      // Task X10 — bounded-retry telemetry. `turnRetries` counts whole-turn
+      // re-dispatches performed on transient/overloaded failures;
+      // `gaveUp` marks a turn that exhausted retries (or hit a non-retryable
+      // error) — distinct final-failure signals in the turn log line.
+      let turnRetries = 0;
+      let gaveUp = false;
 
       // Once the client disconnects, every subsequent enqueue throws
       // "Invalid state: Controller is already closed." We track that
@@ -507,8 +519,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      try {
-        for await (const ev of runTutorTurn({
+      // Task X10: the turn input is pure, byte-stable data (no per-attempt
+      // mutation), so the SAME object is safely reused on every retry.
+      const turnInput = {
           systemPrompt: body.systemPrompt,
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,
@@ -553,7 +566,30 @@ export async function POST(req: NextRequest) {
             body.shownProblemIds ?? [],
             body.shownProblemHashes ?? []
           ),
-        })) {
+      };
+
+      // Task X10 — bounded whole-turn retry. Wraps the generator so a turn
+      // that throws (overloaded_error / transient) BEFORE emitting any
+      // content can be re-dispatched from scratch. The cardinal safety
+      // rule (decideBrainRetry): NEVER retry once a sentence or tool call
+      // has already been sent — a re-run would double-speak / double-render.
+      // Because we only retry on the ZERO-emitted shape, re-running is
+      // provably duplication-free: the client received nothing from the
+      // failed attempt, so the fresh attempt's events are the only ones it
+      // sees. `sentenceCount` / `toolNames` are the authoritative
+      // emitted-to-client counters (send() is the single egress), so they
+      // are the correct guard.
+      let turnAttempt = 0;
+      try {
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+        try {
+        for await (const ev of runTutorTurn(turnInput)) {
+          // Stamp the whole-turn retry count onto the terminal event so the
+          // client turn-ok log can surface it too (server log already has it).
+          if (ev.type === 'done') {
+            (ev as { retries?: number }).retries = turnRetries;
+          }
           if (ev.type === 'sentence') {
             sentenceCount++;
             if (firstSentenceMs === null) firstSentenceMs = Date.now() - startedAt;
@@ -664,9 +700,53 @@ export async function POST(req: NextRequest) {
           // one is listening.
           if (clientGone) break;
         }
-      } catch (err) {
-        console.error('[brain.stream] error:', err);
-        send({ type: 'done', stopReason: 'error', usage, fullText, toolCalls: [] });
+        // Stream drained without throwing (or the client vanished) — this
+        // attempt is terminal; leave the retry loop.
+        break;
+        } catch (err) {
+          // The turn threw — classify it and decide retry vs honest give-up.
+          if (clientGone) {
+            console.warn('[brain.stream] client gone during turn error — not retrying');
+            break;
+          }
+          const errorKind = classifyBrainError(err);
+          const decision = decideBrainRetry({
+            errorKind,
+            sentencesEmitted: sentenceCount,
+            toolsEmitted: toolNames.length,
+            attempt: turnAttempt,
+            maxRetries: MAX_TURN_RETRIES,
+          });
+          console.warn(
+            `[brain.stream] turn error kind=${errorKind} sentences=${sentenceCount} ` +
+            `tools=${toolNames.length} attempt=${turnAttempt} → ${decision.action} ` +
+            `(${decision.reason}): ${err instanceof Error ? err.message : String(err)}`,
+          );
+          if (decision.action === 'retry') {
+            turnAttempt++;
+            turnRetries = turnAttempt;
+            await new Promise((r) => setTimeout(r, decision.delayMs));
+            continue;
+          }
+          // Give up. Emit the terminal done with the honest-fallback signal —
+          // `brainUnavailable` is set ONLY when zero content reached the
+          // client (the observed incident shape). A partial turn already
+          // played what it sent, so we don't flag it (the client's
+          // empty-stream path requires 0 sentences + 0 tools anyway).
+          gaveUp = true;
+          stopReason = 'error';
+          send({
+            type: 'done',
+            stopReason: 'error',
+            usage,
+            fullText,
+            toolCalls: [],
+            retries: turnRetries,
+            brainUnavailable: sentenceCount === 0 && toolNames.length === 0,
+          });
+          break;
+        }
+        } // end whole-turn retry loop
       } finally {
         const totalMs = Date.now() - startedAt;
         const textSnippet = fullText.slice(0, 120).replace(/\n/g, ' ');
@@ -678,7 +758,7 @@ export async function POST(req: NextRequest) {
           `→ tools=[${toolNames.join(', ') || '(none)'}] · sentences=${sentenceCount} ` +
           `· first_sentence=${firstSentenceMs}ms · first_tool=${firstToolMs}ms · total=${totalMs}ms ` +
           `· text="${textSnippet}${fullText.length > 120 ? '…' : ''}" ` +
-          `· stop=${stopReason} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
+          `· stop=${stopReason} · retries=${turnRetries}${gaveUp ? ' FAILED' : ''} · in=${usage.inputTokens} out=${usage.outputTokens} cache_read=${usage.cacheReadTokens} cache_creation=${usage.cacheCreationTokens}` +
           (violatedRule8 ? ' ⚠ RULE8_VIOLATION' : '') +
           (clientGone ? ' (client_gone)' : '')
         );

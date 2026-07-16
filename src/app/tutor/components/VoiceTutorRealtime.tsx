@@ -884,6 +884,13 @@ export function VoiceTutorRealtime({
   // composition (user-identified gap, 2026-07-05). Set by the input's
   // existing focus/blur handlers.
   const studentTypingRef = useRef(false);
+  // Task X10: modality of the CURRENT brain turn's input — true when the
+  // student TYPED it (in-session text box / external typed dispatch), false
+  // for voice / button / kickoff. Set at the unified relay entry point
+  // (handleStudentTranscriptForBrain) from the dispatch's `typed` opt and
+  // read by the honest empty-stream fallback, which renders a text bubble
+  // (never speaks "say that again") for a typed exchange during a brain outage.
+  const currentTurnTypedRef = useRef(false);
 
   // Tutor reactions (noise-nagging v1, fixes-queue-v2 item 2): situation
   // counter → one-time spoken suggestion. Events are recorded in
@@ -6766,6 +6773,14 @@ export function VoiceTutorRealtime({
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
       let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
+      // Task X10 — brain-unavailability signal from the stream route. When the
+      // server exhausts its bounded retries (or hits a non-retryable error)
+      // with ZERO content produced, the terminal done event carries
+      // brainUnavailable=true. It drives the HONEST empty-stream fallback
+      // (below) instead of the mis-blaming "could you say that again?" line.
+      // `serverBrainRetries` is server-side retry count, surfaced in telemetry.
+      let brainUnavailable = false;
+      let serverBrainRetries = 0;
       // Judge-kill Stage 3.1 (2026-06-16): cross-attempt resume-from-cut
       // state. When a content kill leaves an unplayed TTS tail, performKill
       // captures it here; the NEXT attempt (the retry) consumes it, holds
@@ -7248,7 +7263,26 @@ export function VoiceTutorRealtime({
         if (!res.ok || !res.body) {
           const err = res.body ? await res.text() : '(no body)';
           console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);
-          speakTextRef.current?.('Sorry, I lost my train of thought. Could you say that again?');
+          // Task X10: an HTTP-level failure is the brain being unreachable —
+          // not the student mishearing. Be honest, and match the empty-stream
+          // fallback's modality split (typed ⇒ text bubble, voice ⇒ spoken).
+          onDebugEvent?.('brain_http_error', `status=${res.status}`);
+          if (currentTurnTypedRef.current) {
+            const msg = "I'm having trouble reaching my brain right now — give me a moment and try again.";
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              {
+                id: `tutor-${t0}-brain-http-error`,
+                timestamp: new Date(),
+                role: 'tutor',
+                text: msg,
+              } as TranscriptEntry,
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+            onTrackInteraction?.('message', msg, undefined, 'tutor');
+          } else {
+            speakTextRef.current?.("I'm having trouble thinking right now — one moment.");
+          }
           return;
         }
 
@@ -8963,6 +8997,14 @@ export function VoiceTutorRealtime({
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   attemptText = ((ev.fullText as string) ?? attemptText).trim();
                   lastUsage = ev.usage as typeof lastUsage;
+                  // Task X10: carry the server's brain-unavailable + retry
+                  // signals out to the post-stream empty-turn fallback.
+                  if (typeof (ev as { retries?: number }).retries === 'number') {
+                    serverBrainRetries = (ev as { retries?: number }).retries ?? 0;
+                  }
+                  if ((ev as { brainUnavailable?: boolean }).brainUnavailable === true) {
+                    brainUnavailable = true;
+                  }
                   // A1: surface per-attempt usage for cost telemetry (was
                   // debug-log-only, leaving brain sessions at $0 recorded).
                   if (lastUsage) {
@@ -9909,7 +9951,7 @@ export function VoiceTutorRealtime({
       console.log(
         `[brain-orchestrator] turn ok in ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · ` +
         `first_sentence=${firstSentenceMs}ms · text="${fullText.slice(0, 80)}${fullText.length > 80 ? '…' : ''}" · ` +
-        `tools=[${totalToolNamesSeen.join(', ')}] · stop=${lastStopReason} · ` +
+        `tools=[${totalToolNamesSeen.join(', ')}] · stop=${lastStopReason} · retries=${serverBrainRetries}${brainUnavailable ? ' BRAIN_UNAVAILABLE' : ''} · ` +
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
@@ -10100,6 +10142,39 @@ export function VoiceTutorRealtime({
 
       // Empty-turn fallback. Brain produced neither text nor tool calls.
       if (!fullText.trim() && totalToolNamesSeen.length === 0) {
+        // Task X10 — HONEST fallback when the server exhausted its bounded
+        // retries during a brain outage (overloaded_error / transient). The
+        // empty stream is NOT the student's fault, so never say "say that
+        // again". Typed turn ⇒ a text bubble where their typed exchange
+        // lives (speaking a typed reply is jarring); voice turn ⇒ a short
+        // spoken honest line. Only the brainUnavailable path diverges — a
+        // genuine empty stream (brain chose silence / all gates dropped)
+        // keeps the pre-existing behavior.
+        if (brainUnavailable) {
+          const typed = currentTurnTypedRef.current;
+          console.warn(
+            `[brain-orchestrator] brain UNAVAILABLE after ${serverBrainRetries} server ` +
+            `retr${serverBrainRetries === 1 ? 'y' : 'ies'} — honest ${typed ? 'text' : 'voice'} fallback`,
+          );
+          onDebugEvent?.('brain_unavailable', `retries=${serverBrainRetries} · ${typed ? 'typed' : 'voice'}`);
+          if (typed) {
+            const msg = "I'm having trouble reaching my brain right now — give me a moment and try again.";
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              {
+                id: `tutor-${t0}-brain-unavailable`,
+                timestamp: new Date(),
+                role: 'tutor',
+                text: msg,
+              } as TranscriptEntry,
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+            onTrackInteraction?.('message', msg, undefined, 'tutor');
+          } else {
+            speakTextRef.current?.("I'm having trouble thinking right now — one moment.");
+          }
+          return;
+        }
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
         speakTextRef.current?.('Sorry, could you say that again?');
         return;
@@ -10356,12 +10431,20 @@ export function VoiceTutorRealtime({
       silent?: boolean;
       bypassPerceptionDedupe?: boolean;
       bypassMidUtteranceGuard?: boolean;
+      // Task X10: true when this dispatch originated from the student TYPING
+      // (in-session text box / external typed send), false/undefined for
+      // voice, buttons, and synthetic kickoffs. Recorded into
+      // currentTurnTypedRef so the honest brain-outage fallback can render a
+      // text bubble instead of speaking "say that again" at a typing student.
+      typed?: boolean;
       // Q3 timestamped-history: forwarded verbatim to callBrainOnce (the
       // direct first call only — queue-drained follow-ups are separate
       // turns and intentionally don't carry it).
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
     },
   ) => {
+    // Task X10: stamp this turn's input modality for the honest fallback.
+    currentTurnTypedRef.current = opts?.typed === true;
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120), `· humor=${humorCeilingRef.current ?? 'default'}`);
     // "Mute me" / "stop listening" voice command — mute the mic instead of
     // sending it to the brain (which would otherwise try to "answer" it). Only
@@ -12120,11 +12203,15 @@ export function VoiceTutorRealtime({
           // cap (voiceSessionStartedAtMsRef stayed null). A real typed
           // message starts both. Bracketed strings are synthetic (kickoff /
           // reactions / harness) and must not start the clock.
-          if (!/^\s*\[/.test(text) && voiceSessionStartedAtMsRef.current === null) {
+          const isSynthetic = /^\s*\[/.test(text);
+          if (!isSynthetic && voiceSessionStartedAtMsRef.current === null) {
             voiceSessionStartedAtMsRef.current = Date.now();
             onSessionStartedRef.current?.();
           }
-          realtime.sendTextMessage(text);
+          // Task X10: a non-bracketed external send is a real typed/text
+          // message; bracketed strings are synthetic (kickoff / reactions /
+          // harness) and get the voice-style fallback path.
+          realtime.sendTextMessage(text, { typed: !isSynthetic });
         },
         speakText: (text: string) => realtime.speakText(text),
         stopSpeaking: () => {
@@ -13270,7 +13357,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // Send to AI. input.value was already cleared at the top of
             // this handler before the plan-from-text await so the box
             // empties immediately on submit, not at end of flow.
-            realtime.sendTextMessage(text);
+            // Task X10: this is the canonical TYPED path — mark it so a
+            // brain-outage fallback renders text, not spoken "say that again".
+            realtime.sendTextMessage(text, { typed: true });
           }
         }}
       >

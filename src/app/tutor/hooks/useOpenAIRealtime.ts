@@ -235,7 +235,15 @@ export interface RealtimeConfig {
      *  remains gated by both. */
     onUserTranscript: (
       transcript: string,
-      opts?: { bypassPerceptionDedupe?: boolean; bypassMidUtteranceGuard?: boolean },
+      opts?: {
+        bypassPerceptionDedupe?: boolean;
+        bypassMidUtteranceGuard?: boolean;
+        /** Task X10: true when this dispatch is a TYPED student message (vs
+         *  voice / button / kickoff). Threaded to the brain orchestrator so
+         *  a brain-outage fallback for a typed turn renders text instead of
+         *  speaking "say that again". */
+        typed?: boolean;
+      },
     ) => void | Promise<void>;
     /** TTS engine for voicing the brain's text in relay mode.
      *  - 'realtime' (default): use Realtime's out-of-band response. Highest
@@ -310,7 +318,7 @@ export interface RealtimeResult {
   muteInput: () => void;
   interrupt: () => void;
   pause: () => void;
-  sendTextMessage: (text: string) => void;
+  sendTextMessage: (text: string, meta?: { typed?: boolean }) => void;
   injectContext: (contextText: string) => void;
   /**
    * Voice the given text through Realtime's TTS without authoring it.
@@ -2459,7 +2467,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   }, [updateState, emitPlaybackStamp]);
 
   // Send text message (for testing or fallback)
-  const sendTextMessage = useCallback((text: string) => {
+  const sendTextMessage = useCallback((text: string, meta?: { typed?: boolean }) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       console.error('[Realtime] Not connected');
       return;
@@ -2493,6 +2501,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         relayUserTranscriptRef.current?.(text, {
           bypassPerceptionDedupe: true,
           bypassMidUtteranceGuard: true,
+          // Task X10: propagate the typed-input signal (set by the in-session
+          // text box + external typed sends) so a brain-outage fallback for
+          // this turn renders text rather than speaking at a typing student.
+          typed: meta?.typed === true,
         });
       } catch (err) {
         console.error('[Realtime] sendTextMessage relay threw:', err);
