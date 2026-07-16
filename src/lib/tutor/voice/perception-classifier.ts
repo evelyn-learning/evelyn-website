@@ -338,32 +338,35 @@ function scriptWindowContains(s: RecentTtsScript, studentT: number, now: number)
   return studentT >= winStart && studentT <= winEnd;
 }
 
-/** Trailing part of the same window, used by the speaking-state asymmetry
- *  check to decide whether the tutor is still effectively "speaking" for
- *  echo purposes even after production state has already moved on (a
- *  transcript can land just after 'speaking' flips to 'listening'). */
-function inTrailWindowOfAnyScript(
-  scripts: RecentTtsScript[],
-  studentT: number,
-  now: number,
-): boolean {
-  return scripts.some((s) => scriptWindowContains(s, studentT, now));
-}
-
-export function scoreSelfVoice(
+/**
+ * Text-score and phonetic-score computed separately (fix wave, 2026-07-15,
+ * review finding 3). `scoreSelfVoice` below just returns `Math.max` of the
+ * two — same public behaviour as before this fix wave — but keeping the two
+ * halves apart lets `classifyHeuristic` tell whether a drop verdict was
+ * reached ONLY via the phonetic pass (text score stayed under threshold) so
+ * the `[CLASSIFIER]` log line can say so distinctly, for the Stage-1 FP-rate
+ * review to count phonetic-only drops separately from ordinary text-echo
+ * drops.
+ */
+function scoreSelfVoiceDetailed(
   transcript: string,
   recentTtsScripts: RecentTtsScript[],
   speechStartedAt: number | undefined,
   now: number,
-): number {
+): { textScore: number; phonScore: number } {
   const tTokens = tokenize(transcript);
-  if (tTokens.length === 0) return 0;
+  if (tTokens.length === 0) return { textScore: 0, phonScore: 0 };
   const tSet = new Set(tTokens);
   const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
   const tPhon = phoneticTokens(tTokens);
   const tPhonSet = new Set(tPhon);
   const tPhon3 = new Set(ngrams(tPhon, Math.min(3, tPhon.length)));
-  let best = 0;
+  // Fix wave (2026-07-15, review finding 2): how many CONTENT words (stop-
+  // word-filtered) the transcript has. Used below to bound the phonetic
+  // containment measure — see its comment.
+  const tContentCount = contentTokens(tTokens).length;
+  let bestText = 0;
+  let bestPhon = 0;
   const studentT = speechStartedAt ?? now;
   for (const s of recentTtsScripts) {
     if (!scriptWindowContains(s, studentT, now)) continue;
@@ -379,6 +382,24 @@ export function scoreSelfVoice(
       ngramHit = hit / Math.max(t3.size, 1);
     }
     // Containment: short transcripts that are entirely inside a TTS line.
+    //
+    // KNOWN PRE-EXISTING FALSE POSITIVE (documented 2026-07-15, fix-wave
+    // review finding 4 — predates V3, not introduced by the phonetic pass):
+    // this text containment check drops a student's exact-echo 1-word
+    // ANSWER when it lands in the trail window right after the tutor asked
+    // about that exact word — e.g. the tutor says "...Dadu or Karakorum?"
+    // and the student answers "Dadu", which is trivially `containment=1`
+    // against the script line that literally contains "Dadu". This is the
+    // DOMINANT known false-positive class in the self-voice matcher. A
+    // candidate remedy was considered and DEFERRED: require
+    // `speechStartedAt <= spokenEndedAt` (the student's speech began WHILE
+    // the audio was still physically playing) before applying the lenient/
+    // unconditional containment treatment — a real answer given after the
+    // tutor finishes talking would then no longer qualify, while a genuine
+    // echo (which necessarily starts during or immediately continuous with
+    // playback) still would. Not implemented in this fix wave; scoped out
+    // as its own follow-up so it gets its own TDD pass rather than riding
+    // in under unrelated findings.
     const containment = tTokens.every((tok) => sSet.has(tok)) ? 1 : 0;
 
     // Phonetic mirror of the three text measures above (V3) — catches
@@ -394,16 +415,43 @@ export function scoreSelfVoice(
       for (const g of tPhon3) if (sPhon3.has(g)) hit += 1;
       ngramHitPhon = hit / Math.max(tPhon3.size, 1);
     }
+    // Fix wave (2026-07-15, review finding 2): phonetic CONTAINMENT alone is
+    // too aggressive for a transcript with ≤1 CONTENT word. The mega-stop-
+    // class (b/p/d/t/g/k/c/q → one class, see `CONSONANT_CLASS` above)
+    // deliberately collapses many short, otherwise-unrelated words to the
+    // same code — "big"/"dig"/"pig"/"pick" all reduce to "KK#1" — so a bare
+    // 1-content-word transcript that merely SOUNDS like a single script
+    // token (in ANY production state, since scoreSelfVoice runs
+    // unconditionally) would otherwise drop unconditionally on pure
+    // coincidental phonetic resemblance to one word, with no other content
+    // to corroborate it. Excluding containment when tContentCount<=1 fixes
+    // this; jaccard/n-gram phonetic measures deliberately stay in play (they
+    // dilute across the whole script line, so a single-word coincidence
+    // can't dominate them the way containment lets it). Text containment is
+    // UNCHANGED — an exact literal-word echo is legitimately suspicious even
+    // as a single word (see the known-FP comment above, which is a separate,
+    // pre-existing concern).
     const containmentPhon =
-      tPhon.length > 0 && tPhon.every((code) => sPhonSet.has(code)) ? 1 : 0;
+      tContentCount > 1 && tPhon.length > 0 && tPhon.every((code) => sPhonSet.has(code)) ? 1 : 0;
 
-    const score = Math.max(
-      j, ngramHit, containment * 0.9,
-      jPhon, ngramHitPhon, containmentPhon * 0.9,
-    );
-    if (score > best) best = score;
+    const textScore = Math.max(j, ngramHit, containment * 0.9);
+    const phonScore = Math.max(jPhon, ngramHitPhon, containmentPhon * 0.9);
+    if (textScore > bestText) bestText = textScore;
+    if (phonScore > bestPhon) bestPhon = phonScore;
   }
-  return best;
+  return { textScore: bestText, phonScore: bestPhon };
+}
+
+export function scoreSelfVoice(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  speechStartedAt: number | undefined,
+  now: number,
+): number {
+  const { textScore, phonScore } = scoreSelfVoiceDetailed(
+    transcript, recentTtsScripts, speechStartedAt, now,
+  );
+  return Math.max(textScore, phonScore);
 }
 
 /** Self-voice threshold tuned conservatively. Scores ≥ this drop. Tuning
@@ -427,13 +475,28 @@ export const SELF_VOICE_THRESHOLD = 0.55;
 // This function is deliberately MORE lenient: content-word (stopword-
 // filtered) EXACT match, verbatim or phonetic, counted per transcript word
 // and averaged. It is only ever consulted by `classifyHeuristic` when BOTH
-// (a) the utterance is ≤4 raw words AND (b) production state is 'speaking'
-// or the utterance landed in the trailing window of a just-played
-// sentence — i.e. exactly the high-prior-echo, low-blast-radius zone V1's
+// (a) the utterance is ≤4 raw words AND (b) production state is literally
+// 'speaking' — i.e. exactly the high-prior-echo, low-blast-radius zone V1's
 // sustained-energy gate has already filtered real sustained speech out of.
 // Outside that zone this function is never called, so its extra leniency
 // can't leak into misclassifying a genuine short answer during
 // 'listening', for instance.
+//
+// Fix wave (2026-07-15, review finding 1): the gate ORIGINALLY also fired
+// whenever the transcript landed in the trailing echo window of a just-
+// played script (`state === 'speaking' || inTrailWindowOfAnyScript(...)`),
+// even after production state had already flipped to 'listening'. That
+// extended this lenient 0.5 threshold into 'listening' for up to
+// TTS_PADDING_TRAIL_MS (1.5s) after the tutor stopped talking — long enough
+// to swallow a genuine ≤4-word ANSWER to the question the tutor had just
+// asked (probe-confirmed: student said "Dadu definitely" ~0.5s after "...was
+// the capital Dadu or Karakorum?" and it was dropped with state=listening,
+// reason citing the trail window, not 'speaking'). Tier 1's symmetric,
+// conservative time-window scoring (`scoreSelfVoice`, which does NOT get
+// more lenient post-speaking) still covers genuine post-speaking echoes, so
+// the trail-window branch of this gate was pure false-positive surface with
+// no compensating catch. Removed — this function is now consulted ONLY when
+// `productionState === 'speaking'`, full stop.
 function scoreSpeakingEchoOverlap(
   transcript: string,
   recentTtsScripts: RecentTtsScript[],
@@ -487,13 +550,24 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   if (wordCount === 0) return { verdict: 'noise', reason: 'empty transcript' };
 
   // 1. Self-voice (defence layers 1+2 — script-cancellation + timing).
-  const selfVoiceScore = scoreSelfVoice(
+  const { textScore: selfVoiceTextScore, phonScore: selfVoicePhonScore } = scoreSelfVoiceDetailed(
     text, input.recentTtsScripts, input.speechStartedAt, input.now,
   );
+  const selfVoiceScore = Math.max(selfVoiceTextScore, selfVoicePhonScore);
   if (selfVoiceScore >= SELF_VOICE_THRESHOLD) {
+    // Fix wave (2026-07-15, review finding 3): when the drop verdict was
+    // reached ONLY via the phonetic pass (text score alone stayed under
+    // threshold), say so distinctly in the reason string so the Stage-1 FP
+    // review can count phonetic-only drops separately from ordinary
+    // text-echo drops — they're a materially different risk (a coincidental
+    // sound-alike, not a literal repeated word).
+    const phoneticOnly =
+      selfVoicePhonScore >= SELF_VOICE_THRESHOLD && selfVoiceTextScore < SELF_VOICE_THRESHOLD;
     return {
       verdict: 'drop_self_voice',
-      reason: `self-voice score ${selfVoiceScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
+      reason: phoneticOnly
+        ? `phonetic-echo overlap ${selfVoicePhonScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`
+        : `self-voice score ${selfVoiceScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
       selfVoiceScore,
     };
   }
@@ -501,17 +575,30 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   const state = input.productionState;
 
   // 1.5. Speaking-state asymmetry (echo-fix V3). A SHORT (≤4 raw-word)
-  // utterance landing while the tutor is 'speaking' — or just after, still
-  // in the trailing echo window of the sentence that just played — is
-  // disproportionately likely to be an ASR-garbled self-echo that didn't
-  // quite clear the conservative universal bar above (single distinctive
-  // word overlap, diluted by scoreSelfVoice's whole-line measures). Within
-  // this narrow, high-prior-echo zone we apply a more lenient overlap
-  // check and, if it fires, drop unconditionally — this MUST run before
-  // the barge-trigger/question-shape checks below, because a word like
-  // "actually" is both a legitimate barge trigger AND, in this exact
-  // window, the tutor's own last word bouncing back (portal-81f2b582:
-  // "actually turn" against "...the Yuan actually used the Mongol title").
+  // utterance landing while the tutor is 'speaking' is disproportionately
+  // likely to be an ASR-garbled self-echo that didn't quite clear the
+  // conservative universal bar above (single distinctive word overlap,
+  // diluted by scoreSelfVoice's whole-line measures). Within this narrow,
+  // high-prior-echo zone we apply a more lenient overlap check and, if it
+  // fires, drop unconditionally — this MUST run before the barge-trigger/
+  // question-shape checks below, because a word like "actually" is both a
+  // legitimate barge trigger AND, in this exact window, the tutor's own
+  // last word bouncing back (portal-81f2b582: "actually turn" against
+  // "...the Yuan actually used the Mongol title").
+  //
+  // Fix wave (2026-07-15, review finding 1): this gate used to ALSO fire
+  // when `state !== 'speaking'` but the transcript landed in the trailing
+  // echo window of a just-played script. That extended the lenient 0.5
+  // threshold into 'listening' for up to TTS_PADDING_TRAIL_MS after the
+  // tutor stopped talking, and swallowed genuine ≤4-word ANSWERS to
+  // questions the tutor had just asked (probe-confirmed: "Dadu definitely"
+  // ~0.5s after "...was the capital Dadu or Karakorum?", state=listening,
+  // wrongly dropped). Tier 1 (`scoreSelfVoice`, unconditional, same
+  // threshold in every state) still covers genuine post-speaking echoes, so
+  // the trail-window branch added FP surface with no compensating catch.
+  // Gate is now `state === 'speaking'` ONLY — a student who's genuinely
+  // answering right after the tutor finishes talking now dispatches as
+  // new_turn instead of being silently dropped.
   //
   // Policy for the ambiguous case where the student deliberately echoes
   // the tutor to ask about it (e.g. "Dadu? what's Dadu?" — 3 raw words,
@@ -524,23 +611,16 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   // re-ask once the tutor stops talking — cheaper than risking the
   // opposite failure mode (the actual incident: real echoes dispatching
   // as turns).
-  if (rawWordCount(text) <= 4) {
-    const speakingOrTrailing =
-      state === 'speaking' ||
-      inTrailWindowOfAnyScript(
-        input.recentTtsScripts, input.speechStartedAt ?? input.now, input.now,
-      );
-    if (speakingOrTrailing) {
-      const echoOverlap = scoreSpeakingEchoOverlap(
-        text, input.recentTtsScripts, input.speechStartedAt, input.now,
-      );
-      if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
-        return {
-          verdict: 'drop_self_voice',
-          reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
-          selfVoiceScore,
-        };
-      }
+  if (rawWordCount(text) <= 4 && state === 'speaking') {
+    const echoOverlap = scoreSpeakingEchoOverlap(
+      text, input.recentTtsScripts, input.speechStartedAt, input.now,
+    );
+    if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
+      return {
+        verdict: 'drop_self_voice',
+        reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
+        selfVoiceScore,
+      };
     }
   }
 

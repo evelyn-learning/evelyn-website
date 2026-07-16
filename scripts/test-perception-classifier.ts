@@ -475,9 +475,12 @@ console.log('\n=== V3: speaking-state asymmetry (≤4-word echo during/just-afte
     );
   }
   {
-    // Trail-window guard: production state already flipped to 'listening'
-    // (script just finished) but the transcript landed inside the trailing
-    // echo window — asymmetry must still apply, not just literal 'speaking'.
+    // Fix wave (2026-07-15, review finding 1): the asymmetry gate no longer
+    // extends into 'listening' via the trailing echo window — it now
+    // requires production state to be LITERALLY 'speaking'. A transcript
+    // landing in 'listening' just after the script finished — even inside
+    // the old trail window — must NOT be swept into the lenient tier-2
+    // check; it's a genuine short answer path (new_turn), not an echo.
     const trailNow = speechStartedAt + 200;
     const r = classifyWithScripts(
       'actually turn', 'listening',
@@ -486,8 +489,8 @@ console.log('\n=== V3: speaking-state asymmetry (≤4-word echo during/just-afte
       speechStartedAt, trailNow,
     );
     check(
-      '"actually turn" landing in listening but within trail window → drop_self_voice',
-      r.verdict === 'drop_self_voice',
+      '"actually turn" landing in listening within the old trail window → new_turn (fix wave finding 1)',
+      r.verdict === 'new_turn',
       `verdict=${r.verdict} (${r.reason})`,
     );
   }
@@ -517,6 +520,209 @@ console.log('\n=== V3: speaking-state asymmetry (≤4-word echo during/just-afte
       `= ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
     );
   }
+}
+
+// ── Fix wave (2026-07-15): review findings on V3 ─────────────────────────
+// Findings from the V3 code review, addressed here via TDD (failing tests
+// written first, then the fix applied in perception-classifier.ts):
+//   1. (CRITICAL) tier-2 asymmetry gate was `state==='speaking' ||
+//      inTrailWindowOfAnyScript(...)` — the OR leaked the lenient 0.5
+//      threshold into 'listening', swallowing genuine short answers.
+//   2. (Important) phonetic CONTAINMENT alone was too aggressive for a
+//      1-content-word transcript (mega-stop-class collisions like
+//      big/dig/pig/pick), in every state.
+//   3. (Important, observability) a drop reached ONLY via the phonetic pass
+//      must say so distinctly in the reason string.
+console.log('\n=== Fix wave finding 1: tier-2 asymmetry scoped to literal \'speaking\' only ===');
+{
+  const classifyWithScripts = (
+    transcript: string,
+    productionState: ProductionStateForClassifier,
+    scripts: RecentTtsScript[],
+    speechStartedAt: number,
+    now: number,
+  ) => {
+    const input: HeuristicInput = {
+      transcript, productionState, recentTtsScripts: scripts, now, speechStartedAt,
+    };
+    return classifyHeuristic(input);
+  };
+
+  // The probe-confirmed case from the finding: tutor asks a question, the
+  // student's short partial-echo ANSWER lands 0.5s later, state already
+  // 'listening'.
+  const KARAKORUM_SCRIPT = 'was the capital Dadu or Karakorum?';
+  const playStart = 4_000_000;
+  const playEnd = 4_002_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 40, text: KARAKORUM_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const speechStartedAt = playEnd + 500; // +0.5s, well inside the old trail window
+  const now = speechStartedAt + 300;
+
+  {
+    const universal = scoreSelfVoice('Dadu definitely', scripts, speechStartedAt, now);
+    check(
+      '"Dadu definitely" does not clear the universal (tier-1) self-voice bar alone',
+      universal < SELF_VOICE_THRESHOLD,
+      `score=${universal.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
+    );
+  }
+  {
+    const r = classifyWithScripts('Dadu definitely', 'listening', scripts, speechStartedAt, now);
+    check(
+      '"Dadu definitely" +0.5s after "...Dadu or Karakorum?", state=listening → NOT dropped (new_turn)',
+      r.verdict === 'new_turn',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // The SAME transcript arriving while state is still literally 'speaking'
+    // must still be dropped — the gate narrows to 'speaking' only, it
+    // doesn't disable tier 2 altogether.
+    const r = classifyWithScripts('Dadu definitely', 'speaking', scripts, speechStartedAt, now);
+    check(
+      '"Dadu definitely" during literal \'speaking\' → still drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Regression guard: every incident-line drop from the original V3 test
+    // block above occurred during literal 'speaking' state, so none of them
+    // depended on the removed trail-window OR — re-assert the headline
+    // incident case here as a fix-wave-scoped guard.
+    const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+    const daduScripts: RecentTtsScript[] = [
+      { id: 41, text: DADU_SCRIPT, spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 },
+    ];
+    const r = classifyWithScripts(
+      "Badu, what's now Badu?", 'speaking', daduScripts, 3_003_300, 3_003_700,
+    );
+    check(
+      'incident line "Badu, what\'s now Badu?" during speaking still drops after the fix',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+}
+
+console.log('\n=== Fix wave finding 2: phonetic containment bounded to >1 content word ===');
+{
+  // "big"/"dig"/"pig"/"pick" all collapse to the same consonant-skeleton
+  // code under the mega-stop-class. A bare 1-word transcript that merely
+  // SOUNDS like one script token must not drop on that alone.
+  const CHANGE_SCRIPT = 'that was a big change for the empire';
+  const playStart = 5_000_000;
+  const playEnd = 5_002_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 50, text: CHANGE_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const speechStartedAt = playEnd + 300;
+  const now = speechStartedAt + 300;
+
+  {
+    const s = scoreSelfVoice('pick', scripts, speechStartedAt, now);
+    check(
+      '"pick" (1 word, phonetically same class as "big") does NOT self-voice-match via containment alone',
+      s < SELF_VOICE_THRESHOLD,
+      `score=${s.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
+    );
+  }
+
+  // The incident's own core case: script contains literal "Dadu", student
+  // says the 1-word garble "Badu". This occurred DURING 'speaking', where
+  // tier 2 (multi-measure, scoped to 'speaking') still catches it — but a
+  // bare 1-word phonetic resemblance during 'listening' must NOT drop on
+  // phonetics alone.
+  const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+  const daduPlayStart = 5_100_000;
+  const daduPlayEnd = 5_102_000;
+  const daduScripts: RecentTtsScript[] = [
+    { id: 51, text: DADU_SCRIPT, spokenStartedAt: daduPlayStart, spokenEndedAt: daduPlayEnd },
+  ];
+  const daduSpeechStartedAt = daduPlayEnd + 300;
+  const daduNow = daduSpeechStartedAt + 300;
+
+  {
+    const classifyWithScripts = (productionState: ProductionStateForClassifier) => {
+      const input: HeuristicInput = {
+        transcript: 'Badu',
+        productionState,
+        recentTtsScripts: daduScripts,
+        now: daduNow,
+        speechStartedAt: daduSpeechStartedAt,
+      };
+      return classifyHeuristic(input);
+    };
+    const rSpeaking = classifyWithScripts('speaking');
+    check(
+      '"Badu" (1 word) during speaking → drop_self_voice (tier 2 still catches it)',
+      rSpeaking.verdict === 'drop_self_voice',
+      `verdict=${rSpeaking.verdict} (${rSpeaking.reason})`,
+    );
+    const rListening = classifyWithScripts('listening');
+    check(
+      '"Badu" (1 word) during listening → NOT dropped by phonetics alone (new_turn)',
+      rListening.verdict === 'new_turn',
+      `verdict=${rListening.verdict} (${rListening.reason})`,
+    );
+  }
+}
+
+console.log('\n=== Fix wave finding 3: distinct reason for phonetic-only drops ===');
+{
+  // "Badu, what's now Badu?" against the Dadu script clears threshold via
+  // the PHONETIC pass only (text containment misses — "badu" is never a
+  // literal token in the script, only "dadu" is). Verified above (V3
+  // section) that the universal score is 0.90 via containment; assert here
+  // that the reason string names it as phonetic specifically, in EVERY
+  // state (tier 1 is unconditional), not just 'speaking'.
+  const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+  const playStart = 6_000_000;
+  const playEnd = 6_002_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 60, text: DADU_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const speechStartedAt = playEnd + 300;
+  const now = speechStartedAt + 300;
+  const input: HeuristicInput = {
+    transcript: "Badu, what's now Badu?",
+    productionState: 'listening',
+    recentTtsScripts: scripts,
+    now,
+    speechStartedAt,
+  };
+  const r = classifyHeuristic(input);
+  check(
+    '"Badu, what\'s now Badu?" → drop_self_voice',
+    r.verdict === 'drop_self_voice',
+    `verdict=${r.verdict}`,
+  );
+  check(
+    'reason string distinctly names the phonetic-only pass',
+    r.reason.startsWith('phonetic-echo overlap'),
+    `reason="${r.reason}"`,
+  );
+
+  // Regression guard: an exact TEXT echo ("Good question.") must keep the
+  // ordinary "self-voice score" reason, not the phonetic-only one — the
+  // text pass alone already clears threshold there.
+  const goodQ: RecentTtsScript[] = [
+    { id: 61, text: 'Good question.', spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const rText = classifyHeuristic({
+    transcript: 'Good question.',
+    productionState: 'listening',
+    recentTtsScripts: goodQ,
+    now,
+    speechStartedAt,
+  });
+  check(
+    'exact text echo keeps the ordinary "self-voice score" reason (not phonetic-only)',
+    rText.reason.startsWith('self-voice score'),
+    `reason="${rText.reason}"`,
+  );
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);
