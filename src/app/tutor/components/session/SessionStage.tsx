@@ -200,6 +200,10 @@ export default function SessionStage(props: SessionStageProps) {
     try { setIframed(window.self !== window.top); } catch { setIframed(true); }
   }, []);
   const [expanded, setExpanded] = useState(false);
+  // TODO: gate this on the embed chrome flag (minimal chrome only) when available.
+  // SessionStage's only call site is TutorSession, iframed only via /embed (chrome="minimal").
+  // If SessionStage gains a second consumer, add explicit chrome prop to avoid unintended expand
+  // button in non-minimal contexts.
   const canExpand = !canFullscreen && iframed;
 
   // The postMessage sender (with its target-origin handling) lives in
