@@ -953,6 +953,23 @@ console.log('\n=== Task X6: echo anchor (speechStartedAt <= spokenEndedAt + ε) 
   }
 
   {
+    // Fail-safe wiring (2026-07-16, Task X6): when VAD reports no onset
+    // (latencyMs === 0, speechStartedAt undefined in caller), the echo anchor
+    // is satisfied (fail-safe engaged), so containment-based drops still occur.
+    // This mirrors the existing undefined-speechStartedAt test but verifies the
+    // zero-latency payload shape (undefined is the fail-safe, not an error).
+    const zeroLatencyScripts: RecentTtsScript[] = [
+      { id: 91, text: 'was the capital Dadu or Karakorum?', spokenStartedAt: 6_000_000, spokenEndedAt: 6_002_000 },
+    ];
+    const r = classifyWithScripts('Dadu', 'listening', zeroLatencyScripts, undefined, 6_002_300);
+    check(
+      'zero-latency (undefined speechStartedAt) payload → containment still drops (fail-safe)',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+
+  {
     // Regression: the three original incident lines all occur during literal
     // 'speaking' (tutor still talking) and must STILL drop after the anchor.
     const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";

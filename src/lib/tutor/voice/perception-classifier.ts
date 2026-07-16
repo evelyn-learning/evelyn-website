@@ -353,8 +353,10 @@ export const TTS_PADDING_TRAIL_MS = 1500;
 // anchored: a verbatim FULL-line echo scores ~1.0 on those regardless of
 // containment and legitimately still drops even when its perception
 // transcript lands a fraction of a second after playback end (VAD onset lag
-// + trail window) — a real answer, by contrast, never reproduces a whole
-// tutor line, so the un-anchored jaccard/n-gram path can't swallow it.
+// + trail window) — most real answers don't reproduce a whole tutor line,
+// but close partial-phrasing restatements (e.g., "the capital was Dadu") can
+// still cross jaccard 0.55 in post-playback timings; this is a known
+// residual FP class, deferred to follow-up echo/restatement discrimination.
 //
 // ε (ECHO_ANCHOR_EPSILON_MS): VAD-onset slop. The perception WS stamps
 // `speech_started` only after enough energy accumulates to trip its
@@ -362,9 +364,11 @@ export const TTS_PADDING_TRAIL_MS = 1500;
 // small margin (~100-200ms for server VAD). A genuine echo whose acoustic
 // onset was at/just-before `spokenEndedAt` can therefore be VAD-reported up
 // to ~that margin AFTER `spokenEndedAt`; ε keeps such an echo anchored-in.
-// Set to 200ms — the top of the cited VAD-onset range, and equal to this
-// file's existing TTS_PADDING_LEAD_MS onset-slop budget (kept in sync
-// deliberately). 200ms biases slightly toward preserving today's drop
+// Set to 200ms — the top of the cited VAD-onset range. This value happens to
+// equal TTS_PADDING_LEAD_MS by coincidence (both are VAD-slop budgets, but
+// serve semantically distinct purposes: ε gates echo-anchor policy, while
+// TTS_PADDING_LEAD_MS gates the TTS timing window). 200ms biases slightly
+// toward preserving today's drop
 // behaviour (fail toward NOT opening a new echo leak) while still fixing the
 // FP: the incident answer began ≥0.4s (400ms > 200ms) after playback end.
 export const ECHO_ANCHOR_EPSILON_MS = 200;

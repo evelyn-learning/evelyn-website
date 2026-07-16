@@ -11384,7 +11384,7 @@ export function VoiceTutorRealtime({
       // sessions before Stage 2 ships any state change.
       if (perceptionStage >= 1) {
         const nowMs = Date.now();
-        const speechStartedAt = nowMs - t.latencyMs;
+        const speechStartedAt = t.latencyMs > 0 ? nowMs - t.latencyMs : undefined;
         // Stage-3 fix #5 (2026-05-28): anchor the buffer read on
         // SPEECH_STARTED, not nowMs. The relevant question for self-voice
         // is "what was the tutor saying when the student STARTED
@@ -11393,8 +11393,11 @@ export function VoiceTutorRealtime({
         // nowMs-anchored window, leaving the defence with empty data
         // and sv=0.00 even when the student transcript was clearly
         // a verbatim copy of recent tutor speech.
+        // Zero-latency onset (production "no VAD") becomes undefined, which
+        // triggers the classifier's fail-safe path (anchor disabled).
+        const studentT = speechStartedAt ?? nowMs;
         const recentTtsScripts: RecentTtsScript[] = ttsScriptBufferRef.current.filter(
-          (s) => s.spokenStartedAt >= speechStartedAt - 30_000,
+          (s) => s.spokenStartedAt >= studentT - 30_000,
         );
         const heur = classifyHeuristic({
           transcript: t.text,
