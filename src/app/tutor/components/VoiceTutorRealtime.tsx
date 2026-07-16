@@ -126,6 +126,7 @@ import {
   TUTOR_TURN_CAP,
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
+  TURN_CAP_WORDS,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   WHITEBOARD_INTENT_PATTERNS,
@@ -6670,6 +6671,13 @@ export function VoiceTutorRealtime({
       }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
+      // Word-budget corrective sibling to totalSentenceCount — same
+      // lifecycle (declared once per callBrainOnce invocation, accumulated
+      // across the retry loop below, never reset mid-turn), so it can't
+      // drift out of sync with the sentence counter it rides alongside.
+      // Incremented at the same site as totalSentenceCount++ (reusing the
+      // per-sentence wordCount already computed there for the dedup guard).
+      let totalWordCount = 0;
       // Number of sentences actually dispatched to TTS this turn. Tracks
       // a strict subset of totalSentenceCount — sentences buffered in the
       // gate then dropped on rejection are counted in totalSentenceCount
@@ -7861,6 +7869,7 @@ export function VoiceTutorRealtime({
                   // letting a post-kill retry re-speak content that was cut off.
                   if (wordCount >= 4 && !attemptKilled) sentencesSpokenThisTurn.add(dedupNorm);
                   totalSentenceCount++;
+                  totalWordCount += wordCount;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   // KEEP markdown emphasis (*word*, **strong**) in the
                   // chat-bound text so TranscriptView can render it as
@@ -9823,11 +9832,17 @@ export function VoiceTutorRealtime({
       // is on UNANCHORED monologue: sentences with zero whiteboard actions —
       // subject-agnostic by design (2026-07-15, user-approved). Telemetry
       // feeds per-subject threshold tuning from real sessions.
-      onDebugEvent?.('turn_length', `${totalSentenceCount} sentence(s) · ${totalToolNamesSeen.length} tool call(s)`, {
+      onDebugEvent?.('turn_length', `${totalSentenceCount} sentence(s) · ${totalWordCount} word(s) · ${totalToolNamesSeen.length} tool call(s)`, {
         sentences: totalSentenceCount,
+        words: totalWordCount,
         toolCalls: totalToolNamesSeen.length,
         subject,
       });
+      // Two independent triggers, ONE corrective. A turn can run wordy
+      // sentences and stay under the sentence cap (or vice versa) — either
+      // is grounds for a next-turn note, but the pendingCadenceNoteRef slot
+      // holds a single note, so the sentence trigger takes priority when
+      // both fire (else-if) rather than planting/overwriting twice.
       if (TUTOR_TURN_CAP && totalSentenceCount > TURN_CAP_HARD_SENTENCES && totalToolNamesSeen.length === 0) {
         pendingCadenceNoteRef.current =
           `[cadence note — not from the student] Your previous turn ran ${totalSentenceCount} spoken sentences ` +
@@ -9836,6 +9851,14 @@ export function VoiceTutorRealtime({
           `board or hand the turn back to the student.`;
         console.warn(`[brain-orchestrator] turn cap: ${totalSentenceCount} sentences, 0 tools — cadence note planted`);
         onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · 0 tool calls — cadence note planted for next turn`);
+      } else if (TUTOR_TURN_CAP && totalWordCount > TURN_CAP_WORDS && totalToolNamesSeen.length === 0) {
+        pendingCadenceNoteRef.current =
+          `[cadence note — not from the student] Your previous turn ran ${totalWordCount} words with no ` +
+          `whiteboard action — too wordy to follow by ear. Condense: one idea per sentence, cut restatement ` +
+          `(don't explain, then analogize, then recap the same point) — anchor what you're saying on the ` +
+          `board or hand the turn back to the student instead.`;
+        console.warn(`[brain-orchestrator] word cap: ${totalWordCount} words, 0 tools — cadence note planted`);
+        onDebugEvent?.('turn_cap_flagged', `${totalWordCount} words · 0 tool calls — cadence note planted for next turn`);
       }
       // Opener-recency (part A): capture THIS session's opener record once,
       // on the opener turn. openingTurnPendingRef is still armed here — it's

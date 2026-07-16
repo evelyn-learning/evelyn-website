@@ -133,6 +133,14 @@ export const RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR = 1;
 export const TUTOR_TURN_CAP = process.env.NEXT_PUBLIC_TUTOR_TURN_CAP !== 'off';
 export const TURN_CAP_SOFT_SENTENCES = 4;
 export const TURN_CAP_HARD_SENTENCES = 8;
+// Word-budget corrective (2026-07-15, part 2 of the verbosity round — see
+// Precision rule in system-prompt-builder.ts, part 1). Sibling trigger to
+// TURN_CAP_HARD_SENTENCES: a turn can stay under the sentence cap while
+// still running long via wordy individual sentences (stacked restatement),
+// so this is a second, independent corrective — NOT a content cap. Same
+// next-turn enforcement point as the sentence cap (post-stream; retry
+// would re-narrate a turn the student already heard).
+export const TURN_CAP_WORDS = 110;
 // Validate-before-speak (Pillar 2 of the robustness track,
 // project_tutor_validate_before_speak). Rolling micro-hold: after the
 // first clean tool opens the gate, subsequent sentences stay BUFFERED
