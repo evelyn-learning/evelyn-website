@@ -109,6 +109,18 @@ export interface BrainTurnInput {
    *  Lives in the volatile per-turn user content (minutesElapsed changes
    *  every turn) — NEVER in the byte-stable cached system prefix. */
   demoStop?: DemoStopPayload;
+  /** Practice-mode contract (Task X2). When true the session is a PRACTICE
+   *  session: the durable per-turn `<practice_session>` block is rendered so
+   *  the tutor runs problem → attempt → feedback and does NOT teach new
+   *  concepts (brief prerequisite remediation is still allowed). Derived on
+   *  the client from the embed token's session_goal === 'practice' — a boot
+   *  flag that rides EVERY token mint, including the resume mint, so the mode
+   *  is durable across resume WITHOUT any client persistence (the block
+   *  re-renders every turn from the stable prop; contrast the one-shot
+   *  "Give me some practice problems." starter chip, which steered a single
+   *  turn and was lost on resume). Absent/false ⇒ block omitted ⇒ userContent
+   *  byte-identical to before this field existed. */
+  practiceMode?: boolean;
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -981,6 +993,30 @@ export function formatDemoStopBlock(input: BrainTurnInput['demoStop']): string {
 }
 
 /**
+ * Practice-mode contract (Task X2). Renders the durable `<practice_session>`
+ * block when the session is a practice session, else ''. Placed in the
+ * governing "how to teach" tier AHEAD of <lesson_plan>/<segment_truth> (same
+ * ordering rationale as pace_preference — see the W3 note in the turn
+ * assemblers) so it out-competes the authored "teach concept X" mandates
+ * that otherwise pull a practice session back into concept-review (the
+ * observed drift: a 'concept-review'-goal session did new-concept teaching
+ * even after the student asked for practice, and reverted fully on resume).
+ *
+ * Exported for the standalone probe (scripts/test-practice-session-block.ts)
+ * so the block text is testable without running a whole brain turn.
+ */
+export function formatPracticeSessionBlock(practiceMode?: boolean): string {
+  if (!practiceMode) return '';
+  const body =
+    `This is a PRACTICE session — the student is here to DO problems, not to be lectured. Hold this for the WHOLE session; it governs every turn.\n` +
+    `- Every segment runs as: problem → student attempt → targeted feedback → next problem. LEAD with a problem, not an explanation.\n` +
+    `- NO new-concept teaching. Do not deliver theory lectures or step-by-step worked-example walkthroughs of material they haven't attempted. If <lesson_plan> or <segment_truth> mandates teaching a new concept, DEMOTE that mandate: turn the concept into a problem for the student to attempt instead of explaining it yourself.\n` +
+    `- Brief prerequisite remediation IS allowed — but only when a gap is actively blocking the current problem. Keep it to a quick recall check or a one-line reminder (a turn or two at most), then go straight back to a problem. Never let remediation expand into a full re-teach.\n` +
+    `- Target problems at where the student is shaky. After each attempt give short, specific feedback, then move to the next problem.`;
+  return `<practice_session>\n${body}\n</practice_session>\n\n`;
+}
+
+/**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
  * accumulated across however many round-trips Sonnet needed.
@@ -1077,6 +1113,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
+  // Task X2: durable practice-mode mandate. '' when not a practice session.
+  const practiceSessionBlock = formatPracticeSessionBlock(input.practiceMode);
+  if (practiceSessionBlock) {
+    console.log('[practice-mode] practice_session block attached');
+  }
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1114,6 +1155,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
+    practiceSessionBlock +
     pacePreferenceBlock +
     lessonBlock +
     truthBlock +
@@ -1258,6 +1300,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     ? `<teacher_style>\n${input.styleReminder}\n</teacher_style>\n\n` : '';
   // Task E1 (pedagogy): demo-only budget-aware stop directive. '' when absent.
   const demoStopBlock = formatDemoStopBlock(input.demoStop);
+  // Task X2: durable practice-mode mandate. '' when not a practice session.
+  const practiceSessionBlock = formatPracticeSessionBlock(input.practiceMode);
+  if (practiceSessionBlock) {
+    console.log('[practice-mode] practice_session block attached');
+  }
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1290,6 +1337,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
+    practiceSessionBlock +
     pacePreferenceBlock +
     lessonBlock +
     truthBlock +

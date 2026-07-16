@@ -70,6 +70,10 @@ interface BrainStreamRequestBody {
    *  undefined so a bad client can never inject an arbitrary blob.
    *  See BrainTurnInput.demoStop. */
   demoStop?: BrainTurnInput['demoStop'];
+  /** Practice-mode contract (Task X2). Client sends true when the session's
+   *  embed token carried session_goal === 'practice'. Surfaces as the durable
+   *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
+  practiceMode?: boolean;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -531,6 +535,10 @@ export async function POST(req: NextRequest) {
           // Task E1: sanitized above (mode enum + finite ≥0 numbers, else
           // undefined). Surfaces as `<demo_stop>` in the user content.
           demoStop,
+          // Task X2: durable practice-mode flag. Coerced to a strict boolean so
+          // a malformed client can't inject a truthy non-bool. Surfaces as the
+          // `<practice_session>` block in the user content.
+          practiceMode: body.practiceMode === true,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

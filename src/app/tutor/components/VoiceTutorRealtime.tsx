@@ -7125,6 +7125,12 @@ export function VoiceTutorRealtime({
             // Task E1: demo-only budget-aware stop (undefined when the flag
             // is off or the session is subscribed — see the block above).
             demoStop,
+            // Task X2: durable practice-mode contract. sessionGoal rides the
+            // embed token on EVERY mint (initial + resume), so deriving the
+            // flag from the stable prop each turn makes the mode durable across
+            // resume with no client persistence — the `<practice_session>`
+            // block re-renders every turn. Absent/false ⇒ block omitted.
+            practiceMode: sessionGoal === 'practice',
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
