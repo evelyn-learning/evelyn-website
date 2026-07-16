@@ -64,3 +64,4 @@ sketch-review/
 scripts/tutor/voice-harness/corpus/**/*.wav
 scripts/tutor/voice-harness/corpus/**/*.mp3
 scripts/tutor/voice-harness/corpus/**/*.flac
+.env.local.bak*
