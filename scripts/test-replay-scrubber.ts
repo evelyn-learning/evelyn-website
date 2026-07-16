@@ -91,13 +91,23 @@ console.log('\nclick <-> render position-math invariant (ReplayTimeline\'s own f
  * automatically. If ReplayTimeline's guards or position formulas change,
  * update the mirror below to match; the `buildCompressedTimeline` tests do
  * lock down that function at the source (importable without CSS).
+ *
+ * Task E1 (pointer-capture drag) moved this guard/formula pair out of the
+ * old onClick/onMouseMove pair and into a single `seekFromClientX(clientX)`
+ * helper shared by onPointerDown/onPointerMove — the guard
+ * (`!barRef.current || !(totalDurationMs > 0)`) and the position formula
+ * (`pct = clamp((clientX - rect.left) / rect.width, 0, 1); onSeek(pct *
+ * totalDurationMs)`) are unchanged text, just called from pointer handlers
+ * instead of duplicated across two mouse handlers. The mirror below still
+ * matches byte-for-byte; nothing here needed to change.
  */
 
-// Mirrors ReplayTimeline.tsx exactly:
+// Mirrors ReplayTimeline.tsx's seekFromClientX + render exactly:
 //   render:      progressPct = totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0
-//   click:       onSeek(pct * totalDurationMs)   where pct = clickFraction in [0,1]
-// For any valid totalDurationMs, clicking at fraction f must render the
-// handle back at (f * 100)% — i.e. render(click(f)) === f, exactly.
+//   seek:        onSeek(pct * totalDurationMs)   where pct = clickFraction in [0,1]
+//                (called from onPointerDown and onPointerMove-while-dragging)
+// For any valid totalDurationMs, seeking at fraction f must render the
+// handle back at (f * 100)% — i.e. render(seek(f)) === f, exactly.
 function renderPct(currentTimeMs: number, totalDurationMs: number): number {
   return totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0;
 }

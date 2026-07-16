@@ -42,6 +42,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
   const barRef = useRef<HTMLDivElement>(null);
   const [showAllEvents, setShowAllEvents] = useState(false);
   const laneRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
 
   // Guard note: `!(totalDurationMs > 0)` — NOT `totalDurationMs <= 0`. For a
   // NaN totalDurationMs (a malformed-session edge case; see ab39e4a7's
@@ -54,19 +55,50 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
   // (ReplayPlayer additionally now guarantees totalDurationMs itself is never
   // NaN/≤0 — see buildCompressedTimeline's `totalMs` — so this is defense in
   // depth, not the only fix.)
-  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  // Shared position math (byte-identical to the pre-pointer-events click/drag
+  // handlers this replaced) — see scripts/test-replay-scrubber.ts's mirror
+  // block for the click<->render invariant this guard/formula pair locks in.
+  const seekFromClientX = useCallback((clientX: number) => {
     if (!barRef.current || !(totalDurationMs > 0)) return;
     const rect = barRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     onSeek(pct * totalDurationMs);
   }, [totalDurationMs, onSeek]);
 
-  const handleDrag = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.buttons !== 1 || !barRef.current || !(totalDurationMs > 0)) return;
-    const rect = barRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    onSeek(pct * totalDurationMs);
-  }, [totalDurationMs, onSeek]);
+  // Pointer Events (mirrors the repo's own idiom in
+  // WhiteboardCanvas.tsx's handlePenDown/handlePenMove/handlePenUp +
+  // StudentInputBar's startDraw/draw/endDraw) subsume mouse, touch, and
+  // stylus in one handler set. setPointerCapture on down means move/up
+  // keep arriving even once the pointer leaves the thin strip's bounds
+  // (the old buttons===1 mousemove died the instant the cursor left the
+  // element) and iOS Safari — which only ever synthesizes tap-shaped mouse
+  // events for a finger drag, never a mousemove stream — now gets real
+  // continuous pointermove events instead.
+  const handlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = true;
+    // try/catch mirrors StudentInputBar's startDraw/endDraw a few hundred
+    // lines into WhiteboardCanvas.tsx: setPointerCapture can throw
+    // (NotFoundError) if the UA doesn't consider the pointerId an active
+    // pointer — seen directly while writing this fix's Playwright coverage
+    // (script-dispatched touch PointerEvents in WebKit). A real finger/mouse
+    // pointerdown always has an active pointerId, so this is defense in
+    // depth, not a workaround for a reachable production path — the drag
+    // must keep working (isDraggingRef + the seek below) even if capture
+    // itself is refused.
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+    seekFromClientX(e.clientX);
+  }, [seekFromClientX]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    e.preventDefault();
+    seekFromClientX(e.clientX);
+  }, [seekFromClientX]);
+
+  const endDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingRef.current = false;
+    try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
+  }, []);
 
   const progressPct = totalDurationMs > 0 ? (currentTimeMs / totalDurationMs) * 100 : 0;
 
@@ -122,8 +154,11 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
       <div
         ref={barRef}
         className="relative h-6 bg-gray-200 rounded-full cursor-pointer select-none overflow-hidden"
-        onClick={handleClick}
-        onMouseMove={handleDrag}
+        style={{ touchAction: 'none' }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
       >
         {segments.map((seg, i) => (
           <div
