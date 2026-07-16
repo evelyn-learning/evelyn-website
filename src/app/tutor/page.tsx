@@ -2286,10 +2286,6 @@ function TutorPage() {
                 }
                 setPacingMenuOpen(false);
               };
-              const paceBiasAction = (delta: -1 | 1) => {
-                realtimeHandleRef.current?.stepPaceBias(delta);
-                setPacingMenuOpen(false);
-              };
               return (
                 <div className="relative flex justify-end items-center gap-2 px-2 py-1 border-b border-gray-100">
                   {/* Phase 3: paceBias badge. Visible whenever bias ≠ 0
@@ -2345,19 +2341,34 @@ function TutorPage() {
                           Easier
                         </button>
                         <div className="my-1 border-t border-gray-100" />
+                        {/* Task W3: pace items keep the menu OPEN on click (a
+                            second/third click must be able to land without
+                            re-opening the menu) and show sticky ✓×N state on
+                            the item itself, mirroring the Humor ✓ pattern
+                            below — the transient badge above only flashes. */}
                         <button
                           type="button"
-                          onClick={() => paceBiasAction(-1)}
-                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          onClick={() => realtimeHandleRef.current?.stepPaceBias(-1)}
+                          className={`block w-full text-left px-3 py-1.5 ${
+                            paceBias < 0
+                              ? 'text-blue-700 bg-blue-50 font-medium'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
                         >
-                          Slow down
+                          <span className="inline-block w-3">{paceBias < 0 ? '✓' : ''}</span>
+                          {' '}Slow down{paceBias < 0 ? ` ×${Math.abs(paceBias)}` : ''}
                         </button>
                         <button
                           type="button"
-                          onClick={() => paceBiasAction(+1)}
-                          className="block w-full text-left px-3 py-1.5 text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                          onClick={() => realtimeHandleRef.current?.stepPaceBias(+1)}
+                          className={`block w-full text-left px-3 py-1.5 ${
+                            paceBias > 0
+                              ? 'text-blue-700 bg-blue-50 font-medium'
+                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                          }`}
                         >
-                          Speed up
+                          <span className="inline-block w-3">{paceBias > 0 ? '✓' : ''}</span>
+                          {' '}Speed up{paceBias > 0 ? ` ×${paceBias}` : ''}
                         </button>
                         <div className="my-1 border-t border-gray-100" />
                         <button

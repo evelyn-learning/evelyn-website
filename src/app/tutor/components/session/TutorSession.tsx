@@ -745,8 +745,18 @@ export default function TutorSession(props: TutorSessionProps) {
           <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
           <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
           <div className="my-1 border-t border-slate-100" />
-          <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Slow down</button>
-          <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Speed up</button>
+          {/* Task W3: pace items keep the menu OPEN on click (delta is
+              ±1 per click, clamped ±2 — a second/third click must be able
+              to land without re-opening the menu). Sticky ✓×N state
+              mirrors the Humor ✓ pattern below so the active pace choice
+              is visible on the menu item itself, not just the transient
+              pill beside the ⋯ button. */}
+          <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(-1); }} className={`w-full text-left px-3 py-2 rounded-xl ${paceBias < 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
+            <span className="inline-block w-3">{paceBias < 0 ? '✓' : ''}</span> Slow down{paceBias < 0 ? ` ×${Math.abs(paceBias)}` : ''}
+          </button>
+          <button onClick={() => { realtimeHandleRef.current?.stepPaceBias(1); }} className={`w-full text-left px-3 py-2 rounded-xl ${paceBias > 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
+            <span className="inline-block w-3">{paceBias > 0 ? '✓' : ''}</span> Speed up{paceBias > 0 ? ` ×${paceBias}` : ''}
+          </button>
           <div className="my-1 border-t border-slate-100" />
           <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
           <div className="my-1 border-t border-slate-100" />

@@ -792,7 +792,7 @@ function formatStudentStateBlock(
  * change. Brain should sustain the preference across the entire session
  * unless the student verbally requests a change in the other direction.
  */
-function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']): string {
+export function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']): string {
   if (!state) return '';
   const bias = state.paceBias ?? 0;
   if (bias === 0) return '';
@@ -803,10 +803,27 @@ function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']): string
   const sinceLine = typeof since === 'number' && since >= 0
     ? `applied since: ${since} turn${since === 1 ? '' : 's'} ago`
     : '';
-  // Generic guidance — no subject-specific examples. Brain reads + adapts.
-  const guidance = bias < 0
-    ? `student wants MORE depth and slower teaching. Break explanations into smaller chunks. Add a brief comprehension check between steps. Lengthen worked examples. Don't skip restatements that aid retention.`
-    : `student wants LESS depth and faster teaching. Shorten explanations. Skip restating known facts. Cut comprehension checks unless the student is clearly stuck. Move through worked examples briskly.`;
+  // Task W3 potency rewrite: the pre-W3 guidance ("break into smaller
+  // chunks", "add a brief comprehension check") was soft, non-checkable
+  // prose that reliably lost to strong segment_truth/lesson_plan mandates
+  // stated elsewhere in the turn. Replaced with directive, checkable rules
+  // a grader could verify turn-by-turn. -2 strengthens -1 further (two-
+  // sentence cap + mandatory recall-back, not just "pause more"). Kept
+  // self-contained: W5's absorption-pause rule has NOT landed yet as of
+  // this write, so no forward reference to it — when W5 lands, its rule
+  // and this one should be reconciled so they don't duplicate/conflict.
+  // Positive bias gets a symmetric-but-lighter version (less depth should
+  // read as "trim", not "rush past comprehension entirely" at mag 1).
+  let guidance: string;
+  if (bias === -1) {
+    guidance = `student wants MORE depth and a slower pace. Cap this turn to ONE new idea — do not bundle a second concept in. After each board item you write, pause and give the student a beat before continuing — don't talk past what you just put up. Ask exactly one short check-in question before introducing anything new.`;
+  } else if (bias <= -2) {
+    guidance = `student wants MORE depth and a much slower pace (strong). Keep every spoken turn to two sentences or fewer. Before introducing ANY new idea, require the student to recall or restate the prior point in their own words — do not proceed to a second new idea until that recall lands. Comprehension checks are mandatory here, not optional.`;
+  } else if (bias === 1) {
+    guidance = `student wants LESS depth and a faster pace. Trim explanations to the essential line — skip restating facts already established this session. Move to the next step unless the student flags confusion; don't insert a comprehension check just to be safe.`;
+  } else {
+    guidance = `student wants LESS depth and a much faster pace (strong). Assume prior steps landed after one pass — do not re-explain them. Compress worked examples to their final form, skipping intermediate restatements. Skip comprehension checks entirely unless the student explicitly stalls or answers incorrectly.`;
+  }
   return (
     `<pace_preference>\n` +
     `bias: ${bias} (${sign}, ${mag})\n` +
@@ -1080,19 +1097,27 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
+  // Task W3: pace_preference promoted ABOVE lessonBlock/truthBlock (the
+  // "competing segment blocks" the W3 investigation identified as out-
+  // competing a mild/soft pace directive). It now reads as a governing
+  // how-to-teach directive stated ahead of the what-to-teach mandates,
+  // alongside styleReminderBlock/demoStopBlock which occupy the same
+  // "how" tier. Previously it sat near the end of userContent, after
+  // truthBlock — this is the ordering-effect change; verified via the
+  // node probe in scripts/ (see task-W3-report.md).
   const userContent =
     profileBlock +
     openingDirectiveBlock +
     studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
+    pacePreferenceBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
     unrealizedMarksBlock +
     deduplicatedShowsBlock +
     studentStateBlock +
-    pacePreferenceBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
@@ -1253,19 +1278,22 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
   const topicNotesBlock = formatTopicNotesStateBlock(input.topicNotesState);
+  // Task W3: same ordering change as runBrainTurn above — pace_preference
+  // moved ahead of lessonBlock/truthBlock. Both twins must stay in lockstep
+  // (see buildBrainMessages doc comment on cache-behavior consistency).
   const userContent =
     profileBlock +
     openingDirectiveBlock +
     studentMarksBlock +
     styleReminderBlock +
     demoStopBlock +
+    pacePreferenceBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
     unrealizedMarksBlock +
     deduplicatedShowsBlock +
     studentStateBlock +
-    pacePreferenceBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
