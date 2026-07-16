@@ -400,9 +400,14 @@ export default function SessionStage(props: SessionStageProps) {
           overlay's position, only grows it downward. */}
       <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
         <div className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
-          <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
-            <Wrench className="w-[18px] h-[18px]" />
-          </ToolBtn>
+          <div className="relative">
+            <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
+              <Wrench className="w-[18px] h-[18px]" />
+            </ToolBtn>
+            {boardPenActive && !toolsOpen && (
+              <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-600" />
+            )}
+          </div>
           {toolsOpen && (
             <>
               <div className="w-6 h-px bg-slate-200 my-0.5" />
@@ -425,7 +430,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canFullscreen && (
                 <>
                   <div className="w-6 h-px bg-slate-200 my-0.5" />
-                  <ToolBtn title="Full screen" onClick={toggleFullscreen}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); setToolsOpen(false); }}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
                 </>
               )}
               {/* Mobile expand (Task E8) — shown only where the native Fullscreen
@@ -436,7 +441,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canExpand && (
                 <>
                   <div className="w-6 h-px bg-slate-200 my-0.5" />
-                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={expanded ? requestCollapse : requestExpand}>
+                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); setToolsOpen(false); }}>
                     {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
                   </ToolBtn>
                 </>
