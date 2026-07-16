@@ -42,7 +42,20 @@ npm ci --production=false
 # with ENOTEMPTY rmdir on stale .next/server/app/blog/*.segments dirs (hit
 # twice 2026-07-14/15). The running pm2 process keeps serving through the
 # ~2.5min rebuild; set -e above means a failed build never restarts pm2.
-rm -rf .next
+# Retry rm -rf against pm2-write race (hit 2026-07-15, 2026-07-16).
+for attempt in 1 2 3; do
+  if rm -rf .next; then
+    break
+  fi
+  if [ $attempt -lt 3 ]; then
+    sleep 2
+  fi
+done
+
+if [ -d .next ]; then
+  echo "Failed to remove .next after 3 attempts" >&2
+  exit 1
+fi
 npm run build
 pm2 restart $APP_NAME --update-env
 ENDSSH
