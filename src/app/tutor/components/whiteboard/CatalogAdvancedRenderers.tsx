@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { CellContent } from './CellContent';
+import { useFitScale } from './useFitScale';
 import type {
   UnitCircleFigure,
   TransformationFigure,
@@ -600,6 +601,17 @@ export function CatalogGovernmentBranchesRenderer({ figure }: { figure: Governme
 export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonTableFigure }) {
   const { items, attributes, cells, title } = figure;
   const N = comparisonTableFeatureNames;
+  // W1 fix: an unconstrained wide table inside `items-center` used to
+  // flex-center and get double-edge-clipped by the board's
+  // `overflow-x-hidden` ancestor, with no way to reach the rest (live
+  // session screenshot IMG_7807). Measure the table against the new
+  // `w-full` wrapper below and scale it down to fit; if even floor 0.6 is
+  // still too wide, the wrapper's `overflow-x-auto` keeps it reachable via
+  // scroll instead of silently clipped.
+  const { containerRef, contentRef, overflowing } = useFitScale<HTMLDivElement, HTMLTableElement>(
+    { floor: 0.6 },
+    [figure],
+  );
   // data-feature values come from the SHARED naming helper that
   // buildComparisonTableManifest also calls — manifest names and DOM
   // attrs cannot drift by construction. Attribute name is `data-feature`
@@ -609,40 +621,46 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
-      <table data-feature={N.table} className="border-collapse text-sm">
-        <thead>
-          <tr data-feature={N.headerRow}>
-            <th className="px-3 py-2 border border-gray-400 bg-gray-100"></th>
-            {items.map((it, i) => (
-              <th
-                key={i}
-                data-feature={N.col(i)}
-                data-feature-label={it}
-                className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900"
-              >
-                <CellContent value={it} />
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {attributes.map((attr, ri) => (
-            <tr key={ri} data-feature={N.row(ri)} data-feature-label={attr}>
-              <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left"><CellContent value={attr} /></th>
-              {cells[ri].map((c, ci) => (
-                <td
-                  key={ci}
-                  data-feature={N.cell(ri, ci)}
-                  data-feature-label={`${items[ci]} / ${attr}`}
-                  className="px-3 py-2 border border-gray-300"
+      <div
+        ref={containerRef}
+        className="w-full max-w-full overflow-x-auto"
+        data-fit-scale={overflowing ? 'floor' : undefined}
+      >
+        <table ref={contentRef} data-feature={N.table} className="border-collapse text-sm mx-auto">
+          <thead>
+            <tr data-feature={N.headerRow}>
+              <th className="px-3 py-2 border border-gray-400 bg-gray-100"></th>
+              {items.map((it, i) => (
+                <th
+                  key={i}
+                  data-feature={N.col(i)}
+                  data-feature-label={it}
+                  className="px-3 py-2 border border-gray-400 bg-blue-50 font-semibold text-blue-900"
                 >
-                  <CellContent value={c} />
-                </td>
+                  <CellContent value={it} />
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {attributes.map((attr, ri) => (
+              <tr key={ri} data-feature={N.row(ri)} data-feature-label={attr}>
+                <th className="px-3 py-2 border border-gray-400 bg-amber-50 font-semibold text-amber-900 text-left"><CellContent value={attr} /></th>
+                {cells[ri].map((c, ci) => (
+                  <td
+                    key={ci}
+                    data-feature={N.cell(ri, ci)}
+                    data-feature-label={`${items[ci]} / ${attr}`}
+                    className="px-3 py-2 border border-gray-300"
+                  >
+                    <CellContent value={c} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -657,6 +675,19 @@ export function CatalogOrganizerRenderer({ figure }: { figure: OrganizerFigure }
 function TChart({ figure }: { figure: OrganizerFigure }) {
   const N = tChartFeatureNames;
   const rows = Math.max(figure.leftItems?.length || 0, figure.rightItems?.length || 0);
+  // W1 fix: this grid is already `w-full` (forced to fill its flex
+  // parent), so a normal-length item never overflows — but an UNBREAKABLE
+  // long token (a URL, a chemical formula with no spaces) can still force
+  // a grid track wider than its `1fr` share via CSS's min-content
+  // constraint, blowing the whole grid out past its own `w-full` box
+  // (classic grid/flex "1fr overflow" bug). `overflow-wrap: anywhere` on
+  // the item/header cells below is the PRIMARY defense (lets the token
+  // break instead of demanding oversized min-content); useFitScale is the
+  // fallback for whatever blowout still gets through.
+  const { containerRef, contentRef, overflowing } = useFitScale<HTMLDivElement, HTMLDivElement>(
+    { floor: 0.6 },
+    [figure],
+  );
   // Rendered as CSS-grid divs (not <table>) so the LEFT and RIGHT
   // columns are actual DOM elements that can carry data-feature
   // markers for tutor_scribble. The previous <table> form had no
@@ -668,49 +699,54 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
-      {/* CSS subgrid: both columns span the SAME parent row tracks, so paired
-          rows size to the taller cell and ALIGN across columns — fixes the
-          drift when one side's item wraps to more lines (2026-06-23 ear-test).
-          The leftColumn/rightColumn elements are kept (scribble targets). */}
-      <div
-        data-feature={N.chart}
-        className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700"
-        style={{ gridTemplateRows: `repeat(${rows + 1}, auto)` }}
-      >
+      <div ref={containerRef} className="w-full max-w-[640px] overflow-x-auto" data-fit-scale={overflowing ? 'floor' : undefined}>
+        {/* CSS subgrid: both columns span the SAME parent row tracks, so paired
+            rows size to the taller cell and ALIGN across columns — fixes the
+            drift when one side's item wraps to more lines (2026-06-23 ear-test).
+            The leftColumn/rightColumn elements are kept (scribble targets). */}
         <div
-          data-feature={N.leftColumn}
-          data-feature-label={figure.leftHeader || 'Left column'}
-          className="border-r-2 border-gray-700"
-          style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
+          ref={contentRef}
+          data-feature={N.chart}
+          className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700"
+          style={{ gridTemplateRows: `repeat(${rows + 1}, auto)` }}
         >
-          <div data-feature={N.leftHeader} data-feature-label={figure.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center">{figure.leftHeader}</div>
-          {Array.from({ length: rows }).map((_, i) => (
-            <div
-              key={i}
-              data-feature={N.leftItem(i)}
-              data-feature-label={figure.leftItems?.[i] || ''}
-              className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
-            >
-              {figure.leftItems?.[i] || ''}
-            </div>
-          ))}
-        </div>
-        <div
-          data-feature={N.rightColumn}
-          data-feature-label={figure.rightHeader || 'Right column'}
-          style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
-        >
-          <div data-feature={N.rightHeader} data-feature-label={figure.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center">{figure.rightHeader}</div>
-          {Array.from({ length: rows }).map((_, i) => (
-            <div
-              key={i}
-              data-feature={N.rightItem(i)}
-              data-feature-label={figure.rightItems?.[i] || ''}
-              className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
-            >
-              {figure.rightItems?.[i] || ''}
-            </div>
-          ))}
+          <div
+            data-feature={N.leftColumn}
+            data-feature-label={figure.leftHeader || 'Left column'}
+            className="border-r-2 border-gray-700"
+            style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
+          >
+            <div data-feature={N.leftHeader} data-feature-label={figure.leftHeader} className="px-3 py-2 border-b border-gray-400 bg-blue-50 font-bold text-blue-900 text-center" style={{ overflowWrap: 'anywhere' }}>{figure.leftHeader}</div>
+            {Array.from({ length: rows }).map((_, i) => (
+              <div
+                key={i}
+                data-feature={N.leftItem(i)}
+                data-feature-label={figure.leftItems?.[i] || ''}
+                className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {figure.leftItems?.[i] || ''}
+              </div>
+            ))}
+          </div>
+          <div
+            data-feature={N.rightColumn}
+            data-feature-label={figure.rightHeader || 'Right column'}
+            style={{ display: 'grid', gridTemplateRows: 'subgrid', gridRow: '1 / -1' }}
+          >
+            <div data-feature={N.rightHeader} data-feature-label={figure.rightHeader} className="px-3 py-2 border-b border-gray-400 bg-amber-50 font-bold text-amber-900 text-center" style={{ overflowWrap: 'anywhere' }}>{figure.rightHeader}</div>
+            {Array.from({ length: rows }).map((_, i) => (
+              <div
+                key={i}
+                data-feature={N.rightItem(i)}
+                data-feature-label={figure.rightItems?.[i] || ''}
+                className={`px-3 py-2 ${i < rows - 1 ? 'border-b border-gray-400' : ''}`}
+                style={{ overflowWrap: 'anywhere' }}
+              >
+                {figure.rightItems?.[i] || ''}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
