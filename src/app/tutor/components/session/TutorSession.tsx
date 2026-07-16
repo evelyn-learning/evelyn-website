@@ -783,21 +783,32 @@ export default function TutorSession(props: TutorSessionProps) {
               </button>
             );
           })}
-          <div className="my-1 border-t border-slate-100" />
-          <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Voice</p>
-          {/* Task W4: "Speak slower" TTS toggle — a SEPARATE knob from
-              "Slow down" above (that one asks for more explanation depth;
-              this one only slows the synthesized audio). Sticky ✓ state
-              mirrors the Humor pattern above. */}
-          <button
-            onClick={() => {
-              realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
-              setPacingMenuOpen(false);
-            }}
-            className={`w-full text-left px-3 py-2 rounded-xl ${speakingRate === 'slow' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
-          >
-            <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span> Speak slower
-          </button>
+          {/* Fix W4-review-1: Cartesia sonic-3.5 ignores
+              voice.__experimental_controls.speed (verified 2026-07-16,
+              task-W4-report.md) — the toggle is a no-op on the production
+              default provider, so hide it there. Plumbing (routes/cache/
+              state) is intentionally kept; re-enable by removing this gate
+              once Cartesia honors speed on the production model (validate
+              with the provisioned TEST keys, never prod keys). */}
+          {ttsProvider !== 'cartesia' && (
+            <>
+              <div className="my-1 border-t border-slate-100" />
+              <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Voice</p>
+              {/* Task W4: "Speak slower" TTS toggle — a SEPARATE knob from
+                  "Slow down" above (that one asks for more explanation depth;
+                  this one only slows the synthesized audio). Sticky ✓ state
+                  mirrors the Humor pattern above. */}
+              <button
+                onClick={() => {
+                  realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
+                  setPacingMenuOpen(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl ${speakingRate === 'slow' ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}
+              >
+                <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span> Speak slower
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

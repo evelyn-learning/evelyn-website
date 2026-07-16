@@ -60,12 +60,23 @@ export async function POST(request: NextRequest) {
     // (documented there); we just forward whatever it sends, string or
     // number, and omit the block entirely when unset so default behavior is
     // unchanged for every existing call site.
+    // Fix W4-review-2: only forward the documented preset labels or a
+    // numeric value clamped to [-1.0, 1.0] — anything else is dropped so an
+    // unrecognized/out-of-range value can't reach Cartesia's API.
+    const CARTESIA_SPEED_PRESETS = new Set(['slowest', 'slow', 'normal', 'fast', 'fastest']);
+    let resolvedSpeed: string | number | undefined;
+    if (typeof speed === 'string' && CARTESIA_SPEED_PRESETS.has(speed)) {
+      resolvedSpeed = speed;
+    } else if (typeof speed === 'number' && Number.isFinite(speed)) {
+      resolvedSpeed = Math.min(1.0, Math.max(-1.0, speed));
+    }
+
     const voice: { mode: 'id'; id: string; __experimental_controls?: { speed: string | number } } = {
       mode: 'id',
       id: substituteCartesiaVoiceId(voiceId ?? CARTESIA_DEFAULT_VOICE_ID),
     };
-    if (speed !== undefined) {
-      voice.__experimental_controls = { speed };
+    if (resolvedSpeed !== undefined) {
+      voice.__experimental_controls = { speed: resolvedSpeed };
     }
 
     const ttsBody = {

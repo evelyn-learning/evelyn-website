@@ -2428,28 +2428,41 @@ function TutorPage() {
                               );
                             });
                         })()}
-                        <div className="my-1 border-t border-gray-100" />
-                        <div className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Voice</div>
-                        {/* Task W4: "Speak slower" TTS toggle — a SEPARATE
-                            knob from "Slow down" above (that one asks for
-                            more explanation depth; this one only slows the
-                            synthesized audio). Sticky ✓ state mirrors the
-                            Humor pattern above. */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
-                            setPacingMenuOpen(false);
-                          }}
-                          className={`block w-full text-left px-3 py-1.5 ${
-                            speakingRate === 'slow'
-                              ? 'text-blue-700 bg-blue-50 font-medium'
-                              : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                          }`}
-                        >
-                          <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span>
-                          {' '}Speak slower
-                        </button>
+                        {/* Fix W4-review-1: Cartesia sonic-3.5 ignores
+                            voice.__experimental_controls.speed (verified
+                            2026-07-16, task-W4-report.md) — the toggle is a
+                            no-op on the production default provider, so hide
+                            it there. Plumbing (routes/cache/state) is
+                            intentionally kept; re-enable by removing this
+                            gate once Cartesia honors speed on the
+                            production model (validate with the provisioned
+                            TEST keys, never prod keys). */}
+                        {ttsProvider !== 'cartesia' && (
+                          <>
+                            <div className="my-1 border-t border-gray-100" />
+                            <div className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Voice</div>
+                            {/* Task W4: "Speak slower" TTS toggle — a SEPARATE
+                                knob from "Slow down" above (that one asks for
+                                more explanation depth; this one only slows the
+                                synthesized audio). Sticky ✓ state mirrors the
+                                Humor pattern above. */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                realtimeHandleRef.current?.setSpeakingRate(speakingRate === 'slow' ? 'normal' : 'slow');
+                                setPacingMenuOpen(false);
+                              }}
+                              className={`block w-full text-left px-3 py-1.5 ${
+                                speakingRate === 'slow'
+                                  ? 'text-blue-700 bg-blue-50 font-medium'
+                                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                              }`}
+                            >
+                              <span className="inline-block w-3">{speakingRate === 'slow' ? '✓' : ''}</span>
+                              {' '}Speak slower
+                            </button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}

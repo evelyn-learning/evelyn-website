@@ -77,8 +77,10 @@ export async function POST(request: NextRequest) {
     // Task W4 (speak-slower toggle): OpenAI's /v1/audio/speech `speed` field
     // is a flat multiplier, 0.25-4.0, default 1.0. Pass-through only — the
     // caller (useOpenAIRealtime.ts fetchTTSPromise) picks the actual value.
-    if (typeof speed === 'number') {
-      ttsBody.speed = speed;
+    // Fix W4-review-2: clamp to the documented range instead of forwarding
+    // an out-of-range or non-finite value straight to OpenAI.
+    if (typeof speed === 'number' && Number.isFinite(speed)) {
+      ttsBody.speed = Math.min(4.0, Math.max(0.25, speed));
     }
 
     const ttsRes = await fetch(OPENAI_TTS_URL, {
