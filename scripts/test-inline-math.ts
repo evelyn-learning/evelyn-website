@@ -198,6 +198,14 @@ console.log('\n=== Bare TeX-special characters defeat validate-or-fallback (Find
   const m = autoMathBodies(t);
   check('escaped \\% still wraps and validates normally', m.length === 1 && m[0] === 'x^2 \\%', JSON.stringify(m));
 }
+{
+  // Double backslash (TeX \\ line-break command) before % means the %
+  // is unescaped; hasUnescapedTexSpecial must detect and block the wrap
+  // to preserve the literal backslashes and percent.
+  const t = 'Expand x^2 \\\\% now.';
+  check('double backslash before % stays unwrapped (parity check)', autoWrapLatex(t) === t, autoWrapLatex(t));
+  check('double backslash before %: zero math segments', autoMathBodies(t).length === 0, autoJoined(t));
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
