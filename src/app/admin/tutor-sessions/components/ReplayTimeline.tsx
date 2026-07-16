@@ -24,11 +24,12 @@ interface ReplayTimelineProps {
   /** Task W2: short inline audio-load/buffering fragment (e.g. "loading
    *  12/45MB" or "buffering") rendered next to the current time, replacing
    *  the standalone pill ReplayPlayer's controls row used to show. `null`/
-   *  undefined (idle/ready/none — or the plain student-facing replay
-   *  page, which never threads this prop) renders nothing extra. */
+   *  undefined (idle/ready/none) renders nothing extra. The student-facing
+   *  replay page does thread this prop too, via the shared ReplayPlayer —
+   *  desirable, since audio status should surface there as well. */
   audioStatusText?: string | null;
-  /** Optional callback for retrying failed audio loads. Provided only when
-   *  audioStatusText === "audio failed". When defined, renders as clickable
+  /** Optional callback for retrying failed audio loads. ReplayPlayer only
+   *  passes this in its error state. When defined, renders as a clickable
    *  retry link instead of plain text. */
   onAudioRetry?: () => void;
 }
@@ -160,7 +161,7 @@ export default function ReplayTimeline({ events, totalDurationMs, currentTimeMs,
       <div className="flex justify-between items-center text-[11px] text-gray-400 font-mono px-0.5">
         <span className="truncate">
           {formatTime(currentTimeMs)}
-          {audioStatusText && audioStatusText === 'audio failed' && onAudioRetry ? (
+          {audioStatusText && onAudioRetry ? (
             <span className="text-amber-500"> · {audioStatusText} — <button
               onClick={onAudioRetry}
               className="underline hover:text-amber-600 transition-colors"

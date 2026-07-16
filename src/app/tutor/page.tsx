@@ -2428,16 +2428,19 @@ function TutorPage() {
                               );
                             });
                         })()}
-                        {/* Fix W4-review-1: Cartesia sonic-3.5 ignores
-                            voice.__experimental_controls.speed (verified
-                            2026-07-16, task-W4-report.md) — the toggle is a
-                            no-op on the production default provider, so hide
-                            it there. Plumbing (routes/cache/state) is
-                            intentionally kept; re-enable by removing this
-                            gate once Cartesia honors speed on the
-                            production model (validate with the provisioned
-                            TEST keys, never prod keys). */}
-                        {ttsProvider !== 'cartesia' && (
+                        {/* Fix W4-review-1: only openai-mini honors
+                            voice.__experimental_controls.speed — Cartesia
+                            sonic-3.5 ignores it (verified 2026-07-16,
+                            task-W4-report.md), and 'realtime' does too, so
+                            the toggle would be a no-op (inert) for any
+                            non-openai-mini persona, including for embed
+                            students. Gate to openai-mini specifically
+                            rather than excluding cartesia alone. Plumbing
+                            (routes/cache/state) is intentionally kept;
+                            widen this gate only once another provider is
+                            verified to honor speed (validate with the
+                            provisioned TEST keys, never prod keys). */}
+                        {ttsProvider === 'openai-mini' && (
                           <>
                             <div className="my-1 border-t border-gray-100" />
                             <div className="px-3 pt-1 pb-0.5 text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Voice</div>

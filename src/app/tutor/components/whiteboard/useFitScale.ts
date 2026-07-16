@@ -129,6 +129,7 @@ export function useFitScale<
     if (containerRef.current && typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(fit);
       observer.observe(containerRef.current);
+      if (contentRef.current) observer.observe(contentRef.current);
     }
     return () => {
       cancelAnimationFrame(raf);
