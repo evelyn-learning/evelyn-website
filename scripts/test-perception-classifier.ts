@@ -16,6 +16,7 @@ import {
   classifyHeuristic,
   scoreSelfVoice,
   SELF_VOICE_THRESHOLD,
+  SPEAKING_ECHO_OVERLAP_THRESHOLD,
   TTS_PADDING_TRAIL_MS,
   type HeuristicInput,
   type ProductionStateForClassifier,
@@ -324,6 +325,198 @@ console.log('\n=== Fix wave: interrupt-path window close rejects a later real ut
     sClosed < SELF_VOICE_THRESHOLD,
     `score=${sClosed.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
   );
+}
+
+// ── Phonetic self-voice matching + speaking-state asymmetry (echo-fix V3,
+// 2026-07-15) ──────────────────────────────────────────────────────────
+// TDD against the ACTUAL incident (session portal-81f2b582): ASR-garbled
+// echoes ("Badu" for "Dadu") scored below SELF_VOICE_THRESHOLD on text
+// trigrams and dispatched as real turns. V3 adds (1) a phonetic n-gram pass
+// to scoreSelfVoice (conservative, whole-line, runs in every state) and
+// (2) a more lenient content-word overlap check scoped to ≤4-word
+// utterances during 'speaking' (or its trailing echo window), which alone
+// may drop but never barge_in/new_turn even if question-shaped.
+console.log('\n=== V3: phonetic self-voice matching (universal scoreSelfVoice) ===');
+{
+  const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+  const playStart = 2_000_000;
+  const playEnd = 2_003_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 1, text: DADU_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+  const speechStartedAt = playEnd + 300; // well inside the trail window
+  const now = speechStartedAt + 400;
+
+  {
+    const s = scoreSelfVoice("Badu, what's now Badu?", scripts, speechStartedAt, now);
+    check(
+      '"Badu, what\'s now Badu?" phonetically matches "...Dadu, what\'s now Beijing"',
+      s >= SELF_VOICE_THRESHOLD,
+      `score=${s.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
+    );
+  }
+  {
+    // Guard: an unrelated short question sharing only common function words
+    // ("what"/"the") with the script must NOT phonetically false-match.
+    const s = scoreSelfVoice('what about the Ming?', scripts, speechStartedAt, now);
+    check(
+      '"what about the Ming?" does NOT phonetically false-match the Dadu script',
+      s < SELF_VOICE_THRESHOLD,
+      `score=${s.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
+    );
+  }
+}
+
+console.log('\n=== V3: speaking-state asymmetry (≤4-word echo during/just-after speaking) ===');
+{
+  const classifyWithScripts = (
+    transcript: string,
+    productionState: ProductionStateForClassifier,
+    scripts: RecentTtsScript[],
+    speechStartedAt: number,
+    now: number,
+  ) => {
+    const input: HeuristicInput = {
+      transcript, productionState, recentTtsScripts: scripts, now, speechStartedAt,
+    };
+    return classifyHeuristic(input);
+  };
+
+  const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+  const daduScripts: RecentTtsScript[] = [
+    { id: 10, text: DADU_SCRIPT, spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 },
+  ];
+  const speechStartedAt = 3_003_300;
+  const now = speechStartedAt + 400;
+
+  {
+    // The actual incident line.
+    const r = classifyWithScripts(
+      "Badu, what's now Badu?", 'speaking', daduScripts, speechStartedAt, now,
+    );
+    check(
+      '"Badu, what\'s now Badu?" during speaking → drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // "Good question." echoed verbatim — must still drop post-V2/V3 (no
+    // regression from adding the phonetic pass / asymmetry gate).
+    const scripts: RecentTtsScript[] = [
+      { id: 11, text: 'Good question.', spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 },
+    ];
+    const r = classifyWithScripts('Good question.', 'speaking', scripts, speechStartedAt, now);
+    check(
+      '"Good question." echo during speaking stays drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Single-word echo diluted below scoreSelfVoice's whole-line bar — only
+    // the speaking-state asymmetry catches this one.
+    const scripts: RecentTtsScript[] = [
+      {
+        id: 12,
+        text: 'how often the Yuan actually used the Mongol title',
+        spokenStartedAt: 3_000_000,
+        spokenEndedAt: 3_003_000,
+      },
+    ];
+    const universalScore = scoreSelfVoice('actually turn', scripts, speechStartedAt, now);
+    check(
+      '"actually turn" does NOT clear the universal (conservative) self-voice bar alone',
+      universalScore < SELF_VOICE_THRESHOLD,
+      `universal score=${universalScore.toFixed(2)} < ${SELF_VOICE_THRESHOLD} (asymmetry gate must be doing the work)`,
+    );
+    const r = classifyWithScripts('actually turn', 'speaking', scripts, speechStartedAt, now);
+    check(
+      '"actually turn" during speaking → drop_self_voice (speaking-state asymmetry, not barge_in)',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // False-positive guard: a genuinely novel question during speaking,
+    // sharing only function words with the script — must barge_in.
+    const r = classifyWithScripts(
+      'what about the Ming?', 'speaking', daduScripts, speechStartedAt, now,
+    );
+    check(
+      '"what about the Ming?" during speaking → barge_in (NOT dropped, novel content)',
+      r.verdict === 'barge_in',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // False-positive guard: a short genuine interjection with zero TTS
+    // overlap must still barge_in via the existing trigger lexicon.
+    const r = classifyWithScripts('no, wait', 'speaking', daduScripts, speechStartedAt, now);
+    check(
+      '"no, wait" during speaking → barge_in (genuine interjection, no TTS overlap)',
+      r.verdict === 'barge_in',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Tricky policy case: the student deliberately echoes the tutor to ask
+    // about it. 4 raw words, phonetically + verbatim identical to the
+    // script. Documented policy: err toward drop during 'speaking' — V1's
+    // sustained-energy gate is the backstop for a genuinely sustained
+    // real question, and the student can re-ask once the tutor stops.
+    const r = classifyWithScripts(
+      "Dadu? what's Dadu?", 'speaking', daduScripts, speechStartedAt, now,
+    );
+    check(
+      '"Dadu? what\'s Dadu?" (echo-as-question) during speaking → drop_self_voice (policy: err toward drop)',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Trail-window guard: production state already flipped to 'listening'
+    // (script just finished) but the transcript landed inside the trailing
+    // echo window — asymmetry must still apply, not just literal 'speaking'.
+    const trailNow = speechStartedAt + 200;
+    const r = classifyWithScripts(
+      'actually turn', 'listening',
+      [{ id: 13, text: 'how often the Yuan actually used the Mongol title',
+         spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 }],
+      speechStartedAt, trailNow,
+    );
+    check(
+      '"actually turn" landing in listening but within trail window → drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Scope guard: the asymmetry only applies to ≤4 raw words. A longer,
+    // genuinely ambiguous utterance that happens to reuse "actually" must
+    // NOT be swept into drop_self_voice just for sharing one word.
+    const r = classifyWithScripts(
+      'wait, actually I think I misheard that',
+      'speaking',
+      [{ id: 14, text: 'how often the Yuan actually used the Mongol title',
+         spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 }],
+      speechStartedAt, now,
+    );
+    check(
+      'longer utterance (>4 words) reusing one script word stays out of the short-utterance asymmetry',
+      r.verdict !== 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+  {
+    // Sanity: the threshold constant is the documented 0.5, not silently
+    // drifted.
+    check(
+      'SPEAKING_ECHO_OVERLAP_THRESHOLD is the documented 0.5',
+      SPEAKING_ECHO_OVERLAP_THRESHOLD === 0.5,
+      `= ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
+    );
+  }
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

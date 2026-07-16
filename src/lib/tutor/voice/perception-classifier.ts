@@ -166,6 +166,129 @@ function ngrams(tokens: string[], n: number): string[] {
   return out;
 }
 
+/** Raw word count — splits on whitespace only, so contractions ("what's")
+ *  count as ONE word. Deliberately distinct from `tokenize().length`, which
+ *  splits "what's" into ["what","s"] (apostrophe is punctuation to the text
+ *  matcher) — that's correct for token-overlap scoring but would over-count
+ *  words for the speaking-state ≤4-word gate below ("Badu, what's now
+ *  Badu?" is 4 words to a human, 5 tokens after punctuation-splitting). */
+function rawWordCount(text: string): number {
+  const t = text.trim();
+  if (!t) return 0;
+  return t.split(/\s+/).filter(Boolean).length;
+}
+
+// ── Phonetic normalizer (echo-fix V3, 2026-07-15) ────────────────────
+//
+// ASR sometimes garbles the tutor's own echoed speech at the CONSONANT
+// level ("Badu" transcribed for "Dadu" — the actual portal-81f2b582
+// incident) rather than just dropping/duplicating whole words the way V1/V2
+// already handle. Exact and n-gram TEXT matching (above) can't see past a
+// misheard letter, so short ASR-garbled echoes were sailing through the
+// 0.55 self-voice gate and dispatching as real turns.
+//
+// This is a compact, dependency-free Soundex/double-metaphone-style
+// normalizer: reduce each word to a CONSONANT-CLASS SKELETON (vowels
+// stripped, confusable consonants collapsed to one symbol) plus a VOWEL
+// COUNT suffix, then compare skeletons for exact equality.
+//
+// Mapping table (consonant → class symbol):
+//   b, p, d, t, g, k, c, q  →  K   (all six plain stops — see below)
+//   v, f                    →  F   (labiodental fricative pair)
+//   z, s, x                 →  S   (sibilant pair)
+//   m, n                    →  N   (nasals)
+//   l, r                    →  R   (liquids)
+//   h, w, y, j (etc.)       →  themselves, uppercased (unmapped — left
+//                               distinct; collapsing them further didn't
+//                               help any known confusion and costs
+//                               discriminating power)
+//   a, e, i, o, u           →  dropped from the skeleton, but counted
+//                               (see "vowel count" below)
+//
+// Why ALL SIX stops collapse to one class (not just the voiced/unvoiced
+// pairs b/p, d/t, g/k the spec names): the incident is "Badu" heard for
+// "Dadu" — a PLACE-of-articulation confusion (bilabial b vs alveolar d),
+// not a voicing confusion. b/p pairing alone doesn't bridge b↔d. Since
+// telling "which flavor of stop-consonant got misheard" apart doesn't help
+// self-echo detection (either way it's "some stop got heard as another
+// stop" in a short, coarticulated proper noun), all eight stop letters
+// collapse together. This is a deliberate, documented widening beyond the
+// minimal spec, justified by the actual incident data.
+//
+// Why a VOWEL COUNT suffix: collapsing all stops to one class is lossy
+// enough that unrelated words start colliding — "about" (b,t → stops,
+// 3 vowel letters a-o-u) reduces to the SAME stop-only skeleton as "Dadu"
+// (d,d → stops, 2 vowel letters a-u) if vowels are simply discarded. That
+// coincidence would false-positive-match ordinary vocabulary ("what about
+// the Ming?") against an unrelated script line purely because both happen
+// to have a stop-vowel-stop-vowel shape. Appending the vowel-letter COUNT
+// (not the vowels themselves, which ASR also garbles) cheaply separates
+// "badu"/"dadu" (both 2 vowels → still match) from "about" (3 vowels →
+// no longer collides). Verified empirically against the incident + guard
+// cases below (see `test-perception-classifier.ts`).
+const VOWELS = new Set(['a', 'e', 'i', 'o', 'u']);
+const CONSONANT_CLASS: Record<string, string> = {
+  b: 'K', p: 'K', d: 'K', t: 'K', g: 'K', k: 'K', c: 'K', q: 'K',
+  v: 'F', f: 'F',
+  z: 'S', s: 'S', x: 'S',
+  m: 'N', n: 'N',
+  l: 'R', r: 'R',
+};
+
+/** Reduce one word to its phonetic skeleton + vowel-count code, e.g.
+ *  phoneticCode('Dadu') === phoneticCode('Badu') === 'KK#2'. Consecutive
+ *  letters of the SAME class collapse to one symbol UNLESS a vowel
+ *  separates them (mirrors classic Soundex: "Badu"'s two stops are
+ *  separated by a vowel and both survive; a doubled letter like "Badd"
+ *  collapses to one). */
+function phoneticCode(word: string): string {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return '';
+  let skeleton = '';
+  let prevClass = '';
+  let vowelCount = 0;
+  for (const ch of w) {
+    if (VOWELS.has(ch)) {
+      vowelCount += 1;
+      prevClass = '';
+      continue;
+    }
+    const cls = CONSONANT_CLASS[ch] ?? ch.toUpperCase();
+    if (cls === prevClass) continue;
+    skeleton += cls;
+    prevClass = cls;
+  }
+  if (!skeleton) skeleton = w[0].toUpperCase(); // all-vowel word fallback
+  return `${skeleton}#${vowelCount}`;
+}
+
+function phoneticTokens(tokens: string[]): string[] {
+  return tokens.map(phoneticCode).filter(Boolean);
+}
+
+/** Words excluded from the speaking-state short-utterance echo check
+ *  (below) — high-frequency function words are phonetically generic (any
+ *  two lines of English share several), so letting them count as "content
+ *  overlap" produces false positives on totally unrelated short utterances
+ *  ("what about the Ming?" sharing "what"/"the" with the TTS script). Reuses
+ *  the file's existing filler/question/ack lexicons rather than
+ *  maintaining a parallel list. Exact matches on these words are still
+ *  caught by the (unfiltered) text/phonetic mirror pass in `scoreSelfVoice`. */
+const PHONETIC_STOPWORDS = new Set<string>([
+  'a', 'an', 'the', 'of', 'to', 'in', 'on', 'at', 'up', 'with', 'for',
+  'as', 'by', 'about', 'into', 'onto', 'from', 'over', 'under', 'off',
+  'out', 'and', 'or', 'but', 'so',
+  'it', 'its', 'this', 'that', 'these', 'those',
+  's', 'll', 're', 've', 'd', // contraction remnants after apostrophe-strip
+  ...QUESTION_TRIGGERS,
+  ...HESITATION_TOKENS,
+  ...ACK_TOKENS,
+]);
+
+function contentTokens(tokens: string[]): string[] {
+  return tokens.filter((tok) => !PHONETIC_STOPWORDS.has(tok));
+}
+
 // ── Self-voice scoring ───────────────────────────────────────────────
 
 /**
@@ -184,6 +307,21 @@ function ngrams(tokens: string[], n: number): string[] {
  * [spokenStartedAt - padding, spokenEndedAt + padding] window intersects
  * the student utterance start time are considered. Lines outside the
  * window can't echo physically — they've already faded.
+ *
+ * Phonetic pass (defence layer 1b, echo-fix V3): alongside the literal-text
+ * jaccard/n-gram/containment above, the SAME three measures are computed
+ * over each line's PHONETIC-CODE tokens (`phoneticCode`, unfiltered —
+ * stopwords included, mirroring the text pass exactly) and combined via
+ * max. This is intentionally the CONSERVATIVE phonetic pass: it requires
+ * broad multi-word agreement (containment needs every code to match,
+ * jaccard/n-gram dilute over the whole line) the same way the text pass
+ * already does, so a single incidentally-similar-sounding word elsewhere in
+ * a long real answer can't tip it over — only a genuinely close overall
+ * match (e.g. "Badu, what's now Badu?" against "...Dadu, what's now
+ * Beijing", which matches on 4 of its 5 tokens) crosses 0.55. The MORE
+ * aggressive single-content-word phonetic check for short utterances during
+ * `state==='speaking'` is a separate function below (`scoreSpeakingEchoOverlap`)
+ * — see its doc comment for why that one needs its own, narrower gate.
  */
 export const TTS_PADDING_LEAD_MS = 200;
 // 1500ms since introduction — sized to cover perception-transcript latency
@@ -193,6 +331,24 @@ export const TTS_PADDING_LEAD_MS = 200;
 // whose perception transcript lands up to ~1.5s after the audio faded
 // still falls inside the window and gets dropped by the matcher.
 export const TTS_PADDING_TRAIL_MS = 1500;
+
+function scriptWindowContains(s: RecentTtsScript, studentT: number, now: number): boolean {
+  const winStart = s.spokenStartedAt - TTS_PADDING_LEAD_MS;
+  const winEnd = (s.spokenEndedAt ?? now) + TTS_PADDING_TRAIL_MS;
+  return studentT >= winStart && studentT <= winEnd;
+}
+
+/** Trailing part of the same window, used by the speaking-state asymmetry
+ *  check to decide whether the tutor is still effectively "speaking" for
+ *  echo purposes even after production state has already moved on (a
+ *  transcript can land just after 'speaking' flips to 'listening'). */
+function inTrailWindowOfAnyScript(
+  scripts: RecentTtsScript[],
+  studentT: number,
+  now: number,
+): boolean {
+  return scripts.some((s) => scriptWindowContains(s, studentT, now));
+}
 
 export function scoreSelfVoice(
   transcript: string,
@@ -204,12 +360,13 @@ export function scoreSelfVoice(
   if (tTokens.length === 0) return 0;
   const tSet = new Set(tTokens);
   const t3 = new Set(ngrams(tTokens, Math.min(3, tTokens.length)));
+  const tPhon = phoneticTokens(tTokens);
+  const tPhonSet = new Set(tPhon);
+  const tPhon3 = new Set(ngrams(tPhon, Math.min(3, tPhon.length)));
   let best = 0;
   const studentT = speechStartedAt ?? now;
   for (const s of recentTtsScripts) {
-    const winStart = s.spokenStartedAt - TTS_PADDING_LEAD_MS;
-    const winEnd = (s.spokenEndedAt ?? now) + TTS_PADDING_TRAIL_MS;
-    if (studentT < winStart || studentT > winEnd) continue;
+    if (!scriptWindowContains(s, studentT, now)) continue;
     const sTokens = tokenize(s.text);
     if (sTokens.length === 0) continue;
     const sSet = new Set(sTokens);
@@ -223,7 +380,27 @@ export function scoreSelfVoice(
     }
     // Containment: short transcripts that are entirely inside a TTS line.
     const containment = tTokens.every((tok) => sSet.has(tok)) ? 1 : 0;
-    const score = Math.max(j, ngramHit, containment * 0.9);
+
+    // Phonetic mirror of the three text measures above (V3) — catches
+    // ASR-garbled echoes ("Badu" for "Dadu") that share no literal text
+    // but reduce to the same consonant-skeleton+vowel-count codes.
+    const sPhon = phoneticTokens(sTokens);
+    const sPhonSet = new Set(sPhon);
+    const jPhon = jaccard(tPhonSet, sPhonSet);
+    let ngramHitPhon = 0;
+    if (tPhon3.size > 0) {
+      const sPhon3 = new Set(ngrams(sPhon, 3));
+      let hit = 0;
+      for (const g of tPhon3) if (sPhon3.has(g)) hit += 1;
+      ngramHitPhon = hit / Math.max(tPhon3.size, 1);
+    }
+    const containmentPhon =
+      tPhon.length > 0 && tPhon.every((code) => sPhonSet.has(code)) ? 1 : 0;
+
+    const score = Math.max(
+      j, ngramHit, containment * 0.9,
+      jPhon, ngramHitPhon, containmentPhon * 0.9,
+    );
     if (score > best) best = score;
   }
   return best;
@@ -234,6 +411,69 @@ export function scoreSelfVoice(
  *  for false positives (real student speech echoing tutor vocabulary),
  *  raise threshold if needed. */
 export const SELF_VOICE_THRESHOLD = 0.55;
+
+// ── Speaking-state asymmetry (echo-fix V3) ────────────────────────────
+//
+// The remaining leak after the conservative pass above: a SHORT (≤4-word)
+// utterance during 'speaking' where only ONE word actually carries the
+// echo signal (e.g. "actually turn" against "...the Yuan actually used the
+// Mongol title" — "actually" is a verbatim/phonetic hit, "turn" is not).
+// scoreSelfVoice's containment/jaccard/n-gram measures all dilute that
+// single hit across the whole line and don't cross 0.55 (correctly — that
+// broad-agreement requirement is what keeps scoreSelfVoice safe to run
+// UNCONDITIONALLY, in every state, against real answers that legitimately
+// reuse one or two tutor words).
+//
+// This function is deliberately MORE lenient: content-word (stopword-
+// filtered) EXACT match, verbatim or phonetic, counted per transcript word
+// and averaged. It is only ever consulted by `classifyHeuristic` when BOTH
+// (a) the utterance is ≤4 raw words AND (b) production state is 'speaking'
+// or the utterance landed in the trailing window of a just-played
+// sentence — i.e. exactly the high-prior-echo, low-blast-radius zone V1's
+// sustained-energy gate has already filtered real sustained speech out of.
+// Outside that zone this function is never called, so its extra leniency
+// can't leak into misclassifying a genuine short answer during
+// 'listening', for instance.
+function scoreSpeakingEchoOverlap(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  speechStartedAt: number | undefined,
+  now: number,
+): number {
+  const tContent = contentTokens(tokenize(transcript));
+  if (tContent.length === 0) return 0;
+  const tPhonContent = tContent.map(phoneticCode);
+  const studentT = speechStartedAt ?? now;
+  let best = 0;
+  for (const s of recentTtsScripts) {
+    if (!scriptWindowContains(s, studentT, now)) continue;
+    const sContent = contentTokens(tokenize(s.text));
+    if (sContent.length === 0) continue;
+    const sContentSet = new Set(sContent);
+    const sPhonContentSet = new Set(sContent.map(phoneticCode));
+    let matches = 0;
+    for (let i = 0; i < tContent.length; i++) {
+      const verbatim = sContentSet.has(tContent[i]);
+      const phonetic = sPhonContentSet.has(tPhonContent[i]);
+      if (verbatim || phonetic) matches += 1;
+    }
+    const score = matches / tContent.length;
+    if (score > best) best = score;
+  }
+  return best;
+}
+
+/** Lower bar than SELF_VOICE_THRESHOLD, deliberately: scoped narrowly (≤4
+ *  words, 'speaking'/trail-window only — see `scoreSpeakingEchoOverlap`
+ *  doc comment) so the extra leniency can't reach a real answer given
+ *  during 'listening'. At 0.5, an utterance needs at least HALF its
+ *  content words to exactly match (verbatim or phonetic) — for the typical
+ *  1–2 content-word short utterance this means at least one strong,
+ *  specific match, not an incidental partial resemblance. Calibrated
+ *  against the incident + guard cases (see test file): drop-cases score
+ *  1.0, keep-cases score 0.0 — wide margin, so the exact cutover point
+ *  isn't fragile. */
+export const SPEAKING_ECHO_OVERLAP_THRESHOLD = 0.5;
 
 // ── Heuristic ────────────────────────────────────────────────────────
 
@@ -259,6 +499,50 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   }
 
   const state = input.productionState;
+
+  // 1.5. Speaking-state asymmetry (echo-fix V3). A SHORT (≤4 raw-word)
+  // utterance landing while the tutor is 'speaking' — or just after, still
+  // in the trailing echo window of the sentence that just played — is
+  // disproportionately likely to be an ASR-garbled self-echo that didn't
+  // quite clear the conservative universal bar above (single distinctive
+  // word overlap, diluted by scoreSelfVoice's whole-line measures). Within
+  // this narrow, high-prior-echo zone we apply a more lenient overlap
+  // check and, if it fires, drop unconditionally — this MUST run before
+  // the barge-trigger/question-shape checks below, because a word like
+  // "actually" is both a legitimate barge trigger AND, in this exact
+  // window, the tutor's own last word bouncing back (portal-81f2b582:
+  // "actually turn" against "...the Yuan actually used the Mongol title").
+  //
+  // Policy for the ambiguous case where the student deliberately echoes
+  // the tutor to ask about it (e.g. "Dadu? what's Dadu?" — 3 raw words,
+  // phonetically AND verbatim identical to the script, but arguably a
+  // genuine question): we deliberately do NOT try to distinguish "echo"
+  // from "echo-as-question" here and let it drop. V1's sustained-energy
+  // gate already guarantees a genuinely sustained, loud real interruption
+  // still barges in regardless of this classifier, the ≤4-word cap bounds
+  // how much could ever be lost this way, and the student can simply
+  // re-ask once the tutor stops talking — cheaper than risking the
+  // opposite failure mode (the actual incident: real echoes dispatching
+  // as turns).
+  if (rawWordCount(text) <= 4) {
+    const speakingOrTrailing =
+      state === 'speaking' ||
+      inTrailWindowOfAnyScript(
+        input.recentTtsScripts, input.speechStartedAt ?? input.now, input.now,
+      );
+    if (speakingOrTrailing) {
+      const echoOverlap = scoreSpeakingEchoOverlap(
+        text, input.recentTtsScripts, input.speechStartedAt, input.now,
+      );
+      if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
+        return {
+          verdict: 'drop_self_voice',
+          reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
+          selfVoiceScore,
+        };
+      }
+    }
+  }
 
   // 2. Filler tokens — state-aware (2026-07-11). While the tutor is
   // LISTENING (or 'connected'), an utterance containing an acknowledgement
