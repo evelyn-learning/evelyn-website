@@ -69,6 +69,36 @@ function main() {
     assert.ok(prompt.includes('unlabelled doodle'), 'must name the failure mode');
   });
 
+  // Task X4 (2026-07-16): try-yourself/show_problem cards described tables
+  //    in prose and referenced "the curve up there" with nothing drawn — the
+  //    brain believed artifacts existed that were never rendered. New rule:
+  //    render the companion artifact FIRST, same turn, before the card; never
+  //    reference an artifact off the current page; no prose-described tables.
+  test('companion-artifact clause: render the table/graph/diagram FIRST, same turn, before the card', () => {
+    assert.ok(prompt.includes('renders that artifact FIRST, same turn'), 'clause header missing');
+    assert.ok(prompt.includes('show_try_yourself` has no attachment field'), 'schema-gap explanation missing');
+    assert.ok(prompt.includes('two-tool-call turn'), 'ordering mandate missing');
+  });
+
+  test('companion-artifact clause: never reference an off-page artifact', () => {
+    assert.ok(prompt.includes('Never reference an artifact that isn\'t on the current board page'), 'clause header missing');
+    assert.ok(prompt.includes('cannot scroll to something you only asserted exists'), 'failure-mode framing missing');
+  });
+
+  test('companion-artifact clause: no prose-described tables', () => {
+    assert.ok(prompt.includes('No prose-described tables'), 'clause header missing');
+    assert.ok(prompt.includes('reconstruct a grid from a sentence'), 'failure-mode framing missing');
+  });
+
+  // Task X4 IMG-14 finding: show_function_graph's schema only requires
+  //    `title` — a `points`-only call (no functions/functionsOfY) is valid
+  //    and renders two floating labeled dots with no curve, often with the
+  //    viewport locked so tight the axes are out of frame too.
+  test('graph-points clause: points must accompany a plotted function, not stand alone', () => {
+    assert.ok(prompt.includes('never send `points` alone'), 'clause header missing');
+    assert.ok(prompt.includes('show_scatter_plot` instead'), 'bare-data redirect missing');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

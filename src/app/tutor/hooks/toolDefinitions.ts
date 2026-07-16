@@ -90,7 +90,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_function_graph',
-    description: 'Plot mathematical functions, curves, points, and shaded regions on a coordinate plane. LaTeX-style expressions for `expr` (use `functions` for y=f(x), `functionsOfY` for x=f(y)). For a POLAR curve r=f(θ) use show_diagram(type: "polar_graph") instead — `functions`/`functionsOfY` are Cartesian only; never convert a polar curve to a Cartesian-implicit form and put it in `functions` (an `expr` that references y is not y=f(x) and renders wrong).',
+    description: 'Plot mathematical functions, curves, points, and shaded regions on a coordinate plane. LaTeX-style expressions for `expr` (use `functions` for y=f(x), `functionsOfY` for x=f(y)). For a POLAR curve r=f(θ) use show_diagram(type: "polar_graph") instead — `functions`/`functionsOfY` are Cartesian only; never convert a polar curve to a Cartesian-implicit form and put it in `functions` (an `expr` that references y is not y=f(x) and renders wrong). `points` marks a spot ON a plotted curve — always pair it with a `functions`/`functionsOfY` entry in the same call; a `points`-only call with no function renders two floating labeled dots with no curve or visible axes. For bare (x, y) data with no function to plot, use `show_scatter_plot` instead.',
     parameters: {
       type: 'object',
       properties: {
