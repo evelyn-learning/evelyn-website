@@ -72,8 +72,12 @@ export interface SessionStageProps {
   // slots
   board: ReactNode;              // <WhiteboardCanvas suppressEmptyState chrome="minimal"/>
   /** Page-nav state surfaced from the chromeless board so the stage can render
-   *  its own slim top-center switcher. Undefined / count<=1 → no switcher. */
-  boardPages?: { index: number; count: number; titles: string[]; goTo: (i: number) => void };
+   *  its own slim top-center switcher. Undefined / count<=1 → no switcher.
+   *  `pendingIndex` (Task X5): a page other than `index` that got new tutor
+   *  content while the anti-yank grace held the view here — renders a subtle
+   *  dot on the switcher so the student knows to look. null/undefined when
+   *  nothing is pending. */
+  boardPages?: { index: number; count: number; titles: string[]; goTo: (i: number) => void; pendingIndex?: number | null };
   voiceInput: ReactNode;         // <VoiceTutorRealtime/> etc — the dock contents
   transcript: ReactNode;         // <TranscriptView/>
   transcriptCount?: number;      // for the drawer badge
@@ -484,10 +488,15 @@ export default function SessionStage(props: SessionStageProps) {
             <button
               onClick={() => { setSwitcherOpen(false); boardPages.goTo(boardPages.index + 1); }}
               disabled={boardPages.index >= boardPages.count - 1}
-              className="shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+              className="relative shrink-0 grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
               title="Next board"
             >
               <ChevronRight className="w-4 h-4" />
+              {/* Task X5: a subtle unseen-content dot — new tutor render landed
+                  on another page while the anti-yank grace held the view here. */}
+              {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
+                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+              )}
             </button>
           </div>
           {/* Jump-to-page dropdown. Outside-click close is handled by the
@@ -505,6 +514,9 @@ export default function SessionStage(props: SessionStageProps) {
                   >
                     <span className="shrink-0 inline-grid place-items-center w-5 h-5 rounded-full bg-slate-100 text-[10px] font-semibold tabular-nums text-slate-500">{i + 1}</span>
                     <span className="truncate">{formatBoardTitle(t) || `Board ${i + 1}`}</span>
+                    {boardPages.pendingIndex === i && (
+                      <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" title="New content" />
+                    )}
                   </button>
                 ))}
               </div>

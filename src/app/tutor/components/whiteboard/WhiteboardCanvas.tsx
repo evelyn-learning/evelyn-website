@@ -94,6 +94,7 @@ import { useDrawOn, drawOnEnabled } from './useDrawOn';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { InkNotesOverlay } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
+import { shouldFollowNewRender } from '@/lib/tutor/whiteboard/view-follow';
 
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
@@ -212,8 +213,12 @@ interface WhiteboardCanvasProps {
   chrome?: 'full' | 'minimal' | 'replay';
   /** Surfaces the internal page navigation state so a host (the SessionStage)
    *  can render its own switcher in 'minimal' chrome. Fires whenever the page
-   *  count / current index / titles change. `goTo` is stable. */
-  onNavChange?: (nav: { index: number; count: number; titles: string[]; goTo: (i: number) => void }) => void;
+   *  count / current index / titles change. `goTo` is stable.
+   *  `pendingIndex` (Task X5): set when a new tutor render landed on a page
+   *  OTHER than the current one but the anti-yank grace held the view there
+   *  — a host can use it to show a subtle "new content" affordance. null
+   *  when there is nothing pending. */
+  onNavChange?: (nav: { index: number; count: number; titles: string[]; goTo: (i: number) => void; pendingIndex: number | null }) => void;
   /** On a resumed session the board is seeded with the prior work all at once;
    *  the default view is page 1, but the student left off on the LAST page. When
    *  true, the canvas jumps to the last page ONCE, after the seeded commands
@@ -311,6 +316,38 @@ export function WhiteboardCanvas({
       prevIndexRef.current = currentIndex;
     }
   }, [currentIndex]);
+
+  // Mirror currentIndex in a ref so effects keyed on [commands.length, pages]
+  // (NOT currentIndex — re-running them on every manual page flip would be
+  // wrong, see the view-follow effect below) can still read the LATEST page
+  // synchronously, same convention as pagesLengthRef further down.
+  const currentIndexRef = useRef(0);
+  currentIndexRef.current = currentIndex;
+
+  // ── View-follow anti-yank grace (Task X5) ──────────────────────────
+  // Timestamp of the student's last BOARD interaction — page flip (arrows,
+  // page pills, the SessionStage switcher's goTo), pen stroke, or panel tap
+  // (a resolved tap-to-point). Read by the view-follow effect below via
+  // shouldFollowNewRender: a new tutor render pulls the view to its page
+  // UNLESS the student interacted within the grace window, in which case a
+  // yank would fight a deliberate "let me look at this" action. Plain
+  // scrolling within a page does NOT count — only page-level/board-level
+  // actions do (see the brief's "define interacted honestly").
+  const lastInteractionAtRef = useRef<number | null>(null);
+  const markInteraction = useCallback(() => {
+    lastInteractionAtRef.current = Date.now();
+  }, []);
+  // Surfaces "new content landed on page N but the anti-yank grace held the
+  // view" so a host can show a subtle affordance (SessionStage's switcher).
+  // Cleared once the student reaches that page (see the effect right below)
+  // or once a later follow actually happens.
+  const [pendingFollowIndex, setPendingFollowIndex] = useState<number | null>(null);
+  useEffect(() => {
+    if (pendingFollowIndex !== null && currentIndex === pendingFollowIndex) {
+      setPendingFollowIndex(null);
+    }
+  }, [currentIndex, pendingFollowIndex]);
+
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Resizable expanded panel state
@@ -673,6 +710,20 @@ export function WhiteboardCanvas({
   // Skip when the batch carried an explicit nav (goToPage / scrollTo) — the
   // scrollTo effect above already positioned the view (incl. Board Map jumps
   // and scribble auto-page-switches), so we must not fight it.
+  //
+  // Task X5 anti-yank grace: even past that check, an unconditional jump
+  // fights a student who just, on their own initiative, flipped pages /
+  // drew / tapped the board. shouldFollowNewRender (pure, script-tested in
+  // scripts/test-view-follow.ts) holds the view when that happened within
+  // the last ~10s; otherwise the honest default is to follow (evidence:
+  // the tutor revealed a try-yourself ANSWER on page 3 while the student
+  // sat on page 2 and the board never advanced — nothing was holding the
+  // view, there just wasn't any pull). REPLAY (chrome='replay') keeps its
+  // OWN timeline-driven paging: it drives this same effect by growing
+  // `commands` as the scrubber advances, and a reviewer's manual scrub
+  // must never suppress the recording's next reveal, so the grace is
+  // skipped entirely there — chase-newest unconditionally, byte-identical
+  // to pre-X5 behavior.
   const prevFollowCountRef = useRef(0);
   useEffect(() => {
     if (commands.length <= prevFollowCountRef.current) {
@@ -715,10 +766,30 @@ export function WhiteboardCanvas({
         }
       }
       if (target < 0) target = pages.length - 1; // fallback: newest page
-      if (target >= 0) setCurrentIndex((prev) => (target !== prev ? target : prev));
+      if (target >= 0) {
+        const cur = currentIndexRef.current;
+        const follow = chrome === 'replay'
+          ? target !== cur // replay: unconditional chase-newest, untouched
+          : shouldFollowNewRender({
+              targetIndex: target,
+              currentIndex: cur,
+              lastInteractionAt: lastInteractionAtRef.current,
+              now: Date.now(),
+            });
+        if (follow) {
+          setCurrentIndex(target);
+          setPendingFollowIndex(null);
+        } else if (target !== cur) {
+          // Anti-yank grace held the view — surface the affordance so a
+          // host can hint that new content landed elsewhere.
+          setPendingFollowIndex(target);
+        }
+      }
       break;
     }
-  }, [commands.length, pages]);
+  // Only re-run when commands.length increases (chrome is stable per mount).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commands.length, pages, chrome]);
 
   // Resume: jump to the LAST page once, after the seeded board populates the
   // page model. Runs a single time (guarded) so later tutor navigation is not
@@ -818,21 +889,29 @@ export function WhiteboardCanvas({
     return () => { el.removeEventListener('scroll', check); observer.disconnect(); };
   }, [currentIndex, commands.length]);
 
-  // Navigation
+  // Navigation. Each of these is a MANUAL page flip — mark it as a board
+  // interaction (Task X5 anti-yank grace) so a tutor render landing
+  // elsewhere a moment later doesn't yank the student back off the page
+  // they just chose to look at.
   const goNext = useCallback(() => {
+    markInteraction();
     setCurrentIndex((prev) => Math.min(prev + 1, pages.length - 1));
-  }, [pages.length]);
+  }, [pages.length, markInteraction]);
 
   const goPrev = useCallback(() => {
+    markInteraction();
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  }, []);
+  }, [markInteraction]);
 
   // Stable page jumper exposed to a host that renders its own switcher
-  // ('minimal' chrome). Clamped against the live page count at call time.
+  // ('minimal' chrome) — also the SessionStage switcher's goTo, and the
+  // 'full' chrome page-pill onClick below. Clamped against the live page
+  // count at call time.
   const goToPage = useCallback((i: number) => {
+    markInteraction();
     const max = pagesLengthRef.current - 1;
     setCurrentIndex(Math.min(Math.max(i, 0), Math.max(max, 0)));
-  }, []);
+  }, [markInteraction]);
 
   // Surface page-nav state to a host that renders its own switcher ('minimal'
   // chrome). `pages` is memoized on [commands], so this only fires when the
@@ -844,8 +923,9 @@ export function WhiteboardCanvas({
       count: pages.length,
       titles: pages.map((p) => p.title || ''),
       goTo: goToPage,
+      pendingIndex: pendingFollowIndex,
     });
-  }, [onNavChange, currentIndex, pages, goToPage]);
+  }, [onNavChange, currentIndex, pages, goToPage, pendingFollowIndex]);
 
   // Handle clear
   const handleClear = useCallback(() => {
@@ -1091,6 +1171,9 @@ export function WhiteboardCanvas({
     if (!wrapper || !onStudentMark) return;
     const wRect = wrapper.getBoundingClientRect();
     if (wRect.width === 0 || wRect.height === 0) return;
+    // A resolved panel tap counts as a board interaction (Task X5 anti-yank
+    // grace) — the student is actively engaging with this page right now.
+    markInteraction();
     const point = { x: (clientX - wRect.left) / wRect.width, y: (clientY - wRect.top) / wRect.height };
     const id = ++pingIdRef.current;
     // Fix 2 (ping bleed): tag with the page it fired on so a ping still
@@ -1104,7 +1187,7 @@ export function WhiteboardCanvas({
       point,
       rects: collectRects(),
     });
-  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage.title]);
+  }, [onStudentMark, collectRects, currentIndex, safeCurrentPage.title, markInteraction]);
 
   const handleMarkPointerDown = useCallback((e: React.PointerEvent) => {
     // While the pen is active, taps are the pen overlay's business — the
@@ -1239,12 +1322,16 @@ export function WhiteboardCanvas({
     e.stopPropagation();
     const p = penPoint(e.clientX, e.clientY);
     if (!p) return;
+    // A pen stroke is a board interaction (Task X5 anti-yank grace) —
+    // marked at stroke START so a render landing elsewhere mid-draw
+    // doesn't yank the page out from under an in-progress stroke.
+    markInteraction();
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
     activeStrokeRef.current = [{ x: p.x, y: p.y }];
     activeStrokePxRef.current = [p.px];
     setLiveStroke([{ x: p.x, y: p.y }]);
     setLiveStrokePx([p.px]);
-  }, [penPoint]);
+  }, [penPoint, markInteraction]);
   const handlePenMove = useCallback((e: React.PointerEvent) => {
     if (!activeStrokeRef.current) return;
     const p = penPoint(e.clientX, e.clientY);
@@ -1428,7 +1515,7 @@ export function WhiteboardCanvas({
             {pages.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrentIndex(i)}
+                onClick={() => goToPage(i)}
                 // Numbered pills (not bare dots) so the brain's spoken
                 // "look at Page 4" maps to a visible label on the board.
                 className={`min-w-[20px] h-5 px-1 rounded-full text-[10px] font-semibold tabular-nums transition-all ${

@@ -1,0 +1,77 @@
+/**
+ * View-follow anti-yank grace (Task X5).
+ *
+ * Regression under test: the tutor revealed a try-yourself ANSWER as a new
+ * item on page 3 while the student sat on page 2 — the board never
+ * followed. New tutor-rendered content should pull the view to it UNLESS
+ * the student interacted with the board (page flip, pen, panel tap) in the
+ * last ~10s (anti-yank grace).
+ *
+ * Run: npx tsx scripts/test-view-follow.ts
+ */
+import { shouldFollowNewRender } from '../src/lib/tutor/whiteboard/view-follow';
+
+let failures = 0;
+function check(name: string, actual: boolean, expected: boolean) {
+  const ok = actual === expected;
+  if (!ok) failures++;
+  console.log(`${ok ? 'PASS' : 'FAIL'} — ${name} (expected ${expected}, got ${actual})`);
+}
+
+const NOW = 1_000_000;
+
+// The X5 evidence case: student parked on page 2 (never interacted this
+// session), a new render lands on page 3 → follow.
+check(
+  'student on old page, no interaction on record → advances',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: null, now: NOW }),
+  true,
+);
+
+// Student flipped pages 3s ago (well inside the 10s grace) → hold position.
+check(
+  'student flipped pages 3s ago, new item elsewhere → stays',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 3_000, now: NOW }),
+  false,
+);
+
+// Student interacted long ago (grace elapsed) → the honest default (follow)
+// resumes.
+check(
+  'student interacted 11s ago (grace elapsed) → advances',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 11_000, now: NOW }),
+  true,
+);
+
+// Exact boundary: grace window is a HALF-open [0, graceMs) hold — at
+// exactly graceMs the interaction no longer counts as "recent".
+check(
+  'interaction exactly at the grace boundary (10s) → advances',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 10_000, now: NOW }),
+  true,
+);
+check(
+  'interaction 1ms inside the grace boundary → stays',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 9_999, now: NOW }),
+  false,
+);
+
+// Already on the target page — no-op regardless of interaction recency.
+check(
+  'new render lands on the CURRENT page → no-op (already there)',
+  shouldFollowNewRender({ targetIndex: 1, currentIndex: 1, lastInteractionAt: NOW - 500, now: NOW }),
+  false,
+);
+
+// Custom grace window (e.g. a caller wanting a tighter/looser policy).
+check(
+  'custom graceMs respected',
+  shouldFollowNewRender({ targetIndex: 2, currentIndex: 1, lastInteractionAt: NOW - 2_000, now: NOW, graceMs: 1_000 }),
+  true,
+);
+
+if (failures > 0) {
+  console.error(`\n${failures} failure(s)`);
+  process.exit(1);
+}
+console.log('\nAll view-follow checks passed.');
