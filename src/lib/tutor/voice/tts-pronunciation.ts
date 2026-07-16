@@ -43,7 +43,10 @@ const MATH_FUNC_REPLACEMENTS: Replacement[] = [
 
 /** Greek letters from LaTeX/Unicode the brain might emit. The TTS
  *  reads e.g. "θ" reliably as "theta", but the LaTeX command "\theta"
- *  gets pronounced as "back-slash theta" or worse. Strip the slash. */
+ *  gets pronounced as "back-slash theta" or worse. Strip the slash.
+ *  \pi resolves to the bare word "pi" here — PI_REPLACEMENTS below then
+ *  upgrades that (and any other bare "pi") to "pie", so the ordering in
+ *  ALL_REPLACEMENTS (Greek before Pi) matters. */
 const GREEK_REPLACEMENTS: Replacement[] = [
   { pattern: /\\theta\b/g, replacement: 'theta' },
   { pattern: /\\phi\b/g, replacement: 'phi' },
@@ -57,6 +60,28 @@ const GREEK_REPLACEMENTS: Replacement[] = [
   { pattern: /\\pi\b/g, replacement: 'pi' },
   { pattern: /\\sigma\b/g, replacement: 'sigma' },
   { pattern: /\\omega\b/g, replacement: 'omega' },
+];
+
+/** Greek letter π — live bug (session portal-236c6e8f): bare "pi" voiced
+ *  as the letter-name "pee" instead of "pie". Unlike the SD/state-code
+ *  ambiguity elsewhere in this file, there's no legitimate ENGLISH
+ *  reading where standalone "pi"/"Pi" is pronounced any way other than
+ *  "pie" — the constant, "Pi Day", "Raspberry Pi", the movie title, all
+ *  say "pie" — so lowercase and Title-Case forms are unconditionally
+ *  rewritten, same as the tier-1 y/b letter respelling below. Word-
+ *  boundary regex keeps "spinning"/"pit"/"piano" untouched (no standalone
+ *  "pi" token exists inside those words — \b requires a non-word
+ *  character on both sides of the match, which "pit"'s trailing "t" and
+ *  "spinning"'s embedded "pi" both fail). ALL-CAPS "PI" is deliberately
+ *  EXCLUDED (case-sensitive pattern, no 'i' flag) — that shape is almost
+ *  always an acronym (principal investigator, personal information)
+ *  rather than the Greek letter, matching CAPS_EMPHASIS_WORDS' own
+ *  known-collision precedent (NO, US, AD/AS, ERA, SAT/ACT). Must run
+ *  AFTER GREEK_REPLACEMENTS in ALL_REPLACEMENTS so "\pi" (already
+ *  resolved to bare "pi" there) also gets upgraded to "pie". */
+const PI_REPLACEMENTS: Replacement[] = [
+  { pattern: /\bpi\b/g, replacement: 'pie' },
+  { pattern: /\bPi\b/g, replacement: 'Pie' },
 ];
 
 /** Punctuation normalizations — the TTS handles these unevenly. */
@@ -125,6 +150,168 @@ const MD_EMPHASIS_REPLACEMENTS: Replacement[] = [
   { pattern: /\*{1,2}([A-Za-z][^*]{0,60}?)\*{1,2}/g, replacement: '$1' },
 ];
 
+/** ---------------------------------------------------------------------
+ *  Math verbalization for speech (Task X1).
+ *
+ *  Live bug (session portal-236c6e8f): E4's prompt change encourages
+ *  $-delimiting math in card fields (e.g. `show_problem`'s statement)
+ *  so KaTeX renders correctly on the board. When the brain narrates that
+ *  same card text as SPEECH (per "narrate the authored card verbatim"),
+ *  the raw LaTeX reaches TTS unconverted — Cartesia voiced `$a^3 b^3$`
+ *  as "dollar a cubed bee circumflex 3 dollar". This section turns LaTeX
+ *  math notation into SPOKEN WORDS ("a cubed b cubed") — a sibling to
+ *  (but distinct from) stripLatexForTitle in whiteboard/board-title.ts,
+ *  which turns the same notation into DISPLAY SYMBOLS ("a³") for a
+ *  page-title pill. The brace-resolution/sizing-command approach below
+ *  is structurally similar to that module (nested-brace loop, \left/
+ *  \right stripping) but the output is always words, never symbols, so
+ *  it's a separate implementation rather than a shared one.
+ * ----------------------------------------------------------------- */
+
+/** Turn `+`/`-` inside an already-isolated math fragment (a \frac
+ *  numerator/denominator, or a braced exponent/subscript) into spoken
+ *  words. Only ever applied to content we already know is math — never
+ *  to arbitrary prose, where a bare "-" is usually a hyphenated word or
+ *  a genuine minus sign it's not safe to guess about. */
+function wordifyMathOperators(s: string): string {
+  return s
+    .replace(/\+/g, ' plus ')
+    .replace(/-/g, ' minus ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** \frac{a}{b} -> "a over b". Looped (not recursive) so nested fractions
+ *  resolve inside-out — same approach as board-title's resolveFractions:
+ *  the regex only matches a frac whose numerator/denominator are
+ *  themselves brace-free, i.e. exactly the innermost one first. */
+const SPEECH_FRAC_RE = /\\frac\{([^{}]*)\}\{([^{}]*)\}/;
+function resolveFractionsForSpeech(t: string): string {
+  let prev: string;
+  do {
+    prev = t;
+    t = t.replace(SPEECH_FRAC_RE, (_m, num: string, den: string) =>
+      ` ${wordifyMathOperators(num)} over ${wordifyMathOperators(den)} `);
+  } while (t !== prev);
+  return t;
+}
+
+/** \sqrt{X} / \sqrt[n]{X} -> "the square root of X" / "the cube root of
+ *  X" / "the Nth root of X". */
+function resolveSqrtForSpeech(t: string): string {
+  t = t.replace(/\\sqrt\[(\w+)\]\{([^{}]*)\}/g, (_m, index: string, content: string) => {
+    const inner = wordifyMathOperators(content);
+    if (index === '2') return ` the square root of ${inner} `;
+    if (index === '3') return ` the cube root of ${inner} `;
+    return ` the ${index}th root of ${inner} `;
+  });
+  t = t.replace(/\\sqrt\{([^{}]*)\}/g, (_m, content: string) =>
+    ` the square root of ${wordifyMathOperators(content)} `);
+  return t;
+}
+
+/** Common LaTeX operator commands with unambiguous spoken forms — the
+ *  backslash-command counterparts to the unicode glyphs already handled
+ *  by MATH_OPERATOR_REPLACEMENTS below. \left/\right/\big../\Big..
+ *  ("parentheses handling") are pure sizing wrappers with no semantic
+ *  content, reused from board-title's delimiter-sizing regex — stripped
+ *  entirely rather than voiced, leaving the bare "(" "/" ")" for the TTS
+ *  to read naturally (it already handles literal parens fine, per the
+ *  existing "200 ± 2(25)" regression test below). Bare "\(" / "\)"
+ *  (the alternate inline-math delimiter form) are stripped the same way
+ *  $ is — see stripDollarMathForSpeech. */
+const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
+  { pattern: /\\times\b/g, replacement: ' times ' },
+  { pattern: /\\cdot\b/g, replacement: ' times ' },
+  { pattern: /\\div\b/g, replacement: ' divided by ' },
+  { pattern: /\\pm\b/g, replacement: ' plus or minus ' },
+  { pattern: /\\leq\b/g, replacement: ' less than or equal to ' },
+  { pattern: /\\geq\b/g, replacement: ' greater than or equal to ' },
+  { pattern: /\\neq\b/g, replacement: ' not equal to ' },
+  { pattern: /\\approx\b/g, replacement: ' approximately ' },
+  { pattern: /\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, replacement: '' },
+  { pattern: /\\[()]/g, replacement: ' ' },
+];
+function verbalizeMathCommandsForSpeech(t: string): string {
+  for (const { pattern, replacement } of MATH_COMMAND_REPLACEMENTS) {
+    t = t.replace(pattern, replacement);
+  }
+  return t;
+}
+
+/** Spoken form for an exponent: 2 -> "squared", 3 -> "cubed", anything
+ *  else -> "to the N". Higher numeric powers deliberately aren't spelled
+ *  as ordinals ("to the fourth") — same conservative call the unicode
+ *  ²/³-only handling below makes, since higher ordinals read ambiguously
+ *  next to a plain number. */
+function spokenExponent(exp: string): string {
+  const trimmed = wordifyMathOperators(exp);
+  if (trimmed === '2') return ' squared ';
+  if (trimmed === '3') return ' cubed ';
+  return ` to the ${trimmed} `;
+}
+
+/** ^{n+1} / ^2 / ^3 / ^n -> spoken exponent form. Braced form first (so
+ *  its content can hold an expression like "n+1"); then bare numeric
+ *  ("x^2", "x^-1"); then bare single-letter ("x^n"). Runs AFTER
+ *  rewriteDerivatives (see call site in rewriteForTTS), which already
+ *  consumes d²y/dx²-style patterns — by the time this runs there's no
+ *  more "d^2y" for the numeric branch to misparse. */
+function verbalizeExponentsForSpeech(t: string): string {
+  t = t.replace(/\^\{([^{}]+)\}/g, (_m, exp: string) => spokenExponent(exp));
+  t = t.replace(/\^(-?\d+)/g, (_m, exp: string) => spokenExponent(exp));
+  t = t.replace(/\^([a-zA-Z])\b/g, (_m, exp: string) => spokenExponent(exp));
+  return t;
+}
+
+/** _{n+1} / _1 / _i -> "sub …". Same braced-first ordering as exponents. */
+function verbalizeSubscriptsForSpeech(t: string): string {
+  t = t.replace(/_\{([^{}]+)\}/g, (_m, sub: string) => ` sub ${wordifyMathOperators(sub)} `);
+  t = t.replace(/_(-?\d+)/g, (_m, sub: string) => ` sub ${sub} `);
+  t = t.replace(/_([a-zA-Z])\b/g, (_m, sub: string) => ` sub ${sub} `);
+  return t;
+}
+
+/** Full math-notation -> words pipeline. Order matters: fractions and
+ *  roots first (they consume whole `\command{...}{...}` shapes before
+ *  the generic exponent/subscript regexes could misfire on braces that
+ *  belong to a \frac or \sqrt), then the small operator-command set,
+ *  then exponents, then subscripts. Safe to run on ANY text — every
+ *  pattern here is backslash/caret/underscore-anchored, none of which
+ *  appear in ordinary English prose, so this never touches real speech. */
+function verbalizeMathForSpeech(t: string): string {
+  t = resolveFractionsForSpeech(t);
+  t = resolveSqrtForSpeech(t);
+  t = verbalizeMathCommandsForSpeech(t);
+  t = verbalizeExponentsForSpeech(t);
+  t = verbalizeSubscriptsForSpeech(t);
+  return t;
+}
+
+/** $...$ delimiter stripping. Only unwraps a paired span when its
+ *  content looks like real math (a caret, underscore, backslash command,
+ *  or bare "=" sign) — a lone "$5" price mention (no closing $ nearby,
+ *  or a closing $ that belongs to an unrelated second price) must never
+ *  be touched. Gate rationale: unlike the SD/state-code ambiguity above,
+ *  there's no legitimate reading where "$a^3 b^3$" or "$x = 3$" (straight
+ *  from the E4 prompt's own show_problem example) is prose rather than
+ *  leaked markup — but plain "$x$" with no such signal is left alone
+ *  (rare in practice, and erring toward leaving a bare $ is safer than
+ *  guessing wrong on a real currency mention).
+ *  Runs the full verbalizeMathForSpeech pipeline on the captured content
+ *  so the dollar signs disappear along with the symbols they wrapped. */
+const MATH_SIGNAL_RE = /[\^_\\=]/;
+function stripDollarMathForSpeech(t: string): string {
+  return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
+    if (!MATH_SIGNAL_RE.test(inner)) return whole;
+    // The signal-char gate above already confirms this span is real math
+    // (not prose), so it's safe to also wordify a top-level "+"/"-" here
+    // ("$x^2 - 4$" → "x squared minus 4") — a liberty NOT taken for
+    // arbitrary text, where a bare "-" is usually a hyphenated word.
+    return ` ${wordifyMathOperators(verbalizeMathForSpeech(inner))} `;
+  });
+}
+
 /** Math-variable letter respelling.
  *
  *  Tier 1 (unconditional): standalone lowercase 'y' and 'b' are almost
@@ -178,6 +365,7 @@ const ALL_REPLACEMENTS: Replacement[] = [
   ...TRIG_REPLACEMENTS,
   ...MATH_FUNC_REPLACEMENTS,
   ...GREEK_REPLACEMENTS,
+  ...PI_REPLACEMENTS,
   ...PUNCTUATION_REPLACEMENTS,
   ...MATH_OPERATOR_REPLACEMENTS,
   ...SLASH_PAIR_REPLACEMENTS,
@@ -276,6 +464,16 @@ export function rewriteForTTS(raw: string): string {
   // Runs before comma/number normalization so its state-code guard can still
   // see "1890 SD" / ", SD".
   t = rewriteDomainAcronyms(t);
+  // Math verbalization (Task X1): $-delimited card-field math and any
+  // bare LaTeX notation both need converting to SPOKEN WORDS before
+  // anything downstream (letter respelling, the bare-equals rule below,
+  // etc.) sees the text. Dollar-wrapped spans are only unwrapped when
+  // they look like real math — see stripDollarMathForSpeech's gate.
+  // Runs after rewriteDerivatives (which already consumed d²y/dx²-style
+  // patterns) and before the bare "=" → "equals" rule so anything left
+  // over (e.g. "$x = 3$" → "x = 3") still gets voiced by it.
+  t = stripDollarMathForSpeech(t);
+  t = verbalizeMathForSpeech(t);
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
   // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
   // glyphs) and "==" (never appears in tutor speech).
@@ -307,9 +505,23 @@ export function rewriteForTTS(raw: string): string {
   // replacement so "— Praveen." is caught too. Openers ("Hey Praveen,
   // I'm Sameer") don't match — their comma isn't before name+terminator.
   t = t.replace(/,\s+([A-Z][a-z]+)([.!?])/g, ' $1$2');
+  // Trailing filler-word comma (Task X1, session portal-236c6e8f): "let's
+  // turn it up, then." reads with the same unnatural comma-pause as the
+  // vocative case above, but for a short spoken-filler tail instead of a
+  // name. Mirrors that rule's shape-match (comma + word + terminator) for
+  // a small curated set of common tail-fillers. Deliberately narrow —
+  // only fires immediately before a sentence terminator, so mid-sentence
+  // uses of these words ("then we simplify", "the right side") are
+  // untouched. Case-insensitive so it also catches the vocative-comma
+  // rule's blind spot when the filler happens to be capitalized ("Ready,
+  // Right?").
+  t = t.replace(/,\s+(then|right|okay|alright|yeah)([.!?])/gi, ' $1$2');
   // Collapse repeated whitespace introduced by replacements.
   t = t.replace(/\s+/g, ' ').trim();
-  // If a sentence ends with "?" but has stray spaces before it, fix.
-  t = t.replace(/\s+\?/g, '?');
+  // Stray whitespace directly before terminal punctuation (introduced by
+  // e.g. math-verbalization replacements padding their output with a
+  // trailing space that then abuts a following "." or "?") reads as an
+  // audible extra pause for some TTS voices — collapse it.
+  t = t.replace(/\s+([.,!?])/g, '$1');
   return t;
 }

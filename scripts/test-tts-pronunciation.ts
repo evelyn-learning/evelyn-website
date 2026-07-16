@@ -270,3 +270,93 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('Here c equals 9.', 'Here see equals 9.', 'c-equals');
   console.log('OK — live-session 2026-07-15 regressions (caps emphasis, a/b/c lists)');
 }
+
+// Task X1 (session portal-236c6e8f): TTS math verbalization + prosody
+// smoothing. Bugs: (a) `$...$` LaTeX delimiters reaching TTS raw ("dollar
+// a cubed bee circumflex 3 dollar" for $a^3 b^3$); (b) "pi" voiced as
+// "pee"; (c) comma-heavy trailing tails ("let's turn it up, then").
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  // --- $-delimited math: the live bug's exact shape -------------------
+  eq('Let me show you $a^3 b^3$ on the board.',
+     'Let me show you a cubed bee cubed on the board.',
+     'dollar-delimited-a3b3');
+  // E4's own show_problem prompt example ("$x^2 - 4$ when $x = 3$") —
+  // caret AND bare "=" both need to gate the $ strip.
+  eq('So $x^2 - 4$ when $x = 3$ gives us the answer.',
+     'So x squared minus 4 when x equals 3 gives us the answer.',
+     'dollar-delimited-e4-prompt-example');
+  // A bare "$5" price mention must NEVER be touched — no LaTeX signal
+  // char in the content, so the $ gate leaves it alone even though a
+  // second "$" appears later in the sentence.
+  eq('It costs $5 and shipping is $10.',
+     'It costs $5 and shipping is $10.',
+     'dollar-price-untouched');
+
+  // --- Exponents: ^2/^3 -> squared/cubed; other -> "to the N" ---------
+  eq('The area is x^2 plus y^2.', 'The area is x squared plus why squared.', 'caret-squared');
+  eq('Volume scales with r^3.', 'Volume scales with r cubed.', 'caret-cubed');
+  eq('Solve for x^n in general.', 'Solve for x to the n in general.', 'caret-to-the-n');
+  // Bare (non-braced, non-$-delimited) "+"/"-" inside parens is left as
+  // literal text — operator wordification only applies to content we've
+  // already confirmed is isolated math (a \frac/\sqrt/^{...}/_{...} brace
+  // or a $-gated span); the prompt's own "speak math in words" rule is
+  // what keeps ungated prose like this out of the brain's raw output.
+  eq('Expand (x+1)^2 fully.', 'Expand (x+1) squared fully.', 'bare-exponent-after-parens');
+
+  // --- Fractions: \frac -> "over" --------------------------------------
+  eq('The formula uses \\frac{a}{b}.', 'The formula uses a over bee.', 'frac-over');
+  eq('We need \\frac{x+1}{2} here.', 'We need x plus 1 over 2 here.', 'frac-with-plus');
+
+  // --- Subscripts: _1 / _{n+1} -> "sub …" -------------------------------
+  eq('The sequence a_1, a_2, a_3 follows.',
+     'The sequence a sub 1, a sub 2, a sub 3 follows.',
+     'bare-subscript-digits');
+  eq('The formula is a_n equals a_1 plus n minus 1 times d.',
+     'The formula is a sub n equals a sub 1 plus n minus 1 times d.',
+     'bare-subscript-letter');
+
+  // --- Common LaTeX commands: \sqrt, \times, \cdot, \div, \pm --------
+  eq('Compute \\sqrt{9} and \\sqrt[3]{27}.',
+     'Compute the square root of 9 and the cube root of 27.',
+     'sqrt-square-and-cube-root');
+  eq('Now try \\sqrt[4]{16}.', 'Now try the 4th root of 16.', 'sqrt-nth-root');
+  eq('2 \\times 3 \\cdot 4 \\div 5 \\pm 1',
+     '2 times 3 times 4 divided by 5 plus or minus 1',
+     'math-operator-commands');
+
+  // --- pi -> "pie" (math-context; whole-token; caps-acronym guarded) ---
+  eq('pi is irrational.', 'pie is irrational.', 'pi-lowercase');
+  eq('Pi is irrational.', 'Pie is irrational.', 'pi-titlecase');
+  eq('\\theta plus \\pi over 2', 'theta plus pie over 2', 'pi-latex-command');
+  eq('The spinning wheel landed in the pit.',
+     'The spinning wheel landed in the pit.',
+     'pi-not-inside-other-words');
+  eq('apple pie is great.', 'apple pie is great.', 'pie-word-untouched');
+  // ALL-CAPS "PI" is a likely acronym collision (principal investigator /
+  // personal information) — deliberately excluded, same style as the
+  // existing CAPS_EMPHASIS_WORDS known-collision list.
+  eq('PI stands for personal information.',
+     'PI stands for personal information.',
+     'pi-allcaps-acronym-untouched');
+
+  // --- Prosody: trailing filler-word comma smoothing --------------------
+  eq("let's turn it up, then.", "let's turn it up then.", 'trailing-comma-then');
+  eq('Ready to keep going, then?', 'Ready to keep going then?', 'trailing-comma-then-question');
+  eq("that's the idea, right?", "that's the idea right?", 'trailing-comma-right');
+  eq('Nice work, okay!', 'Nice work okay!', 'trailing-comma-okay');
+  eq('We should stop, alright.', 'We should stop alright.', 'trailing-comma-alright');
+  // Mid-sentence uses of the same words must stay untouched — the rule
+  // only fires directly before a sentence terminator.
+  eq('Then we simplify the right side.',
+     'Then we simplify the right side.',
+     'filler-word-mid-sentence-untouched');
+  eq('First, we simplify.', 'First, we simplify.', 'ordinary-comma-still-untouched');
+
+  console.log('OK — Task X1 (math verbalization, pi, prosody smoothing)');
+}
