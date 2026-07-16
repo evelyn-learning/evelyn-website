@@ -39,6 +39,7 @@ import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
+import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -50,17 +51,6 @@ const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
 // Q pin (2026-07-14): gist of the tutor's current question pinned over the
 // board while the student thinks/answers. Kill switch, same pattern as above.
 const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
-
-/** The turn's LAST question sentence, COMPLETE (round-4 feedback: a mid-cut
- *  ellipsis gist is useless). Used as the fallback when the LLM gist call
- *  fails, and as the probe source for spoken-reveal timing. Returns null when
- *  there's no question or it's too long to pin whole. */
-function lastQuestionSentence(text: string): string | null {
-  const questions = text.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1').match(/[^.!?\n]{4,}\?/g);
-  const last = questions?.[questions.length - 1]?.trim();
-  if (!last || last.length > 220) return null;
-  return last;
-}
 
 /** Loose normalization for matching the caption-sync reveal against the
  *  question sentence (display text and spoken text differ in punctuation
@@ -562,7 +552,11 @@ export default function TutorSession(props: TutorSessionProps) {
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`gist ${r.status}`))))
       .then((d) => {
-        const gist = typeof d?.gist === 'string' ? d.gist.trim() : '';
+        // Strip markdown emphasis the Haiku producer sometimes emits
+        // (Task X8: "*in order to*" showed as literal asterisks — the pin
+        // renders through InlineMathText, which only special-cases $...$
+        // math, not *emphasis*).
+        const gist = typeof d?.gist === 'string' ? stripMarkdownEmphasis(d.gist.trim()) : '';
         // gist === '' means the model judged the turn's "?" conversational
         // plumbing (a repeat-request / mishear) — deliberately NO pin then.
         if (gist) setQuestionPin({ turnId: entry.id, gist });

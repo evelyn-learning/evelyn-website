@@ -47,6 +47,7 @@
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
     "test:ink-placement": "npx tsx scripts/test-ink-placement.ts",
     "test:inline-math": "npx tsx scripts/test-inline-math.ts",
+    "test:question-gist-text": "npx tsx scripts/test-question-gist-text.ts",
     "test:show-passage": "npx tsx scripts/test-show-passage.ts",
     "test:process-tool-call": "npx tsx scripts/test-process-tool-call.ts",
     "test:timeline": "npx tsx scripts/test-timeline-spacing.ts",

@@ -360,3 +360,80 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Task X1 (math verbalization, pi, prosody smoothing)');
 }
+
+// Task X8: roman numerals in document citations ("Article I" → "Article
+// one"), legal case-name "v." ("McCulloch v. Maryland" → "... versus ..."),
+// and (separately, tested in scripts/test-question-gist-text.ts) the Q-pin
+// markdown-emphasis leak.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  // --- Roman numerals: keyword-gated conversion ------------------------
+  eq('Article I establishes the legislative branch.',
+     'Article one establishes the legislative branch.',
+     'article-1');
+  eq('Article II covers the executive branch.',
+     'Article two covers the executive branch.',
+     'article-2');
+  eq('Article III sets up the judiciary.',
+     'Article three sets up the judiciary.',
+     'article-3');
+  eq('Title IX bans sex discrimination in education.',
+     'Title nine bans sex discrimination in education.',
+     'title-9');
+  eq('Section IV outlines succession.',
+     'Section four outlines succession.',
+     'section-4');
+  eq('Amendment XIV guarantees equal protection.',
+     'Amendment fourteen guarantees equal protection.',
+     'amendment-14');
+  eq('Amendment XIX gave women the vote.',
+     'Amendment nineteen gave women the vote.',
+     'amendment-19');
+  eq('Amendment XX changed the inauguration date.',
+     'Amendment twenty changed the inauguration date.',
+     'amendment-20');
+  eq('Chapter VII deals with collective security.',
+     'Chapter seven deals with collective security.',
+     'chapter-7');
+  eq('Act III begins the climax.',
+     'Act three begins the climax.',
+     'act-3');
+  eq('Part VI of the reading is due Friday.',
+     'Part six of the reading is due Friday.',
+     'part-6');
+  // Bare pronoun "I" — NEVER touched (no citation keyword precedes it).
+  eq('I think the answer is 4.', 'I think the answer is 4.', 'bare-pronoun-i-untouched');
+  eq('Do you know what I mean?', 'Do you know what I mean?', 'bare-pronoun-i-mid-sentence');
+  // Documented edge case: once the keyword gates it, ANY following word
+  // still reads as the document sense — "Article I said" is grammatically
+  // implausible as "Article, I said", so this is intentionally converted.
+  eq('Article I says Congress holds legislative power.',
+     'Article one says Congress holds legislative power.',
+     'article-followed-by-verb-still-document-sense');
+
+  // --- Legal "v." case names --------------------------------------------
+  eq('McCulloch v. Maryland established implied powers.',
+     'McCulloch versus Maryland established implied powers.',
+     'mcculloch-v-maryland');
+  eq('Marbury v. Madison created judicial review.',
+     'Marbury versus Madison created judicial review.',
+     'marbury-v-madison');
+  eq('Brown v. Board of Education ended segregation.',
+     'Brown versus Board of Education ended segregation.',
+     'brown-v-board');
+  eq('The United States v. Nixon case limited executive privilege.',
+     'The United States versus Nixon case limited executive privilege.',
+     'united-states-v-nixon-multiword-left-side');
+  // Not gated: lowercase left side ("v." as some other abbreviation) is
+  // left untouched — the shape requires a capitalized word on both sides.
+  eq('see page 5 v. page 6 for the comparison.',
+     'see page 5 v. page 6 for the comparison.',
+     'lowercase-v-untouched');
+
+  console.log('OK — Task X8 (roman numeral citations, legal "v.")');
+}

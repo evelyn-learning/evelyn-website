@@ -412,6 +412,59 @@ function rewriteDerivatives(t: string): string {
 }
 
 /**
+ * Roman numerals in document-citation contexts ("Article I", "Amendment
+ * XIV", "Title IX") — live-heard as "Article aye" rather than "Article
+ * one" (Task X8, AP Gov/US History sessions). Gate on a preceding citation
+ * keyword so the pronoun "I" is NEVER touched standalone — "I said", "I
+ * think" never match because no keyword immediately precedes them.
+ *
+ * Deliberately simple once gated: ANY keyword + roman-numeral token is
+ * read as the document sense, even in a sentence like "Article I says
+ * this clause..." where "I" is followed by a verb that would otherwise
+ * look pronoun-like ("I says" is ungrammatical anyway) — there's no
+ * legitimate reading of "Article I" as "Article, I ..." (a citation
+ * keyword is never itself a complete clause), so no further gating on
+ * what follows is needed. This is the one documented edge case the task
+ * called out: we accept it because the false-positive surface is empty in
+ * practice (no one writes "Article I <verb>" meaning "Article, I <verb>").
+ *
+ * Covers I through XX (Article/Amendment/Section numbers rarely exceed
+ * this in AP Gov/US History content; extend the map if a higher one shows
+ * up live, e.g. Amendment XXVII).
+ */
+const ROMAN_NUMERAL_WORDS: Record<string, string> = {
+  I: 'one', II: 'two', III: 'three', IV: 'four', V: 'five',
+  VI: 'six', VII: 'seven', VIII: 'eight', IX: 'nine', X: 'ten',
+  XI: 'eleven', XII: 'twelve', XIII: 'thirteen', XIV: 'fourteen', XV: 'fifteen',
+  XVI: 'sixteen', XVII: 'seventeen', XVIII: 'eighteen', XIX: 'nineteen', XX: 'twenty',
+};
+const ROMAN_NUMERAL_KEYWORDS = 'Article|Title|Section|Amendment|Chapter|Act|Part';
+const ROMAN_NUMERAL_RE = new RegExp(
+  `\\b(${ROMAN_NUMERAL_KEYWORDS})\\s+(${Object.keys(ROMAN_NUMERAL_WORDS).join('|')})\\b`,
+  'gi',
+);
+function rewriteRomanNumerals(t: string): string {
+  return t.replace(ROMAN_NUMERAL_RE, (_m, keyword: string, numeral: string) =>
+    `${keyword} ${ROMAN_NUMERAL_WORDS[numeral.toUpperCase()]}`);
+}
+
+/**
+ * Legal case-name "v." (live-heard: "McCulloch vee Maryland" instead of
+ * "McCulloch versus Maryland"). Gated on the " v. " token sitting directly
+ * between two capitalized words — the shape of a case citation — so other
+ * uses of "v." (rare in tutor speech; e.g. an abbreviation elsewhere) are
+ * left alone. Only the word immediately before "v." needs to be
+ * capitalized (multi-word names like "United States v. Nixon" still work
+ * correctly: the untouched "United " prefix passes through unchanged, and
+ * only "States v. " is rewritten to "States versus ", giving "United
+ * States versus Nixon").
+ */
+const LEGAL_V_RE = /\b([A-Z][\w.]*)\s+v\.\s+(?=[A-Z])/g;
+function rewriteLegalV(t: string): string {
+  return t.replace(LEGAL_V_RE, '$1 versus ');
+}
+
+/**
  * Domain acronyms the Cartesia text normalizer expands into US state names.
  * Confirmed live 2026-07-13: "SD" (standard deviation) voiced as "South
  * Dakota" in a stats session. The fix expands the acronym to its spoken
@@ -464,6 +517,13 @@ export function rewriteForTTS(raw: string): string {
   // Runs before comma/number normalization so its state-code guard can still
   // see "1890 SD" / ", SD".
   t = rewriteDomainAcronyms(t);
+  // Document-citation roman numerals ("Article I" → "Article one") and
+  // legal case-name "v." ("McCulloch v. Maryland" → "... versus ...")
+  // (Task X8). Both are text-shape rewrites unrelated to math notation, so
+  // they run before the math-verbalization pipeline; order between the two
+  // doesn't matter (disjoint token shapes).
+  t = rewriteRomanNumerals(t);
+  t = rewriteLegalV(t);
   // Math verbalization (Task X1): $-delimited card-field math and any
   // bare LaTeX notation both need converting to SPOKEN WORDS before
   // anything downstream (letter respelling, the bare-equals rule below,
