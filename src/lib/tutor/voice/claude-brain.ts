@@ -808,17 +808,20 @@ export function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']):
   // prose that reliably lost to strong segment_truth/lesson_plan mandates
   // stated elsewhere in the turn. Replaced with directive, checkable rules
   // a grader could verify turn-by-turn. -2 strengthens -1 further (two-
-  // sentence cap + mandatory recall-back, not just "pause more"). Kept
-  // self-contained: W5's absorption-pause rule has NOT landed yet as of
-  // this write, so no forward reference to it — when W5 lands, its rule
-  // and this one should be reconciled so they don't duplicate/conflict.
-  // Positive bias gets a symmetric-but-lighter version (less depth should
-  // read as "trim", not "rush past comprehension entirely" at mag 1).
+  // sentence cap + mandatory recall-back, not just "pause more"). Positive
+  // bias gets a symmetric-but-lighter version (less depth should read as
+  // "trim", not "rush past comprehension entirely" at mag 1).
+  // Task W5: the Absorption rule (system-prompt-builder.ts, near Precision)
+  // now owns the concrete dense-board-item pause/memory-worthiness/recall-
+  // back mechanics. Negative bias here cross-references it rather than
+  // re-deriving pause behavior — the two rules previously risked drifting
+  // (this block's "pause and give the student a beat" vs. the Absorption
+  // rule's structured hand-off) since W3 landed before W5 was written.
   let guidance: string;
   if (bias === -1) {
-    guidance = `student wants MORE depth and a slower pace. Cap this turn to ONE new idea — do not bundle a second concept in. After each board item you write, pause and give the student a beat before continuing — don't talk past what you just put up. Ask exactly one short check-in question before introducing anything new.`;
+    guidance = `student wants MORE depth and a slower pace. Cap this turn to ONE new idea — do not bundle a second concept in. Increase absorption pauses per the Absorption rule — treat more board items as worth a full stop-and-hand-off, not just the clearly dense ones. Ask exactly one short check-in question before introducing anything new.`;
   } else if (bias <= -2) {
-    guidance = `student wants MORE depth and a much slower pace (strong). Keep every spoken turn to two sentences or fewer. Before introducing ANY new idea, require the student to recall or restate the prior point in their own words — do not proceed to a second new idea until that recall lands. Comprehension checks are mandatory here, not optional.`;
+    guidance = `student wants MORE depth and a much slower pace (strong). Keep every spoken turn to two sentences or fewer. Increase absorption pauses per the Absorption rule — raise the recall-back rate above the default one-in-three toward closer to every dense, memorize-worthy item. Before introducing ANY new idea, require the student to recall or restate the prior point in their own words — do not proceed to a second new idea until that recall lands. Comprehension checks are mandatory here, not optional.`;
   } else if (bias === 1) {
     guidance = `student wants LESS depth and a faster pace. Trim explanations to the essential line — skip restating facts already established this session. Move to the next step unless the student flags confusion; don't insert a comprehension check just to be safe.`;
   } else {
