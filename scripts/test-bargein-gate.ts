@@ -6,7 +6,7 @@
  *   - 150ms echo blip DURING 'speaking' → NO kill (self-echo defended)
  *   - 450ms sustained speech during 'speaking' → kill (real barge-in works)
  *   - onset while NOT 'speaking' → instant path (gate bypassed, no frames needed)
- *   - boundary at exactly 400ms → kill; just under → no kill
+ *   - boundary at exactly BARGEIN_SUSTAIN_MS → kill; just under → no kill
  * Plus: added barge-in latency ≤ the sustain constant (the boundary proves it).
  *
  * Run: npm run test:bargein-gate
@@ -15,6 +15,7 @@
 
 import { strict as assert } from 'node:assert';
 import { shouldFireBargeInKill, type BargeInFrame } from '../src/lib/tutor/voice/bargein-gate';
+import { BARGEIN_SUSTAIN_MS } from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
 let failed = 0;
@@ -24,7 +25,7 @@ function test(name: string, fn: () => void) {
 }
 
 const THRESHOLD = 0.15;   // "voice present" on the scaled 0..1 mic level
-const SUSTAIN = 400;      // BARGEIN_SUSTAIN_MS default
+const SUSTAIN = BARGEIN_SUSTAIN_MS; // Read from flags.ts
 const FRAME_MS = 80;      // ~ the perception ScriptProcessor cadence
 
 /** Frames every FRAME_MS from `start`..`end` (inclusive) at `energy`. */
@@ -41,10 +42,10 @@ function main() {
   console.log('Sustained-energy barge-in gate — shouldFireBargeInKill\n');
 
   test('150ms echo blip during speaking → NO kill', () => {
-    // Loud for the first ~150ms, then silence. Evaluated at 400ms.
-    const blip = [...frames(0, 150, LOUD), ...frames(160, 400, QUIET)];
+    // Loud for the first ~150ms, then silence. Evaluated at SUSTAIN ms.
+    const blip = [...frames(0, 150, LOUD), ...frames(160, SUSTAIN, QUIET)];
     const fire = shouldFireBargeInKill({
-      state: 'speaking', speechStartMs: 0, nowMs: 400,
+      state: 'speaking', speechStartMs: 0, nowMs: SUSTAIN,
       frames: blip, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
     });
     assert.equal(fire, false, 'a short self-echo blip must not kill the tutor');
@@ -78,19 +79,20 @@ function main() {
     }
   });
 
-  test('boundary: exactly 400ms of sustained energy → kill', () => {
+  test('boundary: exactly sustainMs of sustained energy → kill', () => {
     const fire = shouldFireBargeInKill({
-      state: 'speaking', speechStartMs: 0, nowMs: 400,
-      frames: frames(0, 400, LOUD), energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+      state: 'speaking', speechStartMs: 0, nowMs: SUSTAIN,
+      frames: frames(0, SUSTAIN, LOUD), energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
     });
     assert.equal(fire, true, 'run of exactly sustainMs fires (>=)');
   });
 
-  test('boundary: just under 400ms → NO kill', () => {
-    // Run continuous but only 360ms long, evaluated at 360ms.
+  test('boundary: just under sustainMs → NO kill', () => {
+    // Run continuous but only (SUSTAIN - 40)ms long, evaluated at that time.
+    const justUnder = SUSTAIN - 40;
     const fire = shouldFireBargeInKill({
-      state: 'speaking', speechStartMs: 0, nowMs: 360,
-      frames: frames(0, 360, LOUD), energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+      state: 'speaking', speechStartMs: 0, nowMs: justUnder,
+      frames: frames(0, justUnder, LOUD), energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
     });
     assert.equal(fire, false, 'under sustainMs must not fire');
   });

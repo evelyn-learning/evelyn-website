@@ -153,7 +153,9 @@ export const TURN_CAP_WORDS = 110;
 // transcript self-voice classification layer on top; this is only the gate.
 //   - SUSTAIN_MS: the added latency a real barge-in pays during TTS. Sized so a
 //     "wait, stop" clears it easily while short echo bursts never do. Kept ≤ the
-//     ~500ms global barge-in budget.
+//     ~500ms global barge-in budget. Worst-case genuine-barge-in latency =
+//     sustain + ~85ms start-frame quantization + ~50ms poll granularity ≈ 485ms,
+//     which holds the ≤500ms budget (at 400 it was ~535ms).
 //   - ENERGY_THRESHOLD: operates on the SCALED 0..1 "being heard" mic level
 //     usePerceptionWS emits (onMicLevel = min(1, rms*6)); normal speech lands
 //     mid-range (~0.5), calm ambient near 0. Set clear of the ambient floor.
@@ -161,7 +163,7 @@ export const TURN_CAP_WORDS = 110;
 //     while a speaking-onset waits out the sustain window.
 //   - GATE_MAX_MS: safety cap so a pending gate never leaks a live interval if
 //     speech_stopped / a state change is somehow missed.
-export const BARGEIN_SUSTAIN_MS = 400;
+export const BARGEIN_SUSTAIN_MS = 350;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;

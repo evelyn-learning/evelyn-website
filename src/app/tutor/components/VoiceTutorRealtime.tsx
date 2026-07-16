@@ -11619,7 +11619,7 @@ export function VoiceTutorRealtime({
         // and no turn ever completes (session-1783615559112).
         if (!cancelStormRef.current.allowCancel(Date.now())) {
           console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
-          onDebugEvent?.('perception_cancel_storm_suppressed', `stage=${cancelStage}`);
+          onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${prodState} stage=${cancelStage}`);
           return;
         }
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
@@ -11628,7 +11628,7 @@ export function VoiceTutorRealtime({
         );
         onDebugEvent?.(
           cancelStage === 'speaking' ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
-          `stage=${cancelStage}`,
+          `prev=${prodState} stage=${cancelStage}`,
         );
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
