@@ -8,6 +8,7 @@
  */
 
 import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
@@ -1707,6 +1708,43 @@ export function WhiteboardCanvas({
 
   // Expanded: resizable floating panel
   if (isExpanded) {
+    // Floating overlay — portaled to document.body (task R2). Rendered
+    // in-place (not portaled) this `fixed inset-0` div would normally cover
+    // the viewport, BUT the CSS Transforms spec says any ancestor with a
+    // `transform` other than `none` becomes the containing block for its
+    // `position: fixed` descendants. The replay modal's whiteboard
+    // scale-to-fit wrapper (ReplayPlayer.tsx) does exactly that — it applies
+    // `transform: scale()` to shrink the WB pane — so without portaling out,
+    // this overlay would render DOUBLE-scaled and mispositioned inside that
+    // wrapper's box instead of covering the real viewport at 1:1. Portaling
+    // to `document.body` escapes any such ancestor, live board or replay
+    // alike, so fullscreen always renders 1:1 regardless of where
+    // WhiteboardCanvas happens to be mounted.
+    const overlay = (
+      <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setIsExpanded(false); }}>
+        <div
+          ref={expandedRef}
+          className="bg-white shadow-2xl rounded-xl flex flex-col relative"
+          style={{
+            width: expandedSize.width || undefined,
+            height: expandedSize.height || undefined,
+            maxWidth: '95vw',
+            maxHeight: '95vh',
+          }}
+        >
+          {headerContent}
+          {bodyContent}
+          {/* Resize handle */}
+          <div
+            onMouseDown={onResizeStart}
+            className="absolute bottom-1 right-1 w-6 h-6 cursor-nwse-resize flex items-center justify-center text-gray-300 hover:text-gray-500 transition"
+            title="Drag to resize"
+          >
+            <GripVertical className="w-3 h-3 rotate-[-45deg]" />
+          </div>
+        </div>
+      </div>
+    );
     return (
       <>
         {/* Inline placeholder */}
@@ -1714,30 +1752,7 @@ export function WhiteboardCanvas({
           {headerContent}
           {bodyContent}
         </div>
-        {/* Floating overlay */}
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) setIsExpanded(false); }}>
-          <div
-            ref={expandedRef}
-            className="bg-white shadow-2xl rounded-xl flex flex-col relative"
-            style={{
-              width: expandedSize.width || undefined,
-              height: expandedSize.height || undefined,
-              maxWidth: '95vw',
-              maxHeight: '95vh',
-            }}
-          >
-            {headerContent}
-            {bodyContent}
-            {/* Resize handle */}
-            <div
-              onMouseDown={onResizeStart}
-              className="absolute bottom-1 right-1 w-6 h-6 cursor-nwse-resize flex items-center justify-center text-gray-300 hover:text-gray-500 transition"
-              title="Drag to resize"
-            >
-              <GripVertical className="w-3 h-3 rotate-[-45deg]" />
-            </div>
-          </div>
-        </div>
+        {typeof document !== 'undefined' ? createPortal(overlay, document.body) : overlay}
       </>
     );
   }

@@ -7,6 +7,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
 import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
 import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '@/lib/tutor/recordings/audio-segments';
+import { computeReplayBoardFit, REPLAY_BOARD_DESIGN_WIDTH_PX } from '@/lib/tutor/recordings/replay-board-fit';
 
 interface TranscriptEntry {
   role: string;
@@ -1043,6 +1044,72 @@ export default function ReplayPlayer({
     };
   }, [isOpen]);
 
+  // Whiteboard scale-to-fit (task R2). WhiteboardCanvas is rendered inside
+  // `wbContentRef` at a FIXED design width (REPLAY_BOARD_DESIGN_WIDTH_PX,
+  // matching the live board's max-w-3xl column) so its cards/diagrams lay
+  // out exactly as they do live, then the whole thing is CSS-scaled down to
+  // fit whatever width the pane (`wbPaneRef`) actually has — measured, not
+  // assumed, so this keeps working unchanged when R3 widens the pane to a
+  // board-dominant layout. See replay-board-fit.ts for why a fixed design
+  // width + uniform scale beats letting the board's own fluid layout shrink
+  // to the pane width (it would silently mismatch proportions rather than
+  // fail loudly).
+  const wbPaneRef = useRef<HTMLDivElement>(null);
+  const wbContentRef = useRef<HTMLDivElement>(null);
+  const [wbContainerWidth, setWbContainerWidth] = useState(0);
+  const [wbContentSize, setWbContentSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    // Depends on `isOpen`: the pane this ref points to only exists in the
+    // DOM once the modal is open (the `!isOpen` early-return below renders a
+    // plain button instead). An empty dep array would run this effect
+    // exactly once, at the component's very first mount — while `isOpen` is
+    // still its initial `false` and `wbPaneRef.current` is still null — and
+    // never again, permanently skipping the observer once the modal
+    // actually mounts. Re-running on `isOpen` toggles re-attaches it every
+    // time the pane comes into existence.
+    if (!isOpen) return;
+    const pane = wbPaneRef.current;
+    if (!pane || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width;
+      if (w != null) setWbContainerWidth(w);
+    });
+    ro.observe(pane);
+    return () => ro.disconnect();
+  }, [isOpen]);
+
+  useEffect(() => {
+    // Also gated on `isOpen` (see the container-width effect above for why):
+    // if the modal is closed and reopened without a full page remount,
+    // `visibleWbCount` alone might not change between the close and the
+    // reopen, which would leave this effect pointed at a stale/torn-down
+    // DOM node instead of re-attaching to the freshly mounted one.
+    if (!isOpen) return;
+    const content = wbContentRef.current;
+    if (!content || typeof ResizeObserver === 'undefined') return;
+    // Observes the UNSCALED content wrapper — ResizeObserver reports layout
+    // size (unaffected by the `transform: scale()` we apply to this same
+    // element for painting), so this stays the honest natural size even
+    // while scaled. scrollWidth/scrollHeight (not the observed contentRect)
+    // are used so any element that overflows past the design width is
+    // captured too, not just the CSS-set width.
+    const measure = () => setWbContentSize({ width: content.scrollWidth, height: content.scrollHeight });
+    const ro = new ResizeObserver(measure);
+    ro.observe(content);
+    measure();
+    return () => ro.disconnect();
+  }, [isOpen, visibleWbCount]);
+
+  const { ratio: wbRatio, scaledHeight: wbScaledHeight } = useMemo(
+    () => computeReplayBoardFit({
+      containerWidth: wbContainerWidth,
+      contentWidth: wbContentSize.width,
+      contentHeight: wbContentSize.height,
+    }),
+    [wbContainerWidth, wbContentSize],
+  );
+
   // Visible slices
   const visibleMessages = sortedTranscript.slice(0, visibleTranscriptCount);
   const visibleCommands = sortedWb.slice(0, visibleWbCount);
@@ -1105,13 +1172,31 @@ export default function ReplayPlayer({
                 <span className="ml-2 text-xs text-gray-400">{visibleWbCount} / {sortedWb.length} items</span>
               </h3>
             </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain">
+            <div ref={wbPaneRef} className="flex-1 overflow-y-auto overscroll-contain">
               {visibleCommands.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-400 text-sm">
                   No whiteboard content yet...
                 </div>
               ) : (
-                <WhiteboardCanvas commands={visibleCommands} chrome="replay" />
+                // Scale-to-fit wrapper (task R2): the outer div reports the
+                // SCALED height to the scrollable pane above (so scrolling
+                // matches the shrunk visual size); the inner div is fixed at
+                // the live board's design width and CSS-scaled down/up to
+                // fit. `overflow: hidden` is a safety net for any rounding —
+                // the transform itself already paints entirely within the
+                // scaled box, nothing is expected to actually clip.
+                <div style={{ height: wbScaledHeight || undefined, overflow: 'hidden' }}>
+                  <div
+                    ref={wbContentRef}
+                    style={{
+                      width: REPLAY_BOARD_DESIGN_WIDTH_PX,
+                      transform: `scale(${wbRatio})`,
+                      transformOrigin: 'top left',
+                    }}
+                  >
+                    <WhiteboardCanvas commands={visibleCommands} chrome="replay" />
+                  </div>
+                </div>
               )}
             </div>
           </div>
