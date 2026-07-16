@@ -706,6 +706,20 @@ export default function ReplayPlayer({
         if (studentTrackRef.current) studentTrackRef.current.done = true;
         if (tutorTrackRef.current) tutorTrackRef.current.done = true;
         if (audioStateRef.current === 'buffering') setAudioStateBoth('ready');
+        // Deadlock fix (review finding #1): both tracks are now marked done,
+        // so if the error landed WHILE the playhead was frozen in a
+        // buffering hold, no future segment will ever land to un-freeze it —
+        // tick's top-of-function guard would hold the playhead forever.
+        // Clear the hold and re-anchor exactly like stopAudioPlayback's
+        // "no live audio" fallback (clockAnchorCtxRef = null ⇒ tick's
+        // frame-delta path takes over from here), so the visual clock
+        // resumes and can run to the end. Mirrors onSegmentLanded's
+        // buffering-resume re-anchor.
+        if (bufferingRef.current) {
+          bufferingRef.current = false;
+          lastFrameRef.current = performance.now();
+          clockAnchorCtxRef.current = null;
+        }
       } else {
         setAudioStateBoth('error');
       }
@@ -817,6 +831,12 @@ export default function ReplayPlayer({
     const ctx = audioCtxRef.current;
     if (!ctx) return;
     if (bufferingRef.current) {
+      // Finding #2: a segment can land inside the 150ms scrub debounce
+      // window (seek() already stopped audio and set seekPendingRef before
+      // its trailing edge fires). Don't restart playback from the stale
+      // bufferingHeldMsRef position here — the trailing-edge seek commit
+      // (which re-evaluates buffering itself) owns positioning once it fires.
+      if (seekPendingRef.current) return;
       const maxFrontierSec = Math.max(studentTrackRef.current?.frontierSec ?? 0, tutorTrackRef.current?.frontierSec ?? 0);
       const heldBufSec = compressedTimeline.toAudio(bufferingHeldMsRef.current) / 1000;
       if (maxFrontierSec > heldBufSec) {
