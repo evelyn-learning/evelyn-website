@@ -56,11 +56,19 @@ export type ProductionStateForClassifier =
   | 'error';
 
 export interface RecentTtsScript {
+  /** Stable per-dispatch id (V2, 2026-07-15). Correlates the audio queue's
+   *  real playback-start/-end callbacks back to THIS buffer entry so the
+   *  timing window reflects when the sentence actually played, not when it
+   *  was dispatched. Optional so pre-V2 call sites / fixtures still typecheck. */
+  id?: number;
   /** Text the tutor spoke. Ideally the post-TTS-pronunciation form so
    *  fuzzy matching aligns with what the speaker actually emitted, but
    *  the pre-TTS text is a very close approximation. */
   text: string;
-  /** ms timestamp (Date.now()) when this script started playback. */
+  /** ms timestamp (Date.now()) when this script started playback.
+   *  V2: stamped at REAL audio-playback start; 0 for an entry that was
+   *  skipped (TTS fetch failure) or drained before it ever played — a
+   *  zeroed window can't physically echo, so it never matches. */
   spokenStartedAt: number;
   /** ms timestamp when playback ended. May be unknown for the currently
    *  playing script — leave as null and the classifier treats the script
@@ -177,8 +185,12 @@ function ngrams(tokens: string[], n: number): string[] {
  * the student utterance start time are considered. Lines outside the
  * window can't echo physically — they've already faded.
  */
-const TTS_PADDING_LEAD_MS = 200;
-const TTS_PADDING_TRAIL_MS = 1500;
+export const TTS_PADDING_LEAD_MS = 200;
+// V2 (2026-07-15): widened from 800ms → 1500ms. With spokenEndedAt now
+// stamped at REAL playback-end, a verbatim echo ("Good question.") whose
+// perception transcript lands up to ~1.5s after the audio faded still
+// falls inside the window and gets dropped by the matcher.
+export const TTS_PADDING_TRAIL_MS = 1500;
 
 export function scoreSelfVoice(
   transcript: string,

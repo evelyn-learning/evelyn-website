@@ -176,6 +176,24 @@ export interface RealtimeConfig {
    */
   onTtsIssue?: (kind: 'retrying' | 'skipped') => void;
   /**
+   * Self-voice echo defence, layer 2 (V2, 2026-07-15). Fires as each TTS
+   * sentence crosses a playback lifecycle boundary so the caller can stamp its
+   * perception self-voice buffer at REAL playback time instead of dispatch
+   * time. `scriptId` is the id the caller passed to `speakText(text, scriptId)`.
+   *   - 'start': the sentence's audio actually began playing (real
+   *     spokenStartedAt; end is left live until 'end').
+   *   - 'end':   the sentence's audio finished — naturally or cut by barge-in.
+   *   - 'skip':  the sentence never played (TTS fetch failed terminally, or a
+   *     barge-in drained it while still queued) → the caller zeroes its window
+   *     so a never-heard line can't match real student speech.
+   * Additive + inert unless consumed. See src/lib/tutor/voice/tts-script-buffer.ts.
+   */
+  onTtsSentencePlayback?: (ev: {
+    scriptId: number;
+    phase: 'start' | 'end' | 'skip';
+    atMs: number;
+  }) => void;
+  /**
    * Relay mode — when set, Realtime is used purely as STT + TTS. The hook
    * suppresses Realtime's own response generation (no auto-`response.create`
    * on student transcript completion) and hands the transcript to the caller
@@ -279,7 +297,7 @@ export interface RealtimeResult {
    * Realtime just speaks it. Sends a `response.create` with explicit
    * instructions to read the text verbatim. No-op when not connected.
    */
-  speakText: (text: string) => void;
+  speakText: (text: string, scriptId?: number) => void;
   /**
    * Cancel the in-flight speakText response (if any) and drop everything
    * waiting in the speakText queue. Used on validator-feedback retry so
@@ -582,7 +600,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     useRealtimeV2 = false,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, relayMode,
+    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
   // so the Realtime model behaves as a transport layer, not a tutor.
@@ -760,8 +778,30 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   onTtsPlaybackProgressRef.current = onTtsPlaybackProgress;
   const onTtsIssueRef = useRef(onTtsIssue);
   onTtsIssueRef.current = onTtsIssue;
+  const onTtsSentencePlaybackRef = useRef(onTtsSentencePlayback);
+  onTtsSentencePlaybackRef.current = onTtsSentencePlayback;
   const pendingDispatchSentenceRef = useRef<string | null>(null);
   const responseIdToSentenceRef = useRef<Map<string, string>>(new Map());
+  // V2 (2026-07-15) self-voice playback-time stamping. These id refs run
+  // PARALLEL to the sentence-text refs above (never replacing them, so
+  // peekSpeechQueue / resume-from-cut / caption-sync stay byte-identical) and
+  // carry each sentence's perception-buffer scriptId through the same
+  // dispatch → queue → playback path. undefined = a speakText call with no
+  // scriptId (kill-bridge / greeting / error-fallback) — those aren't in the
+  // perception buffer, so they simply fire no stamp.
+  const speakTextScriptIdQueueRef = useRef<(number | undefined)[]>([]); // ∥ speakTextQueueRef
+  const audioQueueScriptIdRef = useRef<(number | undefined)[]>([]);     // ∥ audioQueueSentenceRef
+  const currentScriptIdRef = useRef<number | undefined>(undefined);     // ∥ currentSpeakTextRef
+  const pendingDispatchScriptIdRef = useRef<number | undefined>(undefined); // ∥ pendingDispatchSentenceRef
+  const responseIdToScriptIdRef = useRef<Map<string, number>>(new Map()); // ∥ responseIdToSentenceRef
+  // Fire a playback stamp iff the sentence carried a scriptId.
+  const emitPlaybackStamp = useCallback(
+    (scriptId: number | undefined, phase: 'start' | 'end' | 'skip') => {
+      if (scriptId == null) return;
+      onTtsSentencePlaybackRef.current?.({ scriptId, phase, atMs: Date.now() });
+    },
+    [],
+  );
   // Monotonic counter bumped inside clearSpeechQueue. Each TTS dispatch
   // captures the epoch at start and re-checks before pushing decoded
   // PCM into audioQueueRef. If the epoch changed during the in-flight
@@ -872,6 +912,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      // V2 self-voice: the sentence whose audio just finished ends NOW. This
+      // covers both the openai-mini inter-sentence gap (each sentence hits
+      // this branch as it finishes) and the turn-final drain below.
+      emitPlaybackStamp(currentScriptIdRef.current, 'end');
+      currentScriptIdRef.current = undefined;
       // Stage 3.1 v2: nothing left in the audio pipeline. Null the
       // in-flight sentence so a subsequent cancel doesn't try to
       // resume audio that already played out.
@@ -893,8 +938,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // sentence and keep going WITHOUT firing 'drain', so render↔speech
         // sync doesn't mistake the gap for the turn's last sentence.
         const next = speakTextQueueRef.current.shift()!;
+        const nextId = speakTextScriptIdQueueRef.current.shift();
+        pendingDispatchScriptIdRef.current = nextId;
         speakTextInFlightRef.current = false;
-        sendOneSpeakTextViaOpenAITTSRef.current?.(next);
+        sendOneSpeakTextViaOpenAITTSRef.current?.(next, nextId);
         return;
       }
       if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
@@ -936,6 +983,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // sentence context (e.g., a rare pre-mapping race), leave the
     // ref alone — better stale than wrong.
     const sentText = audioQueueSentenceRef.current.shift();
+    const sentScriptId = audioQueueScriptIdRef.current.shift();
     // Resume-from-cut (P5): accumulate audio-seconds played of the CURRENT
     // sentence (chunk samples / 24000). Reset on a sentence transition. At a
     // noise cut this + the queued-but-unplayed chunks of the same sentence give
@@ -947,6 +995,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // orchestrator can release renders anchored to the prior sentence.
       // Guard on a real transition so multi-chunk sentences fire once.
       if (sentText !== currentSpeakTextRef.current) {
+        // V2 self-voice: a new sentence's audio begins now. The PREVIOUS
+        // sentence (if one is still tracked — realtime path keeps multiple
+        // sentences queued; the openai-mini path already ended it at the
+        // empty-queue branch and cleared currentScriptIdRef) ends here.
+        emitPlaybackStamp(currentScriptIdRef.current, 'end');
+        emitPlaybackStamp(sentScriptId, 'start');
+        currentScriptIdRef.current = sentScriptId;
         onTtsPlaybackProgressRef.current?.('sentence-start');
         currentSentencePlayedSecRef.current = chunkSec;
         playedBeforeChunkSecRef.current = 0;                                  // caption clock: new sentence
@@ -972,7 +1027,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     };
     playbackSourceRef.current = source;
     source.start();
-  }, [updateState, isHttpTtsProvider]);
+  }, [updateState, isHttpTtsProvider, emitPlaybackStamp]);
 
   // Queue audio for playback
   const queueAudio = useCallback((base64Audio: string) => {
@@ -1206,8 +1261,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             // pipeline. queueAudio pushes the chunk; the sentence push
             // happens in parallel.
             const sentText = respId ? (responseIdToSentenceRef.current.get(respId) ?? '') : '';
+            const sentScriptId = respId ? responseIdToScriptIdRef.current.get(respId) : undefined;
             queueAudio(data.delta);
             audioQueueSentenceRef.current.push(sentText);
+            audioQueueScriptIdRef.current.push(sentScriptId); // V2: ∥ scriptId
           }
           break;
 
@@ -1251,6 +1308,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           if (typeof createdRespId === 'string' && pendingDispatchSentenceRef.current) {
             responseIdToSentenceRef.current.set(createdRespId, pendingDispatchSentenceRef.current);
             pendingDispatchSentenceRef.current = null;
+            // V2: bind the same response to its perception scriptId so the
+            // audio-chunk push can carry it (∥ responseIdToSentenceRef).
+            if (pendingDispatchScriptIdRef.current != null) {
+              responseIdToScriptIdRef.current.set(createdRespId, pendingDispatchScriptIdRef.current);
+            }
+            pendingDispatchScriptIdRef.current = undefined;
           }
           if (typeof createdRespId === 'string') {
             currentResponseIdRef.current = createdRespId;
@@ -2544,7 +2607,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Alternative TTS path for relay mode: gpt-4o-mini-tts via HTTP. Returns
   // Float32 PCM at 24kHz, dropped directly into the audio playback queue.
   // Cheaper than Realtime audio output; chosen via relayMode.ttsProvider.
-  const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string) => {
+  const sendOneSpeakTextViaOpenAITTS = useCallback(async (trimmed: string, scriptId?: number) => {
     speakTextInFlightRef.current = true;
     updateState('processing');
     // Capture the speak epoch at dispatch time. If clearSpeechQueue runs
@@ -2575,6 +2638,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         // return to listening when nothing is left.
         console.warn(`[Realtime] TTS terminally failed — skipping sentence: "${trimmed.slice(0, 60)}"`);
         onTtsIssueRef.current?.('skipped');
+        // V2 self-voice: this sentence never reaches the speaker → zero its
+        // perception window so the never-heard line can't match real speech.
+        emitPlaybackStamp(scriptId, 'skip');
         if (!isPlayingRef.current) playNextAudio();
         return;
       }
@@ -2585,6 +2651,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // mapping is trivial (no response_id needed — the sentence text
       // is right here).
       audioQueueSentenceRef.current.push(trimmed);
+      audioQueueScriptIdRef.current.push(scriptId); // V2: ∥ scriptId
       if (!isPlayingRef.current) playNextAudio();
       // Pre-fetch the NEXT queued sentence's audio in parallel so its
       // bytes are ready when this one ends. Idempotent — repeat calls
@@ -2597,19 +2664,21 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } finally {
       ttsAbortRef.current = null;
     }
-  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise]);
+  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise, emitPlaybackStamp]);
   const sendOneSpeakTextViaOpenAITTSRef = useRef(sendOneSpeakTextViaOpenAITTS);
   sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
 
-  const dispatchSpeakText = useCallback((trimmed: string) => {
+  const dispatchSpeakText = useCallback((trimmed: string, scriptId?: number) => {
     if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
-      sendOneSpeakTextViaOpenAITTS(trimmed);
+      sendOneSpeakTextViaOpenAITTS(trimmed, scriptId);
     } else {
+      // Realtime path carries scriptId via pendingDispatchScriptIdRef →
+      // responseIdToScriptIdRef (set by the caller before dispatch).
       sendOneSpeakText(trimmed);
     }
   }, [sendOneSpeakText, sendOneSpeakTextViaOpenAITTS, isHttpTtsProvider]);
 
-  const speakText = useCallback((text: string) => {
+  const speakText = useCallback((text: string, scriptId?: number) => {
     const usingOpenAITTS = isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current);
     if (!usingOpenAITTS && (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)) {
       // Skip + warn (NOT error) when the WS isn't open. Stay fully quiet when
@@ -2630,6 +2699,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     const trimmed = text.trim();
     if (speakTextInFlightRef.current) {
       speakTextQueueRef.current.push(trimmed);
+      speakTextScriptIdQueueRef.current.push(scriptId); // V2: ∥ scriptId
       return;
     }
     // Stage 3.1 v2: stash text in pendingDispatchSentenceRef so the
@@ -2638,7 +2708,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // audioQueueSentenceRef. currentSpeakTextRef is NOT set here —
     // it gets set when a chunk dequeues for playback.
     pendingDispatchSentenceRef.current = trimmed;
-    dispatchSpeakText(trimmed);
+    pendingDispatchScriptIdRef.current = scriptId; // V2: ∥ scriptId
+    dispatchSpeakText(trimmed, scriptId);
   }, [dispatchSpeakText, isHttpTtsProvider]);
 
   // Stable ref so the response.done handler (long-lived closure) can
@@ -2648,12 +2719,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     speakTextInFlightRef.current = false;
     const next = speakTextQueueRef.current.shift();
     if (!next) return;
+    const nextId = speakTextScriptIdQueueRef.current.shift(); // V2: ∥ scriptId
     // Stage 3.1 v2: stash next sentence for the response.created
     // mapping. Don't touch currentSpeakTextRef — that's driven by
     // chunk dequeue in playNextAudio.
     pendingDispatchSentenceRef.current = next;
+    pendingDispatchScriptIdRef.current = nextId;
     if (isRelayRef.current && isHttpTtsProvider(ttsProviderRef.current)) {
-      sendOneSpeakTextViaOpenAITTSRef.current(next);
+      sendOneSpeakTextViaOpenAITTSRef.current(next, nextId);
     } else {
       sendOneSpeakText(next);
     }
@@ -2690,6 +2763,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     responseCancelWindowUntilRef.current = Date.now() + RESPONSE_CANCEL_WINDOW_MS;
     const droppedCount = speakTextQueueRef.current.length;
     speakTextQueueRef.current = [];
+    // V2 self-voice: reconcile the perception buffer for a barge-in drain.
+    // The sentence that was PLAYING (currentScriptIdRef) really was audible
+    // up to now → 'end' at cut time (keeps its real start). Everything that
+    // was queued/fetching but NEVER started — future realtime chunks
+    // (audioQueueScriptIdRef), the in-flight fetch (pendingDispatchScriptIdRef),
+    // and undispatched pending sentences (speakTextScriptIdQueueRef) — is
+    // 'skip'ped so those never-heard lines can't match real student speech.
+    emitPlaybackStamp(currentScriptIdRef.current, 'end');
+    const skipped = new Set<number>();
+    const collectSkip = (id: number | undefined) => {
+      if (id != null && id !== currentScriptIdRef.current) skipped.add(id);
+    };
+    for (const id of audioQueueScriptIdRef.current) collectSkip(id);
+    for (const id of speakTextScriptIdQueueRef.current) collectSkip(id);
+    collectSkip(pendingDispatchScriptIdRef.current);
+    for (const id of skipped) emitPlaybackStamp(id, 'skip');
     // Stage 3.1 v2: clear the sentence tracking. peekSpeechQueue was
     // called BEFORE this so the snapshot is already captured. Leaving
     // these populated past this point would wrongly include them in
@@ -2697,6 +2786,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     currentSpeakTextRef.current = null;
     audioQueueSentenceRef.current = [];
     pendingDispatchSentenceRef.current = null;
+    // V2: clear the parallel id tracking in lockstep.
+    currentScriptIdRef.current = undefined;
+    audioQueueScriptIdRef.current = [];
+    speakTextScriptIdQueueRef.current = [];
+    pendingDispatchScriptIdRef.current = undefined;
     // Drop any pre-fetched TTS bytes — they're for sentences we're
     // about to skip via clearSpeechQueue (validator-feedback retry).
     ttsPrefetchCacheRef.current.clear();
@@ -2790,7 +2884,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       setTimeout(done, 60);
     });
-  }, [isHttpTtsProvider]);
+  }, [isHttpTtsProvider, emitPlaybackStamp]);
 
   // Voice Perception Stage 3.1 v2 (2026-06-16): snapshot of TTS content
   // the student would have heard if not cut. Now tracked at audio-

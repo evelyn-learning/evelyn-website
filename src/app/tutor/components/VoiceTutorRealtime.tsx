@@ -19,6 +19,7 @@ import {
   type ProductionStateForClassifier,
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
+import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
@@ -612,23 +613,25 @@ export function VoiceTutorRealtime({
   // (claude-brain + openai-mini TTS — Realtime audio_transcript events
   // don't fire there, so we have to capture at the dispatch site).
   const ttsScriptBufferRef = useRef<RecentTtsScript[]>([]);
-  const pushTtsScriptForPerception = useCallback((text: string) => {
-    const trimmed = (text ?? '').trim();
-    if (!trimmed) return;
-    const nowMs = Date.now();
-    ttsScriptBufferRef.current.push({
-      text: trimmed,
-      spokenStartedAt: nowMs,
-      spokenEndedAt: nowMs,
-    });
-    const cutoff = nowMs - 60_000;
-    while (
-      ttsScriptBufferRef.current.length > 0 &&
-      ttsScriptBufferRef.current[0].spokenStartedAt < cutoff
-    ) {
-      ttsScriptBufferRef.current.shift();
-    }
+  // V2 (2026-07-15): monotonic id per dispatched sentence. Threaded through
+  // speakText → the audio queue → per-sentence playback callbacks so the
+  // buffer entry's timing window is stamped at REAL playback time, not
+  // dispatch time (see tts-script-buffer.ts + useOpenAIRealtime playback
+  // callbacks). Returns the id so the dispatch site can hand it to speakText.
+  const ttsScriptIdCounterRef = useRef(0);
+  const pushTtsScriptForPerception = useCallback((text: string): number | undefined => {
+    const id = ttsScriptIdCounterRef.current++;
+    const entry = pushTtsScript(ttsScriptBufferRef.current, text, id, Date.now());
+    return entry ? id : undefined;
   }, []);
+  // V2: apply a real-playback lifecycle stamp (start/end/skip) from the audio
+  // queue to the matching buffer entry by id.
+  const applyTtsPlaybackStamp = useCallback(
+    (ev: { scriptId: number; phase: 'start' | 'end' | 'skip'; atMs: number }) => {
+      applyPlaybackStamp(ttsScriptBufferRef.current, ev);
+    },
+    [],
+  );
   // Circuit breaker for the Haiku perception-classify endpoint per Q6:
   // 5 consecutive failures opens the circuit for 60s, during which the
   // 'escalate' verdict short-circuits to 'noise' (fail-open). Resets on
@@ -1024,7 +1027,7 @@ export function VoiceTutorRealtime({
   // Claude-brain mode: refs filled after the useOpenAIRealtime call so the
   // orchestrator (which is constructed BEFORE the hook returns) can call
   // hook methods. Pattern matches sendTextMessageRef / injectContextRef.
-  const speakTextRef = useRef<((text: string) => void) | null>(null);
+  const speakTextRef = useRef<((text: string, scriptId?: number) => void) | null>(null);
   const clearSpeechQueueRef = useRef<(() => Promise<void>) | null>(null);
   // Stage 3.1 (2026-06-16): refs to the new resume-from-cut hook
   // methods. Following the same long-lived-closure pattern as
@@ -7309,8 +7312,10 @@ export function VoiceTutorRealtime({
         // count as audible. The single place a brain sentence actually
         // reaches the speaker.
         const speakOne = (s: string): void => {
-          pushTtsScriptForPerception(s);
-          speakTextRef.current?.(s);
+          // V2: capture the perception scriptId and hand it to speakText so the
+          // audio queue can stamp this sentence's window at real playback time.
+          const scriptId = pushTtsScriptForPerception(s);
+          speakTextRef.current?.(s, scriptId);
           audibleSentenceCount++;
           if (TUTOR_BOARD_ANCHOR_ASSIST) {
             turnNarrationRef.current.push(s);
@@ -7975,8 +7980,8 @@ export function VoiceTutorRealtime({
                         console.warn('[brain-orchestrator] STAGE-3 fix #10: fast-opener dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
                         onDebugEvent?.('speak_text_gated_opener', sentenceForSpeech.slice(0, 80));
                       } else {
-                        pushTtsScriptForPerception(sentenceForSpeech);
-                        speakTextRef.current?.(sentenceForSpeech);
+                        const openerScriptId = pushTtsScriptForPerception(sentenceForSpeech);
+                        speakTextRef.current?.(sentenceForSpeech, openerScriptId);
                         audibleSentenceCount++;
                         // Render↔speech sync: count the fast-opener too (it
                         // bypasses speakOne but still reaches the speaker).
@@ -10899,6 +10904,10 @@ export function VoiceTutorRealtime({
       if (ttsNoticeTimerRef.current) clearTimeout(ttsNoticeTimerRef.current);
       ttsNoticeTimerRef.current = setTimeout(() => setTtsNotice(null), kind === 'retrying' ? 4000 : 6000);
     },
+    // V2 self-voice echo defence (2026-07-15): stamp the perception buffer at
+    // REAL TTS playback time so late sentences in long turns keep an accurate
+    // timing window and their verbatim echoes get dropped by the matcher.
+    onTtsSentencePlayback: applyTtsPlaybackStamp,
     // Render↔speech sync: drive the buffered-render flush off TTS playback.
     // 'sentence-start' = a new sentence's audio began (the prior one
     // completed) → release renders anchored to that prior sentence.
