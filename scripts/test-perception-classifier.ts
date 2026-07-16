@@ -17,6 +17,7 @@ import {
   scoreSelfVoice,
   SELF_VOICE_THRESHOLD,
   SPEAKING_ECHO_OVERLAP_THRESHOLD,
+  ECHO_ANCHOR_EPSILON_MS,
   TTS_PADDING_TRAIL_MS,
   type HeuristicInput,
   type ProductionStateForClassifier,
@@ -743,8 +744,13 @@ console.log('\n=== Final-review item 1: distinct reason for containment-only dro
   const scripts: RecentTtsScript[] = [
     { id: 70, text: KARAKORUM_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
   ];
-  const speechStartedAt = playEnd + 500;
-  const now = speechStartedAt + 300;
+  // Speech that BEGINS while the audio is still playing (onset inside
+  // [playStart, playEnd]) — a genuine during-playback containment echo, for
+  // which the Task X6 echo anchor is satisfied and the containment lift
+  // still applies. (The post-playback FP case, where the same "Dadu" is a
+  // real answer and must NOT drop, is covered in the Task X6 block below.)
+  const speechStartedAt = playStart + 1_000;
+  const now = playEnd + 300;
 
   {
     // "Dadu" alone: contained in the (much longer) script line, but jaccard
@@ -758,7 +764,7 @@ console.log('\n=== Final-review item 1: distinct reason for containment-only dro
       speechStartedAt,
     });
     check(
-      '"Dadu" contained in the Karakorum script → drop_self_voice',
+      '"Dadu" contained in the Karakorum script (onset during playback) → drop_self_voice',
       r.verdict === 'drop_self_voice',
       `verdict=${r.verdict} (${r.reason})`,
     );
@@ -808,6 +814,178 @@ console.log('\n=== Final-review item 1: distinct reason for containment-only dro
       'phonetic-only drop keeps its own marker, not the containment one',
       r.reason.startsWith('phonetic-echo overlap'),
       `reason="${r.reason}"`,
+    );
+  }
+}
+
+// ── Task X6 (2026-07-16): echo anchor — speechStartedAt <= spokenEndedAt+ε
+// ─────────────────────────────────────────────────────────────────────────
+// The dominant known FP: a genuine 1-2-word ANSWER lands in the trail window
+// right after the tutor asked about that exact word ("Dadu" after "...Dadu
+// or Karakorum?") and drops as self-voice via text/phonetic CONTAINMENT.
+// Remedy: an echo cannot BEGIN after the speaker stopped, so the lenient
+// containment measures apply only when the student's speech ONSET
+// (speechStartedAt, VAD-reconstructed as Date.now()-latencyMs) is at or
+// before playback end + ε. Onset after playback end = student → containment
+// lift withheld (jaccard/n-gram stay in play, so a verbatim full-line echo
+// still drops). ε accounts for VAD onset lag.
+console.log('\n=== Task X6: echo anchor (speechStartedAt <= spokenEndedAt + ε) ===');
+{
+  const classifyWithScripts = (
+    transcript: string,
+    productionState: ProductionStateForClassifier,
+    scripts: RecentTtsScript[],
+    speechStartedAt: number | undefined,
+    now: number,
+  ) => {
+    const input: HeuristicInput = {
+      transcript, productionState, recentTtsScripts: scripts, now, speechStartedAt,
+    };
+    return classifyHeuristic(input);
+  };
+
+  const KARAKORUM_SCRIPT = 'was the capital Dadu or Karakorum?';
+  const playStart = 8_000_000;
+  const playEnd = 8_002_000;
+  const scripts: RecentTtsScript[] = [
+    { id: 80, text: KARAKORUM_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: playEnd },
+  ];
+
+  {
+    // THE FP, FIXED: student's exact-echo 1-word answer "Dadu" begins 0.4s
+    // AFTER playback ended → not this line's echo → containment withheld →
+    // NOT dropped. (Same transcript, same script, as the containment-marker
+    // regression above, which uses during-playback onset and still drops.)
+    const speechStartedAt = playEnd + 400;
+    const now = speechStartedAt + 300;
+    const universal = scoreSelfVoice('Dadu', scripts, speechStartedAt, now);
+    check(
+      '"Dadu" onset 0.4s after playback end no longer clears the self-voice bar',
+      universal < SELF_VOICE_THRESHOLD,
+      `score=${universal.toFixed(2)} < ${SELF_VOICE_THRESHOLD}`,
+    );
+    const r = classifyWithScripts('Dadu', 'listening', scripts, speechStartedAt, now);
+    check(
+      '"Dadu" answer 0.4s after "...Dadu or Karakorum?" → new_turn (FP fixed)',
+      r.verdict === 'new_turn',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+
+  {
+    // A true echo that BEGAN mid-playback but whose transcript arrives late
+    // (long perception latency) still drops — onset is before playback end,
+    // so the anchor is satisfied and containment applies.
+    const speechStartedAt = playStart + 800; // onset while audio still playing
+    const lateNow = playEnd + 4_000;         // transcript lands 4s after end
+    const r = classifyWithScripts('Dadu', 'listening', scripts, speechStartedAt, lateNow);
+    check(
+      'true echo (onset mid-playback, transcript late) → still drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+
+  {
+    // Boundary: onset exactly at playback end + ε is still anchored-in (VAD
+    // onset lag budget) → drops. One ms beyond ε → withheld → new_turn.
+    const rAtEps = classifyWithScripts(
+      'Dadu', 'listening', scripts, playEnd + ECHO_ANCHOR_EPSILON_MS, playEnd + ECHO_ANCHOR_EPSILON_MS + 300,
+    );
+    check(
+      'onset exactly at playEnd+ε → still drop_self_voice (within VAD-onset slop)',
+      rAtEps.verdict === 'drop_self_voice',
+      `verdict=${rAtEps.verdict} (${rAtEps.reason})`,
+    );
+    const rPastEps = classifyWithScripts(
+      'Dadu', 'listening', scripts, playEnd + ECHO_ANCHOR_EPSILON_MS + 1, playEnd + ECHO_ANCHOR_EPSILON_MS + 301,
+    );
+    check(
+      'onset 1ms past playEnd+ε → new_turn (anchor withholds containment)',
+      rPastEps.verdict === 'new_turn',
+      `verdict=${rPastEps.verdict} (${rPastEps.reason})`,
+    );
+  }
+
+  {
+    // Fail-safe: some payloads carry no onset (speechStartedAt undefined).
+    // The anchor must NOT newly suppress — keep today's behaviour (drop) on
+    // missing data rather than risk letting a real echo through.
+    const r = classifyWithScripts('Dadu', 'listening', scripts, undefined, playEnd + 400);
+    check(
+      'speechStartedAt undefined → fail safe: containment still drops (today\'s behaviour)',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+
+  {
+    // A currently-playing script (spokenEndedAt = null) is live at `now`, so
+    // the anchor is trivially satisfied even for an onset "after" any past
+    // stamp — containment applies, echo drops. (Mirrors the speaking-state
+    // reality where tier-2 relies on this same triviality.)
+    const live: RecentTtsScript[] = [
+      { id: 81, text: KARAKORUM_SCRIPT, spokenStartedAt: playStart, spokenEndedAt: null },
+    ];
+    const r = classifyWithScripts('Dadu', 'speaking', live, playStart + 5_000, playStart + 5_300);
+    check(
+      'live script (end=null) → anchor trivially satisfied → drop_self_voice',
+      r.verdict === 'drop_self_voice',
+      `verdict=${r.verdict} (${r.reason})`,
+    );
+  }
+
+  {
+    // The anchor removes ONLY the containment lift, NOT the broad-agreement
+    // (jaccard/n-gram) path: a verbatim FULL-line echo arriving 0.4s after
+    // playback end still drops — a real answer never reproduces a whole
+    // tutor line, so this can't swallow a genuine turn.
+    const gq: RecentTtsScript[] = [
+      { id: 82, text: 'Good question.', spokenStartedAt: playStart, spokenEndedAt: playEnd },
+    ];
+    const speechStartedAt = playEnd + 400;
+    const s = scoreSelfVoice('Good question', gq, speechStartedAt, speechStartedAt + 300);
+    check(
+      'verbatim full-line echo 0.4s after playback end → still drops (jaccard/n-gram un-anchored)',
+      s >= SELF_VOICE_THRESHOLD,
+      `score=${s.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`,
+    );
+  }
+
+  {
+    // Regression: the three original incident lines all occur during literal
+    // 'speaking' (tutor still talking) and must STILL drop after the anchor.
+    const DADU_SCRIPT = "the Mongol capital up at Dadu, what's now Beijing";
+    const YUAN_SCRIPT = 'how often the Yuan actually used the Mongol title';
+    const speaking = (transcript: string, text: string) => classifyWithScripts(
+      transcript, 'speaking',
+      [{ id: 83, text, spokenStartedAt: 3_000_000, spokenEndedAt: 3_003_000 }],
+      3_003_300, 3_003_700,
+    );
+    check(
+      'incident 1: "Badu, what\'s now Badu?" during speaking → still drop_self_voice',
+      speaking("Badu, what's now Badu?", DADU_SCRIPT).verdict === 'drop_self_voice',
+      `verdict=${speaking("Badu, what's now Badu?", DADU_SCRIPT).verdict}`,
+    );
+    check(
+      'incident 2: "actually turn" during speaking → still drop_self_voice',
+      speaking('actually turn', YUAN_SCRIPT).verdict === 'drop_self_voice',
+      `verdict=${speaking('actually turn', YUAN_SCRIPT).verdict}`,
+    );
+    check(
+      'incident 3: "Dadu? what\'s Dadu?" during speaking → still drop_self_voice',
+      speaking("Dadu? what's Dadu?", DADU_SCRIPT).verdict === 'drop_self_voice',
+      `verdict=${speaking("Dadu? what's Dadu?", DADU_SCRIPT).verdict}`,
+    );
+  }
+
+  {
+    // Sanity: ε is the documented VAD-onset slop, not silently drifted, and
+    // stays in the cited 100-200ms range.
+    check(
+      'ECHO_ANCHOR_EPSILON_MS is the documented 200ms VAD-onset slop',
+      ECHO_ANCHOR_EPSILON_MS === 200,
+      `= ${ECHO_ANCHOR_EPSILON_MS}`,
     );
   }
 }

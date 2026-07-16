@@ -332,6 +332,60 @@ export const TTS_PADDING_LEAD_MS = 200;
 // still falls inside the window and gets dropped by the matcher.
 export const TTS_PADDING_TRAIL_MS = 1500;
 
+// ── Echo anchor (Task X6, 2026-07-16) ────────────────────────────────
+//
+// Physical fact the anchor encodes: an echo of the tutor's own voice
+// CANNOT BEGIN after the speaker stopped emitting it. So the moment the
+// student's speech STARTED (`speechStartedAt`, the perception WS's VAD
+// onset, reconstructed in the caller as `Date.now() - transcript.latencyMs`
+// — same wall-clock domain as V2's real playback-stamped `spokenEndedAt`)
+// must fall at or before playback end for a candidate to be self-voice.
+// Speech that BEGINS after a script's playback ended is the student, not
+// that script's echo.
+//
+// This anchor gates ONLY the lenient CONTAINMENT measures (text + phonetic)
+// — the ones that lift a SHORT utterance to a drop purely because it sits
+// entirely inside a longer line (`containment`/`containmentPhon` below).
+// That containment lift is exactly the DOMINANT known false positive: the
+// tutor asks "...Dadu or Karakorum?", the student answers "Dadu" a beat
+// after the audio faded, and the 1-word answer trivially contains-matches.
+// The broad-agreement measures (jaccard, n-gram) are deliberately NOT
+// anchored: a verbatim FULL-line echo scores ~1.0 on those regardless of
+// containment and legitimately still drops even when its perception
+// transcript lands a fraction of a second after playback end (VAD onset lag
+// + trail window) — a real answer, by contrast, never reproduces a whole
+// tutor line, so the un-anchored jaccard/n-gram path can't swallow it.
+//
+// ε (ECHO_ANCHOR_EPSILON_MS): VAD-onset slop. The perception WS stamps
+// `speech_started` only after enough energy accumulates to trip its
+// detector, so the VAD-reported onset LAGS the true acoustic onset by a
+// small margin (~100-200ms for server VAD). A genuine echo whose acoustic
+// onset was at/just-before `spokenEndedAt` can therefore be VAD-reported up
+// to ~that margin AFTER `spokenEndedAt`; ε keeps such an echo anchored-in.
+// Set to 200ms — the top of the cited VAD-onset range, and equal to this
+// file's existing TTS_PADDING_LEAD_MS onset-slop budget (kept in sync
+// deliberately). 200ms biases slightly toward preserving today's drop
+// behaviour (fail toward NOT opening a new echo leak) while still fixing the
+// FP: the incident answer began ≥0.4s (400ms > 200ms) after playback end.
+export const ECHO_ANCHOR_EPSILON_MS = 200;
+
+/** True when the student's speech could physically be an echo of THIS
+ *  script — i.e. began (VAD onset) at or before the script's playback end,
+ *  within ε. A null `spokenEndedAt` means the script is still playing at
+ *  `now`, so the anchor is trivially satisfied (speech onset is always ≤
+ *  now). Fail-safe: when `speechStartedAt` is unavailable (some payloads
+ *  carry no onset), return true — keep today's behaviour rather than newly
+ *  suppress a containment drop on missing data. */
+function echoAnchorSatisfied(
+  s: RecentTtsScript,
+  speechStartedAt: number | undefined,
+  now: number,
+): boolean {
+  if (speechStartedAt === undefined) return true;
+  const end = s.spokenEndedAt ?? now;
+  return speechStartedAt <= end + ECHO_ANCHOR_EPSILON_MS;
+}
+
 function scriptWindowContains(s: RecentTtsScript, studentT: number, now: number): boolean {
   const winStart = s.spokenStartedAt - TTS_PADDING_LEAD_MS;
   const winEnd = (s.spokenEndedAt ?? now) + TTS_PADDING_TRAIL_MS;
@@ -385,6 +439,13 @@ function scoreSelfVoiceDetailed(
     if (!scriptWindowContains(s, studentT, now)) continue;
     const sTokens = tokenize(s.text);
     if (sTokens.length === 0) continue;
+    // Echo anchor (Task X6): the lenient containment measures below apply
+    // only if the student's speech began while this script's audio could
+    // still be playing (onset ≤ playback end + ε). Speech that began after
+    // playback ended is a student answer, not this line's echo — so its
+    // containment lift is withheld (jaccard/n-gram stay in play). See
+    // `echoAnchorSatisfied` for the physical rationale + ε justification.
+    const anchorOk = echoAnchorSatisfied(s, speechStartedAt, now);
     const sSet = new Set(sTokens);
     const j = jaccard(tSet, sSet);
     let ngramHit = 0;
@@ -396,24 +457,20 @@ function scoreSelfVoiceDetailed(
     }
     // Containment: short transcripts that are entirely inside a TTS line.
     //
-    // KNOWN PRE-EXISTING FALSE POSITIVE (documented 2026-07-15, fix-wave
-    // review finding 4 — predates V3, not introduced by the phonetic pass):
-    // this text containment check drops a student's exact-echo 1-word
-    // ANSWER when it lands in the trail window right after the tutor asked
-    // about that exact word — e.g. the tutor says "...Dadu or Karakorum?"
-    // and the student answers "Dadu", which is trivially `containment=1`
-    // against the script line that literally contains "Dadu". This is the
-    // DOMINANT known false-positive class in the self-voice matcher. A
-    // candidate remedy was considered and DEFERRED: require
-    // `speechStartedAt <= spokenEndedAt` (the student's speech began WHILE
-    // the audio was still physically playing) before applying the lenient/
-    // unconditional containment treatment — a real answer given after the
-    // tutor finishes talking would then no longer qualify, while a genuine
-    // echo (which necessarily starts during or immediately continuous with
-    // playback) still would. Not implemented in this fix wave; scoped out
-    // as its own follow-up so it gets its own TDD pass rather than riding
-    // in under unrelated findings.
-    const containment = tTokens.every((tok) => sSet.has(tok)) ? 1 : 0;
+    // FORMERLY the DOMINANT known false positive (documented 2026-07-15,
+    // fix-wave review finding 4), NOW REMEDIED by the echo anchor (Task X6,
+    // 2026-07-16 — `anchorOk` above): this containment check used to drop a
+    // student's exact-echo 1-word ANSWER when it landed in the trail window
+    // right after the tutor asked about that exact word — the tutor says
+    // "...Dadu or Karakorum?" and the student answers "Dadu", trivially
+    // `containment=1` against the line that literally contains "Dadu". The
+    // anchor now withholds the containment lift when the student's speech
+    // BEGAN after playback ended (+ε) — a real post-question answer no longer
+    // qualifies, while a genuine echo (which necessarily begins during, or
+    // within ε of, playback) still does. The jaccard/n-gram measures stay
+    // un-anchored so a verbatim full-line echo arriving just after playback
+    // still drops (see `echoAnchorSatisfied`).
+    const containment = anchorOk && tTokens.every((tok) => sSet.has(tok)) ? 1 : 0;
 
     // Phonetic mirror of the three text measures above (V3) — catches
     // ASR-garbled echoes ("Badu" for "Dadu") that share no literal text
@@ -445,7 +502,9 @@ function scoreSelfVoiceDetailed(
     // as a single word (see the known-FP comment above, which is a separate,
     // pre-existing concern).
     const containmentPhon =
-      tContentCount > 1 && tPhon.length > 0 && tPhon.every((code) => sPhonSet.has(code)) ? 1 : 0;
+      anchorOk && tContentCount > 1 && tPhon.length > 0 && tPhon.every((code) => sPhonSet.has(code))
+        ? 1
+        : 0;
 
     const textScore = Math.max(j, ngramHit, containment * 0.9);
     const phonScore = Math.max(jPhon, ngramHitPhon, containmentPhon * 0.9);
@@ -513,6 +572,18 @@ export const SELF_VOICE_THRESHOLD = 0.55;
 // the trail-window branch of this gate was pure false-positive surface with
 // no compensating catch. Removed — this function is now consulted ONLY when
 // `productionState === 'speaking'`, full stop.
+//
+// Echo-anchor audit (Task X6, 2026-07-16): the tier-1 echo anchor
+// (`echoAnchorSatisfied`) is deliberately NOT applied here, and this is NOT
+// an oversight. The anchor withholds a self-voice drop when the student's
+// speech BEGAN after playback ended; but this function is reached ONLY while
+// `productionState === 'speaking'`, i.e. the tutor's audio is by definition
+// still playing (the currently-playing script's `spokenEndedAt` is null →
+// anchor TRIVIALLY satisfied). The post-playback FP the anchor targets can
+// only occur once production has flipped to 'listening', where this function
+// is never consulted. Adding the anchor here would be redundant double-
+// gating with no case it could catch that the state gate doesn't already
+// exclude.
 function scoreSpeakingEchoOverlap(
   transcript: string,
   recentTtsScripts: RecentTtsScript[],
