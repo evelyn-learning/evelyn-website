@@ -311,9 +311,16 @@ const MATH_SIGNAL_RE = /[\^_\\=]/;
 // "5 and shipping is " between the two $, which has no operand-op-operand
 // shape. En-dash ranges ("$5–8$") are excluded by using ASCII operators.
 const MATH_OPERAND_OP_RE = /[A-Za-z0-9)\]]\s*[-+*/×·^]\s*[A-Za-z0-9(\[]/;
+// Round-16 Issue 3 (2026-07-17, live AP Calc): "the numerator's just $x$"
+// reached Cartesia with the dollar signs spoken — a bare single-letter span
+// has no signal char and no operand-op-operand shape. A PAIRED
+// $<single letter>$ is essentially never a currency mention (currency is
+// "$5", one sign), so unwrap it. Single letters only — "$5$" stays out of
+// scope to keep the price guard airtight.
+const SINGLE_VAR_RE = /^\s*[A-Za-z]\s*$/;
 function stripDollarMathForSpeech(t: string): string {
   return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
-    if (!MATH_SIGNAL_RE.test(inner) && !MATH_OPERAND_OP_RE.test(inner)) return whole;
+    if (!MATH_SIGNAL_RE.test(inner) && !MATH_OPERAND_OP_RE.test(inner) && !SINGLE_VAR_RE.test(inner)) return whole;
     // The signal-char gate above already confirms this span is real math
     // (not prose), so it's safe to also wordify a top-level "+"/"-" here
     // ("$x^2 - 4$" → "x squared minus 4") — a liberty NOT taken for

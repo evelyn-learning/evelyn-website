@@ -1376,6 +1376,10 @@ export function VoiceTutorRealtime({
   // keep, so a valid render the student asked for doesn't vanish).
   const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
+  // Round-16 Issue 1: live mirror of the hasStarted state for closures that
+  // capture stale state (the handleRef effect). See the sync effect near the
+  // hasStarted declaration.
+  const hasStartedRef = useRef(false);
 
   // Variable-name continuity: track declared functions across the session.
   // When the tutor silently renames f→g without redeclaring, we rewrite the
@@ -12585,15 +12589,40 @@ export function VoiceTutorRealtime({
           // session — and a typed-only trial never armed the demo hard-stop
           // cap (voiceSessionStartedAtMsRef stayed null). A real typed
           // message starts both. Bracketed strings are synthetic (kickoff /
-          // reactions / harness) and must not start the clock.
-          const isSynthetic = /^\s*\[/.test(text);
+          // reactions / harness) and must not start the clock — EXCEPT the
+          // student-board-action wrappers ("[The student wrote/drew/
+          // uploaded …]"): those carry a REAL student gesture (starter
+          // chip, typed whiteboard answer, image upload) that TutorSession
+          // brackets for the brain contract. Round-16 Issue 1 (2026-07-17,
+          // session portal-f0c496ca): the Practice chip fired pre-start,
+          // was classed synthetic, and the session never "started" — timer
+          // pinned at 0:00, no unlockAudio (suspended AudioContext → TTS
+          // sources never fire onended → dock wedged on SPEAKING for 9
+          // minutes), and hasStarted stayed false so the eventual mic tap
+          // fired a redundant [start lesson] re-opener.
+          const isStudentBoardAction = /^\s*\[The student (?:wrote|drew|uploaded)/i.test(text);
+          const isSynthetic = /^\s*\[/.test(text) && !isStudentBoardAction;
           if (!isSynthetic && voiceSessionStartedAtMsRef.current === null) {
             voiceSessionStartedAtMsRef.current = Date.now();
             onSessionStartedRef.current?.();
           }
+          // Round-16 Issue 1: a real input landing BEFORE the mic-tap start
+          // runs the same one-time session-start sequence the tap would —
+          // most critically unlockAudio(), which must execute inside this
+          // click's gesture call stack for the AudioContext to resume. The
+          // brain turn this message triggers replaces the [start lesson]
+          // kickoff (hasStarted=true makes the later mic tap skip it).
+          // Resume sessions keep their dedicated resumeContinue gesture.
+          if (!isSynthetic && !hasStartedRef.current && !resumeState) {
+            hasStartedRef.current = true;
+            setHasStarted(true);
+            setIsWarmingUp(true);
+            realtime.unlockAudio();
+          }
           // Task X10: a non-bracketed external send is a real typed/text
           // message; bracketed strings are synthetic (kickoff / reactions /
-          // harness) and get the voice-style fallback path.
+          // harness) and get the voice-style fallback path. Student-board
+          // actions came from typing/clicking → typed path.
           realtime.sendTextMessage(text, { typed: !isSynthetic });
         },
         speakText: (text: string) => realtime.speakText(text),
@@ -12674,7 +12703,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
+  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level, resumeState]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds
@@ -12935,6 +12964,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
   // Track if we've started the session (state, not ref, so pause button renders)
   const [hasStarted, setHasStarted] = useState(false);
+  // Round-16 Issue 1: ref mirror of hasStarted for the handleRef closure
+  // (the handle effect closes over state that would otherwise be stale).
+  // Written directly at every setHasStarted(true) site.
+  useEffect(() => { hasStartedRef.current = hasStarted; }, [hasStarted]);
 
   // RESUME first-interaction: the single gesture that unlocks TTS audio AND
   // kicks the brain to pick up a rehydrated session. The brain has the restored
@@ -12947,6 +12980,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // a second trigger after the session has started is a harmless no-op.
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
+    hasStartedRef.current = true;
     setHasStarted(true);
     // Task E1 / demo time-box: stamp the actual session start for the demo-stop
     // clock AND the hard-stop cap. Unconditional (not flag-gated) — the cap
@@ -13031,6 +13065,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // the brain greets in its first turn (the system prompt already
       // instructs it to open with the student's name).
       if (!hasStarted) {
+        hasStartedRef.current = true;
         setHasStarted(true);
         // Task E1 / demo time-box: stamp the actual session start for the
         // demo-stop clock AND the hard-stop cap. Unconditional (not flag-gated)

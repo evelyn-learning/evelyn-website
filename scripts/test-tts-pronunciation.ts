@@ -703,3 +703,27 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-15 Issue 5 (element symbols)');
 }
+
+// --- Round-16 Issue 3 (2026-07-17): single-letter $x$ spans ------------
+// Live AP Calc conjugate turn: "numerator's just $x$, denominator's
+// $x(x+4)$" — "$x$" has no signal char and no operand-op-operand shape,
+// so the gate left it and Cartesia spoke the dollar signs. A paired
+// $<single letter>$ is essentially never currency — unwrap it.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq("The numerator's just $x$, so cancel it.",
+     "The numerator's just x, so cancel it.",
+     'single-letter-var-unwraps');
+  eq('Watch the $n$ in the exponent.',
+     'Watch the n in the exponent.',
+     'single-letter-n-unwraps');
+  // Currency must still survive.
+  eq('It costs $5 and shipping is $10.',
+     'It costs $5 and shipping is $10.',
+     'currency-still-untouched-r16');
+
+  console.log('OK — Round-16 Issue 3 (single-letter $x$ spans)');
+}

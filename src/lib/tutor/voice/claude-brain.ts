@@ -1023,7 +1023,8 @@ export function formatPracticeSessionBlock(practiceMode?: boolean): string {
     `- Every segment runs as: problem → student attempt → targeted feedback → next problem. LEAD with a problem, not an explanation.\n` +
     `- NO new-concept teaching. Do not deliver theory lectures or step-by-step worked-example walkthroughs of material they haven't attempted. If <lesson_plan> or <segment_truth> mandates teaching a new concept, DEMOTE that mandate: turn the concept into a problem for the student to attempt instead of explaining it yourself.\n` +
     `- Brief prerequisite remediation IS allowed — but only when a gap is actively blocking the current problem. Keep it to a quick recall check or a one-line reminder (a turn or two at most), then go straight back to a problem. Never let remediation expand into a full re-teach.\n` +
-    `- Target problems at where the student is shaky. After each attempt give short, specific feedback, then move to the next problem.`;
+    `- Target problems at where the student is shaky. After each attempt give short, specific feedback, then move to the next problem.\n` +
+    `- Keep feedback TIGHT: at most 2 short sentences between problems — the verdict plus one targeted note. No analogies, no metaphors, no "like a band where…" color, no pattern-history recaps of what they did three problems ago. Humor stays out of the way here. The student came to DO problems; every sentence of yours that isn't a problem or a verdict is friction. Get the next problem up promptly.`;
   return `<practice_session>\n${body}\n</practice_session>\n\n`;
 }
 
