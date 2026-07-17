@@ -240,6 +240,10 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // multiplication ("2(2)^2", "x(x+3)") and stays untouched.
   { pattern: /\b([fgh])\(([^()]{1,16})\)/g, replacement: '$1 of $2 ' },
   { pattern: /\\quad\b|\\qquad\b/g, replacement: ', ' },
+  // Round-22: named functions shed the backslash but KEEP the word (the
+  // end-of-span residual sweep would otherwise delete "\sin" wholesale);
+  // the prose-level trig pass then converts sin→sine etc. as usual.
+  { pattern: /\\(arcsin|arccos|arctan|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|log|exp)\b/g, replacement: ' $1 ' },
   { pattern: /\\times\b/g, replacement: ' times ' },
   { pattern: /\\cdot\b/g, replacement: ' times ' },
   { pattern: /\\div\b/g, replacement: ' divided by ' },
@@ -328,7 +332,24 @@ const MATH_SIGNAL_RE = /[\^_\\=]/;
 // heuristics (below) don't apply here. x/e/i read naturally and are left
 // alone; d covers the bare differential (dy/dx forms are rewritten before
 // this runs on the span's inner text).
+// Round-22: in-span words that must NEVER be split as variable products —
+// function names, spoken-form tokens the verbalizers emit, and connective
+// words that legitimately appear inside spans.
+const SPAN_PRODUCT_EXCLUDE = new Set([
+  'of', 'to', 'the', 'as', 'at', 'is', 'in', 'or', 'and', 'for', 'over',
+  'plus', 'minus', 'times', 'equals', 'squared', 'cubed', 'root', 'limit',
+  'approaches', 'sub', 'not', 'equal', 'than', 'less', 'greater', 'why',
+  'bee', 'ay', 'dee', 'ex', 'pi', 'ln', 'log', 'sin', 'cos', 'tan', 'sec',
+  'csc', 'cot', 'sine', 'cosine', 'tangent', 'exp', 'lim', 'dx', 'dy',
+  'dt', 'du', 'dv', 'max', 'min', 'mod', 'abs', 'deg', 'degrees',
+]);
 function respellMathLetters(s: string): string {
+  // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
+  // letter lowercase token inside a DECLARED span is a variable PRODUCT
+  // ("ab", "xy") unless it's a known word/function — split into letters
+  // so each respells below ("ay bee", "x why").
+  s = s.replace(/\b([a-z]{2,3})\b/g, (m: string) =>
+    SPAN_PRODUCT_EXCLUDE.has(m) ? m : m.split('').join(' '));
   return s
     .replace(/\b[aA]\b/g, 'ay')
     .replace(/\b[bB]\b/g, 'bee')
@@ -381,7 +402,12 @@ function stripDollarMathForSpeech(t: string): string {
     const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewriteDerivatives(inner))))
       .replace(/\\[a-zA-Z]+\s*/g, ' ')
       .replace(/[[\]{}]/g, ' ')
+      // Round-22: adjacent paren groups are an implied product —
+      // "(x+2)(x-2)" spoke as "x plus 2 x minus 2" with no operator.
+      .replace(/\)\s*\(/g, ') times (')
       .replace(/\s+/g, ' ')
+      .replace(/\s+\)/g, ')')
+      .replace(/\(\s+/g, '(')
       .trim();
     return ` ${spoken} `;
   });

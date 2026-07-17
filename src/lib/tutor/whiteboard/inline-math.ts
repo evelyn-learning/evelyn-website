@@ -42,7 +42,7 @@ function looksLikeMath(inner: string): boolean {
   //      so "$(low, high) prices$" stays literal.
   if (
     inner.length <= 24 &&
-    /^\(\s*-?[\w.]{1,4}\s*(?:,\s*-?[\w.]{1,4}\s*)+\)$/.test(inner)
+    /^[([]\s*-?[\w.]{1,4}\s*(?:,\s*-?[\w.]{1,4}\s*)+[)\]]$/.test(inner)
   ) return true;
   //   5. Compact operand-operator-operand (Round-21 — live transcript
   //      showed literal "$L + M$"): an arithmetic operator between short

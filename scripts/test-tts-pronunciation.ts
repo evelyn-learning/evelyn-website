@@ -855,3 +855,26 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-21 (lim/dfrac/f-of-x verbalization)');
 }
+
+// --- Round-22 (2026-07-17, sessions portal-cbd93b08 / portal-b35f5553) --
+// In-span variable PRODUCTS: "ab" spoken as in "cab"; adjacent paren
+// groups "(x+2)(x-2)" spoken with no operator between them.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('using $a^3 - b^3 = (a-b)(a^2+ab+b^2)$ here.',
+     'using ay cubed minus bee cubed equals (ay minus bee) times (ay squared plus ay bee plus bee squared) here.',
+     'ab-product-splits');
+  eq('factor as $(x+2)(x-2)$ first.',
+     'factor as (x plus 2) times (x minus 2) first.',
+     'adjacent-parens-times');
+  eq('the term $xy$ appears twice.',
+     'the term x why appears twice.',
+     'xy-product-splits');
+  // Known words/functions inside spans must NOT split.
+  eq('so $\\sin x$ stays put.', 'so sine x stays put.', 'sin-not-split');
+
+  console.log('OK — Round-22 (variable products + adjacent parens)');
+}

@@ -278,5 +278,16 @@ console.log('\n=== Round-21: compact operand-operator spans are math ===');
   check('currency artifact still literal (prose guard)', m1.length === 0);
 }
 
+console.log('\n=== Round-22: bracketed intervals are math ===');
+{
+  // Live card showed literal "$[2,b]$" — brackets, so the paren-tuple rule missed it.
+  const m = mathBodies('velocity over intervals $[2,b]$ as $b$ approaches 2.');
+  check('interval $[2,b]$ renders as math', m.includes('[2,b]'));
+  const m2 = mathBodies('on $[a, b]$ and half-open $(0, 5]$.');
+  check('spaced and half-open intervals render', m2.length === 2);
+  const m3 = mathBodies('It costs $5 and shipping is $10.');
+  check('currency still literal', m3.length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

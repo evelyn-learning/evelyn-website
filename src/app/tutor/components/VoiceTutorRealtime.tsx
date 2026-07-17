@@ -1432,7 +1432,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated'; expectedAnswer?: string } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated'; expectedAnswer?: string; hasChoices?: boolean } | null>(null);
   // 2026-07-17 (expectedAnswer pin): the most recent generate_problem
   // resolution, delivered via the 'generated-problem' SSE event. When the
   // brain's follow-up show_problem renders the matching canonicalText, the
@@ -1699,7 +1699,7 @@ export function VoiceTutorRealtime({
   // classification at turn-start so the post-stream code knows whether
   // to even consider streak changes. Pure-ack turns ("ok", "yeah")
   // never update the streak regardless of what the brain says next.
-  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean } | null>(null);
+  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
   // Buffer of [pacing] events fired during the most recent brain turn.
   // Forwarded server-side on the NEXT brain stream request body so the
   // /api/tutor/brain/stream route can write them to the server log
@@ -1752,6 +1752,11 @@ export function VoiceTutorRealtime({
   // with no problem on the board at all. A problem now counts as solved
   // ONCE (statement-hash set) and only when a problem is actually active.
   const practiceSolvedHashesRef = useRef<Set<string>>(new Set());
+  // Round-22: SESSION-LOCAL solve streak for the meter. The pacing streak
+  // resumes across sessions (by design), which read as "🔥 ×11" beside
+  // "0 solved" on a fresh session — incoherent. The meter's flame now
+  // counts consecutive solves THIS session, reset on a wrong answer.
+  const practiceStreakRef = useRef(0);
   const onPracticeStatsChangeRef = useRef(onPracticeStatsChange);
   useEffect(() => { onPracticeStatsChangeRef.current = onPracticeStatsChange; }, [onPracticeStatsChange]);
   // Ref-assigned every render (endSessionNowRef pattern) so every call
@@ -4030,6 +4035,9 @@ export function VoiceTutorRealtime({
           currentProblemRef.current = {
             statement: p.statement,
             kind,
+            // Round-22: MCQ marker so the verification classifier can accept
+            // a bare choice letter ("d") as the student's answer.
+            hasChoices: Array.isArray(p.answerChoices) && p.answerChoices.length > 0,
             ...(genMatch ? { source: 'generated' as const, expectedAnswer: genMatch.expectedAnswer } : {}),
           };
           if (genMatch) {
@@ -6851,7 +6859,15 @@ export function VoiceTutorRealtime({
         // brain affirmation in response false-increments the streak.
         // Observed 2026-05-06 lines session.
         const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
-        const isVerification = !isPureAck && !isHelpRequest && t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6);
+        // Round-22 (2026-07-17, session portal-cbd93b08): a single-letter
+        // MCQ answer ("d") failed every verification signal — no digits, no
+        // math language, 1 word, length < 3 — so two correct MCQ answers
+        // moved neither the streak nor the practice meter ("0 solved" beside
+        // two answered problems). When the ACTIVE problem is multiple-choice,
+        // a bare choice letter IS the student's answer.
+        const isMcqLetterAnswer = !!currentProblemRef.current?.hasChoices && /^[a-eA-E][).\s]*$/.test(t);
+        const isVerification = !isPureAck && !isHelpRequest
+          && ((t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6)) || isMcqLetterAnswer);
         // Session-end signal (Task Y4 farewell-exemption fix) — see
         // sessionEndSignalRegex definition above for scope/rationale.
         const isSessionEndSignal = sessionEndSignalRegex.test(lower);
@@ -6860,6 +6876,11 @@ export function VoiceTutorRealtime({
           segId: segIdNow,
           isVerification,
           isSessionEndSignal,
+          // Round-22: snapshot the ACTIVE problem at answer time — the
+          // post-stream solve counter previously read currentProblemRef
+          // AFTER the turn, where a same-turn segment advance had already
+          // cleared it (a second silent under-count).
+          activeStatement: currentProblemRef.current?.statement ?? '',
         };
         // Streak segId-retag policy (revised post-2026-05-05 session
         // analysis). Streak tracks CONCEPT mastery across consecutive
@@ -10644,7 +10665,10 @@ export function VoiceTutorRealtime({
             // times), and only when a problem is actually on the board
             // (hook-phase Q&A affirmations don't count).
             {
-              const solvedStmt = (currentProblemRef.current?.statement ?? '').trim();
+              // Round-22: use the TURN-START snapshot — a same-turn segment
+              // advance clears currentProblemRef before this post-stream
+              // code runs, silently dropping the solve.
+              const solvedStmt = (ver.activeStatement ?? currentProblemRef.current?.statement ?? '').trim();
               if (solvedStmt.length >= 10) {
                 let sh = 5381;
                 for (let i = 0; i < solvedStmt.length; i++) sh = (sh * 33) ^ solvedStmt.charCodeAt(i);
@@ -10652,6 +10676,7 @@ export function VoiceTutorRealtime({
                 if (!practiceSolvedHashesRef.current.has(solvedHash)) {
                   practiceSolvedHashesRef.current.add(solvedHash);
                   practiceSolvedRef.current++;
+                  practiceStreakRef.current++;
                 }
               }
             }
@@ -10683,7 +10708,8 @@ export function VoiceTutorRealtime({
             }
             logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
-            // Practice meter: the streak reset must reach the display.
+            // Practice meter: a wrong answer resets the session solve streak.
+            practiceStreakRef.current = 0;
             emitPracticeStatsRef.current();
           }
 
@@ -13564,7 +13590,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       active: derivePracticeMode(sessionGoal, practiceOverrideRef.current),
       presented: practicePresentedRef.current,
       solved: practiceSolvedRef.current,
-      streak: studentStreakRef.current.count,
+      // Round-22: session-local SOLVE streak (the resumed cross-session
+      // pacing streak read as "×11" beside "0 solved" — incoherent).
+      streak: practiceStreakRef.current,
     });
   };
   // End/Pause teardown, shared by the dock's own button and the handleRef's
