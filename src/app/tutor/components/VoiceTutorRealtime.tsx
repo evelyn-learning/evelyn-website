@@ -1889,6 +1889,13 @@ export function VoiceTutorRealtime({
   // retry) because enforcement runs post-stream — a retry would re-narrate a
   // turn the student already heard.
   const pendingCadenceNoteRef = useRef<string | null>(null);
+  // Bare-praise-ending advisory (Task Y4 addendum): same next-turn-note
+  // lifecycle as pendingCadenceNoteRef, but a SEPARATE ref/concern (not
+  // gated by TUTOR_TURN_CAP, which is a turn-LENGTH kill-switch unrelated
+  // to this lapse). Holds a note when a full-correct-confirmation turn
+  // ended with no question and no next-move tool call; spliced into the
+  // next callBrainOnce's transcript and cleared, same convention as above.
+  const pendingNoAdvanceNoteRef = useRef<string | null>(null);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -6803,6 +6810,12 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingCadenceNoteRef.current}\n\n${runTranscript}`;
         pendingCadenceNoteRef.current = null;
       }
+      // Bare-praise-ending corrective (Task Y4 addendum) — same convention,
+      // independent of TUTOR_TURN_CAP (a distinct concern from turn length).
+      if (pendingNoAdvanceNoteRef.current) {
+        runTranscript = `${pendingNoAdvanceNoteRef.current}\n\n${runTranscript}`;
+        pendingNoAdvanceNoteRef.current = null;
+      }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
       // Word-budget corrective sibling to totalSentenceCount — same
@@ -10144,6 +10157,41 @@ export function VoiceTutorRealtime({
             }
             logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
+          }
+
+          // Bare-praise-ending advisory (Task Y4 addendum). Same shape as
+          // the word-budget corrective below (post-stream detection →
+          // plant a "[… — not from the student]" note for the NEXT turn),
+          // but SOFT like the Affirmative-no-advance advisory above — no
+          // kill, no retry. A kill here would cut audio that already
+          // finished playing correctly, and the dead air the student just
+          // sat through has already happened by the time we can detect
+          // it — planting a note can't undo THIS turn, but it makes the
+          // same lapse less likely to recur later in the session (the
+          // brain sees its own omission named in its own context, same
+          // self-correction path as the cadence note). Fires only on the
+          // SAME full-correct-confirmation gate as the streak-correct
+          // branch above (isAffirm && !isCorrect, genuine verification
+          // turn) AND only when the turn shows neither a trailing
+          // question nor a next-move tool call (advance_lesson /
+          // generate_problem open the next segment or problem;
+          // show_problem / show_segment_card render one directly).
+          if (isAffirm && !isCorrect) {
+            const endsWithQuestion = /\?\s*$/.test(fullText.trim());
+            const opensNextMove = totalToolNamesSeen.some(
+              (n) => n === 'advance_lesson' || n === 'generate_problem'
+                || n === 'show_problem' || n === 'show_segment_card',
+            );
+            if (!endsWithQuestion && !opensNextMove) {
+              pendingNoAdvanceNoteRef.current =
+                `[cadence note — not from the student] Your previous turn confirmed the student was fully ` +
+                `correct but ended without a next move — no question, no new segment or problem. From this ` +
+                `turn on: when you confirm a fully-correct answer, always close with the next question, the ` +
+                `next segment's opening, or an explicit choice ("ready for the next one?") — never end on ` +
+                `bare praise.`;
+              console.warn(`[brain-orchestrator] bare-praise-ending ADVISORY (no kill): full-correct confirmation on seg="${ver.segId}" ended with no question and no next-move tool — cadence note planted for next turn.`);
+              onDebugEvent?.('bare_praise_ending_advisory', `seg="${ver.segId}" tools=[${totalToolNamesSeen.join(', ')}]`);
+            }
           }
         }
       } catch (err) {
