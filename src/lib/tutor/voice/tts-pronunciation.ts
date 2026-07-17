@@ -301,6 +301,19 @@ function verbalizeMathForSpeech(t: string): string {
  *  Runs the full verbalizeMathForSpeech pipeline on the captured content
  *  so the dollar signs disappear along with the symbols they wrapped. */
 const MATH_SIGNAL_RE = /[\^_\\=]/;
+// Round-20 (2026-07-17): in-span letter respelling. Inside a DECLARED math
+// span, ambiguity doesn't exist — a standalone letter is a variable by
+// construction, so the article/prose guards that constrain the Tier-1/2
+// heuristics (below) don't apply here. x/e/i read naturally and are left
+// alone; d covers the bare differential (dy/dx forms are rewritten before
+// this runs on the span's inner text).
+function respellMathLetters(s: string): string {
+  return s
+    .replace(/\b[aA]\b/g, 'ay')
+    .replace(/\b[bB]\b/g, 'bee')
+    .replace(/\b[yY]\b/g, 'why')
+    .replace(/\bd\b/g, 'dee');
+}
 // Round-15 Issue 4 (2026-07-16, live AP Calc): "$(x-2)$" leaked raw to
 // Cartesia — no ^ _ \ = inside, so the signal gate never fired, and the
 // prose bare-minus rule (BARE_MINUS_RE) requires spaces on both sides so
@@ -318,14 +331,30 @@ const MATH_OPERAND_OP_RE = /[A-Za-z0-9)\]]\s*[-+*/×·^]\s*[A-Za-z0-9(\[]/;
 // "$5", one sign), so unwrap it. Single letters only — "$5$" stays out of
 // scope to keep the price guard airtight.
 const SINGLE_VAR_RE = /^\s*[A-Za-z]\s*$/;
+// Round-20 (2026-07-17): the gate is FLIPPED to math-by-default. History:
+// every $-leak fixed since X1 ($a^3 b^3$, $(x-2)$, $x$, …) was this gate
+// being under-inclusive — a whitelist of "math signals" meeting an
+// unbounded variety of math shapes. With the brain now instructed to wrap
+// ALL spoken math in $…$ (the declared-pronunciation design), the default
+// inverts: a paired span is math unless it matches the one enumerable
+// counter-shape — a currency PAIRING ARTIFACT, where two real prices pair
+// into a fake span ("It costs $5 and shipping is $10" captures "5 and
+// shipping is "): digit-led, contains prose words, no math signal. A
+// wrapped span can no longer leak "$" into speech by construction; the
+// inner text runs the full math pipeline (derivatives included — "$dy/dx$"
+// previously leaked because rewriteDerivatives consumed the slash before
+// this gate ran) plus unconditional in-span letter respelling.
+const CURRENCY_ARTIFACT_RE = /^\s*\d/;
+const PROSE_WORD_RE = /[a-z]{3,}/i;
 function stripDollarMathForSpeech(t: string): string {
   return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
-    if (!MATH_SIGNAL_RE.test(inner) && !MATH_OPERAND_OP_RE.test(inner) && !SINGLE_VAR_RE.test(inner)) return whole;
-    // The signal-char gate above already confirms this span is real math
-    // (not prose), so it's safe to also wordify a top-level "+"/"-" here
-    // ("$x^2 - 4$" → "x squared minus 4") — a liberty NOT taken for
-    // arbitrary text, where a bare "-" is usually a hyphenated word.
-    return ` ${wordifyMathOperators(verbalizeMathForSpeech(inner))} `;
+    if (
+      CURRENCY_ARTIFACT_RE.test(inner) &&
+      PROSE_WORD_RE.test(inner) &&
+      !MATH_SIGNAL_RE.test(inner) &&
+      !MATH_OPERAND_OP_RE.test(inner)
+    ) return whole;
+    return ` ${respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewriteDerivatives(inner)))).trim()} `;
   });
 }
 

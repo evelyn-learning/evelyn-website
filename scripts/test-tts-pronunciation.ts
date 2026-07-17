@@ -785,3 +785,42 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-19b (a-variable stress cases)');
 }
+
+// --- Round-20 (2026-07-17): $-span math-by-default + in-span respelling --
+// Design debate outcome: the brain DECLARES pronunciation intent by
+// wrapping spoken math in $...$ (the convention it already uses on cards).
+// The TTS gate flips to math-by-default for paired spans — the only
+// exclusion is the currency pairing-artifact shape (digit-led inner with
+// prose words and no math signal). Inside a span, ambiguity doesn't exist
+// by construction: single letters ARE variables and respell
+// unconditionally (a→ay, b→bee, y→why, d→dee; capitals too).
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  // Every heuristic-net letter, declared:
+  eq('Watch how $a$ behaves here.', 'Watch how ay behaves here.', 'span-a');
+  eq('Now $b$ carries the sign.', 'Now bee carries the sign.', 'span-b');
+  eq('And $y$ is the output.', 'And why is the output.', 'span-y');
+  eq('Angle $A$ is bigger than angle $B$.', 'Angle ay is bigger than angle bee.', 'span-capitals');
+  eq('So $a^2 - b^2$ factors as a difference of squares.',
+     'So ay squared minus bee squared factors as a difference of squares.',
+     'span-expression-multi-letter');
+  // The lurking derivative leak: rewriteDerivatives used to run BEFORE the
+  // $-gate, leaving "dee why over dee ex" inside dollars with no signal.
+  eq('Compute $dy/dx$ for this curve.', 'Compute dee why over dee ex for this curve.', 'span-derivative-no-leak');
+  eq('Here $d$ is the differential.', 'Here dee is the differential.', 'span-d');
+  // Flip default: even a signal-less wrapped word sheds its dollars —
+  // never spoken as "dollar".
+  eq('The $profit$ term drops out.', 'The profit term drops out.', 'span-flip-default-strips');
+  // Currency pairing-artifacts stay untouched (the ONLY exclusion):
+  eq('It costs $5 and shipping is $10.', 'It costs $5 and shipping is $10.', 'currency-classic');
+  eq('Choose between $5 and $8 per seat.', 'Choose between $5 and $8 per seat.', 'currency-between');
+  // Un-wrapped prose still rides the heuristic net (unchanged):
+  eq('Now, a squared minus b squared is exactly that pattern.',
+     'Now, ay squared minus bee squared is exactly that pattern.',
+     'unwrapped-net-still-works');
+
+  console.log('OK — Round-20 ($-span math-by-default + in-span respell)');
+}

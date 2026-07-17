@@ -13,6 +13,9 @@ import type { TranscriptEntry } from '@/lib/tutor/types';
 // actions layer so the two surfaces never drift. (The pure detection helpers
 // below are mirrored in quick-actions.ts/getQuickActions for the stage.)
 import { STUCK_TEXT, SKIP_TEXT } from '@/lib/tutor/quick-actions';
+// Round-20: bubble math rendering — see renderBubbleText.
+import { segment } from '@/lib/tutor/whiteboard/inline-math';
+import { InlineMathText } from './whiteboard/InlineMathText';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -47,6 +50,23 @@ interface TranscriptViewProps {
  *  instead of leaving the asterisks raw in the chat bubble. The brain
  *  uses *word* as a TTS hint AND as visual emphasis; we strip the
  *  asterisks and apply <em>/<strong> in their place. */
+/** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
+ *  Rule 3b instructs the brain to wrap ALL spoken math in $…$ (the
+ *  declared-pronunciation design) — without this, chat bubbles would fill
+ *  with raw dollar signs. Math segments render through InlineMathText
+ *  (which owns the math-vs-currency segmentation); prose segments keep
+ *  the existing *emphasis* handling. */
+function renderBubbleText(text: string): React.ReactNode {
+  if (!text || !text.includes('$')) return renderInlineEmphasis(text);
+  const parts = segment(text);
+  if (!parts.some((p) => p.kind === 'math')) return renderInlineEmphasis(text);
+  return parts.map((p, i) =>
+    p.kind === 'math'
+      ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} />
+      : <React.Fragment key={`t-${i}`}>{renderInlineEmphasis(p.body)}</React.Fragment>,
+  );
+}
+
 function renderInlineEmphasis(text: string): React.ReactNode {
   if (!text) return text;
   // Split on **bold** and *italic*. Order: bold first, then italic, so
@@ -421,7 +441,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                 if (!split) {
                   return (
                     <p className="whitespace-pre-wrap">
-                      {renderInlineEmphasis(entry.text)}
+                      {renderBubbleText(entry.text)}
                     </p>
                   );
                 }
@@ -429,19 +449,19 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
                   <p className="whitespace-pre-wrap">
                     {split.body && (
                       <>
-                        {renderInlineEmphasis(split.body)}
+                        {renderBubbleText(split.body)}
                         {' '}
                       </>
                     )}
                     <span className="font-semibold">
-                      {renderInlineEmphasis(split.question)}
+                      {renderBubbleText(split.question)}
                     </span>
                   </p>
                 );
               })()
             : (
               <p className={`whitespace-pre-wrap ${entry.role === 'tutor' && entry.streaming ? 'typing-caret' : ''}`}>
-                {renderInlineEmphasis(entry.text)}
+                {renderBubbleText(entry.text)}
               </p>
             )
           }
