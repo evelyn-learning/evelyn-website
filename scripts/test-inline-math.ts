@@ -239,3 +239,27 @@ console.log('\n=== Fn-call-only run must NOT inject literal $…$ (Final-review 
 
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
+
+console.log('\n=== Round-19: coordinate tuples are math (2026-07-17) ===');
+{
+  // Live AP Calc BC card: "passes through the point $(1,-1)$" rendered the
+  // dollar signs literally — no LaTeX signal char, longer than 4 chars, no
+  // relation symbol, so every looksLikeMath rule missed it.
+  const t = 'The curve $y^2 = x^3$ passes through the point $(1,-1)$.';
+  const m = mathBodies(t);
+  check('tuple $(1,-1)$ renders as math', m.includes('(1,-1)'), joined(t));
+  check('the relation span still renders', m.includes('y^2 = x^3'), joined(t));
+}
+{
+  const m = mathBodies('Plot $(0, 3.5)$ and $(-2, a)$ on the grid.');
+  check('spaced/decimal/negative/identifier tuples render', m.length === 2 && m[0] === '(0, 3.5)' && m[1] === '(-2, a)');
+}
+{
+  // Currency-adjacent guards: prose amounts must stay literal.
+  const m1 = mathBodies('It costs $5 (about) and $9 elsewhere.');
+  check('unpaired currency untouched', m1.length === 0);
+  const m2 = mathBodies('a range of $(low, high) prices$ here');
+  check('tuple with prose words stays literal', m2.length === 0);
+}
+
+console.log(`\nround-19 additions: done`);

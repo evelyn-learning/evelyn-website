@@ -84,6 +84,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
       properties: {
         latex: { type: 'string', description: 'The equation in LaTeX format. Must contain math (digits, operators, variables), NOT English placeholder text.' },
         label: { type: 'string', description: 'A short descriptive label shown above the equation (e.g., "Newton\'s 2nd Law", "Balance solved"). If the label itself contains math, wrap it in inline $…$ (e.g. "Tangent at $(\\sqrt{5}, 4/3)$") — rendered with KaTeX; never unicode math.' },
+        expectedAnswer: { type: 'string', description: 'ONLY when this card poses a PROBLEM the student will now attempt (e.g. rendering a student-brought problem as an equation card): the bare final answer you derived. NEVER shown to the student — the runtime strips it, independently solves the active problem, and pins your answer for consistent grading when it verifies. Omit for ordinary equation/step cards.' },
       },
       required: ['latex'],
     },

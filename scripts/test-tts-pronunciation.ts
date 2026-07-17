@@ -284,7 +284,10 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   // --- $-delimited math: the live bug's exact shape -------------------
   eq('Let me show you $a^3 b^3$ on the board.',
-     'Let me show you a cubed bee cubed on the board.',
+     // Round-19: 'a' before cubed/squared with a math continuation is the
+     // VARIABLE (was pinned as the bare article pre-19 — the exact
+     // mispronunciation reported live 2026-07-17).
+     'Let me show you ay cubed bee cubed on the board.',
      'dollar-delimited-a3b3');
   // E4's own show_problem prompt example ("$x^2 - 4$ when $x = 3$") —
   // caret AND bare "=" both need to gate the $ strip.
@@ -726,4 +729,26 @@ console.log('OK — tts-pronunciation rewrites validated');
      'currency-still-untouched-r16');
 
   console.log('OK — Round-16 Issue 3 (single-letter $x$ spans)');
+}
+
+// --- Round-19 (2026-07-17): 'a' before squared/cubed is the variable -----
+// Live: "Now — a squared minus b squared is exactly…" spoke 'a' as the
+// article. squared/cubed followed by a math continuation anchors it.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('Now, a squared minus b squared is exactly that pattern.',
+     'Now, ay squared minus bee squared is exactly that pattern.',
+     'a-squared-minus-anchors');
+  eq('So a cubed b cubed factors nicely.',
+     'So ay cubed bee cubed factors nicely.',
+     'a-cubed-letter-anchors');
+  // The article must survive when "squared" is an adjective.
+  eq('Draw a squared grid on the paper.',
+     'Draw a squared grid on the paper.',
+     'a-squared-adjective-untouched');
+
+  console.log('OK — Round-19 (a-before-squared variable respell)');
 }

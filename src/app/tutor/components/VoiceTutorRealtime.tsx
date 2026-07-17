@@ -1746,6 +1746,12 @@ export function VoiceTutorRealtime({
   // onPracticeStatsChange for the practice/no-plan progress display.
   const practicePresentedRef = useRef(0);
   const practiceSolvedRef = useRef(0);
+  // Round-19 (2026-07-17, live: "✓ 6 solved · 4 shown"): solved was
+  // counting affirmed-verification TURNS — multi-step problems produce
+  // several affirmations each, and hook-phase Q&A affirmations counted
+  // with no problem on the board at all. A problem now counts as solved
+  // ONCE (statement-hash set) and only when a problem is actually active.
+  const practiceSolvedHashesRef = useRef<Set<string>>(new Set());
   const onPracticeStatsChangeRef = useRef(onPracticeStatsChange);
   useEffect(() => { onPracticeStatsChangeRef.current = onPracticeStatsChange; }, [onPracticeStatsChange]);
   // Ref-assigned every render (endSessionNowRef pattern) so every call
@@ -7649,6 +7655,12 @@ export function VoiceTutorRealtime({
         // buffered wrong sentence before it's ever spoken.
         let vbsRolling = false;
         let vbsCapTimer: ReturnType<typeof setTimeout> | null = null;
+        // Round-19 (2026-07-17, session portal-fef3fbb0): set when the
+        // 'generated-problem' SSE event lands (the pipeline RETURNED a
+        // problem this attempt). If the stream then ends without any
+        // show_problem, the brain spoke its bridge ("let me see what I
+        // have…") and froze — checked at stream end, kill + retry.
+        let generatedProblemReceivedThisAttempt = false;
         const clearVbsCap = () => {
           if (vbsCapTimer) { clearTimeout(vbsCapTimer); vbsCapTimer = null; }
         };
@@ -8594,6 +8606,7 @@ export function VoiceTutorRealtime({
                   // where it rides every later turn's <active_problem>.
                   const st = typeof ev.statement === 'string' ? ev.statement : '';
                   if (st) {
+                    generatedProblemReceivedThisAttempt = true;
                     const expAns = typeof ev.expectedAnswer === 'string' ? ev.expectedAnswer : undefined;
                     // Late-pin robustness (Round-17): if the matching card is
                     // ALREADY the tracked problem (event arrived after the
@@ -8644,10 +8657,18 @@ export function VoiceTutorRealtime({
                   // disagreement trusts neither answer — but the divergence
                   // is logged as an early warning that the brain may be
                   // about to mis-grade.
-                  if (name === 'show_problem' && typeof (args as Record<string, unknown>).expectedAnswer === 'string') {
+                  if ((name === 'show_problem' || name === 'show_equation') && typeof (args as Record<string, unknown>).expectedAnswer === 'string') {
                     const claimedAnswer = String((args as Record<string, unknown>).expectedAnswer).trim();
-                    const claimedStatement = typeof (args as Record<string, unknown>).statement === 'string'
-                      ? String((args as Record<string, unknown>).statement).trim() : '';
+                    // Round-19: the show_equation path (the brain often
+                    // renders a student-brought problem as an equation card
+                    // rather than a problem card) verifies against the
+                    // ACTIVE problem's statement — that's what grading will
+                    // run against — falling back to the card's latex.
+                    const claimedStatement = name === 'show_problem'
+                      ? (typeof (args as Record<string, unknown>).statement === 'string'
+                          ? String((args as Record<string, unknown>).statement).trim() : '')
+                      : ((currentProblemRef.current?.statement
+                          ?? (typeof (args as Record<string, unknown>).latex === 'string' ? String((args as Record<string, unknown>).latex) : ''))).trim();
                     delete (args as Record<string, unknown>).expectedAnswer;
                     if (claimedAnswer && claimedStatement) {
                       onDebugEvent?.('improvised_answer_verifying', claimedAnswer.slice(0, 40));
@@ -9561,6 +9582,23 @@ export function VoiceTutorRealtime({
           // when the hold already released via lookahead/cap, or when a
           // kill dropped it via closeGate).
           releaseVerdictHold();
+        }
+
+        // Round-19 (2026-07-17): generation returned a problem but the brain
+        // ended its turn without rendering it — the student heard the bridge
+        // sentence and then nothing (observed live: "Alright, let me see
+        // what I have for you." → stop=end_turn → frozen session). Surface
+        // as a rejection so the retry renders the canonicalText.
+        if (!attemptKilled
+            && generatedProblemReceivedThisAttempt
+            && !toolNamesThisAttempt.includes('show_problem')) {
+          rejectionsThisAttempt.push({
+            action: 'generate_problem_unrendered',
+            reason: 'You called generate_problem and RECEIVED a canonicalText in the tool_result, but ended your turn WITHOUT rendering it. The student heard your bridge sentence and then silence — the session looks frozen. RETRY: emit show_problem with `statement` set to the EXACT canonicalText from the tool_result, plus one short spoken line introducing the problem.',
+          });
+          console.warn('[brain-orchestrator] generate_problem returned a problem but no show_problem followed — killing for retry.');
+          onDebugEvent?.('generate_problem_unrendered', 'kill + retry');
+          await performKill();
         }
 
         // Dev forced kill: a short, fully-gated turn flushes its only
@@ -10575,8 +10613,22 @@ export function VoiceTutorRealtime({
             }
             logPacing(`streak-correct seg="${ver.segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
-            // Practice meter: a brain-affirmed genuine verification is a solve.
-            practiceSolvedRef.current++;
+            // Practice meter: a brain-affirmed genuine verification is a
+            // solve — once per PROBLEM (multi-step problems affirm several
+            // times), and only when a problem is actually on the board
+            // (hook-phase Q&A affirmations don't count).
+            {
+              const solvedStmt = (currentProblemRef.current?.statement ?? '').trim();
+              if (solvedStmt.length >= 10) {
+                let sh = 5381;
+                for (let i = 0; i < solvedStmt.length; i++) sh = (sh * 33) ^ solvedStmt.charCodeAt(i);
+                const solvedHash = (sh >>> 0).toString(36);
+                if (!practiceSolvedHashesRef.current.has(solvedHash)) {
+                  practiceSolvedHashesRef.current.add(solvedHash);
+                  practiceSolvedRef.current++;
+                }
+              }
+            }
             emitPracticeStatsRef.current();
             // Late-fire segment-mastered: if completedSegmentIdsRef
             // contains ver.segId (i.e. brain emitted mark_segment_complete

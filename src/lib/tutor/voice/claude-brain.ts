@@ -1009,7 +1009,7 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
     return (
       `<active_problem>\n` +
       `The student brought THIS problem themselves — it is what they asked to work on. ` +
-      `Render and narrate THEIR numbers/expression via show_problem (NOT the authored segment card; do not substitute different values), apply the current lesson's method, and derive the answer yourself — declare it via show_problem's expectedAnswer field so the runtime can verify it. ` +
+      `Render and narrate THEIR numbers/expression via show_problem (NOT the authored segment card; do not substitute different values), apply the current lesson's method, and derive the answer yourself — declare it via the expectedAnswer field on WHICHEVER card you render it with (show_problem preferred; show_equation also accepts it) so the runtime can verify it. ` +
       `This is the example to teach with — it does NOT replace the segment's learning objectives: once it is solved, keep going with the segment's remaining objectives and any follow-up the student raises, then advance normally. Do not tunnel on this single problem if the lesson has more to cover.\n\n` +
       `Statement: ${active.statement}\n` +
       (active.expectedAnswer

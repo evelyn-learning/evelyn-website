@@ -350,6 +350,11 @@ const MATH_ANCHOR_SRC = 'squared|cubed|equals|=|over|plus|minus|axis|coordinate|
 const A_VARIABLE_REPLACEMENTS: Replacement[] = [
   // "a represents/denotes/stands for/equals/=" — 'a' as the named variable.
   { pattern: /\ba\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'ay' },
+  // Round-19 (2026-07-17, live): "a squared minus b squared" spoke the
+  // article. 'a' before squared/cubed is the variable when a math
+  // continuation follows (operator word, "is", or another single-letter /
+  // respelled term) — "a squared grid" (adjective use) stays untouched.
+  { pattern: /\ba\b(?=\s+(?:squared|cubed)\s+(?:minus|plus|times|over|equals|divided|is\b|[a-z]\b|bee\b|why\b))/gi, replacement: 'ay' },
   // "substitute a" / "solve for a" / "value of a" / "values of a"
   { pattern: /(?<=\b(?:substitute|solve for|value of|values of)\s)a\b/gi, replacement: 'ay' },
   // "of a and b" — e.g. "the ratio of a and b"

@@ -35,6 +35,15 @@ function looksLikeMath(inner: string): boolean {
     /\S\s*[=<>≤≥≠]\s*\S/.test(inner) &&
     !/[a-z]{3,}/.test(inner)
   ) return true;
+  //   4. Coordinate tuple (2026-07-17 — live AP Calc card showed literal
+  //      "$(1,-1)$"): a parenthesized, comma-separated list of short
+  //      operands (numbers, decimals, negatives, single identifiers).
+  //      No prose word can appear (each operand caps at 4 word chars),
+  //      so "$(low, high) prices$" stays literal.
+  if (
+    inner.length <= 24 &&
+    /^\(\s*-?[\w.]{1,4}\s*(?:,\s*-?[\w.]{1,4}\s*)+\)$/.test(inner)
+  ) return true;
   return false;
 }
 
