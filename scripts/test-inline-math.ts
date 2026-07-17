@@ -237,8 +237,6 @@ console.log('\n=== Fn-call-only run must NOT inject literal $…$ (Final-review 
   check('screenshot 2 still wraps (has _{ signal)', m.length === 1 && m[0] === 'lim_{x→4} (x² − 16)/(x − 4)', autoJoined(t));
 }
 
-console.log(`\n${pass} passed, ${fail} failed`);
-if (fail > 0) process.exit(1);
 
 console.log('\n=== Round-19: coordinate tuples are math (2026-07-17) ===');
 {
@@ -263,3 +261,22 @@ console.log('\n=== Round-19: coordinate tuples are math (2026-07-17) ===');
 }
 
 console.log(`\nround-19 additions: done`);
+
+console.log('\n=== Round-21: compact operand-operator spans are math ===');
+{
+  // Live transcript showed literal "$L + M$" — no relation symbol, >4
+  // chars, no LaTeX signal, so every display rule missed it.
+  const m = mathBodies('The limit of a sum is $L + M$ here.');
+  check('$L + M$ renders as math', m.length === 1 && m[0] === 'L + M');
+}
+{
+  const m = mathBodies('So $c \\cdot L$ and $L/M$ both work.');
+  check('operator spans render', m.length === 2);
+}
+{
+  const m1 = mathBodies('It costs $5 and shipping is $10.');
+  check('currency artifact still literal (prose guard)', m1.length === 0);
+}
+
+console.log(`\n${pass} passed, ${fail} failed`);
+if (fail > 0) process.exit(1);

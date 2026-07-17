@@ -44,6 +44,15 @@ function looksLikeMath(inner: string): boolean {
     inner.length <= 24 &&
     /^\(\s*-?[\w.]{1,4}\s*(?:,\s*-?[\w.]{1,4}\s*)+\)$/.test(inner)
   ) return true;
+  //   5. Compact operand-operator-operand (Round-21 — live transcript
+  //      showed literal "$L + M$"): an arithmetic operator between short
+  //      operands, no prose word. The prose guard keeps the currency
+  //      pairing-artifact ("5 and shipping is") literal.
+  if (
+    inner.length <= 24 &&
+    /[A-Za-z0-9)\]]\s*[-+*/·×^]\s*[A-Za-z0-9(\[]/.test(inner) &&
+    !/[a-z]{3,}/.test(inner)
+  ) return true;
   return false;
 }
 

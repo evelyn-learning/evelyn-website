@@ -824,3 +824,34 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-20 ($-span math-by-default + in-span respell)');
 }
+
+// --- Round-21 (2026-07-17, session portal-83b4bb89): complex declared spans
+// Rule 3b made the brain wrap heavily; the verbalizer met \lim, \to, \dfrac
+// and left raw LaTeX in speech ("\\lim sub x\\to ay [f(x) plus g(x)]").
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('if $\\lim_{x\\to a} f(x) = L$, what should $\\lim_{x\\to a} [f(x) + g(x)]$ equal?',
+     'if the limit as x approaches ay of f of x equals L, what should the limit as x approaches ay of f of x plus g of x equal?',
+     'lim-sum-law-span');
+  eq('what do you think $\\lim_{x\\to a} [c \\cdot f(x)]$ should equal?',
+     'what do you think the limit as x approaches ay of c times f of x should equal?',
+     'lim-constant-multiple-span');
+  eq('the quotient becomes $\\dfrac{5 \\cdot 6}{5}$.',
+     'the quotient becomes 5 times 6 over 5.',
+     'dfrac-span');
+  eq('we want $\\lim_{x\\to 2} \\dfrac{f(x)\\cdot g(x)}{g(x) - 1}$.',
+     'we want the limit as x approaches 2 of f of x times g of x over g of x minus 1.',
+     'lim-dfrac-composite-span');
+  eq('Quotient works only when $M \\neq 0$.',
+     'Quotient works only when M not equal to 0.',
+     'neq-regression');
+  // Missing space after a sentence-joining period ("…$L \cdot M$.Same…").
+  eq('the product of the limits — $L \\cdot M$.Same pattern every time.',
+     'the product of the limits, L times M. Same pattern every time.',
+     'period-capital-space');
+
+  console.log('OK — Round-21 (lim/dfrac/f-of-x verbalization)');
+}

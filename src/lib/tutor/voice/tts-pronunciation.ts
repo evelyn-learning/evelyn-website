@@ -13,7 +13,9 @@
 
 interface Replacement {
   pattern: RegExp;
-  replacement: string;
+  // Round-21: callback form for replacements that transform a capture
+  // (e.g. \lim_{x\to a} → "the limit as x approaches a of").
+  replacement: string | ((substring: string, ...args: string[]) => string);
 }
 
 /** Trigonometric function names. The TTS pronounces "sin" as the
@@ -185,7 +187,10 @@ function wordifyMathOperators(s: string): string {
  *  resolve inside-out — same approach as board-title's resolveFractions:
  *  the regex only matches a frac whose numerator/denominator are
  *  themselves brace-free, i.e. exactly the innermost one first. */
-const SPEECH_FRAC_RE = /\\frac\{([^{}]*)\}\{([^{}]*)\}/;
+// Round-21: \dfrac/\tfrac are display/text-size variants of the same
+// fraction — the brain uses \dfrac heavily on cards and (post-Rule-3b) in
+// speech spans, which previously reached the speaker raw.
+const SPEECH_FRAC_RE = /\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/;
 function resolveFractionsForSpeech(t: string): string {
   let prev: string;
   do {
@@ -221,6 +226,20 @@ function resolveSqrtForSpeech(t: string): string {
  *  (the alternate inline-math delimiter form) are stripped the same way
  *  $ is — see stripDollarMathForSpeech. */
 const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
+  // Round-21: limits. Must run before the generic subscript rule (which
+  // would otherwise read \lim_{x\to a} as "lim sub x to a"). The braced
+  // subscript is the approach expression; "of" closes the phrase so the
+  // following operand reads naturally ("the limit as x approaches 2 of
+  // f of x times g of x").
+  { pattern: /\\lim_\{([^{}]*)\}/g, replacement: (_m: string, sub: string) => ` the limit as ${sub.replace(/\\to\b/g, ' approaches ')} of ` },
+  { pattern: /\\lim\b/g, replacement: ' the limit of ' },
+  { pattern: /\\to\b/g, replacement: ' approaches ' },
+  { pattern: /→/g, replacement: ' approaches ' },
+  // Single-letter function application: f(x) → "f of x". Restricted to the
+  // conventional function names f/g/h — a leading digit or other letter is
+  // multiplication ("2(2)^2", "x(x+3)") and stays untouched.
+  { pattern: /\b([fgh])\(([^()]{1,16})\)/g, replacement: '$1 of $2 ' },
+  { pattern: /\\quad\b|\\qquad\b/g, replacement: ', ' },
   { pattern: /\\times\b/g, replacement: ' times ' },
   { pattern: /\\cdot\b/g, replacement: ' times ' },
   { pattern: /\\div\b/g, replacement: ' divided by ' },
@@ -234,7 +253,9 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
 ];
 function verbalizeMathCommandsForSpeech(t: string): string {
   for (const { pattern, replacement } of MATH_COMMAND_REPLACEMENTS) {
-    t = t.replace(pattern, replacement);
+    t = typeof replacement === 'string'
+      ? t.replace(pattern, replacement)
+      : t.replace(pattern, replacement);
   }
   return t;
 }
@@ -354,7 +375,15 @@ function stripDollarMathForSpeech(t: string): string {
       !MATH_SIGNAL_RE.test(inner) &&
       !MATH_OPERAND_OP_RE.test(inner)
     ) return whole;
-    return ` ${respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewriteDerivatives(inner)))).trim()} `;
+    // Round-21: post-verbalization span cleanup — square brackets are
+    // grouping (silent), and any RESIDUAL braces or unknown \commands
+    // must never reach the speaker (the raw-"\lim sub x\to ay" class).
+    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewriteDerivatives(inner))))
+      .replace(/\\[a-zA-Z]+\s*/g, ' ')
+      .replace(/[[\]{}]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return ` ${spoken} `;
   });
 }
 
@@ -800,7 +829,9 @@ export function rewriteForTTS(raw: string): string {
   // Degree sign: "38°N" → "38 degrees N", "60°C" → "60 degrees C".
   t = t.replace(/°/g, ' degrees ');
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
-    t = t.replace(pattern, replacement);
+    t = typeof replacement === 'string'
+      ? t.replace(pattern, replacement)
+      : t.replace(pattern, replacement);
   }
   // Collapse doubled commas (e.g. two adjacent em-dashes both becoming
   // ", ") into a single comma.
@@ -831,5 +862,10 @@ export function rewriteForTTS(raw: string): string {
   // trailing space that then abuts a following "." or "?") reads as an
   // audible extra pause for some TTS voices — collapse it.
   t = t.replace(/\s+([.,!?])/g, '$1');
+  // Round-21: restore the missing space after a sentence-joining period
+  // ("…$L \cdot M$.Same pattern…" → after $-strip, "M.Same"). Requires a
+  // capital + lowercase after the period so decimals ("3.14") and
+  // abbreviations ("U.S." — uppercase follows) stay untouched.
+  t = t.replace(/(\w)\.([A-Z][a-z])/g, '$1. $2');
   return t;
 }

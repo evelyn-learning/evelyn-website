@@ -3070,6 +3070,32 @@ export function VoiceTutorRealtime({
           if (pg?.title) g.title = pg.title;
         }
       }
+      // Round-21 (2026-07-17, session portal-83b4bb89): duplicate function
+      // definition in one equation card. The brain's latex drifted from its
+      // narration (it SPOKE about f and g, but the card read
+      // "g(x)=2x^2-3, g(x)=x+4" — the same name defined twice with
+      // different bodies, which is ALWAYS an authoring error). Reject +
+      // retry with a pointed corrective; single-definition or repeated
+      // identical definitions pass untouched.
+      if (cmd.action === 'showEquation') {
+        const latex = String(cmdAny.latex ?? '');
+        const defs = new Map<string, string>();
+        let dupName: string | null = null;
+        for (const m of latex.matchAll(/([a-zA-Z])\s*\(\s*[a-zA-Z]\s*\)\s*=\s*([^,;=]+)/g)) {
+          const name = m[1];
+          const body = m[2].replace(/\s+/g, '');
+          const prior = defs.get(name);
+          if (prior !== undefined && prior !== body) { dupName = name; break; }
+          defs.set(name, body);
+        }
+        if (dupName) {
+          const reason = `Your show_equation latex defines the function "${dupName}" TWICE with different bodies (${latex.slice(0, 140)}). One of them is a DIFFERENT function — this is copy-paste letter drift (e.g. writing g(x) where your narration says f(x)). Re-emit the equation with each function under the letter your NARRATION uses; every letter in the latex must match what you speak.`;
+          console.warn('[VoiceTutorRealtime] Dropping show_equation — duplicate function definition:', dupName);
+          onDebugEvent?.('equation_duplicate_definition', `${dupName}: ${latex.slice(0, 80)}`);
+          rejected.push({ action: 'show_equation', reason });
+          return [];
+        }
+      }
       if (cmd.action === 'showProblem') {
         const statement = cmdAny.problem?.statement?.trim() || '';
         // Adaptive-pacing v1 dedup: append the rendered problem's hash
