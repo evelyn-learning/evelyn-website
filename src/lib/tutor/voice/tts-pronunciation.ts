@@ -544,11 +544,52 @@ function rewriteLegalV(t: string): string {
  */
 const MATH_OPERAND_SRC = String.raw`\d+(?:\.\d+)?|[A-Za-z]`;
 const BARE_MINUS_RE = new RegExp(
-  `\\b(${MATH_OPERAND_SRC})\\b\\s+-\\s+(?=(?:${MATH_OPERAND_SRC})\\b)`,
+  `\\b(${MATH_OPERAND_SRC})\\b\\s+-\\s+(?=(${MATH_OPERAND_SRC})\\b)`,
   'g',
 );
+
+/** Y3 review (Controller decision, upgraded from documentation): a spaced
+ *  YEAR RANGE ("1941 - 1945") was being read as subtraction ("1941 minus
+ *  1945") — a live regression in a history-heavy catalog, where year ranges
+ *  are common and a bare hyphen there already reads fine as a natural
+ *  pause/range, same as TTS handles unspaced ranges elsewhere in this file.
+ *  Excluded ONLY when BOTH operands are exactly 4-digit numbers (the year
+ *  shape) — a 2-digit pair ("21 - 14", exam scores) or a mixed-digit-count
+ *  pair ("400 - 40") still converts normally, since neither reads as a year.
+ *  Accepted, documented loss: genuine math subtraction between two 4-digit
+ *  literals (e.g. "9000 - 1500") will also read as an untouched range rather
+ *  than "minus" — judged rare enough in tutoring speech that the year-range
+ *  fix is worth the tradeoff. */
+function isFourDigitYear(operand: string): boolean {
+  return /^\d{4}$/.test(operand);
+}
+
+/** Y3 review (Minor): a chain of 3+ single-letter operands ("A - B - C")
+ *  reads more like an enumerated list / labeled option set than subtraction
+ *  — unlike a numeric chain ("2 - 2 - 2", still converted, tested above),
+ *  there's no digit-shaped chain to anchor the math reading. Cheap guard:
+ *  only fires when BOTH sides of a link are single letters AND the link
+ *  extends into a further single-letter link on either side (forward: the
+ *  right operand is itself followed by another " - <letter>"; backward: the
+ *  left operand is itself preceded by another "<letter> - "). A single
+ *  isolated two-letter link ("x - y", no third letter chained in either
+ *  direction) is NOT a "chain" by this definition and still converts
+ *  normally — same conservative shape as the rest of this file. */
+function isSingleLetterChainLink(full: string, offset: number, matchLen: number, left: string, right: string): boolean {
+  if (!/^[A-Za-z]$/.test(left) || !/^[A-Za-z]$/.test(right)) return false;
+  const afterRight = full.slice(offset + matchLen + 1); // right operand is exactly 1 char
+  const forwardExtends = /^\s+-\s+[A-Za-z]\b/.test(afterRight);
+  const beforeMatch = full.slice(0, offset);
+  const backwardExtends = /(?:^|[^A-Za-z])[A-Za-z]\s+-\s+$/.test(beforeMatch);
+  return forwardExtends || backwardExtends;
+}
+
 function rewriteBareMinusForSpeech(t: string): string {
-  return t.replace(BARE_MINUS_RE, (_m, left: string) => `${left} minus `);
+  return t.replace(BARE_MINUS_RE, (m: string, left: string, right: string, offset: number, full: string) => {
+    if (isFourDigitYear(left) && isFourDigitYear(right)) return m; // year range — leave hyphen
+    if (isSingleLetterChainLink(full, offset, m.length, left, right)) return m; // enumerated list, not subtraction
+    return `${left} minus `;
+  });
 }
 
 /**
@@ -651,11 +692,31 @@ export function rewriteForTTS(raw: string): string {
   // it's the single digit ²/³ in isolation; "x¹²" (a 2-digit run that
   // happens to contain the digit shape for 2) correctly reads "to the 12",
   // never "to the 1 squared" or digit-by-digit.
+  //
+  // Y3 REVIEW FIX (Important): a footnoted excerpt ("document¹", "citizens²"
+  // — common in history/lit passages) was misread as an exponent
+  // ("document to the 1", "citizens squared"). Gated on the PRECEDING
+  // character's shape, mirroring the bare-minus operand-shape gate below:
+  // only convert when the character immediately before the superscript run
+  // is a digit ("5²"), a single-letter variable standalone token ("x²",
+  // "m²" — "m" here is a unit, e.g. square meters, so converting IS the
+  // correct reading), or a closing paren/bracket ("(x+1)²"). A superscript
+  // directly after a MULTI-LETTER word (the preceding character is a letter
+  // that is itself preceded by another letter, i.e. not a standalone
+  // single-letter token) is left untouched — the footnote-marker shape.
   const SUPERSCRIPT_DIGIT_MAP: Record<string, string> = {
     '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
     '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
   };
-  t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (run: string) => {
+  t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (run: string, offset: number, full: string) => {
+    const prev = full.charAt(offset - 1);
+    const prevPrev = full.charAt(offset - 2);
+    const precededByDigit = /\d/.test(prev);
+    const precededByCloser = prev === ')' || prev === ']';
+    const precededBySingleLetterVar = /[A-Za-z]/.test(prev) && !/[A-Za-z]/.test(prevPrev);
+    if (!precededByDigit && !precededByCloser && !precededBySingleLetterVar) {
+      return run; // footnote marker shape — leave the raw glyph(s) untouched
+    }
     const digits = run.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => SUPERSCRIPT_DIGIT_MAP[ch]);
     return spokenExponent(digits);
   });

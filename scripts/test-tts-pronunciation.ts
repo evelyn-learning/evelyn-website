@@ -583,3 +583,59 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Task Y3 (bare minus between operands, unicode superscript exponents)');
 }
+
+// Task Y3 review findings (round14-chips-qpin-pace):
+//  1. Footnote superscripts ("document¹", "citizens²" — common in
+//     history/lit excerpts) were misread as exponents.
+//  2. Year ranges ("1941 - 1945") were misread as subtraction — a live
+//     regression in a history-heavy catalog.
+//  3. Single-letter chains ("A - B - C") read more like an enumerated list
+//     than subtraction.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  // --- (1) Footnote superscripts: gated on the preceding character's shape
+  // A superscript directly after a MULTI-LETTER word is a footnote marker,
+  // not an exponent — must stay untouched.
+  eq('The document¹ argues for federalism.',
+     'The document¹ argues for federalism.',
+     'footnote-after-multiletter-word-untouched');
+  eq('All citizens² deserve equal protection.',
+     'All citizens² deserve equal protection.',
+     'footnote-after-plural-word-untouched');
+  // A superscript after a single-letter variable, a bare digit, or a
+  // closing paren/bracket still converts — those are the genuine exponent
+  // shapes ("m²" is a unit — "m" is a single letter, so it converts, and
+  // that's the correct reading).
+  eq('Compute x² for this problem.', 'Compute x squared for this problem.', 'single-letter-var-still-converts');
+  eq('The area is m² of floor space.', 'The area is m squared of floor space.', 'single-letter-unit-still-converts');
+  eq('Expand (x+1)² fully.', 'Expand (x+1) squared fully.', 'closing-paren-still-converts');
+  eq('The value 5² is 25.', 'The value 5 squared is 25.', 'digit-anchor-still-converts');
+
+  // --- (2) Year ranges: exclude the minus conversion when BOTH operands
+  // are 4-digit numbers (year-like) — the hyphen is left for TTS to read as
+  // a natural pause/range.
+  eq('The war lasted from 1941 - 1945.',
+     'The war lasted from 1941 - 1945.',
+     'year-range-untouched');
+  eq('2 - 2 is 0.', '2 minus 2 is 0.', 'non-year-digits-still-convert');
+  eq('x - 4 is negative if x is small.', 'x minus 4 is negative if x is small.', 'letter-digit-still-converts');
+  eq('400 - 40 is 360.', '400 minus 40 is 360.', 'mixed-digit-count-still-converts');
+  // 2-digit pair (e.g. exam scores) is NOT year-shaped — still converts,
+  // documented accepted call per the brief.
+  eq('21 - 14 is 7.', '21 minus 14 is 7.', 'two-digit-pair-still-converts');
+
+  // --- (3) Single-letter chains: 3+ single-letter operands chained read as
+  // an enumerated list, not subtraction — left untouched. A numeric chain
+  // ("2 - 2 - 2", tested above) is unaffected — this guard only fires when
+  // ALL chained operands are single letters.
+  eq('Compare A - B - C as your options.',
+     'Compare A - B - C as your options.',
+     'single-letter-chain-untouched');
+
+  console.log('OK — Task Y3 review findings (footnote superscripts, year ranges, letter chains)');
+}
