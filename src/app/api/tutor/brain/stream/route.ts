@@ -146,7 +146,11 @@ interface BrainStreamRequestBody {
 function makeToolResultProvider(
   ctx: BrainTurnInput['lessonPlanContext'] | undefined,
   shownProblemIds: string[],
-  shownProblemHashes: string[]
+  shownProblemHashes: string[],
+  // 2026-07-17: lets the route surface a resolved generate_problem to the
+  // CLIENT as a 'generated-problem' SSE event, so the client can pin the
+  // verified expectedAnswer into later turns' <active_problem> block.
+  onGeneratedProblem?: (p: { statement: string; expectedAnswer?: string }) => void
 ): BrainTurnInput['toolResultProvider'] {
   if (!ctx) return undefined;
   return async (name, args) => {
@@ -263,6 +267,13 @@ function makeToolResultProvider(
           telemetry,
         });
       }
+      // Surface to the client so the expectedAnswer can ride every later
+      // turn's <active_problem> block instead of decaying in an old
+      // tool_result (the 2026-07-17 verification-drift fix).
+      onGeneratedProblem?.({
+        statement: result.canonicalText,
+        expectedAnswer: result.expectedAnswer,
+      });
       return JSON.stringify({
         canonicalText: result.canonicalText,
         expectedAnswer: result.expectedAnswer,
@@ -576,7 +587,8 @@ export async function POST(req: NextRequest) {
           toolResultProvider: makeToolResultProvider(
             body.lessonPlanContext,
             body.shownProblemIds ?? [],
-            body.shownProblemHashes ?? []
+            body.shownProblemHashes ?? [],
+            (p) => send({ type: 'generated-problem', ...p })
           ),
       };
 

@@ -171,7 +171,15 @@ export interface BrainTurnInput {
    *  on the next turn verified the student's correct answer against the
    *  anchor's expected answer — five judge KILLs in a row before the
    *  brain regrasped which dataset was active. */
-  activeProblem?: { statement: string; source?: 'student' | 'generated' };
+  activeProblem?: {
+    statement: string;
+    source?: 'student' | 'generated';
+    /** Pipeline-verified expected answer for the active problem (2026-07-17).
+     *  Carried on EVERY turn while the problem is active so the brain
+     *  verifies attempts against it instead of re-deriving from scratch and
+     *  drifting mid-thread. */
+    expectedAnswer?: string;
+  };
   /** Pacing v2 student-state snapshot. Surfaces as `<student_state>`
    *  block when any signal is interesting (streak > 0 OR cue present
    *  OR segmentMastered set OR segTurns >= 2). Block is OMITTED
@@ -343,6 +351,13 @@ export type BrainStreamEvent =
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
   | { type: 'pause'; ms: number; reason?: string }
+  /** generate_problem resolved server-side (2026-07-17): the verified
+   *  problem + its expected answer, surfaced so the CLIENT can pin the
+   *  answer into subsequent turns' <active_problem> block. Without this
+   *  the expected answer lived only in an old tool_result and the brain
+   *  drifted from it during long verification threads (live 2026-07-17:
+   *  affirmed 1/4 for a limit whose pipeline-verified answer was 1/32). */
+  | { type: 'generated-problem'; statement: string; expectedAnswer?: string }
   /** Terminal event. Includes cumulative metadata for telemetry. */
   | {
       type: 'done';
@@ -945,7 +960,9 @@ function formatDeduplicatedShowsBlock(shows?: string[]): string {
   );
 }
 
-function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
+// Exported for scripts/test-active-problem-block.ts (same pattern as
+// formatPracticeSessionBlock — testable without running a brain turn).
+export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): string {
   if (!active?.statement) return '';
   // Student-brought problem: the student stated their OWN concrete problem to
   // work. Teach THEIRS via show_problem (segment_truth is suppressed this turn,
@@ -970,6 +987,10 @@ function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']): stri
     `Earlier problem cards may still be visible in <whiteboard_state> (the runtime keeps them for scroll-back); ignore them when reasoning about the current attempt. ` +
     `If you called generate_problem this session, the canonicalText that came back IS the active problem; the anchor problem you passed in was calibration only and is no longer the focus.\n\n` +
     `Statement: ${active.statement}\n` +
+    (active.expectedAnswer
+      ? `\nVERIFIED expected answer (from the problem pipeline's independent solve): ${active.expectedAnswer}\n` +
+        `Check the student's attempts against THIS. Do not re-derive the answer from scratch mid-conversation — long verification threads are where dropped factors and sign slips creep in. If your own working disagrees with this answer, TRUST THIS and re-check your working before saying anything. Never reveal it before the student has genuinely attempted or given up.\n`
+      : '') +
     `</active_problem>\n\n`
   );
 }

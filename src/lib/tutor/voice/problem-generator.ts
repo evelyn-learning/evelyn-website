@@ -101,11 +101,19 @@ function resolveAbsoluteDifficulty(
   return target as IProblemBank['difficulty'];
 }
 
-/** Layer 1 / 3 — bank query. Returns null if no eligible row. */
+/** Layer 1 / 3 — bank query. Returns null if no eligible row.
+ *
+ *  excludeHashes (2026-07-17, write-back cache): bank rows written back
+ *  from runtime brain-gen can also have been SERVED via Layer 2 earlier in
+ *  this same session (tracked by content hash, not bank _id). Without the
+ *  hash filter, a later request could re-serve the same problem from the
+ *  bank because its _id was never in shownProblemIds. Filtered in JS —
+ *  candidates are capped at 20. */
 async function queryBank(
   topic: string,
   difficulty: IProblemBank['difficulty'],
-  excludeIds: string[]
+  excludeIds: string[],
+  excludeHashes: string[] = []
 ): Promise<GeneratedProblem | null> {
   await connectDB();
   const filter: Record<string, unknown> = {
@@ -117,14 +125,22 @@ async function queryBank(
   }
   // Random sampling within the matching set so back-to-back
   // requests don't return the same row.
-  const candidates = (await ProblemBank.find(filter)
+  let candidates = (await ProblemBank.find(filter)
     .limit(20)
     .lean()) as unknown as IProblemBank[];
+  if (excludeHashes.length > 0) {
+    candidates = candidates.filter((c) => !excludeHashes.includes(simpleHash(c.problemText)));
+  }
   if (candidates.length === 0) return null;
   const pick = candidates[Math.floor(Math.random() * candidates.length)];
   return {
     canonicalText: pick.problemText,
-    expectedAnswer: pick.answer,
+    // Same combined shape brainGenWithVerify returns: the worked solution
+    // (when the row has one — write-back rows do) plus the bare checkable
+    // answer, so bank-served problems give the tutor identical material.
+    expectedAnswer: pick.solutionText
+      ? `${pick.solutionText} (answer: ${pick.answer})`
+      : pick.answer,
     hints: pick.hints,
     responseFormat: pick.responseFormat,
     choices: pick.choices?.map((c, i) => ({
@@ -134,6 +150,53 @@ async function queryBank(
     provenance: 'bank',
     trackingId: String(pick._id),
   };
+}
+
+/** Write-back cache (2026-07-17): persist a runtime-verified brain-gen
+ *  problem into the bank so the NEXT request for this topic+difficulty hits
+ *  the ~50ms Layer-1 fast-path instead of paying the ~2.5-8s generate+verify
+ *  round again. This turns bank seeding into a lazy, demand-driven process —
+ *  the bank grows exactly where students actually practice, per course, with
+ *  no authoring effort. Fire-and-forget from the Layer-2 success path: a
+ *  write failure must never delay or fail the serve. Idempotent — keyed on
+ *  the content hash ($setOnInsert upsert), so re-generation collisions are
+ *  no-ops. License policy: the generator writes ORIGINAL items (the prompt
+ *  forbids reusing anchor numbers/context), matching the 'internal-original'
+ *  origin the schema documents. */
+async function persistBrainGenProblem(
+  topic: string,
+  difficulty: IProblemBank['difficulty'],
+  gen: GenPayload,
+  hash: string
+): Promise<void> {
+  try {
+    await connectDB();
+    await ProblemBank.updateOne(
+      { id: `brain-gen.${topic}.${hash}` },
+      {
+        $setOnInsert: {
+          id: `brain-gen.${topic}.${hash}`,
+          topic,
+          difficulty,
+          problemText: gen.problemText,
+          answer: gen.finalAnswer,
+          solutionText: gen.teachingAnswer,
+          hints: gen.hints,
+          responseFormat: gen.responseFormat === 'mcq' ? 'mcq' : 'numeric',
+          choices: gen.choices,
+          source: { name: 'Evelyn (brain-gen runtime)' },
+          license: 'internal-original',
+          verifiedAt: new Date(),
+          verifierModel: BRAINGEN_VERIFY_MODEL,
+        },
+      },
+      { upsert: true }
+    );
+    console.log(`[problem-generator] write-back stored brain-gen.${topic}.${hash}`);
+  } catch (err) {
+    // Non-fatal by design — the student already has their problem.
+    console.warn('[problem-generator] write-back failed (non-fatal):', err);
+  }
 }
 
 const BRAINGEN_SYSTEM = `You are an expert problem author for a tutoring engine. Given an ANCHOR practice problem, write ONE fresh problem that tests the SAME underlying skill and concept at the requested difficulty, but with a DIFFERENT real-world context and different numbers/specifics — so a returning student doesn't see the same problem twice. Keep it self-contained and unambiguous. The answer MUST be a single clean, checkable value: a number (with units if natural) or a short exact phrase / multiple-choice letter — NOT an open-ended discussion. Output ONLY a JSON object, no fences, no preamble:
@@ -195,7 +258,8 @@ function parseGenPayload(raw: string): GenPayload | null {
  * to bank / plan-authored, so an UNVERIFIED problem is never served.
  */
 async function brainGenWithVerify(
-  input: GenerateProblemInput
+  input: GenerateProblemInput,
+  absDifficulty: IProblemBank['difficulty']
 ): Promise<GeneratedProblem | null> {
   const los = input.plan.los.map((lo) => `- ${lo.description}`).join('\n');
   const userPrompt =
@@ -213,6 +277,9 @@ async function brainGenWithVerify(
     // Independent solve — the verifier only sees the problem text.
     const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
     if (!answersAgree(gen.finalAnswer, solved)) return null;
+    // Write-back cache: store the verified problem so future requests for
+    // this topic+difficulty hit the bank fast-path. Fire-and-forget.
+    void persistBrainGenProblem(input.topic, absDifficulty, gen, hash);
     return {
       canonicalText: gen.problemText,
       // The teaching solution is what the tutor references; fall back to the
@@ -387,32 +454,33 @@ export async function generateProblem(
   const start = Date.now();
   const topicMeta = getTopicById(input.topic);
   const brainGenState = topicMeta?.brainGen ?? 'disabled';
-  const bankCoverage = topicMeta?.bankCoverage ?? 'none';
   const absDifficulty = resolveAbsoluteDifficulty(input.anchor, input.difficulty);
   const excludeIds = input.excludeIds ?? [];
   const excludeHashes = input.excludeHashes ?? [];
 
-  // Layer 1 — bank fast-path. Skipped if no coverage.
-  if (bankCoverage !== 'none') {
-    try {
-      const hit = await queryBank(input.topic, absDifficulty, excludeIds);
-      if (hit) {
-        return {
-          result: hit,
-          telemetry: {
-            topic: input.topic,
-            brainGenState,
-            difficulty: input.difficulty,
-            layerReached: 1,
-            provenance: 'bank',
-            totalMs: Date.now() - start,
-          },
-        };
-      }
-    } catch (err) {
-      // Bank failure is non-fatal — fall through to brain-gen / fallback.
-      console.warn('[problem-generator] bank query failed:', err);
+  // Layer 1 — bank fast-path. ALWAYS attempted (2026-07-17): the old
+  // `bankCoverage !== 'none'` gate predates the write-back cache — with
+  // runtime brain-gen persisting its verified output, every topic can
+  // accumulate bank rows regardless of its static taxonomy coverage tag,
+  // and an empty-collection miss is one cheap indexed find.
+  try {
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes);
+    if (hit) {
+      return {
+        result: hit,
+        telemetry: {
+          topic: input.topic,
+          brainGenState,
+          difficulty: input.difficulty,
+          layerReached: 1,
+          provenance: 'bank',
+          totalMs: Date.now() - start,
+        },
+      };
     }
+  } catch (err) {
+    // Bank failure is non-fatal — fall through to brain-gen / fallback.
+    console.warn('[problem-generator] bank query failed:', err);
   }
 
   // Layer 2 — brain-gen + verify. Gated by per-topic state.
@@ -423,7 +491,7 @@ export async function generateProblem(
   let brainGenFailed = false;
   if (brainGenState !== 'disabled' || input.forceBrainGen) {
     try {
-      const gen = await brainGenWithVerify(input);
+      const gen = await brainGenWithVerify(input, absDifficulty);
       if (gen) {
         return {
           result: gen,
@@ -445,27 +513,26 @@ export async function generateProblem(
   }
 
   // Layer 3 — bank fallback. Same query as Layer 1, retried after
-  // brain-gen exhaustion in case difficulty resolution shifted.
-  if (bankCoverage !== 'none') {
-    try {
-      const hit = await queryBank(input.topic, absDifficulty, excludeIds);
-      if (hit) {
-        return {
-          result: { ...hit, provenance: 'bank-fallback' },
-          telemetry: {
-            topic: input.topic,
-            brainGenState,
-            difficulty: input.difficulty,
-            layerReached: 3,
-            provenance: 'bank-fallback',
-            totalMs: Date.now() - start,
-            brainGenFailed,
-          },
-        };
-      }
-    } catch (err) {
-      console.warn('[problem-generator] bank fallback failed:', err);
+  // brain-gen exhaustion in case difficulty resolution shifted. Same
+  // always-attempt rationale as Layer 1 (write-back cache).
+  try {
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes);
+    if (hit) {
+      return {
+        result: { ...hit, provenance: 'bank-fallback' },
+        telemetry: {
+          topic: input.topic,
+          brainGenState,
+          difficulty: input.difficulty,
+          layerReached: 3,
+          provenance: 'bank-fallback',
+          totalMs: Date.now() - start,
+          brainGenFailed,
+        },
+      };
     }
+  } catch (err) {
+    console.warn('[problem-generator] bank fallback failed:', err);
   }
 
   // Layer 4 — plan-authored ultimate fallback (relevance-filtered).

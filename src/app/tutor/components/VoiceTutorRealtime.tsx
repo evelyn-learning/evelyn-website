@@ -1420,7 +1420,15 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated'; expectedAnswer?: string } | null>(null);
+  // 2026-07-17 (expectedAnswer pin): the most recent generate_problem
+  // resolution, delivered via the 'generated-problem' SSE event. When the
+  // brain's follow-up show_problem renders the matching canonicalText, the
+  // expectedAnswer is attached to currentProblemRef so it rides EVERY later
+  // turn's <active_problem> block — the fix for verification drift (the
+  // brain re-deriving mid-thread, dropping a factor, and affirming a wrong
+  // answer while the verified one sat in a stale tool_result).
+  const pendingGeneratedAnswerRef = useRef<{ statement: string; expectedAnswer?: string } | null>(null);
 
   // Walk-through insistence counter for the current problem. The tutor should
   // default to Socratic; only switch to walk-through mode after the student
@@ -3927,7 +3935,24 @@ export function VoiceTutorRealtime({
         const p = (cmd as any).problem;
         if (p?.statement) {
           const kind: 'integral' | 'generic' = /\\int|Integral_|\bintegral\b/i.test(p.statement) ? 'integral' : 'generic';
-          currentProblemRef.current = { statement: p.statement, kind };
+          // expectedAnswer pin (2026-07-17): if this render is the
+          // generate_problem canonicalText the server just resolved, carry
+          // its verified answer on the tracked problem. Whitespace-collapsed
+          // comparison — the brain quotes canonicalText verbatim per the
+          // tool contract, but sentence-assembly can normalize whitespace.
+          const pendingGen = pendingGeneratedAnswerRef.current;
+          const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
+          const genMatch = pendingGen && norm(pendingGen.statement) === norm(p.statement) ? pendingGen : null;
+          currentProblemRef.current = {
+            statement: p.statement,
+            kind,
+            ...(genMatch ? { source: 'generated' as const, expectedAnswer: genMatch.expectedAnswer } : {}),
+          };
+          if (genMatch) {
+            pendingGeneratedAnswerRef.current = null;
+            console.log('[VoiceTutorRealtime] expectedAnswer pinned to active problem:', (genMatch.expectedAnswer ?? '').slice(0, 60));
+            onDebugEvent?.('expected_answer_pinned', (genMatch.expectedAnswer ?? '').slice(0, 60));
+          }
           console.log('[VoiceTutorRealtime] Tracked current problem:', p.statement.slice(0, 80));
           // New problem → reset walk-through insistence counter. The tutor
           // needs to re-enter Socratic mode; any walk-through request will
@@ -7342,7 +7367,15 @@ export function VoiceTutorRealtime({
             // verifies the student's correct answer against the OLD
             // problem (judge KILL spiral, observed 2026-05-02).
             activeProblem: currentProblemRef.current?.statement
-              ? { statement: currentProblemRef.current.statement, source: currentProblemRef.current.source }
+              ? {
+                  statement: currentProblemRef.current.statement,
+                  source: currentProblemRef.current.source,
+                  // expectedAnswer pin (2026-07-17): the pipeline-verified
+                  // answer rides every turn while this problem is active so
+                  // the brain verifies against it instead of re-deriving
+                  // (verification-drift fix — see <active_problem> block).
+                  expectedAnswer: currentProblemRef.current.expectedAnswer,
+                }
               : undefined,
             // Whiteboard markup Phase 1 (2026-05-13 audit): drain the
             // unrealized-marks buffer accumulated during the prior turn's
@@ -8474,6 +8507,20 @@ export function VoiceTutorRealtime({
                     setStreamingEntryActive(true);
                   }
                   onTranscriptUpdate([...transcriptRef.current]);
+                } else if (ev.type === 'generated-problem') {
+                  // 2026-07-17 expectedAnswer pin: generate_problem resolved
+                  // server-side. Stash the canonicalText + verified answer;
+                  // the follow-up show_problem dispatch attaches it to
+                  // currentProblemRef (see the tracked-problem site), from
+                  // where it rides every later turn's <active_problem>.
+                  const st = typeof ev.statement === 'string' ? ev.statement : '';
+                  if (st) {
+                    pendingGeneratedAnswerRef.current = {
+                      statement: st,
+                      expectedAnswer: typeof ev.expectedAnswer === 'string' ? ev.expectedAnswer : undefined,
+                    };
+                    onDebugEvent?.('generated_problem_received', st.slice(0, 60));
+                  }
                 } else if (ev.type === 'pause') {
                   // P-02 comprehension pause. The brain or the engine asked
                   // us to wait before voicing the next sentence so the

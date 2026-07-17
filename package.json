@@ -65,6 +65,7 @@
     "test:bargein-gate": "npx tsx scripts/test-bargein-gate.ts",
     "test:practice-session-block": "npx tsx scripts/test-practice-session-block.ts",
     "test:pace-preference-block": "npx tsx scripts/test-pace-preference-block.ts",
+    "test:active-problem-block": "npx tsx scripts/test-active-problem-block.ts",
     "test:perception-watchdog": "npx tsx scripts/test-perception-watchdog.ts",
     "test:perception-classifier": "npx tsx scripts/test-perception-classifier.ts",
     "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",

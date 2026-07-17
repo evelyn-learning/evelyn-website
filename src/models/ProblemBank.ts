@@ -58,6 +58,13 @@ export interface IProblemBank extends Document {
   /** Reference answer — the value or accepted solution. May be
    *  numeric, expression, free-text. */
   answer: string;
+  /** Optional short worked solution (1-3 sentences) the tutor can
+   *  reference while walking a student through the problem. Populated
+   *  by the runtime brain-gen write-back (2026-07-17) — the generator
+   *  produces a teachingAnswer alongside the bare answer; storing it
+   *  keeps bank-served rows behaviorally identical to freshly-generated
+   *  ones. Additive — pre-existing rows lack it. */
+  solutionText?: string;
   /** Optional ordered hints, mirrors SegmentTryYourself.hints[]. */
   hints?: string[];
   /** Response format expected from student. */
@@ -98,6 +105,7 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     passageId: { type: String, required: false },
     problemText: { type: String, required: true },
     answer: { type: String, required: true },
+    solutionText: { type: String },
     hints: [{ type: String }],
     responseFormat: { type: String, enum: ['mcq', 'frq', 'numeric', 'free'] },
     choices: [{ type: String }],
