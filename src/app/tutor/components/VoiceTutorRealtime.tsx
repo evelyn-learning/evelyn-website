@@ -126,6 +126,7 @@ import {
   RENDER_SYNC_STALL_MS,
   RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR,
   VALIDATE_BEFORE_SPEAK_CAP_MS,
+  VERDICT_HOLD_CAP_MS,
   TUTOR_TURN_CAP,
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
@@ -142,6 +143,7 @@ import {
   rendersStudentProblem,
   detectStudentBroughtProblem,
   isSafeOpener,
+  isVerdictOpener,
   judgeKillContentWords,
   isJudgeKillRestatement,
   extractSentence1Normalized,
@@ -150,6 +152,7 @@ import {
 } from '@/lib/tutor/orchestrator/text-heuristics';
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
+import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
 
 export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -1696,6 +1699,12 @@ export function VoiceTutorRealtime({
   // below). Records `<pace_preference>` setting time so the prompt
   // formatter can compute "applied since N turns ago".
   const paceBiasSetTurnRef = useRef<number>(0);
+  // Round-15 Issue 6: true once the pace was set via the BUTTONS this
+  // session (or restored from a button-marked blob). Only button-set bias
+  // persists as a durable cross-session preference — cue-derived bumps
+  // (STT mishears, content phrases like "the car speeds up") stay
+  // session-local. See resolvePaceBiasOnLoad (pace-preference.ts).
+  const paceBiasButtonSetRef = useRef(false);
   const onPaceBiasChangeRef = useRef(onPaceBiasChange);
   useEffect(() => { onPaceBiasChangeRef.current = onPaceBiasChange; }, [onPaceBiasChange]);
   const onSpeakingRateChangeRef = useRef(onSpeakingRateChange);
@@ -1717,6 +1726,12 @@ export function VoiceTutorRealtime({
       const key = `evelyn:pacing-v2:${planId}`;
       const payload = {
         paceBias: paceBiasRef.current,
+        // Round-15 Issue 6: mark bias that the student chose via the pace
+        // BUTTONS. On a FRESH session (vs resume), resolvePaceBiasOnLoad
+        // only honors button-marked bias — unmarked (legacy / cue-derived)
+        // values fall back to the slow default instead of leaking a stale
+        // "fast" into a brand-new session (the 2026-07-16 live bug).
+        ...(paceBiasButtonSetRef.current ? { paceBiasSource: 'button' } : {}),
         correctStreakCount: studentStreakRef.current.count,
         incorrectStreakCount: studentIncorrectStreakRef.current.count,
         speakingRate: speakingRateRef.current,
@@ -1762,6 +1777,9 @@ export function VoiceTutorRealtime({
     paceBiasSetTurnRef.current = pacingTurnCounterRef.current;
     logPacing(`pace-bias-step delta=${delta} from=${from} to=${to} source=${source}${detail ? ` cue="${detail}"` : ''}`);
     onPaceBiasChangeRef.current?.(to);
+    // Round-15 Issue 6: only a BUTTON step marks the bias as a durable
+    // cross-session preference; cue steps adjust this session only.
+    if (source === 'button') paceBiasButtonSetRef.current = true;
     persistPacingState();
   }, [logPacing, persistPacingState]);
   // Task W4: "Speak slower" toggle, set directly (not stepped like
@@ -1857,6 +1875,16 @@ export function VoiceTutorRealtime({
   // substituted to show_segment_card("try-mean-1") → completion-block
   // fired → MAX_VALIDATOR_RETRIES → student stuck.
   const generateProblemThisTurnRef = useRef(false);
+  // Round-15 Issue 1: segment id the cursor was inferred-advanced to this
+  // turn because show_segment_card resolved to a later segment than the
+  // pedagogical cursor (the brain skipped advance_lesson). A relative
+  // advance_lesson({to:"next"}) later in the same turn is treated as
+  // already satisfied by this inference so the two paths can't
+  // double-advance. Cleared at every student-turn entry point;
+  // deliberately NOT cleared on validator retries — the cursor move
+  // survives the retry, so a retry's advance_lesson must still be
+  // absorbed.
+  const inferredAdvanceThisTurnRef = useRef('');
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -2087,6 +2115,7 @@ export function VoiceTutorRealtime({
         newPageThisTurnRef.current = false;
         brainEmittedNewPageThisTurnRef.current = false;
         generateProblemThisTurnRef.current = false;
+        inferredAdvanceThisTurnRef.current = '';
         console.log('[VoiceTutor] Student turn start — cleared visualActionsThisTurn');
 
         // Detect if student is requesting a visual (e.g., "show it on the board")
@@ -3953,6 +3982,20 @@ export function VoiceTutorRealtime({
               currentProblemRef.current = null;
               catalogRef.current.setCurrentSegment('');
             }
+            continue;
+          }
+          // Round-15 Issue 1: a show_segment_card earlier in this turn
+          // already moved the cursor via inferred advance. A relative
+          // advance_lesson({to:"next"}) in the same turn expresses the
+          // SAME transition the card implied — resolving it now (from
+          // the already-moved cursor) would double-advance past the
+          // segment the student is looking at. Consume the inference
+          // instead. Explicit segment-id targets still resolve normally.
+          if (to === 'next' && inferredAdvanceThisTurnRef.current
+              && currentSegmentIdRef.current === inferredAdvanceThisTurnRef.current) {
+            console.log(`[VoiceTutorRealtime] advance_lesson({to:"next"}) already satisfied by inferred advance to "${inferredAdvanceThisTurnRef.current}" this turn — skipping double-advance.`);
+            onDebugEvent?.('advance_satisfied_by_inference', inferredAdvanceThisTurnRef.current);
+            inferredAdvanceThisTurnRef.current = '';
             continue;
           }
           // Pass shownProblemHashesRef so resolveAdvanceTarget skips
@@ -6238,6 +6281,7 @@ export function VoiceTutorRealtime({
             if (raw) {
               const prior = JSON.parse(raw) as {
                 paceBias?: number;
+                paceBiasSource?: string;
                 correctStreakCount?: number;
                 incorrectStreakCount?: number;
                 speakingRate?: 'slow' | 'normal';
@@ -6253,7 +6297,18 @@ export function VoiceTutorRealtime({
                 // absent field falls through to DEFAULT_PACE_BIAS, which
                 // paceBiasRef is already initialized to, so the comparison
                 // below is a genuine no-op in that case (see pace-preference.ts).
-                const resolvedBias = resolvePaceBiasOnLoad(prior);
+                // Round-15 Issue 6: fresh-vs-resume gating. A FRESH session
+                // only restores bias the student set via the pace BUTTONS
+                // (paceBiasSource === 'button'); a genuine resume restores
+                // any numeric bias for mid-session continuity. This is what
+                // stops a discarded session's cue-derived "fast" from
+                // leaking into a brand-new session on the same plan.
+                const resolvedBias = resolvePaceBiasOnLoad(prior, { isResume: !!resumeState });
+                if (prior.paceBiasSource === 'button') {
+                  // Keep the durable marker across re-persists so the
+                  // preference survives future sessions too.
+                  paceBiasButtonSetRef.current = true;
+                }
                 if (resolvedBias !== paceBiasRef.current) {
                   paceBiasRef.current = resolvedBias;
                   paceBiasSetTurnRef.current = 0;
@@ -7535,6 +7590,59 @@ export function VoiceTutorRealtime({
           // flush only once this sentence (and all before it) has played.
           ttsDispatchedCountRef.current++;
         };
+        // Round-15 Issue 2 (2026-07-16): verdict hold. The first sentence
+        // of a turn that opens with a judgment of the student's answer
+        // ("Not quite…" / "That's right…") is held OUT of the TTS queue —
+        // along with its successors, to preserve order — until the verdict
+        // is settled: two further sentences arrive without a contradiction
+        // signal, the cap timer fires, or the stream ends. A contradiction
+        // detected while holding kills PRE-AUDIO (the whole point): the
+        // observed live failure was speak-then-kill — TTS played "Not
+        // qu—", the inversion regex on a LATER sentence tripped
+        // performKill which chopped the audio mid-word, then the retry
+        // affirmed the same answer the student gave. Only attempt 0
+        // holds (retries are already post-kill corrections; the kill
+        // regexes don't fire there, and the Stage-3.1 resume machinery
+        // owns retry pacing).
+        let verdictHoldActive = false;
+        let verdictSeenThisAttempt = false;
+        let verdictHeldText = '';
+        const verdictHeld: string[] = [];
+        let verdictHoldTimer: ReturnType<typeof setTimeout> | null = null;
+        const clearVerdictCap = () => {
+          if (verdictHoldTimer) { clearTimeout(verdictHoldTimer); verdictHoldTimer = null; }
+        };
+        const releaseVerdictHold = (): void => {
+          clearVerdictCap();
+          if (!verdictHoldActive) return;
+          verdictHoldActive = false;
+          const held = verdictHeld.splice(0, verdictHeld.length);
+          verdictHeldText = '';
+          if (held.length > 0) {
+            onDebugEvent?.('verdict_hold_released', `${held.length} sentence(s)`);
+          }
+          for (const s of held) {
+            if (!speakTextGated()) speakOne(s);
+          }
+        };
+        const dropVerdictHold = (why: string): void => {
+          clearVerdictCap();
+          if (!verdictHoldActive && verdictHeld.length === 0) return;
+          if (verdictHeld.length > 0) {
+            console.log(`[brain-orchestrator] verdict hold: DROPPED ${verdictHeld.length} held sentence(s) pre-audio (${why}, never spoken):`, verdictHeld.map((s) => s.slice(0, 60)));
+            onDebugEvent?.('verdict_hold_dropped', `${verdictHeld.length} sentence(s) — ${why}`);
+          }
+          verdictHoldActive = false;
+          verdictHeld.length = 0;
+          verdictHeldText = '';
+        };
+        const armVerdictCap = () => {
+          clearVerdictCap();
+          verdictHoldTimer = setTimeout(() => {
+            verdictHoldTimer = null;
+            releaseVerdictHold();
+          }, VERDICT_HOLD_CAP_MS);
+        };
         // Judge-kill Stage 3.1: decide restatement-vs-correction for a
         // post-content-kill retry, using whatever opener text we've held so
         // far. Restatement (≥60% content-word overlap + no changed number)
@@ -7628,6 +7736,31 @@ export function VoiceTutorRealtime({
             }
             return;
           }
+          // Round-15 Issue 2: verdict hold (attempt 0 only — see the hold
+          // state block above). Intercepting HERE covers every dispatch
+          // route uniformly: the gated flush (flushPending), the rolling
+          // 1-deep hold release, and direct gate-open emissions.
+          if (attempt === 0) {
+            if (verdictHoldActive) {
+              verdictHeld.push(s);
+              verdictHeldText += (verdictHeldText ? ' ' : '') + s;
+              // Verdict + 2 clean successors = settled (each successor
+              // already passed the self-correction / inversion / cross-
+              // sentence checks before reaching this dispatch).
+              if (verdictHeld.length >= 3) releaseVerdictHold();
+              else armVerdictCap();
+              return;
+            }
+            if (!verdictSeenThisAttempt && isVerdictOpener(s)) {
+              verdictSeenThisAttempt = true;
+              verdictHoldActive = true;
+              verdictHeld.push(s);
+              verdictHeldText = s;
+              onDebugEvent?.('verdict_hold_started', s.slice(0, 60));
+              armVerdictCap();
+              return;
+            }
+          }
           speakOne(s);
         };
         const flushPending = () => {
@@ -7655,6 +7788,9 @@ export function VoiceTutorRealtime({
           }
           gateState = 'closed';
           pendingSentences.length = 0;
+          // Round-15 Issue 2: a kill/abort closing the gate also drops the
+          // held verdict pre-audio — the retry re-speaks the settled one.
+          dropVerdictHold('gate close');
         };
         // Rolling-hold verbal-tail flush: a buffered sentence with no
         // following tool flushes after VALIDATE_BEFORE_SPEAK_CAP_MS so the
@@ -7889,7 +8025,20 @@ export function VoiceTutorRealtime({
                   // gated on a preceding "actually," to avoid catching
                   // pedagogical "let me back up and explain why" uses
                   // that don't signal a walkback.
-                  const selfCorrectionRe = /\b(?:wait,?\s+actually|wait,?\s+no\b|wait,?\s+i\s+(?:meant|said|mean)\b|wait,?\s+sorry|actually,?\s+(?:i was wrong|i['’]m wrong|never mind|i meant|let me back up|let me re-?\w+)|let me re-?(?:check|verify|consider|examine|state|phrase)|let me (?:redo|restart|try again)\b|or rather\b|or actually\b|i mean,?\s+(?:no|actually)\b|i meant\s+to\s+(?:say|write)\b|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong|correction:)/i;
+                  // Round-15 Issue 3 (2026-07-16): widened with narrated-
+                  // verification markers. Observed live walk-back: "…which
+                  // is antagonist behavior. Wait — let me be precise here…
+                  // that's antagonist — you had it right the first time."
+                  // The old regex matched "let me re-check/verify" but NOT
+                  // "let me be precise" / "let me double-check", and the
+                  // em-dash after "wait" defeated the "wait,\s+…" forms.
+                  // The prompt now forbids voicing the verification process
+                  // outright (SILENT_VERIFICATION_RULE); this is the
+                  // orchestrator safety net for when the brain does it
+                  // anyway. "you had it right the first time" requires the
+                  // trailing qualifier — a bare "you had it right" is a
+                  // legit reassurance to a self-doubting student.
+                  const selfCorrectionRe = /\b(?:wait,?\s+actually|wait,?\s+no\b|wait,?\s+i\s+(?:meant|said|mean)\b|wait,?\s+sorry|wait\s*[—–-]+\s*let me\b|actually,?\s+(?:i was wrong|i['’]m wrong|never mind|i meant|let me back up|let me re-?\w+)|let me re-?(?:check|verify|consider|examine|state|phrase)|let me (?:redo|restart|try again)\b|let me be (?:precise|careful|exact)\b|let me double-?check\b|you had it right the first time\b|is that right\?\s*(?:no|wait|hmm)|(?:^|\.\s+)wait[,.]?\s+is that\b|or rather\b|or actually\b|i mean,?\s+(?:no|actually)\b|i meant\s+to\s+(?:say|write)\b|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong|correction:)/i;
                   // Round-7+++ Fix Issue 2: skip self-correction
                   // detection on RETRY attempts. The brain's retry
                   // following a judge KILL or rejection legitimately
@@ -7944,6 +8093,36 @@ export function VoiceTutorRealtime({
                     await performKill();
                     console.warn('[brain-orchestrator] contradiction-inversion detected — retrying:', updatedSentence.slice(0, 80));
                     onDebugEvent?.('contradiction_inversion_retry', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Round-15 Issue 2 (2026-07-16): CROSS-SENTENCE
+                  // contradiction against the HELD verdict. The single-
+                  // sentence inversion regex above misses the live-test
+                  // failure shape — "Not quite." as its own sentence (no
+                  // trailing "right", so the first branch never matches),
+                  // the reversal ("…is actually right") in a LATER
+                  // sentence. While the verdict hold is buffering
+                  // (pre-audio), test the held verdict + this sentence
+                  // combined with a wider pattern: bare negation opener
+                  // allowed, affirmation branch kept EXPLICIT ("you're
+                  // right" / "that's it" / "actually correct" — NOT bare
+                  // "<subject> is right", which would false-kill partial-
+                  // credit feedback like "Your setup is right, but…"). A
+                  // match kills BEFORE the verdict was ever voiced, so
+                  // the retry's settled judgment is the only thing the
+                  // student hears — no more "Not qu—" audio chop.
+                  const crossSentenceInversionRe = /\b(?:not\s+(?:quite|exactly|really|right|correct)|that'?s?\s+(?:not|wrong)|nope|wrong)\b[\s\S]{0,160}?\b(?:actually\s+(?:correct|right)|you(?:'re|\s+are|\s+were)\s+(?:actually\s+)?(?:correct|right)|that'?s\s+(?:actually\s+)?(?:correct|right|exactly\s+it|it)\b|you\s+(?:got|had)\s+it\b|(?:is|was)\s+actually\s+(?:right|correct)|spot\s+on\b|bingo\b)/i;
+                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && verdictHoldActive
+                      && crossSentenceInversionRe.test(`${verdictHeldText} ${updatedSentence}`)) {
+                    const reason =
+                      `Your response contradicts itself across sentences: you opened with "${verdictHeldText.slice(0, 100)}" and then said "${updatedSentence.slice(0, 120)}". ` +
+                      `Decide BEFORE you speak whether the student's answer is right or wrong, and speak only that single settled judgment. ` +
+                      `Re-emit cleanly: if the answer is correct, affirm it directly. If it is wrong, explain what's wrong without reversing yourself.`;
+                    rejectionsThisAttempt.push({ action: 'contradiction_inversion', reason });
+                    judgeRetriesUsed++;
+                    await performKill();
+                    console.warn('[brain-orchestrator] cross-sentence contradiction vs held verdict — retrying:', `held="${verdictHeldText.slice(0, 60)}" now="${updatedSentence.slice(0, 60)}"`);
+                    onDebugEvent?.('contradiction_inversion_retry', `held="${verdictHeldText.slice(0, 40)}" + "${updatedSentence.slice(0, 40)}"`);
                     continue;
                   }
                   // Round-7++ meta-narration filter. The system prompt
@@ -8167,13 +8346,20 @@ export function VoiceTutorRealtime({
                     // played a bridge / silence — avoids opener cascades)
                     // and to non-Skip turns (a real Skip turn with FIX B
                     // off must keep #4's silent-drop on a botched skip).
+                    // Round-15 Issue 2: a verdict is NOT a content-free
+                    // runway phrase, even though it passes isSafeOpener
+                    // (short, no digits/operators/question — "Not quite."
+                    // and "Spot on." both qualify). Voicing it ungated is
+                    // exactly the speak-then-kill window; route it through
+                    // the gate + verdict hold instead.
                     const fastOpenerEligible =
                       TUTOR_BRAIN_FAST_OPENER &&
                       attempt === 0 &&
                       !skipTurnMarkerPresent &&
                       totalSentenceCount === 1 &&
                       gateState === 'gated' &&
-                      isSafeOpener(trimmedSentence);
+                      isSafeOpener(trimmedSentence) &&
+                      !isVerdictOpener(trimmedSentence);
                     if (fastOpenerEligible) {
                       if (speakTextGated()) {
                         console.warn('[brain-orchestrator] STAGE-3 fix #10: fast-opener dropped — perception cancel gate active:', sentenceForSpeech.slice(0, 80));
@@ -8893,6 +9079,31 @@ export function VoiceTutorRealtime({
                       } else {
                         console.warn(`[brain-orchestrator] show_segment_card: plan has no segments to fall back on.`);
                       }
+                      // Round-15 Issue 1 (2026-07-16): the brain walks the
+                      // board forward with show_segment_card alone and never
+                      // calls advance_lesson, so the pedagogical cursor (and
+                      // the portal progress pills it drives) freezes at the
+                      // opening segment — hit in BOTH live-test sessions
+                      // (AP Psych pill stuck on "Hook" 0/7 after two Try-
+                      // Yourself problems). When the card resolves to a
+                      // segment strictly LATER in the plan than the cursor,
+                      // the transition already happened conversationally —
+                      // apply it through applyResolvedAdvance (auto-marks
+                      // skipped-over segments complete, moves the cursor,
+                      // and defers the transition newPage that this very
+                      // render will consume). advance_lesson({to:"next"})
+                      // later in the same turn is absorbed via
+                      // inferredAdvanceThisTurnRef (see advanceLesson
+                      // branch) so the two paths can't double-advance.
+                      if (resolvedCmd) {
+                        const cursorId = currentSegmentIdRef.current;
+                        if (inferAdvanceFromSegmentCard(plan.segments.map((s) => s.id), cursorId, segId)) {
+                          console.log(`[brain-orchestrator] show_segment_card implies lesson advance "${cursorId}" → "${segId}" (brain skipped advance_lesson) — applying inferred advance.`);
+                          onDebugEvent?.('inferred_advance_from_segment_card', `${cursorId} → ${segId}`);
+                          applyResolvedAdvance(plan, cursorId, segId);
+                          inferredAdvanceThisTurnRef.current = segId;
+                        }
+                      }
                     } else {
                       console.warn(`[brain-orchestrator] show_segment_card: no active plan.`);
                     }
@@ -9151,6 +9362,11 @@ export function VoiceTutorRealtime({
           );
         if (!skipNoAdvanceAtStreamEnd) {
           openGate();
+          // Round-15 Issue 2: the stream is done — no further sentence can
+          // contradict the held verdict, so it's settled. Flush it (no-op
+          // when the hold already released via lookahead/cap, or when a
+          // kill dropped it via closeGate).
+          releaseVerdictHold();
         }
 
         // Dev forced kill: a short, fully-gated turn flushes its only
@@ -10720,6 +10936,7 @@ export function VoiceTutorRealtime({
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
     generateProblemThisTurnRef.current = false;
+    inferredAdvanceThisTurnRef.current = '';
     // Watchdog: if callBrainOnce hangs (network never resolves, no
     // error thrown), brainBusyRef stays true forever and every
     // subsequent student turn gets queued silently. Observed
@@ -13044,8 +13261,17 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // Instant end — no recap delay, no spinner. Finalize recording and
     // commit profile in the background; the student sees the summary
     // page immediately.
+    // Round-15 Issue 10 (2026-07-16): actually background the finalize.
+    // The old `await` here flushed up to 30s of buffered PCM for BOTH
+    // tracks (~2.9 MB) over a no-timeout fetch before navigating — the
+    // observed ~15s hang between clicking End/Pause and reaching the
+    // lessons page. The server tolerates unfinalized sessions (hasAudio
+    // is set on early chunks — api/tutor/session-audio/route.ts); worst
+    // case a teardown races the flush and the final <30s audio tail is
+    // lost from the recording, which is the accepted trade for an
+    // instant exit.
     if (audioRecordEnabled) {
-      try { await audioRecorder.finalize(); } catch {}
+      void audioRecorder.finalize().catch(() => {});
     }
     // final: carries the transcript + generates the session summary
     // (intermediate flushes already persisted deltas incrementally).

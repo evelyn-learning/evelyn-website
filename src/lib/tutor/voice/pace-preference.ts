@@ -53,9 +53,32 @@ export const DEFAULT_PACE_BIAS = -1;
  * Any numeric `paceBias` field — including 0 — is treated as an explicit
  * prior choice and wins over the default. Clamped to the same -2..+2 range
  * `stepPaceBias` enforces.
+ *
+ * Round-15 Issue 6 (2026-07-16): fresh-vs-resume gating. Observed live: a
+ * discarded session's paceBias — nudged POSITIVE by verbal-cue detection
+ * (STT mishears, content phrases like "the car speeds up") — persisted in
+ * the plan-keyed blob and a brand-NEW session on the same curated plan
+ * started at "Pace: fast" despite the Y5 slow-by-default. The gate:
+ *   - RESUME (`opts.isResume` true): any numeric bias restores, marked or
+ *     not — mid-session continuity keeps whatever pace the session was
+ *     actually running at (legacy blobs included).
+ *   - FRESH start: only a bias the student chose via the pace BUTTONS
+ *     (`paceBiasSource === 'button'`, written by persistPacingState since
+ *     this fix) counts as a durable preference. Cue-derived values and
+ *     legacy unmarked blobs fall back to DEFAULT_PACE_BIAS.
+ * Called without `opts` the function behaves like the pre-fix (resume)
+ * path — acceptable only because the single call site passes opts
+ * explicitly; kept for the pinned Y5 characterization tests.
  */
-export function resolvePaceBiasOnLoad(prior: { paceBias?: number } | null | undefined): number {
+export function resolvePaceBiasOnLoad(
+  prior: { paceBias?: number; paceBiasSource?: string } | null | undefined,
+  opts?: { isResume?: boolean },
+): number {
   if (prior && typeof prior.paceBias === 'number' && Number.isFinite(prior.paceBias)) {
+    const isFreshStart = opts !== undefined && !opts.isResume;
+    if (isFreshStart && prior.paceBiasSource !== 'button') {
+      return DEFAULT_PACE_BIAS;
+    }
     return Math.max(-2, Math.min(2, Math.round(prior.paceBias)));
   }
   return DEFAULT_PACE_BIAS;

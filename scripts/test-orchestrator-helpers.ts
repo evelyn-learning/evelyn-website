@@ -9,10 +9,12 @@ import {
   isJudgeKillRestatement,
   detectStudentBroughtProblem,
   isMuteMeCommand,
+  isVerdictOpener,
   extractSentence1Normalized,
   deepEqualParams,
 } from '../src/lib/tutor/orchestrator/text-heuristics';
 import { sanitizeInkOcrText } from '../src/lib/tutor/orchestrator/ink-capture';
+import { inferAdvanceFromSegmentCard } from '../src/lib/tutor/orchestrator/segment-advance';
 
 let passed = 0;
 let failed = 0;
@@ -172,6 +174,72 @@ function check(name: string, cond: boolean): void {
   check(
     'sanitizeInkOcrText: undefined input → undefined',
     sanitizeInkOcrText(undefined) === undefined,
+  );
+}
+
+// ── isVerdictOpener ───────────────────────────────────────────────
+// Round-15 Issue 2 (2026-07-16): a sentence that opens with a judgment
+// of the student's answer must NOT be voiced until the turn's verdict
+// is settled — the observed failure was "Not qu…" [audio chop] then an
+// affirmation. False positives only add a brief hold; false negatives
+// re-open the speak-then-kill window, so the detector leans inclusive.
+{
+  // negative verdicts
+  check('isVerdictOpener: "Not quite." → true', isVerdictOpener('Not quite.') === true);
+  check('isVerdictOpener: "Not exactly — think about…" → true', isVerdictOpener('Not exactly — think about the receptor.') === true);
+  check('isVerdictOpener: "Close, but not quite." → true', isVerdictOpener('Close, but not quite.') === true);
+  check('isVerdictOpener: "Nope, remember the sign." → true', isVerdictOpener('Nope, remember the sign.') === true);
+  check('isVerdictOpener: "That\'s not right." → true', isVerdictOpener("That's not right.") === true);
+  // affirmations
+  check('isVerdictOpener: "That\'s right!" → true', isVerdictOpener("That's right!") === true);
+  check('isVerdictOpener: "Exactly." → true', isVerdictOpener('Exactly.') === true);
+  check('isVerdictOpener: "Right, that\'s exactly it." → true', isVerdictOpener("Right, that's exactly it.") === true);
+  check('isVerdictOpener: "Spot on." → true', isVerdictOpener('Spot on.') === true);
+  check('isVerdictOpener: "You got it." → true', isVerdictOpener('You got it.') === true);
+  check('isVerdictOpener: "Correct." → true', isVerdictOpener('Correct.') === true);
+  // NON-verdicts — runway openers and ordinary narration must not hold
+  check('isVerdictOpener: runway opener → false', isVerdictOpener("Let's take a look at this together.") === false);
+  check('isVerdictOpener: "No worries — let me draw it." → false', isVerdictOpener('No worries, let me draw it.') === false);
+  check('isVerdictOpener: mid-sentence "right" (direction) → false', isVerdictOpener('Now look at the right side of the equation.') === false);
+  check('isVerdictOpener: "Okay, next up is the synapse." → false', isVerdictOpener('Okay, next up is the synapse.') === false);
+  check('isVerdictOpener: question → false', isVerdictOpener('What do you think happens next?') === false);
+}
+
+// ── inferAdvanceFromSegmentCard ───────────────────────────────────
+// Round-15 Issue 1 (2026-07-16): the brain walks the board forward via
+// show_segment_card without calling advance_lesson, freezing the
+// pedagogical cursor (and the portal progress pills) at the opening
+// segment. The orchestrator infers the advance when the card resolves
+// to a segment strictly LATER in the plan than the cursor.
+{
+  const ids = ['hook', 'concept', 'worked-1', 'try-1', 'recap'];
+  check(
+    'inferAdvanceFromSegmentCard: card for a later segment → infer',
+    inferAdvanceFromSegmentCard(ids, 'hook', 'try-1') === true,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: card for the immediate next segment → infer',
+    inferAdvanceFromSegmentCard(ids, 'hook', 'concept') === true,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: re-render of the current segment → no advance',
+    inferAdvanceFromSegmentCard(ids, 'try-1', 'try-1') === false,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: card for an EARLIER segment (revisit) → no advance',
+    inferAdvanceFromSegmentCard(ids, 'try-1', 'concept') === false,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: empty cursor (free conversation) → no advance',
+    inferAdvanceFromSegmentCard(ids, '', 'concept') === false,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: unknown cursor id → no advance',
+    inferAdvanceFromSegmentCard(ids, 'not-a-segment', 'concept') === false,
+  );
+  check(
+    'inferAdvanceFromSegmentCard: unknown target id → no advance',
+    inferAdvanceFromSegmentCard(ids, 'hook', 'not-a-segment') === false,
   );
 }
 

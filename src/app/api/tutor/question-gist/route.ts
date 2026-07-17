@@ -33,8 +33,12 @@ const SYSTEM = `You extract the question a tutor just asked a student, for a sma
 Reply with ONLY the question, rephrased as ONE complete, self-contained, natural-sounding question of at most 14 words, ending with "?". Never cut a question off — rephrase it shorter instead. Keep the student-facing essence: exactly what they must answer or decide. Drop preamble, context recaps, and scaffolding.
 Preserve any inline $...$ LaTeX EXACTLY as written — do not convert or drop it.
 
-Reply with exactly NONE when the turn's only question is conversational plumbing rather than something worth pinning: asking the student to repeat or rephrase themselves ("could you say that again?"), reacting to a mishear, or a rhetorical aside the student isn't meant to answer.
-Choice prompts ARE real questions — pin them (e.g. "Want another at this level, something harder, or move on?").`;
+Reply with exactly NONE only in these narrow cases: the turn asks the student to repeat or rephrase themselves ("could you say that again?"), reacts to a mishear, or poses a purely rhetorical aside the student isn't meant to answer. NONE is rare — when in doubt, pin the question.
+These are NOT plumbing — always pin them (input → your reply):
+- Choice prompts: "Want another at this level, something harder, or should we move on?" → "Another at this level, something harder, or move on?" (asking whether to continue, do another, or move on is a REAL decision the student must answer — it is never plumbing)
+- Recall / brainstorm / name-anything questions, even casual ones: "can you name any neurotransmitter you've heard of — from class, from anywhere?" → "Can you name any neurotransmitter you've heard of?"
+- Questions after a transitional lead-in ("quick one before we move on:", "one more before we wrap:"): the lead-in is scaffolding to DROP; the question after it is real. "Quick one before we move: what's the sign of the second term?" → "What's the sign of the second term?"
+- Readiness checks that gate real work: "Ready to try one yourself?" → "Ready to try one yourself?"`;
 
 export async function POST(req: NextRequest) {
   try {

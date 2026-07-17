@@ -639,3 +639,67 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Task Y3 review findings (footnote superscripts, year ranges, letter chains)');
 }
+
+// --- Round-15 Issue 4 (2026-07-16): unspaced minus inside $...$ ---------
+// Live AP Calc session: "$(x-2)$" reached Cartesia raw — the $ gate only
+// fired on ^ _ \ = signal chars, and the prose bare-minus rule requires
+// spaces on both sides. A $-span with an operator BETWEEN operand-shaped
+// tokens is math: strip the $ AND wordify the minus.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('Factor $(x-2)$ completely.',
+     'Factor (x minus 2) completely.',
+     'dollar-unspaced-minus-parens');
+  eq('The root of $x-2$ is at 2.',
+     'The root of x minus 2 is at 2.',
+     'dollar-unspaced-minus-bare');
+  eq('Now $x+3$ shifts left.',
+     'Now x plus 3 shifts left.',
+     'dollar-unspaced-plus');
+  // The pre-fix cases must keep working.
+  eq('So $x = 3$ still works.',
+     'So x equals 3 still works.',
+     'dollar-equals-regression');
+  // Currency guard: no operand-operator-operand inside → untouched.
+  eq('It costs $5 and shipping is $10.',
+     'It costs $5 and shipping is $10.',
+     'currency-still-untouched');
+
+  console.log('OK — Round-15 Issue 4 ($-span unspaced minus)');
+}
+
+// --- Round-15 Issue 5 (2026-07-16): element symbols read as words -------
+// Live AP Psych neuron lesson: "Na"/"Na+" voiced as the word "nah". No
+// chemistry handling existed in the TTS layer. Guarded expansions in
+// rewriteDomainAcronyms, mirroring the SD → "standard deviation" precedent:
+// bare K is NEVER touched (vitamin K, grade K, "$5K"); K only expands with
+// a charge sign. Case-sensitive on purpose.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('Na+ floods into the cell.',
+     'sodium floods into the cell.',
+     'na-plus-expands');
+  eq('The Na channels open first.',
+     'The sodium channels open first.',
+     'bare-na-expands');
+  eq('K+ flows out to repolarize.',
+     'potassium flows out to repolarize.',
+     'k-plus-expands');
+  eq('Vitamin K helps clotting.',
+     'Vitamin K helps clotting.',
+     'bare-k-untouched');
+  eq('The Na-K pump restores the gradient.',
+     'The sodium potassium pump restores the gradient.',
+     'na-k-pump-expands');
+  eq('Nathan asked about the sodium channel.',
+     'Nathan asked about the sodium channel.',
+     'word-boundary-guard');
+
+  console.log('OK — Round-15 Issue 5 (element symbols)');
+}

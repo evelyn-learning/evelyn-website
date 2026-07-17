@@ -369,11 +369,21 @@ export default function SessionStage(props: SessionStageProps) {
                   the mode STICK. "Practice problems" sets the durable
                   override; "Explain a concept" clears it (returns to
                   token-goal behavior). Active state mirrors the Humor ✓
-                  idiom (TutorSession.tsx's ⋯ menu). */}
-              <Chip active={practiceOverrideActive} onClick={() => { onStudentInput('text', 'Give me some practice problems.'); onTogglePracticeOverride?.(true); }}>
+                  idiom (TutorSession.tsx's ⋯ menu).
+                  Round-15 Issue 12 (2026-07-16, session portal-d08232c4):
+                  the override MUST be set BEFORE the synthetic utterance —
+                  onStudentInput → sendTextMessage runs the brain-call
+                  request assembly synchronously up to its first await, so
+                  with the old order the turn responding to the chip read
+                  practiceOverrideRef while still false and went out WITHOUT
+                  the <practice_session> block (prod log: turn 1 missing
+                  "[practice-mode] practice_session block attached", turns
+                  2+ have it) — the tutor ran the regular concept-review
+                  lesson over the student's explicit practice request. */}
+              <Chip active={practiceOverrideActive} onClick={() => { onTogglePracticeOverride?.(true); onStudentInput('text', 'Give me some practice problems.'); }}>
                 {practiceOverrideActive ? '✓ ' : ''}Practice problems
               </Chip>
-              <Chip onClick={() => { onStudentInput('text', 'Explain a concept to me.'); onTogglePracticeOverride?.(false); }}>Explain a concept</Chip>
+              <Chip onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
             </div>
           </div>
         )}

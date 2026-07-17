@@ -91,6 +91,32 @@ for (const c of derivationCases) {
   console.log(`${ok ? 'OK' : 'FAIL'}: ${c.label} -> ${got} (expected ${c.expected})`);
   if (!ok) failed = true;
 }
+
+// Round-15 Issue 6 (2026-07-16): a FRESH session (not a resume) restored a
+// stale positive paceBias from the plan-keyed blob — the bias had been
+// nudged up by verbal-cue detection (STT mishears, content phrases like
+// "the car speeds up"), then persisted like a deliberate preference. On a
+// fresh start, only a bias the student set via the pace BUTTONS
+// (paceBiasSource === 'button') is durable; cue-derived and legacy
+// (unmarked) values are session-local. On a genuine RESUME, any numeric
+// bias still restores — mid-session continuity keeps whatever pace the
+// session was actually running at.
+console.log('\n--- Round-15 Issue 6: fresh-vs-resume + button-source gating ---');
+const freshResumeCases: Array<{ label: string; prior: { paceBias?: number; paceBiasSource?: string } | null; isResume: boolean; expected: number }> = [
+  { label: 'FRESH + legacy blob (bias=1, no source marker) → default -1 (the live bug)', prior: { paceBias: 1 }, isResume: false, expected: -1 },
+  { label: 'FRESH + cue-tagged bias → default -1', prior: { paceBias: 2, paceBiasSource: 'cue' }, isResume: false, expected: -1 },
+  { label: 'FRESH + button-set bias=1 → restores 1 (durable preference)', prior: { paceBias: 1, paceBiasSource: 'button' }, isResume: false, expected: 1 },
+  { label: 'FRESH + button-set bias=0 (explicit "normal") → restores 0', prior: { paceBias: 0, paceBiasSource: 'button' }, isResume: false, expected: 0 },
+  { label: 'RESUME + legacy blob (bias=1, no marker) → restores 1 (continuity)', prior: { paceBias: 1 }, isResume: true, expected: 1 },
+  { label: 'RESUME + cue-derived bias → restores (continuity)', prior: { paceBias: 2, paceBiasSource: 'cue' }, isResume: true, expected: 2 },
+  { label: 'FRESH + no blob → default -1', prior: null, isResume: false, expected: -1 },
+];
+for (const c of freshResumeCases) {
+  const got = resolvePaceBiasOnLoad(c.prior, { isResume: c.isResume });
+  const ok = got === c.expected;
+  console.log(`${ok ? 'OK' : 'FAIL'}: ${c.label} -> ${got} (expected ${c.expected})`);
+  if (!ok) failed = true;
+}
 // The new -1 default must compose with the existing W3 potency tiers with
 // no special-casing: bias=-1 (whether it arrived via the new default or an
 // explicit student choice) renders the same "mild"/negative guidance as any

@@ -184,6 +184,14 @@ export const TUTOR_VALIDATE_BEFORE_SPEAK =
 // until its rejecting tool arrives. Hidden behind TTS playback for
 // multi-sentence turns; only the post-last-tool tail pays it. Tunable.
 export const VALIDATE_BEFORE_SPEAK_CAP_MS = 1200;
+// Round-15 Issue 2 (2026-07-16): verdict hold — the first verdict-shaped
+// sentence of a turn ("Not quite…" / "That's right…") is held pre-audio
+// until 2 successor sentences arrive without a contradiction signal, or
+// this cap fires (bounds the latency on short "Not quite." turns whose
+// stream stays open while the brain thinks). Sized just above the VBS
+// cap: long enough for the successor sentence that carries a reversal
+// to stream in, short enough that a clean verdict doesn't feel laggy.
+export const VERDICT_HOLD_CAP_MS = 1500;
 // Keep-validated-on-kill (robustness track, project_tutor_validate_before_speak
 // / work-queue #5+#7). On a content kill / give-up, the existing rollback
 // removes EVERY render the killed attempt(s) painted — including renders that

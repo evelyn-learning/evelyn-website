@@ -112,6 +112,24 @@ export function isSafeOpener(s: string): boolean {
   return true;
 }
 
+/** Round-15 Issue 2 (2026-07-16) — verdict-opener detector. A sentence
+ *  that OPENS with a judgment of the student's answer ("Not quite…",
+ *  "That's right…", "Spot on.") must not reach the speaker until the
+ *  turn's verdict is settled: the observed live failure was TTS playing
+ *  "Not qu—" before the contradiction-inversion kill chopped it and the
+ *  retry affirmed the same answer. Verdicts pass isSafeOpener (short,
+ *  no digits/operators/question) so the fast-opener bypass voiced them
+ *  instantly; this detector re-gates them into the verdict hold.
+ *  Anchored to the sentence START — a mid-sentence "right"/"correct" is
+ *  ordinary narration. Leans inclusive: a false positive only holds a
+ *  non-verdict sentence briefly; a false negative re-opens the
+ *  speak-then-kill window. Generic phrasing only, no subject content. */
+export function isVerdictOpener(s: string): boolean {
+  const t = s.trim();
+  if (!t || /\?\s*$/.test(t)) return false; // a question is a prompt, not a verdict
+  return /^(?:not\s+(?:quite|exactly|really|at\s+all|right|correct)\b|almost[.!,\s]|close[.!,\s]|so\s+close\b|nearly\s+there\b|nope\b|yep[.!,\s]|yes[.!,]|no[.!,]|hmm+,?\s+not\b|that'?s\s+(?:right|correct|exactly|it\b|not\b|wrong|close|almost)|exactly[.!,\s]|correct[.!,\s]|right[.!,]|perfect[.!,\s]|spot\s+on\b|bingo\b|you\s+(?:got|nailed|have)\s+it\b|you'?re\s+(?:right|correct|close|almost|nearly)\b|you\s+had\s+it\b|well\s+done\b|nice\s+(?:work|job|one)\b|great\s+(?:work|job)\b|good\s+(?:work|job|thinking)\b|wrong\b)/i.test(t);
+}
+
 // ── Judge-kill Stage 3.1 (2026-06-16) restatement detector ────────────
 // When a content-correctness kill fires mid-narration and the retry comes
 // back saying substantively the SAME thing (a re-statement, not a real

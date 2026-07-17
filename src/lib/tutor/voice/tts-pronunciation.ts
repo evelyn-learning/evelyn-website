@@ -301,9 +301,19 @@ function verbalizeMathForSpeech(t: string): string {
  *  Runs the full verbalizeMathForSpeech pipeline on the captured content
  *  so the dollar signs disappear along with the symbols they wrapped. */
 const MATH_SIGNAL_RE = /[\^_\\=]/;
+// Round-15 Issue 4 (2026-07-16, live AP Calc): "$(x-2)$" leaked raw to
+// Cartesia — no ^ _ \ = inside, so the signal gate never fired, and the
+// prose bare-minus rule (BARE_MINUS_RE) requires spaces on both sides so
+// unspaced "x-2" never converted either. A $-span with an arithmetic
+// operator BETWEEN operand-shaped tokens (letter/digit/closing bracket →
+// op → letter/digit/opening bracket) is math, not prose: "(x-2)", "x+3",
+// "2n-1". Currency stays safe — "It costs $5 and shipping is $10" captures
+// "5 and shipping is " between the two $, which has no operand-op-operand
+// shape. En-dash ranges ("$5–8$") are excluded by using ASCII operators.
+const MATH_OPERAND_OP_RE = /[A-Za-z0-9)\]]\s*[-+*/×·^]\s*[A-Za-z0-9(\[]/;
 function stripDollarMathForSpeech(t: string): string {
   return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
-    if (!MATH_SIGNAL_RE.test(inner)) return whole;
+    if (!MATH_SIGNAL_RE.test(inner) && !MATH_OPERAND_OP_RE.test(inner)) return whole;
     // The signal-char gate above already confirms this span is real math
     // (not prose), so it's safe to also wordify a top-level "+"/"-" here
     // ("$x^2 - 4$" → "x squared minus 4") — a liberty NOT taken for
@@ -608,6 +618,17 @@ function rewriteDomainAcronyms(t: string): string {
   // "SD"/"SDs" → "standard deviation(s)" unless it reads as a state code
   // (preceded by "<year> " or "Placename, ").
   t = t.replace(/(?<!\d{4}\s)(?<![A-Z][a-z]+,\s)\bSD(s?)\b/g, (_m, s: string) => `standard deviation${s}`);
+  // Round-15 Issue 5 (2026-07-16, live AP Psych neuron lesson): "Na"/"Na+"
+  // voiced as the word "nah". Element-symbol expansions, guarded like the
+  // SD precedent above. Case-sensitive on purpose ("na" in dialect text
+  // stays). The ion charge sign is CONSUMED by the expansion so a stray
+  // "+"/"-" doesn't reach the math wordifier. Bare "K" is NEVER touched —
+  // vitamin K, grade K, "$5K" are all genuine K readings — it only
+  // expands with an explicit charge sign or in the "Na-K pump" compound.
+  t = t.replace(/\bNa[-–/]K\b/g, 'sodium potassium'); // Na-K / Na–K / Na/K pump
+  t = t.replace(/\bNa\+/g, 'sodium');
+  t = t.replace(/\bNa\b/g, 'sodium');
+  t = t.replace(/\bK\+/g, 'potassium');
   return t;
 }
 

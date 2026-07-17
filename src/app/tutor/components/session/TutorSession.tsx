@@ -512,7 +512,17 @@ export default function TutorSession(props: TutorSessionProps) {
     <button
       type="button"
       title="Open transcript"
-      onClick={() => window.dispatchEvent(new Event('evelyn:open-transcript'))}
+      // Round-15 Issue 9 (2026-07-16): pass the last tutor entry's id so
+      // TranscriptView scrolls to (and flashes) the message the caption is
+      // showing — the bare event opened the drawer but TranscriptView's
+      // listener early-returns without an entryId, leaving the scroll
+      // wherever it last was. Same event shape as the Q-pill below; falls
+      // back to the bare event when no tutor entry exists yet.
+      onClick={() => window.dispatchEvent(
+        lastTutorEntry?.id
+          ? new CustomEvent('evelyn:open-transcript', { detail: { entryId: lastTutorEntry.id } })
+          : new Event('evelyn:open-transcript'),
+      )}
       className="w-full min-w-0 flex items-center gap-2 text-left"
     >
       {voiceState === 'muted' && (
