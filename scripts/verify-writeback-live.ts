@@ -14,6 +14,7 @@
  * Run (on a box with MONGODB_URI + ANTHROPIC_API_KEY exported, e.g. prod):
  *   npx tsx scripts/verify-writeback-live.ts
  */
+import './writeback-env-preload'; // MUST stay first — see that file's header
 import { generateProblem, simpleHash } from '../src/lib/tutor/voice/problem-generator';
 import { ProblemBank } from '../src/models/ProblemBank';
 import { connectDB } from '../src/lib/db';
