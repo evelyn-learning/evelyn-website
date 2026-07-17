@@ -53,3 +53,16 @@ export function lastQuestionSentence(text: string): string | null {
   if (!last || last.length > 220) return null;
   return last;
 }
+
+/** Task Y2: pure seam for the Haiku reply → gist decision, extracted out
+ *  of the route handler so it's unit-testable without a network call.
+ *  A deliberate "NONE" verdict (the turn's "?" was conversational
+ *  plumbing, not worth pinning) and an over-length reply both resolve to
+ *  null here — same as the model saying nothing pin-worthy. This is
+ *  distinct from an API/transport failure, which never reaches this
+ *  function; the route returns a non-200 status for that case instead so
+ *  the client can tell "deliberately nothing" from "we don't know". */
+export function parseGistReply(raw: string): string | null {
+  const trimmed = raw.trim();
+  return trimmed && trimmed !== 'NONE' && trimmed.length <= 200 ? trimmed : null;
+}

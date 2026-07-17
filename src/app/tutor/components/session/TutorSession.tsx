@@ -554,6 +554,12 @@ export default function TutorSession(props: TutorSessionProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ turnText: entry.text }),
     })
+      // Task Y2: the route now returns non-200 for an internal failure
+      // (Anthropic 5xx/timeout/parse) and 200 for every model verdict,
+      // including deliberate NONE. Rejecting here on !r.ok is what makes
+      // the .catch() fallback below an ERROR-only path — a deliberate
+      // NONE resolves gist to '' in the .then branch and pins nothing,
+      // without ever touching lastQuestionSentence.
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`gist ${r.status}`))))
       .then((d) => {
         // Strip markdown emphasis the Haiku producer sometimes emits
@@ -595,9 +601,19 @@ export default function TutorSession(props: TutorSessionProps) {
     return () => clearInterval(id);
   }, [questionPin, pinShownForTurn, voiceState, lastTutorFinal, getSpokenCaption]);
 
+  // Task Y2 (2026-07-16): the marking effect above already encodes
+  // reveal-safety (probe-matched while speaking, or marked-shown
+  // immediately in any non-speaking state, including 'thinking') — a
+  // second, narrower `voiceState !== 'thinking'` gate here silently
+  // dropped gists that finished marking-shown but landed/settled during
+  // the NEXT turn's 'thinking' (student answered fast). The
+  // `lastTutorEntry?.id === questionPin.turnId` check alone still hides
+  // the pin the instant the next turn starts composing (its id changes
+  // first), so dropping the redundant clause closes the gap without
+  // reopening the stale-turn case.
   const questionPinEl =
     TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId &&
-    lastTutorEntry?.id === questionPin.turnId && voiceState !== 'thinking' ? (
+    lastTutorEntry?.id === questionPin.turnId ? (
       <button
         type="button"
         onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }))}

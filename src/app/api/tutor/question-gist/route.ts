@@ -17,6 +17,7 @@
  */
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { parseGistReply } from '@/lib/tutor/question-gist-text';
 
 export const runtime = 'nodejs';
 
@@ -49,10 +50,19 @@ export async function POST(req: NextRequest) {
       messages: [{ role: 'user', content: turnText.slice(-4000) }],
     });
     const raw = msg.content[0]?.type === 'text' ? msg.content[0].text.trim() : '';
-    const gist = raw && raw !== 'NONE' && raw.length <= 200 ? raw : null;
+    const gist = parseGistReply(raw);
+    // 200 always means "the model judged this turn" — gist:null here is a
+    // DELIBERATE verdict (NONE / over-length), not a failure.
     return Response.json({ gist });
   } catch {
-    // Fail soft — the client keeps its derived-sentence fallback.
-    return Response.json({ gist: null });
+    // Task Y2: internal failure (Anthropic 5xx/timeout/malformed response)
+    // — NOT a deliberate NONE. Round-4 had this collapse to the same
+    // `Response.json({ gist: null })` as a real NONE verdict, so the
+    // client's fetch `.then` treated both as "ok, no pin" and its
+    // lastQuestionSentence `.catch()` fallback never ran for genuine
+    // errors. A non-200 status (plus an explicit ok:false in the body)
+    // makes the client's `r.ok` check reject the promise so the fallback
+    // fires ONLY here, never for a legitimate NONE.
+    return Response.json({ gist: null, ok: false }, { status: 502 });
   }
 }

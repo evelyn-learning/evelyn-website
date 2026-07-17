@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply } from '../src/lib/tutor/question-gist-text';
 
 let pass = 0;
 let fail = 0;
@@ -95,6 +95,42 @@ check(
   'fallback returns null when the only question is too long to pin',
   lastQuestionSentence(`${'x'.repeat(221)}?`),
   null,
+);
+
+// --- parseGistReply (Task Y2: route's Haiku-reply → gist decision) ----
+// This is the pure seam the route handler defers to. It only sees the
+// model's own text — the distinction between "deliberate NONE" (handled
+// here, resolves to null) and "internal failure" (never reaches this
+// function; the route returns non-200 instead) lives one layer up.
+check(
+  'deliberate NONE verdict resolves to null',
+  parseGistReply('NONE'),
+  null,
+);
+check(
+  'ordinary question passes through trimmed',
+  parseGistReply('  What is the slope of this line?  '),
+  'What is the slope of this line?',
+);
+check(
+  'over-length reply (>200 chars) resolves to null',
+  parseGistReply(`${'x'.repeat(201)}?`),
+  null,
+);
+check(
+  'empty string resolves to null',
+  parseGistReply(''),
+  null,
+);
+check(
+  'whitespace-only string resolves to null',
+  parseGistReply('   '),
+  null,
+);
+check(
+  'choice prompt (not literal NONE) passes through',
+  parseGistReply('Want another at this level, something harder, or move on?'),
+  'Want another at this level, something harder, or move on?',
 );
 
 console.log(`\n${pass} passed, ${fail} failed`);
