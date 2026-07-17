@@ -27,7 +27,7 @@
  * Run:
  *   npx tsx scripts/test-pace-preference-block.ts
  */
-import { formatPacePreferenceBlock } from '../src/lib/tutor/voice/claude-brain';
+import { formatPacePreferenceBlock, formatDifficultyPreferenceBlock } from '../src/lib/tutor/voice/claude-brain';
 import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '../src/lib/tutor/voice/pace-preference';
 
 const cases: Array<{ label: string; paceBias?: number; paceBiasAppliedSinceTurns?: number }> = [
@@ -129,9 +129,36 @@ if (!/mild/i.test(defaultBlock) || !/absorption rule/i.test(defaultBlock)) {
   console.log('OK: -1 default composes with W3 potency text (mild tier) + Absorption cross-reference');
 }
 
+// Round-17 (#7 hybrid, 2026-07-17): standing difficulty preference block.
+// Rendered from pacingState.difficultyBias; independent of paceBias (a
+// difficulty-only preference must render even at pace 0, and the pinned
+// pace-block invariants above must stay untouched).
+console.log('\n--- #7: formatDifficultyPreferenceBlock ---');
+const diffCases: Array<{ label: string; state: { difficultyBias?: number; paceBias?: number } | undefined; expectEmpty: boolean; expectGen?: string }> = [
+  { label: 'no state → empty', state: undefined, expectEmpty: true },
+  { label: 'bias absent → empty', state: { paceBias: -1 }, expectEmpty: true },
+  { label: 'bias 0 → empty', state: { difficultyBias: 0 }, expectEmpty: true },
+  { label: 'bias +1 → harder / slightly_harder', state: { difficultyBias: 1 }, expectEmpty: false, expectGen: 'slightly_harder' },
+  { label: 'bias +2 → much harder / much_harder', state: { difficultyBias: 2 }, expectEmpty: false, expectGen: 'much_harder' },
+  { label: 'bias -1 → easier / slightly_easier', state: { difficultyBias: -1 }, expectEmpty: false, expectGen: 'slightly_easier' },
+  { label: 'bias renders at pace 0 (independence)', state: { difficultyBias: 1, paceBias: 0 }, expectEmpty: false, expectGen: 'slightly_harder' },
+];
+for (const c of diffCases) {
+  const block = formatDifficultyPreferenceBlock(c.state as Parameters<typeof formatDifficultyPreferenceBlock>[0]);
+  let ok: boolean;
+  if (c.expectEmpty) ok = block === '';
+  else ok = block.includes('<difficulty_preference>')
+    && block.includes(`"${c.expectGen}"`)
+    && /STANDING/.test(block)
+    && /do not abandon|Do NOT abandon/i.test(block)
+    && /explicit/i.test(block); // in-the-moment ask must win for that problem
+  console.log(`${ok ? 'OK' : 'FAIL'}: ${c.label}`);
+  if (!ok) { console.error('  block was:', JSON.stringify(block.slice(0, 200))); failed = true; }
+}
+
 if (failed) {
   console.error('\ntest-pace-preference-block: FAILED');
   process.exit(1);
 } else {
-  console.log('\ntest-pace-preference-block: all cases OK (block presence + Absorption cross-reference at negative bias only; Y5 -1-default derivation seam)');
+  console.log('\ntest-pace-preference-block: all cases OK (block presence + Absorption cross-reference at negative bias only; Y5 -1-default derivation seam; #7 difficulty block)');
 }

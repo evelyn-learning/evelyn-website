@@ -150,7 +150,14 @@ function makeToolResultProvider(
   // 2026-07-17: lets the route surface a resolved generate_problem to the
   // CLIENT as a 'generated-problem' SSE event, so the client can pin the
   // verified expectedAnswer into later turns' <active_problem> block.
-  onGeneratedProblem?: (p: { statement: string; expectedAnswer?: string }) => void
+  onGeneratedProblem?: (p: { statement: string; expectedAnswer?: string }) => void,
+  // #7 hybrid (2026-07-17): standing difficulty preference from the session
+  // controls (pacingState.difficultyBias). Deterministically upgrades a
+  // brain-chosen difficulty of 'same' — the default it passes when the
+  // student didn't verbally ask for a level — so the preference holds even
+  // when the brain forgets the <difficulty_preference> block. An explicit
+  // non-'same' choice (in-the-moment student ask) is honored untouched.
+  difficultyBias?: number
 ): BrainTurnInput['toolResultProvider'] {
   if (!ctx) return undefined;
   return async (name, args) => {
@@ -236,7 +243,11 @@ function makeToolResultProvider(
         message: 'The runtime could not resolve the lesson plan; falling back to plan-authored.',
       });
     }
-    const difficulty = (args.difficulty as Difficulty) ?? 'same';
+    let difficulty = (args.difficulty as Difficulty) ?? 'same';
+    if (difficulty === 'same' && typeof difficultyBias === 'number' && difficultyBias !== 0) {
+      difficulty = difficultyBias < 0 ? 'slightly_easier' : difficultyBias === 1 ? 'slightly_harder' : 'much_harder';
+      console.log(`[brain.stream:generate_problem] difficulty 'same' → '${difficulty}' (standing difficultyBias=${difficultyBias})`);
+    }
     const anchorStatement = String(args.anchorProblem ?? '').trim();
     const anchorAnswer = typeof args.anchorAnswer === 'string' ? args.anchorAnswer : undefined;
     if (!anchorStatement) {
@@ -588,7 +599,8 @@ export async function POST(req: NextRequest) {
             body.lessonPlanContext,
             body.shownProblemIds ?? [],
             body.shownProblemHashes ?? [],
-            (p) => send({ type: 'generated-problem', ...p })
+            (p) => send({ type: 'generated-problem', ...p }),
+            typeof body.pacingState?.difficultyBias === 'number' ? body.pacingState.difficultyBias : undefined
           ),
       };
 

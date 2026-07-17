@@ -417,6 +417,10 @@ interface VoiceTutorRealtimeProps {
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
   onPaceBiasChange?: (bias: number) => void;
+  /** #7 hybrid (2026-07-17): fires whenever the standing difficulty
+   *  preference changes (chip click or blob restore) so the ⋯ menu's
+   *  sticky ✓ state stays in sync. */
+  onDifficultyBiasChange?: (bias: number) => void;
   /** Task W4: fires whenever the "Speak slower" TTS toggle changes (menu
    *  click OR prior-session restore). SEPARATE knob from paceBias/explain-
    *  pace above — this only affects synthesis speed, not depth/verbosity.
@@ -565,6 +569,7 @@ export function VoiceTutorRealtime({
   onMicLevel,
   onListeningHint,
   onPaceBiasChange,
+  onDifficultyBiasChange,
   onSpeakingRateChange,
   onPracticeOverrideChange,
   onInterruptedChange,
@@ -1719,6 +1724,13 @@ export function VoiceTutorRealtime({
   const paceBiasButtonSetRef = useRef(false);
   const onPaceBiasChangeRef = useRef(onPaceBiasChange);
   useEffect(() => { onPaceBiasChangeRef.current = onPaceBiasChange; }, [onPaceBiasChange]);
+  // #7 hybrid: standing problem-difficulty preference. -1 (easier) .. +2
+  // (much harder), 0 = neutral. Set ONLY by the Harder/Easier menu chips
+  // (inherently button-set — no verbal-cue path, so the round-15 cue-vs-
+  // button persistence split doesn't apply: any persisted value restores).
+  const difficultyBiasRef = useRef(0);
+  const onDifficultyBiasChangeRef = useRef(onDifficultyBiasChange);
+  useEffect(() => { onDifficultyBiasChangeRef.current = onDifficultyBiasChange; }, [onDifficultyBiasChange]);
   const onSpeakingRateChangeRef = useRef(onSpeakingRateChange);
   useEffect(() => { onSpeakingRateChangeRef.current = onSpeakingRateChange; }, [onSpeakingRateChange]);
   const onPracticeOverrideChangeRef = useRef(onPracticeOverrideChange);
@@ -1744,6 +1756,9 @@ export function VoiceTutorRealtime({
         // values fall back to the slow default instead of leaking a stale
         // "fast" into a brand-new session (the 2026-07-16 live bug).
         ...(paceBiasButtonSetRef.current ? { paceBiasSource: 'button' } : {}),
+        // #7 hybrid: standing difficulty preference. Only chips set it, so
+        // no source marker needed — any persisted value is deliberate.
+        ...(difficultyBiasRef.current !== 0 ? { difficultyBias: difficultyBiasRef.current } : {}),
         correctStreakCount: studentStreakRef.current.count,
         incorrectStreakCount: studentIncorrectStreakRef.current.count,
         speakingRate: speakingRateRef.current,
@@ -1817,6 +1832,17 @@ export function VoiceTutorRealtime({
     practiceOverrideRef.current = active;
     logPacing(`practice-override-set active=${active}`);
     onPracticeOverrideChangeRef.current?.(active);
+    persistPacingState();
+  }, [logPacing, persistPacingState]);
+  // #7 hybrid: set the standing difficulty preference. Clamped to the
+  // Difficulty scale's reachable notches (-1 = slightly_easier is the only
+  // easier notch; +2 = much_harder). Persisted in the same pacing blob.
+  const setDifficultyBias = useCallback((bias: number) => {
+    const to = Math.max(-1, Math.min(2, Math.round(bias)));
+    if (difficultyBiasRef.current === to) return;
+    difficultyBiasRef.current = to;
+    logPacing(`difficulty-bias-set bias=${to}`);
+    onDifficultyBiasChangeRef.current?.(to);
     persistPacingState();
   }, [logPacing, persistPacingState]);
 
@@ -6311,6 +6337,7 @@ export function VoiceTutorRealtime({
               const prior = JSON.parse(raw) as {
                 paceBias?: number;
                 paceBiasSource?: string;
+                difficultyBias?: number;
                 correctStreakCount?: number;
                 incorrectStreakCount?: number;
                 speakingRate?: 'slow' | 'normal';
@@ -6337,6 +6364,14 @@ export function VoiceTutorRealtime({
                   // Keep the durable marker across re-persists so the
                   // preference survives future sessions too.
                   paceBiasButtonSetRef.current = true;
+                }
+                // #7 hybrid: restore the standing difficulty preference on
+                // BOTH resume and fresh starts — chips are its only writer,
+                // so any persisted value is a deliberate button choice
+                // (the round-15 cue-contamination concern doesn't exist).
+                if (typeof prior.difficultyBias === 'number' && Number.isFinite(prior.difficultyBias) && prior.difficultyBias !== 0) {
+                  difficultyBiasRef.current = Math.max(-1, Math.min(2, Math.round(prior.difficultyBias)));
+                  onDifficultyBiasChangeRef.current?.(difficultyBiasRef.current);
                 }
                 if (resolvedBias !== paceBiasRef.current) {
                   paceBiasRef.current = resolvedBias;
@@ -7420,6 +7455,10 @@ export function VoiceTutorRealtime({
               paceBiasAppliedSinceTurns: paceBiasRef.current !== 0
                 ? Math.max(0, pacingTurnCounterRef.current - paceBiasSetTurnRef.current)
                 : undefined,
+              // #7 hybrid: standing difficulty preference → renders as
+              // <difficulty_preference> + deterministic 'same'-upgrade at
+              // the route's generate_problem resolver.
+              difficultyBias: difficultyBiasRef.current,
             },
             // Pacing v2 telemetry events buffered since the previous
             // brain call. Drained here. The /api/tutor/brain/stream
@@ -12686,6 +12725,7 @@ export function VoiceTutorRealtime({
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         setSpeakingRate,
         setPracticeOverride,
+        setDifficultyBias,
         resumeContinue: () => resumeContinueRef.current(),
         endSession: () => { void endSessionNowRef.current(); },
         getSpokenCaption: () => {
@@ -12750,7 +12790,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level, resumeState]);
+  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, setDifficultyBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level, resumeState]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds

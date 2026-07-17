@@ -219,6 +219,16 @@ export interface BrainTurnInput {
     /** Number of turns since paceBias was last set / changed. Surfaces
      *  as "applied since N turns ago" in the pace_preference block. */
     paceBiasAppliedSinceTurns?: number;
+    /** #7 hybrid (2026-07-17): STANDING problem-difficulty preference, set
+     *  by the Harder/Easier menu chips. -1 (easier) .. +2 (much harder);
+     *  0/absent = neutral. Unlike the old behavior (each click fired a
+     *  one-shot "give me a harder one" utterance and was then forgotten),
+     *  this governs every upcoming problem: surfaces as a
+     *  `<difficulty_preference>` block AND deterministically upgrades a
+     *  generate_problem difficulty of 'same' at the route (an explicit
+     *  brain-chosen non-'same' value — i.e. an in-the-moment student ask —
+     *  wins for that one problem). Persisted in the pacing blob. */
+    difficultyBias?: number;
   };
   /** Topic-notes orchestrator state — warmup status + remaining per-bucket
    *  capacity for the current session. Surfaces as a compact
@@ -874,6 +884,29 @@ export function formatPacePreferenceBlock(state: BrainTurnInput['pacingState']):
   );
 }
 
+/** #7 hybrid (2026-07-17): standing difficulty preference block. Sibling of
+ *  formatPacePreferenceBlock (same pacingState input, same omit-when-neutral
+ *  contract) but deliberately a SEPARATE block: a difficulty-only preference
+ *  must render even when paceBias is 0, and the pace block's pinned
+ *  invariants (bias 0 → empty) stay untouched. Exported for
+ *  test-pace-preference-block.ts. */
+export function formatDifficultyPreferenceBlock(state: BrainTurnInput['pacingState']): string {
+  if (!state) return '';
+  const bias = state.difficultyBias ?? 0;
+  if (bias === 0) return '';
+  const label = bias < 0 ? 'easier' : bias === 1 ? 'harder' : 'much harder';
+  const genDifficulty = bias < 0 ? 'slightly_easier' : bias === 1 ? 'slightly_harder' : 'much_harder';
+  return (
+    `<difficulty_preference>\n` +
+    `bias: ${bias} (${label})\n` +
+    `The student set a STANDING difficulty preference via the session controls. It applies to every upcoming problem until they change it — they should never have to re-ask. ` +
+    `When you call generate_problem, pass difficulty: "${genDifficulty}" — unless the student's CURRENT utterance explicitly asks for a different level, in which case the explicit in-the-moment ask wins for that one problem. ` +
+    `When choosing among authored segment problems or improvising, bias the pick the same direction. ` +
+    `Do NOT abandon or replace a problem the student is mid-attempt on because of this preference — it governs the NEXT problem onward.\n` +
+    `</difficulty_preference>\n\n`
+  );
+}
+
 /** Compact eligibility + capacity block for the topic-notes tools.
  *  Renders nothing when no plan / no baselineId. Three states:
  *    - warmup not cleared: tells brain calls would be silent-dropped.
@@ -1170,6 +1203,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
   }
   const pacePreferenceBlock = formatPacePreferenceBlock(input.pacingState);
+  const difficultyPreferenceBlock = formatDifficultyPreferenceBlock(input.pacingState);
   if (pacePreferenceBlock) {
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
@@ -1190,6 +1224,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     demoStopBlock +
     practiceSessionBlock +
     pacePreferenceBlock +
+    difficultyPreferenceBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +
@@ -1357,6 +1392,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     console.log(`[pacing] hint-rendered hint="${pacingHint}"`);
   }
   const pacePreferenceBlock = formatPacePreferenceBlock(input.pacingState);
+  const difficultyPreferenceBlock = formatDifficultyPreferenceBlock(input.pacingState);
   if (pacePreferenceBlock) {
     console.log(`[pacing] pace-preference-rendered bias=${input.pacingState?.paceBias}`);
   }
@@ -1372,6 +1408,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     demoStopBlock +
     practiceSessionBlock +
     pacePreferenceBlock +
+    difficultyPreferenceBlock +
     lessonBlock +
     truthBlock +
     activeProblemBlock +

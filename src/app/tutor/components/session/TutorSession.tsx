@@ -240,6 +240,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime's internal ref via onPracticeOverrideChange so the
   // "Practice problems" chip can render its active state (Humor ✓ idiom).
   const [practiceOverrideActive, setPracticeOverrideActive] = useState(false);
+  // #7 hybrid (2026-07-17): standing difficulty preference — mirrored from
+  // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
+  // restore) so the Harder/Easier menu items render their sticky ✓×N state.
+  const [difficultyBias, setDifficultyBias] = useState(0);
   const [, setIsPerceptionInterrupted] = useState(false);
   const [voiceTrouble, setVoiceTrouble] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -393,6 +397,15 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.stopSpeaking();
     realtimeHandleRef.current?.sendTextMessage(text);
   }, []);
+
+  // #7 hybrid: bracketed directive sent alongside a difficulty-chip click.
+  // Bracketed = synthetic (no session-start / timer side effects), and the
+  // BRAIN decides the hybrid branch — it knows the conversation state
+  // (mid-attempt vs between problems) better than any client heuristic.
+  const difficultyChangeDirective = (bias: number): string => {
+    const label = bias < 0 ? 'easier' : bias === 0 ? 'back to normal' : bias === 1 ? 'harder' : 'much harder';
+    return `[difficulty-preference-changed: the student set their standing difficulty preference to "${label}" via the session controls. This governs every upcoming problem (see <difficulty_preference>) — they should not have to re-ask. If the student has FINISHED or given up on the current problem — or no problem is active — serve the NEXT problem now at the new level (generate_problem). If they are MID-attempt, acknowledge the change in a few words and continue the current problem unchanged; do NOT replace it.]`;
+  };
 
   const handleStudentMark = useCallback((ev: StudentMarkEvent) => {
     realtimeHandleRef.current?.pushStudentMark?.(ev);
@@ -718,6 +731,7 @@ export default function TutorSession(props: TutorSessionProps) {
         }}
         onSpeakingRateChange={setSpeakingRate}
         onPracticeOverrideChange={setPracticeOverrideActive}
+        onDifficultyBiasChange={setDifficultyBias}
         onInterruptedChange={setIsPerceptionInterrupted}
         onBeforeTypedSubmit={onBeforeTypedSubmit}
         onProposePlanSwap={onProposePlanSwap}
@@ -790,8 +804,23 @@ export default function TutorSession(props: TutorSessionProps) {
       {pacingMenuOpen && (
         <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
           <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
-          <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me a harder one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Harder</button>
-          <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage('Give me an easier one.'); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Easier</button>
+          {/* #7 hybrid (2026-07-17): Harder/Easier are now a STANDING
+              preference, not a one-shot "give me a harder one" utterance.
+              Each click steps the durable difficultyBias (sticky ✓×N, menu
+              stays open — same idiom as the pace items below) and sends a
+              bracketed directive letting the BRAIN apply the hybrid: fetch
+              the next problem now at the new level if the student is
+              between problems, or just acknowledge and keep the current
+              problem if they're mid-attempt. The bias also rides every
+              turn (<difficulty_preference>) and deterministically upgrades
+              generate_problem's 'same' difficulty at the stream route, so
+              the student never has to re-ask. */}
+          <button onClick={() => { const next = Math.min(2, difficultyBias + 1); if (next !== difficultyBias) { realtimeHandleRef.current?.setDifficultyBias(next); realtimeHandleRef.current?.sendTextMessage(difficultyChangeDirective(next)); } }} className={`w-full text-left px-3 py-2 rounded-xl ${difficultyBias > 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
+            <span className="inline-block w-3">{difficultyBias > 0 ? '✓' : ''}</span> Harder{difficultyBias > 0 ? ` ×${difficultyBias}` : ''}
+          </button>
+          <button onClick={() => { const next = Math.max(-1, difficultyBias - 1); if (next !== difficultyBias) { realtimeHandleRef.current?.setDifficultyBias(next); realtimeHandleRef.current?.sendTextMessage(difficultyChangeDirective(next)); } }} className={`w-full text-left px-3 py-2 rounded-xl ${difficultyBias < 0 ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'}`}>
+            <span className="inline-block w-3">{difficultyBias < 0 ? '✓' : ''}</span> Easier
+          </button>
           <div className="my-1 border-t border-slate-100" />
           {/* Task W3: pace items keep the menu OPEN on click (delta is
               ±1 per click, clamped ±2 — a second/third click must be able

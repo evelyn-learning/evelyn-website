@@ -41,6 +41,12 @@ export interface RealtimeHandle {
    *  it survives resume. Wired to the "Practice problems" (true) / "Explain
    *  a concept" (false) starter chips in SessionStage.tsx. */
   setPracticeOverride: (active: boolean) => void;
+  /** #7 hybrid (2026-07-17): set the STANDING problem-difficulty preference
+   *  (-1 easier .. +2 much harder, 0 neutral; clamped). Persisted in the
+   *  pacing-v2 blob; surfaces per-turn as `<difficulty_preference>` and
+   *  deterministically upgrades a generate_problem difficulty of 'same' at
+   *  the stream route. Wired to the Harder/Easier ⋯-menu chips. */
+  setDifficultyBias: (bias: number) => void;
   /** Caption word-sync: poll the audio-locked caption reveal. Returns null
    *  when unsupported (non-claude-brain engines) — caller falls back to the
    *  legacy typewriter. live:false = supported but nothing being spoken
