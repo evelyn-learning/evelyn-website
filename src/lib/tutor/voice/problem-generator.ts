@@ -113,13 +113,30 @@ async function queryBank(
   topic: string,
   difficulty: IProblemBank['difficulty'],
   excludeIds: string[],
-  excludeHashes: string[] = []
+  excludeHashes: string[] = [],
+  planScope?: string
 ): Promise<GeneratedProblem | null> {
   await connectDB();
   const filter: Record<string, unknown> = {
     topic,
     difficulty,
   };
+  // Round-18 (2026-07-17, session portal-6342d1f6): lesson-scope the
+  // WRITE-BACK rows. The cache keys rows by broad topic only, so a
+  // generation that drifted subject-area (a derivative-critical-points
+  // problem out of a much_harder push in a LIMITS lesson) could re-serve
+  // into any other lesson of the same course — observed live, the brain
+  // had to filter it aloud. Rule: rows the runtime wrote back (id prefix
+  // "brain-gen.") only serve into the lesson (plan id, stamped as
+  // subtopic) that generated them; every non-write-back row (ingested
+  // corpus, chapter-tagged or not) serves exactly as before — zero
+  // regression for existing content.
+  if (planScope) {
+    filter.$or = [
+      { id: { $not: /^brain-gen\./ } },
+      { subtopic: planScope },
+    ];
+  }
   if (excludeIds.length > 0) {
     filter._id = { $nin: excludeIds };
   }
@@ -167,7 +184,9 @@ async function persistBrainGenProblem(
   topic: string,
   difficulty: IProblemBank['difficulty'],
   gen: GenPayload,
-  hash: string
+  hash: string,
+  planId?: string,
+  loId?: string
 ): Promise<void> {
   try {
     await connectDB();
@@ -177,6 +196,10 @@ async function persistBrainGenProblem(
         $setOnInsert: {
           id: `brain-gen.${topic}.${hash}`,
           topic,
+          // Round-18: lesson scoping — write-back rows serve only into the
+          // plan that generated them (see queryBank's planScope rule).
+          ...(planId ? { subtopic: planId } : {}),
+          ...(loId ? { loId } : {}),
           difficulty,
           problemText: gen.problemText,
           answer: gen.finalAnswer,
@@ -279,7 +302,7 @@ async function brainGenWithVerify(
     if (!answersAgree(gen.finalAnswer, solved)) return null;
     // Write-back cache: store the verified problem so future requests for
     // this topic+difficulty hit the bank fast-path. Fire-and-forget.
-    void persistBrainGenProblem(input.topic, absDifficulty, gen, hash);
+    void persistBrainGenProblem(input.topic, absDifficulty, gen, hash, input.planId, input.plan.los?.[0]?.id);
     return {
       canonicalText: gen.problemText,
       // The teaching solution is what the tutor references; fall back to the

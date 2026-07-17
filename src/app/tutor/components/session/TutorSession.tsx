@@ -371,6 +371,17 @@ export default function TutorSession(props: TutorSessionProps) {
         realtimeHandleRef.current.sendTextMessage(`[The student wrote on the whiteboard: "${content}". Respond to what they wrote.]`);
       } else {
         const noun = type === 'drawing' ? 'drew on' : 'uploaded an image to';
+        // Round-18 (2026-07-17): instant acknowledgment. The Vision
+        // extraction below takes a few seconds, during which the dock shows
+        // only a generic "Thinking…" — it reads as stuck and tempts the
+        // student to re-click. Speak a canned one-liner the moment the
+        // upload lands so the wait is explained; the brain's real response
+        // follows once extraction returns.
+        realtimeHandleRef.current?.speakText(
+          type === 'drawing'
+            ? 'Got your drawing — one sec while I take a look.'
+            : 'Got your upload — one sec while I read it.',
+        );
         (async () => {
           try {
             const base64Data = content.replace(/^data:image\/\w+;base64,/, '');

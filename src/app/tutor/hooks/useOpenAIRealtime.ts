@@ -2698,10 +2698,46 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             continue;
           }
           const buf = await res.arrayBuffer();
+          if (buf.byteLength === 0) {
+            // Defensive: a 200 with an empty body is a failed synthesis.
+            console.error(`[Realtime] ${useCartesia ? 'cartesia' : 'openai-mini'} TTS returned empty body (attempt ${attempt + 1})`);
+            continue;
+          }
           return new Float32Array(buf);
         } catch (err) {
           if ((err as { name?: string })?.name === 'AbortError') return null;
           console.error(`[Realtime] TTS error (attempt ${attempt + 1}):`, err);
+        }
+      }
+      // Round-18 (2026-07-17, session portal-6342d1f6): cross-engine
+      // fallback. A Cartesia degradation window (upstream timeouts → route
+      // 500s / HTTP2 resets) exhausted all 3 attempts on sentence after
+      // sentence, and each terminal skip silently swallowed a spoken
+      // sentence — the student had to read the chat to find the tail of
+      // every turn. One last attempt through the OpenAI TTS route keeps
+      // the voice flowing: a brief voice change beats a dropped sentence.
+      // Cartesia-only (an OpenAI outage falling back to Cartesia would
+      // need voiceId plumbing this path doesn't have).
+      if (useCartesia) {
+        onTtsIssueRef.current?.('retrying');
+        try {
+          const fbSpeed = speakingRateRef.current === 'slow' ? 0.85 : undefined;
+          const res = await fetch('/api/tutor/tts-openai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: trimmed, ...(fbSpeed !== undefined ? { speed: fbSpeed } : {}) }),
+          });
+          if (res.ok) {
+            const buf = await res.arrayBuffer();
+            if (buf.byteLength > 0) {
+              console.warn('[Realtime] Cartesia exhausted — sentence spoken via OpenAI TTS fallback');
+              return new Float32Array(buf);
+            }
+          } else {
+            console.error('[Realtime] OpenAI TTS fallback also failed:', res.status);
+          }
+        } catch (err) {
+          console.error('[Realtime] OpenAI TTS fallback error:', err);
         }
       }
       return null;
