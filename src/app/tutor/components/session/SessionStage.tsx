@@ -400,7 +400,11 @@ export default function SessionStage(props: SessionStageProps) {
               {subtitle && <p className="text-[11px] text-slate-500 truncate leading-tight">{subtitle}</p>}
             </div>
             {/* beats (desktop) */}
-            {hasPlan && beats && <div className="hidden lg:flex mx-auto min-w-0 max-w-[46%] overflow-x-auto">{beats}</div>}
+            {/* Practice meter (2026-07-17): the beats slot no longer requires a
+                plan — plan-less sessions (free practice / upload) render the
+                problems-solved meter here; TutorSession passes beats=null when
+                there is genuinely nothing to show. */}
+            {beats && <div className="hidden lg:flex mx-auto min-w-0 max-w-[46%] overflow-x-auto">{beats}</div>}
             <div className="shrink-0 ml-auto flex items-center gap-1.5 sm:gap-2.5">
               {/* Transcript trigger — header icon at ALL sizes (R1 2026-07-14;
                   the old md+ bottom-left floating chip covered board ink and

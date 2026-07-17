@@ -92,6 +92,10 @@ export interface TutorSessionProps {
   maxDurationExplicit?: VTRProps['maxDurationExplicit'];
   /** Prior-session snapshot to rehydrate (resume). Forwarded to the runtime. */
   resumeState?: VTRProps['resumeState'];
+  /** Practice meter (2026-07-17): live problem-work stats bubbled up from
+   *  the runtime (also consumed locally for the header meter). The embed
+   *  page forwards these to the portal in the evelyn:progress message. */
+  onPracticeStatsChange?: VTRProps['onPracticeStatsChange'];
   /** Task D1b — transient session-scoped social threads / progress digest
    *  from the portal's StudentContext (embed passes them; the standalone
    *  /tutor page has no source and omits both). Forwarded to the runtime,
@@ -191,6 +195,7 @@ export default function TutorSession(props: TutorSessionProps) {
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
     socialMemory, progressDigest, lastOpener, readinessNote, onOpenerRecord, isTrial,
     targetKind, checkpointStale, teacherPersona, sessionWrapMinutes, maxDurationExplicit,
+    onPracticeStatsChange,
   } = props;
 
   // Task E8: SessionStage's mobile "expand" button lives deep in this
@@ -244,6 +249,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
   const [difficultyBias, setDifficultyBias] = useState(0);
+  // Practice meter (2026-07-17): live problem-work stats from the runtime.
+  // Drives the header meter that REPLACES the segment beats when practice
+  // mode is active (or no plan exists) — segment pills answer "where am I
+  // in this lesson's content", which is the wrong question mid-practice.
+  const [practiceStats, setPracticeStats] = useState<{ active: boolean; presented: number; solved: number; streak: number } | null>(null);
   const [, setIsPerceptionInterrupted] = useState(false);
   const [voiceTrouble, setVoiceTrouble] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -743,6 +753,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onSpeakingRateChange={setSpeakingRate}
         onPracticeOverrideChange={setPracticeOverrideActive}
         onDifficultyBiasChange={setDifficultyBias}
+        onPracticeStatsChange={(s) => { setPracticeStats(s); onPracticeStatsChange?.(s); }}
         onInterruptedChange={setIsPerceptionInterrupted}
         onBeforeTypedSubmit={onBeforeTypedSubmit}
         onProposePlanSwap={onProposePlanSwap}
@@ -756,9 +767,26 @@ export default function TutorSession(props: TutorSessionProps) {
     </>
   );
 
-  const beatsEl = lessonProgress.plan ? (
-    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
+  // Practice meter: swaps in for the segment beats while practice mode is
+  // active (and for plan-less sessions once a problem has been shown).
+  const showPracticeMeter = !!practiceStats
+    && (practiceStats.active || !lessonProgress.plan)
+    && practiceStats.presented > 0;
+  const practiceMeterEl = showPracticeMeter && practiceStats ? (
+    <div className="flex items-center gap-2 text-xs whitespace-nowrap" aria-label="Practice progress">
+      <span className="rounded-full bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 font-medium">
+        {practiceStats.active ? 'Practice' : 'Problems'}
+      </span>
+      <span className="font-semibold text-slate-700">✓ {practiceStats.solved} solved</span>
+      {practiceStats.streak >= 2 && (
+        <span className="font-semibold text-amber-600">🔥 ×{practiceStats.streak}</span>
+      )}
+      <span className="text-slate-400">{practiceStats.presented} shown</span>
+    </div>
   ) : null;
+  const beatsEl = practiceMeterEl ?? (lessonProgress.plan ? (
+    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
+  ) : null);
 
   const controlsEl = (
     <SessionControls

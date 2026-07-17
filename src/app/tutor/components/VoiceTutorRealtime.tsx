@@ -421,6 +421,12 @@ interface VoiceTutorRealtimeProps {
    *  preference changes (chip click or blob restore) so the ⋯ menu's
    *  sticky ✓ state stays in sync. */
   onDifficultyBiasChange?: (bias: number) => void;
+  /** Practice meter (2026-07-17): live problem-work stats for the
+   *  practice/no-plan progress display. `active` mirrors the current
+   *  derived practiceMode; `presented` counts distinct problem cards
+   *  shown; `solved` counts brain-affirmed genuine verifications;
+   *  `streak` is the current correct streak. Fires on every change. */
+  onPracticeStatsChange?: (s: { active: boolean; presented: number; solved: number; streak: number }) => void;
   /** Task W4: fires whenever the "Speak slower" TTS toggle changes (menu
    *  click OR prior-session restore). SEPARATE knob from paceBias/explain-
    *  pace above — this only affects synthesis speed, not depth/verbosity.
@@ -570,6 +576,7 @@ export function VoiceTutorRealtime({
   onListeningHint,
   onPaceBiasChange,
   onDifficultyBiasChange,
+  onPracticeStatsChange,
   onSpeakingRateChange,
   onPracticeOverrideChange,
   onInterruptedChange,
@@ -1731,6 +1738,20 @@ export function VoiceTutorRealtime({
   const difficultyBiasRef = useRef(0);
   const onDifficultyBiasChangeRef = useRef(onDifficultyBiasChange);
   useEffect(() => { onDifficultyBiasChangeRef.current = onDifficultyBiasChange; }, [onDifficultyBiasChange]);
+  // Practice meter (2026-07-17): distinct problems shown + brain-affirmed
+  // solves this session. Presented increments at the shownProblemHashes
+  // new-hash site (every distinct problem card, any provenance); solved at
+  // the post-stream affirmed-verification site (same guard as the pacing
+  // streak, so pure acks / retries never count). Surfaced via
+  // onPracticeStatsChange for the practice/no-plan progress display.
+  const practicePresentedRef = useRef(0);
+  const practiceSolvedRef = useRef(0);
+  const onPracticeStatsChangeRef = useRef(onPracticeStatsChange);
+  useEffect(() => { onPracticeStatsChangeRef.current = onPracticeStatsChange; }, [onPracticeStatsChange]);
+  // Ref-assigned every render (endSessionNowRef pattern) so every call
+  // site — command loop, post-stream verification, override setter — can
+  // fire it without threading it through dependency arrays.
+  const emitPracticeStatsRef = useRef<() => void>(() => {});
   const onSpeakingRateChangeRef = useRef(onSpeakingRateChange);
   useEffect(() => { onSpeakingRateChangeRef.current = onSpeakingRateChange; }, [onSpeakingRateChange]);
   const onPracticeOverrideChangeRef = useRef(onPracticeOverrideChange);
@@ -1832,6 +1853,8 @@ export function VoiceTutorRealtime({
     practiceOverrideRef.current = active;
     logPacing(`practice-override-set active=${active}`);
     onPracticeOverrideChangeRef.current?.(active);
+    // Practice meter: mode flips swap the progress display immediately.
+    emitPracticeStatsRef.current();
     persistPacingState();
   }, [logPacing, persistPacingState]);
   // #7 hybrid: set the standing difficulty preference. Clamped to the
@@ -3062,6 +3085,9 @@ export function VoiceTutorRealtime({
             if (shownProblemHashesRef.current.length > 40) {
               shownProblemHashesRef.current.shift();
             }
+            // Practice meter: a NEW distinct problem card was presented.
+            practicePresentedRef.current++;
+            emitPracticeStatsRef.current();
           }
         }
         // Empty/near-empty problem card is never useful. Drop regardless of
@@ -6404,6 +6430,8 @@ export function VoiceTutorRealtime({
                 if (resumeState && prior.practiceOverride === true) {
                   practiceOverrideRef.current = true;
                   onPracticeOverrideChangeRef.current?.(true);
+                  // Practice meter: restored mode must reach the display.
+                  emitPracticeStatsRef.current();
                 }
                 logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} speakingRate=${speakingRateRef.current} practiceOverride=${practiceOverrideRef.current} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
               } else {
@@ -10547,6 +10575,9 @@ export function VoiceTutorRealtime({
             }
             logPacing(`streak-correct seg="${ver.segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
+            // Practice meter: a brain-affirmed genuine verification is a solve.
+            practiceSolvedRef.current++;
+            emitPracticeStatsRef.current();
             // Late-fire segment-mastered: if completedSegmentIdsRef
             // contains ver.segId (i.e. brain emitted mark_segment_complete
             // earlier in this turn) AND the new streak is >= 2, fire the
@@ -10574,6 +10605,8 @@ export function VoiceTutorRealtime({
             }
             logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
+            // Practice meter: the streak reset must reach the display.
+            emitPracticeStatsRef.current();
           }
 
           // Bare-praise-ending advisory (Task Y4 addendum). Same shape as
@@ -13446,6 +13479,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Expose the rotation handler to the response-done callback via ref so
   // auto-rotation at 58 min can fire without a forward-reference problem.
   continueRotationRef.current = handleContinueRotation;
+  // Practice meter: ref-assigned every render (same pattern as the two
+  // refs above) so any call site can fire without dependency plumbing.
+  emitPracticeStatsRef.current = () => {
+    onPracticeStatsChangeRef.current?.({
+      active: derivePracticeMode(sessionGoal, practiceOverrideRef.current),
+      presented: practicePresentedRef.current,
+      solved: practiceSolvedRef.current,
+      streak: studentStreakRef.current.count,
+    });
+  };
   // End/Pause teardown, shared by the dock's own button and the handleRef's
   // endSession (header control). Ref-assigned every render (same pattern as
   // continueRotationRef) so the handleRef effect — whose deps don't include

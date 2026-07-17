@@ -517,6 +517,9 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const completedSegmentIdsRef = useRef<string[]>([]);
   const lessonProgressRef = useRef<LessonProgress | null>(null);
   const lastEmittedProgressRef = useRef<string>('');
+  // Practice meter (2026-07-17): latest problem-work stats from the
+  // runtime; rides the evelyn:progress message as an ADDITIVE field.
+  const practiceStatsRef = useRef<{ active: boolean; presented: number; solved: number; streak: number } | null>(null);
 
   // Build LessonProgress from the latest position and surface it to the
   // portal: a live `evelyn:progress` postMessage (highlights the current pill,
@@ -531,13 +534,21 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     );
     if (!progress) return;
     lessonProgressRef.current = progress;
-    const sig = JSON.stringify(progress);
+    // Practice stats fold into the dedup signature so a solve/streak
+    // change re-emits even when the segment position didn't move.
+    const sig = JSON.stringify({ progress, practice: practiceStatsRef.current });
     if (sig === lastEmittedProgressRef.current) return;
     lastEmittedProgressRef.current = sig;
 
     window.parent.postMessage({
       type: 'evelyn:progress',
-      data: { session_id: sessionId, lesson_progress: progress },
+      data: {
+        session_id: sessionId,
+        lesson_progress: progress,
+        // Additive (2026-07-17): live practice meter for the portal strip.
+        // Older portals ignore unknown fields — contract-safe.
+        ...(practiceStatsRef.current ? { practice: practiceStatsRef.current } : {}),
+      },
     }, '*');
 
     // Identity fields included so this upsert inserts validly if it lands
@@ -753,6 +764,12 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         }}
         onCompletedSegmentsChange={(ids) => {
           completedSegmentIdsRef.current = ids;
+          emitProgress();
+        }}
+        onPracticeStatsChange={(s) => {
+          // Practice meter (2026-07-17): additive field on the progress
+          // message — older portals ignore it (contract-safe).
+          practiceStatsRef.current = s;
           emitProgress();
         }}
       />
