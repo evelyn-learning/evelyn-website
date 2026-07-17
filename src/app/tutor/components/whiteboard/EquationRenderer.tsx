@@ -11,6 +11,7 @@ import { useEffect, useRef } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { InlineMathText } from './InlineMathText';
+import { computeFitScale } from './fit-scale-math';
 
 interface EquationRendererProps {
   latex: string;
@@ -114,6 +115,10 @@ export function EquationRenderer({
       // deepest element to get the actual math width.
       const mathEl = (inner.querySelector('.katex') as HTMLElement) || inner;
       const innerWidth = mathEl.scrollWidth;
+      // Clear a stale stamp from a previous fit (e.g. panel widened enough
+      // that the equation now fits at natural size) before possibly
+      // re-setting it below.
+      delete el.dataset.fitScale;
       if (containerWidth > 0 && innerWidth > containerWidth) {
         // Lower floor to 0.32 — the prior 0.5 floor wasn't enough for
         // chained identity rows on a narrow whiteboard panel
@@ -121,7 +126,13 @@ export function EquationRenderer({
         // identities clipped on both edges). Below ~0.32 the math
         // becomes hard to read; the carousel allows horizontal scroll
         // for anything that still doesn't fit.
-        const scale = Math.max(0.32, containerWidth / innerWidth);
+        // Shared with W1's useFitScale (fit-scale-math.ts) — same
+        // never-upscale / never-NaN / floor-clamp semantics, just a
+        // fixed 0.32 floor instead of a caller-supplied one.
+        const { scale, overflowing } = computeFitScale({ containerWidth, contentWidth: innerWidth, floor: 0.32 });
+        // Stamped for harness/visual verification only (no CSS/behavior
+        // hooks off it) — mirrors W1's data-fit-scale="floor" convention.
+        el.dataset.fitScale = overflowing ? 'floor' : 'scaled';
         inner.style.transform = `scale(${scale})`;
         // Pin the inline-block to the container width so its layout
         // box can't push the parent wider than the page. Combined
@@ -146,7 +157,33 @@ export function EquationRenderer({
         const padY = cs
           ? (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0)
           : 16;
-        const innerHeight = Math.ceil(inner.scrollHeight * scale) + padY + 8;
+        // KaTeX's own stylesheet gives `.katex-display` a default
+        // `margin: 1em 0` (~32px unscaled at typical body font sizes).
+        // `transform: scale()` shrinks the painted content box but NOT
+        // margins — a scaled-down equation still carries its full,
+        // unscaled top/bottom margin in the parent's layout. Discovered
+        // via the Y6 verification harness (2026-07-16): once this task
+        // added `overflow-y-hidden` to suppress a vertical-scrollbar
+        // artifact, the pre-existing height formula (which only knew
+        // about scaled content + our own padding, not this margin)
+        // under-sized the box by ~2em and silently clipped the bottom of
+        // EVERY scaled display equation — worse than the scrollbar it
+        // replaced. Read the actual computed margin instead of assuming
+        // it's zero.
+        const innerCs = (typeof window !== 'undefined' && typeof getComputedStyle === 'function')
+          ? getComputedStyle(inner)
+          : null;
+        const marginY = innerCs
+          ? (parseFloat(innerCs.marginTop) || 0) + (parseFloat(innerCs.marginBottom) || 0)
+          : 0;
+        // +10 (was +8): the extra 2px absorbs independent sub-pixel
+        // rounding between the height we assign here (float, rounded by
+        // the browser to a `clientHeight` integer) and the content's own
+        // separately-rounded `scrollHeight` — without it, a fractional
+        // mismatch of ~1px could round the wrong way and reintroduce a
+        // 1px vertical clip now that overflow-y is hidden instead of
+        // auto-scrolling.
+        const innerHeight = Math.ceil(inner.scrollHeight * scale) + marginY + padY + 10;
         el.style.height = `${innerHeight}px`;
       }
     };
@@ -157,8 +194,38 @@ export function EquationRenderer({
     if (containerRef.current && typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(() => fitToWidth());
       observer.observe(containerRef.current);
+      // ALSO observe the rendered math node itself, not just the
+      // container. The first fitToWidth() runs on the very next
+      // animation frame after katex.render(), which can be BEFORE the
+      // KaTeX_* webfonts finish loading/swapping in — the browser lays
+      // out with fallback font metrics that happen to be a hair
+      // narrower, so the initial measurement sees the equation as
+      // fitting (~1:1, no scale applied). The container's own size
+      // never changes when this happens, so without observing the math
+      // node too, nothing re-triggers the fit once the real fonts swap
+      // in and the equation grows past the container — the only visible
+      // symptom is the plain overflow-x-auto fallback showing a
+      // scrollbar sliver instead of the equation scaling down (2026-07-16
+      // AP World live-session screenshot: a wide \text-heavy line with an
+      // arrow, "Muslim ruling elite + jizya tax → Hindu majority left
+      // largely self-governing"). ResizeObserver reports a node's
+      // untransformed layout box, so this doesn't get confused by our own
+      // `transform: scale()` on the ancestor `inner`.
+      const inner = containerRef.current.firstElementChild as HTMLElement | null;
+      const mathEl = inner ? ((inner.querySelector('.katex') as HTMLElement) || inner) : null;
+      if (mathEl) observer.observe(mathEl);
+    }
+    // Belt-and-suspenders re-fit once web fonts finish loading, in case a
+    // given browser/font doesn't produce a detectable box-size change on
+    // swap (e.g. a fallback font with near-identical metrics to KaTeX's).
+    let cancelled = false;
+    if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) fitToWidth();
+      });
     }
     return () => {
+      cancelled = true;
       cancelAnimationFrame(raf);
       observer?.disconnect();
     };
@@ -197,7 +264,16 @@ export function EquationRenderer({
       )}
       <div
         ref={containerRef}
-        className="equation-content overflow-x-auto py-2 fit-to-width"
+        // overflow-y-hidden: some platforms (e.g. non-overlay scrollbars
+        // on Windows/Linux) reserve a horizontal strip of height for the
+        // horizontal scrollbar and, on certain box-sizing edge cases,
+        // let a vertical scrollbar sliver appear alongside it even
+        // though this box never legitimately needs vertical scroll (its
+        // height is either auto-sized to content or explicitly pinned in
+        // fitToWidth() above). Suppress it defensively — it's a pure
+        // display:none-equivalent no-op whenever content doesn't overflow
+        // vertically, which is always the case here.
+        className="equation-content overflow-x-auto overflow-y-hidden py-2 fit-to-width"
         style={{ maxWidth: '100%' }}
       />
     </div>
