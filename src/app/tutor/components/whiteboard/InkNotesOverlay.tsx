@@ -151,21 +151,51 @@ function targetRect(
   host: HTMLElement,
   targetId?: string,
   targetFeature?: string,
-): { rect: Rect; itemEl: Element | null } | null {
+): { rect: Rect; itemEl: Element | null; el: Element } | null {
   const hostBox = host.getBoundingClientRect();
   let el: Element | null = null;
+  let matchedFeature = false;
   if (targetId) {
     const item = host.querySelector(`[data-wb-item-id="${targetId.replace(/"/g, '\\"')}"]`);
-    if (item && targetFeature) el = item.querySelector(`[data-feature="${targetFeature.replace(/"/g, '\\"')}"]`) ?? item;
-    else el = item;
+    if (item && targetFeature) {
+      const f = item.querySelector(`[data-feature="${targetFeature.replace(/"/g, '\\"')}"]`);
+      matchedFeature = !!f;
+      el = f ?? item;
+    } else el = item;
   }
-  if (!el && targetFeature) el = host.querySelector(`[data-feature="${targetFeature.replace(/"/g, '\\"')}"]`);
+  if (!el && targetFeature) {
+    el = host.querySelector(`[data-feature="${targetFeature.replace(/"/g, '\\"')}"]`);
+    matchedFeature = !!el;
+  }
   if (!el) return null;
-  const b = el.getBoundingClientRect();
+  let b = el.getBoundingClientRect();
   if (b.width === 0 && b.height === 0) return null;
+  // Round-17 (2026-07-17, session portal-ef215ea0): for FEATURE targets,
+  // shrink the rect to the union of the element's children — the CONTENT
+  // extent. An MCQ choice row is a full-width flex <li> whose text ends
+  // early: with the container's rect as the target, the row's own trailing
+  // whitespace counts as "inside the target" (unplaceable) and the 'right'
+  // slot starts past the card edge, so every near slot failed and the
+  // scribble labels ("correct") degraded to the below-page margin
+  // extension, pooling under the LAST card — two verdicts for two
+  // different problems read as a repeat under one problem. Content-extent
+  // targets put the label beside the text, in the row's own whitespace.
+  if (matchedFeature && el.children.length > 0) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const child of Array.from(el.children)) {
+      const cb = child.getBoundingClientRect();
+      if (cb.width === 0 && cb.height === 0) continue;
+      minX = Math.min(minX, cb.left); minY = Math.min(minY, cb.top);
+      maxX = Math.max(maxX, cb.right); maxY = Math.max(maxY, cb.bottom);
+    }
+    if (minX < maxX && minY < maxY) {
+      b = new DOMRect(minX, minY, maxX - minX, maxY - minY);
+    }
+  }
   return {
     rect: { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height },
     itemEl: el.closest('[data-wb-item-id]'),
+    el,
   };
 }
 
@@ -388,6 +418,15 @@ export function InkNotesOverlay({
         for (const entry of itemEntries) {
           if (t?.itemEl && entry.el === t.itemEl) {
             entry.el.querySelectorAll('[data-feature]').forEach((f) => {
+              // Round-17: skip the target element ITSELF (its shrunken
+              // content rect is already the carve-protected target — its
+              // full container rect here would re-block its own trailing
+              // whitespace) and any feature that CONTAINS the target (an
+              // enclosing list like data-feature="choices" wraps every
+              // choice row; treating its whole rect as occupied made
+              // every slot beside an interior choice collide with its own
+              // container). Sibling features still block via their rects.
+              if (t.el && (f === t.el || f.contains(t.el))) return;
               const r = toHostRect(f);
               if (r.w > 0 || r.h > 0) occupied.push(r);
             });

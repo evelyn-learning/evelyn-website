@@ -902,7 +902,8 @@ export function formatDifficultyPreferenceBlock(state: BrainTurnInput['pacingSta
     `The student set a STANDING difficulty preference via the session controls. It applies to every upcoming problem until they change it — they should never have to re-ask. ` +
     `When you call generate_problem, pass difficulty: "${genDifficulty}" — unless the student's CURRENT utterance explicitly asks for a different level, in which case the explicit in-the-moment ask wins for that one problem. ` +
     `When choosing among authored segment problems or improvising, bias the pick the same direction. ` +
-    `Do NOT abandon or replace a problem the student is mid-attempt on because of this preference — it governs the NEXT problem onward.\n` +
+    `Do NOT abandon or replace a problem the student is mid-attempt on because of this preference — it governs the NEXT problem onward. ` +
+    `A "harder one" must be a genuinely NEW problem (generate_problem, or a fresh improvisation) — NEVER re-present an equation or problem already on the board as if it were the next problem; the runtime dedups the render silently and the student sees you asking about content they already solved.\n` +
     `</difficulty_preference>\n\n`
   );
 }
@@ -1085,7 +1086,8 @@ export function formatPracticeSessionBlock(practiceMode?: boolean): string {
     `- NO new-concept teaching. Do not deliver theory lectures or step-by-step worked-example walkthroughs of material they haven't attempted. If <lesson_plan> or <segment_truth> mandates teaching a new concept, DEMOTE that mandate: turn the concept into a problem for the student to attempt instead of explaining it yourself.\n` +
     `- Brief prerequisite remediation IS allowed — but only when a gap is actively blocking the current problem. Keep it to a quick recall check or a one-line reminder (a turn or two at most), then go straight back to a problem. Never let remediation expand into a full re-teach.\n` +
     `- Target problems at where the student is shaky. After each attempt give short, specific feedback, then move to the next problem.\n` +
-    `- Keep feedback TIGHT: at most 2 short sentences between problems — the verdict plus one targeted note. No analogies, no metaphors, no "like a band where…" color, no pattern-history recaps of what they did three problems ago. Humor stays out of the way here. The student came to DO problems; every sentence of yours that isn't a problem or a verdict is friction. Get the next problem up promptly.`;
+    `- Keep feedback TIGHT: at most 2 short sentences between problems — the verdict plus one targeted note. No analogies, no metaphors, no "like a band where…" color, no pattern-history recaps of what they did three problems ago. Humor stays out of the way here. The student came to DO problems; every sentence of yours that isn't a problem or a verdict is friction. Get the next problem up promptly.\n` +
+    `- ANSWER the student's questions — always. A direct question from the student ("what do you mean by X?", "why does that work?") is NEVER "lecturing" and is NOT friction: answer it plainly and completely first, then return to problems. Deflecting a genuine question back to "let's stick with the problems" is a failure — a real student asked twice what a phrase meant and was deflected both times. The no-lecture rule bans UNREQUESTED theory, not requested explanations.`;
   return `<practice_session>\n${body}\n</practice_session>\n\n`;
 }
 

@@ -418,17 +418,72 @@ export function answersAgree(genAnswer: string, solveAnswer: string): boolean {
   return !!na && na === nb;
 }
 
+/** Round-17b (2026-07-17): MCQ-aware agreement. Live false-mismatch class
+ *  (session portal-ef215ea0): the brain claims a LETTER ("D") while the
+ *  blind solver answered with the choice's TEXT. Resolve BOTH sides to a
+ *  letter — direct letter shapes ("D", "(D)", "Option D."), else a
+ *  conservative match against the choice texts (normalized equality, or
+ *  containment when the shorter side is long enough to be unambiguous) —
+ *  and compare letters. Unresolvable sides never agree. */
+export function mcqAnswersAgree(
+  claimed: string,
+  solved: string,
+  choices: Array<{ letter: string; text: string }>
+): boolean {
+  const norm = (s: string) => (s ?? '').toLowerCase().replace(/\$|\\[a-z]+|[{}()]/g, ' ').replace(/[^a-z0-9]/g, '');
+  const nClaimed = norm(claimed);
+  const nSolved = norm(solved);
+  if (nClaimed && nClaimed === nSolved) return true;
+  const letterOf = (s: string): string | null => {
+    const t = (s ?? '').trim();
+    const direct = t.match(/^\(?([A-Ea-e])\)?[.):]?$/);
+    if (direct) return direct[1].toUpperCase();
+    const prefixed = t.match(/^(?:option|choice|answer(?:\s+is)?)[:\s]+\(?([A-Ea-e])\)?[.):]?\s*$/i);
+    return prefixed ? prefixed[1].toUpperCase() : null;
+  };
+  const resolve = (s: string): string | null => {
+    const l = letterOf(s);
+    if (l) return l;
+    // Text → letter only on EXACT normalized equality. Fuzzy/containment
+    // matching is deliberately absent: MCQ choices about one concept share
+    // most of their words (a negation distractor differs from the correct
+    // choice by one token), so paraphrase matching would mis-resolve. The
+    // solver sees the choices and is instructed to answer with a letter —
+    // that is the reliable path; this branch only covers verbatim quotes.
+    const n = norm(s);
+    if (!n) return null;
+    for (const c of choices) {
+      if (norm(c.text) === n) return c.letter.toUpperCase();
+    }
+    return null;
+  };
+  const a = resolve(claimed);
+  const b = resolve(solved);
+  return !!a && a === b;
+}
+
 /** Round-17 (2026-07-17): blind-solve verification for a CLAIMED answer —
  *  the improvised / student-brought coverage of the pipeline's Layer-2
  *  check. The solver gets ONLY the problem text (never the claim) and the
  *  comparison uses the same answersAgree tolerance the pipeline serves
- *  under. Used by /api/tutor/verify-answer. */
+ *  under. Round-17b: for multiple-choice problems the CHOICES are appended
+ *  to the solver's problem text (it previously answered free-form text
+ *  because it couldn't see them) with a letter-only reply instruction, and
+ *  agreement adds the MCQ letter/text resolution. */
 export async function verifyClaimedAnswer(
   problemText: string,
-  claimedAnswer: string
+  claimedAnswer: string,
+  choices?: Array<{ letter: string; text: string }>
 ): Promise<{ agree: boolean; solved: string }> {
-  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, problemText, 400);
-  return { agree: answersAgree(claimedAnswer, solved), solved };
+  const hasChoices = Array.isArray(choices) && choices.length > 0;
+  const solverInput = hasChoices
+    ? `${problemText}\n\nAnswer choices:\n${choices!.map((c) => `${c.letter}) ${c.text}`).join('\n')}\n\nThis is multiple-choice: reply with ONLY the letter of the correct choice.`
+    : problemText;
+  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, solverInput, 400);
+  const agree = hasChoices
+    ? mcqAnswersAgree(claimedAnswer, solved, choices!) || answersAgree(claimedAnswer, solved)
+    : answersAgree(claimedAnswer, solved);
+  return { agree, solved };
 }
 
 /** Cheap deterministic hash for dedup. Not cryptographic. */

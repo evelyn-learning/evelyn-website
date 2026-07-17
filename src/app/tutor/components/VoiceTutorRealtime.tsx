@@ -8114,7 +8114,19 @@ export function VoiceTutorRealtime({
                   // anyway. "you had it right the first time" requires the
                   // trailing qualifier — a bare "you had it right" is a
                   // legit reassurance to a self-doubting student.
-                  const selfCorrectionRe = /\b(?:wait,?\s+actually|wait,?\s+no\b|wait,?\s+i\s+(?:meant|said|mean)\b|wait,?\s+sorry|wait\s*[—–-]+\s*let me\b|actually,?\s+(?:i was wrong|i['’]m wrong|never mind|i meant|let me back up|let me re-?\w+)|let me re-?(?:check|verify|consider|examine|state|phrase)|let me (?:redo|restart|try again)\b|let me be (?:precise|careful|exact)\b|let me double-?check\b|you had it right the first time\b|is that right\?\s*(?:no|wait|hmm)|(?:^|\.\s+)wait[,.]?\s+is that\b|or rather\b|or actually\b|i mean,?\s+(?:no|actually)\b|i meant\s+to\s+(?:say|write)\b|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong|correction:)/i;
+                  const selfCorrectionRe = /\b(?:wait,?\s+actually|wait,?\s+no\b|wait,?\s+i\s+(?:meant|said|mean)\b|wait,?\s+sorry|wait\s*[—–-]+\s*let me\b|actually,?\s+(?:i was wrong|i['’]m wrong|never mind|i meant|let me back up|let me re-?\w+)|let me re-?(?:check|verify|consider|examine|state|phrase)|let me (?:redo|restart|try again)\b|let me be (?:precise|careful|exact)\b|let me double-?check\b|you had it right the first time\b|is that right\?\s*(?:no|wait|hmm)|(?:^|\.\s+)wait[,.]?\s+is that\b|i mean,?\s+(?:no|actually)\b|i meant\s+to\s+(?:say|write)\b|my mistake|my apologies|sorry,?\s+i (?:was|['’]m) wrong|i (?:was|['’]m) wrong|never mind\s+(?:that|what i)|scratch that|hold on,?\s+i (?:was|['’]m) wrong|correction:)/i;
+                  // Round-17 (2026-07-17, session portal-ef215ea0): "or
+                  // rather / or actually" moved out of the main regex into a
+                  // SOFT tier that never fires on a QUESTION. Live FP: "…want
+                  // to stick with algebraic limits and go harder, or actually
+                  // switch flavors?" — an alternatives-offering question, not
+                  // a walk-back — got killed, and the retry deflected the
+                  // student's genuine question. A real self-correction ("it's
+                  // 12 — or actually, 13.") is declarative and still caught.
+                  const softCorrectionRe = /\b(?:or rather|or actually)\b/i;
+                  const isInterrogativeSentence = /\?\s*$/.test(updatedSentence.trim());
+                  const selfCorrectionHit = selfCorrectionRe.test(updatedSentence)
+                    || (!isInterrogativeSentence && softCorrectionRe.test(updatedSentence));
                   // Round-7+++ Fix Issue 2: skip self-correction
                   // detection on RETRY attempts. The brain's retry
                   // following a judge KILL or rejection legitimately
@@ -8128,7 +8140,7 @@ export function VoiceTutorRealtime({
                   // self-correction → another retry). Only fire on
                   // the FIRST attempt of a turn; retries are already
                   // corrections, not confused walkbacks.
-                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionRe.test(updatedSentence)) {
+                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionHit) {
                     const reason =
                       `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +
                       `That's confusing for the student to hear. Re-emit your response cleanly: ` +
@@ -8611,10 +8623,20 @@ export function VoiceTutorRealtime({
                     delete (args as Record<string, unknown>).expectedAnswer;
                     if (claimedAnswer && claimedStatement) {
                       onDebugEvent?.('improvised_answer_verifying', claimedAnswer.slice(0, 40));
+                      // Round-17b: pass MCQ choices so the blind solver can
+                      // answer with a letter (without them it answered the
+                      // correct choice's text — a false mismatch vs "D").
+                      const rawChoices = (args as Record<string, unknown>).answerChoices;
+                      const verifyChoices = Array.isArray(rawChoices)
+                        ? rawChoices
+                            .filter((c): c is { letter: string; text: string } =>
+                              !!c && typeof (c as { letter?: unknown }).letter === 'string' && typeof (c as { text?: unknown }).text === 'string')
+                            .map((c) => ({ letter: c.letter, text: c.text }))
+                        : undefined;
                       void fetch('/api/tutor/verify-answer', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ statement: claimedStatement, claimedAnswer }),
+                        body: JSON.stringify({ statement: claimedStatement, claimedAnswer, choices: verifyChoices }),
                       })
                         .then((r) => (r.ok ? r.json() : null))
                         .then((v: { agree?: boolean; solved?: string } | null) => {
