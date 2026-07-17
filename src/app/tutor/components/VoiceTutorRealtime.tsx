@@ -6235,13 +6235,16 @@ export function VoiceTutorRealtime({
                   setSpeakingRateState(prior.speakingRate);
                   onSpeakingRateChangeRef.current?.(prior.speakingRate);
                 }
-                // Task Y1: restore the starter-chip practiceOverride the same
-                // way — the student's in-session "Practice problems" intent
-                // survives a resume of the same plan exactly like paceBias/
-                // speakingRate do. Absent/false ⇒ leave the ref at its
+                // Task Y1: restore the starter-chip practiceOverride ONLY on
+                // genuine RESUME of a prior session — fresh sessions re-invite
+                // the choice. Distinction: paceBias/speakingRate are comfort
+                // settings (legitimately persist across fresh loads); mode
+                // (practiceOverride) is a choice that should be re-made on each
+                // fresh start. On resume, the intent survives exactly like
+                // paceBias/speakingRate do. Absent/false ⇒ leave the ref at its
                 // false default (no forced-off state to restore — see
                 // practice-mode.ts).
-                if (prior.practiceOverride === true) {
+                if (resumeState && prior.practiceOverride === true) {
                   practiceOverrideRef.current = true;
                   onPracticeOverrideChangeRef.current?.(true);
                 }

@@ -120,21 +120,36 @@ if (derivePracticeMode('practice', false) !== true) {
   fail('token=practice, override cleared must still derive practiceMode=true (token untouched)');
 }
 
-// blob restore: the pacing-v2 blob only ever persists `practiceOverride:
-// true` when set (VoiceTutorRealtime.persistPacingState omits the key
-// entirely when false — see the comment there), so a restored blob with no
-// key must behave exactly like "no override", and a restored blob with
-// `practiceOverride: true` must behave exactly like a fresh chip click.
+// blob restore on RESUME vs FRESH: the pacing-v2 blob only ever persists
+// `practiceOverride: true` when set (VoiceTutorRealtime.persistPacingState
+// omits the key entirely when false — see the comment there). Y1 fix:
+// restore practiceOverride (mode, the "Practice problems" chip) ONLY on
+// genuine RESUME; fresh sessions re-invite the choice. paceBias/speakingRate
+// (comfort settings) persist across fresh loads — that's fine. A blob
+// restored on resume must behave exactly like a fresh chip click.
 type PacingV2Blob = { paceBias?: number; speakingRate?: 'slow' | 'normal'; practiceOverride?: boolean };
 const blobWithOverride: PacingV2Blob = { paceBias: 0, practiceOverride: true };
 const blobWithoutOverride: PacingV2Blob = { paceBias: -1 };
+
+// resumed + blob-override -> ON: the override survives the resume.
 if (derivePracticeMode('concept-review', blobWithOverride.practiceOverride === true) !== true) {
-  fail('restoring a blob with practiceOverride=true must derive practiceMode=true even on a non-practice token');
+  fail('resumed session: restoring a blob with practiceOverride=true must derive practiceMode=true even on a non-practice token');
 }
+
+// fresh + blob-override -> OFF: a stale blob override from 20 days ago on
+// a fresh session should NOT force practice mode (the blob is ignored on
+// fresh loads per Y1 fix). Fresh sessions re-invite the choice.
+// On fresh load, the blob restoration code is guarded by `if (resumeState)`,
+// so practiceOverride is never read from the blob. Simulating that:
+if (derivePracticeMode('concept-review', false) !== false) {
+  fail('fresh session: blob override must be ignored (resumeState falsy), so token=concept-review must derive practiceMode=false');
+}
+
+// blob without override on either fresh or resumed: must derive from token.
 if (derivePracticeMode('concept-review', blobWithoutOverride.practiceOverride === true) !== false) {
-  fail('restoring a blob with no practiceOverride key must derive practiceMode=false (token governs)');
+  fail('blob with no practiceOverride key must derive practiceMode=false (token governs)');
 }
-console.log('OK: derivePracticeMode precedence (token-practice+no-override, token-review+override, override-cleared, blob-restore) all correct');
+console.log('OK: derivePracticeMode precedence (token-practice+no-override, token-review+override, override-cleared, resumed+blob-override→ON, fresh+blob-override→OFF) all correct');
 
 if (failed) {
   console.error('\ntest-practice-session-block: FAILED');
