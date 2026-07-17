@@ -1650,12 +1650,29 @@ export function VoiceTutorRealtime({
   // Brain-correction regex. Matches phrases that indicate the student
   // got the answer wrong. Resets correct-streak, increments wrong-streak.
   const brainCorrectionRegex = /\b(not\s+quite|that's\s+not|that\s+is\s+not|let's\s+(?:re)?check|almost|close\s+but|incorrect)\b/i;
+  // Session-end signal regex (Task Y4 farewell-exemption fix). Mirrors the
+  // "Session-end signals" trigger-phrase list verbatim from the
+  // system-prompt (system-prompt-builder.ts ~907-913) — that section is a
+  // prompt-only HARD RULE with no prior code-side detector. Scope is
+  // intentionally narrow: it classifies the STUDENT's utterance that
+  // preceded this brain turn, not the tutor's own reply. When it matches,
+  // the tutor's upcoming turn is expected to be a farewell/wrap-up close
+  // per that rule, so any "must end with a next move" corrective (Rule 20 /
+  // the bare-praise-ending advisory below) must NOT fire against it — Rule
+  // 20 explicitly carves out "a genuine session-end signal from the
+  // student" as the one case where ending without a next move is correct.
+  // Deliberately generous (short words like "stop"/"quit"/"exit" match
+  // anywhere in the utterance): a false POSITIVE here only skips planting
+  // an advisory note for one turn (low cost — same "advisory, not a kill"
+  // tolerance already accepted for this detector); a false NEGATIVE would
+  // reintroduce the exact bug this fix targets.
+  const sessionEndSignalRegex = /\b(i'?m\s+done|i\s+am\s+done|i'?m\s+finished|stop|wrap\s+it\s+up|wrap\s+up|end\s+the\s+session|end\s+here|i\s+want\s+to\s+end|quit|exit|i'?m\s+out|goodbye|good\s+bye|bye|see\s+you)\b/i;
   // Bridges callBrainOnce student-utterance bookkeeping → end-of-brain-
   // stream streak update. Captures the student utterance's
   // classification at turn-start so the post-stream code knows whether
   // to even consider streak changes. Pure-ack turns ("ok", "yeah")
   // never update the streak regardless of what the brain says next.
-  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean } | null>(null);
+  const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean } | null>(null);
   // Buffer of [pacing] events fired during the most recent brain turn.
   // Forwarded server-side on the NEXT brain stream request body so the
   // /api/tutor/brain/stream route can write them to the server log
@@ -6656,10 +6673,14 @@ export function VoiceTutorRealtime({
         // Observed 2026-05-06 lines session.
         const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
         const isVerification = !isPureAck && !isHelpRequest && t.length >= 3 && (hasDigits || hasMathLang || wordCount >= 6);
+        // Session-end signal (Task Y4 farewell-exemption fix) — see
+        // sessionEndSignalRegex definition above for scope/rationale.
+        const isSessionEndSignal = sessionEndSignalRegex.test(lower);
         lastStudentVerificationRef.current = {
           turn: pacingTurnCounterRef.current,
           segId: segIdNow,
           isVerification,
+          isSessionEndSignal,
         };
         // Streak segId-retag policy (revised post-2026-05-05 session
         // analysis). Streak tracks CONCEPT mastery across consecutive
@@ -10189,8 +10210,23 @@ export function VoiceTutorRealtime({
           // turn) AND only when the turn shows neither a trailing
           // question nor a next-move tool call (advance_lesson /
           // generate_problem open the next segment or problem;
-          // show_problem / show_segment_card render one directly).
-          if (isAffirm && !isCorrect) {
+          // show_problem / show_segment_card render one directly). ALSO
+          // gated on !ver.isSessionEndSignal (review fix, Y4 addendum):
+          // Rule 20's own text explicitly exempts "a genuine session-end
+          // signal from the student" — a farewell turn is allowed to close
+          // without a next move because there is no next move. Without
+          // this gate, a student closing with "Thanks, that's all for
+          // today!" gets a tutor farewell turn ("Nailed it — see you next
+          // time!") flagged by this detector, planting a note that
+          // contradicts Rule 20's own exception and risks colliding with
+          // the "One sign-off only" rule (system-prompt-builder.ts ~919) if
+          // the brain "corrects" by tacking on a second next-move prompt.
+          // ver.isSessionEndSignal is set from the STUDENT turn that
+          // preceded this brain turn (sessionEndSignalRegex, defined
+          // above), mirroring the "Session-end signals" trigger-phrase list
+          // in system-prompt-builder.ts ~907-913 — that section was
+          // prompt-only with no code-side detector before this fix.
+          if (isAffirm && !isCorrect && !ver.isSessionEndSignal) {
             const endsWithQuestion = /\?\s*$/.test(fullText.trim());
             const opensNextMove = totalToolNamesSeen.some(
               (n) => n === 'advance_lesson' || n === 'generate_problem'
