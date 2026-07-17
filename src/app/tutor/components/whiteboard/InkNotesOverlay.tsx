@@ -400,7 +400,7 @@ export function InkNotesOverlay({
       for (const src of allSources) {
         const m = measureNote(src.text);
         const t = src.explicitTarget
-          ? { rect: src.explicitTarget, itemEl: null as Element | null }
+          ? { rect: src.explicitTarget, itemEl: null as Element | null, el: null as Element | null }
           : targetRect(host, src.targetId, src.targetFeature);
         // Defect A of the 2026-07-11 gate: a feature (say, vertex O) lives
         // INSIDE its item's card, so every right/above/below/left slot
