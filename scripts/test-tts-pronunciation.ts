@@ -752,3 +752,36 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-19 (a-before-squared variable respell)');
 }
+
+// --- Round-19b (2026-07-17): user stress-test cases for 'a' respell -----
+// Four grammatically unambiguous variable-'a' shapes that the anchor
+// whitelist missed. Each is impossible as an English article ("a is",
+// "the a", "a when", sentence-final "over a"), so anchoring them cannot
+// corrupt prose.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('a squared can be taken common from the expression.',
+     'ay squared can be taken common from the expression.',
+     'a-squared-verb-continuation');
+  eq('a is a variable in the expression.',
+     'ay is a variable in the expression.',
+     'a-is-a-variable (second a stays the article)');
+  eq('the a in the expression is a variable.',
+     'the ay in the expression is a variable.',
+     'the-a-is-the-variable (second a stays)');
+  eq('only a when divided by b gives b over a.',
+     'only ay when divided by bee gives bee over ay.',
+     'a-when + sentence-final over-a');
+  // Article guards must survive.
+  eq('Draw a squared grid on the paper.',
+     'Draw a squared grid on the paper.',
+     'adjective-squared-still-article');
+  eq('He walked over a bridge to think.',
+     'He walked over a bridge to think.',
+     'over-a-noun-still-article');
+
+  console.log('OK — Round-19b (a-variable stress cases)');
+}

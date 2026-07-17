@@ -352,9 +352,24 @@ const A_VARIABLE_REPLACEMENTS: Replacement[] = [
   { pattern: /\ba\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'ay' },
   // Round-19 (2026-07-17, live): "a squared minus b squared" spoke the
   // article. 'a' before squared/cubed is the variable when a math
-  // continuation follows (operator word, "is", or another single-letter /
-  // respelled term) — "a squared grid" (adjective use) stays untouched.
-  { pattern: /\ba\b(?=\s+(?:squared|cubed)\s+(?:minus|plus|times|over|equals|divided|is\b|[a-z]\b|bee\b|why\b))/gi, replacement: 'ay' },
+  // continuation follows (operator word, a VERB — "a squared can be taken
+  // common" — or another single-letter / respelled term). "a squared grid"
+  // (squared as adjective before a noun) stays untouched.
+  { pattern: /\ba\b(?=\s+(?:squared|cubed)\s+(?:minus|plus|times|over|equals|divided|is\b|can\b|could\b|will\b|would\b|becomes?\b|gives?\b|gets?\b|cancels?\b|factors?\b|divides?\b|[a-z]\b|bee\b|why\b))/gi, replacement: 'ay' },
+  // Round-19b (user stress cases) — grammatically unambiguous variable
+  // shapes an English article can never form:
+  //   "a is a/the variable…"  (article + "is" is ungrammatical)
+  { pattern: /\ba\b(?=\s+is\s+(?:a|the)\s+(?:variable|constant|coefficient|term|factor|number|value|unknown)\b)/gi, replacement: 'ay' },
+  //   "the a in/of/…"  ("the a" can only denote the letter/variable; the
+  //   follower list keeps "the a cappella choir" safe)
+  { pattern: /(?<=\bthe\s)a\b(?=\s+(?:in|of|here|term|value|equals|is|and)\b)/gi, replacement: 'ay' },
+  //   "a when divided/…"  (article + "when" is ungrammatical; follower list
+  //   guards hyphenless "a when-clause" prose)
+  { pattern: /\ba\b(?=\s+when\s+(?:divided|multiplied|squared|cubed|added|subtracted|raised|it\b|we\b|you\b))/gi, replacement: 'ay' },
+  //   sentence-final "…over a." / "…divided by a," (an article must be
+  //   followed by a noun — clause-final 'a' after a math preposition is
+  //   always the variable)
+  { pattern: /(?<=\b(?:over|by|times|plus|minus)\s)a\b(?=\s*(?:[.,;:!?]|$))/gi, replacement: 'ay' },
   // "substitute a" / "solve for a" / "value of a" / "values of a"
   { pattern: /(?<=\b(?:substitute|solve for|value of|values of)\s)a\b/gi, replacement: 'ay' },
   // "of a and b" — e.g. "the ratio of a and b"
