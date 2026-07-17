@@ -114,27 +114,32 @@ async function queryBank(
   difficulty: IProblemBank['difficulty'],
   excludeIds: string[],
   excludeHashes: string[] = [],
-  planScope?: string
+  planScope?: string,
+  planLoIds: string[] = []
 ): Promise<GeneratedProblem | null> {
   await connectDB();
   const filter: Record<string, unknown> = {
     topic,
     difficulty,
   };
-  // Round-18 (2026-07-17, session portal-6342d1f6): lesson-scope the
-  // WRITE-BACK rows. The cache keys rows by broad topic only, so a
-  // generation that drifted subject-area (a derivative-critical-points
-  // problem out of a much_harder push in a LIMITS lesson) could re-serve
-  // into any other lesson of the same course — observed live, the brain
-  // had to filter it aloud. Rule: rows the runtime wrote back (id prefix
-  // "brain-gen.") only serve into the lesson (plan id, stamped as
-  // subtopic) that generated them; every non-write-back row (ingested
-  // corpus, chapter-tagged or not) serves exactly as before — zero
-  // regression for existing content.
-  if (planScope) {
+  // Lesson scoping (Round-18, tightened Round-22 after session
+  // portal-cbd93b08 served course-wide corpus items into a limits lesson —
+  // the R18 "corpus rows serve as before" rule was itself the regression:
+  // removing the bankCoverage gate had unlocked a 422-row LO-TAGGED course
+  // corpus that was never meant to serve unscoped). Eligibility:
+  //   - write-back rows (id "brain-gen."): only into the lesson (plan id =
+  //     subtopic) that generated them;
+  //   - LO-tagged corpus rows: only when their loId matches one of THIS
+  //     plan's learning objectives (plan LO ids and corpus loIds share the
+  //     same vocabulary, e.g. "apcalcbc.limits-algebraic-properties");
+  //   - untagged corpus rows (pre-LO-tagging content): serve as before —
+  //     excluding them would regress topics whose corpus predates tagging.
+  if (planScope || planLoIds.length > 0) {
     filter.$or = [
-      { id: { $not: /^brain-gen\./ } },
-      { subtopic: planScope },
+      { id: /^brain-gen\./, subtopic: planScope ?? '__no_plan__' },
+      ...(planLoIds.length > 0 ? [{ id: { $not: /^brain-gen\./ }, loId: { $in: planLoIds } }] : []),
+      { id: { $not: /^brain-gen\./ }, loId: { $exists: false } },
+      { id: { $not: /^brain-gen\./ }, loId: null },
     ];
   }
   if (excludeIds.length > 0) {
@@ -556,7 +561,7 @@ export async function generateProblem(
   // accumulate bank rows regardless of its static taxonomy coverage tag,
   // and an empty-collection miss is one cheap indexed find.
   try {
-    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes);
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id));
     if (hit) {
       return {
         result: hit,
@@ -608,7 +613,7 @@ export async function generateProblem(
   // brain-gen exhaustion in case difficulty resolution shifted. Same
   // always-attempt rationale as Layer 1 (write-back cache).
   try {
-    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes);
+    const hit = await queryBank(input.topic, absDifficulty, excludeIds, excludeHashes, input.planId, (input.plan.los ?? []).map((lo) => lo.id));
     if (hit) {
       return {
         result: { ...hit, provenance: 'bank-fallback' },
