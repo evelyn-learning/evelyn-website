@@ -515,3 +515,71 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — X8 review I1 (elided roman-numeral list continuations)');
 }
+
+// Task Y3: bare minus between math operands ("2 - 2" spoken with the minus
+// SKIPPED — live bug) and unicode superscript exponents beyond ²/³ ("a²"
+// voiced as "a square"/"a two" — X1 only handled caret "^2", not the unicode
+// glyph outside a $-gated span).
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+
+  // --- (a) Bare minus: spaced hyphen between numeric/variable operands ---
+  eq('2 - 2 is 0.', '2 minus 2 is 0.', 'bare-minus-digits');
+  eq('x - 4 is negative if x is small.', 'x minus 4 is negative if x is small.', 'bare-minus-var-digit');
+  eq('4 - x could be negative.', '4 minus x could be negative.', 'bare-minus-digit-var');
+  eq('n - 1 terms remain.', 'n minus 1 terms remain.', 'bare-minus-letter-digit');
+  eq('12.5 - 3.25 is the difference.', '12.5 minus 3.25 is the difference.', 'bare-minus-decimals');
+  // Composes with tier-1 letter respelling (y -> why) — the minus rewrite
+  // runs before ALL_REPLACEMENTS, so both standalone y's still get respelled.
+  eq('Solve y - 2 for y.', 'Solve why minus 2 for why.', 'bare-minus-composes-with-y-respelling');
+  // Chained operators in one sentence.
+  eq('2 - 2 - 2 is negative 2.', '2 minus 2 minus 2 is negative 2.', 'bare-minus-chained');
+
+  // Hyphenated words (no surrounding spaces) must NEVER be touched.
+  eq('That is a well-known fact.', 'That is a well-known fact.', 'hyphenated-word-untouched');
+  eq('This is a state-of-the-art method.', 'This is a state-of-the-art method.', 'multi-hyphen-word-untouched');
+
+  // Unspaced numeric ranges ("3-5") are ambiguous with no space signal —
+  // documented decision: leave untouched (could be a page/date range, not
+  // necessarily subtraction).
+  eq('Read pages 3-5 tonight.', 'Read pages 3-5 tonight.', 'unspaced-range-untouched-ambiguous');
+  // Documented tradeoff: a SPACED hyphen between two numeric operands is
+  // still converted even when the surrounding prose reads as a range — the
+  // brief's call is that a spaced hyphen between operands is the STRONGEST
+  // signal available and outweighs the range reading (accepted, rare case).
+  eq('Read pages 3 - 5 tonight.', 'Read pages 3 minus 5 tonight.', 'spaced-range-still-converts-documented-tradeoff');
+
+  // Prose dashes between ordinary words (not numeric/single-letter operands)
+  // must never be touched, spaced or not — the operand-shape gate alone
+  // rules these out without any extra prose-detection.
+  eq('The plan - which was risky - failed anyway.',
+     'The plan - which was risky - failed anyway.',
+     'prose-dash-between-words-untouched');
+
+  // Em-dash prose (already handled by EMDASH_REPLACEMENTS, a different
+  // unicode glyph) is unaffected by the new bare-minus rule.
+  eq("That's a clean session — Praveen — you walked in confident.",
+     "That's a clean session, Praveen, you walked in confident.",
+     'emdash-prose-still-comma-not-minus');
+
+  // --- (b) Unicode superscript exponents ---------------------------------
+  eq('Compute a² for this problem.', 'Compute a squared for this problem.', 'unicode-superscript-2-squared');
+  eq('Volume scales with x³.', 'Volume scales with x cubed.', 'unicode-superscript-3-cubed');
+  // Other single superscript digits (not 2/3) -> "to the N".
+  eq('Solve for x⁴.', 'Solve for x to the 4.', 'unicode-superscript-4-to-the-n');
+  eq('T⁰ equals 1.', 'T to the 0 equals 1.', 'unicode-superscript-0-to-the-n');
+  eq('Find x⁵ next.', 'Find x to the 5 next.', 'unicode-superscript-5-to-the-n');
+  eq('Then x⁹ appears.', 'Then x to the 9 appears.', 'unicode-superscript-9-to-the-n');
+  // Multi-digit superscript RUNS read as one number, not digit-by-digit —
+  // "to the 12", never "to the 1 squared" or "to the 1 to the 2".
+  eq('x¹² is large.', 'x to the 12 is large.', 'unicode-superscript-run-to-the-12');
+  eq('r²¹ is even larger.', 'r to the 21 is even larger.', 'unicode-superscript-run-to-the-21');
+  // Standalone superscript ¹ (exponent 1, not part of a run) -> "to the 1".
+  eq('x¹ is just x.', 'x to the 1 is just x.', 'unicode-superscript-1-to-the-n');
+
+  console.log('OK — Task Y3 (bare minus between operands, unicode superscript exponents)');
+}

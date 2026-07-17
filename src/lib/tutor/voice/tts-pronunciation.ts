@@ -505,6 +505,53 @@ function rewriteLegalV(t: string): string {
 }
 
 /**
+ * Bare `-` (ASCII hyphen) between numeric/variable operands (Task Y3, live
+ * bug: "2 - 2" spoken with the minus SKIPPED — Cartesia reads the bare glyph
+ * as a pause, not "minus"). X1's `wordifyMathOperators` already converts
+ * `-` -> "minus" everywhere, but ONLY inside content already confirmed to be
+ * isolated math (a `\frac`/`\sqrt` brace, a braced exponent/subscript, or a
+ * signal-gated `$...$` span) — by design it's never run on arbitrary prose,
+ * where a bare `-` is usually a hyphenated word ("well-known") or a dash
+ * used as punctuation. This is the missing case: a bare hyphen OUTSIDE any
+ * of those gated contexts, sitting directly between two operand-shaped
+ * tokens in otherwise-ungated text ("2 - 2", "x - 4").
+ *
+ * Gate: SPACES on both sides of the hyphen, AND a numeric token (int or
+ * decimal) or a single letter immediately on each side. This is deliberately
+ * narrow, same conservative shape as the rest of this file:
+ *   - Hyphenated words ("well-known", "state-of-the-art") have NO spaces
+ *     around the hyphen, so they never match — no separate word-list guard
+ *     needed.
+ *   - Prose dashes between ordinary words ("the plan - which was risky -
+ *     failed") don't match either: the operand-shape gate (number or single
+ *     letter only) already excludes multi-letter word tokens, so no extra
+ *     prose-detection is needed beyond the shape check itself.
+ *   - Em-dash / en-dash prose is a different unicode glyph entirely
+ *     (EMDASH_REPLACEMENTS / PUNCTUATION_REPLACEMENTS above), unaffected.
+ *
+ * Documented ambiguity (per the brief): an UNSPACED numeric range ("pages
+ * 3-5") is genuinely ambiguous with no space signal available — left
+ * untouched, since "3-5" reads fine as a page range and there's no way to
+ * distinguish it from subtraction shorthand without spaces. A SPACED
+ * numeric pair ("pages 3 - 5"), by contrast, IS converted ("pages 3 minus
+ * 5") even though it could still be intended as a range — the brief's call
+ * is that a spaced hyphen between two operand-shaped tokens is the
+ * STRONGEST available signal of minus-intent, and this rule trusts it
+ * unconditionally rather than trying to sniff prose context (e.g. a
+ * preceding "pages"/"years" word) to override it. Accepted tradeoff: rare
+ * in tutoring speech, and erring toward voicing the operator is more
+ * consistent with this module's math-speech mission than staying silent.
+ */
+const MATH_OPERAND_SRC = String.raw`\d+(?:\.\d+)?|[A-Za-z]`;
+const BARE_MINUS_RE = new RegExp(
+  `\\b(${MATH_OPERAND_SRC})\\b\\s+-\\s+(?=(?:${MATH_OPERAND_SRC})\\b)`,
+  'g',
+);
+function rewriteBareMinusForSpeech(t: string): string {
+  return t.replace(BARE_MINUS_RE, (_m, left: string) => `${left} minus `);
+}
+
+/**
  * Domain acronyms the Cartesia text normalizer expands into US state names.
  * Confirmed live 2026-07-13: "SD" (standard deviation) voiced as "South
  * Dakota" in a stats session. The fix expands the acronym to its spoken
@@ -578,6 +625,14 @@ export function rewriteForTTS(raw: string): string {
   // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
   // glyphs) and "==" (never appears in tutor speech).
   t = t.replace(/\s*=\s*/g, ' equals ');
+  // Bare minus between math operands (Task Y3, live bug: "2 - 2" spoken with
+  // the minus SKIPPED). See rewriteBareMinusForSpeech's doc comment above
+  // for the full spaced/unspaced gating rationale. Runs after the bare-"="
+  // rule (same family of ASCII-operator normalizations) and before the
+  // unicode sub/superscript handling below (disjoint character classes, so
+  // order between the two doesn't matter, but keeping ASCII-operator rules
+  // together mirrors the existing equals-sign placement).
+  t = rewriteBareMinusForSpeech(t);
   // Unicode sub/superscript digits: Cartesia mangles them ("T₁" was
   // voiced roughly as "T-jash"). Speak the plain digit ("T 1").
   const SUBSCRIPT_DIGITS: Record<string, string> = {
@@ -585,10 +640,25 @@ export function rewriteForTTS(raw: string): string {
     '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
   };
   t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch}`);
-  // Superscript squared/cubed: Cartesia drops or mis-voices "x²"/"cm²".
-  // Only ²/³ are handled — higher superscripts are rare and their spoken
-  // form ("to the fourth") is ambiguous with ordinals.
-  t = t.replace(/²/g, ' squared').replace(/³/g, ' cubed');
+  // Unicode superscript digits (Task Y3, live bug: "a²" voiced as "a
+  // square"/"a two" — X1's exponent handling only covered the CARET form
+  // ("x^2"), never the unicode glyph outside a $-gated span). Reuses
+  // spokenExponent (defined above for caret exponents) so "squared"/"cubed"
+  // vs "to the N" stays a SINGLE source of truth between the two notations.
+  // Runs at the character level: a MAXIMAL RUN of superscript digits is
+  // resolved to one number first ("¹²" -> "12"), THEN spokenExponent decides
+  // squared/cubed/"to the N" — so a run only reads as "squared"/"cubed" when
+  // it's the single digit ²/³ in isolation; "x¹²" (a 2-digit run that
+  // happens to contain the digit shape for 2) correctly reads "to the 12",
+  // never "to the 1 squared" or digit-by-digit.
+  const SUPERSCRIPT_DIGIT_MAP: Record<string, string> = {
+    '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+    '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+  };
+  t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (run: string) => {
+    const digits = run.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => SUPERSCRIPT_DIGIT_MAP[ch]);
+    return spokenExponent(digits);
+  });
   // Degree sign: "38°N" → "38 degrees N", "60°C" → "60 degrees C".
   t = t.replace(/°/g, ' degrees ');
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
