@@ -34,6 +34,13 @@ export interface RealtimeHandle {
    *  (Cartesia/OpenAI-mini), not depth/verbosity. Wired to the ⋯ menu's
    *  "Speak slower" item (sticky ✓ state, mirrors the Humor pattern). */
   setSpeakingRate: (rate: 'slow' | 'normal') => void;
+  /** Task Y1: set/clear the starter-chip practiceOverride. `true` durably
+   *  forces practiceMode on (ORed with sessionGoal — see
+   *  `derivePracticeMode` in practice-mode.ts); `false` clears the override
+   *  and returns to token-goal behavior. Persisted in the pacing-v2 blob so
+   *  it survives resume. Wired to the "Practice problems" (true) / "Explain
+   *  a concept" (false) starter chips in SessionStage.tsx. */
+  setPracticeOverride: (active: boolean) => void;
   /** Caption word-sync: poll the audio-locked caption reveal. Returns null
    *  when unsupported (non-claude-brain engines) — caller falls back to the
    *  legacy typewriter. live:false = supported but nothing being spoken

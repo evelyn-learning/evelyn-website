@@ -65,6 +65,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
+import { derivePracticeMode } from '@/lib/tutor/voice/practice-mode';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -417,6 +418,12 @@ interface VoiceTutorRealtimeProps {
    *  pace above — this only affects synthesis speed, not depth/verbosity.
    *  Parent uses this to render the ✓ state on the menu item. */
   onSpeakingRateChange?: (rate: 'slow' | 'normal') => void;
+  /** Task Y1: fires whenever the starter-chip practiceOverride changes
+   *  (chip click OR prior-session pacing-v2 restore). Parent uses this to
+   *  render the chip's active state (Humor ✓ idiom — see SessionStage's
+   *  Chip). See practiceOverrideRef below + derivePracticeMode for the
+   *  full precedence contract. */
+  onPracticeOverrideChange?: (active: boolean) => void;
   /** Voice Perception Q9 (2026-06-16). Fires true when a perception
    *  cancel fires (yellow-flash window opens) and false ~300ms later
    *  when the window closes. Parent uses this to render a visible
@@ -555,6 +562,7 @@ export function VoiceTutorRealtime({
   onListeningHint,
   onPaceBiasChange,
   onSpeakingRateChange,
+  onPracticeOverrideChange,
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
@@ -1590,6 +1598,16 @@ export function VoiceTutorRealtime({
   const [speakingRate, setSpeakingRateState] = useState<'slow' | 'normal'>('normal');
   const speakingRateRef = useRef<'slow' | 'normal'>('normal');
   useEffect(() => { speakingRateRef.current = speakingRate; }, [speakingRate]);
+  // Task Y1: starter-chip practiceOverride. "Practice problems" sets it,
+  // "Explain a concept" clears it — see derivePracticeMode for the full
+  // precedence contract (sessionGoal = launch context, this = in-session
+  // intent, ORs in and only ever forces practiceMode ON). Persisted in the
+  // same pacing-v2 blob as paceBias/speakingRate (persistPacingState below)
+  // so it survives a resume of the same plan. Bare ref, not state — nothing
+  // in THIS component's own render depends on the value; only the per-turn
+  // brain-call body reads it (via setPracticeOverride's setter below) and
+  // the parent's chip UI (via onPracticeOverrideChange).
+  const practiceOverrideRef = useRef<boolean>(false);
   // Set when mark_segment_complete fires AND streak >= 2 at that moment.
   // Renders a "segment-mastered" hint in next-turn student_state block.
   // Cleared on segment change (one-shot signal).
@@ -1658,6 +1676,8 @@ export function VoiceTutorRealtime({
   useEffect(() => { onPaceBiasChangeRef.current = onPaceBiasChange; }, [onPaceBiasChange]);
   const onSpeakingRateChangeRef = useRef(onSpeakingRateChange);
   useEffect(() => { onSpeakingRateChangeRef.current = onSpeakingRateChange; }, [onSpeakingRateChange]);
+  const onPracticeOverrideChangeRef = useRef(onPracticeOverrideChange);
+  useEffect(() => { onPracticeOverrideChangeRef.current = onPracticeOverrideChange; }, [onPracticeOverrideChange]);
   // Phase 4: persist pacing state to localStorage so it carries over
   // when the same lesson plan is re-launched. Keyed on plan.id;
   // session-unmount + paceBias-step both call this. No-op when no
@@ -1676,6 +1696,11 @@ export function VoiceTutorRealtime({
         correctStreakCount: studentStreakRef.current.count,
         incorrectStreakCount: studentIncorrectStreakRef.current.count,
         speakingRate: speakingRateRef.current,
+        // Task Y1: only persist the override when it's actually set — an
+        // absent key (rather than `false`) keeps old blobs (pre-Y1)
+        // forwards-compatible and matches the "no forced-off state" design
+        // (see practice-mode.ts): nothing to restore ⇒ token goal governs.
+        ...(practiceOverrideRef.current ? { practiceOverride: true } : {}),
         savedAt: new Date().toISOString(),
       };
       window.localStorage.setItem(key, JSON.stringify(payload));
@@ -1727,6 +1752,17 @@ export function VoiceTutorRealtime({
     setSpeakingRateState(rate);
     logPacing(`speaking-rate-set rate=${rate}`);
     onSpeakingRateChangeRef.current?.(rate);
+    persistPacingState();
+  }, [logPacing, persistPacingState]);
+  // Task Y1: starter-chip practiceOverride, set directly (not stepped) — the
+  // "Practice problems" chip sets it true, "Explain a concept" clears it to
+  // false. Bare ref (no state re-render needed — see practiceOverrideRef
+  // declaration above), so this is just a mutation + notify + persist.
+  const setPracticeOverride = useCallback((active: boolean) => {
+    if (practiceOverrideRef.current === active) return;
+    practiceOverrideRef.current = active;
+    logPacing(`practice-override-set active=${active}`);
+    onPracticeOverrideChangeRef.current?.(active);
     persistPacingState();
   }, [logPacing, persistPacingState]);
 
@@ -6174,6 +6210,7 @@ export function VoiceTutorRealtime({
                 correctStreakCount?: number;
                 incorrectStreakCount?: number;
                 speakingRate?: 'slow' | 'normal';
+                practiceOverride?: boolean;
                 savedAt?: string;
               };
               const ageMs = prior.savedAt ? Date.now() - new Date(prior.savedAt).getTime() : Infinity;
@@ -6198,7 +6235,17 @@ export function VoiceTutorRealtime({
                   setSpeakingRateState(prior.speakingRate);
                   onSpeakingRateChangeRef.current?.(prior.speakingRate);
                 }
-                logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} speakingRate=${speakingRateRef.current} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
+                // Task Y1: restore the starter-chip practiceOverride the same
+                // way — the student's in-session "Practice problems" intent
+                // survives a resume of the same plan exactly like paceBias/
+                // speakingRate do. Absent/false ⇒ leave the ref at its
+                // false default (no forced-off state to restore — see
+                // practice-mode.ts).
+                if (prior.practiceOverride === true) {
+                  practiceOverrideRef.current = true;
+                  onPracticeOverrideChangeRef.current?.(true);
+                }
+                logPacing(`resumed-from-prior-session bias=${paceBiasRef.current} correctStreak=${studentStreakRef.current.count} incorrectStreak=${studentIncorrectStreakRef.current.count} speakingRate=${speakingRateRef.current} practiceOverride=${practiceOverrideRef.current} ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}"`);
               } else {
                 logPacing(`prior-session-stale ageDays=${(ageMs / (24 * 60 * 60 * 1000)).toFixed(1)} planId="${plan.id}" (skipped resume)`);
                 window.localStorage.removeItem(key);
@@ -7155,7 +7202,13 @@ export function VoiceTutorRealtime({
             // flag from the stable prop each turn makes the mode durable across
             // resume with no client persistence — the `<practice_session>`
             // block re-renders every turn. Absent/false ⇒ block omitted.
-            practiceMode: sessionGoal === 'practice',
+            // Task Y1: OR in the starter-chip practiceOverride (durably
+            // forced by the "Practice problems" chip, cleared by "Explain a
+            // concept", persisted in the pacing-v2 blob) — see
+            // derivePracticeMode / practice-mode.ts for the full precedence
+            // contract (token = launch context, override = in-session
+            // intent that wins while set).
+            practiceMode: derivePracticeMode(sessionGoal, practiceOverrideRef.current),
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured
@@ -12238,6 +12291,7 @@ export function VoiceTutorRealtime({
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         setSpeakingRate,
+        setPracticeOverride,
         resumeContinue: () => resumeContinueRef.current(),
         endSession: () => { void endSessionNowRef.current(); },
         getSpokenCaption: () => {
@@ -12302,7 +12356,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
+  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds

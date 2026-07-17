@@ -231,6 +231,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // synthesis speed). Mirrored from VoiceTutorRealtime's internal state via
   // onSpeakingRateChange so the ⋯ menu item can render its ✓ state.
   const [speakingRate, setSpeakingRate] = useState<'slow' | 'normal'>('normal');
+  // Task Y1: starter-chip practiceOverride state — mirrored from
+  // VoiceTutorRealtime's internal ref via onPracticeOverrideChange so the
+  // "Practice problems" chip can render its active state (Humor ✓ idiom).
+  const [practiceOverrideActive, setPracticeOverrideActive] = useState(false);
   const [, setIsPerceptionInterrupted] = useState(false);
   const [voiceTrouble, setVoiceTrouble] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -682,6 +686,7 @@ export default function TutorSession(props: TutorSessionProps) {
           paceBiasFlashTimeoutRef.current = setTimeout(() => setPaceBiasFlash(false), 1600);
         }}
         onSpeakingRateChange={setSpeakingRate}
+        onPracticeOverrideChange={setPracticeOverrideActive}
         onInterruptedChange={setIsPerceptionInterrupted}
         onBeforeTypedSubmit={onBeforeTypedSubmit}
         onProposePlanSwap={onProposePlanSwap}
@@ -876,6 +881,8 @@ export default function TutorSession(props: TutorSessionProps) {
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}
         quickActions={quickActionsEl}
         onStudentInput={handleStudentInput}
+        practiceOverrideActive={practiceOverrideActive}
+        onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}
         boardPenActive={boardPenActive}
         onToggleBoardPen={studentMarksOn ? () => setBoardPenActive((v) => !v) : undefined}

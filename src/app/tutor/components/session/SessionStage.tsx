@@ -88,6 +88,17 @@ export interface SessionStageProps {
   quickActions?: ReactNode;      // promoted chips (optional)
   // student tools → existing onStudentInput pipeline
   onStudentInput: (type: 'text' | 'drawing' | 'image', content: string) => void;
+  /** Task Y1: true while the "Practice problems" chip's durable override is
+   *  set (mirrored from VoiceTutorRealtime via onPracticeOverrideChange).
+   *  Drives the chip's active state (Humor ✓ idiom). Absent ⇒ chip never
+   *  shows active (caller not wired yet). */
+  practiceOverrideActive?: boolean;
+  /** Task Y1: fires when a starter chip should flip the durable
+   *  practiceOverride — true from "Practice problems", false (clear) from
+   *  "Explain a concept". The canned onStudentInput text still fires
+   *  alongside this on every click (it cues the brain in-turn); this call
+   *  is what makes the mode STICK across turns + resume. */
+  onTogglePracticeOverride?: (active: boolean) => void;
   onBack?: () => void;
   // Phase 2 student marks — present only when the feature is enabled
   boardPenActive?: boolean;
@@ -115,6 +126,7 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
+    practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
   } = props;
 
@@ -352,8 +364,16 @@ export default function SessionStage(props: SessionStageProps) {
                 <Upload className="w-4 h-4 text-slate-500" /> Upload a problem
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} />
               </label>
-              <Chip onClick={() => onStudentInput('text', 'Give me some practice problems.')}>Practice problems</Chip>
-              <Chip onClick={() => onStudentInput('text', 'Explain a concept to me.')}>Explain a concept</Chip>
+              {/* Task Y1: the canned text still fires every click (it cues
+                  the brain in-turn) — onTogglePracticeOverride is what makes
+                  the mode STICK. "Practice problems" sets the durable
+                  override; "Explain a concept" clears it (returns to
+                  token-goal behavior). Active state mirrors the Humor ✓
+                  idiom (TutorSession.tsx's ⋯ menu). */}
+              <Chip active={practiceOverrideActive} onClick={() => { onStudentInput('text', 'Give me some practice problems.'); onTogglePracticeOverride?.(true); }}>
+                {practiceOverrideActive ? '✓ ' : ''}Practice problems
+              </Chip>
+              <Chip onClick={() => { onStudentInput('text', 'Explain a concept to me.'); onTogglePracticeOverride?.(false); }}>Explain a concept</Chip>
             </div>
           </div>
         )}
@@ -738,8 +758,17 @@ export function MicMeter({ level, speaking, large = false }: { level: number; sp
   );
 }
 
-function Chip({ children, onClick }: { children: ReactNode; onClick: () => void }) {
-  return <button onClick={onClick} className="rounded-full bg-white border border-slate-200 px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">{children}</button>;
+function Chip({ children, onClick, active }: { children: ReactNode; onClick: () => void; active?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm ${
+        active ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 function ToolBtn({ children, title, active, onClick }: { children: ReactNode; title: string; active?: boolean; onClick: () => void }) {
   return <button title={title} onClick={onClick} className={`grid place-items-center w-9 h-9 rounded-xl ${active ? 'bg-blue-50 text-blue-600' : 'hover:bg-slate-100 text-slate-600'}`}>{children}</button>;
