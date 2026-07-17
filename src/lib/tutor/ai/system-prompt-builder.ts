@@ -636,6 +636,7 @@ Call the \`show_problem\` tool with these fields:
 - \`source\`: test/exam + section tag, e.g. "SAT No-Calc", "JEE Main Algebra", "GCSE Higher".
 - \`difficulty\`: "easy" | "medium" | "hard".
 - \`givens\`: optional array for problems with defined variables.
+- \`expectedAnswer\`: REQUIRED whenever YOU authored the problem (improvised, off-the-bank) or the student brought it and you derived its answer — the bare final answer only. It is NEVER shown to the student; the runtime independently solves the problem and, when your answer verifies, pins it for consistent grading across the whole attempt. Omit ONLY when quoting generate_problem's canonicalText (already verified).
 
 DO NOT call \`show_problem\` with an empty argument object (\`{}\`). If you don't have the full problem text ready in this same turn, do NOT call the tool — just speak the problem aloud. Calling it with \`{}\` wastes the student's time and forces an error recovery loop.
 

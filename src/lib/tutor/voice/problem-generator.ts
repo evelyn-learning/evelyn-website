@@ -418,6 +418,19 @@ export function answersAgree(genAnswer: string, solveAnswer: string): boolean {
   return !!na && na === nb;
 }
 
+/** Round-17 (2026-07-17): blind-solve verification for a CLAIMED answer —
+ *  the improvised / student-brought coverage of the pipeline's Layer-2
+ *  check. The solver gets ONLY the problem text (never the claim) and the
+ *  comparison uses the same answersAgree tolerance the pipeline serves
+ *  under. Used by /api/tutor/verify-answer. */
+export async function verifyClaimedAnswer(
+  problemText: string,
+  claimedAnswer: string
+): Promise<{ agree: boolean; solved: string }> {
+  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, problemText, 400);
+  return { agree: answersAgree(claimedAnswer, solved), solved };
+}
+
 /** Cheap deterministic hash for dedup. Not cryptographic. */
 export function simpleHash(s: string): string {
   let h = 5381;

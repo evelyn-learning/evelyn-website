@@ -8554,10 +8554,17 @@ export function VoiceTutorRealtime({
                   // where it rides every later turn's <active_problem>.
                   const st = typeof ev.statement === 'string' ? ev.statement : '';
                   if (st) {
-                    pendingGeneratedAnswerRef.current = {
-                      statement: st,
-                      expectedAnswer: typeof ev.expectedAnswer === 'string' ? ev.expectedAnswer : undefined,
-                    };
+                    const expAns = typeof ev.expectedAnswer === 'string' ? ev.expectedAnswer : undefined;
+                    // Late-pin robustness (Round-17): if the matching card is
+                    // ALREADY the tracked problem (event arrived after the
+                    // render), attach directly; else stage for the render.
+                    const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
+                    if (currentProblemRef.current && normWs(currentProblemRef.current.statement) === normWs(st)) {
+                      currentProblemRef.current.expectedAnswer = expAns;
+                      onDebugEvent?.('expected_answer_pinned', (expAns ?? '').slice(0, 60));
+                    } else {
+                      pendingGeneratedAnswerRef.current = { statement: st, expectedAnswer: expAns };
+                    }
                     onDebugEvent?.('generated_problem_received', st.slice(0, 60));
                   }
                 } else if (ev.type === 'pause') {
@@ -8582,6 +8589,53 @@ export function VoiceTutorRealtime({
                   }
                   toolNamesThisAttempt.push(name);
                   toolArgsThisAttempt.push(args);
+                  // Round-17 (2026-07-17): improvised / student-brought
+                  // answer verification. The tool contract has the brain
+                  // declare its derived answer on any free-form
+                  // show_problem. Capture + STRIP it here — it must never
+                  // reach the renderer, board persistence, or the PDF
+                  // export — then blind-solve server-side (the solver never
+                  // sees the claim). On agreement, pin via the same
+                  // expectedAnswer machinery pipeline problems use: late-pin
+                  // if the card is already tracked by the time the ~1-3s
+                  // verification returns (the normal case), else stage in
+                  // pendingGeneratedAnswerRef for the render (kill/retry
+                  // case). On mismatch nothing is pinned — a single-solve
+                  // disagreement trusts neither answer — but the divergence
+                  // is logged as an early warning that the brain may be
+                  // about to mis-grade.
+                  if (name === 'show_problem' && typeof (args as Record<string, unknown>).expectedAnswer === 'string') {
+                    const claimedAnswer = String((args as Record<string, unknown>).expectedAnswer).trim();
+                    const claimedStatement = typeof (args as Record<string, unknown>).statement === 'string'
+                      ? String((args as Record<string, unknown>).statement).trim() : '';
+                    delete (args as Record<string, unknown>).expectedAnswer;
+                    if (claimedAnswer && claimedStatement) {
+                      onDebugEvent?.('improvised_answer_verifying', claimedAnswer.slice(0, 40));
+                      void fetch('/api/tutor/verify-answer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ statement: claimedStatement, claimedAnswer }),
+                      })
+                        .then((r) => (r.ok ? r.json() : null))
+                        .then((v: { agree?: boolean; solved?: string } | null) => {
+                          if (!v) return;
+                          if (v.agree === true) {
+                            const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
+                            if (currentProblemRef.current && normWs(currentProblemRef.current.statement) === normWs(claimedStatement)) {
+                              currentProblemRef.current.expectedAnswer = claimedAnswer;
+                            } else {
+                              pendingGeneratedAnswerRef.current = { statement: claimedStatement, expectedAnswer: claimedAnswer };
+                            }
+                            console.log('[VoiceTutorRealtime] improvised answer VERIFIED + pinned:', claimedAnswer.slice(0, 60));
+                            onDebugEvent?.('improvised_answer_verified', claimedAnswer.slice(0, 60));
+                          } else {
+                            console.warn(`[VoiceTutorRealtime] improvised answer MISMATCH — claimed "${claimedAnswer.slice(0, 60)}" vs blind solve "${(v.solved ?? '').slice(0, 60)}" — nothing pinned.`);
+                            onDebugEvent?.('improvised_answer_mismatch', `claimed="${claimedAnswer.slice(0, 40)}" solved="${(v.solved ?? '').slice(0, 40)}"`);
+                          }
+                        })
+                        .catch(() => { /* verification is best-effort */ });
+                    }
+                  }
                   totalToolNamesSeen.push(name);
                   // #4: a Skip turn that actually advances is a legit
                   // "moving on" response — open the held gate the moment

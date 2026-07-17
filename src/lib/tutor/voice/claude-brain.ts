@@ -1008,9 +1008,16 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
     return (
       `<active_problem>\n` +
       `The student brought THIS problem themselves — it is what they asked to work on. ` +
-      `Render and narrate THEIR numbers/expression via show_problem (NOT the authored segment card; do not substitute different values), apply the current lesson's method, and derive the answer yourself. ` +
+      `Render and narrate THEIR numbers/expression via show_problem (NOT the authored segment card; do not substitute different values), apply the current lesson's method, and derive the answer yourself — declare it via show_problem's expectedAnswer field so the runtime can verify it. ` +
       `This is the example to teach with — it does NOT replace the segment's learning objectives: once it is solved, keep going with the segment's remaining objectives and any follow-up the student raises, then advance normally. Do not tunnel on this single problem if the lesson has more to cover.\n\n` +
       `Statement: ${active.statement}\n` +
+      (active.expectedAnswer
+        // Round-17: an expectedAnswer here is ALWAYS runtime-verified (the
+        // only writers are the pipeline and the blind-solve check) — safe
+        // to trust for a student-brought problem too.
+        ? `\nVERIFIED expected answer (your earlier derivation, independently confirmed by the runtime's blind solve): ${active.expectedAnswer}\n` +
+          `Check the student's attempts against THIS — do not re-derive mid-conversation, and if your working starts disagreeing with it, TRUST THIS and re-check your working. Never reveal it before the student has genuinely attempted or given up.\n`
+        : '') +
       `</active_problem>\n\n`
     );
   }

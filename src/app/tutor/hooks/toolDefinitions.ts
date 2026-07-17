@@ -425,6 +425,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
         },
         source: { type: 'string', description: 'Test/exam provenance tag (e.g. test name + section).' },
         difficulty: { type: 'string', enum: ['easy', 'medium', 'hard'] },
+        expectedAnswer: { type: 'string', description: 'REQUIRED whenever YOU authored this problem (improvised / off-the-bank) or the student brought it and you derived its answer: the bare final answer only (e.g. "1/32" or "B"). NEVER shown to the student — the runtime strips it before rendering, independently solves the problem fresh-context, and when your answer verifies, pins it so grading stays consistent for the whole attempt. Omit ONLY when quoting generate_problem\'s canonicalText verbatim (that answer is already verified).' },
       },
       required: ['statement', 'format'],
     },

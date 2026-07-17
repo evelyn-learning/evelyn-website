@@ -41,17 +41,28 @@ check('empty statement → empty string', formatActiveProblemBlock({ statement: 
   check('no-answer: no VERIFIED section', !/VERIFIED expected answer/.test(block));
 }
 
-// Student-brought problem → student framing, and expectedAnswer (should one
-// ever be passed erroneously) is NOT rendered — the student branch has no
-// verified-answer source.
+// Student-brought problem → student framing. Round-17: an expectedAnswer is
+// only ever written by the runtime AFTER independent verification (pipeline
+// or blind-solve), so when present it renders with the same trust framing;
+// absent → no VERIFIED section (grading stays brain-derived until the
+// blind-solve confirms).
 {
-  const block = formatActiveProblemBlock({
+  const noAns = formatActiveProblemBlock({
     statement: 'My homework asks for the derivative of x^3.',
     source: 'student',
-    expectedAnswer: 'should-not-appear',
   });
-  check('student: student framing present', /brought THIS problem themselves/.test(block));
-  check('student: expectedAnswer NOT rendered', !block.includes('should-not-appear'));
+  check('student: student framing present', /brought THIS problem themselves/.test(noAns));
+  check('student: declare-expectedAnswer instruction present', /expectedAnswer/.test(noAns));
+  check('student: no VERIFIED section without an answer', !/VERIFIED expected answer/.test(noAns));
+
+  const withAns = formatActiveProblemBlock({
+    statement: 'My homework asks for the derivative of x^3.',
+    source: 'student',
+    expectedAnswer: '3x^2',
+  });
+  check('student: verified answer renders', withAns.includes('3x^2'));
+  check('student: VERIFIED framing present', /VERIFIED expected answer/.test(withAns));
+  check('student: trust-this instruction present', /TRUST THIS/.test(withAns));
 }
 
 console.log(`\nactive-problem-block: ${passed} passed, ${failed} failed`);
