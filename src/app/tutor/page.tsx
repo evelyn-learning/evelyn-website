@@ -57,6 +57,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 import { resolveCartesiaVoice } from '@/lib/tutor/voice/cartesia-voice-registry';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
+import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 
 type InputMode = 'text' | 'voice';
 type VoiceEngine = 'classic' | 'realtime' | 'realtime-2' | 'realtime-validated' | 'claude-brain' | 'gemini-live';
@@ -297,7 +298,10 @@ function TutorPage() {
   // (the actual depth shift only manifests in subsequent brain turns,
   // so the click otherwise feels inert). Also flashes briefly to ack
   // each click.
-  const [paceBias, setPaceBias] = useState(0);
+  // Task Y5: matches VoiceTutorRealtime's new -1 ("slow") default so the
+  // pill renders correctly on first paint, before any onPaceBiasChange
+  // callback fires (see pace-preference.ts).
+  const [paceBias, setPaceBias] = useState(DEFAULT_PACE_BIAS);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Task W4: "Speak slower" TTS toggle — SEPARATE from paceBias above
@@ -2293,28 +2297,33 @@ function TutorPage() {
               };
               return (
                 <div ref={pacingMenuRef} className="relative flex justify-end items-center gap-2 px-2 py-1 border-b border-gray-100">
-                  {/* Phase 3: paceBias badge. Visible whenever bias ≠ 0
-                      so the student knows the Slow down / Speed up
-                      clicks took effect (the actual depth shift only
-                      manifests on subsequent brain turns, so the click
-                      would otherwise feel inert). Briefly flashes on
-                      each step regardless of direction — including
-                      clamp no-ops so the student gets acknowledgement
-                      that the click was registered even when at ±2. */}
-                  {(paceBias !== 0 || paceBiasFlash) && (
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full border transition-all duration-200 ${
-                        paceBiasFlash
-                          ? 'bg-blue-100 border-blue-400 text-blue-800'
-                          : paceBias < 0
-                            ? 'bg-amber-50 border-amber-300 text-amber-800'
-                            : 'bg-green-50 border-green-300 text-green-800'
-                      }`}
-                      aria-label={paceBias < 0 ? 'Pace: slower' : paceBias > 0 ? 'Pace: faster' : 'Pace neutral'}
-                    >
-                      {paceBias < 0 ? `Slower ×${Math.abs(paceBias)}` : paceBias > 0 ? `Faster ×${paceBias}` : 'Pace'}
-                    </span>
-                  )}
+                  {/* Task Y5: ALWAYS visible (not just when bias ≠ 0 /
+                      flashing) — discoverability was the whole point: a
+                      student should be able to see + tap into the pace
+                      control without ever having touched it. Subdued
+                      neutral styling at "normal" (0), warmer amber/green +
+                      transient flash highlight otherwise — same as
+                      before (Phase 3's flash-on-every-step, including
+                      clamp no-ops, is unchanged). Now a button (not a
+                      span) so tapping it opens this same menu. */}
+                  <button
+                    type="button"
+                    onClick={() => setPacingMenuOpen((o) => !o)}
+                    className={`text-xs px-2 py-0.5 rounded-full border transition-all duration-200 ${
+                      paceBiasFlash
+                        ? 'bg-blue-100 border-blue-400 text-blue-800'
+                        : paceBias < 0
+                          ? 'bg-amber-50 border-amber-300 text-amber-800'
+                          : paceBias > 0
+                            ? 'bg-green-50 border-green-300 text-green-800'
+                            : 'bg-gray-50 border-gray-200 text-gray-500'
+                    }`}
+                    aria-label={paceBias < 0 ? 'Pace: slow — tap to adjust' : paceBias > 0 ? 'Pace: fast — tap to adjust' : 'Pace: normal — tap to adjust'}
+                  >
+                    {paceBias < 0 ? `Pace: slow${Math.abs(paceBias) > 1 ? ` ×${Math.abs(paceBias)}` : ''}`
+                      : paceBias > 0 ? `Pace: fast${paceBias > 1 ? ` ×${paceBias}` : ''}`
+                      : 'Pace: normal'}
+                  </button>
                   <button
                     type="button"
                     aria-label="Pacing options"

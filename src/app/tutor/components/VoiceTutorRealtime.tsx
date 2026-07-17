@@ -66,6 +66,7 @@ import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import { derivePracticeMode } from '@/lib/tutor/voice/practice-mode';
+import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '@/lib/tutor/voice/pace-preference';
 import {
   extractDeclarations,
   extractIntegrand,
@@ -1584,7 +1585,13 @@ export function VoiceTutorRealtime({
   // depth/explanation. Positive = student wants less. Stepped by Slow
   // down / Speed up button clicks (Phase 3) AND matching verbal cues.
   // Resets only on session unmount.
-  const paceBiasRef = useRef<number>(0);
+  // Task Y5: defaults to -1 ("slow") rather than neutral 0 for every new
+  // session — better pedagogical default, still fully adjustable, clamps
+  // unchanged. A persisted pacing-v2 blob (any explicit numeric paceBias,
+  // including 0) still wins on resume — see resolvePaceBiasOnLoad /
+  // pace-preference.ts for the full derivation + the "never set" vs "set
+  // to 0" writeup.
+  const paceBiasRef = useRef<number>(DEFAULT_PACE_BIAS);
   // Task W4: "Speak slower" TTS toggle. A SEPARATE knob from paceBias above
   // — this only asks the HTTP-TTS provider (relayMode.speakingRate, read by
   // useOpenAIRealtime's fetchTTSPromise) to synthesize slower audio; it does
@@ -6223,8 +6230,15 @@ export function VoiceTutorRealtime({
               const ageMs = prior.savedAt ? Date.now() - new Date(prior.savedAt).getTime() : Infinity;
               const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
               if (ageMs <= TTL_MS) {
-                if (typeof prior.paceBias === 'number' && prior.paceBias !== 0) {
-                  paceBiasRef.current = Math.max(-2, Math.min(2, Math.round(prior.paceBias)));
+                // Task Y5: any explicit numeric paceBias in the blob — INCLUDING
+                // 0 — wins over the new -1 default (a student who dialed back
+                // down to "normal" keeps that choice on resume). Only a truly
+                // absent field falls through to DEFAULT_PACE_BIAS, which
+                // paceBiasRef is already initialized to, so the comparison
+                // below is a genuine no-op in that case (see pace-preference.ts).
+                const resolvedBias = resolvePaceBiasOnLoad(prior);
+                if (resolvedBias !== paceBiasRef.current) {
+                  paceBiasRef.current = resolvedBias;
                   paceBiasSetTurnRef.current = 0;
                   // Notify parent so the badge updates immediately
                   // on session start.

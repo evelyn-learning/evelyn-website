@@ -39,6 +39,7 @@ import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
+import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
@@ -224,7 +225,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // yet — drives the "Continue lesson" overlay over the board (its click is the
   // gesture that unlocks audio + kicks the brain to pick up the lesson).
   const [awaitingResume, setAwaitingResume] = useState(false);
-  const [paceBias, setPaceBias] = useState(0);
+  // Task Y5: matches VoiceTutorRealtime's new -1 ("slow") default so the
+  // pill renders correctly on first paint, before any onPaceBiasChange
+  // callback fires (a callback only fires here when the resolved value
+  // differs from the default — see pace-preference.ts).
+  const [paceBias, setPaceBias] = useState(DEFAULT_PACE_BIAS);
   const [paceBiasFlash, setPaceBiasFlash] = useState(false);
   // Task W4: "Speak slower" TTS toggle — SEPARATE from paceBias above
   // (paceBias/"Slow down" changes explain depth; this only changes TTS
@@ -750,15 +755,27 @@ export default function TutorSession(props: TutorSessionProps) {
   const currentHumor = studentPreferencesForChip.humorCeiling ?? null;
   const adaptiveMenuEl = (
     <div ref={pacingMenuRef} className="relative flex items-center gap-1">
-      {(paceBias !== 0 || paceBiasFlash) && (
-        <span className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
+      {/* Task Y5: ALWAYS visible (not just when bias ≠ 0 / flashing) —
+          discoverability was the whole point: a student should be able to
+          see + tap into the pace control without ever having touched it.
+          Subdued neutral styling at "normal" (0), warmer amber/green +
+          transient flash highlight otherwise — same as before. Tappable
+          (button, not span) to open this same adaptive/session menu. */}
+      <button
+        type="button"
+        onClick={() => setPacingMenuOpen((o) => !o)}
+        aria-label={paceBias < 0 ? 'Pace: slow — tap to adjust' : paceBias > 0 ? 'Pace: fast — tap to adjust' : 'Pace: normal — tap to adjust'}
+        className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
           paceBiasFlash ? 'bg-blue-100 border-blue-400 text-blue-800'
           : paceBias < 0 ? 'bg-amber-50 border-amber-300 text-amber-800'
-          : 'bg-green-50 border-green-300 text-green-800'
-        }`}>
-          {paceBias < 0 ? `Slower ×${Math.abs(paceBias)}` : paceBias > 0 ? `Faster ×${paceBias}` : 'Pace'}
-        </span>
-      )}
+          : paceBias > 0 ? 'bg-green-50 border-green-300 text-green-800'
+          : 'bg-slate-50 border-slate-200 text-slate-500'
+        }`}
+      >
+        {paceBias < 0 ? `Pace: slow${Math.abs(paceBias) > 1 ? ` ×${Math.abs(paceBias)}` : ''}`
+          : paceBias > 0 ? `Pace: fast${paceBias > 1 ? ` ×${paceBias}` : ''}`
+          : 'Pace: normal'}
+      </button>
       <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && (
         <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
