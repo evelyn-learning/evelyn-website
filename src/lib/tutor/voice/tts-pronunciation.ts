@@ -430,6 +430,12 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // be split as variable products.
   'sum', 'bar', 'hat', 'set', 'rho', 'tau', 'eta', 'chi', 'psi', 'nu',
   'xi', 'pie',
+  // Round-25 (live: du → "dee why o u", $x-\mu$ → "m u"): every word
+  // VAR_SPOKEN can emit (rewriteDerivatives runs BEFORE this splitter)
+  // plus the short Greek names the base prose set owns — all of them
+  // re-enter this splitter and must never be shredded into letters.
+  'you', 'see', 'ee', 'ef', 'jee', 'kay', 'em', 'en', 'pee', 'cue', 'ar',
+  'ess', 'tee', 'vee', 'zee', 'mu', 'phi',
 ]);
 function respellMathLetters(s: string): string {
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3

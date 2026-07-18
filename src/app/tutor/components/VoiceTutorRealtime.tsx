@@ -149,6 +149,7 @@ import {
   extractSentence1Normalized,
   deepEqualParams,
   isMuteMeCommand,
+  latexProseFiller,
 } from '@/lib/tutor/orchestrator/text-heuristics';
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
@@ -3097,6 +3098,18 @@ export function VoiceTutorRealtime({
           const reason = `Your show_equation latex defines the function "${dupName}" TWICE with different bodies (${latex.slice(0, 140)}). One of them is a DIFFERENT function — this is copy-paste letter drift (e.g. writing g(x) where your narration says f(x)). Re-emit the equation with each function under the letter your NARRATION uses; every letter in the latex must match what you speak.`;
           console.warn('[VoiceTutorRealtime] Dropping show_equation — duplicate function definition:', dupName);
           onDebugEvent?.('equation_duplicate_definition', `${dupName}: ${latex.slice(0, 80)}`);
+          rejected.push({ action: 'show_equation', reason });
+          return [];
+        }
+        // Round-25 (2026-07-18, session portal-59ae30c7): the brain aborted
+        // a self-correction mid-thought INSIDE the latex arg — the board
+        // rendered "e^x \sin x' \cdot wait" verbatim. Conversational filler
+        // in latex is always an authoring error; reject + corrective.
+        const filler = latexProseFiller(latex);
+        if (filler) {
+          const reason = `Your show_equation latex contains the conversational filler "${filler}" (${latex.slice(0, 140)}). You typed a mid-thought reaction INTO the card. Never put prose fillers in latex — if you catch a mistake while writing a card, finish the latex cleanly or re-emit the whole corrected equation. Re-emit this card with pure math only.`;
+          console.warn('[VoiceTutorRealtime] Dropping show_equation — prose filler in latex:', filler);
+          onDebugEvent?.('equation_prose_filler', `${filler}: ${latex.slice(0, 80)}`);
           rejected.push({ action: 'show_equation', reason });
           return [];
         }

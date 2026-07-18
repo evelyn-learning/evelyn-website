@@ -927,3 +927,32 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-23 (primes + function inverses)');
 }
+
+// --- Round-25 (2026-07-18, sessions portal-ef9e8eff / portal-551f475c) --
+// The in-span variable-product splitter shredded words OTHER rules emit:
+// du → rewriteDerivatives "dee you" → splitter doesn't know "you" →
+// "dee why o u" (heard live); $x - \mu$ → "mu" → "m u" (heard live).
+// Every VAR_SPOKEN output and short Greek name must be split-proof.
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('the integral of $u^5 \\, du$ now.',
+     'the integral of u to the 5 dee you now.',
+     'du-dee-you');
+  eq('so $\\int u^5 \\, du$ becomes that.',
+     'so the integral of u to the 5 dee you becomes that.',
+     'integral-du');
+  eq('What is $x - \\mu$ here?',
+     'What is x minus mu here?',
+     'mu-not-split');
+  eq('then $dv = e^x \\, dx$ works.',
+     'then dee vee equals e to the x dee ex works.',
+     'dv-dee-vee');
+  eq('so $\\phi$ appears in the golden ratio.',
+     'so phi appears in the golden ratio.',
+     'phi-not-split');
+
+  console.log('OK — Round-25 (spelled-letter + short-Greek split guards)');
+}

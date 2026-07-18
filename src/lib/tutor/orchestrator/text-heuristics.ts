@@ -124,6 +124,20 @@ export function isSafeOpener(s: string): boolean {
  *  ordinary narration. Leans inclusive: a false positive only holds a
  *  non-verdict sentence briefly; a false negative re-opens the
  *  speak-then-kill window. Generic phrasing only, no subject content. */
+/** Round-25 (2026-07-18, session portal-59ae30c7) — conversational filler
+ *  inside show_equation latex. The brain second-guessed a CORRECT card,
+ *  emitted a "fix", and aborted mid-thought INSIDE the latex argument:
+ *  "e^x \sin x' \cdot wait" rendered verbatim on the board. Detects bare
+ *  filler words in latex OUTSIDE \text{…}/\mathrm{…} wrappers (a stats
+ *  problem's \text{waiting time} is legitimate). Returns the matched
+ *  filler for the corrective message, or null when clean. */
+const LATEX_FILLER_RE = /\b(wait|hold on|hang on|hmm+|umm+|oops|whoops|sorry|let me|actually|nevermind|never mind|scratch that|one sec|no wait)\b/i;
+export function latexProseFiller(latex: string): string | null {
+  const stripped = latex.replace(/\\(?:text|mathrm|textbf|mathbf)\{[^{}]*\}/g, ' ');
+  const m = stripped.match(LATEX_FILLER_RE);
+  return m ? m[1] : null;
+}
+
 export function isVerdictOpener(s: string): boolean {
   const t = s.trim();
   if (!t || /\?\s*$/.test(t)) return false; // a question is a prompt, not a verdict

@@ -10,6 +10,7 @@ import {
   detectStudentBroughtProblem,
   isMuteMeCommand,
   isVerdictOpener,
+  latexProseFiller,
   extractSentence1Normalized,
   deepEqualParams,
 } from '../src/lib/tutor/orchestrator/text-heuristics';
@@ -253,6 +254,23 @@ function check(name: string, cond: boolean): void {
     'inferAdvanceFromSegmentCard: unknown target id → no advance',
     inferAdvanceFromSegmentCard(ids, 'hook', 'not-a-segment') === false,
   );
+}
+
+// ── latexProseFiller ──────────────────────────────────────────────
+// Round-25 (session portal-59ae30c7): the brain aborted a self-correction
+// mid-thought INSIDE a show_equation latex arg — the board rendered
+// "e^x \sin x' \cdot wait" verbatim.
+{
+  check('latexProseFiller: the live "· wait" card → caught',
+    latexProseFiller("\\frac{d}{dx}[e^x \\sin x] = e^x \\sin x' \\cdot wait") === 'wait');
+  check('latexProseFiller: "hold on" mid-latex → caught',
+    latexProseFiller('x^2 + hold on') === 'hold on');
+  check('latexProseFiller: clean equation → null',
+    latexProseFiller("\\frac{d}{dx}[e^x \\sin x] = e^x \\sin x + e^x \\cos x") === null);
+  check('latexProseFiller: \\text{waiting time} is legitimate → null',
+    latexProseFiller('W = \\text{waiting time} + 5') === null);
+  check('latexProseFiller: \\text{no waiting} + real filler → caught',
+    latexProseFiller('\\text{waiting time} = umm 5') === 'umm');
 }
 
 // ── withInactivityTimeout ─────────────────────────────────────────
