@@ -386,6 +386,11 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /î/g, replacement: ' i hat ' },
   { pattern: /ĵ/g, replacement: ' j hat ' },
   { pattern: /([A-Za-z])̂/g, replacement: ' $1 hat ' },
+  // Combining macron (subject-notation round): x̄ / ȳ — the statistics
+  // sample-mean glyph, sibling of the circumflex above. The physics round
+  // handled the circumflex (p̂ → "p hat") but not the macron, so x̄ leaked
+  // its raw glyph. Both precomposed (ā) and base+U+0304 forms.
+  { pattern: /([A-Za-z])̄/g, replacement: ' $1 bar ' },
   { pattern: /√\s*\(([^()]{1,24})\)/g, replacement: ' the square root of ($1) ' },
   { pattern: /√\s*([0-9]+(?:\.[0-9]+)?|[a-zA-Z])/g, replacement: ' the square root of $1 ' },
   { pattern: /\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, replacement: '' },
@@ -526,6 +531,9 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // el/oh/eye/jay are SPOKEN_ELEMENT_LETTERS outputs (the rest of that
   // map's words are already here from round-25).
   'gas', 'aq', 'dot', 'ion', 'ppm', 'el', 'oh', 'eye', 'jay',
+  // Subject-notation round: the genotype respell emits "big"/"little" (and
+  // "star" from the critical-value rule) into spans — never split them.
+  'big', 'star',
 ]);
 function respellMathLetters(s: string): string {
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
@@ -582,6 +590,23 @@ const PROSE_WORD_RE = /[a-z]{3,}/i;
  *  f'(f^{-1}(2)) resolves its argument before the prime-with-argument rule
  *  measures it; double prime before single so f'' never half-matches.
  *  Non-function bases (x^{-1}) deliberately keep "to the minus 1". */
+/** Genetics allele notation, applied to a NON-chem span's raw text before
+ *  the shared verbalizer runs. Kept off the chemistry path: that path
+ *  spells element runs into letter-name words ("Fe" → "ef ee"), and "ee"
+ *  would otherwise re-match as a homozygous genotype. Runs before the
+ *  exponent pass so sex-linked allele superscripts aren't read as powers. */
+function rewriteGeneticsInSpan(t: string): string {
+  // Sex-linked: X/Y carry an allele on the chromosome, not an exponent.
+  t = t.replace(/([XY])\^\{?([A-Za-z])\}?/g, (_m, chrom: string, allele: string) =>
+    ` ${chrom} ${spokenAllele(allele)} `);
+  // Genotype tokens respell with case spoken (see isGenotypeToken) — ahead
+  // of respellMathLetters, which only splits all-lowercase runs and would
+  // drop the case that IS the meaning.
+  t = t.replace(/\b([A-Za-z]{2,8})\b/g, (m: string) =>
+    isGenotypeToken(m) ? ` ${speakGenotype(m)} ` : m);
+  return t;
+}
+
 function rewritePrimesForSpeech(t: string): string {
   t = t.replace(/\\(sin|cos|tan)\^(?:\{-1\}|-1(?!\d))/g, '\\arc$1');
   t = t.replace(/\b([fgh])\^(?:\{-1\}|-1(?!\d))\(([^()]{1,16})\)/g, '$1 inverse of $2 ');
@@ -611,13 +636,22 @@ function rewritePrimesForSpeech(t: string): string {
     prevAbs = t;
     t = t.replace(/\|([^|]{1,160})\|/g, ' the absolute value of $1 ');
   } while (t !== prevAbs);
+  // Starred critical values (subject-notation round): "z^*"/"t^*"/"A^*"
+  // (statistics critical values, conjugates) speak "star". Before the
+  // one-sided-limit markers so "^*" isn't mistaken for a sign, and before
+  // the exponent pass which would strand the bare "*".
+  t = t.replace(/\^\{\*\}/g, ' star ');
+  t = t.replace(/\^\*/g, ' star ');
   // One-sided limit approach markers: 2^+ / 2^- / 2^{+}. The optional
   // brace pair is matched as a unit so a \lim_{...}'s closing brace is
   // never consumed; a digit after ^- is a negative exponent, not a side.
   t = t.replace(/\^(?:\{\+\}|\+)(?=[\s)\]},]|$)/g, ' from the right ');
   t = t.replace(/\^(?:\{-\}|-)(?=[\s)\]},]|$)/g, ' from the left ');
-  // Ratios ("$3:4$"). In-span only — prose colons are clock times.
-  t = t.replace(/(\d+)\s*:\s*(\d+)/g, '$1 to $2');
+  // Ratios. In-span only — prose colons are clock times. Chained so a
+  // multi-part phenotype ratio ("9:3:3:1", subject-notation round) reads
+  // fully, not just the first pair — each colon between digits becomes
+  // "to" ("9 to 3 to 3 to 1"); the 2-part case ("3:1") is unchanged.
+  t = t.replace(/(\d)\s*:\s*(?=\d)/g, '$1 to ');
   // Interval notation — only when a square bracket marks it as an interval;
   // a plain paren pair "(3, -4)" is a coordinate point and reads fine as-is.
   // The comma must not be a LaTeX thin-space's ("\,") — chem round: that
@@ -952,6 +986,33 @@ const SPOKEN_ELEMENT_LETTERS: Record<string, string> = {
   v: 'vee', w: 'double u', x: 'ex', y: 'why', z: 'zee',
 };
 
+/** ---------------------------------------------------------------------
+ *  Genetics notation → spoken words (subject-notation round, 2026-07-18).
+ *  Genotype allele notation is unusual: CASE is the meaning (dominant B vs
+ *  recessive b), so a genotype respells with the case spoken aloud —
+ *  "Bb" → "big bee little bee" — the way a teacher dictates it. This is
+ *  distinct from the round-22 variable-product split ("ab" → "ay bee"),
+ *  which drops case because there it carries no meaning.
+ * ----------------------------------------------------------------- */
+/** A genotype token: letters only, even length, in consecutive same-base
+ *  allele pairs (Aa, aa, AaBb). "Ab"/"xy" (distinct-letter products) and
+ *  odd-length runs are rejected — they fall to the ordinary letter split. */
+function isGenotypeToken(tok: string): boolean {
+  if (tok.length < 2 || tok.length % 2 !== 0 || !/^[A-Za-z]+$/.test(tok)) return false;
+  for (let i = 0; i < tok.length; i += 2) {
+    if (tok[i].toLowerCase() !== tok[i + 1].toLowerCase()) return false;
+  }
+  return true;
+}
+/** One allele: "big"/"little" + the spoken letter name ("A" → "big ay"). */
+function spokenAllele(ch: string): string {
+  const size = ch === ch.toUpperCase() ? 'big' : 'little';
+  return `${size} ${SPOKEN_ELEMENT_LETTERS[ch.toLowerCase()] ?? ch.toLowerCase()}`;
+}
+function speakGenotype(tok: string): string {
+  return tok.split('').map(spokenAllele).join(' ');
+}
+
 /** Prose reaction arrows: "2H₂ + O₂ → 2H₂O" reads "yields" when BOTH
  *  neighbors of the arrow are chemical-formula tokens and at least one is
  *  unambiguously chemical (subscript, coefficient, charge, state, or a
@@ -987,7 +1048,7 @@ function stripDollarMathForSpeech(t: string): string {
     // passes can misread them) in place of the plain unit pass.
     const prepped = looksLikeChemistrySpan(inner)
       ? rewriteChemistrySpanForSpeech(inner)
-      : rewriteUnitsForSpeech(inner, true);
+      : rewriteUnitsForSpeech(rewriteGeneticsInSpan(inner), true);
     const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped)))))
       .replace(/\\[a-zA-Z]+\s*/g, ' ')
       .replace(/[[\]{}]/g, ' ')
@@ -1367,6 +1428,16 @@ export function rewriteForTTS(raw: string): string {
   // Caps-emphasis → lowercase (see CAPS_EMPHASIS_WORDS). Runs early so
   // later rules see normal-case words.
   t = t.replace(CAPS_EMPHASIS_WORDS, (m) => m.toLowerCase());
+  // LaTeX literal escapes \$ \% \& (subject-notation round, live-heard in
+  // econ: "\$21" spoke "backslash 21"). These leaked their backslash to
+  // Cartesia, and \$ additionally CORRUPTED $-span parsing (its stray "$"
+  // mis-paired the splitter), so they must be neutralized up front, before
+  // the split below. \$ → literal "$" so Cartesia's native currency
+  // reading applies (matching the currency-guard convention that leaves
+  // "$5" literal); \% → "%" (Cartesia says "percent"); \& → "and".
+  t = t.replace(/\\\$/g, '$');
+  t = t.replace(/\\%/g, '%');
+  t = t.replace(/\\&/g, ' and ');
   t = rewriteDerivatives(t);
   // Domain acronyms Cartesia expands as state names ("SD" → "South Dakota").
   // Runs before comma/number normalization so its state-code guard can still

@@ -82,6 +82,10 @@ function looksLikeMath(inner: string): boolean {
   //      marker. The marker requirement keeps ordinary parenthesized
   //      prose ("$(loss)$") literal.
   if (/^\d{0,3}(?:[A-Z][a-z]?\d{0,3})+\(\s*(?:aq|s|l|g)\s*\)$/.test(inner)) return true;
+  //  10. Numeric ratio (subject-notation round — "$9:3:3:1$" dihybrid
+  //      phenotype ratio): two or more colon-separated integers. Without
+  //      this the wrapped ratio showed literal "$9:3:3:1$" on cards.
+  if (/^\d+(?::\d+)+$/.test(inner)) return true;
   return false;
 }
 
