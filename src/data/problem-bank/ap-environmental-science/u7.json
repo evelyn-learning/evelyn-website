@@ -1,0 +1,377 @@
+[
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.01",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is classified as a SECONDARY air pollutant?",
+    "choices": [
+      "Ground-level ozone (O3)",
+      "Carbon monoxide (CO)",
+      "Sulfur dioxide (SO2)",
+      "Lead (Pb)"
+    ],
+    "answer": "A",
+    "hints": ["Secondary pollutants are not emitted directly — they form through atmospheric reactions involving primary pollutants."]
+  },
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.02",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT one of the six criteria air pollutants regulated under the Clean Air Act?",
+    "choices": [
+      "Particulate matter (PM2.5 and PM10)",
+      "Carbon dioxide (CO2)",
+      "Nitrogen dioxide (NO2)",
+      "Sulfur dioxide (SO2)"
+    ],
+    "answer": "B",
+    "hints": ["The six criteria pollutants are CO, NO2, SO2, O3, PM, and Pb."]
+  },
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.03",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A homeowner tests their basement and discovers elevated radon levels. Radon most likely entered the home through:",
+    "choices": [
+      "Combustion of natural gas from stove and furnace appliances",
+      "Off-gassing from synthetic carpet fibers and adhesives",
+      "Tobacco smoke residue left by previous residents",
+      "Cracks in the foundation through which radon seeps up from the radioactive decay of uranium in underlying rock and soil"
+    ],
+    "answer": "D",
+    "hints": ["Radon is a naturally occurring radioactive gas that forms as uranium decays in rock and soil."]
+  },
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.04",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ground-level ozone is classified as a secondary air pollutant because it:",
+    "choices": [
+      "Is emitted directly by burning fossil fuels in automobile engines",
+      "Is transported downward from the stratosphere during cold-weather events",
+      "Forms when nitrogen oxides (NOx) and volatile organic compounds (VOCs) react in the presence of sunlight",
+      "Is produced only by industrial stack emissions concentrated in urban areas"
+    ],
+    "answer": "C",
+    "hints": ["A secondary pollutant forms through chemical reactions in the atmosphere rather than being directly emitted."]
+  },
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.05",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following correctly pairs an indoor air pollutant with its primary source?",
+    "choices": [
+      "Radon — off-gassing from synthetic fabrics and furniture foam",
+      "Carbon monoxide — incomplete combustion from a gas furnace or an idling vehicle in an attached garage",
+      "Formaldehyde — radioactive decay of uranium beneath the home's foundation",
+      "Asbestos — burning tobacco products indoors"
+    ],
+    "answer": "B",
+    "hints": ["Carbon monoxide is an odorless, colorless gas produced whenever carbon-containing fuel burns incompletely."]
+  },
+  {
+    "id": "apenvsci.air-pollution-sources.mcq.06",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A coal-fired power plant emits SO2 from its smokestacks. Some of that SO2 later reacts in the atmosphere with oxygen and water to form sulfate particles (PM2.5). Which statement BEST classifies these two forms of pollution?",
+    "choices": [
+      "Both the SO2 and the sulfate particulates it forms are classified as primary pollutants",
+      "SO2 is a secondary pollutant because it must react with water vapor before causing harm to human health",
+      "The SO2 is a secondary pollutant while the sulfate particles are primary pollutants because they reach the lung directly",
+      "The original SO2 is a primary pollutant; the sulfate particulates formed through atmospheric reactions are secondary pollutants"
+    ],
+    "answer": "D",
+    "hints": ["A primary pollutant is emitted directly from a source; a secondary pollutant forms through reactions in the air after emission."]
+  },
+
+  {
+    "id": "apenvsci.smog-inversion.mcq.01",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Photochemical smog is most likely to form under which set of conditions?",
+    "choices": [
+      "Cool, overcast days with high humidity and little wind",
+      "Warm, sunny days with high concentrations of NOx and volatile organic compounds",
+      "Cold nights following peak industrial production",
+      "High-altitude locations where sulfur dioxide emissions accumulate over time"
+    ],
+    "answer": "B",
+    "hints": ["Photochemical smog requires sunlight to drive the reactions that produce ozone and other oxidants from NOx and VOCs."]
+  },
+  {
+    "id": "apenvsci.smog-inversion.mcq.02",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Industrial (sulfurous) smog differs from photochemical smog primarily because industrial smog:",
+    "choices": [
+      "Is dominated by NOx, VOCs, and ozone produced under strong sunlight in warm climates",
+      "Consists mainly of ozone, PAN, and secondary aerosols from vehicle exhaust",
+      "Is dominated by SO2, particulate matter, and fog produced in coal-burning industrial areas under cool, humid conditions",
+      "Forms primarily from carbon dioxide and methane released by landfills and livestock operations"
+    ],
+    "answer": "C",
+    "hints": ["London-type smog from the industrial era was characterized by coal smoke, sulfur compounds, and damp, cool fog."]
+  },
+  {
+    "id": "apenvsci.smog-inversion.mcq.03",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a temperature inversion, surface air quality typically worsens because:",
+    "choices": [
+      "A layer of warm air aloft acts as a lid, trapping cool, pollutant-laden surface air and preventing vertical mixing",
+      "Increased wind speeds near the surface push concentrated pollutants into densely populated areas",
+      "Reduced UV radiation at the surface slows the photochemical breakdown of NOx into harmless nitrogen gas",
+      "Precipitation associated with temperature inversions washes NOx from the upper atmosphere down to the surface"
+    ],
+    "answer": "A",
+    "hints": ["Normally, surface air is warmer than upper air and rises freely, carrying pollutants upward. An inversion reverses this temperature gradient."]
+  },
+  {
+    "id": "apenvsci.smog-inversion.mcq.04",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which geographic feature MOST increases a city's susceptibility to smog accumulation during a thermal inversion?",
+    "choices": [
+      "High elevation above sea level, which reduces the overall density of atmospheric pollutants",
+      "Location on a flat coastal plain with consistent onshore sea breezes throughout the day",
+      "Proximity to large lakes that moderate temperature extremes year-round",
+      "Situation in a valley surrounded by mountains that restrict horizontal airflow and trap local emissions"
+    ],
+    "answer": "D",
+    "hints": ["Los Angeles and Mexico City both sit in basins where surrounding mountains block winds that would otherwise ventilate the accumulated pollutants."]
+  },
+  {
+    "id": "apenvsci.smog-inversion.mcq.05",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sequence BEST describes the chain of atmospheric reactions that leads to photochemical smog formation?",
+    "choices": [
+      "SO2 + H2O → H2SO4 → sulfate aerosols that reduce visibility and acidify precipitation",
+      "NO + UV light → NO2; NO2 + UV → NO + O; O + O2 → O3; O3 + VOCs → PAN and other photochemical oxidants",
+      "CO + NOx → N2 + CO2 through high-temperature combustion in the absence of sunlight",
+      "Lead particulates react with oxygen to form lead oxide, which catalyzes ozone production from ambient oxygen"
+    ],
+    "answer": "B",
+    "hints": ["The core cycle begins with the photolysis of NO2, which generates reactive atomic oxygen that combines with O2 to form ozone."]
+  },
+  {
+    "id": "apenvsci.smog-inversion.mcq.06",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A valley city experiences persistent morning temperature inversions each winter. Meteorologists record surface air at 4 degrees Celsius and air at 400 m altitude at 11 degrees Celsius. Pollution monitors show that ground-level concentrations continue rising for nearly an hour after the morning commute ends. Which explanation BEST accounts for this pattern?",
+    "choices": [
+      "Falling traffic volume reduces CO emissions that would otherwise chemically destroy ozone, so O3 accumulates as vehicles leave the road",
+      "Methane from nearby agricultural fields peaks in mid-morning, reacting with NOx to extend the smog formation window",
+      "Solar heating of the ground surface gradually warms the lower atmosphere until it exceeds the inversion layer temperature, finally breaking the inversion and dispersing the accumulated emissions",
+      "A second pulse of SO2 from afternoon industrial shifts combines with morning NOx residue to extend the smog event past rush hour"
+    ],
+    "answer": "C",
+    "hints": ["The inversion traps all emissions continuously — even after traffic slows, the accumulated pollutants remain until solar heating breaks the thermal lid."]
+  },
+
+  {
+    "id": "apenvsci.air-quality-mitigation.mcq.01",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A catalytic converter in a vehicle reduces air pollution primarily by converting:",
+    "choices": [
+      "Carbon dioxide and water vapor into less harmful compounds before tailpipe release",
+      "Lead and heavy metals into inert metallic deposits that are retained on a filter",
+      "Particulate matter larger than 10 micrometers into smaller fine particles",
+      "Carbon monoxide, nitrogen oxides, and unburned hydrocarbons into carbon dioxide, nitrogen gas, and water vapor"
+    ],
+    "answer": "D",
+    "hints": ["A three-way catalytic converter is designed to address three pollutant categories: CO, NOx, and unburned hydrocarbons."]
+  },
+  {
+    "id": "apenvsci.air-quality-mitigation.mcq.02",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Electrostatic precipitators are most commonly installed at coal-fired power plants to control which category of air pollutant?",
+    "choices": [
+      "Sulfur dioxide gas produced during coal combustion",
+      "Carbon monoxide from incomplete combustion in the boiler",
+      "Particulate matter such as fly ash and soot",
+      "Ground-level ozone generated by NOx photolysis"
+    ],
+    "answer": "C",
+    "hints": ["An electrostatic precipitator gives airborne particles an electric charge so they migrate to and stick on oppositely charged collection plates."]
+  },
+  {
+    "id": "apenvsci.air-quality-mitigation.mcq.03",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coal-fired power plant installs a wet scrubber system on its exhaust stack. The PRIMARY pollutant removed by a wet scrubber is:",
+    "choices": [
+      "Ground-level ozone",
+      "Particulate matter larger than PM10",
+      "Carbon dioxide",
+      "Sulfur dioxide"
+    ],
+    "answer": "D",
+    "hints": ["Wet scrubbers spray a liquid reagent — often a lime or limestone slurry — that reacts with and absorbs acidic gases from the exhaust stream."]
+  },
+  {
+    "id": "apenvsci.air-quality-mitigation.mcq.04",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The 1990 Clean Air Act Amendments established a cap-and-trade program to reduce SO2 emissions from power plants. Under this program:",
+    "choices": [
+      "All power plants are required to install identical scrubber technology regardless of cost or technical feasibility",
+      "Plants that reduce emissions below their allocated cap can sell unused emission allowances to higher-emitting plants, creating a market-based incentive to cut pollution cost-effectively",
+      "The federal government sets a uniform per-ton tax on SO2 emissions applied identically in all regions regardless of local air quality",
+      "States must achieve all SO2 reductions exclusively through mandated transitions to renewable energy sources"
+    ],
+    "answer": "B",
+    "hints": ["Cap-and-trade sets an overall emission ceiling while giving individual firms flexibility in how they meet their share of the reduction."]
+  },
+  {
+    "id": "apenvsci.air-quality-mitigation.numeric.01",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A factory exhaust stream contains 8,000 micrograms of particulate matter per cubic meter (micrograms/m3) before any control device is installed. An electrostatic precipitator with 96% collection efficiency is then added to the stack. What is the concentration of particulate matter remaining in the exhaust (in micrograms/m3) after passing through the precipitator?",
+    "answer": "320",
+    "hints": ["Multiply the initial concentration by the fraction that passes through uncaptured: (1 minus 0.96)."]
+  },
+  {
+    "id": "apenvsci.air-quality-mitigation.mcq.05",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A city is developing a strategy to reduce ground-level ozone concentrations. Which of the following actions would be LEAST effective at achieving this goal?",
+    "choices": [
+      "Requiring all new vehicles sold in the region to meet stricter NOx emission standards",
+      "Encouraging commuters to switch from personal vehicles to electric buses on high-smog alert days",
+      "Requiring coal-fired power plants to install taller smokestacks that disperse their SO2 emissions at higher altitudes",
+      "Implementing summer regulations that restrict the use of high-VOC paints, adhesives, and solvents during daytime hours"
+    ],
+    "answer": "C",
+    "hints": ["Ground-level ozone forms from NOx and VOC precursors. Which option does not actually reduce these precursors within the local airshed?"]
+  },
+
+  {
+    "id": "apenvsci.acid-rain.mcq.01",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Normal, unpolluted rainwater has a pH of approximately 5.6 rather than a neutral 7.0 because:",
+    "choices": [
+      "Industrial sulfur dioxide mixes with atmospheric moisture to form sulfuric acid in all precipitation worldwide",
+      "Atmospheric carbon dioxide dissolves in rainwater to form carbonic acid (H2CO3)",
+      "Nitrogen oxides naturally released by lightning convert to nitric acid in all rainfall",
+      "Sulfur compound emissions from active volcanoes acidify precipitation across the entire planet"
+    ],
+    "answer": "B",
+    "hints": ["CO2 is uniformly present throughout the atmosphere and reacts with water: CO2 + H2O forms H2CO3."]
+  },
+  {
+    "id": "apenvsci.acid-rain.mcq.02",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The two PRIMARY precursor pollutants responsible for acid deposition are:",
+    "choices": [
+      "Carbon monoxide (CO) and lead (Pb)",
+      "Carbon dioxide (CO2) and methane (CH4)",
+      "Ground-level ozone (O3) and particulate matter (PM)",
+      "Sulfur dioxide (SO2) and nitrogen oxides (NOx)"
+    ],
+    "answer": "D",
+    "hints": ["SO2 reacts with water to form sulfuric acid; NOx reacts with water to form nitric acid — both contribute to acid rain."]
+  },
+  {
+    "id": "apenvsci.acid-rain.mcq.03",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lakes underlain by granite bedrock are more vulnerable to acidification from acid rain than lakes underlain by limestone. This difference is primarily because:",
+    "choices": [
+      "Granite releases sulfuric acid through chemical weathering, directly adding to the acid load of the lake",
+      "Limestone (calcium carbonate) acts as a natural buffer that neutralizes incoming acids; granite lacks this buffering capacity",
+      "Granite dissolves far more slowly than limestone, allowing incoming acids to accumulate without being neutralized",
+      "Limestone directly absorbs nitrogen oxides from the atmosphere above the lake surface, removing acid precursors"
+    ],
+    "answer": "B",
+    "hints": ["Buffering capacity — the ability of a substance to resist a change in pH — is the key concept here."]
+  },
+  {
+    "id": "apenvsci.acid-rain.mcq.04",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following accurately describes a mechanism by which acid deposition damages forest ecosystems?",
+    "choices": [
+      "Acid deposition raises soil pH to levels too alkaline for tree roots to absorb phosphorus and potassium",
+      "Acid deposition increases solar UV penetration to forest floors, directly burning root systems near the soil surface",
+      "Acid deposition leaches essential nutrients such as calcium and magnesium from the soil and can mobilize toxic aluminum ions that damage tree roots and reduce water uptake",
+      "Acid deposition reduces atmospheric CO2 concentrations above affected forests, slowing the rate of photosynthesis"
+    ],
+    "answer": "C",
+    "hints": ["Think about what acids do to soil chemistry — both stripping nutrients away from soil particles and releasing metals that are otherwise locked in insoluble mineral form."]
+  },
+  {
+    "id": "apenvsci.acid-rain.mcq.05",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Marble and limestone statues and buildings are particularly susceptible to damage from acid rain. Which explanation BEST accounts for this vulnerability?",
+    "choices": [
+      "Steel reinforcement embedded in marble corrodes first, fracturing the stone from within before any surface erosion begins",
+      "Tempered glass panels mounted in limestone facades concentrate acid onto adjacent stone surfaces",
+      "Calcium carbonate (CaCO3) in marble and limestone reacts with sulfuric and nitric acid to form soluble products — calcium sulfate and calcium nitrate — that dissolve and wash away in subsequent rainfall",
+      "Iron oxides dispersed throughout limestone react with nitric acid, dissolving the pigments that bind mineral particles together"
+    ],
+    "answer": "C",
+    "hints": ["The reaction converts an insoluble mineral (CaCO3) into soluble salts — the stone is literally being dissolved and carried away by rain."]
+  },
+  {
+    "id": "apenvsci.acid-rain.numeric.01",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Normal rainwater has a pH of 5.6. Rain collected downwind of a coal-burning power plant has a pH of 3.6. The pH scale is logarithmic: each one-unit decrease in pH represents a 10-fold increase in hydrogen ion concentration [H+]. By what factor is the [H+] concentration in the acid-rain sample GREATER than in normal rain?",
+    "answer": "100",
+    "hints": ["Calculate the difference in pH units between the two samples, then raise 10 to that power."]
+  }
+]

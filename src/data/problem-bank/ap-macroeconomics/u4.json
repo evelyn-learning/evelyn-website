@@ -1,0 +1,650 @@
+[
+  {
+    "id": "apmacro.financial-assets.mcq.01",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bond issued by a corporation is best described as which of the following?",
+    "choices": [
+      "A financial asset representing a loan from the bondholder to the corporation, promising fixed interest payments and repayment of principal at maturity",
+      "An ownership stake in the corporation entitling the holder to vote on corporate decisions",
+      "A physical asset produced by the corporation for sale to consumers",
+      "A government-guaranteed certificate that eliminates all default risk"
+    ],
+    "answer": "A",
+    "hints": ["Bonds are debt instruments — the bondholder is a creditor, not an owner."]
+  },
+  {
+    "id": "apmacro.financial-assets.mcq.02",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If market interest rates rise after an existing bond was issued at a fixed coupon rate, what happens to the market price of that existing bond?",
+    "choices": [
+      "It rises, because higher interest rates make all bonds more valuable",
+      "It falls, because the fixed coupon becomes less attractive compared with newly issued bonds offering higher rates",
+      "It remains unchanged, because the bond's face value and coupon are contractually fixed",
+      "It doubles, because investors must be compensated for the rate increase"
+    ],
+    "answer": "B",
+    "hints": ["Bond prices and interest rates move in opposite directions."]
+  },
+  {
+    "id": "apmacro.financial-assets.mcq.03",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following financial assets is generally considered the MOST liquid?",
+    "choices": [
+      "Shares in a small, privately held company",
+      "A 30-year corporate bond",
+      "Currency (paper bills and coins)",
+      "Residential real estate"
+    ],
+    "answer": "C",
+    "hints": ["Liquidity means how quickly an asset can be exchanged for goods and services without significant loss of value."]
+  },
+  {
+    "id": "apmacro.financial-assets.mcq.04",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "All else equal, why does a 10-year corporate bond typically offer a higher interest rate than a 3-month U.S. Treasury bill?",
+    "choices": [
+      "Treasury bills are riskier because the federal government defaults on short-term debt more frequently than corporations default on long-term debt",
+      "Corporate bonds have shorter effective maturities and therefore lower inflation risk",
+      "Short-term instruments always yield more than long-term instruments as a universal rule of financial markets",
+      "The corporate bond carries greater default risk and a longer maturity, both of which require higher compensation for investors"
+    ],
+    "answer": "D",
+    "hints": ["Investors demand a premium for credit risk and for the uncertainty of tying up funds over a longer horizon."]
+  },
+  {
+    "id": "apmacro.financial-assets.mcq.05",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Compared with holders of corporate bonds, stockholders of the same corporation are best described as having which of the following?",
+    "choices": [
+      "A legally binding creditor claim that receives fixed interest payments before any other disbursement",
+      "A residual ownership claim that entitles them to profits only after all debt obligations are met, meaning they bear greater financial risk",
+      "Priority over bondholders in the event of corporate liquidation",
+      "A guaranteed dividend payment regardless of the firm's annual profitability"
+    ],
+    "answer": "B",
+    "hints": ["Equity holders are owners; debt holders are creditors. Owners bear the residual risk."]
+  },
+  {
+    "id": "apmacro.financial-assets.mcq.06",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A bond with a face value of 1,000 dollars pays an annual coupon of 50 dollars, giving it a coupon rate of 5 percent. Investors in the market now require a 6 percent annual return on bonds of this type. Relative to its face value, the bond's current market price will be:",
+    "choices": [
+      "Below its face value, because the 5 percent coupon rate is less than the 6 percent return investors now require",
+      "Equal to its face value, because the coupon payment is contractually fixed",
+      "Above its face value, because the coupon rate once exceeded prevailing market rates",
+      "Exactly zero, because no investor will purchase a bond that yields below the market rate"
+    ],
+    "answer": "A",
+    "hints": ["When the required return exceeds the coupon rate, the bond must sell at a discount so the total return equals the required rate."]
+  },
+
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.mcq.01",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The real interest rate is best described as the nominal interest rate:",
+    "choices": [
+      "Plus the expected inflation rate",
+      "Minus the expected inflation rate",
+      "Divided by the overall price level",
+      "Multiplied by the money multiplier"
+    ],
+    "answer": "B",
+    "hints": ["Approximate Fisher equation: real rate ≈ nominal rate − expected inflation."]
+  },
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.mcq.02",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The nominal interest rate on a savings account is 7 percent and expected inflation is 3 percent. Using the approximate Fisher equation, what is the real interest rate?",
+    "choices": [
+      "4 percent",
+      "10 percent",
+      "3 percent",
+      "7 percent"
+    ],
+    "answer": "A",
+    "hints": ["Real rate ≈ nominal rate − expected inflation = 7 − 3."]
+  },
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.mcq.03",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bank charges a nominal interest rate of 5 percent on a one-year loan. Over the year, actual inflation turns out to be 6 percent. What is the real interest rate actually earned by the bank on this loan?",
+    "choices": [
+      "Positive 5 percent",
+      "Positive 11 percent",
+      "Negative 1 percent",
+      "Zero percent"
+    ],
+    "answer": "C",
+    "hints": ["Real rate = nominal rate − actual inflation = 5 − 6 = −1."]
+  },
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.mcq.04",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A household took out a fixed-rate mortgage at a 4 percent nominal interest rate. Unexpectedly, inflation averages 7 percent per year over the life of the loan. Which of the following best describes the distributional outcome between borrower and lender?",
+    "choices": [
+      "The lender benefits, because the nominal rate remains positive throughout the loan",
+      "Neither party is affected, since the nominal payment schedule is contractually fixed",
+      "The lender benefits, because higher inflation raises the real value of assets the lender holds",
+      "The borrower benefits, because the real cost of repayment has fallen — dollars repaid are worth less in purchasing power than the dollars originally borrowed"
+    ],
+    "answer": "D",
+    "hints": ["Unexpected inflation transfers purchasing power from creditors to debtors."]
+  },
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.numeric.01",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An investor requires a real return of 3 percent on a one-year bond. Expected inflation for the coming year is 4.5 percent. Using the approximate Fisher equation, what nominal interest rate must the bond offer? Give your answer as a number in percent (for example, enter 5 for 5 percent).",
+    "answer": "7.5",
+    "hints": ["Nominal rate ≈ real rate + expected inflation."]
+  },
+  {
+    "id": "apmacro.nominal-vs-real-interest-rates.numeric.02",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A government bond offers a nominal interest rate of 8 percent. The real interest rate on comparable investments is 2 percent. Using the approximate Fisher equation, what is the implied expected inflation rate built into this bond's yield? Give your answer as a number in percent.",
+    "answer": "6",
+    "hints": ["Rearrange the Fisher equation: expected inflation ≈ nominal rate − real rate."]
+  },
+
+  {
+    "id": "apmacro.functions-of-money.mcq.01",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is NOT one of the three standard functions of money?",
+    "choices": [
+      "Medium of exchange",
+      "Unit of account",
+      "Store of value",
+      "Factor of production"
+    ],
+    "answer": "D",
+    "hints": ["The three functions are medium of exchange, unit of account, and store of value."]
+  },
+  {
+    "id": "apmacro.functions-of-money.mcq.02",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following assets is included in M2 but NOT in M1?",
+    "choices": [
+      "Currency in circulation",
+      "Demand deposits at commercial banks",
+      "Small-denomination savings accounts and certificates of deposit",
+      "Traveler's checks"
+    ],
+    "answer": "C",
+    "hints": ["M1 = currency + demand deposits + other highly liquid accounts. M2 adds less-liquid near-monies such as savings accounts and small CDs."]
+  },
+  {
+    "id": "apmacro.functions-of-money.mcq.03",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fiat money differs from commodity money primarily in that fiat money:",
+    "choices": [
+      "Has intrinsic value because of the physical material from which it is made",
+      "Derives its value solely from government decree and the general trust of the public, not from any underlying commodity",
+      "Must be backed by a fixed quantity of a commodity such as gold held in reserve",
+      "Can only function as a medium of exchange within a single country's borders"
+    ],
+    "answer": "B",
+    "hints": ["'Fiat' means 'let it be done' — the government declares it to be money, and public confidence sustains that value."]
+  },
+  {
+    "id": "apmacro.functions-of-money.mcq.04",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During a period of hyperinflation, which function of money is most severely undermined?",
+    "choices": [
+      "Medium of exchange — merchants begin refusing all cash payments outright",
+      "Unit of account — the government stops publishing official price lists",
+      "Legal tender status — courts refuse to enforce contracts denominated in the currency",
+      "Store of value — the purchasing power of money holdings erodes so rapidly that people spend money immediately rather than save it"
+    ],
+    "answer": "D",
+    "hints": ["If money loses purchasing power rapidly, it fails to preserve value over time — the core of the store-of-value function."]
+  },
+  {
+    "id": "apmacro.functions-of-money.mcq.05",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a barter economy, trade requires a double coincidence of wants. The introduction of money most directly solves this problem by serving as a:",
+    "choices": [
+      "Medium of exchange that eliminates the need for both parties to want each other's goods simultaneously",
+      "Unit of account that sets standard prices for all goods and services",
+      "Store of value that allows individuals to accumulate wealth over time",
+      "Legal tender guarantee that forces all sellers to accept payment"
+    ],
+    "answer": "A",
+    "hints": ["Money lets a farmer sell grain to anyone and then separately buy shoes from a shoemaker — no coincidence of wants needed."]
+  },
+  {
+    "id": "apmacro.functions-of-money.mcq.06",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Assets classified as 'near monies' within M2 — such as savings accounts — differ from M1 assets primarily because near monies are:",
+    "choices": [
+      "Issued by the Federal Reserve rather than by commercial banks",
+      "Not directly spendable as a medium of exchange without first converting them to a more liquid form",
+      "Denominated in foreign currencies and subject to exchange-rate risk",
+      "Exempt from all federal reserve requirements and government oversight"
+    ],
+    "answer": "B",
+    "hints": ["You cannot write a check directly against a savings account — you must transfer the funds to a checking account first."]
+  },
+
+  {
+    "id": "apmacro.banking-money-creation.mcq.01",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under a fractional reserve banking system, commercial banks are required to:",
+    "choices": [
+      "Lend out 100 percent of each deposit, holding no reserves at all",
+      "Keep only a required fraction of deposits as reserves and lend the remainder",
+      "Hold 100 percent of deposits as reserves and make no loans",
+      "Transfer all deposits to the central bank for safekeeping"
+    ],
+    "answer": "B",
+    "hints": ["'Fractional' reserve means only a fraction must be held — the rest can be lent out."]
+  },
+  {
+    "id": "apmacro.banking-money-creation.mcq.02",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bank has total deposits of 200,000 dollars and a required reserve ratio of 10 percent. The bank currently holds 25,000 dollars in total reserves. What are the bank's excess reserves?",
+    "choices": [
+      "5,000 dollars",
+      "20,000 dollars",
+      "25,000 dollars",
+      "180,000 dollars"
+    ],
+    "answer": "A",
+    "hints": ["Required reserves = RRR x deposits = 0.10 x 200,000 = 20,000. Excess = actual reserves minus required reserves."]
+  },
+  {
+    "id": "apmacro.banking-money-creation.mcq.03",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following actions by a commercial bank most directly expands the money supply?",
+    "choices": [
+      "Holding all excess reserves in its vault rather than making new loans",
+      "Converting customers' demand deposits into time deposits",
+      "Making a new loan to a business and crediting the loan proceeds to the business's checking account",
+      "Repaying reserves it had previously borrowed from the Federal Reserve"
+    ],
+    "answer": "C",
+    "hints": ["When a bank makes a loan, it creates a new demand deposit — new purchasing power enters the economy."]
+  },
+  {
+    "id": "apmacro.banking-money-creation.mcq.04",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A sudden loss of depositor confidence leads large numbers of people to simultaneously withdraw funds from their banks. This scenario threatens the stability of the banking system primarily because:",
+    "choices": [
+      "It is merely a nuisance for banks that are already holding more than their required reserves",
+      "Only banks with fewer outstanding loans than required are at risk of failing",
+      "FDIC insurance fully protects deposits at any dollar amount, so systemic risk is eliminated",
+      "Fractional reserve banks hold reserves equal to only a fraction of total deposits and cannot immediately satisfy all simultaneous withdrawal demands"
+    ],
+    "answer": "D",
+    "hints": ["Banks lend most of their deposits; a simultaneous run will exceed the reserves any fractional-reserve bank holds."]
+  },
+  {
+    "id": "apmacro.banking-money-creation.numeric.01",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The required reserve ratio in a banking system is 25 percent. What is the value of the simple money multiplier? Give your answer as a number.",
+    "answer": "4",
+    "hints": ["Simple money multiplier = 1 divided by the required reserve ratio."]
+  },
+  {
+    "id": "apmacro.banking-money-creation.numeric.02",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A new cash deposit of 1,000 dollars is made into a bank. The required reserve ratio is 10 percent. Assuming every bank lends out all of its excess reserves and all loan proceeds are fully redeposited into the banking system, what is the maximum total increase in checkable deposits in the banking system, including the initial 1,000-dollar deposit? Give your answer in dollars.",
+    "answer": "10000",
+    "hints": ["Total deposit expansion = initial deposit x money multiplier = 1,000 x (1 divided by 0.10)."]
+  },
+
+  {
+    "id": "apmacro.money-market.mcq.01",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the money market, what variable adjusts to bring the quantity of money supplied and the quantity of money demanded into equilibrium?",
+    "choices": [
+      "The overall price level",
+      "Real GDP",
+      "The nominal interest rate",
+      "The velocity of money"
+    ],
+    "answer": "C",
+    "hints": ["The standard money-market diagram places the nominal interest rate on the vertical axis."]
+  },
+  {
+    "id": "apmacro.money-market.mcq.02",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If real GDP increases, the transactions demand for money will most likely:",
+    "choices": [
+      "Fall, because higher incomes reduce the need to hold liquid cash",
+      "Fall, because rising interest rates typically accompany GDP growth",
+      "Stay the same, because money demand depends only on the interest rate",
+      "Rise, because a greater volume of transactions requires more money to finance them"
+    ],
+    "answer": "D",
+    "hints": ["More economic activity means more purchases, so households and firms need more money on hand."]
+  },
+  {
+    "id": "apmacro.money-market.mcq.03",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the nominal interest rate rises, the quantity of money demanded will:",
+    "choices": [
+      "Decrease, because the opportunity cost of holding non-interest-bearing money rises",
+      "Remain unchanged, because money demand is perfectly inelastic with respect to the interest rate",
+      "Increase, because the higher rate signals a stronger economy with more transactions",
+      "Increase, because bonds become less attractive relative to holding cash"
+    ],
+    "answer": "A",
+    "hints": ["Holding cash means forgoing the interest earned on bonds; a higher rate raises that opportunity cost, reducing desired money holdings."]
+  },
+  {
+    "id": "apmacro.money-market.mcq.04",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Federal Reserve conducts open-market purchases of government bonds, increasing the money supply. In the money market, this action will most likely cause the nominal interest rate to:",
+    "choices": [
+      "Rise, because bond prices fall when the Fed purchases them in large quantities",
+      "Fall, because the rightward shift of the money supply curve creates a surplus of money at the original interest rate, pushing the rate down",
+      "Rise, because the increased money supply immediately raises the price level",
+      "Remain unchanged, because the Fed cannot influence nominal interest rates through bond purchases"
+    ],
+    "answer": "B",
+    "hints": ["An increase in money supply shifts the supply curve right; at the old rate there is now excess supply of money, so the nominal rate falls."]
+  },
+  {
+    "id": "apmacro.money-market.numeric.01",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The nominal money supply is 750 billion dollars. The aggregate price level is 1.25 (expressed as an index relative to the base year, where the base-year value equals 1.00). What is the real money supply in billions of dollars? Give your answer as a number.",
+    "answer": "600",
+    "hints": ["Real money supply = nominal money supply divided by the price level index."]
+  },
+  {
+    "id": "apmacro.money-market.mcq.05",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Federal Reserve typically describes monetary policy in terms of a target for the nominal federal funds rate rather than a specific money supply target. Which of the following best explains this approach?",
+    "choices": [
+      "The Fed lacks the legal authority to set targets for monetary aggregates such as M1 or M2",
+      "The nominal interest rate cannot be precisely measured, making the money supply a more reliable policy target",
+      "Commercial banks set the federal funds rate through interbank lending, so the Fed only reacts to bank behavior",
+      "Money demand shifts unpredictably; targeting a fixed money supply could produce large interest-rate swings, whereas targeting the rate provides greater economic stability"
+    ],
+    "answer": "D",
+    "hints": ["If money demand shifts while supply is fixed, the interest rate fluctuates. Fixing the rate instead absorbs those demand shifts automatically."]
+  },
+
+  {
+    "id": "apmacro.monetary-policy.mcq.01",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a primary tool the Federal Reserve uses to implement monetary policy in a traditional limited-reserves framework?",
+    "choices": [
+      "Changing the federal personal income tax rate",
+      "Open-market operations — buying or selling government bonds to change the level of bank reserves",
+      "Setting the official consumer price index used to measure inflation",
+      "Adjusting the federal government's annual spending budget"
+    ],
+    "answer": "B",
+    "hints": ["Open-market operations are the Fed's main day-to-day tool for controlling reserves and the federal funds rate."]
+  },
+  {
+    "id": "apmacro.monetary-policy.mcq.02",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To stimulate a slowing economy, the Federal Reserve would most likely take which of the following actions?",
+    "choices": [
+      "Sell government bonds to drain bank reserves and raise the federal funds rate",
+      "Raise the required reserve ratio to increase the money multiplier",
+      "Buy government bonds, inject reserves into the banking system, and lower the federal funds rate",
+      "Raise the discount rate to discourage banks from borrowing reserves"
+    ],
+    "answer": "C",
+    "hints": ["Expansionary monetary policy lowers interest rates to stimulate borrowing, investment, and consumer spending."]
+  },
+  {
+    "id": "apmacro.monetary-policy.mcq.03",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Federal Reserve is concerned about inflation running persistently above its 2 percent target. Which of the following monetary policy actions would most directly address this concern?",
+    "choices": [
+      "Buy government bonds to inject reserves and lower the federal funds rate",
+      "Sell government bonds to drain reserves and push the federal funds rate higher",
+      "Lower the required reserve ratio to expand the banking system's lending capacity",
+      "Reduce the interest rate on reserve balances to encourage more bank lending"
+    ],
+    "answer": "B",
+    "hints": ["Contractionary monetary policy raises interest rates, reducing borrowing and cooling inflationary spending."]
+  },
+  {
+    "id": "apmacro.monetary-policy.mcq.04",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the modern ample-reserves framework now used by the Federal Reserve, the primary administered rate that sets a floor for the federal funds rate is the:",
+    "choices": [
+      "Quantity of government bonds the Fed makes available for open-market purchase",
+      "Required reserve ratio applied uniformly to all commercial bank deposits",
+      "Interest rate paid on reserve balances that commercial banks hold at the Federal Reserve (IORB)",
+      "M1 money supply target announced by the Federal Open Market Committee each quarter"
+    ],
+    "answer": "C",
+    "hints": ["In an ample-reserves environment, banks will not lend reserves in the overnight market at a rate below what the Fed pays them on reserve balances."]
+  },
+  {
+    "id": "apmacro.monetary-policy.mcq.05",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When the Federal Reserve raises the discount rate, the most direct effect on commercial banks is that:",
+    "choices": [
+      "Banks face a higher cost of borrowing reserves from the Fed, reducing their incentive to seek such loans",
+      "Commercial banks are required to increase their holdings of government securities",
+      "Banks find it cheaper to obtain short-term reserves, expanding their capacity to lend",
+      "The required reserve ratio automatically rises, contracting the money supply"
+    ],
+    "answer": "A",
+    "hints": ["The discount rate is the interest rate the Fed charges banks for short-term borrowing; a higher rate makes such borrowing more costly."]
+  },
+  {
+    "id": "apmacro.monetary-policy.mcq.06",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During the 2008 financial crisis, the Federal Reserve purchased large quantities of long-term Treasury bonds and mortgage-backed securities in a policy known as quantitative easing. The primary purpose of these asset purchases was to:",
+    "choices": [
+      "Inject reserves into the banking system and exert downward pressure on long-term interest rates at a time when the short-term federal funds rate was already near its effective lower bound",
+      "Raise short-term interest rates to combat inflation by restricting the supply of bank reserves",
+      "Reduce the federal government's outstanding debt obligations by retiring Treasury bonds",
+      "Increase the required reserve ratio to strengthen commercial bank capital positions"
+    ],
+    "answer": "A",
+    "hints": ["When the short-term policy rate hit near zero, the Fed turned to large-scale asset purchases to ease broader financial conditions."]
+  },
+
+  {
+    "id": "apmacro.loanable-funds-market.mcq.01",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the loanable funds market, what is the relevant price of borrowing that equilibrates the supply of and demand for loanable funds?",
+    "choices": [
+      "The nominal interest rate, since lenders care only about the stated contractual return",
+      "The real interest rate, since it reflects the true purchasing-power cost of borrowing after adjusting for inflation",
+      "The federal funds rate, set directly by the Federal Reserve",
+      "The discount rate, which the Federal Reserve charges commercial banks for overnight loans"
+    ],
+    "answer": "B",
+    "hints": ["Lenders and borrowers care about real purchasing power, so the real interest rate clears the loanable funds market."]
+  },
+  {
+    "id": "apmacro.loanable-funds-market.mcq.02",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following events would shift the demand for loanable funds to the RIGHT, raising the equilibrium real interest rate?",
+    "choices": [
+      "A decline in business confidence causing firms to scale back planned investment projects",
+      "A government budget surplus that significantly reduces public-sector borrowing",
+      "A rise in the real interest rate that increases the cost of investment for businesses",
+      "A surge in expected business profits that prompts firms to dramatically expand investment spending"
+    ],
+    "answer": "D",
+    "hints": ["Demand for loanable funds shifts right when borrowers want to borrow more at every real interest rate — here driven by higher expected returns on investment."]
+  },
+  {
+    "id": "apmacro.loanable-funds-market.mcq.03",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If household saving increases with no change in government saving, the loanable funds market will most likely experience:",
+    "choices": [
+      "A rightward shift in the supply of loanable funds, lowering the equilibrium real interest rate",
+      "A rightward shift in the demand for loanable funds, raising the equilibrium real interest rate",
+      "A leftward shift in the supply of loanable funds, raising the equilibrium real interest rate",
+      "No effect, since household saving decisions are unrelated to the loanable funds market"
+    ],
+    "answer": "A",
+    "hints": ["More saving means more funds available to lend; the supply of loanable funds shifts right and the real interest rate falls."]
+  },
+  {
+    "id": "apmacro.loanable-funds-market.mcq.04",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the loanable funds framework, national saving is equal to the sum of:",
+    "choices": [
+      "Consumption spending plus investment spending",
+      "Private household saving plus public saving (the government's budget balance, T minus G)",
+      "Gross domestic product plus net exports",
+      "Government expenditures plus tax revenues"
+    ],
+    "answer": "B",
+    "hints": ["National saving = private saving + (T minus G). A budget surplus adds to national saving; a deficit subtracts from it."]
+  },
+  {
+    "id": "apmacro.loanable-funds-market.mcq.05",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A large increase in government borrowing to finance a budget deficit shifts the demand for loanable funds rightward, raising the real interest rate. What is the most likely effect on private business investment?",
+    "choices": [
+      "Private investment falls, because the higher real interest rate increases the cost of borrowing for private firms",
+      "Private investment rises as well, because higher government spending creates new business investment opportunities",
+      "Private investment stays the same, because firms plan investment independently of the real interest rate",
+      "Private investment rises, because a higher real interest rate increases the after-tax return on capital"
+    ],
+    "answer": "A",
+    "hints": ["This is the crowding-out effect: government borrowing raises the real interest rate, which discourages private investment."]
+  },
+  {
+    "id": "apmacro.loanable-funds-market.mcq.06",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Suppose the government simultaneously shifts from a balanced budget to a large deficit (increasing demand for loanable funds) and households significantly reduce their saving rate (decreasing the supply of loanable funds). Which of the following statements about the effect on the equilibrium real interest rate is most certain?",
+    "choices": [
+      "The real interest rate rises unambiguously, because demand for loanable funds increases while supply decreases",
+      "The real interest rate falls, since government deficits reduce confidence and suppress overall borrowing demand",
+      "The real interest rate is unchanged, since the two effects exactly offset each other",
+      "The equilibrium quantity of loanable funds increases, but the direction of the rate change is ambiguous"
+    ],
+    "answer": "A",
+    "hints": ["When demand rises AND supply falls simultaneously, the price (real interest rate) unambiguously increases, regardless of what happens to the equilibrium quantity."]
+  }
+]

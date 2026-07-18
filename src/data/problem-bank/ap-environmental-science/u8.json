@@ -1,0 +1,383 @@
+[
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.01",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is an example of a point source of water pollution?",
+    "choices": [
+      "Runoff from a cornfield after a heavy rain",
+      "Urban stormwater washing off a large parking lot",
+      "Acid drainage discharged through a pipe at a copper mine",
+      "Atmospheric deposition of nitrogen compounds over a lake"
+    ],
+    "answer": "C",
+    "hints": ["Point sources have a single, identifiable discharge location such as a pipe or outfall — they are distinguishable from diffuse nonpoint sources."]
+  },
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.02",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Biochemical oxygen demand (BOD) measures the amount of:",
+    "choices": [
+      "Dissolved oxygen currently present in a water sample",
+      "Oxygen required by microorganisms to decompose the organic matter in a water sample",
+      "Total chemical pollutants dissolved in a water body",
+      "Photosynthetic oxygen produced by aquatic plants per day"
+    ],
+    "answer": "B",
+    "hints": ["High BOD signals a large load of decomposable organic matter; measuring it predicts how much dissolved oxygen decomposers will consume."]
+  },
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.03",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a dissolved-oxygen sag curve for a river receiving a sewage discharge, the lowest dissolved oxygen reading typically occurs:",
+    "choices": [
+      "Upstream of the sewage outfall, in the undisturbed clean-water zone",
+      "At the exact point of the outfall, before any microbial decomposition has begun",
+      "Some distance below the outfall, where oxygen-consuming decomposition of organic waste is most intense and reaeration has not yet offset the oxygen debt",
+      "Far downstream where the river has fully recovered and dissolved oxygen has returned to near-saturation levels"
+    ],
+    "answer": "C",
+    "hints": ["The 'sag' deepens as decomposers consume oxygen; the minimum is reached when BOD is still high but reaeration has not yet caught up."]
+  },
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.04",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A farmer applies excess nitrogen fertilizer to fields bordering a river. Heavy rains wash the fertilizer directly into the river. This is best classified as:",
+    "choices": [
+      "Thermal pollution, because decomposing fertilizer releases heat energy into the water",
+      "Point source pollution, because the farm is a single identifiable property",
+      "Industrial effluent, because agriculture is classified under industrial use by the Clean Water Act",
+      "Nonpoint source pollution, because the runoff originates from a diffuse, widespread land area rather than a single discharge pipe"
+    ],
+    "answer": "D",
+    "hints": ["Ask whether the pollution enters the water body through an identifiable, discrete conveyance — if not, it is nonpoint."]
+  },
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.05",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Primary sewage treatment removes pollutants from wastewater primarily by:",
+    "choices": [
+      "Physically settling suspended solids out of the wastewater using screens, grit chambers, and sedimentation tanks",
+      "Adding chlorine or ultraviolet light to disinfect and kill pathogens in the wastewater",
+      "Using aerobic bacteria in aeration tanks to biologically decompose dissolved organic compounds",
+      "Passing wastewater through beds of activated carbon to adsorb dissolved chemicals"
+    ],
+    "answer": "A",
+    "hints": ["Primary treatment is a physical — not biological or chemical — process; it removes solids by allowing them to settle under gravity."]
+  },
+  {
+    "id": "apenvsci.water-pollution-sources.mcq.06",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A monitoring station records dissolved oxygen (DO) at five points along a river downstream from a sewage outfall: 8.5 mg/L (0.5 km upstream), 6.1 mg/L (1 km downstream), 3.2 mg/L (3 km downstream), 5.4 mg/L (6 km downstream), 8.0 mg/L (10 km downstream). Which explanation best accounts for this pattern?",
+    "choices": [
+      "Thermal discharge from the outfall heats the river initially, and cooling farther downstream restores normal oxygen solubility",
+      "Acid from the outfall lowers pH near the discharge point, and natural buffering capacity neutralizes it farther downstream",
+      "Organic waste from the outfall raises BOD, causing decomposers to deplete dissolved oxygen; natural reaeration and decreasing BOD allow DO to recover with distance",
+      "Algae immediately below the outfall consume oxygen during nighttime respiration, then produce oxygen via photosynthesis farther downstream"
+    ],
+    "answer": "C",
+    "hints": [
+      "Trace the sequence: organic load raises BOD → decomposers consume O2 → DO sags → waste diluted and degraded → reaeration → DO recovers.",
+      "This is the classic dissolved-oxygen sag curve driven by BOD, not temperature or pH."
+    ]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.mcq.01",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly distinguishes bioaccumulation from biomagnification?",
+    "choices": [
+      "Both terms are synonymous and describe the same process of toxin buildup across food webs",
+      "Biomagnification occurs only in marine ecosystems; bioaccumulation occurs only in freshwater ecosystems",
+      "Bioaccumulation refers to increasing toxin concentration at higher trophic levels; biomagnification refers to toxin storage within a single organism",
+      "Bioaccumulation is the buildup of a substance within an individual organism over its lifetime; biomagnification is the increase in toxin concentration at successively higher trophic levels"
+    ],
+    "answer": "D",
+    "hints": ["Think of 'accumulate' as one animal storing more over time, and 'magnify' as the level-to-level amplification up the food web."]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.mcq.02",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Persistent organic pollutants (POPs) such as DDT and PCBs concentrate in organisms and biomagnify through food webs primarily because these chemicals are:",
+    "choices": [
+      "Water-soluble, making them easy to absorb through drinking water but difficult to flush from the bloodstream",
+      "Lipid-soluble (fat-soluble), so they dissolve into and are retained in fatty tissues instead of being excreted in urine",
+      "Electrically charged, drawing them to bind with protein molecules in muscle tissue",
+      "Gaseous at body temperature, so they concentrate in air pockets within lung tissue"
+    ],
+    "answer": "B",
+    "hints": ["Lipid solubility means the chemical is stored rather than excreted — concentration builds with every meal at a higher trophic level."]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.numeric.01",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A study measured DDT concentration in a coastal food chain: phytoplankton = 0.04 ppb, zooplankton = 0.4 ppb, anchovy = 4 ppb, osprey = 40 ppb. What is the overall biomagnification factor from phytoplankton to osprey? Express your answer as a whole number.",
+    "answer": "1000",
+    "hints": ["Divide the concentration at the top predator by the concentration at the base producer: 40 divided by 0.04."]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.mcq.03",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The LD50 of a new herbicide is determined to be 200 mg per kilogram of body weight in laboratory rats. Which statement correctly interprets this value?",
+    "choices": [
+      "A dose of 200 mg/kg body weight is lethal to exactly 50% of the test population under standard test conditions",
+      "200 mg of the herbicide will kill any rat regardless of its body weight",
+      "50% of the herbicide applied to soil degrades chemically within 200 days",
+      "Any dose below 200 mg/kg body weight is guaranteed to be safe for all organisms"
+    ],
+    "answer": "A",
+    "hints": ["LD50 = the dose that is Lethal to 50% of a test population; it is always expressed per unit of body weight, not as a fixed mass."]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.numeric.02",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A rodenticide has an LD50 of 25 mg per kilogram of body weight. A researcher needs to estimate the lethal dose for a 60-kilogram experimental animal. What mass of rodenticide, in milligrams (mg), would be lethal to 50% of a population of such animals?",
+    "answer": "1500",
+    "hints": [
+      "Multiply the LD50 value (mg/kg) by the animal's body mass in kilograms.",
+      "25 mg/kg multiplied by 60 kg gives the answer in mg."
+    ]
+  },
+  {
+    "id": "apenvsci.toxics-pops-biomag.mcq.04",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "DDT was banned in the United States in 1972, yet measurable residues of DDE (a DDT breakdown product) were still detected in bald eagle eggs and human adipose tissue decades later. Which combination of chemical properties best explains this long-term persistence?",
+    "choices": [
+      "High water solubility, which allows DDT to circulate continuously through ocean currents and re-enter food chains via drinking water",
+      "Chemical instability that causes DDT to constantly reform from its breakdown products stored in river sediments",
+      "Rapid volatilization from soils that enables global atmospheric transport and annual redeposition in precipitation",
+      "Lipid solubility combined with resistance to chemical and biological degradation, which allows DDT and DDE to accumulate in fatty tissues and persist in sediments while recirculating through food webs"
+    ],
+    "answer": "D",
+    "hints": [
+      "Persistence = won't break down; lipid solubility = won't be excreted. Both properties together define a classic POP.",
+      "DDT and DDE are fat-soluble and chemically stable — the combination means they remain in the environment AND remain stored in organisms."
+    ]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.01",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Cultural eutrophication is best defined as:",
+    "choices": [
+      "Human-caused over-enrichment of a water body with nutrients, leading to excessive algal growth and subsequent oxygen depletion",
+      "The natural aging of a lake over thousands of years as organic sediments fill the basin",
+      "Toxic contamination of a water body by heavy metals discharged from factories",
+      "Rising water temperatures caused by discharge of industrial cooling water"
+    ],
+    "answer": "A",
+    "hints": ["The prefix 'cultural' signals human cause. Eutrophication follows the chain: excess nutrients → algal bloom → die-off → oxygen crash."]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.02",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In temperate freshwater lakes, the nutrient most commonly identified as the primary limiting factor driving cultural eutrophication is:",
+    "choices": [
+      "Carbon dioxide, because photosynthesis directly consumes CO2 and algae exhaust it first",
+      "Nitrogen, which is universally the scarcest element in freshwater lake water throughout the year",
+      "Sulfur, because acid rain delivers concentrated sulfate directly to lake surfaces",
+      "Phosphorus, because it is typically available in the lowest supply relative to algal demand and even small additions trigger large bloom responses"
+    ],
+    "answer": "D",
+    "hints": ["In lakes, phosphorus is usually the limiting nutrient; adding phosphorus causes the biggest algal response. Nitrogen is more often limiting in marine coastal waters."]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.03",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nuclear power plant discharges cooling water at 8 degrees Celsius above the ambient river temperature. Which immediate effect on the river ecosystem is most directly caused by this thermal pollution?",
+    "choices": [
+      "Reduced dissolved oxygen concentration, stressing aerobic aquatic organisms that require adequate DO for respiration",
+      "Increased dissolved oxygen concentration, directly improving conditions for fish and invertebrates",
+      "A rapid drop in water pH toward acidic conditions due to dissolved CO2 released at higher temperatures",
+      "Permanent eutrophication triggered by added thermal energy accelerating algal photosynthesis"
+    ],
+    "answer": "A",
+    "hints": ["Warm water holds less dissolved oxygen — this is the primary direct physical consequence of thermal pollution."]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.04",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sequence correctly describes how excess nutrients from agricultural runoff produce a hypoxic zone in a coastal estuary?",
+    "choices": [
+      "Excess nutrients → fish population explosion → intense fish respiration depletes oxygen → DO crashes",
+      "Excess nutrients → algal bloom → algae produce extra oxygen → dissolved oxygen spikes, harming saltwater species",
+      "Excess nutrients → algal bloom → algae die and sink → aerobic bacteria decompose biomass → oxygen consumed faster than it is replenished → hypoxic dead zone forms",
+      "Excess nutrients → precipitation of calcium phosphate minerals → sediment clouds the water → photosynthesis halts → algae die of light deprivation"
+    ],
+    "answer": "C",
+    "hints": ["The oxygen crash happens during decomposition of dead algal biomass, not during the bloom itself — bacteria do the damage."]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.05",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The large seasonal hypoxic zone (dead zone) in the northern Gulf of Mexico is primarily caused by:",
+    "choices": [
+      "Chronic crude-oil spills from offshore drilling platforms releasing toxins fatal to marine life",
+      "Nitrogen and phosphorus from Midwestern agricultural fertilizers carried down the Mississippi River, fueling algal blooms whose decomposition depletes bottom-water oxygen",
+      "Warm Caribbean surface currents that push naturally oxygen-depleted tropical water onto the continental shelf",
+      "Industrial thermal discharges from petrochemical refineries concentrated along the Louisiana coastline"
+    ],
+    "answer": "B",
+    "hints": ["Follow the nutrient pathway: farm fertilizers → river drainage → Gulf → algal bloom → decomposition → hypoxia."]
+  },
+  {
+    "id": "apenvsci.eutrophication-thermal.mcq.06",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Scientists determine that phosphorus from lawn fertilizers is the single limiting nutrient driving summer algal blooms in a local lake. A municipal government wants to address the root cause rather than treat symptoms. Which intervention would be MOST effective?",
+    "choices": [
+      "Restrict or ban phosphorus in residential and commercial fertilizers and require vegetated riparian buffer strips to intercept phosphorus-laden runoff before it reaches the lake",
+      "Stock the lake with herbivorous fish such as grass carp to consume algae during peak bloom periods",
+      "Install floating aerators throughout the lake to maintain dissolved oxygen levels during algal die-off events",
+      "Drain the lake every five years and allow it to refill naturally with rainwater to dilute accumulated nutrients"
+    ],
+    "answer": "A",
+    "hints": ["Root-cause solutions eliminate the nutrient input at the source; symptomatic treatments manage blooms after they have already formed."]
+  },
+  {
+    "id": "apenvsci.solid-waste.mcq.01",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the solid-waste management hierarchy, which strategy has the highest environmental priority?",
+    "choices": [
+      "Recovering energy by incinerating waste in a waste-to-energy facility",
+      "Reducing the total amount of waste generated at the source",
+      "Sorting and sending materials to recycling facilities",
+      "Composting organic food scraps and yard waste on-site"
+    ],
+    "answer": "B",
+    "hints": ["The hierarchy in descending priority is: Reduce → Reuse → Recycle → Recover energy → Dispose. Source reduction always comes first."]
+  },
+  {
+    "id": "apenvsci.solid-waste.mcq.02",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Modern sanitary landfills minimize groundwater contamination primarily through:",
+    "choices": [
+      "A composite liner system — compacted clay beneath high-density polyethylene — combined with a leachate collection and removal network below the waste cells",
+      "Chemically treating all incoming waste with disinfectants before burial",
+      "Compacting waste into dense bales that prevent any liquid from forming",
+      "Covering each day's waste with a thick clean-soil layer that naturally filters leachate before it reaches the water table"
+    ],
+    "answer": "A",
+    "hints": ["The liner prevents leachate from escaping downward; the collection system drains and removes leachate that does form inside the landfill."]
+  },
+  {
+    "id": "apenvsci.solid-waste.mcq.03",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement most accurately describes how landfill gas is produced, and one environmental benefit of capturing it?",
+    "choices": [
+      "Landfill gas forms when rainwater dissolves calcium carbonate in buried concrete; capturing it helps neutralize acid rain precursors",
+      "Landfill gas (primarily methane) is produced by anaerobic bacteria decomposing organic waste; capturing and combusting it generates electricity while preventing the release of a greenhouse gas far more potent than CO2 over a 20-year timeframe",
+      "Landfill gas is mainly CO2 released when buried plastics photodegrade; capturing it reduces photochemical smog formation",
+      "Landfill gas results from inorganic reactions between buried metals; capturing it prevents heavy metals from migrating into leachate"
+    ],
+    "answer": "B",
+    "hints": ["Organic waste plus no oxygen plus bacteria equals methane. Burning methane for energy converts it to CO2, which is much less potent as a greenhouse gas."]
+  },
+  {
+    "id": "apenvsci.solid-waste.numeric.01",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A city generates 250,000 metric tons of municipal solid waste in one year. Of this total, 65,000 metric tons are recycled and 35,000 metric tons are composted; the remainder goes to a landfill. What is the city's waste diversion rate, expressed as a whole-number percentage?",
+    "answer": "40",
+    "hints": [
+      "Diversion rate = (mass diverted from landfill) divided by (total waste generated), multiplied by 100%.",
+      "Total diverted = recycled plus composted = 100,000 metric tons out of 250,000."
+    ]
+  },
+  {
+    "id": "apenvsci.solid-waste.mcq.04",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Electronic waste (e-waste) such as discarded smartphones, computers, and televisions is classified as hazardous waste primarily because these devices contain:",
+    "choices": [
+      "Radioactive isotopes that continuously emit ionizing radiation, posing acute risks to landfill workers",
+      "Synthetic polymers that hydrolyze in landfill moisture to form strongly alkaline leachate",
+      "High concentrations of agricultural persistent organic pollutants identical to DDT or PCBs",
+      "Toxic heavy metals — including lead, mercury, and cadmium — that can leach from landfills into soil and groundwater"
+    ],
+    "answer": "D",
+    "hints": ["Think about the solder joints, batteries, and display screens inside electronics — all contain heavy metals that become hazardous when landfilled."]
+  },
+  {
+    "id": "apenvsci.solid-waste.mcq.05",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An industrial facility generates three waste streams: used motor oil, spent lead-acid batteries, and clean cardboard packaging. Under RCRA and the solid-waste management hierarchy, which approach best manages the hazardous components of this waste stream?",
+    "choices": [
+      "Co-incinerate all three streams together in a high-temperature combustion unit to maximize volume reduction and energy recovery",
+      "Dispose of all waste in a permitted RCRA Subtitle D sanitary landfill that meets federal composite-liner standards",
+      "Prioritize reclamation and recycling for the hazardous components — re-refine used oil into base lubricant and send spent batteries to a licensed lead smelter — before any residuals undergo properly licensed disposal",
+      "Export the used oil and spent batteries to a trading partner with lower-cost disposal regulations"
+    ],
+    "answer": "C",
+    "hints": [
+      "RCRA Subtitle C governs hazardous waste and favors treatment and recycling over disposal to reduce toxicity and volume.",
+      "Exporting hazardous waste to avoid domestic regulation is prohibited under the Basel Convention and U.S. export rules."
+    ]
+  }
+]

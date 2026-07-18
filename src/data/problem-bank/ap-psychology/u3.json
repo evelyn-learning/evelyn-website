@@ -1,0 +1,680 @@
+[
+  {
+    "id": "appsych.developmental-themes-methods.mcq.01",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher follows the same group of children from age 2 to age 18, testing their cognitive skills every two years. This research design is best described as a:",
+    "choices": [
+      "Cross-sectional study",
+      "Longitudinal study",
+      "Case study",
+      "Meta-analysis"
+    ],
+    "answer": "B",
+    "hints": ["Ask whether the same individuals are tested repeatedly or different age groups are compared at one point in time."]
+  },
+  {
+    "id": "appsych.developmental-themes-methods.mcq.02",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To study how memory changes with age, a researcher tests three separate groups — 20-year-olds, 40-year-olds, and 60-year-olds — on the same day using the same memory tasks. This design is called a:",
+    "choices": [
+      "Longitudinal study",
+      "Cross-sequential study",
+      "Cross-sectional study",
+      "Naturalistic observation"
+    ],
+    "answer": "C",
+    "hints": ["The key feature is comparing different age groups tested at a single point in time."]
+  },
+  {
+    "id": "appsych.developmental-themes-methods.mcq.03",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cross-sectional study compares adults born in the 1950s with adults born in the 1990s and finds the younger cohort performs significantly better on technology-related tasks. The most significant threat to concluding that age itself caused this difference is:",
+    "choices": [
+      "Experimenter bias in scoring the technology tasks",
+      "Cohort effects, because the two groups grew up in different cultural and technological environments",
+      "Order effects from repeated testing",
+      "Regression to the mean over time"
+    ],
+    "answer": "B",
+    "hints": ["Consider whether differences between age groups in a cross-sectional study might reflect era of birth rather than the aging process itself."]
+  },
+  {
+    "id": "appsych.developmental-themes-methods.mcq.04",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which developmental theorist argued most strongly that cognitive development proceeds through discrete, qualitatively distinct stages — meaning the kind of thinking changes, not just the amount — rather than as a smooth, continuous process?",
+    "choices": [
+      "Vygotsky",
+      "Bandura",
+      "Piaget",
+      "Skinner"
+    ],
+    "answer": "C",
+    "hints": ["This theorist described four universal stages including sensorimotor and formal operational thinking."]
+  },
+  {
+    "id": "appsych.developmental-themes-methods.mcq.05",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers find that identical twins raised in separate households tend to have more similar IQ scores than fraternal twins raised together. This finding most directly supports which developmental theme?",
+    "choices": [
+      "Environmental factors are the primary determinant of intelligence",
+      "Genetic factors contribute substantially to intellectual development",
+      "Shared family environments are more influential than genes",
+      "Cognitive development is entirely the result of continuous reinforcement"
+    ],
+    "answer": "B",
+    "hints": ["Identical twins share 100% of their DNA; fraternal twins share about 50%."]
+  },
+  {
+    "id": "appsych.developmental-themes-methods.mcq.06",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A developmental psychologist plans to track the same group of infants through adolescence. Compared to a cross-sectional design, her longitudinal plan has which combination of advantage and disadvantage?",
+    "choices": [
+      "Advantage: cheaper and faster to conduct; disadvantage: confounds age with generation (cohort)",
+      "Advantage: eliminates cohort effects by following the same individuals; disadvantage: takes many years and risks participant dropout (attrition)",
+      "Advantage: tests many age groups simultaneously; disadvantage: lacks ecological validity",
+      "Advantage: controls for experimenter bias; disadvantage: produces only qualitative case-study data"
+    ],
+    "answer": "B",
+    "hints": ["Longitudinal designs avoid the cohort-effects problem of cross-sectional studies, but they are costly in time and susceptible to attrition."]
+  },
+
+  {
+    "id": "appsych.cognitive-development.mcq.01",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A toddler watches her parent hide a ball under a blanket, then successfully lifts the blanket to retrieve the ball, demonstrating she understands the ball still exists even when she cannot see it. This cognitive milestone is called:",
+    "choices": [
+      "Conservation",
+      "Object permanence",
+      "Egocentrism",
+      "Symbolic thought"
+    ],
+    "answer": "B",
+    "hints": ["This concept is mastered during Piaget's sensorimotor stage."]
+  },
+  {
+    "id": "appsych.cognitive-development.mcq.02",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A child watches a researcher pour water from a wide, short glass into a tall, narrow glass. The child says the tall glass now has more water because 'it looks taller,' even though no water was added or removed. According to Piaget, this child is most likely in the:",
+    "choices": [
+      "Sensorimotor stage",
+      "Preoperational stage",
+      "Concrete operational stage",
+      "Formal operational stage"
+    ],
+    "answer": "B",
+    "hints": ["Inability to conserve volume is a hallmark of children aged roughly 2 to 7."]
+  },
+  {
+    "id": "appsych.cognitive-development.mcq.03",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fourth-grader can solve two-digit multiplication problems independently, but can only solve three-digit problems with guidance from her teacher. The tasks she can accomplish only with assistance best represent Vygotsky's concept of the:",
+    "choices": [
+      "Zone of proximal development",
+      "Concrete operational boundary",
+      "Scaffolding ceiling",
+      "Object permanence threshold"
+    ],
+    "answer": "A",
+    "hints": ["Vygotsky defined this zone as the gap between what a learner can do alone and what they can do with support."]
+  },
+  {
+    "id": "appsych.cognitive-development.mcq.04",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following tasks most clearly requires the kind of abstract, hypothetical-deductive reasoning that Piaget associated with the formal operational stage?",
+    "choices": [
+      "Sorting colored blocks into groups by shape",
+      "Understanding that a flattened ball of clay weighs the same as the original round ball",
+      "Systematically testing every possible combination of variables to identify which one causes a chemical reaction",
+      "Searching for a toy hidden beneath a blanket"
+    ],
+    "answer": "C",
+    "hints": ["Formal operational thinking involves reasoning about possibilities and systematically isolating variables."]
+  },
+  {
+    "id": "appsych.cognitive-development.mcq.05",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Piaget's three-mountains task, a preoperational child is shown a three-dimensional model of mountains and asked what a doll sitting on the opposite side of the model would see. The child consistently describes only her own view. This demonstrates:",
+    "choices": [
+      "Animism — attributing life to inanimate objects",
+      "Egocentrism — difficulty taking another person's perspective",
+      "Failure of conservation",
+      "Irreversibility — inability to mentally reverse an action"
+    ],
+    "answer": "B",
+    "hints": ["Egocentrism in Piaget's usage means the child cannot easily adopt a viewpoint other than her own."]
+  },
+  {
+    "id": "appsych.cognitive-development.mcq.06",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Piaget viewed cognitive development as driven primarily by internal biological maturation and the child's own active discovery (assimilation and accommodation). Vygotsky's theory most directly challenges this view by emphasizing that:",
+    "choices": [
+      "Unconscious psychosexual conflicts are the true engine of cognitive change",
+      "Social interaction, language, and culturally mediated instruction are key drivers of cognitive growth",
+      "Operant reinforcement schedules shape all cognitive development",
+      "Cognitive stages are fixed by biology and cannot be accelerated by any social experience"
+    ],
+    "answer": "B",
+    "hints": ["Vygotsky stressed that learning is a social and cultural process, not solely an individual one."]
+  },
+
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.01",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best captures the distinction psychologists draw between biological sex and gender?",
+    "choices": [
+      "Biological sex refers to chromosomal makeup, while gender refers only to hormonal levels",
+      "Biological sex refers to chromosomes, gonads, and anatomy, while gender refers to a person's internal sense of being male, female, or another identity",
+      "Biological sex is determined at puberty, while gender is assigned at birth",
+      "Biological sex reflects emotional sensitivity, while gender reflects physical strength"
+    ],
+    "answer": "B",
+    "hints": ["Sex is a biological classification; gender is a psychological and social identity."]
+  },
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.02",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 5-year-old boy refuses to play with a doll, saying 'that's for girls.' According to social learning theory, this gender-typed behavior most likely developed through:",
+    "choices": [
+      "Testosterone-driven aggression suppressing nurturing behavior",
+      "Observation of social models and reinforcement of gender-conforming behavior",
+      "Piaget's concrete operational stage requiring rule-following",
+      "A secure attachment bond with his primary caregiver"
+    ],
+    "answer": "B",
+    "hints": ["Social learning theory emphasizes modeling and the rewards and punishments children receive for imitating gender-typical behavior."]
+  },
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.03",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Contemporary psychological research most consistently indicates that sexual orientation is best understood as:",
+    "choices": [
+      "A purely voluntary choice that individuals make during adolescence",
+      "A dimension that exists along a continuum, influenced by a complex interplay of biological and environmental factors",
+      "Determined solely by hormone levels at the onset of puberty",
+      "A product of poor parenting or unresolved childhood trauma"
+    ],
+    "answer": "B",
+    "hints": ["Research points to multiple contributing factors — genetic, hormonal, and experiential — rather than a single cause."]
+  },
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.04",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mariana was assigned female at birth but, from early childhood, consistently and persistently identified as male regardless of parental and cultural expectations. The term that best describes Mariana's experience is that Mariana:",
+    "choices": [
+      "Is displaying only gender role nonconformity that is typical of young children",
+      "Has a gender identity that does not align with the sex assigned at birth, an experience sometimes described as being transgender",
+      "Is experiencing sexual orientation confusion typical of early adolescence",
+      "Exhibits hysteria, as described in early psychoanalytic theory"
+    ],
+    "answer": "B",
+    "hints": ["Distinguish gender identity (one's internal sense of gender) from gender role nonconformity and from sexual orientation."]
+  },
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.05",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Twin studies examining the biological basis of sexual orientation have generally found which of the following?",
+    "choices": [
+      "Identical twins show a 100% concordance rate for sexual orientation, proving complete genetic determination",
+      "Concordance rates for sexual orientation are higher for identical twins than for fraternal twins, suggesting a genetic contribution that is real but not absolute",
+      "Postnatal socialization is the sole determinant of sexual orientation, as twin concordance rates are near zero",
+      "Brain structure differences fully account for all variation in sexual orientation across individuals"
+    ],
+    "answer": "B",
+    "hints": ["If genes were the only factor, identical twins would show 100% concordance; partial concordance implies both genetic and non-genetic influences."]
+  },
+  {
+    "id": "appsych.gender-sexual-orientation.mcq.06",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher claims gender differences in toy preferences are entirely caused by socialization, citing evidence that parents purchase more gender-typical toys for their children. A psychologist who favors a biopsychosocial model would most likely counter that:",
+    "choices": [
+      "Socialization has absolutely no role; only chromosomes determine toy preferences",
+      "Gender differences in toy preference disappear entirely when children are raised without any gendered input",
+      "Biological predispositions may shape both children's initial preferences and parents' purchasing decisions, making it difficult to isolate socialization as the sole cause",
+      "The biopsychosocial model applies only to psychological disorders, not to typical developmental differences"
+    ],
+    "answer": "C",
+    "hints": ["The biopsychosocial model acknowledges bidirectional effects: biology can influence social behavior, and social factors can influence biology."]
+  },
+
+  {
+    "id": "appsych.social-emotional-moral.mcq.01",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Erikson's theory of psychosocial development, the central conflict of the first year of life — in which infants learn whether the world is a safe and reliable place — is:",
+    "choices": [
+      "Autonomy versus shame and doubt",
+      "Trust versus mistrust",
+      "Industry versus inferiority",
+      "Identity versus role confusion"
+    ],
+    "answer": "B",
+    "hints": ["This is the very first of Erikson's eight stages, associated with infancy."]
+  },
+  {
+    "id": "appsych.social-emotional-moral.mcq.02",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Harlow's famous experiments with infant rhesus monkeys, the monkeys spent the vast majority of their time clinging to the soft, cloth-covered surrogate 'mother' rather than the wire surrogate that provided milk. This finding most directly supports the idea that:",
+    "choices": [
+      "Attachment is formed primarily with whoever provides nourishment",
+      "Contact comfort — physical warmth and softness — is a critical factor in the formation of attachment",
+      "Infant monkeys prefer visual stimulation over any form of tactile stimulation",
+      "Attachment behavior is entirely explained by operant conditioning"
+    ],
+    "answer": "B",
+    "hints": ["Harlow's work challenged the drive-reduction view that attachment is simply learned by association with food."]
+  },
+  {
+    "id": "appsych.social-emotional-moral.mcq.03",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Ainsworth's Strange Situation procedure, an 18-month-old shows distress when his mother leaves the room, but when she returns he runs to her, is quickly comforted, and soon returns to playing with toys. This child most likely displays which attachment style?",
+    "choices": [
+      "Anxious-ambivalent attachment",
+      "Avoidant attachment",
+      "Secure attachment",
+      "Disorganized attachment"
+    ],
+    "answer": "C",
+    "hints": ["Securely attached children use the caregiver as a safe base and are easily comforted upon reunion."]
+  },
+  {
+    "id": "appsych.social-emotional-moral.mcq.04",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A teenager decides not to shoplift a video game because she is afraid of being caught and receiving a punishment from the store owner. According to Kohlberg's theory, her reasoning best reflects which stage of moral development?",
+    "choices": [
+      "Postconventional — social contract and individual rights",
+      "Conventional — law and order orientation",
+      "Preconventional — punishment and obedience orientation",
+      "Conventional — interpersonal concordance ('good boy/good girl')"
+    ],
+    "answer": "C",
+    "hints": ["The preconventional level is driven by self-interest: avoiding punishment or gaining rewards, not by social rules or principles."]
+  },
+  {
+    "id": "appsych.social-emotional-moral.mcq.05",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Research on Baumrind's parenting styles consistently finds that children raised with which style tend to show the highest levels of social competence, self-esteem, and academic achievement?",
+    "choices": [
+      "Authoritarian parenting",
+      "Permissive parenting",
+      "Uninvolved parenting",
+      "Authoritative parenting"
+    ],
+    "answer": "D",
+    "hints": ["Authoritative parents combine warmth and responsiveness with clear expectations and consistent boundaries."]
+  },
+  {
+    "id": "appsych.social-emotional-moral.mcq.06",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A 17-year-old tries on different social roles, questions her values, experiments with career ideas, and eventually arrives at a stable, coherent sense of who she is. According to Erikson, she has successfully resolved which psychosocial conflict?",
+    "choices": [
+      "Intimacy versus isolation",
+      "Identity versus role confusion",
+      "Industry versus inferiority",
+      "Generativity versus stagnation"
+    ],
+    "answer": "B",
+    "hints": ["Erikson placed this conflict squarely in adolescence; failure leads to role confusion or a diffuse sense of self."]
+  },
+
+  {
+    "id": "appsych.classical-conditioning.mcq.01",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In Pavlov's original experiments, a tone was repeatedly paired with food powder until the dog salivated in response to the tone alone. At that point, salivation in response to the tone is called the:",
+    "choices": [
+      "Unconditioned response",
+      "Unconditioned stimulus",
+      "Conditioned response",
+      "Conditioned stimulus"
+    ],
+    "answer": "C",
+    "hints": ["The conditioned response is a learned reaction to a previously neutral stimulus."]
+  },
+  {
+    "id": "appsych.classical-conditioning.mcq.02",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A child is stung by a bee while playing near a flower bed. The sting is extremely painful. Afterward, the child feels anxious and distressed whenever she sees flowers, even with no bee present. In this example, what is the conditioned stimulus (CS)?",
+    "choices": [
+      "The pain of the bee sting",
+      "The anxiety felt immediately after being stung",
+      "The sight of the flowers",
+      "Playing outside"
+    ],
+    "answer": "C",
+    "hints": ["The CS is originally neutral but acquires the power to elicit a response after being paired with the unconditioned stimulus."]
+  },
+  {
+    "id": "appsych.classical-conditioning.mcq.03",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dog has been conditioned to salivate to the sound of a bell. The bell is then presented many times without food until the dog no longer salivates. The following day, the dog is presented with the bell again and briefly salivates before stopping. This brief return of the conditioned response is called:",
+    "choices": [
+      "Higher-order conditioning",
+      "Reconditioning",
+      "Stimulus generalization",
+      "Spontaneous recovery"
+    ],
+    "answer": "D",
+    "hints": ["Extinction does not permanently erase a conditioned association — the response can reappear after a rest period."]
+  },
+  {
+    "id": "appsych.classical-conditioning.mcq.04",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Inspired by Watson's Little Albert study, a child conditioned to fear a white rat also shows fear toward a white rabbit and a cotton ball, but shows no fear response toward wooden building blocks. The fear of the rabbit and cotton ball illustrates _______, while the absence of fear toward the blocks illustrates _______.",
+    "choices": [
+      "Extinction; spontaneous recovery",
+      "Stimulus generalization; stimulus discrimination",
+      "Higher-order conditioning; extinction",
+      "Spontaneous recovery; reconditioning"
+    ],
+    "answer": "B",
+    "hints": ["Generalization = responding to stimuli similar to the CS; discrimination = NOT responding to stimuli that differ from the CS."]
+  },
+  {
+    "id": "appsych.classical-conditioning.mcq.05",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a severe case of food poisoning caused by eating shrimp, a person now feels nauseated every time she sees or smells shrimp, even though the shrimp itself is no longer contaminated. Which pairing CORRECTLY identifies the conditioned stimulus and conditioned response?",
+    "choices": [
+      "CS = the original illness; CR = the sight of shrimp",
+      "CS = the sight or smell of shrimp; CR = nausea elicited by the sight or smell of shrimp",
+      "CS = nausea; CR = the sight of shrimp",
+      "CS = the original illness; CR = nausea during the illness"
+    ],
+    "answer": "B",
+    "hints": ["The CS was neutral (shrimp) before it was paired with the US (illness). The CR is the same class of response as the UR, now triggered by the CS."]
+  },
+  {
+    "id": "appsych.classical-conditioning.mcq.06",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A trainer first conditions a dog to salivate in response to a bell (CS1 paired with food). The trainer then pairs the bell (CS1) with a flashing light (CS2) until the dog salivates to the flashing light alone — even though the light was never directly paired with food. This process demonstrates:",
+    "choices": [
+      "Stimulus generalization from the bell to the light",
+      "Latent learning through passive exposure",
+      "Higher-order (second-order) conditioning",
+      "Operant shaping through successive approximations"
+    ],
+    "answer": "C",
+    "hints": ["In higher-order conditioning, an established CS is used as if it were a US to condition a new neutral stimulus."]
+  },
+
+  {
+    "id": "appsych.operant-conditioning.mcq.01",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In operant conditioning, any consequence that follows a behavior and increases the probability that the behavior will occur again in the future is called a:",
+    "choices": [
+      "Punisher",
+      "Reinforcer",
+      "Discriminative stimulus",
+      "Conditioned suppressor"
+    ],
+    "answer": "B",
+    "hints": ["The defining feature of reinforcement is that it strengthens (increases the frequency of) the behavior it follows."]
+  },
+  {
+    "id": "appsych.operant-conditioning.mcq.02",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student studies diligently every night specifically to eliminate the anxious feeling she gets when she feels unprepared for class. Because her studying removes an unpleasant internal state, her studying behavior is maintained by:",
+    "choices": [
+      "Positive reinforcement — she receives praise and approval from her teacher",
+      "Negative reinforcement — studying removes the aversive feeling of anxiety, increasing the likelihood of studying",
+      "Positive punishment — the anxiety is an aversive event added after insufficient studying",
+      "Negative punishment — privileges are removed whenever she fails to study"
+    ],
+    "answer": "B",
+    "hints": ["Negative reinforcement INCREASES behavior by removing something aversive — it is not a form of punishment."]
+  },
+  {
+    "id": "appsych.operant-conditioning.mcq.03",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A factory worker is paid a bonus for every 50 items she assembles, regardless of how long it takes her. This payment arrangement is an example of which reinforcement schedule?",
+    "choices": [
+      "Fixed-interval",
+      "Variable-ratio",
+      "Fixed-ratio",
+      "Variable-interval"
+    ],
+    "answer": "C",
+    "hints": ["Fixed-ratio schedules deliver reinforcement after a set number of responses — the number never changes."]
+  },
+  {
+    "id": "appsych.operant-conditioning.mcq.04",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A toddler throws a loud tantrum in a grocery store. The parent, desperate to stop the noise, buys the child a candy bar. The tantrum immediately ceases. As a result, the parent buys candy more readily on future shopping trips. Which operant principle BEST explains the change in the PARENT'S behavior?",
+    "choices": [
+      "The child is positively reinforced for tantrums; the parent's behavior is unrelated to operant conditioning",
+      "The parent is negatively reinforced — buying the candy terminates the aversive tantrum, making candy-buying more likely in the future",
+      "The parent is positively punished — the aversive tantrum is added after entering the store, reducing future shopping",
+      "The child is placed on a fixed-interval reinforcement schedule for tantrums"
+    ],
+    "answer": "B",
+    "hints": ["Ask what happens to the parent's behavior (buying candy) and why — is an aversive event being removed?"]
+  },
+  {
+    "id": "appsych.operant-conditioning.mcq.05",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which reinforcement schedule generally produces the highest and most consistent rate of responding and is the most resistant to extinction?",
+    "choices": [
+      "Fixed-ratio",
+      "Fixed-interval",
+      "Variable-ratio",
+      "Variable-interval"
+    ],
+    "answer": "C",
+    "hints": ["Slot machines are a classic example — reinforcement comes after an unpredictable number of responses."]
+  },
+  {
+    "id": "appsych.operant-conditioning.mcq.06",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A marine animal trainer wants to teach a dolphin to leap through a hoop held high above the water. Because the dolphin never spontaneously does this, the trainer first rewards any upward movement, then only leaps that reach knee height, then only leaps at waist height, and so on until the full behavior is achieved. This technique is called:",
+    "choices": [
+      "Classical conditioning through stimulus pairing",
+      "Shaping through successive approximations",
+      "Negative punishment to eliminate low leaps",
+      "Latent learning through passive observation"
+    ],
+    "answer": "B",
+    "hints": ["Shaping reinforces behaviors that are progressively closer to the desired target behavior."]
+  },
+
+  {
+    "id": "appsych.observational-learning.mcq.01",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Learning that occurs by watching the actions of others and observing the consequences those others experience — without direct personal experience of those consequences — is called:",
+    "choices": [
+      "Classical conditioning",
+      "Latent learning",
+      "Observational (social) learning",
+      "Operant conditioning"
+    ],
+    "answer": "C",
+    "hints": ["Albert Bandura is the theorist most closely associated with this form of learning."]
+  },
+  {
+    "id": "appsych.observational-learning.mcq.02",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Bandura's Bobo doll experiments, children who watched an adult model physically and verbally attack an inflatable Bobo doll later:",
+    "choices": [
+      "Showed decreased aggression toward the doll due to vicarious catharsis",
+      "Showed no change in aggression because young children cannot learn through observation alone",
+      "Showed increased aggression toward the doll, demonstrating that aggressive behavior can be acquired through modeling",
+      "Showed increased aggression only when the model was visibly punished for the attacks"
+    ],
+    "answer": "C",
+    "hints": ["The Bobo doll studies were landmark evidence that children learn novel behaviors simply by watching others perform them."]
+  },
+  {
+    "id": "appsych.observational-learning.mcq.03",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A new employee notices that colleagues who regularly stay late at the office receive public praise and a bonus from the manager. Without ever receiving praise herself, she begins staying late more often. Her behavior change best illustrates:",
+    "choices": [
+      "Negative reinforcement — staying late removes the anxiety of falling behind",
+      "Vicarious reinforcement — she observed others being rewarded, which increased her own similar behavior",
+      "Shaping through successive approximations",
+      "A variable-interval reinforcement schedule"
+    ],
+    "answer": "B",
+    "hints": ["Vicarious reinforcement occurs when observing another person receive a reward increases the observer's tendency to perform the same behavior."]
+  },
+  {
+    "id": "appsych.observational-learning.mcq.04",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bandura described four cognitive processes required for observational learning. Which process ensures that an observer is able to reproduce a modeled behavior at a later time, even if they do not immediately perform it after watching?",
+    "choices": [
+      "Attention — focusing on the model's actions during the observation",
+      "Motivation — having an incentive or desire to reproduce the behavior",
+      "Retention — encoding the observed behavior into memory so it can be retrieved later",
+      "Reproduction — the physical ability to perform the behavior"
+    ],
+    "answer": "C",
+    "hints": ["Without storing what you saw, you could not reproduce it hours or days later."]
+  },
+  {
+    "id": "appsych.observational-learning.mcq.05",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Tolman allowed one group of rats to explore a maze freely for several days without receiving any food reward. When food was later placed at the goal box, these rats navigated the maze as efficiently as rats that had been rewarded on every previous trial. Tolman used this finding to argue for the concept of:",
+    "choices": [
+      "Shaping — the rats were approximating the goal behavior through reinforced steps",
+      "Stimulus generalization from prior maze experience",
+      "Latent learning — the rats formed a cognitive map of the maze without any external reinforcement",
+      "Higher-order classical conditioning"
+    ],
+    "answer": "C",
+    "hints": ["'Latent' means hidden — the learning had occurred but was not expressed until there was a reason to use it."]
+  },
+  {
+    "id": "appsych.observational-learning.mcq.06",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A school publicly announces the suspension of a student caught cheating on an exam, hoping that other students who learn about this outcome will be less inclined to cheat themselves. The intended deterrent effect relies most directly on which principle of observational learning?",
+    "choices": [
+      "Vicarious reinforcement — students observe a peer being rewarded for honesty",
+      "Latent learning — students passively absorb the school's values without direct instruction",
+      "Stimulus discrimination — students learn to distinguish cheating from legitimate studying",
+      "Vicarious punishment — observing a peer receive a negative consequence reduces observers' own likelihood of performing the same behavior"
+    ],
+    "answer": "D",
+    "hints": ["Vicarious punishment mirrors vicarious reinforcement but in the opposite direction — a modeled consequence that decreases the observer's behavior."]
+  }
+]

@@ -1,0 +1,656 @@
+[
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.01",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The government simultaneously increases spending and the central bank purchases government bonds on the open market. In the short run, what is the most likely combined effect on real output?",
+    "choices": [
+      "Real output increases",
+      "Real output decreases",
+      "The effect on real output is indeterminate",
+      "Real output is unaffected"
+    ],
+    "answer": "A",
+    "hints": ["Both policies are expansionary — they reinforce each other's rightward shift of aggregate demand."]
+  },
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.02",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The government reduces spending and the central bank raises the required reserve ratio. Which of the following outcomes is most certain in the short run?",
+    "choices": [
+      "Interest rates fall",
+      "The price level falls",
+      "Real output rises",
+      "Unemployment decreases"
+    ],
+    "answer": "B",
+    "hints": ["Both policies are contractionary, reinforcing each other's downward pressure on aggregate demand and the price level."]
+  },
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.03",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Congress enacts a large tax cut (expansionary fiscal policy) while the central bank simultaneously sells bonds on the open market (contractionary monetary policy). Which macroeconomic variable has a DETERMINATE direction of change?",
+    "choices": [
+      "Real output",
+      "The price level",
+      "The nominal interest rate",
+      "Unemployment"
+    ],
+    "answer": "C",
+    "hints": ["Expansionary fiscal policy raises government borrowing, putting upward pressure on interest rates. Contractionary monetary policy shrinks the money supply, also pushing interest rates up."]
+  },
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.04",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The government cuts spending (contractionary fiscal policy) while the central bank lowers its target interest rate (expansionary monetary policy). Which of the following is the most certain outcome of this policy combination?",
+    "choices": [
+      "The price level rises",
+      "Real output rises",
+      "Real output falls",
+      "The interest rate falls"
+    ],
+    "answer": "D",
+    "hints": ["Fiscal contraction reduces government borrowing demand; expansionary monetary policy increases the money supply — both forces push interest rates downward."]
+  },
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.05",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Expansionary fiscal policy and contractionary monetary policy of roughly equal strength are applied at the same time. Which of the following best describes the effect on real GDP?",
+    "choices": [
+      "The effect on real GDP is indeterminate",
+      "Real GDP definitely rises",
+      "Real GDP definitely falls",
+      "Real GDP returns exactly to its potential level"
+    ],
+    "answer": "A",
+    "hints": ["The two policies push aggregate demand in opposite directions; the net effect on output depends on which force is stronger."]
+  },
+  {
+    "id": "apmacro.fiscal-monetary-short-run.mcq.06",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The government pursues expansionary fiscal policy at the same time the central bank pursues expansionary monetary policy. In the short run, what happens to real output and the nominal interest rate?",
+    "choices": [
+      "Real output rises, and the effect on the nominal interest rate is indeterminate",
+      "Real output falls, and the nominal interest rate rises",
+      "Real output rises, and the nominal interest rate must rise",
+      "Real output falls, and the nominal interest rate must fall"
+    ],
+    "answer": "A",
+    "hints": ["Both policies increase aggregate demand, so short-run real output rises.", "Expansionary fiscal policy pushes the interest rate up while expansionary monetary policy pushes it down, so the net effect on the nominal interest rate is indeterminate."]
+  },
+
+  {
+    "id": "apmacro.phillips-curve.mcq.01",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The short-run Phillips curve illustrates a tradeoff between which two macroeconomic variables?",
+    "choices": [
+      "Real output and private investment",
+      "Savings and real interest rates",
+      "The money supply and the price level",
+      "The inflation rate and the unemployment rate"
+    ],
+    "answer": "D",
+    "hints": ["The curve was originally derived by comparing wage inflation to unemployment rates across business cycles."]
+  },
+  {
+    "id": "apmacro.phillips-curve.mcq.02",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When the central bank adopts expansionary monetary policy and the economy moves along a stable short-run Phillips curve, what happens to inflation and unemployment?",
+    "choices": [
+      "Inflation rises and unemployment falls",
+      "Inflation falls and unemployment falls",
+      "Inflation rises and unemployment rises",
+      "Both inflation and unemployment remain unchanged"
+    ],
+    "answer": "A",
+    "hints": ["Moving along the SRPC toward lower unemployment corresponds to higher inflation — the classic short-run tradeoff."]
+  },
+  {
+    "id": "apmacro.phillips-curve.mcq.03",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The long-run Phillips curve (LRPC) is vertical at which point?",
+    "choices": [
+      "The natural rate of unemployment",
+      "Zero percent inflation",
+      "Any positive unemployment rate above frictional unemployment",
+      "The actual unemployment rate observed in the current period"
+    ],
+    "answer": "A",
+    "hints": ["In the long run, monetary policy cannot permanently lower unemployment below its natural rate — the LRPC is a vertical line at that rate."]
+  },
+  {
+    "id": "apmacro.phillips-curve.mcq.04",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sudden large increase in oil prices reduces aggregate supply throughout the economy. On a Phillips curve diagram, this negative supply shock most likely causes the short-run Phillips curve to:",
+    "choices": [
+      "Remain stationary; the economy simply moves along the existing curve",
+      "Shift downward, producing lower inflation at every unemployment rate",
+      "Shift rightward (upward), producing higher unemployment AND higher inflation — stagflation",
+      "Shift leftward, producing lower unemployment at every inflation rate"
+    ],
+    "answer": "C",
+    "hints": ["A negative supply shock raises costs and lowers output simultaneously, worsening both inflation and unemployment — an outward shift of the SRPC."]
+  },
+  {
+    "id": "apmacro.phillips-curve.mcq.05",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If workers and firms revise their expected inflation rate upward, the short-run Phillips curve will:",
+    "choices": [
+      "Shift downward (leftward), reducing inflation at every unemployment rate",
+      "Shift upward (rightward), increasing inflation at every unemployment rate",
+      "Become steeper but not shift",
+      "Become flatter but not shift"
+    ],
+    "answer": "B",
+    "hints": ["Higher inflation expectations raise wage demands and input costs, shifting the SRPC upward — the same unemployment rate now corresponds to higher actual inflation."]
+  },
+  {
+    "id": "apmacro.phillips-curve.mcq.06",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy is experiencing unemployment above its natural rate and actual inflation below workers' expected inflation. According to the expectations-augmented Phillips curve model, what happens in the long run if no new policy is implemented?",
+    "choices": [
+      "The economy remains stuck at high unemployment indefinitely",
+      "The SRPC shifts rightward, worsening stagflation",
+      "The central bank must intervene to restore the natural rate",
+      "Workers revise expected inflation downward; the SRPC shifts downward and the economy gradually returns to the natural rate with lower inflation"
+    ],
+    "answer": "D",
+    "hints": ["When actual inflation persistently falls short of expectations, workers reduce wage demands, lowering expected inflation and shifting the SRPC down until unemployment returns to its natural rate."]
+  },
+
+  {
+    "id": "apmacro.money-growth-inflation.mcq.01",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the quantity theory of money, $MV = PQ$, if the money supply doubles while velocity and real output remain constant, what happens to the price level?",
+    "choices": [
+      "Real output doubles",
+      "Velocity doubles",
+      "The price level is cut in half",
+      "The price level doubles"
+    ],
+    "answer": "D",
+    "hints": ["With V and Q fixed, P must change proportionally with M: doubling M doubles P."]
+  },
+  {
+    "id": "apmacro.money-growth-inflation.mcq.02",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the long run, an increase in the money supply leads to which outcome?",
+    "choices": [
+      "An increase in the price level but no change in real variables such as real GDP or real wages",
+      "Higher real GDP due to the sustained increase in spending",
+      "Permanently lower real interest rates",
+      "An increase in both the price level and long-run real output"
+    ],
+    "answer": "A",
+    "hints": ["Money is neutral in the long run: it changes nominal values but not real quantities like output, employment, or real wages."]
+  },
+  {
+    "id": "apmacro.money-growth-inflation.numeric.01",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a simple economy, the money supply is 250 billion dollars, the price level is 4, and real output is 500 billion dollars. Using the quantity theory of money ($MV = PQ$), what is the velocity of money?",
+    "answer": "8",
+    "hints": ["Solve for V: $V = PQ / M$. Compute PQ first, then divide by M."]
+  },
+  {
+    "id": "apmacro.money-growth-inflation.mcq.03",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "According to the quantity theory of money, if the money supply grows at 10% per year, real GDP grows at 2% per year, and velocity is stable, the approximate annual inflation rate is:",
+    "choices": [
+      "10%",
+      "2%",
+      "12%",
+      "8%"
+    ],
+    "answer": "D",
+    "hints": ["With V fixed, $MV = PQ$ implies: % change in M = % change in P + % change in Q, so inflation ≈ 10% − 2%."]
+  },
+  {
+    "id": "apmacro.money-growth-inflation.numeric.02",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An economy has a money supply of 300 billion dollars, a velocity of 5, and real output of 500 billion dollars. Using the quantity theory of money ($MV = PQ$), what is the price level?",
+    "answer": "3",
+    "hints": ["Solve for P: $P = MV / Q$. First compute MV, then divide by Q."]
+  },
+  {
+    "id": "apmacro.money-growth-inflation.mcq.04",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the short run, an unexpected increase in the money supply can temporarily raise real output. Which of the following best explains why this real effect disappears in the long run?",
+    "choices": [
+      "The central bank eventually reverses the money expansion to restore the original price level",
+      "Prices and wages fully adjust upward, eliminating the real purchasing-power stimulus",
+      "The velocity of money decreases to exactly offset the money increase",
+      "Real GDP falls below its natural level once the initial stimulus ends"
+    ],
+    "answer": "B",
+    "hints": ["In the long run, workers renegotiate nominal wages and firms reset prices upward; real variables return to their pre-shock levels, confirming money neutrality."]
+  },
+
+  {
+    "id": "apmacro.deficits-debt.mcq.01",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following correctly distinguishes the federal budget deficit from the national debt?",
+    "choices": [
+      "The deficit is a stock variable; the national debt is a flow variable",
+      "The deficit is a flow variable (measured per year); the national debt is a stock variable (accumulated over time)",
+      "Both the deficit and the debt are flow variables",
+      "Both the deficit and the debt are stock variables"
+    ],
+    "answer": "B",
+    "hints": ["A surplus or deficit is the difference between revenues and outlays in one fiscal year; debt is the running total of all past deficits minus surpluses."]
+  },
+  {
+    "id": "apmacro.deficits-debt.mcq.02",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the federal government runs a budget surplus in a given year, what happens to the national debt?",
+    "choices": [
+      "The national debt decreases",
+      "The national debt increases",
+      "The national debt remains unchanged because debt is a stock",
+      "The national debt converts from a stock to a flow"
+    ],
+    "answer": "A",
+    "hints": ["A surplus means revenues exceed outlays; the government can use the surplus to retire outstanding debt, reducing the stock of debt."]
+  },
+  {
+    "id": "apmacro.deficits-debt.numeric.01",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "In a given fiscal year, the federal government collects 3,200 billion dollars in tax revenue and spends 4,000 billion dollars in total outlays. What is the budget deficit for that year, in billions of dollars?",
+    "answer": "800",
+    "hints": ["Deficit = total outlays minus total revenues."]
+  },
+  {
+    "id": "apmacro.deficits-debt.mcq.03",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The primary deficit excludes interest payments on the existing national debt. If total outlays are 5,000 billion dollars, interest payments on the debt are 600 billion dollars, and tax revenues are 4,200 billion dollars, which statement is correct?",
+    "choices": [
+      "The total deficit is 800 billion dollars and the primary deficit is 200 billion dollars",
+      "The primary deficit is 800 billion dollars and the total deficit is 200 billion dollars",
+      "Both the total deficit and the primary deficit equal 800 billion dollars",
+      "The primary deficit is 200 billion dollars and the total deficit is 600 billion dollars"
+    ],
+    "answer": "A",
+    "hints": ["Total deficit = 5,000 minus 4,200 = 800 billion dollars. Primary outlays = 5,000 minus 600 = 4,400 billion dollars; primary deficit = 4,400 minus 4,200 = 200 billion dollars."]
+  },
+  {
+    "id": "apmacro.deficits-debt.mcq.04",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Economists often assess long-run fiscal sustainability using the debt-to-GDP ratio. This ratio is stable (not growing over time) when:",
+    "choices": [
+      "The government always runs a balanced budget",
+      "The central bank monetizes all outstanding debt",
+      "The GDP growth rate equals or exceeds the deficit-to-GDP ratio",
+      "Tax revenues exceed interest payments on the debt alone"
+    ],
+    "answer": "C",
+    "hints": ["If the economy grows at least as fast as the deficit-to-GDP ratio, the denominator rises fast enough to keep the ratio from expanding."]
+  },
+  {
+    "id": "apmacro.deficits-debt.mcq.05",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During a recession, the government's budget deficit increases even without any new spending legislation, because tax revenues fall and transfer payments (such as unemployment insurance) rise automatically. The portion of the deficit attributable to these automatic changes is called the:",
+    "choices": [
+      "Structural deficit",
+      "Capital budget deficit",
+      "Primary deficit",
+      "Cyclical deficit"
+    ],
+    "answer": "D",
+    "hints": ["The cyclical deficit reflects the impact of the business cycle on the budget; the structural deficit is what would remain even at full employment."]
+  },
+
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.01",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Crowding out occurs when government borrowing leads to:",
+    "choices": [
+      "Higher taxes that directly reduce household consumption spending",
+      "A decrease in private investment caused by higher real interest rates",
+      "An expansion of the money supply that accelerates inflation",
+      "A reduction in future government spending to repay current debt"
+    ],
+    "answer": "B",
+    "hints": ["Government borrowing competes with private borrowers in the loanable funds market, driving up the real interest rate and reducing private investment."]
+  },
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.02",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the loanable funds market, an increase in government borrowing to finance a budget deficit shifts the demand for loanable funds rightward. The most likely immediate result is:",
+    "choices": [
+      "An increase in the real interest rate and a decrease in private investment",
+      "A decrease in the real interest rate and an increase in private investment",
+      "No change in the real interest rate because the central bank offsets the shift",
+      "A decrease in the supply of loanable funds"
+    ],
+    "answer": "A",
+    "hints": ["Greater demand for funds, supply unchanged, raises the price of borrowing — the real interest rate — which discourages private borrowing for investment."]
+  },
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.03",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If government borrowing persistently crowds out private investment over many years, the long-run consequence for the economy is most likely:",
+    "choices": [
+      "A larger physical capital stock and faster economic growth",
+      "Higher inflation and permanently lower unemployment",
+      "A smaller physical capital stock and slower growth in potential output",
+      "An upward shift of the long-run aggregate supply curve"
+    ],
+    "answer": "C",
+    "hints": ["Private investment builds the capital stock. Less investment over time means fewer machines and structures, reducing long-run productive capacity and shifting LRAS leftward."]
+  },
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.04",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Complete crowding out would imply that a fiscal stimulus has a spending multiplier equal to:",
+    "choices": [
+      "Greater than one",
+      "Exactly one",
+      "Zero",
+      "Negative one"
+    ],
+    "answer": "C",
+    "hints": ["If government spending fully displaces an equal amount of private investment, the net addition to aggregate demand is zero — the multiplier is zero."]
+  },
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.05",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In an open economy, increased government borrowing raises domestic real interest rates, attracting foreign capital inflows and appreciating the domestic currency. This currency appreciation is likely to:",
+    "choices": [
+      "Increase net exports by making domestic goods cheaper for foreign buyers",
+      "Have no effect on net exports",
+      "Increase the trade surplus",
+      "Reduce net exports, so foreign crowding out of exports partially replaces domestic crowding out of private investment"
+    ],
+    "answer": "D",
+    "hints": ["A stronger currency makes exports more expensive abroad and imports cheaper at home, reducing net exports — a second channel through which fiscal expansion can be offset."]
+  },
+  {
+    "id": "apmacro.crowding-out-long-run.mcq.06",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Ricardian equivalence hypothesis, if true, would imply that deficit-financed tax cuts:",
+    "choices": [
+      "Always increase aggregate demand by the full amount of the tax multiplier",
+      "Lead to complete crowding out because rational households save the entire tax cut to cover anticipated future taxes",
+      "Immediately raise real interest rates in the loanable funds market",
+      "Increase private investment by reducing business uncertainty"
+    ],
+    "answer": "B",
+    "hints": ["If households foresee that today's deficit implies higher future taxes, they save the full tax cut rather than spending it, leaving aggregate demand unchanged."]
+  },
+
+  {
+    "id": "apmacro.economic-growth.mcq.01",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to standard growth theory, which of the following is the most important source of sustained long-run economic growth?",
+    "choices": [
+      "Increases in government spending",
+      "Growth in the size of the labor force alone",
+      "Improvements in technology and productivity",
+      "Reductions in the nominal interest rate"
+    ],
+    "answer": "C",
+    "hints": ["Physical capital accumulation faces diminishing returns; only ongoing technological progress can sustain indefinite growth in output per person."]
+  },
+  {
+    "id": "apmacro.economic-growth.mcq.02",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economy's real GDP grows by 3% in a year while its population grows by 1%. What happens to real GDP per capita?",
+    "choices": [
+      "Real GDP per capita falls by approximately 1%",
+      "Real GDP per capita grows by approximately 2%",
+      "Real GDP per capita is unchanged because both real GDP and population grew",
+      "Real GDP per capita grows by 3%"
+    ],
+    "answer": "B",
+    "hints": ["Growth in GDP per capita is approximately equal to GDP growth minus population growth: 3% minus 1% = 2%."]
+  },
+  {
+    "id": "apmacro.economic-growth.mcq.03",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An increase in the average level of education and job skills of the workforce is best classified as an increase in:",
+    "choices": [
+      "Financial capital",
+      "Natural resources",
+      "Human capital",
+      "Physical capital"
+    ],
+    "answer": "C",
+    "hints": ["Human capital refers to the productive capacity embedded in workers — their skills, knowledge, and health."]
+  },
+  {
+    "id": "apmacro.economic-growth.numeric.01",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A country's real GDP per capita is currently growing at 3.5% per year. Using the rule of 70, approximately how many years will it take for real GDP per capita to double?",
+    "answer": "20",
+    "hints": ["Doubling time (in years) is approximately equal to 70 divided by the annual growth rate expressed as a percent."]
+  },
+  {
+    "id": "apmacro.economic-growth.mcq.04",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The convergence hypothesis in growth economics predicts that, all else equal, poorer countries tend to grow faster than richer ones. The primary reason given by standard theory is:",
+    "choices": [
+      "Poorer countries tend to have larger natural resource endowments",
+      "Diminishing returns to capital mean that each new unit of capital is more productive in capital-scarce economies",
+      "Poorer countries typically have lower inflation rates, which stimulates investment",
+      "Richer countries devote more resources to education, leaving less room for further growth"
+    ],
+    "answer": "B",
+    "hints": ["Because capital-poor countries are on the steep part of the production function, a given investment generates a bigger output gain there than in a capital-rich country."]
+  },
+  {
+    "id": "apmacro.economic-growth.mcq.05",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a growth accounting framework, the portion of real GDP growth that cannot be explained by increases in measured physical capital or labor inputs is attributed to:",
+    "choices": [
+      "Growth in government spending",
+      "Population growth",
+      "Financial sector development",
+      "Total factor productivity, often identified with technological progress"
+    ],
+    "answer": "D",
+    "hints": ["This unexplained residual — sometimes called the Solow residual — captures improvements in how efficiently inputs are combined, driven largely by technology and innovation."]
+  },
+
+  {
+    "id": "apmacro.public-policy-growth.mcq.01",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Government policies designed to promote long-run economic growth primarily aim to:",
+    "choices": [
+      "Shift aggregate demand rightward in the short run to reduce unemployment",
+      "Shift the long-run aggregate supply (LRAS) rightward by expanding the economy's productive capacity",
+      "Reduce the natural rate of unemployment to zero",
+      "Lower the price level through contractionary demand management"
+    ],
+    "answer": "B",
+    "hints": ["Supply-side growth policies raise potential output — they work through the LRAS, not just short-run aggregate demand."]
+  },
+  {
+    "id": "apmacro.public-policy-growth.mcq.02",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Public investment in transportation infrastructure (roads, ports, airports) promotes long-run economic growth primarily by:",
+    "choices": [
+      "Increasing aggregate demand through higher government spending with no supply-side effect",
+      "Temporarily reducing unemployment during the construction phase only",
+      "Lowering production and distribution costs, thereby raising the productivity of private capital",
+      "Raising the price level and reducing real interest rates through expansionary policy"
+    ],
+    "answer": "C",
+    "hints": ["Better infrastructure reduces firms' costs and improves the efficiency with which private inputs are used — a supply-side effect that shifts LRAS rightward."]
+  },
+  {
+    "id": "apmacro.public-policy-growth.mcq.03",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Government subsidies for higher education and job training programs are classified as growth-oriented policies because they:",
+    "choices": [
+      "Increase aggregate demand in the short run by transferring income to students",
+      "Expand the money supply, allowing firms to borrow at lower rates",
+      "Generate budget surpluses that reduce the national debt",
+      "Increase the stock of human capital, shifting the production possibilities frontier outward over time"
+    ],
+    "answer": "D",
+    "hints": ["A more educated, better-trained workforce is more productive — human capital accumulation is a key driver of long-run potential output."]
+  },
+  {
+    "id": "apmacro.public-policy-growth.mcq.04",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A government offers tax credits for business research and development (R&D) expenditures. The intended long-run growth mechanism is to:",
+    "choices": [
+      "Reduce the corporate tax rate, permanently raising aggregate demand",
+      "Stimulate innovation and technological progress, shifting the LRAS rightward",
+      "Crowd out private saving by increasing the budget deficit",
+      "Lower the inflation rate by reducing business operating costs"
+    ],
+    "answer": "B",
+    "hints": ["R&D generates new technologies; because knowledge has positive spillovers and is a public good, private R&D may be underprovided without a subsidy."]
+  },
+  {
+    "id": "apmacro.public-policy-growth.mcq.05",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Economists generally argue that free trade agreements promote long-run economic growth primarily because they:",
+    "choices": [
+      "Allow countries to specialize according to comparative advantage, raising economy-wide efficiency and productivity",
+      "Eliminate government budget deficits by boosting export tax revenues",
+      "Guarantee that all trading partners grow at the same rate",
+      "Prevent foreign firms from competing with less-efficient domestic industries"
+    ],
+    "answer": "A",
+    "hints": ["Comparative advantage means each country produces what it makes most efficiently; trade allows more total output from the same resources."]
+  },
+  {
+    "id": "apmacro.public-policy-growth.mcq.06",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Cross-country growth research consistently finds that strong protection of property rights is associated with higher long-run economic growth. The most likely economic explanation is that:",
+    "choices": [
+      "Property rights enforcement directly lowers the natural rate of unemployment",
+      "Property rights eliminate production externalities automatically",
+      "Strong property rights reduce government budget deficits by increasing tax compliance",
+      "Secure property rights encourage investment and innovation because entrepreneurs can capture the returns from their efforts"
+    ],
+    "answer": "D",
+    "hints": ["Without secure property rights, firms and individuals have weak incentives to invest, innovate, or enter into long-term contracts — all essential for sustained growth."]
+  }
+]

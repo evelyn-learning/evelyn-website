@@ -1,0 +1,380 @@
+[
+  {
+    "id": "apenvsci.plate-tectonics-soil.mcq.01",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which type of tectonic plate boundary is characterized by two plates moving away from each other and is commonly associated with mid-ocean ridges where new oceanic crust is created?",
+    "choices": [
+      "Divergent boundary",
+      "Convergent boundary",
+      "Transform boundary",
+      "Hotspot boundary"
+    ],
+    "answer": "A",
+    "hints": ["Think about the word 'diverge' — to spread apart."]
+  },
+  {
+    "id": "apenvsci.plate-tectonics-soil.mcq.02",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When a dense oceanic plate collides with a less-dense continental plate at a convergent boundary, the oceanic plate sinks beneath the continental plate. This process is called:",
+    "choices": [
+      "Seafloor spreading",
+      "Continental rifting",
+      "Lateral faulting",
+      "Subduction"
+    ],
+    "answer": "D",
+    "hints": ["The denser plate 'ducks under' the lighter one."]
+  },
+  {
+    "id": "apenvsci.plate-tectonics-soil.mcq.03",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which soil horizon is commonly called 'topsoil,' is darkened by humus, and is the layer most critical for plant growth and agricultural productivity?",
+    "choices": [
+      "A horizon",
+      "B horizon",
+      "C horizon",
+      "E horizon"
+    ],
+    "answer": "A",
+    "hints": ["The letter 'A' comes first — this is the uppermost mineral horizon."]
+  },
+  {
+    "id": "apenvsci.plate-tectonics-soil.mcq.04",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A soil scientist samples a horizon that is enriched with accumulated clay minerals, iron oxides, and other materials that were leached downward from layers above. This horizon formed primarily through which process?",
+    "choices": [
+      "Eluviation — the physical washing of dissolved materials downward out of a horizon",
+      "Illuviation — the deposition and accumulation of leached materials from overlying horizons",
+      "Decomposition of underlying parent material by freeze-thaw cycling",
+      "Mechanical weathering of bedrock by root penetration and frost action"
+    ],
+    "answer": "B",
+    "hints": ["Il-luviation = 'in' — material moving IN to settle in this layer."]
+  },
+  {
+    "id": "apenvsci.plate-tectonics-soil.numeric.01",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A soil sample is analyzed and found to contain 40% sand and 35% silt by mass. Assuming the only three mineral components are sand, silt, and clay, what is the clay content of this soil? Give your answer as a whole-number percentage.",
+    "answer": "25",
+    "hints": ["Sand + silt + clay = 100%."]
+  },
+  {
+    "id": "apenvsci.plate-tectonics-soil.mcq.05",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Pacific Ring of Fire encircles the Pacific Ocean in a zone of intense volcanic and seismic activity. Which combination of tectonic processes and associated landforms best explains this pattern?",
+    "choices": [
+      "Divergent boundaries producing rift valleys and new oceanic crust around the entire Pacific rim",
+      "Transform boundaries causing horizontal shearing, creating parallel mountain ridges with minimal volcanism",
+      "Convergent boundaries with subduction, producing volcanic arcs, stratovolcanoes, and deep ocean trenches",
+      "Stationary hotspots creating chains of shield volcanoes as the Pacific Plate drifts overhead"
+    ],
+    "answer": "C",
+    "hints": ["Think about where oceanic plates are sinking beneath neighboring plates around the Pacific."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.01",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In which layer of Earth's atmosphere does virtually all weather occur, and where does temperature generally decrease with increasing altitude?",
+    "choices": [
+      "Stratosphere",
+      "Mesosphere",
+      "Troposphere",
+      "Thermosphere"
+    ],
+    "answer": "C",
+    "hints": ["'Tropos' is Greek for 'turning' — this layer is full of convective mixing and weather."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.02",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Earth's ozone layer, which absorbs the majority of incoming ultraviolet-B radiation from the Sun, is located primarily within which atmospheric layer?",
+    "choices": [
+      "Troposphere",
+      "Stratosphere",
+      "Mesosphere",
+      "Thermosphere"
+    ],
+    "answer": "B",
+    "hints": ["Ozone concentration peaks roughly 15–35 km above Earth's surface."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.03",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a Hadley circulation cell, air rises at the equator due to intense solar heating, travels poleward at high altitude, then descends at approximately 30° latitude. What type of climate is most commonly found in these subtropical subsidence zones where air sinks?",
+    "choices": [
+      "Tropical rainforest with year-round heavy precipitation",
+      "Temperate grassland with moderate seasonal rainfall",
+      "Boreal (taiga) forest with cold winters and moderate summer rain",
+      "Desert or semi-arid zone, because descending air is compressed, warms, and holds moisture rather than releasing it as rain"
+    ],
+    "answer": "D",
+    "hints": ["Sinking air warms by compression — this suppresses cloud formation and rainfall."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.04",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the Northern Hemisphere, the Coriolis effect deflects moving air to the right. Air flowing from the subtropical high-pressure belt near 30°N toward the equatorial low-pressure zone is deflected to become which surface wind pattern?",
+    "choices": [
+      "Northeast trade winds — surface winds blowing from the northeast toward the equator",
+      "Southwest trade winds — surface winds blowing from the southwest toward the equator",
+      "Prevailing westerlies — winds blowing from west to east across mid-latitudes",
+      "Polar easterlies — cold winds blowing from the polar high toward 60°N"
+    ],
+    "answer": "A",
+    "hints": ["Air heading south (toward equator) is deflected to the right — so it curves toward the east, making it a NE wind."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.05",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Intertropical Convergence Zone (ITCZ) is a low-pressure belt near the equator associated with heavy, persistent rainfall. Which atmospheric process most directly drives the intense precipitation at the ITCZ?",
+    "choices": [
+      "Cold, dense air sinks at the equator, forcing surface moisture underground to re-emerge as groundwater",
+      "The Coriolis effect spirals dry air from both hemispheres inward toward the equatorial center",
+      "Warm, moist air from both hemispheres converges, rises, cools with altitude, and condenses to form deep convective clouds and heavy rainfall",
+      "Descending dry air masses from subtropical highs push moisture poleward, triggering rain at the equator"
+    ],
+    "answer": "C",
+    "hints": ["Rising air cools — and cool air holds less water vapor, so condensation and rain result."]
+  },
+  {
+    "id": "apenvsci.atmosphere-wind.mcq.06",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Polar regions receive relatively little precipitation and are sometimes classified as cold deserts, even though they are covered in ice and snow. Which explanation best accounts for the low precipitation rate at the poles?",
+    "choices": [
+      "Polar regions receive 24 hours of intense summer sunlight, causing rapid evaporation that easily exceeds any precipitation input",
+      "Cold, descending air at the poles holds very little water vapor because cold air has low moisture capacity; precipitation is extremely sparse, and what does fall accumulates because temperatures never rise above freezing",
+      "Polar easterlies transport all available atmospheric moisture toward the temperate zones, leaving the polar atmosphere perpetually depleted",
+      "High surface albedo reflects incoming solar radiation back to space before it can warm the ocean and supply evaporated water vapor to the atmosphere"
+    ],
+    "answer": "B",
+    "hints": ["Cold air has a very low saturation vapor pressure — it simply cannot hold much moisture."]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.01",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A watershed (also called a drainage basin) is best defined as:",
+    "choices": [
+      "The entire land area that drains precipitation and snowmelt to a common outlet such as a river, lake, or coastal point",
+      "The underground zone of saturated rock and sediment that stores and supplies groundwater",
+      "The coastal transition zone where a river's freshwater mixes with ocean saltwater",
+      "The riparian vegetation corridor that lines the banks of a stream or river"
+    ],
+    "answer": "A",
+    "hints": ["Think of topography: rain falling on one side of a ridge drains one way; rain on the other side drains a different way."]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.02",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Albedo is the fraction of incoming solar radiation that a surface reflects. Which of the following surfaces has the HIGHEST albedo?",
+    "choices": [
+      "Dark, closed-canopy old-growth forest",
+      "Open deep-ocean surface water",
+      "Dry, dark-colored urban pavement",
+      "Fresh snow or sea ice"
+    ],
+    "answer": "D",
+    "hints": ["Bright white surfaces reflect the most light — they appear white because of the high reflectivity."]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.03",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solar radiation intensity (watts per square meter) is greatest at the equator primarily because:",
+    "choices": [
+      "Earth's elliptical orbit keeps the equatorial region closest to the Sun throughout the entire year",
+      "The atmosphere is significantly thinner at the equator, so less solar radiation is absorbed before reaching the surface",
+      "Solar rays strike the equatorial surface at nearly a 90° angle, concentrating a given amount of solar energy over the smallest possible surface area",
+      "The equator experiences exactly 12 hours of daylight every day of the year, maximizing total daily solar energy received"
+    ],
+    "answer": "C",
+    "hints": ["Shine a flashlight straight down versus at an angle — which makes a smaller, brighter spot?"]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.04",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Earth experiences distinct seasons primarily because:",
+    "choices": [
+      "Earth's distance from the Sun varies greatly throughout the year, with the Northern Hemisphere being warmest when Earth is closest to the Sun",
+      "Earth's rotational axis is tilted approximately 23.5° from vertical, so different hemispheres receive more direct solar radiation at different times of year",
+      "The thickness of Earth's atmosphere changes seasonally, filtering more solar radiation in winter than in summer",
+      "Ocean currents seasonally redistribute thermal energy from the equator toward the poles, driving predictable temperature cycles on land"
+    ],
+    "answer": "B",
+    "hints": ["Earth is actually closest to the Sun in early January — yet the Northern Hemisphere is in winter. Distance is not the primary factor."]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.05",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A developer clears a forested watershed and replaces it with roads and parking lots. Which of the following best predicts the hydrological consequence for the watershed's stream?",
+    "choices": [
+      "Lower peak stream discharge after rainstorms, because paved surfaces channel water more efficiently and slow infiltration evenly",
+      "Higher base flow during dry periods, because impervious surfaces prevent evapotranspiration losses and return more water to the stream",
+      "Higher peak stream discharge and increased flood risk, because impervious surfaces dramatically reduce infiltration and increase the volume and speed of surface runoff",
+      "Reduced sediment transport in the stream, because tree removal eliminates leaf-litter and organic debris inputs"
+    ],
+    "answer": "C",
+    "hints": ["When rain cannot soak into the ground, where must it go?"]
+  },
+  {
+    "id": "apenvsci.watersheds-solar.mcq.06",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "At the Northern Hemisphere summer solstice (approximately June 21), which set of statements about solar conditions is entirely correct?",
+    "choices": [
+      "The Southern Hemisphere is experiencing its summer; the South Pole receives 24 hours of daylight while the North Pole is in continuous darkness",
+      "Both hemispheres receive equal daily solar radiation because Earth is near perihelion (its closest approach to the Sun) around this date",
+      "The Arctic Circle experiences 24 hours of darkness while the Antarctic Circle experiences 24 hours of daylight on this date",
+      "The Northern Hemisphere receives longer days and more intense solar radiation than the Southern Hemisphere, while the South Pole experiences 24 hours of continuous darkness"
+    ],
+    "answer": "D",
+    "hints": ["On June 21, which pole is tilted toward the Sun and which is tilted away?"]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.01",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best distinguishes climate from weather?",
+    "choices": [
+      "Climate describes the long-term average atmospheric conditions of a region (typically averaged over 30 or more years), while weather refers to short-term, day-to-day atmospheric conditions at a specific place",
+      "Weather describes long-term atmospheric patterns of a region, while climate refers to daily temperature and precipitation at a specific location",
+      "Climate only includes temperature data, while weather also encompasses wind speed, humidity, and precipitation",
+      "Weather and climate measure identical atmospheric properties but at different altitudes in the atmosphere"
+    ],
+    "answer": "A",
+    "hints": ["'Climate is what you expect; weather is what you get.'"]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.02",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a typical non-ENSO year in the Pacific, strong trade winds blow warm surface water westward across the equatorial Pacific. What is the effect of this pattern along the west coast of South America?",
+    "choices": [
+      "Warm water pools along the South American coast, suppressing upwelling and raising sea-surface temperatures",
+      "Sea-surface temperatures equalize across the entire Pacific basin, eliminating east-west temperature gradients",
+      "Intensified monsoon rainfall drenches Peru and Ecuador throughout the year",
+      "Cold, nutrient-rich water upwells from depth along the South American coast, supporting some of the world's most productive fisheries"
+    ],
+    "answer": "D",
+    "hints": ["When warm surface water is pushed away to the west, what rises to replace it?"]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.03",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During an El Niño event, the normally strong Pacific trade winds weaken substantially. Which of the following correctly describes the resulting changes in the eastern Pacific Ocean?",
+    "choices": [
+      "Upwelling intensifies off the South American coast, bringing colder water to the surface and cooling sea-surface temperatures",
+      "The thermocline in the eastern Pacific rises (shoals) closer to the surface, making cold deep water more accessible",
+      "Warm water spreads eastward across the Pacific, sea-surface temperatures rise in the eastern Pacific, upwelling decreases, and the thermocline deepens",
+      "Sea-surface temperatures drop sharply in the central Pacific, increasing precipitation over Australia and Indonesia"
+    ],
+    "answer": "C",
+    "hints": ["Weaker trade winds mean less warm water is pushed west — so it spreads back east instead."]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.04",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which set of regional effects is most consistent with a strong El Niño event?",
+    "choices": [
+      "Above-average rainfall in Australia and Indonesia with drought conditions along the Pacific coast of South America",
+      "Drought and elevated wildfire risk in Australia and Indonesia; above-average rainfall and flooding along the Pacific coast of South America (Peru, Ecuador)",
+      "Enhanced upwelling and record fish catches off Peru; well above-average grain harvests in the central United States",
+      "Cooler-than-average sea-surface temperatures in the central and eastern Pacific; amplified trade winds driving anomalous moisture westward"
+    ],
+    "answer": "B",
+    "hints": ["During El Niño, the warm rainfall-producing water shifts to the central/eastern Pacific — where does that leave Australia?"]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.05",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "La Niña is generally described as the opposite phase of ENSO from El Niño. Which set of conditions best characterizes a La Niña year in the equatorial Pacific?",
+    "choices": [
+      "Weaker-than-normal trade winds allow warm surface water to spread eastward, raising eastern Pacific sea-surface temperatures above the long-term average",
+      "Stronger-than-normal trade winds push more warm water westward, intensify upwelling off South America, and cool eastern Pacific sea-surface temperatures below average",
+      "The Walker circulation breaks down entirely, producing nearly uniform sea-surface temperatures across the entire equatorial Pacific",
+      "The Southern Oscillation Index (SOI) becomes strongly negative, indicating anomalously low surface pressure over the eastern Pacific"
+    ],
+    "answer": "B",
+    "hints": ["La Niña = more intense version of normal Pacific conditions, not a reversal."]
+  },
+  {
+    "id": "apenvsci.climate-enso.mcq.06",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A climate researcher monitoring the Pacific during a strong El Niño records measurements of the Southern Oscillation Index (SOI) and the depth of the thermocline in the eastern Pacific. Which combination of observations would the researcher most likely report?",
+    "choices": [
+      "A strongly positive SOI and a shallow (shoaled) thermocline in the eastern Pacific",
+      "A strongly positive SOI and a deep thermocline in the eastern Pacific",
+      "A strongly negative SOI and a shallow (shoaled) thermocline in the eastern Pacific",
+      "A strongly negative SOI and a deep thermocline in the eastern Pacific"
+    ],
+    "answer": "D",
+    "hints": ["SOI = Tahiti pressure minus Darwin pressure. El Niño weakens the east-west pressure difference. Warm water piling in the eastern Pacific pushes the thermocline downward."]
+  }
+]

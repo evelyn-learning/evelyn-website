@@ -1,0 +1,362 @@
+[
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.01",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which survivorship curve shows high survival throughout most of an organism's lifespan, with steep mortality concentrated only among the elderly?",
+    "choices": [
+      "Type I",
+      "Type II",
+      "Type III",
+      "All three curves show the same overall pattern"
+    ],
+    "answer": "A",
+    "hints": ["Think about which large mammals — elephants, humans — display this shape.", "Type I species invest heavily in each offspring."]
+  },
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.02",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A prairie dog colony reaches sexual maturity within months, produces large litters several times per year, and provides minimal parental care per pup. Which life-history strategy best describes this species?",
+    "choices": [
+      "K-selected: long-lived, with high per-offspring investment",
+      "K-selected: population typically held near carrying capacity by competition",
+      "Neither r-selected nor K-selected — prairie dogs occupy an intermediate niche that defies classification",
+      "r-selected: rapid reproduction and low per-offspring investment suited to variable environments"
+    ],
+    "answer": "D",
+    "hints": ["r-selected species maximize reproductive rate rather than offspring quality."]
+  },
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.03",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An oyster releases millions of larvae into the water column. Nearly all larvae die within days from predation and starvation. The few that attach to hard substrate can live for a decade or more. Which survivorship curve best describes this population, and why?",
+    "choices": [
+      "Type I, because adults survive for many years",
+      "Type II, because mortality rate is constant across all life stages",
+      "Type III, because mortality is extremely high in the earliest life stages while survivors live long",
+      "Type I, because the high total reproductive output compensates for early losses"
+    ],
+    "answer": "C",
+    "hints": ["Type III is typical of organisms that produce vast numbers of offspring with little parental care.", "The curve drops steeply early, then flattens."]
+  },
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.04",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which combination of traits is MOST characteristic of a K-selected species?",
+    "choices": [
+      "Early sexual maturity, large litter size, minimal parental care, and short lifespan",
+      "Long gestation period, one or two offspring per reproductive event, extensive parental care, and late reproductive maturity",
+      "Ability to rapidly colonize disturbed or newly available habitats",
+      "High intrinsic growth rate (r) and boom-bust population dynamics"
+    ],
+    "answer": "B",
+    "hints": ["K-selected species devote energy to raising fewer, high-quality offspring.", "Think elephants, whales, humans."]
+  },
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.05",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Following a volcanic eruption that buries all vegetation, the first plant colonizers are annual weeds that produce thousands of tiny seeds and complete their life cycles within a single growing season. These pioneer species are best described as:",
+    "choices": [
+      "K-selected, because they thrive in physically stable post-eruption environments",
+      "K-selected, because survivors on bare ground face little competition for resources",
+      "r-selected, because they maximize reproductive rate rather than competitive ability or long-term survival",
+      "Neither r nor K — organisms adapted to volcanic landscapes require a separate life-history category"
+    ],
+    "answer": "C",
+    "hints": ["r-selected species are the classic colonizers of disturbed habitats.", "Short lifespan + many seeds = high r."]
+  },
+  {
+    "id": "apenvsci.survivorship-r-k.mcq.06",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A wildlife biologist confirms that grizzly bears in a national park follow a Type I survivorship curve. When designing a population recovery plan for this threatened population, which management recommendation follows MOST directly from this pattern?",
+    "choices": [
+      "Prioritize protecting cubs and juveniles, because Type I curves show the greatest losses occur in early life",
+      "Focus on increasing annual litter size, because high early mortality is limiting population growth",
+      "Type I survivorship is only observed in captivity and cannot guide management of wild populations",
+      "Direct resources toward reducing adult mortality — from poaching, vehicle strikes, and human-conflict kills — because adult survival is the primary driver of population growth in Type I species"
+    ],
+    "answer": "D",
+    "hints": ["In a Type I species, adults survive well; removing causes of adult mortality has the greatest leverage.", "Grizzlies produce few cubs — losing an adult female is a large setback."]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.mcq.01",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a logistic growth model, the total population growth rate (dN/dt) is at its maximum when the population size N equals:",
+    "choices": [
+      "Zero, because the per-capita growth rate is highest when there is no competition",
+      "Half the carrying capacity (N = K/2)",
+      "The full carrying capacity (N = K), because the population is largest",
+      "Twice the carrying capacity, because overshoot accelerates growth"
+    ],
+    "answer": "B",
+    "hints": ["At K/2, the logistic equation r*N*(1 - N/K) reaches its peak because N and (1 - N/K) are balanced.", "Below K/2, resources are abundant but N is small; above K/2, N is large but growth is slowing."]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.mcq.02",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which factor most directly sets the carrying capacity (K) for a population within a specific habitat?",
+    "choices": [
+      "The availability of the most limiting resource — such as food, nesting sites, or water",
+      "The species' intrinsic rate of natural increase (r)",
+      "The size of the founding population introduced into the habitat",
+      "The geographic latitude of the habitat"
+    ],
+    "answer": "A",
+    "hints": ["Whichever essential resource runs out first caps population size.", "Remove the limiting resource and K would rise."]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.numeric.01",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A population of harbor seals has a per-capita birth rate (b) of 0.24 per year and a per-capita death rate (d) of 0.09 per year. Assuming no migration, calculate the intrinsic rate of natural increase r = b minus d. Express your answer as a decimal.",
+    "answer": "0.15",
+    "hints": ["r = b - d; subtract the death rate from the birth rate."]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.mcq.03",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A wolf pack of 30 individuals enters a wilderness reserve with a carrying capacity of 150 wolves. Compared with a scenario where the pack has grown to 135 individuals, the per-capita growth rate when N = 30 is:",
+    "choices": [
+      "Lower, because fewer individuals means fewer total births",
+      "Equal, because the intrinsic rate r does not change with population size",
+      "Higher, because density-dependent limiting factors are much weaker when the population is far below K",
+      "Zero, because logistic growth has not yet begun at low density"
+    ],
+    "answer": "C",
+    "hints": ["Per-capita rate in logistic model = r(1 - N/K). At N=30: r(1-30/150)=0.8r; at N=135: r(1-135/150)=0.1r.", "The farther below K, the less crowding suppresses per-capita growth."]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.numeric.02",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A country's population is growing at a constant annual rate of 2.8%. Using the rule of 70, what is the approximate doubling time for this population in years? Round to the nearest whole number.",
+    "answer": "25",
+    "hints": ["Rule of 70: doubling time = 70 divided by the percent growth rate.", "70 / 2.8 = ?"]
+  },
+  {
+    "id": "apenvsci.carrying-capacity-growth.mcq.04",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A reindeer herd introduced to a remote island grows exponentially to 6,000 animals — far above the island's estimated carrying capacity of 1,500. The resulting overgrazing destroys slow-recovering lichen, permanently lowering the island's long-term carrying capacity well below 1,500. This scenario BEST illustrates:",
+    "choices": [
+      "Logistic regulation, which smoothly guides populations back to K without long-term habitat damage",
+      "Density-independent population control triggered by severe winter weather",
+      "Competitive exclusion between the introduced reindeer and native herbivores reducing K for all species",
+      "Population overshoot and a permanent reduction in carrying capacity caused by resource degradation"
+    ],
+    "answer": "D",
+    "hints": ["When a population exceeds K and damages the habitat, K itself can drop — a positive-feedback crash.", "This pattern was documented historically on St. Matthew Island, Alaska."]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.mcq.01",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An age-structure diagram for a country shows bars that are widest at the youngest age classes and become progressively narrower toward the oldest age classes. This pyramid shape indicates that the population is:",
+    "choices": [
+      "Declining, because more individuals are concentrated in older age classes",
+      "Stable, because births approximately equal deaths across all age groups",
+      "Shrinking rapidly due to emigration of working-age adults",
+      "Growing, because a large proportion of individuals are young and will soon enter reproductive age"
+    ],
+    "answer": "D",
+    "hints": ["A wide base means many children who will become reproductive adults — future growth is built in.", "This shape is characteristic of many sub-Saharan African nations today."]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.mcq.02",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The replacement-level total fertility rate (TFR) is approximately 2.1 rather than exactly 2.0. The extra 0.1 children primarily accounts for:",
+    "choices": [
+      "Statistical rounding error in national birth-registration records",
+      "The tendency for families to emigrate after having two children",
+      "The fact that slightly more boys than girls are born and some girls die before reaching reproductive age, so more than two births are needed on average to guarantee one woman survives to reproduce in the next generation",
+      "Government policies that require at least one extra birth per family for census purposes"
+    ],
+    "answer": "C",
+    "hints": ["At birth, the sex ratio is about 105 boys per 100 girls; some females also die in childhood.", "Replacement needs 2 parents replaced — but the slight female deficit at birth means > 2 births are required."]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.numeric.01",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A country records a crude birth rate of 28 per 1,000 people per year and a crude death rate of 8 per 1,000 people per year. Ignoring migration, what is its rate of natural increase expressed as a percent? Report the number without the percent sign, rounded to one decimal place.",
+    "answer": "2.0",
+    "hints": ["Rate of natural increase (%) = (CBR - CDR) / 10.", "(28 - 8) = 20 per 1,000 = 2.0 per 100 = 2.0%."]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.mcq.03",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A country's TFR drops to exactly 2.1 in 2025, yet a demographer projects that the country's total population will continue to rise until approximately 2055. The MOST likely explanation is:",
+    "choices": [
+      "A large generation of young adults — born during an earlier period of high fertility — is moving through peak reproductive years, so total births still exceed total deaths even at replacement-level TFR",
+      "Replacement-level TFR always produces positive population growth for at least 50 years regardless of age structure",
+      "The country must be receiving an extremely high volume of immigration",
+      "The crude death rate is rising independently due to a new epidemic, temporarily masking population decline"
+    ],
+    "answer": "A",
+    "hints": ["This phenomenon is called population momentum.", "Even at replacement fertility, a youthful age structure means many more births than deaths for decades."]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.numeric.02",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A rural province reports a total fertility rate of 4.6 children per woman. The generally accepted replacement-level TFR is 2.1 children per woman. By how many children above replacement level does this province's TFR exceed replacement? Express your answer as a decimal to one decimal place.",
+    "answer": "2.5",
+    "hints": ["Subtract the replacement-level TFR from the observed TFR.", "4.6 - 2.1 = ?"]
+  },
+  {
+    "id": "apenvsci.age-structure-fertility.mcq.04",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Country P has a broad-based population pyramid (widest at youngest ages, narrowing toward top). Country Q has a nearly rectangular pyramid (roughly equal bar widths across all age classes). Both countries currently have 60 million people. Which statement BEST predicts their contrasting resource demands over the next 30 years?",
+    "choices": [
+      "Country Q will face greater demand for schools because a rectangular pyramid implies proportionally more school-age children",
+      "Country P's large young cohort will drive surging demand for schools and jobs, then eventually pressure pension systems; Country Q already faces strain on elder-care and healthcare systems for an aging population",
+      "Both countries will require identical resources because their total populations are the same",
+      "Country P's population will decline rapidly due to high infant and child mortality"
+    ],
+    "answer": "B",
+    "hints": ["Follow Country P's large base cohort as it ages: first schools, then jobs, then retirement.", "Country Q's rectangular shape means many people are already old — healthcare costs are its near-term pressure."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.01",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In which stage of the demographic transition model do BOTH the crude birth rate and the crude death rate remain high, producing little or no net population growth?",
+    "choices": [
+      "Stage 1",
+      "Stage 2",
+      "Stage 3",
+      "Stage 4"
+    ],
+    "answer": "A",
+    "hints": ["Stage 1 represents pre-industrial, subsistence societies before modern medicine.", "High births + high deaths = the baseline equilibrium before the transition begins."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.02",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The rapid decline in death rates that marks the transition from Stage 1 to Stage 2 is MOST directly caused by:",
+    "choices": [
+      "Government enforcement of strict family-planning policies that reduce birth-related mortality",
+      "Large-scale emigration that removes the most vulnerable members of the population",
+      "Improvements in public health — including clean water, sanitation, and vaccines — that dramatically reduce infectious-disease mortality",
+      "Industrialization generating sufficient wealth for all citizens to afford adequate nutrition independently"
+    ],
+    "answer": "C",
+    "hints": ["Death rates fall first, while birth rates remain high — that gap is what causes Stage 2 population explosion.", "Cholera, smallpox, and infant diarrhea declined sharply once clean water and vaccines arrived."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.03",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which combination of vital-rate trends would place a country in Stage 3 of the demographic transition?",
+    "choices": [
+      "High birth rate and high death rate, with little net population growth",
+      "Falling birth rate combined with already-low death rate, producing decelerating but still positive population growth",
+      "Rising birth rate and rising death rate driven by renewed conflict and disease",
+      "Very low birth rate and a slightly rising death rate as the population ages past the workforce"
+    ],
+    "answer": "B",
+    "hints": ["In Stage 3, urbanization and access to contraception begin to lower birth rates.", "Death rate is already low from Stage 2; now birth rate catches up — narrowing the gap."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.04",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Several high-income countries currently have TFRs well below the replacement level of 2.1. If this trend continues for multiple generations, the MOST likely long-term demographic consequence is:",
+    "choices": [
+      "Accelerating population growth, because improved longevity will offset the lower birth rate",
+      "A return toward Stage 2 conditions as economic pressure eventually pushes birth rates back up",
+      "An abrupt population collapse within a single generation once the birth rate falls below the death rate",
+      "A shrinking, aging population with rising dependency ratios that strain pension and healthcare systems"
+    ],
+    "answer": "D",
+    "hints": ["Fewer workers per retiree = higher dependency ratio = economic strain.", "Japan and Germany are current examples of Stage 4 / Stage 5 challenges."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.05",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Country W has high birth rates and recently experienced a sharp fall in death rates following improved medical infrastructure. Its population is growing rapidly. Country X maintains both low birth rates and low death rates. Using the demographic transition model, Country W is in Stage __ and Country X is in Stage __.",
+    "choices": [
+      "Stage 2 and Stage 4, respectively",
+      "Stage 1 and Stage 3, respectively",
+      "Stage 3 and Stage 1, respectively",
+      "Stage 4 and Stage 2, respectively"
+    ],
+    "answer": "A",
+    "hints": ["High birth rate + recently falling death rate = Stage 2 (rapid growth phase).", "Low birth + low death = Stage 4 (near-zero growth, post-transition)."]
+  },
+  {
+    "id": "apenvsci.demographic-transition.mcq.06",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The demographic transition model was developed largely from Western European historical data spanning the 18th through 20th centuries. Critics argue its universal applicability is limited. Which limitation is MOST valid when applying the model to today's developing nations?",
+    "choices": [
+      "The model incorrectly claims birth rates must always fall before death rates begin to decline",
+      "The model was designed only for island nations with closed, non-migratory populations",
+      "Stage 3 has been empirically removed from the revised demographic transition model since 1950",
+      "Access to modern contraceptives, international health aid, and global trade can compress or bypass stages that Western nations passed through over centuries, making the model less predictive for contemporary developing countries"
+    ],
+    "answer": "D",
+    "hints": ["Some countries moved from high fertility to near-replacement in a single generation — far faster than Europe's experience.", "Thailand's TFR fell from 6 to below 2 in roughly 30 years, compressing what took Europe 150 years."]
+  }
+]
