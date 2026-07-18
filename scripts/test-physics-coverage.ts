@@ -251,8 +251,11 @@ function runCurated(): void {
   tts('An electron carries $q = 1.6 \\times 10^{-19} \\, \\text{C}$ of charge.', 'An electron carries q equals 1.6 times 10 to the minus 19 coulombs of charge.', 'sci-neg-exp-coulombs');
 
   // ── 7. Vectors ───────────────────────────────────────────────────
-  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals m vector ay governs motion.', 'second-law-vectors');
-  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals m vector ay works too.', 'braceless-vec');
+  // Round-28: bare in-span "m" now respells to "em" (Cartesia read a
+  // standalone m as "meter" in a live calc session) — these pins updated
+  // deliberately to the spoken letterform, same as the ay/bee precedent.
+  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals em vector ay governs motion.', 'second-law-vectors');
+  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals em vector ay works too.', 'braceless-vec');
   tts('Split it into $3\\hat{i} + 4\\hat{j}$ parts.', 'Split it into 3 i hat plus 4 j hat parts.', 'unit-vectors');
   tts('The direction î points east.', 'The direction i hat points east.', 'i-hat-glyph');
   tts('So $|\\vec{v}| = 5$ overall.', 'So the magnitude of vector v equals 5 overall.', 'vector-magnitude');
@@ -275,11 +278,11 @@ function runCurated(): void {
   tts('Friction obeys $F = \\mu N$ here.', 'Friction obeys F equals mu N here.', 'mu-friction');
 
   // ── 9. Canonical equations ───────────────────────────────────────
-  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals m ay compactly.', 'f-equals-ma');
-  tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals m c squared famously.', 'e-mc2');
+  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em ay compactly.', 'f-equals-ma');
+  tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals em c squared famously.', 'e-mc2');
   tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v sub 0 plus ay t for velocity.', 'kinematics-at');
   tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v sub 0 t plus 1 over 2 ay t squared follows.', 'kinematics-x');
-  tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 m v squared always.', 'kinetic-energy');
+  tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 em v squared always.', 'kinetic-energy');
   tts('Work is $W = F d \\cos\\theta$ along the path.', 'Work is W equals F dee cosine theta along the path.', 'work-eq');
   tts('Waves follow $v = f\\lambda$ neatly.', 'Waves follow v equals f lambda neatly.', 'wave-eq');
   tts('Period is $T = \\frac{2\\pi}{\\omega}$ here.', 'Period is T equals 2 pie over omega here.', 'period-eq');

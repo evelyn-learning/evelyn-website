@@ -797,6 +797,11 @@ export function WhiteboardCanvas({
               currentIndex: cur,
               lastInteractionAt: lastInteractionAtRef.current,
               now: Date.now(),
+              // Viewer was on the newest page before this batch landed a
+              // page beyond them (round-28: deferred auto-newPage flushes
+              // land late, after the student has often interacted — a
+              // caught-up viewer gets the short guard, not the 10s hold).
+              onLatestPage: target === pages.length - 1 && cur === target - 1,
             });
         if (follow) {
           setCurrentIndex(target);

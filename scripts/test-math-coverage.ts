@@ -29,7 +29,7 @@
  *      for bulk adjudication while authoring pins)
  */
 import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
-import { segment } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, preprocessKatexBody } from '../src/lib/tutor/whiteboard/inline-math';
 import {
   captionMeasureProxy,
   tokenizeCaptionMathAtomic,
@@ -365,4 +365,46 @@ function runCurated(): void {
   check('title: cdot/times render as symbols',
     stripLatexForTitle('$a \\cdot b \\times c$') === 'a · b × c',
     `got "${stripLatexForTitle('$a \\cdot b \\times c$')}"`);
+
+  // ── 23. Round-28: command-glued-to-digit + bare variable letters ──
+  // (live 2026-07-18, AP Calc BC session portal-f31017f0)
+  // "$8\neq5$" spoke as "8 5": `\b` after a letter-run command never
+  // matches when a digit follows (q→5 is word-char→word-char, no
+  // boundary), so the relation rule missed and the residual sweep
+  // deleted the command wholesale. Same class as the round-24 \log_2 fix.
+  tts('and $1 + 7 = 8\\neq5$, so no.', 'and 1 plus 7 equals 8 not equal to 5, so no.', 'unspaced-neq-digit');
+  tts('so $x\\neq2$ here.', 'so x not equal to 2 here.', 'unspaced-neq-var');
+  tts('We need $x\\leq5$ and $y\\geq3$.', 'We need x less than or equal to 5 and why greater than or equal to 3.', 'unspaced-leq-geq');
+  tts('so $x\\ne2$ here.', 'so x not equal to 2 here.', 'unspaced-ne-short');
+  tts('so $6\\pm2$ and $3\\times2$ here.', 'so 6 plus or minus 2 and 3 times 2 here.', 'unspaced-pm-times');
+  // Bare variable "m": the pipeline used to pass a standalone "m"
+  // through untouched and Cartesia normalized it to "meter". Spans
+  // respell unconditionally; prose respells only behind variable
+  // anchors. "5 m" (number + unit) must still convert to meters.
+  tts('so $m = 7$ here.', 'so em equals 7 here.', 'span-variable-m');
+  tts('Right, m equals 7 there.', 'Right, em equals 7 there.', 'prose-m-equals');
+  tts('so m should be 7 there.', 'so em should be 7 there.', 'prose-m-should');
+  tts('The rod is 5 m long.', 'The rod is 5 meters long.', 'unit-m-still-meters');
+  tts("I'm being careful there.", "I'm being careful there.", 'im-contraction-m-guard');
+  // Article-'a' before an operator word with a math-shaped continuation
+  // ("*a plus b*" spoke the article — markdown italics, not a $-span).
+  tts('and we are told a plus b equals 5.', 'and we are told ay plus bee equals 5.', 'prose-a-plus-b');
+  tts('so a minus b gives 2 here.', 'so ay minus bee gives 2 here.', 'prose-a-minus-b');
+  tts('That is a plus for the team.', 'That is a plus for the team.', 'article-a-plus-guard');
+  // Display side of the same incident: the pre-KaTeX "\n → newline"
+  // de-escape must not eat the backslash off \n-prefixed commands
+  // ("x\neq2" rendered as italic "xeq2" in problem cards and bubbles;
+  // EquationRenderer already carried the guarded form).
+  check('katex-preprocess: \\neq survives',
+    preprocessKatexBody('x\\neq2') === 'x\\neq2',
+    `got ${JSON.stringify(preprocessKatexBody('x\\neq2'))}`);
+  check('katex-preprocess: \\nabla survives',
+    preprocessKatexBody('\\nabla f') === '\\nabla f',
+    `got ${JSON.stringify(preprocessKatexBody('\\nabla f'))}`);
+  check('katex-preprocess: literal newline escape still converts',
+    preprocessKatexBody('a\\n b') === 'a\n b',
+    `got ${JSON.stringify(preprocessKatexBody('a\\n b'))}`);
+  check('katex-preprocess: double-escaped command collapses',
+    preprocessKatexBody('\\\\frac{1}{2}') === '\\frac{1}{2}',
+    `got ${JSON.stringify(preprocessKatexBody('\\\\frac{1}{2}'))}`);
 }

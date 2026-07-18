@@ -272,13 +272,13 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /(?:\\prod|∏)\s*_\s*(\{[^{}]*\}|[^\s{^]+)\s*\^\s*(\{[^{}]*\}|[^\s{]+)/g,
     replacement: (_m: string, lo: string, hi: string) => ` the product from ${unbrace(lo)} to ${unbrace(hi)} of ` },
   { pattern: /(?:\\prod|∏)/g, replacement: ' the product of ' },
-  { pattern: /\\infty\b|∞/g, replacement: ' infinity ' },
+  { pattern: /\\infty(?![a-zA-Z])|∞/g, replacement: ' infinity ' },
   // Round-21: limits. Must run before the generic subscript rule (which
   // would otherwise read \lim_{x\to a} as "lim sub x to a"). The braced
   // subscript is the approach expression; "of" closes the phrase so the
   // following operand reads naturally ("the limit as x approaches 2 of
   // f of x times g of x").
-  { pattern: /\\lim_\{([^{}]*)\}/g, replacement: (_m: string, sub: string) => ` the limit as ${sub.replace(/\\to\b/g, ' approaches ')} of ` },
+  { pattern: /\\lim_\{([^{}]*)\}/g, replacement: (_m: string, sub: string) => ` the limit as ${sub.replace(/\\to(?![a-zA-Z])/g, ' approaches ')} of ` },
   { pattern: /\\lim\b/g, replacement: ' the limit of ' },
   // Chemistry round (2026-07-17): the equilibrium harpoon has no math
   // meaning — unconditional. Chem-detected $-spans already converted their
@@ -286,7 +286,7 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // ("approaches") unless it sits between two chemical-formula tokens in
   // prose ("2H₂ + O₂ → 2H₂O"), where it reads "yields".
   { pattern: /\\rightleftharpoons\b|\\leftrightharpoons\b|⇌/g, replacement: ' is in equilibrium with ' },
-  { pattern: /\\to\b|\\longrightarrow\b|\\rightarrow\b/g, replacement: ' approaches ' },
+  { pattern: /\\to(?![a-zA-Z])|\\longrightarrow(?![a-zA-Z])|\\rightarrow(?![a-zA-Z])/g, replacement: ' approaches ' },
   { pattern: /→/g,
     replacement: (m: string, ...rest: unknown[]) => {
       const offset = rest[rest.length - 2] as number;
@@ -297,7 +297,7 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // conventional function names f/g/h — a leading digit or other letter is
   // multiplication ("2(2)^2", "x(x+3)") and stays untouched.
   { pattern: /\b([fgh])\(([^()]{1,16})\)/g, replacement: '$1 of $2 ' },
-  { pattern: /\\quad\b|\\qquad\b/g, replacement: ', ' },
+  { pattern: /\\quad(?![a-zA-Z])|\\qquad(?![a-zA-Z])/g, replacement: ', ' },
   // Round-22: named functions shed the backslash but KEEP the word (the
   // end-of-span residual sweep would otherwise delete "\sin" wholesale);
   // the prose-level trig pass then converts sin→sine etc. as usual.
@@ -305,31 +305,36 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // never matched and the residual sweep deleted "\log" wholesale. A
   // negative letter lookahead keeps longest-first alternation semantics.
   { pattern: /\\(arcsin|arccos|arctan|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|log|exp)(?![a-zA-Z])/g, replacement: ' $1 ' },
-  { pattern: /\\times\b/g, replacement: ' times ' },
-  { pattern: /\\cdot\b/g, replacement: ' times ' },
-  { pattern: /\\div\b/g, replacement: ' divided by ' },
-  { pattern: /\\pm\b/g, replacement: ' plus or minus ' },
-  { pattern: /\\leq\b/g, replacement: ' less than or equal to ' },
-  { pattern: /\\geq\b/g, replacement: ' greater than or equal to ' },
-  { pattern: /\\neq\b/g, replacement: ' not equal to ' },
-  { pattern: /\\approx\b/g, replacement: ' approximately ' },
+  // Round-28 (live 2026-07-18: "$8\neq5$" spoke "8 5"): every letter-run
+  // command below uses the round-24 \log_2 lookahead instead of \b — a \b
+  // after a letter never matches when a DIGIT follows (q→5 is word→word),
+  // so the glued form "\neq5" missed the rule and the residual sweep
+  // deleted the relation from speech entirely.
+  { pattern: /\\times(?![a-zA-Z])/g, replacement: ' times ' },
+  { pattern: /\\cdot(?![a-zA-Z])/g, replacement: ' times ' },
+  { pattern: /\\div(?![a-zA-Z])/g, replacement: ' divided by ' },
+  { pattern: /\\pm(?![a-zA-Z])/g, replacement: ' plus or minus ' },
+  { pattern: /\\leq(?![a-zA-Z])/g, replacement: ' less than or equal to ' },
+  { pattern: /\\geq(?![a-zA-Z])/g, replacement: ' greater than or equal to ' },
+  { pattern: /\\neq(?![a-zA-Z])/g, replacement: ' not equal to ' },
+  { pattern: /\\approx(?![a-zA-Z])/g, replacement: ' approximately ' },
   // ── Round-24: short relation forms, geometry, sets, decorations ───
-  { pattern: /\\le\b/g, replacement: ' less than or equal to ' },
-  { pattern: /\\ge\b/g, replacement: ' greater than or equal to ' },
-  { pattern: /\\ne\b/g, replacement: ' not equal to ' },
-  { pattern: /\\cong\b|≅/g, replacement: ' is congruent to ' },
-  { pattern: /\\sim\b/g, replacement: ' is similar to ' },
-  { pattern: /\\perp\b|⊥/g, replacement: ' is perpendicular to ' },
-  { pattern: /\\parallel\b|∥/g, replacement: ' is parallel to ' },
-  { pattern: /\\triangle\b|△/g, replacement: ' triangle ' },
-  { pattern: /\\angle\b|∠/g, replacement: ' angle ' },
-  { pattern: /\\in\b|∈/g, replacement: ' is in ' },
-  { pattern: /\\cup\b|∪/g, replacement: ' union ' },
-  { pattern: /\\cap\b|∩/g, replacement: ' intersect ' },
-  { pattern: /\\subseteq\b|\\subset\b|⊆|⊂/g, replacement: ' is a subset of ' },
-  { pattern: /\\emptyset\b|\\varnothing\b|∅/g, replacement: ' the empty set ' },
-  { pattern: /\\implies\b|\\Rightarrow\b|⇒/g, replacement: ' implies ' },
-  { pattern: /\\iff\b/g, replacement: ' if and only if ' },
+  { pattern: /\\le(?![a-zA-Z])/g, replacement: ' less than or equal to ' },
+  { pattern: /\\ge(?![a-zA-Z])/g, replacement: ' greater than or equal to ' },
+  { pattern: /\\ne(?![a-zA-Z])/g, replacement: ' not equal to ' },
+  { pattern: /\\cong(?![a-zA-Z])|≅/g, replacement: ' is congruent to ' },
+  { pattern: /\\sim(?![a-zA-Z])/g, replacement: ' is similar to ' },
+  { pattern: /\\perp(?![a-zA-Z])|⊥/g, replacement: ' is perpendicular to ' },
+  { pattern: /\\parallel(?![a-zA-Z])|∥/g, replacement: ' is parallel to ' },
+  { pattern: /\\triangle(?![a-zA-Z])|△/g, replacement: ' triangle ' },
+  { pattern: /\\angle(?![a-zA-Z])|∠/g, replacement: ' angle ' },
+  { pattern: /\\in(?![a-zA-Z])|∈/g, replacement: ' is in ' },
+  { pattern: /\\cup(?![a-zA-Z])|∪/g, replacement: ' union ' },
+  { pattern: /\\cap(?![a-zA-Z])|∩/g, replacement: ' intersect ' },
+  { pattern: /\\subseteq(?![a-zA-Z])|\\subset(?![a-zA-Z])|⊆|⊂/g, replacement: ' is a subset of ' },
+  { pattern: /\\emptyset(?![a-zA-Z])|\\varnothing(?![a-zA-Z])|∅/g, replacement: ' the empty set ' },
+  { pattern: /\\implies(?![a-zA-Z])|\\Rightarrow(?![a-zA-Z])|⇒/g, replacement: ' implies ' },
+  { pattern: /\\iff(?![a-zA-Z])/g, replacement: ' if and only if ' },
   { pattern: /\\binom\{([^{}]+)\}\{([^{}]+)\}/g, replacement: '$1 choose $2 ' },
   { pattern: /\\bar\{([^{}]{1,8})\}/g, replacement: ' $1 bar ' },
   { pattern: /\\hat\{([^{}]{1,8})\}/g, replacement: ' $1 hat ' },
@@ -342,7 +347,7 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /\\hat\s+([A-Za-z])(?![A-Za-z])/g, replacement: ' $1 hat ' },
   // ℏ — reduced Planck constant. Without a rule the in-span residual sweep
   // deleted it from speech entirely (the round-24 \theta deletion class).
-  { pattern: /\\hbar\b/g, replacement: ' h bar ' },
+  { pattern: /\\hbar(?![a-zA-Z])/g, replacement: ' h bar ' },
   // 0.\overline{3} is a repeating decimal; any other overline is a bar.
   { pattern: /\.\\overline\{(\d+)\}/g, replacement: '.$1 repeating ' },
   { pattern: /\\overline\{([^{}]{1,12})\}/g, replacement: ' $1 bar ' },
@@ -370,7 +375,7 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // letter-only residual sweep and spoke as a literal backslash).
   { pattern: /\\[,;!:]/g, replacement: ' ' },
   { pattern: /(?:\\partial|∂)\s*([a-zA-Z])\s*\/\s*(?:\\partial|∂)\s*([a-zA-Z])/g, replacement: ' partial $1 over partial $2 ' },
-  { pattern: /\\partial\b|∂/g, replacement: ' partial ' },
+  { pattern: /\\partial(?![a-zA-Z])|∂/g, replacement: ' partial ' },
   // Conditional probability — must claim P(A|B) before anything else sees
   // the pipe (the in-span absolute-value rule requires a pipe PAIR, so a
   // single conditional bar never matches it).
@@ -546,7 +551,13 @@ function respellMathLetters(s: string): string {
     .replace(/\b[aA]\b/g, 'ay')
     .replace(/\b[bB]\b/g, 'bee')
     .replace(/\b[yY]\b/g, 'why')
-    .replace(/\bd\b/g, 'dee');
+    .replace(/\bd\b/g, 'dee')
+    // Round-28 (live: "$m = 7$" heard as "meter equals 7"): Cartesia
+    // normalizes a bare standalone "m" to "meter". Units have already
+    // converted ("5 m" → "5 meters", "m/s" → compound) before this
+    // respell runs, so a surviving standalone lowercase m in a declared
+    // span is the variable. Capital M stays (molar / labels).
+    .replace(/\bm\b/g, 'em');
 }
 // Round-15 Issue 4 (2026-07-16, live AP Calc): "$(x-2)$" leaked raw to
 // Cartesia — no ^ _ \ = inside, so the signal gate never fired, and the
@@ -961,7 +972,7 @@ function rewriteChemistrySpanForSpeech(t: string): string {
   // Reaction / equilibrium arrows.
   t = t.replace(/\\xrightarrow\{[^{}]*\}/g, ' yields ');
   t = t.replace(/\\rightleftharpoons\b|\\leftrightharpoons\b|⇌/g, ' is in equilibrium with ');
-  t = t.replace(/\\to\b|\\longrightarrow\b|\\rightarrow\b|→/g, ' yields ');
+  t = t.replace(/\\to(?![a-zA-Z])|\\longrightarrow(?![a-zA-Z])|\\rightarrow(?![a-zA-Z])|→/g, ' yields ');
   // Mixed-case element runs spell out with SPOKEN letter names ("NaCl" →
   // "en ay see el") — bare capitals would re-anchor the prose unit pass on
   // the output ("2 N …" → "2 newtons", a T4 idempotence break) and
@@ -1112,6 +1123,12 @@ const A_VARIABLE_REPLACEMENTS: Replacement[] = [
   { pattern: /(?<=\b(?:value|values|find|for)\s)a(?=\s+and\s+b\b)/gi, replacement: 'ay' },
   // "a, the ..." apposition — "substitute a, the number of apples"
   { pattern: /\ba\b(?=,\s*the\b)/gi, replacement: 'ay' },
+  // Round-28 (live 2026-07-18: "*a plus b* equals 5" spoke the article —
+  // markdown italics, not a $-span, so no span respell applied): 'a'
+  // before an operator word is the variable when a math-shaped term
+  // follows (single letter, respelled letter word, or digit). "a plus
+  // for the team" / "a plus sign" stay articles (multi-letter follower).
+  { pattern: /\ba\b(?=\s+(?:plus|minus|times|over)\s+(?:[a-z]\b|bee\b|why\b|dee\b|see\b|\d))/gi, replacement: 'ay' },
 ];
 
 const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
@@ -1127,6 +1144,14 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   { pattern: /\bc\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'see' },
   { pattern: /\by\b(?!['’])/g, replacement: 'why' },  // (?!') guards contractions like y'all
   { pattern: /\bb\b(?!['’])/g, replacement: 'bee' },
+  // Round-28: standalone prose 'm' behind variable anchors ("Right, m
+  // equals 7" was heard as "meter equals 7" — Cartesia's own
+  // normalization of a bare m). Prose units ("5 m long") have already
+  // converted by the earlier unit pass, so an anchored m here is the
+  // variable. Lookbehind guards contractions ("I'm") and dotted
+  // abbreviations ("a.m."); lowercase only, same tier as 'a'.
+  { pattern: /(?<!['’.])\bm\b(?=\s*(?:=|equals?\b|should\b|must\b|will\s+be\b|is\s+equal\b))/g, replacement: 'em' },
+  { pattern: /(?<=\b(?:substitute|solve for|value of|values of|find)\s)m\b(?!['’])/g, replacement: 'em' },
   { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
   { pattern: new RegExp(`\\bB\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];

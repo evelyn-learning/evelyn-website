@@ -31,6 +31,8 @@
     "test:energy-bars-scope": "npx tsx scripts/test-energy-bars-scope.ts",
     "test:dedup-scroll": "npx tsx scripts/test-dedup-scroll.ts",
     "test:view-follow": "npx tsx scripts/test-view-follow.ts",
+    "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
+    "test:silent-regen-clause": "npx tsx scripts/test-silent-regen-clause.ts",
     "test:board-map": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-board-map.ts",
     "test:board-title": "npx tsx scripts/test-board-title.ts",
     "test:replay-scrubber": "npx tsx scripts/test-replay-scrubber.ts",

@@ -411,3 +411,21 @@ export function segment(text: string, forceMath = false): Array<{ kind: 'text' |
   }
   return out;
 }
+
+/**
+ * Pre-KaTeX normalization shared by the inline-math renderers
+ * (InlineMathText / EquationRenderer): collapse model double-escapes
+ * (\\frac → \frac) and convert literal "\n" escapes to real newlines.
+ *
+ * The newline conversion carries a negative lookahead so it never eats
+ * the start of \n-prefixed LaTeX commands — \neq, \not, \nabla, \nu,
+ * \ne, \nmid… Round-28 (live 2026-07-18): InlineMathText shipped the
+ * unguarded form, so "x\neq2" lost its backslash and rendered as italic
+ * "xeq2" in problem cards and transcript bubbles, while EquationRenderer
+ * (which already had the guard) rendered the same input correctly.
+ */
+export function preprocessKatexBody(latex: string): string {
+  return latex
+    .replace(/\\\\(?=[a-zA-Z{])/g, '\\')
+    .replace(/\\n(?![a-zA-Z])/g, '\n');
+}

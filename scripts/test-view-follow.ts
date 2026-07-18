@@ -70,6 +70,39 @@ check(
   true,
 );
 
+// --- Round-28 (live 2026-07-18, session portal-f31017f0): caught-up viewer
+// exemption. The student was ON the then-newest page when the tutor's
+// DEFERRED auto-newPage flushed a brand-new page — but a page flip inside
+// the 10s grace held the view, leaving only the badge. A viewer sitting on
+// the newest page hasn't "flipped back to re-read" anything; for a NEW
+// page beyond them, only a short mid-stroke guard (3s default) applies. ---
+
+check(
+  'caught-up viewer, flipped to live page 5s ago, NEW page appears → follows',
+  shouldFollowNewRender({ targetIndex: 3, currentIndex: 2, lastInteractionAt: NOW - 5_000, now: NOW, onLatestPage: true }),
+  true,
+);
+check(
+  'caught-up viewer but mid-stroke 1s ago → still held (short guard)',
+  shouldFollowNewRender({ targetIndex: 3, currentIndex: 2, lastInteractionAt: NOW - 1_000, now: NOW, onLatestPage: true }),
+  false,
+);
+check(
+  'viewer flipped BACK (not on newest page), 5s ago → held (unchanged policy)',
+  shouldFollowNewRender({ targetIndex: 3, currentIndex: 1, lastInteractionAt: NOW - 5_000, now: NOW, onLatestPage: false }),
+  false,
+);
+check(
+  'caught-up flag with a BACKWARD target → full grace still applies',
+  shouldFollowNewRender({ targetIndex: 1, currentIndex: 2, lastInteractionAt: NOW - 5_000, now: NOW, onLatestPage: true }),
+  false,
+);
+check(
+  'caught-up custom short guard respected',
+  shouldFollowNewRender({ targetIndex: 3, currentIndex: 2, lastInteractionAt: NOW - 2_000, now: NOW, onLatestPage: true, caughtUpGraceMs: 1_000 }),
+  true,
+);
+
 // --- trailingNavSuppressesFollow: the order-only "does the batch's trailing
 // nav win over the newest render" call, lifted out of WhiteboardCanvas's
 // view-follow effect (Task X5 fix-wave, Finding 1). ---

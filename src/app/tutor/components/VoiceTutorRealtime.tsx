@@ -20,6 +20,7 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
+import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
@@ -815,6 +816,14 @@ export function VoiceTutorRealtime({
   // (the eventual transcript routes normally through applyPerceptionVerdict
   // or the production-WS fallback).
   const perceptionMidUtteranceWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Round-28 (live 2026-07-18, session portal-f31017f0): STAGE-2 cancels
+  // whose interrupting sound never resolves to a transcript get NO verdict,
+  // so RESTORE never re-fires and the lesson stalls in silence (38s of dead
+  // air observed; the stale checkpoint only cleared at the NEXT student
+  // turn). This timer, armed at 'processing'-cancel time, re-fires the
+  // aborted turn once the no-verdict window elapses — decision logic lives
+  // in the pure decideStage2TimeoutRestore (test:stage2-restore).
+  const stage2TimeoutRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Clears the post-speech "Got that — one sec…" state + its didn't-catch timer.
   // Called when a real student turn reaches the brain, the tutor starts talking,
   // or the student begins a new utterance.
@@ -11400,6 +11409,12 @@ export function VoiceTutorRealtime({
     const checkpoint = perceptionInterruptCheckpointRef.current;
     if (!checkpoint) return;
     perceptionInterruptCheckpointRef.current = null;
+    // Round-28: a real verdict is consuming the checkpoint — the
+    // no-verdict timeout-RESTORE is moot.
+    if (stage2TimeoutRestoreTimerRef.current) {
+      clearTimeout(stage2TimeoutRestoreTimerRef.current);
+      stage2TimeoutRestoreTimerRef.current = null;
+    }
     // Stage 3 fix #10: re-arm the speakText gate AT VERDICT TIME. The
     // original cancel-site arm (in onSpeechStart / retro-cancel) may
     // have expired by the time Haiku returns (300-1500ms typical, up to
@@ -12504,6 +12519,48 @@ export function VoiceTutorRealtime({
           // clearSpeechQueue empties it. See retro-cancel useEffect.
           unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
         };
+        // Round-28: no-verdict recovery for 'processing' cancels. If the
+        // interrupting sound never resolves to a transcript, no verdict
+        // ever consumes this checkpoint — re-fire the aborted turn after
+        // the window instead of stalling until the student re-prompts.
+        if (cancelStage === 'processing') {
+          const armedCheckpoint = perceptionInterruptCheckpointRef.current;
+          if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
+          const checkTimeoutRestore = () => {
+            stage2TimeoutRestoreTimerRef.current = null;
+            const cp = perceptionInterruptCheckpointRef.current;
+            const verdict = decideStage2TimeoutRestore({
+              checkpointActive: cp !== null && cp === armedCheckpoint,
+              cancelledDuringState: armedCheckpoint!.cancelledDuringState,
+              brainWasInFlight: armedCheckpoint!.brainWasInFlight,
+              brainTurnAborted: brainTurnAbortedRef.current,
+              midUtterance: perceptionMidUtteranceRef.current,
+              newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
+              ageMs: Date.now() - armedCheckpoint!.cancelledAt,
+            });
+            if (verdict === 'defer') {
+              stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
+              return;
+            }
+            if (verdict !== 'restore') return;
+            console.warn(
+              `[PERCEPTION] STAGE-2 timeout-RESTORE (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-firing original transcript=${JSON.stringify(armedCheckpoint!.originalTranscript).slice(0, 80)}`,
+            );
+            onDebugEvent?.('perception_stage2_timeout_restore', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms`);
+            perceptionInterruptCheckpointRef.current = null;
+            // Same re-fire discipline as the verdict-driven STAGE-2
+            // RESTORE: re-arm the speakText gate, drop buffered renders
+            // (refire redraws from scratch), bypass the perception dedupe
+            // armed at cancel time.
+            speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+            dropRenderBuffer();
+            void handleStudentTranscriptForBrain(armedCheckpoint!.originalTranscript, {
+              ...(armedCheckpoint!.originalOpts || {}),
+              bypassPerceptionDedupe: true,
+            });
+          };
+          stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS);
+        }
         // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
         // sentence drained from the in-flight orchestrator's SSE buffer
         // between this point and AbortError propagation drops silently.

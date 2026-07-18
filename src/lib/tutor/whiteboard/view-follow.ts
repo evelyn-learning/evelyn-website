@@ -34,13 +34,30 @@ export function shouldFollowNewRender(args: {
   now: number;
   /** Anti-yank grace window. Defaults to 10s per the X5 brief. */
   graceMs?: number;
+  /** Round-28 (live 2026-07-18, session portal-f31017f0): the viewer was
+   *  sitting on the then-newest page when a DEFERRED auto-newPage flushed
+   *  a brand-new page — a page flip inside the 10s grace held the view
+   *  and the student only got the badge. A viewer already caught up
+   *  hasn't "flipped back to re-read" anything, so for a NEW page beyond
+   *  them only a short mid-stroke guard applies (caughtUpGraceMs). The
+   *  caller sets this when currentIndex was the newest page before this
+   *  batch landed. */
+  onLatestPage?: boolean;
+  /** Short guard for the caught-up case (mid-stroke protection). 3s. */
+  caughtUpGraceMs?: number;
 }): boolean {
   const { targetIndex, currentIndex, lastInteractionAt, now } = args;
   const graceMs = args.graceMs ?? 10_000;
+  const caughtUpGraceMs = args.caughtUpGraceMs ?? 3_000;
   // Already there — nothing to follow (also guards against a false
   // "yank" reading when the new render happens to land on the current page).
   if (targetIndex === currentIndex) return false;
-  if (lastInteractionAt != null && now - lastInteractionAt < graceMs) return false;
+  // Caught-up viewers only get the short guard, and only for FORWARD
+  // targets — a backward-landing render keeps the full anti-yank window.
+  const effectiveGraceMs = args.onLatestPage && targetIndex > currentIndex
+    ? caughtUpGraceMs
+    : graceMs;
+  if (lastInteractionAt != null && now - lastInteractionAt < effectiveGraceMs) return false;
   return true;
 }
 

@@ -28,7 +28,7 @@
 import { useEffect, useRef } from 'react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
-import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities } from '@/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
 
 interface InlineMathTextProps {
   text: string;
@@ -43,9 +43,7 @@ function Math({ latex }: { latex: string }) {
   useEffect(() => {
     if (!ref.current) return;
     try {
-      const processed = latex
-        .replace(/\\\\(?=[a-zA-Z{])/g, '\\')
-        .replace(/\\n/g, '\n');
+      const processed = preprocessKatexBody(latex);
       katex.render(processed, ref.current, {
         throwOnError: false,
         displayMode: false,

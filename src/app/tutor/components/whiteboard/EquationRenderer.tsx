@@ -12,6 +12,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { InlineMathText } from './InlineMathText';
 import { computeFitScale } from './fit-scale-math';
+import { preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
 
 interface EquationRendererProps {
   latex: string;
@@ -39,9 +40,7 @@ export function EquationRenderer({
       // the start of LaTeX commands that begin with `\n` — \neq, \not, \nabla,
       // \nu, \nrightarrow, etc. Without this, "23 \neq 5" rendered as "23eq5"
       // because the \n was stripped as a "literal newline" escape.
-      let processedLatex = latex
-        .replace(/\\\\(?=[a-zA-Z{])/g, '\\')      // \\frac → \frac, \\{ → \{
-        .replace(/\\n(?![a-zA-Z])/g, '\n');       // \n → newline, but NOT \neq / \nabla / \nu
+      let processedLatex = preprocessKatexBody(latex);
 
       // Auto-wrap multi-line latex in \begin{aligned}...\end{aligned} when
       // the brain emits `\\` line breaks or `\hline` outside an environment.
