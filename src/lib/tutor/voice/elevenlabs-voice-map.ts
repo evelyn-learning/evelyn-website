@@ -17,7 +17,11 @@
  */
 
 export const ELEVENLABS_VOICES = {
-  /** Mr. Praveen's own ElevenLabs clone. */
+  /** Mr. Praveen's own ElevenLabs clone — PARKED, not in the active map:
+   *  professional voices require a Creator-tier subscription (403
+   *  only_for_creator+ observed 2026-07-18). User decision: substitute
+   *  Nakul rather than upgrade. Re-point the Praveen row below at this
+   *  constant if the account ever moves to Creator+. */
   PRAVEEN: 'smHyZAcbUaIu7hBvqWsF',
   /** Nakul — Indian male. */
   NAKUL: 'UZZaeURqKfDlK782R5Xb',
@@ -29,14 +33,14 @@ export const ELEVENLABS_VOICES = {
   SONYA: 'xmVFTJ0HkfAEMw4wGMgl',
 } as const;
 
-const { PRAVEEN, NAKUL, ANJURA, EARL, SONYA } = ELEVENLABS_VOICES;
+const { NAKUL, ANJURA, EARL, SONYA } = ELEVENLABS_VOICES;
 
 /** Mirrors the Cartesia default (Katie — en-us female). */
 export const ELEVENLABS_DEFAULT_VOICE_ID = SONYA;
 
 const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
   // ── Portal teachers (apps/api seed-teachers.ts in the academy repo) ──
-  '232ac7bd-274f-468b-a06d-98248beee31a': PRAVEEN, // Mr. Praveen (custom clone)
+  '232ac7bd-274f-468b-a06d-98248beee31a': NAKUL,   // Mr. Praveen — Indian male (own clone parked, see above)
   '638efaaa-4d0c-442e-b701-3fae16aad012': NAKUL,   // Mr. Sameer — Indian male
   'f8f5f1b2-f02d-4d8e-a40d-fd850a487b3d': ANJURA,  // Ms. Kiara — Indian female
   '7d444628-dd13-442b-b687-71a6baf0c07e': EARL,    // Mr. Joseph — American male

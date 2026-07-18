@@ -25,8 +25,11 @@ function check(name: string, actual: string, expected: string) {
 const { PRAVEEN, NAKUL, ANJURA, EARL, SONYA } = ELEVENLABS_VOICES;
 
 // Portal teacher clones/voices (seed-teachers.ts) — user-confirmed mapping.
-check('Mr. Praveen (custom clone) → Praveen ElevenLabs clone',
-  resolveElevenLabsVoice('232ac7bd-274f-468b-a06d-98248beee31a'), PRAVEEN);
+// Praveen's own ElevenLabs clone (ELEVENLABS_VOICES.PRAVEEN) is PARKED —
+// professional voices need a Creator-tier subscription (user decision
+// 2026-07-18: substitute Nakul instead of upgrading).
+check('Mr. Praveen (custom clone) → Nakul (clone parked: needs Creator tier)',
+  resolveElevenLabsVoice('232ac7bd-274f-468b-a06d-98248beee31a'), NAKUL);
 check('Mr. Sameer (Cartesia Sameer, Indian male) → Nakul',
   resolveElevenLabsVoice('638efaaa-4d0c-442e-b701-3fae16aad012'), NAKUL);
 check('Ms. Kiara (Indian female) → Anjura',
