@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex, normalizeSentenceGaps } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -287,6 +287,47 @@ console.log('\n=== Round-22: bracketed intervals are math ===');
   check('spaced and half-open intervals render', m2.length === 2);
   const m3 = mathBodies('It costs $5 and shipping is $10.');
   check('currency still literal', m3.length === 0);
+}
+
+console.log('\n=== Round-23: prime/derivative spans are math ===');
+{
+  // Live transcript + problem card showed literal "$f'(x)$" and "$h'(1)$" —
+  // no LaTeX signal char, 5 chars (>4), no relation, apostrophe is not in
+  // the operator class, so every rule missed them.
+  const m = mathBodies("The derivative $f'(x)$ tells you the slope.");
+  check("$f'(x)$ renders as math", m.length === 1 && m[0] === "f'(x)");
+  const m2 = mathBodies("So $h'(1)$ is what we want.");
+  check("$h'(1)$ renders as math", m2.length === 1 && m2[0] === "h'(1)");
+  const m3 = mathBodies("Second derivative $f''(x)$ measures concavity.");
+  check("$f''(x)$ renders as math", m3.length === 1 && m3[0] === "f''(x)");
+  const m4 = mathBodies("Evaluate $g'(-2)$ next.");
+  check("$g'(-2)$ renders as math", m4.length === 1);
+}
+{
+  // Currency + possessive prose must stay literal: the candidate inner
+  // between the two $ is "5 and Bob's fee is " — prose, not a prime span.
+  const m = mathBodies("It costs $5 and Bob's fee is $10.");
+  check('possessive prose between currency stays literal', m.length === 0);
+}
+
+console.log('\n=== Round-23: display-side sentence-gap normalization ===');
+{
+  // Round 21 fixed the missing sentence space on the SPEECH side only;
+  // Image 25 (round 23) showed the bubble still rendering "1.So" run-ons.
+  check(
+    'space inserted after mid-word period',
+    normalizeSentenceGaps('the slope is 1.So what next?') === 'the slope is 1. So what next?',
+  );
+  check(
+    'space inserted after math-closing $.',
+    normalizeSentenceGaps("$h'(1) = \\dfrac{1}{2}$.Now let's cross-check.") ===
+      "$h'(1) = \\dfrac{1}{2}$. Now let's cross-check.",
+  );
+  check('decimals untouched', normalizeSentenceGaps('about 3.14 units') === 'about 3.14 units');
+  check(
+    'already-spaced sentences untouched',
+    normalizeSentenceGaps('Nailed it. Now onward.') === 'Nailed it. Now onward.',
+  );
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

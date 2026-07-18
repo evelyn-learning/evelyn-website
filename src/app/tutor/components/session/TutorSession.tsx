@@ -660,18 +660,41 @@ export default function TutorSession(props: TutorSessionProps) {
   // the pin the instant the next turn starts composing (its id changes
   // first), so dropping the redundant clause closes the gap without
   // reopening the stale-turn case.
+  // R23: the pin can obstruct the board — dismissable via ✕. The root is a
+  // div[role=button] (not <button>) because the ✕ inside must be a real
+  // button and nested buttons are invalid HTML. Dismiss = setQuestionPin(null)
+  // only: pinFetchedTurnRef already blocks a same-turn re-fetch, so the pin
+  // cannot re-appear until the next finalized turn.
   const questionPinEl =
     TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId &&
     lastTutorEntry?.id === questionPin.turnId ? (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }));
+          }
+        }}
         title="The tutor's question — tap for the full transcript"
-        className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left"
+        className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left cursor-pointer"
       >
         <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-amber-400 text-white text-[10px] font-bold">Q</span>
         <span className="min-w-0 text-sm font-medium leading-snug text-amber-900"><InlineMathText text={questionPin.gist} forceMath /></span>
-      </button>
+        <button
+          type="button"
+          aria-label="Dismiss question pin"
+          onClick={(e) => {
+            e.stopPropagation();
+            setQuestionPin(null);
+          }}
+          className="shrink-0 grid place-items-center w-5 h-5 rounded-md text-amber-700/70 hover:bg-amber-100 hover:text-amber-900"
+        >
+          ✕
+        </button>
+      </div>
     ) : undefined;
 
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef

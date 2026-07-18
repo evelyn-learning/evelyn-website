@@ -36,12 +36,20 @@ import {
 } from '@/lib/tutor/voice/problem-generator';
 import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
-import { classifyBrainError, decideBrainRetry } from '@/lib/tutor/voice/brain-retry';
+import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
 
 /** Task X10: max whole-turn retries the route performs on a transient /
  *  overloaded failure that produced ZERO content. Sits on top of the SDK
  *  client's own 2 fast retries (see brain-retry.ts). 2 ⇒ up to 3 attempts. */
 const MAX_TURN_RETRIES = 2;
+
+/** Round-23: inter-event inactivity ceiling for a brain turn. Observed
+ *  2026-07-18 (session portal-6b84012b): the model stream went quiet ~55s
+ *  between sentences (server total=62578ms, retries=0) without throwing,
+ *  leaving the student in dead air no retry tier could see. Legitimate
+ *  inter-event gaps sit far below this: first_sentence ≤ ~7s across the
+ *  session's other turns, tool-result generation ≤ ~10s. */
+const BRAIN_EVENT_STALL_MS = 30_000;
 
 export const runtime = 'nodejs';
 
@@ -619,7 +627,7 @@ export async function POST(req: NextRequest) {
         // eslint-disable-next-line no-constant-condition
         while (true) {
         try {
-        for await (const ev of runTutorTurn(turnInput)) {
+        for await (const ev of withInactivityTimeout(runTutorTurn(turnInput), BRAIN_EVENT_STALL_MS)) {
           // Stamp the whole-turn retry count onto the terminal event so the
           // client turn-ok log can surface it too (server log already has it).
           if (ev.type === 'done') {

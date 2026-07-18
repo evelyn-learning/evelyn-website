@@ -15,6 +15,7 @@ import {
 } from '../src/lib/tutor/orchestrator/text-heuristics';
 import { sanitizeInkOcrText } from '../src/lib/tutor/orchestrator/ink-capture';
 import { inferAdvanceFromSegmentCard } from '../src/lib/tutor/orchestrator/segment-advance';
+import { withInactivityTimeout, classifyBrainError } from '../src/lib/tutor/voice/brain-retry';
 
 let passed = 0;
 let failed = 0;
@@ -203,6 +204,17 @@ function check(name: string, cond: boolean): void {
   check('isVerdictOpener: mid-sentence "right" (direction) → false', isVerdictOpener('Now look at the right side of the equation.') === false);
   check('isVerdictOpener: "Okay, next up is the synapse." → false', isVerdictOpener('Okay, next up is the synapse.') === false);
   check('isVerdictOpener: question → false', isVerdictOpener('What do you think happens next?') === false);
+  // Round-23 (2026-07-18, session portal-6b84012b): "Right idea, but let's
+  // check that carefully" opened a soft-reject of a CORRECT answer and was
+  // voiced ungated — `right` was only matched with [.!,] directly after,
+  // so the verdict hold and the cross-sentence inversion check never armed.
+  check('isVerdictOpener: "Right idea, but…" → true', isVerdictOpener("Right idea, but let's check that carefully.") === true);
+  check('isVerdictOpener: "Right track — now…" → true', isVerdictOpener('Right track, now finish the step.') === true);
+  check('isVerdictOpener: "Good idea, but…" → true', isVerdictOpener('Good idea, but check the sign.') === true);
+  check('isVerdictOpener: "Good start — keep going." → true', isVerdictOpener('Good start, keep going.') === true);
+  check('isVerdictOpener: "Good thinking, but…" → true (pre-existing)', isVerdictOpener('Good thinking, but look again.') === true);
+  check('isVerdictOpener: "Close — but…" → true (pre-existing)', isVerdictOpener('Close — but check the denominator.') === true);
+  check('isVerdictOpener: "The right idea here is…" mid-sentence → false', isVerdictOpener('The right idea here is substitution.') === false);
 }
 
 // ── inferAdvanceFromSegmentCard ───────────────────────────────────
@@ -243,5 +255,63 @@ function check(name: string, cond: boolean): void {
   );
 }
 
-console.log(`\norchestrator-helpers: ${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+// ── withInactivityTimeout ─────────────────────────────────────────
+// Round-23 (2026-07-18, session portal-6b84012b): the "Nailed it." turn's
+// Anthropic stream went quiet ~55s BETWEEN sentences without throwing
+// (server total=62578ms, retries=0), so no retry tier engaged and the
+// student sat in dead air. The watchdog turns inter-event silence into a
+// thrown error that the existing classify/decide machinery handles.
+// Async tests — the summary/exit gate moves inside the IIFE so it still
+// runs LAST.
+void (async () => {
+  async function* paced(events: string[], gapMs: number): AsyncGenerator<string, void, unknown> {
+    for (const e of events) {
+      await new Promise((r) => setTimeout(r, gapMs));
+      yield e;
+    }
+  }
+  {
+    const got: string[] = [];
+    for await (const e of withInactivityTimeout(paced(['a', 'b', 'c'], 5), 200)) got.push(e);
+    check('withInactivityTimeout: fast stream passes through untouched', got.join(',') === 'a,b,c');
+  }
+  {
+    async function* stalls(): AsyncGenerator<string, void, unknown> {
+      yield 'a';
+      await new Promise((r) => setTimeout(r, 500));
+      yield 'never';
+    }
+    const got: string[] = [];
+    let msg = '';
+    try {
+      for await (const e of withInactivityTimeout(stalls(), 60)) got.push(e);
+    } catch (err) {
+      msg = err instanceof Error ? err.message : String(err);
+    }
+    check('withInactivityTimeout: stalled stream throws, keeps earlier events', /stalled/.test(msg) && got.join(',') === 'a');
+    check(
+      'withInactivityTimeout: stall error classifies transient (composes with decideBrainRetry)',
+      classifyBrainError(new Error(msg)) === 'transient',
+    );
+  }
+  {
+    // Early consumer exit (route breaks on client-gone) must still run the
+    // underlying generator's cleanup.
+    let cleaned = false;
+    async function* withCleanup(): AsyncGenerator<string, void, unknown> {
+      try {
+        yield 'a';
+        yield 'b';
+      } finally {
+        cleaned = true;
+      }
+    }
+    for await (const e of withInactivityTimeout(withCleanup(), 200)) {
+      if (e === 'a') break;
+    }
+    check('withInactivityTimeout: early break forwards cleanup to the wrapped generator', cleaned);
+  }
+
+  console.log(`\norchestrator-helpers: ${passed} passed, ${failed} failed`);
+  if (failed > 0) process.exit(1);
+})();

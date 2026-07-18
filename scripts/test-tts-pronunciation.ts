@@ -878,3 +878,52 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   console.log('OK — Round-22 (variable products + adjacent parens)');
 }
+
+// --- Round-23 (2026-07-18, session portal-6b84012b) --------------------
+// Primes and function-inverse notation. User heard "fe"/"fef"/"fe-x" for
+// $f'(x)$ (apostrophe breaks the f( function-application match, span goes
+// to Cartesia raw), "fe-one" for $f'(1)$, "ha-one" for $h'(1)$, and
+// "f to the minus one two" for $f^{-1}(2)$ (general exponent rule — right
+// for x^{-1}, wrong for a function letter).
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq("the derivative $f'(x)$ gives the slope.",
+     'the derivative f prime of x gives the slope.',
+     'f-prime-of-x');
+  eq("evaluate $h'(1)$ directly.",
+     'evaluate h prime of 1 directly.',
+     'h-prime-of-1');
+  eq("that gives $f^{-1}(2)$ here.",
+     'that gives f inverse of 2 here.',
+     'f-inverse-of-2');
+  eq('write $f^{-1}$ first.',
+     'write f inverse first.',
+     'bare-f-inverse');
+  eq("concavity via $f''(x)$ here.",
+     'concavity via f double prime of x here.',
+     'f-double-prime-of-x');
+  // The exact transcript formula: nested inverse inside a prime's argument
+  // inside a \dfrac denominator.
+  eq("so $h'(1) = \\dfrac{1}{f'(f^{-1}(2))}$ by the formula.",
+     'so h prime of 1 equals 1 over f prime of f inverse of 2 by the formula.',
+     'nested-inverse-prime-dfrac');
+  eq("and $h'(x) = \\dfrac{1}{1+x^2}$ follows.",
+     'and h prime of x equals 1 over 1 plus x squared follows.',
+     'h-prime-formula');
+  // Guards: non-function bases keep the exponent reading; plain function
+  // application still reads "of"; prose contractions are untouched.
+  eq('but $x^{-1}$ means the reciprocal.',
+     'but x to the minus 1 means the reciprocal.',
+     'x-to-the-minus-1-kept');
+  eq('so $h(x)$ still reads naturally.',
+     'so h of x still reads naturally.',
+     'h-of-x-still-works');
+  eq("I'm sure you don't mind, let's go.",
+     "I'm sure you don't mind, let's go.",
+     'contractions-untouched');
+
+  console.log('OK — Round-23 (primes + function inverses)');
+}

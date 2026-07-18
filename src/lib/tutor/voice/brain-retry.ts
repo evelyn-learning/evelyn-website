@@ -148,3 +148,68 @@ export function decideBrainRetry(input: BrainRetryDecisionInput): BrainRetryDeci
     reason: 'retry',
   };
 }
+
+/**
+ * Round-23 (2026-07-18, session portal-6b84012b): the "Nailed it." turn
+ * showed server total=62578ms with first_sentence=6297ms and retries=0 —
+ * the Anthropic stream went quiet ~55s BETWEEN sentences without ever
+ * throwing, so neither the SDK's retry tier nor ours engaged and the
+ * student sat in dead air behind two already-played sentences.
+ *
+ * Wraps a turn generator with an inter-event inactivity watchdog: if no
+ * event arrives within timeoutMs, throw a bare Error — which
+ * classifyBrainError calls 'transient', so the route's existing decision
+ * logic does the right thing in both shapes: zero-egress → duplication-free
+ * re-dispatch; partially-played → 'partial-emitted' fallback that ends the
+ * turn cleanly with what already played.
+ *
+ * Cleanup: on a normal early consumer exit (client gone → the route breaks
+ * out of its for-await) the wrapped generator's return() is awaited so its
+ * finally blocks run as they did before this wrapper existed. After a STALL
+ * we cannot await it — an async generator queues return() behind the
+ * pending next(), which is the very call that's hung — so it's
+ * fire-and-forgotten; the point is unblocking the student, not reclaiming
+ * the socket.
+ */
+export async function* withInactivityTimeout<T>(
+  src: AsyncIterable<T>,
+  timeoutMs: number,
+): AsyncGenerator<T, void, unknown> {
+  const gen = src[Symbol.asyncIterator]();
+  let stalled = false;
+  try {
+    while (true) {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      let res: IteratorResult<T, unknown>;
+      try {
+        res = await Promise.race([
+          gen.next(),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => {
+              stalled = true;
+              reject(new Error(`brain stream stalled: no event for ${timeoutMs}ms`));
+            }, timeoutMs);
+          }),
+        ]);
+      } finally {
+        clearTimeout(timer);
+      }
+      if (res.done) return;
+      yield res.value;
+    }
+  } finally {
+    const ret = gen.return?.(undefined);
+    if (ret) {
+      if (stalled) {
+        void ret.then(() => undefined, () => undefined);
+      } else {
+        try {
+          await ret;
+        } catch {
+          // The wrapped generator's own teardown failure must not mask the
+          // consumer's exit path.
+        }
+      }
+    }
+  }
+}

@@ -388,6 +388,26 @@ const SINGLE_VAR_RE = /^\s*[A-Za-z]\s*$/;
 // this gate ran) plus unconditional in-span letter respelling.
 const CURRENCY_ARTIFACT_RE = /^\s*\d/;
 const PROSE_WORD_RE = /[a-z]{3,}/i;
+/** Round-23: primes and function inverses, IN-SPAN ONLY. The apostrophe in
+ *  f'(x) breaks the [fgh]( function-application match, so the span reached
+ *  Cartesia raw ("fe"/"fef"); f^{-1} fell to the general exponent rule and
+ *  spoke "f to the minus 1" instead of "f inverse". These shapes must NOT
+ *  join MATH_COMMAND_REPLACEMENTS: that set also runs on full prose (see
+ *  rewriteForTTS), where an apostrophe rule would shred contractions.
+ *  Order inside-out: inverse first, so the nested transcript shape
+ *  f'(f^{-1}(2)) resolves its argument before the prime-with-argument rule
+ *  measures it; double prime before single so f'' never half-matches.
+ *  Non-function bases (x^{-1}) deliberately keep "to the minus 1". */
+function rewritePrimesForSpeech(t: string): string {
+  t = t.replace(/\\(sin|cos|tan)\^(?:\{-1\}|-1(?!\d))/g, '\\arc$1');
+  t = t.replace(/\b([fgh])\^(?:\{-1\}|-1(?!\d))\(([^()]{1,16})\)/g, '$1 inverse of $2 ');
+  t = t.replace(/\b([fgh])\^(?:\{-1\}|-1(?!\d))/g, ' $1 inverse ');
+  t = t.replace(/\b([a-zA-Z])''\(([^()]{1,16})\)/g, '$1 double prime of $2 ');
+  t = t.replace(/\b([a-zA-Z])''(?![a-zA-Z])/g, ' $1 double prime ');
+  t = t.replace(/\b([a-zA-Z])'\(([^()]{1,16})\)/g, '$1 prime of $2 ');
+  t = t.replace(/\b([a-zA-Z])'(?![a-zA-Z])/g, ' $1 prime ');
+  return t;
+}
 function stripDollarMathForSpeech(t: string): string {
   return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
     if (
@@ -399,7 +419,7 @@ function stripDollarMathForSpeech(t: string): string {
     // Round-21: post-verbalization span cleanup — square brackets are
     // grouping (silent), and any RESIDUAL braces or unknown \commands
     // must never reach the speaker (the raw-"\lim sub x\to ay" class).
-    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewriteDerivatives(inner))))
+    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(inner)))))
       .replace(/\\[a-zA-Z]+\s*/g, ' ')
       .replace(/[[\]{}]/g, ' ')
       // Round-22: adjacent paren groups are an implied product —

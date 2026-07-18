@@ -53,7 +53,24 @@ function looksLikeMath(inner: string): boolean {
     /[A-Za-z0-9)\]]\s*[-+*/·×^]\s*[A-Za-z0-9(\[]/.test(inner) &&
     !/[a-z]{3,}/.test(inner)
   ) return true;
+  //   6. Prime/derivative span (Round-23 — live transcript and problem card
+  //      showed literal "$f'(x)$", "$h'(1)$"): a single letter with 1–2
+  //      primes and an optional short parenthesized argument. The
+  //      prime-follows-first-letter shape can't match possessive prose
+  //      ("Bob's") because prose has more letters before the apostrophe.
+  if (/^[A-Za-z]'{1,2}(?:\([^\s()]{1,8}\))?$/.test(inner)) return true;
   return false;
+}
+
+/** Display-side sentence-gap normalization (Round-23). The brain sometimes
+ *  omits the space after a sentence-ending period — "the slope is 1.So" or
+ *  "…= \dfrac{1}{2}$.Now" — which round 21 fixed on the SPEECH side only
+ *  (tts-pronunciation). Bubbles apply this before segmentation. The `$` in
+ *  the left class covers the period-right-after-closing-math shape; the
+ *  [A-Z][a-z] right side keeps decimals ("3.14") and initialisms ("U.S.A.")
+ *  untouched. */
+export function normalizeSentenceGaps(text: string): string {
+  return text.replace(/([\w$])\.([A-Z][a-z])/g, '$1. $2');
 }
 
 // Pre-pass: auto-wrap Unicode math symbols with limits in $...$ so they
