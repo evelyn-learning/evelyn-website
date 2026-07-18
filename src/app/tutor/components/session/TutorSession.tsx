@@ -585,6 +585,24 @@ export default function TutorSession(props: TutorSessionProps) {
   const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
   const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
+  // Round-28b: BOTH voice engines failed a sentence (Cartesia retries +
+  // voice-matched ElevenLabs fallback) — show the unspoken text as a
+  // transient captions pin at the board bottom. Cleared when the tutor's
+  // audio actually resumes (voiceState → speaking) or after 30s.
+  const [voiceHiccup, setVoiceHiccup] = useState<string | null>(null);
+  const voiceHiccupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleVoiceHiccup = useCallback((text: string) => {
+    setVoiceHiccup(text);
+    if (voiceHiccupTimerRef.current) clearTimeout(voiceHiccupTimerRef.current);
+    voiceHiccupTimerRef.current = setTimeout(() => setVoiceHiccup(null), 30_000);
+  }, []);
+  useEffect(() => {
+    if (voiceState === 'speaking' && voiceHiccup) {
+      // Audio is flowing again — the pin has served its purpose.
+      if (voiceHiccupTimerRef.current) clearTimeout(voiceHiccupTimerRef.current);
+      setVoiceHiccup(null);
+    }
+  }, [voiceState, voiceHiccup]);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -697,6 +715,25 @@ export default function TutorSession(props: TutorSessionProps) {
       </div>
     ) : undefined;
 
+  // Round-28b: voice-hiccup captions pin — board-bottom sibling of the
+  // Q-pin, shown only when a sentence could not be spoken by EITHER voice
+  // engine. Renders the unspoken text (math via KaTeX) under a short
+  // "shifting to captions" chip.
+  const hiccupPinEl = voiceHiccup ? (
+    <div className="ss-cap w-full flex items-start gap-2 rounded-xl bg-slate-50/95 border border-slate-300 shadow-md px-3 py-1.5">
+      <span className="shrink-0 mt-0.5 rounded-md bg-slate-500 text-white text-[10px] font-bold px-1.5 py-0.5 whitespace-nowrap">Voice hiccup — captions</span>
+      <span className="min-w-0 text-sm font-medium leading-snug text-slate-800"><InlineMathText text={voiceHiccup} /></span>
+      <button
+        type="button"
+        aria-label="Dismiss captions pin"
+        onClick={() => setVoiceHiccup(null)}
+        className="shrink-0 grid place-items-center w-5 h-5 rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+      >
+        ✕
+      </button>
+    </div>
+  ) : undefined;
+
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
   // endSession = TTS hard-stop + recording finalize + final profile commit)
   // — calling onEndSession directly would skip the final transcript commit.
@@ -767,6 +804,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
         onMicLevel={(l) => { micLevelRef.current = l; }}
         onListeningHint={setListeningHint}
+        onVoiceHiccup={handleVoiceHiccup}
         onPaceBiasChange={(bias) => {
           setPaceBias(bias);
           setPaceBiasFlash(true);
@@ -1000,6 +1038,7 @@ export default function TutorSession(props: TutorSessionProps) {
         adaptiveMenu={adaptiveMenuEl}
         endControl={endControlEl}
         questionPin={questionPinEl}
+        hiccupPin={hiccupPinEl}
         voiceState={voiceState}
         micLevelRef={micLevelRef}
         listeningHint={listeningHint}

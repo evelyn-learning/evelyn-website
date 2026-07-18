@@ -188,6 +188,10 @@ export interface RealtimeConfig {
    * so the gap doesn't read as the tutor being stuck.
    */
   onTtsIssue?: (kind: 'retrying' | 'skipped') => void;
+  /** Round-28b: BOTH voice engines failed for a sentence (Cartesia retries
+   *  + the voice-matched ElevenLabs fallback) — surface the unspoken text
+   *  as a transient captions pin at the board bottom. Never a third voice. */
+  onVoiceHiccupCaption?: (text: string) => void;
   /**
    * Self-voice echo defence, layer 2 (V2, 2026-07-15). Fires as each TTS
    * sentence crosses a playback lifecycle boundary so the caller can stamp its
@@ -629,7 +633,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     useRealtimeV2 = false,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, relayMode,
+    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, onVoiceHiccupCaption, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
   // so the Realtime model behaves as a transport layer, not a tutor.
@@ -807,6 +811,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   onTtsPlaybackProgressRef.current = onTtsPlaybackProgress;
   const onTtsIssueRef = useRef(onTtsIssue);
   onTtsIssueRef.current = onTtsIssue;
+  const onVoiceHiccupCaptionRef = useRef(onVoiceHiccupCaption);
+  onVoiceHiccupCaptionRef.current = onVoiceHiccupCaption;
+  // Round-28b Cartesia circuit breaker: after 2 consecutive sentence-level
+  // failures, later sentences make ONE quick Cartesia attempt (an automatic
+  // recovery probe — "keep trying") instead of the full retry ladder, so a
+  // sustained outage doesn't add seconds of dead air per sentence. Any
+  // Cartesia success closes the breaker.
+  const cartesiaConsecFailRef = useRef(0);
   const onTtsSentencePlaybackRef = useRef(onTtsSentencePlayback);
   onTtsSentencePlaybackRef.current = onTtsSentencePlayback;
   const pendingDispatchSentenceRef = useRef<string | null>(null);
@@ -2680,8 +2692,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
       // with no second attempt and wedged the turn. Network faults and 5xx
       // get 2 more tries with short backoff; 4xx fails fast (a bad request
-      // won't get better).
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // won't get better). Round-28b: with the Cartesia breaker open
+      // (2+ consecutive failed sentences), each sentence makes ONE quick
+      // probe attempt instead — fast fallback during a sustained outage,
+      // automatic recovery the moment Cartesia is healthy.
+      const attemptCap = useCartesia && cartesiaConsecFailRef.current >= 2 ? 1 : 3;
+      for (let attempt = 0; attempt < attemptCap; attempt++) {
         if (attempt > 0) {
           onTtsIssueRef.current?.('retrying');
           await new Promise((r) => setTimeout(r, 250 * attempt));
@@ -2703,42 +2719,45 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             console.error(`[Realtime] ${useCartesia ? 'cartesia' : 'openai-mini'} TTS returned empty body (attempt ${attempt + 1})`);
             continue;
           }
+          if (useCartesia) cartesiaConsecFailRef.current = 0; // breaker closes on success
           return new Float32Array(buf);
         } catch (err) {
           if ((err as { name?: string })?.name === 'AbortError') return null;
           console.error(`[Realtime] TTS error (attempt ${attempt + 1}):`, err);
         }
       }
-      // Round-18 (2026-07-17, session portal-6342d1f6): cross-engine
-      // fallback. A Cartesia degradation window (upstream timeouts → route
-      // 500s / HTTP2 resets) exhausted all 3 attempts on sentence after
-      // sentence, and each terminal skip silently swallowed a spoken
-      // sentence — the student had to read the chat to find the tail of
-      // every turn. One last attempt through the OpenAI TTS route keeps
-      // the voice flowing: a brief voice change beats a dropped sentence.
-      // Cartesia-only (an OpenAI outage falling back to Cartesia would
-      // need voiceId plumbing this path doesn't have).
+      // Round-28b (2026-07-18, replaces round-18's OpenAI-voice fallback —
+      // a sudden accent change mid-lesson was a user dealbreaker): when
+      // Cartesia exhausts, speak a SHORTENED recovery line through the
+      // VOICE-MATCHED ElevenLabs fallback (Praveen's own clone / a
+      // gender+accent match — see elevenlabs-voice-map.ts; the route
+      // compresses the text server-side so the fallback voice says less).
+      // If ElevenLabs also fails (outage / no subscription), degrade to
+      // the captions pin at the board bottom — never a third voice.
       if (useCartesia) {
+        cartesiaConsecFailRef.current++;
         onTtsIssueRef.current?.('retrying');
         try {
-          const fbSpeed = speakingRateRef.current === 'slow' ? 0.85 : undefined;
-          const res = await fetch('/api/tutor/tts-openai', {
+          const res = await fetch('/api/tutor/tts-elevenlabs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: trimmed, ...(fbSpeed !== undefined ? { speed: fbSpeed } : {}) }),
+            body: JSON.stringify({ text: trimmed, cartesiaVoiceId: cartesiaVoiceIdRef.current }),
           });
           if (res.ok) {
             const buf = await res.arrayBuffer();
             if (buf.byteLength > 0) {
-              console.warn('[Realtime] Cartesia exhausted — sentence spoken via OpenAI TTS fallback');
+              console.warn('[Realtime] Cartesia exhausted — recovery line spoken via voice-matched ElevenLabs fallback');
               return new Float32Array(buf);
             }
           } else {
-            console.error('[Realtime] OpenAI TTS fallback also failed:', res.status);
+            console.error('[Realtime] ElevenLabs fallback failed:', res.status, await res.text().catch(() => ''));
           }
         } catch (err) {
-          console.error('[Realtime] OpenAI TTS fallback error:', err);
+          console.error('[Realtime] ElevenLabs fallback error:', err);
         }
+        // Both voice engines down for this sentence → transient captions
+        // pin with the unspoken text (round-28b captions fallback).
+        onVoiceHiccupCaptionRef.current?.(trimmed);
       }
       return null;
     })();

@@ -415,6 +415,9 @@ interface VoiceTutorRealtimeProps {
   /** Transient listening hint: 'didnt-catch' when the student clearly spoke but
    *  nothing reached the brain (likely dropped); null clears it. */
   onListeningHint?: (hint: 'didnt-catch' | null) => void;
+  /** Round-28b: both voice engines failed for a sentence — the host shows
+   *  a transient "voice hiccup" captions pin with the unspoken text. */
+  onVoiceHiccup?: (text: string) => void;
   /** Phase 3: fires whenever paceBias changes (button click OR matching
    *  verbal cue). Parent uses this to render an "ack" badge confirming
    *  the click landed and showing current bias state. */
@@ -576,6 +579,7 @@ export function VoiceTutorRealtime({
   onResumeAwaitingTapChange,
   onMicLevel,
   onListeningHint,
+  onVoiceHiccup,
   onPaceBiasChange,
   onDifficultyBiasChange,
   onPracticeStatsChange,
@@ -11763,6 +11767,10 @@ export function VoiceTutorRealtime({
       if (ttsNoticeTimerRef.current) clearTimeout(ttsNoticeTimerRef.current);
       ttsNoticeTimerRef.current = setTimeout(() => setTtsNotice(null), kind === 'retrying' ? 4000 : 6000);
     },
+    // Round-28b: Cartesia AND the voice-matched ElevenLabs fallback both
+    // failed this sentence — hand the unspoken text to the host chrome for
+    // the transient board-bottom captions pin.
+    onVoiceHiccupCaption: (text) => onVoiceHiccup?.(text),
     // V2 self-voice echo defence (2026-07-15): stamp the perception buffer at
     // REAL TTS playback time so late sentences in long turns keep an accurate
     // timing window and their verbatim echoes get dropped by the matcher.

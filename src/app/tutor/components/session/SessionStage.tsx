@@ -60,6 +60,9 @@ export interface SessionStageProps {
    *  top-center over the board after the tutor stops speaking, cleared when
    *  the next turn starts. Composed by TutorSession (owns the gist state). */
   questionPin?: ReactNode;
+  /** Round-28b: transient voice-hiccup captions pin — board bottom, just
+   *  above the floating tutor bar (both voice engines failed a sentence). */
+  hiccupPin?: ReactNode;
   // presence
   voiceState: VoiceState;
   /** Live student-mic amplitude (0..1) in a ref, polled here for the "being
@@ -130,7 +133,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
     practiceOverrideActive = false, onTogglePracticeOverride,
@@ -576,6 +579,18 @@ export default function SessionStage(props: SessionStageProps) {
       {questionPin && (
         <div className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)]`}>
           {questionPin}
+        </div>
+      )}
+
+      {/* ===== Voice-hiccup captions pin (round-28b) — board bottom, just
+              above the floating tutor bar: the sentence NEITHER voice
+              engine could speak, readable where the student is already
+              looking. Transient; host clears it when audio resumes. ===== */}
+      {hiccupPin && (
+        <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
+          <div className="max-w-[min(88vw,560px)] pointer-events-auto">
+            {hiccupPin}
+          </div>
         </div>
       )}
 
