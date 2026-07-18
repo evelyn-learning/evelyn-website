@@ -245,7 +245,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('The area is x² plus y².', 'The area is x squared plus why squared.', 'superscript-squared');
   eq('Volume scales with r³.', 'Volume scales with r cubed.', 'superscript-cubed');
   eq('Wichita, KS is at 38°N.', 'Wichita, KS is at 38 degrees N.', 'degree-latitude');
-  eq('Reaction A peaks at 60°C.', 'Reaction A peaks at 60 degrees C.', 'degree-celsius');
+  // Physics-coverage round (2026-07-18) upgraded °C to speak the scale name
+  // (was "60 degrees C") — pin deliberately updated.
+  eq('Reaction A peaks at 60°C.', 'Reaction A peaks at 60 degrees Celsius.', 'degree-celsius');
   console.log('OK — math notation gaps 2026-07-13 (operators, superscripts, degree)');
 }
 

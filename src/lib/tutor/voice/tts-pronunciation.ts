@@ -234,6 +234,29 @@ function resolveSqrtForSpeech(t: string): string {
 // ("{i=1}" → "i=1", "0" → "0").
 const unbrace = (s: string): string => s.replace(/^\{/, '').replace(/\}$/, '');
 
+/** Physics round (2026-07-18): bare Greek GLYPHS get the same spoken words
+ *  as their \commands (previously only π had a glyph rule — ω/Ω/Δ/μ etc.
+ *  leaked raw to Cartesia in prose and failed the speakable invariant in
+ *  spans). Prose-safe: a Greek glyph in English text is always the letter,
+ *  never punctuation. μ is the POST-unit-pass fallback: number-anchored
+ *  micro-units (5 μC) are consumed by rewriteUnitsForSpeech before this
+ *  runs, so a surviving μ is the Greek letter (F = μN → "mu"). Covers both
+ *  U+00B5 MICRO SIGN and U+03BC GREEK SMALL LETTER MU. */
+const GREEK_GLYPH_WORDS: Array<[string, string]> = [
+  ['Ω', 'Omega'], ['ω', 'omega'], ['α', 'alpha'], ['β', 'beta'],
+  ['γ', 'gamma'], ['Γ', 'Gamma'], ['δ', 'delta'], ['Δ', 'Delta'],
+  ['ε', 'epsilon'], ['θ', 'theta'], ['Θ', 'Theta'], ['λ', 'lambda'],
+  ['Λ', 'Lambda'], ['ρ', 'rho'], ['σ', 'sigma'], ['Σ', 'Sigma'],
+  ['τ', 'tau'], ['φ', 'phi'], ['Φ', 'Phi'], ['ν', 'nu'], ['η', 'eta'],
+  ['ξ', 'xi'], ['ζ', 'zeta'], ['χ', 'chi'], ['ψ', 'psi'], ['ι', 'iota'],
+  ['κ', 'kappa'], ['υ', 'upsilon'],
+];
+const GREEK_GLYPH_RULES: Replacement[] = [
+  { pattern: /[μµ]/g, replacement: ' mu ' },
+  ...GREEK_GLYPH_WORDS.map(([glyph, word]): Replacement => (
+    { pattern: new RegExp(glyph, 'g'), replacement: ` ${word} ` })),
+];
+
 const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // ── Round-24 math-coverage sweep ──────────────────────────────────
   // Integrals/sums/products: bounds variant FIRST (else the bare rule
@@ -300,18 +323,34 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /\\bar\{([^{}]{1,8})\}/g, replacement: ' $1 bar ' },
   { pattern: /\\hat\{([^{}]{1,8})\}/g, replacement: ' $1 hat ' },
   { pattern: /\\vec\{([^{}]{1,8})\}/g, replacement: ' vector $1 ' },
+  // Physics round: brace-less decoration forms (\vec F, \hat i) — the brain
+  // writes both. Without a rule the in-span product splitter shreds the
+  // command name into letters ("\vec F" spoke as "e c F": the splitter
+  // split "vec", then the residual sweep ate the orphaned "\v").
+  { pattern: /\\vec\s+([A-Za-z])(?![A-Za-z])/g, replacement: ' vector $1 ' },
+  { pattern: /\\hat\s+([A-Za-z])(?![A-Za-z])/g, replacement: ' $1 hat ' },
+  // ℏ — reduced Planck constant. Without a rule the in-span residual sweep
+  // deleted it from speech entirely (the round-24 \theta deletion class).
+  { pattern: /\\hbar\b/g, replacement: ' h bar ' },
   // 0.\overline{3} is a repeating decimal; any other overline is a bar.
   { pattern: /\.\\overline\{(\d+)\}/g, replacement: '.$1 repeating ' },
   { pattern: /\\overline\{([^{}]{1,12})\}/g, replacement: ' $1 bar ' },
   { pattern: /\\(text|mathrm|mathbf|textbf)\{([^{}]*)\}/g, replacement: ' $2 ' },
-  { pattern: /\^\{?\\circ\}?/g, replacement: ' degrees ' },
+  // Braces matched as a unit (physics stress sweep: the old optional \}?
+  // ate the CLOSING brace of an enclosing F_{...} group when the span held
+  // an unbraced "^\circ}" — the round-24 one-sided-limit lesson again).
+  { pattern: /\^(?:\{\\circ\}|\\circ)/g, replacement: ' degrees ' },
   // Greek commands → bare words. The FULL alphabet must live HERE, not
   // only in the prose pass: the in-span residual sweep deletes any
   // \command still unconverted when the span is cleaned, so "\theta"
   // relying on the prose rule spoke as nothing ("tangent ()", round-24).
   // "pi" survives the in-span product-split (SPAN_PRODUCT_EXCLUDE) and
   // the prose pass turns it into "pie" as usual. Longest names first.
-  { pattern: /\\(varepsilon|vartheta|varphi|upsilon|Upsilon|epsilon|lambda|Lambda|omega|Omega|sigma|Sigma|gamma|Gamma|theta|Theta|kappa|alpha|delta|Delta|beta|iota|zeta|eta|rho|tau|chi|psi|phi|Phi|Psi|pi|nu|xi|Xi|mu)(?![a-zA-Z])/g, replacement: ' $1 ' },
+  // Physics round: the \var* variants strip their "var" prefix — they're
+  // typographic variants of the same letter ("\varepsilon" previously
+  // spoke as the non-word "varepsilon").
+  { pattern: /\\(varepsilon|vartheta|varphi|upsilon|Upsilon|epsilon|lambda|Lambda|omega|Omega|sigma|Sigma|gamma|Gamma|theta|Theta|kappa|alpha|delta|Delta|beta|iota|zeta|eta|rho|tau|chi|psi|phi|Phi|Psi|pi|nu|xi|Xi|mu)(?![a-zA-Z])/g,
+    replacement: (_m: string, name: string) => ` ${name.replace(/^var/, '')} ` },
   // Thin-space and spacing macros (backslash-punctuation escapes the
   // letter-only residual sweep and spoke as a literal backslash).
   { pattern: /\\[,;!:]/g, replacement: ' ' },
@@ -326,6 +365,12 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /·/g, replacement: ' times ' },
   { pattern: /÷/g, replacement: ' divided by ' },
   { pattern: /π/g, replacement: ' pie ' },
+  ...GREEK_GLYPH_RULES,
+  // Unit-vector glyphs: precomposed î/ĵ and any letter carrying a
+  // combining circumflex (k̂, x̂ have no precomposed forms).
+  { pattern: /î/g, replacement: ' i hat ' },
+  { pattern: /ĵ/g, replacement: ' j hat ' },
+  { pattern: /([A-Za-z])̂/g, replacement: ' $1 hat ' },
   { pattern: /√\s*\(([^()]{1,24})\)/g, replacement: ' the square root of ($1) ' },
   { pattern: /√\s*([0-9]+(?:\.[0-9]+)?|[a-zA-Z])/g, replacement: ' the square root of $1 ' },
   { pattern: /\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, replacement: '' },
@@ -373,9 +418,16 @@ function verbalizeExponentsForSpeech(t: string): string {
   return t;
 }
 
-/** _{n+1} / _1 / _i -> "sub …". Same braced-first ordering as exponents. */
+/** _{n+1} / _1 / _i -> "sub …". Same braced-first ordering as exponents.
+ *  The braced rule LOOPS so nested subscripts (F_{F_{\Delta x}}, physics
+ *  stress sweep) resolve inside-out — a single pass left the outer "_{"
+ *  stranded as residue once the inner braces were consumed. */
 function verbalizeSubscriptsForSpeech(t: string): string {
-  t = t.replace(/_\{([^{}]+)\}/g, (_m, sub: string) => ` sub ${wordifyMathOperators(sub)} `);
+  let prev: string;
+  do {
+    prev = t;
+    t = t.replace(/_\{([^{}]+)\}/g, (_m, sub: string) => ` sub ${wordifyMathOperators(sub)} `);
+  } while (t !== prev);
   t = t.replace(/_(-?\d+)/g, (_m, sub: string) => ` sub ${sub} `);
   t = t.replace(/_([a-zA-Z])\b/g, (_m, sub: string) => ` sub ${sub} `);
   return t;
@@ -389,11 +441,21 @@ function verbalizeSubscriptsForSpeech(t: string): string {
  *  pattern here is backslash/caret/underscore-anchored, none of which
  *  appear in ordinary English prose, so this never touches real speech. */
 function verbalizeMathForSpeech(t: string): string {
-  t = resolveFractionsForSpeech(t);
-  t = resolveSqrtForSpeech(t);
-  t = verbalizeMathCommandsForSpeech(t);
-  t = verbalizeExponentsForSpeech(t);
-  t = verbalizeSubscriptsForSpeech(t);
+  // Physics round: the whole sequence loops to a fixpoint (bounded) so
+  // structures nested ACROSS pass types resolve inside-out — e.g. a
+  // fraction inside a braced subscript (F_{\frac{a}{t}}) only becomes
+  // brace-free after the subscript pass exposes it, which is too late for
+  // the single fraction pass that already ran. Each pass is idempotent on
+  // its own output, so a stable string exits immediately.
+  for (let i = 0; i < 5; i++) {
+    const prev = t;
+    t = resolveFractionsForSpeech(t);
+    t = resolveSqrtForSpeech(t);
+    t = verbalizeMathCommandsForSpeech(t);
+    t = verbalizeExponentsForSpeech(t);
+    t = verbalizeSubscriptsForSpeech(t);
+    if (t === prev) break;
+  }
   return t;
 }
 
@@ -419,8 +481,12 @@ const MATH_SIGNAL_RE = /[\^_\\=]/;
 // Round-22: in-span words that must NEVER be split as variable products —
 // function names, spoken-form tokens the verbalizers emit, and connective
 // words that legitimately appear inside spans.
+// Physics round: 'at' is deliberately NOT in this set anymore — inside a
+// declared span "at" is the kinematic product a·t (v = v₀ + at → "ay t"),
+// the single most common physics equation tail. Accepted tradeoff: a rare
+// \text{…at…} prose fragment inside a span respells its "at".
 const SPAN_PRODUCT_EXCLUDE = new Set([
-  'of', 'to', 'the', 'as', 'at', 'is', 'in', 'or', 'and', 'for', 'over',
+  'of', 'to', 'the', 'as', 'is', 'in', 'or', 'and', 'for', 'over',
   'plus', 'minus', 'times', 'equals', 'squared', 'cubed', 'root', 'limit',
   'approaches', 'sub', 'not', 'equal', 'than', 'less', 'greater', 'why',
   'bee', 'ay', 'dee', 'ex', 'pi', 'ln', 'log', 'sin', 'cos', 'tan', 'sec',
@@ -436,6 +502,10 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // re-enter this splitter and must never be shredded into letters.
   'you', 'see', 'ee', 'ef', 'jee', 'kay', 'em', 'en', 'pee', 'cue', 'ar',
   'ess', 'tee', 'vee', 'zee', 'mu', 'phi',
+  // Physics round: unit vocabulary + words the unit pass emits — none may
+  // be shredded into letter names ("kg" spoke as "k g" pre-round).
+  'per', 'ohm', 'amp', 'kg', 'mg', 'km', 'cm', 'mm', 'nm', 'ms', 'ns',
+  'mol', 'rad', 'amu', 'atm',
 ]);
 function respellMathLetters(s: string): string {
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
@@ -513,6 +583,9 @@ function rewritePrimesForSpeech(t: string): string {
   // (the probability rule in the commands set claims it instead). Looped:
   // nested pipes ("$||x||$", "|" around an already-expanded inner) need a
   // second pass, and prior expansions can push the inner past a small cap.
+  // Physics round: |\vec{v}| is a MAGNITUDE, not an absolute value — claim
+  // the vector-pipe shape before the generic pair rule below sees it.
+  t = t.replace(/\|\s*\\vec\{?([A-Za-z])\}?\s*\|/g, ' the magnitude of vector $1 ');
   let prevAbs: string;
   do {
     prevAbs = t;
@@ -535,6 +608,131 @@ function rewritePrimesForSpeech(t: string): string {
   t = t.replace(/(\d+|\b[a-zA-Z])!/g, '$1 factorial ');
   return t;
 }
+/** ---------------------------------------------------------------------
+ *  Physics units → spoken words (physics-coverage round, 2026-07-18).
+ *
+ *  Cartesia reads unit symbols unreliably ("kg", "Hz", "Ω") and the
+ *  in-span product splitter used to shred them into letter names
+ *  ("kg" → "k g"). Expansion is NUMBER-ANCHORED ("5 kg" → "5 kilograms")
+ *  so bare variables never convert; COMPOUND units (m/s, m/s², km/h,
+ *  N·m) are shape-unambiguous and expand unconditionally. Single letters
+ *  that are common in prose (s, A, C, K, T, F) expand only inside $-spans
+ *  (spanMode), where a declared-math context removes the ambiguity —
+ *  same reasoning as the round-20 in-span letter respell. Bare prose
+ *  "300 K" stays untouched (vitamin K / "$5K" precedent in
+ *  rewriteDomainAcronyms). Accepted, documented tradeoffs: "9 g" always
+ *  reads grams (never g-force); a genuine prose "5 N" (e.g. a route
+ *  number) reads newtons.
+ * ----------------------------------------------------------------- */
+// A number token, optionally carrying a caret exponent ("10^{-19} C") or
+// made of unicode superscripts ("10⁻³⁴ J" — the run after "10"). The
+// lookbehinds stop mid-number matches: "x^2 kg" must not anchor on the
+// exponent's 2, and a superscript run anchors at its own start.
+const UNIT_NUM_SRC = String.raw`(?:(?<![\d,.^_{])\d[\d,]*(?:\.\d+)?(?:\s*\^\s*(?:\{-?\d+\}|-?\d+))?|(?<![⁰¹²³⁴⁵⁶⁷⁸⁹])[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+)`;
+// Whitespace / LaTeX thin-space / non-breaking tie between number and unit.
+const UNIT_SEP_SRC = String.raw`(?:\s|\\[,;:!]|\\ |~)*`;
+interface UnitRule { src: string; plural: string; singular: string; spanOnly?: boolean }
+const SINGLE_UNIT_RULES: UnitRule[] = [
+  // Prefixed forms first (longest match wins over their base unit).
+  { src: '[μµ]C', plural: 'microcoulombs', singular: 'microcoulomb' },
+  { src: 'nC', plural: 'nanocoulombs', singular: 'nanocoulomb' },
+  { src: 'pC', plural: 'picocoulombs', singular: 'picocoulomb' },
+  { src: '[μµ]F', plural: 'microfarads', singular: 'microfarad' },
+  { src: 'nF', plural: 'nanofarads', singular: 'nanofarad' },
+  { src: 'pF', plural: 'picofarads', singular: 'picofarad' },
+  { src: '[μµ]s', plural: 'microseconds', singular: 'microsecond' },
+  { src: 'ns', plural: 'nanoseconds', singular: 'nanosecond' },
+  { src: 'ms', plural: 'milliseconds', singular: 'millisecond' },
+  { src: '[μµ]m', plural: 'micrometers', singular: 'micrometer' },
+  { src: 'nm', plural: 'nanometers', singular: 'nanometer' },
+  { src: 'mm', plural: 'millimeters', singular: 'millimeter' },
+  { src: 'cm', plural: 'centimeters', singular: 'centimeter' },
+  { src: 'km', plural: 'kilometers', singular: 'kilometer' },
+  { src: '[μµ]A', plural: 'microamps', singular: 'microamp' },
+  { src: 'mA', plural: 'milliamps', singular: 'milliamp' },
+  { src: 'mV', plural: 'millivolts', singular: 'millivolt' },
+  { src: 'kV', plural: 'kilovolts', singular: 'kilovolt' },
+  { src: 'kΩ', plural: 'kilohms', singular: 'kilohm' },
+  { src: 'MΩ', plural: 'megohms', singular: 'megohm' },
+  { src: 'GHz', plural: 'gigahertz', singular: 'gigahertz' },
+  { src: 'MHz', plural: 'megahertz', singular: 'megahertz' },
+  { src: 'kHz', plural: 'kilohertz', singular: 'kilohertz' },
+  { src: 'Hz', plural: 'hertz', singular: 'hertz' },
+  { src: 'GeV', plural: 'giga electron volts', singular: 'giga electron volt' },
+  { src: 'MeV', plural: 'mega electron volts', singular: 'mega electron volt' },
+  { src: 'keV', plural: 'kilo electron volts', singular: 'kilo electron volt' },
+  { src: 'eV', plural: 'electron volts', singular: 'electron volt' },
+  { src: 'kN', plural: 'kilonewtons', singular: 'kilonewton' },
+  { src: 'kJ', plural: 'kilojoules', singular: 'kilojoule' },
+  { src: 'MJ', plural: 'megajoules', singular: 'megajoule' },
+  { src: 'kW', plural: 'kilowatts', singular: 'kilowatt' },
+  { src: 'MW', plural: 'megawatts', singular: 'megawatt' },
+  { src: 'kPa', plural: 'kilopascals', singular: 'kilopascal' },
+  { src: 'MPa', plural: 'megapascals', singular: 'megapascal' },
+  { src: 'Pa', plural: 'pascals', singular: 'pascal' },
+  { src: 'kg', plural: 'kilograms', singular: 'kilogram' },
+  { src: 'mg', plural: 'milligrams', singular: 'milligram' },
+  { src: 'mol', plural: 'moles', singular: 'mole' },
+  { src: 'rad', plural: 'radians', singular: 'radian' },
+  { src: 'amu', plural: 'atomic mass units', singular: 'atomic mass unit' },
+  { src: 'atm', plural: 'atmospheres', singular: 'atmosphere' },
+  // Glyph + command forms of ohm (the span sees raw \Omega).
+  { src: 'Ω|\\\\Omega\\b', plural: 'ohms', singular: 'ohm' },
+  { src: 'N', plural: 'newtons', singular: 'newton' },
+  { src: 'J', plural: 'joules', singular: 'joule' },
+  { src: 'W', plural: 'watts', singular: 'watt' },
+  { src: 'V', plural: 'volts', singular: 'volt' },
+  { src: 'm', plural: 'meters', singular: 'meter' },
+  { src: 'g', plural: 'grams', singular: 'gram' },
+  // Prose-ambiguous single letters: $-span only.
+  { src: 's', plural: 'seconds', singular: 'second', spanOnly: true },
+  { src: 'A', plural: 'amps', singular: 'amp', spanOnly: true },
+  { src: 'C', plural: 'coulombs', singular: 'coulomb', spanOnly: true },
+  { src: 'K', plural: 'kelvin', singular: 'kelvin', spanOnly: true },
+  { src: 'T', plural: 'tesla', singular: 'tesla', spanOnly: true },
+  { src: 'F', plural: 'farads', singular: 'farad', spanOnly: true },
+];
+const SINGLE_UNIT_COMPILED = SINGLE_UNIT_RULES.map((u) => ({
+  ...u,
+  // Trailing guard excludes digits too: a unit letter directly followed by
+  // a digit is notation, not a unit — "$10C3$" is nCr shorthand ("10
+  // choose 3"), which the span-only coulomb rule must never claim.
+  re: new RegExp(`(${UNIT_NUM_SRC})(?:${UNIT_SEP_SRC})(?:${u.src})(?![A-Za-z0-9])`, 'g'),
+  // \text{kg}/\mathrm{K} with an optional preceding number. A \text-wrapped
+  // unit inside a span is an EXPLICIT unit annotation, so it converts even
+  // number-less ((x)_0 \, \text{kg} → "… sub 0 kilograms") — leaving it raw
+  // broke T4 idempotence: the spoken "sub 0 kg" re-matched as "0 kg".
+  textRe: new RegExp(`(?:(${UNIT_NUM_SRC})(?:${UNIT_SEP_SRC}))?\\\\(?:text|mathrm)\\{\\s*(?:${u.src})\\s*\\}`, 'g'),
+}));
+const COMPOUND_UNIT_RULES: Array<{ re: RegExp; spoken: string }> = [
+  // Brace pair matched as a unit — "^2}" inside an enclosing braced group
+  // must not have its foreign "}" consumed.
+  { re: /(?<![A-Za-z])m\/s\s*(?:²|\^\{2\}|\^2)(?![A-Za-z])/g, spoken: ' meters per second squared ' },
+  { re: /(?<![A-Za-z])m\/s(?![A-Za-z0-9])/g, spoken: ' meters per second ' },
+  { re: /(?<![A-Za-z])km\/h(?![A-Za-z])/g, spoken: ' kilometers per hour ' },
+  { re: /(?<![A-Za-z])km\/s(?![A-Za-z])/g, spoken: ' kilometers per second ' },
+  { re: /(?<![A-Za-z])N\s*(?:·|\\cdot\b)\s*m(?![A-Za-z])/g, spoken: ' newton meters ' },
+];
+function rewriteUnitsForSpeech(t: string, spanMode: boolean): string {
+  if (spanMode) {
+    // \text-wrapped single units convert first (see textRe above), THEN
+    // remaining \text/\mathrm unwrap so compound units ("\text{m/s}") are
+    // visible to the rules below — identical to the strip
+    // verbalizeMathCommandsForSpeech performs later, just earlier.
+    for (const u of SINGLE_UNIT_COMPILED) {
+      t = t.replace(u.textRe, (_m, num?: string) =>
+        num ? `${num} ${num === '1' ? u.singular : u.plural} ` : ` ${u.plural} `);
+    }
+    t = t.replace(/\\(?:text|mathrm)\{\s*([^{}]*?)\s*\}/g, ' $1 ');
+  }
+  for (const { re, spoken } of COMPOUND_UNIT_RULES) t = t.replace(re, spoken);
+  for (const u of SINGLE_UNIT_COMPILED) {
+    if (u.spanOnly && !spanMode) continue;
+    t = t.replace(u.re, (_m, num: string) => `${num} ${num === '1' ? u.singular : u.plural} `);
+  }
+  return t;
+}
+
 function stripDollarMathForSpeech(t: string): string {
   return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
     if (
@@ -546,7 +744,7 @@ function stripDollarMathForSpeech(t: string): string {
     // Round-21: post-verbalization span cleanup — square brackets are
     // grouping (silent), and any RESIDUAL braces or unknown \commands
     // must never reach the speaker (the raw-"\lim sub x\to ay" class).
-    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(inner)))))
+    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(rewriteUnitsForSpeech(inner, true))))))
       .replace(/\\[a-zA-Z]+\s*/g, ' ')
       .replace(/[[\]{}]/g, ' ')
       // Round-22: adjacent paren groups are an implied product —
@@ -942,6 +1140,20 @@ export function rewriteForTTS(raw: string): string {
   // Runs after rewriteDerivatives (which already consumed d²y/dx²-style
   // patterns) and before the bare "=" → "equals" rule so anything left
   // over (e.g. "$x = 3$" → "x = 3") still gets voiced by it.
+  // Physics units in prose ("5 kg", "9.8 m/s²"). MUST run BEFORE span
+  // processing: a span's respelled output ("1 over 2 m v squared" from
+  // $\frac{1}{2}mv^2$) is indistinguishable from prose "2 m", so the pass
+  // may only ever see the pre-span text. $-span INTERIORS are skipped
+  // entirely (same pair regex as stripDollarMathForSpeech): they run their
+  // own span-mode pass, and letting the prose pass eat "\, \Omega" inside
+  // "$2 \, \Omega$" destroyed the span's only math signal — the gate then
+  // mistook "2 ohms" for a currency artifact and spoke the dollar signs.
+  t = t
+    .split(/(\$[^$\n]{1,160}\$)/)
+    .map((chunk) => (chunk.startsWith('$') && chunk.endsWith('$') && chunk.length > 1
+      ? chunk
+      : rewriteUnitsForSpeech(chunk, false)))
+    .join('');
   t = stripDollarMathForSpeech(t);
   t = verbalizeMathForSpeech(t);
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
@@ -986,11 +1198,17 @@ export function rewriteForTTS(raw: string): string {
   // directly after a MULTI-LETTER word (the preceding character is a letter
   // that is itself preceded by another letter, i.e. not a standalone
   // single-letter token) is left untouched — the footnote-marker shape.
+  // Physics round: superscript minus/plus join the map so scientific
+  // notation ("10⁻¹⁹") reads "10 to the minus 19" — previously the ⁻ glyph
+  // passed through raw and the magnitude was silently dropped. A run with
+  // no DIGIT (a bare ⁺/⁻, e.g. an ion charge "Na⁺") is left untouched.
   const SUPERSCRIPT_DIGIT_MAP: Record<string, string> = {
     '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
     '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+    '⁻': '-', '⁺': '+',
   };
-  t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (run: string, offset: number, full: string) => {
+  t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, (run: string, offset: number, full: string) => {
+    if (!/[⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(run)) return run; // sign-only run — not an exponent
     const prev = full.charAt(offset - 1);
     const prevPrev = full.charAt(offset - 2);
     const precededByDigit = /\d/.test(prev);
@@ -999,10 +1217,13 @@ export function rewriteForTTS(raw: string): string {
     if (!precededByDigit && !precededByCloser && !precededBySingleLetterVar) {
       return run; // footnote marker shape — leave the raw glyph(s) untouched
     }
-    const digits = run.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => SUPERSCRIPT_DIGIT_MAP[ch]);
+    const digits = run.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]/g, (ch) => SUPERSCRIPT_DIGIT_MAP[ch]);
     return spokenExponent(digits);
   });
-  // Degree sign: "38°N" → "38 degrees N", "60°C" → "60 degrees C".
+  // Degree sign: "38°N" → "38 degrees N". Physics round: °C/°F expand the
+  // scale name first ("100°C" previously spoke "100 degrees C").
+  t = t.replace(/°\s*C\b/g, ' degrees Celsius ');
+  t = t.replace(/°\s*F\b/g, ' degrees Fahrenheit ');
   t = t.replace(/°/g, ' degrees ');
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = typeof replacement === 'string'
