@@ -25,6 +25,12 @@ import {
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 import { InlineMathText } from '../whiteboard/InlineMathText';
+import {
+  captionMeasureProxy,
+  tokenizeCaptionMathAtomic,
+  holdBackUnbalancedMathTail,
+  normalizeCaptionMath,
+} from '@/lib/tutor/whiteboard/caption-fit';
 
 export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
 
@@ -729,31 +735,19 @@ export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: (
     const ctx = _capMeasureCanvas.getContext('2d');
     if (!ctx) { setDisplay(shown); return; }
     ctx.font = font;
-    const proxy = (s: string) =>
-      s.replace(/\$([^$]*)\$/g, (_m, b: string) => b.replace(/\\[a-zA-Z]+/g, '').replace(/[{}]/g, ''));
-    if (ctx.measureText(proxy(shown)).width <= width) { setDisplay(shown); return; }
-    // Tokens are whitespace-separated runs where a balanced `$…$` span
-    // (which may itself contain spaces, e.g. `$y = 3$`) counts as one
-    // unsplittable unit, keeping `$` pairs balanced in the trimmed tail.
-    const words = shown.match(/(?:\$[^$]*\$|\S)+/g) ?? [];
+    if (ctx.measureText(captionMeasureProxy(shown)).width <= width) { setDisplay(shown); return; }
+    const words = tokenizeCaptionMathAtomic(shown);
     const ell = '… ';
     let tail = '';
     for (let i = words.length - 1; i >= 0; i--) {
       const cand = words[i] + (tail ? ' ' + tail : '');
-      if (ctx.measureText(proxy(ell + cand)).width > width) break;
+      if (ctx.measureText(captionMeasureProxy(ell + cand)).width > width) break;
       tail = cand;
     }
     setDisplay(tail ? ell + tail : ell + (words[words.length - 1] ?? shown));
   }, [shown]);
 
-  // A typewriter/clamp cut can land mid-span; hold back the unbalanced tail
-  // until its closing `$` arrives so raw LaTeX never flashes while streaming.
-  let capText = display;
-  if (((capText.match(/\$/g) ?? []).length) % 2 === 1) {
-    capText = capText.slice(0, capText.lastIndexOf('$'));
-  }
-  // \dfrac renders display-height and overflows the single-line ticker.
-  capText = capText.replace(/\\dfrac/g, '\\frac');
+  const capText = normalizeCaptionMath(holdBackUnbalancedMathTail(display));
 
   return (
     <div ref={ref} className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-sm text-slate-700">

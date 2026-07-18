@@ -59,6 +59,23 @@ function looksLikeMath(inner: string): boolean {
   //      prime-follows-first-letter shape can't match possessive prose
   //      ("Bob's") because prose has more letters before the apostrophe.
   if (/^[A-Za-z]'{1,2}(?:\([^\s()]{1,8}\))?$/.test(inner)) return true;
+  //   7. Prime compositions & absolute values (Round-24 stress sweep):
+  //      nested derivative shapes f'(f'(x)) / |f'(x)| carry no LaTeX
+  //      signal char and defeat the anchored rule above. A span made only
+  //      of math-word characters that contains a prime or a pipe PAIR —
+  //      with no prose word (3+ consecutive lowercase) — is math. The
+  //      prose guard keeps "don't", "Bob's fee", and every currency
+  //      pairing artifact literal.
+  if (
+    inner.length <= 60 &&
+    (/'/.test(inner) || /\|[^|]*\|/.test(inner)) &&
+    /^[A-Za-z0-9'()|,.\s+\-*/^=<>≤≥]+$/.test(inner) &&
+    !/[a-z]{3,}/.test(inner)
+  ) return true;
+  //   8. Conditional probability P(A|B) (Round-24): a single capital-letter
+  //      function over a single-pipe argument — the pipe-PAIR clause above
+  //      deliberately misses it.
+  if (/^[A-Z]\([^|()]{1,12}\|[^()]{1,12}\)$/.test(inner)) return true;
   return false;
 }
 

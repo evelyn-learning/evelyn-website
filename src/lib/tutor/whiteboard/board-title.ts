@@ -14,7 +14,9 @@
 // fractions resolve inside-out: the regex only matches a frac whose
 // numerator/denominator groups are themselves brace-free, which is
 // exactly the innermost one first.
-const FRAC_RE = /\\frac\{([^{}]*)\}\{([^{}]*)\}/;
+// Round-24: \dfrac/\tfrac alias — Rule 3b output overwhelmingly uses
+// \dfrac, which the plain-\frac regex silently missed.
+const FRAC_RE = /\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/;
 function resolveFractions(t: string): string {
   let prev: string;
   do {
@@ -53,6 +55,12 @@ export function stripLatexForTitle(t: string | undefined): string {
   // before the generic bare-command pass, so they're not converted to words.
   s = s.replace(/\\pm\b/g, '±');
   s = s.replace(/\\infty\b/g, '∞');
+  s = s.replace(/\\cdot\b/g, '·');
+  s = s.replace(/\\times\b/g, '×');
+  s = s.replace(/\\div\b/g, '÷');
+  s = s.replace(/\\leq?\b/g, '≤');
+  s = s.replace(/\\geq?\b/g, '≥');
+  s = s.replace(/\\neq?\b|\\ne\b/g, '≠');
 
   // Other \command{arg} forms ("drop \command names sensibly") — keep the
   // braced content, drop the command name: \text{Hi} -> Hi.

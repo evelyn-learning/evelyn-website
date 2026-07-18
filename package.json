@@ -60,6 +60,7 @@
     "test:cartesia-registry": "npx tsx scripts/test-cartesia-voice-registry.ts",
     "test:tts-flag": "npx tsx scripts/test-tts-engine-flag.ts",
     "test:tts-pronunciation": "npx tsx scripts/test-tts-pronunciation.ts",
+    "test:math-coverage": "npx tsx scripts/test-math-coverage.ts",
     "test:dispatch-dedupe": "npx tsx scripts/test-dispatch-dedupe.ts",
     "test:cancel-storm": "npx tsx scripts/test-cancel-storm.ts",
     "test:bargein-gate": "npx tsx scripts/test-bargein-gate.ts",

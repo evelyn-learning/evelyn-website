@@ -7,6 +7,7 @@ import type jsPDF from 'jspdf';
 // precedent of this export module reaching into app/tutor for a flag
 // helper (see its `drawOnEnabled` import from useDrawOn.ts).
 import { inkNotesEnabled, linksEnabled } from '@/app/tutor/hooks/toolDefinitions';
+import { latexToReadable, mathifyDollarSpans } from './latex-readable';
 
 interface TranscriptMessage {
   id: string;
@@ -23,7 +24,11 @@ interface WhiteboardCommandData {
 }
 
 function sanitizeForPDF(text: string): string {
-  let s = baseSanitize(text);
+  // Round-24: transcript/board prose reaches the PDF with inline $…$ LaTeX
+  // intact (live bubbles mathify via KaTeX since round 20; the PDF was the
+  // last raw surface). Convert here — the single choke point every text
+  // sink passes through. segment() keeps currency prose untouched.
+  let s = baseSanitize(mathifyDollarSpans(text));
   // Normalize Unicode punctuation to ASCII before the Latin-1 strip
   s = s.replace(/[\u2018\u2019\u201A]/g, "'");  // curly single quotes
   s = s.replace(/[\u201C\u201D\u201E]/g, '"');  // curly double quotes
@@ -231,101 +236,9 @@ function toWinAnsiSafe(text: string): string {
   );
 }
 
-// ── LaTeX → readable text (WinAnsi safe) ──
-
-function latexToReadable(latex: string): string {
-  let s = latex;
-
-  // Math functions — convert to readable names BEFORE the catch-all strip
-  s = s.replace(/\\sin/g, 'sin');
-  s = s.replace(/\\cos/g, 'cos');
-  s = s.replace(/\\tan/g, 'tan');
-  s = s.replace(/\\cot/g, 'cot');
-  s = s.replace(/\\sec/g, 'sec');
-  s = s.replace(/\\csc/g, 'csc');
-  s = s.replace(/\\arcsin/g, 'arcsin');
-  s = s.replace(/\\arccos/g, 'arccos');
-  s = s.replace(/\\arctan/g, 'arctan');
-  s = s.replace(/\\sinh/g, 'sinh');
-  s = s.replace(/\\cosh/g, 'cosh');
-  s = s.replace(/\\tanh/g, 'tanh');
-  s = s.replace(/\\log/g, 'log');
-  s = s.replace(/\\ln/g, 'ln');
-  s = s.replace(/\\exp/g, 'exp');
-  s = s.replace(/\\lim/g, 'lim');
-  s = s.replace(/\\max/g, 'max');
-  s = s.replace(/\\min/g, 'min');
-  s = s.replace(/\\det/g, 'det');
-  s = s.replace(/\\gcd/g, 'gcd');
-  s = s.replace(/\\mod/g, 'mod');
-  s = s.replace(/\\deg/g, 'deg');
-
-  // Summation and product
-  s = s.replace(/\\sum/g, 'Sum');
-  s = s.replace(/\\prod/g, 'Prod');
-  s = s.replace(/\\int/g, 'Integral');
-  s = s.replace(/\\infty/g, 'inf');
-
-  // Binomial coefficient: \binom{n}{k} → C(n,k)
-  s = s.replace(/\\binom\{([^}]+)\}\{([^}]+)\}/g, 'C($1,$2)');
-
-  // Square root: \sqrt{x} → sqrt(x)
-  s = s.replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)');
-
-  // Greek letters
-  s = s.replace(/\\rho/g, 'rho');
-  s = s.replace(/\\alpha/g, 'alpha');
-  s = s.replace(/\\beta/g, 'beta');
-  s = s.replace(/\\gamma/g, 'gamma');
-  s = s.replace(/\\theta/g, 'theta');
-  s = s.replace(/\\Delta/g, 'Delta ');
-  s = s.replace(/\\delta/g, 'delta');
-  s = s.replace(/\\epsilon/g, 'epsilon');
-  s = s.replace(/\\lambda/g, 'lambda');
-  s = s.replace(/\\mu/g, 'mu');
-  s = s.replace(/\\pi/g, 'pi');
-  s = s.replace(/\\sigma/g, 'sigma');
-  s = s.replace(/\\tau/g, 'tau');
-  s = s.replace(/\\phi/g, 'phi');
-  s = s.replace(/\\omega/g, 'omega');
-
-  // Common operators — use Latin-1 compatible symbols where possible
-  s = s.replace(/\\cdot/g, ' \u00B7 ');   // middle dot ·
-  s = s.replace(/\\times/g, ' \u00D7 ');  // multiplication sign ×
-  s = s.replace(/\\div/g, ' \u00F7 ');    // division sign ÷
-  s = s.replace(/\\pm/g, '\u00B1');        // plus-minus ±
-  s = s.replace(/\\mp/g, '-/+');
-  s = s.replace(/\\leq/g, '<=');
-  s = s.replace(/\\geq/g, '>=');
-  s = s.replace(/\\neq/g, '!=');
-  s = s.replace(/\\approx/g, '~=');
-  s = s.replace(/\\equiv/g, '===');
-  s = s.replace(/\\rightarrow/g, ' -> ');
-  s = s.replace(/\\leftarrow/g, ' <- ');
-  s = s.replace(/\\Rightarrow/g, ' => ');
-  s = s.replace(/\\quad/g, '  ');
-  s = s.replace(/\\qquad/g, '    ');
-  s = s.replace(/\\,/g, ' ');
-  s = s.replace(/\\;/g, ' ');
-  s = s.replace(/\\!/g, '');
-  s = s.replace(/\\left/g, '');
-  s = s.replace(/\\right/g, '');
-
-  // Fractions: \frac{a}{b} → (a)/(b)
-  s = s.replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)');
-  // Subscripts/superscripts: keep inline
-  s = s.replace(/\^{([^}]+)}/g, '^$1');
-  s = s.replace(/_{([^}]+)}/g, '_$1');
-  // Remove \text{...} wrapper
-  s = s.replace(/\\text\{([^}]+)\}/g, '$1');
-  // Remove remaining backslash commands (spacing, formatting, etc.)
-  s = s.replace(/\\[a-zA-Z]+/g, '');
-  // Clean up extra braces and spaces
-  s = s.replace(/[{}]/g, '');
-  s = s.replace(/\s+/g, ' ').trim();
-  return s;
-}
-
+// -- LaTeX -> readable text: moved to latex-readable.ts (round-24, pure module,
+// node-testable); gained \dfrac/\tfrac + nested-frac + \sqrt[n] handling there.
+// Every text sink also mathifies inline $...$ spans via sanitizeForPDF above.
 // ── jsPDF visual drawing helpers ──
 
 function drawArrow(

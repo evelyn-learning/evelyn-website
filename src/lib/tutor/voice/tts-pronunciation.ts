@@ -179,6 +179,11 @@ function wordifyMathOperators(s: string): string {
   return s
     .replace(/\+/g, ' plus ')
     .replace(/-/g, ' minus ')
+    // Round-24: bare relational glyphs leaked from spans ("$x > 0$" spoke
+    // "x 0"). In-span/argument scope only — this function never runs on
+    // prose, so HTML-ish angle brackets in ordinary text are unaffected.
+    .replace(/</g, ' less than ')
+    .replace(/>/g, ' greater than ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -225,7 +230,26 @@ function resolveSqrtForSpeech(t: string): string {
  *  existing "200 ± 2(25)" regression test below). Bare "\(" / "\)"
  *  (the alternate inline-math delimiter form) are stripped the same way
  *  $ is — see stripDollarMathForSpeech. */
+// Strip one optional layer of braces off a captured limit-bound token
+// ("{i=1}" → "i=1", "0" → "0").
+const unbrace = (s: string): string => s.replace(/^\{/, '').replace(/\}$/, '');
+
 const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
+  // ── Round-24 math-coverage sweep ──────────────────────────────────
+  // Integrals/sums/products: bounds variant FIRST (else the bare rule
+  // strands `_0^4` for the subscript/exponent rules to misread as
+  // "sub 0 to the 4"). Both the \command and the bare glyph forms.
+  // These must also precede `\in\b` — `\int` would otherwise never match.
+  { pattern: /(?:\\int|∫)\s*_\s*(\{[^{}]*\}|[^\s{^]+)\s*\^\s*(\{[^{}]*\}|[^\s{]+)/g,
+    replacement: (_m: string, lo: string, hi: string) => ` the integral from ${unbrace(lo)} to ${unbrace(hi)} of ` },
+  { pattern: /(?:\\int|∫)/g, replacement: ' the integral of ' },
+  { pattern: /(?:\\sum|∑)\s*_\s*(\{[^{}]*\}|[^\s{^]+)\s*\^\s*(\{[^{}]*\}|[^\s{]+)/g,
+    replacement: (_m: string, lo: string, hi: string) => ` the sum from ${unbrace(lo)} to ${unbrace(hi)} of ` },
+  { pattern: /(?:\\sum|∑)/g, replacement: ' the sum of ' },
+  { pattern: /(?:\\prod|∏)\s*_\s*(\{[^{}]*\}|[^\s{^]+)\s*\^\s*(\{[^{}]*\}|[^\s{]+)/g,
+    replacement: (_m: string, lo: string, hi: string) => ` the product from ${unbrace(lo)} to ${unbrace(hi)} of ` },
+  { pattern: /(?:\\prod|∏)/g, replacement: ' the product of ' },
+  { pattern: /\\infty\b|∞/g, replacement: ' infinity ' },
   // Round-21: limits. Must run before the generic subscript rule (which
   // would otherwise read \lim_{x\to a} as "lim sub x to a"). The braced
   // subscript is the approach expression; "of" closes the phrase so the
@@ -243,7 +267,10 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // Round-22: named functions shed the backslash but KEEP the word (the
   // end-of-span residual sweep would otherwise delete "\sin" wholesale);
   // the prose-level trig pass then converts sin→sine etc. as usual.
-  { pattern: /\\(arcsin|arccos|arctan|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|log|exp)\b/g, replacement: ' $1 ' },
+  // Round-24: the \b here was wrong — `_` is a word char, so `\log_2`
+  // never matched and the residual sweep deleted "\log" wholesale. A
+  // negative letter lookahead keeps longest-first alternation semantics.
+  { pattern: /\\(arcsin|arccos|arctan|sinh|cosh|tanh|sin|cos|tan|sec|csc|cot|ln|log|exp)(?![a-zA-Z])/g, replacement: ' $1 ' },
   { pattern: /\\times\b/g, replacement: ' times ' },
   { pattern: /\\cdot\b/g, replacement: ' times ' },
   { pattern: /\\div\b/g, replacement: ' divided by ' },
@@ -252,6 +279,55 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /\\geq\b/g, replacement: ' greater than or equal to ' },
   { pattern: /\\neq\b/g, replacement: ' not equal to ' },
   { pattern: /\\approx\b/g, replacement: ' approximately ' },
+  // ── Round-24: short relation forms, geometry, sets, decorations ───
+  { pattern: /\\le\b/g, replacement: ' less than or equal to ' },
+  { pattern: /\\ge\b/g, replacement: ' greater than or equal to ' },
+  { pattern: /\\ne\b/g, replacement: ' not equal to ' },
+  { pattern: /\\cong\b|≅/g, replacement: ' is congruent to ' },
+  { pattern: /\\sim\b/g, replacement: ' is similar to ' },
+  { pattern: /\\perp\b|⊥/g, replacement: ' is perpendicular to ' },
+  { pattern: /\\parallel\b|∥/g, replacement: ' is parallel to ' },
+  { pattern: /\\triangle\b|△/g, replacement: ' triangle ' },
+  { pattern: /\\angle\b|∠/g, replacement: ' angle ' },
+  { pattern: /\\in\b|∈/g, replacement: ' is in ' },
+  { pattern: /\\cup\b|∪/g, replacement: ' union ' },
+  { pattern: /\\cap\b|∩/g, replacement: ' intersect ' },
+  { pattern: /\\subseteq\b|\\subset\b|⊆|⊂/g, replacement: ' is a subset of ' },
+  { pattern: /\\emptyset\b|\\varnothing\b|∅/g, replacement: ' the empty set ' },
+  { pattern: /\\implies\b|\\Rightarrow\b|⇒/g, replacement: ' implies ' },
+  { pattern: /\\iff\b/g, replacement: ' if and only if ' },
+  { pattern: /\\binom\{([^{}]+)\}\{([^{}]+)\}/g, replacement: '$1 choose $2 ' },
+  { pattern: /\\bar\{([^{}]{1,8})\}/g, replacement: ' $1 bar ' },
+  { pattern: /\\hat\{([^{}]{1,8})\}/g, replacement: ' $1 hat ' },
+  { pattern: /\\vec\{([^{}]{1,8})\}/g, replacement: ' vector $1 ' },
+  // 0.\overline{3} is a repeating decimal; any other overline is a bar.
+  { pattern: /\.\\overline\{(\d+)\}/g, replacement: '.$1 repeating ' },
+  { pattern: /\\overline\{([^{}]{1,12})\}/g, replacement: ' $1 bar ' },
+  { pattern: /\\(text|mathrm|mathbf|textbf)\{([^{}]*)\}/g, replacement: ' $2 ' },
+  { pattern: /\^\{?\\circ\}?/g, replacement: ' degrees ' },
+  // Greek commands → bare words. The FULL alphabet must live HERE, not
+  // only in the prose pass: the in-span residual sweep deletes any
+  // \command still unconverted when the span is cleaned, so "\theta"
+  // relying on the prose rule spoke as nothing ("tangent ()", round-24).
+  // "pi" survives the in-span product-split (SPAN_PRODUCT_EXCLUDE) and
+  // the prose pass turns it into "pie" as usual. Longest names first.
+  { pattern: /\\(varepsilon|vartheta|varphi|upsilon|Upsilon|epsilon|lambda|Lambda|omega|Omega|sigma|Sigma|gamma|Gamma|theta|Theta|kappa|alpha|delta|Delta|beta|iota|zeta|eta|rho|tau|chi|psi|phi|Phi|Psi|pi|nu|xi|Xi|mu)(?![a-zA-Z])/g, replacement: ' $1 ' },
+  // Thin-space and spacing macros (backslash-punctuation escapes the
+  // letter-only residual sweep and spoke as a literal backslash).
+  { pattern: /\\[,;!:]/g, replacement: ' ' },
+  { pattern: /(?:\\partial|∂)\s*([a-zA-Z])\s*\/\s*(?:\\partial|∂)\s*([a-zA-Z])/g, replacement: ' partial $1 over partial $2 ' },
+  { pattern: /\\partial\b|∂/g, replacement: ' partial ' },
+  // Conditional probability — must claim P(A|B) before anything else sees
+  // the pipe (the in-span absolute-value rule requires a pipe PAIR, so a
+  // single conditional bar never matches it).
+  { pattern: /\bP\(\s*([^|()]{1,12})\s*\|\s*([^()]{1,12})\s*\)/g, replacement: ' the probability of $1 given $2 ' },
+  // Bare math glyphs (prose-safe: these are never punctuation).
+  { pattern: /×/g, replacement: ' times ' },
+  { pattern: /·/g, replacement: ' times ' },
+  { pattern: /÷/g, replacement: ' divided by ' },
+  { pattern: /π/g, replacement: ' pie ' },
+  { pattern: /√\s*\(([^()]{1,24})\)/g, replacement: ' the square root of ($1) ' },
+  { pattern: /√\s*([0-9]+(?:\.[0-9]+)?|[a-zA-Z])/g, replacement: ' the square root of $1 ' },
   { pattern: /\\(left|right|big[lmr]?|Big[lmr]?|bigg[lmr]?|Bigg[lmr]?)\b/g, replacement: '' },
   { pattern: /\\[()]/g, replacement: ' ' },
 ];
@@ -261,6 +337,14 @@ function verbalizeMathCommandsForSpeech(t: string): string {
       ? t.replace(pattern, replacement)
       : t.replace(pattern, replacement);
   }
+  // Round-24: composition. One pass converts the innermost application
+  // only — f(g(2)) leaves "f(g of 2 )" because the outer arg contained
+  // parens at match time. Re-run until stable (bounded by nesting depth).
+  let prev: string;
+  do {
+    prev = t;
+    t = t.replace(/\b([fgh])\(([^()]{1,24})\)/g, '$1 of $2 ');
+  } while (t !== prev);
   return t;
 }
 
@@ -342,6 +426,10 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   'bee', 'ay', 'dee', 'ex', 'pi', 'ln', 'log', 'sin', 'cos', 'tan', 'sec',
   'csc', 'cot', 'sine', 'cosine', 'tangent', 'exp', 'lim', 'dx', 'dy',
   'dt', 'du', 'dv', 'max', 'min', 'mod', 'abs', 'deg', 'degrees',
+  // Round-24: words the new verbalizer rules emit into spans — none may
+  // be split as variable products.
+  'sum', 'bar', 'hat', 'set', 'rho', 'tau', 'eta', 'chi', 'psi', 'nu',
+  'xi', 'pie',
 ]);
 function respellMathLetters(s: string): string {
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
@@ -402,10 +490,43 @@ function rewritePrimesForSpeech(t: string): string {
   t = t.replace(/\\(sin|cos|tan)\^(?:\{-1\}|-1(?!\d))/g, '\\arc$1');
   t = t.replace(/\b([fgh])\^(?:\{-1\}|-1(?!\d))\(([^()]{1,16})\)/g, '$1 inverse of $2 ');
   t = t.replace(/\b([fgh])\^(?:\{-1\}|-1(?!\d))/g, ' $1 inverse ');
-  t = t.replace(/\b([a-zA-Z])''\(([^()]{1,16})\)/g, '$1 double prime of $2 ');
-  t = t.replace(/\b([a-zA-Z])''(?![a-zA-Z])/g, ' $1 double prime ');
-  t = t.replace(/\b([a-zA-Z])'\(([^()]{1,16})\)/g, '$1 prime of $2 ');
-  t = t.replace(/\b([a-zA-Z])'(?![a-zA-Z])/g, ' $1 prime ');
+  // Longest prime run first — a shorter rule matching the head of a longer
+  // run strands the leftover apostrophes as residue (round-24 stress sweep
+  // caught f''' emitting "f double prime '").
+  t = t.replace(/\b([a-zA-Z])''''\(([^()]{1,24})\)/g, '$1 fourth derivative of $2 ');
+  t = t.replace(/\b([a-zA-Z])''''(?![a-zA-Z'])/g, ' $1 fourth derivative ');
+  t = t.replace(/\b([a-zA-Z])'''\(([^()]{1,24})\)/g, '$1 triple prime of $2 ');
+  t = t.replace(/\b([a-zA-Z])'''(?![a-zA-Z'])/g, ' $1 triple prime ');
+  t = t.replace(/\b([a-zA-Z])''\(([^()]{1,24})\)/g, '$1 double prime of $2 ');
+  t = t.replace(/\b([a-zA-Z])''(?![a-zA-Z'])/g, ' $1 double prime ');
+  t = t.replace(/\b([a-zA-Z])'\(([^()]{1,24})\)/g, '$1 prime of $2 ');
+  t = t.replace(/\b([a-zA-Z])'(?![a-zA-Z'])/g, ' $1 prime ');
+  // ── Round-24 in-span notation (kept OUT of MATH_COMMAND_REPLACEMENTS,
+  // which also runs on prose where pipes/colons/bangs are punctuation) ──
+  // Absolute value. P(A|B) has a single pipe so the pair rule skips it
+  // (the probability rule in the commands set claims it instead). Looped:
+  // nested pipes ("$||x||$", "|" around an already-expanded inner) need a
+  // second pass, and prior expansions can push the inner past a small cap.
+  let prevAbs: string;
+  do {
+    prevAbs = t;
+    t = t.replace(/\|([^|]{1,160})\|/g, ' the absolute value of $1 ');
+  } while (t !== prevAbs);
+  // One-sided limit approach markers: 2^+ / 2^- / 2^{+}. The optional
+  // brace pair is matched as a unit so a \lim_{...}'s closing brace is
+  // never consumed; a digit after ^- is a negative exponent, not a side.
+  t = t.replace(/\^(?:\{\+\}|\+)(?=[\s)\]},]|$)/g, ' from the right ');
+  t = t.replace(/\^(?:\{-\}|-)(?=[\s)\]},]|$)/g, ' from the left ');
+  // Ratios ("$3:4$"). In-span only — prose colons are clock times.
+  t = t.replace(/(\d+)\s*:\s*(\d+)/g, '$1 to $2');
+  // Interval notation — only when a square bracket marks it as an interval;
+  // a plain paren pair "(3, -4)" is a coordinate point and reads fine as-is.
+  t = t.replace(/\[\s*([^,()[\]|]{1,10})\s*,\s*([^,()[\]|]{1,10})\s*[\])]/g, ' the interval from $1 to $2 ');
+  t = t.replace(/\(\s*([^,()[\]|]{1,10})\s*,\s*([^,()[\]|]{1,10})\s*\]/g, ' the interval from $1 to $2 ');
+  // Combinatorics shorthand 10C3 and factorials — span-only (prose "10C"
+  // is a temperature, "!" an exclamation).
+  t = t.replace(/\b(\d{1,3}|[a-z])C(\d{1,3}|[a-z])\b/g, '$1 choose $2');
+  t = t.replace(/(\d+|\b[a-zA-Z])!/g, '$1 factorial ');
   return t;
 }
 function stripDollarMathForSpeech(t: string): string {
@@ -533,6 +654,9 @@ const spokenVar = (ch: string): string => VAR_SPOKEN[ch.toLowerCase()] ?? ch;
  * two-letter "dy" reads as the word "die").
  */
 function rewriteDerivatives(t: string): string {
+  // Round-24: \frac{d}{dx}[…] operator form — must resolve before the
+  // generic fraction pass turns it into a meaningless "d over dee x".
+  t = t.replace(/\\[dt]?frac\{d\}\{d([a-zA-Z])\}/g, ' the derivative with respect to $1 of ');
   // d²y/dx² and d^2y/dx^2 — second derivative fractions.
   t = t.replace(
     /\bd(?:²|\^2)\s*([a-z])\s*\/\s*d\s*([a-z])\s*(?:²|\^2)/gi,

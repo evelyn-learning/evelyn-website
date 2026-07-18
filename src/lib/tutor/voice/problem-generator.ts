@@ -416,8 +416,22 @@ function planAuthoredFallback(
  *  "Area = 20" → 20). Returns null when there's no digit. Used by
  *  answersAgree to verify a brain-generated problem's answer. */
 export function extractAnswerNumber(s: string): number | null {
-  const t = (s ?? '').trim();
+  let t = (s ?? '').trim();
   if (!t) return null;
+  // Round-24 notation normalization — realistic solver-vs-brain form pairs
+  // that must extract the same value: \frac{1}{2} vs 1/2, π/4 vs 0.785,
+  // 50% vs 0.5, √2/2 vs 0.707, unicode minus, leading-dot decimals. Order
+  // matters: structural forms to plain slashes first, then symbolic
+  // constants to numerics, then percent.
+  t = t
+    .replace(/−/g, '-')
+    .replace(/\\[dt]?frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2')
+    .replace(/\\sqrt\{([^{}]+)\}/g, '√$1')
+    .replace(/(^|[^\d.])\.(\d)/g, '$10.$2');
+  t = t.replace(/(\d*\.?\d*)\s*(?:π|\\pi(?![a-zA-Z])|\bpi\b)/gi, (_m, c: string) =>
+    String((c && c.trim() !== '' ? parseFloat(c) : 1) * Math.PI));
+  t = t.replace(/√\s*(\d+(?:\.\d+)?)/g, (_m, n: string) => String(Math.sqrt(parseFloat(n))));
+  t = t.replace(/(-?\d+(?:\.\d+)?)\s*%/g, (_m, n: string) => String(parseFloat(n) / 100));
   const frac = t.match(/(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)/);
   if (frac) {
     const d = parseFloat(frac[2]);
