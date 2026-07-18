@@ -280,8 +280,19 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   // f of x times g of x").
   { pattern: /\\lim_\{([^{}]*)\}/g, replacement: (_m: string, sub: string) => ` the limit as ${sub.replace(/\\to\b/g, ' approaches ')} of ` },
   { pattern: /\\lim\b/g, replacement: ' the limit of ' },
-  { pattern: /\\to\b/g, replacement: ' approaches ' },
-  { pattern: /→/g, replacement: ' approaches ' },
+  // Chemistry round (2026-07-17): the equilibrium harpoon has no math
+  // meaning — unconditional. Chem-detected $-spans already converted their
+  // arrows to "yields" before this set runs; a REMAINING → is math
+  // ("approaches") unless it sits between two chemical-formula tokens in
+  // prose ("2H₂ + O₂ → 2H₂O"), where it reads "yields".
+  { pattern: /\\rightleftharpoons\b|\\leftrightharpoons\b|⇌/g, replacement: ' is in equilibrium with ' },
+  { pattern: /\\to\b|\\longrightarrow\b|\\rightarrow\b/g, replacement: ' approaches ' },
+  { pattern: /→/g,
+    replacement: (m: string, ...rest: unknown[]) => {
+      const offset = rest[rest.length - 2] as number;
+      const full = rest[rest.length - 1] as string;
+      return chemArrowContext(full, offset, m.length) ? ' yields ' : ' approaches ';
+    } },
   // Single-letter function application: f(x) → "f of x". Restricted to the
   // conventional function names f/g/h — a leading digit or other letter is
   // multiplication ("2(2)^2", "x(x+3)") and stays untouched.
@@ -336,6 +347,10 @@ const MATH_COMMAND_REPLACEMENTS: Replacement[] = [
   { pattern: /\.\\overline\{(\d+)\}/g, replacement: '.$1 repeating ' },
   { pattern: /\\overline\{([^{}]{1,12})\}/g, replacement: ' $1 bar ' },
   { pattern: /\\(text|mathrm|mathbf|textbf)\{([^{}]*)\}/g, replacement: ' $2 ' },
+  // Chemistry round: a thermodynamic standard-state mark on H/G/S/E is
+  // spoken "naught" ("ΔH°" → "Delta H naught"), never "degrees". Must
+  // precede the generic ^\circ rule.
+  { pattern: /([HGSE])\^(?:\{\\circ\}|\\circ)/g, replacement: '$1 naught ' },
   // Braces matched as a unit (physics stress sweep: the old optional \}?
   // ate the CLOSING brace of an enclosing F_{...} group when the span held
   // an unbraced "^\circ}" — the round-24 one-sided-limit lesson again).
@@ -506,6 +521,11 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // be shredded into letter names ("kg" spoke as "k g" pre-round).
   'per', 'ohm', 'amp', 'kg', 'mg', 'km', 'cm', 'mm', 'nm', 'ms', 'ns',
   'mol', 'rad', 'amu', 'atm',
+  // Chemistry round: words the chem rewrites emit into spans. NOT 'sp' or
+  // 'eq' — those are K-constant subscripts the splitter SHOULD spell out.
+  // el/oh/eye/jay are SPOKEN_ELEMENT_LETTERS outputs (the rest of that
+  // map's words are already here from round-25).
+  'gas', 'aq', 'dot', 'ion', 'ppm', 'el', 'oh', 'eye', 'jay',
 ]);
 function respellMathLetters(s: string): string {
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
@@ -600,8 +620,10 @@ function rewritePrimesForSpeech(t: string): string {
   t = t.replace(/(\d+)\s*:\s*(\d+)/g, '$1 to $2');
   // Interval notation — only when a square bracket marks it as an interval;
   // a plain paren pair "(3, -4)" is a coordinate point and reads fine as-is.
-  t = t.replace(/\[\s*([^,()[\]|]{1,10})\s*,\s*([^,()[\]|]{1,10})\s*[\])]/g, ' the interval from $1 to $2 ');
-  t = t.replace(/\(\s*([^,()[\]|]{1,10})\s*,\s*([^,()[\]|]{1,10})\s*\]/g, ' the interval from $1 to $2 ');
+  // The comma must not be a LaTeX thin-space's ("\,") — chem round: that
+  // misread "$[O_2 \, \text{M}]$" as an interval and stranded the backslash.
+  t = t.replace(/\[\s*([^,()[\]|]{1,10})\s*(?<!\\),\s*([^,()[\]|]{1,10})\s*[\])]/g, ' the interval from $1 to $2 ');
+  t = t.replace(/\(\s*([^,()[\]|]{1,10})\s*(?<!\\),\s*([^,()[\]|]{1,10})\s*\]/g, ' the interval from $1 to $2 ');
   // Combinatorics shorthand 10C3 and factorials — span-only (prose "10C"
   // is a temperature, "!" an exclamation).
   t = t.replace(/\b(\d{1,3}|[a-z])C(\d{1,3}|[a-z])\b/g, '$1 choose $2');
@@ -676,6 +698,13 @@ const SINGLE_UNIT_RULES: UnitRule[] = [
   { src: 'rad', plural: 'radians', singular: 'radian' },
   { src: 'amu', plural: 'atomic mass units', singular: 'atomic mass unit' },
   { src: 'atm', plural: 'atmospheres', singular: 'atmosphere' },
+  // Chemistry round (2026-07-17): unambiguous chem units expand everywhere
+  // the physics rules do. mmHg/mmol never collide with the bare mm rule —
+  // its trailing guard rejects the following letter.
+  { src: 'mmHg', plural: 'millimeters of mercury', singular: 'millimeter of mercury' },
+  { src: 'mmol', plural: 'millimoles', singular: 'millimole' },
+  { src: 'mL', plural: 'milliliters', singular: 'milliliter' },
+  { src: 'ppm', plural: 'parts per million', singular: 'part per million' },
   // Glyph + command forms of ohm (the span sees raw \Omega).
   { src: 'Ω|\\\\Omega\\b', plural: 'ohms', singular: 'ohm' },
   { src: 'N', plural: 'newtons', singular: 'newton' },
@@ -691,6 +720,12 @@ const SINGLE_UNIT_RULES: UnitRule[] = [
   { src: 'K', plural: 'kelvin', singular: 'kelvin', spanOnly: true },
   { src: 'T', plural: 'tesla', singular: 'tesla', spanOnly: true },
   { src: 'F', plural: 'farads', singular: 'farad', spanOnly: true },
+  // Chemistry round: liters and molarity are prose-ambiguous ("5 L" could
+  // be a label, bare "0.5 M" reads as an initial/million) — span-only,
+  // same tier as s/A/C/K/T/F. M sits LAST so every M-prefixed unit above
+  // (MΩ, MHz, MPa, MeV, MJ, MW) wins first.
+  { src: 'L', plural: 'liters', singular: 'liter', spanOnly: true },
+  { src: 'M', plural: 'molar', singular: 'molar', spanOnly: true },
 ];
 const SINGLE_UNIT_COMPILED = SINGLE_UNIT_RULES.map((u) => ({
   ...u,
@@ -712,14 +747,28 @@ const COMPOUND_UNIT_RULES: Array<{ re: RegExp; spoken: string }> = [
   { re: /(?<![A-Za-z])km\/h(?![A-Za-z])/g, spoken: ' kilometers per hour ' },
   { re: /(?<![A-Za-z])km\/s(?![A-Za-z])/g, spoken: ' kilometers per second ' },
   { re: /(?<![A-Za-z])N\s*(?:·|\\cdot\b)\s*m(?![A-Za-z])/g, spoken: ' newton meters ' },
+  // Chemistry round: mol-denominated and density compounds. kJ/mol before
+  // J/mol is cosmetic — J/mol's lookbehind already rejects the k.
+  { re: /(?<![A-Za-z])kJ\/mol(?![A-Za-z])/g, spoken: ' kilojoules per mole ' },
+  { re: /(?<![A-Za-z])J\/mol(?![A-Za-z])/g, spoken: ' joules per mole ' },
+  { re: /(?<![A-Za-z])g\/mol(?![A-Za-z])/g, spoken: ' grams per mole ' },
+  { re: /(?<![A-Za-z])mol\/L(?![A-Za-z])/g, spoken: ' moles per liter ' },
+  { re: /(?<![A-Za-z])g\/mL(?![A-Za-z])/g, spoken: ' grams per milliliter ' },
+  { re: /(?<![A-Za-z])g\/cm(?:³|\^\{?3\}?)(?![A-Za-z0-9])/g, spoken: ' grams per cubic centimeter ' },
+  { re: /(?<![A-Za-z])kg\/m(?:³|\^\{?3\}?)(?![A-Za-z0-9])/g, spoken: ' kilograms per cubic meter ' },
 ];
-function rewriteUnitsForSpeech(t: string, spanMode: boolean): string {
+/** Single-letter units that ARE element symbols (or the seconds "s" an
+ *  orbital run emits) — inside a chemistry-detected span "2C" is two
+ *  carbons, never coulombs, so these singles are suppressed there. */
+const CHEM_UNIT_COLLISIONS = new Set(['N', 'C', 'K', 'F', 's']);
+function rewriteUnitsForSpeech(t: string, spanMode: boolean, chemMode = false): string {
   if (spanMode) {
     // \text-wrapped single units convert first (see textRe above), THEN
     // remaining \text/\mathrm unwrap so compound units ("\text{m/s}") are
     // visible to the rules below — identical to the strip
     // verbalizeMathCommandsForSpeech performs later, just earlier.
     for (const u of SINGLE_UNIT_COMPILED) {
+      if (chemMode && CHEM_UNIT_COLLISIONS.has(u.src)) continue;
       t = t.replace(u.textRe, (_m, num?: string) =>
         num ? `${num} ${num === '1' ? u.singular : u.plural} ` : ` ${u.plural} `);
     }
@@ -728,9 +777,198 @@ function rewriteUnitsForSpeech(t: string, spanMode: boolean): string {
   for (const { re, spoken } of COMPOUND_UNIT_RULES) t = t.replace(re, spoken);
   for (const u of SINGLE_UNIT_COMPILED) {
     if (u.spanOnly && !spanMode) continue;
+    if (chemMode && CHEM_UNIT_COLLISIONS.has(u.src)) continue;
     t = t.replace(u.re, (_m, num: string) => `${num} ${num === '1' ? u.singular : u.plural} `);
   }
   return t;
+}
+
+/** ---------------------------------------------------------------------
+ *  Chemistry notation → spoken words (chem-coverage round, 2026-07-17).
+ *
+ *  The math pipeline reads chemistry wrong: "H_2O" spoke "H sub 2 O",
+ *  \to spoke "approaches" (a reaction YIELDS), Na⁺ ion charges were
+ *  deliberately untouched by the physics round, and the in-span splitter
+ *  respelled "(aq)" as letters. A $-span that LOOKS like chemistry (see
+ *  looksLikeChemistrySpan) routes through rewriteChemistrySpanForSpeech
+ *  instead of the plain unit pass; detection misses degrade gracefully —
+ *  the math pipeline still produces clean (if "sub"-flavored) speech.
+ *  Genuinely ambiguous shapes stay math by design: "$F_2$" alone is
+ *  "F sub 2" (force vs fluorine has no signal), "$\text{C}$" alone is
+ *  coulombs. \ce{...} (mhchem) is unsupported — KaTeX here has no mhchem
+ *  and the residual sweep already degrades it losslessly enough.
+ * ----------------------------------------------------------------- */
+const ELEMENT_SYMBOLS = new Set([
+  'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al',
+  'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe',
+  'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr',
+  'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn',
+  'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm',
+  'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W',
+  'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
+  'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf',
+  'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds',
+  'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og',
+]);
+/** Two-letter element symbols that are also common English words (via
+ *  \text prose inside a span) — never spelled out letter-by-letter. */
+const ELEMENT_WORD_COLLISIONS = new Set(['In', 'As', 'At', 'No', 'He', 'Be']);
+/** Spoken element names for nuclide notation ("^{14}C" → "carbon 14") —
+ *  the isotopes that actually show up in AP/intro chem and physics.
+ *  Fallback for anything else: the bare symbol ("Xy 99"). */
+const ISOTOPE_ELEMENT_NAMES: Record<string, string> = {
+  H: 'hydrogen', He: 'helium', C: 'carbon', N: 'nitrogen', O: 'oxygen',
+  F: 'fluorine', Na: 'sodium', P: 'phosphorus', S: 'sulfur', Cl: 'chlorine',
+  K: 'potassium', Ca: 'calcium', Fe: 'iron', Co: 'cobalt', Ni: 'nickel',
+  Cu: 'copper', Zn: 'zinc', Sr: 'strontium', Tc: 'technetium', I: 'iodine',
+  Cs: 'cesium', Ba: 'barium', Pb: 'lead', Po: 'polonium', Rn: 'radon',
+  Ra: 'radium', Th: 'thorium', U: 'uranium', Pu: 'plutonium', Am: 'americium',
+};
+/** True when a capital-letter run parses entirely into element symbols
+ *  (greedy two-letter-first with single-letter backtrack). */
+function parsesAsElementRun(token: string): boolean {
+  let i = 0;
+  while (i < token.length) {
+    const two = token.slice(i, i + 2);
+    if (two.length === 2 && ELEMENT_SYMBOLS.has(two)) { i += 2; continue; }
+    if (ELEMENT_SYMBOLS.has(token[i])) { i += 1; continue; }
+    return false;
+  }
+  return token.length > 0;
+}
+
+// Nuclide superscript: {}^{14}C / ^{235}U / ^{14}_{6}C, element optionally
+// \text-wrapped. The \} is consumed ONLY with its own \text{ (the physics
+// "optional \}? ate a foreign closing brace" lesson). The callback rejects
+// a match whose ^ rides a preceding digit/brace with no explicit {} base —
+// that shape is an exponent ("10^{23}"), not a nuclide.
+const NUCLIDE_RE = /(\{\}\s*)?\^\{(\d{1,3})\}(?:_\{\d{1,3}\})?\s*(?:\\text\{([A-Z][a-z]?)\}|([A-Z][a-z]?))/g;
+const CHEM_TWO_LETTER_SIGNAL = /(?:^|[^A-Za-z])(?:Na|Cl|Mg|Ca|Fe|Cu|Zn|Ag|Au|Pb|Hg|Al|Si|Br|Li|Ba|Sr|Ni|Mn|Cr|Sn|Kr|Xe|Ne|Ar|Rb|Cs|Ti|Co)(?![a-z])/;
+function looksLikeChemistrySpan(inner: string): boolean {
+  // Arrows and states are chemistry-only shapes.
+  if (/\\rightleftharpoons\b|\\leftrightharpoons\b|⇌|\\xrightarrow\b/.test(inner)) return true;
+  if (/[A-Za-z0-9)\]}]\s*\(\s*(?:aq|s|l|g)\s*\)/.test(inner)) return true;
+  // Ion charges: a TRAILING sign in a superscript (leading-sign is a
+  // negative exponent; digit-based "2^+" is a one-sided limit).
+  if (/\^\{\d{0,2}[+-]\}/.test(inner)) return true;
+  if (/[A-Za-z)\]]\^[+-](?![\w{])/.test(inner)) return true;
+  if (/[A-Za-z0-9][⁰¹²³⁴⁵⁶⁷⁸⁹]*[⁺⁻]/.test(inner)) return true;
+  // Nuclide superscripts (digit-preceded ^ is an exponent, not a nuclide).
+  if (/(?:^|[^\d}])\^\{\d{1,3}\}(?:_\{\d{1,3}\})?\s*(?:\\text\{)?[A-Z]/.test(inner)) return true;
+  if (/\{\}\s*\^\{\d{1,3}\}/.test(inner)) return true;
+  // Unambiguous two-letter element symbols (case-sensitive, inside or
+  // outside a compound — "NaCl" has no word boundary before "Cl").
+  if (CHEM_TWO_LETTER_SIGNAL.test(inner)) return true;
+  // Formula shapes: element-subscript chained to another element (H_2O),
+  // two capitals + subscript (CO_2, NH_3), coefficient + element +
+  // subscript (2H_2). A LONE capital-with-subscript ("$F_2$", "$O_2$")
+  // deliberately stays math — force-sub-2 vs fluorine has no signal.
+  if (/[A-Z][a-z]?(?:_\{?\d+\}?|[₀-₉]+)(?=\(?[A-Z])/.test(inner)) return true;
+  if (/[A-Z]{2}[a-z]?(?:_\{?\d|[₀-₉])/.test(inner)) return true;
+  if (/\d[A-Z][a-z]?(?:_\{?\d|[₀-₉])/.test(inner)) return true;
+  if (/\\(?:text|mathrm)\{[A-Z][A-Za-z]{0,2}\}(?:_|[₀-₉])/.test(inner)) return true;
+  // Named equilibrium constants and concentration brackets. The bracket
+  // probe normalizes LaTeX thin-spaces away first — their comma character
+  // is not a list comma — then asks for a capital inside a comma-free
+  // bracket pair (an interval "[2, 5]" keeps its real comma and is math).
+  if (/\bK_(?:\{(?:sp|eq|a|b|w|c|p)\}|[abwcp]\b)/.test(inner)) return true;
+  const bracketProbe = inner.replace(/\\[,;:!]/g, ' ');
+  if (/\[\s*[^,[\]]*[A-Z][^,[\]]*\]/.test(bracketProbe)) return true;
+  // Electron configurations: two or more orbital tokens (a single "3d^5"
+  // could be plain algebra).
+  if ((inner.match(/\d[spdf](?:\^|[⁰¹²³⁴⁵⁶⁷⁸⁹])/g) ?? []).length >= 2) return true;
+  return false;
+}
+
+const CHEM_STATE_WORDS: Record<string, string> = { aq: 'aqueous', s: 'solid', l: 'liquid', g: 'gas' };
+function rewriteChemistrySpanForSpeech(t: string): string {
+  // Nuclides first, before anything reads their superscript as a power.
+  t = t.replace(NUCLIDE_RE, (m: string, base: string | undefined, mass: string, sym1: string | undefined, sym2: string | undefined, offset: number, full: string) => {
+    const prev = full.charAt(offset - 1);
+    if (!base && (/[\d}]/.test(prev))) return m; // exponent shape, not a nuclide
+    const sym = (sym1 ?? sym2) as string;
+    const name = ISOTOPE_ELEMENT_NAMES[sym] ?? sym;
+    return ` ${name} ${mass} `;
+  });
+  // Orbitals before units — "1s^2" must never anchor the seconds rule.
+  t = t.replace(/\b([1-7])([spdf])(?:\^\{?(\d{1,2})\}?|([⁰¹²³⁴⁵⁶⁷⁸⁹]{1,2}))/g,
+    (_m, shell: string, sub: string, caret?: string, glyph?: string) => {
+      const count = caret ?? (glyph ?? '').replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g,
+        (ch) => String('⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(ch)));
+      return ` ${shell} ${sub} ${count} `;
+    });
+  // Units (chem mode: element-collision singles suppressed) + \text unwrap.
+  t = rewriteUnitsForSpeech(t, true, true);
+  // Aggregation states — inside a chem-detected span every (aq|s|l|g)
+  // paren is a state marker.
+  t = t.replace(/\(\s*(aq|s|l|g)\s*\)/g, (_m, st: string) => ` ${CHEM_STATE_WORDS[st]} `);
+  // Hydrate dot: CuSO₄·5H₂O reads "dot", not "times".
+  t = t.replace(/\\cdot\b|·/g, ' dot ');
+  // Ion charges: sign AFTER the digits ("^{2-}", "^+"). A sign BEFORE
+  // digits ("10^{-19}") is a negative exponent and falls through to the
+  // math pipeline.
+  t = t.replace(/\^\{(\d{0,2})\s*([+-])\}/g, (_m, n: string, sign: string) =>
+    ` ${n ? `${n} ` : ''}${sign === '+' ? 'plus' : 'minus'} `);
+  t = t.replace(/\^(\d{0,2})([+-])(?![\w{])/g, (_m, n: string, sign: string) =>
+    ` ${n ? `${n} ` : ''}${sign === '+' ? 'plus' : 'minus'} `);
+  // Concentration brackets. Adjacent []-groups are an implied product;
+  // the × resolves to "times" in the command pass. Looped so nested
+  // groups resolve inside-out.
+  t = t.replace(/\]\s*\[/g, '] × [');
+  let prevBr: string;
+  do {
+    prevBr = t;
+    t = t.replace(/\[([^[\]]{1,80})\]/g, ' the concentration of $1 ');
+  } while (t !== prevBr);
+  // Subscripts speak as PLAIN tokens — "H 2 O", "K a", "K sp" (the span
+  // splitter then letter-spells sp → "s p"). Nobody says "H sub 2 O".
+  t = t.replace(/_\{?(\d{1,3})\}?/g, ' $1 ');
+  t = t.replace(/_\{?([A-Za-z]{1,3})\}?/g, ' $1 ');
+  // Reaction / equilibrium arrows.
+  t = t.replace(/\\xrightarrow\{[^{}]*\}/g, ' yields ');
+  t = t.replace(/\\rightleftharpoons\b|\\leftrightharpoons\b|⇌/g, ' is in equilibrium with ');
+  t = t.replace(/\\to\b|\\longrightarrow\b|\\rightarrow\b|→/g, ' yields ');
+  // Mixed-case element runs spell out with SPOKEN letter names ("NaCl" →
+  // "en ay see el") — bare capitals would re-anchor the prose unit pass on
+  // the output ("2 N …" → "2 newtons", a T4 idempotence break) and
+  // Cartesia reads letter names deterministically. Pure-caps runs (CO,
+  // NH, HA) stay joined — Cartesia letter-reads those correctly already,
+  // per the round-22 uppercase-token precedent.
+  t = t.replace(/\b(\d{0,3})((?:[A-Z][a-z]?)+)\b/g, (m: string, coeff: string, run: string) => {
+    if (!/[a-z]/.test(run)) return m;
+    if (ELEMENT_WORD_COLLISIONS.has(run)) return m;
+    if (!parsesAsElementRun(run)) return m;
+    const spelled = run.split('').map((ch) => SPOKEN_ELEMENT_LETTERS[ch.toLowerCase()] ?? ch).join(' ');
+    return ` ${coeff ? `${coeff} ` : ''}${spelled} `;
+  });
+  return t;
+}
+/** Letter names for spelled-out element runs. VAR_SPOKEN plus the letters
+ *  it lacks (h/i/j/l/o/w — element seconds like Al, Ni, Co, Bh need them). */
+const SPOKEN_ELEMENT_LETTERS: Record<string, string> = {
+  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'ef', g: 'jee',
+  h: 'aitch', i: 'eye', j: 'jay', k: 'kay', l: 'el', m: 'em', n: 'en',
+  o: 'oh', p: 'pee', q: 'cue', r: 'ar', s: 'ess', t: 'tee', u: 'you',
+  v: 'vee', w: 'double u', x: 'ex', y: 'why', z: 'zee',
+};
+
+/** Prose reaction arrows: "2H₂ + O₂ → 2H₂O" reads "yields" when BOTH
+ *  neighbors of the arrow are chemical-formula tokens and at least one is
+ *  unambiguously chemical (subscript, coefficient, charge, state, or a
+ *  second capital) — "A → B" (a mapping) keeps "approaches". */
+function isChemFormulaToken(tok: string): boolean {
+  const clean = tok.replace(/^[([]+|[).,;:!?\]]+$/g, '');
+  return /^\(?\d{0,3}(?:[A-Z][a-z]?(?:[₀-₉]|\d)*)+(?:[⁺⁻]|\(\s*(?:aq|s|l|g)\s*\))?\)?$/.test(clean);
+}
+function isStrongChemToken(tok: string): boolean {
+  return /[₀-₉]|\d|[⁺⁻]|\(\s*(?:aq|s|l|g)\s*\)|[A-Z][a-z]?.*[A-Z]/.test(tok);
+}
+function chemArrowContext(full: string, offset: number, len: number): boolean {
+  const prevTok = /(\S+)\s*$/.exec(full.slice(0, offset))?.[1];
+  const nextTok = /^\s*(\S+)/.exec(full.slice(offset + len))?.[1];
+  if (!prevTok || !nextTok) return false;
+  if (!isChemFormulaToken(prevTok) || !isChemFormulaToken(nextTok)) return false;
+  return isStrongChemToken(prevTok) || isStrongChemToken(nextTok);
 }
 
 function stripDollarMathForSpeech(t: string): string {
@@ -744,7 +982,13 @@ function stripDollarMathForSpeech(t: string): string {
     // Round-21: post-verbalization span cleanup — square brackets are
     // grouping (silent), and any RESIDUAL braces or unknown \commands
     // must never reach the speaker (the raw-"\lim sub x\to ay" class).
-    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(rewriteUnitsForSpeech(inner, true))))))
+    // Chemistry round: chem-looking spans take the chemistry rewrite
+    // (which claims arrows/charges/subscripts/brackets before the math
+    // passes can misread them) in place of the plain unit pass.
+    const prepped = looksLikeChemistrySpan(inner)
+      ? rewriteChemistrySpanForSpeech(inner)
+      : rewriteUnitsForSpeech(inner, true);
+    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped)))))
       .replace(/\\[a-zA-Z]+\s*/g, ' ')
       .replace(/[[\]{}]/g, ' ')
       // Round-22: adjacent paren groups are an implied product —
@@ -1085,9 +1329,12 @@ function rewriteDomainAcronyms(t: string): string {
   // vitamin K, grade K, "$5K" are all genuine K readings — it only
   // expands with an explicit charge sign or in the "Na-K pump" compound.
   t = t.replace(/\bNa[-–/]K\b/g, 'sodium potassium'); // Na-K / Na–K / Na/K pump
-  t = t.replace(/\bNa\+/g, 'sodium');
+  // Chemistry round: the unicode superscript charge signs join the ASCII
+  // forms — "Na⁺"/"K⁺" read "sodium"/"potassium" with the charge consumed,
+  // same round-15 semantics ("the sodium ion" beats "sodium plus ion").
+  t = t.replace(/\bNa[+⁺]/g, 'sodium');
   t = t.replace(/\bNa\b/g, 'sodium');
-  t = t.replace(/\bK\+/g, 'potassium');
+  t = t.replace(/\bK[+⁺]/g, 'potassium');
   return t;
 }
 
@@ -1174,7 +1421,17 @@ export function rewriteForTTS(raw: string): string {
     '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4',
     '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
   };
-  t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch}`);
+  // Trailing space too (chemistry round): "H₂O" must break into "H 2 O",
+  // not "H 2O" — the collapse pass folds any doubling back to one space.
+  t = t.replace(/[₀-₉]/g, (ch) => ` ${SUBSCRIPT_DIGITS[ch] ?? ch} `);
+  // Electron configurations in prose ("1s² 2s² 2p⁶" → "1 s 2 2 s 2 2 p 6")
+  // — must claim the superscript run before the exponent pass below reads
+  // "1s²" as "1 second squared". Digit + s/p/d/f + superscript digits is
+  // uniquely orbital notation.
+  const SUP_DIGIT_VAL = (ch: string): string => String('⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(ch));
+  t = t.replace(/\b([1-7])([spdf])([⁰¹²³⁴⁵⁶⁷⁸⁹]{1,2})/g,
+    (_m, shell: string, sub: string, run: string) =>
+      ` ${shell} ${sub} ${run.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, SUP_DIGIT_VAL)} `);
   // Unicode superscript digits (Task Y3, live bug: "a²" voiced as "a
   // square"/"a two" — X1's exponent handling only covered the CARET form
   // ("x^2"), never the unicode glyph outside a $-gated span). Reuses
@@ -1208,8 +1465,24 @@ export function rewriteForTTS(raw: string): string {
     '⁻': '-', '⁺': '+',
   };
   t = t.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, (run: string, offset: number, full: string) => {
-    if (!/[⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(run)) return run; // sign-only run — not an exponent
     const prev = full.charAt(offset - 1);
+    // Chemistry round: ion charges. A sign-only run anchored to a token is
+    // a bare charge ("OH⁻" → "OH minus", "e⁻" → "e minus"); a run whose
+    // sign TRAILS its digits is a multiple charge ("Ca²⁺" → "Ca 2 plus").
+    // Leading-sign runs stay exponents ("10⁻³⁴" → "to the minus 34"), and
+    // an unanchored sign-only run stays untouched. The footnote gate below
+    // deliberately does NOT apply — footnote markers never carry signs,
+    // and element symbols ("OH", "Ca") are multi-letter by nature.
+    if (!/[⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(run)) {
+      if (run.length === 1 && /[A-Za-z0-9)\]]/.test(prev)) {
+        return run === '⁺' ? ' plus' : ' minus';
+      }
+      return run; // sign-only, unanchored (or a nonsense multi-sign run)
+    }
+    if (/[⁺⁻]$/.test(run) && !/[⁺⁻]/.test(run.slice(0, -1)) && /[A-Za-z0-9)\]]/.test(prev)) {
+      const digits = run.slice(0, -1).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => SUP_DIGIT_VAL(ch));
+      return ` ${digits} ${run.endsWith('⁺') ? 'plus' : 'minus'} `;
+    }
     const prevPrev = full.charAt(offset - 2);
     const precededByDigit = /\d/.test(prev);
     const precededByCloser = prev === ')' || prev === ']';
@@ -1224,6 +1497,10 @@ export function rewriteForTTS(raw: string): string {
   // scale name first ("100°C" previously spoke "100 degrees C").
   t = t.replace(/°\s*C\b/g, ' degrees Celsius ');
   t = t.replace(/°\s*F\b/g, ' degrees Fahrenheit ');
+  // Chemistry round: thermodynamic standard state — "ΔH°"/"ΔG°"/"S°"/"E°"
+  // speak "naught", never "degrees". Letter-anchored, so coordinates
+  // ("38°N") and plain angles ("90°") fall through to the generic rule.
+  t = t.replace(/\b([HGSE])\s*°/g, '$1 naught ');
   t = t.replace(/°/g, ' degrees ');
   for (const { pattern, replacement } of ALL_REPLACEMENTS) {
     t = typeof replacement === 'string'

@@ -76,6 +76,12 @@ function looksLikeMath(inner: string): boolean {
   //      function over a single-pipe argument — the pipe-PAIR clause above
   //      deliberately misses it.
   if (/^[A-Z]\([^|()]{1,12}\|[^()]{1,12}\)$/.test(inner)) return true;
+  //   9. Chemical formula with an aggregation state (chem round — live
+  //      shape "$NaCl(aq)$" has no LaTeX signal char): optional
+  //      coefficient, element-symbol run, then a mandatory (aq|s|l|g)
+  //      marker. The marker requirement keeps ordinary parenthesized
+  //      prose ("$(loss)$") literal.
+  if (/^\d{0,3}(?:[A-Z][a-z]?\d{0,3})+\(\s*(?:aq|s|l|g)\s*\)$/.test(inner)) return true;
   return false;
 }
 

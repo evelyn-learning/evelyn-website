@@ -62,6 +62,7 @@
     "test:tts-pronunciation": "npx tsx scripts/test-tts-pronunciation.ts",
     "test:math-coverage": "npx tsx scripts/test-math-coverage.ts",
     "test:physics-coverage": "npx tsx scripts/test-physics-coverage.ts",
+    "test:chem-coverage": "npx tsx scripts/test-chem-coverage.ts",
     "test:dispatch-dedupe": "npx tsx scripts/test-dispatch-dedupe.ts",
     "test:cancel-storm": "npx tsx scripts/test-cancel-storm.ts",
     "test:bargein-gate": "npx tsx scripts/test-bargein-gate.ts",
