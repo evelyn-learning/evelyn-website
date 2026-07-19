@@ -260,10 +260,10 @@
     "responseFormat": "mcq",
     "problemText": "Selective incorporation means the Supreme Court has applied Bill of Rights protections to the states one right at a time rather than all at once. Which of the following is an accurate example of a Bill of Rights protection the Supreme Court has NOT incorporated against the states?",
     "choices": [
-      "the Sixth Amendment right to counsel in felony cases, which the Court left unincorporated entirely out of deference to long-standing state criminal-procedure traditions",
-      "the First Amendment's free-speech protections, which the Court has to this day genuinely never once applied against any state or local government",
+      "the Sixth Amendment right to counsel in felony cases, which the Court left unincorporated out of deference to long-standing state criminal-procedure traditions",
+      "the First Amendment's free-speech protections, which the Court has not applied against any state or local government",
       "the Fifth Amendment's grand jury requirement in felony cases, which states may replace with an alternative procedure such as a preliminary hearing",
-      "the Fourteenth Amendment's own Equal Protection Clause, which in this mistaken view the Court has still not yet gotten around to incorporating against the states"
+      "the Fourteenth Amendment's own Equal Protection Clause, which the Court has not yet incorporated against the states"
     ],
     "answer": "C",
     "hints": [
@@ -299,7 +299,7 @@
     "problemText": "The government seeks a court order to stop a newspaper from publishing leaked classified documents, arguing publication could harm ongoing diplomatic negotiations. Applying the reasoning of New York Times Co. v. United States (1971), which best describes how a court should evaluate this request?",
     "choices": [
       "the newspaper must first affirmatively prove to the court's satisfaction that the leaked documents were obtained lawfully before it is permitted to publish them at all",
-      "once any information touches on national security in any way, courts are constitutionally barred outright from reviewing any government request to restrain its publication whatsoever",
+      "once any information touches on national security, courts are constitutionally barred from reviewing any government request to restrain its publication",
       "a court may freely enjoin the publication in advance so long as it also permits a subsequent-punishment lawsuit afterward as an alternative remedy for the same underlying harm",
       "the government bears a heavy burden to show direct, immediate, irreparable harm, and generalized diplomatic embarrassment does not overcome the presumption against a prior restraint"
     ],

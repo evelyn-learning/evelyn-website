@@ -296,10 +296,10 @@
     "responseFormat": "mcq",
     "problemText": "An interest group runs television ads urging viewers to call their senators and demand they vote against a bill, while separately meeting privately with committee staff to request technical changes to the bill's language. Which pair of terms correctly identifies each strategy?",
     "choices": [
-      "the ad campaign is instead inside (direct) lobbying, while the private staff meeting is actually an example of outside (grassroots) lobbying, the reverse of the correct pairing",
-      "both actions described here are really just examples of a political action committee making direct campaign contributions to a candidate's reelection campaign",
+      "the ad campaign is inside (direct) lobbying, aimed at persuading policymakers privately, while the private staff meeting is outside (grassroots) lobbying, aimed at mobilizing the public",
+      "both actions described here are examples of a political action committee making direct campaign contributions to a candidate's reelection campaign",
       "the ad campaign is outside (grassroots) lobbying, mobilizing the public, while the staff meeting is inside (direct) lobbying, engaging policymakers directly",
-      "both actions described in the scenario are actually examples of the free-rider problem in collective action among an interest group's own dues-paying members"
+      "both actions described in the scenario are examples of the free-rider problem in collective action among an interest group's own dues-paying members"
     ],
     "answer": "C",
     "hints": [
@@ -335,9 +335,9 @@
     "problemText": "A social-media platform's algorithm shows each user political content matching their prior likes and shares, so that two users with different initial preferences eventually see almost entirely non-overlapping political stories and opinions. Distinguished from a single news outlet's general editorial agenda-setting choices, this phenomenon is best described as which of the following?",
     "choices": [
       "a filter bubble — personalized algorithmic curation narrowing exposure to reinforcing views, unlike agenda setting's one shared editorial judgment",
-      "agenda setting, since in this view the algorithm is still ultimately just deciding which broad issues each individual user considers important on any given day",
-      "media consolidation, since in this mistaken view a single company's algorithm ultimately controls exactly what every single user on the entire platform sees at once",
-      "horse-race coverage, since in this mistaken view the platform is merely tracking which particular stories are gaining popularity among its users over time"
+      "agenda setting, since the algorithm is still deciding which broad issues each individual user considers important on any given day",
+      "media consolidation, since a single company's algorithm controls what every user on the platform sees",
+      "horse-race coverage, since the platform is tracking which stories are gaining popularity among its users over time"
     ],
     "answer": "A",
     "hints": [

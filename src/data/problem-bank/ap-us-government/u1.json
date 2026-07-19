@@ -285,7 +285,7 @@
     "choices": [
       "the House of Representatives, since it is apportioned by population and faces reelection most often",
       "the Senate, since its members serve six-year staggered terms that allow them to weigh tax policy without facing short-term electoral pressure from angry constituents",
-      "either chamber, since the Constitution leaves the choice of which chamber originates a revenue bill entirely up to congressional leadership on a case-by-case basis",
+      "either chamber, since the Constitution leaves the choice of which chamber originates a revenue bill up to congressional leadership on a case-by-case basis",
       "a joint session of both chambers voting together as a single body, since taxation is a matter that affects every state in the union equally"
     ],
     "answer": "A",
@@ -340,8 +340,8 @@
     "responseFormat": "mcq",
     "problemText": "The filibuster survives as a viable delaying tactic in the Senate but has no equivalent in the House. Which best explains why?",
     "choices": [
-      "House members serve two-year terms, which supposedly leaves them too little time in office to organize an extended floor speech before facing their next reelection contest back home",
-      "the Senate alone confirms presidential nominations and ratifies treaties, so senators supposedly require an extra procedural tool that representatives, who play no role in either process, simply do not need",
+      "House members serve two-year terms, which leaves them too little time in office to organize an extended floor speech before facing their next reelection contest back home",
+      "the Senate alone confirms presidential nominations and ratifies treaties, so senators require an extra procedural tool that representatives, who play no role in either process, do not need",
       "the House Rules Committee sets strict time limits on floor debate, while Senate tradition permits unlimited debate absent a 60-vote cloture motion, a leverage point the House's rules deny individual members",
       "House rules require unanimous consent from every single member to close debate on a bill, while Senate rules by contrast require only a bare simple majority to accomplish the same thing"
     ],
@@ -359,10 +359,10 @@
     "responseFormat": "mcq",
     "problemText": "At the Constitutional Convention, large states favored the Virginia Plan (a legislature apportioned entirely by population) and small states favored the New Jersey Plan (a legislature giving each state an equal vote). What did the Great Compromise (Connecticut Compromise) produce to resolve this dispute?",
     "choices": [
-      "a unicameral legislature apportioned entirely by state population, effectively adopting the Virginia Plan in full without any modification to satisfy the small states",
-      "a unicameral legislature giving each state one single equal vote regardless of population, effectively adopting the New Jersey Plan in full without modification",
+      "a unicameral legislature apportioned by state population, adopting the Virginia Plan without modification to satisfy the small states",
+      "a unicameral legislature giving each state one single equal vote regardless of population, adopting the New Jersey Plan without modification",
       "a bicameral Congress: the House apportioned by population, the Senate giving each state equal representation",
-      "direct national popular election of the president, resolving the large-state/small-state dispute by removing Congress from the presidential selection process entirely"
+      "direct national popular election of the president, resolving the large-state/small-state dispute by removing Congress from the presidential selection process"
     ],
     "answer": "C",
     "hints": [
@@ -378,10 +378,10 @@
     "responseFormat": "mcq",
     "problemText": "Which best and most precisely describes the Three-Fifths Compromise reached at the Constitutional Convention?",
     "choices": [
-      "enslaved people were counted as full persons for the purpose of representation in the House, but were excluded entirely from a state's tax calculations",
+      "enslaved people were counted as full persons for the purpose of representation in the House, but were excluded from a state's tax calculations",
       "enslaved people were counted as three-fifths of a person for BOTH House representation and direct federal taxation",
-      "the compromise applied only to federal taxation and had absolutely no effect at all on how many House seats a given state received",
-      "delegates debated the proposal at length but ultimately rejected it outright, so no such counting rule was actually adopted at the Convention"
+      "the compromise applied only to federal taxation and had no effect on how many House seats a given state received",
+      "delegates debated the proposal at length but ultimately rejected it outright, so no such counting rule was adopted at the Convention"
     ],
     "answer": "B",
     "hints": [
@@ -400,7 +400,7 @@
       "yes, since the amendment comfortably exceeded the two-thirds threshold required for passage in both the House of Representatives and the Senate",
       "no — a two-thirds vote in both chambers only PROPOSES the amendment; ratification still requires three-fourths of the states",
       "no, because unlike an ordinary piece of legislation, a constitutional amendment also requires the president's signature before it can take legal effect",
-      "no, because Article V actually requires the Senate vote to reach a three-fourths majority rather than merely a two-thirds majority"
+      "no, because Article V requires the Senate vote to reach a three-fourths majority rather than a two-thirds majority"
     ],
     "answer": "B",
     "hints": [
@@ -517,8 +517,8 @@
     "choices": [
       "no — the excerpt stops at \"consent of the governed\" and never reaches the later alter-or-abolish language; it only states why government is instituted, not what happens if government fails that purpose",
       "yes — the phrase \"just powers\" itself directly grants the people a constitutional right of revolution against any government that oversteps its bounds in any way",
-      "yes — because the social-contract ideal always logically implies a right of revolution, no matter which specific sentences any given excerpt happens to actually include",
-      "no — the excerpt does not engage the social contract at all, since it only ever discusses natural rights and never once addresses why government is instituted in the first place"
+      "yes — because the social-contract ideal logically implies a right of revolution regardless of which specific sentences a given excerpt happens to include",
+      "no — the excerpt does not engage the social contract, since it only discusses natural rights and does not address why government is instituted"
     ],
     "answer": "A",
     "hints": [
@@ -553,7 +553,7 @@
     "responseFormat": "mcq",
     "problemText": "In McCulloch v. Maryland (1819), the Supreme Court upheld Congress's authority to charter a national bank even though the Constitution never explicitly mentions banking. What did the case establish about the scope of congressional power?",
     "choices": [
-      "Congress may exercise only those powers explicitly enumerated word-for-word in Article I, Section 8, leaving absolutely no room for any implied powers whatsoever",
+      "Congress may exercise only those powers explicitly enumerated word-for-word in Article I, Section 8, with no room for additional implied powers",
       "states retain the power to tax any federal institution, such as a national bank, so long as that institution operates physically within their own borders",
       "Congress may exercise powers reasonably implied by its enumerated powers under the Necessary and Proper Clause",
       "the Necessary and Proper Clause grants Congress additional implied power only over matters directly and narrowly related to war and national defense specifically"
@@ -592,8 +592,8 @@
     "problemText": "During the New Deal, the federal government created joint federal-state relief and public-works programs with shared funding and overlapping administrative authority, blurring which level of government was responsible for what. Which model of federalism does this best represent, and how does it differ from the model that came before it?",
     "choices": [
       "cooperative (\"marble cake\") federalism, sharing funding and administration — replacing the earlier dual (\"layer cake\") model",
-      "new federalism, which actually describes the LATER return of power to the states through block grants and devolution beginning only in the 1970s, an opposite reaction to this same New Deal-era trend",
-      "dual federalism, since in this account New Deal programs supposedly kept federal and state authority in strictly separate, non-overlapping spheres of responsibility with no shared administration at all",
+      "new federalism, the later return of power to the states through block grants and devolution beginning in the 1970s, an opposite reaction to this same New Deal-era trend",
+      "dual federalism, since New Deal programs kept federal and state authority in strictly separate, non-overlapping spheres of responsibility with little shared administration",
       "creative federalism, a distinct term describing the 1960s Great Society's expansion of federal categorical grants rather than the different, earlier 1930s New Deal programs described here"
     ],
     "answer": "A",
@@ -631,8 +631,8 @@
     "choices": [
       "single-member districts decided by plurality voting, since voters tend to avoid parties unlikely to finish first or second",
       "proportional representation, in which every seat in the House of Representatives is allocated according to each party's share of the statewide vote",
-      "a national rule requiring every voter to formally register with one specific political party before that voter is permitted to cast any ballot at all",
-      "a constitutional requirement that presidential nominees be selected exclusively by a party convention rather than through any primary election process whatsoever"
+      "a national rule requiring every voter to formally register with one specific political party before that voter is permitted to cast a ballot",
+      "a constitutional requirement that presidential nominees be selected only by a party convention rather than through a primary election process"
     ],
     "answer": "A",
     "hints": [
@@ -648,9 +648,9 @@
     "responseFormat": "mcq",
     "problemText": "A presidential candidate wins large popular-vote margins in populous states the candidate would win anyway, but loses many narrowly contested swing states by small margins. What is the most likely Electoral College outcome, despite the candidate's lead in the national popular vote?",
     "choices": [
-      "the candidate is absolutely guaranteed to win the presidency regardless, since the Twelfth Amendment supposedly makes the national popular vote itself decisive whenever any clear leader emerges from the count",
-      "each state would automatically split its own electors proportionally to match the national popular-vote share, guaranteeing the candidate a matching proportional share of electors in every single state nationwide",
-      "the election would instead be decided by the House of Representatives, since no candidate reached an outright majority of the national popular vote total",
+      "the candidate is guaranteed to win the presidency, since the Twelfth Amendment makes the national popular vote itself decisive whenever a clear leader emerges from the count",
+      "each state would split its own electors proportionally to match the national popular-vote share, guaranteeing the candidate a matching proportional share of electors in every state",
+      "the election would be decided by the House of Representatives, since no candidate reached an outright majority of the national popular vote total",
       "the candidate could still lose the Electoral College, since winner-take-all rules waste votes beyond what's needed to carry a landslide state, while narrow swing-state losses cost electors evenly"
     ],
     "answer": "D",
@@ -667,10 +667,10 @@
     "responseFormat": "mcq",
     "problemText": "A state redistricting map is challenged on two separate grounds: one lawsuit argues the map dilutes a racial minority's voting power by scattering its members across many districts so they cannot form a majority in any single district; a second lawsuit argues the same map simply favors the majority party by packing opposition voters into a few districts. Under current Supreme Court doctrine, which challenge, if either, is justiciable in federal court?",
     "choices": [
-      "only the second challenge is justiciable, since the Voting Rights Act of 1965 supposedly and permanently resolved every racial-gerrymandering dispute and removed all such claims from judicial review entirely",
-      "both challenges are equally justiciable in federal court, since courts apply the exact same Equal Protection standard to racial claims and partisan claims alike without any distinction whatsoever",
+      "only the second challenge is justiciable, since the Voting Rights Act of 1965 permanently resolved every racial-gerrymandering dispute and removed such claims from judicial review",
+      "both challenges are equally justiciable in federal court, since courts apply the same Equal Protection standard to racial claims and partisan claims alike",
       "only the first — racial vote-dilution remains reviewable under Equal Protection, while Rucho v. Common Cause (2019) held partisan-gerrymandering claims nonjusticiable",
-      "neither challenge is justiciable at all, since the Constitution supposedly commits every redistricting decision entirely and exclusively to state legislatures under Article I with no judicial role"
+      "neither challenge is justiciable, since the Constitution commits every redistricting decision to state legislatures under Article I with no judicial role"
     ],
     "answer": "C",
     "hints": [
@@ -706,7 +706,7 @@
     "problemText": "A president issues an executive order; a successor campaigns against it and wins election. Which action can the new president take on their own authority, without needing congressional approval?",
     "choices": [
       "rescind or replace the prior order with a new one, since an order lasts only as long as a president chooses to maintain it",
-      "sign a brand-new statute overriding the prior order, since in this view only newly passed legislation is capable of canceling an existing executive order",
+      "sign a brand-new statute overriding the prior order, since only newly passed legislation can cancel an existing executive order",
       "petition the Supreme Court directly to formally repeal the prior order as a matter of simple policy preference rather than constitutional violation",
       "wait for Congress to assemble a full two-thirds override vote against the order, the identical threshold ordinarily used only to override a presidential veto"
     ],
@@ -726,7 +726,7 @@
     "choices": [
       "a simple majority, since the filibuster was eliminated for judicial nominations even though it remains available for ordinary legislation",
       "a three-fifths supermajority of 60 votes, exactly as it stood before either the 2013 or the 2017 rule changes took effect",
-      "a two-thirds supermajority, matching the entirely separate threshold the Senate instead uses only to ratify international treaties with foreign nations",
+      "a two-thirds supermajority, matching the separate threshold the Senate uses to ratify international treaties with foreign nations",
       "unanimous consent of literally every single senator present in the chamber on the day of the confirmation vote"
     ],
     "answer": "A",
@@ -746,7 +746,7 @@
       "the Senate must convict by nothing more than a simple majority vote, the exact same threshold the House already used earlier to impeach the president",
       "the Supreme Court must first independently certify that the president's conduct meets the constitutional standard for \"high crimes and misdemeanors\" before the Senate is permitted to vote at all",
       "the Senate must convict on at least one article by a two-thirds vote, well above the simple House majority that impeached",
-      "removal from office happens completely automatically the instant the House impeaches, since impeachment and removal are treated as one single, identical constitutional act"
+      "removal from office happens automatically the instant the House impeaches, since impeachment and removal are treated as one single, identical constitutional act"
     ],
     "answer": "C",
     "hints": [
@@ -763,8 +763,8 @@
     "problemText": "Congress passes a bill; the president vetoes it; Congress then overrides the veto with a two-thirds vote in both chambers. Which structural principle does this sequence of events best illustrate?",
     "choices": [
       "checks and balances — the veto lets the executive check the legislature, and the override lets the legislature check the executive back",
-      "separation of powers alone, since in this narrower view the sequence only divides law-making authority among the branches without any branch ever directly acting on another",
-      "federalism, since in this mistaken view the sequence somehow involves both the national government and individual state governments acting jointly on the same piece of legislation",
+      "separation of powers alone, since the sequence only divides law-making authority among the branches without any branch directly acting on another",
+      "federalism, since the sequence involves both the national government and individual state governments acting jointly on the same piece of legislation",
       "judicial review, since a federal court could still, at some later point, strike the resulting law down as unconstitutional even after the override vote succeeds"
     ],
     "answer": "A",
@@ -782,7 +782,7 @@
     "problemText": "The Constitution gives the president the power to appoint federal executive officials with the Senate's advice and consent, but its text never explicitly grants the president a matching power to REMOVE those officials. How has this gap generally been resolved in practice for most executive-branch officials?",
     "choices": [
       "the Senate must formally approve every single removal decision by the exact same two-thirds vote otherwise required only for treaty ratification",
-      "Congress instead removes executive officials directly through nothing more than a simple majority vote of the House alone, completely bypassing the Senate at every step of the process",
+      "Congress removes executive officials directly through a simple majority vote of the House alone, without any Senate involvement in the process",
       "courts and long practice have generally recognized an implied presidential removal power, except where Congress has validly limited it for certain independent agency heads",
       "the Supreme Court must independently pre-approve each individual removal decision in advance before any official may actually be dismissed from office"
     ],

@@ -302,7 +302,7 @@
     "problemText": "The Federal Communications Commission (FCC) is best classified as which type of federal bureaucratic entity?",
     "choices": [
       "an independent regulatory commission, insulated from direct presidential removal by fixed, staggered commissioner terms",
-      "a cabinet department, headed by a single secretary who serves entirely and exclusively at the sitting president's own personal pleasure",
+      "a cabinet department, headed by a single secretary who serves at the sitting president's own personal pleasure",
       "a government corporation that operates much like an ordinary business and charges user fees for the specific services it provides to the public",
       "a congressional support agency that conducts independent studies and financial audits on behalf of lawmakers rather than regulating an industry"
     ],
@@ -320,7 +320,7 @@
     "responseFormat": "mcq",
     "problemText": "Beyond holding oversight hearings or threatening funding cuts, Congress has a specific statutory tool for overturning a recently issued federal agency regulation. What is it, and what is its key procedural feature?",
     "choices": [
-      "a single chamber of Congress may unilaterally veto the rule entirely on its own, without any need for the other chamber's involvement or the president's signature at any point in the process",
+      "a single chamber of Congress may unilaterally veto the rule on its own, without any need for the other chamber's involvement or the president's signature",
       "the Government Accountability Office may nullify the agency rule directly and immediately on its own once it completes an audit report concluding the rule is unwise or poorly designed",
       "a simple majority of the relevant committee chairs may jointly rescind the agency's entire funding for implementing the rule without holding any floor vote in either chamber of Congress",
       "a joint resolution of disapproval under the Congressional Review Act, considered under expedited Senate procedures, but still needing both chambers plus the president's signature or a veto override"
@@ -397,10 +397,10 @@
     "passageId": "evelyn.passage.apgov-federalist-70.v1",
     "problemText": "Federalist No. 70 argues that vesting executive power in a single person, rather than a plural executive council, best secures \"decision, activity, secrecy, and despatch.\" Federalist No. 51 argues separately that \"ambition must be made to counteract ambition.\" Which best describes how these two arguments fit together rather than conflict?",
     "choices": [
-      "the two arguments genuinely contradict each other, since Federalist No. 70 calls for concentrating executive power while Federalist No. 51, by contrast, calls broadly for dividing all governmental power instead",
+      "the two arguments contradict each other, since Federalist No. 70 calls for concentrating executive power while Federalist No. 51 calls for dividing governmental power broadly across all branches",
       "Federalist No. 70 addresses how power should be structured WITHIN the executive branch, while Federalist No. 51 addresses how power should be checked BETWEEN branches; a unified president is still constrained by Congress and the courts",
-      "Federalist No. 51's checks-and-balances argument was written specifically and solely to limit the unified executive that Federalist No. 70 proposes, and it applies to no other branch of government whatsoever",
-      "Federalist No. 70 argues that internal executive unity substitutes entirely for external checks and balances, leaving the president accountable only at the next scheduled election and to no other institution"
+      "Federalist No. 51's checks-and-balances argument was written specifically to limit the unified executive that Federalist No. 70 proposes, and it applies to no other branch of government",
+      "Federalist No. 70 argues that internal executive unity substitutes for external checks and balances, leaving the president accountable only at the next scheduled election and to no other institution"
     ],
     "answer": "B",
     "hints": [
