@@ -56,6 +56,7 @@ import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 import { resolveCartesiaVoice } from '@/lib/tutor/voice/cartesia-voice-registry';
+import { accentFromTimezone } from '@/lib/tutor/voice/geo-accent';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 
@@ -397,7 +398,19 @@ function TutorPage() {
   // cfg.teacherId override (see the hook below), and defaults to
   // DEMO_TEACHERS[0].id (Elena) otherwise.
   const cartesiaVoiceId = useMemo(
-    () => resolveCartesiaVoice({ teacherId: selectedTeacherId }).voiceId,
+    () =>
+      resolveCartesiaVoice({
+        teacherId: selectedTeacherId,
+        // Geo default (2026-07-19 spec): browser timezone -> accent pool.
+        // Client-only signal; during SSR Intl has no user timezone, but
+        // this memo's value is only consumed at TTS-request time (client),
+        // so the server-render value is never used for audio.
+        accent: accentFromTimezone(
+          typeof Intl !== 'undefined'
+            ? Intl.DateTimeFormat().resolvedOptions().timeZone
+            : undefined,
+        ),
+      }).voiceId,
     [selectedTeacherId],
   );
 
