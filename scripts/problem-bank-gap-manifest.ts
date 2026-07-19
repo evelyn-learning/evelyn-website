@@ -31,6 +31,18 @@ export const COURSE_PREFIX: Record<string, string> = {
 
 const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-practice/;
 
+/** Derive unit from filename -u<N>- segment, or from cedCode first digit, or default to 1. */
+export function deriveUnit(filename: string, cedCode: string): number {
+  // Try filename -u<N>- segment first
+  const fileM = filename.match(/-u(\d+)-/);
+  if (fileM) return parseInt(fileM[1], 10);
+  // Try cedCode first digit
+  const cedM = cedCode.match(/(\d+)\.\d+/);
+  if (cedM) return parseInt(cedM[1], 10);
+  // Fallback to 1 (no warning needed; handled at call site in collectPlanLos)
+  return 1;
+}
+
 /** Extract `{ id: '<prefix>.x', ... standard: 'Y' }` pairs from plan seed source. */
 export function parsePlanLosFromSource(src: string, prefix: string): Array<{ loId: string; cedCode: string }> {
   const out: Array<{ loId: string; cedCode: string }> = [];
@@ -42,17 +54,23 @@ export function parsePlanLosFromSource(src: string, prefix: string): Array<{ loI
 
 export function collectPlanLos(seedsDir: string, prefix: string): PlanLo[] {
   const byLo = new Map<string, PlanLo>();
+  const scoreByLo = new Map<string, number>(); // preference score: 2 for -u<N>-, 1 otherwise
   const inNonFrq = new Set<string>();
-  for (const f of fs.readdirSync(seedsDir).filter((f) => f.endsWith('.ts'))) {
+  const files = fs.readdirSync(seedsDir).filter((f) => f.endsWith('.ts')).sort();
+  for (const f of files) {
     const src = fs.readFileSync(path.join(seedsDir, f), 'utf8');
-    const unitM = f.match(/-u(\d+)-/);
-    const unit = unitM ? parseInt(unitM[1], 10) : 1;
     const isFrq = FRQ_FILE_RE.test(f);
+    const score = f.match(/-u(\d+)-/) ? 2 : 1; // preference score
     for (const { loId, cedCode } of parsePlanLosFromSource(src, prefix)) {
       if (!isFrq) inNonFrq.add(loId);
+      const unit = deriveUnit(f, cedCode); // derive per-LO
       const prev = byLo.get(loId);
-      if (!prev) byLo.set(loId, { loId, cedCode, unit, frqPracticeOnly: isFrq });
-      else if (prev.frqPracticeOnly && !isFrq) byLo.set(loId, { loId, cedCode, unit, frqPracticeOnly: false });
+      const prevScore = scoreByLo.get(loId) ?? 0;
+      // Only replace if: no prev, or (prev is frq and new is non-frq), or (same frq status but higher score)
+      if (!prev || (prev.frqPracticeOnly && !isFrq) || (!prev.frqPracticeOnly && !isFrq && score > prevScore)) {
+        byLo.set(loId, { loId, cedCode, unit, frqPracticeOnly: isFrq });
+        scoreByLo.set(loId, score);
+      }
     }
   }
   for (const lo of byLo.values()) lo.frqPracticeOnly = !inNonFrq.has(lo.loId);
