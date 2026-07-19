@@ -8,6 +8,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
+import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
+import { lookupGeo } from "@/lib/tutor/recordings/geo";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -89,6 +91,12 @@ export async function POST(req: NextRequest) {
     // Build the update payload — only include fields that are present
     const updateFields: Record<string, unknown> = {};
     const setOnInsertFields: Record<string, unknown> = {};
+
+    // Location capture (admin debugging): resolve the client IP once, on
+    // the insert that creates the session document.
+    const isNewSession = !(await TutorSession.exists({ sessionId }));
+    const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
+    if (clientIp) setOnInsertFields.clientIp = clientIp;
 
     // Fields that should only be set on insert
     if (body.subject) setOnInsertFields.subject = body.subject;
@@ -227,6 +235,15 @@ export async function POST(req: NextRequest) {
       updateOp,
       { upsert: true, new: true, runValidators: true }
     );
+
+    // Fire-and-forget geolocation — a down ip-api can never sink the save.
+    if (clientIp) {
+      void lookupGeo(clientIp)
+        .then((loc) => {
+          if (loc) return TutorSession.updateOne({ sessionId }, { $set: { location: loc } });
+        })
+        .catch((err) => console.error("Geo lookup failed:", err));
+    }
 
     return NextResponse.json({ success: true, sessionId: session.sessionId });
   } catch (error) {

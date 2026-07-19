@@ -64,6 +64,10 @@ export interface ITutorSession extends Document {
   sourcePartnerId?: string;
   /** Origin of the page embedding the tutor iframe (ancestorOrigins/referrer). */
   sourceHost?: string;
+  /** First-hop client IP captured on session insert (admin debugging). */
+  clientIp?: string;
+  /** Geolocated from clientIp at capture time (ip-api.com); city='Local' for private IPs. */
+  location?: { city?: string; region?: string; country?: string };
   // Topics the student struggled with this session, ordered by frequency.
   // Populated on session end from the weakness tracker. Future sessions
   // can use this to surface targeted review at the start.
@@ -286,6 +290,18 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     sourceHost: {
       type: String,
+    },
+    clientIp: { type: String },
+    location: {
+      type: new Schema(
+        {
+          city: { type: String },
+          region: { type: String },
+          country: { type: String },
+        },
+        { _id: false },
+      ),
+      default: undefined,
     },
     weakTopics: {
       type: [{ topic: String, count: Number }],
