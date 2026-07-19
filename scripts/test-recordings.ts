@@ -7,6 +7,7 @@ import { formatRelativeTime } from '../src/lib/tutor/recordings/relative-time';
 import { categorizeEvent, curateEvents, EVENT_CATEGORIES } from '../src/lib/tutor/recordings/timeline-events';
 import { buildSpeakerSegments } from '../src/lib/tutor/recordings/segments';
 import { buildSessionFilter } from '../src/lib/tutor/recordings/filters';
+import { extractClientIp, isPrivateIp } from '../src/lib/tutor/recordings/client-ip';
 
 let passed = 0;
 let failed = 0;
@@ -112,6 +113,21 @@ check('invalid range ignored (defaults to students)', Object.keys(buildSessionFi
   const f = buildSessionFilter({ src: 'embed', partner: 'acme', audio: '1' });
   check('filters compose', Object.keys(f).length === 3);
 }
+
+// ── client-ip ─────────────────────────────────────────────────────
+check('xff first hop wins', extractClientIp(new Headers({ 'x-forwarded-for': '203.0.113.9, 10.0.0.1' })) === '203.0.113.9');
+check('x-real-ip fallback', extractClientIp(new Headers({ 'x-real-ip': '198.51.100.7' })) === '198.51.100.7');
+check('no headers → undefined', extractClientIp(new Headers()) === undefined);
+check('ipv4-mapped prefix stripped', extractClientIp(new Headers({ 'x-forwarded-for': '::ffff:203.0.113.9' })) === '203.0.113.9');
+check('loopback private', isPrivateIp('127.0.0.1') === true);
+check('::1 private', isPrivateIp('::1') === true);
+check('10.x private', isPrivateIp('10.1.2.3') === true);
+check('192.168 private', isPrivateIp('192.168.1.5') === true);
+check('172.16 private', isPrivateIp('172.16.0.1') === true);
+check('172.31 private', isPrivateIp('172.31.255.1') === true);
+check('172.32 public', isPrivateIp('172.32.0.1') === false);
+check('public ip not private', isPrivateIp('203.0.113.9') === false);
+check('fd00 unique-local private', isPrivateIp('fd12::1') === true);
 
 console.log(`\nrecordings: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
