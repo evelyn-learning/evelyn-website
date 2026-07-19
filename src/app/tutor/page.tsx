@@ -402,9 +402,10 @@ function TutorPage() {
       resolveCartesiaVoice({
         teacherId: selectedTeacherId,
         // Geo default (2026-07-19 spec): browser timezone -> accent pool.
-        // Client-only signal; during SSR Intl has no user timezone, but
-        // this memo's value is only consumed at TTS-request time (client),
-        // so the server-render value is never used for audio.
+        // During prerender this resolves with the SERVER's timezone; that
+        // value never reaches audio — cartesiaVoiceId is only consumed
+        // inside client-side TTS fetch bodies, never rendered to DOM, so
+        // the client-side memo result is the one that matters.
         accent: accentFromTimezone(
           typeof Intl !== 'undefined'
             ? Intl.DateTimeFormat().resolvedOptions().timeZone

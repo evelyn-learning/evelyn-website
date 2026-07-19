@@ -18,6 +18,8 @@ const EXACT_ZONE_ACCENTS: Record<string, string> = {
   // Subcontinent -> en-in
   'Asia/Kolkata': 'en-in',
   'Asia/Calcutta': 'en-in', // legacy alias some browsers still emit
+  'Asia/Katmandu': 'en-in', // legacy spelling still emitted by some platforms
+  'Asia/Dacca': 'en-in', // legacy alias
   'Asia/Karachi': 'en-in',
   'Asia/Dhaka': 'en-in',
   'Asia/Colombo': 'en-in',

@@ -127,6 +127,11 @@ const ACCENT_POOLS: Record<string, AccentPool> = {
   },
 };
 
+/** True when an accent tag has a pool entry — lets tests catch tag typos. */
+export function hasAccentPool(accent: string): boolean {
+  return accent in ACCENT_POOLS;
+}
+
 /** Default Cartesia voice when no teacher/accent match is found — Katie. */
 export const CARTESIA_DEFAULT_VOICE_ID = TEACHER_VOICES['ms-elena-vasquez'].voiceId;
 

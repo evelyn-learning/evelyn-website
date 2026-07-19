@@ -7,6 +7,7 @@
  */
 import assert from 'node:assert';
 import { accentFromTimezone } from '../src/lib/tutor/voice/geo-accent';
+import { hasAccentPool } from '../src/lib/tutor/voice/cartesia-voice-registry';
 
 let passed = 0;
 function check(name: string, fn: () => void) {
@@ -28,6 +29,8 @@ const CASES: Array<[string | undefined, string | undefined]> = [
   ['Asia/Dhaka', 'en-in'],
   ['Asia/Colombo', 'en-in'],
   ['Asia/Kathmandu', 'en-in'],
+  ['Asia/Katmandu', 'en-in'],
+  ['Asia/Dacca', 'en-in'],
   // en-au: Australia + NZ
   ['Australia/Sydney', 'en-au'],
   ['Australia/Perth', 'en-au'],
@@ -93,4 +96,13 @@ for (const [tz, expected] of CASES) {
   });
 }
 
-console.log(`\n${passed}/${CASES.length} geo-accent checks passed`);
+// Every tag the mapper can emit must be a real ACCENT_POOLS key — a typo'd
+// tag would silently degrade to the default voice with all tests green.
+const emitted = new Set(CASES.map(([, a]) => a).filter((a): a is string => !!a));
+for (const tag of emitted) {
+  check(`emitted tag ${tag} has an accent pool`, () => {
+    assert.ok(hasAccentPool(tag));
+  });
+}
+
+console.log(`\n${passed} geo-accent checks passed`);
