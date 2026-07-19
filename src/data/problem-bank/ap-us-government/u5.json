@@ -287,5 +287,100 @@
       "Focus on the SPECIFIC framing described — who 'won' and how polls moved — not just the general fact that the outlet chose what to cover.",
       "Rule out media consolidation (no ownership fact is given) and filter bubble (this describes the outlet's own coverage choice, not a single viewer's pattern of exposure)."
     ]
+  },
+  {
+    "id": "apgov.interest-groups.mcq.04",
+    "loId": "apgov.interest-groups",
+    "cedCode": "AP-APGOV-5.6/5.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An interest group runs television ads urging viewers to call their senators and demand they vote against a bill, while separately meeting privately with committee staff to request technical changes to the bill's language. Which pair of terms correctly identifies each strategy?",
+    "choices": [
+      "the ad campaign is instead inside (direct) lobbying, while the private staff meeting is actually an example of outside (grassroots) lobbying, the reverse of the correct pairing",
+      "both actions described here are really just examples of a political action committee making direct campaign contributions to a candidate's reelection campaign",
+      "the ad campaign is outside (grassroots) lobbying, mobilizing the public, while the staff meeting is inside (direct) lobbying, engaging policymakers directly",
+      "both actions described in the scenario are actually examples of the free-rider problem in collective action among an interest group's own dues-paying members"
+    ],
+    "answer": "C",
+    "hints": [
+      "'Outside' lobbying works through the public; 'inside' lobbying works directly with officials or staff.",
+      "Neither action described in the stem involves a campaign contribution or the free-rider/collective-action problem at all."
+    ]
+  },
+  {
+    "id": "apgov.media-linkage.mcq.03",
+    "loId": "apgov.media-linkage",
+    "cedCode": "AP-APGOV-5.12/5.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A small number of large corporations increasingly own most major television, newspaper, and radio outlets in the United States. Political scientists refer to this trend as which of the following?",
+    "choices": [
+      "agenda setting, which concerns which issues the public perceives as important, not who owns media outlets",
+      "horse-race coverage, which concerns how campaigns are framed as a competition, not media ownership",
+      "media consolidation",
+      "a filter bubble, which concerns an individual's personalized exposure to content, not corporate ownership structure"
+    ],
+    "answer": "C",
+    "hints": [
+      "This trend is specifically about OWNERSHIP concentrating among fewer companies.",
+      "Agenda setting, horse-race coverage, and filter bubbles are all real AP Gov terms, but none describes ownership consolidation."
+    ]
+  },
+  {
+    "id": "apgov.media-linkage.mcq.04",
+    "loId": "apgov.media-linkage",
+    "cedCode": "AP-APGOV-5.12/5.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A social-media platform's algorithm shows each user political content matching their prior likes and shares, so that two users with different initial preferences eventually see almost entirely non-overlapping political stories and opinions. Distinguished from a single news outlet's general editorial agenda-setting choices, this phenomenon is best described as which of the following?",
+    "choices": [
+      "a filter bubble — personalized algorithmic curation narrowing exposure to reinforcing views, unlike agenda setting's one shared editorial judgment",
+      "agenda setting, since in this view the algorithm is still ultimately just deciding which broad issues each individual user considers important on any given day",
+      "media consolidation, since in this mistaken view a single company's algorithm ultimately controls exactly what every single user on the entire platform sees at once",
+      "horse-race coverage, since in this mistaken view the platform is merely tracking which particular stories are gaining popularity among its users over time"
+    ],
+    "answer": "A",
+    "hints": [
+      "The defining feature here is that different users see DIFFERENT content based on personalization, not a single shared editorial judgment.",
+      "Media consolidation is about corporate ownership; horse-race coverage is about polling and campaign-competition framing — neither fits this personalization scenario."
+    ]
+  },
+  {
+    "id": "apgov.political-parties.mcq.04",
+    "loId": "apgov.political-parties",
+    "cedCode": "AP-APGOV-5.3/5.4/5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "At its national convention, a party adopts a formal document outlining its positions on major policy issues, which the party's candidates are then expected to campaign on. Which core party function does this represent?",
+    "choices": [
+      "recruitment — finding and encouraging candidates to run for office",
+      "mobilization — turning out voters on election day",
+      "patronage — historically, rewarding supporters with government jobs",
+      "platform-setting — establishing the party's stated policy positions"
+    ],
+    "answer": "D",
+    "hints": [
+      "A platform is specifically a statement of POLICY POSITIONS, not a tool for finding candidates or turning out voters.",
+      "Patronage is a largely historical practice tied to government jobs, not to writing a policy document."
+    ]
+  },
+  {
+    "id": "apgov.voting-rights-behavior.mcq.04",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which constitutional amendment lowered the voting age to 18 nationwide?",
+    "choices": [
+      "the Nineteenth Amendment, which guaranteed women's suffrage",
+      "the Twenty-Sixth Amendment (1971)",
+      "the Twenty-Fourth Amendment, which banned poll taxes in federal elections",
+      "the Fifteenth Amendment, which barred race-based denial of the right to vote"
+    ],
+    "answer": "B",
+    "hints": [
+      "This is the most recently ratified of the four voting-related amendments listed here.",
+      "The other three amendments address sex, poll taxes, and race — none of them addresses age."
+    ]
   }
 ]

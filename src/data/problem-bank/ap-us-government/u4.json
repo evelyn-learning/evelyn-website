@@ -190,5 +190,43 @@
       "Ask who actually makes discount-rate and open-market-operations decisions — an elected official, or the Fed's own governors — and recall why the Fed's governors serve long, staggered terms.",
       "Rule out both 'accurate' choices (neither the President nor Congress directly controls a specific Fed decision) and the last choice, which mislabels genuinely monetary tools as fiscal policy."
     ]
+  },
+  {
+    "id": "apgov.ideology-policy.mcq.04",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A voter says government should increase regulation of the economy, expand social safety-net programs, and actively promote greater economic equality. This set of views is most consistent with which ideological orientation, as commonly defined in AP Government?",
+    "choices": [
+      "liberal",
+      "conservative, which generally favors less economic regulation and a smaller social safety net",
+      "libertarian, which favors minimal government intervention in both the economy and personal life",
+      "moderate, a residual label without a defined set of policy commitments of its own"
+    ],
+    "answer": "A",
+    "hints": [
+      "This voter wants MORE government intervention in the economy to promote equality, the opposite of the conservative and libertarian positions.",
+      "'Moderate' isn't treated as a coherent ideological orientation with its own defined content in this course."
+    ]
+  },
+  {
+    "id": "apgov.public-opinion-measurement.mcq.04",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A campaign commissions a poll early in the race, before any advertising has aired, to establish a baseline reading of the candidate's name recognition and initial level of support. This is an example of which type of poll?",
+    "choices": [
+      "a benchmark poll",
+      "a tracking poll, which measures day-to-day movement in support once the campaign is already underway",
+      "an exit poll, conducted as voters leave polling places on election day",
+      "a push poll, a persuasion tactic disguised as legitimate research"
+    ],
+    "answer": "A",
+    "hints": [
+      "This poll is establishing a STARTING POINT before the campaign has really begun.",
+      "A push poll isn't legitimate research at all, and an exit poll happens on election day itself, not before advertising begins."
+    ]
   }
 ]

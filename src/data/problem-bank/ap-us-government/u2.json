@@ -292,5 +292,120 @@
       "The Resolution imposes a notification deadline and a withdrawal deadline on the president — ask which branch's power that constrains and which branch's role it protects.",
       "Rule out transferring war power to the Supreme Court, eliminating the commander-in-chief role, and a United Nations approval requirement — none of those is what the War Powers Resolution actually does."
     ]
+  },
+  {
+    "id": "apgov.bureaucracy-accountability.mcq.03",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Federal Communications Commission (FCC) is best classified as which type of federal bureaucratic entity?",
+    "choices": [
+      "an independent regulatory commission, insulated from direct presidential removal by fixed, staggered commissioner terms",
+      "a cabinet department, headed by a single secretary who serves entirely and exclusively at the sitting president's own personal pleasure",
+      "a government corporation that operates much like an ordinary business and charges user fees for the specific services it provides to the public",
+      "a congressional support agency that conducts independent studies and financial audits on behalf of lawmakers rather than regulating an industry"
+    ],
+    "answer": "A",
+    "hints": [
+      "Regulatory commissions like the FCC, SEC, and FTC are designed to sit somewhat apart from direct presidential control.",
+      "A government corporation (like the Postal Service) and a congressional support agency (like the GAO) are both real but different categories."
+    ]
+  },
+  {
+    "id": "apgov.bureaucracy-accountability.mcq.04",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Beyond holding oversight hearings or threatening funding cuts, Congress has a specific statutory tool for overturning a recently issued federal agency regulation. What is it, and what is its key procedural feature?",
+    "choices": [
+      "a single chamber of Congress may unilaterally veto the rule entirely on its own, without any need for the other chamber's involvement or the president's signature at any point in the process",
+      "the Government Accountability Office may nullify the agency rule directly and immediately on its own once it completes an audit report concluding the rule is unwise or poorly designed",
+      "a simple majority of the relevant committee chairs may jointly rescind the agency's entire funding for implementing the rule without holding any floor vote in either chamber of Congress",
+      "a joint resolution of disapproval under the Congressional Review Act, considered under expedited Senate procedures, but still needing both chambers plus the president's signature or a veto override"
+    ],
+    "answer": "D",
+    "hints": [
+      "A one-house 'legislative veto' of this kind was struck down as unconstitutional in INS v. Chadha (1983) for violating bicameralism and presentment.",
+      "The Congressional Review Act tool still needs full bicameral passage and either the president's signature or a veto override — it isn't a shortcut around presentment."
+    ]
+  },
+  {
+    "id": "apgov.checks-in-practice.mcq.02",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Supreme Court declares an act of Congress unconstitutional and therefore unenforceable. This is the clearest example of which check in the constitutional system of separation of powers?",
+    "choices": [
+      "executive privilege — the executive branch's check on congressional and judicial demands for information",
+      "the veto power — the executive branch's check on the legislative branch",
+      "judicial review — the judiciary's check on the legislative branch",
+      "senatorial confirmation — the legislative branch's check on executive and judicial appointments"
+    ],
+    "answer": "C",
+    "hints": [
+      "A court striking down a law is the textbook example of one specific check.",
+      "The veto and confirmation power both involve the executive or the Senate acting on legislation or nominees, not a court ruling a law unconstitutional."
+    ]
+  },
+  {
+    "id": "apgov.checks-in-practice.mcq.03",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The president signs a major treaty with a foreign government. Under the Constitution, what must happen before the treaty carries binding legal force for the United States?",
+    "choices": [
+      "the Senate must ratify the treaty by a two-thirds vote",
+      "the House and the Senate must both pass it by a simple majority, following the same process used for an ordinary statute",
+      "the Supreme Court must certify the treaty's constitutionality before it can take effect",
+      "the treaty is binding immediately upon the president's signature, since the Constitution designates the president as the nation's chief diplomat"
+    ],
+    "answer": "A",
+    "hints": [
+      "Only one chamber of Congress plays a formal role in treaty-making, and it requires a supermajority, not a simple majority.",
+      "The Supreme Court does not pre-clear treaties before they take effect."
+    ]
+  },
+  {
+    "id": "apgov.checks-in-practice.mcq.04",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Congress objects to an extended overseas military deployment that the president has not sought specific statutory authorization for. Beyond the War Powers Resolution's notification and withdrawal-deadline requirements, which additional tool can Congress use to constrain the deployment?",
+    "choices": [
+      "Congress can refuse to appropriate funding for the operation, since Article I gives it exclusive power over federal spending and a deployment cannot continue without money",
+      "Congress can issue its own executive order directly countermanding the president's deployment decision, since Article I gives Congress final say over military policy in every case",
+      "the Senate alone can vote to remove the sitting president from office without waiting for any prior impeachment vote to happen first in the House of Representatives",
+      "the Supreme Court can independently order troops withdrawn from the field on its own initiative, even without any party ever bringing a lawsuit before the Court"
+    ],
+    "answer": "A",
+    "hints": [
+      "Executive orders are a presidential tool, not a congressional one.",
+      "The House must impeach before the Senate can even consider removal — there is no way to skip that step."
+    ]
+  },
+  {
+    "id": "apgov.presidency-power.mcq.04",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apgov-federalist-70.v1",
+    "problemText": "Federalist No. 70 argues that vesting executive power in a single person, rather than a plural executive council, best secures \"decision, activity, secrecy, and despatch.\" Federalist No. 51 argues separately that \"ambition must be made to counteract ambition.\" Which best describes how these two arguments fit together rather than conflict?",
+    "choices": [
+      "the two arguments genuinely contradict each other, since Federalist No. 70 calls for concentrating executive power while Federalist No. 51, by contrast, calls broadly for dividing all governmental power instead",
+      "Federalist No. 70 addresses how power should be structured WITHIN the executive branch, while Federalist No. 51 addresses how power should be checked BETWEEN branches; a unified president is still constrained by Congress and the courts",
+      "Federalist No. 51's checks-and-balances argument was written specifically and solely to limit the unified executive that Federalist No. 70 proposes, and it applies to no other branch of government whatsoever",
+      "Federalist No. 70 argues that internal executive unity substitutes entirely for external checks and balances, leaving the president accountable only at the next scheduled election and to no other institution"
+    ],
+    "answer": "B",
+    "hints": [
+      "Federalist 51's checks-and-balances argument applies across ALL branches, not solely as a response to executive unity.",
+      "Federalist 70 is about efficacy WITHIN the executive branch; it never claims that unity replaces external checks from Congress or the courts."
+    ]
   }
 ]

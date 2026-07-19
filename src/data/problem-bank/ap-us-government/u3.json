@@ -232,5 +232,81 @@
       "Filings can only grow this much if plaintiffs gained MORE legal grounds to sue, not fewer — ask which choice matches an expansion, not a restriction.",
       "Rule out \"narrowed,\" \"refusing to hear,\" and \"state courts gained exclusive jurisdiction\" — each would produce falling federal filings, the opposite of the growth shown."
     ]
+  },
+  {
+    "id": "apgov.due-process-incorporation.mcq.03",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Fifth and Fourteenth Amendments' Due Process Clauses require government to follow fair procedures before depriving a person of life, liberty, or property. This requirement is best described as which type of due process?",
+    "choices": [
+      "substantive due process, which concerns WHAT government may do rather than the fairness of its procedures",
+      "procedural due process",
+      "equal protection, a distinct Fourteenth Amendment guarantee concerned with discriminatory treatment rather than fair procedure",
+      "selective incorporation, the separate mechanism courts use to apply Bill of Rights protections to the states"
+    ],
+    "answer": "B",
+    "hints": [
+      "Procedural due process is about HOW government acts; substantive due process is about WHAT government may do at all.",
+      "Selective incorporation is a mechanism for applying rights to states, not itself a type of due process."
+    ]
+  },
+  {
+    "id": "apgov.due-process-incorporation.mcq.04",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Selective incorporation means the Supreme Court has applied Bill of Rights protections to the states one right at a time rather than all at once. Which of the following is an accurate example of a Bill of Rights protection the Supreme Court has NOT incorporated against the states?",
+    "choices": [
+      "the Sixth Amendment right to counsel in felony cases, which the Court left unincorporated entirely out of deference to long-standing state criminal-procedure traditions",
+      "the First Amendment's free-speech protections, which the Court has to this day genuinely never once applied against any state or local government",
+      "the Fifth Amendment's grand jury requirement in felony cases, which states may replace with an alternative procedure such as a preliminary hearing",
+      "the Fourteenth Amendment's own Equal Protection Clause, which in this mistaken view the Court has still not yet gotten around to incorporating against the states"
+    ],
+    "answer": "C",
+    "hints": [
+      "Gideon v. Wainwright incorporated the right to counsel decades ago — don't mistake it for an unincorporated right.",
+      "The Fourteenth Amendment applies to states by its own terms; incorporation is the process of applying the separate Bill of Rights to states, so 'incorporating' the Fourteenth Amendment against itself doesn't make sense."
+    ]
+  },
+  {
+    "id": "apgov.press-assembly-arms.mcq.03",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In First Amendment law, \"prior restraint\" refers to which of the following?",
+    "choices": [
+      "government action preventing speech or publication from occurring in the first place, rather than punishing it afterward",
+      "a law that punishes speech only after it has already been published, through fines or imprisonment imposed well after the fact",
+      "a content-neutral regulation simply limiting the volume of amplified sound equipment at a public rally in a residential neighborhood",
+      "a private defamation lawsuit filed only after a newspaper has already published a false and damaging statement about someone"
+    ],
+    "answer": "A",
+    "hints": [
+      "The defining feature of prior restraint is that it acts BEFORE the speech happens, not afterward.",
+      "All three distractors describe consequences that occur only after speech has already happened."
+    ]
+  },
+  {
+    "id": "apgov.press-assembly-arms.mcq.04",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The government seeks a court order to stop a newspaper from publishing leaked classified documents, arguing publication could harm ongoing diplomatic negotiations. Applying the reasoning of New York Times Co. v. United States (1971), which best describes how a court should evaluate this request?",
+    "choices": [
+      "the newspaper must first affirmatively prove to the court's satisfaction that the leaked documents were obtained lawfully before it is permitted to publish them at all",
+      "once any information touches on national security in any way, courts are constitutionally barred outright from reviewing any government request to restrain its publication whatsoever",
+      "a court may freely enjoin the publication in advance so long as it also permits a subsequent-punishment lawsuit afterward as an alternative remedy for the same underlying harm",
+      "the government bears a heavy burden to show direct, immediate, irreparable harm, and generalized diplomatic embarrassment does not overcome the presumption against a prior restraint"
+    ],
+    "answer": "D",
+    "hints": [
+      "The burden in a prior-restraint case falls on the government seeking the restraint, not on the press to justify its source.",
+      "Courts DO review these requests — they just apply an unusually demanding standard against restraint, rather than declining to review at all."
+    ]
   }
 ]
