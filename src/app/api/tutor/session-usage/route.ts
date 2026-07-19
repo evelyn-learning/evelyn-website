@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
     // the insert that creates the session document.
     const isNewSession = !(await TutorSession.exists({ sessionId }));
     const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
-    if (clientIp) setOnInsertFields.clientIp = clientIp;
+    if (clientIp) setOnInsertFields.clientIp = clientIp.slice(0, 100);
 
     // Fields that should only be set on insert
     if (body.subject) setOnInsertFields.subject = body.subject;

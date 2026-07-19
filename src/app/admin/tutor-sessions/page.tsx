@@ -247,7 +247,9 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
         {sessions.length === 0 ? (
           <div className="rounded-xl bg-white p-12 text-center shadow">
             <p className="text-gray-500">
-              {hasActiveFilters ? 'No sessions match these filters.' : 'No tutor sessions found.'}
+              {hasActiveFilters
+                ? 'No sessions match these filters.'
+                : 'No student sessions found. Use the All chip to include test and showcase sessions.'}
             </p>
           </div>
         ) : (
