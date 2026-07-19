@@ -384,5 +384,64 @@
     "problemText": "Group 1: x1 = 45, n1 = 100 (p-hat1 = 0.45). Group 2: x2 = 30, n2 = 100 (p-hat2 = 0.30). The pooled proportion is p-hat_c = 0.375. Compute the test statistic z = (p-hat1 - p-hat2) / sqrt(p-hat_c(1-p-hat_c)(1/n1 + 1/n2)). Round to two decimal places.",
     "answer": "2.19",
     "hints": ["First find the standard error: sqrt(0.375 times 0.625 times (1/100 + 1/100)).", "Then divide (0.45 - 0.30) by that standard error."]
+  },
+
+  {
+    "id": "apstats.confidence-intervals.mcq.01",
+    "loId": "apstats.confidence-intervals",
+    "cedCode": "AP-STATS-UNC-3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In statistics, a confidence interval for a population parameter is best described as:",
+    "choices": [
+      "A single value that exactly matches the population parameter",
+      "A range of plausible values for the population parameter, at a stated confidence level",
+      "The probability that a randomly selected individual falls above the sample mean",
+      "A fixed percentage of the sample data that lies closest to the sample mean"
+    ],
+    "answer": "B",
+    "hints": ["A confidence interval is a RANGE, not a single number, and it always comes with a confidence level attached."]
+  },
+  {
+    "id": "apstats.confidence-intervals.mcq.02",
+    "loId": "apstats.confidence-intervals",
+    "cedCode": "AP-STATS-UNC-3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 95% confidence interval is constructed to estimate a population parameter. Which statement correctly interprets this 95% confidence level?",
+    "choices": [
+      "There is a 95% probability that the true population parameter falls within this specific interval",
+      "About 95% of intervals built this same way, from repeated random samples, would capture the true parameter",
+      "About 95% of the values in the population lie somewhere within this interval",
+      "About 95% of all possible sample means from this population equal the interval's midpoint"
+    ],
+    "answer": "B",
+    "hints": ["The true parameter is a fixed number — it is either in this one interval or it isn't, so no probability statement applies to THIS interval.", "The 95% describes the long-run success rate of the METHOD across many hypothetical samples."]
+  },
+  {
+    "id": "apstats.confidence-intervals.numeric.01",
+    "loId": "apstats.confidence-intervals",
+    "cedCode": "AP-STATS-UNC-3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A sample of n = 64 observations is drawn from a population with known standard deviation sigma = 20. Using z* = 1.96 for 95% confidence, compute the margin of error: margin = z* times (sigma / sqrt(n)). Round to one decimal place.",
+    "answer": "4.9",
+    "hints": ["sigma / sqrt(64) = 20/8 = 2.5.", "Multiply 1.96 by 2.5 to get the margin of error."]
+  },
+  {
+    "id": "apstats.confidence-intervals.mcq.03",
+    "loId": "apstats.confidence-intervals",
+    "cedCode": "AP-STATS-UNC-3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A team builds a confidence interval using n = 50 observations at a 90% confidence level. A second team, sampling from the same population, builds an interval using n = 200 observations (four times as many) at a 99% confidence level. Compared to the first interval, what can be said about the width of the second interval?",
+    "choices": [
+      "The second interval is wider, because higher confidence always produces a wider interval regardless of sample size",
+      "The second interval is exactly the same width, because the two effects cancel out precisely",
+      "The second interval is narrower, since the sample-size effect outweighs the confidence-level effect here",
+      "The second interval is wider, because the sample size increase has no effect once confidence level changes"
+    ],
+    "answer": "C",
+    "hints": ["Quadrupling n cuts the standard error in half, since margin of error scales with 1/sqrt(n).", "Moving from 90% to 99% confidence multiplies z* by roughly 1.57 (from about 1.645 to about 2.576).", "Combine the two multipliers: 0.5 times about 1.57 is less than 1, so the margin actually shrinks overall."]
   }
 ]
