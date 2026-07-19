@@ -156,5 +156,233 @@
       "Ask whether the Green Revolution and smallpox eradication reached every place at the same time and by the same method, or unevenly and only after extended effort.",
       "Rule out any answer restating an accurate but unrelated fact about the Green Revolution or smallpox eradication — the question asks which broader CLAIM the two examples undermine."
     ]
+  },
+  {
+    "id": "apworld.culture-rights-migration.mcq.03",
+    "loId": "apworld.culture-rights-migration",
+    "cedCode": "AP-APWORLD-9.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Universal Declaration of Human Rights (1948) proclaims rights belonging to \"all members of the human family.\" Which statement best describes the UDHR's legal status?",
+    "choices": [
+      "it is a UN General Assembly declaration, not legally binding by itself, though foundational to later binding human-rights treaties",
+      "it is a binding treaty enforced by an international court with the power to overturn national laws",
+      "it is a military alliance requiring signatory states to defend each other's borders",
+      "it is a trade agreement establishing tariff rates among UN member states"
+    ],
+    "answer": "A",
+    "hints": [
+      "The UDHR proclaims a standard of rights but is not itself a binding legal instrument.",
+      "Rule out any answer describing a binding court-enforced treaty, a military alliance, or a trade agreement — none matches the UDHR's actual form."
+    ]
+  },
+  {
+    "id": "apworld.culture-rights-migration.mcq.04",
+    "loId": "apworld.culture-rights-migration",
+    "cedCode": "AP-APWORLD-9.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Bollywood films from India, K-pop from South Korea, and football with roots spanning Europe, Latin America, Africa, and Asia all became widely popular across the globe after 1945. Which conclusion about cultural globalization is best supported by these three examples together?",
+    "choices": [
+      "cultural globalization after 1945 was driven entirely by American media and entertainment companies",
+      "global popular culture flowed outward from multiple different centers, not along a single path from one dominant source",
+      "these three cultural forms remained confined entirely to their countries or regions of origin",
+      "football, Bollywood, and K-pop all originated in the same country before spreading worldwide"
+    ],
+    "answer": "B",
+    "hints": [
+      "Three different countries or regions of origin producing three genuinely global cultural phenomena is direct evidence against a single-source model of cultural globalization.",
+      "Rule out any answer crediting American media alone, claiming these forms stayed local, or claiming a shared origin — none matches the examples given."
+    ]
+  },
+  {
+    "id": "apworld.environment-disease.mcq.03",
+    "loId": "apworld.environment-disease",
+    "cedCode": "AP-APWORLD-9.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The 1918 influenza pandemic, spread and worsened by the movement of troops during the final stages of World War I, killed an estimated tens of millions of people worldwide within about two years. Which factor most directly explains why this pandemic caused such a high death toll?",
+    "choices": [
+      "it was deliberately spread as a biological weapon by one of the warring powers",
+      "it affected only elderly populations already suffering from other chronic illnesses",
+      "it struck before effective antiviral treatments or a vaccine existed, and spread rapidly through wartime troop movements",
+      "it was successfully contained within a single country and never spread internationally"
+    ],
+    "answer": "C",
+    "hints": [
+      "No effective vaccine or antiviral treatment existed in 1918, and wartime troop movements accelerated the pandemic's spread.",
+      "Rule out any answer describing deliberate biological warfare, an elderly-only impact, or containment within one country — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.environment-disease.mcq.04",
+    "loId": "apworld.environment-disease",
+    "cedCode": "AP-APWORLD-9.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Montreal Protocol (1987), which phased out ozone-depleting chemicals, is widely regarded as a successful example of coordinated international environmental action, while the Kyoto Protocol (1997) and the Paris Agreement (2015), aimed at reducing carbon emissions, have made comparatively slower and more contested progress. Which factor best explains this difference in international success?",
+    "choices": [
+      "the Montreal Protocol addressed a problem that scientists had not yet reached any consensus about, unlike climate change",
+      "the Kyoto Protocol and Paris Agreement were both voluntarily implemented with complete success by every signatory nation",
+      "no international treaty has ever successfully addressed any environmental problem prior to the Paris Agreement",
+      "reducing carbon emissions carries far greater economic stakes tied to fossil-fuel use across the global economy than phasing out a narrower set of ozone-depleting chemicals did"
+    ],
+    "answer": "D",
+    "hints": [
+      "Weigh the economic stakes of phasing out a narrower set of chemicals against the stakes of reducing fossil-fuel use across entire economies.",
+      "Rule out any answer claiming no scientific consensus existed for the Montreal Protocol, claiming complete Kyoto/Paris success, or denying any prior successful environmental treaty — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.global-economy.mcq.03",
+    "loId": "apworld.global-economy",
+    "cedCode": "AP-APWORLD-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Representatives of the Allied powers met at Bretton Woods, New Hampshire in 1944, before World War II had even ended, to create new international financial institutions. Which two institutions did this conference establish?",
+    "choices": [
+      "the International Monetary Fund and the World Bank",
+      "the World Trade Organization and the General Agreement on Tariffs and Trade",
+      "the United Nations and the League of Nations",
+      "the North Atlantic Treaty Organization and the Warsaw Pact"
+    ],
+    "answer": "A",
+    "hints": [
+      "Bretton Woods (1944) created institutions to stabilize currency exchange and fund postwar reconstruction, distinct from the trade-focused GATT/WTO created later.",
+      "Rule out the UN/League of Nations (political bodies) and NATO/Warsaw Pact (military alliances) — neither was created at Bretton Woods."
+    ]
+  },
+  {
+    "id": "apworld.global-economy.mcq.04",
+    "loId": "apworld.global-economy",
+    "cedCode": "AP-APWORLD-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The 2008 global financial crisis began with a collapse in the US mortgage market but spread to banks and economies worldwide within months. Which broader point about the postwar global economy does this rapid spread best illustrate?",
+    "choices": [
+      "the 2008 crisis remained entirely confined to the United States, with no measurable effect on any other country's economy",
+      "by 2008, national financial systems had become so interconnected that a crisis originating in one major economy could no longer stay contained to that economy alone",
+      "the International Monetary Fund had, by 2008, eliminated the possibility of any future financial crisis",
+      "the 2008 crisis originated simultaneously and independently in every major economy, with no single point of origin"
+    ],
+    "answer": "B",
+    "hints": [
+      "The crisis's rapid international spread from a single national origin point is the key evidence here.",
+      "Rule out any answer claiming the crisis stayed confined to the US, that the IMF had eliminated future crises, or that it had no single origin point — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.technology-communication.mcq.03",
+    "loId": "apworld.technology-communication",
+    "cedCode": "AP-APWORLD-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "From the 1940s through the 1960s, agricultural scientists developed high-yield, disease-resistant wheat and rice varieties, paired with expanded irrigation and synthetic fertilizer use. This set of agricultural innovations is known as —",
+    "choices": [
+      "the Digital Revolution",
+      "the Bretton Woods System",
+      "the Green Revolution",
+      "the Non-Aligned Movement"
+    ],
+    "answer": "C",
+    "hints": [
+      "This agricultural transformation is specifically called the Green Revolution, distinct from later digital/communication changes.",
+      "Rule out the Digital Revolution (communication technology), Bretton Woods (financial institutions), and the Non-Aligned Movement (Cold War foreign policy) — none describes agricultural innovation."
+    ]
+  },
+  {
+    "id": "apworld.technology-communication.mcq.04",
+    "loId": "apworld.technology-communication",
+    "cedCode": "AP-APWORLD-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An effective smallpox vaccine had existed for well over a century before the World Health Organization's campaign achieved the disease's global eradication, certified in 1980. Which statement best explains why eradication took so long after an effective vaccine already existed?",
+    "choices": [
+      "the vaccine itself was not actually effective until the WHO's campaign began in the twentieth century",
+      "smallpox eradication was achieved instantly and simultaneously worldwide the moment the vaccine was first developed",
+      "the WHO's campaign focused exclusively on wealthy countries, ignoring the rest of the world entirely",
+      "eradicating a disease worldwide required decades of sustained, coordinated global vaccination campaigning, not merely the existence of an effective vaccine"
+    ],
+    "answer": "D",
+    "hints": [
+      "An effective tool existing is different from the sustained global logistics needed to deploy it everywhere.",
+      "Rule out any answer claiming the vaccine was ineffective until the WHO campaign, claiming instant simultaneous eradication, or claiming the campaign ignored poorer countries — smallpox eradication specifically prioritized reaching the hardest, most under-resourced regions."
+    ]
+  },
+  {
+    "id": "apworld.unit9-globalization.mcq.01",
+    "loId": "apworld.unit9-globalization",
+    "cedCode": "AP-WORLD-9.1-9.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Beginning in the late 1970s, leaders such as Margaret Thatcher (UK), Ronald Reagan (US), and Deng Xiaoping (China) each moved their countries toward policies emphasizing free trade, deregulation, and reduced state control of the economy. Historians refer to this broad policy shift as —",
+    "choices": [
+      "neoliberalism",
+      "mercantilism",
+      "détente",
+      "the Non-Aligned Movement"
+    ],
+    "answer": "A",
+    "hints": [
+      "Neoliberalism describes this late-twentieth-century turn toward free trade, deregulation, and privatization.",
+      "Rule out mercantilism (an early-modern doctrine), détente (a US-Soviet policy of eased tension), and the Non-Aligned Movement (a Cold War foreign-policy stance) — none describes this economic shift."
+    ]
+  },
+  {
+    "id": "apworld.unit9-globalization.mcq.02",
+    "loId": "apworld.unit9-globalization",
+    "cedCode": "AP-WORLD-9.1-9.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The World Trade Organization (WTO), established in 1995, replaced which earlier institution?",
+    "choices": [
+      "the International Monetary Fund (IMF)",
+      "the General Agreement on Tariffs and Trade (GATT)",
+      "the League of Nations",
+      "the Non-Aligned Movement"
+    ],
+    "answer": "B",
+    "hints": [
+      "GATT (1947) negotiated tariff reductions through successive rounds before being replaced by the permanent WTO in 1995.",
+      "Rule out the IMF (a separate institution created in 1944), the League of Nations (dissolved 1946), and the Non-Aligned Movement (a diplomatic stance, not a trade institution)."
+    ]
+  },
+  {
+    "id": "apworld.unit9-globalization.mcq.03",
+    "loId": "apworld.unit9-globalization",
+    "cedCode": "AP-WORLD-9.1-9.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "World trade as a share of global GDP was actually lower in the late 1940s than it had been in 1913, and did not recover to 1913 levels until the 1970s. This fact is best used as evidence against which claim about globalization?",
+    "choices": [
+      "the claim that World War I had any effect on international trade patterns",
+      "the claim that the 1929 stock market crash occurred in the United States",
+      "the claim that globalization is an irreversible, one-way historical trend that never contracts once economies become integrated",
+      "the claim that container shipping reduced the cost of transporting goods internationally"
+    ],
+    "answer": "C",
+    "hints": [
+      "A multi-decade decline and slow recovery in trade's share of GDP is direct evidence that global economic integration can reverse, not just advance.",
+      "Rule out answers about WWI's effects, the 1929 crash's location, or container shipping's cost effects — none is the claim this specific fact refutes."
+    ]
+  },
+  {
+    "id": "apworld.unit9-globalization.mcq.04",
+    "loId": "apworld.unit9-globalization",
+    "cedCode": "AP-WORLD-9.1-9.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "McDonald's restaurants in India sell menu items such as McAloo Tikki, adapted to local dietary practices and preferences, rather than an unmodified version of the chain's standard Western menu. This kind of local adaptation of a global product is best described by which concept?",
+    "choices": [
+      "cultural homogenization, in which local cultures are entirely replaced by an unmodified global culture",
+      "protectionism, a trade policy restricting the import of any foreign goods or brands",
+      "neocolonialism, a critique of continued economic dependency on former colonial powers",
+      "glocalization, the adaptation of global products and ideas to local cultural contexts"
+    ],
+    "answer": "D",
+    "hints": [
+      "The India-specific menu adaptation is a case of a global brand blending with local preferences, not replacing them wholesale.",
+      "Rule out cultural homogenization (implies no local adaptation at all), protectionism (a trade-restriction policy), and neocolonialism (an economic-dependency critique) — none matches this specific pattern of local product adaptation."
+    ]
   }
 ]

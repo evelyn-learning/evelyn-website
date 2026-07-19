@@ -196,5 +196,271 @@
       "Ask what stance a state takes when it deliberately avoids joining either superpower's bloc, rather than joining one side (NATO or a Soviet pact) outright.",
       "Rule out any answer claiming a single shared economic model or a secret alliance — non-alignment was a foreign-policy stance, and its member states pursued quite different development paths."
     ]
+  },
+  {
+    "id": "apworld.cold-war-global.mcq.04",
+    "loId": "apworld.cold-war-global",
+    "cedCode": "AP-APWORLD-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Truman Doctrine (1947) committed US aid to states resisting communist pressure, and the Marshall Plan (1948) provided economic aid to rebuild Western Europe. Together, these two policies are best understood as expressions of which broader US Cold War strategy?",
+    "choices": [
+      "rollback, aimed at using US troops to directly liberate every state already under Soviet control",
+      "containment, aimed at limiting the spread of Soviet influence through economic and political support rather than direct military invasion",
+      "isolationism, aimed at withdrawing the United States from all involvement in European affairs",
+      "détente, aimed at formally normalizing relations between the US and USSR through direct negotiation"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both policies aim to blunt Soviet influence without direct military invasion of Soviet-controlled territory.",
+      "Rule out rollback (direct liberation by force), isolationism (withdrawal), and détente (a later, 1970s policy of eased tension) — none matches these two 1947-48 policies."
+    ]
+  },
+  {
+    "id": "apworld.decolonization.mcq.01",
+    "loId": "apworld.decolonization",
+    "cedCode": "AP-WORLD-8.5-8.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Historians identify several combined causes of post-1945 decolonization: European powers weakened economically and militarily by World War II, wartime \"self-determination\" rhetoric that colonized peoples held their rulers to, and decades of organizing by nationalist movements. Which of these is best classified as an economic/military, rather than ideological, cause?",
+    "choices": [
+      "wartime rhetoric of democracy and self-determination that colonized peoples invoked against their rulers",
+      "decades of nationalist organizing led by figures such as Gandhi, Nehru, and Nkrumah",
+      "European powers' economic and military weakening from World War II, which made maintaining empires unaffordable",
+      "pressure from the United States and Soviet Union, both rhetorically anti-colonial"
+    ],
+    "answer": "C",
+    "hints": [
+      "Distinguish an economic/military cause (postwar weakening) from ideological/rhetorical causes (self-determination language) and political-organizational causes (nationalist movements, superpower pressure).",
+      "European economic and military exhaustion after WWII is the material, capacity-based cause among the four."
+    ]
+  },
+  {
+    "id": "apworld.decolonization.mcq.02",
+    "loId": "apworld.decolonization",
+    "cedCode": "AP-WORLD-8.5-8.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "India achieved independence in 1947 largely through negotiation, while Algeria achieved independence in 1962 only after an eight-year armed war against France. Which factor best explains why Algeria's path to independence was so much more violent than India's?",
+    "choices": [
+      "Algeria had a large population of European settlers invested in continued French rule, while India had comparatively few British settlers",
+      "India had no organized nationalist movement prior to 1947, while Algeria's independence movement had organized for decades before 1954",
+      "France considered Algeria an overseas colony with no special legal status, exactly as Britain viewed India",
+      "Britain refused to ever consider granting India independence under any circumstances"
+    ],
+    "answer": "A",
+    "hints": [
+      "A large, politically influential settler population invested in continued colonial rule is a key factor distinguishing violent from negotiated decolonization.",
+      "Rule out any answer denying India had an organized nationalist movement, treating France's legal view of Algeria as identical to Britain's view of India, or claiming Britain flatly refused Indian independence — the Indian National Congress organized for decades and Britain ultimately did negotiate."
+    ]
+  },
+  {
+    "id": "apworld.decolonization.mcq.03",
+    "loId": "apworld.decolonization",
+    "cedCode": "AP-WORLD-8.5-8.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Colonial powers often drew administrative borders with little regard for existing ethnic, religious, or linguistic communities on the ground. Which statement best describes the postcolonial consequence of this practice, as illustrated by cases such as Nigeria and Sudan?",
+    "choices": [
+      "colonial-era borders were universally redrawn immediately upon independence to reflect ethnic and linguistic boundaries",
+      "newly independent states sometimes inherited internal divisions that colonial administrators had previously managed by force, contributing to postindependence conflict",
+      "artificial borders caused no lasting political problems once colonial rule formally ended",
+      "every postcolonial state inheriting an artificial border experienced an identical civil war within the same number of years"
+    ],
+    "answer": "B",
+    "hints": [
+      "Borders that grouped rival communities together did not disappear at independence — they became the new state's own internal challenge.",
+      "Rule out any answer describing universal border redrawing, no lasting problems, or an identical timeline for every case — none matches the actual variety of postcolonial outcomes."
+    ]
+  },
+  {
+    "id": "apworld.decolonization.mcq.04",
+    "loId": "apworld.decolonization",
+    "cedCode": "AP-WORLD-8.5-8.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Between the 1960s and 1980s, many newly independent states experienced coups, one-party rule, or civil war, while others, such as India, sustained democratic government, and some East Asian economies achieved rapid growth. Which conclusion about decolonization's outcomes is best supported by this range of experience?",
+    "choices": [
+      "every newly independent state experienced political and economic outcomes that were essentially identical to one another",
+      "decolonization automatically produced stable democratic government in every case, without exception",
+      "political independence was a starting condition that led to widely varying outcomes, not a guarantee of either democratic stability or economic prosperity",
+      "no newly independent state ever achieved either democratic stability or rapid economic growth after independence"
+    ],
+    "answer": "C",
+    "hints": [
+      "Weigh the range of outcomes — coups and civil war in some states, sustained democracy in India, rapid growth in some East Asian economies — against any single, uniform prediction.",
+      "Rule out any answer claiming identical outcomes everywhere, guaranteed democracy, or that no state ever succeeded — the actual record shows real variation."
+    ]
+  },
+  {
+    "id": "apworld.end-cold-war.mcq.03",
+    "loId": "apworld.end-cold-war",
+    "cedCode": "AP-APWORLD-8.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Despite sharing a Communist ideology, the Soviet Union and the People's Republic of China developed sharp ideological disagreements and border tensions that became clearly visible by the 1960s. Historians refer to this development as —",
+    "choices": [
+      "détente, a period of eased tension between the United States and the Soviet Union",
+      "the Truman Doctrine, a US commitment to aid states resisting communist pressure",
+      "glasnost, Gorbachev's policy of increased political openness",
+      "the Sino-Soviet split, which fractured the assumption of one unified Communist bloc"
+    ],
+    "answer": "D",
+    "hints": [
+      "This split describes tension WITHIN the Communist bloc, between the USSR and China — not a US-Soviet policy.",
+      "Rule out détente, the Truman Doctrine, and glasnost — each describes a different Cold War development, not Sino-Soviet relations."
+    ]
+  },
+  {
+    "id": "apworld.end-cold-war.mcq.04",
+    "loId": "apworld.end-cold-war",
+    "cedCode": "AP-APWORLD-8.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Soviet Union invaded Afghanistan in 1979 to support a friendly Communist government against a mujahideen insurgency that received substantial covert backing from the United States. Which statement best explains how this decade-long war contributed to the Cold War's end?",
+    "choices": [
+      "the war drained Soviet military resources and public morale for a decade before withdrawal in 1989, weakening the USSR's capacity to sustain its broader Cold War position",
+      "the war ended in a decisive Soviet military victory that significantly strengthened the USSR's global position",
+      "the war was fought and concluded within a single year, with no lasting effect on Soviet resources",
+      "the war was fought entirely by Warsaw Pact allies, with no direct Soviet military involvement"
+    ],
+    "answer": "A",
+    "hints": [
+      "The war lasted roughly a decade (1979-1989) and is cited as a major drain on Soviet resources and morale, paralleling the later US experience in Vietnam.",
+      "Rule out any answer describing a decisive Soviet victory, a brief one-year conflict, or exclusively Warsaw Pact (non-Soviet) involvement — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.new-states.mcq.02",
+    "loId": "apworld.new-states",
+    "cedCode": "AP-APWORLD-8.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In 1955, leaders from newly independent and colonized Asian and African nations met in Bandung, Indonesia. What was the primary purpose of this conference?",
+    "choices": [
+      "to formally establish a joint Asian-African military alliance directed against the Soviet Union",
+      "to articulate shared solidarity among Asian and African states, oppose colonialism, and lay groundwork for cooperation outside the two Cold War blocs",
+      "to negotiate the terms of India's partition into India and Pakistan",
+      "to formally admit newly independent African and Asian states into NATO"
+    ],
+    "answer": "B",
+    "hints": [
+      "Bandung laid the diplomatic groundwork for a movement declining to align militarily with either Cold War superpower.",
+      "Rule out any answer describing a military alliance against the USSR, the India-Pakistan partition negotiation, or NATO admission — none matches Bandung's actual purpose."
+    ]
+  },
+  {
+    "id": "apworld.new-states.mcq.03",
+    "loId": "apworld.new-states",
+    "cedCode": "AP-APWORLD-8.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Julius Nyerere's Tanzania pursued ujamaa, a policy of communal, village-based agricultural collectivization framed as a distinctly African socialism, while many Latin American states pursued import substitution industrialization (ISI), protecting domestic industry behind tariffs. Which statement best characterizes the relationship between these two development strategies?",
+    "choices": [
+      "ujamaa and import substitution industrialization were, in practice, the identical policy applied in different countries",
+      "every newly independent state was required by the Non-Aligned Movement to adopt one of these two specific strategies",
+      "newly independent and postcolonial states pursued genuinely varied development strategies suited to their own political and economic circumstances, rather than a single shared model",
+      "these two strategies were developed jointly by the Soviet Union and imposed uniformly on all non-aligned states"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ujamaa (village-based collectivization) and ISI (tariff-protected domestic industry) are genuinely different approaches to development.",
+      "Rule out any answer treating them as identical, mandatory under the Non-Aligned Movement, or Soviet-imposed — none matches the historical record of varied, independently chosen strategies."
+    ]
+  },
+  {
+    "id": "apworld.new-states.mcq.04",
+    "loId": "apworld.new-states",
+    "cedCode": "AP-APWORLD-8.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Egypt under Nasser was a founding non-aligned state, yet after Western financing for the Aswan High Dam fell through, Nasser turned to the Soviet Union for financing and engineering to complete the project, all without joining the Warsaw Pact. Which statement best resolves the apparent tension between Egypt's non-aligned status and its acceptance of Soviet aid?",
+    "choices": [
+      "Egypt's acceptance of Soviet financing proves that it had secretly joined the Warsaw Pact by the time the Aswan Dam was built",
+      "non-aligned states were formally barred from accepting any foreign aid whatsoever, from either Cold War bloc",
+      "Nasser's decision meant Egypt formally abandoned the Non-Aligned Movement immediately after accepting Soviet aid",
+      "non-alignment meant declining to join a formal Cold War military alliance, not refusing aid or financing from either superpower"
+    ],
+    "answer": "D",
+    "hints": [
+      "Distinguish formal military alliance membership from pragmatic acceptance of aid or financing.",
+      "Rule out any answer claiming secret Warsaw Pact membership, a total foreign-aid ban for non-aligned states, or Egypt's formal abandonment of non-alignment — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.cold-war.mcq.01",
+    "loId": "apworld.cold-war",
+    "cedCode": "AP-WORLD-8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "George Kennan's 1946 \"Long Telegram\" argued that the United States should block the further spread of Soviet influence without engaging in direct war against the USSR. This strategy became known as —",
+    "choices": [
+      "containment",
+      "détente",
+      "rollback",
+      "appeasement"
+    ],
+    "answer": "A",
+    "hints": [
+      "Containment aimed to block Soviet expansion without direct war — distinct from détente (later eased tension), rollback (actively reversing Soviet gains by force), or appeasement (conceding to demands).",
+      "Kennan's telegram is the founding document historians cite for containment specifically."
+    ]
+  },
+  {
+    "id": "apworld.cold-war.mcq.02",
+    "loId": "apworld.cold-war",
+    "cedCode": "AP-WORLD-8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During the Cold War, direct military conflict between the United States and the Soviet Union never occurred. Instead, the superpower rivalry played out through proxy wars fought in third countries. Which of the following is an example of such a proxy war?",
+    "choices": [
+      "the Franco-Prussian War (1870-1871)",
+      "the Korean War (1950-1953)",
+      "the First Opium War (1839-1842)",
+      "the Napoleonic Wars (1803-1815)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Only one of these four conflicts occurred during the Cold War period at all.",
+      "The Korean War pitted a Soviet- and Chinese-backed North against a US-backed South, without direct US-Soviet combat."
+    ]
+  },
+  {
+    "id": "apworld.cold-war.mcq.03",
+    "loId": "apworld.cold-war",
+    "cedCode": "AP-WORLD-8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "China's split from the Soviet Union by the 1960s, and the existence of the Non-Aligned Movement (including India, Yugoslavia, and Egypt), are both best used as evidence against which common misconception about the Cold War?",
+    "choices": [
+      "the misconception that the Korean War was fought without any Soviet or Chinese involvement",
+      "the misconception that the Cuban Missile Crisis was resolved through direct military combat",
+      "the misconception that every country was clearly and permanently aligned with either the US-led or Soviet-led bloc",
+      "the misconception that the Marshall Plan provided aid exclusively to Latin American states"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both the Sino-Soviet split and the Non-Aligned Movement complicate a clean, two-bloc picture of the Cold War world.",
+      "Rule out answers about the Korean War's participants, the Cuban Missile Crisis's resolution, or the Marshall Plan's recipients — none is the misconception these two facts target."
+    ]
+  },
+  {
+    "id": "apworld.cold-war.mcq.04",
+    "loId": "apworld.cold-war",
+    "cedCode": "AP-WORLD-8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Cold War ended in 1989-1991 through Eastern European revolutions and the Soviet Union's dissolution, without a direct military confrontation between the United States and the Soviet Union. Which combination of factors is most directly credited with this outcome, rather than a single decisive military victory?",
+    "choices": [
+      "a single decisive NATO military campaign that defeated Warsaw Pact forces in direct combat",
+      "a formal surrender treaty signed by the Soviet Union following its defeat in the Korean War",
+      "the immediate and total collapse of the Non-Aligned Movement in 1985",
+      "Gorbachev's reform program, the costly Soviet war in Afghanistan, and organized popular movements across Eastern Europe"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Cold War's end is best explained as a convergence of internal Soviet strain and organized popular pressure, not a single knockout blow.",
+      "Rule out any answer describing direct NATO-Warsaw Pact combat, a surrender treaty tied to the Korean War, or the Non-Aligned Movement's collapse — none matches the actual multi-causal ending."
+    ]
   }
 ]

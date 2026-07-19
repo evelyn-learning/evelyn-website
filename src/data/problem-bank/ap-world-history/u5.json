@@ -236,5 +236,233 @@
       "Notice the testimony states there was no time for parental instruction, and the child went \"to bed immediately\" after supper.",
       "Rule out any answer describing ample leisure, daily parental instruction, or fatigue limited to brisk-trade days — this exchange describes the ordinary schedule too."
     ]
+  },
+  {
+    "id": "apworld.enlightenment.mcq.03",
+    "loId": "apworld.enlightenment",
+    "cedCode": "AP-APWORLD-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "John Locke argued that individuals possess natural rights to life, liberty, and property that exist prior to and independent of government. According to Locke, what happens if a government violates these rights?",
+    "choices": [
+      "the people retain a right to alter or replace that government",
+      "the rights themselves cease to exist once government is established",
+      "only the monarch may lawfully redefine the scope of the violated rights",
+      "the violation has no political consequence, since rights are held only in a pre-political state of nature"
+    ],
+    "answer": "A",
+    "hints": [
+      "Locke's theory of legitimate government rests on consent — and a right to withdraw that consent if government violates natural rights.",
+      "Rule out any answer treating rights as disappearing once government exists, or as redefinable only by a monarch."
+    ]
+  },
+  {
+    "id": "apworld.enlightenment.mcq.04",
+    "loId": "apworld.enlightenment",
+    "cedCode": "AP-APWORLD-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Locke argued that legitimate government rests on the consent of the governed to protect pre-existing natural rights, while Rousseau argued that legitimate authority comes from a social contract in which individuals submit to the \"general will\" — the collective good of the community, which could in principle override an individual's private preference. Which statement best distinguishes these two theories?",
+    "choices": [
+      "Locke and Rousseau proposed identical theories of the social contract, differing only in the language they used to describe it",
+      "Locke's framework centers on protecting pre-existing individual rights, while Rousseau's centers on the collective community's will potentially overriding individual preference",
+      "Rousseau rejected the idea of a social contract entirely, while only Locke used that term",
+      "Locke argued that the general will could override individual rights, while Rousseau argued individual rights were absolute and inviolable"
+    ],
+    "answer": "B",
+    "hints": [
+      "Locke's theory is built around protecting rights that exist before government; Rousseau's is built around a collective will that can, in principle, override individual preference.",
+      "Rule out any answer claiming the theories were identical, that Rousseau rejected the social contract, or that swaps the two thinkers' actual positions."
+    ]
+  },
+  {
+    "id": "apworld.industrial-revolution.mcq.02",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Britain combined several factors that together explain why it industrialized before other economies of the period: large, accessible coal deposits; substantial capital accumulated from earlier trade and colonial wealth; colonial markets and raw materials such as cotton; an agricultural revolution freeing rural labor; and an existing network of rivers and canals. Which statement best characterizes this explanation for British industrial primacy?",
+    "choices": [
+      "British industrialization resulted from a single decisive factor: James Watt's steam engine, with no other contributing causes",
+      "no economy other than Britain possessed any of these five factors in any form",
+      "British industrialization resulted from a specific combination of coal, capital, colonial markets, agricultural change, and existing transport infrastructure",
+      "British industrialization depended entirely on colonial raw materials, with no role for domestic coal or capital"
+    ],
+    "answer": "C",
+    "hints": [
+      "The concept's core point is that multiple factors combined — not any single invention alone.",
+      "Rule out any answer crediting one factor exclusively, denying any other economy had access to similar resources, or ignoring domestic coal and capital."
+    ]
+  },
+  {
+    "id": "apworld.industrial-revolution.mcq.03",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Before the rise of the factory system, textile production in Britain was often organized through the \"putting-out\" system, in which merchants supplied raw materials to workers who spun or wove them in their own homes on their own schedule. How did the factory system change this arrangement?",
+    "choices": [
+      "it eliminated wage labor entirely, replacing it with unpaid apprenticeship in every industry",
+      "it required workers to purchase their own raw materials before beginning any production",
+      "it kept production entirely home-based but introduced steam-powered machinery into individual houses",
+      "it concentrated wage laborers under one roof, working machine-paced shifts rather than home-based piecework"
+    ],
+    "answer": "D",
+    "hints": [
+      "The factory system's key change was concentrating labor under one roof on a machine's schedule, not the worker's own.",
+      "Rule out any answer describing unpaid apprenticeship, worker-purchased materials, or continued home-based production — none matches the factory system."
+    ]
+  },
+  {
+    "id": "apworld.industrial-revolution.mcq.04",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Germany industrialized rapidly especially after its 1871 unification, building heavy industry and large industrial cartels, while Japan pursued deliberate, state-led industrialization after the 1868 Meiji Restoration. Which motivation is most specifically associated with Japan's state-led approach, distinct from Germany's case?",
+    "choices": [
+      "a deliberate strategy to modernize industrially and militarily in order to avoid the fate of territories elsewhere in Asia that had come under direct European colonial control",
+      "an effort to recover territory lost in a war against Austria fought immediately before industrialization began",
+      "a desire to imitate Ottoman millet-style religious toleration in its new industrial cities",
+      "a plan to abolish its own imperial institution and adopt a republican government before industrializing"
+    ],
+    "answer": "A",
+    "hints": [
+      "Japan's Meiji-era industrialization was explicitly framed around avoiding colonization, unlike Germany's post-unification industrial build-up.",
+      "Rule out any answer describing an Austrian war, millet-style toleration, or abolishing the imperial institution — none describes Japan's actual motivation."
+    ]
+  },
+  {
+    "id": "apworld.nationalism-unification.mcq.02",
+    "loId": "apworld.nationalism-unification",
+    "cedCode": "AP-APWORLD-5.2b",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Otto von Bismarck's approach to German unification is often described using the term \"realpolitik.\" Which definition best captures this term as applied to Bismarck's methods?",
+    "choices": [
+      "a politics based entirely on idealistic appeals to shared German ethnic identity, with no use of military force",
+      "a politics of hard-nosed, calculated pursuit of state power and interest, prioritized over ideological consistency",
+      "a politics requiring formal approval from the Austro-Hungarian emperor before any German unification could proceed",
+      "a politics of peaceful federation among German states with no role for Prussia specifically"
+    ],
+    "answer": "B",
+    "hints": [
+      "Realpolitik describes calculated pursuit of power over ideological consistency — think about Bismarck's engineered wars.",
+      "Rule out any answer describing purely idealistic appeals, Austrian approval, or peaceful federation — Bismarck's method relied on calculated war."
+    ]
+  },
+  {
+    "id": "apworld.nationalism-unification.mcq.03",
+    "loId": "apworld.nationalism-unification",
+    "cedCode": "AP-APWORLD-5.2b",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Italian and German unification combined smaller states into larger nation-states, while nineteenth-century Balkan nationalist movements against Ottoman rule generally sought the opposite outcome. Which statement best describes that opposite direction?",
+    "choices": [
+      "Balkan nationalist movements sought to unite the entire Balkan peninsula into a single new empire modeled on Prussia",
+      "Balkan nationalist movements sought to restore the Ottoman sultan's direct control over all Balkan provinces",
+      "Balkan nationalist movements sought to break a large multiethnic empire apart along national and ethnic lines",
+      "Balkan nationalist movements had no relationship to nationalist ideas circulating elsewhere in nineteenth-century Europe"
+    ],
+    "answer": "C",
+    "hints": [
+      "Unification combined smaller units into one state; Balkan nationalism moved the opposite direction, breaking a large empire apart.",
+      "Rule out any answer describing a new unified Balkan empire, restored Ottoman control, or no connection to broader nationalist ideas."
+    ]
+  },
+  {
+    "id": "apworld.nationalism-unification.mcq.04",
+    "loId": "apworld.nationalism-unification",
+    "cedCode": "AP-APWORLD-5.2b",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Pan-Slavism and Pan-Germanism sought political unity among people sharing an ethnic or linguistic identity across existing state borders, applying the same underlying nationalist logic seen in Italian and German unification at a different scale. Which statement best distinguishes pan-movements from the Italian and German unification processes covered in this unit?",
+    "choices": [
+      "pan-movements rejected the idea that ethnic or linguistic identity had any relationship to legitimate political authority",
+      "pan-movements were led entirely by monarchs seeking to expand their own dynastic territory, exactly as Cavour and Bismarck did",
+      "pan-movements succeeded in creating unified states in every case during the nineteenth century",
+      "pan-movements aimed at uniting people across existing state borders on the basis of shared ethnic or linguistic identity, rather than unifying a single, already largely contiguous set of Italian or German states"
+    ],
+    "answer": "D",
+    "hints": [
+      "Pan-movements applied the same ethnic/linguistic nationalist logic, but aimed across existing borders rather than at a bounded set of Italian or German states.",
+      "Rule out any answer denying identity's role, crediting monarchs identically to Cavour and Bismarck, or claiming universal nineteenth-century success — none matches the actual pattern."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.01",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-WORLD-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The French Revolution's outbreak in 1789 is generally explained by a combination of causes: Enlightenment ideas about equality and popular sovereignty, a financial crisis worsened by war debts and support for the American Revolution, the unequal Estates system in which clergy and nobility held tax privileges while commoners bore most of the tax burden, and bad harvests causing bread shortages. Which of these was primarily an economic, rather than an intellectual or institutional, cause?",
+    "choices": [
+      "the financial crisis produced by war debt and by France's support for the American Revolution",
+      "Enlightenment writers' arguments about popular sovereignty",
+      "the Estates-General's traditional three-part structure of representation",
+      "the storming of the Bastille"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distinguish an economic cause (debt, near-bankruptcy) from intellectual (Enlightenment ideas) and institutional (the Estates structure) causes.",
+      "The storming of the Bastille was an event of the Revolution itself, not one of its underlying causes."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.02",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-WORLD-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The French Revolution moved through several distinct phases: a moderate constitutional phase (1789-1791), a radical phase including the Reign of Terror (1792-1794), the Directory (1795-1799), and Napoleon's rise (from 1799). Which statement correctly places the execution of King Louis XVI within this sequence?",
+    "choices": [
+      "Louis XVI was executed during the moderate constitutional phase, before the monarchy was abolished",
+      "Louis XVI was executed in January 1793, during the radical phase, after the monarchy had already been abolished",
+      "Louis XVI was executed by Napoleon shortly after Napoleon became emperor",
+      "Louis XVI was executed during the Directory, as its first official act"
+    ],
+    "answer": "B",
+    "hints": [
+      "The monarchy was abolished before the king's execution — the sequence matters.",
+      "Rule out any answer placing the execution in the moderate phase, under Napoleon, or under the Directory — none matches the actual chronology."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.03",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-WORLD-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Robespierre, a champion of legal equality and the abolition of slavery in French colonies, also led the Committee of Public Safety during the Reign of Terror, which sent thousands to the guillotine — and was ultimately executed by former allies within his own revolutionary movement. This history is best used as evidence against which common misconception about the French Revolution?",
+    "choices": [
+      "the misconception that the Revolution had no connection whatsoever to Enlightenment ideas",
+      "the misconception that Napoleon single-handedly caused the Revolution's outbreak in 1789",
+      "the misconception that the Revolution was a single, unified movement with one consistent faction and one consistent set of goals",
+      "the misconception that the Estates-General met only a single time in French history"
+    ],
+    "answer": "C",
+    "hints": [
+      "Robespierre's rise and fall within the same revolutionary movement is direct evidence against picturing the Revolution as one unified faction.",
+      "Rule out any answer about Enlightenment connections, Napoleon's role in 1789, or the Estates-General's meeting history — none is what this specific history illustrates."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-revolutions.mcq.04",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-WORLD-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Napoleon's Code Napoleon established legal equality before the law and secure property rights, and Napoleon's conquests spread these legal principles across much of Europe, even as his own rule was an authoritarian empire rather than a democracy. Which statement best captures this apparent tension in the Napoleonic legacy?",
+    "choices": [
+      "Napoleon's authoritarian rule made it impossible for the Code Napoleon to have any lasting influence outside France",
+      "the Code Napoleon abolished private property entirely across the territories Napoleon conquered",
+      "Napoleon's rule fully restored the hereditary privileges of the First and Second Estates that the Revolution had abolished",
+      "Napoleonic conquest spread durable legal principles of equality and property rights even while French politics itself remained authoritarian under Napoleon's own rule"
+    ],
+    "answer": "D",
+    "hints": [
+      "Legal reform and authoritarian rule can travel together — think about what the Code actually changed even as Napoleon centralized personal power.",
+      "Rule out any answer denying the Code's lasting influence, claiming it abolished private property, or claiming it restored the old estates' privileges — none matches the historical record."
+    ]
   }
 ]

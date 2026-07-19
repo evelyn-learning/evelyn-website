@@ -197,5 +197,271 @@
       "Adwa is significant because Ethiopia's victory forced a European power to formally back off — think about which broad claim that single fact disproves.",
       "Most resistance movements in this period, including the Sepoy Rebellion, were eventually suppressed, but 'always failed' overstates a real pattern into a false absolute — Adwa is the clean counterexample."
     ]
+  },
+  {
+    "id": "apworld.economic-imperialism.mcq.03",
+    "loId": "apworld.economic-imperialism",
+    "cedCode": "AP-APWORLD-6.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The First Opium War (1839-1842) ended with the Treaty of Nanjing, which imposed 'unequal treaty' terms on Qing China, including extraterritoriality — the principle that foreign nationals accused of crimes in China would be tried under their own country's laws rather than Chinese law. Which statement best describes what extraterritoriality meant for Qing sovereignty?",
+    "choices": [
+      "it left Qing China formally sovereign but stripped it of legal jurisdiction over foreign nationals within its own territory",
+      "it formally transferred all Qing territory to British colonial administration",
+      "it required foreign nationals in China to be tried exclusively under Qing law, with no exceptions",
+      "it abolished the Qing dynasty and replaced it with a British-appointed government"
+    ],
+    "answer": "A",
+    "hints": [
+      "Extraterritoriality is a legal carve-out, not a formal transfer of territory or government.",
+      "Rule out any answer describing full colonization, a reversed legal rule, or the Qing dynasty's abolition — China remained a sovereign Qing state under informal imperialism."
+    ]
+  },
+  {
+    "id": "apworld.economic-imperialism.mcq.04",
+    "loId": "apworld.economic-imperialism",
+    "cedCode": "AP-APWORLD-6.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Unlike much of Africa and South Asia, China was never formally partitioned into European colonies; instead, foreign powers carved out \"spheres of influence\" — regions of exclusive economic and political privilege — while the Qing dynasty remained nominally sovereign. Which statement best captures why historians classify this arrangement as \"informal imperialism\" rather than formal colonization?",
+    "choices": [
+      "foreign powers had no meaningful economic or political influence in China at all during this period",
+      "the Qing dynasty formally ceded all of its territory to a single foreign power under one comprehensive treaty",
+      "spheres of influence gave the Qing dynasty exclusive control over foreign merchants operating within its borders",
+      "foreign powers exercised substantial economic and political control without formally replacing Qing sovereignty with direct colonial administration"
+    ],
+    "answer": "D",
+    "hints": [
+      "Informal imperialism means real foreign control without formally replacing the existing government.",
+      "Rule out any answer denying real foreign influence, describing a single comprehensive cession, or reversing who controlled whom."
+    ]
+  },
+  {
+    "id": "apworld.global-migration.mcq.03",
+    "loId": "apworld.global-migration",
+    "cedCode": "AP-APWORLD-6.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "After Britain abolished slavery in 1833, British colonial planters turned to indentured labor, recruiting workers under contracts binding them to work for a fixed number of years in exchange for passage and wages. Which statement best describes why colonial planters adopted this labor system?",
+    "choices": [
+      "to replace the enslaved plantation labor force that abolition had eliminated",
+      "to comply with a new law requiring planters to import laborers exclusively from China",
+      "to end all forms of contracted or bound labor on British plantations permanently",
+      "to provide a form of paid vacation labor for British citizens seeking overseas travel"
+    ],
+    "answer": "A",
+    "hints": [
+      "Indenture expanded specifically to fill the labor gap abolition created on plantations.",
+      "Rule out any answer requiring exclusively Chinese recruitment, ending all bound labor, or describing indenture as vacation travel — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.global-migration.mcq.04",
+    "loId": "apworld.global-migration",
+    "cedCode": "AP-APWORLD-6.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mauritius and British Guiana together received roughly 64 percent of all Indian indentured laborers recorded in the 1834-1917 table, far more than smaller destinations like Fiji. Beyond Fiji's later 1879 start date, which additional factor most plausibly explains this concentration in Mauritius and British Guiana specifically?",
+    "choices": [
+      "both colonies banned the recruitment of any laborers other than those from India",
+      "both had large, well-established sugar plantation economies with an especially urgent labor need immediately after the 1833 abolition of slavery",
+      "both colonies were located in the Pacific Ocean, closer to Indian ports than any Caribbean colony",
+      "both colonies had no sugar industry and instead recruited indentured labor for mining"
+    ],
+    "answer": "B",
+    "hints": [
+      "Sugar plantations were the primary post-abolition source of labor demand for indenture across British colonies.",
+      "Rule out any answer involving a ban on non-Indian labor, incorrect geography, or a non-sugar industry — Mauritius and Guiana were major sugar producers."
+    ]
+  },
+  {
+    "id": "apworld.imperial-expansion.mcq.04",
+    "loId": "apworld.imperial-expansion",
+    "cedCode": "AP-APWORLD-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Berlin Conference's \"effective occupation\" principle required a European power to notify other signatory powers of a new African territorial claim, but imposed no requirement that African governments consent to or even be informed of that claim. Which conclusion about the imperial \"scramble for Africa\" does this principle best support?",
+    "choices": [
+      "African governments held equal negotiating status alongside European powers at the Berlin Conference itself",
+      "the principle required African governments to formally ratify any new European claim before it could take effect",
+      "European powers structured mutual recognition of colonial claims entirely among themselves, treating African political consent as unnecessary",
+      "the principle banned any further European territorial claims in Africa after 1885"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice who the notification requirement is addressed to — other European powers, not African governments.",
+      "Rule out any answer granting African governments negotiating status, requiring their ratification, or claiming a post-1885 claims ban — none matches the Berlin Act's actual terms."
+    ]
+  },
+  {
+    "id": "apworld.imperial-resistance.mcq.02",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When the British governor demanded that the Asante Empire surrender the Golden Stool — the sacred symbol of Asante royal authority — Yaa Asantewaa, Queen Mother of Ejisu, rallied Asante forces to resist in the War of the Golden Stool (1900). Which statement best describes the outcome and significance of this resistance?",
+    "choices": [
+      "the uprising succeeded in permanently expelling British forces from the entire Gold Coast region",
+      "the British governor withdrew his demand for the Golden Stool immediately after the uprising began",
+      "Yaa Asantewaa's forces were defeated before ever engaging British troops in combat",
+      "the uprising was ultimately suppressed and Asante was formally annexed, but it stands out as a case of a woman leading a state's most significant armed resistance to colonization"
+    ],
+    "answer": "D",
+    "hints": [
+      "The War of the Golden Stool was ultimately suppressed, but its leadership and scale remain historically significant.",
+      "Rule out any answer claiming a full British withdrawal, a withdrawn demand, or no armed engagement — the war was fought and then suppressed."
+    ]
+  },
+  {
+    "id": "apworld.imperial-resistance.mcq.03",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Boxer Uprising (1899-1901) besieged foreign legations in Beijing with eventual Qing court support, but was suppressed by an international Eight-Nation Alliance force, resulting in the Boxer Protocol (1901). Which statement best characterizes this outcome relative to most other resistance movements covered in this topic?",
+    "choices": [
+      "the Boxer Uprising's suppression led to an even harsher round of foreign intervention, imposing a large indemnity and further concessions on China",
+      "unlike most suppressed resistance, the Boxer Uprising's suppression brought immediate relief from foreign intervention rather than harsher terms",
+      "the Boxer Uprising succeeded in permanently ending all foreign spheres of influence in China",
+      "the Boxer Uprising was resolved entirely through diplomatic negotiation, without any military intervention by foreign powers"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Boxer Protocol imposed a large indemnity and further concessions — not relief.",
+      "Rule out any answer describing relief from intervention, an end to spheres of influence, or a purely diplomatic resolution — the uprising was suppressed militarily by an international coalition."
+    ]
+  },
+  {
+    "id": "apworld.imperial-resistance.mcq.04",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Zulu Kingdom inflicted a major defeat on British forces at the Battle of Isandlwana (1879) but was ultimately defeated later that same year, while Ethiopia's victory at the Battle of Adwa (1896) preserved its independence for decades afterward. Which factor best explains why Adwa produced a lasting result that Isandlwana did not?",
+    "choices": [
+      "the Zulu Kingdom possessed more modern rifles than Ethiopia did at Adwa",
+      "Ethiopia fielded a large, centrally unified army under Menelik II against a comparatively small, overextended invading force, while Britain was able to draw on substantial reinforcement after its initial defeat at Isandlwana",
+      "Britain formally recognized Zulu independence immediately after Isandlwana, exactly as Italy recognized Ethiopian independence after Adwa",
+      "Italy's army at Adwa was substantially larger and better supplied than Britain's forces in the Anglo-Zulu War"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what happened AFTER each initial battle — one invading power could reinforce and ultimately prevail; the other could not.",
+      "Rule out any answer claiming superior Zulu weaponry, an immediate British recognition of Zulu independence, or a larger Italian force — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.reform-responses.mcq.03",
+    "loId": "apworld.reform-responses",
+    "cedCode": "AP-APWORLD-6.4b",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Meiji government issued the Charter Oath in 1868, shortly after the fall of the Tokugawa shogunate. Which of the following best describes the Charter Oath's basic purpose?",
+    "choices": [
+      "to formally abolish the office of the Japanese emperor",
+      "to establish Japan's first detailed, fully drafted national constitution",
+      "to set out broad guiding principles for Japan's new government, including consultative decision-making and openness to useful outside knowledge",
+      "to declare war on Qing China immediately following the Tokugawa shogunate's fall"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Charter Oath set broad principles in 1868, well before Japan's detailed 1889 constitution.",
+      "Rule out any answer describing abolishing the emperor, a full constitution, or an immediate declaration of war — none describes the Oath's actual content."
+    ]
+  },
+  {
+    "id": "apworld.reform-responses.mcq.04",
+    "loId": "apworld.reform-responses",
+    "cedCode": "AP-APWORLD-6.4b",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Meiji Japan's reform program selectively adapted foreign knowledge and technology within a framework that preserved and strengthened the emperor's central authority, while Qing China's roughly contemporary Self-Strengthening Movement attempted to adopt foreign technology without comparably restructuring its political institutions. Which conclusion do historians most often draw from contrasting these two reform efforts?",
+    "choices": [
+      "both reform efforts were identical in scope, timing, and political approach",
+      "Qing China's Self-Strengthening Movement restructured its political institutions far more thoroughly than Meiji Japan did",
+      "neither Meiji Japan nor Qing China adopted any foreign technology during this period",
+      "Meiji Japan's willingness to pair technological adoption with political and institutional restructuring helps explain its more thorough and successful modernization compared to Qing China's more limited Self-Strengthening efforts"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key contrast is technological adoption ALONE (Self-Strengthening) versus technological adoption paired with institutional restructuring (Meiji Japan).",
+      "Rule out any answer treating the two efforts as identical, reversing which state restructured institutions more, or denying either adopted foreign technology."
+    ]
+  },
+  {
+    "id": "apworld.imperialism.mcq.01",
+    "loId": "apworld.imperialism",
+    "cedCode": "AP-WORLD-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Historians identify several combined causes of the late-nineteenth-century \"New Imperialism\": industrial demand for raw materials and new markets, nationalist competition among European powers, the pseudo-moral \"civilizing mission\" ideology, and military technology advantages such as the Maxim gun and quinine treatment for malaria. Which of these is best classified as a technological, rather than economic or ideological, cause?",
+    "choices": [
+      "the Maxim gun and quinine, which gave European forces a decisive military and medical advantage in colonial campaigns",
+      "the demand for raw materials such as rubber, oil, and cotton",
+      "the \"civilizing mission\" ideology used to justify colonial rule",
+      "nationalist competition among rival European powers"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distinguish a technological/medical cause (weapons, disease treatment) from economic (raw materials/markets), ideological (\"civilizing mission\"), and political (nationalist rivalry) causes.",
+      "The Maxim gun and quinine are the technological/medical factor among the four."
+    ]
+  },
+  {
+    "id": "apworld.imperialism.mcq.02",
+    "loId": "apworld.imperialism",
+    "cedCode": "AP-WORLD-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Berlin Conference (1884-85) brought European powers together to establish rules for dividing African territory among themselves. Which statement best describes a defining feature of this conference?",
+    "choices": [
+      "it was attended by delegates from every major African kingdom and empire, who jointly approved the resulting borders",
+      "it drew colonial borders across Africa without African governments' participation, often cutting across existing ethnic and political lines",
+      "it formally ended all European colonization of Africa",
+      "it was convened specifically to abolish the slave trade throughout the African continent"
+    ],
+    "answer": "B",
+    "hints": [
+      "African governments were not represented at the conference — its participants were entirely European powers.",
+      "Rule out any answer claiming African participation, an end to colonization, or a focus on abolishing the slave trade — none describes the conference's actual purpose or attendance."
+    ]
+  },
+  {
+    "id": "apworld.imperialism.mcq.03",
+    "loId": "apworld.imperialism",
+    "cedCode": "AP-WORLD-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Colonial governments in this period often built railroads, telegraph lines, and other infrastructure in their African and Asian territories. Which statement best evaluates the claim that this infrastructure primarily served the interests of colonized populations?",
+    "choices": [
+      "colonial infrastructure was built exclusively for the personal convenience of colonized populations, with no economic function for colonizers",
+      "colonial governments built no infrastructure of any kind in their African or Asian territories",
+      "colonial infrastructure was built primarily to extract raw materials and move them toward colonial ports, not primarily to benefit local populations' own internal development",
+      "colonial infrastructure investment was distributed equally between extraction-oriented projects and locally directed development projects"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what a railroad running from an inland resource to a coastal port was actually built to accomplish.",
+      "Rule out any answer claiming no infrastructure was built, that it served colonized populations exclusively, or that investment was evenly split — none matches the historical pattern."
+    ]
+  },
+  {
+    "id": "apworld.imperialism.mcq.04",
+    "loId": "apworld.imperialism",
+    "cedCode": "AP-WORLD-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "King Leopold II ran the Congo Free State as his own personal colonial possession from 1885 to 1908, extracting rubber through a forced-labor system that killed an estimated several million Congolese, before international pressure forced him to cede the territory to the Belgian government. Which feature makes the Congo Free State a distinctive, rather than typical, case within the broader history of this period's imperialism?",
+    "choices": [
+      "it was the only colonial territory in this period where any forced labor of any kind occurred",
+      "it was the only case in this period in which international pressure ever influenced a colonial power's policy",
+      "Leopold II personally governed the territory in close cooperation with an elected Belgian parliament from the outset",
+      "the territory was held as one monarch's personal possession rather than as a state-administered colony, a structure that removed even the limited oversight formal government administration might have provided"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Congo Free State's defining feature was personal royal ownership, distinct from state-administered colonies elsewhere.",
+      "Rule out any answer claiming forced labor was unique to the Congo, that international pressure never mattered elsewhere, or that Leopold governed through an elected parliament from the start — none matches the historical record."
+    ]
   }
 ]

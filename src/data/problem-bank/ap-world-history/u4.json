@@ -236,5 +236,233 @@
       "Ask which case — the VOC's trading posts or Spain's territorial rule — was the more typical pattern among European maritime empires before 1750.",
       "Rule out any answer claiming the two systems were identical, or that mercantilism applied to only one of them — both were mercantilist, but structured differently."
     ]
+  },
+  {
+    "id": "apworld.atlantic-slave-trade.mcq.03",
+    "loId": "apworld.atlantic-slave-trade",
+    "cedCode": "AP-APWORLD-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Europeans engaged in the Atlantic slave trade largely from coastal trading posts such as Elmina and Cape Coast, rather than venturing into the African interior themselves. Given this, which statement best describes how most captives entering the Atlantic slave trade were actually obtained?",
+    "choices": [
+      "African states and kingdoms such as Asante, Dahomey, and Oyo captured people through warfare, raiding, or judicial enslavement, then sold them to European buyers at the coast",
+      "European soldiers conducted raids deep into the African interior to capture most captives directly",
+      "captives were exclusively prisoners voluntarily sold by their own families for cash payments",
+      "the Portuguese crown negotiated formal population quotas directly with each African village"
+    ],
+    "answer": "A",
+    "hints": [
+      "Europeans rarely ventured far from coastal forts — think about who did the actual capturing further inland.",
+      "Rule out any answer involving direct European raiding, purely voluntary family sales, or formal government population quotas — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.atlantic-slave-trade.mcq.04",
+    "loId": "apworld.atlantic-slave-trade",
+    "cedCode": "AP-APWORLD-4.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "European traders supplied firearms to coastal West African kingdoms such as Dahomey and Asante in exchange for captives. Which statement best explains the long-term political effect this arms trade had on the region?",
+    "choices": [
+      "firearms had no effect on the balance of power between coastal and interior African states",
+      "firearms gave coastal kingdoms a military advantage over interior neighbors, reinforcing a cycle in which more captures fueled more gun imports, and vice versa",
+      "firearms were used exclusively for hunting and had no role in warfare or captive-taking",
+      "interior African states received the same quantity of firearms as coastal kingdoms, keeping military power balanced"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what a growing military advantage plus an ongoing demand for captives would do to the incentive to keep trading for more guns.",
+      "Rule out any answer denying firearms' military role or claiming an even balance of power between coastal and interior states."
+    ]
+  },
+  {
+    "id": "apworld.columbian-exchange-global.mcq.04",
+    "loId": "apworld.columbian-exchange-global",
+    "cedCode": "AP-APWORLD-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ming China's Single Whip tax reform (1581) consolidated most tax obligations into silver payments, making China the world's largest sustained buyer of silver by the late 1500s. Which statement best explains how this Chinese demand shaped the global silver trade described in the Potosí data?",
+    "choices": [
+      "China's tax reform reduced global demand for silver, causing the price of American silver to collapse worldwide",
+      "Chinese demand for silver was entirely unrelated to the volume of silver mined in Spanish America",
+      "high Chinese demand for silver made shipping American silver across the Pacific to China a profitable venture, tying Spanish American mining directly into a global, not merely Atlantic, trade circuit",
+      "the Single Whip reform ended Ming China's use of silver as currency in favor of paper money"
+    ],
+    "answer": "C",
+    "hints": [
+      "A tax system requiring silver payment created sustained Chinese demand that pulled American silver across the Pacific via the Manila Galleon route.",
+      "Rule out any answer describing reduced demand, no connection to American silver, or a shift away from silver — all contradict the reform's actual effect."
+    ]
+  },
+  {
+    "id": "apworld.maritime-empires.mcq.03",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A trading-post empire extends control primarily through fortified coastal outposts and dominance over shipping lanes, extracting wealth by controlling commerce rather than by administering conquered territory or population. Which European colonial venture in Asia before 1750 best fits this model?",
+    "choices": [
+      "Spain's encomienda-based administration of the Americas",
+      "Russia's territorial expansion into Siberia",
+      "the Ottoman Empire's direct territorial rule over Egypt",
+      "the Dutch VOC's network of fortified ports across the Indonesian archipelago"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which venture extracted wealth chiefly by controlling ports and shipping lanes rather than administering inland territory or population.",
+      "Rule out the Spanish, Russian, and Ottoman cases — each involved direct territorial administration."
+    ]
+  },
+  {
+    "id": "apworld.maritime-empires.mcq.04",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Unlike Spain's approach in the Americas, the Dutch VOC in Asia generally avoided directly administering large inland populations, instead concentrating its resources on fortified ports and control of shipping lanes. Which reasoning best explains why a trading-post model, rather than full territorial conquest, made commercial sense for European powers operating in densely populated, well-organized Asian societies?",
+    "choices": [
+      "controlling ports and sea lanes let a comparatively small European force profit from existing regional trade networks without the far greater cost of administering populous, already-organized societies",
+      "Asian societies before 1750 had no organized states or armies capable of resisting any form of European rule",
+      "European monarchs formally prohibited their chartered companies from ever governing any overseas territory",
+      "the VOC lacked any military capacity to fortify or defend coastal trading posts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Weigh the cost of administering a populous inland society against the cost of holding a handful of fortified ports.",
+      "Rule out any answer denying organized Asian states existed, inventing a formal prohibition, or denying the VOC's real military capacity — the VOC did fortify and defend its posts."
+    ]
+  },
+  {
+    "id": "apworld.maritime-exploration.mcq.04",
+    "loId": "apworld.maritime-exploration",
+    "cedCode": "AP-APWORLD-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Zheng He's early-fifteenth-century treasure-fleet voyages were financed directly by the Ming imperial court. Which of the following was also true of the roughly contemporary Iberian voyages of exploration, such as Columbus's 1492 expedition?",
+    "choices": [
+      "they were financed entirely by private merchant guilds with no royal involvement whatsoever",
+      "they too were undertaken with sponsorship from a royal court, in Columbus's case the Spanish crown",
+      "they were financed by the Ottoman sultan, who sought to expand Mediterranean trade",
+      "they received no state or royal financial backing of any kind"
+    ],
+    "answer": "B",
+    "hints": [
+      "Columbus sailed with backing from the Spanish crown (Ferdinand and Isabella), a royal sponsorship parallel to the Ming court's financing of Zheng He.",
+      "Rule out any answer denying royal involvement or crediting the Ottoman sultan — neither matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.resistance-accommodation.mcq.03",
+    "loId": "apworld.resistance-accommodation",
+    "cedCode": "AP-APWORLD-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A series of Tokugawa shogunate directives culminating in 1635 barred most Japanese subjects from traveling abroad and narrowed foreign trade to a small number of closely supervised ports. Which statement best describes the overall purpose of these directives?",
+    "choices": [
+      "to eliminate all contact between Japan and the outside world permanently",
+      "to force all Japanese subjects to convert to Christianity",
+      "to let the shogunate control and supervise the terms of foreign contact rather than eliminate contact entirely",
+      "to open Japan's ports fully to unrestricted foreign trade"
+    ],
+    "answer": "C",
+    "hints": [
+      "The directives narrowed and supervised contact — they did not eliminate it outright.",
+      "Rule out any answer describing total isolation, forced Christian conversion, or unrestricted trade — none matches the actual policy."
+    ]
+  },
+  {
+    "id": "apworld.resistance-accommodation.mcq.04",
+    "loId": "apworld.resistance-accommodation",
+    "cedCode": "AP-APWORLD-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Tokugawa shogunate's narrowing of foreign trade to a single supervised channel — Dutch merchants confined to Dejima — left the shogunate, not the foreign trading partner, in control of the terms of continued contact. Which conclusion about non-European responses to European contact, 1450-1750, does this case best support?",
+    "choices": [
+      "non-European states uniformly and violently rejected all European contact during this period",
+      "European states always dictated the complete terms of contact, leaving non-European states no negotiating power",
+      "Japan's policy proves that no European merchants were ever permitted to trade anywhere in Japan after 1635",
+      "some non-European states, like Tokugawa Japan, actively negotiated and limited the terms of European contact rather than simply submitting to or rejecting it outright"
+    ],
+    "answer": "D",
+    "hints": [
+      "Tokugawa policy kept one narrow, closely supervised channel open rather than closing off contact completely or submitting to unrestricted trade.",
+      "Rule out any answer describing uniform rejection, total European dictation of terms, or a complete ban on all European trade — the Dutch continued trading at Dejima."
+    ]
+  },
+  {
+    "id": "apworld.unit4-transoceanic.mcq.01",
+    "loId": "apworld.unit4-transoceanic",
+    "cedCode": "AP-WORLD-4.1-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the Columbian Exchange following 1492, which of the following pairs correctly matches a crop or animal with the direction it primarily traveled?",
+    "choices": [
+      "the potato traveled from the Americas to Afro-Eurasia",
+      "wheat traveled from the Americas to Afro-Eurasia",
+      "smallpox traveled from the Americas to Afro-Eurasia",
+      "horses traveled from Afro-Eurasia to the Americas but were never successfully established there"
+    ],
+    "answer": "A",
+    "hints": [
+      "The potato, along with maize and tomatoes, originated in the Americas and spread to Afro-Eurasia.",
+      "Rule out wheat and smallpox, both of which moved from Afro-Eurasia to the Americas, and horses, which were successfully established in the Americas."
+    ]
+  },
+  {
+    "id": "apworld.unit4-transoceanic.mcq.02",
+    "loId": "apworld.unit4-transoceanic",
+    "cedCode": "AP-WORLD-4.1-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Indigenous populations in the Americas collapsed by an estimated 50 to 90 percent within a century of sustained European contact. Historians attribute this collapse primarily to —",
+    "choices": [
+      "direct combat casualties suffered during conquest campaigns",
+      "epidemic disease, since indigenous populations had no prior immunity to Old World pathogens such as smallpox",
+      "a sudden, region-wide famine unrelated to European contact",
+      "mass voluntary emigration of indigenous peoples to Afro-Eurasia"
+    ],
+    "answer": "B",
+    "hints": [
+      "Old World diseases like smallpox often preceded conquistadors and devastated populations with no prior immunity.",
+      "Rule out combat casualties, an unrelated famine, or voluntary emigration — none is the primary documented cause."
+    ]
+  },
+  {
+    "id": "apworld.unit4-transoceanic.mcq.03",
+    "loId": "apworld.unit4-transoceanic",
+    "cedCode": "AP-WORLD-4.1-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Silver mined at Potosí and Zacatecas moved not only across the Atlantic to Spain but also across the Pacific via the Manila Galleon route (established 1565) to purchase Chinese silk and porcelain. This Pacific silver flow is best explained by which factor?",
+    "choices": [
+      "China refused to accept silver as currency, forcing merchants to trade only in gold",
+      "Spain had no direct access to the Atlantic and could trade with Asia only via the Pacific",
+      "Ming and Qing China's tax system required payment substantially in silver, sustaining strong Chinese demand for the metal",
+      "the Manila Galleon route carried only enslaved laborers, not silver or trade goods"
+    ],
+    "answer": "C",
+    "hints": [
+      "China's Single Whip tax reform consolidated tax obligations into silver payments, creating sustained demand.",
+      "Rule out any answer claiming China rejected silver, that Spain lacked Atlantic access, or that the galleons carried no trade goods."
+    ]
+  },
+  {
+    "id": "apworld.unit4-transoceanic.mcq.04",
+    "loId": "apworld.unit4-transoceanic",
+    "cedCode": "AP-WORLD-4.1-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Mercantilist policy treated global wealth as effectively fixed, aiming to accumulate gold and silver bullion through a favorable balance of trade, tariffs, and colonies serving as captive markets and raw-material sources. Chartered joint-stock companies such as the VOC (1602) and the English East India Company (1600) fit into this system chiefly by —",
+    "choices": [
+      "operating as fully independent entities with no government charter, monopoly rights, or state oversight",
+      "existing solely to redistribute wealth equally among all European trading nations",
+      "replacing tariffs and colonial policy entirely as the primary tool of mercantilist states",
+      "pooling private investment capital while operating under state-granted monopoly trading rights, extending state commercial power without direct state financing of every voyage"
+    ],
+    "answer": "D",
+    "hints": [
+      "Joint-stock companies combined private capital with state-granted exclusive trading rights — a hybrid, not a replacement for state policy.",
+      "Rule out any answer denying their government charter, claiming equal wealth redistribution, or claiming they replaced tariffs/colonial policy entirely."
+    ]
   }
 ]

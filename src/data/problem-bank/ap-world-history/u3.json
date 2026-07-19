@@ -196,5 +196,157 @@
       "Look for the example that shows recruits being trained for ongoing administrative and military roles, not just used in one battle.",
       "Rule out any answer describing no administration at all, or attributing sustained control to imported artillery alone — those restate the 'guns alone' misconception."
     ]
+  },
+  {
+    "id": "apworld.empires-belief-systems.mcq.03",
+    "loId": "apworld.empires-belief-systems",
+    "cedCode": "AP-APWORLD-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Ottoman millet system allowed non-Muslim religious communities — including Orthodox Christians, Jews, and Armenian Christians — to manage their own internal legal, educational, and religious affairs under their own religious leaders. In exchange for this autonomy, millet communities were required to —",
+    "choices": [
+      "convert to Sunni Islam within one generation",
+      "pay the jizya tax and accept a legally subordinate status to Muslims",
+      "surrender all property to the Ottoman treasury",
+      "relocate permanently to designated frontier provinces"
+    ],
+    "answer": "B",
+    "hints": [
+      "The millet system granted real internal autonomy, but always within a framework of legal subordination and taxation.",
+      "Rule out any answer requiring conversion, property surrender, or relocation — none describes the millet arrangement."
+    ]
+  },
+  {
+    "id": "apworld.empires-belief-systems.mcq.04",
+    "loId": "apworld.empires-belief-systems",
+    "cedCode": "AP-APWORLD-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Akbar abolished the jizya tax on non-Muslims and appointed Hindus to the highest ranks of Mughal administration; his great-grandson Aurangzeb later reimposed the jizya in 1679 and pursued more orthodox Sunni religious policies. This sequence is best used as evidence for which point about religious pluralism in the Mughal Empire?",
+    "choices": [
+      "Mughal religious policy was fixed from the empire's founding and never changed across its history",
+      "Aurangzeb's reimposition of the jizya proves that Akbar's sulh-i-kul policy never actually existed",
+      "Hindus were expelled from Mughal administration entirely as soon as Akbar's reign ended",
+      "Mughal approaches to religious pluralism could shift dramatically depending on the individual ruler, rather than following one fixed dynastic policy"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare Akbar's and Aurangzeb's policies as evidence about how much a single ruler's choices could shift imperial religious policy.",
+      "Rule out any answer claiming fixed, unchanging policy, denying Akbar's sulh-i-kul occurred, or claiming immediate expulsion right after Akbar's reign."
+    ]
+  },
+  {
+    "id": "apworld.empires-expansion.mcq.03",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At the First Battle of Panipat (1526), Babur's forces defeated the much larger army of the Delhi Sultanate using matchlock guns and cannon positioned behind a fortified line of carts, combined with flanking cavalry charges once Lodi lines were disordered. Which statement best characterizes how Babur's victory is best explained?",
+    "choices": [
+      "gunpowder weapons created an opening in the Lodi lines that flanking cavalry then exploited",
+      "gunpowder weapons alone, without any cavalry tactics, decided the battle",
+      "Babur's army relied exclusively on cavalry, with no gunpowder weapons present at all",
+      "the Lodi army also possessed matchlock guns and cannon in equal numbers to Babur's forces"
+    ],
+    "answer": "A",
+    "hints": [
+      "The battle combined two elements — gunfire disorder plus cavalry exploitation — rather than either alone.",
+      "Rule out any answer denying gunpowder's role, denying cavalry's role, or claiming the Lodi army was equally equipped."
+    ]
+  },
+  {
+    "id": "apworld.empires-expansion.mcq.04",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The 1644 Qing conquest of Ming China relied on gunpowder-equipped Manchu banner armies to seize Beijing and, in subsequent decades, the rest of China. Which factor was most essential to the Qing Dynasty's ability to sustain lasting rule over China after the initial conquest?",
+    "choices": [
+      "continuing to rely exclusively on Manchu banner armies for all subsequent civil administration",
+      "absorbing and continuing the existing, already-sophisticated Ming bureaucratic and civil-service apparatus",
+      "abolishing the Confucian civil-service examination system to eliminate rival sources of legitimacy",
+      "relying solely on continued gunpowder superiority to suppress any Han Chinese administrative involvement"
+    ],
+    "answer": "B",
+    "hints": [
+      "Conquest and durable administration are two separate achievements — think about which one required absorbing an existing system rather than more firepower.",
+      "Rule out any answer suggesting the Qing ruled through military force alone or eliminated the exam system — neither matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.unit3-land-empires.mcq.01",
+    "loId": "apworld.unit3-land-empires",
+    "cedCode": "AP-WORLD-3.1-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Ottoman devshirme system recruited Christian boys from Balkan territories, converted them to Islam, and trained them for elite service. Which two career paths did devshirme recruits typically follow?",
+    "choices": [
+      "hereditary noble titles passed down through their birth families",
+      "positions exclusively within the Orthodox Christian millet leadership",
+      "Janissary infantry service or palace administrative positions",
+      "service only as provincial tax collectors, with no military role"
+    ],
+    "answer": "C",
+    "hints": [
+      "Devshirme recruits were trained for two main roles within Ottoman service.",
+      "Rule out any answer involving hereditary noble titles or millet leadership — devshirme recruits were removed from their birth families and converted."
+    ]
+  },
+  {
+    "id": "apworld.unit3-land-empires.mcq.02",
+    "loId": "apworld.unit3-land-empires",
+    "cedCode": "AP-WORLD-3.1-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Ming Dynasty sponsored Zheng He's massive treasure-fleet voyages to Southeast Asia, India, and East Africa between 1405 and 1433, then abandoned further voyages afterward. Which combination of factors best explains this decision?",
+    "choices": [
+      "the voyages had been a purely private commercial venture that ended once its merchant investors withdrew funding",
+      "a catastrophic naval defeat destroyed the treasure fleet, making further voyages physically impossible",
+      "European naval powers blockaded Chinese ports, forcing the fleet's withdrawal",
+      "Mongol resurgence on the northern frontier redirected military spending, and Confucian officials opposed the voyages' cost and eunuch-faction associations"
+    ],
+    "answer": "D",
+    "hints": [
+      "The voyages were state-sponsored, not privately financed, and were not ended by a military defeat or European blockade.",
+      "Northern frontier security concerns and court political rivalries between eunuch and Confucian officials both mattered."
+    ]
+  },
+  {
+    "id": "apworld.unit3-land-empires.mcq.03",
+    "loId": "apworld.unit3-land-empires",
+    "cedCode": "AP-WORLD-3.1-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Peter the Great modernized the Russian military, founded St. Petersburg, and required nobles to adopt Western dress and shave their beards. Which statement best describes the limits of this westernization program?",
+    "choices": [
+      "it was largely superficial and elite-focused, and Peter's reign actually expanded serfdom by tying state-industrial workers to factories",
+      "it transformed Russian society completely, ending serfdom and rural peasant life along Western European lines",
+      "it had no lasting effect on Russian court culture or military organization",
+      "it was rejected outright by the Russian nobility, who refused to adopt any Western customs"
+    ],
+    "answer": "A",
+    "hints": [
+      "Peter's reforms reached the court and military far more than they reached the overwhelming rural peasant majority.",
+      "Rule out any answer claiming total transformation, no lasting effect, or noble rejection — none matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.unit3-land-empires.mcq.04",
+    "loId": "apworld.unit3-land-empires",
+    "cedCode": "AP-WORLD-3.1-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Akbar managed Mughal religious diversity chiefly through personal, experimental policies — abolishing the jizya, marrying into Hindu royal families, and floating the syncretic Din-i Ilahi — while Suleiman managed Ottoman religious diversity chiefly through the standing institutional structure of the millet system. Which statement best captures the difference AP comparison essays should draw between these two approaches?",
+    "choices": [
+      "both rulers relied on identical millet-style institutions, differing only in which religious minorities were included",
+      "Akbar's approach rested on the choices of an individual ruler, while Suleiman's rested on an enduring institutional framework that could outlast any one sultan's personal preferences",
+      "Akbar's policies were institutionalized in permanent law, while Suleiman's depended entirely on his personal charisma",
+      "neither ruler's approach to religious diversity outlasted his own reign"
+    ],
+    "answer": "B",
+    "hints": [
+      "One approach was tied to a ruler's personal choices (and could be reversed by a successor, as Aurangzeb showed); the other was built into a lasting institution.",
+      "Rule out any answer claiming identical institutions, a reversed distinction, or that neither approach outlasted its founder — the millet system persisted for centuries."
+    ]
   }
 ]

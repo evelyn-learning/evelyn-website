@@ -196,5 +196,195 @@
       "Notice the clause protects 'freemen' specifically — medieval England still had a large unfree (serf) population outside this protection.",
       "Rule out any answer describing full democracy, church takeover of justice, or the end of feudalism — the clause limits royal power over free subjects, nothing more."
     ]
+  },
+  {
+    "id": "apworld.americas-africa-states.mcq.03",
+    "loId": "apworld.americas-africa-states",
+    "cedCode": "AP-APWORLD-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Mexica Empire administered conquered altepetl (city-states) chiefly by requiring regular tribute in goods, labor, or captives while leaving local rulers largely in place. The Inca Empire, by contrast, administered its territory chiefly through the mit'a system of rotational labor service, reinforced by an extensive road network and quipu record-keeping. Which statement best distinguishes these two administrative models?",
+    "choices": [
+      "The Inca required conquered city-states to pay tribute in goods and captives, while the Mexica organized subject labor through rotational mit'a service",
+      "The Mexica extracted tribute from largely self-governing subordinate city-states, while the Inca organized subject communities' labor time directly through the mit'a system",
+      "Both empires relied on the identical rotational labor-service system, differing only in which crops individual communities were assigned to farm for the state",
+      "The Mexica left conquered altepetl with no ongoing obligations to Tenochtitlan at all, while only the Inca imposed any formal administrative requirements on subject peoples"
+    ],
+    "answer": "B",
+    "hints": [
+      "Keep the two systems distinct: tribute extraction from largely autonomous polities versus direct organization of subject labor time.",
+      "Rule out any answer that swaps the two systems between empires, treats them as identical, or claims the Mexica imposed no obligations at all."
+    ]
+  },
+  {
+    "id": "apworld.americas-africa-states.mcq.04",
+    "loId": "apworld.americas-africa-states",
+    "cedCode": "AP-APWORLD-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Cahokia, a large Mississippian urban center near the confluence of the Mississippi and Missouri rivers, reached its peak population and regional influence roughly 1050-1200, and was already in decline during the 1200-1450 window covered by this unit. A student writing an AP long-essay response citing Cahokia as evidence for this unit's period should —",
+    "choices": [
+      "avoid citing Cahokia entirely, since it has no relevance to any point about Indigenous American state-building",
+      "treat Cahokia as evidence of Mexica imperial administration extending into the Mississippi River valley",
+      "date Cahokia's peak population to within the 1200-1450 window itself, since the settlement remained inhabited into the thirteenth century",
+      "cite Cahokia to establish that populous, hierarchical, complex urban societies existed in North America well before sustained European contact, while noting its peak preceded most of this unit's own window"
+    ],
+    "answer": "D",
+    "hints": [
+      "Cahokia's peak (1050-1200) is a genuine chronological outlier relative to this unit's 1200-1450 window — precision about timing matters on the AP exam.",
+      "Rule out any answer erasing Cahokia's relevance altogether or wrongly linking it to Mexica administration — it was an independent Mississippian society."
+    ]
+  },
+  {
+    "id": "apworld.dar-al-islam.mcq.02",
+    "loId": "apworld.dar-al-islam",
+    "cedCode": "AP-APWORLD-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "By 1200, the Dar al-Islam — the collective territories under Muslim rule and cultural influence — stretched from Iberia and North Africa through the Middle East into Central and South Asia. Which statement best describes its political structure at that time?",
+    "choices": [
+      "It was a religiously and culturally connected zone made up of many competing, independently ruled states",
+      "It was a single, unified political empire ruled directly by one caliph in Baghdad",
+      "It had no shared religious or intellectual institutions connecting its different regions",
+      "It was confined entirely to the Arabian Peninsula, with no presence in Iberia, Africa, or Asia"
+    ],
+    "answer": "A",
+    "hints": [
+      "Even by 1200, real political power in the Dar al-Islam was already spread across many regional rulers, not concentrated in Baghdad.",
+      "Rule out any answer denying the ulama/madrasa/Sufi networks that did connect the region religiously and intellectually."
+    ]
+  },
+  {
+    "id": "apworld.dar-al-islam.mcq.03",
+    "loId": "apworld.dar-al-islam",
+    "cedCode": "AP-APWORLD-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Seljuk Sultanate (from the eleventh century), the Delhi Sultanate (established 1206), and the Mamluk Sultanate (from 1250) each exercised real, independent Muslim political power in different regions of the Dar al-Islam. The existence of these three states before and shortly after 1258 is best used as evidence that —",
+    "choices": [
+      "each of these three states formally answered to Baghdad's caliph for all military and tax decisions",
+      "the Abbasid caliph in Baghdad had already lost most practical political authority over much of the Dar al-Islam well before the Mongols sacked the city",
+      "Muslim political power did not exist anywhere outside Baghdad until after 1258",
+      "these three states were established only after the Mongols destroyed Baghdad in 1258, filling the resulting power vacuum"
+    ],
+    "answer": "B",
+    "hints": [
+      "Seljuk rule began in the eleventh century and the Delhi Sultanate in 1206 — both well before Baghdad fell in 1258.",
+      "Rule out any answer requiring these states to answer to Baghdad, or claiming Muslim political power began only after 1258."
+    ]
+  },
+  {
+    "id": "apworld.dar-al-islam.mcq.04",
+    "loId": "apworld.dar-al-islam",
+    "cedCode": "AP-APWORLD-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In 1260, Mamluk forces defeated a Mongol army at the Battle of Ain Jalut, just two years after the Mongols had sacked Baghdad and executed the last Abbasid caliph residing there. This Mamluk victory is best used as evidence for which point about the Dar al-Islam after 1258?",
+    "choices": [
+      "Muslim political power collapsed entirely across the Dar al-Islam once the Baghdad caliphate fell",
+      "the Mongols permanently ended organized Muslim resistance anywhere west of Persia",
+      "an independent Muslim state could check Mongol expansion and continue exercising real political-military power after Baghdad's fall",
+      "the Mamluks required the Abbasid caliph's approval before engaging Mongol forces in battle"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ain Jalut happened only two years after Baghdad fell — think about what a Mamluk victory that soon shows about Muslim political power's survival.",
+      "Rule out any answer treating Baghdad's fall as ending Muslim political-military capacity everywhere."
+    ]
+  },
+  {
+    "id": "apworld.east-asia-song.mcq.04",
+    "loId": "apworld.east-asia-song",
+    "cedCode": "AP-APWORLD-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Champa rice, a fast-ripening, drought-resistant variety introduced into Song China from what is now Vietnam, allowed farmers to bring in multiple harvests within a single year. Which outcome is most directly associated with this agricultural change?",
+    "choices": [
+      "a sharp, sustained decline in China's total population",
+      "the collapse of Song China's civil-service examination system",
+      "the introduction of paper currency to replace grain as a medium of exchange",
+      "substantial population growth supporting an increasingly commercialized, urbanized economy"
+    ],
+    "answer": "D",
+    "hints": [
+      "More harvests per year directly increases the food supply available to support a growing population.",
+      "Rule out any answer linking rice farming to the exam system or to paper currency — those are separate Song-era developments."
+    ]
+  },
+  {
+    "id": "apworld.medieval-europe.mcq.03",
+    "loId": "apworld.medieval-europe",
+    "cedCode": "AP-APWORLD-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under feudalism in medieval Europe, monarchs granted land (fiefs) to nobles in exchange for military service and loyalty, and those nobles could in turn grant land to lesser lords. Which statement best describes the kind of political power this system produced?",
+    "choices": [
+      "a decentralized structure in which political and military authority radiated outward through personal, reciprocal bonds rather than a trained central administration",
+      "a highly centralized bureaucracy in which officials were selected by a standardized examination",
+      "a system in which the Catholic Church held no independent political or economic power",
+      "an economic arrangement in which peasants owned their manor's land outright, free of any obligation to a lord"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare feudalism's personal, reciprocal bonds to the centralized bureaucracies studied elsewhere in this unit.",
+      "Rule out any answer describing an exam-selected bureaucracy or a powerless Church — neither matches feudal Europe."
+    ]
+  },
+  {
+    "id": "apworld.medieval-europe.mcq.04",
+    "loId": "apworld.medieval-europe",
+    "cedCode": "AP-APWORLD-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Medieval Europe's revival of merchant towns and universities (Paris, Oxford, Bologna) from the eleventh-twelfth century onward built institutional centers of commerce and higher learning, even as political power in Europe remained fragmented among competing kings, feudal nobles, and the Church. Which conclusion about this revival is best supported by comparing it to the Islamic world's ulama/madrasa network covered elsewhere in this unit?",
+    "choices": [
+      "Medieval Europe's fragmented political structure prevented it from developing any institutions of trade or higher learning at all",
+      "Europe's towns and universities show that a politically fragmented society could still build its own distinct institutional track for commerce and scholarship, without requiring centralized political power",
+      "European universities directly copied the madrasa curriculum and legal training used across the Dar al-Islam",
+      "the rise of universities proves that the Catholic Church had lost all independent authority over higher education by 1450"
+    ],
+    "answer": "B",
+    "hints": [
+      "The core point is that fragmented political power did not prevent Europe from building its own institutions — a different, not a lesser, track.",
+      "Rule out any answer claiming Europe built nothing, that Europe copied the madrasa system directly, or that the Church lost authority over education."
+    ]
+  },
+  {
+    "id": "apworld.south-southeast-asia.mcq.03",
+    "loId": "apworld.south-southeast-asia",
+    "cedCode": "AP-APWORLD-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Delhi Sultanate, established in 1206, was a series of Turkic and Afghan Muslim dynasties ruling much of North India. Which statement best describes the religious composition of the population it governed?",
+    "choices": [
+      "a population that had overwhelmingly converted to Islam under Sultanate rule",
+      "a population composed entirely of Buddhist subjects",
+      "a population that remained majority Hindu throughout Sultanate rule",
+      "a population with no religious diversity at all prior to the Sultanate's founding"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Delhi Sultanate extended Muslim political rule by conquest, but that is a separate question from the population's actual religious composition.",
+      "Rule out any answer claiming mass conversion or religious uniformity — neither matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.south-southeast-asia.mcq.04",
+    "loId": "apworld.south-southeast-asia",
+    "cedCode": "AP-APWORLD-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Angkor Wat, the Khmer Empire's monumental temple complex, was built in the early twelfth century originally as a Hindu temple dedicated to Vishnu, and was later adapted for Buddhist worship. A student using Angkor Wat as evidence in an AP World History response should describe it as illustrating —",
+    "choices": [
+      "a temple built exclusively for Buddhist worship from its original twelfth-century construction onward",
+      "the Delhi Sultanate's direct political and religious authority extending into mainland Southeast Asia",
+      "the complete absence of Hindu religious influence anywhere in mainland Southeast Asia before 1450",
+      "the religious layering characteristic of Southeast Asia, where a single monumental site could shift between Hindu and Buddhist traditions over time"
+    ],
+    "answer": "D",
+    "hints": [
+      "Angkor Wat's own history — Hindu origin, later Buddhist adaptation — is itself the evidence of religious layering, not a single fixed tradition.",
+      "Rule out any answer erasing its Hindu origins or wrongly connecting it to the Delhi Sultanate's political reach."
+    ]
   }
 ]

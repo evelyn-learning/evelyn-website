@@ -198,5 +198,290 @@
       "The unit's key point is that the same routes carrying goods across Afro-Eurasia could carry disease too — think about what physically enabled the plague's westward spread.",
       "Rule out any answer involving deliberate human action (warfare) or a coincidental, unconnected outbreak."
     ]
+  },
+  {
+    "id": "apworld.cultural-diffusion.mcq.03",
+    "loId": "apworld.cultural-diffusion",
+    "cedCode": "AP-APWORLD-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Neo-Confucian thought diffused from Song China to Korea, Vietnam, and Japan in this period. Which statement best describes how Japan's adoption of Neo-Confucianism differed from Korea's and Vietnam's?",
+    "choices": [
+      "Japan adopted both Neo-Confucian philosophy and the civil-service examination system in full, exactly as Korea and Vietnam did",
+      "Japan adopted Neo-Confucian philosophy without adopting the examination-based bureaucracy, remaining governed by hereditary samurai rule",
+      "Japan rejected Neo-Confucian philosophy entirely while adopting only the examination system",
+      "Korea and Vietnam rejected Neo-Confucian philosophy entirely while only Japan adopted it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Korea and Vietnam adopted the exam-based bureaucracy along with Neo-Confucian thought; Japan's case is the exception.",
+      "Rule out any answer claiming full adoption of the exam system in Japan, or rejection of the philosophy anywhere."
+    ]
+  },
+  {
+    "id": "apworld.cultural-diffusion.mcq.04",
+    "loId": "apworld.cultural-diffusion",
+    "cedCode": "AP-APWORLD-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Black Death, having spread westward along Mongol-secured trade routes, killed an estimated one-third or more of Europe's population by the mid-1300s. Which of the following best describes a documented downstream social and economic consequence of this population loss in Europe?",
+    "choices": [
+      "Labor became more abundant, driving wages down and strengthening lords' control over serfs",
+      "European feudal obligations were immediately abolished by royal decree in response to the plague",
+      "The plague had no lasting economic effect once population levels began recovering within a few years",
+      "Severe labor shortages increased surviving peasants' bargaining power, contributing to the erosion of some feudal labor obligations"
+    ],
+    "answer": "D",
+    "hints": [
+      "A smaller labor force generally increases, not decreases, surviving workers' bargaining leverage.",
+      "Rule out any answer describing an immediate legal abolition of feudalism or a quick, effect-free recovery — neither matches the actual, gradual social change."
+    ]
+  },
+  {
+    "id": "apworld.indian-ocean-trade.mcq.03",
+    "loId": "apworld.indian-ocean-trade",
+    "cedCode": "AP-APWORLD-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Indian Ocean sailors used two ship designs to work the monsoon cycle: the dhow, common in the western Indian Ocean, and the Chinese junk, common on the network's eastern end. What technological feature let the dhow sail effectively across and against the wind, rather than only downwind?",
+    "choices": [
+      "its triangular lateen sail",
+      "its use of a magnetic compass for navigation",
+      "its reliance on oar-powered propulsion rather than sails",
+      "its flat-bottomed hull design borrowed from Chinese junks"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lateen sail's triangular shape is what let sailors tack across and against the wind.",
+      "Rule out the compass (a navigation aid, not a sailing-angle technology) and oar power — the dhow was a sailing vessel."
+    ]
+  },
+  {
+    "id": "apworld.indian-ocean-trade.mcq.04",
+    "loId": "apworld.indian-ocean-trade",
+    "cedCode": "AP-APWORLD-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Arab, Persian, Gujarati, and Chinese merchants settled semi-permanently in foreign Indian Ocean ports, often intermarrying locally and maintaining shared religious or commercial ties across vast distances. This pattern of diasporic merchant settlement is best understood as addressing which underlying challenge of long-distance trade?",
+    "choices": [
+      "the absence of any common written language among Indian Ocean merchants",
+      "the difficulty of establishing trust and enforcing business agreements between merchants from distant, unfamiliar societies",
+      "the lack of monsoon wind knowledge among foreign merchants arriving in new ports",
+      "a shortage of skilled shipbuilders in Indian Ocean port cities"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what settling permanently, intermarrying, and sharing religion or commercial ties across distant ports would actually solve for merchants doing business with strangers.",
+      "Rule out answers about language, wind knowledge, or shipbuilding — none of those is the underlying problem diasporic communities addressed."
+    ]
+  },
+  {
+    "id": "apworld.mongol-empire.mcq.03",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "After the mid-1200s, the Mongol Empire fractured into four major successor states, still linked by shared Mongol lineage but increasingly independent in practice. Which of the following is one of these four khanates?",
+    "choices": [
+      "the Ottoman Empire in Anatolia",
+      "the Mamluk Sultanate in Egypt",
+      "the Yuan Dynasty in China",
+      "the Byzantine Empire in Constantinople"
+    ],
+    "answer": "C",
+    "hints": [
+      "The four khanates were the Yuan Dynasty, the Chagatai Khanate, the Ilkhanate, and the Golden Horde.",
+      "Rule out the Ottomans, Mamluks, and Byzantines — none were Mongol successor states."
+    ]
+  },
+  {
+    "id": "apworld.mongol-empire.mcq.04",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mongol conquest was frequently brutal — cities that resisted were sometimes destroyed as a deterrent. Yet once territory was secured, Mongol rulers generally practiced religious tolerance and employed skilled foreign administrators regardless of ethnicity or faith. Which conclusion about the Mongol Empire's overall legacy do these two facts together best support?",
+    "choices": [
+      "the Mongols were purely destructive conquerors whose empire left no lasting positive institutional legacy",
+      "Mongol tolerance of foreign administrators proves that Mongol conquest itself was never actually violent",
+      "Mongol rulers only tolerated religions and administrators that were ethnically Mongol",
+      "Mongol conquest and Mongol administration should be evaluated as two distinct phases with different, even contradictory, characteristics"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key point is a genuine tension: brutal conquest followed by pragmatic, tolerant administration — hold both facts as true rather than picking one to explain away the other.",
+      "Rule out any answer denying the conquest's real violence or denying the administration's real tolerance."
+    ]
+  },
+  {
+    "id": "apworld.silk-roads.mcq.03",
+    "loId": "apworld.silk-roads",
+    "cedCode": "AP-APWORLD-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Caravanserai were roadside inns spaced roughly a day's journey apart along Silk Roads routes. What was their primary function for merchant caravans?",
+    "choices": [
+      "providing rest, resupply, and safe overnight storage of goods",
+      "collecting customs duties on behalf of the Mongol government",
+      "training merchants in the use of bills of exchange",
+      "housing the imperial yam relay messengers exclusively, with no access for merchants"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what a caravan crossing hundreds of miles of overland route would need at regular intervals.",
+      "Rule out the yam messenger system (a related but distinct Mongol institution) and customs collection or merchant training — neither is the caravanserai's stated function."
+    ]
+  },
+  {
+    "id": "apworld.silk-roads.mcq.04",
+    "loId": "apworld.silk-roads",
+    "cedCode": "AP-APWORLD-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Overland trade connecting China, Central Asia, and the Mediterranean existed for more than a thousand years before the Mongol conquests of the 1200s, rising and falling with political stability along the route. Given this, which claim about the Mongols' role in Silk Roads history is most defensible?",
+    "choices": [
+      "the Mongols created overland Eurasian trade where none had existed before",
+      "the Mongols secured and intensified an already-ancient network by unifying much of the route under one political authority",
+      "the Mongols had no meaningful effect on Silk Roads trade volume in either direction",
+      "the Mongols redirected all Silk Roads trade toward maritime routes instead of overland ones"
+    ],
+    "answer": "B",
+    "hints": [
+      "The key distinction is inventing a network versus securing and intensifying one that already existed for centuries.",
+      "Rule out any answer denying the Mongols had any effect, or claiming they shifted trade toward the sea — that describes a much later period."
+    ]
+  },
+  {
+    "id": "apworld.trans-saharan-trade.mcq.03",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the trans-Saharan trade network, salt mined in the Sahara moved south into West Africa, while gold mined in West African goldfields moved north across the desert. This exchange is best explained by which economic logic?",
+    "choices": [
+      "West Africa produced both gold and salt in equal abundance, making the exchange purely ceremonial",
+      "salt was more valuable than gold everywhere in the medieval world",
+      "each region traded away a resource it had in abundance for one it lacked",
+      "North Africa mined its own gold and had no need to trade for West African gold"
+    ],
+    "answer": "C",
+    "hints": [
+      "Salt was scarce in tropical West Africa but abundant in the Sahara; gold was the reverse.",
+      "Rule out any answer denying real scarcity on one side or the other, or claiming a universal value ranking between salt and gold."
+    ]
+  },
+  {
+    "id": "apworld.trans-saharan-trade.mcq.04",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Much of the gold that reached Mali's trade routes was mined outside Mali's own core territory, in goldfields such as the Akan forest region and the Bambuk/Bure area, controlled by other peoples and polities. Given this, which statement best explains the actual source of Mali's imperial wealth?",
+    "choices": [
+      "Mali directly owned and mined nearly all of West Africa's gold within its own core territory",
+      "Mali's wealth came entirely from tribute paid by the Songhai Empire",
+      "Mali's rulers earned their wealth primarily through direct diplomatic gifts from Mamluk Egypt",
+      "Mali grew wealthy chiefly by controlling and taxing the trade routes and market cities through which gold from various sources moved north"
+    ],
+    "answer": "D",
+    "hints": [
+      "Distinguish between owning a gold source outright and controlling/taxing the routes gold traveled along.",
+      "Rule out any answer requiring Mali to directly mine most of the gold itself, or crediting Songhai tribute or Mamluk gifts — neither matches the historical record."
+    ]
+  },
+  {
+    "id": "apworld.trans-saharan-trade.mcq.05",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Mansa Musa and other Mali rulers converted to Islam, partly because shared religion with North African trading partners eased business and diplomatic ties. Which statement most accurately describes the broader pattern of religious change across the Mali Empire that resulted from this trade-driven conversion?",
+    "choices": [
+      "conversion to Islam was concentrated among rulers and urban merchant classes, while traditional African religions persisted widely, especially in rural areas",
+      "the entire population of the Mali Empire converted to Islam within a single generation of Mansa Musa's reign",
+      "Mansa Musa's conversion had no influence on religious practice anywhere else in the empire",
+      "traditional African religions were formally banned throughout Mali immediately after Mansa Musa's 1324 hajj"
+    ],
+    "answer": "A",
+    "hints": [
+      "Conversion concentrated among rulers and urban merchants while traditional religions persisted widely in rural areas.",
+      "Rule out any answer claiming universal, immediate conversion or a formal ban on other religions — neither is supported."
+    ]
+  },
+  {
+    "id": "apworld.unit2-networks.mcq.01",
+    "loId": "apworld.unit2-networks",
+    "cedCode": "AP-WORLD-2.1-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Of the three major Afro-Eurasian trade networks active in the period 1200-1450 — the Silk Roads, the Indian Ocean network, and the trans-Saharan network — which one relied primarily on seasonal monsoon winds rather than overland caravan routes or camel crossings?",
+    "choices": [
+      "the Silk Roads",
+      "the Indian Ocean network",
+      "the trans-Saharan network",
+      "all three relied equally on monsoon winds"
+    ],
+    "answer": "B",
+    "hints": [
+      "Only one of the three networks was maritime, powered by seasonally reversing winds.",
+      "The Silk Roads were overland caravan routes; trans-Saharan trade used camel caravans across desert, not ships."
+    ]
+  },
+  {
+    "id": "apworld.unit2-networks.mcq.02",
+    "loId": "apworld.unit2-networks",
+    "cedCode": "AP-WORLD-2.1-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Strait of Malacca, the narrow sea passage connecting the Indian Ocean to the South China Sea, was controlled at different points by Srivijaya, then Majapahit, then the Sultanate of Malacca. Controlling this chokepoint was valuable chiefly because it allowed a ruling power to —",
+    "choices": [
+      "prevent Chinese junks from ever entering the Indian Ocean",
+      "monopolize the mining of gold throughout Southeast Asia",
+      "tax the enormous volume of maritime trade passing between East Asia and India, Africa, and the Middle East",
+      "control the overland Silk Roads routes running through Central Asia"
+    ],
+    "answer": "C",
+    "hints": [
+      "Nearly all maritime trade between East Asia and India/Africa/the Middle East had to pass through this narrow strait.",
+      "Rule out any answer about gold mining or overland Central Asian routes — Malacca's value was maritime chokepoint taxation."
+    ]
+  },
+  {
+    "id": "apworld.unit2-networks.mcq.03",
+    "loId": "apworld.unit2-networks",
+    "cedCode": "AP-WORLD-2.1-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Long-distance merchants in this period relied on financial innovations such as bills of exchange (Italian and Islamic banking), hundi (an Indian credit network), and Yuan-issued paper money to reduce the risks of long-distance trade. What problem did these innovations chiefly solve?",
+    "choices": [
+      "the absence of any common language for negotiating prices between merchants of different regions",
+      "the unpredictability of monsoon wind patterns in the Indian Ocean",
+      "the lack of camels suitable for carrying trade goods across the Sahara",
+      "the danger and inefficiency of physically transporting large quantities of coin across long, often unsafe distances"
+    ],
+    "answer": "D",
+    "hints": [
+      "Each of these credit instruments let a merchant avoid physically carrying valuable metal across dangerous distances.",
+      "Rule out answers about language, monsoon winds, or camels — none of those is what credit instruments address."
+    ]
+  },
+  {
+    "id": "apworld.unit2-networks.mcq.04",
+    "loId": "apworld.unit2-networks",
+    "cedCode": "AP-WORLD-2.1-2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Marco Polo's end-to-end journey from Europe to China and back is often cited in popular accounts of the Silk Roads. Historians note that this kind of complete journey was exceptional rather than typical. Which statement best explains why?",
+    "choices": [
+      "the Silk Roads functioned as a network of regional trade segments, with most merchants traveling only part of the route and exchanging goods at hub cities along the way",
+      "almost no merchants other than Marco Polo ever traveled any part of the Silk Roads during this period",
+      "the Mongol Empire banned merchants from traveling the full length of the route for security reasons",
+      "goods moved along the Silk Roads exclusively by sea, making an overland end-to-end journey physically impossible"
+    ],
+    "answer": "A",
+    "hints": [
+      "Most goods changed hands repeatedly at hub cities like Samarkand or Bukhara rather than traveling with a single merchant the whole way.",
+      "Rule out any answer claiming near-total absence of travel, a Mongol travel ban, or an exclusively maritime route — none matches the historical record."
+    ]
   }
 ]
