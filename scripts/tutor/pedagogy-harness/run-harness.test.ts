@@ -177,12 +177,12 @@ test('personaToPickerStart(tara, teacherId): teacher pin works for the parent-pr
   assert.equal(cfg.studentName, 'Tara', 'demo fallback name derived from the id');
 });
 
-test('personaToPickerStart: overrides are absent (not defaulted) when not requested — page defaults own them', () => {
+test('personaToPickerStart: sessionMaxMinutes/targetKind overrides are absent when not requested; teacherId defaults to ms-elena-vasquez for deterministic runs (geo pre-select landed 2026-07-19)', () => {
   for (const id of ['maya', 'diego', 'ravi']) {
     const cfg = personaToPickerStart(loadPersona(id));
     assert.equal(cfg.sessionMaxMinutes, undefined, `${id}: no budget override`);
     assert.equal(cfg.targetKind, undefined, `${id}: no targetKind override`);
-    assert.equal(cfg.teacherId, undefined, `${id}: no teacher pin`);
+    assert.equal(cfg.teacherId, 'ms-elena-vasquez', `${id}: harness default teacher, deterministic run`);
   }
 });
 

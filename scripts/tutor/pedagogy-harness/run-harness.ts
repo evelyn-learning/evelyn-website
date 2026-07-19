@@ -280,7 +280,10 @@ export interface PickerStartOpts {
 function withDriverOverrides(start: TestStartConfig, opts?: PickerStartOpts): TestStartConfig {
   if (opts?.sessionMaxMinutes !== undefined) start.sessionMaxMinutes = opts.sessionMaxMinutes;
   if (opts?.targetKind) start.targetKind = opts.targetKind;
-  if (opts?.teacherId) start.teacherId = opts.teacherId;
+  // Default to a fixed teacher when not explicitly pinned: geo pre-select
+  // landed 2026-07-19, so unpinned runs on fresh contexts would otherwise
+  // get a random local persona pair — harness runs must be deterministic.
+  start.teacherId = opts?.teacherId ?? 'ms-elena-vasquez';
   return start;
 }
 

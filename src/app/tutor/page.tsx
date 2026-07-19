@@ -422,8 +422,10 @@ function TutorPage() {
   }, []);
   const orderedTeachers = useMemo(() => {
     if (!geoPairIds.length) return DEMO_TEACHERS;
-    const inPair = (t: (typeof DEMO_TEACHERS)[number]) => geoPairIds.includes(t.id);
-    return [...DEMO_TEACHERS.filter(inPair), ...DEMO_TEACHERS.filter((t) => !inPair(t))];
+    const pairTeachers = geoPairIds
+      .map((id) => DEMO_TEACHERS.find((t) => t.id === id))
+      .filter((t): t is (typeof DEMO_TEACHERS)[number] => !!t);
+    return [...pairTeachers, ...DEMO_TEACHERS.filter((t) => !geoPairIds.includes(t.id))];
   }, [geoPairIds]);
   // C6: keep the opener-store key in sync for the stable capture callback
   // declared above (render-time ref assignment — the teacher can't change
@@ -455,7 +457,8 @@ function TutorPage() {
     // Persona-native voice (2026-07-19 accent-personas spec): geo now
     // pre-selects the TEACHER, never swaps voices — an explicit pick of
     // any persona always sounds like that persona. resolveCartesiaVoice's
-    // accent support remains for the embed/EmbedConfig path only.
+    // accent support is reserved for a future portal/EmbedConfig override
+    // (no current caller).
     () => resolveCartesiaVoice({ teacherId: selectedTeacherId }).voiceId,
     [selectedTeacherId],
   );
