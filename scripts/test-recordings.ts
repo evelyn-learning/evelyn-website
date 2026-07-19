@@ -80,13 +80,25 @@ check('EVENT_CATEGORIES has 5 legend entries', EVENT_CATEGORIES.length === 5);
 }
 
 // ── filters ───────────────────────────────────────────────────────
-check('no params → empty filter', Object.keys(buildSessionFilter({})).length === 0);
+{
+  // Default (no src) → Students view: excludes test/showcase sources and test-named students.
+  const f = buildSessionFilter({}) as { source?: { $nin?: string[] }; studentName?: { $not?: RegExp } };
+  check('no params → students source $nin', JSON.stringify(f.source?.$nin) === JSON.stringify(['test', 'showcase']));
+  check('no params → students name exclusion matches Praveen', f.studentName?.$not instanceof RegExp && f.studentName.$not.test('Praveen'));
+  check('no params → students name exclusion spares real names', f.studentName?.$not instanceof RegExp && !f.studentName.$not.test('mitakshra bhaskar'));
+}
+{
+  const f = buildSessionFilter({ src: 'bogus' }) as { source?: unknown };
+  check('invalid src falls back to students shape', typeof f.source === 'object' && f.source !== null);
+}
+check('src=all → no source clause', buildSessionFilter({ src: 'all' }).source === undefined);
+check('src=all + audio still applies audio', (buildSessionFilter({ src: 'all', audio: '1' }) as { hasAudio?: boolean }).hasAudio === true);
 check('src=test → source filter', (buildSessionFilter({ src: 'test' }) as { source?: string }).source === 'test');
-check('invalid src ignored', Object.keys(buildSessionFilter({ src: 'bogus' })).length === 0);
+check('src=embed unchanged', (buildSessionFilter({ src: 'embed' }) as { source?: string }).source === 'embed');
 check('partner filter', (buildSessionFilter({ partner: 'acme' }) as { sourcePartnerId?: string }).sourcePartnerId === 'acme');
 check('host filter', (buildSessionFilter({ host: 'https://retail.example' }) as { sourceHost?: string }).sourceHost === 'https://retail.example');
 check('audio=1 → hasAudio true', (buildSessionFilter({ audio: '1' }) as { hasAudio?: boolean }).hasAudio === true);
-check('audio other value ignored', Object.keys(buildSessionFilter({ audio: '0' })).length === 0);
+check('audio other value ignored (defaults to students)', Object.keys(buildSessionFilter({ audio: '0' })).length === 2);
 {
   const f = buildSessionFilter({ range: '7d' }, NOW) as { startedAt?: { $gte: Date } };
   check('range=7d → startedAt $gte 7 days back', f.startedAt?.$gte.getTime() === NOW.getTime() - 7 * 86_400_000);
@@ -95,7 +107,7 @@ check('audio other value ignored', Object.keys(buildSessionFilter({ audio: '0' }
   const f = buildSessionFilter({ range: 'today' }, NOW) as { startedAt?: { $gte: Date } };
   check('range=today → startedAt $gte 24h back', f.startedAt?.$gte.getTime() === NOW.getTime() - 86_400_000);
 }
-check('invalid range ignored', Object.keys(buildSessionFilter({ range: 'always' })).length === 0);
+check('invalid range ignored (defaults to students)', Object.keys(buildSessionFilter({ range: 'always' })).length === 2);
 {
   const f = buildSessionFilter({ src: 'embed', partner: 'acme', audio: '1' });
   check('filters compose', Object.keys(f).length === 3);
