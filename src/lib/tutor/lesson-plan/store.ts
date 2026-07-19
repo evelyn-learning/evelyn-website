@@ -3086,6 +3086,28 @@ export async function getLessonPlan(id: string): Promise<LessonPlan | null> {
   }
 }
 
+/** Batched title lookup for admin listings: in-code seeds first, then ONE
+ *  Mongo query for the rest (freestyle plans). Unknown ids are omitted. */
+export async function getLessonTitles(ids: string[]): Promise<Record<string, string>> {
+  const titles: Record<string, string> = {};
+  const missing: string[] = [];
+  for (const id of ids) {
+    const seed = seedById.get(id);
+    if (seed) titles[id] = seed.title;
+    else missing.push(id);
+  }
+  if (missing.length > 0) {
+    try {
+      await connectDB();
+      const docs = await LessonPlanModel.find({ _id: { $in: missing } }).select('title').lean();
+      for (const d of docs) titles[String(d._id)] = d.title as string;
+    } catch {
+      // best-effort — admin listing renders the raw id as fallback
+    }
+  }
+  return titles;
+}
+
 export interface LessonPlanFilter {
   subject?: string;
   grade?: string;

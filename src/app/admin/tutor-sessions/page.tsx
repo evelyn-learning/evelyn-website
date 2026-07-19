@@ -4,7 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TutorSession } from "@/models";
-import { LessonPlanModel } from "@/models/LessonPlan";
+import { getLessonTitles } from "@/lib/tutor/lesson-plan/store";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import { buildSessionFilter, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
@@ -79,13 +79,7 @@ async function getSessions(filters: SessionFilterParams, page: number) {
         .filter((id): id is string => Boolean(id)),
     ),
   ];
-  const lessonTitles: Record<string, string> = {};
-  if (planIds.length > 0) {
-    const plans = await LessonPlanModel.find({ _id: { $in: planIds } })
-      .select('title')
-      .lean();
-    for (const p of plans) lessonTitles[String(p._id)] = p.title as string;
-  }
+  const lessonTitles = planIds.length > 0 ? await getLessonTitles(planIds) : {};
   return {
     sessions: JSON.parse(JSON.stringify(sessions)),
     total,
