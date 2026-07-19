@@ -4,6 +4,7 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TutorSession } from "@/models";
+import { LessonPlanModel } from "@/models/LessonPlan";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
 import { buildSessionFilter, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
@@ -70,11 +71,27 @@ async function getSessions(filters: SessionFilterParams, page: number) {
       if (resolved) s.studentName = resolved;
     }
   }
+  // Lesson titles for the Subject/Topic cell — one batched query per page.
+  const planIds = [
+    ...new Set(
+      sessions
+        .map((s) => (s.lessonProgress as { lessonPlanId?: string } | undefined)?.lessonPlanId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const lessonTitles: Record<string, string> = {};
+  if (planIds.length > 0) {
+    const plans = await LessonPlanModel.find({ _id: { $in: planIds } })
+      .select('title')
+      .lean();
+    for (const p of plans) lessonTitles[String(p._id)] = p.title as string;
+  }
   return {
     sessions: JSON.parse(JSON.stringify(sessions)),
     total,
     partners: partners.sort(),
     hosts: hosts.sort(),
+    lessonTitles,
   };
 }
 
@@ -96,13 +113,9 @@ const statusColors: Record<string, string> = {
   abandoned: 'bg-gray-100 text-gray-800',
 };
 
-const modeLabels: Record<string, string> = {
-  text: 'Text',
-  voice: 'Voice',
-};
-
 const SOURCE_CHIPS: { value: string | undefined; label: string }[] = [
-  { value: undefined, label: 'All' },
+  { value: undefined, label: 'Students' },
+  { value: 'all', label: 'All' },
   { value: 'tutor', label: 'Website' },
   { value: 'embed', label: 'Portal' },
   { value: 'showcase', label: 'Showcase' },
@@ -140,7 +153,7 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
     range: param(sp, 'range'),
   };
   const page = Math.max(1, parseInt(param(sp, 'page') || '1', 10) || 1);
-  const { sessions, total, partners, hosts } = await getSessions(filters, page);
+  const { sessions, total, partners, hosts, lessonTitles } = await getSessions(filters, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const now = new Date();
   const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range);
@@ -246,7 +259,6 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Student</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Subject / Topic</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Level</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Mode</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       <Clock className="inline h-3.5 w-3.5 mr-1" />Duration
                     </th>
@@ -257,6 +269,7 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                       <Layers className="inline h-3.5 w-3.5 mr-1" />WB
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Cost</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Location</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"></th>
@@ -289,18 +302,13 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                       <td className="px-4 py-3 text-sm text-gray-700">
                         <div>{s.subject as string}</div>
                         <div className="text-xs text-gray-400">{s.topic as string}</div>
+                        {(() => {
+                          const planId = (s.lessonProgress as { lessonPlanId?: string } | undefined)?.lessonPlanId;
+                          if (!planId) return null;
+                          return <div className="text-xs text-indigo-500">{lessonTitles[planId] || planId}</div>;
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">{s.level as string || '-'}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium ${
-                          s.inputMode === 'voice' ? 'bg-purple-50 text-purple-700' : 'bg-gray-50 text-gray-600'
-                        }`}>
-                          {modeLabels[s.inputMode as string] || s.inputMode as string}
-                        </span>
-                        {s.voiceEngine ? (
-                          <div className="text-[10px] text-gray-400 mt-0.5">{String(s.voiceEngine)}</div>
-                        ) : null}
-                      </td>
                       <td className="px-4 py-3 text-sm text-gray-600 font-mono">
                         {formatDuration(s.duration as number)}
                       </td>
@@ -309,12 +317,22 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                       <td className="px-4 py-3 text-sm text-gray-600 font-mono">
                         {formatCost(s.estimatedCost as number)}
                       </td>
+                      <td className="px-4 py-3 text-sm text-gray-600" title={(s.clientIp as string) || undefined}>
+                        {(() => {
+                          const loc = s.location as { city?: string; country?: string } | undefined;
+                          const text = [loc?.city, loc?.country].filter(Boolean).join(', ');
+                          return text || <span className="text-gray-400">–</span>;
+                        })()}
+                      </td>
                       <td className="px-4 py-3 text-sm">
                         <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           statusColors[s.status as string] || 'bg-gray-100 text-gray-600'
                         }`}>
                           {s.status as string}
                         </span>
+                        {s.voiceEngine ? (
+                          <div className="text-[10px] text-gray-400 mt-0.5">{String(s.voiceEngine)}</div>
+                        ) : null}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500" title={new Date(s.startedAt as string).toLocaleString('en-US')}>
                         {formatRelativeTime(s.startedAt as string, now)}
