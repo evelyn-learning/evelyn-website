@@ -47,6 +47,7 @@
     "test:conic": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-construction.ts",
     "test:graph-consistency": "npx tsx scripts/test-graph-consistency.ts",
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
+    "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
