@@ -8,6 +8,7 @@ import assert from 'node:assert';
 import {
   CARTESIA_DEFAULT_VOICE_ID,
   resolveCartesiaVoice,
+  teachersForAccent,
 } from '../src/lib/tutor/voice/cartesia-voice-registry';
 
 let passed = 0;
@@ -148,6 +149,55 @@ check('dev + en-in still -> Sameer (native-accent short-circuit unchanged)', () 
     resolveCartesiaVoice({ teacherId: DEV, accent: 'en-in' }).voiceId,
     SAMEER,
   );
+});
+
+// ── Per-accent personas (2026-07-19 accent-personas spec) ──
+const NEW_TEACHER_VOICES: Array<[string, string]> = [
+  ['mr-jake-sullivan', 'a5136bf9-224c-4d76-b823-52bd5efcffcc'], // Jameson
+  ['ms-priya-nair', '28ca2041-5dda-42df-8123-f58ea9c3da00'], // Palak (user-confirmed)
+  ['mr-oliver-hartley', 'ef191366-f52f-447a-a398-ed8c0f2943a1'], // Archie
+  ['ms-maryam-haddad', '9825cf5f-6aff-412a-80c5-bc58a8d55bc4'], // Maryam
+  ['mr-youssef-karim', '9cbad5f7-fbf6-4416-a22f-1ecc75ad40a2'], // Youssef
+  ['ms-anna-weber', 'ac197a78-cec7-4c50-93e5-93bdc1910b11'], // Jennifer
+  ['mr-lukas-brandt', '42f14755-88c3-4124-aae3-5cc3a9618e8f'], // Jan
+  ['ms-anneliese-de-vries', '225ba8cf-9fc2-4371-a78c-fe38ba38898a'], // Anneliese
+  ['ms-grace-thompson', 'c2ad7092-0447-47ea-948b-61fbb6faf153'], // Grace
+  ['mr-cooper-reid', '49743b08-0f5d-4741-839c-b12933853780'], // Cooper
+  ['ms-nadia-lim', 'efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f'], // Nadia
+  ['mr-kiran-raj', 'ac5a9529-3965-4eac-b574-dce63664fbf4'], // Kiran
+  ['ms-zanele-dlamini', '263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18'], // Zanele
+  ['mr-pieter-van-der-merwe', 'baf84392-fa95-4d44-8871-d32ee36b0e01'], // Pieter
+];
+
+for (const [id, voiceId] of NEW_TEACHER_VOICES) {
+  check(`${id} -> native voice, no accent arg`, () => {
+    assert.strictEqual(resolveCartesiaVoice({ teacherId: id }).voiceId, voiceId);
+  });
+}
+
+const EXPECTED_PAIRS: Array<[string, string | undefined, string | undefined]> = [
+  ['en-us', 'ms-elena-vasquez', 'mr-jake-sullivan'], // Elena, NOT Amara
+  ['en-in', 'ms-priya-nair', 'mr-dev-khanna'],
+  ['en-gb', 'sofia', 'mr-oliver-hartley'],
+  ['en-ar-gulf', 'ms-maryam-haddad', 'mr-youssef-karim'],
+  ['en-de', 'ms-anna-weber', 'mr-lukas-brandt'],
+  ['en-nl', 'ms-anneliese-de-vries', undefined], // no passing male voice
+  ['en-au', 'ms-grace-thompson', 'mr-cooper-reid'],
+  ['en-sg', 'ms-nadia-lim', 'mr-kiran-raj'],
+  ['en-za', 'ms-zanele-dlamini', 'mr-pieter-van-der-merwe'],
+];
+
+for (const [accent, female, male] of EXPECTED_PAIRS) {
+  check(`teachersForAccent(${accent})`, () => {
+    assert.deepStrictEqual(teachersForAccent(accent), {
+      ...(female ? { female } : {}),
+      ...(male ? { male } : {}),
+    });
+  });
+}
+
+check('teachersForAccent(unknown) -> empty', () => {
+  assert.deepStrictEqual(teachersForAccent('en-xx'), {});
 });
 
 console.log(`\n${passed} passed`);

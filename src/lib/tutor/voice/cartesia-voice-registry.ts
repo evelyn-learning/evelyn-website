@@ -76,6 +76,93 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
     gender: 'female',
     nativeAccent: 'en-gb',
   },
+  // ── Per-accent personas (2026-07-19 accent-personas spec; ids match
+  // DEMO_TEACHERS in src/lib/tutor/ai/teacher-persona.ts, voices are the
+  // user-locked accent-pool picks — Priya=Palak user-confirmed) ──
+  'mr-jake-sullivan': {
+    voiceId: 'a5136bf9-224c-4d76-b823-52bd5efcffcc', // Jameson
+    label: 'Jameson',
+    gender: 'male',
+    nativeAccent: 'en-us',
+  },
+  'ms-priya-nair': {
+    voiceId: '28ca2041-5dda-42df-8123-f58ea9c3da00', // Palak
+    label: 'Palak',
+    gender: 'female',
+    nativeAccent: 'en-in',
+  },
+  'mr-oliver-hartley': {
+    voiceId: 'ef191366-f52f-447a-a398-ed8c0f2943a1', // Archie
+    label: 'Archie',
+    gender: 'male',
+    nativeAccent: 'en-gb',
+  },
+  'ms-maryam-haddad': {
+    voiceId: '9825cf5f-6aff-412a-80c5-bc58a8d55bc4', // Maryam
+    label: 'Maryam',
+    gender: 'female',
+    nativeAccent: 'en-ar-gulf',
+  },
+  'mr-youssef-karim': {
+    voiceId: '9cbad5f7-fbf6-4416-a22f-1ecc75ad40a2', // Youssef
+    label: 'Youssef',
+    gender: 'male',
+    nativeAccent: 'en-ar-gulf',
+  },
+  'ms-anna-weber': {
+    voiceId: 'ac197a78-cec7-4c50-93e5-93bdc1910b11', // Jennifer
+    label: 'Jennifer',
+    gender: 'female',
+    nativeAccent: 'en-de',
+  },
+  'mr-lukas-brandt': {
+    voiceId: '42f14755-88c3-4124-aae3-5cc3a9618e8f', // Jan
+    label: 'Jan',
+    gender: 'male',
+    nativeAccent: 'en-de',
+  },
+  'ms-anneliese-de-vries': {
+    voiceId: '225ba8cf-9fc2-4371-a78c-fe38ba38898a', // Anneliese
+    label: 'Anneliese',
+    gender: 'female',
+    nativeAccent: 'en-nl',
+  },
+  'ms-grace-thompson': {
+    voiceId: 'c2ad7092-0447-47ea-948b-61fbb6faf153', // Grace
+    label: 'Grace',
+    gender: 'female',
+    nativeAccent: 'en-au',
+  },
+  'mr-cooper-reid': {
+    voiceId: '49743b08-0f5d-4741-839c-b12933853780', // Cooper
+    label: 'Cooper',
+    gender: 'male',
+    nativeAccent: 'en-au',
+  },
+  'ms-nadia-lim': {
+    voiceId: 'efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f', // Nadia
+    label: 'Nadia',
+    gender: 'female',
+    nativeAccent: 'en-sg',
+  },
+  'mr-kiran-raj': {
+    voiceId: 'ac5a9529-3965-4eac-b574-dce63664fbf4', // Kiran
+    label: 'Kiran',
+    gender: 'male',
+    nativeAccent: 'en-sg',
+  },
+  'ms-zanele-dlamini': {
+    voiceId: '263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18', // Zanele
+    label: 'Zanele',
+    gender: 'female',
+    nativeAccent: 'en-za',
+  },
+  'mr-pieter-van-der-merwe': {
+    voiceId: 'baf84392-fa95-4d44-8871-d32ee36b0e01', // Pieter
+    label: 'Pieter',
+    gender: 'male',
+    nativeAccent: 'en-za',
+  },
 };
 
 // ── Accent pools (passing-only, round-1 verdicts) ──
@@ -130,6 +217,20 @@ const ACCENT_POOLS: Record<string, AccentPool> = {
 /** True when an accent tag has a pool entry — lets tests catch tag typos. */
 export function hasAccentPool(accent: string): boolean {
   return accent in ACCENT_POOLS;
+}
+
+/**
+ * The /tutor geo pre-select pair for an accent: first TEACHER_VOICES entry
+ * per gender whose nativeAccent matches (2026-07-19 accent-personas spec).
+ * Insertion order is load-bearing — the original four personas come first,
+ * so Elena (not Amara) is the en-us female. Returns DEMO_TEACHERS ids.
+ */
+export function teachersForAccent(accent: string): { female?: string; male?: string } {
+  const out: { female?: string; male?: string } = {};
+  for (const [id, v] of Object.entries(TEACHER_VOICES)) {
+    if (v.nativeAccent === accent && !out[v.gender]) out[v.gender] = id;
+  }
+  return out;
 }
 
 /** Default Cartesia voice when no teacher/accent match is found — Katie. */
