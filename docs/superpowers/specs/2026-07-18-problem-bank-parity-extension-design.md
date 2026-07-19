@@ -37,9 +37,10 @@ Their rows are already live in prod Mongo; git needs to catch up.
 - **Approach:** merge first, then manifest-driven parallel authoring
   (approach A). Runtime brain-gen is unchanged and not a substitute.
 - **FRQ-practice LOs excluded (amendment, 2026-07-18):** plan LOs that exist
-  only in `*-frq-practice` / `*-saq-practice` / `*-dbq-practice` /
-  `*-leq-practice` plans (e.g. `apush.u1-dbq-practice`) are essay-skill LOs
-  and get no MCQ bank items; the manifest excludes them. This drops the true
+  only in plan seed files with a `-frq-` / `-saq-` / `-dbq-` / `-leq-`
+  filename segment (covers both the `*-frq-practice` convention and APGov's
+  `*-u<N>-frq-<type>` essay plans) are essay-skill LOs and get no MCQ bank
+  items; the manifest excludes them. This drops the true
   gap to ~450 items (measured: 97 of the ~104 "zero-item" LOs outside APGov
   are FRQ-practice LOs; APGov's 27 are genuine content gaps).
 
