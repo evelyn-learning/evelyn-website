@@ -197,7 +197,7 @@
     "responseFormat": "mcq",
     "problemText": "A draft reasons: \"The city repaved the road near the new development, so the city clearly favors that developer.\" Which revision adds genuine complexity to this reasoning instead of just restating the obvious first link?",
     "choices": [
-      "The city repaved the road, which simply shows that the city made some kind of routine decision about which roads to prioritize resurfacing during this year's particular budget cycle",
+      "The city repaved the road, which simply shows that the city made some kind of routine decision about which specific roads to prioritize resurfacing during this particular year's overall budget cycle",
       "In today's complicated municipal landscape, road-repair decisions generally reflect numerous multifaceted budgetary and political pressures at once",
       "The city probably repaved the road for some reason of its own, though it's really impossible to know for certain what any city government is thinking",
       "Repaving that specific stretch suggests the city is betting on the development's success to justify the cost, a wager that ties the city's own credibility to the project's outcome"
@@ -218,7 +218,7 @@
     "choices": [
       "The refunds, offered only once the story went viral, suggest the airline's response tracks its exposure to public backlash as much as genuine concern for customers",
       "The refund proves beyond any doubt whatsoever that the airline deeply and sincerely values every single one of its paying customers",
-      "Offering refunds after widely publicized cancellations has become a fairly common part of airline crisis communication in general across the industry",
+      "Offering refunds after widely publicized cancellations has become a fairly common and expected part of airline crisis communication in general across most of the whole airline industry today",
       "The refund might mean the airline genuinely cares about its customers, or it might not; it's honestly impossible to say for certain either way"
     ],
     "answer": "A",
@@ -256,7 +256,7 @@
     "choices": [
       "This shows that businesses often make complicated internal decisions that ultimately speak to readers everywhere, in one way or another",
       "This relocation extends a pattern the company has followed twice before, announcing a strategic rationale within weeks of a pending state tax change",
-      "Some observers might interpret the move as purely strategic, while others might see it quite differently, and both readings arguably have merit",
+      "Some observers might interpret the move as purely strategic, while others might see it quite differently, and both readings arguably have some real merit to them",
       "Growth, taxation, and corporate strategy are universal themes found in nearly every industry's recorded history, across every era and region"
     ],
     "answer": "B",
@@ -276,7 +276,7 @@
       "Close with an escalating string of exclamation points demanding, over and over, that the council 'act now, act now, ACT NOW!!!' immediately",
       "Close with a plain, literal sentence simply stating that the council should get around to voting on the measure fairly soon",
       "Shift tone three separate times within one paragraph — sarcastic, then furious, then formally academic — in an attempt to cover every possible reader reaction",
-      "Close by returning, without comment, to one earlier image — the council's gavel, unused for months, gathering dust — and letting the silence make the point"
+      "Close by returning, without comment, to one earlier image — the council's gavel, unused for months, gathering dust — and simply letting the silence itself make the point"
     ],
     "answer": "D",
     "hints": [

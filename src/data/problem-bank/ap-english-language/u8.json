@@ -237,7 +237,7 @@
     "choices": [
       "A district survey found self-reported stress dropped after switching to a four-day week, confirming that the schedule improves wellbeing",
       "A district survey found self-reported stress dropped after switching to a four-day week, though a separate report found parents' childcare costs rose enough to offset some of that relief",
-      "A district survey found self-reported stress dropped after switching to a four-day week, and every single district everywhere should therefore adopt this exact same schedule immediately without exception",
+      "A district survey found self-reported stress dropped after switching to a four-day week, and every single district everywhere should therefore go ahead and adopt this exact same schedule immediately without any exception",
       "A district survey found self-reported stress dropped after switching to a four-day week, a finding already echoed by two additional independent surveys conducted just last year"
     ],
     "answer": "B",
@@ -273,10 +273,10 @@
     "responseFormat": "mcq",
     "problemText": "A synthesis essay already cites three sources on the rise of food-delivery apps, each discussed competently in its own paragraph. To earn the sophistication point, a student adds one concluding sentence. Which sentence best demonstrates genuine sophistication rather than mere decoration?",
     "choices": [
+      "Read individually, each source names a separate winner — but together they trace one pattern: the restaurant's reach is financed by a commission that quietly narrows its own margin",
       "In summation, it is abundantly and thoroughly clear, as evinced by the aforementioned sources cited throughout, that food-delivery apps present myriad multifaceted considerations worth noting",
-      "In summation, it is abundantly and thoroughly clear, as evinced by the aforementioned sources cited at length throughout this entire essay, that food-delivery apps present myriad multifaceted considerations",
-      "A fourth source, a 2023 industry report, further confirms yet again that delivery volume has grown, adding one more data point to the pattern already firmly established",
-      "Each of the three sources cited above makes a valid and well-supported point about food-delivery apps"
+      "A fourth source, a 2023 industry report focused specifically on delivery volume, further confirms yet again that the pattern already established keeps holding",
+      "Each of the three sources cited above in this particular essay makes a valid and well-supported point about food-delivery apps"
     ],
     "answer": "A",
     "hints": [

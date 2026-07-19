@@ -178,10 +178,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's body paragraph opens with the sentence \"This paragraph will talk about the school's new recycling program.\" Which revision best turns this into an effective topic sentence?",
     "choices": [
-      "This paragraph will talk about the school's new recycling program, which started sometime earlier this fall semester",
+      "This paragraph will talk about the school's new recycling program, which started sometime earlier during this current fall semester",
       "The recycling program succeeds only where hallway bins are placed within sight of a trash can, not tucked in a back corner",
       "Recycling programs of various kinds have become fairly common in schools all across the country in recent years",
-      "Further specific details about the recycling program's overall rollout process will be provided later in the paragraph that follows this one"
+      "Further specific details about the recycling program's overall rollout process will be provided a bit later on, in the paragraph that follows this one"
     ],
     "answer": "B",
     "hints": [
@@ -197,10 +197,10 @@
     "responseFormat": "mcq",
     "problemText": "A student's paragraph opens with the topic sentence \"The school's tutoring program should be expanded to include weekend hours,\" but the paragraph then also argues, linked by \"Also,\" that the library needs updated computers. Which revision best fixes this paragraph's structure?",
     "choices": [
-      "Replace \"Also\" with \"Moreover\" throughout the paragraph so the two separate ideas connect together a little bit more smoothly than before",
+      "Replace \"Also\" with \"Moreover\" throughout the paragraph so the two separate ideas connect together a good deal more smoothly than they currently do",
       "Delete the topic sentence about tutoring altogether so the paragraph can focus only on the library's computers",
       "Add one more sentence at the very end introducing a third, related complaint about the library's operating hours",
-      "Split the paragraph into two separate paragraphs, each opening with its own topic sentence — one on tutoring hours, one on library computers"
+      "Split the paragraph into two, each opening with its own topic sentence — one on tutoring hours, one on library computers"
     ],
     "answer": "D",
     "hints": [

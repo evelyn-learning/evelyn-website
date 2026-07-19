@@ -226,17 +226,17 @@
     "difficulty": 4,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
-    "problemText": "In the line \"above your national, tumultuous joy, I hear the mournful wail of millions,\" Douglass develops his claim primarily through which method — and to what end?",
+    "problemText": "In the line \"The blessings in which you, this day, rejoice, are not enjoyed in common,\" Douglass develops his claim primarily through which method — and to what end?",
     "choices": [
-      "definition — formally defining what qualifies as a national holiday under the era's prevailing law and custom",
-      "narration — recounting, in strict chronological order, the specific events of the day's festivities as they unfolded",
-      "comparison-contrast — juxtaposing the audience's celebratory joy against the enslaved's grief so the day's meaning fractures depending on who hears it",
-      "exemplification — offering an isolated real-world case study drawn from one enslaved family's own personal history"
+      "definition — formally defining what qualifies as a national holiday under the era's own prevailing law and custom",
+      "narration — recounting, in strict chronological order, each specific event of the day's festivities as they unfolded",
+      "comparison-contrast — measuring the audience's shared \"blessings\" against the speaker's exclusion from them, splitting the day's meaning by who is included",
+      "exemplification — offering an isolated real-world case study drawn from just one enslaved family's own personal history"
     ],
     "answer": "C",
     "hints": [
-      "Notice the two feelings placed side by side in one sentence: 'joy' above, 'wail' beneath.",
-      "Ask what this juxtaposition does to a single day's meaning, depending on who is listening."
+      "Notice the claim of shared 'blessings' set against the phrase 'not enjoyed in common.'",
+      "Ask what this measured contrast does to a single day's meaning, depending on who is included in 'you.'"
     ]
   },
   {
@@ -266,16 +266,16 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
-    "problemText": "Douglass calls the celebration \"a thin veil to cover up crimes which would disgrace a nation of savages.\" Word choices like \"crimes\" and \"disgrace\" cluster together to build which tone?",
+    "problemText": "Douglass calls the nation's self-regard, even as it continues to enslave millions, \"your national greatness, swelling vanity.\" Word choices like \"swelling\" and \"vanity\" cluster together to build which tone?",
     "choices": [
       "a wistful, nostalgic tone that longs for a version of the holiday that no longer exists",
       "an admiring tone that praises the nation's founders for their foresight",
       "a neutral, journalistic tone that simply reports the day's events without judgment",
-      "a scathing, accusatory tone that frames the celebration itself as criminal concealment"
+      "a scathing, accusatory tone that reduces the nation's pride in itself to empty self-importance"
     ],
     "answer": "D",
     "hints": [
-      "'Crimes' and 'disgrace' both belong to the vocabulary of wrongdoing, not celebration.",
+      "\"Swelling\" and \"vanity\" both belong to the vocabulary of inflated self-regard, not celebration.",
       "Ask what kind of speaker reaches for these particular words to describe a national holiday."
     ]
   },
@@ -286,7 +286,7 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.swift-modest-proposal.v1",
-    "problemText": "Swift first names poor children as \"a very great additional grievance,\" and later claims his proposal will make them \"a common good to the publick.\" How do these two moments connect in Swift's line of reasoning?",
+    "problemText": "Swift first names poor children as \"a very great additional grievance,\" and in the same breath imagines a method of making them \"sound and useful members of the commonwealth.\" How do these two moments connect in Swift's line of reasoning?",
     "choices": [
       "The first names children as a burden so that the second can resolve that named burden, making the proposal appear to answer a problem Swift has already established",
       "The first and second are unrelated observations about two wholly separate topics raised elsewhere in the pamphlet",

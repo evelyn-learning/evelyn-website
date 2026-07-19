@@ -226,16 +226,16 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
-    "problemText": "Douglass describes the nation's continued embrace of slavery, even as it celebrates independence, as a \"revolting barbarity.\" This diction primarily creates a tone of —",
+    "problemText": "Douglass describes the nation's celebratory noise, even as slavery continues, as \"empty and heartless.\" This diction primarily creates a tone of —",
     "choices": [
       "gentle amusement at what reads as an old-fashioned national custom worth smiling about",
       "quiet, understated gratitude for whatever progress the nation has already managed to make",
-      "moral revulsion, casting the practice as savage rather than merely regrettable",
+      "bitter contempt, casting the day's cheer as hollow rather than genuinely felt",
       "cautious, measured optimism about reforms that are already said to be underway somewhere"
     ],
     "answer": "C",
     "hints": [
-      "\"Revolting\" and \"barbarity\" both signal disgust, not mild disapproval.",
+      "\"Empty\" and \"heartless\" both deny the celebration any real feeling behind its noise.",
       "Ask how strong a reaction these two words, combined, are built to provoke."
     ]
   },
@@ -246,17 +246,17 @@
     "difficulty": 1,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
-    "problemText": "Douglass declares, \"It is not light that is needed, but fire; it is not the gentle shower, but thunder.\" This pair of contrasting images —",
+    "problemText": "Douglass piles up a string of parallel accusations: \"your celebration is a sham; your boasted liberty, an unholy license; ... your shouts of liberty and equality, hollow mockery.\" This device —",
     "choices": [
-      "offers a simile comparing Douglass's own speaking style to a natural weather event he witnessed firsthand",
-      "builds antithesis through two metaphors, rejecting gentle persuasion in favor of forceful, urgent action",
-      "functions as a rhetorical question, leaving genuinely open whether light or fire is more effective",
-      "relies on understatement to downplay how urgently Douglass believes change is needed"
+      "offers an extended simile comparing Douglass's own speaking style to a natural weather event he witnessed firsthand that day",
+      "builds anaphora and antithesis at once, repeating \"your\" before each noun paired against a harsher label, so the list intensifies with each step",
+      "functions as a rhetorical question addressed to the crowd, leaving genuinely open whether the celebration is sincere or not",
+      "relies on understatement throughout to downplay how urgently Douglass actually believes change is needed"
     ],
     "answer": "B",
     "hints": [
-      "Notice the paired structure: 'not X, but Y' repeated twice.",
-      "Ask what each pair (light/fire, shower/thunder) has in common — mildness versus force."
+      "Notice the repeated \"your\" opening each clause, and the negative label that follows each time.",
+      "Ask whether the list stays at one level of severity or keeps escalating."
     ]
   },
   {
@@ -289,9 +289,9 @@
     "problemText": "Lincoln pairs anaphoric negation (\"we can not... we can not... we can not\") with diction that escalates in solemnity (\"dedicate... consecrate... hallow\"). A full style analysis would note both choices are doing work at the same moment. Together, they integrate to —",
     "choices": [
       "combine repeated negation with diction that escalates in solemnity, transferring the power to sanctify from the living to the dead as the words themselves grow more sacred",
-      "rely on the negation alone, since the diction choices here are functionally interchangeable synonyms carrying no separate escalation of their own",
-      "undercut the moment's solemnity somewhat, since repeating \"we can not\" three times in a row reads as a comic technique within formal oratory",
-      "function mainly to fill space, since ceremonial speeches of this particular kind conventionally pad their middle section out with repeated phrasing of some sort or another"
+      "rely on the negation alone, since the diction choices here are functionally interchangeable synonyms carrying no genuinely separate escalation of their own at all",
+      "undercut the moment's solemnity somewhat, since repeating \"we can not\" three times in a row reads as a somewhat comic technique within formal ceremonial oratory",
+      "function mainly to fill space, since ceremonial speeches of this particular kind conventionally pad their own middle section out with repeated phrasing of some sort or another anyway"
     ],
     "answer": "A",
     "hints": [
