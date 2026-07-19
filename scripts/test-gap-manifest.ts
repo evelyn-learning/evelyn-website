@@ -62,4 +62,33 @@ try {
   fs.rmSync(tmpDir, { recursive: true });
 }
 
+// --- Essay-skill files: ap-apgov-u<N>-frq-<type>.ts (no -practice suffix) must be excluded ---
+const tmpDir2 = fs.mkdtempSync(path.join(os.tmpdir(), 'gap-manifest-test-'));
+try {
+  // Create essay-skill file (should be marked frqPracticeOnly)
+  fs.writeFileSync(
+    path.join(tmpDir2, 'ap-apgov-u1-frq-argument-essay.ts'),
+    `los: [{ id: 'apgov.u1-frq-argument-essay', description: 'essay', standard: 'AP-GOV-FRQ-1' }]`,
+  );
+  // Create normal content file (should survive manifest)
+  fs.writeFileSync(
+    path.join(tmpDir2, 'ap-apgov-u1-foundations.ts'),
+    `los: [{ id: 'apgov.foundations', description: 'foundations', standard: 'AP-GOV-1.1' }]`,
+  );
+  const collected2 = collectPlanLos(tmpDir2, 'apgov');
+  const frqLo = collected2.find((lo) => lo.loId === 'apgov.u1-frq-argument-essay');
+  const contentLo = collected2.find((lo) => lo.loId === 'apgov.foundations');
+  assert.ok(frqLo, 'frq LO must be collected');
+  assert.strictEqual(frqLo.frqPracticeOnly, true, 'frq LO must be marked frqPracticeOnly');
+  assert.ok(contentLo, 'content LO must be collected');
+  assert.strictEqual(contentLo.frqPracticeOnly, false, 'content LO must not be frqPracticeOnly');
+  // Verify frq LO excluded from manifest
+  const manifest2 = computeManifest(collected2, new Map(), 4);
+  assert.strictEqual(manifest2.length, 1, 'frq LO must be excluded from manifest');
+  assert.ok(manifest2.find((m) => m.loId === 'apgov.foundations'), 'content LO must survive in manifest');
+  assert.ok(!manifest2.find((m) => m.loId === 'apgov.u1-frq-argument-essay'), 'frq LO must not survive in manifest');
+} finally {
+  fs.rmSync(tmpDir2, { recursive: true });
+}
+
 console.log('✓ test-gap-manifest: all assertions passed');

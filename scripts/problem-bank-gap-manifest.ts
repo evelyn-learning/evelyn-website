@@ -29,7 +29,7 @@ export const COURSE_PREFIX: Record<string, string> = {
   'ap-us-history': 'apush', 'ap-us-government': 'apgov',
 };
 
-const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-practice/;
+const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-/;
 
 /** Derive unit from filename -u<N>- segment, or from cedCode first digit, or default to 1. */
 export function deriveUnit(filename: string, cedCode: string): number {
