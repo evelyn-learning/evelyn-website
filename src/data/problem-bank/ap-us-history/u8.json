@@ -195,5 +195,195 @@
       "If détente had ended Cold War competition outright, continued US fighting in Vietnam and expanded defense spending elsewhere would be hard to explain.",
       "Détente applied specifically to managing the relationship with the USSR (and, via the China opening, its Communist rival) — not to disengaging from the Cold War everywhere at once."
     ]
+  },
+  {
+    "id": "apush.civil-rights-movement.mcq.02",
+    "loId": "apush.civil-rights-movement",
+    "cedCode": "AP-APUSH-8.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Montgomery Bus Boycott (1955-56), organized after Rosa Parks's arrest, demonstrated chiefly that —",
+    "choices": [
+      "federal troops were required to enforce any local desegregation order",
+      "the Civil Rights Act of 1964 had already ended bus segregation nationwide",
+      "disciplined, sustained economic pressure by ordinary people could force real change",
+      "the NAACP's legal strategy alone was sufficient without any grassroots organizing"
+    ],
+    "answer": "C",
+    "hints": [
+      "The boycott succeeded through community organizing and economic pressure, not federal troop deployment.",
+      "The Civil Rights Act came nearly a decade later, in 1964 — well after this boycott had already ended."
+    ]
+  },
+  {
+    "id": "apush.civil-rights-movement.mcq.03",
+    "loId": "apush.civil-rights-movement",
+    "cedCode": "AP-APUSH-8.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When Arkansas's governor used the National Guard to block the Little Rock Nine from enrolling at Central High School in 1957, President Eisenhower responded by —",
+    "choices": [
+      "filing a lawsuit against the governor in federal court instead of using troops",
+      "ordering the school closed entirely until the following school year, the exact same limited scope covering only public education",
+      "declining to intervene at all, citing states' rights",
+      "federalizing the Guard and sending US Army troops to enforce the students' enrollment"
+    ],
+    "answer": "D",
+    "hints": [
+      "Eisenhower used direct military force, not a lawsuit, to resolve this specific standoff.",
+      "The school stayed open — the crisis was resolved by federalizing troops, not by closure."
+    ]
+  },
+  {
+    "id": "apush.civil-rights-movement.mcq.04",
+    "loId": "apush.civil-rights-movement",
+    "cedCode": "AP-APUSH-8.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Civil Rights Act of 1964 significantly expanded on Brown v. Board's constitutional holding chiefly because it —",
+    "choices": [
+      "reached discrimination in private employment and public accommodations that the Equal Protection Clause alone could not touch",
+      "applied only to public schools, exactly like Brown itself, ordering the Guard to escort the students personally through the front entrance",
+      "was struck down by the Supreme Court within a year of its passage",
+      "banned literacy tests and poll taxes in voting specifically"
+    ],
+    "answer": "A",
+    "hints": [
+      "Brown was limited to public education — the 1964 Act reached much further, into private businesses and workplaces.",
+      "Banning literacy tests and poll taxes was the specific achievement of the Voting Rights Act the following year, 1965."
+    ]
+  },
+  {
+    "id": "apush.cold-war-origins.mcq.04",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "NSC-68 (1950) called for a dramatic expansion of US military spending to contain Communism globally, but proved a hard sell in Congress until —",
+    "choices": [
+      "the Soviet Union tested its first atomic bomb in 1949, an event that raised alarm but did not by itself unlock new funding",
+      "the Korean War provided a crisis that made the buildup politically possible",
+      "NATO was formally established in 1949",
+      "the Berlin Airlift ended in 1949"
+    ],
+    "answer": "B",
+    "hints": [
+      "All three other events happened in 1949, a full year BEFORE NSC-68 itself was even written.",
+      "NSC-68 needed a fresh, ongoing crisis to justify its spending increase — Korea (1950) provided exactly that."
+    ]
+  },
+  {
+    "id": "apush.postwar-society.mcq.03",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Federal-Aid Highway Act (1956), which built the interstate highway system, was justified in part on —",
+    "choices": [
+      "Cold War national-defense grounds, enabling rapid military and civilian movement",
+      "the need to fund NASA's moon-landing program directly, a program not proposed publicly until several years after this highway act had already passed",
+      "provisions written into the original 1944 GI Bill",
+      "requirements imposed by the Marshall Plan on recipient nations"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Moon program wasn't announced until 1961, five years after this highway act passed.",
+      "The Marshall Plan funded European recovery — it had no requirements for US domestic highway policy."
+    ]
+  },
+  {
+    "id": "apush.postwar-society.mcq.04",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Writers associated with the Beat movement, such as Jack Kerouac and Allen Ginsberg, are significant to postwar cultural history chiefly because they —",
+    "choices": [
+      "helped design the federal interstate highway system in the 1950s",
+      "rejected mainstream 1950s conformity and consumerism, anticipating the 1960s counterculture",
+      "led the legal campaign that produced Brown v. Board of Education",
+      "organized the suburban homeownership boom financed by FHA loans"
+    ],
+    "answer": "B",
+    "hints": [
+      "The Beats were writers and cultural critics, not highway engineers or federal housing officials.",
+      "Brown v. Board was the product of the NAACP's legal strategy, not literary figures like Kerouac or Ginsberg."
+    ]
+  },
+  {
+    "id": "apush.seventies-crisis.mcq.02",
+    "loId": "apush.seventies-crisis",
+    "cedCode": "AP-APUSH-8.14",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Watergate scandal centered less on the original 1972 break-in itself than on —",
+    "choices": [
+      "a dispute over federal funding for the Environmental Protection Agency",
+      "the outcome of the 1972 SALT I arms-control negotiations",
+      "Nixon's decision to open relations with Communist China",
+      "the White House's sustained cover-up of its involvement"
+    ],
+    "answer": "D",
+    "hints": [
+      "The EPA, SALT I, and the China opening were all real Nixon-era policies, but none was the source of the Watergate scandal itself.",
+      "What ultimately forced Nixon's resignation was the cover-up, revealed through the Oval Office tapes, not the break-in alone."
+    ]
+  },
+  {
+    "id": "apush.seventies-crisis.mcq.03",
+    "loId": "apush.seventies-crisis",
+    "cedCode": "AP-APUSH-8.14",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The term 'stagflation' describes the 1970s combination of —",
+    "choices": [
+      "high inflation and high unemployment occurring at the same time",
+      "rapid economic growth alongside steadily falling consumer prices across most major industries",
+      "declining oil prices paired with a rapidly strengthening dollar",
+      "rising wages alongside falling consumer prices nationwide"
+    ],
+    "answer": "A",
+    "hints": [
+      "Stagflation is specifically the combination economists hadn't expected to see together: rising prices AND rising unemployment.",
+      "Oil prices actually spiked sharply during this decade — they did not decline."
+    ]
+  },
+  {
+    "id": "apush.seventies-crisis.mcq.04",
+    "loId": "apush.seventies-crisis",
+    "cedCode": "AP-APUSH-8.14",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Equal Rights Amendment, passed by Congress in 1972, ultimately —",
+    "choices": [
+      "was ratified with support from all fifty states by 1975, a debate settled quietly within the first congressional session after passage",
+      "was immediately struck down by the Supreme Court as unconstitutional",
+      "fell short of ratification by the required three-fourths of states by its extended 1982 deadline",
+      "was withdrawn from consideration by Congress before any state could ratify it"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ratification required three-fourths of the states, and organized opposition (led by Phyllis Schlafly) kept it from reaching that threshold.",
+      "Congress passed the amendment and sent it to the states — it was never withdrawn before the ratification process played out."
+    ]
+  },
+  {
+    "id": "apush.sixties-vietnam.mcq.04",
+    "loId": "apush.sixties-vietnam",
+    "cedCode": "AP-APUSH-8.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Tet Offensive (January 1968) is best described as —",
+    "choices": [
+      "a military defeat for Communist forces that nonetheless became a political turning point damaging American confidence in the war",
+      "a decisive military and political victory for Communist forces that ended the war completely and permanently within that very same calendar year",
+      "a minor skirmish with no lasting effect on American public opinion",
+      "the specific event that caused Congress to pass the Gulf of Tonkin Resolution against North Vietnam"
+    ],
+    "answer": "A",
+    "hints": [
+      "Communist forces were pushed back militarily with heavy losses — the war continued for years afterward.",
+      "The Gulf of Tonkin Resolution came in 1964, four years BEFORE the Tet Offensive."
+    ]
   }
 ]

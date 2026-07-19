@@ -196,5 +196,195 @@
       "The South was still deeply tied to international markets — through cotton exports — just not through wage-factory labor.",
       "Ask what varied between regions: transportation access and existing economic structure, not simple regional character."
     ]
+  },
+  {
+    "id": "apush.jacksonian-democracy.mcq.03",
+    "loId": "apush.jacksonian-democracy",
+    "cedCode": "AP-APUSH-4.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "South Carolina's 1832 attempt to nullify the federal tariff, and Jackson's forceful response through the Force Bill, most directly reflected a dispute over —",
+    "choices": [
+      "whether enslaved people should count toward congressional representation",
+      "whether the national bank should be rechartered by Congress, a power Congress alone held under the Constitution's amendment process",
+      "whether a state could declare a federal law void within its own borders",
+      "whether federal judges should be elected rather than appointed"
+    ],
+    "answer": "C",
+    "hints": [
+      "'Nullification' is the specific doctrine at stake here — think about what that word actually means.",
+      "This crisis is separate from the Bank War, even though both happened during Jackson's presidency."
+    ]
+  },
+  {
+    "id": "apush.jacksonian-democracy.mcq.04",
+    "loId": "apush.jacksonian-democracy",
+    "cedCode": "AP-APUSH-4.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Jackson's expansion of the spoils system and his populist framing of the Bank War both reflect a consistent underlying argument. What is that argument?",
+    "choices": [
+      "Entrenched elites and permanent officeholders should not hold unaccountable power over ordinary Americans",
+      "The federal government should have no role whatsoever in the national economy, a position Jackson explicitly rejected in his own veto message",
+      "Political office should be reserved for a small class of specially trained experts",
+      "State governments, not the federal government, should control all banking policy"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both policies are framed as taking power away from an entrenched few and giving 'the people' a greater stake.",
+      "Jackson still used federal power aggressively — in the Bank veto and the Force Bill — so 'no federal role at all' doesn't fit."
+    ]
+  },
+  {
+    "id": "apush.jefferson-era.mcq.04",
+    "loId": "apush.jefferson-era",
+    "cedCode": "AP-APUSH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Historians call Jefferson's 1800 election victory over John Adams the 'Revolution of 1800' primarily because it marked —",
+    "choices": [
+      "the first time a sitting president was removed from office by impeachment",
+      "the abolition of the Electoral College in favor of a direct popular vote, a reform several state legislatures had petitioned Congress for that same year",
+      "the first election in which property requirements for voting were eliminated nationwide",
+      "the first peaceful transfer of power between rival political parties in the young republic"
+    ],
+    "answer": "D",
+    "hints": [
+      "No president has ever been removed from office by impeachment — Adams simply lost the election.",
+      "The Electoral College still exists today, and property requirements weren't broadly eliminated until decades later, under Jackson."
+    ]
+  },
+  {
+    "id": "apush.market-revolution.mcq.03",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Lowell mills, beginning in the 1820s, pioneered a factory system chiefly employing which group of workers?",
+    "choices": [
+      "enslaved laborers transported from Southern plantations",
+      "young, unmarried women recruited from New England farms",
+      "recently arrived German immigrant families",
+      "formerly indentured servants completing their contracts and receiving land grants under colonial-era headright rules"
+    ],
+    "answer": "B",
+    "hints": [
+      "These workers, nicknamed 'Lowell girls,' lived in company-run boardinghouses near the mills.",
+      "German immigration surged later, mostly in the 1840s-50s, and mainly settled in different regions and industries."
+    ]
+  },
+  {
+    "id": "apush.market-revolution.mcq.04",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Interchangeable parts and the shift toward commercial agriculture both contributed to the Market Revolution primarily by —",
+    "choices": [
+      "enabling faster, cheaper mass production and tying farm households more directly into distant cash markets",
+      "eliminating the need for any transportation infrastructure between regions",
+      "restricting economic change almost entirely to the rural South",
+      "reversing the nation's growing reliance on wage labor outside the household, the opposite of the trend commercial agriculture and factories actually produced"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both developments actually depended heavily on canals and railroads to reach distant markets and buyers.",
+      "This transformation reached hardest into the Northeast and parts of the Midwest, not primarily the South."
+    ]
+  },
+  {
+    "id": "apush.reform-awakening.mcq.03",
+    "loId": "apush.reform-awakening",
+    "cedCode": "AP-APUSH-4.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Second Great Awakening's teaching that individuals could actively choose salvation and pursue moral self-improvement most directly fed which broader development?",
+    "choices": [
+      "a renewed emphasis on predestination and inherited religious hierarchy",
+      "a rejection of all organized religious revivalism after roughly 1840",
+      "an exclusive focus on temperance to the neglect of every other reform cause the era's revivalists might have pursued",
+      "a belief that society itself, not just the individual soul, could be perfected through reform"
+    ],
+    "answer": "D",
+    "hints": [
+      "Predestination was the OLDER Calvinist idea the Awakening moved away from, not toward.",
+      "The Awakening actually fed a whole family of reform movements — temperance, abolition, women's rights, education — not just one."
+    ]
+  },
+  {
+    "id": "apush.reform-awakening.mcq.04",
+    "loId": "apush.reform-awakening",
+    "cedCode": "AP-APUSH-4.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Garrison's demand for immediate, uncompensated emancipation provoked violent mobs even in Northern cities during the 1830s. This fact is best used as evidence against which claim?",
+    "choices": [
+      "that temperance reform faced no organized opposition anywhere in the country",
+      "that the Seneca Falls Convention occurred before the abolition movement had begun",
+      "that abolitionism was a broadly popular, uncontroversial cause even in the North",
+      "that Southern proslavery ideology hardened only after the Civil War had already started"
+    ],
+    "answer": "C",
+    "hints": [
+      "Violent Northern mobs attacking abolitionist meetings directly contradicts the idea that the cause was widely embraced there.",
+      "Seneca Falls organizers, including Stanton, came directly OUT OF the abolition movement — which was already active well before 1848."
+    ]
+  },
+  {
+    "id": "apush.slavery-south.mcq.02",
+    "loId": "apush.slavery-south",
+    "cedCode": "AP-APUSH-4.12",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Eli Whitney's cotton gin (1793) transformed the Southern economy chiefly by —",
+    "choices": [
+      "eliminating the South's dependence on enslaved labor for cotton cultivation",
+      "mechanizing the separation of cotton fiber from seed, making short-staple cotton highly profitable to grow at scale",
+      "replacing cotton with tobacco as the South's dominant export crop",
+      "ending the internal slave trade between the Upper and Deep South once cotton cultivation shifted toward mechanized harvesting"
+    ],
+    "answer": "B",
+    "hints": [
+      "The gin actually increased demand for enslaved labor, since more cotton could now be profitably grown and needed planting and picking.",
+      "Cotton, not tobacco, became the South's dominant export crop after the gin's invention."
+    ]
+  },
+  {
+    "id": "apush.slavery-south.mcq.03",
+    "loId": "apush.slavery-south",
+    "cedCode": "AP-APUSH-4.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The expansion of cotton cultivation across the Deep South after the cotton gin's invention directly drove which development?",
+    "choices": [
+      "a sharp decline in the total enslaved population of the United States as cotton cultivation shifted toward free wage labor",
+      "the migration of most enslaved people into Northern factory work",
+      "a formal federal ban on selling enslaved people across state lines",
+      "a massive internal slave trade relocating enslaved people from the Upper South, routinely separating enslaved families"
+    ],
+    "answer": "D",
+    "hints": [
+      "The enslaved population of the United States actually grew substantially during this period, not declined.",
+      "No such federal ban existed — enslaved people were forcibly sold and relocated within the country throughout this era."
+    ]
+  },
+  {
+    "id": "apush.slavery-south.mcq.04",
+    "loId": "apush.slavery-south",
+    "cedCode": "AP-APUSH-4.12",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Most White Southern families owned no enslaved people and worked small farms as yeomen, yet many yeomen still supported the slave system. Which factor best explains this apparent contradiction?",
+    "choices": [
+      "Yeomen were legally required to support slavery under their state constitutions",
+      "Yeomen were largely unaware that slavery existed in their own region",
+      "Kinship ties, racial hierarchy, and hope of future mobility gave non-slaveholders a real stake in the system",
+      "The planter class paid yeomen a direct annual subsidy in exchange for their political support, an arrangement no planter's ledger from the period actually records"
+    ],
+    "answer": "C",
+    "hints": [
+      "No state constitution legally compelled individual support for slavery — this was a social and economic reality, not a legal mandate.",
+      "Yeomen lived and worked alongside a system that was highly visible in their own communities — awareness was not the issue."
+    ]
   }
 ]

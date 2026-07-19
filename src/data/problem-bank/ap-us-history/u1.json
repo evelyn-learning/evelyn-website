@@ -157,5 +157,613 @@
       "One of these societies farmed intensively; the other had no agriculture at all — what does that difference already disprove about a single 'Native culture'?",
       "Think about the two-part myth this unit pushes back on: an empty continent, and one shared way of life."
     ]
+  },
+  {
+    "id": "apush.1920s.mcq.01",
+    "loId": "apush.1920s",
+    "cedCode": "AP-USH-NAT-7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which constitutional amendment, ratified in 1920, granted women the right to vote nationally?",
+    "choices": [
+      "The Eighteenth Amendment, which banned the manufacture and sale of alcohol",
+      "The Nineteenth Amendment",
+      "The Twenty-First Amendment",
+      "The Seventeenth Amendment"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two of the other amendments listed deal with alcohol, not voting rights.",
+      "This amendment was ratified the same year the decade begins."
+    ]
+  },
+  {
+    "id": "apush.1920s.mcq.02",
+    "loId": "apush.1920s",
+    "cedCode": "AP-USH-NAT-7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Eighteenth Amendment, ratified in 1920, banned the manufacture and sale of alcohol nationwide. Which outcome most directly explains why it was repealed just thirteen years later?",
+    "choices": [
+      "The Supreme Court ruled the amendment unconstitutional in 1925 after several state governments challenged its enforcement powers in court",
+      "European governments imposed trade sanctions in retaliation for the ban",
+      "Rural voters organized to protect a whiskey-based export economy",
+      "It proved unenforceable, fueled organized crime, and cost the government badly needed tax revenue during the Depression"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happened to drinking once it was banned outright — did it stop, or move underground?",
+      "Consider what the federal government was losing in revenue just as the Depression hit."
+    ]
+  },
+  {
+    "id": "apush.1920s.mcq.03",
+    "loId": "apush.1920s",
+    "cedCode": "AP-USH-NAT-7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Harlem Renaissance, which produced writers like Langston Hughes and Zora Neale Hurston and musicians like Duke Ellington and Louis Armstrong, is best understood as —",
+    "choices": [
+      "an assertion of Black cultural and artistic identity, centered in New York, that flourished despite ongoing Jim Crow segregation",
+      "a government-funded arts initiative created to integrate Black and white neighborhoods, once federal civil rights law made segregated arts institutions illegal nationwide",
+      "a movement that emerged only after the Civil Rights Act of 1964",
+      "a rural folk-music tradition that urban Black communities rejected"
+    ],
+    "answer": "A",
+    "hints": [
+      "This movement was produced by Black artists themselves, not a federal program.",
+      "It happened decades before the Civil Rights Act — check the dates."
+    ]
+  },
+  {
+    "id": "apush.1920s.mcq.04",
+    "loId": "apush.1920s",
+    "cedCode": "AP-USH-NAT-7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A historian argues that the 1920s' surface prosperity concealed structural problems that would surface in the 1929 crash. Which piece of evidence BEST supports this argument?",
+    "choices": [
+      "The Immigration Act of 1924 sharply increased the number of low-wage industrial workers, flooding factories with workers willing to accept even lower wages than before",
+      "Ku Klux Klan membership collapsed after 1925, easing social tensions in rural areas",
+      "Agricultural commodity prices stayed depressed throughout the decade even as urban consumer spending and stock speculation surged",
+      "The Scopes Trial proved that most Americans rejected the theory of evolution"
+    ],
+    "answer": "C",
+    "hints": [
+      "The 1924 Immigration Act actually cut immigration sharply — it didn't add workers.",
+      "Look for evidence that a whole sector of the economy was NOT sharing in the 'roaring' prosperity."
+    ]
+  },
+  {
+    "id": "apush.civil-rights.mcq.01",
+    "loId": "apush.civil-rights",
+    "cedCode": "AP-USH-NAT-9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which 1954 Supreme Court case declared state-mandated public school segregation unconstitutional, overturning the doctrine of 'separate but equal'?",
+    "choices": [
+      "Plessy v. Ferguson",
+      "Brown v. Board of Education",
+      "Loving v. Virginia, the 1967 case striking down bans on interracial marriage",
+      "Korematsu v. United States"
+    ],
+    "answer": "B",
+    "hints": [
+      "Plessy is the OLDER case this one overturned, not the answer itself.",
+      "This case is named for a Kansas school-segregation lawsuit."
+    ]
+  },
+  {
+    "id": "apush.civil-rights.mcq.02",
+    "loId": "apush.civil-rights",
+    "cedCode": "AP-USH-NAT-9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In February 1960, four Black college students sat down at a whites-only Woolworth's lunch counter in Greensboro, North Carolina, and refused to leave when denied service. What did this tactic demonstrate about the movement's evolving strategy?",
+    "choices": [
+      "College students had abandoned nonviolent tactics in favor of armed self-defense",
+      "The March on Washington had already achieved integrated public accommodations before 1960",
+      "The NAACP's legal strategy had become unnecessary once federal troops began enforcing Brown in every Southern school district by the late 1950s",
+      "Organizers were shifting from litigation alone toward direct, nonviolent confrontation that could spread rapidly to other cities"
+    ],
+    "answer": "D",
+    "hints": [
+      "The sit-in itself was strictly nonviolent — no weapons involved.",
+      "The March on Washington happened in 1963, three years AFTER this sit-in."
+    ]
+  },
+  {
+    "id": "apush.civil-rights.mcq.03",
+    "loId": "apush.civil-rights",
+    "cedCode": "AP-USH-NAT-9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During the 1963 Birmingham campaign, television cameras broadcast police attacking peaceful Black demonstrators, including children, with fire hoses and police dogs. Civil rights leaders had calculated that this kind of violent response would —",
+    "choices": [
+      "discredit the movement in the eyes of most Northern white viewers, a reaction organizers considered unlikely given the movement's national visibility",
+      "provoke Congress to authorize immediate military occupation of the South",
+      "generate national outrage that built pressure for federal civil rights legislation",
+      "convince the movement's leadership to abandon nonviolent tactics entirely"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about who was watching on television, and how they likely reacted to seeing children attacked.",
+      "This event is widely linked to the passage of a major law the very next year."
+    ]
+  },
+  {
+    "id": "apush.civil-rights.mcq.04",
+    "loId": "apush.civil-rights",
+    "cedCode": "AP-USH-NAT-9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Civil Rights Act of 1964 outlawed discrimination in employment and public accommodations. Why was a separate Voting Rights Act still needed in 1965?",
+    "choices": [
+      "The 1964 Act left the literacy tests, poll taxes, and other tactics still barring Black Southerners from voting untouched",
+      "The 1964 Act had already been struck down by the Supreme Court in a ruling handed down the previous year",
+      "The 1964 Act applied only to Northern states, exempting every state south of the Mason-Dixon line from its provisions",
+      "The Fifteenth Amendment had already been repealed by that point"
+    ],
+    "answer": "A",
+    "hints": [
+      "The 1964 Act's focus was jobs and public accommodations — check what it left untouched.",
+      "No constitutional amendment guaranteeing Black voting rights was ever repealed."
+    ]
+  },
+  {
+    "id": "apush.colonial-period.mcq.01",
+    "loId": "apush.colonial-period",
+    "cedCode": "AP-USH-NAT-2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "John Winthrop's 1630 sermon describing the Massachusetts Bay colony as a 'city upon a hill' expressed the Puritan belief that their community would serve as —",
+    "choices": [
+      "a profitable trading post independent of any religious purpose, entirely apart from any religious mission",
+      "a temporary refuge before the settlers returned to England",
+      "a moral example whose righteousness the world would watch",
+      "a religiously neutral haven open to all faiths equally"
+    ],
+    "answer": "C",
+    "hints": [
+      "'City upon a hill' is a visibility metaphor — something everyone can see and judge.",
+      "The Puritans intended to stay and build a permanent, godly community, not go home."
+    ]
+  },
+  {
+    "id": "apush.colonial-period.mcq.02",
+    "loId": "apush.colonial-period",
+    "cedCode": "AP-USH-NAT-2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "New England town meetings, in which property-owning men voted directly on local matters, are best understood as —",
+    "choices": [
+      "an early democratic practice that planted seeds of American self-government, even though participation was limited",
+      "proof that colonial New England had achieved full democracy for all residents, a level of participation historians do not consider genuinely universal",
+      "a religious ritual with no real political function",
+      "a system copied directly from Virginia's plantation government"
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice the qualifier: only property-owning MEN could vote — that limits how 'full' this democracy was.",
+      "Virginia's colonial government was organized very differently, around large landholders and an appointed governor."
+    ]
+  },
+  {
+    "id": "apush.colonial-period.mcq.03",
+    "loId": "apush.colonial-period",
+    "cedCode": "AP-USH-NAT-2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historians link the Great Awakening (1730s-40s) to the American Revolution because revival preachers' message — that ordinary people could find salvation directly, without relying on an educated clergy — most directly —",
+    "choices": [
+      "established the Anglican Church as the sole legal religion enforced uniformly across every New England colony",
+      "ended all religious revivalism in the colonies after roughly 1750",
+      "united the colonies under a single Puritan denomination",
+      "encouraged colonists to question institutional authority, including political hierarchy, decades before independence"
+    ],
+    "answer": "D",
+    "hints": [
+      "If ordinary people can bypass religious authorities, what other kind of authority might they start to question?",
+      "Think about the gap in time between the Awakening (1730s-40s) and independence (1776) — this is about a long-term effect, not an immediate one."
+    ]
+  },
+  {
+    "id": "apush.colonial-period.mcq.04",
+    "loId": "apush.colonial-period",
+    "cedCode": "AP-USH-NAT-2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Roger Williams was banished from Massachusetts Bay in 1636 for arguing for separation of church and state and fair treatment of Native Americans, then founded Rhode Island on principles of religious toleration. His banishment is best used as evidence that —",
+    "choices": [
+      "Puritan New England sought religious liberty for all residents, including dissenters",
+      "the Puritans pursued religious freedom for their own community, not universal toleration for dissenting beliefs",
+      "Massachusetts Bay had no religious establishment capable of enforcing conformity",
+      "Rhode Island was founded before Massachusetts Bay as a haven for Puritans, years after Williams's own banishment from that colony"
+    ],
+    "answer": "B",
+    "hints": [
+      "Williams was punished for the very views Rhode Island would later be founded on — what does banishing him show about Massachusetts's own tolerance?",
+      "Massachusetts Bay was founded in 1630, six years before Williams was banished and founded Rhode Island."
+    ]
+  },
+  {
+    "id": "apush.jacksonian.mcq.01",
+    "loId": "apush.jacksonian",
+    "cedCode": "AP-USH-NAT-3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Indian Removal Act of 1830 led directly to which event, in which thousands of Cherokee died during a forced march to present-day Oklahoma?",
+    "choices": [
+      "The Trail of Tears",
+      "The Nullification Crisis, the 1832-33 standoff between South Carolina and the federal government over tariffs",
+      "The Bank War",
+      "King Philip's War"
+    ],
+    "answer": "A",
+    "hints": [
+      "This event is named for the suffering of the forced march itself.",
+      "The other three options involve tariffs, banking, and a much earlier colonial conflict — none involve forced relocation."
+    ]
+  },
+  {
+    "id": "apush.jacksonian.mcq.02",
+    "loId": "apush.jacksonian",
+    "cedCode": "AP-USH-NAT-3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jackson vetoed the recharter of the Second Bank of the United States in 1832, arguing it served wealthy elites rather than ordinary citizens. What was a direct consequence of shutting down the Bank?",
+    "choices": [
+      "An immediate return to the gold standard that stabilized the currency",
+      "The founding of the Federal Reserve System later that same decade",
+      "Unstable state-issued currency that contributed to the Panic of 1837",
+      "South Carolina's nullification of the federal tariff"
+    ],
+    "answer": "C",
+    "hints": [
+      "Without a national bank regulating currency, who issued money instead, and how reliable was it?",
+      "The Federal Reserve wasn't created until 1913 — long after Jackson's presidency."
+    ]
+  },
+  {
+    "id": "apush.jacksonian.mcq.03",
+    "loId": "apush.jacksonian",
+    "cedCode": "AP-USH-NAT-3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Worcester v. Georgia (1832), the Supreme Court ruled that Georgia could not extend its laws over Cherokee territory. Jackson's response to this ruling illustrates —",
+    "choices": [
+      "the Supreme Court's ability to directly enforce its own rulings without executive cooperation, a power the Constitution reserves for Congress and the states acting together, not the courts alone",
+      "Jackson's consistent deference to judicial decisions throughout his presidency",
+      "a rare instance of judicial and executive power operating in perfect alignment",
+      "the president's willingness to defy a Supreme Court ruling he disagreed with, weakening the Court's practical authority in that instance"
+    ],
+    "answer": "D",
+    "hints": [
+      "Courts have no army or police of their own — they depend on the executive branch to enforce their rulings.",
+      "Jackson proceeded with Indian removal despite this ruling — what does that tell you about enforcement?"
+    ]
+  },
+  {
+    "id": "apush.jacksonian.mcq.04",
+    "loId": "apush.jacksonian",
+    "cedCode": "AP-USH-NAT-3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Historians describe the expansion of white male suffrage under Jackson as genuine but bounded. Which piece of evidence BEST illustrates this qualification?",
+    "choices": [
+      "Property requirements for voting were eliminated for all adult residents regardless of race or sex, a change that in practice applied only to men who already met the old property qualifications",
+      "Nearly all white men gained the vote by the 1830s, while women, Black Americans, and Native Americans remained excluded",
+      "The spoils system extended government employment to women for the first time",
+      "The Nullification Crisis proved that federal authority had become irrelevant to Southern states"
+    ],
+    "answer": "B",
+    "hints": [
+      "'Bounded' means the expansion helped some groups but not others — which groups were left out?",
+      "The spoils system rewarded political supporters with government jobs, not a specific demographic group like women."
+    ]
+  },
+  {
+    "id": "apush.modern-era.mcq.01",
+    "loId": "apush.modern-era",
+    "cedCode": "AP-USH-9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Reagan's 1980s political program combined tax cuts and deregulation with which foreign-policy posture toward the Soviet Union?",
+    "choices": [
+      "Détente and gradual disarmament negotiations only, a posture Reagan explicitly rejected as insufficient to pressure Soviet reform toward openness",
+      "Formal recognition of Soviet territorial claims in Eastern Europe",
+      "A renewed Cold War hard line, including the Strategic Defense Initiative and pressure at the Berlin Wall",
+      "Withdrawal of all US nuclear forces from Europe"
+    ],
+    "answer": "C",
+    "hints": [
+      "Reagan called for Gorbachev to 'tear down this wall' — that's not a soft, accommodating posture.",
+      "SDI (the 'Star Wars' missile-defense program) was a major buildup, not a withdrawal."
+    ]
+  },
+  {
+    "id": "apush.modern-era.mcq.02",
+    "loId": "apush.modern-era",
+    "cedCode": "AP-USH-9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "NAFTA (1994) and China's 2001 entry into the World Trade Organization both reflect which broader trend in the 1990s-2000s US economy?",
+    "choices": [
+      "Accelerating globalization, expanding trade even as domestic manufacturing employment declined",
+      "Increasing economic isolationism and rising tariff barriers, a posture neither agreement reflects given their tariff-reducing purpose",
+      "A shift back toward an agrarian economic base",
+      "The elimination of income inequality through free trade"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both NAFTA and WTO entry are about REDUCING trade barriers, the opposite of isolationism.",
+      "Expanded trade with lower-wage countries put pressure on which sector of the US economy specifically?"
+    ]
+  },
+  {
+    "id": "apush.modern-era.mcq.03",
+    "loId": "apush.modern-era",
+    "cedCode": "AP-USH-9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After the September 11, 2001 attacks, the PATRIOT Act is best understood as an example of —",
+    "choices": [
+      "a peacetime reduction in federal law-enforcement power, the opposite of what Congress actually did in response to the attacks",
+      "a treaty ratified by the United Nations Security Council",
+      "a temporary measure repealed within a year of passage",
+      "expanded federal surveillance and law-enforcement authority justified by the new counterterrorism priority"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what a government typically does with its own powers right after a major attack on its soil.",
+      "This was a domestic US law passed by Congress, not an international treaty."
+    ]
+  },
+  {
+    "id": "apush.modern-era.mcq.04",
+    "loId": "apush.modern-era",
+    "cedCode": "AP-USH-9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Historians point to the 2008 financial crisis as a key turning point in recent US politics primarily because it —",
+    "choices": [
+      "restored broad public confidence in the effectiveness of both major political parties",
+      "fueled populist backlash on both the right (Tea Party) and left (Occupy), eroding trust in elite institutions",
+      "ended American military involvement in the wars in Afghanistan and Iraq",
+      "led directly to the ratification of a new constitutional amendment placing federal examiners inside every major national bank"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for movements that emerged AFTER 2008 on both ends of the political spectrum.",
+      "No new constitutional amendment on banking was ratified after 2008 — Dodd-Frank was ordinary legislation, not an amendment."
+    ]
+  },
+  {
+    "id": "apush.period1-encounter.mcq.01",
+    "loId": "apush.period1-encounter",
+    "cedCode": "APUSH-1.1-1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The 1494 Treaty of Tordesillas, mediated by the Pope, divided newly claimed non-European territory primarily between which two powers?",
+    "choices": [
+      "England and France",
+      "the Netherlands and Spain",
+      "Portugal and England",
+      "Spain and Portugal"
+    ],
+    "answer": "D",
+    "hints": [
+      "This treaty came right after Columbus's voyages, which were sponsored by Spain.",
+      "Portugal had already been exploring the African coast and Atlantic islands before 1492."
+    ]
+  },
+  {
+    "id": "apush.period1-encounter.mcq.02",
+    "loId": "apush.period1-encounter",
+    "cedCode": "APUSH-1.1-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the century following 1492, Native American populations in many regions of the Americas declined by an estimated 50 to 90 percent. Which factor was the PRIMARY driver of this decline?",
+    "choices": [
+      "Epidemic disease introduced by Europeans, against which Native populations had no prior immunity",
+      "Intertribal warfare that intensified independent of European contact",
+      "Voluntary migration of Native peoples to Europe",
+      "crop failures caused by Old World grazing livestock destroying Native maize fields across the continent"
+    ],
+    "answer": "A",
+    "hints": [
+      "This decline happened even in areas Europeans had barely reached in person — how could that be, unless something spread ahead of them?",
+      "'Virgin soil epidemic' is the term historians use for this — no prior exposure means no immunity."
+    ]
+  },
+  {
+    "id": "apush.period1-encounter.mcq.03",
+    "loId": "apush.period1-encounter",
+    "cedCode": "APUSH-1.1-1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Spanish colonial casta system, which classified colonial society by degrees of European, Indigenous, and African ancestry, differed from the racial system that later developed in British North America chiefly because it —",
+    "choices": [
+      "enslaved only Indigenous peoples under a legal system that formally excluded anyone of African descent",
+      "granted full legal equality to all colonial subjects regardless of ancestry, treating every casta category identically under Spanish law",
+      "recognized and ranked a wide range of mixed-ancestry categories rather than sorting the population into a strict binary",
+      "was abolished immediately after the Valladolid debate"
+    ],
+    "answer": "C",
+    "hints": [
+      "Casta paintings depicted MANY named categories of mixed ancestry — count how many labels existed versus a simple 'Black/white' split.",
+      "The Valladolid debate addressed the treatment of Native peoples, not the casta classification system itself."
+    ]
+  },
+  {
+    "id": "apush.period1-encounter.mcq.04",
+    "loId": "apush.period1-encounter",
+    "cedCode": "APUSH-1.1-1.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Spanish colonization in the Caribbean and Mexico relied heavily on extracting labor and tribute from dense, already-settled Native populations through the encomienda system. French colonization of the St. Lawrence valley, by contrast, centered on —",
+    "choices": [
+      "large-scale plantation agriculture worked by an enslaved labor force, a model the French pursued only briefly before abandoning it entirely",
+      "the fur trade conducted through alliances with Native nations, with comparatively light settlement",
+      "an encomienda-style tribute system imposed on Native communities",
+      "mass immigration of entire European families seeking farmland"
+    ],
+    "answer": "B",
+    "hints": [
+      "French colonization in Canada involved far fewer settlers than Spanish or later English colonization — think about why.",
+      "Encomienda was a specifically Spanish institution — France pursued a different economic relationship with Native nations."
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.01",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-USH-MIG-2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which constitutional amendment, ratified in 1870, prohibited denying the right to vote on the basis of race?",
+    "choices": [
+      "The Fifteenth Amendment",
+      "The Thirteenth Amendment, ratified five years earlier, in 1865",
+      "The Fourteenth Amendment",
+      "The Nineteenth Amendment"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Thirteenth ended slavery and the Fourteenth granted citizenship — this one comes after both.",
+      "The Nineteenth Amendment is about a different group's voting rights, ratified 50 years later."
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.02",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-USH-MIG-2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Freedmen's Bureau, established in 1865, provided formerly enslaved people with which combination of services?",
+    "choices": [
+      "Direct cash payments of forty acres and a mule to every freed family",
+      "Full voting rights enforced by federal troops in every Southern county",
+      "Schools, food, legal aid, and help negotiating labor contracts",
+      "Permanent land grants confiscated from all former Confederate officers"
+    ],
+    "answer": "C",
+    "hints": [
+      "'Forty acres and a mule' was a famous but largely undelivered promise, not the Bureau's actual mandate.",
+      "The Bureau was chronically underfunded — think about what modest services it could realistically provide."
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.03",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-USH-MIG-2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The contested 1876 presidential election was resolved by an informal deal in which Republicans secured the presidency for Hayes in exchange for —",
+    "choices": [
+      "ratifying the Fifteenth Amendment",
+      "appointing a Southern Democrat as Chief Justice",
+      "admitting several new Western territories as free states in exchange for continued Southern Democratic cooperation",
+      "withdrawing federal troops from the remaining occupied Southern states, ending Reconstruction enforcement"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Fifteenth Amendment was ratified years earlier, in 1870 — before this compromise.",
+      "This deal is remembered as the event that effectively ENDED Reconstruction — what would achieve that?"
+    ]
+  },
+  {
+    "id": "apush.reconstruction.mcq.04",
+    "loId": "apush.reconstruction",
+    "cedCode": "AP-USH-MIG-2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student argues that Reconstruction 'completely failed' because Jim Crow segregation followed within two decades of its end. Which fact complicates this claim?",
+    "choices": [
+      "The Thirteenth, Fourteenth, and Fifteenth Amendments remained part of the Constitution and later became the legal foundation for the twentieth-century civil rights movement",
+      "The Freedmen's Bureau continued operating without interruption through the 1950s",
+      "Congress readmitted no former Confederate states until after 1900",
+      "The Compromise of 1877 restored full federal enforcement of Black voting rights, the opposite of what actually happened once the deal was reached in 1877"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Freedmen's Bureau actually shut down in 1872 — it did not last anywhere near that long.",
+      "The Compromise of 1877 did the OPPOSITE of restoring enforcement — it withdrew troops."
+    ]
+  },
+  {
+    "id": "apush.columbian-exchange.mcq.03",
+    "loId": "apush.columbian-exchange",
+    "cedCode": "AP-APUSH-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following crops originated in the Americas and, after 1492, became a staple food across much of Northern Europe?",
+    "choices": [
+      "Wheat",
+      "Sugarcane, brought from the Old World to Caribbean plantations",
+      "The potato",
+      "Rice"
+    ],
+    "answer": "C",
+    "hints": [
+      "Wheat, sugarcane, and rice all moved the OPPOSITE direction — from the Eastern Hemisphere into the Americas.",
+      "This crop grew well in poor, cold soil and helped fuel population growth across Ireland and Eastern Europe."
+    ]
+  },
+  {
+    "id": "apush.columbian-exchange.mcq.04",
+    "loId": "apush.columbian-exchange",
+    "cedCode": "AP-APUSH-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Columbian Exchange transferred crops and livestock in both directions across the Atlantic, yet its demographic consequences were overwhelmingly one-sided. Which statement best explains this apparent contradiction?",
+    "choices": [
+      "Old World diseases devastated Native American populations, who lacked prior immunity, while New World crops mainly enabled population growth in Afro-Eurasia rather than causing losses there",
+      "New World crops such as maize and the potato caused a population decline across Europe fully comparable in scale to the disease-driven demographic collapse across the whole of the Americas",
+      "The exchange of livestock, unlike crops or disease, moved exclusively from the Americas to Europe and never in the reverse direction",
+      "Native American populations in the continent's deep interior were largely unaffected because epidemic disease spread only along the coasts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Crops and disease both moved, but did they move in the SAME direction, and did they have the SAME effect wherever they landed?",
+      "Disease often traveled ahead of European settlers themselves, along existing Native trade networks — it was not limited to coastal contact zones."
+    ]
+  },
+  {
+    "id": "apush.native-societies.mcq.03",
+    "loId": "apush.native-societies",
+    "cedCode": "AP-APUSH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Haudenosaunee (Iroquois) Confederacy united five nations under the Great Law of Peace before sustained European contact. Which feature of Haudenosaunee political organization is most notable for the political authority it gave to women?",
+    "choices": [
+      "A monarchy in which only women could inherit the throne",
+      "A system in which only unmarried women could vote in council meetings, a structure no Haudenosaunee nation actually used",
+      "An entirely female governing council with no male participation",
+      "Matrilineal clans in which women held a voice in selecting male chiefs"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Confederacy had no monarchy at all — it was a council-based alliance of nations.",
+      "Chiefs were still male; the notable feature is who had a say in choosing them."
+    ]
+  },
+  {
+    "id": "apush.native-societies.mcq.04",
+    "loId": "apush.native-societies",
+    "cedCode": "AP-APUSH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ancestral Puebloan communities in the arid Southwest built irrigated agriculture and multi-story stone dwellings, while Haudenosaunee communities in the Northeast built a political confederation among five nations. Considered together, these two societies best support which conclusion about pre-1492 Native America?",
+    "choices": [
+      "Political confederation was the single dominant, universally shared form of government among nearly all Native societies regardless of environment or region",
+      "Native societies developed solutions closely adapted to their own environment and needs, not one shared model",
+      "Agriculture was practiced identically across every region of North America",
+      "Only Southwestern societies achieved permanent, complex settlements"
+    ],
+    "answer": "B",
+    "hints": [
+      "One of these societies is defined by irrigation farming, the other by political alliance — they solved very different problems.",
+      "The Haudenosaunee were in the Northeast, not the Southwest, and reached complexity through political organization, not irrigation."
+    ]
   }
 ]

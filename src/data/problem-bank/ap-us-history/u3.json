@@ -198,5 +198,271 @@
       "Think about what formed around Hamilton's and Jefferson's rival visions during Washington's administration.",
       "Madison hoped the Constitution's structure would prevent durable national factions — did it succeed by the late 1790s?"
     ]
+  },
+  {
+    "id": "apush.articles-of-confederation.mcq.03",
+    "loId": "apush.articles-of-confederation",
+    "cedCode": "AP-APUSH-3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under the Articles of Confederation, when Congress needed money it could only issue a formal request to the states, called a requisition, which states frequently ignored or paid late. This arrangement illustrates which specific weakness of the Confederation government?",
+    "choices": [
+      "No power to declare war or make peace with foreign nations, a power Congress also lacked entirely under this same government",
+      "No power to levy or collect taxes directly, forcing reliance on voluntary state contributions",
+      "No power to negotiate treaties, leaving foreign relations entirely to the states",
+      "No power to coin money or manage western territories"
+    ],
+    "answer": "B",
+    "hints": [
+      "Requisition means asking, not commanding — think about what power Congress lacked to make states actually pay.",
+      "The Articles DID give Congress the power to declare war, negotiate treaties, and coin money — this weakness is about something else entirely."
+    ]
+  },
+  {
+    "id": "apush.articles-of-confederation.mcq.04",
+    "loId": "apush.articles-of-confederation",
+    "cedCode": "AP-APUSH-3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Shays' Rebellion (1786-87) demonstrated the Confederation government's weakness most directly because —",
+    "choices": [
+      "Congress used the incident to justify a new national tax on whiskey, the first excise tax the Confederation government ever levied",
+      "the rebellion succeeded in permanently abolishing debt collection in Massachusetts",
+      "Congress deployed the Continental Army to suppress the uprising, proving it retained real military power after the war",
+      "Congress had no national army, and Massachusetts had to raise its own private militia to suppress the uprising"
+    ],
+    "answer": "D",
+    "hints": [
+      "Congress had already disbanded most of the Continental Army after the Revolution — it had no standing force to send.",
+      "The whiskey tax came later, under Hamilton's financial plan in the 1790s, not from the Confederation Congress."
+    ]
+  },
+  {
+    "id": "apush.causes-of-revolution.mcq.03",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which 1765 law, a direct internal tax on printed materials such as newspapers and legal documents, provoked the fiercest colonial objections as 'taxation without representation'?",
+    "choices": [
+      "The Stamp Act",
+      "The Sugar Act, an external duty on imported molasses and sugar",
+      "The Tea Act",
+      "The Townshend Acts"
+    ],
+    "answer": "A",
+    "hints": [
+      "This tax required a stamp on printed paper goods — hence its name.",
+      "The Sugar Act and Townshend Acts were external duties on imported goods, not a direct internal tax."
+    ]
+  },
+  {
+    "id": "apush.causes-of-revolution.mcq.04",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Tea Act of 1773 provoked the Boston Tea Party even though it added no new tax on tea beyond the existing Townshend duty. What specifically made the Tea Act provocative?",
+    "choices": [
+      "It doubled the existing Townshend duty on tea, a hike Parliament imposed without seeking any colonial consent",
+      "It banned the importation of tea into the colonies entirely, closing every colonial port to East India Company shipments",
+      "It granted the East India Company a monopoly on direct tea sales, undercutting colonial merchants and smugglers",
+      "It transferred all tea-tax revenue directly to the Bank of England"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Tea Act's tax rate on tea did not actually change — look for what else the law did to the tea trade.",
+      "Think about who specifically lost business because of this law: not taxpayers in general, but a particular group of merchants."
+    ]
+  },
+  {
+    "id": "apush.constitution-ratification.mcq.03",
+    "loId": "apush.constitution-ratification",
+    "cedCode": "AP-APUSH-3.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Great (Connecticut) Compromise resolved the dispute between large and small states by creating —",
+    "choices": [
+      "a unicameral Congress with one vote per state regardless of population, mirroring the design of most European parliaments at the time",
+      "an Electoral College that selected United States senators directly",
+      "a Congress in which only landowning citizens could serve as representatives",
+      "a bicameral Congress: the House apportioned by population, the Senate with equal representation per state"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Confederation Congress was already unicameral with one vote per state — the compromise created something different.",
+      "The compromise created TWO chambers, each apportioned by a different rule — think about what those two rules were."
+    ]
+  },
+  {
+    "id": "apush.constitution-ratification.mcq.04",
+    "loId": "apush.constitution-ratification",
+    "cedCode": "AP-APUSH-3.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Constitutional Convention's Commerce Compromise permanently barred Congress from taxing exports, and separately barred Congress from banning the international slave trade until 1808. Which statement accurately distinguishes these two restrictions?",
+    "choices": [
+      "The export-tax ban was permanent, while the slave-trade restriction expired as a twenty-year sunset clause",
+      "Both restrictions were permanent and remain in the Constitution's text today",
+      "The slave-trade restriction was permanent, while the export-tax ban expired in 1808",
+      "Both restrictions expired simultaneously once the Bill of Rights was ratified in 1791, resolving the Convention's remaining disputes over commerce"
+    ],
+    "answer": "A",
+    "hints": [
+      "Only one of these two restrictions carried an explicit expiration date written into the Constitution's text.",
+      "The export-tax ban (Article I, Section 9) is still in force today — the slave-trade clause was, by design, time-limited."
+    ]
+  },
+  {
+    "id": "apush.new-republic.mcq.03",
+    "loId": "apush.new-republic",
+    "cedCode": "AP-APUSH-3.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "As part of his financial plan, Alexander Hamilton proposed that the federal government assume, or take over, which specific financial obligation?",
+    "choices": [
+      "State debts incurred during the Revolutionary War",
+      "Britain's national debt, as a diplomatic goodwill gesture",
+      "Individual colonists' private mortgage debts owed to British creditors",
+      "Foreign loans the Confederation Congress owed to Spain"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Assumption' refers to the federal government taking on debts the STATES already owed — not debts owed by individuals or foreign governments.",
+      "This plan aimed to tie state financial interests to the new federal government's success."
+    ]
+  },
+  {
+    "id": "apush.new-republic.mcq.04",
+    "loId": "apush.new-republic",
+    "cedCode": "AP-APUSH-3.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Washington's 1796 Farewell Address warned against the dangers of political parties and permanent foreign alliances. This warning is best understood as —",
+    "choices": [
+      "a successful prediction that prevented any American political parties from forming for decades",
+      "a comment on divisions — the Federalist/Democratic-Republican split — that had already emerged within his own administration",
+      "a proposal later enacted into a constitutional amendment formally banning political parties from operating in any federal election",
+      "advice that Adams and Jefferson jointly co-authored together in the months leading up to Washington's retirement"
+    ],
+    "answer": "B",
+    "hints": [
+      "By 1796, had organized political parties already formed, or was Washington warning about something purely hypothetical?",
+      "No constitutional amendment has ever banned political parties in the United States."
+    ]
+  },
+  {
+    "id": "apush.period3-independence.mcq.01",
+    "loId": "apush.period3-independence",
+    "cedCode": "APUSH-3.1-3.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Treaty of Paris (1763), ending the French and Indian War, transferred nearly all of France's mainland North American territory to which power?",
+    "choices": [
+      "Spain",
+      "Britain",
+      "The Netherlands",
+      "The newly independent United States"
+    ],
+    "answer": "B",
+    "hints": [
+      "This war was fought primarily between Britain and France — think about who won.",
+      "The United States did not yet exist in 1763 — independence was still thirteen years away."
+    ]
+  },
+  {
+    "id": "apush.period3-independence.mcq.02",
+    "loId": "apush.period3-independence",
+    "cedCode": "APUSH-3.1-3.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The American victory at Saratoga in October 1777 proved decisive to the Revolution's outcome chiefly because it —",
+    "choices": [
+      "forced Britain to abandon the war effort immediately afterward",
+      "ended fighting in the northern colonies for the remainder of the war, shifting all remaining combat south toward Yorktown",
+      "persuaded France to enter the war as an American ally, providing crucial military and financial support",
+      "resulted in George Washington's promotion to commander of all Continental forces"
+    ],
+    "answer": "C",
+    "hints": [
+      "Britain kept fighting for four more years after Saratoga — the war did not end here.",
+      "Washington was already commander of the Continental Army well before this battle."
+    ]
+  },
+  {
+    "id": "apush.period3-independence.mcq.03",
+    "loId": "apush.period3-independence",
+    "cedCode": "APUSH-3.1-3.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "At the Constitutional Convention, the Three-Fifths Compromise resolved a dispute over whether enslaved people would count toward a state's population for purposes of —",
+    "choices": [
+      "House representation and direct taxation",
+      "qualifying for statehood under the Northwest Ordinance",
+      "determining eligibility to serve in the United States Senate",
+      "selecting delegates to the Constitutional Convention itself"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Northwest Ordinance concerned admitting NEW states from Northwest territory, not the population count in existing states.",
+      "This compromise affected two specific things at once: how many seats a state got, and how much it owed in direct taxes."
+    ]
+  },
+  {
+    "id": "apush.period3-independence.mcq.04",
+    "loId": "apush.period3-independence",
+    "cedCode": "APUSH-3.1-3.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Alien and Sedition Acts (1798), passed by a Federalist-controlled Congress, provoked the Virginia and Kentucky Resolutions because Madison and Jefferson argued that —",
+    "choices": [
+      "states could nullify federal laws they judged unconstitutional",
+      "the acts violated the Three-Fifths Compromise's taxation formula",
+      "the Supreme Court, not the states, held exclusive power to nullify federal law",
+      "the acts were fully consistent with a strict construction of federal power"
+    ],
+    "answer": "A",
+    "hints": [
+      "Madison and Jefferson were strict constructionists who believed the Acts exceeded Congress's constitutional powers — hardly 'consistent' with that view.",
+      "The Resolutions asserted a states'-rights power that foreshadowed the later nullification crisis of the 1830s."
+    ]
+  },
+  {
+    "id": "apush.revolutionary-ideals.mcq.03",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Thomas Paine's Common Sense (1776) translated Lockean natural-rights philosophy into plain, widely accessible language. This is significant chiefly because it —",
+    "choices": [
+      "was the first document to use the exact phrase 'life, liberty, and the pursuit of happiness'",
+      "persuaded King George III to negotiate directly with the Continental Congress, coined instead by Jefferson in the Declaration's own preamble",
+      "replaced the Declaration of Independence as the colonies' official founding document",
+      "reached ordinary colonists who had never read Locke directly, helping make revolutionary ideas a genuinely popular cause"
+    ],
+    "answer": "D",
+    "hints": [
+      "That specific phrase actually appears in the Declaration of Independence, not in Common Sense.",
+      "Paine's pamphlet was aimed at ordinary readers, not at negotiating with the king himself."
+    ]
+  },
+  {
+    "id": "apush.revolutionary-ideals.mcq.04",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Colonial republicans envisioned government structured around elected representatives accountable to the people, rather than direct citizen votes on every law. This distinction between republicanism and direct democracy matters chiefly because it shows that —",
+    "choices": [
+      "the revolutionaries rejected popular sovereignty entirely in favor of an appointed elite",
+      "republicanism sought a middle path between monarchy and unchecked direct rule by momentary popular passions",
+      "republicanism required every law to be ratified through a national popular referendum",
+      "republicanism and direct democracy are simply two different names for the same system, a claim that ignores why colonial writers used two different terms at all"
+    ],
+    "answer": "B",
+    "hints": [
+      "Republicanism still traces authority back to the people — it just channels that authority through elected representatives, not a hereditary elite.",
+      "If republicanism and direct democracy were the same thing, colonial leaders wouldn't have needed two different names for them."
+    ]
   }
 ]

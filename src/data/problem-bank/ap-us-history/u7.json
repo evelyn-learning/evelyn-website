@@ -110,7 +110,7 @@
     "choices": [
       "the burst of \"Hundred Days\" relief and recovery legislation, though the Depression itself persisted until World War II mobilization",
       "the burst of \"Hundred Days\" relief and recovery legislation that fully and permanently ended the Great Depression within the year",
-      "a policy Roosevelt would not actually implement until his second term, after the 1936 election",
+      "a policy Roosevelt planned publicly but held in reserve for his second term, after the 1936 election",
       "a purely rhetorical flourish with no connection to any specific legislation that followed"
     ],
     "answer": "A",
@@ -234,6 +234,386 @@
     "hints": [
       "The 1920s did see genuine industrial and consumer growth — the question is whether that growth reached everyone.",
       "Recall that farmers suffered a depression roughly a decade before the rest of the country did."
+    ]
+  },
+  {
+    "id": "apush.depression-new-deal.mcq.03",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "President Hoover's Reconstruction Finance Corporation (1932) was designed chiefly to —",
+    "choices": [
+      "provide direct cash relief payments to unemployed individuals",
+      "fund the Civilian Conservation Corps' work camps, though he actually resisted this kind of direct aid throughout his term",
+      "lend federal funds to banks and businesses to stabilize the financial system",
+      "guarantee bank deposits against future failures"
+    ],
+    "answer": "C",
+    "hints": [
+      "Hoover resisted direct relief payments to individuals — this program worked through institutions instead.",
+      "The CCC was an FDR-era program created after Hoover left office, not funded by the RFC."
+    ]
+  },
+  {
+    "id": "apush.depression-new-deal.mcq.04",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Social Security Act (1935) initially excluded agricultural and domestic workers from its old-age pension and unemployment insurance coverage. This exclusion is significant chiefly because it —",
+    "choices": [
+      "disproportionately limited the Act's benefits for Black Americans, who were concentrated in those excluded occupations",
+      "applied equally to all American workers regardless of occupation, including seasonal agricultural laborers and household staff",
+      "had no disproportionate effect on any particular racial or demographic group",
+      "was corrected immediately by a 1936 amendment extending coverage to all workers"
+    ],
+    "answer": "A",
+    "hints": [
+      "The whole point of this fact is that the exclusion was NOT applied equally in its practical effect.",
+      "Coverage for agricultural and domestic workers was not extended until decades later, not the following year."
+    ]
+  },
+  {
+    "id": "apush.imperialism.mcq.03",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The explosion of the battleship USS Maine in Havana harbor (February 1898), amplified by sensationalist 'yellow journalism,' most directly —",
+    "choices": [
+      "ended American interest in Cuban affairs entirely",
+      "led immediately to Cuban statehood within the United States",
+      "was formally blamed on the United States Navy by an international tribunal",
+      "helped push the United States into war against Spain"
+    ],
+    "answer": "D",
+    "hints": [
+      "The explosion had the opposite effect — it intensified, not ended, American involvement in Cuba.",
+      "Cuba became a nominally independent nation under the Platt Amendment, not a U.S. state."
+    ]
+  },
+  {
+    "id": "apush.imperialism.mcq.04",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Treaty of Paris (1898), which ceded the Philippines to the United States, passed the Senate only narrowly in 1899. This narrow vote is best used as evidence that —",
+    "choices": [
+      "the Senate unanimously supported acquiring the Philippines after only a brief, uncontroversial floor debate",
+      "American overseas expansion faced genuine, organized political opposition, not universal support",
+      "the Anti-Imperialist League successfully blocked the treaty's ratification entirely",
+      "Spain refused to sign the treaty until the vote was held"
+    ],
+    "answer": "B",
+    "hints": [
+      "A narrow vote is the opposite of unanimous support — it shows a real, contested fight.",
+      "The League organized real opposition but did not succeed in blocking ratification — the treaty passed."
+    ]
+  },
+  {
+    "id": "apush.period7-imperialism-progressive.mcq.01",
+    "loId": "apush.period7-imperialism-progressive",
+    "cedCode": "APUSH-7.1-7.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Secretary of State John Hay's Open Door Notes (1899-1900) asked other powers to preserve, in China, —",
+    "choices": [
+      "equal trading access for all nations rather than exclusive spheres of influence",
+      "a single unified European colonial government, an arrangement no European power actually proposed or accepted",
+      "a complete ban on all foreign trade with China",
+      "exclusive American control over Chinese ports"
+    ],
+    "answer": "A",
+    "hints": [
+      "Hay's notes argued AGAINST exclusive control by any one power, European or American.",
+      "The policy sought open commercial access, the opposite of banning trade."
+    ]
+  },
+  {
+    "id": "apush.period7-imperialism-progressive.mcq.02",
+    "loId": "apush.period7-imperialism-progressive",
+    "cedCode": "APUSH-7.1-7.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which pair of constitutional amendments, both ratified in 1913, established a federal income tax and direct election of U.S. senators?",
+    "choices": [
+      "the 18th and 19th Amendments, ratified the same year after a long legislative push",
+      "the 14th and 15th Amendments",
+      "the 13th and 14th Amendments",
+      "the 16th and 17th Amendments"
+    ],
+    "answer": "D",
+    "hints": [
+      "The 18th and 19th Amendments concern Prohibition and women's suffrage, ratified later in 1919-1920.",
+      "The 13th, 14th, and 15th Amendments date to Reconstruction, decades before 1913."
+    ]
+  },
+  {
+    "id": "apush.period7-imperialism-progressive.mcq.03",
+    "loId": "apush.period7-imperialism-progressive",
+    "cedCode": "APUSH-7.1-7.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Espionage Act (1917) and Sedition Act (1918), upheld in Schenck v. United States (1919), are best understood as —",
+    "choices": [
+      "laws protecting soldiers' personal mail from wartime censorship by military postal inspectors",
+      "measures criminalizing speech that interfered with the war effort",
+      "statutes granting amnesty to conscientious objectors",
+      "laws specifically protecting the Black press's Double V campaign"
+    ],
+    "answer": "B",
+    "hints": [
+      "These laws expanded government power to restrict speech, not to protect objectors from prosecution.",
+      "The Double V campaign came during World War II, a different war entirely from the one these 1917-18 laws addressed."
+    ]
+  },
+  {
+    "id": "apush.period7-imperialism-progressive.mcq.04",
+    "loId": "apush.period7-imperialism-progressive",
+    "cedCode": "APUSH-7.1-7.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Wilson's Fourteen Points (1918) called for self-determination, open diplomacy, and a League of Nations. The actual Treaty of Versailles (1919) is best described as —",
+    "choices": [
+      "an exact implementation of Wilson's Fourteen Points, adopted by the Allied delegations without a single modification",
+      "rejected by every European power that had fought in the war",
+      "falling well short of that idealistic vision, shaped instead by punitive Allied demands for reparations",
+      "silent on the question of a League of Nations entirely"
+    ],
+    "answer": "C",
+    "hints": [
+      "France and Britain, not Wilson alone, shaped the treaty's harsher final terms.",
+      "The League of Nations WAS included in the treaty — the U.S. Senate, not European powers, rejected American membership in it."
+    ]
+  },
+  {
+    "id": "apush.progressivism.mcq.03",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Upton Sinclair's 1906 novel 'The Jungle,' exposing unsanitary conditions in Chicago's meatpacking industry, most directly helped spur —",
+    "choices": [
+      "the Federal Reserve Act (1913), ratified seven years earlier, in a different Progressive-era reform push",
+      "the Clayton Antitrust Act (1914)",
+      "the 19th Amendment (1920)",
+      "the Pure Food and Drug Act and Meat Inspection Act (1906)"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Federal Reserve concerns banking and currency, an unrelated Wilson-era reform passed years later.",
+      "Sinclair's novel targeted food safety specifically, not banking, antitrust, or suffrage."
+    ]
+  },
+  {
+    "id": "apush.progressivism.mcq.04",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Many Southern 'Progressive' reforms, including literacy tests and poll taxes, are best understood as —",
+    "choices": [
+      "measures that expanded Black political participation broadly alongside the era's many other suffrage and ballot reforms",
+      "tools used to disenfranchise Black voters even as the movement expanded rights for others",
+      "laws struck down by the Supreme Court immediately upon passage",
+      "reforms enacted only after the Voting Rights Act of 1965"
+    ],
+    "answer": "B",
+    "hints": [
+      "These measures had the opposite effect — reducing, not expanding, Black political participation.",
+      "These laws remained in force for decades — they were not struck down immediately, and predated 1965 by many years."
+    ]
+  },
+  {
+    "id": "apush.twenties.mcq.02",
+    "loId": "apush.twenties",
+    "cedCode": "AP-APUSH-7.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The National Origins Act (Immigration Act of 1924) set immigration quotas that —",
+    "choices": [
+      "applied equally to every sending country regardless of origin",
+      "banned all immigration into the United States entirely, a quota design Congress explicitly rejected when drafting this specific law",
+      "sharply favored Northern and Western European immigrants while restricting most others",
+      "applied only to immigrants arriving by sea, exempting overland arrivals"
+    ],
+    "answer": "C",
+    "hints": [
+      "The whole design of the quota system was to favor some sending regions over others, not treat them equally.",
+      "Immigration continued after 1924 — it was restricted and reshaped by national origin, not eliminated."
+    ]
+  },
+  {
+    "id": "apush.twenties.mcq.03",
+    "loId": "apush.twenties",
+    "cedCode": "AP-APUSH-7.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Harlem Renaissance, a flowering of Black literary and artistic creativity in the 1920s, was fueled partly by —",
+    "choices": [
+      "the Great Migration's concentration of Black artists and writers in Northern cities",
+      "federal arts funding created by the New Deal",
+      "the repeal of Jim Crow segregation laws nationwide",
+      "mass emigration of Black Americans to Africa organized through Marcus Garvey's Back-to-Africa shipping line"
+    ],
+    "answer": "A",
+    "hints": [
+      "New Deal federal arts funding came later, in the 1930s, under FDR, after the Harlem Renaissance had already begun.",
+      "Jim Crow segregation remained firmly in place throughout the 1920s and for decades afterward."
+    ]
+  },
+  {
+    "id": "apush.twenties.mcq.04",
+    "loId": "apush.twenties",
+    "cedCode": "AP-APUSH-7.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Scopes Trial (1925), the revived Ku Klux Klan, and the National Origins Act (1924) are best understood together as —",
+    "choices": [
+      "unrelated, isolated events driven by three entirely separate and unconnected local controversies",
+      "three expressions of a traditionalist backlash against the decade's modernizing change",
+      "evidence that the 1920s saw no meaningful conflict over cultural values",
+      "federal programs coordinated directly by a single government agency"
+    ],
+    "answer": "B",
+    "hints": [
+      "These three events actually share a common thread — a reaction against the same modernizing forces.",
+      "None of these was a coordinated federal program; they operated through courts, private organizing, and Congress respectively."
+    ]
+  },
+  {
+    "id": "apush.wwi.mcq.03",
+    "loId": "apush.wwi",
+    "cedCode": "AP-APUSH-7.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Zimmermann Telegram, made public in early 1917, most directly inflamed American opinion by —",
+    "choices": [
+      "announcing Germany's unconditional surrender to the Allied powers in Paris",
+      "revealing a secret U.S.-British treaty establishing joint naval patrols in the Atlantic",
+      "offering Mexico's neutrality in exchange for oil rights along the Gulf Coast",
+      "proposing a German alliance with Mexico against the United States"
+    ],
+    "answer": "D",
+    "hints": [
+      "Germany did not surrender until 1918, well after this telegram was intercepted.",
+      "The telegram was a German proposal TO Mexico, not a revelation about any U.S.-British agreement."
+    ]
+  },
+  {
+    "id": "apush.wwi.mcq.04",
+    "loId": "apush.wwi",
+    "cedCode": "AP-APUSH-7.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Great Migration, in which hundreds of thousands of African Americans moved from the rural South to Northern cities beginning around 1916, was driven chiefly by —",
+    "choices": [
+      "the passage of the 19th Amendment, ratified several years after the Migration had already begun",
+      "the founding of the NAACP, an organization founded years earlier for a related but distinct civil-rights purpose",
+      "wartime industrial labor demand combined with the halt of European immigration",
+      "the end of the Espionage Act's wartime speech restrictions, which came after the war itself had ended"
+    ],
+    "answer": "C",
+    "hints": [
+      "The 19th Amendment concerned women's suffrage, ratified in 1920, after the Migration had already begun.",
+      "The NAACP (founded 1909) organized for civil rights but did not itself drive this specific labor migration."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.01",
+    "loId": "apush.wwii",
+    "cedCode": "AP-USH-7.10-7.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Lend-Lease Act (1941) allowed the United States to —",
+    "choices": [
+      "supply war materiel to Britain and other Allies without requiring immediate cash payment",
+      "declare war on Germany immediately upon passage, formalizing a policy already agreed to in secret talks with Britain",
+      "annex British colonial territories in the Caribbean",
+      "draft British citizens into the U.S. military"
+    ],
+    "answer": "A",
+    "hints": [
+      "Lend-Lease was a supply arrangement, not a declaration of war — the U.S. remained formally at peace until Pearl Harbor.",
+      "The Act concerned materiel, not territorial annexation or conscription of foreign citizens."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.02",
+    "loId": "apush.wwii",
+    "cedCode": "AP-USH-7.10-7.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Japan's attack on Pearl Harbor (December 7, 1941) was intended chiefly to —",
+    "choices": [
+      "force an immediate Japanese surrender to the United States",
+      "establish a permanent Japanese naval base in Hawaii",
+      "provoke a joint U.S.-Soviet invasion of the Japanese home islands the following spring",
+      "disable the U.S. Pacific Fleet and secure resource-rich territory in Southeast Asia"
+    ],
+    "answer": "D",
+    "hints": [
+      "The attack was launched BY Japan — it was not designed to produce Japan's own surrender.",
+      "Japan withdrew after the raid; it never held or occupied Pearl Harbor itself."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.03",
+    "loId": "apush.wwii",
+    "cedCode": "AP-USH-7.10-7.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "World War II mobilization permanently expanded the federal government's role chiefly by —",
+    "choices": [
+      "reducing federal spending back down to roughly its levels before the Great Depression had begun",
+      "broadening income taxation and federal economic management in ways that did not roll back",
+      "eliminating the income tax entirely for the war's duration",
+      "transferring most war production decisions to state governments"
+    ],
+    "answer": "B",
+    "hints": [
+      "Federal spending's share of the economy stayed permanently higher after the war, not lower.",
+      "The income tax was broadened during the war, via withholding, not eliminated."
+    ]
+  },
+  {
+    "id": "apush.wwii.mcq.04",
+    "loId": "apush.wwii",
+    "cedCode": "AP-USH-7.10-7.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Historians continue to debate President Truman's decision to use atomic bombs on Hiroshima and Nagasaki in August 1945. This is best described as —",
+    "choices": [
+      "a genuinely unresolved debate over military necessity, surrender timing, and Soviet diplomacy",
+      "a settled historical verdict reached unanimously by the government's own official war-history commission",
+      "a decision universally condemned by all of Truman's own wartime advisors",
+      "a decision required by an explicit congressional declaration mandating atomic weapons use"
+    ],
+    "answer": "A",
+    "hints": [
+      "Historians actively disagree about this decision to this day — it is not a closed question.",
+      "Truman's advisors were not unanimous in opposition; several supported the decision at the time."
+    ]
+  },
+  {
+    "id": "apush.wwii-era.mcq.04",
+    "loId": "apush.wwii-era",
+    "cedCode": "AP-APUSH-7.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Supreme Court upheld Japanese American internment in Korematsu v. United States (1944). The U.S. government's later response to this episode, under the Civil Liberties Act of 1988, is best described as —",
+    "choices": [
+      "a formal reversal of the Korematsu ruling itself by the Supreme Court",
+      "a decision to reinstate similar exclusion authority specifically for any future declared war",
+      "a formal acknowledgment of the internment as a grave injustice, including reparations",
+      "a rejection of any wrongdoing, reaffirming the original wartime necessity claim"
+    ],
+    "answer": "C",
+    "hints": [
+      "The 1988 Act was legislation from Congress, not a Supreme Court ruling overturning its own earlier decision.",
+      "The Act moved in the opposite direction from reaffirming wartime necessity — it acknowledged injustice and paid reparations."
     ]
   }
 ]

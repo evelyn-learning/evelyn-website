@@ -196,5 +196,195 @@
       "Sharecroppers were legally free; consider what the crop-lien system's debt cycle did to their real economic independence.",
       "'Forty acres and a mule' was proposed but never delivered as durable federal policy — most land stayed with former owners."
     ]
+  },
+  {
+    "id": "apush.manifest-destiny.mcq.02",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The 1846 dispute between the United States and Britain over the Oregon Country, despite the expansionist slogan 'Fifty-Four Forty or Fight,' was ultimately resolved by —",
+    "choices": [
+      "a full-scale war that the United States won decisively",
+      "a Supreme Court ruling awarding the entire territory to Britain",
+      "Mexico's cession of the territory as part of the Treaty of Guadalupe Hidalgo",
+      "the Oregon Treaty, splitting the territory diplomatically at the 49th parallel"
+    ],
+    "answer": "D",
+    "hints": [
+      "No war was fought over Oregon — the slogan was a campaign demand, not a description of what happened.",
+      "Oregon and the Mexican Cession are two separate territorial disputes, resolved by two separate treaties."
+    ]
+  },
+  {
+    "id": "apush.manifest-destiny.mcq.03",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Wilmot Proviso (1846), which proposed banning slavery in any territory acquired from Mexico, repeatedly passed the House but failed in the Senate and never became law. Its lasting significance lies in the fact that it —",
+    "choices": [
+      "permanently banned slavery in the Mexican Cession despite failing to pass, a claim its own repeated failure in the Senate directly disproves",
+      "ended the Mexican-American War immediately upon its introduction",
+      "revealed that territorial expansion had reopened the sectional fight over whether slavery would spread west",
+      "was signed into law by President Polk despite Senate opposition"
+    ],
+    "answer": "C",
+    "hints": [
+      "A proposal that never became law cannot have banned anything — focus on what its repeated introduction revealed politically.",
+      "The war continued for roughly two more years after the Proviso was first introduced in 1846."
+    ]
+  },
+  {
+    "id": "apush.manifest-destiny.mcq.04",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A freshman Whig congressman named Abraham Lincoln introduced the 'Spot Resolutions' in 1847, demanding President Polk identify the exact spot where American blood had been shed on American soil to justify the Mexican-American War. This episode is best used as evidence that —",
+    "choices": [
+      "manifest destiny was a contested political argument, not a national consensus",
+      "Congress unanimously supported Polk's justification for the war",
+      "Lincoln personally opposed all forms of American territorial expansion throughout his career",
+      "the Mexican-American War began only after Congress formally investigated its causes"
+    ],
+    "answer": "A",
+    "hints": [
+      "A congressman publicly challenging the president's war justification is the opposite of unanimous support.",
+      "The war had already begun in 1846, a full year before Lincoln's resolutions challenged its justification in 1847."
+    ]
+  },
+  {
+    "id": "apush.sectional-crisis.mcq.02",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Compromise of 1850 admitted California as a free state and, as part of the same package, also —",
+    "choices": [
+      "repealed the Missouri Compromise line entirely, four years before that line was actually repealed by separate legislation",
+      "banned slavery outright in the Utah and New Mexico Territories",
+      "permanently banned the domestic slave trade nationwide",
+      "enacted a much stronger Fugitive Slave Act compelling Northern assistance in recapturing escaped enslaved people"
+    ],
+    "answer": "D",
+    "hints": [
+      "The Missouri Compromise line was repealed later, by the Kansas-Nebraska Act of 1854, not by this 1850 compromise.",
+      "Utah and New Mexico were organized under popular sovereignty, letting settlers decide on slavery — not an outright ban."
+    ]
+  },
+  {
+    "id": "apush.sectional-crisis.mcq.03",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Supreme Court's 1857 ruling in Dred Scott v. Sandford inflamed sectional conflict chiefly because it held that —",
+    "choices": [
+      "popular sovereignty was the only constitutional method for regulating slavery in the territories, since Congress held no independent authority over them",
+      "Congress had no constitutional authority to ban slavery in the territories at all",
+      "enslaved people who reached free territory automatically became citizens and were freed",
+      "the Fugitive Slave Act of 1850 was unconstitutional and unenforceable"
+    ],
+    "answer": "B",
+    "hints": [
+      "The ruling actually went further than endorsing popular sovereignty — it removed Congress's power to ban slavery in territories at all.",
+      "The Court ruled the opposite on Scott's own status: living in free territory did not make him free or a citizen."
+    ]
+  },
+  {
+    "id": "apush.sectional-crisis.mcq.04",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Many architects of the Compromise of 1850 genuinely believed they had permanently settled the sectional conflict over slavery. This belief is best used as evidence for which argument about the coming of the Civil War?",
+    "choices": [
+      "that war became foreseeable only through a specific chain of ruptures across the following decade, not through an outcome fixed in 1850",
+      "that war was already understood as inevitable by 1850, making the compromise a mere formality, a claim the compromise's own architects at the time would have flatly rejected",
+      "that the Compromise of 1850 abolished slavery outright in all US territories",
+      "that Congress passed no further legislation touching slavery after 1850"
+    ],
+    "answer": "A",
+    "hints": [
+      "If leaders genuinely believed they had achieved a lasting settlement, that belief is hard to square with treating war as already certain.",
+      "Congress passed several more major slavery-related laws and saw major rulings after 1850 — Kansas-Nebraska (1854) and Dred Scott (1857) among them."
+    ]
+  },
+  {
+    "id": "apush.reconstruction-era.mcq.03",
+    "loId": "apush.reconstruction-era",
+    "cedCode": "AP-APUSH-5.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under Presidential Reconstruction (1865-66), restored Southern legislatures responded to minimal federal requirements by passing —",
+    "choices": [
+      "the 15th Amendment, guaranteeing Black male suffrage nationwide",
+      "new state constitutions banning slavery outright for the first time in the region",
+      "laws granting each formerly enslaved family forty acres of land",
+      "Black Codes restricting freedpeople's labor contracts, movement, and legal standing"
+    ],
+    "answer": "D",
+    "hints": [
+      "The 15th Amendment was a federal constitutional amendment, not something state legislatures could pass on their own.",
+      "'Forty acres and a mule' was proposed but never delivered as durable federal or state policy."
+    ]
+  },
+  {
+    "id": "apush.reconstruction-era.mcq.04",
+    "loId": "apush.reconstruction-era",
+    "cedCode": "AP-APUSH-5.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Later historians, most influentially Eric Foner, revised an earlier interpretation of Reconstruction's failure. This revision argued that Reconstruction's central problem was —",
+    "choices": [
+      "that federal enforcement was too aggressive and provoked unnecessary Southern resistance",
+      "that Congress moved too slowly to grant Black men the right to vote after the war, the older interpretation Foner's scholarship specifically revised and rejected",
+      "that federal enforcement was not sustained long enough or backed by enough durable commitment to protect freedpeople's rights",
+      "that the Freedmen's Bureau continued operating well past the year 1900"
+    ],
+    "answer": "C",
+    "hints": [
+      "This is the OLDER 'Dunning School' interpretation Foner's scholarship pushed back against, not his own argument.",
+      "The Freedmen's Bureau actually shut down by the early 1870s, decades before 1900."
+    ]
+  },
+  {
+    "id": "apush.secession-civil-war.mcq.04",
+    "loId": "apush.secession-civil-war",
+    "cedCode": "AP-APUSH-5.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Democratic Party's split into Northern and Southern factions in the 1860 election most directly allowed —",
+    "choices": [
+      "John Bell's Constitutional Union Party to win a majority of electoral votes, a result the party's own leaders worked hard to prevent",
+      "South Carolina to secede before the election results were even announced",
+      "Congress to cancel the presidential election entirely that year",
+      "Republican Abraham Lincoln to win the presidency despite receiving no electoral votes from the South"
+    ],
+    "answer": "D",
+    "hints": [
+      "Bell's third party siphoned some votes but never came close to an electoral majority.",
+      "South Carolina seceded in December 1860, after Lincoln's November election victory, not before it."
+    ]
+  },
+  {
+    "id": "apush.emancipation.mcq.04",
+    "loId": "apush.emancipation",
+    "cedCode": "AP-APUSH-5.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Lincoln announced the preliminary Emancipation Proclamation in September 1862 shortly after which event?",
+    "choices": [
+      "the surrender of the Confederate capital at Richmond",
+      "the ratification of the Thirteenth Amendment",
+      "the Union victory at Antietam",
+      "the assassination of Abraham Lincoln"
+    ],
+    "answer": "C",
+    "hints": [
+      "Richmond did not fall to Union forces until 1865, near the war's very end.",
+      "Lincoln was still very much alive in September 1862 — his assassination came in April 1865."
+    ]
   }
 ]

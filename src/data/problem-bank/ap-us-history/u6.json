@@ -196,5 +196,271 @@
       "Ask what made land access to distant 'open' territory practically possible for settlers, beyond the Homestead Act alone.",
       "The word 'empty' is a trap — remember whose land these homestead claims were being filed on."
     ]
+  },
+  {
+    "id": "apush.gilded-politics-populism.mcq.04",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Pendleton Civil Service Act (1883), passed after President Garfield's assassination by a disappointed office-seeker, addressed which problem in federal government hiring?",
+    "choices": [
+      "low voter turnout in national elections",
+      "the absence of any federal income tax, an omission Congress addressed decades later through direct constitutional amendment",
+      "the patronage 'spoils system,' by requiring competitive exams for many federal jobs",
+      "railroad rate discrimination against farmers"
+    ],
+    "answer": "C",
+    "hints": [
+      "This law responded directly to an assassination motivated by a denied patronage job.",
+      "Voter turnout in this era was actually quite high — this reform targeted hiring practices, not elections."
+    ]
+  },
+  {
+    "id": "apush.immigration-urbanization.mcq.04",
+    "loId": "apush.immigration-urbanization",
+    "cedCode": "AP-APUSH-6.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jane Addams founded Hull House in Chicago in 1889 chiefly to —",
+    "choices": [
+      "provide childcare, English classes, and other services directly to immigrant neighborhoods",
+      "lobby Congress to overturn the Chinese Exclusion Act on behalf of Chinese merchant associations along the West Coast",
+      "organize immigrant voters into a political machine modeled on Tammany Hall",
+      "recruit new members exclusively for the Populist Party"
+    ],
+    "answer": "A",
+    "hints": [
+      "Hull House was a settlement house providing hands-on community services, not a lobbying organization.",
+      "Settlement houses like Hull House offered an alternative to machine politics, not a version of it."
+    ]
+  },
+  {
+    "id": "apush.industrialization-big-business.mcq.03",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Carnegie Steel's dominant strategy of buying up mines, ore transport, and mills at every stage of steel production is best described as —",
+    "choices": [
+      "horizontal integration",
+      "vertical integration",
+      "a labor union merger",
+      "a government-chartered trust"
+    ],
+    "answer": "B",
+    "hints": [
+      "Horizontal integration means consolidating competitors at the SAME stage of production — this describes controlling every DIFFERENT stage instead.",
+      "This strategy involved buying businesses, not merging with any labor organization."
+    ]
+  },
+  {
+    "id": "apush.industrialization-big-business.mcq.04",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Congress passed both the Interstate Commerce Act (1887) and the Sherman Antitrust Act (1890) to regulate big business, yet large industrial combinations remained largely undisturbed through the 1890s. Which factor best explains this gap between the laws' stated purpose and their practical effect?",
+    "choices": [
+      "both laws were repealed by Congress within a year of passage after sustained lobbying from the largest industrial trusts in the country",
+      "industrialists voluntarily complied with the laws, forming their own internal boards to police compliance without court involvement",
+      "the laws applied only to companies operating exclusively within a single state",
+      "courts interpreted the laws narrowly, as in United States v. E.C. Knight Co. (1895), limiting their reach over manufacturing monopolies"
+    ],
+    "answer": "D",
+    "hints": [
+      "Neither law was repealed — both remained on the books throughout this period.",
+      "The gap here is about a narrow COURT interpretation of 'commerce,' not a geographic limit written into the statutes themselves."
+    ]
+  },
+  {
+    "id": "apush.labor-movement.mcq.02",
+    "loId": "apush.labor-movement",
+    "cedCode": "AP-APUSH-6.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The American Federation of Labor, founded in 1886 under Samuel Gompers, organized workers chiefly through —",
+    "choices": [
+      "craft-specific unions limited to skilled workers in a particular trade",
+      "a single union open to all workers regardless of skill or trade",
+      "a national referendum open to any citizen sympathetic to labor",
+      "cooperative ownership councils that replaced private employers entirely"
+    ],
+    "answer": "A",
+    "hints": [
+      "That broad, all-worker approach actually describes the Knights of Labor, the AFL's more inclusive rival.",
+      "The AFL negotiated directly with employers over wages and hours — it did not attempt to replace employers with cooperatives."
+    ]
+  },
+  {
+    "id": "apush.labor-movement.mcq.03",
+    "loId": "apush.labor-movement",
+    "cedCode": "AP-APUSH-6.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Great Railroad Strike of 1877, triggered by wage cuts during an economic downturn, was ultimately suppressed by —",
+    "choices": [
+      "a Supreme Court ruling declaring the strike illegal",
+      "a negotiated settlement granting workers most of their demands",
+      "state militias and federal troops ordered out by President Hayes",
+      "the American Federation of Labor's own leadership, which opposed the strike"
+    ],
+    "answer": "C",
+    "hints": [
+      "No Supreme Court ruling was involved in ending this particular strike — armed force was.",
+      "The AFL was not even founded until 1886, nine years after this strike took place."
+    ]
+  },
+  {
+    "id": "apush.labor-movement.mcq.04",
+    "loId": "apush.labor-movement",
+    "cedCode": "AP-APUSH-6.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Supreme Court's ruling in In re Debs (1895), upholding the federal injunction against the Pullman Strike, is best understood as establishing —",
+    "choices": [
+      "a constitutional right for workers to strike without any government interference",
+      "a permanent statutory ban on all future railroad strikes, written into law by Congress the same year as the ruling",
+      "the Knights of Labor's exclusive legal right to arbitrate disputes on workers' behalf, granted by the same 1895 ruling",
+      "the federal government's power to use court injunctions to break strikes threatening interstate commerce or mail"
+    ],
+    "answer": "D",
+    "hints": [
+      "The ruling actually upheld government power AGAINST the strike, the opposite of an unrestricted right to strike.",
+      "This ruling concerned one specific strike's injunction, not a blanket ban written into permanent statute."
+    ]
+  },
+  {
+    "id": "apush.period6-gilded-age.mcq.01",
+    "loId": "apush.period6-gilded-age",
+    "cedCode": "APUSH-6.1-6.13",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Union Pacific and Central Pacific railroads met at Promontory, Utah, in 1869, completing —",
+    "choices": [
+      "the Erie Canal, finished decades earlier under a very different transportation need",
+      "the first transcontinental railroad",
+      "the Panama Canal",
+      "the Interstate Highway System"
+    ],
+    "answer": "B",
+    "hints": [
+      "The Erie Canal was completed decades earlier, in 1825, and connected the Hudson River to Lake Erie, not the Atlantic to the Pacific.",
+      "This 1869 event joined two railroad companies building from opposite directions across the continent."
+    ]
+  },
+  {
+    "id": "apush.period6-gilded-age.mcq.02",
+    "loId": "apush.period6-gilded-age",
+    "cedCode": "APUSH-6.1-6.13",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "John D. Rockefeller's Standard Oil achieved control of roughly 90 percent of U.S. oil refining by the 1880s chiefly through —",
+    "choices": [
+      "horizontal integration",
+      "government contracts guaranteeing it a monopoly by law over all federally subsidized pipeline construction",
+      "vertical integration into steel production",
+      "a formal merger with the Knights of Labor"
+    ],
+    "answer": "A",
+    "hints": [
+      "No federal law granted Standard Oil a legal monopoly — it achieved dominance through business strategy.",
+      "Standard Oil operated in the oil industry, not the steel industry that Carnegie dominated."
+    ]
+  },
+  {
+    "id": "apush.period6-gilded-age.mcq.03",
+    "loId": "apush.period6-gilded-age",
+    "cedCode": "APUSH-6.1-6.13",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "By the 1880s-90s, immigration to American cities increasingly came from Southern and Eastern Europe rather than Northern and Western Europe. This shift most directly provoked —",
+    "choices": [
+      "uniform, evenly distributed hostility toward all immigrant groups regardless of origin",
+      "a federal law banning all immigration from Europe entirely while leaving Asian immigration completely unrestricted",
+      "the immediate repeal of the Homestead Act",
+      "targeted nativist organizing aimed specifically at Catholic and Jewish 'new immigrants'"
+    ],
+    "answer": "D",
+    "hints": [
+      "Nativist hostility in this period targeted specific groups with sharply different intensity, not every immigrant equally.",
+      "No federal law banned all European immigration in this period — restrictions targeted specific groups, most severely Chinese immigrants."
+    ]
+  },
+  {
+    "id": "apush.period6-gilded-age.mcq.04",
+    "loId": "apush.period6-gilded-age",
+    "cedCode": "APUSH-6.1-6.13",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "William McKinley's decisive victory over William Jennings Bryan in the 1896 election is best understood as producing —",
+    "choices": [
+      "an immediate national switch to the free-silver standard",
+      "the immediate abolition of the Populist Party by federal statute passed during McKinley's first term",
+      "a Republican-dominant political realignment lasting roughly the next three decades",
+      "a constitutional amendment banning fusion tickets between parties"
+    ],
+    "answer": "C",
+    "hints": [
+      "McKinley defended the GOLD standard and won — the opposite of switching to free silver.",
+      "No statute abolished the Populist Party; it declined gradually as an independent political force after this defeat."
+    ]
+  },
+  {
+    "id": "apush.the-west-new-south.mcq.02",
+    "loId": "apush.the-west-new-south",
+    "cedCode": "AP-APUSH-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Homestead Act (1862) offered settlers 160 acres of public land nearly free provided they —",
+    "choices": [
+      "paid the full market price in gold within one year",
+      "worked and improved the land for five years",
+      "had previously served in the Union Army",
+      "already owned land in an Eastern state"
+    ],
+    "answer": "B",
+    "hints": [
+      "The whole point of the Act was to make land available WITHOUT requiring a full market payment.",
+      "Military service was not a requirement of the Homestead Act itself."
+    ]
+  },
+  {
+    "id": "apush.the-west-new-south.mcq.03",
+    "loId": "apush.the-west-new-south",
+    "cedCode": "AP-APUSH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Dawes Act (1887) broke up communally held reservation land into individual family allotments. Its long-term practical effect was to —",
+    "choices": [
+      "devastate Native landholding, as 'surplus' land was sold off to non-Native settlers",
+      "increase total Native American landholding by consolidating scattered reservations, a status not achieved for Native Americans generally until decades later",
+      "grant full U.S. citizenship to all Native Americans immediately upon passage",
+      "restore treaty-recognized tribal governance over former reservation land"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Act reduced, rather than consolidated or expanded, Native-controlled land over the following decades.",
+      "Full, universal Native American citizenship was not achieved until the Indian Citizenship Act of 1924."
+    ]
+  },
+  {
+    "id": "apush.the-west-new-south.mcq.04",
+    "loId": "apush.the-west-new-south",
+    "cedCode": "AP-APUSH-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "'New South' boosters like Henry Grady promised a diversified, industrialized economy after Reconstruction. Which piece of evidence best complicates this promise?",
+    "choices": [
+      "most former slaves and many poor White farmers became tenant farmers trapped in debt, continuing dependence on cotton",
+      "Southern textile production surpassed Northern industrial output by 1900, driven by newly built mills across the Piedmont region and the Gulf Coast",
+      "Plessy v. Ferguson (1896) struck down racial segregation in public accommodations",
+      "the federal government redistributed plantation land to formerly enslaved families as promised"
+    ],
+    "answer": "A",
+    "hints": [
+      "Southern industry grew somewhat but remained small relative to the North's — it never actually surpassed it.",
+      "Plessy v. Ferguson did the opposite of striking down segregation — it upheld 'separate but equal.'"
+    ]
   }
 ]

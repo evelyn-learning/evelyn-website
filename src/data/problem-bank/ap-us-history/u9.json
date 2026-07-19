@@ -157,5 +157,81 @@
       "The passage names both a loss (manufacturing jobs) and a gain (expanded export access) happening at the same time — look for the option that accounts for both facts.",
       "Deindustrialization was a longer-run trend predating 1994, so rule out the option claiming it started only after NAFTA."
     ]
+  },
+  {
+    "id": "apush.america-since-2001.mcq.03",
+    "loId": "apush.america-since-2001",
+    "cedCode": "AP-APUSH-9.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The USA PATRIOT Act, passed by Congress in October 2001, is best described as —",
+    "choices": [
+      "a treaty establishing the international coalition that invaded Afghanistan later that year",
+      "a constitutional amendment suspending habeas corpus nationwide for the war's duration",
+      "a law expanding government surveillance and law-enforcement authority to investigate terrorism",
+      "legislation creating the Department of Health and Human Services"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Afghanistan invasion was a military campaign, not a treaty created by this domestic law.",
+      "No constitutional amendment was passed in response to September 11 — the PATRIOT Act was an ordinary federal statute."
+    ]
+  },
+  {
+    "id": "apush.america-since-2001.mcq.04",
+    "loId": "apush.america-since-2001",
+    "cedCode": "AP-APUSH-9.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Historians and economists generally explain the 2008 financial crisis as resulting from —",
+    "choices": [
+      "a single bank's fraudulent lending practices, acting independently of broader market conditions",
+      "a sudden, unexplained collapse in consumer confidence with no identifiable economic cause",
+      "a sudden, unexplained collapse in national consumer confidence with absolutely no identifiable underlying economic cause whatsoever",
+      "several factors operating together, including a housing bubble, risky mortgage securitization, and weak regulatory oversight"
+    ],
+    "answer": "D",
+    "hints": [
+      "The standard account explicitly rejects single-actor explanations in favor of several compounding factors.",
+      "The Affordable Care Act was passed in 2010, two years after the crisis, and concerns health insurance, not mortgage markets."
+    ]
+  },
+  {
+    "id": "apush.conservative-resurgence.mcq.04",
+    "loId": "apush.conservative-resurgence",
+    "cedCode": "AP-APUSH-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Historians generally explain the Cold War's end around 1989-1991 as the product of —",
+    "choices": [
+      "several factors together: sustained US pressure, the Soviet Union's internal economic stagnation, and organic Eastern European reform movements",
+      "sustained US military and economic pressure alone, with the Soviet Union's own internal economy playing no meaningful role in the outcome",
+      "a single treaty signed in 1991 that immediately dissolved the Soviet Union",
+      "Eastern European reform movements acting entirely independently of any US or Soviet policy"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Soviet economy's own long-building stagnation is treated as at least as significant as external US pressure, not irrelevant.",
+      "No single 1991 treaty dissolved the USSR by itself — its collapse resulted from converging internal and external pressures over years."
+    ]
+  },
+  {
+    "id": "apush.globalization-tech.mcq.04",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "NAFTA, which took effect in 1994, primarily —",
+    "choices": [
+      "established the World Trade Organization in 1994 to replace the older GATT framework entirely",
+      "removed most tariffs on trade among the United States, Canada, and Mexico",
+      "ended the national-origins immigration quota system that had favored Europe",
+      "created new federal welfare block grants to the states"
+    ],
+    "answer": "B",
+    "hints": [
+      "The WTO was a separate, later development (1995), not something NAFTA itself established.",
+      "Ending the national-origins quota system was the achievement of the Immigration Act of 1965, decades before NAFTA."
+    ]
   }
 ]

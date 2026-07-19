@@ -157,5 +157,158 @@
       "Edwards is not appealing to calm reasoning or evidence here — notice the vivid, frightening imagery instead.",
       "This sermon was preached to an ordinary mixed congregation, not delivered as a scholarly treatise."
     ]
+  },
+  {
+    "id": "apush.colonial-society.mcq.02",
+    "loId": "apush.colonial-society",
+    "cedCode": "AP-APUSH-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "By the mid-18th century, colonial elites increasingly bought British manufactured goods, modeled their homes on London fashion, and saw themselves as sharing in British culture. Historians call this broad cultural trend —",
+    "choices": [
+      "Mercantilism, the theory that colonies exist to enrich the mother country",
+      "The Stono Rebellion, an armed uprising near Charleston, South Carolina, which took place decades later near Charleston",
+      "Anglicization, a trend fed by the era's growing Atlantic consumer trade",
+      "The Halfway Covenant, adopted by New England's Puritan churches"
+    ],
+    "answer": "C",
+    "hints": [
+      "Mercantilism is an economic theory about trade policy, not a cultural fashion trend among elites.",
+      "The other two options are specific events (a rebellion, a church policy), not a broad cultural pattern."
+    ]
+  },
+  {
+    "id": "apush.colonial-society.mcq.03",
+    "loId": "apush.colonial-society",
+    "cedCode": "AP-APUSH-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apush-edwards-sinners.v1",
+    "problemText": "Jonathan Edwards preached 'Sinners in the Hands of an Angry God' (1741) to an ordinary mixed congregation at Enfield, not to a gathering of trained clergy or colonial elites, and the Awakening's itinerant preachers drew similarly large, socially mixed crowds across the colonies. This mass, broad audience is best evidence against which claim?",
+    "choices": [
+      "That the First Great Awakening was primarily an elite-driven religious movement",
+      "That Awakening preachers used vivid, emotionally urgent imagery to provoke conversion, a style historians agree was central to Awakening preaching",
+      "That the Awakening contributed to the growth of new evangelical denominations",
+      "That established, formally trained clergy sometimes viewed itinerant preachers with suspicion"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask who was actually sitting in the crowd Edwards preached to at Enfield — trained ministers, or ordinary townspeople?",
+      "The other three statements are all TRUE according to the unit — only one of the four options is the false claim being disproven."
+    ]
+  },
+  {
+    "id": "apush.colonial-society.mcq.04",
+    "loId": "apush.colonial-society",
+    "cedCode": "AP-APUSH-2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Enlightenment and the First Great Awakening appealed to very different sources of authority — reason versus emotional piety — yet historians note the two movements shared one underlying effect on ordinary colonists. What is that shared effect?",
+    "choices": [
+      "Both directly increased the legislative taxing power of colonial assemblies",
+      "Both were funded and organized by the very same network of Atlantic merchants who financed colonial shipping, trade, correspondence, and marine insurance",
+      "Both rejected the value of print culture and colonial newspapers entirely, relying solely on oral preaching and personal correspondence",
+      "Both encouraged colonists to trust their own judgment, reasoned in one case and spiritual in the other, over inherited authority"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both movements told colonists to rely on something inside themselves — reason for one, personal faith for the other — rather than deferring to an outside authority.",
+      "Print culture actually helped SPREAD both Enlightenment ideas and Awakening sermons — neither movement rejected it."
+    ]
+  },
+  {
+    "id": "apush.slavery-colonies.mcq.03",
+    "loId": "apush.slavery-colonies",
+    "cedCode": "AP-APUSH-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Virginia's 1662 law established that a child's legal status as enslaved or free followed the status of the mother, regardless of the father's status. This law most directly made colonial slavery —",
+    "choices": [
+      "temporary, tied only to a fixed term of years like indentured servitude",
+      "hereditary, passing automatically from one generation to the next",
+      "limited exclusively to individuals captured directly from Africa",
+      "reversible through religious conversion to Christianity"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare this to indentured servitude, which ended after a set number of years — does this law describe a fixed term?",
+      "'Passing from mother to child' describes something that continues automatically across generations, not a status tied to birthplace or religion."
+    ]
+  },
+  {
+    "id": "apush.slavery-colonies.mcq.04",
+    "loId": "apush.slavery-colonies",
+    "cedCode": "AP-APUSH-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "By the 18th century, enslaved people outnumbered the free population in parts of coastal South Carolina's rice country, while slavery in the Middle Colonies and New England remained smaller-scale and largely urban or domestic. Together, these facts best support which conclusion?",
+    "choices": [
+      "Slavery was legally prohibited outside the Lower South before the Revolution",
+      "Enslaved people in New England worked primarily on large rice and indigo plantations",
+      "Slavery existed in every colonial region, though its scale and labor systems varied by region",
+      "The task-labor system described for the Lower South was used only in the Chesapeake tobacco economy"
+    ],
+    "answer": "C",
+    "hints": [
+      "New England's slavery was smaller-scale and domestic — not organized around large plantations at all.",
+      "Notice the passage explicitly describes slavery existing in BOTH the Lower South and the Middle Colonies/New England, just at very different scales."
+    ]
+  },
+  {
+    "id": "apush.transatlantic-economy.mcq.02",
+    "loId": "apush.transatlantic-economy",
+    "cedCode": "AP-APUSH-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under the economic theory that guided British colonial policy, colonies existed primarily to —",
+    "choices": [
+      "supply raw materials to, and buy manufactured goods from, the mother country",
+      "develop fully independent, self-sufficient local economies free of reliance on any Atlantic trade network",
+      "compete directly with British manufacturers in European markets",
+      "establish democratic self-government free of any imperial oversight"
+    ],
+    "answer": "A",
+    "hints": [
+      "This theory aims for a 'favorable balance of trade' for the mother country, not colonial independence.",
+      "Ask which direction goods and profits were supposed to flow under this system: toward the colonies, or back to Britain?"
+    ]
+  },
+  {
+    "id": "apush.transatlantic-economy.mcq.03",
+    "loId": "apush.transatlantic-economy",
+    "cedCode": "AP-APUSH-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mid-1700s Boston merchant's voyage carries rum to West Africa, exchanges it for captives sold in the West Indies, then returns home with sugar and molasses to distill into more rum. This voyage illustrates —",
+    "choices": [
+      "a route made entirely illegal by the Navigation Acts of 1651 and 1660, which barred any voyage touching West African ports",
+      "a purely internal coastal trade confined to New England ports",
+      "the specific customs-enforcement mechanism that produced salutary neglect",
+      "one leg of the overlapping Atlantic trade network known as the triangular trade"
+    ],
+    "answer": "D",
+    "hints": [
+      "This voyage crosses three regions — West Africa, the West Indies, and New England — not a single coastline.",
+      "The Navigation Acts regulated HOW this kind of trade had to be carried out; they did not ban this general trade pattern outright."
+    ]
+  },
+  {
+    "id": "apush.transatlantic-economy.mcq.04",
+    "loId": "apush.transatlantic-economy",
+    "cedCode": "AP-APUSH-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For decades before 1763, Britain enforced the Navigation Acts only loosely, tolerating widespread colonial smuggling. Given this loose enforcement, why did the Navigation Acts still matter for what happened after 1763?",
+    "choices": [
+      "They had already been formally repealed by Parliament before 1763",
+      "They set a legal precedent for parliamentary authority over colonial trade that Parliament drew on after 1763",
+      "Colonial assemblies had used them to declare full independence from Parliament decades earlier, a step no colonial assembly took until after the war with Britain began",
+      "They applied only to Spanish colonial ports, not to British colonial trade"
+    ],
+    "answer": "B",
+    "hints": [
+      "A loosely enforced law can still remain on the books, ready to be enforced strictly once circumstances change.",
+      "Independence wasn't declared until 1776 — well after this loose-enforcement period the question describes."
+    ]
   }
 ]
