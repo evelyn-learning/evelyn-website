@@ -381,5 +381,25 @@
     "hints": [
       "A defensible thesis explains HOW the specific rhetorical moves (question, invocation, declaration) work together to build an effect — not just that the line is famous."
     ]
+  },
+  {
+    "id": "apenglang.defensible-thesis.mcq.04",
+    "loId": "apenglang.defensible-thesis",
+    "cedCode": "AP-ENGLANG-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass declares, \"This Fourth of July is yours, not mine.\" Which thesis statement about this line is most defensible — an arguable claim rather than a simple fact?",
+    "choices": [
+      "Douglass delivered this particular address in the state of New York, in a ceremony held more than seventy years after the Declaration of Independence was first signed",
+      "By separating \"yours\" from \"mine,\" Douglass argues that the holiday's promise of freedom excludes the enslaved audience he addresses",
+      "Douglass mentions the Fourth of July by name at several distinct points across the full text of this particular address",
+      "The sentence is short and grammatically parallel, a structural pattern Douglass repeats at several other points across the speech"
+    ],
+    "answer": "B",
+    "hints": [
+      "A defensible thesis states an arguable claim about meaning or effect, not a fact about delivery, wordcount, or grammar.",
+      "Ask whether the sentence could be argued against — a location, a mention count, or a grammar label alone cannot."
+    ]
   }
 ]

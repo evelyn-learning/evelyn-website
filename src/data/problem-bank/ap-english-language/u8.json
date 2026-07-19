@@ -169,5 +169,138 @@
       "Test the sentence against a single question: could it have been written from just one source?",
       "Sophistication requires the sources to be shown in relation to each other, not decorated individually."
     ]
+  },
+  {
+    "id": "apenglang.source-credibility-bias.mcq.04",
+    "loId": "apenglang.source-credibility-bias",
+    "cedCode": "AP-ENGLANG-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's synthesis draft reads: \"A peer-reviewed study funded by a beverage industry trade group found no link between sugary drinks and weight gain, so this finding should be excluded from the essay entirely.\" Which revision best reflects a sophisticated understanding of source credibility?",
+    "choices": [
+      "\"...and this finding can be accepted at face value since peer review by itself already guarantees a study is largely free of bias.\"",
+      "\"...which proves conclusively that no reputable research has ever found any link between sugary drinks and weight gain.\"",
+      "\"...but because the study's funding source has a direct financial stake in the outcome, its methodology should be weighed against independently funded research rather than dismissed outright.\"",
+      "\"...but because any industry-funded study is automatically and entirely invalid no matter what its underlying methodology actually looks like in practice, it simply will not appear anywhere in the essay.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Peer review and funding bias are separate questions — one doesn't cancel out the other.",
+      "Look for the revision that names the stake AND still finds a defensible way to weigh the source."
+    ]
+  },
+  {
+    "id": "apenglang.competing-perspectives.mcq.03",
+    "loId": "apenglang.competing-perspectives",
+    "cedCode": "AP-ENGLANG-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A draft paragraph handles two competing city planners by writing: \"One planner argues one-way streets improve traffic flow, while another argues they hurt local business visibility. Because the first planner's article was more convincing to me, I will only discuss that view and leave the second planner out of my essay entirely.\" Which revision best corrects how this draft handles the competing sources?",
+    "choices": [
+      "\"...the disagreement may dissolve once each recommendation is read in context: the first planner studies commuter routes and the second studies retail strips, so each conclusion likely holds within its own setting.\"",
+      "\"...since experts who genuinely disagree can never both be right at the same time, this essay will simply cite whichever one happens to get quoted more often elsewhere.\"",
+      "\"...because two genuinely credible planners cannot possibly disagree with each other, one of them must not actually be a real expert at all.\"",
+      "\"...the second planner's argument will only be mentioned briefly in a footnote so it does not need to be addressed anywhere in the body of the essay.\""
+    ],
+    "answer": "A",
+    "hints": [
+      "The original draft commits the false-choice trap: picking a side and dropping the disagreeing source.",
+      "Look for the revision that reconciles the disagreement by noticing each source may hold within a different scope."
+    ]
+  },
+  {
+    "id": "apenglang.competing-perspectives.mcq.04",
+    "loId": "apenglang.competing-perspectives",
+    "cedCode": "AP-ENGLANG-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student summarizes an opposing urban planner's view as: \"This planner claims congestion pricing works because of reduced traffic, full stop, and ignores every other factor.\" The planner's actual report states that reduced traffic was the single most significant benefit compared with earlier proposals, though it also briefly notes that lower-income commuters faced a real, if smaller, cost. Which statement best evaluates the student's summary?",
+    "choices": [
+      "The summary is fair and accurate, since a planner's stated main argument should always be treated as their one and only argument",
+      "The summary actually strengthens the essay, since exaggerating an opposing view tends to make that view considerably easier to refute",
+      "The summary is largely unnecessary here, since competing planning proposals of this kind should never really be mentioned anywhere in a synthesis essay at all",
+      "The summary straw-mans the planner's position by dropping the acknowledged equity cost and inflating \"most significant\" into an absolute, all-or-nothing claim"
+    ],
+    "answer": "D",
+    "hints": [
+      "Test the summary against the source's actual wording: would the planner recognize this as a fair restatement?",
+      "Notice what the summary quietly drops from the planner's original, qualified argument."
+    ]
+  },
+  {
+    "id": "apenglang.qualifying-with-sources.mcq.03",
+    "loId": "apenglang.qualifying-with-sources",
+    "cedCode": "AP-ENGLANG-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's thesis is: \"Four-day school weeks improve student wellbeing.\" Which sentence uses a source to QUALIFY this claim rather than simply support it?",
+    "choices": [
+      "A district survey found self-reported stress dropped after switching to a four-day week, confirming that the schedule improves wellbeing",
+      "A district survey found self-reported stress dropped after switching to a four-day week, though a separate report found parents' childcare costs rose enough to offset some of that relief",
+      "A district survey found self-reported stress dropped after switching to a four-day week, and every single district everywhere should therefore adopt this exact same schedule immediately without exception",
+      "A district survey found self-reported stress dropped after switching to a four-day week, a finding already echoed by two additional independent surveys conducted just last year"
+    ],
+    "answer": "B",
+    "hints": [
+      "Supporting a claim just piles on evidence for it; qualifying a claim narrows its scope or adds a condition.",
+      "Look for the sentence that names a specific limit on who the benefit reaches."
+    ]
+  },
+  {
+    "id": "apenglang.qualifying-with-sources.mcq.04",
+    "loId": "apenglang.qualifying-with-sources",
+    "cedCode": "AP-ENGLANG-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's overclaiming thesis reads: \"Standardized testing has permanently corrupted how schools teach reading.\" A source reports that a 2021 study found reading instruction narrowed toward test formats mainly in schools facing the threat of state takeover, while schools without that threat showed little curricular change. Which revised thesis best QUALIFIES the original claim using this source, without abandoning it?",
+    "choices": [
+      "\"Standardized testing has, in fact, meaningfully improved how schools teach reading for everyone who takes the process seriously enough.\"",
+      "\"Standardized testing has permanently corrupted reading instruction absolutely everywhere in every school district, a conclusion this particular study fully and completely confirms.\"",
+      "\"Standardized testing narrows reading instruction toward test formats mainly where the stakes of failing are highest, suggesting the corrosive effect tracks accountability pressure rather than testing itself.\"",
+      "\"Because this one study complicates the claim somewhat, no argument about standardized testing's effect on reading can really be made at all.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "A qualified thesis keeps its core claim standing while narrowing how far it applies — it is not a full retraction.",
+      "Check whether the revised thesis still makes a real, arguable claim after accounting for the study's finding."
+    ]
+  },
+  {
+    "id": "apenglang.sophistication-in-synthesis.mcq.03",
+    "loId": "apenglang.sophistication-in-synthesis",
+    "cedCode": "AP-ENGLANG-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis essay already cites three sources on the rise of food-delivery apps, each discussed competently in its own paragraph. To earn the sophistication point, a student adds one concluding sentence. Which sentence best demonstrates genuine sophistication rather than mere decoration?",
+    "choices": [
+      "In summation, it is abundantly and thoroughly clear, as evinced by the aforementioned sources cited throughout, that food-delivery apps present myriad multifaceted considerations worth noting",
+      "In summation, it is abundantly and thoroughly clear, as evinced by the aforementioned sources cited at length throughout this entire essay, that food-delivery apps present myriad multifaceted considerations",
+      "A fourth source, a 2023 industry report, further confirms yet again that delivery volume has grown, adding one more data point to the pattern already firmly established",
+      "Each of the three sources cited above makes a valid and well-supported point about food-delivery apps"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sophistication is a specific stand-back move, not fancier vocabulary or an extra source.",
+      "Ask which sentence could NOT have been written after reading only one of the three sources."
+    ]
+  },
+  {
+    "id": "apenglang.sophistication-in-synthesis.mcq.04",
+    "loId": "apenglang.sophistication-in-synthesis",
+    "cedCode": "AP-ENGLANG-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student claims their essay's final sentence — \"This source shows that gig work has changed how people earn income\" — earns the sophistication point because it cites a fourth source and uses the word \"multifaceted.\" Which statement best evaluates this claim?",
+    "choices": [
+      "The student is correct, since sophistication on this rubric is generally earned by citing additional sources and using more elevated vocabulary",
+      "The student is correct, since any concluding sentence placed at the very end of a finished synthesis essay automatically and always satisfies the sophistication requirement regardless of content",
+      "The student is incorrect, but only because the fourth source should have been introduced much earlier in the essay rather than at its very end",
+      "The student is incorrect: the sentence could have been written after reading only one source, so it does not perform the stand-back move sophistication requires, regardless of vocabulary or source count"
+    ],
+    "answer": "D",
+    "hints": [
+      "Test the sentence against a single question: could it have been written from just one source?",
+      "Sophistication requires the sources to be shown in relation to each other, not decorated individually."
+    ]
   }
 ]

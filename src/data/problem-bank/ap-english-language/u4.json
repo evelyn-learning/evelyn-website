@@ -198,5 +198,125 @@
       "Ask what obligation stage one creates, and what stage two claims we owe because of it.",
       "A line of reasoning means each stage depends on the one before — check whether removing stage one would still make stage three make sense."
     ]
+  },
+  {
+    "id": "apenglang.methods-of-development.mcq.03",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "In the line \"We have petitioned; we have remonstrated; we have supplicated; we have prostrated ourselves before the throne,\" Henry develops his claim that peaceful means are exhausted primarily through which method — and to what end?",
+    "choices": [
+      "definition — formally defining the legal term \"petition\" as it was specifically understood under British parliamentary procedure of that period",
+      "narration — recounting, in sequence, each peaceful measure already attempted, so their cumulative failure justifies what comes next",
+      "comparison-contrast — measuring the colonists' actions against a specific rival nation's own diplomatic history and precedent",
+      "description — using vivid physical detail of the throne room's architecture and furnishings to evoke its grandeur for the audience"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the sequence of past-tense verbs Henry stacks in a row.",
+      "Ask what this recounted sequence is building toward, rather than what any single verb means on its own."
+    ]
+  },
+  {
+    "id": "apenglang.methods-of-development.mcq.04",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "In the line \"above your national, tumultuous joy, I hear the mournful wail of millions,\" Douglass develops his claim primarily through which method — and to what end?",
+    "choices": [
+      "definition — formally defining what qualifies as a national holiday under the era's prevailing law and custom",
+      "narration — recounting, in strict chronological order, the specific events of the day's festivities as they unfolded",
+      "comparison-contrast — juxtaposing the audience's celebratory joy against the enslaved's grief so the day's meaning fractures depending on who hears it",
+      "exemplification — offering an isolated real-world case study drawn from one enslaved family's own personal history"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice the two feelings placed side by side in one sentence: 'joy' above, 'wail' beneath.",
+      "Ask what this juxtaposition does to a single day's meaning, depending on who is listening."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions-analysis.mcq.04",
+    "loId": "apenglang.intros-conclusions-analysis",
+    "cedCode": "AP-ENGLANG-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift opens his proposal with a description of \"streets, the roads, and cabbin-doors crowded with beggars,\" rather than his solution. As an introduction, this opening primarily —",
+    "choices": [
+      "requests that Parliament immediately investigate the specific causes of rural poverty before any policy is proposed to address it",
+      "frames the entire proposal as a response to a real, visible crisis, so that whatever solution follows will be measured against this vivid scene of need",
+      "summarizes, in full and exhaustive legal detail, the specific poor-relief statutes and workhouse regulations already in effect across the kingdom at that time",
+      "apologizes in advance for the considerable length of the pamphlet that is about to follow this opening description"
+    ],
+    "answer": "B",
+    "hints": [
+      "An introduction's job is to frame how everything that follows should be read.",
+      "Ask what problem this opening scene establishes before any proposal is offered."
+    ]
+  },
+  {
+    "id": "apenglang.diction-and-tone.mcq.04",
+    "loId": "apenglang.diction-and-tone",
+    "cedCode": "AP-ENGLANG-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass calls the celebration \"a thin veil to cover up crimes which would disgrace a nation of savages.\" Word choices like \"crimes\" and \"disgrace\" cluster together to build which tone?",
+    "choices": [
+      "a wistful, nostalgic tone that longs for a version of the holiday that no longer exists",
+      "an admiring tone that praises the nation's founders for their foresight",
+      "a neutral, journalistic tone that simply reports the day's events without judgment",
+      "a scathing, accusatory tone that frames the celebration itself as criminal concealment"
+    ],
+    "answer": "D",
+    "hints": [
+      "'Crimes' and 'disgrace' both belong to the vocabulary of wrongdoing, not celebration.",
+      "Ask what kind of speaker reaches for these particular words to describe a national holiday."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-line-of-reasoning.mcq.03",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.swift-modest-proposal.v1",
+    "problemText": "Swift first names poor children as \"a very great additional grievance,\" and later claims his proposal will make them \"a common good to the publick.\" How do these two moments connect in Swift's line of reasoning?",
+    "choices": [
+      "The first names children as a burden so that the second can resolve that named burden, making the proposal appear to answer a problem Swift has already established",
+      "The first and second are unrelated observations about two wholly separate topics raised elsewhere in the pamphlet",
+      "The first restates a claim already fully proven earlier in the pamphlet, and the second merely repeats that same claim",
+      "The first flatly contradicts the second in a way that reveals an unresolved inconsistency running through the whole of Swift's entire argument here"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what problem the first phrase sets up, and what the second phrase claims to solve.",
+      "A line of reasoning has each stage depend on the one before it — check what would be lost if the first phrase were cut."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-line-of-reasoning.mcq.04",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry first states \"we have done everything that could be done to avert the storm\" and later asks, \"Shall we gather strength by irresolution and inaction?\" How do these two moments connect in Henry's line of reasoning?",
+    "choices": [
+      "The first and second address two wholly unrelated audiences seated within the very same assembly hall",
+      "The first restates a fact already proven earlier, and the second merely repeats that same fact in slightly different words",
+      "The first establishes that peaceful measures are exhausted, so the second question forecloses delay as a remaining option, pushing the assembly toward action",
+      "The first flatly contradicts the second in Henry's own speech here, so the two statements cancel out entirely and expose an inconsistency in his line of reasoning"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what options remain once the first statement is accepted as true.",
+      "A line of reasoning means the second stage depends on the first — check what the question forecloses."
+    ]
   }
 ]

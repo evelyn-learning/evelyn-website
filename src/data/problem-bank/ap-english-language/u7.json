@@ -169,5 +169,138 @@
       "A shocking or novel idea alone isn't sophistication — the credit-earning move is showing the choice sustained and controlled across multiple moments.",
       "Watch for a choice that swaps in fancy diction or balance/fairness as if either were the same thing as stylistic control — neither is what makes a risk 'controlled.'"
     ]
+  },
+  {
+    "id": "apenglang.nuance-qualification-concession.mcq.04",
+    "loId": "apenglang.nuance-qualification-concession",
+    "cedCode": "AP-ENGLANG-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A draft claims: \"This nonprofit's mentorship program has completely solved the dropout problem at every school it serves.\" Which revision both scopes the claim to what the evidence supports AND makes a genuine concession about the claim's own limits?",
+    "choices": [
+      "The program has helped some students in some of the participating schools, though results vary depending on many different individual and local factors",
+      "The program has cut dropout rates by double digits at most participating schools, though a handful of rural sites with high mentor turnover have seen little change",
+      "While the program clearly works overall, critics still argue its funding model is unsustainable for the district over the long run",
+      "The program is clearly the single most effective dropout intervention any school district has implemented in at least the past decade or more"
+    ],
+    "answer": "B",
+    "hints": [
+      "A genuine concession names a real limit in the writer's OWN claim, not an opponent's separate objection.",
+      "The correct choice should still say something specific enough to disagree with, unlike a vague 'results vary.'"
+    ]
+  },
+  {
+    "id": "apenglang.complex-reasoning.mcq.03",
+    "loId": "apenglang.complex-reasoning",
+    "cedCode": "AP-ENGLANG-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A draft reasons: \"The city repaved the road near the new development, so the city clearly favors that developer.\" Which revision adds genuine complexity to this reasoning instead of just restating the obvious first link?",
+    "choices": [
+      "The city repaved the road, which simply shows that the city made some kind of routine decision about which roads to prioritize resurfacing during this year's particular budget cycle",
+      "In today's complicated municipal landscape, road-repair decisions generally reflect numerous multifaceted budgetary and political pressures at once",
+      "The city probably repaved the road for some reason of its own, though it's really impossible to know for certain what any city government is thinking",
+      "Repaving that specific stretch suggests the city is betting on the development's success to justify the cost, a wager that ties the city's own credibility to the project's outcome"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether the reasoning goes one step past the first plausible link, to a further consequence a less careful reader would miss.",
+      "A restatement in different words isn't complexity, and neither is retreating into 'we can't really know.'"
+    ]
+  },
+  {
+    "id": "apenglang.complex-reasoning.mcq.04",
+    "loId": "apenglang.complex-reasoning",
+    "cedCode": "AP-ENGLANG-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft reasons: \"The airline offered refunds after the flight cancellations went viral online, so the airline clearly values its customers.\" Which revision traces the implication a further step, rather than stopping at the first plausible link?",
+    "choices": [
+      "The refunds, offered only once the story went viral, suggest the airline's response tracks its exposure to public backlash as much as genuine concern for customers",
+      "The refund proves beyond any doubt whatsoever that the airline deeply and sincerely values every single one of its paying customers",
+      "Offering refunds after widely publicized cancellations has become a fairly common part of airline crisis communication in general across the industry",
+      "The refund might mean the airline genuinely cares about its customers, or it might not; it's honestly impossible to say for certain either way"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the choice that names a tension the first-level claim creates, rather than asserting or retreating from it.",
+      "A generic fact about how airlines usually behave doesn't trace what THIS refund implies."
+    ]
+  },
+  {
+    "id": "apenglang.situating-in-context.mcq.03",
+    "loId": "apenglang.situating-in-context",
+    "cedCode": "AP-ENGLANG-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's essay argues: \"The city should convert the old rail yard into a public park.\" Which closing sentence best situates this specific proposal in a genuine broader context, rather than a generic gesture that could close any essay?",
+    "choices": [
+      "In the end, this issue shows that public spaces are important and affect essentially everyone living in the surrounding community",
+      "This proposal, like all human endeavors across the entire span of recorded history, reflects our species' age-old, eternal struggle between industry and untouched nature itself",
+      "This rail yard has sat fenced off since the freight line closed in the 1980s — converting it would finally finish a conversation this neighborhood started forty years ago",
+      "There are many differing perspectives on public parks, and reasonable people can disagree about how best to use limited city land"
+    ],
+    "answer": "C",
+    "hints": [
+      "Try the untransferable test: could the sentence close an essay on a totally different topic without changing a word?",
+      "The strongest choice names a specific, dated local history the proposal actually continues."
+    ]
+  },
+  {
+    "id": "apenglang.situating-in-context.mcq.04",
+    "loId": "apenglang.situating-in-context",
+    "cedCode": "AP-ENGLANG-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An essay claims: \"The company's decision to relocate its headquarters overseas, framed publicly as a growth strategy, reflects a narrower calculation about avoiding a pending tax increase.\" Which sentence best situates this specific claim within a genuine broader context?",
+    "choices": [
+      "This shows that businesses often make complicated internal decisions that ultimately speak to readers everywhere, in one way or another",
+      "This relocation extends a pattern the company has followed twice before, announcing a strategic rationale within weeks of a pending state tax change",
+      "Some observers might interpret the move as purely strategic, while others might see it quite differently, and both readings arguably have merit",
+      "Growth, taxation, and corporate strategy are universal themes found in nearly every industry's recorded history, across every era and region"
+    ],
+    "answer": "B",
+    "hints": [
+      "A real broader-context sentence names a specific pattern inside this company's own history, not universal business themes.",
+      "Watch for a choice that just gestures at 'different readings are possible' without connecting to any larger frame."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-risk.mcq.03",
+    "loId": "apenglang.rhetorical-risk",
+    "cedCode": "AP-ENGLANG-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writer is drafting a column criticizing a city council's habit of tabling controversial votes and is choosing how to close it. Which choice represents an effective, controlled rhetorical risk rather than an unclear or overwrought one?",
+    "choices": [
+      "Close with an escalating string of exclamation points demanding, over and over, that the council 'act now, act now, ACT NOW!!!' immediately",
+      "Close with a plain, literal sentence simply stating that the council should get around to voting on the measure fairly soon",
+      "Shift tone three separate times within one paragraph — sarcastic, then furious, then formally academic — in an attempt to cover every possible reader reaction",
+      "Close by returning, without comment, to one earlier image — the council's gavel, unused for months, gathering dust — and letting the silence make the point"
+    ],
+    "answer": "D",
+    "hints": [
+      "A controlled risk commits to one image or voice and trusts the reader to draw the conclusion.",
+      "One choice isn't risky at all, and another breaks its own tone three times — neither is a controlled risk."
+    ]
+  },
+  {
+    "id": "apenglang.rhetorical-risk.mcq.04",
+    "loId": "apenglang.rhetorical-risk",
+    "cedCode": "AP-ENGLANG-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph analyzes a speech that compares a company's layoffs to a captain ordering passengers overboard to keep a ship afloat — an image sustained across two full paragraphs without ever breaking into literal statement. Which claim about this stylistic choice best identifies it as an effective, controlled rhetorical risk?",
+    "choices": [
+      "The metaphor is a controlled risk because the speaker sustains the shipwreck imagery across both paragraphs, so the comparison accumulates weight instead of reading as one clever aside",
+      "The metaphor is risky simply because comparing corporate layoffs to a shipwreck is such an unusual, wildly creative idea that most professional speakers would rarely ever think to reach for it",
+      "The metaphor works mainly because it relies on sophisticated, elevated vocabulary that makes the whole speech sound more intelligent to an audience",
+      "The metaphor is effective mainly because it presents both sides of the layoff decision fairly before reaching some kind of balanced conclusion"
+    ],
+    "answer": "A",
+    "hints": [
+      "A shocking or novel idea alone isn't sophistication — the credit-earning move is sustaining and controlling it.",
+      "Watch for a choice that swaps in fancy diction or fairness as if either were the same as stylistic control."
+    ]
   }
 ]

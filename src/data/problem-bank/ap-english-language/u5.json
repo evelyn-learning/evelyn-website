@@ -169,5 +169,138 @@
       "Directness is not the same as persuasiveness — ask what the audience needs to hear before they'll accept the conclusion.",
       "A claim placed after the evidence and the rebuttal lands as earned; the same claim placed first lands as an unsupported demand."
     ]
+  },
+  {
+    "id": "apenglang.reasoning-and-paragraphing.mcq.03",
+    "loId": "apenglang.reasoning-and-paragraphing",
+    "cedCode": "AP-ENGLANG-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's body paragraph opens with the sentence \"This paragraph will talk about the school's new recycling program.\" Which revision best turns this into an effective topic sentence?",
+    "choices": [
+      "This paragraph will talk about the school's new recycling program, which started sometime earlier this fall semester",
+      "The recycling program succeeds only where hallway bins are placed within sight of a trash can, not tucked in a back corner",
+      "Recycling programs of various kinds have become fairly common in schools all across the country in recent years",
+      "Further specific details about the recycling program's overall rollout process will be provided later in the paragraph that follows this one"
+    ],
+    "answer": "B",
+    "hints": [
+      "A topic sentence must make a claim the paragraph goes on to support, not just name a subject.",
+      "Ask whether the sentence asserts something specific a reader could disagree with."
+    ]
+  },
+  {
+    "id": "apenglang.reasoning-and-paragraphing.mcq.04",
+    "loId": "apenglang.reasoning-and-paragraphing",
+    "cedCode": "AP-ENGLANG-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph opens with the topic sentence \"The school's tutoring program should be expanded to include weekend hours,\" but the paragraph then also argues, linked by \"Also,\" that the library needs updated computers. Which revision best fixes this paragraph's structure?",
+    "choices": [
+      "Replace \"Also\" with \"Moreover\" throughout the paragraph so the two separate ideas connect together a little bit more smoothly than before",
+      "Delete the topic sentence about tutoring altogether so the paragraph can focus only on the library's computers",
+      "Add one more sentence at the very end introducing a third, related complaint about the library's operating hours",
+      "Split the paragraph into two separate paragraphs, each opening with its own topic sentence — one on tutoring hours, one on library computers"
+    ],
+    "answer": "D",
+    "hints": [
+      "A transition word can make two sentences read smoothly without making them the same idea.",
+      "Ask whether the paragraph's job can be stated in one sentence without joining two unrelated claims with 'and.'"
+    ]
+  },
+  {
+    "id": "apenglang.unity-and-coherence.mcq.04",
+    "loId": "apenglang.unity-and-coherence",
+    "cedCode": "AP-ENGLANG-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph argues that the school's new recycling program has reduced hallway litter. Its four sentences are: (1) \"Since bins were added outside the cafeteria, hallway litter has visibly decreased.\" (2) \"Custodial staff report emptying recycling bins twice as often as before.\" (3) \"Recycling has been a topic of national environmental discussion for decades.\" (4) \"Even students who used to toss wrappers on the floor now walk the extra few steps to a bin.\" Which sentence should be cut to preserve the paragraph's unity?",
+    "choices": [
+      "\"Recycling has been a topic of national environmental discussion for decades.\"",
+      "\"Since bins were added outside the cafeteria, hallway litter has visibly decreased.\"",
+      "\"Custodial staff report emptying recycling bins twice as often as before.\"",
+      "\"Even students who used to toss wrappers on the floor now walk the extra few steps to a bin.\""
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace each sentence back to the paragraph's specific claim about hallway litter at this school.",
+      "A true, general fact about a topic can still be a digression if it doesn't support the paragraph's specific claim."
+    ]
+  },
+  {
+    "id": "apenglang.transitions-cohesion.mcq.03",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Draft: \"The museum's new wing cost twice its original budget. ___, attendance has risen enough to cover the difference within two years.\" Which transition best fills the blank, given that the outcome offsets what the first sentence would lead a reader to expect?",
+    "choices": [
+      "As a result — signals that rising attendance follows naturally from the cost overrun",
+      "For example — signals that the second sentence simply illustrates the first with one specific, concrete instance of it",
+      "Fortunately — signals a turn from a worrying fact toward a reassuring outcome that offsets it",
+      "Similarly — signals that the two sentences describe comparable situations"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what relationship actually holds between a cost overrun and rising attendance covering it.",
+      "A transition should announce the logical relationship that's really there, not just any smooth-sounding connector."
+    ]
+  },
+  {
+    "id": "apenglang.transitions-cohesion.mcq.04",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Draft: \"The new stadium's construction displaced twelve small businesses from the surrounding block. ___, the city's economic report credits the stadium with a net increase in area jobs.\" Which transition best fills the blank, given the tension between a concrete local cost and an aggregated citywide benefit?",
+    "choices": [
+      "Yet — signals a contrast between the specific, visible cost to those twelve businesses and a broader, aggregated gain that doesn't erase it",
+      "Therefore — signals that the reported job increase is a direct result of the twelve businesses being displaced",
+      "In addition — signals that the two facts simply sit alongside each other with no real tension between them",
+      "For instance — signals that the citywide job increase is simply one specific example drawn from the twelve businesses' own displacement"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether a citywide net gain actually cancels out a specific, local cost, or merely sits alongside it.",
+      "Look for the transition that names tension rather than smooth agreement or plain causation."
+    ]
+  },
+  {
+    "id": "apenglang.organizing-for-effect.mcq.03",
+    "loId": "apenglang.organizing-for-effect",
+    "cedCode": "AP-ENGLANG-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student drafting an essay arguing for expanded school counseling services has three points ready: (1) \"Students report long waits for an appointment.\" (2) \"The program has already secured a grant to hire two more counselors.\" (3) \"Counseling has been shown to improve attendance among students who use it regularly.\" Which order, presented as topic sentences in sequence, builds most effectively toward a climax that leaves no easy objection to expansion?",
+    "choices": [
+      "(2), then (1), and only then (3)",
+      "(1), then (3), then (2)",
+      "(3), then (2), and only then (1)",
+      "(2), then (3), and only then (1)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with the problem, then the proven benefit, then remove the cost objection last.",
+      "Ask which order leaves the reader with nothing left to object to by the final point."
+    ]
+  },
+  {
+    "id": "apenglang.organizing-for-effect.mcq.04",
+    "loId": "apenglang.organizing-for-effect",
+    "cedCode": "AP-ENGLANG-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student drafts a persuasive essay's strongest point — \"the program has already secured a grant to hire two more counselors, so expansion costs the district nothing extra\" — and considers placing it first, reasoning that the easiest point to accept should come first to win the reader over immediately. Which revision of this organizing decision is best supported by the principle that order itself produces a rhetorical effect?",
+    "choices": [
+      "Keep the point first in the essay, since the easiest point for a reader to accept is usually the single most persuasive one to lead with in any argument",
+      "Repeat the point at both the very beginning and the very end of the essay so that no reader could possibly miss it",
+      "Remove the point from the essay altogether and simply let the grant's existence stay implied throughout the rest of the piece",
+      "Move the point to the end, after establishing the need and the proven benefit, so removing the last objection lands as the decisive stroke"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what the reader needs to be convinced of before a 'no extra cost' point can land as decisive rather than incidental.",
+      "A point placed after the case for need and benefit lands differently than the same point placed first."
+    ]
   }
 ]

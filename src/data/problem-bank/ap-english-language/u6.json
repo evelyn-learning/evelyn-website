@@ -198,5 +198,125 @@
       "List the four verbs in order: petitioned, remonstrated, supplicated, prostrated. Do they get calmer or more desperate?",
       "This LO asks you to integrate syntax (the repeated \"we have\" clauses) and diction (the verb choices) into one combined effect — what single effect do they build together?"
     ]
+  },
+  {
+    "id": "apenglang.syntax-for-effect.mcq.04",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.henry-give-me-liberty.v1",
+    "problemText": "Henry poses a rapid sequence of short questions — \"when shall we be stronger?... Will it be the next week, or the next year?\" — before finally answering with one declarative sentence: \"The battle, sir, is not to the strong alone; it is to the vigilant, the active, the brave.\" This shift from short interrogative syntax to a single confident declarative primarily —",
+    "choices": [
+      "converts the mounting urgency built by the unanswered questions into a settled, actionable claim, so the declarative sentence lands as the point the questions were driving toward",
+      "signals that Henry has run out of prepared material at this point in the speech and is filling time before the vote is finally called",
+      "weakens the argument overall by abruptly switching from a recognizable rhetorical technique to plain, unadorned prose right at the close",
+      "shows that Henry privately doubts his own answer to the question quite a bit, since he raises so many questions before finally responding to any of them at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count how many unanswered questions pile up before the single declarative sentence arrives.",
+      "Ask what effect that pile-up of unresolved questions has on how the final, resolved sentence lands."
+    ]
+  },
+  {
+    "id": "apenglang.diction-connotation-tone.mcq.04",
+    "loId": "apenglang.diction-connotation-tone",
+    "cedCode": "AP-ENGLANG-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass describes the nation's continued embrace of slavery, even as it celebrates independence, as a \"revolting barbarity.\" This diction primarily creates a tone of —",
+    "choices": [
+      "gentle amusement at what reads as an old-fashioned national custom worth smiling about",
+      "quiet, understated gratitude for whatever progress the nation has already managed to make",
+      "moral revulsion, casting the practice as savage rather than merely regrettable",
+      "cautious, measured optimism about reforms that are already said to be underway somewhere"
+    ],
+    "answer": "C",
+    "hints": [
+      "\"Revolting\" and \"barbarity\" both signal disgust, not mild disapproval.",
+      "Ask how strong a reaction these two words, combined, are built to provoke."
+    ]
+  },
+  {
+    "id": "apenglang.figurative-language-schemes.mcq.04",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass declares, \"It is not light that is needed, but fire; it is not the gentle shower, but thunder.\" This pair of contrasting images —",
+    "choices": [
+      "offers a simile comparing Douglass's own speaking style to a natural weather event he witnessed firsthand",
+      "builds antithesis through two metaphors, rejecting gentle persuasion in favor of forceful, urgent action",
+      "functions as a rhetorical question, leaving genuinely open whether light or fire is more effective",
+      "relies on understatement to downplay how urgently Douglass believes change is needed"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the paired structure: 'not X, but Y' repeated twice.",
+      "Ask what each pair (light/fire, shower/thunder) has in common — mildness versus force."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-style.mcq.02",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln pairs the balanced tricolon \"of the people, by the people, for the people\" with a short, resolute final clause, \"shall not perish from the earth,\" after a much longer preceding sentence. A full style analysis would note Lincoln combines parallel structure with a shift in sentence length. Together, these choices integrate to —",
+    "choices": [
+      "combine the tricolon with a hesitant, uncertain final clause that quietly undercuts the speech's overall confidence at its close",
+      "rely mainly on figurative language, since the tricolon and the final clause are both simply examples of the same extended metaphor",
+      "function mainly as a memory aid for the audience, since parallel structure was traditionally used in oratory only to help listeners remember the lines more easily afterward",
+      "combine the balanced tricolon defining government with a firm, unadorned final clause, so structure and diction jointly deliver a resolute closing claim"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice both the grammatical parallelism (tricolon) and the sentence-length shift working at the same moment.",
+      "Ask what effect naming government three ways, then closing on one short clause, has together — not separately."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-style.mcq.03",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.lincoln-gettysburg.v1",
+    "problemText": "Lincoln pairs anaphoric negation (\"we can not... we can not... we can not\") with diction that escalates in solemnity (\"dedicate... consecrate... hallow\"). A full style analysis would note both choices are doing work at the same moment. Together, they integrate to —",
+    "choices": [
+      "combine repeated negation with diction that escalates in solemnity, transferring the power to sanctify from the living to the dead as the words themselves grow more sacred",
+      "rely on the negation alone, since the diction choices here are functionally interchangeable synonyms carrying no separate escalation of their own",
+      "undercut the moment's solemnity somewhat, since repeating \"we can not\" three times in a row reads as a comic technique within formal oratory",
+      "function mainly to fill space, since ceremonial speeches of this particular kind conventionally pad their middle section out with repeated phrasing of some sort or another"
+    ],
+    "answer": "A",
+    "hints": [
+      "List the three verbs in order — dedicate, consecrate, hallow — and ask whether they intensify or stay flat.",
+      "Ask what the repeated 'we can not' denies the living, and who or what gains that power instead."
+    ]
+  },
+  {
+    "id": "apenglang.analyzing-style.mcq.04",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.douglass-fourth-of-july.v1",
+    "problemText": "Douglass sharply shortens his syntax with the exclamation \"I am not included within the pale of this glorious anniversary!\" right after several longer, flowing sentences, while also choosing diction (\"glorious\") that ironically clashes with his own stated exclusion. A full style analysis would connect these two choices. Together, they integrate to —",
+    "choices": [
+      "combine a lengthening sentence with diction that sincerely praises the holiday throughout, reinforcing rather than undercutting the audience's own patriotic pride",
+      "rely on figurative language alone here, since the syntax shift at this exact moment carries no separate rhetorical weight of its own",
+      "combine an abrupt drop in sentence length with diction that turns \"glorious\" ironic in his mouth, so form and word choice together isolate his exclusion as the moment's sharpest point",
+      "function mainly as a transitional device, smoothing the passage from one topic to a wholly unrelated topic elsewhere in the speech"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare this sentence's length to the longer sentences right before it.",
+      "Ask whether Douglass could mean \"glorious\" sincerely here, given what the rest of the sentence says."
+    ]
   }
 ]

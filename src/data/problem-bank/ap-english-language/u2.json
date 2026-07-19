@@ -188,5 +188,195 @@
       "A strong conclusion projects the claim's significance forward instead of repeating the thesis in the same words.",
       "Test: if you deleted the conclusion, would the essay feel unfinished, or would nothing be lost?"
     ]
+  },
+  {
+    "id": "apenglang.building-an-argument.mcq.03",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Draft position: \"Social media has changed the way teenagers interact with each other, and this shift deserves closer examination by researchers and educators alike.\" Which revision best sharpens this into a defensible, specific position a reader could actually push back against?",
+    "choices": [
+      "Schools should require a semester-long digital-literacy course because teenagers report struggling to recognize manipulative design patterns in the apps they use daily",
+      "Social media is a defining and pervasive feature of teenage life today, for better and for worse, in ways that likely differ considerably from one platform or community to the next",
+      "This paper will examine several distinct ways in which social media might be reshaping teenage social interaction, friendship formation, and self-image across different contexts",
+      "Many researchers, educators, and parent advocacy groups have expressed some degree of interest in formally studying how social media affects teenagers' daily behavior"
+    ],
+    "answer": "A",
+    "hints": [
+      "A defensible position commits to a specific proposal, not a general observation that something 'deserves examination.'",
+      "Ask which option a reasonable school board member could actually vote against."
+    ]
+  },
+  {
+    "id": "apenglang.building-an-argument.mcq.04",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Draft position: \"The city's noise ordinance limiting outdoor events after 10 p.m. has led to disagreement between residents and nightlife business owners.\" Which revision most sharpens this into the writer's OWN defensible position, rather than a description of the dispute itself?",
+    "choices": [
+      "The city's noise ordinance has led to disagreement between residents who want quiet nights and business owners who rely on late revenue, and both sides raise concerns worth taking seriously",
+      "Whether the city's noise ordinance is fair depends heavily on which neighborhood a given resident happens to live closest to",
+      "The city should replace its blanket 10 p.m. cutoff with a sliding curfew tied to each block's own measured noise levels, collected by the city's existing sensor network",
+      "The noise ordinance debate raises broader questions about how growing cities balance residential comfort against nightlife-driven economic vitality"
+    ],
+    "answer": "C",
+    "hints": [
+      "Naming that two sides disagree, or that fairness 'depends,' is not the same as the writer taking a position.",
+      "Look for the option that commits to a specific policy change the writer is arguing for."
+    ]
+  },
+  {
+    "id": "apenglang.selecting-evidence.mcq.03",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"The city should install more crosswalk signals near the elementary school.\" Draft paragraph: \"Crosswalks are important. Kids need to get to school safely. Many people think safety matters.\" Which revision adds the most relevant, sufficient evidence to support the claim?",
+    "choices": [
+      "Crosswalk signals of one form or another have existed in American cities for well over a century now",
+      "A city traffic study recorded fourteen near-miss incidents at the school's unsignaled crossing in a single semester",
+      "Some neighborhoods happen to have more crosswalks installed than others depending on their overall physical size",
+      "Most drivers say they generally try their best to watch out for pedestrians whenever possible"
+    ],
+    "answer": "B",
+    "hints": [
+      "Relevant evidence bears on the specific claim (this school's crossing), not the general history of crosswalks.",
+      "Look for a concrete, measurable finding rather than a vague impression of how people 'try' to behave."
+    ]
+  },
+  {
+    "id": "apenglang.selecting-evidence.mcq.04",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"The library's new noise-free study room has improved students' ability to concentrate.\" Four possible sentences are under consideration for the evidence paragraph. Which one is both relevant to the claim AND sufficient on its own to support it, rather than merely on-topic?",
+    "choices": [
+      "A single student mentioned in a brief hallway conversation, in passing, that the new room \"seemed pretty quiet\" to them",
+      "The room's construction was funded through a combination of PTA fundraising drives and a competitive state library grant",
+      "The room includes four enclosed study carrels, soundproofed walls, and seating for up to twelve students at a time",
+      "A schoolwide survey of every enrolled student found their average self-reported focus score rose from 5.8 to 7.4 after the room opened"
+    ],
+    "answer": "D",
+    "hints": [
+      "Funding source and room dimensions are true facts about the room, but neither speaks to concentration.",
+      "A single overheard comment is relevant but too thin to carry a claim alone — compare it to a measured, schoolwide result."
+    ]
+  },
+  {
+    "id": "apenglang.line-of-reasoning-argument.mcq.03",
+    "loId": "apenglang.line-of-reasoning-argument",
+    "cedCode": "AP-ENGLANG-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An essay argues cities should invest in urban tree planting. Three body-paragraph points are ready: (1) trees reduce summer temperatures in paved areas, (2) lower temperatures cut residents' summer cooling costs, (3) the planting program's cost is manageable within existing budgets. Which revision states these as a coherent line of reasoning rather than a list of topics?",
+    "choices": [
+      "This essay will discuss temperature, then cost, then energy bills, in an order that could easily be rearranged without changing anything about the essay's overall meaning or its underlying persuasive force",
+      "Cities should plant trees because trees are about temperature, and trees are also about cost, and trees are also about energy in some general sense",
+      "Because trees measurably lower pavement temperatures, and that cooling effect directly reduces nearby residents' summer energy bills, cities can afford to expand tree planting",
+      "Urban tree planting involves temperature considerations, cost considerations, and energy considerations, each one worth exploring separately in its own right"
+    ],
+    "answer": "C",
+    "hints": [
+      "A line of reasoning shows one point building on the one before it, not three topics named side by side.",
+      "Apply the swap test: could these points trade places with nothing lost? If so, it's a list, not a reasoned sequence."
+    ]
+  },
+  {
+    "id": "apenglang.line-of-reasoning-argument.mcq.04",
+    "loId": "apenglang.line-of-reasoning-argument",
+    "cedCode": "AP-ENGLANG-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student explains an essay's structure this way: \"First I cover temperature, then energy costs, then program cost, because that's simply the order the notes happened to be arranged in.\" Which revision most improves this into an actual statement of line of reasoning rather than a topic list?",
+    "choices": [
+      "Establishing that trees cool pavement first gives the energy-savings claim a mechanism to point to, and only then does program cost answer the objection either point might raise on its own",
+      "First I cover temperature, then energy costs, then program cost, and each of the three parts matters about equally to the overall persuasiveness of the finished essay",
+      "My essay is organized into three separate parts — a temperature part, an energy part, and a cost part — arranged in a logical and sensible order",
+      "First I cover temperature, then energy costs, then program cost, because that's simply the order the notes happened to be arranged in when I first drafted them"
+    ],
+    "answer": "A",
+    "hints": [
+      "Naming an order as 'logical' without explaining why one point depends on the last is still a topic list.",
+      "Look for the option that explains WHY the second point needs the first, and what the third point is answering."
+    ]
+  },
+  {
+    "id": "apenglang.counterargument-rebuttal.mcq.03",
+    "loId": "apenglang.counterargument-rebuttal",
+    "cedCode": "AP-ENGLANG-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Draft paragraph: \"Some people might not like the new recycling fee, but they're wrong to complain since the city needs the revenue.\" Which revision best names and concedes a real objection, then rebuts it, instead of dismissing an unnamed one?",
+    "choices": [
+      "Critics of the fee simply don't understand how municipal budgets and public works financing actually work in practice",
+      "A few residents dislike the fee, but most residents across the city support it overall, so their scattered complaints probably don't carry enough weight to justify reconsidering the policy at this point",
+      "The recycling fee has been debated at open city council meetings for several months now without full resolution",
+      "Critics raise a fair concern: the flat fee falls hardest on large families with more household waste; the city addresses this by discounting the fee per registered dependent"
+    ],
+    "answer": "D",
+    "hints": [
+      "A real counterargument names the strongest specific objection, not a vague dismissal of 'people who complain.'",
+      "Look for the option that grants a true cost is real before explaining how the policy still handles it."
+    ]
+  },
+  {
+    "id": "apenglang.counterargument-rebuttal.mcq.04",
+    "loId": "apenglang.counterargument-rebuttal",
+    "cedCode": "AP-ENGLANG-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Draft paragraph addressing the objection that a proposed school dress code limits student self-expression: \"That's true, uniforms really would limit how students express themselves, so maybe requiring uniforms isn't worth it after all.\" Which revision best concedes the true cost and then rebuts it, without abandoning the original claim?",
+    "choices": [
+      "Self-expression through clothing matters a great deal to teenagers, so this really isn't something schools should be interfering with at all",
+      "It's true uniforms limit clothing choices; the policy still reduces the visible economic gap between students, a benefit the school judges worth that cost",
+      "That's a fair and reasonable point, and it might honestly be reason enough to just drop the uniform proposal altogether",
+      "People who support uniform policies are usually just uncomfortable with how teenagers today choose to dress themselves"
+    ],
+    "answer": "B",
+    "hints": [
+      "The draft concedes the cost but then abandons the claim — a rebuttal has to answer the objection, not surrender to it.",
+      "Look for the option that grants the real cost AND names a specific reason the position still holds."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions.mcq.03",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Draft opening for an essay arguing a city should fund a youth job-training program: \"This essay will discuss the pros and cons of funding a youth job-training program, a complex issue this city has faced for some time.\" Which revision most effectively opens the argument by establishing concrete stakes before stating the claim?",
+    "choices": [
+      "Every summer, the unemployment office sees the same graduating seniors return in September, having spent three months applying to jobs that require experience they were never given a chance to build",
+      "Youth unemployment is a significant and pressing issue that has affected communities across the entire country for a great many years now",
+      "Since the earliest labor markets existed many centuries ago, young workers have struggled to gain their first foothold in the workforce",
+      "This essay will discuss, in a balanced and evenhanded way, several considerations relevant to the city's ongoing job-training funding decision, weighing near-term costs against the community's longer-term benefit"
+    ],
+    "answer": "A",
+    "hints": [
+      "A strong opening earns the claim with a concrete, specific scene — not a broad statement about the issue's importance.",
+      "Avoid the 'dawn of time' opening and the sentence that just announces the essay's plan."
+    ]
+  },
+  {
+    "id": "apenglang.intros-conclusions.mcq.04",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Draft conclusion: \"In conclusion, this essay has argued that the city should fund the youth job-training program for the reasons stated above, and hopefully readers now agree with this position.\" Which revision most effectively closes the argument by answering \"so what\" instead of restating the thesis?",
+    "choices": [
+      "To summarize once more, funding the program is something the city should clearly do given everything already discussed in detail above",
+      "As shown throughout this essay, youth job-training matters a great deal, and the reasons given already make the case sufficiently clear",
+      "A city that trains its own graduates for its own open jobs stops importing workers it could have grown instead",
+      "In closing, this essay has shown that job training is an important issue and that the program deserves the city's continued funding"
+    ],
+    "answer": "C",
+    "hints": [
+      "A strong conclusion projects the claim's significance forward instead of repeating the thesis in the same words.",
+      "Test: if you deleted the conclusion, would the essay feel unfinished, or would nothing be lost?"
+    ]
   }
 ]

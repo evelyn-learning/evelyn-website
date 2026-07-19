@@ -226,5 +226,119 @@
       "Real sophistication names a SPECIFIC boundary, mechanism, or stake tied to this claim — ask whether the sentence could be pasted into an essay on a totally different topic without anyone noticing.",
       "Fancier vocabulary or a generic 'shows the complexity' phrase is the classic trap the rubric does NOT reward."
     ]
+  },
+  {
+    "id": "apenglang.timed-writing-strategy.mcq.02",
+    "loId": "apenglang.timed-writing-strategy",
+    "cedCode": "AP-ENGLANG-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt reads: \"Read the sources below on urban composting programs, then write an essay that develops your own position on whether cities should mandate composting, using the sources as support.\" Within the first minute of a timed planning window, which task-verb restatement most accurately captures what the prompt requires?",
+    "choices": [
+      "Summarize what each of the three sources says about composting, in the same order they were given in the prompt",
+      "Take and defend my own position on whether composting should be mandated, using the sources as evidence",
+      "Explain the general history of composting programs in major cities across the country over the past few decades",
+      "List the specific benefits and drawbacks of composting mentioned across all of the sources, in no particular order"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the prompt for its task verb — 'develops your own position' — before reading the sources closely.",
+      "Rule out any restatement that stops at reporting the sources rather than taking a stance."
+    ]
+  },
+  {
+    "id": "apenglang.timed-writing-strategy.mcq.03",
+    "loId": "apenglang.timed-writing-strategy",
+    "cedCode": "AP-ENGLANG-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "With 30 minutes remaining in a 40-minute Argument FRQ window and only a thesis and outline written so far, which use of the remaining time best reflects sound timed-writing strategy?",
+    "choices": [
+      "Spend the first ten minutes rereading the prompt over and over again to make sure the outline is exactly right before writing even a single sentence of the essay",
+      "Add a fourth body-paragraph point to the existing outline to make sure the essay covers as many angles on the topic as possible",
+      "Begin drafting the conclusion first instead, since it is usually the shortest paragraph and can therefore be finished rather quickly",
+      "Begin drafting the first body paragraph immediately, allocating roughly equal remaining time to each of the three paragraphs already outlined"
+    ],
+    "answer": "D",
+    "hints": [
+      "The outline is already done — further rereading spends planning time that should now go to drafting.",
+      "A quick, even time split across the outlined paragraphs is more reliable than adding scope this late."
+    ]
+  },
+  {
+    "id": "apenglang.timed-writing-strategy.mcq.04",
+    "loId": "apenglang.timed-writing-strategy",
+    "cedCode": "AP-ENGLANG-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "At the midpoint of the drafting window for a Rhetorical Analysis FRQ, a student has finished only one of three planned body paragraphs, and that paragraph already restates the same point twice in different words. Which adjustment best reflects the pace-check principle from timed-writing strategy?",
+    "choices": [
+      "Tighten the existing paragraph by cutting its repeated point, then move to a second paragraph with a different device, rather than adding a third point at this pace",
+      "Keep drafting exactly as originally planned, since three body paragraphs were already outlined and all three should still be attempted no matter how much time remains",
+      "Abandon the outline altogether at this point and instead write one single long paragraph that covers all three of the planned points at once",
+      "Spend the entire remaining time revising word choice in the one finished paragraph rather than starting any new paragraph at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "A pace-check at the midpoint asks whether to tighten or add scope, not whether to follow the original outline no matter what.",
+      "Two well-developed points at this pace beat three thin ones — but a paragraph that repeats itself isn't developed, it's padded."
+    ]
+  },
+  {
+    "id": "apenglang.revision-and-sophistication.mcq.02",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's flat but technically correct sentence reads: \"The speaker uses an analogy to make her point.\" Which revision best earns the sophistication point by adding a genuine, specific stake — rather than a vague, bolted-on closing line?",
+    "choices": [
+      "The speaker uses an analogy to make her point in a genuinely complex, richly multifaceted, and remarkably highly effective way throughout the entirety of her remarks",
+      "The speaker uses an analogy to make her point, which shows the impressive richness of rhetorical strategy available to speakers in general",
+      "The analogy translates an abstract funding formula into a household grocery budget, letting listeners feel a policy's unfairness they could not have grasped from raw numbers alone",
+      "The speaker uses an analogy to make her point, and this is truly an important, quite significant, and rhetorically noteworthy choice on her part"
+    ],
+    "answer": "C",
+    "hints": [
+      "Real sophistication names a specific mechanism tied to this claim — ask whether the sentence could be pasted into an essay on a different topic unnoticed.",
+      "Fancier vocabulary or a generic 'shows the richness' phrase is the classic trap the rubric does not reward."
+    ]
+  },
+  {
+    "id": "apenglang.revision-and-sophistication.mcq.03",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's flat sentence reads: \"This makes the reader see the problem differently.\" Which revision best earns the sophistication point by naming a specific mechanism, rather than restating the same vague claim in fancier words?",
+    "choices": [
+      "By shifting the metaphor from a \"battle\" to a \"marathon,\" the writer trades urgency for endurance, asking readers to commit to a longer struggle rather than brace for a short one",
+      "This makes the reader see the problem in a genuinely different, considerably deeper, and rather profound new light overall",
+      "This shows the complex, richly multifaceted nature of how readers in general tend to perceive problems of this particular kind",
+      "This makes the reader see the problem quite differently indeed overall, which is a genuinely significant and thoroughly noteworthy rhetorical achievement worth remarking upon here"
+    ],
+    "answer": "A",
+    "hints": [
+      "A flat sentence stays flat no matter how many adjectives are added to it.",
+      "Look for the option that names the specific device and the specific shift it produces."
+    ]
+  },
+  {
+    "id": "apenglang.revision-and-sophistication.mcq.04",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph includes the flat but correct sentence: \"The historian's argument relies on economic data to support her claim.\" Which revision best earns the sophistication point by adding a genuine qualification or stake, rather than a vague closing flourish?",
+    "choices": [
+      "The historian's argument relies on economic data to support her claim in a remarkably rich, multifaceted, and altogether persuasive way throughout the piece",
+      "The economic data supports the claim only for the decade it covers; extending the argument to earlier periods would require data the historian never presents, a boundary she does not acknowledge",
+      "This shows the considerable complexity and depth of historical argumentation as an academic discipline more broadly speaking",
+      "The historian's argument relies on economic data, and this is a genuinely significant and rather noteworthy methodological choice worth remarking on"
+    ],
+    "answer": "B",
+    "hints": [
+      "Real sophistication names a specific boundary the claim runs into, not just that the topic is 'complex.'",
+      "Ask whether the sentence could survive being pasted into an essay about a completely different historian's argument."
+    ]
   }
 ]

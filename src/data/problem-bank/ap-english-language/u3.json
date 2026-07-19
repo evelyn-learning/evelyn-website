@@ -188,5 +188,195 @@
       "A strong transition connects the reasoning of paragraph 2 to a new, escalating point — it does not announce which source is coming up next.",
       "Rule out the option that just restates paragraph 2's point without moving the argument forward."
     ]
+  },
+  {
+    "id": "apenglang.the-synthesis-task.mcq.03",
+    "loId": "apenglang.the-synthesis-task",
+    "cedCode": "AP-ENGLANG-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt asks students to read three sources on whether cities should subsidize electric-vehicle charging stations, then develop their own position. A student's outline opens each body paragraph with \"Source A says...,\" \"Source B says...,\" \"Source C says...,\" and never states what the student concludes from each. Which best explains why this outline will likely underperform on the synthesis task?",
+    "choices": [
+      "It cites too few sources overall, since the prompt technically allows citing more than three sources if additional supporting evidence happens to be readily available to the writer",
+      "It organizes each paragraph around reporting a source rather than around the student's own claim, leaving the student's position implicit rather than argued",
+      "It fails to include a formal citation format noting each source's original publication date and author credentials",
+      "It quotes each source too briefly throughout, reducing the overall word count of the finished essay below what graders typically expect"
+    ],
+    "answer": "B",
+    "hints": [
+      "A synthesis essay is scored on the writer's OWN argument, not on how faithfully each source got summarized.",
+      "Ask whether a reader could state the student's thesis after reading only this outline."
+    ]
+  },
+  {
+    "id": "apenglang.the-synthesis-task.mcq.04",
+    "loId": "apenglang.the-synthesis-task",
+    "cedCode": "AP-ENGLANG-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt provides sources on whether homework should be assigned over school breaks. A student drafts: \"Sources disagree on this issue, and this essay will explain both sides before concluding that reasonable people can disagree.\" Which best diagnoses the flaw in this plan, at the level of the task itself rather than mechanics?",
+    "choices": [
+      "The plan cites an even number of sources overall, and synthesis essays on this particular exam are supposedly graded down for using an even number of sources",
+      "The plan's final sentence is too short to serve as an adequate concluding paragraph on its own",
+      "The plan never signals which sources will be quoted directly versus paraphrased",
+      "The plan announces disagreement and stops there; it never commits to the student's own defensible position on the issue itself"
+    ],
+    "answer": "D",
+    "hints": [
+      "Noticing that sources disagree is not the same as arguing what that disagreement means.",
+      "Check whether the plan's closing move is a stance or just an observation about the sources."
+    ]
+  },
+  {
+    "id": "apenglang.citing-attributing-sources.mcq.03",
+    "loId": "apenglang.citing-attributing-sources",
+    "cedCode": "AP-ENGLANG-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis source is labeled: Source A, a nutritionist, writes, \"School lunch reforms cut plate waste by a third within one year.\" Which sentence correctly attributes and integrates this claim?",
+    "choices": [
+      "As Source A's nutritionist reports, school lunch reforms \"cut plate waste by a third within one year\"",
+      "\"School lunch reforms cut plate waste by a third within one year.\" This proves every school should adopt the same reforms immediately",
+      "According to Source B, school lunch reforms cut plate waste by a third within one year",
+      "School lunch reforms are well known to cut plate waste by a third, regardless of what any particular study found"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check three things: is the source named, is the quotation exact, and is it stitched into a sentence rather than standing alone?",
+      "Watch the source letter carefully — one option credits the claim to the wrong source."
+    ]
+  },
+  {
+    "id": "apenglang.citing-attributing-sources.mcq.04",
+    "loId": "apenglang.citing-attributing-sources",
+    "cedCode": "AP-ENGLANG-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's draft reads: \"Extending library hours increases teen visits. This shows library funding should prioritize evening staffing.\" The first sentence paraphrases a finding from Source C but never says so. Which revision best fixes the missing attribution while keeping the sentence properly integrated?",
+    "choices": [
+      "\"Extending library hours increases teen visits.\" This shows library funding should prioritize evening staffing",
+      "Extending library hours increases teen visits, according to research conducted at some unspecified point over the past several years by an unnamed organization",
+      "As Source C's circulation data shows, extending library hours increases teen visits — evidence that funding should prioritize evening staffing",
+      "It is often observed that extending library hours increases teen visits, though no particular source is typically named for the claim"
+    ],
+    "answer": "C",
+    "hints": [
+      "Paraphrase needs attribution too, even without quotation marks.",
+      "Look for the option that names the specific source rather than a vague 'some research' or 'it is often observed.'"
+    ]
+  },
+  {
+    "id": "apenglang.position-across-sources.mcq.03",
+    "loId": "apenglang.position-across-sources",
+    "cedCode": "AP-ENGLANG-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt provides: Source A: \"Later school start times let teenagers get more sleep.\" Source B: \"Later start times force some working parents to find new before-school childcare.\" Which thesis takes the most defensible position ACROSS both sources, rather than simply repeating one side?",
+    "choices": [
+      "Source A argues later start times help sleep, while Source B argues they burden working parents, so the two sources simply disagree with each other",
+      "Later start times should be adopted only if paired with a supervised before-school program that absorbs the childcare gap Source B identifies",
+      "Later school start times are clearly beneficial for every single student enrolled in every district, regardless of that district's particular circumstances",
+      "Whether later start times are good policy depends heavily on each individual's personal opinion about mornings and family scheduling"
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the strip test: remove the source references — does a real, arguable claim survive?",
+      "Rule out any option that only restates what one source says, or that only names the disagreement."
+    ]
+  },
+  {
+    "id": "apenglang.position-across-sources.mcq.04",
+    "loId": "apenglang.position-across-sources",
+    "cedCode": "AP-ENGLANG-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis prompt provides: Source A, a labor economist, writes that a 15-dollar minimum wage \"raises earnings for the lowest-paid workers with only modest job losses in high-cost regions.\" Source B, also a labor economist, writes that the same policy \"produces steep job losses concentrated among the least-experienced workers in lower-cost regions.\" Which thesis takes the most defensible position across both sources?",
+    "choices": [
+      "Source A supports a 15-dollar minimum wage while Source B opposes it, so the two labor economists simply and irreconcilably disagree with one another",
+      "A 15-dollar minimum wage is unambiguously good economic policy nationwide, since Source A already confirms that it raises earnings for workers",
+      "Because two credentialed economists disagree, no defensible thesis about the minimum wage can realistically be written from these two sources alone",
+      "A 15-dollar minimum wage's effect depends heavily on regional cost of living, so a single national wage floor risks helping low-cost-region workers' earnings while pricing out their least-experienced peers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice both sources are credible economists — the disagreement may reflect a difference in region rather than a simple right/wrong split.",
+      "Look for the option that reconciles the two findings by scope, rather than picking a side or giving up."
+    ]
+  },
+  {
+    "id": "apenglang.integrating-evidence.mcq.03",
+    "loId": "apenglang.integrating-evidence",
+    "cedCode": "AP-ENGLANG-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student drafts: \"Source A says composting reduces landfill waste. Source B also discusses composting, noting that many households find the process too time-consuming to maintain. Both sources talk about composting.\" Which revision replaces this book-report paragraph with one that integrates both sources as evidence for a single claim?",
+    "choices": [
+      "Composting only cuts landfill waste in practice if it stays convenient enough that busy households keep doing it — the very obstacle Source B raises",
+      "Source A discusses landfill waste, and then Source B discusses time constraints, so both angles are worth knowing",
+      "Composting is a clear net benefit for any city that adopts it widely",
+      "Composting is a complicated issue that involves both real benefits and real drawbacks for a household to weigh before deciding whether to participate consistently"
+    ],
+    "answer": "A",
+    "hints": [
+      "A book-report paragraph can have any sentence removed without weakening an argument, because it never makes one.",
+      "Look for the option that states a claim first and uses both sources' details to support that same claim."
+    ]
+  },
+  {
+    "id": "apenglang.integrating-evidence.mcq.04",
+    "loId": "apenglang.integrating-evidence",
+    "cedCode": "AP-ENGLANG-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A draft paragraph reads: \"Source A reports that a downtown bike-share program saw 40% of trips replace car trips. Source B reports that the same city's bike-lane network still has significant gaps outside downtown. The city has a bike-share program.\" Which revision most effectively integrates both sources as evidence for one claim, rather than narrating each source in turn?",
+    "choices": [
+      "Both Source A and Source B examine the same bike-share program, one from a ridership angle and the other from an infrastructure angle worth noting",
+      "The bike-share program clearly and unambiguously reduces car trips citywide, as the 40% figure from Source A already shows on its own",
+      "The bike-share program's strong 40% car-trip replacement rate is likely capped by Source B's finding that bike lanes thin out beyond downtown, leaving suburban riders without a safe route to use it",
+      "Source A's ridership finding and Source B's infrastructure finding are both relevant considerations that are worth mentioning somewhere in the essay"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the option that states one claim and uses BOTH sources' details as proof for it.",
+      "A paragraph that calls both findings merely 'relevant' or 'worth knowing' has no claim of its own yet."
+    ]
+  },
+  {
+    "id": "apenglang.synthesis-line-of-reasoning.mcq.03",
+    "loId": "apenglang.synthesis-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student's thesis is: \"A city's composting mandate succeeds only when paired with accessible, low-cost bins for renters.\" Which roadmap sentence for the essay's body paragraphs is organized by REASON rather than by source?",
+    "choices": [
+      "This essay will first examine what Source A says about the mandate, then what Source B says, and finally whatever additional detail Source C happens to add",
+      "The mandate must first overcome renters' lack of storage space, then survive the added weekly cost of a bin rental fee, and finally prove itself through early pilot-program results",
+      "Paragraph one will cover the city council's report, paragraph two the waste-hauler survey, and paragraph three the renter interviews in turn",
+      "This essay will look at several different viewpoints on the composting mandate before eventually reaching some kind of conclusion"
+    ],
+    "answer": "B",
+    "hints": [
+      "A by-reason roadmap names the logical steps of the argument, not which source appears in which paragraph.",
+      "Organizing by source tends to collapse an essay back into a source-by-source summary."
+    ]
+  },
+  {
+    "id": "apenglang.synthesis-line-of-reasoning.mcq.04",
+    "loId": "apenglang.synthesis-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A synthesis essay argues that ride-hailing apps have reshaped late-night public transit ridership. Paragraph 2 has just shown that ride-hailing apps pull riders away from late-night bus routes. Which transition sentence best opens paragraph 3 by connecting to a NEXT REASON, rather than announcing a switch to a new source?",
+    "choices": [
+      "Turning now to Source B, which surveyed transit riders directly about ride-hailing use, a different picture emerges",
+      "As shown above, ride-hailing apps pull riders away from late-night bus routes",
+      "Public transit agencies have tried many different strategies over the years to boost late-night ridership",
+      "That lost ridership compounds itself once transit agencies respond by cutting the very late-night routes riders still depend on"
+    ],
+    "answer": "D",
+    "hints": [
+      "A strong transition connects paragraph 2's point to a new, escalating point — it does not announce which source is next.",
+      "Rule out the option that just restates paragraph 2's point without moving the argument forward."
+    ]
   }
 ]
