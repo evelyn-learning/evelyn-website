@@ -435,9 +435,9 @@
     "responseFormat": "mcq",
     "problemText": "Thomas Paine's Common Sense (1776) translated Lockean natural-rights philosophy into plain, widely accessible language. This is significant chiefly because it —",
     "choices": [
-      "was the first document to use the exact phrase 'life, liberty, and the pursuit of happiness'",
-      "persuaded King George III to negotiate directly with the Continental Congress, coined instead by Jefferson in the Declaration's own preamble",
-      "replaced the Declaration of Independence as the colonies' official founding document",
+      "was the first known document anywhere to use the exact phrase 'life, liberty, and the pursuit of happiness'",
+      "persuaded King George III to negotiate directly with the Continental Congress",
+      "replaced the Declaration of Independence entirely as the colonies' single official founding document of national government",
       "reached ordinary colonists who had never read Locke directly, helping make revolutionary ideas a genuinely popular cause"
     ],
     "answer": "D",

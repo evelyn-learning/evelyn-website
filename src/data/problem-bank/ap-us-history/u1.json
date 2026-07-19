@@ -183,7 +183,7 @@
     "cedCode": "AP-USH-NAT-7",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The Eighteenth Amendment, ratified in 1920, banned the manufacture and sale of alcohol nationwide. Which outcome most directly explains why it was repealed just thirteen years later?",
+    "problemText": "The Eighteenth Amendment, ratified in 1919 and taking effect in January 1920, banned the manufacture and sale of alcohol nationwide. Which outcome most directly explains why it was repealed just thirteen years later?",
     "choices": [
       "The Supreme Court ruled the amendment unconstitutional in 1925 after several state governments challenged its enforcement powers in court",
       "European governments imposed trade sanctions in retaliation for the ban",
@@ -200,19 +200,19 @@
     "id": "apush.1920s.mcq.03",
     "loId": "apush.1920s",
     "cedCode": "AP-USH-NAT-7",
-    "difficulty": 1,
+    "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "The Harlem Renaissance, which produced writers like Langston Hughes and Zora Neale Hurston and musicians like Duke Ellington and Louis Armstrong, is best understood as —",
+    "problemText": "The Harlem Renaissance flourished in New York during the very same decade that Southern states enforced strict Jim Crow segregation and the revived Ku Klux Klan reached several million members. This timing is best explained by which development?",
     "choices": [
-      "an assertion of Black cultural and artistic identity, centered in New York, that flourished despite ongoing Jim Crow segregation",
-      "a government-funded arts initiative created to integrate Black and white neighborhoods, once federal civil rights law made segregated arts institutions illegal nationwide",
-      "a movement that emerged only after the Civil Rights Act of 1964",
-      "a rural folk-music tradition that urban Black communities rejected"
+      "the Great Migration concentrated Black artists, writers, and musicians in Northern cities where Jim Crow's legal segregation did not take the same form",
+      "Congress passed a sweeping federal law during the 1920s specifically funding and integrating Black artistic institutions nationwide",
+      "the Ku Klux Klan's decline after 1925 opened new economic opportunities for Black artists across the South",
+      "Jim Crow laws were formally struck down in New York State in the early 1920s, ending all forms of racial segregation there entirely and immediately"
     ],
     "answer": "A",
     "hints": [
-      "This movement was produced by Black artists themselves, not a federal program.",
-      "It happened decades before the Civil Rights Act — check the dates."
+      "Ask where the Great Migration (1915-  ) actually sent hundreds of thousands of Black Southerners, and why that mattered for where this cultural movement could take root.",
+      "No federal arts-funding law or New York State desegregation law of this kind existed in the 1920s — the real explanation is about population movement, not new legislation."
     ]
   },
   {
