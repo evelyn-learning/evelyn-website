@@ -55,7 +55,7 @@ import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
-import { resolveCartesiaVoice } from '@/lib/tutor/voice/cartesia-voice-registry';
+import { resolveCartesiaVoice, teachersForAccent } from '@/lib/tutor/voice/cartesia-voice-registry';
 import { accentFromTimezone } from '@/lib/tutor/voice/geo-accent';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
@@ -90,6 +90,25 @@ const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_
 const OPENER_STORE_PREFIX = 'evelyn:tutor:lastOpener:';
 // Demo teacher choice survives refreshes (see selectedTeacherId below).
 const TEACHER_STORE_KEY = 'evelyn:tutor:selectedTeacher';
+// Accent hint shown on the new per-accent persona cards (the original four
+// render unchanged). Display copy only — accent truth lives in the registry.
+const ORIGINAL_TEACHER_IDS = new Set(['ms-elena-vasquez', 'mr-dev-khanna', 'dr-amara-osei', 'sofia']);
+const ACCENT_CARD_HINTS: Record<string, string> = {
+  'mr-jake-sullivan': 'American accent',
+  'ms-priya-nair': 'Indian accent',
+  'mr-oliver-hartley': 'British accent',
+  'ms-maryam-haddad': 'Gulf accent',
+  'mr-youssef-karim': 'Gulf accent',
+  'ms-anna-weber': 'German accent',
+  'mr-lukas-brandt': 'German accent',
+  'ms-anneliese-de-vries': 'Dutch accent',
+  'ms-grace-thompson': 'Australian accent',
+  'mr-cooper-reid': 'Australian accent',
+  'ms-nadia-lim': 'Singaporean accent',
+  'mr-kiran-raj': 'Singaporean accent',
+  'ms-zanele-dlamini': 'South African accent',
+  'mr-pieter-van-der-merwe': 'South African accent',
+};
 function readStoredOpener(teacherId: string): LastOpenerRecord | undefined {
   try {
     const raw = window.localStorage.getItem(OPENER_STORE_PREFIX + teacherId);
@@ -360,8 +379,24 @@ function TutorPage() {
     if (!teacherRestoredRef.current) {
       teacherRestoredRef.current = true;
       try {
-        const stored = resolveInitialTeacherId(window.localStorage.getItem(TEACHER_STORE_KEY));
-        if (stored !== DEMO_TEACHERS[0].id) setSelectedTeacherId(stored);
+        const raw = window.localStorage.getItem(TEACHER_STORE_KEY);
+        if (raw !== null) {
+          const stored = resolveInitialTeacherId(raw);
+          if (stored !== DEMO_TEACHERS[0].id) setSelectedTeacherId(stored);
+          return;
+        }
+        // First visit (2026-07-19 accent-personas spec): geo pre-select.
+        // 50/50 gender pick from the local pair, persisted immediately so
+        // it sticks on return visits like an explicit pick. Written here
+        // (not via the effect re-run) because picking the default teacher
+        // (e.g. Elena) wouldn't change state and would never persist.
+        const accent = accentFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+        const pair = accent ? teachersForAccent(accent) : {};
+        const pick = Math.random() < 0.5 ? (pair.female ?? pair.male) : (pair.male ?? pair.female);
+        if (pick) {
+          setSelectedTeacherId(pick);
+          window.localStorage.setItem(TEACHER_STORE_KEY, pick);
+        }
         return;
       } catch {}
     }
@@ -371,6 +406,25 @@ function TutorPage() {
     () => DEMO_TEACHERS.find((t) => t.id === selectedTeacherId) ?? DEMO_TEACHERS[0],
     [selectedTeacherId],
   );
+  // Geo grid order (2026-07-19 accent-personas spec): local F/M pair first,
+  // everyone else after in roster order. Computed post-mount (state, not a
+  // render-time read) for the same SSR-hydration reason as the stored-choice
+  // restore above; the brief reorder flash on geo-matched visitors is
+  // accepted. Empty array = no geo match = today's order exactly.
+  const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const accent = accentFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+      if (!accent) return;
+      const pair = teachersForAccent(accent);
+      setGeoPairIds([pair.female, pair.male].filter((id): id is string => !!id));
+    } catch {}
+  }, []);
+  const orderedTeachers = useMemo(() => {
+    if (!geoPairIds.length) return DEMO_TEACHERS;
+    const inPair = (t: (typeof DEMO_TEACHERS)[number]) => geoPairIds.includes(t.id);
+    return [...DEMO_TEACHERS.filter(inPair), ...DEMO_TEACHERS.filter((t) => !inPair(t))];
+  }, [geoPairIds]);
   // C6: keep the opener-store key in sync for the stable capture callback
   // declared above (render-time ref assignment — the teacher can't change
   // mid-session, the picker only renders on the setup stage).
@@ -398,20 +452,11 @@ function TutorPage() {
   // cfg.teacherId override (see the hook below), and defaults to
   // DEMO_TEACHERS[0].id (Elena) otherwise.
   const cartesiaVoiceId = useMemo(
-    () =>
-      resolveCartesiaVoice({
-        teacherId: selectedTeacherId,
-        // Geo default (2026-07-19 spec): browser timezone -> accent pool.
-        // During prerender this resolves with the SERVER's timezone; that
-        // value never reaches audio — cartesiaVoiceId is only consumed
-        // inside client-side TTS fetch bodies, never rendered to DOM, so
-        // the client-side memo result is the one that matters.
-        accent: accentFromTimezone(
-          typeof Intl !== 'undefined'
-            ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : undefined,
-        ),
-      }).voiceId,
+    // Persona-native voice (2026-07-19 accent-personas spec): geo now
+    // pre-selects the TEACHER, never swaps voices — an explicit pick of
+    // any persona always sounds like that persona. resolveCartesiaVoice's
+    // accent support remains for the embed/EmbedConfig path only.
+    () => resolveCartesiaVoice({ teacherId: selectedTeacherId }).voiceId,
     [selectedTeacherId],
   );
 
@@ -2025,7 +2070,7 @@ function TutorPage() {
               <h2 className="text-lg font-semibold text-gray-900">Your teacher</h2>
               <p className="text-xs text-gray-500 mt-1 mb-4">Pick who you&apos;d like to learn with today.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Your teacher">
-                {DEMO_TEACHERS.map((t) => {
+                {orderedTeachers.map((t) => {
                   const isSel = t.id === selectedTeacherId;
                   return (
                     <button
@@ -2052,6 +2097,9 @@ function TutorPage() {
                         </span>
                       </div>
                       <p className="text-xs text-gray-600 mt-1.5 leading-snug">{t.intro}</p>
+                      {!ORIGINAL_TEACHER_IDS.has(t.id) && ACCENT_CARD_HINTS[t.id] && (
+                        <p className="text-[11px] text-gray-400 mt-1.5">{ACCENT_CARD_HINTS[t.id]}</p>
+                      )}
                     </button>
                   );
                 })}

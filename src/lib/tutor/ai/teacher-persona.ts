@@ -66,8 +66,9 @@ export const TEACHER_IDENTITY_BOUNDS_CLAUSE =
  * EIGHTEEN house personas for demo sessions on /tutor — the original four plus one per accent/gender where a passing Cartesia voice exists (2026-07-19 accent-personas spec; geo pre-selects a local pair, every persona speaks its native voice). User-facing —
  * names/intros are spoken to real students. Subjects are broad on purpose
  * (any demo topic must work) and intros stay GENERIC about topics (no
- * curriculum claims we can't back). Each maps to a DIFFERENT OpenAI
- * Realtime voice (see OpenAIVoice in src/app/tutor/hooks/useOpenAIRealtime.ts).
+ * curriculum claims we can't back). The original four keep their OpenAI
+ * Realtime voices; the per-accent personas are Cartesia-native (voice ids
+ * mirrored in cartesia-voice-registry.ts).
  */
 export const DEMO_TEACHERS: TeacherPersonaWire[] = [
   {
