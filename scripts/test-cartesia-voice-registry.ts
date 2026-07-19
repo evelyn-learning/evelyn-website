@@ -93,4 +93,61 @@ check('every result includes a non-empty label', () => {
   assert.ok(resolveCartesiaVoice().label.length > 0);
 });
 
+// ── Geo-accent pools (2026-07-19 spec: user-locked ids, no listening round) ──
+const GRACE_EN_AU = 'c2ad7092-0447-47ea-948b-61fbb6faf153';
+const COOPER_EN_AU = '49743b08-0f5d-4741-839c-b12933853780';
+const NADIA_EN_SG = 'efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f';
+const KIRAN_EN_SG = 'ac5a9529-3965-4eac-b574-dce63664fbf4';
+const ZANELE_EN_ZA = '263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18';
+const PIETER_EN_ZA = 'baf84392-fa95-4d44-8871-d32ee36b0e01';
+
+check('elena + en-au -> Grace (female pool pick)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: ELENA, accent: 'en-au' }).voiceId,
+    GRACE_EN_AU,
+  );
+});
+
+check('dev + en-au -> Cooper (male pool pick)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: DEV, accent: 'en-au' }).voiceId,
+    COOPER_EN_AU,
+  );
+});
+
+check('no teacher + en-sg -> Nadia (female default)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ accent: 'en-sg' }).voiceId,
+    NADIA_EN_SG,
+  );
+});
+
+check('dev + en-sg -> Kiran (male pool pick)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: DEV, accent: 'en-sg' }).voiceId,
+    KIRAN_EN_SG,
+  );
+});
+
+check('elena + en-za -> Zanele (female pool pick; user-corrected gender)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: ELENA, accent: 'en-za' }).voiceId,
+    ZANELE_EN_ZA,
+  );
+});
+
+check('dev + en-za -> Pieter (male pool pick; user-corrected gender)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: DEV, accent: 'en-za' }).voiceId,
+    PIETER_EN_ZA,
+  );
+});
+
+check('dev + en-in still -> Sameer (native-accent short-circuit unchanged)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: DEV, accent: 'en-in' }).voiceId,
+    SAMEER,
+  );
+});
+
 console.log(`\n${passed} passed`);

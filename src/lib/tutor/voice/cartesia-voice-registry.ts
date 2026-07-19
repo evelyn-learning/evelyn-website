@@ -107,6 +107,24 @@ const ACCENT_POOLS: Record<string, AccentPool> = {
     female: { voiceId: 'ac197a78-cec7-4c50-93e5-93bdc1910b11', label: 'Jennifer' },
     male: { voiceId: '42f14755-88c3-4124-aae3-5cc3a9618e8f', label: 'Jan' },
   },
+  // ── Geo-default pools (2026-07-19 geo-accent spec; user-locked ids,
+  // no listening round — see docs/superpowers/specs/
+  // 2026-07-19-geo-accent-tutor-voice-design.md). en-sg also serves the
+  // Philippines/SE Asia (Cartesia stocks no Filipino accent); en-za serves
+  // all African-accent needs (only African accent Cartesia stocks).
+  'en-au': {
+    female: { voiceId: 'c2ad7092-0447-47ea-948b-61fbb6faf153', label: 'Grace' },
+    male: { voiceId: '49743b08-0f5d-4741-839c-b12933853780', label: 'Cooper' },
+  },
+  'en-sg': {
+    female: { voiceId: 'efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f', label: 'Nadia' },
+    male: { voiceId: 'ac5a9529-3965-4eac-b574-dce63664fbf4', label: 'Kiran' },
+  },
+  'en-za': {
+    // Gender labels user-corrected 2026-07-19: Zanele female, Pieter male.
+    female: { voiceId: '263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18', label: 'Zanele' },
+    male: { voiceId: 'baf84392-fa95-4d44-8871-d32ee36b0e01', label: 'Pieter' },
+  },
 };
 
 /** Default Cartesia voice when no teacher/accent match is found — Katie. */
