@@ -205,10 +205,10 @@
     "responseFormat": "mcq",
     "problemText": "The Ottoman millet system allowed non-Muslim religious communities — including Orthodox Christians, Jews, and Armenian Christians — to manage their own internal legal, educational, and religious affairs under their own religious leaders. In exchange for this autonomy, millet communities were required to —",
     "choices": [
-      "convert to Sunni Islam within one generation",
-      "pay the jizya tax and accept a legally subordinate status to Muslims",
-      "surrender all property to the Ottoman treasury",
-      "relocate permanently to designated frontier provinces"
+      "convert every community's leadership to Sunni Islam within a single generation",
+      "pay the jizya tax and accept subordinate legal status",
+      "surrender all privately held property directly to the Ottoman imperial treasury",
+      "relocate their entire communities to remote frontier provinces, forfeiting original city rights"
     ],
     "answer": "B",
     "hints": [
@@ -224,10 +224,10 @@
     "responseFormat": "mcq",
     "problemText": "Akbar abolished the jizya tax on non-Muslims and appointed Hindus to the highest ranks of Mughal administration; his great-grandson Aurangzeb later reimposed the jizya in 1679 and pursued more orthodox Sunni religious policies. This sequence is best used as evidence for which point about religious pluralism in the Mughal Empire?",
     "choices": [
-      "Mughal religious policy was fixed from the empire's founding and never changed across its history",
-      "Aurangzeb's reimposition of the jizya proves that Akbar's sulh-i-kul policy never actually existed",
-      "Hindus were expelled from Mughal administration entirely as soon as Akbar's reign ended",
-      "Mughal approaches to religious pluralism could shift dramatically depending on the individual ruler, rather than following one fixed dynastic policy"
+      "Mughal religious policy was fixed at the empire's 1526 founding and stayed unchanged for its entire history",
+      "Aurangzeb's reimposition of the jizya shows that Akbar's sulh-i-kul policy was only ever symbolic court rhetoric",
+      "Hindus were removed from every Mughal administrative post within a year of Akbar's death in 1605",
+      "Mughal approaches to religious pluralism shifted dramatically with each ruler, rather than following one fixed policy"
     ],
     "answer": "D",
     "hints": [
@@ -245,7 +245,7 @@
     "choices": [
       "gunpowder weapons created an opening in the Lodi lines that flanking cavalry then exploited",
       "gunpowder weapons alone, without any cavalry tactics, decided the battle",
-      "Babur's army relied exclusively on cavalry, with no gunpowder weapons present at all",
+      "Babur's army relied mainly on cavalry charges, with gunpowder weapons playing no real role in the battle",
       "the Lodi army also possessed matchlock guns and cannon in equal numbers to Babur's forces"
     ],
     "answer": "A",
@@ -262,10 +262,10 @@
     "responseFormat": "mcq",
     "problemText": "The 1644 Qing conquest of Ming China relied on gunpowder-equipped Manchu banner armies to seize Beijing and, in subsequent decades, the rest of China. Which factor was most essential to the Qing Dynasty's ability to sustain lasting rule over China after the initial conquest?",
     "choices": [
-      "continuing to rely exclusively on Manchu banner armies for all subsequent civil administration",
+      "continuing to rely mainly on Manchu banner armies for all subsequent civil and provincial administration",
       "absorbing and continuing the existing, already-sophisticated Ming bureaucratic and civil-service apparatus",
       "abolishing the Confucian civil-service examination system to eliminate rival sources of legitimacy",
-      "relying solely on continued gunpowder superiority to suppress any Han Chinese administrative involvement"
+      "relying mainly on continued gunpowder superiority to suppress any Han Chinese role in administration"
     ],
     "answer": "B",
     "hints": [
@@ -282,7 +282,7 @@
     "problemText": "The Ottoman devshirme system recruited Christian boys from Balkan territories, converted them to Islam, and trained them for elite service. Which two career paths did devshirme recruits typically follow?",
     "choices": [
       "hereditary noble titles passed down through their birth families",
-      "positions exclusively within the Orthodox Christian millet leadership",
+      "positions only within the Orthodox Christian millet's own internal leadership structure",
       "Janissary infantry service or palace administrative positions",
       "service only as provincial tax collectors, with no military role"
     ],
@@ -300,7 +300,7 @@
     "responseFormat": "mcq",
     "problemText": "The Ming Dynasty sponsored Zheng He's massive treasure-fleet voyages to Southeast Asia, India, and East Africa between 1405 and 1433, then abandoned further voyages afterward. Which combination of factors best explains this decision?",
     "choices": [
-      "the voyages had been a purely private commercial venture that ended once its merchant investors withdrew funding",
+      "the voyages had been a mostly private commercial venture that ended once its merchant investors withdrew funding",
       "a catastrophic naval defeat destroyed the treasure fleet, making further voyages physically impossible",
       "European naval powers blockaded Chinese ports, forcing the fleet's withdrawal",
       "Mongol resurgence on the northern frontier redirected military spending, and Confucian officials opposed the voyages' cost and eunuch-faction associations"
@@ -320,7 +320,7 @@
     "problemText": "Peter the Great modernized the Russian military, founded St. Petersburg, and required nobles to adopt Western dress and shave their beards. Which statement best describes the limits of this westernization program?",
     "choices": [
       "it was largely superficial and elite-focused, and Peter's reign actually expanded serfdom by tying state-industrial workers to factories",
-      "it transformed Russian society completely, ending serfdom and rural peasant life along Western European lines",
+      "it transformed Russian society deeply, ending serfdom and rural peasant life along Western European lines",
       "it had no lasting effect on Russian court culture or military organization",
       "it was rejected outright by the Russian nobility, who refused to adopt any Western customs"
     ],
@@ -338,10 +338,10 @@
     "responseFormat": "mcq",
     "problemText": "Akbar managed Mughal religious diversity chiefly through personal, experimental policies — abolishing the jizya, marrying into Hindu royal families, and floating the syncretic Din-i Ilahi — while Suleiman managed Ottoman religious diversity chiefly through the standing institutional structure of the millet system. Which statement best captures the difference AP comparison essays should draw between these two approaches?",
     "choices": [
-      "both rulers relied on identical millet-style institutions, differing only in which religious minorities were included",
-      "Akbar's approach rested on the choices of an individual ruler, while Suleiman's rested on an enduring institutional framework that could outlast any one sultan's personal preferences",
-      "Akbar's policies were institutionalized in permanent law, while Suleiman's depended entirely on his personal charisma",
-      "neither ruler's approach to religious diversity outlasted his own reign"
+      "both rulers relied on the same millet-style legal institutions, differing only in which specific religious minorities each empire recognized",
+      "Akbar's approach rested on one ruler's personal choices, while Suleiman's rested on a lasting institutional framework beyond any sultan",
+      "Akbar's policies became permanent Mughal law, while Suleiman's millet system rested only on his personal charisma during his own reign",
+      "neither ruler's approach to religious diversity survived past the end of his own reign in any form"
     ],
     "answer": "B",
     "hints": [

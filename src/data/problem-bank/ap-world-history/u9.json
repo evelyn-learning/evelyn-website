@@ -184,9 +184,9 @@
     "responseFormat": "mcq",
     "problemText": "Bollywood films from India, K-pop from South Korea, and football with roots spanning Europe, Latin America, Africa, and Asia all became widely popular across the globe after 1945. Which conclusion about cultural globalization is best supported by these three examples together?",
     "choices": [
-      "cultural globalization after 1945 was driven entirely by American media and entertainment companies",
-      "global popular culture flowed outward from multiple different centers, not along a single path from one dominant source",
-      "these three cultural forms remained confined entirely to their countries or regions of origin",
+      "cultural globalization after 1945 was driven mainly by Hollywood and other American media and entertainment companies",
+      "global popular culture flowed outward from multiple centers, not along a single path from one dominant source",
+      "these three cultural forms stayed largely confined to their own countries or regions of origin throughout this period",
       "football, Bollywood, and K-pop all originated in the same country before spreading worldwide"
     ],
     "answer": "B",
@@ -206,7 +206,7 @@
       "it was deliberately spread as a biological weapon by one of the warring powers",
       "it affected only elderly populations already suffering from other chronic illnesses",
       "it struck before effective antiviral treatments or a vaccine existed, and spread rapidly through wartime troop movements",
-      "it was successfully contained within a single country and never spread internationally"
+      "it stayed confined to a single country and did not spread across any international border"
     ],
     "answer": "C",
     "hints": [
@@ -222,10 +222,10 @@
     "responseFormat": "mcq",
     "problemText": "The Montreal Protocol (1987), which phased out ozone-depleting chemicals, is widely regarded as a successful example of coordinated international environmental action, while the Kyoto Protocol (1997) and the Paris Agreement (2015), aimed at reducing carbon emissions, have made comparatively slower and more contested progress. Which factor best explains this difference in international success?",
     "choices": [
-      "the Montreal Protocol addressed a problem that scientists had not yet reached any consensus about, unlike climate change",
-      "the Kyoto Protocol and Paris Agreement were both voluntarily implemented with complete success by every signatory nation",
-      "no international treaty has ever successfully addressed any environmental problem prior to the Paris Agreement",
-      "reducing carbon emissions carries far greater economic stakes tied to fossil-fuel use across the global economy than phasing out a narrower set of ozone-depleting chemicals did"
+      "the Montreal Protocol addressed a problem scientists had already resolved decades before climate science reached any consensus",
+      "the Kyoto Protocol and Paris Agreement were both fully implemented on schedule by every one of their signatory nations",
+      "no international environmental treaty had ever succeeded at anything before the Paris Agreement was finally signed in 2015",
+      "reducing carbon emissions carries greater economic stakes across the global fossil-fuel economy than phasing out ozone-depleting chemicals did"
     ],
     "answer": "D",
     "hints": [
@@ -260,9 +260,9 @@
     "responseFormat": "mcq",
     "problemText": "The 2008 global financial crisis began with a collapse in the US mortgage market but spread to banks and economies worldwide within months. Which broader point about the postwar global economy does this rapid spread best illustrate?",
     "choices": [
-      "the 2008 crisis remained entirely confined to the United States, with no measurable effect on any other country's economy",
-      "by 2008, national financial systems had become so interconnected that a crisis originating in one major economy could no longer stay contained to that economy alone",
-      "the International Monetary Fund had, by 2008, eliminated the possibility of any future financial crisis",
+      "the 2008 crisis stayed mostly confined to the United States, with only minor effects on any other country's economy",
+      "by 2008, national financial systems had grown so interconnected that a crisis in one major economy could no longer stay contained there",
+      "the International Monetary Fund had, by 2008, developed effective tools that eliminated the risk of any future crisis",
       "the 2008 crisis originated simultaneously and independently in every major economy, with no single point of origin"
     ],
     "answer": "B",
@@ -300,7 +300,7 @@
     "choices": [
       "the vaccine itself was not actually effective until the WHO's campaign began in the twentieth century",
       "smallpox eradication was achieved instantly and simultaneously worldwide the moment the vaccine was first developed",
-      "the WHO's campaign focused exclusively on wealthy countries, ignoring the rest of the world entirely",
+      "the WHO's campaign focused mainly on wealthy countries, largely bypassing lower-income regions of the world",
       "eradicating a disease worldwide required decades of sustained, coordinated global vaccination campaigning, not merely the existence of an effective vaccine"
     ],
     "answer": "D",
@@ -336,10 +336,10 @@
     "responseFormat": "mcq",
     "problemText": "The World Trade Organization (WTO), established in 1995, replaced which earlier institution?",
     "choices": [
-      "the International Monetary Fund (IMF)",
-      "the General Agreement on Tariffs and Trade (GATT)",
-      "the League of Nations",
-      "the Non-Aligned Movement"
+      "the International Monetary Fund, created in 1944",
+      "the General Agreement on Tariffs and Trade, from 1947",
+      "the League of Nations, founded in 1920",
+      "the Non-Aligned Movement, founded in 1961"
     ],
     "answer": "B",
     "hints": [
@@ -357,8 +357,8 @@
     "choices": [
       "the claim that World War I had any effect on international trade patterns",
       "the claim that the 1929 stock market crash occurred in the United States",
-      "the claim that globalization is an irreversible, one-way historical trend that never contracts once economies become integrated",
-      "the claim that container shipping reduced the cost of transporting goods internationally"
+      "the claim that globalization is an irreversible trend that never contracts once economies integrate",
+      "the claim that container shipping steadily reduced the cost of transporting goods internationally after 1970"
     ],
     "answer": "C",
     "hints": [
@@ -374,7 +374,7 @@
     "responseFormat": "mcq",
     "problemText": "McDonald's restaurants in India sell menu items such as McAloo Tikki, adapted to local dietary practices and preferences, rather than an unmodified version of the chain's standard Western menu. This kind of local adaptation of a global product is best described by which concept?",
     "choices": [
-      "cultural homogenization, in which local cultures are entirely replaced by an unmodified global culture",
+      "cultural homogenization, in which local cultures are steadily replaced by one unmodified global culture",
       "protectionism, a trade policy restricting the import of any foreign goods or brands",
       "neocolonialism, a critique of continued economic dependency on former colonial powers",
       "glocalization, the adaptation of global products and ideas to local cultural contexts"

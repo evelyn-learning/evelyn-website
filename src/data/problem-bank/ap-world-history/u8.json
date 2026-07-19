@@ -244,7 +244,7 @@
     "problemText": "India achieved independence in 1947 largely through negotiation, while Algeria achieved independence in 1962 only after an eight-year armed war against France. Which factor best explains why Algeria's path to independence was so much more violent than India's?",
     "choices": [
       "Algeria had a large population of European settlers invested in continued French rule, while India had comparatively few British settlers",
-      "India had no organized nationalist movement prior to 1947, while Algeria's independence movement had organized for decades before 1954",
+      "India had no organized nationalist movement at all prior to 1947, while Algeria's independence movement had organized for decades before 1954",
       "France considered Algeria an overseas colony with no special legal status, exactly as Britain viewed India",
       "Britain refused to ever consider granting India independence under any circumstances"
     ],
@@ -262,10 +262,10 @@
     "responseFormat": "mcq",
     "problemText": "Colonial powers often drew administrative borders with little regard for existing ethnic, religious, or linguistic communities on the ground. Which statement best describes the postcolonial consequence of this practice, as illustrated by cases such as Nigeria and Sudan?",
     "choices": [
-      "colonial-era borders were universally redrawn immediately upon independence to reflect ethnic and linguistic boundaries",
-      "newly independent states sometimes inherited internal divisions that colonial administrators had previously managed by force, contributing to postindependence conflict",
+      "colonial-era borders were promptly redrawn upon independence in nearly every case to reflect ethnic and linguistic boundaries",
+      "newly independent states sometimes inherited internal divisions colonial administrators had previously managed by force, contributing to postindependence conflict",
       "artificial borders caused no lasting political problems once colonial rule formally ended",
-      "every postcolonial state inheriting an artificial border experienced an identical civil war within the same number of years"
+      "every postcolonial state inheriting an artificial border experienced a comparable civil war within roughly the same number of years"
     ],
     "answer": "B",
     "hints": [
@@ -281,9 +281,9 @@
     "responseFormat": "mcq",
     "problemText": "Between the 1960s and 1980s, many newly independent states experienced coups, one-party rule, or civil war, while others, such as India, sustained democratic government, and some East Asian economies achieved rapid growth. Which conclusion about decolonization's outcomes is best supported by this range of experience?",
     "choices": [
-      "every newly independent state experienced political and economic outcomes that were essentially identical to one another",
-      "decolonization automatically produced stable democratic government in every case, without exception",
-      "political independence was a starting condition that led to widely varying outcomes, not a guarantee of either democratic stability or economic prosperity",
+      "every newly independent state experienced political and economic outcomes that closely tracked one another",
+      "decolonization automatically produced stable, lasting democratic government in nearly every newly independent state by the 1970s",
+      "political independence was a starting condition for widely varying outcomes, not a guarantee of prosperity",
       "no newly independent state ever achieved either democratic stability or rapid economic growth after independence"
     ],
     "answer": "C",
@@ -319,10 +319,10 @@
     "responseFormat": "mcq",
     "problemText": "The Soviet Union invaded Afghanistan in 1979 to support a friendly Communist government against a mujahideen insurgency that received substantial covert backing from the United States. Which statement best explains how this decade-long war contributed to the Cold War's end?",
     "choices": [
-      "the war drained Soviet military resources and public morale for a decade before withdrawal in 1989, weakening the USSR's capacity to sustain its broader Cold War position",
-      "the war ended in a decisive Soviet military victory that significantly strengthened the USSR's global position",
-      "the war was fought and concluded within a single year, with no lasting effect on Soviet resources",
-      "the war was fought entirely by Warsaw Pact allies, with no direct Soviet military involvement"
+      "the war drained Soviet military resources and morale for a decade, weakening the USSR's broader Cold War position",
+      "the war ended in a decisive Soviet military victory that significantly expanded Moscow's influence across South Asia",
+      "the war was fought and fully concluded within a single year, leaving Soviet military resources largely untouched",
+      "the war was fought mainly by Warsaw Pact proxy forces stationed well behind the Soviet army's own front lines"
     ],
     "answer": "A",
     "hints": [
@@ -338,10 +338,10 @@
     "responseFormat": "mcq",
     "problemText": "In 1955, leaders from newly independent and colonized Asian and African nations met in Bandung, Indonesia. What was the primary purpose of this conference?",
     "choices": [
-      "to formally establish a joint Asian-African military alliance directed against the Soviet Union",
-      "to articulate shared solidarity among Asian and African states, oppose colonialism, and lay groundwork for cooperation outside the two Cold War blocs",
-      "to negotiate the terms of India's partition into India and Pakistan",
-      "to formally admit newly independent African and Asian states into NATO"
+      "to formally establish a lasting and binding joint Asian-African military alliance directed against the United States",
+      "to articulate Asian-African solidarity, oppose colonialism, and build cooperation outside the two Cold War blocs",
+      "to negotiate the final territorial terms of India's 1947 partition into India and Pakistan",
+      "to formally admit every newly independent African and Asian state into the Warsaw Pact"
     ],
     "answer": "B",
     "hints": [
@@ -357,9 +357,9 @@
     "responseFormat": "mcq",
     "problemText": "Julius Nyerere's Tanzania pursued ujamaa, a policy of communal, village-based agricultural collectivization framed as a distinctly African socialism, while many Latin American states pursued import substitution industrialization (ISI), protecting domestic industry behind tariffs. Which statement best characterizes the relationship between these two development strategies?",
     "choices": [
-      "ujamaa and import substitution industrialization were, in practice, the identical policy applied in different countries",
+      "ujamaa and import substitution industrialization were, in practice, the same policy under two different regional names",
       "every newly independent state was required by the Non-Aligned Movement to adopt one of these two specific strategies",
-      "newly independent and postcolonial states pursued genuinely varied development strategies suited to their own political and economic circumstances, rather than a single shared model",
+      "newly independent states pursued genuinely varied development strategies suited to their own political and economic circumstances",
       "these two strategies were developed jointly by the Soviet Union and imposed uniformly on all non-aligned states"
     ],
     "answer": "C",
@@ -398,7 +398,7 @@
       "containment",
       "détente",
       "rollback",
-      "appeasement"
+      "appeasement policy"
     ],
     "answer": "A",
     "hints": [
@@ -436,7 +436,7 @@
       "the misconception that the Korean War was fought without any Soviet or Chinese involvement",
       "the misconception that the Cuban Missile Crisis was resolved through direct military combat",
       "the misconception that every country was clearly and permanently aligned with either the US-led or Soviet-led bloc",
-      "the misconception that the Marshall Plan provided aid exclusively to Latin American states"
+      "the misconception that the Marshall Plan provided aid only to Latin American and Caribbean states"
     ],
     "answer": "C",
     "hints": [
@@ -455,7 +455,7 @@
       "a single decisive NATO military campaign that defeated Warsaw Pact forces in direct combat",
       "a formal surrender treaty signed by the Soviet Union following its defeat in the Korean War",
       "the immediate and total collapse of the Non-Aligned Movement in 1985",
-      "Gorbachev's reform program, the costly Soviet war in Afghanistan, and organized popular movements across Eastern Europe"
+      "Gorbachev's reform program, the costly Soviet war in Afghanistan, and popular movements across Eastern Europe"
     ],
     "answer": "D",
     "hints": [

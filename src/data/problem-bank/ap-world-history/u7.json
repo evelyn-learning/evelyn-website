@@ -205,10 +205,10 @@
     "responseFormat": "mcq",
     "problemText": "The Nuremberg Trials (1945-1946) tried surviving senior Nazi officials before an international military tribunal. What key legal precedent did these trials establish?",
     "choices": [
-      "individuals, not just states, could be held criminally responsible for crimes against humanity, and \"following orders\" was not by itself a complete defense",
-      "only entire nations, never individual officials, could be held legally responsible for wartime atrocities",
-      "\"following superior orders\" was accepted as a complete and sufficient legal defense against any war-crimes charge",
-      "the trials were conducted exclusively by German judges appointed by the postwar German government"
+      "individuals, not just states, could be held criminally responsible for crimes against humanity, even when following orders",
+      "only entire nations, not individual military or political officials, could ever be held legally responsible for wartime atrocities",
+      "'following superior orders' was accepted at Nuremberg as a complete and sufficient legal defense against any war-crimes charge",
+      "the trials were conducted only by German judges appointed by the new postwar West German government itself"
     ],
     "answer": "A",
     "hints": [
@@ -225,7 +225,7 @@
     "problemText": "The Nuremberg Trials were a judicial tribunal assigning individual criminal guilt for specific past acts, while the Universal Declaration of Human Rights (1948) was a UN General Assembly declaration stating, in advance, a broad list of rights. Which statement best distinguishes these two institutions?",
     "choices": [
       "both were binding international treaties enforced by the same international court",
-      "the UDHR assigned criminal guilt to specific Nazi officials, while Nuremberg articulated general aspirational rights",
+      "the UDHR only assigned specific criminal guilt to named Nazi officials, while Nuremberg articulated general aspirational rights",
       "neither institution had any connection to the atrocities of World War II",
       "Nuremberg was a retrospective judicial proceeding; the UDHR was a prospective, non-binding declaration of aspirational rights"
     ],
@@ -243,10 +243,10 @@
     "responseFormat": "mcq",
     "problemText": "Colonial troops who fought for the Allied cause during the World Wars often invoked wartime rhetoric of freedom and self-determination on returning home. Which statement best explains how this experience contributed to postwar decolonization pressure?",
     "choices": [
-      "colonial veterans questioned why self-determination rhetoric used to justify the war did not apply to their own colonized countries, building political pressure for independence",
-      "colonial troops uniformly returned home in full support of continued European imperial rule",
-      "European governments immediately granted full independence to all colonies as a reward for wartime military service",
-      "colonial participation in the World Wars had no effect on postwar political movements in colonized territories"
+      "colonial veterans questioned why self-determination rhetoric justifying the war did not apply to their own countries",
+      "colonial troops who fought and returned home mostly voiced strong, continued support for European imperial rule",
+      "European governments granted full, immediate independence to every one of their colonies as a wartime service reward",
+      "colonial participation in the World Wars left no measurable trace on any postwar political movement in the colonies"
     ],
     "answer": "A",
     "hints": [
@@ -262,7 +262,7 @@
     "responseFormat": "mcq",
     "problemText": "In response to the Great Depression, the United States expanded federal management of the economy through the New Deal, several Latin American states pursued import substitution industrialization, and Germany pursued autarky. Which statement best describes what these three responses had in common?",
     "choices": [
-      "each response abolished all forms of international trade completely and permanently",
+      "each response sharply cut back international trade ties rather than pursuing closer global integration",
       "each was a form of economic nationalism aimed at reducing dependence on a global trading system that had proven fragile",
       "each was coordinated jointly among the United States, Latin American states, and Germany as a single international agreement",
       "each response had no connection whatsoever to the Great Depression"
@@ -281,10 +281,10 @@
     "responseFormat": "mcq",
     "problemText": "Gandhi's 1930 Salt March, the 1919 May Fourth Movement, and Ho Chi Minh's 1919 petition to the Paris Peace Conference each responded to a similar gap between wartime promises and colonial reality, but through different methods and toward different immediate targets. Which statement best distinguishes Ho Chi Minh's 1919 petition from the Salt March?",
     "choices": [
-      "both actions were armed uprisings that directly attacked French and British colonial military forces",
-      "Ho Chi Minh's petition succeeded in securing immediate Vietnamese independence from France in 1919",
-      "Ho Chi Minh's petition sought formal recognition and civil rights through diplomatic channels at an international conference, while the Salt March was a mass, non-violent act of direct civil disobedience against a specific colonial policy",
-      "the Salt March was a diplomatic petition submitted to the League of Nations, while Ho Chi Minh organized a mass civil disobedience campaign"
+      "both actions were coordinated armed uprisings that directly attacked French colonial garrisons and British police outposts nationwide",
+      "Ho Chi Minh's 1919 petition secured France's immediate written agreement to grant full Vietnamese self-rule that year",
+      "Ho Chi Minh petitioned through diplomatic channels at an international conference, while the Salt March was mass civil disobedience against one policy",
+      "the Salt March was actually a formal diplomatic petition Gandhi submitted directly to the League of Nations in Geneva"
     ],
     "answer": "C",
     "hints": [
@@ -319,10 +319,10 @@
     "responseFormat": "mcq",
     "problemText": "Historians continue to debate President Truman's decision to authorize the atomic bombings of Hiroshima and Nagasaki. Which statement best characterizes the nature of this ongoing historical debate?",
     "choices": [
-      "historians disagree over whether the bombings were necessary to avoid a costly invasion, or whether Japan was already near surrender and the bombings partly aimed to signal power to the Soviet Union",
-      "the debate has been fully and permanently resolved by unanimous historical consensus that the bombings were entirely unnecessary",
-      "historians agree unanimously that the bombings were the only possible way to end the war under any circumstances",
-      "the debate concerns only the exact number of casualties at Hiroshima, with no disagreement about the decision's necessity"
+      "historians disagree over whether the bombings were necessary to avoid invasion, or whether Japan was near surrender",
+      "the debate was fully resolved decades ago by a unanimous historians' consensus that the bombings were unnecessary",
+      "historians broadly agree that the bombings were the only realistic way to end the Pacific War that year",
+      "the debate today concerns only the precise casualty count at Hiroshima, with no disagreement left about necessity"
     ],
     "answer": "A",
     "hints": [
@@ -341,7 +341,7 @@
       "Monarchy, Agriculture, Industry, Navigation",
       "Militarism, Alliances, Imperialism, Nationalism",
       "Migration, Autocracy, Isolationism, Neutrality",
-      "Mercantilism, Absolutism, Isolationism, Nativism"
+      "Mercantilism, Absolutism, Isolationism, and Nativism"
     ],
     "answer": "B",
     "hints": [
@@ -358,9 +358,9 @@
     "problemText": "By 1914, Europe's major powers had divided into two competing alliance blocs: the Triple Entente (France, Russia, Britain) and the Triple Alliance (Germany, Austria-Hungary, Italy). How did this alliance system contribute to turning the Austria-Serbia crisis into a continental war?",
     "choices": [
       "the alliance system required all six powers to hold a unanimous vote before any member could declare war",
-      "the alliances had already dissolved by 1914, leaving each power to act entirely independently",
-      "mutual defense commitments meant that as one power mobilized, its treaty partners felt bound to follow, turning a regional conflict into a chain reaction across the continent",
-      "the alliance system bound its members only to economic cooperation, with no military obligations at all"
+      "the alliances had already fully dissolved by early 1914, leaving each great power to act on its own",
+      "mutual defense commitments meant one power's mobilization pulled its allies in too, turning a regional conflict continental",
+      "the alliance system bound its signatories only to economic cooperation and trade, with no shared military obligations"
     ],
     "answer": "C",
     "hints": [
@@ -377,9 +377,9 @@
     "problemText": "Gavrilo Princip's assassination of Archduke Franz Ferdinand in Sarajevo on June 28, 1914, is often cited as the event that started World War I. Which statement best describes the relationship between this assassination and the war's actual causes?",
     "choices": [
       "the assassination was the sole cause of the war, with no meaningful role played by militarism, alliances, imperialism, or nationalism",
-      "the assassination occurred only after the war had already been underway for several months",
-      "the assassination had no connection whatsoever to the war's outbreak",
-      "the assassination was the immediate trigger, but decades of militarism, alliance commitments, imperial rivalry, and nationalist tension were the underlying structural causes that made a general war possible"
+      "the assassination is sometimes mistakenly dated to several months after the war had already fully begun",
+      "the assassination had no meaningful connection at all to the deeper causes of the war's outbreak",
+      "the assassination was the immediate trigger, while decades of militarism, alliances, rivalry, and nationalism were the deeper structural causes"
     ],
     "answer": "D",
     "hints": [
@@ -396,8 +396,8 @@
     "problemText": "World War I produced casualties on a scale far beyond earlier European wars — the Battle of the Somme alone killed roughly a million soldiers. Which combination best explains this unprecedented death toll?",
     "choices": [
       "industrial-era weapons such as machine guns, heavy artillery, and poison gas were used alongside tactics still based on nineteenth-century open-field infantry assaults",
-      "the war was fought entirely with pre-industrial weapons such as swords and cavalry lances, with no modern armaments involved",
-      "casualties were concentrated almost entirely among civilian populations, with negligible military losses on any front",
+      "the war was fought mainly with pre-industrial weapons such as swords and cavalry lances, with few modern armaments involved",
+      "casualties were concentrated mainly among civilian populations, with only negligible military losses on any front",
       "all major combatant nations had adopted trench-based defensive tactics specifically designed to minimize casualties"
     ],
     "answer": "A",

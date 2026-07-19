@@ -209,8 +209,8 @@
     "choices": [
       "Japan adopted both Neo-Confucian philosophy and the civil-service examination system in full, exactly as Korea and Vietnam did",
       "Japan adopted Neo-Confucian philosophy without adopting the examination-based bureaucracy, remaining governed by hereditary samurai rule",
-      "Japan rejected Neo-Confucian philosophy entirely while adopting only the examination system",
-      "Korea and Vietnam rejected Neo-Confucian philosophy entirely while only Japan adopted it"
+      "Japan rejected Neo-Confucian philosophy outright while adopting only the examination system",
+      "Korea and Vietnam rejected Neo-Confucian philosophy outright while only Japan adopted it"
     ],
     "answer": "B",
     "hints": [
@@ -228,7 +228,7 @@
     "choices": [
       "Labor became more abundant, driving wages down and strengthening lords' control over serfs",
       "European feudal obligations were immediately abolished by royal decree in response to the plague",
-      "The plague had no lasting economic effect once population levels began recovering within a few years",
+      "The plague had no lasting economic effect at all once population levels began recovering within a few years",
       "Severe labor shortages increased surviving peasants' bargaining power, contributing to the erosion of some feudal labor obligations"
     ],
     "answer": "D",
@@ -284,7 +284,7 @@
     "problemText": "After the mid-1200s, the Mongol Empire fractured into four major successor states, still linked by shared Mongol lineage but increasingly independent in practice. Which of the following is one of these four khanates?",
     "choices": [
       "the Ottoman Empire in Anatolia",
-      "the Mamluk Sultanate in Egypt",
+      "the rival Mamluk Sultanate ruling Egypt and Syria",
       "the Yuan Dynasty in China",
       "the Byzantine Empire in Constantinople"
     ],
@@ -302,8 +302,8 @@
     "responseFormat": "mcq",
     "problemText": "Mongol conquest was frequently brutal — cities that resisted were sometimes destroyed as a deterrent. Yet once territory was secured, Mongol rulers generally practiced religious tolerance and employed skilled foreign administrators regardless of ethnicity or faith. Which conclusion about the Mongol Empire's overall legacy do these two facts together best support?",
     "choices": [
-      "the Mongols were purely destructive conquerors whose empire left no lasting positive institutional legacy",
-      "Mongol tolerance of foreign administrators proves that Mongol conquest itself was never actually violent",
+      "the Mongols were destructive conquerors whose empire left behind no lasting positive institutional legacy of any real kind",
+      "Mongol tolerance of foreign administrators proves that Mongol conquest itself was largely peaceful and bloodless",
       "Mongol rulers only tolerated religions and administrators that were ethnically Mongol",
       "Mongol conquest and Mongol administration should be evaluated as two distinct phases with different, even contradictory, characteristics"
     ],
@@ -324,7 +324,7 @@
       "providing rest, resupply, and safe overnight storage of goods",
       "collecting customs duties on behalf of the Mongol government",
       "training merchants in the use of bills of exchange",
-      "housing the imperial yam relay messengers exclusively, with no access for merchants"
+      "housing only the imperial yam relay messengers, with merchants turned away at the door"
     ],
     "answer": "A",
     "hints": [
@@ -340,7 +340,7 @@
     "responseFormat": "mcq",
     "problemText": "Overland trade connecting China, Central Asia, and the Mediterranean existed for more than a thousand years before the Mongol conquests of the 1200s, rising and falling with political stability along the route. Given this, which claim about the Mongols' role in Silk Roads history is most defensible?",
     "choices": [
-      "the Mongols created overland Eurasian trade where none had existed before",
+      "the Mongols invented overland Eurasian trade, since no contact between China and the Mediterranean existed earlier",
       "the Mongols secured and intensified an already-ancient network by unifying much of the route under one political authority",
       "the Mongols had no meaningful effect on Silk Roads trade volume in either direction",
       "the Mongols redirected all Silk Roads trade toward maritime routes instead of overland ones"
@@ -359,7 +359,7 @@
     "responseFormat": "mcq",
     "problemText": "In the trans-Saharan trade network, salt mined in the Sahara moved south into West Africa, while gold mined in West African goldfields moved north across the desert. This exchange is best explained by which economic logic?",
     "choices": [
-      "West Africa produced both gold and salt in equal abundance, making the exchange purely ceremonial",
+      "West Africa produced both gold and salt in equal abundance, making the exchange largely ceremonial rather than economic",
       "salt was more valuable than gold everywhere in the medieval world",
       "each region traded away a resource it had in abundance for one it lacked",
       "North Africa mined its own gold and had no need to trade for West African gold"
@@ -379,7 +379,7 @@
     "problemText": "Much of the gold that reached Mali's trade routes was mined outside Mali's own core territory, in goldfields such as the Akan forest region and the Bambuk/Bure area, controlled by other peoples and polities. Given this, which statement best explains the actual source of Mali's imperial wealth?",
     "choices": [
       "Mali directly owned and mined nearly all of West Africa's gold within its own core territory",
-      "Mali's wealth came entirely from tribute paid by the Songhai Empire",
+      "Mali's wealth came mainly from tribute paid by the neighboring Songhai Empire",
       "Mali's rulers earned their wealth primarily through direct diplomatic gifts from Mamluk Egypt",
       "Mali grew wealthy chiefly by controlling and taxing the trade routes and market cities through which gold from various sources moved north"
     ],
@@ -435,10 +435,10 @@
     "responseFormat": "mcq",
     "problemText": "The Strait of Malacca, the narrow sea passage connecting the Indian Ocean to the South China Sea, was controlled at different points by Srivijaya, then Majapahit, then the Sultanate of Malacca. Controlling this chokepoint was valuable chiefly because it allowed a ruling power to —",
     "choices": [
-      "prevent Chinese junks from ever entering the Indian Ocean",
-      "monopolize the mining of gold throughout Southeast Asia",
-      "tax the enormous volume of maritime trade passing between East Asia and India, Africa, and the Middle East",
-      "control the overland Silk Roads routes running through Central Asia"
+      "block Chinese junks and Arab dhows alike from ever reaching any Indian Ocean trading ports west of Malacca",
+      "monopolize the mining and sale of gold across the entire Southeast Asian mainland and archipelago",
+      "tax the huge volume of maritime trade passing between East Asia, India, Africa, and the Middle East",
+      "control the overland Silk Roads caravan routes running through Central Asia toward the Mediterranean"
     ],
     "answer": "C",
     "hints": [
@@ -473,10 +473,10 @@
     "responseFormat": "mcq",
     "problemText": "Marco Polo's end-to-end journey from Europe to China and back is often cited in popular accounts of the Silk Roads. Historians note that this kind of complete journey was exceptional rather than typical. Which statement best explains why?",
     "choices": [
-      "the Silk Roads functioned as a network of regional trade segments, with most merchants traveling only part of the route and exchanging goods at hub cities along the way",
-      "almost no merchants other than Marco Polo ever traveled any part of the Silk Roads during this period",
-      "the Mongol Empire banned merchants from traveling the full length of the route for security reasons",
-      "goods moved along the Silk Roads exclusively by sea, making an overland end-to-end journey physically impossible"
+      "the Silk Roads worked as a network of regional segments, with most merchants trading only part of the route at hub cities",
+      "almost no merchant besides Marco Polo ever completed the full overland journey from Venice to Yuan China",
+      "the Mongol Yuan government formally banned merchants from traveling the entire route in a single continuous journey",
+      "goods reached Europe from China only by the long Indian Ocean sea route, since overland caravan routes had already closed a century earlier"
     ],
     "answer": "A",
     "hints": [

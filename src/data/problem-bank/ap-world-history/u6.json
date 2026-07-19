@@ -208,7 +208,7 @@
     "choices": [
       "it left Qing China formally sovereign but stripped it of legal jurisdiction over foreign nationals within its own territory",
       "it formally transferred all Qing territory to British colonial administration",
-      "it required foreign nationals in China to be tried exclusively under Qing law, with no exceptions",
+      "it required foreign nationals in China to be tried only under Qing law in every case",
       "it abolished the Qing dynasty and replaced it with a British-appointed government"
     ],
     "answer": "A",
@@ -245,8 +245,8 @@
     "problemText": "After Britain abolished slavery in 1833, British colonial planters turned to indentured labor, recruiting workers under contracts binding them to work for a fixed number of years in exchange for passage and wages. Which statement best describes why colonial planters adopted this labor system?",
     "choices": [
       "to replace the enslaved plantation labor force that abolition had eliminated",
-      "to comply with a new law requiring planters to import laborers exclusively from China",
-      "to end all forms of contracted or bound labor on British plantations permanently",
+      "to comply with a new law requiring planters to import laborers only from southern China",
+      "to end every form of contracted or bound labor on British Caribbean plantations within a decade",
       "to provide a form of paid vacation labor for British citizens seeking overseas travel"
     ],
     "answer": "A",
@@ -261,7 +261,7 @@
     "cedCode": "AP-APWORLD-6.7",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Mauritius and British Guiana together received roughly 64 percent of all Indian indentured laborers recorded in the 1834-1917 table, far more than smaller destinations like Fiji. Beyond Fiji's later 1879 start date, which additional factor most plausibly explains this concentration in Mauritius and British Guiana specifically?",
+    "problemText": "Historians estimate that Mauritius and British Guiana together received roughly 64 percent of all Indian indentured laborers transported between 1834 and 1917, far more than smaller destinations like Fiji. Beyond Fiji's later 1879 start date, which additional factor most plausibly explains this concentration in Mauritius and British Guiana specifically?",
     "choices": [
       "both colonies banned the recruitment of any laborers other than those from India",
       "both had large, well-established sugar plantation economies with an especially urgent labor need immediately after the 1833 abolition of slavery",
@@ -284,7 +284,7 @@
     "choices": [
       "African governments held equal negotiating status alongside European powers at the Berlin Conference itself",
       "the principle required African governments to formally ratify any new European claim before it could take effect",
-      "European powers structured mutual recognition of colonial claims entirely among themselves, treating African political consent as unnecessary",
+      "European powers structured mutual recognition of colonial claims among themselves, treating African political consent as unnecessary",
       "the principle banned any further European territorial claims in Africa after 1885"
     ],
     "answer": "C",
@@ -301,10 +301,10 @@
     "responseFormat": "mcq",
     "problemText": "When the British governor demanded that the Asante Empire surrender the Golden Stool — the sacred symbol of Asante royal authority — Yaa Asantewaa, Queen Mother of Ejisu, rallied Asante forces to resist in the War of the Golden Stool (1900). Which statement best describes the outcome and significance of this resistance?",
     "choices": [
-      "the uprising succeeded in permanently expelling British forces from the entire Gold Coast region",
-      "the British governor withdrew his demand for the Golden Stool immediately after the uprising began",
-      "Yaa Asantewaa's forces were defeated before ever engaging British troops in combat",
-      "the uprising was ultimately suppressed and Asante was formally annexed, but it stands out as a case of a woman leading a state's most significant armed resistance to colonization"
+      "the uprising succeeded in expelling British colonial forces from the entire Gold Coast region for good",
+      "the British governor formally withdrew his demand for the Golden Stool right after the uprising's opening skirmish",
+      "Yaa Asantewaa's forces were decisively defeated in their very first engagement against regular British colonial troops",
+      "the uprising was suppressed and Asante formally annexed, though it stands out for a woman leading the state's major armed resistance"
     ],
     "answer": "D",
     "hints": [
@@ -322,8 +322,8 @@
     "choices": [
       "the Boxer Uprising's suppression led to an even harsher round of foreign intervention, imposing a large indemnity and further concessions on China",
       "unlike most suppressed resistance, the Boxer Uprising's suppression brought immediate relief from foreign intervention rather than harsher terms",
-      "the Boxer Uprising succeeded in permanently ending all foreign spheres of influence in China",
-      "the Boxer Uprising was resolved entirely through diplomatic negotiation, without any military intervention by foreign powers"
+      "the Boxer Uprising succeeded in ending every foreign sphere of influence in China for good",
+      "the Boxer Uprising was resolved through diplomatic negotiation alone, without any foreign military intervention at all"
     ],
     "answer": "A",
     "hints": [
@@ -339,10 +339,10 @@
     "responseFormat": "mcq",
     "problemText": "The Zulu Kingdom inflicted a major defeat on British forces at the Battle of Isandlwana (1879) but was ultimately defeated later that same year, while Ethiopia's victory at the Battle of Adwa (1896) preserved its independence for decades afterward. Which factor best explains why Adwa produced a lasting result that Isandlwana did not?",
     "choices": [
-      "the Zulu Kingdom possessed more modern rifles than Ethiopia did at Adwa",
-      "Ethiopia fielded a large, centrally unified army under Menelik II against a comparatively small, overextended invading force, while Britain was able to draw on substantial reinforcement after its initial defeat at Isandlwana",
-      "Britain formally recognized Zulu independence immediately after Isandlwana, exactly as Italy recognized Ethiopian independence after Adwa",
-      "Italy's army at Adwa was substantially larger and better supplied than Britain's forces in the Anglo-Zulu War"
+      "the Zulu Kingdom's warriors carried more modern breech-loading rifles than Ethiopia's army did at the Battle of Adwa",
+      "Ethiopia fielded a large, unified army under Menelik II against a small, overextended Italian force, while Britain could reinforce after Isandlwana",
+      "Britain formally recognized full Zulu independence immediately after Isandlwana, just as Italy later recognized Ethiopian independence after Adwa",
+      "Italy fielded a substantially larger and better-supplied invading army at Adwa than Britain committed during the entire Anglo-Zulu War"
     ],
     "answer": "B",
     "hints": [
@@ -358,10 +358,10 @@
     "responseFormat": "mcq",
     "problemText": "The Meiji government issued the Charter Oath in 1868, shortly after the fall of the Tokugawa shogunate. Which of the following best describes the Charter Oath's basic purpose?",
     "choices": [
-      "to formally abolish the office of the Japanese emperor",
-      "to establish Japan's first detailed, fully drafted national constitution",
-      "to set out broad guiding principles for Japan's new government, including consultative decision-making and openness to useful outside knowledge",
-      "to declare war on Qing China immediately following the Tokugawa shogunate's fall"
+      "to formally abolish the imperial throne and replace it with an elected Meiji parliament",
+      "to establish, in 1868, Japan's first detailed and fully drafted written national constitution",
+      "to set out broad guiding principles for Japan's new government, favoring consultative rule and openness to outside knowledge",
+      "to declare war on Qing China immediately following the Tokugawa shogunate's collapse in 1868"
     ],
     "answer": "C",
     "hints": [
@@ -377,10 +377,10 @@
     "responseFormat": "mcq",
     "problemText": "Meiji Japan's reform program selectively adapted foreign knowledge and technology within a framework that preserved and strengthened the emperor's central authority, while Qing China's roughly contemporary Self-Strengthening Movement attempted to adopt foreign technology without comparably restructuring its political institutions. Which conclusion do historians most often draw from contrasting these two reform efforts?",
     "choices": [
-      "both reform efforts were identical in scope, timing, and political approach",
-      "Qing China's Self-Strengthening Movement restructured its political institutions far more thoroughly than Meiji Japan did",
-      "neither Meiji Japan nor Qing China adopted any foreign technology during this period",
-      "Meiji Japan's willingness to pair technological adoption with political and institutional restructuring helps explain its more thorough and successful modernization compared to Qing China's more limited Self-Strengthening efforts"
+      "both reform efforts followed the same scope, timing, and top-down political approach to modernization",
+      "Qing China's own Self-Strengthening Movement restructured its central government institutions far more thoroughly than Meiji Japan's reforms did",
+      "neither Meiji Japan nor Qing China adopted meaningful Western military or industrial technology during this period",
+      "Meiji Japan paired technological adoption with political restructuring, explaining its more thorough modernization than Qing's Self-Strengthening effort"
     ],
     "answer": "D",
     "hints": [
@@ -396,10 +396,10 @@
     "responseFormat": "mcq",
     "problemText": "Historians identify several combined causes of the late-nineteenth-century \"New Imperialism\": industrial demand for raw materials and new markets, nationalist competition among European powers, the pseudo-moral \"civilizing mission\" ideology, and military technology advantages such as the Maxim gun and quinine treatment for malaria. Which of these is best classified as a technological, rather than economic or ideological, cause?",
     "choices": [
-      "the Maxim gun and quinine, which gave European forces a decisive military and medical advantage in colonial campaigns",
-      "the demand for raw materials such as rubber, oil, and cotton",
-      "the \"civilizing mission\" ideology used to justify colonial rule",
-      "nationalist competition among rival European powers"
+      "the Maxim gun and quinine, giving European forces a decisive military and medical edge in colonial campaigns",
+      "the industrial demand for raw materials such as rubber, oil, cotton, and tin ore",
+      "the 'civilizing mission' ideology, used to justify colonial rule as a moral obligation",
+      "nationalist competition among rival European powers racing to claim territory before others did"
     ],
     "answer": "A",
     "hints": [
@@ -416,7 +416,7 @@
     "problemText": "The Berlin Conference (1884-85) brought European powers together to establish rules for dividing African territory among themselves. Which statement best describes a defining feature of this conference?",
     "choices": [
       "it was attended by delegates from every major African kingdom and empire, who jointly approved the resulting borders",
-      "it drew colonial borders across Africa without African governments' participation, often cutting across existing ethnic and political lines",
+      "it drew colonial borders across Africa without African governments' participation, cutting across ethnic and political lines",
       "it formally ended all European colonization of Africa",
       "it was convened specifically to abolish the slave trade throughout the African continent"
     ],
@@ -434,10 +434,10 @@
     "responseFormat": "mcq",
     "problemText": "Colonial governments in this period often built railroads, telegraph lines, and other infrastructure in their African and Asian territories. Which statement best evaluates the claim that this infrastructure primarily served the interests of colonized populations?",
     "choices": [
-      "colonial infrastructure was built exclusively for the personal convenience of colonized populations, with no economic function for colonizers",
-      "colonial governments built no infrastructure of any kind in their African or Asian territories",
-      "colonial infrastructure was built primarily to extract raw materials and move them toward colonial ports, not primarily to benefit local populations' own internal development",
-      "colonial infrastructure investment was distributed equally between extraction-oriented projects and locally directed development projects"
+      "colonial infrastructure was built mainly for the comfort of colonized populations, with almost no economic function for colonizers",
+      "colonial governments generally built no rail, port, or telegraph infrastructure anywhere in their African or Asian territories",
+      "colonial infrastructure was built mainly to extract raw materials and move them toward colonial ports, not to serve local development",
+      "colonial infrastructure investment was split evenly between resource-extraction projects and locally directed community development projects"
     ],
     "answer": "C",
     "hints": [
@@ -453,10 +453,10 @@
     "responseFormat": "mcq",
     "problemText": "King Leopold II ran the Congo Free State as his own personal colonial possession from 1885 to 1908, extracting rubber through a forced-labor system that killed an estimated several million Congolese, before international pressure forced him to cede the territory to the Belgian government. Which feature makes the Congo Free State a distinctive, rather than typical, case within the broader history of this period's imperialism?",
     "choices": [
-      "it was the only colonial territory in this period where any forced labor of any kind occurred",
-      "it was the only case in this period in which international pressure ever influenced a colonial power's policy",
-      "Leopold II personally governed the territory in close cooperation with an elected Belgian parliament from the outset",
-      "the territory was held as one monarch's personal possession rather than as a state-administered colony, a structure that removed even the limited oversight formal government administration might have provided"
+      "it was the only colonial territory anywhere in Africa where forced labor of any kind was ever documented",
+      "it was the only nineteenth-century case in which international public pressure ever forced a colonial power to change policy",
+      "Leopold II personally governed the territory in close, continuous cooperation with an elected Belgian parliament from day one",
+      "the territory was held as one monarch's personal possession rather than a state-administered colony, removing limited government oversight"
     ],
     "answer": "D",
     "hints": [

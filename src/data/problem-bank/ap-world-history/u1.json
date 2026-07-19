@@ -207,7 +207,7 @@
     "choices": [
       "The Inca required conquered city-states to pay tribute in goods and captives, while the Mexica organized subject labor through rotational mit'a service",
       "The Mexica extracted tribute from largely self-governing subordinate city-states, while the Inca organized subject communities' labor time directly through the mit'a system",
-      "Both empires relied on the identical rotational labor-service system, differing only in which crops individual communities were assigned to farm for the state",
+      "Both empires relied on the same rotational corvée-labor system, differing only in which specific crops each region's farmers were assigned to the state",
       "The Mexica left conquered altepetl with no ongoing obligations to Tenochtitlan at all, while only the Inca imposed any formal administrative requirements on subject peoples"
     ],
     "answer": "B",
@@ -224,10 +224,10 @@
     "responseFormat": "mcq",
     "problemText": "Cahokia, a large Mississippian urban center near the confluence of the Mississippi and Missouri rivers, reached its peak population and regional influence roughly 1050-1200, and was already in decline during the 1200-1450 window covered by this unit. A student writing an AP long-essay response citing Cahokia as evidence for this unit's period should —",
     "choices": [
-      "avoid citing Cahokia entirely, since it has no relevance to any point about Indigenous American state-building",
-      "treat Cahokia as evidence of Mexica imperial administration extending into the Mississippi River valley",
-      "date Cahokia's peak population to within the 1200-1450 window itself, since the settlement remained inhabited into the thirteenth century",
-      "cite Cahokia to establish that populous, hierarchical, complex urban societies existed in North America well before sustained European contact, while noting its peak preceded most of this unit's own window"
+      "skip discussing Cahokia altogether in this response, since Mississippian sites like it fall outside the AP World History curriculum's American units",
+      "treat Cahokia as a Mexica administrative outpost, since Mexica tribute networks reached north from central Mexico into the Mississippi River valley",
+      "place Cahokia's peak population squarely inside the 1200-1450 window, since Mississippian mound-building there continued at full scale through the fifteenth century",
+      "cite Cahokia as evidence of complex, hierarchical urban society in North America before European contact, dating its peak to before this unit's window"
     ],
     "answer": "D",
     "hints": [
@@ -246,7 +246,7 @@
       "It was a religiously and culturally connected zone made up of many competing, independently ruled states",
       "It was a single, unified political empire ruled directly by one caliph in Baghdad",
       "It had no shared religious or intellectual institutions connecting its different regions",
-      "It was confined entirely to the Arabian Peninsula, with no presence in Iberia, Africa, or Asia"
+      "It remained confined to the Arabian Peninsula only, with no meaningful presence in Iberia, Africa, or Asia"
     ],
     "answer": "A",
     "hints": [
@@ -263,8 +263,8 @@
     "problemText": "The Seljuk Sultanate (from the eleventh century), the Delhi Sultanate (established 1206), and the Mamluk Sultanate (from 1250) each exercised real, independent Muslim political power in different regions of the Dar al-Islam. The existence of these three states before and shortly after 1258 is best used as evidence that —",
     "choices": [
       "each of these three states formally answered to Baghdad's caliph for all military and tax decisions",
-      "the Abbasid caliph in Baghdad had already lost most practical political authority over much of the Dar al-Islam well before the Mongols sacked the city",
-      "Muslim political power did not exist anywhere outside Baghdad until after 1258",
+      "the Abbasid caliph in Baghdad had already lost most practical political power well before the Mongols sacked the city in 1258",
+      "Muslim political power did not exist anywhere outside Baghdad's caliphal court until the Mongols destroyed the city in 1258",
       "these three states were established only after the Mongols destroyed Baghdad in 1258, filling the resulting power vacuum"
     ],
     "answer": "B",
@@ -281,8 +281,8 @@
     "responseFormat": "mcq",
     "problemText": "In 1260, Mamluk forces defeated a Mongol army at the Battle of Ain Jalut, just two years after the Mongols had sacked Baghdad and executed the last Abbasid caliph residing there. This Mamluk victory is best used as evidence for which point about the Dar al-Islam after 1258?",
     "choices": [
-      "Muslim political power collapsed entirely across the Dar al-Islam once the Baghdad caliphate fell",
-      "the Mongols permanently ended organized Muslim resistance anywhere west of Persia",
+      "Muslim political power across the whole Dar al-Islam collapsed the moment the Baghdad caliphate finally fell in 1258",
+      "the Mongol army that sacked Baghdad went on to conquer Mamluk Egypt within the following decade",
       "an independent Muslim state could check Mongol expansion and continue exercising real political-military power after Baghdad's fall",
       "the Mamluks required the Abbasid caliph's approval before engaging Mongol forces in battle"
     ],
@@ -338,10 +338,10 @@
     "responseFormat": "mcq",
     "problemText": "Medieval Europe's revival of merchant towns and universities (Paris, Oxford, Bologna) from the eleventh-twelfth century onward built institutional centers of commerce and higher learning, even as political power in Europe remained fragmented among competing kings, feudal nobles, and the Church. Which conclusion about this revival is best supported by comparing it to the Islamic world's ulama/madrasa network covered elsewhere in this unit?",
     "choices": [
-      "Medieval Europe's fragmented political structure prevented it from developing any institutions of trade or higher learning at all",
-      "Europe's towns and universities show that a politically fragmented society could still build its own distinct institutional track for commerce and scholarship, without requiring centralized political power",
-      "European universities directly copied the madrasa curriculum and legal training used across the Dar al-Islam",
-      "the rise of universities proves that the Catholic Church had lost all independent authority over higher education by 1450"
+      "Medieval Europe's fragmented political structure prevented any independent town or university from forming without direct royal or papal sponsorship",
+      "Europe's towns and universities show that political fragmentation did not prevent building its own institutions of commerce and scholarship",
+      "European universities adopted the madrasa's curriculum and legal-training model wholesale from the Dar al-Islam's scholarly network",
+      "the rise of universities shows that the Catholic Church had already lost its independent authority over higher education well before 1450"
     ],
     "answer": "B",
     "hints": [
@@ -358,7 +358,7 @@
     "problemText": "The Delhi Sultanate, established in 1206, was a series of Turkic and Afghan Muslim dynasties ruling much of North India. Which statement best describes the religious composition of the population it governed?",
     "choices": [
       "a population that had overwhelmingly converted to Islam under Sultanate rule",
-      "a population composed entirely of Buddhist subjects",
+      "a population composed mostly of Buddhist subjects under a rival Buddhist dynasty",
       "a population that remained majority Hindu throughout Sultanate rule",
       "a population with no religious diversity at all prior to the Sultanate's founding"
     ],
@@ -376,10 +376,10 @@
     "responseFormat": "mcq",
     "problemText": "Angkor Wat, the Khmer Empire's monumental temple complex, was built in the early twelfth century originally as a Hindu temple dedicated to Vishnu, and was later adapted for Buddhist worship. A student using Angkor Wat as evidence in an AP World History response should describe it as illustrating —",
     "choices": [
-      "a temple built exclusively for Buddhist worship from its original twelfth-century construction onward",
-      "the Delhi Sultanate's direct political and religious authority extending into mainland Southeast Asia",
-      "the complete absence of Hindu religious influence anywhere in mainland Southeast Asia before 1450",
-      "the religious layering characteristic of Southeast Asia, where a single monumental site could shift between Hindu and Buddhist traditions over time"
+      "a temple built only for Buddhist worship, with no Hindu iconography anywhere in its original twelfth-century design",
+      "the Delhi Sultanate's Turkic Muslim rulers extended direct political and religious control over mainland Southeast Asian courts",
+      "a long-standing absence of Hindu religious influence anywhere across mainland Southeast Asia during the medieval period",
+      "the religious layering typical of Southeast Asia, where one monumental site shifted between Hindu and Buddhist use over time"
     ],
     "answer": "D",
     "hints": [
