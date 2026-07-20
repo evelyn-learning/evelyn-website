@@ -12,6 +12,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export interface PendulumProps {
   title?: string;
@@ -121,6 +122,57 @@ export default function PendulumRenderer({
 
   const period = 2 * Math.PI * Math.sqrt(length / g);
 
+  // ── Label layout (2026-07-19 renderer label-collision audit) ──────────
+  // θ, L and m captions are all data-positioned; when the bob swings near
+  // or above horizontal the L and m captions converge in the string's
+  // upper band. One deoverlapLabels pass, seeded with the historical
+  // spots, resolves them around the fixed geometry.
+  const labelObstacles: DeoverlapObstacle[] = [
+    { left: pivotX - 80, right: pivotX + 80, top: pivotY - 16, bottom: pivotY - 4 }, // ceiling bar + hatching
+    { left: pivotX - 3, right: pivotX + 3, top: pivotY - 3, bottom: pivotY + 3 },    // pivot dot
+    { left: leftX - 10, right: leftX + 10, top: leftY - 10, bottom: leftY + 10 },    // bob
+    { left: rightX - 10, right: rightX + 10, top: rightY - 10, bottom: rightY + 10 }, // faint right bob
+    { left: equilX - 4, right: equilX + 4, top: equilY - 4, bottom: equilY + 4 },    // equilibrium bob
+    { left: W - 158, right: W - 18, top: H - 52, bottom: H - 24 },                   // period readouts
+  ];
+  type PendLabel = DeoverlapLabel & { key: string };
+  const pendLabels: PendLabel[] = [
+    {
+      key: 'theta',
+      x: pivotX - 22 * Math.sin(theta / 2) - 8,
+      y: pivotY + 40 + 10 * Math.cos(theta / 2),
+      text: `θ = ${formatValue(amplitude)}°`,
+      fontSize: 11,
+      anchor: 'start',
+      preferDir: 'down',
+    },
+    {
+      key: 'length',
+      x: (pivotX + leftX) / 2 - 10,
+      y: (pivotY + leftY) / 2,
+      text: `L = ${formatValue(length)} m`,
+      fontSize: 11,
+      anchor: 'end',
+      preferDir: 'up',
+    },
+  ];
+  if (mass != null) {
+    pendLabels.push({
+      key: 'mass',
+      x: leftX,
+      y: leftY + 22,
+      text: `m = ${formatValue(mass)} kg`,
+      fontSize: 11,
+      preferDir: 'down',
+    });
+  }
+  const resolvedPendLabels = new Map(
+    deoverlapLabels(pendLabels, { width: W, height: H }, { obstacles: labelObstacles, baseline: 'alphabetic' })
+      .map((l) => [l.key, { x: l.x, y: l.y }]),
+  );
+  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+    resolvedPendLabels.get(key) ?? { x: fallbackX, y: fallbackY };
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -178,12 +230,13 @@ export default function PendulumRenderer({
         <g {...feat('angle', { cx: pivotX - 15, cy: pivotY + 30, w: 60, h: 40 })}>
           <path d={`M ${pivotX} ${pivotY + 30} A 30 30 0 0 1 ${pivotX - 30 * Math.sin(theta)} ${pivotY + 30 * Math.cos(theta)}`}
             stroke={DIAGRAM_COLORS.secondary} strokeWidth={1.5} fill="none" />
-          <text x={pivotX - 22 * Math.sin(theta / 2) - 8} y={pivotY + 40 + 10 * Math.cos(theta / 2)} fontSize={11} fill={DIAGRAM_COLORS.secondary} fontWeight={700}>θ = {formatValue(amplitude)}°</text>
+          <text x={labelPos('theta', pivotX - 22 * Math.sin(theta / 2) - 8, pivotY + 40 + 10 * Math.cos(theta / 2)).x} y={labelPos('theta', pivotX - 22 * Math.sin(theta / 2) - 8, pivotY + 40 + 10 * Math.cos(theta / 2)).y} fontSize={11} fill={DIAGRAM_COLORS.secondary} fontWeight={700}>θ = {formatValue(amplitude)}°</text>
         </g>
 
         {/* Length label */}
         <text
-          x={(pivotX + leftX) / 2 - 10} y={(pivotY + leftY) / 2}
+          x={labelPos('length', (pivotX + leftX) / 2 - 10, (pivotY + leftY) / 2).x}
+          y={labelPos('length', (pivotX + leftX) / 2 - 10, (pivotY + leftY) / 2).y}
           fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="end" fontWeight={600}
           {...feat('length', { cx: (pivotX + leftX) / 2 - 30, cy: (pivotY + leftY) / 2, w: 80, h: 18 })}
         >L = {formatValue(length)} m</text>
@@ -191,7 +244,8 @@ export default function PendulumRenderer({
         {/* Mass label */}
         {mass != null && (
           <text
-            x={leftX} y={leftY + 22}
+            x={labelPos('mass', leftX, leftY + 22).x}
+            y={labelPos('mass', leftX, leftY + 22).y}
             fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}
             {...feat('mass-label', { cx: leftX, cy: leftY + 22, w: 60, h: 14 })}
           >m = {formatValue(mass)} kg</text>

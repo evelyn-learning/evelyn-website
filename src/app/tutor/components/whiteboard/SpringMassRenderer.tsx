@@ -14,6 +14,7 @@ import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 /** See RayDiagramRenderer for documentation. */
 function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
@@ -328,6 +329,49 @@ function ChainRenderer({
   const omega = keff && singleMass > 0 ? Math.sqrt(keff / singleMass) : 0;
   const period = omega > 0 ? (2 * Math.PI) / omega : 0;
 
+  // ── Label layout (2026-07-19 renderer label-collision audit) ─────────
+  // Element captions were laid out per element with no awareness of their
+  // neighbours, so verbose spring-constant / mass labels on multi-element
+  // chains overlapped along their shared rows. One deoverlapLabels pass,
+  // seeded with the historical spots, resolves them around the blocks,
+  // walls, spring bands and summary readouts.
+  type ChainLabel = DeoverlapLabel & { key: string };
+  const chainLabels: ChainLabel[] = [];
+  const chainObstacles: DeoverlapObstacle[] = [
+    { left: padX, right: W - padX, top: H - 48, bottom: H - 20 }, // summary readouts
+  ];
+  for (const { el, x, w, i } of placed) {
+    const cx = x + w / 2;
+    if (el.type === 'wall') {
+      const wallW = Math.min(WALL_PX, w);
+      const wallX = x + (w - wallW) / 2;
+      chainObstacles.push({ left: wallX, right: wallX + wallW + 2, top: H_CENTER - 50, bottom: H_CENTER + 30 });
+      if (el.label) {
+        chainLabels.push({ key: `el-${i}`, x: cx, y: H_CENTER - 56, text: el.label, fontSize: 10, preferDir: 'up' });
+      }
+    } else if (el.type === 'spring') {
+      chainObstacles.push({ left: x, right: x + w, top: H_CENTER - 12, bottom: H_CENTER + 12 });
+      chainLabels.push({
+        key: `el-${i}`, x: cx, y: H_CENTER - 24,
+        text: el.label ?? `k = ${formatValue(el.k ?? 0)} N/m`, fontSize: 11, preferDir: 'up',
+      });
+    } else {
+      const boxW = Math.min(MASS_PX, w);
+      const boxX = x + (w - boxW) / 2;
+      chainObstacles.push({ left: boxX, right: boxX + boxW, top: H_CENTER - MASS_PX / 2, bottom: H_CENTER + MASS_PX / 2 });
+      chainLabels.push({
+        key: `el-${i}`, x: cx, y: H_CENTER + MASS_PX / 2 + 14,
+        text: el.label ?? `m = ${formatValue(el.mass ?? 0)} kg`, fontSize: 10, preferDir: 'down',
+      });
+    }
+  }
+  const resolvedChainLabels = new Map(
+    deoverlapLabels(chainLabels, { width: W, height: H }, { obstacles: chainObstacles, baseline: 'alphabetic' })
+      .map((l) => [l.key, { x: l.x, y: l.y }]),
+  );
+  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+    resolvedChainLabels.get(key) ?? { x: fallbackX, y: fallbackY };
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -360,7 +404,7 @@ function ChainRenderer({
                     <line key={hi} x1={wallX} y1={H_CENTER - 40 + hi * 18} x2={wallX + wallW} y2={H_CENTER - 30 + hi * 18} stroke={DIAGRAM_COLORS.slate} strokeWidth={1} />
                   ))}
                   {el.label && (
-                    <text x={cx} y={H_CENTER - 56} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{el.label}</text>
+                    <text x={labelPos(`el-${i}`, cx, H_CENTER - 56).x} y={labelPos(`el-${i}`, cx, H_CENTER - 56).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{el.label}</text>
                   )}
                 </g>
               );
@@ -371,7 +415,7 @@ function ChainRenderer({
                 <g key={`spring-${i}`} {...feat(`spring-${springN}`, { cx, cy: H_CENTER, w, h: 40 })}>
                   <path d={springPath(x, H_CENTER, x + w, H_CENTER, 6, 10)}
                     stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
-                  <text x={cx} y={H_CENTER - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>
+                  <text x={labelPos(`el-${i}`, cx, H_CENTER - 24).x} y={labelPos(`el-${i}`, cx, H_CENTER - 24).y} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>
                     {el.label ?? `k = ${formatValue(el.k ?? 0)} N/m`}
                   </text>
                 </g>
@@ -388,7 +432,7 @@ function ChainRenderer({
                 <rect x={boxX} y={boxY} width={boxW} height={boxH}
                   fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
                 <text x={cx} y={boxY + boxH / 2 + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
-                <text x={cx} y={boxY + boxH + 14} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
+                <text x={labelPos(`el-${i}`, cx, boxY + boxH + 14).x} y={labelPos(`el-${i}`, cx, boxY + boxH + 14).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">
                   {el.label ?? `m = ${formatValue(el.mass ?? 0)} kg`}
                 </text>
               </g>
@@ -456,6 +500,40 @@ export default function SpringMassRenderer({
           const naturalEnd = wallX + naturalPx;
           const displacedEnd = wallX + naturalPx + displacedPx;
 
+          // ── Label layout (2026-07-19 renderer label-collision audit) ──
+          // The mass caption's historical baseline (cy + 40) grazed the
+          // double-headed displacement arrow's shaft band (cy + 44); seed
+          // it 3px higher, then one deoverlapLabels pass over every
+          // caption resolves any residual crowding around the wall,
+          // spring band, blocks, arrow and corner readouts.
+          const legacyObstacles: DeoverlapObstacle[] = [
+            { left: wallX - 14, right: wallX, top: cy - 50, bottom: cy + 50 },      // wall
+            {
+              left: Math.min(wallX, displacedEnd), right: Math.max(wallX, displacedEnd),
+              top: cy - 13, bottom: cy + 13,
+            },                                                                       // displaced spring band
+            { left: naturalEnd, right: naturalEnd + massSize, top: cy - massSize / 2, bottom: cy + massSize / 2 }, // equilibrium ghost block
+            { left: displacedEnd, right: displacedEnd + massSize, top: cy - massSize / 2, bottom: cy + massSize / 2 }, // mass block
+            {
+              left: Math.min(naturalEnd, displacedEnd) - 3, right: Math.max(naturalEnd, displacedEnd) + 3,
+              top: cy + 41, bottom: cy + 47,
+            },                                                                       // displacement arrow
+            { left: W - 160, right: W - 18, top: H - 50, bottom: H - 22 },          // ω / T readouts
+          ];
+          type LegacyLabel = DeoverlapLabel & { key: string };
+          const legacyLabels: LegacyLabel[] = [
+            { key: 'eq', x: naturalEnd + massSize / 2, y: cy - massSize / 2 - 4, text: 'equilibrium', fontSize: 10, preferDir: 'up' },
+            { key: 'k', x: wallX + naturalPx / 2, y: cy - 24, text: `k = ${formatValue(k)} N/m`, fontSize: 11, preferDir: 'up' },
+            { key: 'mass', x: displacedEnd + massSize / 2, y: cy + massSize / 2 + 11, text: `m = ${formatValue(mass)} kg`, fontSize: 11, preferDir: 'down' },
+            { key: 'x', x: (naturalEnd + displacedEnd) / 2, y: cy + 58, text: `x = ${formatValue(displacement)} m`, fontSize: 11, preferDir: 'down' },
+          ];
+          const resolvedLegacy = new Map(
+            deoverlapLabels(legacyLabels, { width: W, height: H }, { obstacles: legacyObstacles, baseline: 'alphabetic' })
+              .map((l) => [l.key, { x: l.x, y: l.y }]),
+          );
+          const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+            resolvedLegacy.get(key) ?? { x: fallbackX, y: fallbackY };
+
           return (
             <g>
               {/* Wall */}
@@ -475,27 +553,27 @@ export default function SpringMassRenderer({
               <g {...feat('equilibrium', { cx: naturalEnd + massSize / 2, cy, w: massSize + 6, h: massSize + 18 })}>
                 <path d={springPath(wallX, cy, naturalEnd, cy)} stroke={DIAGRAM_COLORS.muted} strokeWidth={1.25} fill="none" opacity={0.35} />
                 <rect x={naturalEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill="none" stroke={DIAGRAM_COLORS.muted} strokeWidth={1} strokeDasharray="4 3" />
-                <text x={naturalEnd + massSize / 2} y={cy - massSize / 2 - 4} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">equilibrium</text>
+                <text x={labelPos('eq', naturalEnd + massSize / 2, cy - massSize / 2 - 4).x} y={labelPos('eq', naturalEnd + massSize / 2, cy - massSize / 2 - 4).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="middle">equilibrium</text>
               </g>
 
               {/* Displaced spring */}
               <g {...feat('spring', { cx: (wallX + displacedEnd) / 2, cy, w: displacedEnd - wallX, h: 40 })}>
                 <path d={springPath(wallX, cy, displacedEnd, cy)} stroke={DIAGRAM_COLORS.primary} strokeWidth={2} fill="none" />
                 {/* Spring-constant label */}
-                <text x={wallX + naturalPx / 2} y={cy - 24} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>k = {formatValue(k)} N/m</text>
+                <text x={labelPos('k', wallX + naturalPx / 2, cy - 24).x} y={labelPos('k', wallX + naturalPx / 2, cy - 24).y} fontSize={11} fill={DIAGRAM_COLORS.primary} textAnchor="middle" fontWeight={600}>k = {formatValue(k)} N/m</text>
               </g>
 
               {/* Mass */}
               <g {...feat('mass', { cx: displacedEnd + massSize / 2, cy: cy + massSize / 4, w: massSize + 6, h: massSize + 24 })}>
                 <rect x={displacedEnd} y={cy - massSize / 2} width={massSize} height={massSize} fill={DIAGRAM_COLORS.secondary} stroke="#7f1d1d" strokeWidth={1.5} />
                 <text x={displacedEnd + massSize / 2} y={cy + 4} fontSize={12} fill="white" textAnchor="middle" fontWeight={700}>m</text>
-                <text x={displacedEnd + massSize / 2} y={cy + massSize / 2 + 14} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={600}>m = {formatValue(mass)} kg</text>
+                <text x={labelPos('mass', displacedEnd + massSize / 2, cy + massSize / 2 + 11).x} y={labelPos('mass', displacedEnd + massSize / 2, cy + massSize / 2 + 11).y} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="middle" fontWeight={600}>m = {formatValue(mass)} kg</text>
               </g>
 
               {/* Displacement annotation */}
               <g {...feat('displacement', { cx: (naturalEnd + displacedEnd) / 2, cy: cy + 50, w: Math.abs(displacedEnd - naturalEnd) + 12, h: 24 })}>
                 <line x1={naturalEnd} y1={cy + 44} x2={displacedEnd} y2={cy + 44} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.5} markerStart="url(#spr-arrow-warning)" markerEnd="url(#spr-arrow-warning)" />
-                <text x={(naturalEnd + displacedEnd) / 2} y={cy + 58} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>x = {formatValue(displacement)} m</text>
+                <text x={labelPos('x', (naturalEnd + displacedEnd) / 2, cy + 58).x} y={labelPos('x', (naturalEnd + displacedEnd) / 2, cy + 58).y} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>x = {formatValue(displacement)} m</text>
               </g>
             </g>
           );

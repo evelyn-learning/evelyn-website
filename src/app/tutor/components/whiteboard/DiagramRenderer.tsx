@@ -11,7 +11,149 @@ import { useMemo } from 'react';
 import { Mafs, Vector, Point, Text, Line, useMovablePoint, Polygon } from 'mafs';
 import 'mafs/core.css';
 import type { Point as PointType } from '@/lib/knowledge/types';
+import { deoverlapLabels, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 import { EquationRenderer } from './EquationRenderer';
+
+// ── Label collision-avoidance (2026-07-19 renderer label-collision audit) ──
+// Mafs <Text> takes math coordinates, but deoverlapLabels reasons in pixels
+// (font sizes are px). mafsLabelSpace mirrors Mafs' "contain" view transform
+// at the 500px SSR width — exact under the server-side collision harness,
+// proportionally right in the browser — so each diagram runs ONE de-overlap
+// pass in pixel space over every data-positioned label, with the fixed
+// geometry (shafts, point markers, static captions) as obstacles, and maps
+// only the resolved y back to math coordinates. Labels that collide with
+// nothing keep their historical positions bit-for-bit.
+
+const MAFS_SSR_WIDTH = 500;
+const MAFS_VIEWBOX_PADDING = 0.5; // Mafs viewBox.padding default
+
+interface MafsLabelSpace {
+  toPx(x: number, y: number): [number, number];
+  yToMath(pxY: number): number;
+  /** Pixels per math unit (uniform — "contain" keeps both axes equal). */
+  pxPerUnit: number;
+  bounds: { width: number; height: number };
+}
+
+function mafsLabelSpace(
+  viewBox: { x: [number, number]; y: [number, number] },
+  height: number,
+): MafsLabelSpace {
+  const width = MAFS_SSR_WIDTH;
+  let xMin = viewBox.x[0] - MAFS_VIEWBOX_PADDING;
+  let xMax = viewBox.x[1] + MAFS_VIEWBOX_PADDING;
+  let yMin = viewBox.y[0] - MAFS_VIEWBOX_PADDING;
+  let yMax = viewBox.y[1] + MAFS_VIEWBOX_PADDING;
+  const aspect = width / height;
+  const aoiAspect = (xMax - xMin) / (yMax - yMin);
+  if (aoiAspect > aspect) {
+    const yCenter = (yMax + yMin) / 2;
+    const half = (xMax - xMin) / aspect / 2;
+    yMin = yCenter - half;
+    yMax = yCenter + half;
+  } else {
+    const xCenter = (xMax + xMin) / 2;
+    const half = ((yMax - yMin) * aspect) / 2;
+    xMin = xCenter - half;
+    xMax = xCenter + half;
+  }
+  const sx = width / (xMax - xMin);
+  const sy = height / (yMax - yMin);
+  return {
+    toPx: (x, y) => [(x - xMin) * sx, (yMax - y) * sy],
+    yToMath: (pxY) => yMax - pxY / sy,
+    pxPerUnit: sy,
+    bounds: { width, height },
+  };
+}
+
+interface DiagramLabel {
+  key: string;
+  /** Seed position in math coordinates (the historical placement). */
+  x: number;
+  y: number;
+  text: string;
+  fontSize: number;
+  preferDir?: 'up' | 'down';
+}
+
+function markerObstacle(space: MafsLabelSpace, x: number, y: number, rPx = 5): DeoverlapObstacle {
+  const [px, py] = space.toPx(x, y);
+  return { left: px - rPx, right: px + rPx, top: py - rPx, bottom: py + rPx };
+}
+
+function textObstacle(
+  space: MafsLabelSpace,
+  x: number,
+  y: number,
+  text: string,
+  fontSize: number,
+): DeoverlapObstacle {
+  const [px, py] = space.toPx(x, y);
+  const w = text.length * fontSize * 0.55;
+  const h = fontSize * 1.2;
+  return { left: px - w / 2, right: px + w / 2, top: py - h / 2, bottom: py + h / 2 };
+}
+
+/** Arrow/axis shafts as chunked obstacle boxes (a diagonal shaft's single
+ *  bbox would block far more area than the line covers). Near-vertical
+ *  shafts are skipped: de-overlap nudges vertically only, so a tall
+ *  vertical band would chase a label to the canvas edge instead of
+ *  clearing it — callers keep labels off vertical shafts by seed x. */
+function shaftObstacles(
+  space: MafsLabelSpace,
+  from: [number, number],
+  to: [number, number],
+  padPx = 3,
+): DeoverlapObstacle[] {
+  const [x1, y1] = space.toPx(from[0], from[1]);
+  const [x2, y2] = space.toPx(to[0], to[1]);
+  if (Math.abs(x2 - x1) < 8 && Math.abs(y2 - y1) > 24) return [];
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  const n = Math.max(1, Math.ceil(len / 12));
+  const boxes: DeoverlapObstacle[] = [];
+  for (let i = 0; i < n; i++) {
+    const ax = x1 + ((x2 - x1) * i) / n;
+    const ay = y1 + ((y2 - y1) * i) / n;
+    const bx = x1 + ((x2 - x1) * (i + 1)) / n;
+    const by = y1 + ((y2 - y1) * (i + 1)) / n;
+    boxes.push({
+      left: Math.min(ax, bx) - padPx,
+      right: Math.max(ax, bx) + padPx,
+      top: Math.min(ay, by) - padPx,
+      bottom: Math.max(ay, by) + padPx,
+    });
+  }
+  return boxes;
+}
+
+/** One de-overlap pass; returns resolved math positions keyed by label key.
+ *  Non-colliding labels come back reference-equal from deoverlapLabels, so
+ *  their original math coordinates are returned untouched. */
+function layoutDiagramLabels(
+  space: MafsLabelSpace,
+  labels: DiagramLabel[],
+  obstacles: DeoverlapObstacle[],
+): Map<string, { x: number; y: number }> {
+  const seeded = labels.map((l) => {
+    const [x, y] = space.toPx(l.x, l.y);
+    return { ...l, x, y };
+  });
+  const resolved = deoverlapLabels(seeded, space.bounds, {
+    baseline: 'middle',
+    obstacles,
+    pad: 2,
+    edgePad: 2,
+  });
+  const out = new Map<string, { x: number; y: number }>();
+  labels.forEach((l, i) => {
+    out.set(
+      l.key,
+      resolved[i] === seeded[i] ? { x: l.x, y: l.y } : { x: l.x, y: space.yToMath(resolved[i].y) },
+    );
+  });
+  return out;
+}
 
 interface VectorRendererProps {
   from: PointType;
@@ -20,9 +162,13 @@ interface VectorRendererProps {
   color?: string;
 }
 
+// `ssr` on every <Mafs> below: render at the 500px SSR default width when no
+// container measurement exists yet — required for the server-side label-
+// collision harness (2026-07-19 audit) and paints one frame earlier in the
+// browser. Final client geometry is unchanged (the resize observer takes over).
 export function VectorRenderer({ from, to, label, color = '#2563eb' }: VectorRendererProps) {
   return (
-    <Mafs height={200} viewBox={{ x: [-5, 5], y: [-5, 5] }}>
+    <Mafs ssr height={200} viewBox={{ x: [-5, 5], y: [-5, 5] }}>
       <Vector
         tail={[from.x, from.y]}
         tip={[to.x, to.y]}
@@ -133,10 +279,66 @@ export function VectorDiagram({
     };
   };
 
+  // De-overlap pass (2026-07-19 audit): tip labels, angle labels and the
+  // resultant label in one pass; shafts, origin marker and compass letters
+  // as obstacles. Near-parallel vectors used to composite both tip labels
+  // and pile every angle label onto the same spot near the origin.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace({ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }, 320);
+    const labels: DiagramLabel[] = [];
+    vectorData.forEach((v, index) => {
+      const seed = getLabelPosition(v.dx, v.dy, index);
+      labels.push({
+        key: `v-${index}`,
+        x: seed.x,
+        y: seed.y,
+        text: v.label,
+        fontSize: 12,
+        preferDir: v.dy >= 0 ? 'up' : 'down',
+      });
+      if (showAngleLabels && v.direction !== 0 && v.direction !== 90 && v.direction !== 180 && v.direction !== 270) {
+        labels.push({
+          key: `ang-${index}`,
+          x: Math.cos(v.rad / 2) * viewRange * 0.25,
+          y: Math.sin(v.rad / 2) * viewRange * 0.25,
+          text: `${Math.round(v.direction)}°`,
+          fontSize: 10,
+          preferDir: Math.sin(v.rad / 2) >= 0 ? 'up' : 'down',
+        });
+      }
+    });
+    if (showResultant && (resultant.dx !== 0 || resultant.dy !== 0)) {
+      labels.push({
+        key: 'res',
+        x: resultant.dx * 1.15,
+        y: resultant.dy * 1.15,
+        text: resultantLabel,
+        fontSize: 12,
+        preferDir: resultant.dy >= 0 ? 'up' : 'down',
+      });
+    }
+    const obstacles: DeoverlapObstacle[] = [markerObstacle(space, 0, 0)];
+    vectorData.forEach((v) => obstacles.push(...shaftObstacles(space, [0, 0], [v.dx, v.dy])));
+    if (showResultant && (resultant.dx !== 0 || resultant.dy !== 0)) {
+      obstacles.push(...shaftObstacles(space, [0, 0], [resultant.dx, resultant.dy]));
+    }
+    if (showAxes) {
+      obstacles.push(
+        textObstacle(space, viewRange * 0.85, -viewRange * 0.1, 'E', 12),
+        textObstacle(space, -viewRange * 0.85, -viewRange * 0.1, 'W', 12),
+        textObstacle(space, viewRange * 0.05, viewRange * 0.85, 'N', 12),
+        textObstacle(space, viewRange * 0.05, -viewRange * 0.85, 'S', 12),
+      );
+    }
+    return layoutDiagramLabels(space, labels, obstacles);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vectorData, viewRange, showAngleLabels, showResultant, resultant, resultantLabel, showAxes]);
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
       <Mafs
+        ssr
         height={320}
         viewBox={{ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }}
       >
@@ -168,7 +370,8 @@ export function VectorDiagram({
 
         {/* Draw each vector */}
         {vectorData.map((v, index) => {
-          const labelPos = getLabelPosition(v.dx, v.dy, index);
+          const labelPos = labelLayout.get(`v-${index}`) ?? getLabelPosition(v.dx, v.dy, index);
+          const angPos = labelLayout.get(`ang-${index}`);
           return (
             <g key={index}>
               <Vector
@@ -182,10 +385,10 @@ export function VectorDiagram({
                 {v.label}
               </Text>
               {/* Angle arc indicator */}
-              {showAngleLabels && v.direction !== 0 && v.direction !== 90 && v.direction !== 180 && v.direction !== 270 && (
+              {showAngleLabels && v.direction !== 0 && v.direction !== 90 && v.direction !== 180 && v.direction !== 270 && angPos && (
                 <Text
-                  x={Math.cos(v.rad / 2) * viewRange * 0.25}
-                  y={Math.sin(v.rad / 2) * viewRange * 0.25}
+                  x={angPos.x}
+                  y={angPos.y}
                   size={10}
                 >
                   {Math.round(v.direction)}°
@@ -206,8 +409,8 @@ export function VectorDiagram({
               style="dashed"
             />
             <Text
-              x={resultant.dx * 1.15}
-              y={resultant.dy * 1.15}
+              x={(labelLayout.get('res') ?? { x: resultant.dx * 1.15, y: resultant.dy * 1.15 }).x}
+              y={(labelLayout.get('res') ?? { x: resultant.dx * 1.15, y: resultant.dy * 1.15 }).y}
               size={12}
             >
               {resultantLabel}
@@ -305,35 +508,84 @@ export function FreeBodyDiagram({
 
   const viewRange = 6; // Fixed view range since we normalize vector lengths
 
+  // De-overlap pass (2026-07-19 audit): same-direction forces used to put
+  // both labels on the identical spot past the shared tip, and the object
+  // caption sat ON the horizontal/vertical shafts. Caption gets a
+  // width-aware seed x when a vertical shaft exists (vertical nudging
+  // can't clear a vertical band); everything else resolves vertically.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace({ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }, 300);
+    const s = space.pxPerUnit;
+    const hasVerticalShaft = vectors.some((v) => {
+      const [x1, y1] = space.toPx(0, 0);
+      const [x2, y2] = space.toPx(v.dx, v.dy);
+      return Math.abs(x2 - x1) < 8 && Math.abs(y2 - y1) > 24;
+    });
+    const captionHalfW = (objectLabel.length * 11 * 0.55) / 2;
+    const captionX = hasVerticalShaft ? Math.max(0.6, (captionHalfW + 8) / s) : 0.6;
+    const labels: DiagramLabel[] = [
+      { key: 'obj', x: captionX, y: 0, text: objectLabel, fontSize: 11, preferDir: 'up' },
+      ...vectors.map((v, i): DiagramLabel => ({
+        key: `f-${i}`,
+        x: v.labelX,
+        y: v.labelY,
+        text: v.label,
+        fontSize: 13,
+        preferDir: v.dy < -0.01 ? 'down' : 'up',
+      })),
+    ];
+    const showNetVector = showNet && (Math.abs(netForce.dx) > 0.01 || Math.abs(netForce.dy) > 0.01);
+    if (showNetVector) {
+      labels.push({
+        key: 'net',
+        x: netForce.dx * 1.3 + 0.5,
+        y: netForce.dy * 1.3 + 0.5,
+        text: 'F_net',
+        fontSize: 13,
+        preferDir: netForce.dy >= 0 ? 'up' : 'down',
+      });
+    }
+    const obstacles: DeoverlapObstacle[] = [];
+    vectors.forEach((v) => obstacles.push(...shaftObstacles(space, [0, 0], [v.dx, v.dy])));
+    if (showNetVector) obstacles.push(...shaftObstacles(space, [0, 0], [netForce.dx, netForce.dy]));
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [vectors, netForce, showNet, objectLabel]);
+  const objPos = labelLayout.get('obj') ?? { x: 0.6, y: 0 };
+  const netPos = labelLayout.get('net') ?? { x: netForce.dx * 1.3 + 0.5, y: netForce.dy * 1.3 + 0.5 };
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">Free Body Diagram</h4>
       <Mafs
+        ssr
         height={300}
         viewBox={{ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }}
       >
         {/* Central object */}
         <Point x={0} y={0} color="#64748b" />
-        <Text x={0.6} y={0} size={11}>{objectLabel}</Text>
+        <Text x={objPos.x} y={objPos.y} size={11}>{objectLabel}</Text>
 
         {/* Force vectors */}
-        {vectors.map((v, index) => (
-          <g key={index}>
-            <Vector
-              tail={[0, 0]}
-              tip={[v.dx, v.dy]}
-              color={v.color || '#2563eb'}
-              weight={3}
-            />
-            <Text
-              x={v.labelX}
-              y={v.labelY}
-              size={13}
-            >
-              {v.label}
-            </Text>
-          </g>
-        ))}
+        {vectors.map((v, index) => {
+          const labelPos = labelLayout.get(`f-${index}`) ?? { x: v.labelX, y: v.labelY };
+          return (
+            <g key={index}>
+              <Vector
+                tail={[0, 0]}
+                tip={[v.dx, v.dy]}
+                color={v.color || '#2563eb'}
+                weight={3}
+              />
+              <Text
+                x={labelPos.x}
+                y={labelPos.y}
+                size={13}
+              >
+                {v.label}
+              </Text>
+            </g>
+          );
+        })}
 
         {/* Net force vector */}
         {showNet && (Math.abs(netForce.dx) > 0.01 || Math.abs(netForce.dy) > 0.01) && (
@@ -346,8 +598,8 @@ export function FreeBodyDiagram({
               style="dashed"
             />
             <Text
-              x={netForce.dx * 1.3 + 0.5}
-              y={netForce.dy * 1.3 + 0.5}
+              x={netPos.x}
+              y={netPos.y}
               size={13}
             >
               F_net
@@ -412,10 +664,30 @@ export function MotionDiagram({
     });
   }, [positions, showVelocityVectors]);
 
+  // De-overlap pass (2026-07-19 audit): decelerating motion bunches the
+  // dots up, compositing adjacent t=…s captions. Dots and velocity shafts
+  // are obstacles; captions stack downward away from the dot row.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace(bounds, 250);
+    const labels: DiagramLabel[] = positions.map((pos, i): DiagramLabel => ({
+      key: `t-${i}`,
+      x: pos.x,
+      y: pos.y - 0.5,
+      text: `t=${pos.t}s`,
+      fontSize: 10,
+      preferDir: 'down',
+    }));
+    const obstacles: DeoverlapObstacle[] = positions.map((pos) => markerObstacle(space, pos.x, pos.y));
+    velocities.forEach((v) =>
+      obstacles.push(...shaftObstacles(space, [v.from.x, v.from.y], [v.from.x + v.dx, v.from.y + v.dy])),
+    );
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [positions, velocities, bounds]);
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
-      <Mafs height={250} viewBox={bounds}>
+      <Mafs ssr height={250} viewBox={bounds}>
         {/* Ground line */}
         <Line.Segment
           point1={[bounds.x[0], 0]}
@@ -424,18 +696,21 @@ export function MotionDiagram({
         />
 
         {/* Position dots */}
-        {positions.map((pos, index) => (
-          <g key={index}>
-            <Point
-              x={pos.x}
-              y={pos.y}
-              color={index === 0 ? '#16a34a' : index === positions.length - 1 ? '#dc2626' : '#2563eb'}
-            />
-            <Text x={pos.x} y={pos.y - 0.5} size={10}>
-              t={pos.t}s
-            </Text>
-          </g>
-        ))}
+        {positions.map((pos, index) => {
+          const tPos = labelLayout.get(`t-${index}`) ?? { x: pos.x, y: pos.y - 0.5 };
+          return (
+            <g key={index}>
+              <Point
+                x={pos.x}
+                y={pos.y}
+                color={index === 0 ? '#16a34a' : index === positions.length - 1 ? '#dc2626' : '#2563eb'}
+              />
+              <Text x={tPos.x} y={tPos.y} size={10}>
+                t={pos.t}s
+              </Text>
+            </g>
+          );
+        })}
 
         {/* Connect with dashed line */}
         {positions.slice(0, -1).map((pos, index) => (
@@ -554,10 +829,62 @@ export function ProjectileMotionDiagram({
     y: [-2, maxHeight + 4] as [number, number],
   };
 
+  // De-overlap pass (2026-07-19 audit): the v₀/θ/max-height/range captions
+  // share the pass; key-point + velocity-point markers and the component-
+  // vector shafts are obstacles (low flat arcs crowd all four together).
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace(
+      { x: [-3, range + 5], y: [-2, maxHeight + 4] },
+      300,
+    );
+    const labels: DiagramLabel[] = [
+      { key: 'v0', x: v0x * 0.15, y: v0y * 0.15 + 2, text: `v₀ = ${v0} m/s`, fontSize: 12, preferDir: 'up' },
+      { key: 'theta', x: 2, y: 0.8, text: `θ = ${angle}°`, fontSize: 12, preferDir: 'up' },
+      {
+        key: 'maxh',
+        x: range / 2,
+        y: maxHeight + 1.2,
+        text: `Max height: ${Math.round(maxHeight * 10) / 10}m`,
+        fontSize: 11,
+        preferDir: 'up',
+      },
+      {
+        key: 'range',
+        x: range,
+        y: -1.2,
+        text: `Range: ${Math.round(range * 10) / 10}m`,
+        fontSize: 11,
+        preferDir: 'down',
+      },
+    ];
+    const obstacles: DeoverlapObstacle[] = [
+      markerObstacle(space, 0, 0),
+      markerObstacle(space, range / 2, maxHeight),
+      markerObstacle(space, range, 0),
+    ];
+    if (showVelocityAtPoints) {
+      for (const pt of velocityPoints) {
+        obstacles.push(markerObstacle(space, pt.x, pt.y));
+        obstacles.push(...shaftObstacles(space, [pt.x, pt.y], [pt.x + pt.vx * vectorScale, pt.y]));
+        if (Math.abs(pt.vy) > 0.5) {
+          obstacles.push(...shaftObstacles(space, [pt.x, pt.y], [pt.x, pt.y + pt.vy * vectorScale]));
+        }
+        obstacles.push(
+          ...shaftObstacles(space, [pt.x, pt.y], [pt.x + pt.vx * vectorScale, pt.y + pt.vy * vectorScale]),
+        );
+      }
+    }
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [v0, v0x, v0y, angle, range, maxHeight, vectorScale, velocityPoints, showVelocityAtPoints]);
+  const v0Pos = labelLayout.get('v0') ?? { x: v0x * 0.15, y: v0y * 0.15 + 2 };
+  const thetaPos = labelLayout.get('theta') ?? { x: 2, y: 0.8 };
+  const maxhPos = labelLayout.get('maxh') ?? { x: range / 2, y: maxHeight + 1.2 };
+  const rangePos = labelLayout.get('range') ?? { x: range, y: -1.2 };
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">Projectile Motion</h4>
-      <Mafs height={300} viewBox={viewBox}>
+      <Mafs ssr height={300} viewBox={viewBox}>
         {/* Ground */}
         <Line.Segment
           point1={[viewBox.x[0], 0]}
@@ -612,12 +939,12 @@ export function ProjectileMotionDiagram({
         ))}
 
         {/* Initial velocity label */}
-        <Text x={v0x * 0.15} y={v0y * 0.15 + 2} size={12}>
+        <Text x={v0Pos.x} y={v0Pos.y} size={12}>
           v₀ = {v0} m/s
         </Text>
 
         {/* Angle label */}
-        <Text x={2} y={0.8} size={12}>
+        <Text x={thetaPos.x} y={thetaPos.y} size={12}>
           θ = {angle}°
         </Text>
 
@@ -627,10 +954,10 @@ export function ProjectileMotionDiagram({
         <Point x={range} y={0} color="#dc2626" />
 
         {/* Max height and range labels */}
-        <Text x={range / 2} y={maxHeight + 1.2} size={11}>
+        <Text x={maxhPos.x} y={maxhPos.y} size={11}>
           Max height: {Math.round(maxHeight * 10) / 10}m
         </Text>
-        <Text x={range} y={-1.2} size={11}>
+        <Text x={rangePos.x} y={rangePos.y} size={11}>
           Range: {Math.round(range * 10) / 10}m
         </Text>
       </Mafs>
@@ -669,9 +996,36 @@ export function CoordinateSystemDiagram({
   showLabels = true,
   vectors = [],
 }: CoordinateSystemProps) {
+  // De-overlap pass (2026-07-19 audit): vector labels converge when the
+  // model emits nearby tips; axis letters and shafts are obstacles.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace({ x: [-5, 5], y: [-5, 5] }, 250);
+    const labels: DiagramLabel[] = vectors.map((v, i): DiagramLabel => ({
+      key: `v-${i}`,
+      x: v.to.x + 0.3,
+      y: v.to.y + 0.3,
+      text: v.label,
+      fontSize: 14,
+      preferDir: v.to.y >= origin.y ? 'up' : 'down',
+    }));
+    const obstacles: DeoverlapObstacle[] = [
+      ...shaftObstacles(space, [origin.x, origin.y], [origin.x + 4, origin.y]),
+      ...shaftObstacles(space, [origin.x, origin.y], [origin.x, origin.y + 4]),
+    ];
+    if (showLabels) {
+      obstacles.push(
+        textObstacle(space, origin.x + 4.3, origin.y, 'x', 16),
+        textObstacle(space, origin.x, origin.y + 4.3, 'y', 16),
+        textObstacle(space, origin.x - 0.3, origin.y - 0.3, 'O', 14),
+      );
+    }
+    vectors.forEach((v) => obstacles.push(...shaftObstacles(space, [origin.x, origin.y], [v.to.x, v.to.y])));
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [vectors, origin, showLabels]);
+
   return (
     <div className="diagram-container">
-      <Mafs height={250} viewBox={{ x: [-5, 5], y: [-5, 5] }}>
+      <Mafs ssr height={250} viewBox={{ x: [-5, 5], y: [-5, 5] }}>
         {/* Axes */}
         <Vector tail={[origin.x, origin.y]} tip={[origin.x + 4, origin.y]} color="#64748b" weight={2} />
         <Vector tail={[origin.x, origin.y]} tip={[origin.x, origin.y + 4]} color="#64748b" weight={2} />
@@ -685,19 +1039,22 @@ export function CoordinateSystemDiagram({
         )}
 
         {/* Custom vectors */}
-        {vectors.map((v, index) => (
-          <g key={index}>
-            <Vector
-              tail={[origin.x, origin.y]}
-              tip={[v.to.x, v.to.y]}
-              color={v.color || '#2563eb'}
-              weight={3}
-            />
-            <Text x={v.to.x + 0.3} y={v.to.y + 0.3} size={14}>
-              {v.label}
-            </Text>
-          </g>
-        ))}
+        {vectors.map((v, index) => {
+          const labelPos = labelLayout.get(`v-${index}`) ?? { x: v.to.x + 0.3, y: v.to.y + 0.3 };
+          return (
+            <g key={index}>
+              <Vector
+                tail={[origin.x, origin.y]}
+                tip={[v.to.x, v.to.y]}
+                color={v.color || '#2563eb'}
+                weight={3}
+              />
+              <Text x={labelPos.x} y={labelPos.y} size={14}>
+                {v.label}
+              </Text>
+            </g>
+          );
+        })}
       </Mafs>
     </div>
   );
@@ -782,10 +1139,42 @@ export function CircularPathDiagram({
 
   const viewRange = safeRadius + 2;
 
+  // De-overlap pass (2026-07-19 audit): points at nearby angles put their
+  // radially-offset labels at almost the same height. Point/center markers
+  // and the O caption are obstacles; labels shift away from the circle top
+  // or bottom depending on which half they sit in.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace({ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }, 300);
+    const labels: DiagramLabel[] = [];
+    safePoints.forEach((p, i) => {
+      const pos = pointPositions[p.label];
+      if (!pos || !isFinite(pos.x) || !isFinite(pos.y)) return;
+      const rad = (p.angle * Math.PI) / 180;
+      labels.push({
+        key: `p-${i}`,
+        x: pos.x + 0.5 * Math.cos(rad),
+        y: pos.y + 0.5 * Math.sin(rad),
+        text: p.label,
+        fontSize: 14,
+        preferDir: Math.sin(rad) >= 0 ? 'up' : 'down',
+      });
+    });
+    const obstacles: DeoverlapObstacle[] = [
+      markerObstacle(space, safeCenter.x, safeCenter.y),
+      textObstacle(space, safeCenter.x - 0.4, safeCenter.y - 0.4, 'O', 14),
+    ];
+    safePoints.forEach((p) => {
+      const pos = pointPositions[p.label];
+      if (pos && isFinite(pos.x) && isFinite(pos.y)) obstacles.push(markerObstacle(space, pos.x, pos.y));
+    });
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [safePoints, pointPositions, safeCenter, viewRange]);
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
       <Mafs
+        ssr
         height={300}
         viewBox={{ x: [-viewRange, viewRange], y: [-viewRange, viewRange] }}
       >
@@ -810,12 +1199,16 @@ export function CircularPathDiagram({
           if (!pos || !isFinite(pos.x) || !isFinite(pos.y)) return null;
           const labelOffset = 0.5;
           const rad = (p.angle * Math.PI) / 180;
+          const labelPos = labelLayout.get(`p-${index}`) ?? {
+            x: pos.x + labelOffset * Math.cos(rad),
+            y: pos.y + labelOffset * Math.sin(rad),
+          };
           return (
             <g key={index}>
               <Point x={pos.x} y={pos.y} color={p.color || '#2563eb'} />
               <Text
-                x={pos.x + labelOffset * Math.cos(rad)}
-                y={pos.y + labelOffset * Math.sin(rad)}
+                x={labelPos.x}
+                y={labelPos.y}
                 size={14}
               >
                 {p.label}
@@ -911,10 +1304,48 @@ export function PipeFlowDiagram({
   const maxV = Math.max(wideVelocity, v2, 1);
   const arrowScale = 2.5 / maxV;
 
+  // De-overlap pass (2026-07-19 audit): the pressure captions sit at y=0 —
+  // exactly on the center flow arrow. Walls and flow arrows are obstacles;
+  // the area/velocity captions outside the pipe stay untouched.
+  const labelLayout = useMemo(() => {
+    const space = mafsLabelSpace({ x: [-10, 10], y: [-5, 5] }, 300);
+    const labels: DiagramLabel[] = [
+      { key: 'a1', x: -5, y: wideHalf + 0.7, text: `A₁ = ${wideArea}`, fontSize: 13, preferDir: 'up' },
+      { key: 'a2', x: 5, y: narrowHalf + 0.7, text: `A₂ = ${narrowArea}`, fontSize: 13, preferDir: 'up' },
+      { key: 'v1', x: -5, y: -wideHalf - 0.7, text: `v₁ = ${wideVelocity} m/s`, fontSize: 13, preferDir: 'down' },
+      { key: 'v2', x: 5, y: -narrowHalf - 0.7, text: `v₂ = ${Math.round(v2 * 10) / 10} m/s`, fontSize: 13, preferDir: 'down' },
+    ];
+    if (showPressure) {
+      labels.push(
+        { key: 'p1', x: -5, y: 0, text: widePressure, fontSize: 11, preferDir: 'up' },
+        { key: 'p2', x: 5, y: 0, text: narrowPressure, fontSize: 11, preferDir: 'up' },
+      );
+    }
+    const obstacles: DeoverlapObstacle[] = [
+      // Pipe walls.
+      ...shaftObstacles(space, [-8, wideHalf], [-2, wideHalf]),
+      ...shaftObstacles(space, [-8, -wideHalf], [-2, -wideHalf]),
+      ...shaftObstacles(space, [-2, wideHalf], [2, narrowHalf]),
+      ...shaftObstacles(space, [-2, -wideHalf], [2, -narrowHalf]),
+      ...shaftObstacles(space, [2, narrowHalf], [8, narrowHalf]),
+      ...shaftObstacles(space, [2, -narrowHalf], [8, -narrowHalf]),
+      // Flow arrows.
+      ...shaftObstacles(space, [-6.5, 0], [-6.5 + wideVelocity * arrowScale, 0]),
+      ...shaftObstacles(space, [-6.5, wideHalf * 0.4], [-6.5 + wideVelocity * arrowScale, wideHalf * 0.4]),
+      ...shaftObstacles(space, [-6.5, -wideHalf * 0.4], [-6.5 + wideVelocity * arrowScale, -wideHalf * 0.4]),
+      ...shaftObstacles(space, [4, 0], [4 + v2 * arrowScale, 0]),
+      ...shaftObstacles(space, [4, narrowHalf * 0.35], [4 + v2 * arrowScale, narrowHalf * 0.35]),
+      ...shaftObstacles(space, [4, -narrowHalf * 0.35], [4 + v2 * arrowScale, -narrowHalf * 0.35]),
+    ];
+    return layoutDiagramLabels(space, labels, obstacles);
+  }, [wideArea, narrowArea, wideVelocity, v2, wideHalf, narrowHalf, arrowScale, showPressure, widePressure, narrowPressure]);
+  const posOf = (key: string, fx: number, fy: number): { x: number; y: number } =>
+    labelLayout.get(key) ?? { x: fx, y: fy };
+
   return (
     <div className="diagram-container">
       <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
-      <Mafs height={300} viewBox={{ x: [-10, 10], y: [-5, 5] }}>
+      <Mafs ssr height={300} viewBox={{ x: [-10, 10], y: [-5, 5] }}>
         {/* Wide section — top wall */}
         <Line.Segment point1={[-8, wideHalf]} point2={[-2, wideHalf]} color="#475569" weight={3} />
         {/* Wide section — bottom wall */}
@@ -945,12 +1376,12 @@ export function PipeFlowDiagram({
         <Vector tail={[4, -narrowHalf * 0.35]} tip={[4 + v2 * arrowScale, -narrowHalf * 0.35]} color="#fca5a5" weight={2} />
 
         {/* Area labels */}
-        <Text x={-5} y={wideHalf + 0.7} size={13}>A₁ = {wideArea}</Text>
-        <Text x={5} y={narrowHalf + 0.7} size={13}>A₂ = {narrowArea}</Text>
+        <Text x={posOf('a1', -5, wideHalf + 0.7).x} y={posOf('a1', -5, wideHalf + 0.7).y} size={13}>A₁ = {wideArea}</Text>
+        <Text x={posOf('a2', 5, narrowHalf + 0.7).x} y={posOf('a2', 5, narrowHalf + 0.7).y} size={13}>A₂ = {narrowArea}</Text>
 
         {/* Velocity labels */}
-        <Text x={-5} y={-wideHalf - 0.7} size={13}>v₁ = {wideVelocity} m/s</Text>
-        <Text x={5} y={-narrowHalf - 0.7} size={13}>v₂ = {Math.round(v2 * 10) / 10} m/s</Text>
+        <Text x={posOf('v1', -5, -wideHalf - 0.7).x} y={posOf('v1', -5, -wideHalf - 0.7).y} size={13}>v₁ = {wideVelocity} m/s</Text>
+        <Text x={posOf('v2', 5, -narrowHalf - 0.7).x} y={posOf('v2', 5, -narrowHalf - 0.7).y} size={13}>v₂ = {Math.round(v2 * 10) / 10} m/s</Text>
 
         {/* Area dimension arrows */}
         <Line.Segment point1={[-8.5, -wideHalf]} point2={[-8.5, wideHalf]} color="#94a3b8" weight={1} style="dashed" />
@@ -959,8 +1390,8 @@ export function PipeFlowDiagram({
         {/* Pressure labels if enabled */}
         {showPressure && (
           <>
-            <Text x={-5} y={0} size={11}>{widePressure}</Text>
-            <Text x={5} y={0} size={11}>{narrowPressure}</Text>
+            <Text x={posOf('p1', -5, 0).x} y={posOf('p1', -5, 0).y} size={11}>{widePressure}</Text>
+            <Text x={posOf('p2', 5, 0).x} y={posOf('p2', 5, 0).y} size={11}>{narrowPressure}</Text>
           </>
         )}
       </Mafs>

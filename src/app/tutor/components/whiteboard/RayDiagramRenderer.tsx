@@ -24,6 +24,7 @@
 import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 /**
  * Build the data-feature-* attribute set used by tutor_scribble to locate
@@ -196,6 +197,65 @@ export default function RayDiagramRenderer({
   const fLeftX = cx - Math.abs(f) * pxPerCm;
   const fRightX = cx + Math.abs(f) * pxPerCm;
 
+  // Readout lines (rendered bottom-left; also an obstacle for the pass below).
+  const readoutLines = [
+    `f = ${formatValue(f)} cm`,
+    `d_o = ${formatValue(doObj)} cm`,
+    `d_i = ${Number.isFinite(di) ? formatValue(di) : '∞'} cm`,
+    `m = ${formatValue(magnification)}`,
+  ];
+
+  // ── Label layout pass (2026-07-19 renderer label-collision audit):
+  // Object / Image / focal-point captions were each placed independently
+  // around the axis band ("Image" composited into "C" for an object just
+  // beyond the center of curvature; the F' caption sat on the image arrow
+  // shaft when d_i ≈ f). One deoverlapLabels pass, seeded at the
+  // historical spots, with the object/image arrow shafts and the readout
+  // block as obstacles. ──
+  const tipBelow = imageTopY > axisY; // inverted image dips below axis
+  const imageLabelAnchor: 'start' | 'end' = imageX >= cx ? 'start' : 'end';
+  const imageLabelSeed = {
+    x: imageX + (imageX >= cx ? 8 : -8),
+    y: tipBelow ? imageTopY + 12 : imageTopY - 6,
+  };
+  type RayLabel = DeoverlapLabel & { key: string };
+  const labelSeeds: RayLabel[] = [];
+  if (!isMirror) {
+    labelSeeds.push({ key: 'focal', x: fLeftX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
+    labelSeeds.push({ key: 'focalPrime', x: fRightX, y: axisY + 16, text: "F'", fontSize: 10, preferDir: 'down' });
+  } else if (type === 'concave-mirror') {
+    labelSeeds.push({ key: 'focal', x: fLeftX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
+    labelSeeds.push({ key: 'centerOfCurvature', x: cx - 2 * Math.abs(f) * pxPerCm, y: axisY + 16, text: 'C', fontSize: 10, preferDir: 'down' });
+  } else {
+    labelSeeds.push({ key: 'focal', x: fRightX, y: axisY + 16, text: 'F', fontSize: 10, preferDir: 'down' });
+  }
+  if (showLabels) {
+    labelSeeds.push({ key: 'object', x: objX - 4, y: objTopY - 6, text: 'Object', fontSize: 11, anchor: 'end', preferDir: 'up' });
+    if (Number.isFinite(di)) {
+      labelSeeds.push({
+        key: 'image', x: imageLabelSeed.x, y: imageLabelSeed.y,
+        text: imageReal ? 'Image' : 'Image (virtual)', fontSize: 11,
+        anchor: imageLabelAnchor, preferDir: tipBelow ? 'down' : 'up',
+      });
+    }
+  }
+  const readoutW = Math.max(...readoutLines.map((s) => s.length)) * 10 * 0.55;
+  const labelObstacles: DeoverlapObstacle[] = [
+    { left: objX - 3, right: objX + 3, top: Math.min(objTopY, axisY) - 3, bottom: Math.max(objTopY, axisY) + 3 },
+    { left: 14, right: 18 + readoutW + 4, top: H - 74 - 12, bottom: H - 74 + 46 },
+  ];
+  if (Number.isFinite(di)) {
+    labelObstacles.push({ left: imageX - 3, right: imageX + 3, top: Math.min(imageTopY, axisY) - 3, bottom: Math.max(imageTopY, axisY) + 3 });
+  }
+  const resolvedLabels = deoverlapLabels(
+    labelSeeds,
+    { width: W, height: H },
+    { obstacles: labelObstacles, baseline: 'alphabetic' },
+  );
+  const labelMap = new Map(resolvedLabels.map((l) => [l.key, { x: l.x, y: l.y }]));
+  const lpos = (key: string, fallbackX: number, fallbackY: number) =>
+    labelMap.get(key) ?? { x: fallbackX, y: fallbackY };
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -231,27 +291,33 @@ export default function RayDiagramRenderer({
         {!isMirror && (
           <>
             <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fLeftX} y={axisY} label="F" />
+              <FocalMark x={fLeftX} y={axisY} label="F" labelPos={lpos('focal', fLeftX, axisY + 16)} />
             </g>
             <g {...feat('focalPrime', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fRightX} y={axisY} label="F'" />
+              <FocalMark x={fRightX} y={axisY} label="F'" labelPos={lpos('focalPrime', fRightX, axisY + 16)} />
             </g>
           </>
         )}
         {type === 'concave-mirror' && (
           <>
             <g {...feat('focal', { cx: fLeftX, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={fLeftX} y={axisY} label="F" />
+              <FocalMark x={fLeftX} y={axisY} label="F" labelPos={lpos('focal', fLeftX, axisY + 16)} />
             </g>
             {/* C = center of curvature at 2f */}
             <g {...feat('centerOfCurvature', { cx: cx - 2 * Math.abs(f) * pxPerCm, cy: axisY, w: 22, h: 22 })}>
-              <FocalMark x={cx - 2 * Math.abs(f) * pxPerCm} y={axisY} label="C" muted />
+              <FocalMark
+                x={cx - 2 * Math.abs(f) * pxPerCm}
+                y={axisY}
+                label="C"
+                muted
+                labelPos={lpos('centerOfCurvature', cx - 2 * Math.abs(f) * pxPerCm, axisY + 16)}
+              />
             </g>
           </>
         )}
         {type === 'convex-mirror' && (
           <g {...feat('focal', { cx: fRightX, cy: axisY, w: 22, h: 22 })}>
-            <FocalMark x={fRightX} y={axisY} label="F" muted />
+            <FocalMark x={fRightX} y={axisY} label="F" muted labelPos={lpos('focal', fRightX, axisY + 16)} />
           </g>
         )}
 
@@ -270,7 +336,14 @@ export default function RayDiagramRenderer({
             markerEnd="url(#rd-arrow-obj)"
           />
           {showLabels && (
-            <text x={objX - 4} y={objTopY - 6} fontSize={11} fill={DIAGRAM_COLORS.secondary} textAnchor="end" fontWeight={700}>
+            <text
+              x={lpos('object', objX - 4, objTopY - 6).x}
+              y={lpos('object', objX - 4, objTopY - 6).y}
+              fontSize={11}
+              fill={DIAGRAM_COLORS.secondary}
+              textAnchor="end"
+              fontWeight={700}
+            >
               Object
             </text>
           )}
@@ -296,29 +369,28 @@ export default function RayDiagramRenderer({
               strokeDasharray={imageReal ? undefined : '6 4'}
               markerEnd="url(#rd-arrow-img)"
             />
-            {showLabels && (() => {
-              // Place the label on the FAR side of the tip so it can't
-              // overlap the arrow itself.
-              const tipBelow = imageTopY > axisY; // inverted image dips below axis
-              const labelX = imageX + (imageX >= cx ? 8 : -8);
-              const anchor: 'start' | 'end' = imageX >= cx ? 'start' : 'end';
-              const labelY = tipBelow ? imageTopY + 12 : imageTopY - 6;
-              return (
-                <text x={labelX} y={labelY} fontSize={11} fill={DIAGRAM_COLORS.accent} textAnchor={anchor} fontWeight={700}>
-                  Image{imageReal ? '' : ' (virtual)'}
-                </text>
-              );
-            })()}
+            {showLabels && (
+              <text
+                x={lpos('image', imageLabelSeed.x, imageLabelSeed.y).x}
+                y={lpos('image', imageLabelSeed.x, imageLabelSeed.y).y}
+                fontSize={11}
+                fill={DIAGRAM_COLORS.accent}
+                textAnchor={imageLabelAnchor}
+                fontWeight={700}
+              >
+                Image{imageReal ? '' : ' (virtual)'}
+              </text>
+            )}
           </g>
           );
         })()}
 
-        {/* Readout — bottom-left corner. */}
-        <g transform={`translate(18, ${H - 74})`}>
-          <text x={0} y={0} fontSize={10} fill={DIAGRAM_COLORS.muted}>f = {formatValue(f)} cm</text>
-          <text x={0} y={14} fontSize={10} fill={DIAGRAM_COLORS.muted}>d_o = {formatValue(doObj)} cm</text>
-          <text x={0} y={28} fontSize={10} fill={DIAGRAM_COLORS.muted}>d_i = {Number.isFinite(di) ? formatValue(di) : '∞'} cm</text>
-          <text x={0} y={42} fontSize={10} fill={DIAGRAM_COLORS.muted}>m = {formatValue(magnification)}</text>
+        {/* Readout — bottom-left corner. Absolute coordinates (no transform)
+            so the label harness / layout pass can measure the lines. */}
+        <g>
+          {readoutLines.map((line, i) => (
+            <text key={i} x={18} y={H - 74 + i * 14} fontSize={10} fill={DIAGRAM_COLORS.muted}>{line}</text>
+          ))}
         </g>
       </svg>
       {/* Notes rendered as HTML so long captions wrap rather than getting
@@ -388,12 +460,16 @@ function renderElement(type: RayDiagramProps['type'], cx: number, axisY: number)
   );
 }
 
-function FocalMark({ x, y, label, muted = false }: { x: number; y: number; label: string; muted?: boolean }): React.ReactElement {
+function FocalMark({ x, y, label, muted = false, labelPos }: {
+  x: number; y: number; label: string; muted?: boolean;
+  /** Resolved caption spot from the layout pass; defaults to just below the dot. */
+  labelPos?: { x: number; y: number };
+}): React.ReactElement {
   const color = muted ? DIAGRAM_COLORS.muted : DIAGRAM_COLORS.warning;
   return (
     <g>
       <circle cx={x} cy={y} r={3} fill={color} />
-      <text x={x} y={y + 16} fontSize={10} fill={color} textAnchor="middle" fontWeight={600}>{label}</text>
+      <text x={labelPos?.x ?? x} y={labelPos?.y ?? y + 16} fontSize={10} fill={color} textAnchor="middle" fontWeight={600}>{label}</text>
     </g>
   );
 }

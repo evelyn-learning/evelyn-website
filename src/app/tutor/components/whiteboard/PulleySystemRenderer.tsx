@@ -2,6 +2,10 @@
 
 import React from 'react';
 import type { PulleyFigure, AtwoodSide } from '@/lib/tutor/diagrams/catalog/kinds/physics';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
+
+// Estimated text width — same char heuristic as label-deoverlap.
+const estTextW = (s: string, fontSize: number): number => s.length * fontSize * 0.55;
 
 export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
   const W = 480;
@@ -86,8 +90,13 @@ export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
 }
 
 function MassBlock({
-  cx, cy, label, weight, width = 64, height = 50,
-}: { cx: number; cy: number; label: string; weight?: string; width?: number; height?: number }) {
+  cx, cy, label, weight, width = 64, height = 50, weightPos,
+}: {
+  cx: number; cy: number; label: string; weight?: string; width?: number; height?: number;
+  /** Resolved weight-caption spot from a scene's deoverlap pass; defaults to
+   *  the historical below-block position. */
+  weightPos?: { x: number; y: number; anchor?: 'start' | 'middle' | 'end' };
+}) {
   return (
     <g>
       <rect x={cx - width / 2} y={cy - height / 2} width={width} height={height} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} rx={4} />
@@ -95,7 +104,13 @@ function MassBlock({
         {label}
       </text>
       {weight && (
-        <text x={cx} y={cy + height / 2 + 16} fontSize={12} textAnchor="middle" fill="#374151">
+        <text
+          x={weightPos?.x ?? cx}
+          y={weightPos?.y ?? cy + height / 2 + 16}
+          fontSize={12}
+          textAnchor={weightPos?.anchor ?? 'middle'}
+          fill="#374151"
+        >
           {weight}
         </text>
       )}
@@ -113,7 +128,7 @@ function PulleyWheel({ cx, cy, r = 16 }: { cx: number; cy: number; r?: number })
 }
 
 function AtwoodScene({
-  W, H: _H, ceilingY, left, right,
+  W, H, ceilingY, left, right,
 }: { W: number; H: number; ceilingY: number; left?: AtwoodSide; right?: AtwoodSide }) {
   // A real Atwood machine has the rope wrapping over the pulley and the two
   // masses hanging directly below the pulley's contact points. Use a wide
@@ -126,6 +141,34 @@ function AtwoodScene({
   const rightMassCx = pulleyCx + pulleyR;
   const ll = left ?? { label: 'm₁' };
   const rr = right ?? { label: 'm₂' };
+  // ── Weight-caption layout (2026-07-19 renderer label-collision audit):
+  // both captions render at massY + 42, so long strings overlap across the
+  // pulley centerline. One deoverlapLabels pass, seeded at the historical
+  // spots, with the blocks / in-block labels / pulley as obstacles. ──
+  const obstacles: DeoverlapObstacle[] = [
+    { left: 20, right: W - 20, top: ceilingY - 14, bottom: ceilingY + 2 },
+    { left: pulleyCx - pulleyR, right: pulleyCx + pulleyR, top: pulleyCy - pulleyR, bottom: pulleyCy + pulleyR },
+    ...[
+      { x: leftMassCx, label: ll.label },
+      { x: rightMassCx, label: rr.label },
+    ].flatMap((b): DeoverlapObstacle[] => [
+      { left: b.x - 28, right: b.x + 28, top: massY - 22, bottom: massY + 22 },
+      { left: b.x - estTextW(b.label, 14) / 2, right: b.x + estTextW(b.label, 14) / 2, top: massY - 6, bottom: massY + 10 },
+    ]),
+  ];
+  const resolvedWeights = deoverlapLabels(
+    [
+      { key: 'left', cx: leftMassCx, side: ll },
+      { key: 'right', cx: rightMassCx, side: rr },
+    ]
+      .filter((s) => s.side.weight)
+      .map((s): DeoverlapLabel & { key: string } => ({
+        key: s.key, x: s.cx, y: massY + 22 + 16, text: s.side.weight!, fontSize: 12, preferDir: 'down',
+      })),
+    { width: W, height: H },
+    { obstacles, baseline: 'alphabetic' },
+  );
+  const weightPos = new Map(resolvedWeights.map((l) => [l.key, { x: l.x, y: l.y }]));
   return (
     <g>
       {/* Ceiling */}
@@ -146,8 +189,8 @@ function AtwoodScene({
       />
       {/* Masses, slightly narrower than the pulley diameter so they don't
           collide visually. */}
-      <MassBlock cx={leftMassCx} cy={massY} label={ll.label} weight={ll.weight} width={56} height={44} />
-      <MassBlock cx={rightMassCx} cy={massY} label={rr.label} weight={rr.weight} width={56} height={44} />
+      <MassBlock cx={leftMassCx} cy={massY} label={ll.label} weight={ll.weight} width={56} height={44} weightPos={weightPos.get('left')} />
+      <MassBlock cx={rightMassCx} cy={massY} label={rr.label} weight={rr.weight} width={56} height={44} weightPos={weightPos.get('right')} />
     </g>
   );
 }
@@ -189,6 +232,41 @@ function InclinePulleyScene({
   const blockTopRightY = blockCy - Math.sin(rad) * blockHalf;
   const ll = left ?? { label: 'm₁' };
   const rr = right ?? { label: 'm₂' };
+  // ── Caption layout (2026-07-19 renderer label-collision audit): a
+  // shallow ramp bottom-clamps the hanging block to H - 30, which pushed
+  // its weight caption below the viewbox. Seed that caption beside the
+  // block when the below-slot doesn't fit, then run one deoverlapLabels
+  // pass over the θ / weight captions with the blocks, pulley and rope
+  // drop as obstacles. ──
+  const inclineExtent = blockHalf * (Math.cos(rad) + Math.sin(rad));
+  const hangBelowY = hangCy + 22 + 16;
+  const hangSeed = hangBelowY <= H - 8
+    ? { x: hangCx, y: hangBelowY, anchor: 'middle' as const }
+    : { x: hangCx - 32, y: hangCy + 4, anchor: 'end' as const };
+  type SceneLabel = DeoverlapLabel & { key: string };
+  const sceneLabels: SceneLabel[] = [
+    { key: 'theta', x: baseXStart + 32, y: baseY - 6, text: `θ = ${Math.round(angle)}°`, fontSize: 12, anchor: 'start', preferDir: 'up' },
+  ];
+  if (ll.weight) {
+    sceneLabels.push({ key: 'lw', x: blockCx, y: blockCy + blockHalf + 22, text: ll.weight, fontSize: 12, preferDir: 'down' });
+  }
+  if (rr.weight) {
+    sceneLabels.push({ key: 'rw', x: hangSeed.x, y: hangSeed.y, text: rr.weight, fontSize: 12, anchor: hangSeed.anchor, preferDir: 'down' });
+  }
+  const sceneObstacles: DeoverlapObstacle[] = [
+    { left: blockCx - inclineExtent, right: blockCx + inclineExtent, top: blockCy - inclineExtent, bottom: blockCy + inclineExtent },
+    { left: hangCx - 28, right: hangCx + 28, top: hangCy - 22, bottom: hangCy + 22 },
+    { left: hangCx - estTextW(rr.label, 14) / 2, right: hangCx + estTextW(rr.label, 14) / 2, top: hangCy - 6, bottom: hangCy + 10 },
+    { left: pulleyCx - pulleyR, right: pulleyCx + pulleyR, top: pulleyCy - pulleyR, bottom: pulleyCy + pulleyR },
+    { left: hangCx - 3, right: hangCx + 3, top: pulleyCy, bottom: hangCy - 22 },
+  ];
+  const resolvedScene = deoverlapLabels(
+    sceneLabels,
+    { width: W, height: H },
+    { obstacles: sceneObstacles, baseline: 'alphabetic' },
+  );
+  const scenePos = new Map(resolvedScene.map((l) => [l.key, { x: l.x, y: l.y }]));
+  const thetaPos = scenePos.get('theta') ?? { x: baseXStart + 32, y: baseY - 6 };
   return (
     <g>
       {/* Floor under everything (purely visual reference) */}
@@ -210,7 +288,7 @@ function InclinePulleyScene({
         stroke="#475569"
         strokeWidth={1.5}
       />
-      <text x={baseXStart + 32} y={baseY - 6} fontSize={12} fill="#475569" fontStyle="italic">
+      <text x={thetaPos.x} y={thetaPos.y} fontSize={12} fill="#475569" fontStyle="italic">
         θ = {Math.round(angle)}°
       </text>
       {/* Pulley wheel + tiny support to the wall on the right */}
@@ -252,12 +330,26 @@ function InclinePulleyScene({
         </text>
       </g>
       {ll.weight && (
-        <text x={blockCx} y={blockCy + blockHalf + 22} fontSize={12} textAnchor="middle" fill="#374151">
+        <text
+          x={scenePos.get('lw')?.x ?? blockCx}
+          y={scenePos.get('lw')?.y ?? blockCy + blockHalf + 22}
+          fontSize={12}
+          textAnchor="middle"
+          fill="#374151"
+        >
           {ll.weight}
         </text>
       )}
       {/* Hanging block */}
-      <MassBlock cx={hangCx} cy={hangCy} label={rr.label} weight={rr.weight} width={56} height={44} />
+      <MassBlock
+        cx={hangCx}
+        cy={hangCy}
+        label={rr.label}
+        weight={rr.weight}
+        width={56}
+        height={44}
+        weightPos={rr.weight ? { ...(scenePos.get('rw') ?? hangSeed), anchor: hangSeed.anchor } : undefined}
+      />
     </g>
   );
 }

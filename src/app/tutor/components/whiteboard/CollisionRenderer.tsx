@@ -20,6 +20,7 @@
 
 import React from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export interface CollisionBody {
   label?: string;
@@ -318,10 +319,33 @@ export default function CollisionRenderer({
     );
   }
 
-  // Render a panel of bodies. For 1D, we lay them out horizontally along the
-  // panel midline, spaced evenly. For 2D, we center and scale the bounding
-  // box of bodies to fit.
-  function renderPanel(bodies: CollisionBody[], panelX: number, isAfter: boolean): React.ReactElement {
+  // ── Panel/body geometry + shared label layout (2026-07-19 renderer
+  // label-collision audit) ── velocity / mass / "at rest" labels were placed
+  // per body with no knowledge of neighbors: head-on 1D collisions cap both
+  // arrows into the same inter-body gap so both speed labels composite there,
+  // and a vertical 2D arrow gets its wide label centered across its own
+  // shaft. Geometry (unchanged) is computed first, then one deoverlapLabels
+  // pass over every data-positioned label with the bodies, arrow shafts,
+  // panel titles and fixed captions as obstacles.
+  interface BodyGeom {
+    key: string;
+    featName: string;
+    featBox: { cx: number; cy: number; w: number; h: number };
+    cx: number;
+    cy: number;
+    r: number;
+    color: string;
+    glyph: string;
+    arrow: { x1: number; y1: number; x2: number; y2: number } | null;
+    vLabel: { x: number; y: number; text: string; preferDir: 'up' | 'down' } | null;
+    atRestY: number | null;
+    massY: number;
+    massText: string;
+  }
+
+  // For 1D, bodies are laid out horizontally along the panel midline, spaced
+  // evenly. For 2D, arrows point at vx/vy-derived angles from each body.
+  function layoutPanel(bodies: CollisionBody[], panelX: number, isAfter: boolean): BodyGeom[] {
     const panelCenterY = PANEL_Y + PANEL_H / 2;
     // Perfectly inelastic "after" panel = single merged blob
     const combine =
@@ -335,63 +359,31 @@ export default function CollisionRenderer({
       const dir = (combined.velocity ?? combined.vx ?? 0) >= 0 ? 1 : -1;
       const arrowLen = arrowLenFor(speed) * dir;
       const centerX = panelX + PANEL_W / 2;
-      const color = pickColor(combined, 0);
       const mergedLabel = bodies.map((b) => b.label ?? '').filter(Boolean).join('+') || 'A+B';
-      return (
-        <g {...feat('object-1-after', { cx: centerX, cy: panelCenterY, w: r * 2 + 40, h: r * 2 + 40 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
-          <circle
-            cx={centerX}
-            cy={panelCenterY}
-            r={r}
-            fill={color}
-            stroke={darken(color)}
-            strokeWidth={2}
-          />
-          <text
-            x={centerX}
-            y={panelCenterY + 4}
-            fontSize={12}
-            fill="white"
-            fontWeight={700}
-            textAnchor="middle"
-          >
-            {mergedLabel}
-          </text>
-          {arrowLen !== 0 && (
-            <line
-              x1={centerX + r * dir}
-              y1={panelCenterY}
-              x2={centerX + r * dir + arrowLen}
-              y2={panelCenterY}
-              stroke={COLORS.arrow}
-              strokeWidth={3}
-              markerEnd={`url(#${arrowMarkerId})`}
-            />
-          )}
-          {speed > 0 && (
-            <text
-              x={centerX + r * dir + arrowLen / 2}
-              y={panelCenterY - 10}
-              fontSize={11}
-              fill={COLORS.arrow}
-              textAnchor="middle"
-              fontWeight={600}
-            >
-              v′ = {formatNum(combined.velocity ?? combined.vx ?? 0)}
-            </text>
-          )}
-          {/* Mass label below */}
-          <text
-            x={centerX}
-            y={panelCenterY + r + 16}
-            fontSize={11}
-            fill={COLORS.muted}
-            textAnchor="middle"
-          >
-            m = {formatNum(totalMass)}
-          </text>
-        </g>
-      );
+      return [{
+        key: 'after-0',
+        featName: 'object-1-after',
+        featBox: { cx: centerX, cy: panelCenterY, w: r * 2 + 40, h: r * 2 + 40 },
+        cx: centerX,
+        cy: panelCenterY,
+        r,
+        color: pickColor(combined, 0),
+        glyph: mergedLabel,
+        arrow: arrowLen !== 0
+          ? { x1: centerX + r * dir, y1: panelCenterY, x2: centerX + r * dir + arrowLen, y2: panelCenterY }
+          : null,
+        vLabel: speed > 0
+          ? {
+              x: centerX + r * dir + arrowLen / 2,
+              y: panelCenterY - 10,
+              text: `v′ = ${formatNum(combined.velocity ?? combined.vx ?? 0)}`,
+              preferDir: 'up',
+            }
+          : null,
+        atRestY: null,
+        massY: panelCenterY + r + 16,
+        massText: `m = ${formatNum(totalMass)}`,
+      }];
     }
 
     // Standard layout: spread bodies horizontally in 1D, or place at vx/vy-derived positions in 2D.
@@ -439,142 +431,206 @@ export default function CollisionRenderer({
       return Math.max(0, Math.min(boundX, boundY) - r - LABEL_GAP);
     }
 
+    return bodies.map((b, i): BodyGeom => {
+      const featName = isAfter ? `object-${i + 1}-after` : `object-${i + 1}-before`;
+      const r = radii[i];
+      const cx = centers[i];
+      const cy = panelCenterY;
+      const color = pickColor(b, i);
+      const speed = speedOf(b);
+
+      let arrowStartX = cx;
+      let arrowStartY = cy;
+      let arrowEndX = cx;
+      let arrowEndY = cy;
+      let arrowDrawn = false;
+      let labelX = cx;
+      let labelY = cy - r - 10;
+      let labelPreferDir: 'up' | 'down' = 'up';
+
+      if (speed > 0) {
+        if (dimension === '2D') {
+          const vx = b.vx ?? 0;
+          const vy = b.vy ?? 0;
+          const theta = Math.atan2(vy, vx);
+          const requested = arrowLenFor(Math.hypot(vx, vy));
+          const cap = maxArrowLen2D(i);
+          const len = Math.min(requested, cap);
+          if (len > 4) {
+            arrowStartX = cx + Math.cos(theta) * r;
+            arrowStartY = cy - Math.sin(theta) * r;
+            arrowEndX = arrowStartX + Math.cos(theta) * len;
+            arrowEndY = arrowStartY - Math.sin(theta) * len;
+            // Label perpendicular to the arrow (offset "above" travel direction)
+            const nx = -Math.sin(theta);
+            const ny = -Math.cos(theta);
+            const midX = (arrowStartX + arrowEndX) / 2;
+            const midY = (arrowStartY + arrowEndY) / 2;
+            labelX = midX + nx * 14;
+            labelY = midY + ny * 14;
+            labelPreferDir = ny > 0 ? 'down' : 'up';
+            arrowDrawn = true;
+          }
+        } else {
+          const v = b.velocity ?? b.vx ?? 0;
+          const dir: 1 | -1 = v >= 0 ? 1 : -1;
+          const requested = arrowLenFor(Math.abs(v));
+          const cap = maxArrowLen1D(i, dir);
+          const len = Math.min(requested, cap);
+          if (len > 4) {
+            arrowStartX = cx + r * dir;
+            arrowEndX = arrowStartX + len * dir;
+            arrowStartY = cy;
+            arrowEndY = cy;
+            // Label above arrow midpoint.
+            labelX = (arrowStartX + arrowEndX) / 2;
+            labelY = cy - 10;
+            arrowDrawn = true;
+          }
+        }
+      }
+
+      const labelText = isAfter ? `v′ = ${vString(b, dimension)}` : `v = ${vString(b, dimension)}`;
+
+      return {
+        key: isAfter ? `after-${i}` : `before-${i}`,
+        featName,
+        featBox: { cx, cy, w: r * 2 + 40, h: r * 2 + 40 },
+        cx,
+        cy,
+        r,
+        color,
+        glyph: b.label || String.fromCharCode(65 + i),
+        arrow: arrowDrawn ? { x1: arrowStartX, y1: arrowStartY, x2: arrowEndX, y2: arrowEndY } : null,
+        vLabel: speed > 0
+          ? (arrowDrawn
+            // Not enough room to draw an arrow — the velocity is still
+            // reported as text above the body so the student sees the value.
+            ? { x: labelX, y: labelY, text: labelText, preferDir: labelPreferDir }
+            : { x: cx, y: cy - r - 8, text: labelText, preferDir: 'up' })
+          : null,
+        atRestY: speed === 0 ? cy + r + 14 : null,
+        massY: cy + r + (speed === 0 ? 28 : 20),
+        massText: b.mass != null ? `m = ${formatNum(b.mass)}` : '',
+      };
+    });
+  }
+
+  const beforeGeoms = layoutPanel(beforeBodies, LEFT_PANEL_X, false);
+  const afterGeoms = layoutPanel(afterBodies, RIGHT_PANEL_X, true);
+  const allGeoms = [...beforeGeoms, ...afterGeoms];
+
+  const estTextBox = (x: number, y: number, text: string, fontSize: number): DeoverlapObstacle => {
+    const w = text.length * fontSize * 0.55;
+    const h = fontSize * 1.2;
+    return { left: x - w / 2, right: x + w / 2, top: y - h * 0.8, bottom: y + h * 0.2 };
+  };
+
+  const bodyLabels: (DeoverlapLabel & { key: string })[] = [];
+  for (const g of allGeoms) {
+    if (g.vLabel) {
+      bodyLabels.push({ key: `${g.key}-v`, x: g.vLabel.x, y: g.vLabel.y, text: g.vLabel.text, fontSize: 11, preferDir: g.vLabel.preferDir });
+    }
+    if (g.atRestY != null) {
+      bodyLabels.push({ key: `${g.key}-rest`, x: g.cx, y: g.atRestY, text: 'at rest', fontSize: 10, preferDir: 'down' });
+    }
+    if (g.massText) {
+      bodyLabels.push({ key: `${g.key}-m`, x: g.cx, y: g.massY, text: g.massText, fontSize: 11, preferDir: 'down' });
+    }
+  }
+  const labelObstacles: DeoverlapObstacle[] = [
+    ...allGeoms.map((g): DeoverlapObstacle => ({ left: g.cx - g.r, right: g.cx + g.r, top: g.cy - g.r, bottom: g.cy + g.r })),
+    ...allGeoms.flatMap((g): DeoverlapObstacle[] => g.arrow
+      ? [{
+          left: Math.min(g.arrow.x1, g.arrow.x2) - 4,
+          right: Math.max(g.arrow.x1, g.arrow.x2) + 4,
+          top: Math.min(g.arrow.y1, g.arrow.y2) - 4,
+          bottom: Math.max(g.arrow.y1, g.arrow.y2) + 4,
+        }]
+      : []),
+    // Divider arrow between the panels.
+    { left: VIEWBOX_W / 2 - 10, right: VIEWBOX_W / 2 + 10, top: PANEL_Y + PANEL_H / 2 - 4, bottom: PANEL_Y + PANEL_H / 2 + 4 },
+    // Panel titles + collision-type badge.
+    estTextBox(LEFT_PANEL_X + PANEL_W / 2, PANEL_Y - 8, 'Before', 13),
+    estTextBox(RIGHT_PANEL_X + PANEL_W / 2, PANEL_Y - 8, 'After', 13),
+    estTextBox(VIEWBOX_W / 2, 30, `${labelForType(type)} · ${dimension}`, 13),
+  ];
+  if (momentumAnnotation) {
+    labelObstacles.push(estTextBox(VIEWBOX_W / 2, PANEL_Y + PANEL_H + 30, momentumAnnotation, 13));
+  }
+  if (notes) {
+    labelObstacles.push(estTextBox(VIEWBOX_W / 2, VIEWBOX_H - 10, notes, 12));
+  }
+  const resolvedBodyLabels = new Map(
+    deoverlapLabels(bodyLabels, { width: VIEWBOX_W, height: VIEWBOX_H }, { obstacles: labelObstacles, baseline: 'alphabetic' })
+      .map((l) => [l.key, { x: l.x, y: l.y }]),
+  );
+  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+    resolvedBodyLabels.get(key) ?? { x: fallbackX, y: fallbackY };
+
+  function renderPanel(geoms: BodyGeom[]): React.ReactElement {
     return (
       <g>
-        {bodies.map((b, i) => {
-          const featName = isAfter ? `object-${i + 1}-after` : `object-${i + 1}-before`;
-          const r = radii[i];
-          const cx = centers[i];
-          const cy = panelCenterY;
-          const color = pickColor(b, i);
-          const speed = speedOf(b);
-
-          let arrowStartX = cx;
-          let arrowStartY = cy;
-          let arrowEndX = cx;
-          let arrowEndY = cy;
-          let arrowDrawn = false;
-          let labelX = cx;
-          let labelY = cy - r - 10;
-
-          if (speed > 0) {
-            if (dimension === '2D') {
-              const vx = b.vx ?? 0;
-              const vy = b.vy ?? 0;
-              const theta = Math.atan2(vy, vx);
-              const requested = arrowLenFor(Math.hypot(vx, vy));
-              const cap = maxArrowLen2D(i);
-              const len = Math.min(requested, cap);
-              if (len > 4) {
-                arrowStartX = cx + Math.cos(theta) * r;
-                arrowStartY = cy - Math.sin(theta) * r;
-                arrowEndX = arrowStartX + Math.cos(theta) * len;
-                arrowEndY = arrowStartY - Math.sin(theta) * len;
-                // Label perpendicular to the arrow (offset "above" travel direction)
-                const nx = -Math.sin(theta);
-                const ny = -Math.cos(theta);
-                const midX = (arrowStartX + arrowEndX) / 2;
-                const midY = (arrowStartY + arrowEndY) / 2;
-                labelX = midX + nx * 14;
-                labelY = midY + ny * 14;
-                arrowDrawn = true;
-              }
-            } else {
-              const v = b.velocity ?? b.vx ?? 0;
-              const dir: 1 | -1 = v >= 0 ? 1 : -1;
-              const requested = arrowLenFor(Math.abs(v));
-              const cap = maxArrowLen1D(i, dir);
-              const len = Math.min(requested, cap);
-              if (len > 4) {
-                arrowStartX = cx + r * dir;
-                arrowEndX = arrowStartX + len * dir;
-                arrowStartY = cy;
-                arrowEndY = cy;
-                // Label above arrow midpoint.
-                labelX = (arrowStartX + arrowEndX) / 2;
-                labelY = cy - 10;
-                arrowDrawn = true;
-              }
-            }
-          }
-
-          const labelText = isAfter ? `v′ = ${vString(b, dimension)}` : `v = ${vString(b, dimension)}`;
-
-          return (
-            <g key={`body-${i}`} {...feat(featName, { cx, cy, w: r * 2 + 40, h: r * 2 + 40 }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
-              <circle cx={cx} cy={cy} r={r} fill={color} stroke={darken(color)} strokeWidth={2} />
+        {geoms.map((g) => (
+          <g key={g.key} {...feat(g.featName, g.featBox, { width: VIEWBOX_W, height: VIEWBOX_H })}>
+            <circle cx={g.cx} cy={g.cy} r={g.r} fill={g.color} stroke={darken(g.color)} strokeWidth={2} />
+            <text
+              x={g.cx}
+              y={g.cy + 4}
+              fontSize={12}
+              fill="white"
+              fontWeight={700}
+              textAnchor="middle"
+            >
+              {g.glyph}
+            </text>
+            {g.arrow && (
+              <line
+                x1={g.arrow.x1}
+                y1={g.arrow.y1}
+                x2={g.arrow.x2}
+                y2={g.arrow.y2}
+                stroke={COLORS.arrow}
+                strokeWidth={3}
+                markerEnd={`url(#${arrowMarkerId})`}
+              />
+            )}
+            {g.vLabel && (
               <text
-                x={cx}
-                y={cy + 4}
-                fontSize={12}
-                fill="white"
-                fontWeight={700}
-                textAnchor="middle"
-              >
-                {b.label || String.fromCharCode(65 + i)}
-              </text>
-              {arrowDrawn && (
-                <>
-                  <line
-                    x1={arrowStartX}
-                    y1={arrowStartY}
-                    x2={arrowEndX}
-                    y2={arrowEndY}
-                    stroke={COLORS.arrow}
-                    strokeWidth={3}
-                    markerEnd={`url(#${arrowMarkerId})`}
-                  />
-                  <text
-                    x={labelX}
-                    y={labelY}
-                    fontSize={11}
-                    fill={COLORS.arrow}
-                    textAnchor="middle"
-                    fontWeight={600}
-                  >
-                    {labelText}
-                  </text>
-                </>
-              )}
-              {speed > 0 && !arrowDrawn && (
-                // Not enough room to draw an arrow — report the velocity as
-                // text above the body so the student still sees the value.
-                <text
-                  x={cx}
-                  y={cy - r - 8}
-                  fontSize={11}
-                  fill={COLORS.arrow}
-                  fontWeight={600}
-                  textAnchor="middle"
-                >
-                  {labelText}
-                </text>
-              )}
-              {speed === 0 && (
-                <text
-                  x={cx}
-                  y={cy + r + 14}
-                  fontSize={10}
-                  fill={COLORS.muted}
-                  textAnchor="middle"
-                  fontStyle="italic"
-                >
-                  at rest
-                </text>
-              )}
-              {/* Mass label below each body */}
-              <text
-                x={cx}
-                y={cy + r + (speed === 0 ? 28 : 20)}
+                x={labelPos(`${g.key}-v`, g.vLabel.x, g.vLabel.y).x}
+                y={labelPos(`${g.key}-v`, g.vLabel.x, g.vLabel.y).y}
                 fontSize={11}
+                fill={COLORS.arrow}
+                textAnchor="middle"
+                fontWeight={600}
+              >
+                {g.vLabel.text}
+              </text>
+            )}
+            {g.atRestY != null && (
+              <text
+                x={labelPos(`${g.key}-rest`, g.cx, g.atRestY).x}
+                y={labelPos(`${g.key}-rest`, g.cx, g.atRestY).y}
+                fontSize={10}
                 fill={COLORS.muted}
                 textAnchor="middle"
+                fontStyle="italic"
               >
-                {b.mass != null ? `m = ${formatNum(b.mass)}` : ''}
+                at rest
               </text>
-            </g>
-          );
-        })}
+            )}
+            {/* Mass label below each body */}
+            <text
+              x={labelPos(`${g.key}-m`, g.cx, g.massY).x}
+              y={labelPos(`${g.key}-m`, g.cx, g.massY).y}
+              fontSize={11}
+              fill={COLORS.muted}
+              textAnchor="middle"
+            >
+              {g.massText}
+            </text>
+          </g>
+        ))}
       </g>
     );
   }
@@ -641,8 +697,8 @@ export default function CollisionRenderer({
           />
         </g>
 
-        {renderPanel(beforeBodies, LEFT_PANEL_X, false)}
-        {renderPanel(afterBodies, RIGHT_PANEL_X, true)}
+        {renderPanel(beforeGeoms)}
+        {renderPanel(afterGeoms)}
 
         {momentumAnnotation && (
           <text

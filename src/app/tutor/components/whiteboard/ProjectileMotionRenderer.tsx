@@ -20,6 +20,7 @@ import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export interface ProjectileMotionProps {
   title?: string;
@@ -154,12 +155,13 @@ export default function ProjectileMotionRenderer({
 
   // Trajectory path
   const steps = 80;
-  const path = Array.from({ length: steps + 1 }, (_, i) => {
+  const trajPts = Array.from({ length: steps + 1 }, (_, i) => {
     const t = (i / steps) * tFlight;
     const x = vx * t;
     const y = y0 + vy * t - 0.5 * g * t * t;
-    return `${i === 0 ? 'M' : 'L'} ${sx(x)} ${sy(Math.max(0, y))}`;
-  }).join(' ');
+    return { x: sx(x), y: sy(Math.max(0, y)) };
+  });
+  const path = trajPts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
   // Equal-time sample markers
   const samples: Array<{ x: number; y: number; t: number }> = [];
@@ -181,6 +183,83 @@ export default function ProjectileMotionRenderer({
 
   const tipXpx = sx(vxReal);
   const tipYpx = sy(y0 + vyReal);
+  const arcR = arrowRealLen * 0.3;
+
+  // ── Shared annotation-label layout (2026-07-19 renderer label-collision
+  // audit) ── h₀/v₀/vₓ/vᵧ/θ/h/Range and the axis captions were each placed
+  // independently at data-derived coordinates: low-angle launches ran the vₓ
+  // label through the range arrow and the θ label through both component
+  // shafts; steep short-range launches parked the x-caption on the range
+  // arrow and v₀ on the apex label. One deoverlapLabels pass over every
+  // annotation, seeded at the historical spots (X clamped into the viewbox),
+  // with the trajectory band, axes, ground and every arrow as obstacles.
+  const estW = (s: string, fontSize: number) => s.length * fontSize * 0.55;
+  const clampX = (x: number, w: number, anchor: 'start' | 'middle' | 'end') => {
+    const left = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+    const shift = Math.max(3 - left, 0) - Math.max(left + w - (VIEWBOX_W - 3), 0);
+    return x + shift;
+  };
+  type AnnLabel = DeoverlapLabel & { key: string };
+  const annLabels: AnnLabel[] = [];
+  const addAnn = (
+    key: string, x: number, y: number, text: string, fontSize: number,
+    anchor: 'start' | 'middle' | 'end', preferDir: 'up' | 'down',
+  ) => annLabels.push({ key, x: clampX(x, estW(text, fontSize), anchor), y, text, fontSize, anchor, preferDir });
+
+  if (y0 > 0) {
+    addAnn('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2, `h₀ = ${formatValue(y0)} ${distanceUnit}`, 10, 'end', 'up');
+  }
+  addAnn(
+    'v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14),
+    `v₀ = ${formatValue(v0)} ${speedUnit}`, 11, vxReal >= 0 ? 'start' : 'end', vyReal >= 0 ? 'up' : 'down',
+  );
+  if (showComponents) {
+    addAnn('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14, `vₓ = ${formatValue(vx)}`, 10, 'middle', 'down');
+    if (Math.abs(vy) > 1e-6) {
+      addAnn('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2, `vᵧ = ${formatValue(vy)}`, 10, 'end', 'up');
+    }
+  }
+  if (Math.abs(angle) > 0.5) {
+    addAnn('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2)), `${formatValue(angle)}°`, 10, 'start', 'down');
+  }
+  if (maxH > y0 + 0.01) {
+    addAnn('h', sx(vx * tMaxH) + 4, sy(maxH) - 4, `h = ${formatValue(maxH)} ${distanceUnit}`, 10, 'start', 'up');
+  }
+  if (range > 0) {
+    addAnn('range', sx(range / 2), sy(0) + 24, `Range = ${formatValue(range)} ${distanceUnit}`, 10, 'middle', 'down');
+  }
+  addAnn('ycap', xOffset - 6, yOffset + 8, `y (${distanceUnit})`, 10, 'end', 'down');
+  addAnn('xcap', xOffset + usedW, sy(0) + 12, `x (${distanceUnit})`, 10, 'end', 'down');
+
+  const arrowBox = (x1: number, y1: number, x2: number, y2: number, pad: number): DeoverlapObstacle => ({
+    left: Math.min(x1, x2) - pad, right: Math.max(x1, x2) + pad,
+    top: Math.min(y1, y2) - pad, bottom: Math.max(y1, y2) + pad,
+  });
+  const annObstacles: DeoverlapObstacle[] = [
+    { left: xOffset, right: xOffset + usedW, top: sy(0) - 2, bottom: sy(0) + 2 },   // ground
+    { left: xOffset - 2, right: xOffset + 2, top: yOffset, bottom: sy(0) },         // y-axis
+    arrowBox(originXpx, originYpx, tipXpx, tipYpx, 4),                              // v0 arrow
+  ];
+  // Trajectory as a chain of segment bands (a single bbox would swallow the plot).
+  for (let i = 0; i < steps; i += 5) {
+    const seg = trajPts.slice(i, Math.min(i + 6, steps + 1));
+    annObstacles.push({
+      left: Math.min(...seg.map((p) => p.x)) - 1.5, right: Math.max(...seg.map((p) => p.x)) + 1.5,
+      top: Math.min(...seg.map((p) => p.y)) - 1.5, bottom: Math.max(...seg.map((p) => p.y)) + 1.5,
+    });
+  }
+  if (showComponents) {
+    annObstacles.push(arrowBox(originXpx, originYpx, sx(vxReal), originYpx, 4));
+    if (Math.abs(vy) > 1e-6) annObstacles.push(arrowBox(originXpx, originYpx, originXpx, sy(y0 + vyReal), 4));
+  }
+  if (range > 0) annObstacles.push(arrowBox(sx(0), sy(0) + 12, sx(range), sy(0) + 12, 4));
+
+  const resolvedAnn = new Map(
+    deoverlapLabels(annLabels, { width: VIEWBOX_W, height: VIEWBOX_H }, { obstacles: annObstacles, baseline: 'alphabetic' })
+      .map((l) => [l.key, { x: l.x, y: l.y }]),
+  );
+  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+    resolvedAnn.get(key) ?? { x: fallbackX, y: fallbackY };
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
@@ -224,7 +303,7 @@ export default function ProjectileMotionRenderer({
         {y0 > 0 && (
           <g>
             <line x1={sx(0)} y1={sy(0)} x2={sx(0)} y2={sy(y0)} stroke={DIAGRAM_COLORS.success} strokeWidth={1} strokeDasharray="4 3" />
-            <text x={sx(0) - 6} y={(sy(0) + sy(y0)) / 2} fontSize={10} fill={DIAGRAM_COLORS.success} textAnchor="end" fontWeight={600}>
+            <text x={labelPos('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2).x} y={labelPos('h0', sx(0) - 6, (sy(0) + sy(y0)) / 2).y} fontSize={10} fill={DIAGRAM_COLORS.success} textAnchor="end" fontWeight={600}>
               h₀ = {formatValue(y0)} {distanceUnit}
             </text>
           </g>
@@ -237,8 +316,8 @@ export default function ProjectileMotionRenderer({
             markerEnd="url(#pm-arrow-secondary)" />
           {/* v0 label: offset outward from the arrow so it doesn't sit on the trajectory. */}
           <text
-            x={tipXpx + (vxReal >= 0 ? 6 : -6)}
-            y={tipYpx + (vyReal >= 0 ? -6 : 14)}
+            x={labelPos('v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14)).x}
+            y={labelPos('v0', tipXpx + (vxReal >= 0 ? 6 : -6), tipYpx + (vyReal >= 0 ? -6 : 14)).y}
             fontSize={11}
             fill={DIAGRAM_COLORS.secondary}
             fontWeight={700}
@@ -257,8 +336,8 @@ export default function ProjectileMotionRenderer({
                 markerEnd="url(#pm-arrow-secondary)"
               />
               <text
-                x={(originXpx + sx(vxReal)) / 2}
-                y={originYpx + 14}
+                x={labelPos('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14).x}
+                y={labelPos('vx', (originXpx + sx(vxReal)) / 2, originYpx + 14).y}
                 fontSize={10}
                 fill={DIAGRAM_COLORS.secondary}
                 textAnchor="middle"
@@ -275,8 +354,8 @@ export default function ProjectileMotionRenderer({
                     markerEnd="url(#pm-arrow-secondary)"
                   />
                   <text
-                    x={originXpx - 4}
-                    y={(originYpx + sy(y0 + vyReal)) / 2}
+                    x={labelPos('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2).x}
+                    y={labelPos('vy', originXpx - 4, (originYpx + sy(y0 + vyReal)) / 2).y}
                     fontSize={10}
                     fill={DIAGRAM_COLORS.secondary}
                     textAnchor="end"
@@ -290,7 +369,6 @@ export default function ProjectileMotionRenderer({
 
           {/* Angle arc — drawn in real-world coords so it matches the tangent. */}
           {Math.abs(angle) > 0.5 && (() => {
-            const arcR = arrowRealLen * 0.3;
             const ax = sx(arcR);
             const bx = sx(arcR * Math.cos(theta));
             const by = sy(y0 + arcR * Math.sin(theta));
@@ -299,8 +377,8 @@ export default function ProjectileMotionRenderer({
                 <path d={`M ${ax} ${originYpx} A ${(ax - originXpx)} ${(originYpx - sy(y0 + arcR))} 0 0 0 ${bx} ${by}`}
                   stroke={DIAGRAM_COLORS.muted} strokeWidth={1} fill="none" />
                 <text
-                  x={sx(arcR * 0.6 * Math.cos(theta / 2))}
-                  y={sy(y0 + arcR * 0.6 * Math.sin(theta / 2))}
+                  x={labelPos('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2))).x}
+                  y={labelPos('angle', sx(arcR * 0.6 * Math.cos(theta / 2)), sy(y0 + arcR * 0.6 * Math.sin(theta / 2))).y}
                   fontSize={10}
                   fill={DIAGRAM_COLORS.muted}
                 >
@@ -315,7 +393,7 @@ export default function ProjectileMotionRenderer({
         {maxH > y0 + 0.01 && (
           <g>
             <line x1={sx(vx * tMaxH)} y1={sy(maxH)} x2={sx(vx * tMaxH)} y2={sy(0)} stroke={DIAGRAM_COLORS.success} strokeWidth={1} strokeDasharray="3 3" />
-            <text x={sx(vx * tMaxH) + 4} y={sy(maxH) - 4} fontSize={10} fill={DIAGRAM_COLORS.success} fontWeight={600}>h = {formatValue(maxH)} {distanceUnit}</text>
+            <text x={labelPos('h', sx(vx * tMaxH) + 4, sy(maxH) - 4).x} y={labelPos('h', sx(vx * tMaxH) + 4, sy(maxH) - 4).y} fontSize={10} fill={DIAGRAM_COLORS.success} fontWeight={600}>h = {formatValue(maxH)} {distanceUnit}</text>
           </g>
         )}
 
@@ -325,15 +403,15 @@ export default function ProjectileMotionRenderer({
             <line x1={sx(0)} y1={sy(0) + 12} x2={sx(range)} y2={sy(0) + 12}
               stroke={DIAGRAM_COLORS.warning} strokeWidth={1}
               markerEnd="url(#pm-arrow-warning)" markerStart="url(#pm-arrow-warning)" />
-            <text x={sx(range / 2)} y={sy(0) + 24} fontSize={10} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>
+            <text x={labelPos('range', sx(range / 2), sy(0) + 24).x} y={labelPos('range', sx(range / 2), sy(0) + 24).y} fontSize={10} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={600}>
               Range = {formatValue(range)} {distanceUnit}
             </text>
           </g>
         )}
 
         {/* Axis captions */}
-        <text x={xOffset - 6} y={yOffset + 8} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
-        <text x={xOffset + usedW} y={sy(0) + 12} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
+        <text x={labelPos('ycap', xOffset - 6, yOffset + 8).x} y={labelPos('ycap', xOffset - 6, yOffset + 8).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">y ({distanceUnit})</text>
+        <text x={labelPos('xcap', xOffset + usedW, sy(0) + 12).x} y={labelPos('xcap', xOffset + usedW, sy(0) + 12).y} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">x ({distanceUnit})</text>
       </svg>
     <DiagramNotes notes={notes} />
     </div>

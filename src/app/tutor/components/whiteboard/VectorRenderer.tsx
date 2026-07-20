@@ -15,6 +15,7 @@ import { DIAGRAM_COLORS, cycleColor } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { ArrowMarkers, arrowMarkerId } from '@/lib/tutor/diagrams/arrows';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export interface VectorSpec {
   /** Magnitude. */
@@ -165,6 +166,57 @@ export default function VectorRenderer({
   const sx = (x: number) => pad.left + ((x - xLo) / (xHi - xLo)) * plotW;
   const sy = (y: number) => pad.top + ((yHi - y) / (yHi - yLo)) * plotH;
 
+  // ── Label layout (2026-07-19 renderer label-collision audit) ─────────
+  // Converging / near-parallel vectors put their midpoint labels on top
+  // of each other, and long resultant labels ran off the right edge.
+  // Keep the historical seeds (midpoint +6/-6, tip +6/-6), clamp x into
+  // the viewbox, and run one deoverlapLabels pass with near-axis-aligned
+  // shafts as obstacles — output stays identical when nothing collides.
+  const estW = (s: string, fs: number): number => s.length * fs * 0.55;
+  const clampX = (x: number, s: string, fs: number): number =>
+    Math.min(Math.max(x, 4), W - estW(s, fs) - 4);
+  const thinShaft = (x1: number, y1: number, x2: number, y2: number): DeoverlapObstacle | null => {
+    const box = {
+      left: Math.min(x1, x2) - 3, right: Math.max(x1, x2) + 3,
+      top: Math.min(y1, y2) - 3, bottom: Math.max(y1, y2) + 3,
+    };
+    // A diagonal shaft's bounding box is mostly empty space and would
+    // push labels much farther than the line itself warrants.
+    return Math.min(box.right - box.left, box.bottom - box.top) <= 24 ? box : null;
+  };
+  const labelObstacles: DeoverlapObstacle[] = [];
+  vectors.forEach((_, i) => {
+    const ob = thinShaft(sx(tails[i].x), sy(tails[i].y), sx(tips[i].x), sy(tips[i].y));
+    if (ob) labelObstacles.push(ob);
+  });
+  if (showResultant) {
+    const ob = thinShaft(sx(0), sy(0), sx(resultant.x), sy(resultant.y));
+    if (ob) labelObstacles.push(ob);
+  }
+  const labelSeeds: Array<DeoverlapLabel & { key: string }> = [];
+  vectors.forEach((v, i) => {
+    if (!(v.label || v.magnitude)) return;
+    const text = `${v.label || `v${i + 1}`} (${formatValue(v.magnitude)}, ${formatValue(v.direction)}°)`;
+    labelSeeds.push({
+      key: `v-${i}`, text, fontSize: 11, anchor: 'start', preferDir: 'up',
+      x: clampX((sx(tails[i].x) + sx(tips[i].x)) / 2 + 6, text, 11),
+      y: (sy(tails[i].y) + sy(tips[i].y)) / 2 - 6,
+    });
+  });
+  if (showResultant) {
+    const text = `${resultantLabel} (${formatValue(resMag)}, ${formatValue(resAngle)}°)`;
+    labelSeeds.push({
+      key: 'resultant', text, fontSize: 12, anchor: 'start', preferDir: 'up',
+      x: clampX(sx(resultant.x) + 6, text, 12),
+      y: sy(resultant.y) - 6,
+    });
+  }
+  const resolvedLabels = new Map(
+    deoverlapLabels(labelSeeds, { width: W, height: H }, { obstacles: labelObstacles, baseline: 'alphabetic' })
+      .map((l) => [l.key, l] as const),
+  );
+  const placedResultant = resolvedLabels.get('resultant');
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -196,6 +248,7 @@ export default function VectorRenderer({
             .toLowerCase()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '') || `vector-${i + 1}`;
+          const placed = resolvedLabels.get(`v-${i}`);
           return (
             <g key={`v${i}`} {...feat(`vector-${slug}`, bbox)}>
               {/* Also expose the positional alias so the tutor can use
@@ -211,9 +264,9 @@ export default function VectorRenderer({
                   <line x1={sx(tip.x)} y1={sy(tail.y)} x2={sx(tip.x)} y2={sy(tip.y)} stroke={color} strokeWidth={1} strokeDasharray="4 3" opacity={0.7} />
                 </g>
               )}
-              {(v.label || v.magnitude) && (
-                <text x={(sx(tail.x) + sx(tip.x)) / 2 + 6} y={(sy(tail.y) + sy(tip.y)) / 2 - 6} fontSize={11} fill={color} fontWeight={700}>
-                  {v.label || `v${i + 1}`} ({formatValue(v.magnitude)}, {formatValue(v.direction)}°)
+              {placed && (
+                <text x={placed.x} y={placed.y} fontSize={11} fill={color} fontWeight={700}>
+                  {placed.text}
                 </text>
               )}
             </g>
@@ -227,9 +280,11 @@ export default function VectorRenderer({
               stroke={DIAGRAM_COLORS.primary} strokeWidth={3}
               strokeDasharray="8 4"
               markerEnd={`url(#${arrowMarkerId(DIAGRAM_COLORS.primary, 'vr-arrow')})`} />
-            <text x={sx(resultant.x) + 6} y={sy(resultant.y) - 6} fontSize={12} fill={DIAGRAM_COLORS.primary} fontWeight={700}>
-              {resultantLabel} ({formatValue(resMag)}, {formatValue(resAngle)}°)
-            </text>
+            {placedResultant && (
+              <text x={placedResultant.x} y={placedResultant.y} fontSize={12} fill={DIAGRAM_COLORS.primary} fontWeight={700}>
+                {placedResultant.text}
+              </text>
+            )}
           </g>
         )}
       </svg>

@@ -12,6 +12,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { deoverlapLabels, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 /** See RayDiagramRenderer for documentation. */
 function feat(name: string, bbox: { cx: number; cy: number; w: number; h: number }) {
@@ -170,6 +171,34 @@ export default function WaveRenderer({
       return `${i === 0 ? 'M' : 'L'} ${sx(x)} ${sy(v)}`;
     }).join(' ');
 
+  // ── Label layout (2026-07-19 renderer label-collision audit) ─────────
+  // Legend entries sat at fixed x-offsets (0 / 90 / 200) regardless of
+  // label width, so verbose wave labels ran into the next entry. Flow the
+  // entries width-aware (historical offsets kept as minimums, so short
+  // labels stay pixel-identical), with a length cap mirroring the FBD
+  // retrofit. λ / A annotation labels go through deoverlapLabels below.
+  const truncate = (s: string, max = 26): string =>
+    (s.length > max ? `${s.slice(0, max - 1)}…` : s);
+  const legendX = pad.left + 10;
+  const legendY = pad.top + plotH - 6;
+  const legendEstW = (s: string): number => s.length * 10 * 0.55;
+  const legendItems: { text: string; color: string; strokeWidth: number; dash?: string }[] = [
+    { text: truncate(wave.label || 'wave'), color: wave.color || DIAGRAM_COLORS.primary, strokeWidth: 2.25 },
+  ];
+  if (secondary) {
+    legendItems.push({ text: truncate(secondary.label || 'wave 2'), color: secondary.color || DIAGRAM_COLORS.secondary, strokeWidth: 2.25, dash: '6 3' });
+  }
+  if (showSuperposition && secondary) {
+    legendItems.push({ text: 'sum', color: DIAGRAM_COLORS.accent, strokeWidth: 2.5 });
+  }
+  const legendOffsets = legendItems.reduce<number[]>((offs, _, i) => {
+    if (i === 0) return [0];
+    const prev = offs[i - 1];
+    const historical = [0, 90, 200][i];
+    offs.push(Math.max(historical, prev + 26 + legendEstW(legendItems[i - 1].text) + 12));
+    return offs;
+  }, []);
+
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
@@ -215,6 +244,32 @@ export default function WaveRenderer({
         {showAnnotations && (() => {
           const wx1 = sx(0);
           const wx2 = sx(wave.wavelength);
+          const ampX = sx(wave.wavelength / 4);
+          const ampTopY = sy(wave.amplitude);
+          // ── Label layout (2026-07-19 renderer label-collision audit) ──
+          // λ / A are data-positioned: a secondary wave with a much longer
+          // wavelength collapses the λ bracket to a sliver (label wider
+          // than the bracket, sitting on its end ticks), and a small
+          // relative amplitude parks the A label on the x-axis. One
+          // deoverlapLabels pass, seeded with the historical spots.
+          const annObstacles: DeoverlapObstacle[] = [
+            { left: wx1 - 1, right: wx2 + 1, top: pad.top + 2.5, bottom: pad.top + 5.5 },  // bracket bar
+            { left: wx1 - 1, right: wx1 + 1, top: pad.top + 1, bottom: pad.top + 10 },     // bracket end ticks
+            { left: wx2 - 1, right: wx2 + 1, top: pad.top + 1, bottom: pad.top + 10 },
+            { left: ampX + 5, right: ampX + 7, top: Math.min(axisY, ampTopY), bottom: Math.max(axisY, ampTopY) }, // amplitude bar
+            { left: pad.left, right: pad.left + plotW, top: axisY - 1.5, bottom: axisY + 1.5 }, // x-axis
+            ...(frequency != null
+              ? [{ left: W - 116, right: W - 18, top: pad.top + 6, bottom: pad.top + 32 }]  // f / T readouts
+              : []),
+          ];
+          const [lambdaLabel, ampLabel] = deoverlapLabels(
+            [
+              { x: (wx1 + wx2) / 2, y: pad.top + 18, text: `λ = ${formatValue(wave.wavelength)}`, fontSize: 11, preferDir: 'down' as const },
+              { x: ampX + 10, y: (axisY + ampTopY) / 2, text: `A = ${formatValue(wave.amplitude)}`, fontSize: 11, anchor: 'start' as const, preferDir: 'up' as const },
+            ],
+            { width: W, height: H },
+            { obstacles: annObstacles, baseline: 'alphabetic' },
+          );
           return (
             <g>
               {/* Wavelength bracket */}
@@ -222,45 +277,42 @@ export default function WaveRenderer({
                 <line x1={wx1} y1={pad.top + 4} x2={wx2} y2={pad.top + 4} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
                 <line x1={wx1} y1={pad.top + 1} x2={wx1} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
                 <line x1={wx2} y1={pad.top + 1} x2={wx2} y2={pad.top + 10} stroke={DIAGRAM_COLORS.warning} strokeWidth={1.25} />
-                <text x={(wx1 + wx2) / 2} y={pad.top + 18} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={700}>λ = {formatValue(wave.wavelength)}</text>
+                <text x={lambdaLabel.x} y={lambdaLabel.y} fontSize={11} fill={DIAGRAM_COLORS.warning} textAnchor="middle" fontWeight={700}>λ = {formatValue(wave.wavelength)}</text>
               </g>
 
               {/* Amplitude bracket — at the first peak */}
-              <g {...feat('amplitude', { cx: sx(wave.wavelength / 4) + 30, cy: (axisY + sy(wave.amplitude)) / 2, w: 60, h: Math.abs(axisY - sy(wave.amplitude)) + 12 })}>
-                <line x1={sx(wave.wavelength / 4) + 6} y1={axisY} x2={sx(wave.wavelength / 4) + 6} y2={sy(wave.amplitude)} stroke={DIAGRAM_COLORS.success} strokeWidth={1.25} />
-                <text x={sx(wave.wavelength / 4) + 10} y={(axisY + sy(wave.amplitude)) / 2} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>A = {formatValue(wave.amplitude)}</text>
+              <g {...feat('amplitude', { cx: ampX + 30, cy: (axisY + ampTopY) / 2, w: 60, h: Math.abs(axisY - ampTopY) + 12 })}>
+                <line x1={ampX + 6} y1={axisY} x2={ampX + 6} y2={ampTopY} stroke={DIAGRAM_COLORS.success} strokeWidth={1.25} />
+                <text x={ampLabel.x} y={ampLabel.y} fontSize={11} fill={DIAGRAM_COLORS.success} fontWeight={700}>A = {formatValue(wave.amplitude)}</text>
               </g>
             </g>
           );
         })()}
 
-        {/* Frequency / period readout */}
+        {/* Frequency / period readout — absolute coords (2026-07-19 audit:
+            transform-relative text hid the real positions from the
+            collision battery; same rendered spot). */}
         {frequency != null && (
-          <g transform={`translate(${W - 18}, ${pad.top + 16})`}>
-            <text x={0} y={0} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">f = {formatValue(frequency)} Hz</text>
-            <text x={0} y={12} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">T = 1/f = {formatValue(1 / frequency)} s</text>
+          <g>
+            <text x={W - 18} y={pad.top + 16} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">f = {formatValue(frequency)} Hz</text>
+            <text x={W - 18} y={pad.top + 28} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">T = 1/f = {formatValue(1 / frequency)} s</text>
           </g>
         )}
 
         {/* X-label */}
         <text x={pad.left + plotW / 2} y={pad.top + plotH + 18} fontSize={11} fill={DIAGRAM_COLORS.text} textAnchor="middle" fontWeight={600}>{xLabel}</text>
 
-        {/* Legend */}
-        <g transform={`translate(${pad.left + 10}, ${pad.top + plotH - 6})`}>
-          <line x1={0} y1={0} x2={20} y2={0} stroke={wave.color || DIAGRAM_COLORS.primary} strokeWidth={2.25} />
-          <text x={26} y={4} fontSize={10} fill={DIAGRAM_COLORS.text}>{wave.label || 'wave'}</text>
-          {secondary && (
-            <g transform="translate(90, 0)">
-              <line x1={0} y1={0} x2={20} y2={0} stroke={secondary.color || DIAGRAM_COLORS.secondary} strokeWidth={2.25} strokeDasharray="6 3" />
-              <text x={26} y={4} fontSize={10} fill={DIAGRAM_COLORS.text}>{secondary.label || 'wave 2'}</text>
+        {/* Legend — width-aware flow, absolute coords (2026-07-19 audit) */}
+        <g>
+          {legendItems.map((item, i) => (
+            <g key={`legend-${i}`}>
+              <line
+                x1={legendX + legendOffsets[i]} y1={legendY} x2={legendX + legendOffsets[i] + 20} y2={legendY}
+                stroke={item.color} strokeWidth={item.strokeWidth} strokeDasharray={item.dash}
+              />
+              <text x={legendX + legendOffsets[i] + 26} y={legendY + 4} fontSize={10} fill={DIAGRAM_COLORS.text}>{item.text}</text>
             </g>
-          )}
-          {showSuperposition && secondary && (
-            <g transform="translate(200, 0)">
-              <line x1={0} y1={0} x2={20} y2={0} stroke={DIAGRAM_COLORS.accent} strokeWidth={2.5} />
-              <text x={26} y={4} fontSize={10} fill={DIAGRAM_COLORS.text}>sum</text>
-            </g>
-          )}
+          ))}
         </g>
       </svg>
     <DiagramNotes notes={notes} />
