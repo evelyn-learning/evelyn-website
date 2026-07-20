@@ -1,5 +1,14 @@
 import { strict as assert } from 'node:assert';
-import { memoryMockStores, startOrResume, listForms, ATTEMPT_TTL_MS, type FormDoc } from './service';
+import {
+  memoryMockStores,
+  startOrResume,
+  listForms,
+  saveResponses,
+  advance,
+  GRACE_MS,
+  ATTEMPT_TTL_MS,
+  type FormDoc,
+} from './service';
 import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
 import type { SeedableItem } from './fixtures';
 import { registerBlueprint, type ExamBlueprint } from './blueprints';
@@ -126,6 +135,189 @@ async function run() {
       () => startOrResume(stores, { studentId: 's1', topicId: 'mismatch', formId: 'bad-form' }, T0),
       /form_module_not_in_blueprint/
     );
+  });
+
+  // --- Task 8: saveResponses / advance / finalize ---
+
+  const START = { studentId: 's1', topicId: 'fixture', formId: 'fixture-form-a' };
+
+  await test('merge autosave: markedForReview does not wipe answer', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    const attemptId = state.attemptId;
+
+    // First save writes an answer.
+    await saveResponses(stores, {
+      studentId: 's1', attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'A' }],
+    }, T0 + 1_000);
+    // Second (autosave) carries ONLY markedForReview.
+    await saveResponses(stores, {
+      studentId: 's1', attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', markedForReview: true }],
+    }, T0 + 2_000);
+
+    const attempt = await stores.findAttempt(attemptId);
+    const r = attempt!.responses.find((x) => x.itemId === 'fx-m1-1');
+    assert.equal(r!.answer, 'A');            // not wiped
+    assert.equal(r!.markedForReview, true);  // merged in
+  });
+
+  await test('saveResponses ignores itemIds outside the open module', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'A' }, { itemId: 'fx-m2h-1', answer: '42' }],
+    }, T0 + 1_000);
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.deepEqual(attempt!.responses.map((r) => r.itemId), ['fx-m1-1']);
+  });
+
+  await test('save after deadline+grace rejects with deadline_passed', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await assert.rejects(
+      () => saveResponses(stores, {
+        studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+        responses: [{ itemId: 'fx-m1-1', answer: 'A' }],
+      }, T0 + 4 * 60_000 + GRACE_MS + 1),
+      /deadline_passed/
+    );
+  });
+
+  await test('save with mismatched cursor rejects with attempt_not_open', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await assert.rejects(
+      () => saveResponses(stores, {
+        studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 1 },
+        responses: [{ itemId: 'fx-m1-1', answer: 'A' }],
+      }, T0 + 1_000),
+      /attempt_not_open/
+    );
+  });
+
+  await test('advance from m1 with 2/2 routes to m2-hard', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'A' }, { itemId: 'fx-m1-2', answer: 'B' }],
+    }, T0 + 30_000);
+    const next = await advance(stores, {
+      studentId: 's1', attemptId: state.attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 },
+    }, T0 + 60_000);
+    assert.equal(next.status, 'in_section');
+    assert.deepEqual(next.cursor, { sectionIdx: 0, moduleIdx: 1 });
+    assert.deepEqual(next.section!.items.map((i) => i.itemId), ['fx-m2h-1']);
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.deepEqual(attempt!.moduleRouting, [{ sectionId: 'sec1', variant: 'hard' }]);
+    assert.equal(next.section!.deadlineAt, T0 + 60_000 + 4 * 60_000);
+  });
+
+  await test('advance from m1 with 0/2 routes to m2-easy', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'C' }, { itemId: 'fx-m1-2', answer: 'C' }],
+    }, T0 + 30_000);
+    const next = await advance(stores, {
+      studentId: 's1', attemptId: state.attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 },
+    }, T0 + 60_000);
+    assert.equal(next.status, 'in_section');
+    assert.deepEqual(next.section!.items.map((i) => i.itemId), ['fx-m2e-1']);
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.deepEqual(attempt!.moduleRouting, [{ sectionId: 'sec1', variant: 'easy' }]);
+  });
+
+  // Helper: drive an attempt to just-inside sec2 (FRQ) open.
+  async function drivePastSec1(stores: ReturnType<typeof memoryMockStores>) {
+    const state = await startOrResume(stores, START, T0);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'A' }, { itemId: 'fx-m1-2', answer: 'B' }],
+    }, T0 + 30_000);
+    await advance(stores, {
+      studentId: 's1', attemptId: state.attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 },
+    }, T0 + 60_000); // now at m2-hard, cursor {0,1}
+    return state.attemptId;
+  }
+
+  await test('advance out of last module of sec1 lands at_break (1 min)', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const attemptId = await drivePastSec1(stores);
+    const brk = await advance(stores, {
+      studentId: 's1', attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 },
+    }, T0 + 120_000);
+    assert.equal(brk.status, 'at_break');
+    assert.equal(brk.breakMinutes, 1);
+    assert.equal(brk.nextSectionLabel, 'Section 2');
+    assert.deepEqual(brk.cursor, { sectionIdx: 1, moduleIdx: 0 });
+  });
+
+  await test('advance from break opens sec2 with fresh deadline', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const attemptId = await drivePastSec1(stores);
+    await advance(stores, { studentId: 's1', attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 } }, T0 + 120_000);
+    const sec2 = await advance(stores, {
+      studentId: 's1', attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 },
+    }, T0 + 200_000);
+    assert.equal(sec2.status, 'in_section');
+    assert.deepEqual(sec2.section!.items.map((i) => i.itemId), ['fx-frq-1']);
+    assert.equal(sec2.section!.deadlineAt, T0 + 200_000 + 4 * 60_000);
+  });
+
+  await test('advance out of sec2 (FRQ answered) -> status grading with rawSections persisted', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const attemptId = await drivePastSec1(stores);
+    await advance(stores, { studentId: 's1', attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 } }, T0 + 120_000);
+    await advance(stores, { studentId: 's1', attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 } }, T0 + 200_000);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId, cursor: { sectionIdx: 1, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-frq-1', frqText: 'Let them be 2k and 2m, so 2(k+m) is even.' }],
+    }, T0 + 210_000);
+    const done = await advance(stores, {
+      studentId: 's1', attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 },
+    }, T0 + 260_000);
+    assert.equal(done.status, 'grading');
+    const attempt = await stores.findAttempt(attemptId);
+    assert.equal(attempt!.status, 'grading');
+    assert.ok(attempt!.rawSections && attempt!.rawSections.length >= 1);
+    const sec1Raw = attempt!.rawSections!.find((r) => r.sectionId === 'sec1');
+    assert.equal(sec1Raw!.rawTotal, 3);    // 2 m1 mcq + 1 m2-hard numeric
+    assert.equal(sec1Raw!.rawCorrect, 2);  // m1 2/2 correct; m2-hard numeric never answered
+    assert.ok(!attempt!.scaled);           // curves wait for Task 9
+  });
+
+  await test('deadline blow-past on startOrResume auto-finalizes with saved answers', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await saveResponses(stores, {
+      studentId: 's1', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-m1-1', answer: 'A' }],  // 1/2 correct -> 0.5 >= 0.5 -> hard
+    }, T0 + 30_000);
+    const resumed = await startOrResume(stores, START, T0 + 4 * 60_000 + GRACE_MS + 1);
+    assert.equal(resumed.status, 'in_section');
+    assert.deepEqual(resumed.cursor, { sectionIdx: 0, moduleIdx: 1 });
+    assert.deepEqual(resumed.section!.items.map((i) => i.itemId), ['fx-m2h-1']);
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.deepEqual(attempt!.moduleRouting, [{ sectionId: 'sec1', variant: 'hard' }]);
+  });
+
+  await test('advance with stale fromCursor is idempotent (returns current state, no double-advance)', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    const same = await advance(stores, {
+      studentId: 's1', attemptId: state.attemptId, fromCursor: { sectionIdx: 9, moduleIdx: 9 },
+    }, T0 + 60_000);
+    assert.equal(same.status, 'in_section');
+    assert.deepEqual(same.cursor, { sectionIdx: 0, moduleIdx: 0 });
+    assert.deepEqual(same.section!.items.map((i) => i.itemId), ['fx-m1-1', 'fx-m1-2']);
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.equal(attempt!.servedModules.length, 1);  // no variant pinned
+    assert.deepEqual(attempt!.moduleRouting, []);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

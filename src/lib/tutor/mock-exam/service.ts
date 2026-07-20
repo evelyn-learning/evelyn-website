@@ -18,12 +18,13 @@ import type {
   MockAttemptState,
   MockAttemptSummary,
   MockAttemptStatus,
-  MockCursor,
   MockFormSummary,
   MockResponse,
   MockSectionItem,
   MockSectionPayload,
   StartMockAttemptRequest,
+  SaveMockResponsesRequest,
+  AdvanceMockAttemptRequest,
 } from '@evelyn/portal-contract/v1';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import { connectDB } from '@/lib/db';
@@ -33,6 +34,7 @@ import { ProblemBank } from '@/models/ProblemBank';
 import { getBlueprint } from './blueprints';
 import type { ExamBlueprint } from './blueprints';
 import type { SeedableItem } from './fixtures';
+import { answersMatch, scoreMcqSections, applyCurves } from './scoring';
 
 export const GRACE_MS = 15_000;
 export const ATTEMPT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -167,7 +169,22 @@ export function mongoMockStores(): MockStores {
     async saveAttempt(a) {
       await connectDB();
       const { attemptId, ...rest } = a;
-      await MockAttempt.updateOne({ attemptId }, { $set: rest });
+      // A blanket $set never clears a field: Mongo drops undefined values, so a
+      // transition that must REMOVE a field (e.g. sectionDeadlineAt on entering
+      // at_break) would silently keep the stale value. Split defined fields into
+      // $set and any explicitly-undefined field into $unset. The memory store
+      // has no such trap (structuredClone preserves the undefined key), so this
+      // keeps both stores behaviourally identical.
+      const set: Record<string, unknown> = {};
+      const unset: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(rest)) {
+        if (v === undefined) unset[k] = '';
+        else set[k] = v;
+      }
+      const update: Record<string, unknown> = {};
+      if (Object.keys(set).length) update.$set = set;
+      if (Object.keys(unset).length) update.$unset = unset;
+      await MockAttempt.updateOne({ attemptId }, update);
     },
     async getItems(itemIds) {
       await connectDB();
@@ -276,18 +293,259 @@ async function buildInSectionState(
 }
 
 /**
- * Auto-finalizes a module whose deadline (+ grace) has passed. Wired into
- * startOrResume's deadline check but not implementable until Task 8 grades
- * responses / advances the cursor / applies scoring — until then this is a
- * stub that fails loudly instead of silently mis-serving a blown module.
+ * The served module the cursor currently points at. `cursor.moduleIdx` is
+ * SECTION-RELATIVE (the position within this section's served path: m1=0, the
+ * routed m2=1), not a global index into servedModules — so filter to the
+ * current section first, then index.
  */
-async function finalizeOpenModule(
-  _stores: MockStores,
-  _attempt: AttemptDoc,
-  _blueprint: ExamBlueprint,
-  _now: number
+function currentServedModule(attempt: AttemptDoc) {
+  const inSection = attempt.servedModules.filter((m) => m.sectionIdx === attempt.cursor.sectionIdx);
+  return inSection[attempt.cursor.moduleIdx];
+}
+
+/** The module a section is entered through: its adaptive from-module, else its
+ *  first non-variant (i.e. only-path) module. */
+function entryModuleId(section: ExamBlueprint['sections'][number]): string {
+  if (section.adaptive) return section.adaptive.fromModuleId;
+  const nonVariant = section.modules.find((m) => !m.variant);
+  return (nonVariant ?? section.modules[0]).moduleId;
+}
+
+/**
+ * Mutates `attempt` to open the entry module of `sectionIdx`: pins it into
+ * servedModules, stamps a fresh deadline, resets the cursor to that section's
+ * first module (moduleIdx 0), and flips status to in_section. Does NOT persist.
+ */
+function openSection(attempt: AttemptDoc, form: FormDoc, blueprint: ExamBlueprint, sectionIdx: number, now: number): AttemptDoc {
+  const bpSection = blueprint.sections[sectionIdx];
+  if (!bpSection) throw new Error(`Unknown section index ${sectionIdx} in blueprint ${blueprint.examKey}`);
+  const moduleId = entryModuleId(bpSection);
+  const bpModule = bpSection.modules.find((m) => m.moduleId === moduleId);
+  if (!bpModule) throw new Error(`Unknown module ${moduleId} in section ${bpSection.sectionId}`);
+  const formSection = form.sections.find((s) => s.sectionId === bpSection.sectionId);
+  const formModule = formSection?.modules.find((m) => m.moduleId === moduleId);
+  if (!formModule) throw new Error(`form_module_not_in_blueprint: ${form.formId}/${moduleId}`);
+
+  attempt.servedModules.push({ sectionIdx, moduleId, itemIds: formModule.itemIds });
+  attempt.cursor = { sectionIdx, moduleIdx: 0 };
+  attempt.sectionDeadlineAt = new Date(now + bpModule.timeLimitMin * 60_000);
+  attempt.status = 'in_section';
+  return attempt;
+}
+
+/** Reads out the current attempt state for the wire, regardless of status. */
+async function buildAttemptState(
+  stores: MockStores,
+  blueprint: ExamBlueprint,
+  attempt: AttemptDoc
 ): Promise<MockAttemptState> {
-  throw new Error('not_implemented_until_task_8');
+  if (attempt.status === 'in_section') {
+    const served = currentServedModule(attempt);
+    if (!served) throw new Error(`Attempt ${attempt.attemptId} cursor points past servedModules`);
+    return buildInSectionState(stores, blueprint, attempt, served);
+  }
+  if (attempt.status === 'at_break') {
+    const prevSection = blueprint.sections[attempt.cursor.sectionIdx - 1];
+    const nextSection = blueprint.sections[attempt.cursor.sectionIdx];
+    return {
+      attemptId: attempt.attemptId,
+      formId: attempt.formId,
+      status: 'at_break',
+      cursor: attempt.cursor,
+      breakMinutes: prevSection?.breakAfterMin ?? 0,
+      nextSectionLabel: nextSection?.label ?? '',
+    };
+  }
+  // completed | grading | expired: no live section payload.
+  return {
+    attemptId: attempt.attemptId,
+    formId: attempt.formId,
+    status: attempt.status,
+    cursor: attempt.cursor,
+  };
+}
+
+/**
+ * Closes the open module and advances the attempt one step: adaptive routing →
+ * next-variant module, else section boundary (break / next section / whole-exam
+ * finalize). Persists and returns the updated attempt. Exported for tests and
+ * called both by startOrResume (deadline blown) and advance (student Next).
+ */
+export async function finalizeOpenModule(
+  stores: MockStores,
+  attempt: AttemptDoc,
+  form: FormDoc,
+  now: number
+): Promise<AttemptDoc> {
+  const blueprint = getBlueprint(attempt.examKey);
+  const sectionIdx = attempt.cursor.sectionIdx;
+  const bpSection = blueprint.sections[sectionIdx];
+  if (!bpSection) throw new Error(`Unknown section index ${sectionIdx} in blueprint ${blueprint.examKey}`);
+  const closed = currentServedModule(attempt);
+  if (!closed) throw new Error(`Attempt ${attempt.attemptId} cursor points past servedModules`);
+
+  // Step 1+2: adaptive routing — closing the from-module serves the routed variant.
+  if (bpSection.adaptive && closed.moduleId === bpSection.adaptive.fromModuleId) {
+    const items = await stores.getItems(closed.itemIds);
+    const responseByItem = new Map(attempt.responses.map((r) => [r.itemId, r]));
+    let rawCorrect = 0;
+    for (const it of items) {
+      if (answersMatch(it, responseByItem.get(it.id)?.answer)) rawCorrect += 1;
+    }
+    const closedBpModule = bpSection.modules.find((m) => m.moduleId === closed.moduleId);
+    const questionCount = closedBpModule?.questionCount ?? closed.itemIds.length;
+    const variant: 'easy' | 'hard' =
+      questionCount > 0 && rawCorrect / questionCount >= bpSection.adaptive.thresholdFraction ? 'hard' : 'easy';
+    attempt.moduleRouting.push({ sectionId: bpSection.sectionId, variant });
+
+    const variantModule = bpSection.modules.find((m) => m.variant === variant);
+    if (!variantModule) throw new Error(`${bpSection.sectionId}: no ${variant} variant module`);
+    const formSection = form.sections.find((s) => s.sectionId === bpSection.sectionId);
+    const formModule = formSection?.modules.find((m) => m.moduleId === variantModule.moduleId);
+    if (!formModule) throw new Error(`form_module_not_in_blueprint: ${form.formId}/${variantModule.moduleId}`);
+
+    attempt.servedModules.push({ sectionIdx, moduleId: variantModule.moduleId, itemIds: formModule.itemIds });
+    attempt.cursor = { sectionIdx, moduleIdx: attempt.cursor.moduleIdx + 1 };
+    attempt.sectionDeadlineAt = new Date(now + variantModule.timeLimitMin * 60_000);
+    attempt.status = 'in_section';
+    await stores.saveAttempt(attempt);
+    return attempt;
+  }
+
+  // Step 3: no more modules in this section.
+  const nextSectionIdx = sectionIdx + 1;
+  const hasNextSection = nextSectionIdx < blueprint.sections.length;
+
+  if (hasNextSection) {
+    if (bpSection.breakAfterMin) {
+      // Break = save/exit point; no deadline runs. Cursor points at the UPCOMING
+      // section so startOrResume/advance can read the break + open it next.
+      attempt.status = 'at_break';
+      attempt.cursor = { sectionIdx: nextSectionIdx, moduleIdx: 0 };
+      attempt.sectionDeadlineAt = undefined;
+      await stores.saveAttempt(attempt);
+      return attempt;
+    }
+    openSection(attempt, form, blueprint, nextSectionIdx, now);
+    await stores.saveAttempt(attempt);
+    return attempt;
+  }
+
+  // Last section closed → finalize the whole exam.
+  const allItemIds = attempt.servedModules.flatMap((m) => m.itemIds);
+  const allItems = await stores.getItems(allItemIds);
+  const hasFrq = allItems.some((it) => it.responseFormat === 'frq');
+  const { rawSections, loBreakdown } = scoreMcqSections(blueprint, attempt.servedModules, attempt.responses, allItems);
+  attempt.rawSections = rawSections;
+  attempt.loBreakdown = loBreakdown;
+  attempt.sectionDeadlineAt = undefined;
+
+  if (hasFrq) {
+    // Curves wait for FRQ points, folded in by Task 9's report/grading path.
+    attempt.status = 'grading';
+    attempt.gradingStartedAt = new Date(now);
+  } else {
+    const { scaled } = applyCurves(blueprint, rawSections, attempt.moduleRouting, {});
+    attempt.scaled = scaled;
+    attempt.status = 'completed';
+    attempt.completedAt = new Date(now);
+  }
+  await stores.saveAttempt(attempt);
+  return attempt;
+}
+
+/** Merge only the DEFINED fields of an incoming response into a stored one, so
+ *  an autosave carrying just `markedForReview` never wipes a saved `answer`. */
+function mergeResponse(target: AttemptDoc['responses'][number], src: MockResponse): void {
+  if (src.answer !== undefined) target.answer = src.answer;
+  if (src.frqText !== undefined) target.frqText = src.frqText;
+  if (src.markedForReview !== undefined) target.markedForReview = src.markedForReview;
+  if (src.struckChoices !== undefined) target.struckChoices = src.struckChoices;
+  if (src.annotations !== undefined) target.annotations = src.annotations;
+}
+
+/**
+ * Upserts the student's responses for the currently-open module. Rejects unless
+ * the attempt is in_section at exactly `req.cursor`; rejects once past the
+ * deadline + grace. Merges per itemId (never clobbering unspecified fields) and
+ * silently ignores itemIds that aren't in the open module.
+ */
+export async function saveResponses(
+  stores: MockStores,
+  req: SaveMockResponsesRequest,
+  now: number = Date.now()
+): Promise<{ ok: true }> {
+  const attempt = await stores.findAttempt(req.attemptId);
+  if (!attempt) throw new Error('attempt_not_open');
+  if (
+    attempt.status !== 'in_section' ||
+    attempt.cursor.sectionIdx !== req.cursor.sectionIdx ||
+    attempt.cursor.moduleIdx !== req.cursor.moduleIdx
+  ) {
+    throw new Error('attempt_not_open');
+  }
+  const deadline = attempt.sectionDeadlineAt?.getTime() ?? 0;
+  if (now > deadline + GRACE_MS) throw new Error('deadline_passed');
+
+  const openModule = currentServedModule(attempt);
+  if (!openModule) throw new Error('attempt_not_open');
+  const openItemIds = new Set(openModule.itemIds);
+  const byId = new Map(attempt.responses.map((r) => [r.itemId, r]));
+
+  for (const incoming of req.responses) {
+    if (!openItemIds.has(incoming.itemId)) continue; // ignore items outside the open module
+    const existing = byId.get(incoming.itemId);
+    if (existing) {
+      mergeResponse(existing, incoming);
+    } else {
+      const created: AttemptDoc['responses'][number] = { itemId: incoming.itemId };
+      mergeResponse(created, incoming);
+      attempt.responses.push(created);
+      byId.set(incoming.itemId, created);
+    }
+  }
+
+  await stores.saveAttempt(attempt);
+  return { ok: true };
+}
+
+/**
+ * Advances the attempt one step on a student Next / module-review confirm / a
+ * client-noticed deadline. Idempotent: a stale `fromCursor` (already advanced)
+ * returns the current state without double-advancing.
+ */
+export async function advance(
+  stores: MockStores,
+  req: AdvanceMockAttemptRequest,
+  now: number = Date.now()
+): Promise<MockAttemptState> {
+  const attempt = await stores.findAttempt(req.attemptId);
+  if (!attempt) throw new Error('attempt_not_found');
+  const form = await stores.findForm(attempt.formId);
+  if (!form) throw new Error(`Unknown mock form: ${attempt.formId}`);
+  const blueprint = getBlueprint(attempt.examKey);
+
+  // Stale fromCursor → someone already advanced; return current state as-is.
+  if (
+    req.fromCursor.sectionIdx !== attempt.cursor.sectionIdx ||
+    req.fromCursor.moduleIdx !== attempt.cursor.moduleIdx
+  ) {
+    return buildAttemptState(stores, blueprint, attempt);
+  }
+
+  if (attempt.status === 'at_break') {
+    openSection(attempt, form, blueprint, attempt.cursor.sectionIdx, now);
+    await stores.saveAttempt(attempt);
+    return buildAttemptState(stores, blueprint, attempt);
+  }
+
+  if (attempt.status === 'in_section') {
+    const finalized = await finalizeOpenModule(stores, attempt, form, now);
+    return buildAttemptState(stores, blueprint, finalized);
+  }
+
+  // completed | grading | expired: terminal, nothing to advance.
+  return buildAttemptState(stores, blueprint, attempt);
 }
 
 /**
@@ -380,25 +638,12 @@ export async function startOrResume(
     if (inFlight.status === 'in_section') {
       const deadline = inFlight.sectionDeadlineAt?.getTime() ?? 0;
       if (now > deadline + GRACE_MS) {
-        return finalizeOpenModule(stores, inFlight, blueprint, now);
+        const finalized = await finalizeOpenModule(stores, inFlight, form, now);
+        return buildAttemptState(stores, blueprint, finalized);
       }
-      const served = inFlight.servedModules[inFlight.cursor.moduleIdx];
-      if (!served) throw new Error(`Attempt ${inFlight.attemptId} cursor points past servedModules`);
-      return buildInSectionState(stores, blueprint, inFlight, served);
     }
-
-    // at_break: no deadline runs; report the break and what's next.
-    const prevSection = blueprint.sections[inFlight.cursor.sectionIdx - 1];
-    const nextSection = blueprint.sections[inFlight.cursor.sectionIdx];
-    const cursor: MockCursor = inFlight.cursor;
-    return {
-      attemptId: inFlight.attemptId,
-      formId: inFlight.formId,
-      status: 'at_break',
-      cursor,
-      breakMinutes: prevSection?.breakAfterMin ?? 0,
-      nextSectionLabel: nextSection?.label ?? '',
-    };
+    // in_section (live) or at_break: report the current state.
+    return buildAttemptState(stores, blueprint, inFlight);
   }
 
   // None in-flight: start a fresh attempt at cursor {0,0}, pinning the
