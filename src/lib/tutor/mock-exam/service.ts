@@ -304,6 +304,9 @@ export async function listForms(
   stores: MockStores,
   studentId: string,
   topicId: string,
+  // Accepted for signature symmetry with startOrResume/injectable clock, but
+  // unused: lazy expiry is deliberately only enforced on the write path
+  // (startOrResume, on the attempt a student actually touches), not here.
   _now: number = Date.now()
 ): Promise<ListMockFormsResponse> {
   const forms = await stores.findLiveForms(topicId);
@@ -405,8 +408,13 @@ export async function startOrResume(
 
   const firstFormSection = form.sections[0];
   const firstFormModule = firstFormSection?.modules[0];
-  const firstBlueprintModule = blueprint.sections[0]?.modules[0];
-  if (!firstFormModule || !firstBlueprintModule) throw new Error(`Form ${formId} has no first module to serve`);
+  if (!firstFormModule) throw new Error(`Form ${formId} has no first module to serve`);
+  // Match by moduleId, not array position — form/blueprint module ordering
+  // could diverge, and every other lookup in this file (buildInSectionState)
+  // already matches by id. Positional pairing here would silently stamp the
+  // deadline from the wrong module's timeLimitMin.
+  const firstBlueprintModule = blueprint.sections[0]?.modules.find((m) => m.moduleId === firstFormModule.moduleId);
+  if (!firstBlueprintModule) throw new Error(`form_module_not_in_blueprint: ${formId}/${firstFormModule.moduleId}`);
 
   const attempt: AttemptDoc = {
     attemptId: randomUUID(),
