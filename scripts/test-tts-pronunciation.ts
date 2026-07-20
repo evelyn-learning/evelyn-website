@@ -207,6 +207,17 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('First, we simplify.', 'First, we simplify.', 'ordinary-clause-comma-untouched');
   eq('Thanks, everyone!', 'Thanks, everyone!', 'lowercase-after-comma-untouched');
   console.log('OK — live-session 2026-07-11 regression (vocative comma)');
+  // Live-session 2026-07-16 (session-1784194326500, student named "baby"):
+  // the brain quote-wrapped the lowercase name — `Hey, "baby"!` — which the
+  // capitalized-bare-name rule can't see. Quoted single word before a
+  // terminator is a vocative regardless of case: drop comma AND quotes.
+  eq('Hey, "baby"! Basics sound perfect.', 'Hey baby! Basics sound perfect.', 'vocative-quoted-lowercase');
+  eq('Nice work, "Maya"!', 'Nice work Maya!', 'vocative-quoted-capitalized');
+  // (Double quotes are always stripped for speech by the long-standing
+  // global rule — the guard here is that the mid-sentence COMMA survives
+  // when the quoted word is not terminator-adjacent.)
+  eq('Remember, "slope" means steepness.', 'Remember, slope means steepness.', 'quoted-word-not-sentence-final-keeps-comma');
+  console.log('OK — live-session 2026-07-16 regression (quoted vocative)');
 }
 
 // Live-session regression 2026-07-13: "SD" (standard deviation) voiced as
@@ -315,7 +326,10 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('Expand (x+1)^2 fully.', 'Expand (x+1) squared fully.', 'bare-exponent-after-parens');
 
   // --- Fractions: \frac -> "over" --------------------------------------
-  eq('The formula uses \\frac{a}{b}.', 'The formula uses a over bee.', 'frac-over');
+  // Round 28 (b7a6872e): variables inside math are letter-spelled, so the
+  // 'a' numerator speaks "ay" like every other bare math letter — the old
+  // 'a over bee' expectation predates that rule.
+  eq('The formula uses \\frac{a}{b}.', 'The formula uses ay over bee.', 'frac-over');
   eq('We need \\frac{x+1}{2} here.', 'We need x plus 1 over 2 here.', 'frac-with-plus');
 
   // --- Subscripts: _1 / _{n+1} -> "sub …" -------------------------------

@@ -1445,6 +1445,19 @@ const CAPS_EMPHASIS_WORDS = new RegExp(
 
 export function rewriteForTTS(raw: string): string {
   let t = raw;
+  // Quoted vocative (live 2026-07-16, session-1784194326500, student named
+  // "baby"): the brain wrote `Hey, "baby"!` — lowercase AND quote-wrapped,
+  // so the sentence-final vocative rule further down (which needs a bare
+  // capitalized name) couldn't fire and Cartesia over-paused on the comma.
+  // A quote-wrapped single word right before a terminator is a name
+  // mention whatever its case → drop the comma here, BEFORE the global
+  // double-quote strip below erases the quote evidence. The quotes
+  // themselves are then removed by that strip as usual. Multi-word quotes
+  // ("...called a "right angle".") don't match. Bare lowercase names
+  // (`Nice work, baby.`) remain out of reach — this layer doesn't know the
+  // student's name, and unquoted lowercase words before terminators
+  // ("Thanks, everyone!") are legitimately not vocatives.
+  t = t.replace(/,\s*(["“‘'][A-Za-z]+["”’'])([.!?])/g, ' $1$2');
   // Double quotes (straight + curly) are stripped outright: after a
   // number Cartesia reads `"6"` as an inch mark ("six inch"), and
   // quotation marks add nothing audible elsewhere. Apostrophes /
