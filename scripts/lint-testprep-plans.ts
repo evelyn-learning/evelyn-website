@@ -4,12 +4,14 @@
  * Mirrors lint-ap-plans.ts. Run: npm run lint:testprep-plans
  *
  * We load seed files directly (not via store.ts) because store.ts pulls in
- * `@/lib/db` which needs Next.js path-alias resolution.
+ * `@/lib/db` which needs Next.js path-alias resolution. Then we validate
+ * that each globbed plan is registered in SEED_PLANS (store.ts).
  */
 import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, SegmentTryYourself } from '../src/lib/tutor/lesson-plan/types';
 import { TESTPREP_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_testprep-shared';
+import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 
 const TOPICS = ['digital-sat', 'act'] as const;
 const ID_PATTERN = /^evelyn\.testprep\.(dsat|act)\.[a-z0-9-]+\.v\d+$/;
@@ -34,7 +36,8 @@ function loadAllPlans(): LessonPlan[] {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       mod = require(fullPath);
-    } catch (err) {
+    } catch (loadErr) {
+      console.error(`⚠️  failed to require ${file}: ${loadErr instanceof Error ? loadErr.message.slice(0, 200) : loadErr}`);
       continue;
     }
     for (const [key, val] of Object.entries(mod)) {
@@ -47,7 +50,18 @@ function loadAllPlans(): LessonPlan[] {
 }
 
 const allPlans = loadAllPlans();
-const plans = allPlans.filter((p) => TOPICS.includes(p.topic as (typeof TOPICS)[number]));
+const globbedTestprepPlans = allPlans.filter((p) => TOPICS.includes(p.topic as (typeof TOPICS)[number]));
+const seedPlanIds = new Set(SEED_PLANS.map((p) => p.id));
+
+// Check registration: each globbed testprep plan must be in SEED_PLANS
+for (const p of globbedTestprepPlans) {
+  if (!seedPlanIds.has(p.id)) {
+    err(p.id, 'plan is authored in seeds/ but not registered in store.ts SEED_PLANS');
+  }
+}
+
+// Lint only registered plans
+const plans = globbedTestprepPlans.filter((p) => seedPlanIds.has(p.id));
 if (plans.length === 0) {
   console.error('lint-testprep-plans: no plans with topic digital-sat/act found');
   process.exit(1);
