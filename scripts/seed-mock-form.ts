@@ -24,15 +24,24 @@
  *   --dry-run               Lint + verify, but do NOT write to Mongo (no
  *                            Mongo connection at all — item-presence checks
  *                            fall back to items.json only).
- *   --no-verify              Skip the Sonnet verify gate (items are treated
- *                            as verified for the --go-live gate; matches
- *                            seed-problem-bank.ts's --no-verify semantics).
+ *   --no-verify              Skip the Sonnet verify gate. Items are upserted
+ *                            as drafts unverified, but CANNOT go live this
+ *                            way — the live gate requires real verification.
  *   --lint-only              Stop after form-lint. No verify, no Mongo, no
  *                            writes.
  *   --go-live                Upsert MockForm with status 'live' instead of
  *                            'draft' — ONLY takes effect when lint passed
- *                            AND every item passed verification (or
- *                            --no-verify was given).
+ *                            AND every item passed the real Sonnet verify
+ *                            gate. Combining --go-live with --no-verify is
+ *                            refused (see --force-live-unverified) — that
+ *                            combo is exactly how an unverified/wrong answer
+ *                            key (e.g. the fx-m2e-1 incident) would ship
+ *                            live with zero verification.
+ *   --force-live-unverified  Escape hatch: allows --no-verify --go-live to
+ *                            publish live anyway. Prints a loud warning at
+ *                            the go-live upsert naming the unverified item
+ *                            count. Has no effect without both --no-verify
+ *                            and --go-live.
  */
 
 import * as dotenv from 'dotenv';
@@ -49,6 +58,9 @@ const VERIFIER_MODEL = 'claude-sonnet-5';
 const SOURCE = { name: 'Evelyn (original)' };
 const LICENSE = 'internal-original';
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
+// Strict numeric-literal check for lint (whole-string match — no trailing
+// garbage like "42abc", which Number.isFinite(parseFloat(...)) would accept).
+const NUMERIC_ANSWER_RE = /^-?\d+(?:\.\d+)?$/;
 
 interface SeedableItem {
   id: string;
@@ -100,6 +112,7 @@ function parseArgs() {
     noVerify: args.includes('--no-verify'),
     lintOnly: args.includes('--lint-only'),
     goLive: args.includes('--go-live'),
+    forceLiveUnverified: args.includes('--force-live-unverified'),
   };
 }
 
@@ -175,7 +188,10 @@ async function lintForm(
         if (idx < 0 || idx >= item.choices.length) errors.push(`${item.id}: mcq answer '${item.answer}' out of choice range`);
       }
     } else if (item.responseFormat === 'numeric') {
-      if (!Number.isFinite(parseFloat(item.answer))) errors.push(`${item.id}: numeric answer '${item.answer}' not a number`);
+      // Strict full-string check — parseFloat('42abc') === 42, so a loose
+      // Number.isFinite(parseFloat(...)) check silently accepts trailing
+      // garbage. Require the whole trimmed string to BE a numeric literal.
+      if (!NUMERIC_ANSWER_RE.test(item.answer.trim())) errors.push(`${item.id}: numeric answer '${item.answer}' is not a strict numeric literal`);
     } else {
       errors.push(`${item.id}: unsupported responseFormat '${(item as { responseFormat?: string }).responseFormat}'`);
     }
@@ -220,6 +236,29 @@ async function lintForm(
             errors.push(`${sec.sectionId}/${mod.moduleId}: itemId '${id}' not in items.json (no Mongo check in lint-only/dry-run mode)`);
           }
         }
+      }
+    }
+  }
+
+  // Reverse walk (blueprint -> form): the forward walk above only catches
+  // form modules that reference a NONEXISTENT blueprint section/module — a
+  // form that's simply missing an entire blueprint section/module lint-
+  // passes it. Every blueprint section and every blueprint module within it
+  // must appear in the form. For adaptive sections this means BOTH the
+  // easy-variant and hard-variant modules individually — a form that ships
+  // only one branch of an adaptive section is broken (the routed-to variant
+  // may never be servable).
+  for (const bpSec of bp.sections) {
+    const formSec = form.sections.find((s) => s.sectionId === bpSec.sectionId);
+    if (!formSec) {
+      errors.push(`blueprint section '${bpSec.sectionId}' is missing from the form`);
+      continue;
+    }
+    for (const bpMod of bpSec.modules) {
+      const formMod = formSec.modules.find((m) => m.moduleId === bpMod.moduleId);
+      if (!formMod) {
+        const variantNote = bpMod.variant ? ` (adaptive ${bpMod.variant}-variant module — required alongside its sibling variant)` : '';
+        errors.push(`blueprint module '${bpSec.sectionId}/${bpMod.moduleId}'${variantNote} is missing from the form`);
       }
     }
   }
@@ -341,6 +380,21 @@ async function main() {
     console.error('✗ --form=<dirname> is required (e.g. --form=fixture-form-a)');
     process.exit(1);
   }
+  // The live gate's intent is "live requires lint clean AND every item
+  // verified". --no-verify --go-live would otherwise promote a form to
+  // 'live' with ZERO verification behind a generic banner — that exact
+  // combo is how a wrong answer key (fx-m2e-1) shipped live locally before
+  // a real verify run caught it. Refuse it unless explicitly forced.
+  if (opts.noVerify && opts.goLive && !opts.forceLiveUnverified) {
+    console.error(
+      "✗ --no-verify --go-live refused: this would publish a form 'live' with zero verification.\n" +
+        '  Pick one:\n' +
+        '    - drop --go-live (seeds/updates as status=draft, no gate)\n' +
+        '    - drop --no-verify (runs the real Sonnet verify gate; live iff every item passes)\n' +
+        '    - add --force-live-unverified (publishes live anyway; prints a loud unverified-item warning)'
+    );
+    process.exit(1);
+  }
   dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
   const formDir = path.join(__dirname, '..', 'src', 'data', 'mock-forms', opts.form);
@@ -388,10 +442,15 @@ async function main() {
   }
 
   // --- Verify (unless --no-verify) ---
+  // allVerified specifically means "every item passed the REAL Sonnet
+  // verify gate" — with --no-verify nothing was actually verified, so this
+  // stays false (the live gate below requires --force-live-unverified to
+  // publish anyway; see the early --no-verify/--go-live guard above).
   let allVerified = true;
   let verifiedItems: SeedableItem[] = items;
   if (opts.noVerify) {
-    console.log('\n⚠️  --no-verify: skipping the Sonnet verify gate (items treated as verified for the --go-live gate).');
+    console.log('\n⚠️  --no-verify: skipping the Sonnet verify gate (items are NOT verified; upserted as unverified drafts).');
+    allVerified = false;
   } else {
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('✗ ANTHROPIC_API_KEY not set (needed for the verify gate). Use --no-verify to skip.');
@@ -428,7 +487,13 @@ async function main() {
   }
 
   // --- Upsert (skipped for --dry-run) ---
-  const targetStatus: 'draft' | 'live' = opts.goLive && allVerified ? 'live' : 'draft';
+  // Live requires lint clean (already enforced above) AND every item really
+  // verified, OR the explicit --force-live-unverified override (only
+  // reachable at all when --no-verify was combined with it, per the early
+  // guard — --force-live-unverified does not override a genuine verify
+  // FAILURE when real verification ran).
+  const forcedLive = opts.goLive && opts.noVerify && opts.forceLiveUnverified;
+  const targetStatus: 'draft' | 'live' = (opts.goLive && allVerified) || forcedLive ? 'live' : 'draft';
   if (opts.dryRun) {
     console.log(
       `\n[dry-run] Would upsert ${verifiedItems.length}/${items.length} items + form '${form.formId}' (status=${targetStatus}). No DB write.`
@@ -476,6 +541,14 @@ async function main() {
   }
   console.log(`✓ Upserted ${upserted} item(s) into ProblemBank (bankScope=mock).`);
 
+  if (targetStatus === 'live' && forcedLive) {
+    console.log(
+      `\n🚨🚨🚨 FORCING '${form.formId}' LIVE WITH ${verifiedItems.length} UNVERIFIED ITEM(S) 🚨🚨🚨\n` +
+        '   --force-live-unverified was set: the Sonnet verify gate did NOT run for these items.\n' +
+        '   This is exactly how the fx-m2e-1 wrong-answer-key incident happened. Confirm this is intentional.'
+    );
+  }
+
   await Form.updateOne(
     { formId: form.formId },
     {
@@ -490,7 +563,12 @@ async function main() {
     },
     { upsert: true }
   );
-  const liveNote = opts.goLive && !allVerified ? ' (requested --go-live but not all items verified — left as draft)' : '';
+  const liveNote =
+    opts.goLive && targetStatus === 'draft'
+      ? ' (requested --go-live but not all items passed real verification — left as draft; use --force-live-unverified with --no-verify to override)'
+      : forcedLive
+        ? ' (FORCED live via --force-live-unverified — unverified)'
+        : '';
   console.log(`✓ Upserted MockForm '${form.formId}' with status='${targetStatus}'.${liveNote}`);
 
   await mongoose.disconnect();
