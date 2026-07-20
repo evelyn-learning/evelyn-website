@@ -29,6 +29,7 @@
     "test:mock-scoring": "npx tsx src/lib/tutor/mock-exam/scoring.test.ts",
     "test:mock-service": "npx tsx src/lib/tutor/mock-exam/service.test.ts",
     "test:mock-report": "npx tsx src/lib/tutor/mock-exam/report.test.ts",
+    "test:portal-mock": "npx tsx scripts/test-portal-mock-endpoints.ts",
     "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
