@@ -1,6 +1,15 @@
 'use client';
 
 import { useRef, useCallback, useEffect } from 'react';
+import { buildAlignedChunks, type TimedChunk } from '@/lib/tutor/recordings/track-align';
+
+const SAMPLE_RATE = 24000;
+// Student-track gap threshold: mic chunks arrive continuously (~170ms
+// cadence) so sub-500ms positive "gaps" are Date.now() scheduler jitter,
+// not real capture holes — filling them would slice micro-silences into
+// continuous speech. Real holes (stopListening turn commits, WS
+// reconnects) are seconds long. See track-align.ts.
+const STUDENT_MIN_GAP_SAMPLES = Math.floor(0.5 * SAMPLE_RATE);
 
 interface UseAudioRecorderConfig {
   sessionId: string;
@@ -50,8 +59,8 @@ export function useAudioRecorder({
   sessionStartedAtMs,
   flushIntervalMs = 30000,
 }: UseAudioRecorderConfig): UseAudioRecorderResult {
-  const studentBufferRef = useRef<Float32Array[]>([]);
-  const tutorBufferRef = useRef<{ data: Float32Array; offsetMs: number }[]>([]);
+  const studentBufferRef = useRef<TimedChunk[]>([]);
+  const tutorBufferRef = useRef<TimedChunk[]>([]);
   const studentChunkIndexRef = useRef(0);
   const tutorChunkIndexRef = useRef(0);
   const flushingRef = useRef(false);
@@ -64,10 +73,12 @@ export function useAudioRecorder({
   // supply sessionStartedAtMs, we degrade to "first audio chunk wins" — same
   // (buggy) behavior as the original implementation, kept for safety.
   const sessionStartRef = useRef(sessionStartedAtMs ?? 0);
-  // Has the first student chunk been observed yet? (Used to inject leading
-  // silence the very first time, so the file aligns with sessionStartedAtMs.)
-  const studentPrimedRef = useRef(false);
-  // Track how many tutor samples have been written so far (to calculate silence gaps)
+  // Samples written so far per track (to calculate silence gaps). The
+  // student counter is what makes the student track wall-clock aligned —
+  // pre-2026-07-19 it was concatenate-only, which collapsed every
+  // stop-listening / reconnect window and made replays drift (the tutor
+  // audibly talked over the student, session-1784194326500).
+  const studentSamplesWrittenRef = useRef(0);
   const tutorSamplesWrittenRef = useRef(0);
 
   const sendChunk = useCallback(async (
@@ -100,39 +111,30 @@ export function useAudioRecorder({
     try {
       const promises: Promise<void>[] = [];
 
-      // Flush student buffer (continuous mic — already time-aligned)
+      // Flush student buffer — silence-fill real capture gaps (turn
+      // commits, reconnects) so the file stays wall-clock aligned; the
+      // jitter threshold keeps continuous speech contiguous.
       if (studentBufferRef.current.length > 0) {
-        const bytes = float32ToPCM16Bytes(studentBufferRef.current);
+        const result = buildAlignedChunks(
+          studentBufferRef.current, studentSamplesWrittenRef.current, SAMPLE_RATE, STUDENT_MIN_GAP_SAMPLES,
+        );
         studentBufferRef.current = [];
+        studentSamplesWrittenRef.current = result.samplesWritten;
+        const bytes = float32ToPCM16Bytes(result.aligned);
         if (bytes) {
           promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false));
         }
       }
 
       // Flush tutor buffer — insert silence gaps to time-align with session
+      // (fill-any-gap: TTS chunks are bursty, so every gap is real).
       if (tutorBufferRef.current.length > 0) {
-        const chunks = tutorBufferRef.current;
+        const result = buildAlignedChunks(
+          tutorBufferRef.current, tutorSamplesWrittenRef.current, SAMPLE_RATE, 0,
+        );
         tutorBufferRef.current = [];
-
-        // Build time-aligned tutor audio: for each chunk, calculate how much
-        // silence is needed before it based on its session offset
-        const alignedChunks: Float32Array[] = [];
-        for (const chunk of chunks) {
-          // How many samples should exist at this point in the session
-          const targetSampleOffset = Math.floor((chunk.offsetMs / 1000) * 24000);
-          const silenceSamples = targetSampleOffset - tutorSamplesWrittenRef.current;
-
-          if (silenceSamples > 0) {
-            // Insert silence gap
-            alignedChunks.push(new Float32Array(silenceSamples)); // zeros = silence
-            tutorSamplesWrittenRef.current += silenceSamples;
-          }
-
-          alignedChunks.push(chunk.data);
-          tutorSamplesWrittenRef.current += chunk.data.length;
-        }
-
-        const bytes = float32ToPCM16Bytes(alignedChunks);
+        tutorSamplesWrittenRef.current = result.samplesWritten;
+        const bytes = float32ToPCM16Bytes(result.aligned);
         if (bytes) {
           promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false));
         }
@@ -167,19 +169,16 @@ export function useAudioRecorder({
     if (sessionStartRef.current === 0) {
       sessionStartRef.current = Date.now();
     }
-    // First student chunk: pad with leading silence so sample 0 of
-    // student.pcm16 corresponds to sessionStartRef rather than to "the
-    // moment the mic happened to activate" (which can be many seconds late
-    // if the tutor greeted the student first or mic permission took time).
-    if (!studentPrimedRef.current) {
-      studentPrimedRef.current = true;
-      const leadingMs = Math.max(0, Date.now() - sessionStartRef.current);
-      const leadingSamples = Math.floor((leadingMs / 1000) * 24000);
-      if (leadingSamples > 0) {
-        studentBufferRef.current.push(new Float32Array(leadingSamples)); // zeros = silence
-      }
-    }
-    studentBufferRef.current.push(new Float32Array(float32)); // copy to avoid mutation
+    // A mic chunk ARRIVES when its capture buffer fills, so Date.now()
+    // marks the chunk's END; subtract its duration to stamp the START.
+    // (Leading silence at session start falls out of the same gap logic
+    // that fills mid-session capture holes — see flush.)
+    const durMs = (float32.length / SAMPLE_RATE) * 1000;
+    const offsetMs = Math.max(0, Date.now() - sessionStartRef.current - durMs);
+    studentBufferRef.current.push({
+      data: new Float32Array(float32), // copy to avoid mutation
+      offsetMs,
+    });
   }, []);
 
   const pushTutorChunk = useCallback((float32: Float32Array) => {
