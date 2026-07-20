@@ -26,7 +26,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Offices",
-    details: ["San Francisco, CA", "New Delhi, India"],
+    details: ["San Francisco, CA"],
   },
   {
     icon: Clock,

@@ -83,7 +83,6 @@ export function Footer() {
                 <MapPin className="h-4 w-4 flex-shrink-0 mt-0.5" />
                 <div>
                   <p>San Francisco, CA</p>
-                  <p>New Delhi, India</p>
                 </div>
               </div>
             </div>

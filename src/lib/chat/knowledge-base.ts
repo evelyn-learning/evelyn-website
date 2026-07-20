@@ -42,7 +42,7 @@ const defaultSettings: SiteSettingsData = {
   responseTime:
     "We typically respond within 24 hours for all inquiries",
   businessHours: "Monday - Friday: 8:00 AM - 5:00 PM PST",
-  offices: ["San Francisco, CA", "New Delhi, India"],
+  offices: ["San Francisco, CA"],
   demoLink: "https://calendar.app.google/zzMeoZAgYCatWN8Y6",
   companyName: "Evelyn Learning",
   companyTagline: "AI-Powered Learning Solutions for Education",

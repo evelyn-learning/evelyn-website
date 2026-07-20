@@ -55,7 +55,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     offices: {
       type: [String],
-      default: ["San Francisco, CA", "New Delhi, India"],
+      default: ["San Francisco, CA"],
     },
     demoLink: {
       type: String,
