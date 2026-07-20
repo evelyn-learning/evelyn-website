@@ -1,0 +1,239 @@
+import { strict as assert } from 'node:assert';
+import {
+  memoryMockStores,
+  startOrResume,
+  saveResponses,
+  advance,
+  type MockStores,
+} from './service';
+import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
+import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
+import { ensureGraded, getReport, getReview, type ReportDeps } from './report';
+
+const T0 = 1_750_000_000_000;
+const START = { topicId: 'fixture', formId: 'fixture-form-a' };
+
+// --- fakes ---------------------------------------------------------------
+
+/** Rubric-part grader returning fixed points, with a call counter and an
+ *  optional "throw the first N calls" (failTimes) / "always throw" (fail). */
+function makeGradeDeps(opts: { points?: number; fail?: boolean; failTimes?: number } = {}) {
+  let calls = 0;
+  let failsLeft = opts.failTimes ?? 0;
+  const deps: GradeDeps = {
+    async gradeRubricPart(args) {
+      calls += 1;
+      if (opts.fail || failsLeft > 0) {
+        failsLeft -= 1;
+        throw new Error('grader boom');
+      }
+      return { pointsAwarded: opts.points ?? args.maxPoints, feedback: 'ok' };
+    },
+    async judgeSingleAnswer() {
+      calls += 1;
+      return { correct: true, feedback: 'ok' };
+    },
+  };
+  return { deps, calls: () => calls };
+}
+
+/** In-memory profile store fake: real empty-ish profiles the pure helpers can
+ *  mutate, capturing every save + counting getOrCreate/save calls. */
+function makeProfileStore() {
+  const profiles = new Map<string, Record<string, unknown>>();
+  const saved: Array<Record<string, unknown>> = [];
+  let getCalls = 0;
+  let saveCalls = 0;
+  const store = {
+    async getOrCreate(id: string) {
+      getCalls += 1;
+      const existing = profiles.get(id);
+      if (existing) return existing;
+      const fresh = { id, mastery: {}, gaps: [], recentSessions: [] };
+      profiles.set(id, fresh);
+      return fresh;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async save(p: any) {
+      saveCalls += 1;
+      profiles.set(p.id, p);
+      saved.push(p);
+      return p;
+    },
+  };
+  return { store, saved, getCalls: () => getCalls, saveCalls: () => saveCalls };
+}
+
+// --- driver: run the REAL service functions to a grading-state attempt ----
+
+/** Drives a fresh attempt through both sections to the `grading` state.
+ *  `m1` = the two answers for module 1 (drives easy/hard routing); `frqText`
+ *  = the free-response (null → leave the FRQ unanswered). Returns attemptId. */
+async function driveToGrading(
+  stores: MockStores,
+  studentId: string,
+  m1: [string, string],
+  frqText: string | null,
+): Promise<string> {
+  const s = await startOrResume(stores, { studentId, ...START }, T0);
+  const attemptId = s.attemptId;
+  await saveResponses(stores, {
+    studentId, attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+    responses: [{ itemId: 'fx-m1-1', answer: m1[0] }, { itemId: 'fx-m1-2', answer: m1[1] }],
+  }, T0 + 1_000);
+
+  let st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 } }, T0 + 2_000);
+  const m2ItemId = st.section!.items[0].itemId; // the routed variant's item
+  await saveResponses(stores, {
+    studentId, attemptId, cursor: { sectionIdx: 0, moduleIdx: 1 },
+    responses: [{ itemId: m2ItemId, answer: 'A' }],
+  }, T0 + 3_000);
+
+  // advance → at_break, then advance again → open section 2 (the FRQ).
+  await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 } }, T0 + 4_000);
+  st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 } }, T0 + 5_000);
+  assert.equal(st.status, 'in_section');
+
+  if (frqText !== null) {
+    await saveResponses(stores, {
+      studentId, attemptId, cursor: { sectionIdx: 1, moduleIdx: 0 },
+      responses: [{ itemId: 'fx-frq-1', frqText }],
+    }, T0 + 6_000);
+  }
+  st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 } }, T0 + 7_000);
+  assert.equal(st.status, 'grading');
+  return attemptId;
+}
+
+function freshStores(): MockStores {
+  return memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+}
+
+// --- harness -------------------------------------------------------------
+
+let passed = 0, failed = 0;
+function test(name: string, fn: () => Promise<void>): Promise<void> {
+  return Promise.resolve().then(fn)
+    .then(() => { passed++; console.log(`  ok - ${name}`); })
+    .catch((e) => { failed++; console.log(`  FAIL - ${name}`); console.error(e); });
+}
+
+async function run() {
+  await test('ensureGraded grades FRQs and completes with curves applied', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's1', ['A', 'B'], 'my proof'); // m1 2/2 -> hard
+    const grade = makeGradeDeps({ points: 2 }); // full marks: 2 + 2 = 4/4
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.equal(a.completedAt!.getTime(), T0 + 8_000);
+    assert.equal(a.frqGrades!.length, 1);
+    assert.equal(a.frqGrades![0].totalPoints, 4);
+    assert.equal(a.frqGrades![0].maxPoints, 4);
+    assert.ok(!a.frqGrades![0].ungraded);
+    assert.ok(a.scaled, 'scaled applied');
+    const sec2 = a.scaled!.sections.find((s) => s.sectionId === 'sec2')!;
+    assert.equal(sec2.scaled, 40); // curve [[0,10],[4,40]] at raw 4
+    // FRQ folded into loBreakdown for fx.lo3 (4/4 >= 0.5 -> correct).
+    const lo3 = a.loBreakdown!.find((e) => e.loId === 'fx.lo3')!;
+    assert.deepEqual({ correct: lo3.correct, total: lo3.total }, { correct: 1, total: 1 });
+    assert.ok(!a.footnote);
+  });
+
+  await test('grader failing 3x marks ungraded + footnote, still completes', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's2', ['A', 'B'], 'my proof');
+    const grade = makeGradeDeps({ fail: true });
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.equal(grade.calls(), 3); // 1 + 2 retries, then gives up
+    assert.equal(a.frqGrades![0].ungraded, true);
+    assert.equal(a.frqGrades![0].totalPoints, 0);
+    assert.equal(a.frqGrades![0].maxPoints, 4);
+    assert.deepEqual(a.frqGrades![0].parts, []);
+    assert.equal(a.footnote, 'Estimated — 1 free-response task(s) could not be graded.');
+    // Ungraded FRQ must NOT ding the LO breakdown.
+    assert.ok(!a.loBreakdown!.some((e) => e.loId === 'fx.lo3'));
+  });
+
+  await test('grading is idempotent — second ensureGraded does not re-call grader', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's3', ['A', 'B'], 'my proof');
+    const grade = makeGradeDeps({ points: 2 });
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const callsAfterFirst = grade.calls();
+    assert.ok(callsAfterFirst > 0);
+    await ensureGraded(stores, attemptId, deps, T0 + 9_000);
+    assert.equal(grade.calls(), callsAfterFirst); // grader not called again
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.equal(a.completedAt!.getTime(), T0 + 8_000); // first completion time preserved
+  });
+
+  await test('gaps feed: lo below 50% recorded with INCORRECT_STREAK_2_PLUS, fed once', async () => {
+    const stores = freshStores();
+    // Both m1 answers wrong -> fx.lo1 = 0/2 (gap + mastery -1). m1 0/2 -> easy route.
+    const attemptId = await driveToGrading(stores, 's4', ['D', 'D'], 'my proof');
+    const grade = makeGradeDeps({ points: 2 });
+    const ps = makeProfileStore();
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    assert.equal(ps.saveCalls(), 1);
+    assert.equal(ps.getCalls(), 1);
+    const profile = ps.saved[0] as { gaps: Array<Record<string, unknown>>; mastery: Record<string, { score: number }> };
+    const gap = profile.gaps.find((g) => g.loId === 'fx.lo1')!;
+    assert.ok(gap, 'gap recorded for fx.lo1');
+    assert.deepEqual((gap.evidence as { signals: string[] }).signals, ['INCORRECT_STREAK_2_PLUS']);
+    assert.equal(gap.sessionIds && (gap.sessionIds as string[])[0], `mock:${attemptId}`);
+    assert.ok(profile.mastery['fx.lo1'].score < 0.5, 'mastery nudged down');
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.gapsFedAt!.getTime(), T0 + 8_000);
+
+    // Second call: feed is guarded by gapsFedAt.
+    await ensureGraded(stores, attemptId, deps, T0 + 9_000);
+    assert.equal(ps.saveCalls(), 1);
+    assert.equal(ps.getCalls(), 1);
+  });
+
+  await test('getReport for another studentId throws forbidden', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's5', ['A', 'B'], 'my proof');
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store };
+    await assert.rejects(() => getReport(stores, 'intruder', attemptId, deps, T0 + 8_000), /forbidden/);
+    // Owner still gets a completed report.
+    const report = await getReport(stores, 's5', attemptId, deps, T0 + 8_000);
+    assert.equal(report.status, 'completed');
+    assert.ok(report.scaled);
+  });
+
+  await test('getReview before completion throws not_ready', async () => {
+    const stores = freshStores();
+    const s = await startOrResume(stores, { studentId: 's6', ...START }, T0); // in_section
+    await assert.rejects(() => getReview(stores, 's6', s.attemptId), /not_ready/);
+
+    // After completion the review joins verdicts + solutions + frq grades.
+    const attemptId = await driveToGrading(stores, 's7', ['A', 'B'], 'my proof');
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store };
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const review = await getReview(stores, 's7', attemptId);
+    const mcq = review.items.find((i) => i.itemId === 'fx-m1-1')!;
+    assert.equal(mcq.correctAnswer, 'A');
+    assert.equal(mcq.isCorrect, true);
+    assert.ok(mcq.solutionText);
+    const frq = review.items.find((i) => i.itemId === 'fx-frq-1')!;
+    assert.equal(frq.studentAnswer, 'my proof');
+    assert.ok(frq.frqGrade);
+  });
+
+  console.log(`\n${passed} passed, ${failed} failed`);
+  if (failed > 0) process.exit(1);
+}
+run();
