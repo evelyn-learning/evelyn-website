@@ -320,6 +320,35 @@ async function run() {
     assert.deepEqual(attempt!.moduleRouting, []);
   });
 
+  await test('save with wrong studentId rejects with attempt_not_open', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await assert.rejects(
+      () => saveResponses(stores, {
+        studentId: 'intruder', attemptId: state.attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+        responses: [{ itemId: 'fx-m1-1', answer: 'A' }],
+      }, T0 + 1_000),
+      /attempt_not_open/
+    );
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.equal(attempt!.responses.length, 0);  // no write leaked through
+  });
+
+  await test('advance with wrong studentId rejects and does not mutate', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const state = await startOrResume(stores, START, T0);
+    await assert.rejects(
+      () => advance(stores, {
+        studentId: 'intruder', attemptId: state.attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 },
+      }, T0 + 60_000),
+      /attempt_not_open/
+    );
+    const attempt = await stores.findAttempt(state.attemptId);
+    assert.deepEqual(attempt!.cursor, { sectionIdx: 0, moduleIdx: 0 });  // no advance
+    assert.equal(attempt!.servedModules.length, 1);
+    assert.deepEqual(attempt!.moduleRouting, []);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

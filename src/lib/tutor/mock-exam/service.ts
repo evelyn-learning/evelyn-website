@@ -476,7 +476,10 @@ export async function saveResponses(
   now: number = Date.now()
 ): Promise<{ ok: true }> {
   const attempt = await stores.findAttempt(req.attemptId);
-  if (!attempt) throw new Error('attempt_not_open');
+  // Attempt lookup is by UUID only; a live attempt must still belong to the
+  // caller. Reuse attempt_not_open (not a distinct message) so a wrong owner
+  // can't distinguish "not yours" from "not open" and probe for existence.
+  if (!attempt || attempt.studentId !== req.studentId) throw new Error('attempt_not_open');
   if (
     attempt.status !== 'in_section' ||
     attempt.cursor.sectionIdx !== req.cursor.sectionIdx ||
@@ -520,7 +523,8 @@ export async function advance(
   now: number = Date.now()
 ): Promise<MockAttemptState> {
   const attempt = await stores.findAttempt(req.attemptId);
-  if (!attempt) throw new Error('attempt_not_found');
+  // Ownership guard — see saveResponses. Same message, no existence leak.
+  if (!attempt || attempt.studentId !== req.studentId) throw new Error('attempt_not_open');
   const form = await stores.findForm(attempt.formId);
   if (!form) throw new Error(`Unknown mock form: ${attempt.formId}`);
   const blueprint = getBlueprint(attempt.examKey);
