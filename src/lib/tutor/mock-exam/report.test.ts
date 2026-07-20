@@ -307,6 +307,48 @@ async function run() {
     assert.ok(grade.calls() > 0); // takeover graded
   });
 
+  await test('a slow superseded first grader abandons at completion (lease fenced)', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's11', ['A', 'B'], 'my proof');
+    const ps = makeProfileStore(); // shared by both polls — asserts a single feed
+
+    // P1: acquires the lease, then blocks inside the grader until released.
+    let releaseP1: () => void = () => {};
+    const gate = new Promise<void>((r) => { releaseP1 = r; });
+    let p1Calls = 0;
+    const p1Deps: ReportDeps = {
+      gradeDeps: {
+        async gradeRubricPart() { p1Calls += 1; await gate; return { pointsAwarded: 2, feedback: 'p1' }; },
+        async judgeSingleAnswer() { return { correct: true, feedback: '' }; },
+      },
+      profileStore: ps.store,
+    };
+    const now1 = T0 + 8_000;
+    const p1 = ensureGraded(stores, attemptId, p1Deps, now1);
+
+    // Let P1 reach (and block in) the grader.
+    for (let i = 0; i < 30 && p1Calls === 0; i++) await Promise.resolve();
+    assert.equal(p1Calls, 1, 'P1 is blocked mid-grading');
+
+    // P2 takes over after the 10-min stale window and fully completes + feeds.
+    const p2Grade = makeGradeDeps({ points: 2 });
+    await ensureGraded(stores, attemptId, { gradeDeps: p2Grade.deps, profileStore: ps.store }, now1 + 11 * 60 * 1_000);
+    const afterP2 = (await stores.findAttempt(attemptId))!;
+    assert.equal(afterP2.status, 'completed');
+    const p2FedAt = afterP2.gapsFedAt!.getTime();
+    const p2Token = afterP2.gradingLockToken;
+    assert.equal(ps.saveCalls(), 1);
+
+    // P1 finishes; it must abandon without clobbering the takeover.
+    releaseP1();
+    await p1;
+    const final = (await stores.findAttempt(attemptId))!;
+    assert.equal(final.status, 'completed');
+    assert.equal(ps.saveCalls(), 1, 'profile fed exactly once');
+    assert.equal(final.gapsFedAt!.getTime(), p2FedAt, 'takeover gapsFedAt intact');
+    assert.equal(final.gradingLockToken, p2Token, 'takeover lease intact');
+  });
+
   // --- I2: skipped FRQ zero-credit -------------------------------------
 
   await test('skipped FRQ scores zero credit (section floor + 0/1 LO, no footnote)', async () => {

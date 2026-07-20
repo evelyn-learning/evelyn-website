@@ -130,8 +130,7 @@ export async function ensureGraded(
     if (!reread) throw new Error('not_found');
     if (reread.gradingLockToken !== token) return reread;
 
-    attempt = reread;
-    await gradeAndComplete(stores, blueprint, attempt, deps, now);
+    attempt = await gradeAndComplete(stores, blueprint, reread, token, deps, now);
   }
 
   if (attempt.status === 'completed' && !attempt.gapsFedAt) {
@@ -142,14 +141,18 @@ export async function ensureGraded(
 }
 
 /** Grade every answered FRQ, fold points into curves, extend loBreakdown, and
- *  flip the attempt to completed. Mutates + persists `attempt`. */
+ *  flip the attempt to completed. `token` is the grading lease held by this
+ *  call; grading may run for minutes, so before committing we re-read and fence
+ *  the lease (see below). Returns the attempt doc to carry forward (the freshly
+ *  committed one, or the owner's doc if the lease was lost). */
 async function gradeAndComplete(
   stores: MockStores,
   blueprint: ExamBlueprint,
   attempt: AttemptDoc,
+  token: string,
   deps: ReportDeps,
   now: number,
-): Promise<void> {
+): Promise<AttemptDoc> {
   const allItemIds = attempt.servedModules.flatMap((m) => m.itemIds);
   const items = await stores.getItems(allItemIds);
   const itemById = new Map(items.map((it) => [it.id, it]));
@@ -253,15 +256,25 @@ async function gradeAndComplete(
     }
   }
 
-  attempt.frqGrades = frqGrades;
-  attempt.loBreakdown = loBreakdown;
-  attempt.scaled = scaled;
+  // Fence the lease at completion. Grading may have run past the 10-min stale
+  // window, letting a second poll take over, complete, and feed. Re-read before
+  // committing: if the lease is no longer ours, abandon silently — writing our
+  // stale doc would clobber the winner (its $unset would even delete the
+  // winner's gapsFedAt). Return the winner's doc so the caller carries it
+  // forward (and, its gapsFedAt already set, skips a second feed).
+  const fenced = await stores.findAttempt(attempt.attemptId);
+  if (!fenced || fenced.gradingLockToken !== token) return fenced ?? attempt;
+
+  fenced.frqGrades = frqGrades;
+  fenced.loBreakdown = loBreakdown;
+  fenced.scaled = scaled;
   if (ungradedCount > 0) {
-    attempt.footnote = `Estimated — ${ungradedCount} free-response task(s) could not be graded.`;
+    fenced.footnote = `Estimated — ${ungradedCount} free-response task(s) could not be graded.`;
   }
-  attempt.status = 'completed';
-  attempt.completedAt = new Date(now);
-  await stores.saveAttempt(attempt);
+  fenced.status = 'completed';
+  fenced.completedAt = new Date(now);
+  await stores.saveAttempt(fenced);
+  return fenced;
 }
 
 /** Load → mutate (pure helpers) → save the student profile, mirroring
