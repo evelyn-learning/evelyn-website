@@ -44,9 +44,9 @@ const MockFormSectionSchema = new Schema(
 
 const MockFormSchema = new Schema<IMockForm>(
   {
-    formId: { type: String, required: true, unique: true, trim: true },
+    formId: { type: String, required: true, trim: true },
     examKey: { type: String, required: true },
-    topicIds: [{ type: String, required: true }],
+    topicIds: { type: [String], required: true },
     label: { type: String, required: true },
     status: { type: String, required: true, enum: ['draft', 'live'] },
     sections: { type: [MockFormSectionSchema], required: true },

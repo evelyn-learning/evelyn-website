@@ -73,6 +73,14 @@ export interface IMockAttempt extends Document {
   updatedAt: Date;
 }
 
+const CursorSchema = new Schema(
+  {
+    sectionIdx: { type: Number, required: true },
+    moduleIdx: { type: Number, required: true },
+  },
+  { _id: false }
+);
+
 const ServedModuleSchema = new Schema(
   {
     sectionIdx: { type: Number, required: true },
@@ -97,7 +105,7 @@ const ResponseSchema = new Schema(
     answer: { type: String },
     frqText: { type: String },
     markedForReview: { type: Boolean },
-    struckChoices: [{ type: Number }],
+    struckChoices: { type: [Number], default: undefined },
     annotations: { type: [AnnotationSchema], default: undefined },
   },
   { _id: false }
@@ -128,6 +136,15 @@ const ScaledSectionSchema = new Schema(
     scaled: { type: Number, required: true },
     scaledMax: { type: Number, required: true },
     inComposite: { type: Boolean },
+  },
+  { _id: false }
+);
+
+const ScaledSchema = new Schema(
+  {
+    composite: { type: Number, required: true },
+    compositeMax: { type: Number, required: true },
+    sections: { type: [ScaledSectionSchema], required: true },
   },
   { _id: false }
 );
@@ -164,7 +181,7 @@ const FrqGradeSchema = new Schema(
 
 const MockAttemptSchema = new Schema<IMockAttempt>(
   {
-    attemptId: { type: String, required: true, unique: true, trim: true },
+    attemptId: { type: String, required: true, trim: true },
     studentId: { type: String, required: true },
     formId: { type: String, required: true },
     examKey: { type: String, required: true },
@@ -173,27 +190,13 @@ const MockAttemptSchema = new Schema<IMockAttempt>(
       required: true,
       enum: ['in_section', 'at_break', 'grading', 'completed', 'expired'],
     },
-    cursor: {
-      type: {
-        sectionIdx: { type: Number, required: true },
-        moduleIdx: { type: Number, required: true },
-      },
-      required: true,
-    },
+    cursor: { type: CursorSchema, required: true },
     sectionDeadlineAt: { type: Date },
     servedModules: { type: [ServedModuleSchema], required: true, default: [] },
     responses: { type: [ResponseSchema], required: true, default: [] },
     moduleRouting: { type: [ModuleRoutingSchema], required: true, default: [] },
     rawSections: { type: [RawSectionSchema], default: undefined },
-    scaled: {
-      type: {
-        composite: { type: Number, required: true },
-        compositeMax: { type: Number, required: true },
-        sections: { type: [ScaledSectionSchema], required: true },
-      },
-      required: false,
-      default: undefined,
-    },
+    scaled: { type: ScaledSchema, required: false, default: undefined },
     loBreakdown: { type: [LoBreakdownSchema], default: undefined },
     frqGrades: { type: [FrqGradeSchema], default: undefined },
     footnote: { type: String },
