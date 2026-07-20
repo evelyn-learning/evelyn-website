@@ -1,0 +1,416 @@
+[
+  {
+    "id": "dsat-boundaries-001",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The library added a new wing last spring_______the renovation nearly doubled the building's reading space. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      ", ",
+      "; ",
+      ", moreover, ",
+      " so"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two independent clauses need a semicolon, a comma plus a coordinating conjunction, or a period — not a comma alone."
+    ]
+  },
+  {
+    "id": "dsat-boundaries-002",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The chef explained her philosophy in simple terms_______fresh ingredients matter more than fancy technique. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      ":",
+      ",",
+      " being",
+      "; because"
+    ],
+    "answer": "A",
+    "hints": [
+      "A colon can follow a complete sentence to introduce an explanation of what came before."
+    ]
+  },
+  {
+    "id": "dsat-boundaries-003",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "My neighbor, a retired violinist_______still practices for two hours every morning. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      ",",
+      ";",
+      ".",
+      ":"
+    ],
+    "answer": "A",
+    "hints": [
+      "Nonessential information, like an appositive naming who the neighbor is, is set off by a pair of commas."
+    ]
+  },
+  {
+    "id": "dsat-boundaries-004",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The committee reviewed dozens of proposals_______ultimately choosing the one that required the least funding. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      ",",
+      ";",
+      ". ",
+      ", and"
+    ],
+    "answer": "A",
+    "hints": [
+      "A participial phrase like 'ultimately choosing...' has no subject of its own, so it takes a comma, not a semicolon or period."
+    ]
+  },
+  {
+    "id": "dsat-boundaries-005",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The new policy — announced without warning last Friday_______caught many employees off guard. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      " — ",
+      ", ",
+      "; ",
+      ": "
+    ],
+    "answer": "A",
+    "hints": [
+      "A punctuation mark that opens a parenthetical interruption must match the mark that closes it."
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-001",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A basket of apples_______ on the kitchen counter. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "sit",
+      "sits",
+      "are sitting",
+      "were sitting"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the true subject of the sentence; ignore the prepositional phrase 'of apples.'"
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-002",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The coach praised the twins because_______ had improved so much over the season. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "they",
+      "them",
+      "it",
+      "he"
+    ],
+    "answer": "A",
+    "hints": [
+      "The pronoun must match its antecedent 'the twins' in both number and case, and it must act as the subject of the clause."
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-003",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Either the manager or the interns_______ responsible for locking up the store each night. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "is",
+      "are",
+      "was",
+      "has been"
+    ],
+    "answer": "B",
+    "hints": [
+      "With 'either...or,' the verb agrees with whichever subject is closer to it."
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-004",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The committee_______ its decision after months of deliberation. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "has announced",
+      "have announced",
+      "were announcing",
+      "are announcing"
+    ],
+    "answer": "A",
+    "hints": [
+      "A collective noun like 'committee,' acting as a single unit, takes a singular verb — notice it already pairs with 'its.'"
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-005",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "No one worked harder on the fundraiser than_______, according to the volunteer coordinator. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "she",
+      "her",
+      "herself",
+      "hers"
+    ],
+    "answer": "A",
+    "hints": [
+      "After 'than' in a comparison, use the subject pronoun that completes the implied clause: 'than she worked.'"
+    ]
+  },
+  {
+    "id": "dsat-subject-verb-pronoun-agreement-006",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The number of applicants who qualify for the scholarship_______ significantly since the program expanded its outreach. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "has increased",
+      "have increased",
+      "were increasing",
+      "are increasing"
+    ],
+    "answer": "A",
+    "hints": [
+      "'The number of' takes a singular verb, while 'a number of' takes a plural verb."
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-001",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "By the time the guests arrived, Maria_______ the entire meal. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "had cooked",
+      "cooks",
+      "was cooking",
+      "will cook"
+    ],
+    "answer": "A",
+    "hints": [
+      "When one past action finished before another past action, use the past perfect: had + past participle."
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-002",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most effectively completes the sentence and avoids a dangling modifier? Walking through the museum, _______",
+    "choices": [
+      "the ancient sculpture immediately caught my attention.",
+      "I immediately noticed the ancient sculpture.",
+      "my attention was caught by the ancient sculpture.",
+      "it was the ancient sculpture that caught my attention."
+    ],
+    "answer": "B",
+    "hints": [
+      "An introductory participial phrase must be followed immediately by the noun that logically performs the action — here, the person doing the walking."
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-003",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most precisely conveys that the runner covered nearly the entire ten-mile distance before her ankle gave out?",
+    "choices": [
+      "The runner almost finished the entire ten-mile race before her ankle gave out.",
+      "The runner finished almost the entire ten-mile race before her ankle gave out.",
+      "The almost runner finished the entire ten-mile race before her ankle gave out.",
+      "Almost, the runner finished the entire ten-mile race before her ankle gave out."
+    ],
+    "answer": "B",
+    "hints": [
+      "Placing 'almost' directly before the word it modifies changes the sentence's precise meaning; it should modify 'the entire race,' not 'finished.'"
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-004",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The safety inspector recommended that the elevator_______ before the building reopened. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "be inspected",
+      "is inspected",
+      "was inspected",
+      "will be inspected"
+    ],
+    "answer": "A",
+    "hints": [
+      "Verbs like 'recommended that' trigger the subjunctive mood: use the bare base form of the verb regardless of subject."
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-005",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When the researchers finally published their results, critics_______ already raised doubts about the study's methodology. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "had already raised",
+      "already raised",
+      "have already raised",
+      "were already raising"
+    ],
+    "answer": "A",
+    "hints": [
+      "An action completed before another past action needs the past perfect tense."
+    ]
+  },
+  {
+    "id": "dsat-verb-forms-modifiers-006",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most logically completes the sentence, ensuring the opening modifier clearly describes the archivist rather than the documents? _______, the archivist carefully catalogued the fragile documents.",
+    "choices": [
+      "Wearing white cotton gloves",
+      "Having been stored improperly for decades",
+      "Fragile and yellowed with age",
+      "Discovered in a forgotten basement archive"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask who or what logically performs the action described in the introductory phrase, then match it to the subject that immediately follows the comma."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-001",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Several_______ arrived late to the rehearsal because of traffic. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "actors",
+      "actor's",
+      "actors'",
+      "actors's"
+    ],
+    "answer": "A",
+    "hints": [
+      "No apostrophe is needed for a simple plural — an apostrophe signals possession, not just more than one."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-002",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "My_______ bicycle was stolen from the garage last night. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "sister's",
+      "sisters",
+      "sisters'",
+      "sister"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add 's to a singular noun to show that one person owns something."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-003",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The company announced that_______ profits had doubled over the past year. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "its",
+      "it's",
+      "its'",
+      "their"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Its' shows possession; 'it's' is a contraction of 'it is' and doesn't fit here."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-004",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers are still studying how prolonged screen time might_______ children's attention spans. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "affect",
+      "effect",
+      "affects",
+      "effected"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Affect' is usually the verb meaning 'to influence'; 'effect' is usually the noun meaning 'a result.' After a modal like 'might,' use the bare base form."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-005",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "_______ research on climate adaptation, published jointly last spring, has been cited widely. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "Dr. Kim and Dr. Patel's",
+      "Dr. Kim's and Dr. Patel's",
+      "Dr. Kim's and Dr. Patel",
+      "Dr. Kims and Dr. Patels"
+    ],
+    "answer": "A",
+    "hints": [
+      "For joint ownership of one shared thing, only the last name in the pair takes the apostrophe + s."
+    ]
+  },
+  {
+    "id": "dsat-plurals-possessives-confusables-006",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The award goes to the team_______ presentation most clearly addressed the judges' concerns about long-term sustainability. Which choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "whose",
+      "who's",
+      "who is",
+      "which's"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Whose' shows possession; 'who's' is a contraction of 'who is' and doesn't fit before a noun like 'presentation.'"
+    ]
+  }
+]

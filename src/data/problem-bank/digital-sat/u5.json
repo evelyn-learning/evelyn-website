@@ -1,0 +1,434 @@
+[
+  {
+    "id": "dsat-central-ideas-details-001",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Coral reefs, though covering less than one percent of the ocean floor, support roughly a quarter of all marine species. Fish, crustaceans, and mollusks rely on reef structures for shelter and food. When reefs are damaged by rising ocean temperatures, these species lose critical habitat, and the effects ripple through the wider marine food web.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Coral reefs are the largest habitat type in the ocean.",
+      "Coral reefs, despite their small size, are vital to marine biodiversity.",
+      "Fish depend more on coral reefs than crustaceans do.",
+      "Rising ocean temperatures affect all marine habitats equally."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the sentence that connects the reef's tiny size to its outsized importance."
+    ]
+  },
+  {
+    "id": "dsat-central-ideas-details-002",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The city's new bike-share program launched in March with 200 bicycles distributed across 20 stations. By June, ridership had grown so quickly that officials added 100 more bikes and five additional stations. Despite the expansion, riders during peak commuting hours still report stations with no bikes available.\n\nAccording to the text, what happened between March and June?",
+    "choices": [
+      "The program was launched with 300 bicycles.",
+      "Officials removed several bike stations due to low demand.",
+      "Ridership increased enough that the program was expanded.",
+      "Peak-hour shortages were fully resolved by the expansion."
+    ],
+    "answer": "C",
+    "hints": [
+      "Track what caused officials to add bikes and stations."
+    ]
+  },
+  {
+    "id": "dsat-central-ideas-details-003",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marie Curie conducted pioneering research on radioactivity, becoming the first person to win Nobel Prizes in two different sciences. Her work required handling radioactive materials without the protective equipment used today, and she kept notebooks that remain too contaminated to handle safely. Yet her discoveries laid the foundation for both nuclear physics and modern cancer treatment.\n\nWhich choice best describes the function of the detail about Curie's notebooks in the text?",
+    "choices": [
+      "It shows that her notebooks contained inaccurate data.",
+      "It illustrates the lasting physical risks of her research.",
+      "It proves that she won two Nobel Prizes.",
+      "It explains why cancer treatment was invented."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask why the writer mentions the notebooks are still contaminated today."
+    ]
+  },
+  {
+    "id": "dsat-central-ideas-details-004",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Urban community gardens are often praised primarily as sources of fresh produce, but their value extends further. Neighbors who might otherwise never interact spend hours together planting, weeding, and harvesting, forming friendships that outlast any single growing season. Several studies have found that residents near active community gardens report feeling safer and more connected to their neighborhood, even those who never garden themselves.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Community gardens are less useful for producing food than for other purposes.",
+      "Community gardens' social benefits extend beyond the value of the food they produce.",
+      "Only residents who garden directly benefit from community gardens.",
+      "Studies show that community gardens are the safest places in a neighborhood."
+    ],
+    "answer": "B",
+    "hints": [
+      "The text says the value 'extends further' than produce, not that produce matters less."
+    ]
+  },
+  {
+    "id": "dsat-central-ideas-details-005",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When the town's only movie theater closed in 2019, some residents worried it signaled a broader economic decline. However, a diner, a bookstore, and a hardware store all opened within the same two years, each employing more workers than the theater had. The theater's closure, it turned out, was not a symptom of decline but simply the result of one owner's retirement.\n\nBased on the text, why did the movie theater close?",
+    "choices": [
+      "The town's economy was declining.",
+      "The owner retired.",
+      "A diner replaced it in the same building.",
+      "New businesses employed more workers than the theater needed."
+    ],
+    "answer": "B",
+    "hints": [
+      "The last sentence directly states the actual cause of the closure."
+    ]
+  },
+  {
+    "id": "dsat-central-ideas-details-006",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Critics of standardized testing argue that a single exam score cannot capture a student's full range of abilities. Defenders counter that without some common measure, comparing outcomes across thousands of schools becomes nearly impossible. A growing number of districts have settled on a middle path: using test scores as one factor among several, alongside teacher evaluations and project portfolios, when assessing student progress.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Standardized testing should be eliminated because it fails to capture student ability.",
+      "Many districts now combine test scores with other measures rather than relying on tests alone.",
+      "Teacher evaluations are more reliable than standardized test scores.",
+      "Comparing school outcomes is impossible without standardized tests."
+    ],
+    "answer": "B",
+    "hints": [
+      "The passage presents two sides, then describes how many districts resolve the debate."
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-001",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Amphibians breathe partly through their skin, which must stay moist to function. Frogs that live in dry climates have evolved thicker, waxier skin to slow water loss. Even so, most frog species remain tied to damp environments, rarely venturing far from a water source, and some cannot survive more than a day without access to moisture.\n\nWhich quotation from the text most directly supports the claim that some frog species have physically adapted to living in drier environments?",
+    "choices": [
+      "\"Amphibians breathe partly through their skin, which must stay moist to function.\"",
+      "\"Frogs that live in dry climates have evolved thicker, waxier skin to slow water loss.\"",
+      "\"most frog species remain tied to damp environments, rarely venturing far from a water source\"",
+      "\"some cannot survive more than a day without access to moisture\""
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the quotation that mentions an actual physical change, not just a behavior or limit."
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-002",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The novelist Elena Ferrante has published under a pseudonym for decades, refusing interviews and public appearances. She has argued that a book should stand on its own, separate from its author's identity or personality. Despite her anonymity, her novels have sold millions of copies and been translated into more than forty languages, suggesting that readers value the writing itself over celebrity.\n\nWhich quotation from the text most directly supports the claim that Ferrante's anonymity has not harmed her commercial success?",
+    "choices": [
+      "\"published under a pseudonym for decades, refusing interviews and public appearances\"",
+      "\"a book should stand on its own, separate from its author's identity or personality\"",
+      "\"her novels have sold millions of copies and been translated into more than forty languages\"",
+      "\"readers value the writing itself over celebrity\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the quotation that gives concrete sales figures, not the writer's opinion."
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-003",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Long-distance runners often describe hitting a mental wall around mile twenty, when fatigue makes each step feel like a struggle of will rather than fitness. Sports psychologists have found that runners who mentally rehearse this moment beforehand, picturing themselves pushing through it, report less severe fatigue than those who do not prepare mentally. Physical training alone, it seems, is not the whole story.\n\nWhich quotation from the text most directly supports the claim that mental preparation can reduce a runner's perceived fatigue?",
+    "choices": [
+      "\"hitting a mental wall around mile twenty\"",
+      "\"each step feel like a struggle of will rather than fitness\"",
+      "\"runners who mentally rehearse this moment beforehand...report less severe fatigue than those who do not prepare mentally\"",
+      "\"Physical training alone, it seems, is not the whole story.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the quotation that reports the actual finding comparing the two groups of runners."
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-004",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Beekeepers have long noticed that hives near flowering almond orchards produce more honey than hives in other locations. Some assumed this was simply because almond trees bloom early, giving bees a head start on the season. Recent research, however, points to a different explanation: almond nectar contains a higher sugar concentration than the nectar of many other early-blooming plants, allowing bees to produce honey more efficiently per foraging trip.\n\nWhich quotation from the text most directly supports the claim that the timing of almond blossoms is not the main reason for increased honey production near almond orchards?",
+    "choices": [
+      "\"hives near flowering almond orchards produce more honey than hives in other locations\"",
+      "\"almond trees bloom early, giving bees a head start on the season\"",
+      "\"almond nectar contains a higher sugar concentration than the nectar of many other early-blooming plants\"",
+      "\"bees to produce honey more efficiently per foraging trip\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the quotation that names the alternative cause the recent research points to."
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-005",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historians once credited the fall of a major Bronze Age civilization to a single catastrophic invasion. Excavated layers of ash at several sites seemed to confirm sudden, violent destruction. More recent analysis of skeletal remains and trade records, however, shows a decades-long pattern of drought and famine that weakened the civilization well before any invasion occurred, suggesting collapse was gradual rather than sudden.\n\nWhich quotation from the text most directly supports the claim that the civilization's decline began before any invasion took place?",
+    "choices": [
+      "\"the fall of a major Bronze Age civilization to a single catastrophic invasion\"",
+      "\"Excavated layers of ash at several sites seemed to confirm sudden, violent destruction.\"",
+      "\"a decades-long pattern of drought and famine that weakened the civilization well before any invasion occurred\"",
+      "\"collapse was gradual rather than sudden\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the quotation that explicitly places the weakening 'before any invasion occurred.'"
+    ]
+  },
+  {
+    "id": "dsat-textual-evidence-006",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Economists have debated why wages in the manufacturing sector stagnated even as productivity rose sharply after 2000. One popular explanation blames automation, arguing that machines replaced enough workers to suppress wage growth despite higher output. Employment in manufacturing, however, fell only modestly during this period, while the share of profits going to shareholders rather than workers increased substantially.\n\nWhich quotation from the text most directly challenges the explanation that automation caused stagnant manufacturing wages?",
+    "choices": [
+      "\"wages in the manufacturing sector stagnated even as productivity rose sharply after 2000\"",
+      "\"machines replaced enough workers to suppress wage growth despite higher output\"",
+      "\"employment in manufacturing fell only modestly during this period, while the share of profits going to shareholders rather than workers increased substantially\"",
+      "\"productivity rose sharply after 2000\""
+    ],
+    "answer": "C",
+    "hints": [
+      "If automation caused the stagnation through job losses, employment should have fallen sharply; check which quotation undercuts that."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-001",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city tracked the number of registered cyclists over four years: 2019, 1,200 riders; 2020, 1,500 riders; 2021, 2,100 riders; 2022, 2,400 riders. A local news article claimed that cycling registration in the city has grown every year since 2019.\n\nDo the data support the claim in the news article?",
+    "choices": [
+      "Yes, because the number of registered cyclists increased in each year shown.",
+      "No, because the number of registered cyclists decreased between 2020 and 2021.",
+      "Yes, because the number of registered cyclists more than doubled between 2019 and 2020.",
+      "No, because the data only cover two years."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare each year's total to the year before it."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-002",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher measured average sleep duration for three age groups: teenagers, 7.1 hours; adults, 6.8 hours; seniors, 6.2 hours. A health blog claimed that average sleep duration decreases with age among these groups.\n\nWhich choice best describes whether the data support the blog's claim?",
+    "choices": [
+      "The data support the claim, since average sleep duration is lowest for the oldest group and highest for the youngest group.",
+      "The data support the claim, since seniors sleep the most among the three groups.",
+      "The data do not support the claim, since adults sleep more than teenagers.",
+      "The data do not support the claim, since sleep duration was not measured in hours."
+    ],
+    "answer": "A",
+    "hints": [
+      "Order the three groups from youngest to oldest and check whether the hours consistently drop."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-003",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A survey asked 400 employees at a company how they commute: 180 drive alone, 120 use public transit, 60 bike, and 40 walk. A manager claimed that fewer than half of employees drive to work alone.\n\nDo the survey data support the manager's claim?",
+    "choices": [
+      "No, because 180 out of 400 employees is more than half.",
+      "Yes, because 180 out of 400 employees is less than half.",
+      "No, because more employees bike than walk.",
+      "Yes, because most employees use public transit."
+    ],
+    "answer": "B",
+    "hints": [
+      "Half of 400 is 200; compare 180 to that number."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-004",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two schools reported test participation: School A had 90 out of 150 students take an optional exam. School B had 140 out of 280 students take the same exam. A district official claimed that School A had a higher participation rate than School B.\n\nDo the data support the official's claim?",
+    "choices": [
+      "No, because School B had more students take the exam in total.",
+      "Yes, because School A's participation rate, 60%, is higher than School B's rate, 50%.",
+      "No, because both schools had the same participation rate.",
+      "Yes, because School A has more total students than School B."
+    ],
+    "answer": "B",
+    "hints": [
+      "Convert each school's numbers to a percentage before comparing them."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-005",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A study tracked the price of a popular smartphone model over its first year: at launch, $999; after 3 months, $929; after 6 months, $859; after 9 months, $779; after 12 months, $729. An analyst claimed that the phone's price dropped by more than $50 in every three-month interval shown.\n\nDo the data support the analyst's claim?",
+    "choices": [
+      "Yes, because the price fell in every interval shown.",
+      "No, because the price fell by exactly $50 in the last interval, not more than $50.",
+      "Yes, because the total price drop over the year exceeded $200.",
+      "No, because the price increased between month 9 and month 12."
+    ],
+    "answer": "B",
+    "hints": [
+      "Calculate the price drop for each three-month interval separately and compare each to $50."
+    ]
+  },
+  {
+    "id": "dsat-quantitative-evidence-006",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A teacher recorded quiz scores for two classes. Class A (20 students) averaged 78 points. Class B (30 students) averaged 88 points. A colleague claimed that the combined average score across both classes, all 50 students, is above 84 points.\n\nDo the data support the colleague's claim?",
+    "choices": [
+      "No, because the combined average is 84 points, not above 84.",
+      "Yes, because the combined average is exactly 84 points.",
+      "Yes, because Class B's average alone is above 84 points.",
+      "No, because Class A has fewer students than Class B."
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the weighted average: (20 x 78 + 30 x 88) / 50."
+    ]
+  },
+  {
+    "id": "dsat-inferences-001",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When Maya arrived at the office, she found the lights already on and the coffee pot half empty, though she was certain she was the first to leave the previous night. Her coworker's jacket hung on the back of a chair that had been empty when she left.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "Maya forgot to turn off the lights the night before.",
+      "Someone else arrived at the office before Maya that morning.",
+      "Maya's coworker no longer works at the office.",
+      "The coffee pot was broken."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lights, coffee, and jacket are all signs of another person's presence."
+    ]
+  },
+  {
+    "id": "dsat-inferences-002",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The museum's new wing was designed with unusually high ceilings and enormous windows, unlike the rest of the building. Curators explained that the wing would house large-scale sculptures and traveling exhibits that require abundant natural light to be viewed properly.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "The museum's other wings do not display sculptures.",
+      "The new wing's design reflects the specific needs of the artwork it will display.",
+      "Traveling exhibits are more popular than permanent collections.",
+      "The museum plans to demolish its older wings."
+    ],
+    "answer": "B",
+    "hints": [
+      "Connect the design features directly to the reason curators gave for them."
+    ]
+  },
+  {
+    "id": "dsat-inferences-003",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After the factory switched to a four-day workweek, output per employee rose by twelve percent, even though total hours worked declined. Management noted that absenteeism also fell sharply during the same period, with far fewer employees calling in sick.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "Employees were paid more after the schedule change.",
+      "The rise in output was unrelated to employee attendance.",
+      "Reduced hours did not prevent an increase in total productivity per worker.",
+      "The factory increased its number of employees."
+    ],
+    "answer": "C",
+    "hints": [
+      "Note that hours fell while output per employee still rose."
+    ]
+  },
+  {
+    "id": "dsat-inferences-004",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pharmaceutical company halted a clinical trial early after an independent review board found the new drug performing significantly better than the existing standard treatment. Continuing to give some patients the older, less effective treatment, the board explained, would no longer be ethical once the difference in outcomes became clear.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "The new drug had no side effects.",
+      "The trial was stopped primarily because of the drug's clear effectiveness relative to the alternative, not because it failed.",
+      "The existing standard treatment will be banned.",
+      "All clinical trials for this drug have now concluded."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask why an early stop would be described as an ethical issue rather than a failure."
+    ]
+  },
+  {
+    "id": "dsat-inferences-005",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city's water utility reported that peak water usage now occurs in early morning hours rather than in the evening, as it had for decades. Utility engineers noted no change in residential population or in the number of businesses served during this period, and lawn-watering restrictions have remained the same since before the shift began.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "The city's population has grown substantially.",
+      "Something other than population growth or watering rules likely caused the shift in peak usage timing.",
+      "Businesses now use more water than residences do.",
+      "The utility plans to change its watering restrictions."
+    ],
+    "answer": "B",
+    "hints": [
+      "The text rules out two possible causes; what does that leave open?"
+    ]
+  },
+  {
+    "id": "dsat-inferences-006",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A publisher noticed that novels released with minimalist cover designs sold at similar rates to those with elaborate illustrated covers, but only among readers who had pre-ordered the book. Among readers browsing in physical stores without prior knowledge of the title, books with elaborate covers consistently outsold those with minimalist designs by a wide margin.\n\nWhich choice most logically follows from the text?",
+    "choices": [
+      "Cover design has little influence on a book's overall sales.",
+      "Pre-ordering readers choose books primarily based on their covers.",
+      "Cover design matters more to readers unfamiliar with a book before encountering it in a store.",
+      "Elaborate covers cost more to produce than minimalist ones."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the two reader groups: one already committed before seeing the cover, one deciding based on what they see in the store."
+    ]
+  }
+]

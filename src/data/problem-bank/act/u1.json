@@ -1,0 +1,956 @@
+[
+  {
+    "id": "act-sentence-structure-001",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe rain stopped early in the morning[, the streets were still wet by noon].\n\nUnderlined portion: \", the streets were still wet by noon\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ", the streets were still wet by noon",
+      ", but the streets were still wet by noon",
+      "; and the streets were still wet by noon",
+      ", the streets, were still wet by noon"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two independent clauses need more than just a comma between them — add a coordinating conjunction or use a semicolon."
+    ]
+  },
+  {
+    "id": "act-sentence-structure-002",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nAlthough the museum had just reopened after renovations[. Visitors] lined up around the block before the doors opened.\n\nUnderlined portion: \". Visitors\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ". Visitors",
+      ", visitors",
+      "; Visitors",
+      ". because visitors"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Although the museum had just reopened after renovations\" is a dependent clause, so it cannot stand alone as a sentence; join it to the independent clause with a comma."
+    ]
+  },
+  {
+    "id": "act-sentence-structure-003",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe debate team traveled to three states last spring[ they won every final round].\n\nUnderlined portion: \" they won every final round\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      " they won every final round",
+      ", they won every final round",
+      "; they won every final round",
+      ", and, they won every final round"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two independent clauses with no connecting word need a semicolon (or a period) between them, not just a space or comma."
+    ]
+  },
+  {
+    "id": "act-sentence-structure-004",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nMarie Curie won two Nobel Prizes in different sciences[; a rare achievement even today].\n\nUnderlined portion: \"; a rare achievement even today\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "; a rare achievement even today",
+      ", a rare achievement even today",
+      ". A rare achievement even today",
+      " which a rare achievement even today"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"A rare achievement even today\" is a phrase, not an independent clause, so it cannot follow a semicolon; set it off with a comma instead."
+    ]
+  },
+  {
+    "id": "act-sentence-structure-005",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nBecause the bridge had been closed for repairs[, commuters relied on the ferry for two months].\n\nUnderlined portion: \", commuters relied on the ferry for two months\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ", commuters relied on the ferry for two months",
+      " commuters relied on the ferry for two months",
+      "; commuters relied on the ferry for two months",
+      ". Commuters relied on the ferry for two months"
+    ],
+    "answer": "A",
+    "hints": [
+      "An introductory dependent clause is correctly followed by a comma before the independent clause — this sentence is already correct."
+    ]
+  },
+  {
+    "id": "act-sentence-structure-006",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe novelist revised her manuscript four times[, however her editor still found errors in the final draft].\n\nUnderlined portion: \", however her editor still found errors in the final draft\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ", however her editor still found errors in the final draft",
+      "; however, her editor still found errors in the final draft",
+      ", however, her editor still found errors in the final draft",
+      " however, her editor still found errors in the final draft"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"However\" is a conjunctive adverb, not a coordinating conjunction — when it joins two independent clauses it needs a semicolon before it and a comma after it."
+    ]
+  },
+  {
+    "id": "act-punctuation-001",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe [teachers] classroom, decorated entirely by her own hands, was a favorite stop during the open house.\n\nUnderlined portion: \"teachers\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "teachers",
+      "teacher's",
+      "teachers'",
+      "teachers's"
+    ],
+    "answer": "B",
+    "hints": [
+      "The classroom belongs to one teacher (note \"her own hands\"), so use the singular possessive with an apostrophe before the s."
+    ]
+  },
+  {
+    "id": "act-punctuation-002",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe company reduced [its'] shipping costs by switching to a regional carrier.\n\nUnderlined portion: \"its'\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "its'",
+      "it's",
+      "its",
+      "its's"
+    ],
+    "answer": "C",
+    "hints": [
+      "The possessive form of \"it\" is \"its\" — it never takes an apostrophe. \"Its'\" is not a word."
+    ]
+  },
+  {
+    "id": "act-punctuation-003",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe recipe calls for three ingredients[; flour, sugar, and eggs].\n\nUnderlined portion: \"; flour, sugar, and eggs\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "; flour, sugar, and eggs",
+      ": flour, sugar, and eggs",
+      ", flour, sugar, and eggs",
+      "—flour, sugar, and eggs—"
+    ],
+    "answer": "B",
+    "hints": [
+      "A colon, not a semicolon, introduces a list after a complete independent clause."
+    ]
+  },
+  {
+    "id": "act-punctuation-004",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nMy uncle Robert[, a retired firefighter,] moved to Arizona last year.\n\nUnderlined portion: \", a retired firefighter,\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ", a retired firefighter,",
+      " a retired firefighter",
+      ", a retired firefighter",
+      "—a retired firefighter,"
+    ],
+    "answer": "A",
+    "hints": [
+      "A nonessential appositive (extra, non-defining information) needs a comma on both sides to set it off from the rest of the sentence — this is already correct."
+    ]
+  },
+  {
+    "id": "act-punctuation-005",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nHer favorite hobbies include[: hiking, painting, and chess].\n\nUnderlined portion: \": hiking, painting, and chess\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      ": hiking, painting, and chess",
+      " hiking, painting, and chess",
+      "; hiking, painting, and chess",
+      ", hiking, painting, and chess"
+    ],
+    "answer": "B",
+    "hints": [
+      "A colon cannot follow a verb like \"include\" that directly needs an object — no punctuation is needed before the list here."
+    ]
+  },
+  {
+    "id": "act-agreement-001",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe stack of old newspapers [were] recycled last weekend.\n\nUnderlined portion: \"were\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "were",
+      "was",
+      "is",
+      "have been"
+    ],
+    "answer": "B",
+    "hints": [
+      "The subject is the singular \"stack,\" not the plural \"newspapers\" in the prepositional phrase — the verb must be singular."
+    ]
+  },
+  {
+    "id": "act-agreement-002",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe committee [have] not yet reached a decision on the new policy.\n\nUnderlined portion: \"have\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "have",
+      "has",
+      "having",
+      "haven't"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Committee\" is a singular collective noun in standard usage, so it takes a singular verb."
+    ]
+  },
+  {
+    "id": "act-agreement-003",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nBoth the mayor and the city council [was] invited to the ribbon-cutting ceremony.\n\nUnderlined portion: \"was\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "was",
+      "were",
+      "is",
+      "has been"
+    ],
+    "answer": "B",
+    "hints": [
+      "A compound subject joined by \"and\" is plural, so it takes a plural verb."
+    ]
+  },
+  {
+    "id": "act-agreement-004",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nNeither the manager nor the employees [was] pleased with the new scheduling software.\n\nUnderlined portion: \"was\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "was",
+      "were",
+      "is",
+      "has been"
+    ],
+    "answer": "B",
+    "hints": [
+      "With \"neither...nor,\" the verb agrees with the closer subject — here, the plural \"employees.\""
+    ]
+  },
+  {
+    "id": "act-agreement-005",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe award went to the runner [who] the judges believed trained the hardest all season.\n\nUnderlined portion: \"who\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "who",
+      "whom",
+      "which",
+      "whose"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look past \"the judges believed\" to find the pronoun's real job: it is the subject of \"trained,\" so the subject form \"who\" is correct."
+    ]
+  },
+  {
+    "id": "act-agreement-006",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nBoth Maria and I finished the assignment ourselves, so the teacher praised Maria and [myself] for our independent work.\n\nUnderlined portion: \"myself\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "myself",
+      "me",
+      "I",
+      "themselves"
+    ],
+    "answer": "B",
+    "hints": [
+      "A reflexive pronoun like \"myself\" can only refer back to the subject of its own clause; as the object of \"praised,\" the sentence needs the object pronoun \"me.\""
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-001",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nYesterday, the museum [closes] early for a private event.\n\nUnderlined portion: \"closes\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "closes",
+      "closed",
+      "will close",
+      "closing"
+    ],
+    "answer": "B",
+    "hints": [
+      "The word \"yesterday\" signals the simple past tense."
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-002",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nBy the time the fire trucks arrived, the flames [spread] to the neighboring building.\n\nUnderlined portion: \"spread\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "spread",
+      "had spread",
+      "have spread",
+      "were spreading"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"By the time\" signals that one past action was completed before another past action — use the past perfect \"had spread.\""
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-003",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe coach insisted that every player [attends] the mandatory practice on Saturday.\n\nUnderlined portion: \"attends\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "attends",
+      "attend",
+      "attended",
+      "will attend"
+    ],
+    "answer": "B",
+    "hints": [
+      "After a verb like \"insisted that\" expressing a demand, use the subjunctive base form of the verb."
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-004",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe team avoided [to make] the same mistake twice during the tournament.\n\nUnderlined portion: \"to make\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "to make",
+      "making",
+      "make",
+      "having made"
+    ],
+    "answer": "B",
+    "hints": [
+      "The verb \"avoid\" is idiomatically followed by a gerund (-ing form), not an infinitive."
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-005",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nBy graduation, she [had went] to every state in the country except Alaska and Hawaii.\n\nUnderlined portion: \"had went\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "had went",
+      "had gone",
+      "has gone",
+      "have went"
+    ],
+    "answer": "B",
+    "hints": [
+      "The auxiliary \"had\" must be paired with the past participle \"gone,\" not the simple past form \"went.\""
+    ]
+  },
+  {
+    "id": "act-verb-tense-form-006",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nIf the museum's rarest painting [was] ever stolen, the entire collection's insurance value would plummet.\n\nUnderlined portion: \"was\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "was",
+      "were",
+      "is",
+      "had been"
+    ],
+    "answer": "B",
+    "hints": [
+      "A hypothetical, contrary-to-fact condition paired with \"would\" calls for the subjunctive \"were,\" regardless of subject number."
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-001",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nHer weekend plans included cleaning the garage, organizing her closet, and [to visit] her grandmother.\n\nUnderlined portion: \"to visit\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "to visit",
+      "visiting",
+      "visits",
+      "she visited"
+    ],
+    "answer": "B",
+    "hints": [
+      "Items in a list should share the same grammatical form — match the earlier gerunds \"cleaning\" and \"organizing.\""
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-002",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nRunning through the park, [the sudden rainstorm caught the joggers off guard].\n\nUnderlined portion: \"the sudden rainstorm caught the joggers off guard\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "the sudden rainstorm caught the joggers off guard",
+      "the joggers were caught off guard by the sudden rainstorm",
+      "a sudden rainstorm was what caught the joggers off guard",
+      "the joggers' surprise came from the sudden rainstorm"
+    ],
+    "answer": "B",
+    "hints": [
+      "The introductory phrase \"Running through the park\" must modify the subject that immediately follows the comma — that subject should be the joggers, who were doing the running."
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-003",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe librarian [nearly returned every] book to its correct shelf before closing time.\n\nUnderlined portion: \"nearly returned every\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "nearly returned every",
+      "returned nearly every",
+      "nearly, returned every",
+      "returned every nearly"
+    ],
+    "answer": "B",
+    "hints": [
+      "Place \"nearly\" right next to the word it limits — here, \"every\" — so the sentence means she returned almost all the books, not that she almost returned any."
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-004",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe new policy not only reduced paperwork but also [it improved] response times for customer complaints.\n\nUnderlined portion: \"it improved\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "it improved",
+      "improved",
+      "improving",
+      "has improved"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Not only...but also\" requires parallel structure — match the verb form of \"reduced\" with a plain verb, not a clause with its own subject."
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-005",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe new smartphone's battery life is longer than [the old model].\n\nUnderlined portion: \"the old model\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "the old model",
+      "that of the old model",
+      "the old model's",
+      "when the old model had"
+    ],
+    "answer": "B",
+    "hints": [
+      "A comparison must compare like things — battery life should be compared to the old model's battery life, not to the model itself."
+    ]
+  },
+  {
+    "id": "act-modifiers-parallelism-006",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nTo succeed in the internship program, students must [arrive early, staying focused, and to communicate clearly] with supervisors throughout the day.\n\nUnderlined portion: \"arrive early, staying focused, and to communicate clearly\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "arrive early, staying focused, and to communicate clearly",
+      "arrive early, stay focused, and communicate clearly",
+      "arriving early, staying focused, and communicating clearly",
+      "to arrive early, to stay focused, and communicating clearly"
+    ],
+    "answer": "B",
+    "hints": [
+      "All three items following \"must\" should be in the same base verb form to be grammatically parallel."
+    ]
+  },
+  {
+    "id": "act-conciseness-001",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nShe had to [return back] the library books before the due date.\n\nUnderlined portion: \"return back\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "return back",
+      "return",
+      "return again",
+      "go back and return"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Return\" already means to go back, so \"back\" is redundant."
+    ]
+  },
+  {
+    "id": "act-conciseness-002",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\n[Due to the fact that] the bridge was closed, drivers took a longer route to work.\n\nUnderlined portion: \"Due to the fact that\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "Due to the fact that",
+      "Because",
+      "In light of the fact that",
+      "Being that"
+    ],
+    "answer": "B",
+    "hints": [
+      "The wordy phrase \"due to the fact that\" can be replaced with the single concise word \"because.\""
+    ]
+  },
+  {
+    "id": "act-conciseness-003",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe twins [both] wore matching outfits to the family reunion.\n\nUnderlined portion: \"both\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "both",
+      "OMIT the underlined portion",
+      "both of them",
+      "the both"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Twins\" already means two people, so \"both\" restates information the reader already has."
+    ]
+  },
+  {
+    "id": "act-conciseness-004",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe report, which was extremely long and consisted of over two hundred pages, [was very long in length] and took hours to read.\n\nUnderlined portion: \"was very long in length\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "was very long in length",
+      "OMIT the underlined portion",
+      "was lengthy in size",
+      "was quite long"
+    ],
+    "answer": "B",
+    "hints": [
+      "The sentence already establishes the report's length (\"extremely long,\" \"over two hundred pages\"), so restating it here is redundant."
+    ]
+  },
+  {
+    "id": "act-conciseness-005",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nIt is important to note that the committee [made the decision to postpone] the vote until further notice.\n\nUnderlined portion: \"made the decision to postpone\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "made the decision to postpone",
+      "postponed",
+      "made a decision about postponing",
+      "came to the decision to postpone"
+    ],
+    "answer": "B",
+    "hints": [
+      "The wordy phrase \"made the decision to postpone\" can be replaced with the single, more direct verb \"postponed.\""
+    ]
+  },
+  {
+    "id": "act-conciseness-006",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nAfter spending three years researching the topic in exhaustive detail, the historian published a book that, [in a very detailed and thorough manner], explored every aspect of the causes of the war.\n\nUnderlined portion: \"in a very detailed and thorough manner\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "in a very detailed and thorough manner",
+      "OMIT the underlined portion",
+      "in a manner that was thorough",
+      "thoroughly and in detail"
+    ],
+    "answer": "B",
+    "hints": [
+      "The sentence already conveys thoroughness through \"exhaustive detail\" and \"every aspect,\" so the underlined phrase only repeats that idea."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-001",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe new lighting will greatly [effect] the mood of the room.\n\nUnderlined portion: \"effect\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "effect",
+      "affect",
+      "affects",
+      "affected"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Affect\" is the verb meaning to influence; \"effect\" is normally the noun meaning a result."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-002",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe new recycling program has resulted in [less] plastic bottles ending up in the landfill.\n\nUnderlined portion: \"less\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "less",
+      "fewer",
+      "lesser",
+      "least"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use \"fewer\" for countable items like bottles, and \"less\" for uncountable quantities."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-003",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe quarterly financial report indicated that revenue had declined, which the board found [super concerning].\n\nUnderlined portion: \"super concerning\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "super concerning",
+      "deeply troubling",
+      "kind of a bummer",
+      "a total bummer"
+    ],
+    "answer": "B",
+    "hints": [
+      "A formal financial report calls for formal diction — \"super concerning\" is too casual for the context."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-004",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe report's numbers seemed to [infer] that the new fertilizer improved crop yields, though the authors never stated this conclusion directly.\n\nUnderlined portion: \"infer\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "infer",
+      "imply",
+      "assume",
+      "conclude"
+    ],
+    "answer": "B",
+    "hints": [
+      "A source (like a report's numbers) implies a conclusion; a reader infers it. Since the report itself is doing the suggesting, \"imply\" is correct."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-005",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe critic's review was [scathing], praising nearly every aspect of the film's cinematography and pacing.\n\nUnderlined portion: \"scathing\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "scathing",
+      "glowing",
+      "lukewarm",
+      "ambivalent"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Scathing\" means harshly critical, which contradicts a review that praises nearly everything — the word should convey strong approval instead."
+    ]
+  },
+  {
+    "id": "act-word-choice-tone-006",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe novelist's latest work is markedly different [than] her earlier novels, both in style and in theme.\n\nUnderlined portion: \"than\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "than",
+      "from",
+      "then",
+      "to"
+    ],
+    "answer": "B",
+    "hints": [
+      "In careful, formal usage, \"different\" is idiomatically followed by \"from,\" not \"than\" or \"to.\""
+    ]
+  },
+  {
+    "id": "act-transitions-001",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe forecast predicted heavy rain all weekend. [Similarly], the outdoor festival proceeded as planned without any delays.\n\nUnderlined portion: \"Similarly\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "Similarly",
+      "However",
+      "Additionally",
+      "For example"
+    ],
+    "answer": "B",
+    "hints": [
+      "The festival happening despite the rain forecast is a contrast, not a similarity, so the transition should signal contrast."
+    ]
+  },
+  {
+    "id": "act-transitions-002",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe volunteers cleaned up the riverbank and planted new trees. [As a result], they organized a recycling workshop for the community the following week.\n\nUnderlined portion: \"As a result\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "As a result",
+      "In addition",
+      "Nevertheless",
+      "In contrast"
+    ],
+    "answer": "B",
+    "hints": [
+      "Organizing the workshop is another action the volunteers took, not a consequence of the cleanup, so an addition transition fits best."
+    ]
+  },
+  {
+    "id": "act-transitions-003",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe factory installed new filters on its smokestacks. [However], local air quality improved significantly within a year.\n\nUnderlined portion: \"However\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "However",
+      "As a result",
+      "Similarly",
+      "In other words"
+    ],
+    "answer": "B",
+    "hints": [
+      "The improved air quality is a direct consequence of installing the filters, so the transition should signal cause and effect, not contrast."
+    ]
+  },
+  {
+    "id": "act-transitions-004",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nCritics argued that the film's plot was predictable and its dialogue clichéd. [Consequently], the movie became one of the highest-grossing films of the year.\n\nUnderlined portion: \"Consequently\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "Consequently",
+      "Nevertheless",
+      "Similarly",
+      "In addition"
+    ],
+    "answer": "B",
+    "hints": [
+      "The film's commercial success happened despite the negative reviews, which is a contrast/concession, not a consequence of the criticism."
+    ]
+  },
+  {
+    "id": "act-transitions-005",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe city council debated the proposal for nearly six hours without reaching a consensus. [Otherwise], they agreed to revisit the issue at the next meeting.\n\nUnderlined portion: \"Otherwise\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "Otherwise",
+      "Instead",
+      "Similarly",
+      "For instance"
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Otherwise\" signals an alternative to a stated condition, but no such condition is being described here — the council instead settled on a different course of action."
+    ]
+  },
+  {
+    "id": "act-transitions-006",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Decide whether the underlined portion — shown in brackets — is correct as written or should be changed.\n\nThe startup's founders had never worked in the health care industry, and none of them held a medical degree. [Because of this], investors were surprised when the company's diagnostic software received government approval faster than any competitor's product.\n\nUnderlined portion: \"Because of this\"\n\nChoose the best version of the underlined portion.",
+    "choices": [
+      "Because of this",
+      "Despite this",
+      "As a result",
+      "Similarly"
+    ],
+    "answer": "B",
+    "hints": [
+      "The founders' lack of experience did not cause their fast approval — investors were surprised precisely because the outcome ran counter to expectations, so a contrast transition is needed."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-001",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Given that all the choices are true, which one provides the most specific and relevant detail to support the passage's point about what community gardens have accomplished?\n\n\"Community gardens have become increasingly popular in urban neighborhoods. Volunteers plant vegetables, flowers, and herbs in once-empty lots. [The gardens are located in cities.] These shared spaces also give neighbors a chance to socialize while working outside.\"",
+    "choices": [
+      "The gardens are located in cities.",
+      "In one Chicago neighborhood alone, volunteers have converted five vacant lots into thriving gardens.",
+      "Cities have many different types of green spaces.",
+      "Gardening requires patience and consistent effort."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the choice that adds a specific, concrete detail directly about community gardens' impact, rather than a vague or off-topic restatement."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-002",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The writer is considering deleting the underlined sentence. Should the sentence be kept or deleted?\n\n\"The city's new library branch features floor-to-ceiling windows and a rooftop reading garden. [The architect also designed a courthouse in a nearby town.] Patrons say the abundant natural light makes the space feel warm and inviting even in winter.\"",
+    "choices": [
+      "Kept, because it provides relevant background on the architect's broader career that helps readers understand the design.",
+      "Kept, because it explains why the library's design features are so unusual compared to other buildings.",
+      "Deleted, because it shifts focus away from the library's design and atmosphere, which is the paragraph's main focus.",
+      "Deleted, because it contradicts information given earlier in the paragraph about the library's features."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check both the recommended action and the stated reason — the correct answer needs an accurate reason, not just the right action."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-003",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the sake of the logic and coherence of the paragraph, sentence 4 should be placed:\n\n\"(1) The bakery opens at six each morning to start the sourdough process. (2) By eight, the smell of fresh bread fills the entire block. (3) Regular customers often arrive before the doors even open. (4) The owner learned to bake from her grandmother in Italy.\"",
+    "choices": [
+      "where it is now (after sentence 3)",
+      "after sentence 1",
+      "after sentence 2",
+      "OMIT sentence 4 from the paragraph"
+    ],
+    "answer": "B",
+    "hints": [
+      "The owner's background is relevant introductory context, best placed right after the bakery is introduced and before the paragraph moves into the daily routine."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-004",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most effectively concludes the paragraph by emphasizing the outcome of the residents' fundraising effort?\n\n\"When the town's old movie theater faced demolition, a group of residents organized a fundraising campaign to save it. Within six months, they raised over $200,000 through bake sales, raffles, and online donations. Local businesses also donated supplies and labor for the renovation. ___\"",
+    "choices": [
+      "The theater's original seats dated back to the 1940s.",
+      "Today, the renovated theater once again screens films for the whole community, a testament to what neighbors can accomplish together.",
+      "Movie tickets at the theater cost less than at newer multiplexes in the region.",
+      "Fundraising campaigns can be difficult to organize successfully."
+    ],
+    "answer": "B",
+    "hints": [
+      "A strong conclusion should tie back to the paragraph's main thread — the residents' effort — and state its outcome, not introduce an unrelated fact."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-005",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "At this point, the writer is considering adding the following sentence: \"Robots have become an important part of manufacturing industries worldwide.\" Should the writer make this addition?\n\n\"The high school's robotics team spent four months designing and building their competition robot. They tested dozens of prototypes before settling on a final design that could climb obstacles and lift objects three times its own weight.\"",
+    "choices": [
+      "Yes, because it provides important context about why robotics competitions exist.",
+      "Yes, because it explains the technical specifications of the team's robot in more detail.",
+      "No, because it shifts focus away from the specific team and robot the paragraph is describing.",
+      "No, because it contradicts the paragraph's claim that the robot could lift heavy objects."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the added sentence stays focused on the paragraph's specific subject or drifts into a broader, unrelated claim — and whether the stated reason is accurate."
+    ]
+  },
+  {
+    "id": "act-rhetorical-skills-006",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Given that the writer's goal is to open the article in a way that is engaging and appropriate for a middle school newsletter audience, which choice best accomplishes this goal?\n\nThe article's opening currently reads:\n\"[Internships in various fields have been shown, according to several longitudinal studies, to have statistically significant positive correlations with post-graduate employment outcomes.]\"",
+    "choices": [
+      "Internships in various fields have been shown, according to several longitudinal studies, to have statistically significant positive correlations with post-graduate employment outcomes.",
+      "Want a taste of a real job before you even finish high school? An internship might be just the adventure you're looking for.",
+      "This article contains information regarding the utility of internship programs for adolescent students.",
+      "Internships, as previously mentioned in academic literature, offer numerous multifaceted benefits to participants."
+    ],
+    "answer": "B",
+    "hints": [
+      "Match the vocabulary and tone to the stated audience — a middle school newsletter calls for direct, engaging language, not academic jargon."
+    ]
+  }
+]

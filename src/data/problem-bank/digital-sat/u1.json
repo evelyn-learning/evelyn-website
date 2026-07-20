@@ -1,0 +1,614 @@
+[
+  {
+    "id": "dsat-linear-equations-one-var-001",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3x + 5 = 20",
+    "choices": [
+      "3",
+      "5",
+      "15",
+      "25"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract 5 from both sides first, then divide by 3."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-one-var-002",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 2(x - 4) = 3x + 1",
+    "choices": [
+      "-9",
+      "9",
+      "-7",
+      "7"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute the 2 on the left side before collecting x-terms on one side."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-one-var-003",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x/3 + 4 = 10",
+    "choices": [
+      "14",
+      "18",
+      "30",
+      "42"
+    ],
+    "answer": "B",
+    "hints": [
+      "Isolate the fraction by subtracting 4, then multiply both sides by 3."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-one-var-004",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 4(x + 2) - 3 = 2(x - 1) + 9",
+    "choices": [
+      "1",
+      "-1",
+      "2",
+      "6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute on both sides, simplify each side fully, then collect x-terms."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-one-var-005",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x: (2x - 1)/4 = (x + 5)/3",
+    "answer": "11.5",
+    "hints": [
+      "Cross-multiply to clear the fractions, then solve the resulting linear equation."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-one-var-006",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A number decreased by 7, then that result multiplied by 3, equals 5 less than twice the number. What is the number?",
+    "choices": [
+      "16",
+      "9",
+      "26",
+      "-16"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let n be the number, translate each phrase into an expression, then set the two sides equal."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-001",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The function f(x) = 5x - 2 gives the value of f for any x. What is f(3)?",
+    "choices": [
+      "13",
+      "15",
+      "17",
+      "3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute 3 for x in the expression 5x - 2."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-002",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through the points (0, 3) and (4, 11). What is the slope of the line?",
+    "choices": [
+      "2",
+      "8",
+      "1/2",
+      "4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Slope is the change in y divided by the change in x between the two points."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-003",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The function h models the height, in feet, of a plant t weeks after it was planted: h(t) = 2.5t + 6. What does the value 6 represent in this context?",
+    "choices": [
+      "The height of the plant at the time it was planted",
+      "The number of weeks it takes the plant to grow",
+      "The rate at which the plant grows each week",
+      "The height of the plant after 6 weeks"
+    ],
+    "answer": "A",
+    "hints": [
+      "The constant term in a linear model is the value when the input variable is 0."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-004",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A taxi charges a flat fee of $3.50 plus $2.25 per mile. If C(m) = 3.50 + 2.25m gives the total cost in dollars for a ride of m miles, what is the cost of a 6-mile ride?",
+    "choices": [
+      "$17.00",
+      "$13.50",
+      "$15.75",
+      "$20.50"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute 6 for m and add the flat fee to the per-mile charge."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-005",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Line l has a slope of -3 and passes through the point (2, 1). What is the y-intercept of line l?",
+    "answer": "7",
+    "hints": [
+      "Use y = mx + b with the given slope and point to solve for b."
+    ]
+  },
+  {
+    "id": "dsat-linear-functions-006",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The function f is linear. f(2) = 11 and f(5) = 20. What is f(10)?",
+    "choices": [
+      "35",
+      "29",
+      "38",
+      "32"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the slope from the two given points, then write f(x) = slope*x + b and solve for b."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-001",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which point lies on the line given by y = 2x - 3?",
+    "choices": [
+      "(4, 5)",
+      "(4, 3)",
+      "(2, 3)",
+      "(3, 4)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute each point's x-coordinate into the equation and check whether you get the y-coordinate."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-002",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the x-intercept of the line 3x + 4y = 12?",
+    "choices": [
+      "(4, 0)",
+      "(0, 3)",
+      "(0, 4)",
+      "(3, 0)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The x-intercept occurs where y = 0."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-003",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Write the equation y - 5 = 2(x - 1) in slope-intercept form.",
+    "choices": [
+      "y = 2x + 3",
+      "y = 2x + 5",
+      "y = 2x - 3",
+      "y = 2x + 7"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute the 2, then add 5 to both sides to isolate y."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-004",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A line passes through (1, 4) and (3, -2). What is the equation of the line in slope-intercept form?",
+    "choices": [
+      "y = -3x + 7",
+      "y = 3x - 7",
+      "y = -3x - 7",
+      "y = -2x + 6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the slope between the two points, then use point-slope form with either point."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-005",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The line 5x - 2y = 10 crosses the y-axis at the point (0, k). What is the value of k?",
+    "answer": "-5",
+    "hints": [
+      "Set x = 0 and solve the resulting equation for y."
+    ]
+  },
+  {
+    "id": "dsat-linear-equations-two-vars-006",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Line m is parallel to the line 4x + 2y = 8 and passes through the point (3, 5). What is the y-intercept of line m?",
+    "choices": [
+      "11",
+      "-2",
+      "5",
+      "17"
+    ],
+    "answer": "A",
+    "hints": [
+      "Parallel lines have equal slopes; find that slope, then use the given point to find the y-intercept of line m."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-001",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: y = x + 2 and y = 3x - 4. What is the value of x?",
+    "choices": [
+      "3",
+      "-3",
+      "1",
+      "6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Since both expressions equal y, set them equal to each other and solve for x."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-002",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: 2x + y = 9 and x - y = 3. What is the value of y?",
+    "choices": [
+      "1",
+      "4",
+      "5",
+      "3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add the two equations together to eliminate y and solve for x, then substitute back to find y."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-003",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two lines are given by the equations y = 2x - 1 and y = -x + 5. At what point do the lines intersect?",
+    "choices": [
+      "(2, 3)",
+      "(3, 2)",
+      "(1, 1)",
+      "(2, 1)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set the two expressions for y equal to each other and solve for x, then find y."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-004",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: 4x + 3y = 18 and 2x - y = 4. What is the value of x + y?",
+    "choices": [
+      "5",
+      "3",
+      "7",
+      "2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Solve the second equation for y in terms of x, then substitute into the first equation."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-005",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A system of equations is given: 3x + 2y = 16 and x = y + 2. What is the value of y?",
+    "answer": "2",
+    "hints": [
+      "Substitute the expression for x from the second equation into the first equation."
+    ]
+  },
+  {
+    "id": "dsat-systems-of-linear-equations-006",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The system 2x - 3y = 7 and 4x + ky = 11 has no solution. What is the value of k?",
+    "choices": [
+      "-6",
+      "6",
+      "-1.5",
+      "1.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "A system of two linear equations has no solution when the coefficient ratios match but the constant ratio does not."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-001",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the inequality: x - 4 > 9",
+    "choices": [
+      "x > 13",
+      "x > 5",
+      "x < 13",
+      "x > -13"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add 4 to both sides of the inequality."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-002",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the inequality: -2x + 5 <= 13",
+    "choices": [
+      "x >= -4",
+      "x <= -4",
+      "x >= 4",
+      "x <= 4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember to flip the inequality sign when you divide both sides by a negative number."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-003",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which point satisfies the inequality y < 2x + 1?",
+    "choices": [
+      "(0, 0)",
+      "(0, 2)",
+      "(1, 4)",
+      "(-1, 0)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute each point's coordinates into the inequality and check whether it holds true."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-004",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A parking garage charges $4 for the first hour and $2.50 for each additional hour. Mia wants to pay no more than $20 total. Which inequality gives h, the number of additional hours she can park after the first hour?",
+    "choices": [
+      "4 + 2.50h <= 20",
+      "4 + 2.50h >= 20",
+      "2.50 + 4h <= 20",
+      "4h + 2.50 <= 20"
+    ],
+    "answer": "A",
+    "hints": [
+      "The flat fee is a fixed cost, and the additional hours are charged at the per-hour rate; the total must be at most $20."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-005",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "What is the smallest integer value of x that satisfies the inequality 3x - 7 > 11?",
+    "answer": "7",
+    "hints": [
+      "Solve the inequality for x first, then identify the smallest integer greater than that boundary value."
+    ]
+  },
+  {
+    "id": "dsat-linear-inequalities-006",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For which of the following inequalities is x = -2 NOT a solution?",
+    "choices": [
+      "2x + 9 < 4",
+      "3x + 10 > 2",
+      "-x - 1 <= 4",
+      "x + 6 >= 3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute x = -2 into each inequality and check which one becomes a false statement."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-001",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which equation is equivalent to 2x + 6 = 14?",
+    "choices": [
+      "x + 3 = 7",
+      "x + 6 = 14",
+      "x + 3 = 14",
+      "2x + 3 = 7"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide every term on both sides of the original equation by 2."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-002",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following equations has the same solution as 3(x - 2) = 15?",
+    "choices": [
+      "x - 2 = 5",
+      "3x - 2 = 15",
+      "x - 6 = 15",
+      "3x + 6 = 15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide both sides of the original equation by 3 to get an equivalent, simpler equation."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-003",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the equation 4x + 8 = 4(x + 2) have?",
+    "choices": [
+      "Infinitely many solutions",
+      "No solution",
+      "Exactly one solution",
+      "Exactly two solutions"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute the right side and compare it to the left side."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-004",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the equation 5x - 3 = 5x + 4 have?",
+    "choices": [
+      "No solution",
+      "Infinitely many solutions",
+      "Exactly one solution",
+      "x = 0"
+    ],
+    "answer": "A",
+    "hints": [
+      "Try to isolate x by subtracting 5x from both sides and see what statement remains."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-005",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For what value of a does the equation 6x + 9 = a(2x + 3) have infinitely many solutions?",
+    "answer": "3",
+    "hints": [
+      "The equation has infinitely many solutions when both sides are identical after distributing."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-forms-solution-counts-006",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The equation kx + 5 = 3(4x - 4) has no solution for x. What is the value of k?",
+    "choices": [
+      "12",
+      "-12",
+      "3",
+      "-3"
+    ],
+    "answer": "A",
+    "hints": [
+      "No solution occurs when the coefficients of x match on both sides but the constant terms do not."
+    ]
+  }
+]

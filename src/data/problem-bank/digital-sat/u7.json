@@ -1,0 +1,218 @@
+[
+  {
+    "id": "dsat-rhetorical-synthesis-001",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a report about a desert. Notes: - The Sahara Desert covers about 3.6 million square miles. - It is the largest hot desert in the world. - It spans across North Africa, touching multiple countries. The student wants to inform readers of the Sahara's size relative to other hot deserts. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "At about 3.6 million square miles, the Sahara Desert is the largest hot desert in the world.",
+      "The Sahara Desert spans across North Africa, touching multiple countries.",
+      "Covering 3.6 million square miles, the Sahara Desert touches many countries in North Africa.",
+      "The Sahara Desert is a hot desert located in North Africa."
+    ],
+    "answer": "A",
+    "hints": [
+      "The goal asks for a size comparison to other hot deserts, so the choice needs both a figure and a superlative claim like 'largest.'"
+    ]
+  },
+  {
+    "id": "dsat-rhetorical-synthesis-002",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about an early aviation milestone. Notes: - The Wright brothers made their first powered flight in 1903. - The flight lasted only 12 seconds. - It traveled a distance of 120 feet. - The location was Kitty Hawk, North Carolina. The student wants to emphasize how brief the flight was. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "The Wright brothers' first powered flight in 1903 lasted only 12 seconds, covering a mere 120 feet.",
+      "The Wright brothers made their first powered flight in 1903 at Kitty Hawk, North Carolina.",
+      "In 1903, the Wright brothers flew 120 feet at Kitty Hawk, North Carolina.",
+      "The first powered flight, achieved by the Wright brothers, took place in Kitty Hawk, North Carolina, in 1903."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the choice that states the duration (12 seconds), since duration is what shows brevity most directly."
+    ]
+  },
+  {
+    "id": "dsat-rhetorical-synthesis-003",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about honeybee behavior. Notes: - Honeybees communicate the location of food sources through a 'waggle dance.' - The dance conveys both distance and direction. - Karl von Frisch first described this behavior in the 1960s. - The angle of the dance relative to the sun indicates the food's direction. The student wants to explain how the angle of the waggle dance relates to direction. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "The angle at which a honeybee performs its waggle dance relative to the sun indicates the direction of a food source.",
+      "Karl von Frisch first described the honeybee waggle dance in the 1960s.",
+      "Honeybees communicate the location of food sources through a dance that conveys distance and direction.",
+      "The waggle dance is a behavior honeybees use to communicate with each other."
+    ],
+    "answer": "A",
+    "hints": [
+      "The goal specifically mentions the angle and direction, so eliminate choices that omit the angle detail."
+    ]
+  },
+  {
+    "id": "dsat-rhetorical-synthesis-004",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about a coral reef system. Notes: - The Great Barrier Reef is located off the coast of Queensland, Australia. - It is composed of over 2,900 individual reefs. - Rising ocean temperatures have caused significant coral bleaching since 2016. - The reef supports thousands of marine species. The student wants to highlight both the reef's scale and the threat it currently faces. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Composed of over 2,900 individual reefs, the Great Barrier Reef has experienced significant coral bleaching from rising ocean temperatures since 2016.",
+      "The Great Barrier Reef, located off the coast of Queensland, Australia, supports thousands of marine species.",
+      "Since 2016, rising ocean temperatures have caused significant coral bleaching in the Great Barrier Reef.",
+      "The Great Barrier Reef is composed of over 2,900 individual reefs that support thousands of marine species."
+    ],
+    "answer": "A",
+    "hints": [
+      "The goal requires two things at once: a scale detail (number of reefs) and a threat detail (bleaching). Only one choice includes both."
+    ]
+  },
+  {
+    "id": "dsat-rhetorical-synthesis-005",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about a classic novel. Notes: - The novel 'Frankenstein' was published anonymously in 1818. - Its author, Mary Shelley, was only 20 years old when she wrote it. - The novel is often cited as one of the earliest works of science fiction. - Shelley conceived the story during a summer spent in Switzerland. The student wants to emphasize Shelley's youth alongside the novel's lasting literary significance. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Mary Shelley was just 20 years old when she wrote 'Frankenstein,' a novel now regarded as one of the earliest works of science fiction.",
+      "'Frankenstein' was published anonymously in 1818 and was conceived during a summer Shelley spent in Switzerland.",
+      "Mary Shelley conceived 'Frankenstein' while spending a summer in Switzerland.",
+      "'Frankenstein,' published in 1818, is often cited as one of the earliest works of science fiction."
+    ],
+    "answer": "A",
+    "hints": [
+      "The goal needs both Shelley's age and a statement about the novel's significance; only one choice pairs those two facts."
+    ]
+  },
+  {
+    "id": "dsat-rhetorical-synthesis-006",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about a city's response to an environmental challenge. Notes: - The city of Venice is built on more than 100 small islands. - The islands are separated by canals and linked by over 400 bridges. - Venice has been slowly sinking due to natural land subsidence and rising sea levels. - Local authorities completed the MOSE flood barrier system in 2020 to help protect the city. The student wants to introduce the engineering solution developed to address a problem specific to the city, without restating the extent of the problem itself. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "In 2020, local authorities completed the MOSE flood barrier system to help protect Venice.",
+      "Venice has been slowly sinking due to natural land subsidence and rising sea levels, prompting authorities to act.",
+      "Built on more than 100 small islands, Venice is linked by over 400 bridges.",
+      "To address its sinking, local authorities in Venice completed the MOSE flood barrier system in 2020, aiming to counter both subsidence and rising seas."
+    ],
+    "answer": "A",
+    "hints": [
+      "Eliminate any choice that spells out the causes of the problem in detail (subsidence, rising seas) — the goal says not to restate the problem's extent, only to introduce the solution."
+    ]
+  },
+  {
+    "id": "dsat-transitions-001",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Many marathon runners follow strict training schedules for months before a race. ______, they carefully plan their diet in the weeks leading up to the event. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "In addition",
+      "However",
+      "Therefore",
+      "Instead"
+    ],
+    "answer": "A",
+    "hints": [
+      "The second sentence adds another item to a list of preparations, so an additive transition fits best."
+    ]
+  },
+  {
+    "id": "dsat-transitions-002",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The museum's new exhibit was expected to draw large crowds. ______, attendance during its opening week fell far below projections. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "However",
+      "Similarly",
+      "As a result",
+      "For example"
+    ],
+    "answer": "A",
+    "hints": [
+      "The second sentence reports an outcome that contradicts the expectation in the first sentence, so a contrast word is needed."
+    ]
+  },
+  {
+    "id": "dsat-transitions-003",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Engineers finished the bridge's structural repairs ahead of schedule. ______, city officials moved up the reopening date by two weeks. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "As a result",
+      "In contrast",
+      "Similarly",
+      "Nonetheless"
+    ],
+    "answer": "A",
+    "hints": [
+      "The second sentence describes a decision that followed directly from the first sentence's news, so look for a cause-and-effect transition."
+    ]
+  },
+  {
+    "id": "dsat-transitions-004",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Coral reefs in shallow, warm waters are highly sensitive to even small changes in temperature. ______, reefs found in cooler, deeper waters tend to withstand temperature fluctuations with less visible damage. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "In contrast",
+      "For instance",
+      "Therefore",
+      "Likewise"
+    ],
+    "answer": "A",
+    "hints": [
+      "The second sentence describes a different type of reef behaving in an opposite way to the first, so the transition should signal contrast rather than similarity or cause."
+    ]
+  },
+  {
+    "id": "dsat-transitions-005",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The company's quarterly earnings exceeded analysts' expectations for the third consecutive year. ______, its stock price dropped sharply the day the report was released. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "Nevertheless",
+      "Therefore",
+      "In addition",
+      "Specifically"
+    ],
+    "answer": "A",
+    "hints": [
+      "The stock drop is an unexpected outcome given the strong earnings, so the transition needs to signal an unexpected contrast, not a result or addition."
+    ]
+  },
+  {
+    "id": "dsat-transitions-006",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Researchers found that a new drug reduced symptoms in 68 percent of patients within the first week of treatment. ______, none of the patients in the study reported serious side effects during the same period. Which choice completes the text with the most logical transition?",
+    "choices": [
+      "Moreover",
+      "Similarly",
+      "In contrast",
+      "Consequently"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both sentences report favorable findings from the same study, adding weight to a single overall case; 'Similarly' would wrongly suggest the second sentence compares to a separate, analogous situation rather than adding further support to the same one."
+    ]
+  }
+]

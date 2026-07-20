@@ -1,0 +1,326 @@
+[
+  {
+    "id": "dsat-words-in-context-001",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "After weeks of drought, the reservoir's water level had dropped so drastically that old stone steps, long submerged, became visible again. Officials described the reservoir as dangerously ______.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "depleted",
+      "replenished",
+      "elevated",
+      "contaminated"
+    ],
+    "answer": "A",
+    "hints": [
+      "The steps became visible because the water was very low."
+    ]
+  },
+  {
+    "id": "dsat-words-in-context-002",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The committee's decision seemed arbitrary at first, but a closer reading of the meeting minutes revealed a consistent, if unstated, rationale behind each choice. What appeared to be caprice was, in fact, ______.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "methodical",
+      "capricious",
+      "arbitrary",
+      "spontaneous"
+    ],
+    "answer": "A",
+    "hints": [
+      "The text contrasts 'appeared random' with what the minutes actually revealed: a consistent rationale."
+    ]
+  },
+  {
+    "id": "dsat-words-in-context-003",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The novelist's prose, often praised for its economy, strips away every unnecessary word until only the essential image remains. Critics have called her style ______.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "austere",
+      "ornate",
+      "verbose",
+      "sentimental"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Economy' and stripping away unnecessary words point to a spare, unadorned style."
+    ]
+  },
+  {
+    "id": "dsat-words-in-context-004",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Though the negotiator's tone remained calm, her arguments were laced with a subtle ______ that left her opponents feeling outmaneuvered rather than persuaded.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "guile",
+      "candor",
+      "indifference",
+      "deference"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Outmaneuvered rather than persuaded' signals cunning, not honesty or openness."
+    ]
+  },
+  {
+    "id": "dsat-words-in-context-005",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The museum's new wing was praised for its restraint: rather than overwhelming visitors with ornamentation, the architects chose a design that let the artwork itself take precedence, a decision widely seen as ______.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "judicious",
+      "garish",
+      "indulgent",
+      "haphazard"
+    ],
+    "answer": "A",
+    "hints": [
+      "'Restraint' and a design praised for showing good judgment point to a word meaning wise or well-judged."
+    ]
+  },
+  {
+    "id": "dsat-words-in-context-006",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The senator's speech was widely reported as 'conciliatory,' yet a close reading shows she made no concessions at all; she merely softened her tone while repeating the same demands. Her rhetoric was better described as ______ than accommodating.\n\nWhich choice completes the text with the most logical and precise word?",
+    "choices": [
+      "obdurate",
+      "conciliatory",
+      "deferential",
+      "accommodating"
+    ],
+    "answer": "A",
+    "hints": [
+      "The text explicitly says she made no real concessions despite a softer tone, so the word must mean stubbornly unyielding."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-001",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Urban parks provide shade, but many cities plant only one species of tree, leaving them vulnerable to a single pest wiping out the whole canopy. Some cities have begun mixing tree species deliberately, so no single disease or insect can destroy the entire urban forest.\n\nWhich choice best describes the overall structure of the text?",
+    "choices": [
+      "It presents a problem and then describes a strategy some cities use to address it.",
+      "It compares two historical approaches to urban planning without favoring either.",
+      "It refutes a widely held belief about city tree planting.",
+      "It narrates a sequence of events in chronological order."
+    ],
+    "answer": "A",
+    "hints": [
+      "The first sentence identifies a vulnerability; the second describes how some cities respond to it."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-002",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Coral reefs cover less than one percent of the ocean floor, yet they support roughly a quarter of all marine species. This disproportionate contribution to biodiversity is why marine biologists refer to reefs as the 'rainforests of the sea.'\n\nWhat is the primary function of the first sentence in the text?",
+    "choices": [
+      "It establishes a contrast that motivates the label given to reefs in the following sentence.",
+      "It introduces a counterargument that the passage will later dismiss.",
+      "It summarizes the main finding of a specific research study.",
+      "It presents a hypothesis that the rest of the text sets out to disprove."
+    ],
+    "answer": "A",
+    "hints": [
+      "The first sentence sets up a size-versus-biodiversity contrast that the second sentence explains and names."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-003",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Freshwater turtles typically bask in the sun to regulate body temperature, spending hours motionless on logs. Sea turtles, by contrast, rarely leave the water except to nest, relying instead on the ocean's relatively stable temperature to stay warm.\n\nWhich choice best describes the overall structure of the text?",
+    "choices": [
+      "It contrasts the thermoregulation behaviors of two related but distinct groups of turtles.",
+      "It traces the evolutionary history of turtles from freshwater to marine environments.",
+      "It argues that sea turtles are better adapted to their environment than freshwater turtles.",
+      "It describes a single turtle species' behavior across different seasons."
+    ],
+    "answer": "A",
+    "hints": [
+      "The phrase 'by contrast' signals the text is setting two behaviors against each other."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-004",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Economists have long debated whether minimum wage increases reduce employment. A 2019 study of neighboring counties with different minimum wage laws found no measurable difference in employment levels. Critics of the study note, however, that it examined only a two-year window, too short to capture the slower, longer-term adjustments firms might make to labor costs.\n\nWhat is the function of the last sentence in the text?",
+    "choices": [
+      "It qualifies the preceding finding by pointing out a limitation in the study's methodology.",
+      "It provides a second piece of evidence that reinforces the study's conclusion.",
+      "It introduces an entirely unrelated debate about labor economics.",
+      "It summarizes the overall argument of the text."
+    ],
+    "answer": "A",
+    "hints": [
+      "The word 'however' signals the sentence is complicating, not confirming, the study's finding."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-005",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "It is often assumed that older architecture is inherently less energy-efficient than modern construction. Yet a 2021 survey of pre-1900 stone buildings in Edinburgh found that many maintained more stable indoor temperatures than nearby glass-walled office towers built after 2000, thanks to the thermal mass of thick stone walls.\n\nWhich choice best describes the overall structure of the text?",
+    "choices": [
+      "It states a common assumption and then presents evidence that complicates it.",
+      "It offers two competing theories without indicating a preference for either.",
+      "It describes a chronological progression in building techniques over centuries.",
+      "It presents a problem and then proposes an untested solution."
+    ],
+    "answer": "A",
+    "hints": [
+      "'It is often assumed' sets up a common belief; 'Yet' introduces evidence against it."
+    ]
+  },
+  {
+    "id": "dsat-text-structure-purpose-006",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The historian's account, which draws almost entirely on court records rather than personal letters, offers a meticulous timeline of events but says little about how ordinary participants understood what was happening around them. This is not a flaw so much as a boundary the author sets deliberately, one that later historians would need other sources to cross.\n\nWhat is the primary function of the final sentence in the text?",
+    "choices": [
+      "It reframes an apparent limitation of the account as an intentional scope rather than a shortcoming.",
+      "It criticizes the historian for failing to consult adequate primary sources.",
+      "It predicts that the historian's account will soon be proven inaccurate.",
+      "It explains why court records are generally more reliable than personal letters."
+    ],
+    "answer": "A",
+    "hints": [
+      "'This is not a flaw so much as a boundary the author sets deliberately' explicitly reinterprets the limitation described just before it."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-001",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Many nutritionists argue that skipping breakfast leads to overeating later in the day, making it harder to maintain a healthy weight.\n\nText 2: A recent review of dozens of studies found no consistent link between breakfast consumption and weight change; some breakfast skippers actually ate less overall by day's end.\n\nHow would the author of Text 2 most likely respond to the claim in Text 1?",
+    "choices": [
+      "By pointing out that the evidence does not support a consistent connection between skipping breakfast and weight gain.",
+      "By agreeing that skipping breakfast reliably causes overeating later in the day.",
+      "By arguing that breakfast is the most important meal for weight management.",
+      "By ignoring the claim as irrelevant to questions of nutrition."
+    ],
+    "answer": "A",
+    "hints": [
+      "Text 2 reports a review finding 'no consistent link,' which directly undercuts Text 1's claim."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-002",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Some urban planners contend that building more highways relieves traffic congestion by giving drivers more routes to choose from.\n\nText 2: Traffic data from several expanded highway systems show that new lanes fill up within a few years as more people choose to drive, a pattern researchers call 'induced demand.' Congestion levels often return to where they started.\n\nBased on the texts, how would the author of Text 2 most likely respond to the planners described in Text 1?",
+    "choices": [
+      "By suggesting that the relief highway expansion provides tends to be temporary because increased road capacity encourages more driving.",
+      "By agreeing that highway expansion is the most effective long-term solution to congestion.",
+      "By claiming that traffic congestion is caused primarily by factors unrelated to road capacity.",
+      "By recommending that cities stop collecting traffic data altogether."
+    ],
+    "answer": "A",
+    "hints": [
+      "Text 2's 'induced demand' finding means congestion returns after new lanes fill up, contradicting the planners' claim of lasting relief."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-003",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: A popular theory holds that the ancient site of Gorun Hill was primarily a defensive fortress, given its elevated position and surrounding stone walls.\n\nText 2: Excavations at Gorun Hill uncovered large communal ovens, storage pits for grain, and almost no weapons, suggesting the site may have served more as a gathering place for trade and feasting than as a stronghold.\n\nWhich choice best describes the relationship between the two texts?",
+    "choices": [
+      "Text 2 presents findings that complicate the interpretation offered in Text 1.",
+      "Text 2 provides additional support for the theory described in Text 1.",
+      "Text 1 and Text 2 focus on entirely different archaeological sites.",
+      "Text 2 restates the claim in Text 1 using different terminology."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ovens, grain storage, and a lack of weapons point away from a purely defensive purpose, complicating the fortress theory."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-004",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Proponents of remote work argue that eliminating commutes gives employees more time and reduces stress, which in turn increases overall productivity.\n\nText 2: A two-year study of software teams found that developers working remotely reported less commute stress but also more difficulty coordinating on complex tasks, leading some teams to schedule mandatory in-person weeks for major project milestones.\n\nOn the basis of the texts, how would the author of Text 2 most likely respond to the claim in Text 1 that eliminating commutes straightforwardly increases productivity?",
+    "choices": [
+      "By suggesting that reduced commute stress must be weighed against coordination challenges that can offset productivity gains.",
+      "By denying that remote work reduces commute-related stress at all.",
+      "By insisting that in-person work is superior in every respect to remote work.",
+      "By arguing that productivity cannot be measured for software teams."
+    ],
+    "answer": "A",
+    "hints": [
+      "Text 2 confirms the stress reduction but adds a complicating factor (coordination difficulty) that Text 1 does not mention."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-005",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Some linguists claim that children acquire grammar primarily by imitating the speech they hear from caregivers, gradually reproducing patterns with increasing accuracy.\n\nText 2: Researchers recorded a child producing the sentence 'I goed to the store,' a form no adult in the household ever used. Such errors, common across many languages, suggest children apply general rules to new words rather than simply repeating heard phrases.\n\nWhich choice best describes how Text 2 relates to the claim in Text 1?",
+    "choices": [
+      "Text 2 presents an observation that challenges a purely imitation-based account of grammar acquisition.",
+      "Text 2 confirms that children learn grammar exclusively by imitating caregivers.",
+      "Text 2 is unrelated to the topic of how children acquire language.",
+      "Text 2 argues that adults and children acquire grammar through identical processes."
+    ],
+    "answer": "A",
+    "hints": [
+      "A child producing a form no adult ever used cannot be explained by pure imitation, which is the point Text 2 makes."
+    ]
+  },
+  {
+    "id": "dsat-cross-text-connections-006",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Advocates of a four-day workweek cite pilot programs in which companies reported steady or improved output despite the shorter schedule, arguing that the standard five-day week contains substantial unproductive time that a compressed schedule simply eliminates.\n\nText 2: A separate analysis of four-day-week pilots found that reported output gains were concentrated in roles with easily measured, repetitive tasks; teams doing exploratory or highly collaborative work saw little change or slight declines, suggesting the benefits of a shorter week may depend heavily on the type of work involved.\n\nWhich choice best describes the relationship between the two texts?",
+    "choices": [
+      "Text 2 suggests that the benefit Text 1 attributes to a four-day week generally may instead be limited to certain kinds of work.",
+      "Text 2 provides evidence that fully confirms the general claim made in Text 1.",
+      "Text 1 and Text 2 both conclude that a four-day week reduces output in every type of role.",
+      "Text 2 dismisses the pilot programs cited in Text 1 as fabricated."
+    ],
+    "answer": "A",
+    "hints": [
+      "Text 2 narrows Text 1's general claim by showing the output gains varied by task type rather than applying broadly."
+    ]
+  }
+]
