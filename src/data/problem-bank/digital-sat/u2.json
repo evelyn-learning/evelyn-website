@@ -1,0 +1,614 @@
+[
+  {
+    "id": "dsat-equivalent-expressions-001",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Factor completely: $x^2 + 7x + 12$.",
+    "choices": [
+      "$(x+3)(x+4)$",
+      "$(x+2)(x+6)$",
+      "$(x-3)(x-4)$",
+      "$(x+1)(x+12)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for two numbers that multiply to 12 and add to 7."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-expressions-002",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For $x>0$, which expression is equivalent to $\\dfrac{x^{3/2}}{x^{1/2}}$?",
+    "choices": [
+      "$x$",
+      "$x^{3}$",
+      "$x^{1/4}$",
+      "$x^{2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "When dividing powers with the same base, subtract the exponents."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-expressions-003",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor completely: $3x^2 - 12$.",
+    "choices": [
+      "$3(x-2)(x+2)$",
+      "$(3x-2)(x+2)$",
+      "$3(x-4)(x+1)$",
+      "$(x-2)(3x+2)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "First factor out the greatest common factor, then factor the resulting difference of squares."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-expressions-004",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For $x>0$, which expression is equivalent to $\\sqrt[3]{x^4} \\cdot \\sqrt{x}$?",
+    "choices": [
+      "$x^{11/6}$",
+      "$x^{5/2}$",
+      "$x^{4/3}$",
+      "$x^{2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite each radical as a fractional exponent, then add the exponents."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-expressions-005",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "If $x^{2/3} = 9$ for $x > 0$, what is the value of $x$?",
+    "answer": "27",
+    "hints": [
+      "Raise both sides to the power $3/2$ to isolate $x$."
+    ]
+  },
+  {
+    "id": "dsat-equivalent-expressions-006",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For $x \\neq 3$ and $x \\neq -3$, which expression is equivalent to $\\dfrac{x^2 - 5x + 6}{x^2 - 9}$?",
+    "choices": [
+      "$\\dfrac{x-2}{x+3}$",
+      "$\\dfrac{x-2}{x-3}$",
+      "$\\dfrac{x+2}{x+3}$",
+      "$\\dfrac{x-2}{x+9}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor the numerator and denominator, then cancel the common factor."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-001",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What are the solutions to $x^2 - 5x + 6 = 0$?",
+    "choices": [
+      "$x = 2$ and $x = 3$",
+      "$x = -2$ and $x = -3$",
+      "$x = 1$ and $x = 6$",
+      "$x = -2$ and $x = 3$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor the quadratic into two binomials."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-002",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the equation $2x^2 - 4x + 5 = 0$, what is the value of the discriminant $b^2 - 4ac$?",
+    "choices": [
+      "$-24$",
+      "$24$",
+      "$-8$",
+      "$56$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute $a=2$, $b=-4$, $c=5$ into $b^2-4ac$."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-003",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quadratic equation has a discriminant equal to 0. What must be true about its solutions?",
+    "choices": [
+      "The equation has exactly one real solution (a repeated root).",
+      "The equation has two distinct real solutions.",
+      "The equation has two complex (non-real) solutions.",
+      "The equation has no solutions at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "The discriminant tells you the number and type of roots: zero means the two roots coincide."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-004",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For what positive value of $k$ does $x^2 + kx + 9 = 0$ have exactly one real solution?",
+    "answer": "6",
+    "hints": [
+      "Set the discriminant $k^2 - 36$ equal to 0 and solve for the positive value of $k$."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-005",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Using the quadratic formula, what is the positive solution to $3x^2 - 2x - 8 = 0$?",
+    "choices": [
+      "$2$",
+      "$-\\dfrac{4}{3}$",
+      "$\\dfrac{4}{3}$",
+      "$\\dfrac{3}{2}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply $x = \\dfrac{-b \\pm \\sqrt{b^2-4ac}}{2a}$ with $a=3$, $b=-2$, $c=-8$."
+    ]
+  },
+  {
+    "id": "dsat-quadratic-equations-006",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For which value of $c$ does $2x^2 - 8x + c = 0$ have two distinct real solutions whose product is positive?",
+    "choices": [
+      "$4$",
+      "$-2$",
+      "$10$",
+      "$0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two distinct real solutions require a positive discriminant; a positive product of roots requires $c/a > 0$. Find the value that satisfies both."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-001",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = (x-3)^2 + 5$ is a parabola. What are the coordinates of its vertex?",
+    "choices": [
+      "$(3, 5)$",
+      "$(-3, 5)$",
+      "$(3, -5)$",
+      "$(5, 3)$"
+    ],
+    "answer": "A",
+    "hints": [
+      "In vertex form $y=(x-h)^2+k$, the vertex is $(h,k)$."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-002",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = -2x^2 + 8x - 3$ opens in which direction, and why?",
+    "choices": [
+      "Downward, because the leading coefficient $-2$ is negative.",
+      "Upward, because the leading coefficient $-2$ is negative.",
+      "Downward, because the constant term $-3$ is negative.",
+      "Upward, because the vertex is a minimum."
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign of the coefficient on $x^2$ determines whether the parabola opens up or down."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-003",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A parabola has zeros at $x=-1$ and $x=5$. What is the x-coordinate of its vertex?",
+    "choices": [
+      "$2$",
+      "$4$",
+      "$-2$",
+      "$3$"
+    ],
+    "answer": "A",
+    "hints": [
+      "The vertex lies on the axis of symmetry, halfway between the two zeros."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-004",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How many distinct real zeros does $f(x) = x^3 - 4x$ have?",
+    "choices": [
+      "$3$",
+      "$1$",
+      "$2$",
+      "$0$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor out $x$, then factor the remaining difference of squares."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-005",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A quadratic function has vertex $(2, -9)$ and passes through the point $(5, 0)$. In the form $f(x) = a(x-2)^2 - 9$, what is the value of $a$?",
+    "answer": "1",
+    "hints": [
+      "Substitute the point $(5, 0)$ into the vertex-form equation and solve for $a$."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-functions-graphs-006",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The polynomial $p(x) = (x-1)^2(x+3)$ touches the x-axis at $x=1$ without crossing, but crosses the x-axis at $x=-3$. Which statement correctly explains this behavior?",
+    "choices": [
+      "The factor $(x-1)$ has even multiplicity (2), so the graph touches and turns at $x=1$; the factor $(x+3)$ has odd multiplicity (1), so the graph crosses at $x=-3$.",
+      "The factor $(x-1)$ has odd multiplicity, so the graph crosses at $x=1$; the factor $(x+3)$ has even multiplicity, so the graph touches at $x=-3$.",
+      "Both factors have even multiplicity, so the graph touches the x-axis at both zeros.",
+      "Multiplicity does not affect whether a graph crosses or touches the x-axis."
+    ],
+    "answer": "A",
+    "hints": [
+      "The exponent on each factor is its multiplicity: even multiplicity means the graph touches and turns, odd means it crosses."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-001",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The function $f(x) = 500(1.08)^x$ models exponential growth. What is the initial value?",
+    "choices": [
+      "$500$",
+      "$1.08$",
+      "$8$",
+      "$508$"
+    ],
+    "answer": "A",
+    "hints": [
+      "In $f(x) = a \\cdot b^x$, the initial value is $a$, the value at $x=0$."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-002",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The function $g(x) = 200(0.85)^x$ models exponential decay. What is the percent decrease per unit increase in $x$?",
+    "choices": [
+      "15%",
+      "85%",
+      "8.5%",
+      "0.85%"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write the base as $1 - r$ to find the decay rate $r$."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-003",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A population grows according to $P(t) = 1000 \\cdot 2^{t/5}$, where $t$ is measured in years. How many years does it take for the population to double?",
+    "choices": [
+      "5 years",
+      "2 years",
+      "10 years",
+      "1000 years"
+    ],
+    "answer": "A",
+    "hints": [
+      "The population doubles when the exponent $t/5$ equals 1."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-004",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An investment of \\$2000 grows at 6% annual interest, compounded annually, modeled by $A(t) = 2000(1.06)^t$. To the nearest dollar, what is the value after 2 years?",
+    "answer": "2247",
+    "hints": [
+      "Compute $2000 \\times 1.06^2$ and round to the nearest dollar."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-005",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which function represents exponential decay?",
+    "choices": [
+      "$f(x) = 50(0.6)^x$",
+      "$f(x) = 50(1.6)^x$",
+      "$f(x) = 50(2)^x$",
+      "$f(x) = 50x^{0.6}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Exponential decay requires a base strictly between 0 and 1."
+    ]
+  },
+  {
+    "id": "dsat-exponential-functions-006",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two functions model bacterial growth: $f(t) = 100 \\cdot 3^t$ and $g(t) = 100 \\cdot e^{1.2t}$. Which statement correctly compares their growth rates for $t > 0$?",
+    "choices": [
+      "$g$ grows faster than $f$ because $1.2 > \\ln 3 \\approx 1.099$, so $g$'s continuous growth rate exceeds $f$'s.",
+      "$f$ grows faster than $g$ because $3 > e$.",
+      "They grow at exactly the same rate for all $t$.",
+      "$f$ grows faster than $g$ because both start at $100$."
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite $3^t$ as $e^{(\\ln 3)t}$ and compare the continuous growth rates $\\ln 3$ and $1.2$."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-001",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for $x$: $|x - 4| = 7$.",
+    "choices": [
+      "$x = 11$ or $x = -3$",
+      "$x = 11$ only",
+      "$x = 3$ or $x = -11$",
+      "$x = -11$ or $x = 3$"
+    ],
+    "answer": "A",
+    "hints": [
+      "An absolute value equation $|A|=b$ splits into $A=b$ and $A=-b$."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-002",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for $x$: $\\sqrt{x+5} = 3$.",
+    "choices": [
+      "$4$",
+      "$-2$",
+      "$14$",
+      "$9$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Square both sides to eliminate the square root, then solve for $x$."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-003",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the equation $\\dfrac{3}{x} = \\dfrac{1}{4}$ for $x$ (assume $x \\neq 0$).",
+    "choices": [
+      "$12$",
+      "$\\dfrac{4}{3}$",
+      "$3$",
+      "$-12$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Cross-multiply the two fractions and solve for $x$."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-004",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for $x$: $\\dfrac{2}{x-1} + 3 = 7$.",
+    "answer": "1.5",
+    "hints": [
+      "Isolate the fraction first, then solve for $x-1$."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-005",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When solving $\\sqrt{x+3} = x - 3$ by squaring both sides, one of the resulting values is an extraneous solution. Which value is extraneous?",
+    "choices": [
+      "$x = 1$",
+      "$x = 6$",
+      "$x = -3$",
+      "$x = 3$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Squaring can introduce solutions that fail in the original equation — check each candidate in the original equation, not the squared one."
+    ]
+  },
+  {
+    "id": "dsat-rational-radical-absolute-006",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for all real $x$: $|2x - 1| = x + 5$. Which set contains all valid solutions?",
+    "choices": [
+      "$x = 6$ and $x = -\\dfrac{4}{3}$",
+      "$x = 6$ only",
+      "$x = -\\dfrac{4}{3}$ only",
+      "$x = 6$ and $x = \\dfrac{4}{3}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Split into the two cases $2x-1 = x+5$ and $2x-1 = -(x+5)$, then check each solution satisfies $x+5 \\ge 0$."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-001",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = f(x) + 4$ is obtained from the graph of $y = f(x)$ by which transformation?",
+    "choices": [
+      "A vertical shift up by 4 units",
+      "A vertical shift down by 4 units",
+      "A horizontal shift left by 4 units",
+      "A horizontal shift right by 4 units"
+    ],
+    "answer": "A",
+    "hints": [
+      "Adding a constant outside the function shifts the graph vertically."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-002",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = (x+2)^2$ is obtained from $y = x^2$ by which transformation?",
+    "choices": [
+      "A horizontal shift left by 2 units",
+      "A horizontal shift right by 2 units",
+      "A vertical shift up by 2 units",
+      "A vertical shift down by 2 units"
+    ],
+    "answer": "A",
+    "hints": [
+      "Replacing $x$ with $x+2$ inside the function shifts the graph horizontally, in the direction opposite the sign."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-003",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Consider the system $y = x^2$ and $y = 4x - 4$. How many points of intersection does the system have, and where?",
+    "choices": [
+      "One point of intersection, at $(2, 4)$ (the line is tangent to the parabola).",
+      "Two points of intersection, at $(2,4)$ and $(-2,4)$.",
+      "No points of intersection.",
+      "One point of intersection, at $(4, 2)$."
+    ],
+    "answer": "A",
+    "hints": [
+      "Set the two expressions for $y$ equal and examine the discriminant of the resulting quadratic."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-004",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system of equations $y = x^2 - 1$ and $y = 3$. What are the x-coordinates of the intersection points?",
+    "choices": [
+      "$x = 2$ and $x = -2$",
+      "$x = 4$ and $x = -4$",
+      "$x = 2$ only",
+      "$x = \\sqrt{3}$ and $x = -\\sqrt{3}$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set $x^2 - 1$ equal to 3 and solve for $x$."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-005",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The graph of $y = x^2$ is reflected over the x-axis and then shifted up by 6 units. What is the value of the resulting function at $x = 3$?",
+    "answer": "-3",
+    "hints": [
+      "Reflecting over the x-axis negates the function; then add 6 to shift up."
+    ]
+  },
+  {
+    "id": "dsat-nonlinear-systems-transformations-006",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For which value of $k$ does the system $y = x^2 + 2x + k$ and $y = -3$ have exactly one solution (the parabola is tangent to the line)?",
+    "choices": [
+      "$k = -2$",
+      "$k = 2$",
+      "$k = -4$",
+      "$k = 4$"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set $x^2+2x+k$ equal to $-3$ and require the discriminant of the resulting quadratic to equal 0."
+    ]
+  }
+]

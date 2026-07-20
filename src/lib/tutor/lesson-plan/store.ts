@@ -1570,6 +1570,76 @@ import { SEED_TEST_G11_PHASE12_ENVIRONMENTAL } from './seeds/test-g11-phase12-en
 import { SEED_TEST_MULTIRENDERER_STRESS } from './seeds/test-multirenderer-stress';
 import { SEED_TEST_JUDGE_SYNC_STRESS } from './seeds/test-judge-sync-stress';
 import { SEED_TEST_OPENER_MERGE_STRESS } from './seeds/test-opener-merge-stress';
+// ── Test-prep: Digital SAT / ACT (2026-07 launch) ──
+import { SEED_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR } from './seeds/dsat-u1-linear-equations-one-var';
+import { SEED_ACT_U4_DATA_REPRESENTATION } from './seeds/act-u4-data-representation';
+import { SEED_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS } from './seeds/dsat-u1-equivalent-forms-solution-counts';
+import { SEED_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS } from './seeds/dsat-u1-linear-equations-two-vars';
+import { SEED_DSAT_U1_LINEAR_FUNCTIONS } from './seeds/dsat-u1-linear-functions';
+import { SEED_DSAT_U1_LINEAR_INEQUALITIES } from './seeds/dsat-u1-linear-inequalities';
+import { SEED_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS } from './seeds/dsat-u1-systems-of-linear-equations';
+import { SEED_DSAT_U2_EQUIVALENT_EXPRESSIONS } from './seeds/dsat-u2-equivalent-expressions';
+import { SEED_DSAT_U2_EXPONENTIAL_FUNCTIONS } from './seeds/dsat-u2-exponential-functions';
+import { SEED_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS } from './seeds/dsat-u2-nonlinear-functions-graphs';
+import { SEED_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS } from './seeds/dsat-u2-nonlinear-systems-transformations';
+import { SEED_DSAT_U2_QUADRATIC_EQUATIONS } from './seeds/dsat-u2-quadratic-equations';
+import { SEED_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE } from './seeds/dsat-u2-rational-radical-absolute';
+import { SEED_DSAT_U3_ONE_VARIABLE_DATA } from './seeds/dsat-u3-one-variable-data';
+import { SEED_DSAT_U3_PERCENTAGES } from './seeds/dsat-u3-percentages';
+import { SEED_DSAT_U3_PROBABILITY } from './seeds/dsat-u3-probability';
+import { SEED_DSAT_U3_RATIOS_RATES_UNITS } from './seeds/dsat-u3-ratios-rates-units';
+import { SEED_DSAT_U3_SAMPLE_STATISTICS_CLAIMS } from './seeds/dsat-u3-sample-statistics-claims';
+import { SEED_DSAT_U3_TWO_VARIABLE_DATA } from './seeds/dsat-u3-two-variable-data';
+import { SEED_DSAT_U4_AREA_VOLUME } from './seeds/dsat-u4-area-volume';
+import { SEED_DSAT_U4_CIRCLES } from './seeds/dsat-u4-circles';
+import { SEED_DSAT_U4_LINES_ANGLES_TRIANGLES } from './seeds/dsat-u4-lines-angles-triangles';
+import { SEED_DSAT_U4_RIGHT_TRIANGLE_TRIG } from './seeds/dsat-u4-right-triangle-trig';
+import { SEED_DSAT_U5_CENTRAL_IDEAS_DETAILS } from './seeds/dsat-u5-central-ideas-details';
+import { SEED_DSAT_U5_INFERENCES } from './seeds/dsat-u5-inferences';
+import { SEED_DSAT_U5_QUANTITATIVE_EVIDENCE } from './seeds/dsat-u5-quantitative-evidence';
+import { SEED_DSAT_U5_TEXTUAL_EVIDENCE } from './seeds/dsat-u5-textual-evidence';
+import { SEED_DSAT_U6_CROSS_TEXT_CONNECTIONS } from './seeds/dsat-u6-cross-text-connections';
+import { SEED_DSAT_U6_TEXT_STRUCTURE_PURPOSE } from './seeds/dsat-u6-text-structure-purpose';
+import { SEED_DSAT_U6_WORDS_IN_CONTEXT } from './seeds/dsat-u6-words-in-context';
+import { SEED_DSAT_U7_RHETORICAL_SYNTHESIS } from './seeds/dsat-u7-rhetorical-synthesis';
+import { SEED_DSAT_U7_TRANSITIONS } from './seeds/dsat-u7-transitions';
+import { SEED_DSAT_U8_BOUNDARIES } from './seeds/dsat-u8-boundaries';
+import { SEED_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES } from './seeds/dsat-u8-plurals-possessives-confusables';
+import { SEED_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT } from './seeds/dsat-u8-subject-verb-pronoun-agreement';
+import { SEED_DSAT_U8_VERB_FORMS_MODIFIERS } from './seeds/dsat-u8-verb-forms-modifiers';
+import { SEED_ACT_U1_AGREEMENT } from './seeds/act-u1-agreement';
+import { SEED_ACT_U1_CONCISENESS } from './seeds/act-u1-conciseness';
+import { SEED_ACT_U1_MODIFIERS_PARALLELISM } from './seeds/act-u1-modifiers-parallelism';
+import { SEED_ACT_U1_PUNCTUATION } from './seeds/act-u1-punctuation';
+import { SEED_ACT_U1_RHETORICAL_SKILLS } from './seeds/act-u1-rhetorical-skills';
+import { SEED_ACT_U1_SENTENCE_STRUCTURE } from './seeds/act-u1-sentence-structure';
+import { SEED_ACT_U1_TRANSITIONS } from './seeds/act-u1-transitions';
+import { SEED_ACT_U1_VERB_TENSE_FORM } from './seeds/act-u1-verb-tense-form';
+import { SEED_ACT_U1_WORD_CHOICE_TONE } from './seeds/act-u1-word-choice-tone';
+import { SEED_ACT_U2_COORDINATE_GEOMETRY } from './seeds/act-u2-coordinate-geometry';
+import { SEED_ACT_U2_EXPONENTS_ROOTS_LOGS } from './seeds/act-u2-exponents-roots-logs';
+import { SEED_ACT_U2_FUNCTIONS_GRAPHS } from './seeds/act-u2-functions-graphs';
+import { SEED_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES } from './seeds/act-u2-linear-equations-inequalities';
+import { SEED_ACT_U2_PLANE_GEOMETRY } from './seeds/act-u2-plane-geometry';
+import { SEED_ACT_U2_PREALGEBRA_REVIEW } from './seeds/act-u2-prealgebra-review';
+import { SEED_ACT_U2_QUADRATICS_POLYNOMIALS } from './seeds/act-u2-quadratics-polynomials';
+import { SEED_ACT_U2_SEQUENCES_MATRICES_COMPLEX } from './seeds/act-u2-sequences-matrices-complex';
+import { SEED_ACT_U2_STATISTICS_PROBABILITY } from './seeds/act-u2-statistics-probability';
+import { SEED_ACT_U2_SYSTEMS } from './seeds/act-u2-systems';
+import { SEED_ACT_U2_TRIGONOMETRY } from './seeds/act-u2-trigonometry';
+import { SEED_ACT_U2_WORD_PROBLEMS_MODELING } from './seeds/act-u2-word-problems-modeling';
+import { SEED_ACT_U3_DETAIL_SEQUENCE } from './seeds/act-u3-detail-sequence';
+import { SEED_ACT_U3_INFERENCE_GENERALIZATION } from './seeds/act-u3-inference-generalization';
+import { SEED_ACT_U3_MAIN_IDEA_PURPOSE } from './seeds/act-u3-main-idea-purpose';
+import { SEED_ACT_U3_PAIRED_PASSAGES } from './seeds/act-u3-paired-passages';
+import { SEED_ACT_U3_READING_PACING_STRATEGY } from './seeds/act-u3-reading-pacing-strategy';
+import { SEED_ACT_U3_VOCABULARY_IN_CONTEXT } from './seeds/act-u3-vocabulary-in-context';
+import { SEED_ACT_U4_CONFLICTING_VIEWPOINTS } from './seeds/act-u4-conflicting-viewpoints';
+import { SEED_ACT_U4_RESEARCH_SUMMARIES } from './seeds/act-u4-research-summaries';
+import { SEED_ACT_U4_SCIENCE_PACING_STRATEGY } from './seeds/act-u4-science-pacing-strategy';
+import { SEED_ACT_U4_SCIENTIFIC_MATH_UNITS } from './seeds/act-u4-scientific-math-units';
+import { SEED_ACT_U4_TRENDS_EXTRAPOLATION } from './seeds/act-u4-trends-extrapolation';
+import { SEED_ACT_U4_VARIABLES_CONTROLS } from './seeds/act-u4-variables-controls';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3070,6 +3140,76 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_TEST_MULTIRENDERER_STRESS,
   SEED_TEST_JUDGE_SYNC_STRESS,
   SEED_TEST_OPENER_MERGE_STRESS,
+  // Test-prep: Digital SAT / ACT (2026-07 launch)
+  SEED_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR,
+  SEED_ACT_U4_DATA_REPRESENTATION,
+  SEED_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS,
+  SEED_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS,
+  SEED_DSAT_U1_LINEAR_FUNCTIONS,
+  SEED_DSAT_U1_LINEAR_INEQUALITIES,
+  SEED_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS,
+  SEED_DSAT_U2_EQUIVALENT_EXPRESSIONS,
+  SEED_DSAT_U2_EXPONENTIAL_FUNCTIONS,
+  SEED_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS,
+  SEED_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS,
+  SEED_DSAT_U2_QUADRATIC_EQUATIONS,
+  SEED_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE,
+  SEED_DSAT_U3_ONE_VARIABLE_DATA,
+  SEED_DSAT_U3_PERCENTAGES,
+  SEED_DSAT_U3_PROBABILITY,
+  SEED_DSAT_U3_RATIOS_RATES_UNITS,
+  SEED_DSAT_U3_SAMPLE_STATISTICS_CLAIMS,
+  SEED_DSAT_U3_TWO_VARIABLE_DATA,
+  SEED_DSAT_U4_AREA_VOLUME,
+  SEED_DSAT_U4_CIRCLES,
+  SEED_DSAT_U4_LINES_ANGLES_TRIANGLES,
+  SEED_DSAT_U4_RIGHT_TRIANGLE_TRIG,
+  SEED_DSAT_U5_CENTRAL_IDEAS_DETAILS,
+  SEED_DSAT_U5_INFERENCES,
+  SEED_DSAT_U5_QUANTITATIVE_EVIDENCE,
+  SEED_DSAT_U5_TEXTUAL_EVIDENCE,
+  SEED_DSAT_U6_CROSS_TEXT_CONNECTIONS,
+  SEED_DSAT_U6_TEXT_STRUCTURE_PURPOSE,
+  SEED_DSAT_U6_WORDS_IN_CONTEXT,
+  SEED_DSAT_U7_RHETORICAL_SYNTHESIS,
+  SEED_DSAT_U7_TRANSITIONS,
+  SEED_DSAT_U8_BOUNDARIES,
+  SEED_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES,
+  SEED_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT,
+  SEED_DSAT_U8_VERB_FORMS_MODIFIERS,
+  SEED_ACT_U1_AGREEMENT,
+  SEED_ACT_U1_CONCISENESS,
+  SEED_ACT_U1_MODIFIERS_PARALLELISM,
+  SEED_ACT_U1_PUNCTUATION,
+  SEED_ACT_U1_RHETORICAL_SKILLS,
+  SEED_ACT_U1_SENTENCE_STRUCTURE,
+  SEED_ACT_U1_TRANSITIONS,
+  SEED_ACT_U1_VERB_TENSE_FORM,
+  SEED_ACT_U1_WORD_CHOICE_TONE,
+  SEED_ACT_U2_COORDINATE_GEOMETRY,
+  SEED_ACT_U2_EXPONENTS_ROOTS_LOGS,
+  SEED_ACT_U2_FUNCTIONS_GRAPHS,
+  SEED_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES,
+  SEED_ACT_U2_PLANE_GEOMETRY,
+  SEED_ACT_U2_PREALGEBRA_REVIEW,
+  SEED_ACT_U2_QUADRATICS_POLYNOMIALS,
+  SEED_ACT_U2_SEQUENCES_MATRICES_COMPLEX,
+  SEED_ACT_U2_STATISTICS_PROBABILITY,
+  SEED_ACT_U2_SYSTEMS,
+  SEED_ACT_U2_TRIGONOMETRY,
+  SEED_ACT_U2_WORD_PROBLEMS_MODELING,
+  SEED_ACT_U3_DETAIL_SEQUENCE,
+  SEED_ACT_U3_INFERENCE_GENERALIZATION,
+  SEED_ACT_U3_MAIN_IDEA_PURPOSE,
+  SEED_ACT_U3_PAIRED_PASSAGES,
+  SEED_ACT_U3_READING_PACING_STRATEGY,
+  SEED_ACT_U3_VOCABULARY_IN_CONTEXT,
+  SEED_ACT_U4_CONFLICTING_VIEWPOINTS,
+  SEED_ACT_U4_RESEARCH_SUMMARIES,
+  SEED_ACT_U4_SCIENCE_PACING_STRATEGY,
+  SEED_ACT_U4_SCIENTIFIC_MATH_UNITS,
+  SEED_ACT_U4_TRENDS_EXTRAPOLATION,
+  SEED_ACT_U4_VARIABLES_CONTROLS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

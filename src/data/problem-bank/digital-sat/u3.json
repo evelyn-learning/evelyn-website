@@ -1,0 +1,614 @@
+[
+  {
+    "id": "dsat-ratios-rates-units-001",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A recipe requires 3 cups of flour for every 2 cups of sugar. If a baker uses 12 cups of flour, how many cups of sugar are needed?",
+    "choices": [
+      "6",
+      "8",
+      "9",
+      "18"
+    ],
+    "answer": "B",
+    "hints": [
+      "Set up the proportion 3/2 = 12/x and solve for x."
+    ]
+  },
+  {
+    "id": "dsat-ratios-rates-units-002",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car travels 150 miles in 2.5 hours at a constant speed. At this rate, how many miles will it travel in 4 hours?",
+    "choices": [
+      "200",
+      "220",
+      "240",
+      "260"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the speed in miles per hour first, then multiply by 4."
+    ]
+  },
+  {
+    "id": "dsat-ratios-rates-units-003",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A container holds 3.5 liters of liquid. Given that 1 liter = 1000 milliliters, how many milliliters does the container hold?",
+    "choices": [
+      "350",
+      "3500",
+      "35000",
+      "3.5"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply the number of liters by 1000."
+    ]
+  },
+  {
+    "id": "dsat-ratios-rates-units-004",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a scale drawing, 2.5 inches represents 10 feet of actual length. If a wall is represented by 7 inches on the drawing, what is the actual length of the wall, in feet?",
+    "choices": [
+      "17.5",
+      "24.5",
+      "28",
+      "31.5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Set up the proportion 2.5/10 = 7/x."
+    ]
+  },
+  {
+    "id": "dsat-ratios-rates-units-005",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A factory produces widgets at a constant rate. It produces 84 widgets in 3.5 hours. At this same rate, how many widgets does it produce in 5 hours?",
+    "answer": "120",
+    "hints": [
+      "Find the rate per hour, then multiply by 5."
+    ]
+  },
+  {
+    "id": "dsat-ratios-rates-units-006",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pump fills a tank at a rate of 8 gallons per minute. A larger pump fills the same size tank at a rate of 3 gallons every 20 seconds. Working together, how many gallons do both pumps fill in 2 minutes?",
+    "choices": [
+      "26",
+      "30",
+      "34",
+      "38"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert both rates to gallons per minute before adding them."
+    ]
+  },
+  {
+    "id": "dsat-percentages-001",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is 15% of 240?",
+    "choices": [
+      "24",
+      "30",
+      "36",
+      "42"
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiply 240 by 0.15."
+    ]
+  },
+  {
+    "id": "dsat-percentages-002",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A shirt originally priced at $40 is on sale for 25% off. What is the sale price?",
+    "choices": [
+      "$10",
+      "$15",
+      "$28",
+      "$30"
+    ],
+    "answer": "D",
+    "hints": [
+      "Subtract 25% of $40 from $40, or multiply $40 by 0.75."
+    ]
+  },
+  {
+    "id": "dsat-percentages-003",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A number increased by 20% is equal to 96. What is the original number?",
+    "choices": [
+      "76.8",
+      "80",
+      "84",
+      "115.2"
+    ],
+    "answer": "B",
+    "hints": [
+      "Let x be the original number and solve 1.2x = 96."
+    ]
+  },
+  {
+    "id": "dsat-percentages-004",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The price of a stock first increases by 20% and then decreases by 25% from its new value. What is the overall percent change from the original price?",
+    "choices": [
+      "5% decrease",
+      "10% decrease",
+      "10% increase",
+      "45% decrease"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply the growth factors: 1.20 x 0.75."
+    ]
+  },
+  {
+    "id": "dsat-percentages-005",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A store's revenue was $50,000 in January and $56,500 in February. By what percent did revenue increase from January to February? Enter your answer as a number, without a percent sign.",
+    "answer": "13",
+    "hints": [
+      "Divide the change in revenue by the original revenue, then convert to a percent."
+    ]
+  },
+  {
+    "id": "dsat-percentages-006",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A mixture contains 100 mL total, consisting of 20 mL of acid and 80 mL of water (20% acid by volume). How many mL of pure acid must be added to make the resulting mixture 50% acid by volume?",
+    "choices": [
+      "40",
+      "50",
+      "60",
+      "80"
+    ],
+    "answer": "C",
+    "hints": [
+      "Set up (20 + x)/(100 + x) = 0.50 and solve for x."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-001",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The data set 4, 7, 9, 12, 18 has a median of:",
+    "choices": [
+      "7",
+      "9",
+      "10",
+      "12"
+    ],
+    "answer": "B",
+    "hints": [
+      "The median is the middle value when the data is ordered."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-002",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A data set consists of the values 2, 3, 3, 4, 5, 5, 40. Which measure of center is most sensitive to the value 40?",
+    "choices": [
+      "The mean",
+      "The median",
+      "The mode",
+      "The range"
+    ],
+    "answer": "A",
+    "hints": [
+      "The mean uses the actual value of every data point, including extreme values."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-003",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Data set A: 10, 10, 10, 10, 10. Data set B: 2, 6, 10, 14, 18. Both sets have a mean of 10. Which statement is true?",
+    "choices": [
+      "Set A has a smaller standard deviation than Set B",
+      "Set A has a larger standard deviation than Set B",
+      "Both sets have equal standard deviation",
+      "Standard deviation cannot be compared without more data"
+    ],
+    "answer": "A",
+    "hints": [
+      "Standard deviation measures how spread out the values are from the mean."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-004",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A boxplot has a minimum of 10, Q1 = 20, median = 28, Q3 = 35, and maximum = 50. What is the interquartile range (IQR) of this data set?",
+    "choices": [
+      "8",
+      "15",
+      "25",
+      "40"
+    ],
+    "answer": "B",
+    "hints": [
+      "IQR = Q3 - Q1."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-005",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A data set has the values 5, 8, 8, 9, 12, 14, 15, 19. What is the interquartile range of this data set?",
+    "answer": "6.5",
+    "hints": [
+      "Split the ordered data into a lower half and upper half, find Q1 and Q3, then subtract."
+    ]
+  },
+  {
+    "id": "dsat-one-variable-data-006",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A data set has Q1 = 18 and Q3 = 30. Using the 1.5xIQR rule, which of the following values would be classified as an outlier?",
+    "choices": [
+      "45",
+      "46",
+      "47",
+      "50"
+    ],
+    "answer": "D",
+    "hints": [
+      "The upper fence is Q3 + 1.5xIQR; any value beyond it is an outlier."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-001",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot shows that as the number of hours studied increases, exam scores tend to increase. This describes a:",
+    "choices": [
+      "Positive association",
+      "Negative association",
+      "No association",
+      "Causal association only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both variables tend to increase together."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-002",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The line of best fit for a set of data relating hours worked (x) and pay in dollars (y) is y = 15x + 20. Based on this model, what is the predicted pay for someone who works 6 hours?",
+    "choices": [
+      "$90",
+      "$100",
+      "$110",
+      "$120"
+    ],
+    "answer": "C",
+    "hints": [
+      "Substitute x = 6 into the equation and solve for y."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-003",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line of best fit relating a car's age in years (x) to its value in dollars (y) is y = -1500x + 22000. What does the slope of -1500 represent in this context?",
+    "choices": [
+      "The car's value decreases by $1,500 for each additional year of age",
+      "The car's initial value is $1,500",
+      "The car's value increases by $1,500 each year",
+      "The car depreciates to $0 after 1,500 years"
+    ],
+    "answer": "A",
+    "hints": [
+      "The slope gives the change in y for each one-unit increase in x."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-004",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot has a correlation coefficient of r = -0.92. Which best describes the relationship between the two variables?",
+    "choices": [
+      "A strong negative linear relationship",
+      "A weak negative linear relationship",
+      "A strong positive linear relationship",
+      "No linear relationship"
+    ],
+    "answer": "A",
+    "hints": [
+      "Values of r close to -1 indicate a strong negative linear relationship."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-005",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The line of best fit for a data set is y = 4.5x - 3. Using this model, what is the predicted value of y when x = 8?",
+    "answer": "33",
+    "hints": [
+      "Substitute x = 8 into the equation."
+    ]
+  },
+  {
+    "id": "dsat-two-variable-data-006",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A line of best fit predicts that a house with 1,800 square feet will sell for $210,000. The house actually sold for $225,000. What is the residual for this data point?",
+    "choices": [
+      "-$15,000",
+      "$15,000",
+      "$210,000",
+      "$225,000"
+    ],
+    "answer": "B",
+    "hints": [
+      "Residual = actual value - predicted value."
+    ]
+  },
+  {
+    "id": "dsat-probability-001",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bag contains 5 red marbles and 3 blue marbles. If one marble is drawn at random, what is the probability that it is blue?",
+    "choices": [
+      "3/8",
+      "5/8",
+      "3/5",
+      "5/3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the number of blue marbles by the total number of marbles."
+    ]
+  },
+  {
+    "id": "dsat-probability-002",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a survey of 150 students, 90 own a bicycle and 60 do not. If one student is selected at random, what is the probability that the student does NOT own a bicycle?",
+    "choices": [
+      "2/5",
+      "3/5",
+      "3/10",
+      "1/2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the number who do not own a bicycle by the total number of students."
+    ]
+  },
+  {
+    "id": "dsat-probability-003",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Of 200 students, 80 are freshmen and 120 are sophomores. Of the freshmen, 30 play a sport. Of the sophomores, 50 play a sport. What is the probability that a randomly selected student is a freshman who plays a sport?",
+    "choices": [
+      "3/20",
+      "3/8",
+      "1/4",
+      "5/8"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the number of freshmen who play a sport by the total number of students."
+    ]
+  },
+  {
+    "id": "dsat-probability-004",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A survey of 250 people classifies them by age group and by beverage preference. Of the 100 people under 30, 40 prefer tea. Of the 150 people 30 or older, 90 prefer tea. If a person is selected at random from those under 30, what is the probability that the person prefers tea?",
+    "choices": [
+      "2/5",
+      "3/5",
+      "4/15",
+      "9/15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Restrict attention to the under-30 group only, then divide by that group's size."
+    ]
+  },
+  {
+    "id": "dsat-probability-005",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In a class of 40 students, 24 are taking Spanish. Of the students taking Spanish, 18 are also taking Chemistry. If a student who is taking Spanish is selected at random, what is the probability that the student is also taking Chemistry? Give your answer as a decimal.",
+    "answer": "0.75",
+    "hints": [
+      "Divide the number taking both classes by the number taking Spanish."
+    ]
+  },
+  {
+    "id": "dsat-probability-006",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Of 300 job applicants, 180 have a college degree and 120 do not. Among those with a college degree, 108 were hired. Among those without a degree, 24 were hired. Given that an applicant was hired, what is the probability that the applicant has a college degree?",
+    "choices": [
+      "9/11",
+      "3/5",
+      "108/300",
+      "4/5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide the number of hired applicants with a degree by the total number hired."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-001",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to estimate the average height of adult men in a city. Which of the following sampling methods would produce the most reliable estimate?",
+    "choices": [
+      "A random sample of 500 men from across the city",
+      "A sample of 500 men from one gym",
+      "A survey of the researcher's 20 friends",
+      "A sample of the first 500 men who volunteer online"
+    ],
+    "answer": "A",
+    "hints": [
+      "A reliable estimate requires a sample that represents the whole population, not just one group."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-002",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A poll estimates that 55% of voters support a proposal, with a margin of error of 3 percentage points. Which of the following is most likely NOT within the plausible range of the true population percentage?",
+    "choices": [
+      "53%",
+      "56%",
+      "58%",
+      "61%"
+    ],
+    "answer": "D",
+    "hints": [
+      "The plausible range is 55% minus 3 to 55% plus 3."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-003",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As the sample size of a survey increases, while all other factors remain constant, the margin of error tends to:",
+    "choices": [
+      "Decrease",
+      "Increase",
+      "Stay exactly the same",
+      "Become impossible to determine"
+    ],
+    "answer": "A",
+    "hints": [
+      "Larger samples give more precise estimates of the population."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-004",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 95% confidence interval for the mean weight of packages shipped by a company is (48.2, 51.8) pounds. Based on this interval, which claim is best supported?",
+    "choices": [
+      "It is plausible that the true mean weight is 50 pounds",
+      "The true mean weight is exactly 50 pounds",
+      "95% of all packages weigh between 48.2 and 51.8 pounds",
+      "The sample mean must be outside this interval"
+    ],
+    "answer": "A",
+    "hints": [
+      "A confidence interval gives a plausible range for the population mean, not a claim about individual values or certainty."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-005",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A poll reports a confidence interval of (0.42, 0.48) for the proportion of residents who support a new policy. What is the margin of error, expressed as a decimal?",
+    "answer": "0.03",
+    "hints": [
+      "The margin of error is half the width of the confidence interval."
+    ]
+  },
+  {
+    "id": "dsat-sample-statistics-claims-006",
+    "loId": "dsat.sample-statistics-claims",
+    "cedCode": "DSAT-3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A city wants to estimate the proportion of residents who support building a new park. Researchers call 400 randomly selected landline phone numbers in the evening and get responses from all 400. Which statement best describes a limitation of this sampling method for making conclusions about all city residents?",
+    "choices": [
+      "The sample may underrepresent residents who do not have landline phones, biasing the results",
+      "The sample size of 400 is too small to be valid",
+      "Calling in the evening guarantees an unbiased sample",
+      "Random selection of phone numbers eliminates all possible bias"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider who is systematically excluded from a landline-only sample."
+    ]
+  }
+]

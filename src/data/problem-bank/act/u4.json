@@ -1,0 +1,758 @@
+[
+  {
+    "id": "act-data-representation-001",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student measured the height of a growing plant every 5 days. Day (days): Height (cm) — 0: 2, 5: 4, 10: 7, 15: 11, 20: 16. According to the table, what was the height of the plant on Day 10?",
+    "choices": [
+      "2 cm",
+      "4 cm",
+      "7 cm",
+      "11 cm"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the row where Day = 10 and read the Height value directly."
+    ]
+  },
+  {
+    "id": "act-data-representation-002",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Table 1 shows the solubility of Substance X in water at various temperatures. Temperature (°C): Solubility (g/100 mL water) — 10: 15, 20: 22, 30: 31, 40: 42, 50: 55. According to Table 1, how much greater is the solubility of Substance X at 50°C than at 20°C?",
+    "choices": [
+      "11 g/100 mL water",
+      "22 g/100 mL water",
+      "33 g/100 mL water",
+      "44 g/100 mL water"
+    ],
+    "answer": "C",
+    "hints": [
+      "Subtract the solubility value at 20°C from the value at 50°C."
+    ]
+  },
+  {
+    "id": "act-data-representation-003",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Table 2 shows the volume of gas produced over time for two reactant concentrations. Time (min): Volume at 0.1 M (mL): Volume at 0.2 M (mL) — 1: 5, 8; 2: 9, 15; 3: 12, 20; 4: 14, 23. According to Table 2, at 3 minutes, how many more mL of gas were produced by the 0.2 M solution than the 0.1 M solution?",
+    "choices": [
+      "5 mL",
+      "6 mL",
+      "8 mL",
+      "9 mL"
+    ],
+    "answer": "C",
+    "hints": [
+      "At the row for 3 minutes, subtract the 0.1 M volume from the 0.2 M volume."
+    ]
+  },
+  {
+    "id": "act-data-representation-004",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Table 3 shows the total distance traveled by a car at 10-second intervals. Time (s): Total distance (m) — 0: 0, 10: 50, 20: 130, 30: 180, 40: 200. During which 10-second interval did the car travel the greatest distance?",
+    "choices": [
+      "0-10 s",
+      "10-20 s",
+      "20-30 s",
+      "30-40 s"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compute the distance traveled in each interval by subtracting consecutive total-distance values, then compare all four."
+    ]
+  },
+  {
+    "id": "act-data-representation-005",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Figure 1 shows dissolved oxygen (DO) readings taken at different depths in a lake, once in the morning and once in the afternoon. Depth (m): Morning DO (mg/L): Afternoon DO (mg/L) — 0: 9, 11; 2: 8, 9; 4: 7, 6; 6: 5, 4; 8: 3, 3. At what depth do the morning and afternoon DO readings become equal, according to Figure 1?",
+    "choices": [
+      "2 m",
+      "4 m",
+      "6 m",
+      "8 m"
+    ],
+    "answer": "D",
+    "hints": [
+      "Scan down both columns and find the depth where the two DO values match."
+    ]
+  },
+  {
+    "id": "act-data-representation-006",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Table 4 shows the yield of product for two catalysts at three pressures. Pressure: Catalyst P yield (g): Catalyst Q yield (g) — 1 atm: 4.2, 5.0; 2 atm: 6.8, 6.5; 3 atm: 9.1, 11.4. Double the yield of Catalyst P at 1 atm is 8.4 g. According to Table 4, which catalyst-and-pressure combination has a yield closest to 8.4 g?",
+    "choices": [
+      "Catalyst P at 2 atm",
+      "Catalyst P at 3 atm",
+      "Catalyst Q at 2 atm",
+      "Catalyst Q at 3 atm"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find 2 × 4.2 g first, then compare each of the four listed yields to that target and pick the closest one."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-001",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Table 1 shows a bacteria population over time. Day: Population (thousands) — 1: 10, 2: 20, 3: 40, 4: 80, 5: 160. Based on the table, as the number of days increases, the bacteria population",
+    "choices": [
+      "increases",
+      "decreases",
+      "stays the same",
+      "increases then decreases"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read down the Population column and see whether the values are getting larger or smaller."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-002",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Table 2 shows the temperature of a cup of water as it cools. Time (min): Temperature (°C) — 0: 90, 10: 70, 20: 55, 30: 45, 40: 38. Based on the trend in the table, the water temperature at 25 minutes was most likely between which two values?",
+    "choices": [
+      "70°C and 55°C",
+      "55°C and 45°C",
+      "45°C and 38°C",
+      "38°C and 30°C"
+    ],
+    "answer": "B",
+    "hints": [
+      "25 minutes falls between the 20-minute and 30-minute readings, so the temperature should fall between those two values."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-003",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Table 3 shows the height of a burning candle over time. Time (hr): Height (cm) — 0: 20, 1: 17, 2: 14, 3: 11. If this trend continues, what is the best prediction for the candle's height at 4 hours?",
+    "choices": [
+      "5 cm",
+      "8 cm",
+      "9 cm",
+      "11 cm"
+    ],
+    "answer": "B",
+    "hints": [
+      "The height decreases by 3 cm each hour; subtract 3 more from the height at 3 hours."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-004",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Table 4 shows how far a ball rolls after being pushed with different forces. Force (N): Distance (m) — 2: 3, 4: 8, 6: 15, 8: 24. If this trend continues, which value is the best prediction for the distance the ball rolls when pushed with a force of 10 N?",
+    "choices": [
+      "28 m",
+      "31 m",
+      "33 m",
+      "35 m"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at how much the distance increases each step (5, then 7, then 9). The increase itself is growing by 2 each time, so the next increase should be 11."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-005",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Figure 2 shows the pH of a solution as base is added during a titration. Volume of base added (mL): pH — 0: 2, 10: 3, 20: 4, 25: 7, 30: 10, 40: 11. Based on Figure 2, the region where pH increases most rapidly per mL of base added is between which two volumes?",
+    "choices": [
+      "0 mL and 10 mL",
+      "10 mL and 20 mL",
+      "20 mL and 25 mL",
+      "30 mL and 40 mL"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the pH change by the volume change for each interval and compare the four rates."
+    ]
+  },
+  {
+    "id": "act-trends-extrapolation-006",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Table 5 shows the rate of a chemical reaction at increasing substrate concentration. Concentration (mM): Rate (µmol/min) — 2: 10, 4: 18, 6: 24, 8: 28, 10: 30. Based on the trend shown in the table, which is the best prediction for the reaction rate at a substrate concentration of 12 mM?",
+    "choices": [
+      "30 µmol/min",
+      "32 µmol/min",
+      "34 µmol/min",
+      "35 µmol/min"
+    ],
+    "answer": "A",
+    "hints": [
+      "The increase between steps is shrinking (8, then 6, then 4, then 2) rather than staying constant. Continue that shrinking pattern to find the next increase before adding it to the rate at 10 mM."
+    ]
+  },
+  {
+    "id": "act-research-summaries-001",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student tested how the amount of daily sunlight affects the growth of bean plants. She placed 5 identical bean plants under grow lights for different durations each day (4, 8, 12, 16, and 20 hours) for 2 weeks, keeping the water, soil, and temperature the same for all plants, then measured each plant's height. What was the independent variable in this experiment?",
+    "choices": [
+      "the height of the plants",
+      "the amount of water given",
+      "the number of hours of light per day",
+      "the type of soil used"
+    ],
+    "answer": "C",
+    "hints": [
+      "The independent variable is the factor the researcher deliberately changed between groups."
+    ]
+  },
+  {
+    "id": "act-research-summaries-002",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Scientists studied how fertilizer type affects tomato plant growth. Experiment 1: plants were given Fertilizer A weekly for 6 weeks, and height was recorded. Experiment 2: plants were given Fertilizer B weekly for 6 weeks, and height was recorded; all other conditions were identical to Experiment 1. What is the main difference between the procedures used in Experiment 1 and Experiment 2?",
+    "choices": [
+      "the number of weeks the plants were grown",
+      "the type of fertilizer applied to the plants",
+      "the amount of water given to the plants",
+      "the species of tomato plant used"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the two procedure descriptions line by line and find the one detail that changed."
+    ]
+  },
+  {
+    "id": "act-research-summaries-003",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher tested a new cleaning solution's ability to kill bacteria. She applied the solution to 10 separate bacteria samples, rather than just 1, and counted surviving colonies on each sample. What was the most likely reason the researcher used 10 separate samples instead of just 1?",
+    "choices": [
+      "to save time during the experiment",
+      "to increase the reliability of the results",
+      "to test 10 different cleaning solutions",
+      "to eliminate the need for a control group"
+    ],
+    "answer": "B",
+    "hints": [
+      "Repeating a measurement across many samples reduces the chance that one unusual result skews the conclusion."
+    ]
+  },
+  {
+    "id": "act-research-summaries-004",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Students investigated how surface area affects the rate an ice cube melts. Step 1: one ice cube was left whole and a second, identical cube was crushed into small pieces. Step 2: both samples were placed on separate plates at room temperature. Step 3: every 2 minutes, students recorded whether each sample had fully melted. Step 4: the trial was repeated 3 times and results were averaged. Based on the procedure, how did the students determine that a sample had melted?",
+    "choices": [
+      "by measuring the temperature of the room every 2 minutes",
+      "by checking every 2 minutes whether the sample had fully melted",
+      "by weighing each sample before and after the trial",
+      "by comparing the crushed pieces to the whole cube only once"
+    ],
+    "answer": "B",
+    "hints": [
+      "Re-read Step 3 carefully; it states exactly what was checked and how often."
+    ]
+  },
+  {
+    "id": "act-research-summaries-005",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To test whether a new drug lowers blood pressure, researchers gave 50 patients the drug and 50 different patients a sugar pill (placebo) that looked identical to the drug. Neither the patients nor the researchers measuring blood pressure knew who received the drug versus the placebo until after the study ended. What was the most likely purpose of making the drug and placebo look identical and keeping both patients and researchers unaware of who received which?",
+    "choices": [
+      "to make the study faster to complete",
+      "to reduce bias in how symptoms were reported and measured",
+      "to ensure every patient received the same dose",
+      "to reduce the total number of patients required"
+    ],
+    "answer": "B",
+    "hints": [
+      "This procedure is called blinding; consider what it prevents patients and researchers from being influenced by."
+    ]
+  },
+  {
+    "id": "act-research-summaries-006",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three experiments tested how temperature affects the rate a chemical reaction produces gas. Experiment 1: reaction run at 10°C, 20°C, and 30°C, using 1.0 g of reactant each time; gas volume recorded after 5 minutes. Experiment 2: reaction run at the same three temperatures, using 2.0 g of reactant each time; gas volume recorded after 5 minutes. Experiment 3: reaction run at the same three temperatures, using 1.0 g of reactant, but gas volume recorded after 10 minutes instead of 5. To determine the effect of reactant mass on the volume of gas produced, results from which two experiments should be compared?",
+    "choices": [
+      "Experiment 1 and Experiment 2",
+      "Experiment 1 and Experiment 3",
+      "Experiment 2 and Experiment 3",
+      "Experiment 1, Experiment 2, and Experiment 3 together"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the pair of experiments that differ only in reactant mass, with every other condition identical."
+    ]
+  },
+  {
+    "id": "act-variables-controls-001",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student tested how the concentration of salt water affects how many seconds it takes an ice cube to melt. She used salt water solutions of 0%, 5%, 10%, and 15% salt, keeping cube size, water volume, and starting temperature the same, and timed how long each cube took to melt completely. What was the dependent variable in this experiment?",
+    "choices": [
+      "the concentration of salt in the water",
+      "the size of the ice cube",
+      "the time it took the ice cube to melt",
+      "the starting temperature of the water"
+    ],
+    "answer": "C",
+    "hints": [
+      "The dependent variable is the outcome that was measured, not the factor that was changed."
+    ]
+  },
+  {
+    "id": "act-variables-controls-002",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Researchers tested how light color (red, blue, green, white) affects the rate of photosynthesis in a water plant, measured by counting oxygen bubbles released per minute. All plants were the same species and size, kept at the same water temperature and the same distance from the light source, and only the color of light was changed. Which of the following was held constant across all trials in this experiment?",
+    "choices": [
+      "the color of light used",
+      "the number of oxygen bubbles released",
+      "the distance between the plant and the light source",
+      "the species of the plant tested only in some trials"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the factor that stayed the same in every trial rather than the one that was deliberately varied or measured."
+    ]
+  },
+  {
+    "id": "act-variables-controls-003",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "To test whether a new pesticide reduces aphid infestation, researchers sprayed pesticide on 20 rose bushes. Another 20 identical rose bushes were sprayed with plain water instead of pesticide. After 2 weeks, the number of aphids on each bush was counted. In this experiment, which group served as the control group?",
+    "choices": [
+      "the 20 rose bushes sprayed with pesticide",
+      "the 20 rose bushes sprayed with plain water",
+      "the aphids counted after 2 weeks",
+      "there was no control group in this experiment"
+    ],
+    "answer": "B",
+    "hints": [
+      "The control group receives no treatment (or a neutral substitute) so it can be compared to the treated group."
+    ]
+  },
+  {
+    "id": "act-variables-controls-004",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A researcher tested a new fertilizer by growing 15 plants with fertilizer and 15 plants without fertilizer, with all other conditions identical, then compared their final heights. What is the main purpose of including the group of plants grown without fertilizer?",
+    "choices": [
+      "to increase the total number of plants studied",
+      "to provide a baseline for comparison to determine the fertilizer's effect",
+      "to test a second independent variable",
+      "to eliminate the need for repeating the trial"
+    ],
+    "answer": "B",
+    "hints": [
+      "Without a group that received no fertilizer, there would be nothing to compare the treated group's growth against."
+    ]
+  },
+  {
+    "id": "act-variables-controls-005",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wanted to test whether background music tempo affects typing speed. Group 1 typed while listening to fast-tempo music in a quiet room in the morning. Group 2 typed while listening to slow-tempo music in a noisy room in the afternoon. Typing speed (words per minute) was recorded for both groups. Which of the following is a variable that was NOT properly controlled between the two groups, making it difficult to conclude that tempo alone caused any difference in typing speed?",
+    "choices": [
+      "the tempo of the music",
+      "the words per minute recorded",
+      "the number of participants in each group",
+      "the noise level and time of day of testing"
+    ],
+    "answer": "D",
+    "hints": [
+      "Besides tempo, compare every other condition each group experienced and find the ones that also differed between groups."
+    ]
+  },
+  {
+    "id": "act-variables-controls-006",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A team studied how the amount of dissolved carbon dioxide (CO2) affects the rate of photosynthesis in spinach leaf discs, measured as the volume of oxygen gas produced in 10 minutes. Leaf discs of identical size and age were placed in a solution with dissolved CO2 at four concentrations: 0.5%, 1.0%, 1.5%, and 2.0%. All trials were run under the same light intensity and the same water temperature (22°C). Each trial used 10 leaf discs, and this was repeated 3 times per CO2 concentration. Which of the following correctly identifies the independent variable AND a variable that was held constant in this experiment?",
+    "choices": [
+      "Independent variable: light intensity; Held constant: CO2 concentration",
+      "Independent variable: CO2 concentration; Held constant: water temperature",
+      "Independent variable: volume of oxygen produced; Held constant: number of leaf discs",
+      "Independent variable: number of trials; Held constant: light intensity"
+    ],
+    "answer": "B",
+    "hints": [
+      "The independent variable is the one factor deliberately varied across the four listed values; everything described as identical or the same across all trials was held constant."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-001",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two geologists present different hypotheses about how a large canyon formed. Scientist 1: the canyon was formed primarily by a river slowly eroding rock over millions of years, carving deeper into the landscape as water flow continued. Scientist 2: the canyon was formed suddenly by a massive flood that rapidly carved through soft rock layers in a much shorter period of time. According to Scientist 1, the canyon formed mainly due to",
+    "choices": [
+      "a sudden, catastrophic flood",
+      "slow erosion by a river over millions of years",
+      "volcanic activity",
+      "movement of tectonic plates"
+    ],
+    "answer": "B",
+    "hints": [
+      "Re-read only Scientist 1's statement and restate it in your own words."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-002",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two geologists present different hypotheses about how a large canyon formed. Scientist 1: the canyon was formed primarily by a river slowly eroding rock over millions of years, carving deeper into the landscape as water flow continued. Scientist 2: the canyon was formed suddenly by a massive flood that rapidly carved through soft rock layers in a much shorter period of time. Scientist 1 and Scientist 2 disagree mainly about",
+    "choices": [
+      "whether water was involved in forming the canyon",
+      "whether the canyon is made of rock",
+      "the amount of time it took for the canyon to form",
+      "whether the canyon exists today"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both scientists mention water and rock; find the one detail where their timelines conflict."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-003",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two geologists present different hypotheses about how a large canyon formed. Scientist 1: the canyon was formed primarily by a river slowly eroding rock over millions of years, carving deeper into the landscape as water flow continued. Scientist 2: the canyon was formed suddenly by a massive flood that rapidly carved through soft rock layers in a much shorter period of time. With which of the following statements would BOTH Scientist 1 and Scientist 2 agree?",
+    "choices": [
+      "The canyon formed over millions of years.",
+      "The canyon formed within a few days.",
+      "Water played a role in forming the canyon.",
+      "Wind was the primary cause of the canyon's formation."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for a detail that appears in both descriptions, not just one of them."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-004",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three students propose different explanations for why a fish species in a lake has been declining over the past decade. Student A: the decline is caused by rising water temperature, which reduces the fish's oxygen supply. Student B: the decline is caused by a new invasive predator species introduced 12 years ago that eats the fish's eggs. Student C: the decline is caused by agricultural runoff increasing algae growth, which depletes oxygen when the algae decompose. Which piece of evidence, if true, would most strongly support Student B's hypothesis over Student A's and Student C's?",
+    "choices": [
+      "Water temperature in the lake has risen by 3°C over the past decade.",
+      "Fish egg counts have dropped sharply in areas of the lake where the invasive predator is most common.",
+      "Algae blooms have become more frequent in the lake in recent summers.",
+      "Fertilizer use on nearby farms has doubled in the past 10 years."
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the evidence that links directly to Student B's specific mechanism (egg predation) rather than to oxygen levels."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-005",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three students propose different explanations for why a fish species in a lake has been declining over the past decade. Student A: the decline is caused by rising water temperature, which reduces the fish's oxygen supply. Student B: the decline is caused by a new invasive predator species introduced 12 years ago that eats the fish's eggs. Student C: the decline is caused by agricultural runoff increasing algae growth, which depletes oxygen when the algae decompose. Which two students would most likely agree that oxygen levels in the lake are a key factor in the fish decline?",
+    "choices": [
+      "Student A and Student B",
+      "Student A and Student C",
+      "Student B and Student C",
+      "None of the students"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check each hypothesis for whether it explicitly mentions oxygen as part of its mechanism."
+    ]
+  },
+  {
+    "id": "act-conflicting-viewpoints-006",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three students propose different explanations for why a fish species in a lake has been declining over the past decade. Student A: the decline is caused by rising water temperature, which reduces the fish's oxygen supply. Student B: the decline is caused by a new invasive predator species introduced 12 years ago that eats the fish's eggs. Student C: the decline is caused by agricultural runoff increasing algae growth, which depletes oxygen when the algae decompose. Researchers found that the lake's oxygen levels have remained steady and within a normal healthy range for fish throughout the past decade. This finding is most inconsistent with the hypothesis or hypotheses of which student(s)?",
+    "choices": [
+      "Student A only",
+      "Student B only",
+      "Student A and Student C",
+      "Student B and Student C"
+    ],
+    "answer": "C",
+    "hints": [
+      "Determine which hypotheses depend on oxygen depletion as their mechanism, then check whether steady, healthy oxygen levels would undermine each one."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-001",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A sample has a mass of 2,500 milligrams (mg). What is this mass in grams (g)? (1 g = 1,000 mg)",
+    "choices": [
+      "0.25 g",
+      "2.5 g",
+      "25 g",
+      "250 g"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the number of milligrams by 1,000 to convert to grams."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-002",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Density is calculated using the formula: density = mass ÷ volume. A sample has a mass of 45 g and a volume of 9 cm³. What is the density of the sample?",
+    "choices": [
+      "0.2 g/cm³",
+      "5 g/cm³",
+      "36 g/cm³",
+      "54 g/cm³"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the mass by the volume using the given formula."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-003",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student recorded that a chemical reaction produced 60 mL of gas in 5 minutes at a constant rate. At this same rate, how many mL of gas would be produced in 8 minutes?",
+    "choices": [
+      "68 mL",
+      "76 mL",
+      "96 mL",
+      "108 mL"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the rate in mL per minute first, then multiply that rate by 8 minutes."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-004",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The volume of a gas sample was 250 mL at the start of an experiment. After heating, the volume increased to 325 mL. What was the percent increase in volume?",
+    "choices": [
+      "13%",
+      "23%",
+      "30%",
+      "75%"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the change in volume by the original volume, then convert to a percent."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-005",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist measures the speed of a chemical reaction front moving through a tube at 0.5 cm/s. If the tube is 120 mm long, how many seconds will it take the reaction front to travel the full length of the tube? (1 cm = 10 mm)",
+    "choices": [
+      "6 s",
+      "12 s",
+      "24 s",
+      "60 s"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert the tube length to centimeters first, then divide by the speed in cm/s."
+    ]
+  },
+  {
+    "id": "act-scientific-math-units-006",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Concentration (in mol/L) is calculated as: concentration = moles of solute ÷ volume of solution (in L). A student dissolves 0.045 mol of a solute in 300 mL of solution. What is the concentration of the solution, in mol/L?",
+    "choices": [
+      "0.00015 mol/L",
+      "0.015 mol/L",
+      "0.15 mol/L",
+      "1.5 mol/L"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert 300 mL to liters before dividing the moles of solute by the volume."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-001",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The ACT Science section contains 40 questions to be completed in 35 minutes, spread across 6 passages. On average, about how much time should a student spend per passage to finish with no time left over?",
+    "choices": [
+      "about 3 minutes",
+      "about 6 minutes",
+      "about 10 minutes",
+      "about 15 minutes"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the total number of minutes by the number of passages."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-002",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "While working through a Research Summaries passage, a student encounters a question that requires comparing results across three separate experiments and cannot determine the answer after re-reading it once. There are still several unanswered questions on other passages. What is generally the best strategy?",
+    "choices": [
+      "Skip the question, mark it, and return to it after answering the remaining questions if time allows",
+      "Stop and re-read the entire passage from the beginning before attempting any other questions",
+      "Leave the entire passage unanswered and move to the next one",
+      "Spend the remaining time on that single question until it is solved"
+    ],
+    "answer": "A",
+    "hints": [
+      "No single question is worth more than any other, so avoid letting one hard question block access to easier ones later in the section."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-003",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student knows from practice that Data Representation passages (mainly reading graphs and tables) take her less time to complete accurately than Conflicting Viewpoints passages (comparing several written hypotheses). To use her time most effectively, which approach is generally recommended?",
+    "choices": [
+      "Complete the passages in whatever order they appear in the test booklet, without exception",
+      "Complete the Data Representation passages first to bank time before tackling the more time-consuming Conflicting Viewpoints passages",
+      "Complete the Conflicting Viewpoints passages first because they are worth more points",
+      "Skip Data Representation passages entirely since they are the easiest"
+    ],
+    "answer": "B",
+    "hints": [
+      "Passages can be answered in any order, and all questions are worth the same amount; consider which order lets her bank extra time for the slower passage type."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-004",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a Data Representation passage consisting mainly of a table and a graph with only a brief introductory paragraph, which approach is generally most time-efficient?",
+    "choices": [
+      "Read every word of the introductory text closely before glancing at the table or graph",
+      "Skim the brief introduction for context, then go directly to the questions and refer back to the table or graph as needed",
+      "Memorize all values in the table and graph before reading any questions",
+      "Answer the questions from memory without looking at the table or graph at all"
+    ],
+    "answer": "B",
+    "hints": [
+      "Data Representation questions are almost always answerable by looking directly at the figure, so heavy up-front reading or memorization wastes time."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-005",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student budgets 5 minutes per passage and wants to check her pacing partway through the section. If she starts the section at a total elapsed time of 0 minutes, by what elapsed time should she be finishing the 4th passage in order to stay on pace?",
+    "choices": [
+      "10 minutes",
+      "15 minutes",
+      "20 minutes",
+      "25 minutes"
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiply the per-passage time budget by the number of passages completed."
+    ]
+  },
+  {
+    "id": "act-science-pacing-strategy-006",
+    "loId": "act.science-pacing-strategy",
+    "cedCode": "ACT-4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "With 6 minutes remaining in the Science section, a student has 2 passages left: one worth 7 unanswered questions that she finds confusing, and one worth 3 unanswered questions on a topic she understands well. Given that ACT Science has no penalty for guessing, what is generally the best use of her remaining time?",
+    "choices": [
+      "Spend all 6 minutes carefully working through only the 7-question passage, leaving the 3-question passage blank",
+      "Quickly fill in a guess for all 10 remaining questions immediately without reading either passage, then stop working",
+      "Spend most of the remaining time answering the 3-question passage she understands well, then use any leftover time and educated guessing on the 7-question passage, filling in guesses for anything left unanswered",
+      "Skip both passages entirely and review previously answered questions instead"
+    ],
+    "answer": "C",
+    "hints": [
+      "Prioritize the questions most likely to be answered correctly given limited time, and remember that a blank answer is guaranteed wrong while a guess has a chance of being right."
+    ]
+  }
+]

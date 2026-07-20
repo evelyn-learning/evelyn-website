@@ -1,0 +1,650 @@
+[
+  {
+    "id": "act-main-idea-purpose-001",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For decades, city planners assumed that widening highways would ease traffic congestion. Yet study after study shows that new lanes fill up within a few years, as more people choose to drive once the road feels less crowded. Some cities have begun reversing course, narrowing streets and investing in buses and bike lanes instead, betting that fewer road-miles will ultimately move more people.\n\nWhich choice best states the main idea of the passage?",
+    "choices": [
+      "Building new highway lanes has long been the most effective way to solve traffic congestion.",
+      "Adding highway lanes often fails to reduce congestion, prompting some cities to try alternative approaches.",
+      "Bike lanes are more dangerous than highway lanes for daily commuters.",
+      "City planners have always opposed the construction of new highways."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the sentence that summarizes both the problem and the shift in approach."
+    ]
+  },
+  {
+    "id": "act-main-idea-purpose-002",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When Marisol took over her grandmother's tailoring shop, she kept the shop's faded sign and the same brand of thread her grandmother had used for forty years. Customers who had never met her grandmother still mentioned her by name, as if the old woman's careful stitching lingered in every hem Marisol finished.\n\nThe author's primary purpose in this passage is to",
+    "choices": [
+      "explain the technical differences between old and new sewing thread",
+      "argue that small businesses should modernize more quickly",
+      "suggest how a tradition can persist through a new owner's small choices",
+      "criticize Marisol for not changing the shop enough"
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice which details (the sign, the thread, customers' memories) the author chose to include."
+    ]
+  },
+  {
+    "id": "act-main-idea-purpose-003",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The octopus has no bones, yet it can squeeze through any opening larger than its beak, the one truly rigid part of its body. Researchers studying this ability hope to design flexible robots that could slip through rubble after an earthquake, reaching survivors that rigid machines cannot.\n\nWhich choice best expresses the main point of the passage?",
+    "choices": [
+      "Octopuses are more intelligent than most other sea creatures.",
+      "The octopus's boneless body has inspired research into flexible rescue robots.",
+      "Earthquake rubble is too dangerous for any robot to navigate safely.",
+      "The octopus's beak is its most vulnerable body part."
+    ],
+    "answer": "B",
+    "hints": [
+      "The last sentence connects the octopus's anatomy to a practical application."
+    ]
+  },
+  {
+    "id": "act-main-idea-purpose-004",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historians once portrayed the fall of the Library of Alexandria as a single catastrophic fire, a dramatic loss of ancient knowledge in one afternoon. More recent scholarship suggests instead a slow decline: dwindling funding, political upheaval, and the gradual copying of texts elsewhere, over centuries rather than hours. The legend of the one great blaze, it turns out, is easier to tell than the truer story of quiet neglect.\n\nThe passage is primarily concerned with",
+    "choices": [
+      "proving that the Library of Alexandria never actually burned",
+      "contrasting a popular dramatic account of the library's end with a more gradual explanation",
+      "listing the political leaders responsible for the library's funding",
+      "describing the architecture of the ancient library"
+    ],
+    "answer": "B",
+    "hints": [
+      "The passage sets up two competing explanations — decide which one the author favors and why."
+    ]
+  },
+  {
+    "id": "act-main-idea-purpose-005",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Coral reefs cover less than one percent of the ocean floor, yet they shelter roughly a quarter of all known marine species. When a reef bleaches, losing the algae that give it color and food, the effect is not confined to the coral itself. Fish that depend on the reef for shelter disperse or starve, and the predators that hunted those fish must search elsewhere, a cascade that can unravel an entire local food web.\n\nWhich choice best captures the author's main purpose?",
+    "choices": [
+      "to argue that coral bleaching is caused primarily by overfishing",
+      "to show how the loss of a small habitat can ripple through a much larger ecosystem",
+      "to compare coral reefs unfavorably to other marine habitats",
+      "to describe the exact percentage of ocean floor covered by reefs"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the cascading consequences described after bleaching, not the opening statistic alone."
+    ]
+  },
+  {
+    "id": "act-main-idea-purpose-006",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "It is tempting to praise the inventor and forget the tinkerer who spent years failing quietly before any patent was filed. The lightbulb did not spring from a single flash of genius; it emerged from thousands of discarded filaments, each failure narrowing the search a little further. We remember the moment of success because it is tidy, but the moment was built entirely from the untidy work that came before it.\n\nThe passage as a whole is best described as",
+    "choices": [
+      "a technical explanation of how a lightbulb filament conducts electricity",
+      "a biography detailing the personal life of a single inventor",
+      "a reflection on how public memory oversimplifies the process behind an invention",
+      "an argument that most inventions are the result of pure luck rather than effort"
+    ],
+    "answer": "C",
+    "hints": [
+      "The passage isn't really about the lightbulb itself — ask what larger point it's making about how we remember invention."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-001",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To make the bread, first mix the flour, water, and yeast into a shaggy dough. Let it rest for ten minutes before kneading it for eight minutes on a floured surface. Cover the dough and let it rise for one hour, then shape it into a loaf and bake at 450 degrees for thirty-five minutes.\n\nAccording to the passage, what should be done immediately after the ten-minute rest?",
+    "choices": [
+      "Bake the dough at 450 degrees",
+      "Shape the dough into a loaf",
+      "Knead the dough for eight minutes",
+      "Let the dough rise for one hour"
+    ],
+    "answer": "C",
+    "hints": [
+      "Trace the steps in the order the passage lists them."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-002",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The museum's new wing opened in March with an exhibit on deep-sea creatures, followed in June by a traveling collection of Egyptian artifacts. By September, attendance had climbed so much that the museum extended its hours on weekends, and in November it announced a fourth exhibit, on the history of flight, to open the following spring.\n\nBased on the passage, which of the following happened last, in the order described?",
+    "choices": [
+      "The deep-sea creatures exhibit opened.",
+      "The museum extended its weekend hours.",
+      "The Egyptian artifacts collection arrived.",
+      "The museum announced the flight history exhibit."
+    ],
+    "answer": "D",
+    "hints": [
+      "List the four events in the sequence given and identify which is mentioned last."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-003",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Elena's flight was delayed two hours in Chicago, which meant she missed her connection to Denver. The airline rebooked her on a later flight, but that one was also delayed, this time by weather. She finally landed in Denver just after midnight, nearly six hours behind her original schedule.\n\nAccording to the passage, what directly caused Elena to miss her connecting flight?",
+    "choices": [
+      "A weather delay in Denver",
+      "A two-hour delay of her first flight in Chicago",
+      "The airline rebooking her onto a later flight",
+      "A mechanical issue with the plane"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the sentence that states the cause of the missed connection specifically."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-004",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The committee reviewed forty grant applications in April, narrowing the pool to twelve finalists by early May. Each finalist was interviewed over the following three weeks. Only after all interviews concluded did the committee meet to rank the candidates, and the five winners were notified by mail in late June, a full two months after the initial review began.\n\nAccording to the passage, the committee's ranking meeting took place",
+    "choices": [
+      "before the finalists were interviewed",
+      "at the same time as the initial review of forty applications",
+      "after all the finalist interviews were completed",
+      "after the winners had already been notified by mail"
+    ],
+    "answer": "C",
+    "hints": [
+      "The phrase \"only after\" signals what must happen before the ranking meeting."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-005",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The bridge's original timber deck was replaced with steel in 1932, extending its lifespan by decades. Engineers reinforced the support piers in 1968 after a routine inspection revealed cracking. A further renovation in 2003 added a pedestrian walkway, and the most recent inspection, completed last spring, found no structural concerns requiring repair.\n\nAccording to the passage, the pier reinforcement occurred",
+    "choices": [
+      "before the timber deck was replaced with steel",
+      "in the same year the pedestrian walkway was added",
+      "after an inspection revealed cracking, decades after the deck was replaced",
+      "during last spring's inspection"
+    ],
+    "answer": "C",
+    "hints": [
+      "Locate the specific reason given for the 1968 reinforcement and compare the dates."
+    ]
+  },
+  {
+    "id": "act-detail-sequence-006",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The lab's protocol calls for the samples to be centrifuged immediately after collection, then refrigerated for no more than two hours before the plasma is separated and frozen. If more than two hours pass before separation, the sample must be discarded, since delayed separation is known to alter protein concentrations. Technicians therefore log both the collection time and the moment centrifugation begins, so that any deviation can be flagged before the plasma is frozen rather than after.\n\nBased on the passage, at what point would a technician discover that a sample must be discarded due to a timing violation?",
+    "choices": [
+      "At the moment of collection, before centrifugation",
+      "When comparing the logged collection and centrifugation times, before the plasma is frozen",
+      "Only after the plasma has already been frozen",
+      "During the two-hour refrigeration period itself, automatically"
+    ],
+    "answer": "B",
+    "hints": [
+      "The last sentence explains exactly when and how the timing check happens."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-001",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Every afternoon, the old dog waited by the door at exactly 3:15, ears perked, tail thumping the floor. At 3:20, the school bus would round the corner, and the children would spill out laughing.\n\nIt can reasonably be inferred that the dog waits by the door because",
+    "choices": [
+      "it dislikes the mail carrier who arrives at that time",
+      "it has learned to anticipate the children's return from school",
+      "it is afraid of loud noises from the street",
+      "it is trained to guard the door at all times"
+    ],
+    "answer": "B",
+    "hints": [
+      "Connect the dog's timing to the event that follows five minutes later."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-002",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The bakery's shelves, usually restocked by 7 a.m., stood nearly empty at ten. A hand-written sign taped to the register read, 'Oven trouble today — thank you for your patience.'\n\nBased on the passage, it is reasonable to infer that",
+    "choices": [
+      "the bakery had closed permanently",
+      "a mechanical problem prevented the usual amount of baking that day",
+      "the bakery had decided to stop selling bread",
+      "customers had bought out the shelves faster than usual"
+    ],
+    "answer": "B",
+    "hints": [
+      "The sign gives a direct explanation for the empty shelves."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-003",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Though the coach had benched him for the first three games, Devon kept arriving an hour before every practice, running drills alone until his teammates showed up.\n\nWhich generalization about Devon is best supported by the passage?",
+    "choices": [
+      "He resented his teammates for outperforming him.",
+      "He responded to being benched with extra effort rather than giving up.",
+      "He planned to quit the team at the end of the season.",
+      "He believed the coach's decision was unfair and refused to practice."
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on what Devon actually does, not how he might feel."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-004",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In villages along the river, homes are built on stilts high enough to clear the water that rises every rainy season. Furniture is kept light and easy to move, and few families own anything that cannot be carried up a ladder in a hurry.\n\nIt can most reasonably be inferred that the villagers' building and furnishing choices are shaped mainly by",
+    "choices": [
+      "a cultural preference for minimalist design",
+      "a recurring seasonal flood risk",
+      "a shortage of building materials in the region",
+      "government regulations on home construction"
+    ],
+    "answer": "B",
+    "hints": [
+      "Tie each detail — stilts, light furniture, easy-to-carry belongings — back to a single recurring cause mentioned in the passage."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-005",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The professor never assigned grades above a B+ in her first three years of teaching, insisting that an A should be reserved for work that surprised her. By her tenth year, colleagues noticed she gave out nearly as many A's as B's, though she still argued her standards had not changed.\n\nWhich inference about the professor is most strongly supported by the passage?",
+    "choices": [
+      "Her actual grading standards likely loosened over time, even though she denied it.",
+      "Her students' work quality declined significantly over the decade.",
+      "She switched to teaching an easier subject after her third year.",
+      "She was pressured by the university to inflate grades."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare what she claims with what the passage says actually happened to her grading pattern."
+    ]
+  },
+  {
+    "id": "act-inference-generalization-006",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The town's only newspaper folded in 2015, and within two years, voter turnout in local elections had dropped by nearly a third, even as turnout in the state's other small towns held steady. Candidates for town council that year reported that residents often had no idea an election was happening at all until they saw a lawn sign.\n\nThe passage most strongly suggests which of the following about the newspaper's closure?",
+    "choices": [
+      "It was the primary cause of declining state-wide voter turnout.",
+      "It plausibly contributed to lower local civic awareness, since the town's turnout drop was unusual compared to similar towns.",
+      "It had no real effect on the town's elections, since candidates still won races.",
+      "It caused the town's population to decline sharply."
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the comparison to other towns — it's what makes this town's drop noteworthy, but the passage doesn't prove sole causation, so pick the more cautious claim."
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-001",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "After the long drought, the farmers were relieved when the rain finally came, soaking the parched fields until the cracked earth softened again.\n\nAs used in the passage, \"parched\" most nearly means",
+    "choices": [
+      "fertile",
+      "extremely dry",
+      "freshly plowed",
+      "frozen"
+    ],
+    "answer": "B",
+    "hints": [
+      "The surrounding words \"long drought\" and \"cracked earth\" describe the fields' condition."
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-002",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The negotiations grew tense as both sides refused to yield, but the mediator's calm, measured proposal finally broke the impasse, allowing talks to move forward again.\n\nAs used in the passage, \"impasse\" most nearly means",
+    "choices": [
+      "agreement",
+      "deadline",
+      "deadlock",
+      "celebration"
+    ],
+    "answer": "C",
+    "hints": [
+      "The word describes the state the talks were in before the mediator's proposal let them \"move forward again.\""
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-003",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The critic's review was so scathing that the young playwright considered abandoning the project altogether, stung by every harsh line.\n\nAs used in the passage, \"scathing\" most nearly means",
+    "choices": [
+      "mildly encouraging",
+      "severely critical",
+      "confusingly written",
+      "unusually long"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at how the playwright reacted to the review — \"stung,\" considering giving up."
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-004",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Though the senator's speech was polished, critics noted its curious reticence on the very policy question voters most wanted answered, as if the topic had been deliberately sidestepped.\n\nAs used in the passage, \"reticence\" most nearly means",
+    "choices": [
+      "enthusiasm",
+      "reluctance to speak on a topic",
+      "grammatical error",
+      "loudness"
+    ],
+    "answer": "B",
+    "hints": [
+      "The clause after the comma restates the idea — \"deliberately sidestepped\" — in different words."
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-005",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The old clock's hands, though rusted still, seemed to arrest the room in a single frozen moment, as if time itself had paused at the instant the power went out.\n\nAs used in the passage, \"arrest\" most nearly means",
+    "choices": [
+      "to take into legal custody",
+      "to bring to a stop",
+      "to repair mechanically",
+      "to speed up suddenly"
+    ],
+    "answer": "B",
+    "hints": [
+      "This word has a common legal meaning, but here it's used with \"room\" and \"frozen moment\" — think about a less common sense of the word."
+    ]
+  },
+  {
+    "id": "act-vocabulary-in-context-006",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Rather than confronting the error directly, the manager's memo was a masterpiece of equivocation, phrased so that no one could later say she had promised anything at all, yet no one could say she had denied it either.\n\nAs used in the passage, \"equivocation\" most nearly means",
+    "choices": [
+      "clear and direct communication",
+      "deliberately ambiguous language meant to avoid commitment",
+      "a formal written apology",
+      "an outright factual error"
+    ],
+    "answer": "B",
+    "hints": [
+      "The rest of the sentence describes a statement that avoids being pinned down either way — that's the behavior the word names."
+    ]
+  },
+  {
+    "id": "act-paired-passages-001",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: Some economists argue that a four-day workweek boosts productivity, since well-rested employees make fewer costly mistakes and use their remaining time more efficiently.\n\nPassage B: Other economists caution that a four-day workweek simply compresses the same workload into less time, leaving employees more rushed and stressed rather than more efficient.\n\nHow does Passage B's view of the four-day workweek relate to the view expressed in Passage A?",
+    "choices": [
+      "It strongly agrees with Passage A's optimistic conclusion.",
+      "It offers a skeptical counterpoint to Passage A's claim.",
+      "It focuses on an entirely unrelated topic.",
+      "It provides historical background that Passage A lacks."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the tone and conclusion of each passage — one is hopeful, the other doubtful."
+    ]
+  },
+  {
+    "id": "act-paired-passages-002",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: The novelist Clara Voss insisted that a first draft should be written quickly, without pausing to fix awkward sentences, since momentum matters more than polish in early drafts.\n\nPassage B: The editor Tomas Reyes countered that writers who race through a first draft often bury a good idea under so many problems that revision becomes overwhelming; better, he argued, to slow down and fix issues as they arise.\n\nBased on both passages, Voss and Reyes would most likely disagree about",
+    "choices": [
+      "whether writing is a valuable skill to develop",
+      "whether early drafts are ever revised at all",
+      "whether it is better to write quickly or to slow down and fix problems during a first draft",
+      "whether editors should be involved in the publishing process"
+    ],
+    "answer": "C",
+    "hints": [
+      "Identify the specific point on which the two speakers' advice directly conflicts."
+    ]
+  },
+  {
+    "id": "act-paired-passages-003",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: A growing number of city planners advocate removing parking minimums from new buildings, arguing that mandated parking drives up housing costs without necessarily reducing traffic.\n\nPassage B: Some residents worry that without required parking, new apartment buildings will push cars onto already-crowded neighborhood streets, making parking even harder to find for existing homeowners.\n\nWhich choice best describes the relationship between the two passages?",
+    "choices": [
+      "Passage B provides evidence that fully supports Passage A's argument.",
+      "Passage A presents a policy proposal, and Passage B raises a practical concern about that proposal's effects.",
+      "Both passages agree that parking minimums should be increased, not removed.",
+      "Passage B is a historical account of how parking minimums were first created."
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that Passage A proposes a change and Passage B responds with a worry about consequences."
+    ]
+  },
+  {
+    "id": "act-paired-passages-004",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: Advocates of remote work point to studies showing that employees who work from home report higher job satisfaction and take fewer sick days, suggesting flexibility benefits both workers and employers.\n\nPassage B: Skeptics note that many of these studies rely on self-reported surveys from employees who already preferred remote work, and that objective measures of team collaboration often decline when workers are dispersed, a cost the surveys do not capture.\n\nThe author of Passage B would most likely respond to the studies cited in Passage A by",
+    "choices": [
+      "agreeing completely with their conclusions and methodology",
+      "questioning whether the studies' self-reported design captures the full picture, including costs to collaboration",
+      "arguing that remote work should be banned in all industries",
+      "claiming that the studies were conducted decades ago and are outdated"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at exactly what critique Passage B raises about the studies' design and what it says is missing from them."
+    ]
+  },
+  {
+    "id": "act-paired-passages-005",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: Nutritionist Dana Ibe argues that counting calories is the most reliable way to manage weight, since it gives people a concrete, measurable target regardless of what foods they choose to eat.\n\nPassage B: Nutritionist Wren Ashby argues that focusing on food quality — whole grains, vegetables, lean proteins — matters more than raw calorie counts, since two foods with identical calories can affect hunger and metabolism very differently.\n\nBased on the two passages, a reader could reasonably conclude that Ibe and Ashby differ most sharply on",
+    "choices": [
+      "whether weight management is worth pursuing at all",
+      "whether calorie counts or food quality should be the primary focus of a weight-management strategy",
+      "whether vegetables are a valid food category",
+      "whether people should consult a nutritionist before dieting"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both passages address the same general goal — find where their recommended methods actually diverge."
+    ]
+  },
+  {
+    "id": "act-paired-passages-006",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Passage A: Defenders of standardized testing argue that a single, consistent exam allows colleges to compare applicants from vastly different schools on a common scale, correcting for the wide variation in grading standards between districts.\n\nPassage B: Critics respond that the very consistency prized by test defenders masks a different kind of unfairness: students whose families can afford extensive tutoring gain an advantage that has nothing to do with ability, so the 'common scale' is common in form only, not in the opportunity to prepare for it.\n\nWhich choice best describes how Passage B complicates the argument made in Passage A?",
+    "choices": [
+      "It shows that Passage A's claim about consistency is factually false.",
+      "It accepts that the test is consistent in format but argues that unequal access to preparation undermines the fairness Passage A claims the consistency provides.",
+      "It argues that standardized tests should be replaced entirely with grades, ignoring the consistency issue altogether.",
+      "It agrees fully with Passage A and adds no new concern."
+    ],
+    "answer": "B",
+    "hints": [
+      "Passage B doesn't deny the test is standardized in form — look at what different kind of unfairness it says that formal consistency hides."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-001",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On the ACT Reading test, a student has 35 minutes to answer 40 questions across four passages of roughly equal length. Which pacing strategy best matches the test's structure?",
+    "choices": [
+      "Spend as long as needed on the first passage, then rush through the rest with any leftover time.",
+      "Budget roughly 8-9 minutes per passage, including its questions, and move on once that time is up.",
+      "Skip reading the passages entirely and only look at the questions.",
+      "Answer only the first ten questions and leave the rest blank."
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the total time evenly across the four passages to avoid running out of time on later ones."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-002",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student reliably answers Natural Science passages quickly and accurately but consistently struggles to finish Prose Fiction passages within their allotted time. If passage order is flexible for her that day, which strategy is most defensible?",
+    "choices": [
+      "Always complete passages in the printed order, regardless of personal strengths.",
+      "Tackle the Natural Science passage first to bank confidence and time, saving the more time-consuming Prose Fiction passage for later.",
+      "Randomly guess on the Prose Fiction passage without reading it, no matter when it appears.",
+      "Spend double the allotted time on Prose Fiction and skip Natural Science entirely."
+    ],
+    "answer": "B",
+    "hints": [
+      "Prioritizing passages that play to a student's strengths first can preserve time and confidence for weaker areas."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-003",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "With two minutes left in the Reading section, a student still has four unanswered questions tied to a paired-passage set she has not started reading. Which strategy is most reasonable?",
+    "choices": [
+      "Begin carefully reading both full passages from the start.",
+      "Leave all four questions blank, since there is no time to answer them.",
+      "Quickly scan the questions for ones answerable from context or general reasoning, and make strategic guesses on any answer choice for the rest rather than leaving them blank.",
+      "Erase all previous answers and start the section over."
+    ],
+    "answer": "C",
+    "hints": [
+      "On the ACT, there is no penalty for wrong answers, so guessing is always better than leaving a question blank when time is nearly gone."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-004",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student notices that detail-and-sequence questions on her practice tests take longer than inference questions because she keeps rereading large sections of the passage to locate the answer. Which strategy would most directly address this specific problem?",
+    "choices": [
+      "Skip all detail questions on future tests, regardless of how quickly they could be answered.",
+      "Read the full passage twice before attempting any questions.",
+      "Note approximate line or paragraph locations for key details while doing the first read, so she can return to the right spot quickly instead of rereading broadly.",
+      "Answer detail questions purely from memory without ever returning to the passage."
+    ],
+    "answer": "C",
+    "hints": [
+      "The problem is inefficient searching, not the reading or the questions themselves — a strategy should target that specific inefficiency."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-005",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has historically scored well on Humanities and Social Science passages but tends to run out of time before reaching the Natural Science passage, which often includes charts or data. Diagnostic review shows she spends extra time re-reading dense sentences in Natural Science passages early on. Which strategy best addresses the actual cause of her time shortage?",
+    "choices": [
+      "Practice reading Natural Science passages for overall structure and data trends first, saving a closer reread of dense sentences only for questions that specifically require it.",
+      "Stop attempting Natural Science passages altogether on the real test.",
+      "Spend extra time perfecting her approach to Humanities passages, since those are already her strongest area.",
+      "Read every sentence in the Natural Science passage exactly three times to ensure full comprehension."
+    ],
+    "answer": "A",
+    "hints": [
+      "The diagnosed cause is over-rereading dense sentences up front — the fix should reduce that specific habit, not avoid the passage or over-invest elsewhere."
+    ]
+  },
+  {
+    "id": "act-reading-pacing-strategy-006",
+    "loId": "act.reading-pacing-strategy",
+    "cedCode": "ACT-3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student consistently finishes with time to spare but scores lower than her practice-test average predicts. Review of her answer sheet shows she reads each passage thoroughly and answers questions in order without skipping, but frequently changes correct first answers to incorrect ones after long reconsideration. Which strategy would most directly address this specific pattern?",
+    "choices": [
+      "Read passages more quickly to leave more time for reconsidering answers.",
+      "Trust her first, textually-supported answer more and limit revisiting choices to cases where she finds clear new evidence, rather than general second-guessing.",
+      "Skip the passages entirely and answer based on general knowledge.",
+      "Slow down further and reconsider every answer at least twice before moving on."
+    ],
+    "answer": "B",
+    "hints": [
+      "The pattern described is over-revision away from correct answers, not a speed or comprehension problem — the fix should target the second-guessing itself."
+    ]
+  }
+]

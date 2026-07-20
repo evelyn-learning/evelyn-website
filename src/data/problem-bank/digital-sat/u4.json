@@ -1,0 +1,410 @@
+[
+  {
+    "id": "dsat-area-volume-001",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A rectangle has a length of 12 and a width of 5. What is its area?",
+    "choices": [
+      "60",
+      "17",
+      "34",
+      "30"
+    ],
+    "answer": "A",
+    "hints": [
+      "Area of a rectangle = length × width."
+    ]
+  },
+  {
+    "id": "dsat-area-volume-002",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A triangle has a base of 10 units and a height of 8 units. What is the area of the triangle?",
+    "choices": [
+      "40",
+      "80",
+      "18",
+      "20"
+    ],
+    "answer": "A",
+    "hints": [
+      "Area of a triangle = 1/2 × base × height."
+    ]
+  },
+  {
+    "id": "dsat-area-volume-003",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular box has a length of 4, a width of 3, and a height of 5. What is the volume of the box?",
+    "choices": [
+      "60",
+      "12",
+      "30",
+      "47"
+    ],
+    "answer": "A",
+    "hints": [
+      "Volume of a rectangular box = length × width × height."
+    ]
+  },
+  {
+    "id": "dsat-area-volume-004",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cylinder has a radius of 3 and a height of 7. What is the volume of the cylinder, in terms of π?",
+    "choices": [
+      "63π",
+      "21π",
+      "42π",
+      "189π"
+    ],
+    "answer": "A",
+    "hints": [
+      "Volume of a cylinder = π r² h."
+    ]
+  },
+  {
+    "id": "dsat-area-volume-005",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular garden measures 10 meters by 6 meters. A triangular flower bed with a base of 4 meters and a height of 3 meters is removed from one corner of the garden. What is the remaining area of the garden, in square meters?",
+    "choices": [
+      "54",
+      "60",
+      "51",
+      "48"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the area removed from the total rectangle area."
+    ]
+  },
+  {
+    "id": "dsat-area-volume-006",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A sphere has a volume of 288π cubic units. What is the radius of the sphere, in units?",
+    "answer": "6",
+    "hints": [
+      "Volume of a sphere = (4/3)π r³; solve for r³ first."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-001",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two straight lines intersect, forming four angles. One of the angles measures 35°. What is the measure of the angle vertical to it (the angle directly across the intersection)?",
+    "choices": [
+      "35°",
+      "55°",
+      "145°",
+      "70°"
+    ],
+    "answer": "A",
+    "hints": [
+      "Vertical angles are always equal."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-002",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a triangle, one angle measures 50° and another measures 70°. What is the measure of the third angle?",
+    "choices": [
+      "60°",
+      "65°",
+      "55°",
+      "120°"
+    ],
+    "answer": "A",
+    "hints": [
+      "The angles in a triangle sum to 180°."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-003",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two parallel lines are cut by a transversal. One of the angles formed measures 118°. What is the measure of its alternate interior angle (the angle on the opposite side of the transversal, between the two parallel lines)?",
+    "choices": [
+      "118°",
+      "62°",
+      "108°",
+      "90°"
+    ],
+    "answer": "A",
+    "hints": [
+      "Alternate interior angles formed by a transversal across parallel lines are equal."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-004",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In triangle ABC, the interior angles at vertex A and vertex B measure 42° and 71°, respectively. What is the measure of the exterior angle at vertex C?",
+    "choices": [
+      "113°",
+      "67°",
+      "109°",
+      "138°"
+    ],
+    "answer": "A",
+    "hints": [
+      "An exterior angle of a triangle equals the sum of the two remote interior angles."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-005",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In isosceles triangle DEF, side DE is congruent to side DF, and the angle at vertex D measures 40°. What is the measure of angle E?",
+    "choices": [
+      "70°",
+      "40°",
+      "110°",
+      "80°"
+    ],
+    "answer": "A",
+    "hints": [
+      "Base angles of an isosceles triangle are equal; all three angles sum to 180°."
+    ]
+  },
+  {
+    "id": "dsat-lines-angles-triangles-006",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A triangle has interior angle measures of (2x)°, (3x)°, and (4x)°. What is the value of x?",
+    "answer": "20",
+    "hints": [
+      "Set the sum of the three angle expressions equal to 180° and solve for x."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-001",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has legs of length 6 and 8. What is the length of the hypotenuse?",
+    "choices": [
+      "10",
+      "14",
+      "48",
+      "7"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the Pythagorean theorem: a² + b² = c²."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-002",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In right triangle ABC, angle C is the right angle. The side opposite angle A has length 3, and the hypotenuse has length 5. What is sin(A)?",
+    "choices": [
+      "3/5",
+      "4/5",
+      "3/4",
+      "5/3"
+    ],
+    "answer": "A",
+    "hints": [
+      "sin(angle) = opposite / hypotenuse."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-003",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has a hypotenuse of length 13 and one leg of length 5. What is the length of the other leg?",
+    "choices": [
+      "12",
+      "8",
+      "18",
+      "9"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the Pythagorean theorem to solve for the missing leg."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-004",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a 30-60-90 right triangle, the side opposite the 30° angle has length 7. What is the length of the side opposite the 60° angle?",
+    "choices": [
+      "7√3",
+      "14",
+      "7√2",
+      "7/√3"
+    ],
+    "answer": "A",
+    "hints": [
+      "In a 30-60-90 triangle, the side opposite 60° is √3 times the side opposite 30°."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-005",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In right triangle PQR, angle R is the right angle. If sin(P) = 5/13, what is cos(Q)?",
+    "choices": [
+      "5/13",
+      "12/13",
+      "13/5",
+      "5/12"
+    ],
+    "answer": "A",
+    "hints": [
+      "In a right triangle, the two non-right angles are complementary, so cos(Q) = sin(P)."
+    ]
+  },
+  {
+    "id": "dsat-right-triangle-trig-006",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A ladder leans against a wall, making a 60° angle with the ground. The base of the ladder is 4 feet from the wall. How many feet up the wall does the ladder reach? Round your answer to the nearest tenth.",
+    "answer": "6.9",
+    "hints": [
+      "tan(angle) = opposite / adjacent; solve for the opposite side (the height on the wall)."
+    ]
+  },
+  {
+    "id": "dsat-circles-001",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a radius of 5. What is its circumference, in terms of π?",
+    "choices": [
+      "10π",
+      "25π",
+      "5π",
+      "20π"
+    ],
+    "answer": "A",
+    "hints": [
+      "Circumference = 2πr."
+    ]
+  },
+  {
+    "id": "dsat-circles-002",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a diameter of 14. What is its area, in terms of π?",
+    "choices": [
+      "49π",
+      "14π",
+      "196π",
+      "7π"
+    ],
+    "answer": "A",
+    "hints": [
+      "Area = πr²; find the radius from the diameter first."
+    ]
+  },
+  {
+    "id": "dsat-circles-003",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a radius of 9. What is the length of an arc with a central angle of 60°, in terms of π?",
+    "choices": [
+      "3π",
+      "6π",
+      "9π",
+      "1.5π"
+    ],
+    "answer": "A",
+    "hints": [
+      "Arc length = (central angle / 360) × circumference."
+    ]
+  },
+  {
+    "id": "dsat-circles-004",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circle is defined by the equation (x − 3)² + (y + 2)² = 49. What is the radius of the circle?",
+    "choices": [
+      "7",
+      "49",
+      "14",
+      "3.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "In (x − h)² + (y − k)² = r², the right side of the equation is r²."
+    ]
+  },
+  {
+    "id": "dsat-circles-005",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a radius of 6. What is the area of a sector with a central angle of 120°, in terms of π?",
+    "choices": [
+      "12π",
+      "6π",
+      "24π",
+      "4π"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sector area = (central angle / 360) × πr²."
+    ]
+  },
+  {
+    "id": "dsat-circles-006",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A circle is defined by the equation x² + y² − 6x + 8y = 0. What is the radius of the circle?",
+    "answer": "5",
+    "hints": [
+      "Complete the square for both the x-terms and the y-terms to write the equation in standard form."
+    ]
+  }
+]

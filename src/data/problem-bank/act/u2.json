@@ -1,0 +1,1226 @@
+[
+  {
+    "id": "act-prealgebra-review-001",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is 3/8 written as a percent?",
+    "choices": [
+      "37.5%",
+      "38%",
+      "0.375%",
+      "26.7%"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide 3 by 8, then multiply by 100."
+    ]
+  },
+  {
+    "id": "act-prealgebra-review-002",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A shirt costs $40 before tax. It is on sale for 25% off, and then 8% sales tax is added to the sale price. What is the final price, to the nearest cent?",
+    "choices": [
+      "$32.40",
+      "$30.00",
+      "$33.00",
+      "$29.60"
+    ],
+    "answer": "A",
+    "hints": [
+      "First subtract 25% of $40, then add 8% tax on the discounted price."
+    ]
+  },
+  {
+    "id": "act-prealgebra-review-003",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a classroom, the ratio of boys to girls is 3 to 5. If there are 24 students in total, how many are girls?",
+    "choices": [
+      "15",
+      "9",
+      "12",
+      "18"
+    ],
+    "answer": "A",
+    "hints": [
+      "The ratio parts sum to 8, so each part represents 24/8 = 3 students."
+    ]
+  },
+  {
+    "id": "act-prealgebra-review-004",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A recipe calls for flour and sugar in the ratio 5:2. If a baker uses 35 cups of flour, how many cups of sugar are needed?",
+    "answer": "14",
+    "hints": [
+      "Set up 5/2 = 35/x and solve for x."
+    ]
+  },
+  {
+    "id": "act-prealgebra-review-005",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A population of bacteria increased from 250 to 310. What was the approximate percent increase?",
+    "choices": [
+      "24%",
+      "19%",
+      "20%",
+      "26%"
+    ],
+    "answer": "A",
+    "hints": [
+      "Percent increase = (change / original) x 100."
+    ]
+  },
+  {
+    "id": "act-prealgebra-review-006",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A store marks up an item's wholesale cost by 40% to set the retail price. During a clearance sale, the retail price is then discounted by 30%. The clearance price is what percent of the original wholesale cost?",
+    "choices": [
+      "98%",
+      "110%",
+      "70%",
+      "88%"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply the wholesale cost by 1.40, then by 0.70, and compare to the original."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-001",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 4x + 7 = 23.",
+    "choices": [
+      "4",
+      "5",
+      "3",
+      "6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract 7 from both sides, then divide by 4."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-002",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3(x - 2) = 2x + 5.",
+    "choices": [
+      "11",
+      "9",
+      "1",
+      "-1"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribute the 3 first, then collect x-terms on one side."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-003",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the inequality: -2x + 9 > 3.",
+    "choices": [
+      "x < 3",
+      "x > 3",
+      "x < -3",
+      "x > -3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Dividing by a negative number flips the inequality sign."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-004",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x: (2x + 3)/5 = (x - 1)/2. Enter your answer as an integer or fraction.",
+    "answer": "11",
+    "hints": [
+      "Cross-multiply to clear the fractions: 2(2x + 3) = 5(x - 1)."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-005",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For what value of k does the equation 3x + k = 5x - 8 have solution x = 6?",
+    "choices": [
+      "4",
+      "-4",
+      "22",
+      "-22"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute x = 6 into the equation and solve for k."
+    ]
+  },
+  {
+    "id": "act-linear-equations-inequalities-006",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve the compound inequality for x: -5 < 2x - 3 <= 7.",
+    "choices": [
+      "-1 < x <= 5",
+      "-4 < x <= 2",
+      "-1 < x <= 2",
+      "-4 < x <= 5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add 3 to all three parts, then divide all three parts by 2."
+    ]
+  },
+  {
+    "id": "act-systems-001",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: x + y = 10 and x - y = 4. What is the value of x?",
+    "choices": [
+      "7",
+      "6",
+      "3",
+      "8"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add the two equations to eliminate y."
+    ]
+  },
+  {
+    "id": "act-systems-002",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: 2x + y = 11 and y = x - 1. What is the value of y?",
+    "choices": [
+      "3",
+      "4",
+      "5",
+      "-3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute the expression for y into the first equation."
+    ]
+  },
+  {
+    "id": "act-systems-003",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A system of two linear equations has graphs that are parallel lines with different y-intercepts. How many solutions does the system have?",
+    "choices": [
+      "0",
+      "1",
+      "2",
+      "Infinitely many"
+    ],
+    "answer": "A",
+    "hints": [
+      "Parallel lines never intersect."
+    ]
+  },
+  {
+    "id": "act-systems-004",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve the system: 3x - 2y = 4 and x + 2y = 12. What is the value of x?",
+    "answer": "4",
+    "hints": [
+      "Add the two equations to eliminate y, then solve for x."
+    ]
+  },
+  {
+    "id": "act-systems-005",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Tickets to a concert cost $8 for children and $15 for adults. A group of 12 people paid a total of $131. How many children were in the group?",
+    "choices": [
+      "7",
+      "5",
+      "6",
+      "8"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let c be children and a adults: c + a = 12 and 8c + 15a = 137."
+    ]
+  },
+  {
+    "id": "act-systems-006",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For what value of k does the system 4x - 6y = 10 and 6x - 9y = k have infinitely many solutions?",
+    "choices": [
+      "15",
+      "10",
+      "20",
+      "6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply the first equation by 3/2 so the coefficients of x and y match the second equation."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-001",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x^2 + 7x + 12.",
+    "choices": [
+      "(x + 3)(x + 4)",
+      "(x + 2)(x + 6)",
+      "(x + 1)(x + 12)",
+      "(x - 3)(x - 4)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find two numbers that multiply to 12 and add to 7."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-002",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What are the solutions to x^2 - 5x - 14 = 0?",
+    "choices": [
+      "x = 7 or x = -2",
+      "x = -7 or x = 2",
+      "x = 7 or x = 2",
+      "x = -7 or x = -2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find two numbers that multiply to -14 and add to -5."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-003",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (2x + 3)(x - 5).",
+    "choices": [
+      "2x^2 - 7x - 15",
+      "2x^2 + 7x - 15",
+      "2x^2 - 7x + 15",
+      "2x^2 - 13x - 15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use FOIL: multiply first, outer, inner, last terms."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-004",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "One solution to x^2 - 3x - 18 = 0 is x = 6. What is the other solution?",
+    "answer": "-3",
+    "hints": [
+      "The product of the roots equals the constant term divided by the leading coefficient (here, -18)."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-005",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Use the quadratic formula to solve 2x^2 + 3x - 5 = 0.",
+    "choices": [
+      "x = 1 or x = -5/2",
+      "x = -1 or x = 5/2",
+      "x = 1 or x = 5/2",
+      "x = -1 or x = -5/2"
+    ],
+    "answer": "A",
+    "hints": [
+      "x = (-b +/- sqrt(b^2 - 4ac)) / (2a) with a = 2, b = 3, c = -5."
+    ]
+  },
+  {
+    "id": "act-quadratics-polynomials-006",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For what positive value of k does x^2 + kx + 25 = 0 have exactly one real solution?",
+    "choices": [
+      "10",
+      "5",
+      "25",
+      "50"
+    ],
+    "answer": "A",
+    "hints": [
+      "Exactly one real solution occurs when the discriminant b^2 - 4ac equals 0."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-001",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If f(x) = 3x - 4, what is f(5)?",
+    "choices": [
+      "11",
+      "15",
+      "7",
+      "19"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute x = 5 into the function."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-002",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If f(x) = x^2 - 2x and g(x) = f(x) + 3, what is g(4)?",
+    "choices": [
+      "11",
+      "8",
+      "14",
+      "5"
+    ],
+    "answer": "A",
+    "hints": [
+      "First find f(4), then add 3."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-003",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of a function f passes through the points (1, 2) and (3, 2), and f is a parabola opening upward. What is a reasonable conclusion about the axis of symmetry?",
+    "choices": [
+      "x = 2",
+      "x = 1",
+      "x = 3",
+      "x = 0"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two points with the same y-value are symmetric about the vertical line halfway between their x-values."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-004",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "If f(x) = 2x^2 - 3x + 1, what is f(-2)?",
+    "answer": "15",
+    "hints": [
+      "Substitute x = -2 carefully, remembering (-2)^2 = 4."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-005",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If f(x) = 2x + 1 and f(g(x)) = 6x - 3, what is g(x)?",
+    "choices": [
+      "3x - 2",
+      "3x - 4",
+      "3x + 2",
+      "3x - 1"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set 2(g(x)) + 1 = 6x - 3 and solve for g(x)."
+    ]
+  },
+  {
+    "id": "act-functions-graphs-006",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The graph of y = f(x) is shifted 3 units left and 2 units down to produce the graph of y = g(x). If f(x) = x^2, which of the following equals g(x)?",
+    "choices": [
+      "(x + 3)^2 - 2",
+      "(x - 3)^2 - 2",
+      "(x + 3)^2 + 2",
+      "(x - 3)^2 + 2"
+    ],
+    "answer": "A",
+    "hints": [
+      "A shift left by h replaces x with (x + h); a shift down by k subtracts k."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-001",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: x^3 * x^5.",
+    "choices": [
+      "x^8",
+      "x^15",
+      "x^2",
+      "2x^8"
+    ],
+    "answer": "A",
+    "hints": [
+      "When multiplying like bases, add the exponents."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-002",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: sqrt(72).",
+    "choices": [
+      "6*sqrt(2)",
+      "8*sqrt(3)",
+      "2*sqrt(18)",
+      "36*sqrt(2)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor 72 as 36 x 2, and sqrt(36) = 6."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-003",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of 4^(-2)?",
+    "choices": [
+      "1/16",
+      "-16",
+      "1/8",
+      "-1/16"
+    ],
+    "answer": "A",
+    "hints": [
+      "A negative exponent means take the reciprocal: 4^(-2) = 1/(4^2)."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-004",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "If log base 2 of x = 5, what is the value of x?",
+    "answer": "32",
+    "hints": [
+      "log base 2 of x = 5 means 2^5 = x."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-005",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (27)^(2/3).",
+    "choices": [
+      "9",
+      "18",
+      "6",
+      "3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Take the cube root of 27 first, then square the result."
+    ]
+  },
+  {
+    "id": "act-exponents-roots-logs-006",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3^(2x - 1) = 27.",
+    "choices": [
+      "2",
+      "1",
+      "3",
+      "5/2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite 27 as 3^3, then set the exponents equal since the bases match."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-001",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the slope of the line passing through (2, 3) and (6, 11)?",
+    "choices": [
+      "2",
+      "1/2",
+      "4",
+      "8"
+    ],
+    "answer": "A",
+    "hints": [
+      "Slope = (change in y) / (change in x)."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-002",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the midpoint of the segment connecting (-2, 5) and (6, -1)?",
+    "choices": [
+      "(2, 2)",
+      "(4, 4)",
+      "(2, -3)",
+      "(-4, 6)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Average the x-coordinates and average the y-coordinates."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-003",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the distance between the points (1, 2) and (4, 6)?",
+    "choices": [
+      "5",
+      "7",
+      "4",
+      "sqrt(13)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the distance formula: sqrt((x2-x1)^2 + (y2-y1)^2)."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-004",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A line has a slope of 3 and passes through the point (2, 7). What is the y-intercept of this line?",
+    "answer": "1",
+    "hints": [
+      "Use y = mx + b, substitute the point, and solve for b."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-005",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Line l has equation y = 2x + 3. Line m is perpendicular to l and passes through the point (4, 1). What is the equation of line m?",
+    "choices": [
+      "y = -1/2 x + 3",
+      "y = 2x - 7",
+      "y = -1/2 x - 1",
+      "y = -2x + 9"
+    ],
+    "answer": "A",
+    "hints": [
+      "Perpendicular lines have slopes that are negative reciprocals of each other."
+    ]
+  },
+  {
+    "id": "act-coordinate-geometry-006",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A circle has the equation x^2 + y^2 - 6x + 4y - 12 = 0. What is the radius of the circle?",
+    "choices": [
+      "5",
+      "4",
+      "6",
+      "25"
+    ],
+    "answer": "A",
+    "hints": [
+      "Complete the square on both x and y terms to write the equation in center-radius form."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-001",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a triangle, two angles measure 50 degrees and 65 degrees. What is the measure of the third angle?",
+    "choices": [
+      "65 degrees",
+      "55 degrees",
+      "70 degrees",
+      "75 degrees"
+    ],
+    "answer": "A",
+    "hints": [
+      "The three angles of a triangle sum to 180 degrees."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-002",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a radius of 6. What is its circumference, in terms of pi?",
+    "choices": [
+      "12*pi",
+      "6*pi",
+      "36*pi",
+      "3*pi"
+    ],
+    "answer": "A",
+    "hints": [
+      "Circumference = 2 x pi x radius."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-003",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two parallel lines are cut by a transversal. One angle formed measures 70 degrees. What is the measure of its co-interior (same-side interior) angle?",
+    "choices": [
+      "110 degrees",
+      "70 degrees",
+      "20 degrees",
+      "90 degrees"
+    ],
+    "answer": "A",
+    "hints": [
+      "Co-interior angles are supplementary, so they sum to 180 degrees."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-004",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A right triangle has legs of length 9 and 12. What is the length of the hypotenuse?",
+    "answer": "15",
+    "hints": [
+      "Use the Pythagorean theorem: a^2 + b^2 = c^2."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-005",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a diameter of 10. What is the area of the circle, in terms of pi?",
+    "choices": [
+      "25*pi",
+      "100*pi",
+      "10*pi",
+      "50*pi"
+    ],
+    "answer": "A",
+    "hints": [
+      "Area = pi x r^2, and the radius is half the diameter."
+    ]
+  },
+  {
+    "id": "act-plane-geometry-006",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC is similar to triangle DEF, with a scale factor of 3 from ABC to DEF. If the area of triangle ABC is 8 square units, what is the area of triangle DEF?",
+    "choices": [
+      "72",
+      "24",
+      "64",
+      "8"
+    ],
+    "answer": "A",
+    "hints": [
+      "When lengths scale by a factor k, area scales by a factor of k^2."
+    ]
+  },
+  {
+    "id": "act-trigonometry-001",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a right triangle, the side opposite angle A has length 3 and the hypotenuse has length 5. What is sin(A)?",
+    "choices": [
+      "3/5",
+      "4/5",
+      "3/4",
+      "5/3"
+    ],
+    "answer": "A",
+    "hints": [
+      "sin(A) = opposite / hypotenuse."
+    ]
+  },
+  {
+    "id": "act-trigonometry-002",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a right triangle, the two legs have lengths 6 and 8. What is the cosine of the angle opposite the side of length 6?",
+    "choices": [
+      "4/5",
+      "3/5",
+      "6/8",
+      "8/6"
+    ],
+    "answer": "A",
+    "hints": [
+      "First find the hypotenuse using the Pythagorean theorem, then cos = adjacent/hypotenuse."
+    ]
+  },
+  {
+    "id": "act-trigonometry-003",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of tan(45 degrees)?",
+    "choices": [
+      "1",
+      "0",
+      "sqrt(2)",
+      "undefined"
+    ],
+    "answer": "A",
+    "hints": [
+      "In a 45-45-90 triangle, the two legs are equal, and tangent is opposite over adjacent."
+    ]
+  },
+  {
+    "id": "act-trigonometry-004",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A right triangle has an angle of 30 degrees and a hypotenuse of length 10. What is the length of the side opposite the 30-degree angle?",
+    "answer": "5",
+    "hints": [
+      "sin(30 degrees) = 1/2, and sin(angle) = opposite / hypotenuse."
+    ]
+  },
+  {
+    "id": "act-trigonometry-005",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If sin(x) = 3/5 and x is an acute angle, what is cos(x)?",
+    "choices": [
+      "4/5",
+      "3/5",
+      "5/4",
+      "5/3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the Pythagorean identity sin^2(x) + cos^2(x) = 1, or the 3-4-5 right triangle."
+    ]
+  },
+  {
+    "id": "act-trigonometry-006",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A ladder leans against a wall, making a 60-degree angle with the ground. The foot of the ladder is 5 feet from the wall. To the nearest tenth of a foot, how long is the ladder?",
+    "choices": [
+      "10.0 ft",
+      "8.7 ft",
+      "5.8 ft",
+      "6.7 ft"
+    ],
+    "answer": "A",
+    "hints": [
+      "cos(60 degrees) = adjacent / hypotenuse = 5 / (ladder length)."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-001",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the mean of the data set: 4, 8, 6, 10, 12?",
+    "choices": [
+      "8",
+      "6",
+      "10",
+      "9"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add all the values and divide by the number of values."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-002",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the median of the data set: 3, 7, 9, 12, 15, 20?",
+    "choices": [
+      "10.5",
+      "9",
+      "12",
+      "11"
+    ],
+    "answer": "A",
+    "hints": [
+      "With an even number of values, the median is the average of the two middle values."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-003",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bag contains 4 red marbles and 6 blue marbles. If one marble is drawn at random, what is the probability that it is red?",
+    "choices": [
+      "2/5",
+      "1/2",
+      "4/10",
+      "3/5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Probability = favorable outcomes / total outcomes; simplify 4/10."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-004",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A data set of 5 numbers has a mean of 12. If four of the numbers are 8, 10, 14, and 16, what is the fifth number?",
+    "answer": "12",
+    "hints": [
+      "The sum of all 5 numbers equals 5 times the mean."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-005",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fair coin is flipped twice. What is the probability of getting exactly one heads and one tails, in either order?",
+    "choices": [
+      "1/2",
+      "1/4",
+      "1/3",
+      "3/4"
+    ],
+    "answer": "A",
+    "hints": [
+      "List all four equally likely outcomes: HH, HT, TH, TT."
+    ]
+  },
+  {
+    "id": "act-statistics-probability-006",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A class of 20 students has an average test score of 78. If the 5 highest-scoring students, who averaged 94, are removed, what is the average score of the remaining 15 students?",
+    "choices": [
+      "72.67",
+      "70",
+      "74",
+      "76"
+    ],
+    "answer": "A",
+    "hints": [
+      "Total score = 20 x 78; subtract the total for the 5 removed students (5 x 94), then divide by 15."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-001",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the 6th term of the arithmetic sequence 3, 7, 11, 15, ...?",
+    "choices": [
+      "23",
+      "19",
+      "27",
+      "21"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each term increases by 4; the nth term is 3 + 4(n-1)."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-002",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the 5th term of the geometric sequence 2, 6, 18, 54, ...?",
+    "choices": [
+      "162",
+      "108",
+      "270",
+      "486"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each term is multiplied by 3; the nth term is 2 x 3^(n-1)."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-003",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: i^2, where i is the imaginary unit.",
+    "choices": [
+      "-1",
+      "1",
+      "-i",
+      "i"
+    ],
+    "answer": "A",
+    "hints": [
+      "By definition, i^2 = -1."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-004",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In an arithmetic sequence, the 3rd term is 11 and the 7th term is 31. What is the common difference?",
+    "answer": "5",
+    "hints": [
+      "The difference between the 7th and 3rd terms spans 4 common differences."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-005",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Given matrices A = [[1, 2], [3, 4]] and B = [[5, 6], [7, 8]], what is A + B?",
+    "choices": [
+      "[[6, 8], [10, 12]]",
+      "[[5, 12], [21, 32]]",
+      "[[6, 8], [10, 11]]",
+      "[[4, 4], [4, 4]]"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add corresponding entries in each matrix."
+    ]
+  },
+  {
+    "id": "act-sequences-matrices-complex-006",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Simplify the complex expression: (3 + 2i)(1 - 4i).",
+    "choices": [
+      "11 - 10i",
+      "3 - 8i",
+      "11 + 10i",
+      "-5 - 10i"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use FOIL and remember that i^2 = -1."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-001",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A taxi charges a flat fee of $3 plus $2 per mile. How much does a 7-mile ride cost?",
+    "choices": [
+      "$17",
+      "$14",
+      "$21",
+      "$10"
+    ],
+    "answer": "A",
+    "hints": [
+      "Total cost = flat fee + (rate per mile x number of miles)."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-002",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car travels at a constant speed of 60 miles per hour. How many hours does it take to travel 210 miles?",
+    "choices": [
+      "3.5",
+      "3",
+      "4",
+      "2.5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Time = distance / speed."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-003",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maria is twice as old as her brother Sam. The sum of their current ages is 36. How old is Sam?",
+    "choices": [
+      "12",
+      "18",
+      "24",
+      "9"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let Sam's age be s and Maria's age be 2s; then s + 2s = 36."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-004",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A tank is filled by a pipe at a rate of 15 gallons per minute. The tank already contains 40 gallons when the pipe starts. After how many minutes will the tank contain 250 gallons?",
+    "answer": "14",
+    "hints": [
+      "Set up 40 + 15t = 250 and solve for t."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-005",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A store sells notebooks for $2 each and pens for $1 each. Jordan spent $23 on a total of 15 notebooks and pens combined. How many notebooks did Jordan buy?",
+    "choices": [
+      "8",
+      "7",
+      "9",
+      "6"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let n be notebooks and p be pens: n + p = 15 and 2n + p = 23."
+    ]
+  },
+  {
+    "id": "act-word-problems-modeling-006",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two trains start 300 miles apart and travel toward each other on the same track. Train A travels at 50 mph and Train B travels at 70 mph. How many hours will it take for the trains to meet?",
+    "choices": [
+      "2.5",
+      "3",
+      "2",
+      "4.3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Their speeds add together when moving toward each other: 300 / (50 + 70)."
+    ]
+  }
+]

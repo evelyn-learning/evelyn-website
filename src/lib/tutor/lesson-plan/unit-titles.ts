@@ -33,6 +33,22 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Parametric Equations, Polar Coordinates, and Vector-Valued Functions',
     '10': 'Infinite Sequences and Series',
   },
+  'digital-sat': {
+    '1': 'Math — Algebra',
+    '2': 'Math — Advanced Math',
+    '3': 'Math — Problem-Solving and Data Analysis',
+    '4': 'Math — Geometry and Trigonometry',
+    '5': 'Reading & Writing — Information and Ideas',
+    '6': 'Reading & Writing — Craft and Structure',
+    '7': 'Reading & Writing — Expression of Ideas',
+    '8': 'Reading & Writing — Standard English Conventions',
+  },
+  act: {
+    '1': 'English',
+    '2': 'Math',
+    '3': 'Reading',
+    '4': 'Science',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.
