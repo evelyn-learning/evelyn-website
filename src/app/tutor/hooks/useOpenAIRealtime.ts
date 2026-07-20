@@ -279,6 +279,11 @@ export interface RealtimeConfig {
      *  chosen in fetchTTSPromise below, not here — this flag only carries
      *  the student-facing intent. */
     speakingRate?: 'slow' | 'normal';
+    /** Student's name for name-aware TTS rewrites (vocative-comma drop in
+     *  rewriteForTTS works for ANY name shape only when it knows the
+     *  name — 2026-07-19, session-1784194326500 "baby"). Forwarded to the
+     *  HTTP-TTS routes and used directly on the realtime verbatim path. */
+    studentName?: string;
   };
 }
 
@@ -908,6 +913,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     speakingRateRef.current = relayMode?.speakingRate ?? 'normal';
   }, [relayMode?.speakingRate]);
+  // Student name for name-aware TTS rewrites. Session-static; ref+effect
+  // mirrors the cartesiaVoiceIdRef pattern above.
+  const studentNameRef = useRef<string | undefined>(relayMode?.studentName);
+  useEffect(() => {
+    studentNameRef.current = relayMode?.studentName;
+  }, [relayMode?.studentName]);
   // Both HTTP-based TTS providers (openai-mini, cartesia) share the exact
   // same dispatch/queue/cancel semantics — neither ever produces a Realtime
   // response.created/response.done event, so every place that gates on the
@@ -2587,7 +2598,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
     // Pronunciation rewrites apply to BOTH TTS paths via the shared
     // module — sin/cos/Greek letter expansion, punctuation normalization.
-    const rewritten = rewriteForTTS(trimmed);
+    const rewritten = rewriteForTTS(trimmed, { studentName: studentNameRef.current });
     // OpenAI's official out-of-band response pattern for verbatim TTS.
     // Three things make this work where simpler patterns failed:
     //   - `conversation: 'none'` keeps the response out of history, so
@@ -2686,8 +2697,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // byte-for-byte unchanged when the toggle is off.
       const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85) : undefined;
       const body = useCartesia
-        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, ...(speed !== undefined ? { speed } : {}) }
-        : { text: trimmed, ...(speed !== undefined ? { speed } : {}) };
+        ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) }
+        : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
       // Bounded retry (2026-07-15 incident): a single mid-session transient
       // (ERR_HTTP2_PROTOCOL_ERROR → "Failed to fetch") killed a sentence
       // with no second attempt and wedged the turn. Network faults and 5xx
@@ -2741,7 +2752,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           const res = await fetch('/api/tutor/tts-elevenlabs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: trimmed, cartesiaVoiceId: cartesiaVoiceIdRef.current }),
+            body: JSON.stringify({ text: trimmed, cartesiaVoiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current }),
           });
           if (res.ok) {
             const buf = await res.arrayBuffer();

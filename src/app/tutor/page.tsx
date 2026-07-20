@@ -1502,9 +1502,19 @@ function TutorPage() {
       }
       return -1;
     })();
-    for (const command of commands) {
-      whiteboardEventsRef.current.push({ command, timestamp: now, sourceMessageIndex: lastTutorIdx });
-    }
+    // Resume-seed batches carry each restored command's ORIGINAL draw stamp:
+    // use it so the replay keeps the figure anchored to when it was actually
+    // drawn (attempt 1) rather than re-stamping the whole board to the resume
+    // moment, which pushed it off the end of the replay timeline
+    // (session-1784507935152, 2026-07-19). A missing/empty stamp (legacy row)
+    // falls back to `now`, the pre-fix behavior.
+    commands.forEach((command, i) => {
+      const seed = meta?.seedStamps?.[i];
+      const seededTs = seed?.timestamp ? new Date(seed.timestamp) : null;
+      const timestamp = seededTs && !Number.isNaN(seededTs.getTime()) ? seededTs : now;
+      const sourceMessageIndex = seed && typeof seed.sourceMessageIndex === 'number' ? seed.sourceMessageIndex : lastTutorIdx;
+      whiteboardEventsRef.current.push({ command, timestamp, sourceMessageIndex });
+    });
     setWhiteboardCommands((prev) => {
       const next = [...prev, ...commands];
       console.log('[TutorPage] Total whiteboard commands now:', next.length);

@@ -73,7 +73,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, cartesiaVoiceId } = body as { text?: string; cartesiaVoiceId?: string };
+    const { text, cartesiaVoiceId, studentName } = body as {
+      text?: string; cartesiaVoiceId?: string; studentName?: string;
+    };
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({ error: 'Text is required' }), {
         status: 400,
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: rewriteForTTS(recoveryLine),
+          text: rewriteForTTS(recoveryLine, { studentName }),
           model_id: ELEVENLABS_MODEL_ID,
         }),
         signal: AbortSignal.timeout(10_000),

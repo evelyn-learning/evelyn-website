@@ -86,4 +86,10 @@ export interface TutorResumeState {
   completedSegmentIds: string[];
   transcript: TranscriptEntry[];
   whiteboardCommands: WhiteboardCommand[];
+  /** Original persistence stamps for whiteboardCommands (same order), carried
+   *  so the resume-seed replay keeps each figure's real draw time instead of
+   *  re-stamping to the resume wall-clock (replay-timeline fix, 2026-07-19 —
+   *  see WhiteboardBatchMeta.seedStamps). Absent on legacy reads (the
+   *  persistence layer then falls back to the resume moment, unchanged). */
+  whiteboardCommandStamps?: Array<{ timestamp: string; sourceMessageIndex?: number }>;
 }

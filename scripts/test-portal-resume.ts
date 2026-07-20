@@ -96,6 +96,35 @@ function main() {
     }
   });
 
+  // 2026-07-19 replay-timeline fix: the resume snapshot must carry each
+  // whiteboard command's ORIGINAL draw stamp (parallel array) so the seed
+  // replay doesn't re-stamp the restored board to the resume moment
+  // (session-1784507935152 drew in attempt 1, resumed ~20min later → whole
+  // board landed off the end of the replay timeline).
+  test('buildResumeState carries whiteboardCommandStamps in command order', () => {
+    const read = readWithCheckpoint(FRESH_AT);
+    read.whiteboardCommands = [
+      { action: 'showEquation', data: { latex: 'x^2=1' }, timestamp: '2026-07-20T00:39:42.000Z', sourceMessageIndex: 0 },
+      { action: 'showProblem', data: { problem: {} }, timestamp: '2026-07-20T00:41:23.000Z', sourceMessageIndex: 4 },
+    ];
+    const state = buildResumeState(read);
+    assert.ok(state, 'fresh checkpoint builds a state');
+    assert.equal(state!.whiteboardCommands.length, 2);
+    assert.deepEqual(state!.whiteboardCommandStamps, [
+      { timestamp: '2026-07-20T00:39:42.000Z', sourceMessageIndex: 0 },
+      { timestamp: '2026-07-20T00:41:23.000Z', sourceMessageIndex: 4 },
+    ]);
+    // Command objects still reconstructed with action restored last.
+    assert.equal(state!.whiteboardCommands[0].action, 'showEquation');
+  });
+
+  test('buildResumeState: legacy commands without a timestamp yield an empty stamp (persistence falls back to now)', () => {
+    const read = readWithCheckpoint(FRESH_AT);
+    read.whiteboardCommands = [{ action: 'showDiagram', data: {} }];
+    const state = buildResumeState(read);
+    assert.deepEqual(state!.whiteboardCommandStamps, [{ timestamp: '' }]);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

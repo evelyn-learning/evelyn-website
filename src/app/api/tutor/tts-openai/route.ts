@@ -52,12 +52,14 @@ export async function POST(request: NextRequest) {
       model = 'gpt-4o-mini-tts',
       instructions,
       speed,
+      studentName,
     } = body as {
       text?: string;
       voice?: string;
       model?: string;
       instructions?: string;
       speed?: number;
+      studentName?: string;
     };
 
     if (!text || !text.trim()) {
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
     const ttsBody: Record<string, unknown> = {
       model,
       voice,
-      input: rewriteForTTS(text),
+      input: rewriteForTTS(text, { studentName }),
       response_format: 'pcm', // 24kHz mono int16
       instructions: instructions || TUTOR_VOICE_INSTRUCTIONS,
     };

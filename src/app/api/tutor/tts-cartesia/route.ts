@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { text, voiceId, speed } = body as { text?: string; voiceId?: string; speed?: string | number };
+    const { text, voiceId, speed, studentName } = body as {
+      text?: string; voiceId?: string; speed?: string | number; studentName?: string;
+    };
 
     if (!text || !text.trim()) {
       return new Response(JSON.stringify({ error: 'Text is required' }), {
@@ -81,7 +83,7 @@ export async function POST(request: NextRequest) {
 
     const ttsBody = {
       model_id: 'sonic-3.5',
-      transcript: rewriteForTTS(text),
+      transcript: rewriteForTTS(text, { studentName }),
       voice,
       language: 'en',
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },

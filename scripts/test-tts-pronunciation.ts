@@ -218,6 +218,23 @@ console.log('OK — tts-pronunciation rewrites validated');
   // when the quoted word is not terminator-adjacent.)
   eq('Remember, "slope" means steepness.', 'Remember, slope means steepness.', 'quoted-word-not-sentence-final-keeps-comma');
   console.log('OK — live-session 2026-07-16 regression (quoted vocative)');
+  // 2026-07-19: name-aware vocative — with the session's studentName
+  // threaded in, ANY comma directly before the name drops, whatever the
+  // case/quoting, sentence-final or bracketed mid-sentence. Shape rules
+  // above stay as the net for sessions with no name.
+  const eqN = (inp, name, want, label) => {
+    const got = rewriteForTTS(inp, { studentName: name });
+    if (got !== want) { console.error(`FAIL ${label}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eqN('Nice work, baby.', 'baby', 'Nice work baby.', 'name-bare-lowercase');
+  eqN('Hey, "baby"! Basics sound perfect.', 'baby', 'Hey baby! Basics sound perfect.', 'name-quoted-lowercase');
+  eqN('Okay, baby, let\'s go.', 'baby', 'Okay baby, let\'s go.', 'name-mid-sentence-vocative');
+  eqN('Ready to keep going, ROKON?', 'Rokon', 'Ready to keep going ROKON?', 'name-case-insensitive');
+  // A name that is also a common word must not eat clause commas when the
+  // word is doing its ordinary grammatical job (followed by a word).
+  eqN('Yes, will you try the next one?', 'will', 'Yes, will you try the next one?', 'name-homograph-clause-comma-kept');
+  eqN('Thanks, everyone!', 'baby', 'Thanks, everyone!', 'name-other-word-untouched');
+  console.log('OK — 2026-07-19 name-aware vocative comma');
 }
 
 // Live-session regression 2026-07-13: "SD" (standard deviation) voiced as

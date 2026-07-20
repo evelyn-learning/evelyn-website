@@ -750,12 +750,18 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {
           if (!acceptWhiteboardBatch(resumeSeedGuardRef.current, meta)) return;
-          // Capture time stamped at append (batch-mates share one stamp —
-          // they arrived in the same turn). A resume-seed batch gets the
-          // resume moment, which is where its items belong on the timeline
-          // of THIS attempt.
-          const capturedAt = new Date().toISOString();
-          setWhiteboardCommands((prev) => [...prev, ...cmds.map((cmd) => ({ cmd, capturedAt }))]);
+          // Capture time stamped at append (live batch-mates share one stamp —
+          // they arrived in the same turn). A resume-seed batch instead keeps
+          // each restored command's ORIGINAL draw stamp (meta.seedStamps) so
+          // the replay timeline stays anchored to when the figure was actually
+          // drawn, not the resume moment — a board drawn in attempt 1 and
+          // resumed much later otherwise lands off the end of the replay
+          // (session-1784507935152, 2026-07-19). Missing/empty stamp → now.
+          const now = new Date().toISOString();
+          setWhiteboardCommands((prev) => [...prev, ...cmds.map((cmd, i) => ({
+            cmd,
+            capturedAt: meta?.seedStamps?.[i]?.timestamp || now,
+          }))]);
         }}
         onLessonProgressChange={(p) => {
           planRef.current = p.plan;

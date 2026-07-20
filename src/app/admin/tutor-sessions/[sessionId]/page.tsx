@@ -155,7 +155,7 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
         />
 
         {/* Static Transcript (with spoken-form / TTS audit toggle) */}
-        <SpokenTranscript transcript={session.transcript || []} />
+        <SpokenTranscript transcript={session.transcript || []} studentName={session.studentName} />
       </main>
     </div>
   );

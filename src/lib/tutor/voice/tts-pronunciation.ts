@@ -1443,8 +1443,34 @@ const CAPS_EMPHASIS_WORDS = new RegExp(
   'g',
 );
 
-export function rewriteForTTS(raw: string): string {
+export interface RewriteForTTSOptions {
+  /** The session's student name. When present, ANY comma directly before
+   *  the name (whatever its case/quoting) is dropped for speech — the
+   *  definitive fix for the vocative-pause class the shape-matched rules
+   *  below can only approximate. */
+  studentName?: string;
+}
+
+export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string {
   let t = raw;
+  // Known-name vocative comma (2026-07-19, closes the residual from the
+  // 2026-07-11/07-16 shape-matched rules): with the actual student name in
+  // hand there is no article/clause ambiguity left — a comma immediately
+  // before the name is always the vocative pause Cartesia exaggerates.
+  // Case-insensitive, quote-tolerant, fires sentence-finally AND
+  // mid-sentence (", baby, let's go"), but ONLY when the name is followed
+  // by punctuation or end-of-text — "Yes, will you try?" with a student
+  // named Will keeps its clause comma because "will" is followed by a
+  // word. Name is regex-escaped; length-capped as a safety valve since
+  // names arrive from an unauthenticated field.
+  const studentName = opts?.studentName?.trim();
+  if (studentName && studentName.length >= 2 && studentName.length <= 40) {
+    const nm = studentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    t = t.replace(
+      new RegExp(`,\\s*((?:["“‘']\\s*)?${nm}(?:\\s*["”’'])?)(\\s*(?:[.!?,;:—–]|$))`, 'gi'),
+      ' $1$2',
+    );
+  }
   // Quoted vocative (live 2026-07-16, session-1784194326500, student named
   // "baby"): the brain wrote `Hey, "baby"!` — lowercase AND quote-wrapped,
   // so the sentence-final vocative rule further down (which needs a bare

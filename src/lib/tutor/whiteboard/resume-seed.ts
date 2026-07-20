@@ -21,11 +21,27 @@
  * Ship-gate: scripts/test-resume-seed-guard.ts (`npm run test:resume-seed`).
  */
 
+/** A whiteboard command's original persistence stamp from a prior attempt. */
+export interface WhiteboardSeedStamp {
+  /** ISO timestamp of when the command was ORIGINALLY drawn (prior attempt). */
+  timestamp: string;
+  /** Transcript index the command anchored to in the prior attempt. */
+  sourceMessageIndex?: number;
+}
+
 /** Optional metadata on an onWhiteboardCommand batch. */
 export interface WhiteboardBatchMeta {
   /** True when this batch is the resume-seed replay of the restored board
    *  (VoiceTutorRealtime's mount-time rehydration), not a live turn batch. */
   resumeSeed?: boolean;
+  /** For resume-seed batches: the ORIGINAL per-command stamps from the prior
+   *  attempt, in the same order as the batch's commands. The persistence
+   *  layer uses these instead of the resume wall-clock so replay timing stays
+   *  anchored to when each figure was actually drawn. Without it, a session
+   *  that drew its board in attempt 1 and resumed ~20min later re-stamped every
+   *  command to the resume time, pushing the whole board off the end of the
+   *  replay timeline so it never painted (session-1784507935152, 2026-07-19). */
+  seedStamps?: WhiteboardSeedStamp[];
 }
 
 /** Per-buffer guard state. Hold in a ref next to the buffer it protects;

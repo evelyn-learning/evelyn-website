@@ -27,18 +27,20 @@ interface TranscriptEntry {
 
 const isTutorTurn = (role: string) => role !== 'student' && role !== 'system';
 
-export default function SpokenTranscript({ transcript }: { transcript: TranscriptEntry[] }) {
+export default function SpokenTranscript({ transcript, studentName }: { transcript: TranscriptEntry[]; studentName?: string }) {
   const [showSpoken, setShowSpoken] = useState(false);
 
   // Precompute the spoken form + whether it differs for every tutor turn.
+  // studentName mirrors the live pipeline's name-aware vocative rewrite so
+  // the audit shows exactly what Cartesia was fed.
   const rows = useMemo(
     () =>
       transcript.map((entry) => {
-        const spoken = isTutorTurn(entry.role) ? rewriteForTTS(entry.text) : entry.text;
+        const spoken = isTutorTurn(entry.role) ? rewriteForTTS(entry.text, { studentName }) : entry.text;
         const differs = isTutorTurn(entry.role) && spoken !== entry.text.trim();
         return { entry, spoken, differs };
       }),
-    [transcript],
+    [transcript, studentName],
   );
 
   const tutorTurns = rows.filter((r) => isTutorTurn(r.entry.role)).length;

@@ -6312,7 +6312,12 @@ export function VoiceTutorRealtime({
       // still set) the effect re-fires with a fresh ref, and an unguarded
       // parent append would duplicate the entire restored board (observed
       // session-1783123067235: items 0–12 ≡ 13–25).
-      onWhiteboardCommand([...resumeState.whiteboardCommands], { resumeSeed: true });
+      onWhiteboardCommand([...resumeState.whiteboardCommands], {
+        resumeSeed: true,
+        // Preserve each restored figure's original draw stamp so replay
+        // timing stays anchored to attempt 1 (2026-07-19 replay-timeline fix).
+        seedStamps: resumeState.whiteboardCommandStamps,
+      });
       // Seed the catalog so cross-turn dedup recognizes the RESTORED board.
       // Without this, findBySignature is empty after a reload, so the brain's
       // resume reflex ("re-render the interrupted visual") sails past the dedup
@@ -11728,6 +11733,7 @@ export function VoiceTutorRealtime({
           ttsProvider,
           cartesiaVoiceId,
           speakingRate,
+          studentName,
         }
       : undefined,
     onTranscriptUpdate: handleTranscriptUpdate,

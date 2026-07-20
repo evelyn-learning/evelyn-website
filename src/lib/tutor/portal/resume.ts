@@ -31,7 +31,7 @@ export interface PriorSessionRead {
     updatedAt?: string;
   } | null;
   transcript?: Array<{ role?: string; text?: string; timestamp?: string }>;
-  whiteboardCommands?: Array<{ action: string; data?: Record<string, unknown> }>;
+  whiteboardCommands?: Array<{ action: string; data?: Record<string, unknown>; timestamp?: string; sourceMessageIndex?: number }>;
 }
 
 /** True when the checkpoint is within the conversation-resume window (§1.4). */
@@ -56,18 +56,29 @@ export function buildResumeState(data: PriorSessionRead | null | undefined): Tut
     timestamp: t.timestamp ? new Date(t.timestamp) : new Date(),
   }));
 
-  const whiteboardCommands: WhiteboardCommand[] = (Array.isArray(data?.whiteboardCommands) ? data!.whiteboardCommands : []).map((c) => ({
+  const rawCommands = Array.isArray(data?.whiteboardCommands) ? data!.whiteboardCommands : [];
+  const whiteboardCommands: WhiteboardCommand[] = rawCommands.map((c) => ({
     // `data` was stored as { ...cmd, action: undefined }; spread it FIRST and
     // restore `action` last or it clobbers to undefined.
     ...(c.data && typeof c.data === 'object' ? c.data : {}),
     action: c.action,
   })) as WhiteboardCommand[];
+  // Carry each command's ORIGINAL draw stamp (parallel array) so the
+  // resume-seed replay doesn't re-stamp the restored board to the resume
+  // moment (replay-timeline fix, 2026-07-19). Commands with no persisted
+  // timestamp (legacy rows) contribute a stamp with an empty string, which
+  // the persistence layer treats as "no stamp → use the resume moment".
+  const whiteboardCommandStamps = rawCommands.map((c) => ({
+    timestamp: typeof c.timestamp === 'string' ? c.timestamp : '',
+    ...(typeof c.sourceMessageIndex === 'number' ? { sourceMessageIndex: c.sourceMessageIndex } : {}),
+  }));
 
   return {
     currentSegmentId: typeof cp.currentSegmentId === 'string' ? cp.currentSegmentId : '',
     completedSegmentIds: Array.isArray(cp.completedSegmentIds) ? cp.completedSegmentIds : [],
     transcript,
     whiteboardCommands,
+    whiteboardCommandStamps,
   };
 }
 
