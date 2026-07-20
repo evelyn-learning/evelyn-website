@@ -95,6 +95,7 @@ export interface AttemptDoc {
   }>;
   footnote?: string;
   gradingStartedAt?: Date;
+  gradingLockToken?: string;
   gapsFedAt?: Date;
   isRetake: boolean;
   startedAt: Date;
@@ -616,6 +617,32 @@ export async function listForms(
   return { forms: summaries };
 }
 
+/**
+ * Lazily expire a stale in-flight attempt. Any SECTION the student fully
+ * completed before abandoning the attempt is scored (raw MCQ correctness +
+ * LO breakdown, no curve/composite) so the report can show partial results;
+ * a mid-first-section abandonment scores nothing (report stays not_found).
+ *
+ * `cursor.sectionIdx` is the section currently open (in_section) or the
+ * upcoming one (at_break), so sections `[0, cursor.sectionIdx)` are exactly
+ * the completed ones. The gaps/mastery feed deliberately does NOT run for an
+ * expired attempt — an abandoned exam is not a graded result to learn from.
+ */
+async function expireAttempt(stores: MockStores, attempt: AttemptDoc): Promise<void> {
+  const completedCount = attempt.cursor.sectionIdx;
+  if (completedCount > 0) {
+    const blueprint = getBlueprint(attempt.examKey);
+    const completedModules = attempt.servedModules.filter((m) => m.sectionIdx < completedCount);
+    const items = await stores.getItems(completedModules.flatMap((m) => m.itemIds));
+    const { rawSections, loBreakdown } = scoreMcqSections(blueprint, completedModules, attempt.responses, items);
+    attempt.rawSections = rawSections;
+    attempt.loBreakdown = loBreakdown;
+  }
+  attempt.status = 'expired';
+  attempt.sectionDeadlineAt = undefined;
+  await stores.saveAttempt(attempt);
+}
+
 export async function startOrResume(
   stores: MockStores,
   req: StartMockAttemptRequest,
@@ -633,8 +660,7 @@ export async function startOrResume(
   // Expiry is lazy — no cron. A stale in-flight attempt is closed out here,
   // on the next start/resume call that touches it, then treated as none.
   if (inFlight && now - inFlight.startedAt.getTime() > ATTEMPT_TTL_MS) {
-    inFlight.status = 'expired';
-    await stores.saveAttempt(inFlight);
+    await expireAttempt(stores, inFlight);
     inFlight = null;
   }
 

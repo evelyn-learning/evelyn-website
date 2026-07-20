@@ -62,8 +62,12 @@ export interface IMockAttempt extends Document {
     ungraded?: boolean;
   }>;
   footnote?: string;
-  /** Idempotency guard for report-triggered grading. */
+  /** Grading lock acquired-at (report path). Re-stamped on each acquisition;
+   *  a lock older than 10min is treated as a crashed run and re-takeable. */
   gradingStartedAt?: Date;
+  /** Unique token of the poll that currently holds the grading lock. Written
+   *  then re-read (compare-and-set) so exactly one concurrent poll grades. */
+  gradingLockToken?: string;
   /** Idempotency guard for the gaps/mastery feed. */
   gapsFedAt?: Date;
   isRetake: boolean;
@@ -201,6 +205,7 @@ const MockAttemptSchema = new Schema<IMockAttempt>(
     frqGrades: { type: [FrqGradeSchema], default: undefined },
     footnote: { type: String },
     gradingStartedAt: { type: Date },
+    gradingLockToken: { type: String },
     gapsFedAt: { type: Date },
     isRetake: { type: Boolean, required: true },
     startedAt: { type: Date, required: true },

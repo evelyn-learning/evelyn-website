@@ -13,6 +13,7 @@
  * connection — see report.test.ts.
  */
 
+import { randomUUID } from 'node:crypto';
 import type { MockReport, MockReviewItem, MockReviewResponse } from '@evelyn/portal-contract/v1';
 import { resolvePassage } from '@/lib/tutor/passages/store';
 import {
@@ -98,19 +99,38 @@ export async function ensureGraded(
   deps: ReportDeps,
   now: number = Date.now(),
 ): Promise<AttemptDoc> {
-  const attempt = await stores.findAttempt(attemptId);
+  let attempt = await stores.findAttempt(attemptId);
   if (!attempt) throw new Error('not_found');
 
   const blueprint = getBlueprint(attempt.examKey);
 
   if (attempt.status === 'grading') {
-    // Best-effort lock: (re)stamp when unset or stale. frqGrades presence is the
-    // real done-marker, so a fresh lock from finalize never blocks this pass.
-    const startedMs = attempt.gradingStartedAt?.getTime();
-    if (startedMs === undefined || now - startedMs > GRADING_STALE_MS) {
-      attempt.gradingStartedAt = new Date(now);
-      await stores.saveAttempt(attempt);
-    }
+    // Concurrency guard. Task 8 sets `gradingStartedAt` at finalize but never a
+    // token, so the FIRST poll (token unset) always grades. A poll that finds a
+    // token already held AND fresh (< 10 min) backs off — the holder is grading
+    // (route replies 202). A token older than 10 min is a crashed run and is
+    // re-takeable.
+    const lockedMs = attempt.gradingStartedAt?.getTime();
+    const heldFresh =
+      attempt.gradingLockToken !== undefined &&
+      lockedMs !== undefined &&
+      now - lockedMs <= GRADING_STALE_MS;
+    if (heldFresh) return attempt;
+
+    // Acquire by compare-and-set: stamp a unique token, re-read, and proceed
+    // only if ours survived. Two concurrent pollers that both saw the lock free
+    // both write; the last write wins, and only that poll's re-read matches —
+    // the other returns untouched (still 'grading').
+    const token = randomUUID();
+    attempt.gradingLockToken = token;
+    attempt.gradingStartedAt = new Date(now);
+    await stores.saveAttempt(attempt);
+
+    const reread = await stores.findAttempt(attemptId);
+    if (!reread) throw new Error('not_found');
+    if (reread.gradingLockToken !== token) return reread;
+
+    attempt = reread;
     await gradeAndComplete(stores, blueprint, attempt, deps, now);
   }
 
@@ -155,7 +175,15 @@ async function gradeAndComplete(
         const item = itemById.get(id);
         if (!item || item.responseFormat !== 'frq') continue;
         const frqText = responseByItem.get(id)?.frqText;
-        if (frqText === undefined || frqText.trim() === '') continue; // unanswered FRQ — not graded
+
+        if (frqText === undefined || frqText.trim() === '') {
+          // Skipped FRQ = zero credit (consistent with a wrong MCQ): 0/max
+          // toward the section curve AND a 0/1 in the LO breakdown. Not
+          // flagged `ungraded` (that is reserved for grader FAILURES) and not
+          // footnoted.
+          frqGrades.push({ itemId: id, totalPoints: 0, maxPoints: rubricMaxPoints(item.rubric), parts: [] });
+          continue;
+        }
 
         const passageText = item.passageId ? resolvePassage(item.passageId)?.fullText : undefined;
         const graded = await gradeOneWithRetry(

@@ -4,6 +4,7 @@ import {
   startOrResume,
   saveResponses,
   advance,
+  ATTEMPT_TTL_MS,
   type MockStores,
 } from './service';
 import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
@@ -17,12 +18,13 @@ const START = { topicId: 'fixture', formId: 'fixture-form-a' };
 
 /** Rubric-part grader returning fixed points, with a call counter and an
  *  optional "throw the first N calls" (failTimes) / "always throw" (fail). */
-function makeGradeDeps(opts: { points?: number; fail?: boolean; failTimes?: number } = {}) {
+function makeGradeDeps(opts: { points?: number; fail?: boolean; failTimes?: number; slow?: boolean } = {}) {
   let calls = 0;
   let failsLeft = opts.failTimes ?? 0;
   const deps: GradeDeps = {
     async gradeRubricPart(args) {
       calls += 1;
+      if (opts.slow) await new Promise((r) => setImmediate(r)); // yield so a concurrent poll interleaves
       if (opts.fail || failsLeft > 0) {
         failsLeft -= 1;
         throw new Error('grader boom');
@@ -107,6 +109,25 @@ async function driveToGrading(
 
 function freshStores(): MockStores {
   return memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+}
+
+/** Drives a fresh attempt through section 1 to the at_break state (section 1
+ *  fully complete, section 2 not yet opened). Returns attemptId. */
+async function driveToAtBreak(stores: MockStores, studentId: string): Promise<string> {
+  const s = await startOrResume(stores, { studentId, ...START }, T0);
+  const attemptId = s.attemptId;
+  await saveResponses(stores, {
+    studentId, attemptId, cursor: { sectionIdx: 0, moduleIdx: 0 },
+    responses: [{ itemId: 'fx-m1-1', answer: 'A' }, { itemId: 'fx-m1-2', answer: 'B' }],
+  }, T0 + 1_000);
+  const st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 } }, T0 + 2_000);
+  await saveResponses(stores, {
+    studentId, attemptId, cursor: { sectionIdx: 0, moduleIdx: 1 },
+    responses: [{ itemId: st.section!.items[0].itemId, answer: 'A' }],
+  }, T0 + 3_000);
+  const br = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 } }, T0 + 4_000);
+  assert.equal(br.status, 'at_break');
+  return attemptId;
 }
 
 // --- harness -------------------------------------------------------------
@@ -231,6 +252,124 @@ async function run() {
     const frq = review.items.find((i) => i.itemId === 'fx-frq-1')!;
     assert.equal(frq.studentAnswer, 'my proof');
     assert.ok(frq.frqGrade);
+  });
+
+  // --- C1: grading lock guard ------------------------------------------
+
+  await test('concurrent ensureGraded polls grade exactly once (lock guard)', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's8', ['A', 'B'], 'my proof');
+    const grade = makeGradeDeps({ points: 2, slow: true }); // slow → the two polls interleave
+    const ps = makeProfileStore();
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store };
+
+    await Promise.all([
+      ensureGraded(stores, attemptId, deps, T0 + 8_000),
+      ensureGraded(stores, attemptId, deps, T0 + 8_000),
+    ]);
+    assert.equal(grade.calls(), 2); // 2 rubric parts, ONE grading pass (not 4)
+    assert.equal(ps.saveCalls(), 1); // profile fed exactly once
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.equal(a.frqGrades!.length, 1);
+  });
+
+  await test('a fresh held grading lock makes another poll back off untouched', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's10', ['A', 'B'], 'my proof');
+    // Simulate another poll currently holding a fresh lock (grading in flight).
+    const held = (await stores.findAttempt(attemptId))!;
+    held.gradingLockToken = 'other-poll';
+    held.gradingStartedAt = new Date(T0 + 8_000);
+    await stores.saveAttempt(held);
+    const grade = makeGradeDeps({ points: 2 });
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    const result = await ensureGraded(stores, attemptId, deps, T0 + 8_000 + 1_000);
+    assert.equal(result.status, 'grading'); // backed off → route 202
+    assert.equal(grade.calls(), 0); // did not double-grade
+  });
+
+  await test('a stale grading lock (>10min) is taken over and graded', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's9', ['A', 'B'], 'my proof');
+    // Simulate a crashed grading run: a held lock stamped long ago, no grades.
+    const crashed = (await stores.findAttempt(attemptId))!;
+    crashed.gradingLockToken = 'crashed-run';
+    crashed.gradingStartedAt = new Date(T0);
+    await stores.saveAttempt(crashed);
+    const grade = makeGradeDeps({ points: 2 });
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 11 * 60 * 1_000);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'completed');
+    assert.ok(grade.calls() > 0); // takeover graded
+  });
+
+  // --- I2: skipped FRQ zero-credit -------------------------------------
+
+  await test('skipped FRQ scores zero credit (section floor + 0/1 LO, no footnote)', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 'k1', ['A', 'B'], null); // FRQ left blank
+    const grade = makeGradeDeps({ points: 2 });
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(grade.calls(), 0); // grader never runs for a blank FRQ
+    const frq = a.frqGrades!.find((g) => g.itemId === 'fx-frq-1')!;
+    assert.equal(frq.totalPoints, 0);
+    assert.equal(frq.maxPoints, 4);
+    assert.ok(!frq.ungraded);
+    const sec2 = a.scaled!.sections.find((s) => s.sectionId === 'sec2')!;
+    assert.equal(sec2.scaled, 10); // curve floor [[0,10],[4,40]] at raw 0
+    const lo3 = a.loBreakdown!.find((e) => e.loId === 'fx.lo3')!;
+    assert.deepEqual({ correct: lo3.correct, total: lo3.total }, { correct: 0, total: 1 });
+    assert.ok(!a.footnote); // a skip is not a grader failure
+  });
+
+  // --- I1: expiry partial scoring --------------------------------------
+
+  await test('expiry after a completed section yields a partial report (no scaled)', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToAtBreak(stores, 'e1');
+    // Resume past the TTL → lazy expiry scores the completed section 1.
+    await startOrResume(stores, { studentId: 'e1', ...START }, T0 + ATTEMPT_TTL_MS + 1);
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'expired');
+    assert.ok(a.rawSections && a.rawSections.length >= 1);
+    assert.ok(!a.scaled);
+
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store };
+    const report = await getReport(stores, 'e1', attemptId, deps, T0 + ATTEMPT_TTL_MS + 2);
+    assert.equal(report.status, 'expired');
+    assert.equal(report.footnote, 'Attempt expired before completion — partial results.');
+    assert.ok(!report.scaled);
+    assert.ok(report.sections.find((s) => s.sectionId === 'sec1'));
+  });
+
+  await test('expiry mid first section yields not_found (nothing finalized)', async () => {
+    const stores = freshStores();
+    const s = await startOrResume(stores, { studentId: 'e2', ...START }, T0); // in_section, cursor {0,0}
+    const attemptId = s.attemptId;
+    await startOrResume(stores, { studentId: 'e2', ...START }, T0 + ATTEMPT_TTL_MS + 1); // expire
+    const a = (await stores.findAttempt(attemptId))!;
+    assert.equal(a.status, 'expired');
+    assert.ok(!a.rawSections);
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store };
+    await assert.rejects(() => getReport(stores, 'e2', attemptId, deps, T0 + ATTEMPT_TTL_MS + 2), /not_found/);
+  });
+
+  await test('getReview works on an expired-partial attempt', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToAtBreak(stores, 'e3');
+    await startOrResume(stores, { studentId: 'e3', ...START }, T0 + ATTEMPT_TTL_MS + 1);
+    const review = await getReview(stores, 'e3', attemptId);
+    const mcq = review.items.find((i) => i.itemId === 'fx-m1-1')!;
+    assert.ok(mcq);
+    assert.equal(mcq.correctAnswer, 'A');
+    assert.equal(mcq.isCorrect, true);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);
