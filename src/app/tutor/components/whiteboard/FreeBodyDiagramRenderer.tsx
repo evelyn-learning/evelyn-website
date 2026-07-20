@@ -17,6 +17,7 @@
 
 import React from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 export type FbdDirection =
   | 'up'
@@ -507,69 +508,132 @@ export default function FreeBodyDiagramRenderer({
     return cluster;
   });
 
-  const renderForces = (): React.ReactElement[] =>
-    forces.map((f, i) => {
-      const angle = angles[i];
-      const rad = (angle * Math.PI) / 180;
-      // "into-surface" on a slope draws the arrow toward the hypotenuse. With
-      // the default 90px length the tip overshoots the slope graphic and the
-      // label crashes into the θ angle annotation at the base-left vertex
-      // (observed 2026-05-07 inclined-plane FBDs). Shorten so the arrow
-      // stays in the air-gap between the box and the slope surface.
-      const dirToken = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
-      const isIntoIncline = surface.type === 'inclined' && dirToken === 'into-surface';
-      const baseLen = isIntoIncline ? 50 : DEFAULT_ARROW_LEN;
-      const len = baseLen * (f.scale ?? 1);
-      const dirX = Math.cos(rad);
-      const dirY = -Math.sin(rad); // SVG y is flipped
-      // Start the arrow at the body edge, not the center.
-      const startX = objX + dirX * bodyRadius;
-      const startY = objY + dirY * bodyRadius;
-      // When two forces share a direction, separate their arrows so both are
-      // visible rather than one on top of the other.
-      const cluster = angleClusters[i];
-      const clusterLen = len - cluster * 18;
-      const tipX = startX + dirX * Math.max(clusterLen, 30);
-      const tipY = startY + dirY * Math.max(clusterLen, 30);
-      const color = colorForForce(f.name, f.color);
-      // Labels just past the arrow tip, offset perpendicular when multiple
-      // forces share this direction.
+  const objectCaption = object.mass || object.label;
+  // Estimated half-width of a 13px label (same char heuristic as
+  // label-deoverlap). Used for arrow clearance + viewbox clamping.
+  const estHalfW = (s: string): number => (s.length * 13 * 0.55) / 2;
+
+  // ── Per-force geometry + label layout (2026-07-17 live session) ──────
+  // Labels used to sit inline just past the arrow tip. For horizontal-ish
+  // arrows that put a center-anchored label ON the arrow axis — it ran
+  // back across its own shaft, crowded the object caption, and an 8-char
+  // name cap mangled real names ("Wall pushes back" → "Wall pu…"). Now:
+  // horizontal-ish labels sit ABOVE their shaft midpoint, arrows start
+  // clear of the caption, names keep up to 20 chars, and one
+  // deoverlapLabels pass (object + shafts + θ/μ as obstacles) resolves
+  // whatever residual crowding the initial spots still have.
+  const forceGeoms = forces.map((f, i) => {
+    const angle = angles[i];
+    const rad = (angle * Math.PI) / 180;
+    // "into-surface" on a slope draws the arrow toward the hypotenuse. With
+    // the default 90px length the tip overshoots the slope graphic and the
+    // label crashes into the θ angle annotation at the base-left vertex
+    // (observed 2026-05-07 inclined-plane FBDs). Shorten so the arrow
+    // stays in the air-gap between the box and the slope surface.
+    const dirToken = typeof f.direction === 'string' ? f.direction.toLowerCase() : '';
+    const isIntoIncline = surface.type === 'inclined' && dirToken === 'into-surface';
+    const baseLen = isIntoIncline ? 50 : DEFAULT_ARROW_LEN;
+    const len = baseLen * (f.scale ?? 1);
+    const dirX = Math.cos(rad);
+    const dirY = -Math.sin(rad); // SVG y is flipped
+    const horizontalish = Math.abs(dirY) < 0.35;
+    // Start the arrow at the body edge, not the center — and for
+    // horizontal-ish arrows, past the object caption too (a wide caption
+    // like "m = 5 kg" sticks out beyond the body glyph).
+    const startRadius = horizontalish && objectCaption
+      ? Math.max(bodyRadius, estHalfW(objectCaption) + 8)
+      : bodyRadius;
+    const startX = objX + dirX * startRadius;
+    const startY = objY + dirY * startRadius;
+    // When two forces share a direction, separate their arrows so both are
+    // visible rather than one on top of the other.
+    const cluster = angleClusters[i];
+    const clusterLen = len - cluster * 18;
+    const tipX = startX + dirX * Math.max(clusterLen, 30);
+    const tipY = startY + dirY * Math.max(clusterLen, 30);
+    const color = colorForForce(f.name, f.color);
+    // Defensive label hygiene. The model sometimes sends (a) LaTeX commands
+    // in magnitude, which don't render in plain SVG text, (b) long descriptive
+    // phrases in name, which overflow and collide with other labels, and (c)
+    // redundant "X = X" where magnitude echoes the name. Sanitize all three.
+    const stripLatex = (s: string): string => s
+      .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2') // \frac{a}{b} → a/b
+      .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')             // \sqrt{x} → √(x)
+      .replace(/\\text\{([^{}]+)\}/g, '$1')                // \text{x} → x
+      .replace(/\\(theta|pi|alpha|beta|mu|Delta|omega|phi|rho|sigma|gamma)\b/g, (_, n) => {
+        const map: Record<string, string> = {
+          theta: 'θ', pi: 'π', alpha: 'α', beta: 'β', mu: 'μ',
+          Delta: 'Δ', omega: 'ω', phi: 'φ', rho: 'ρ', sigma: 'σ', gamma: 'γ',
+        };
+        return map[n] || n;
+      })
+      .replace(/\\[a-zA-Z]+/g, '')   // strip any remaining LaTeX commands
+      .replace(/[{}]/g, '')
+      .trim();
+    const truncate = (s: string, max: number): string =>
+      s.length > max ? `${s.slice(0, max - 1)}…` : s;
+    // 20 chars fits every real force phrase seen live ("Wall pushes back");
+    // the cap only guards against essay-length names now.
+    const nameN = truncate(stripLatex((f.name || '').trim()), 20);
+    const magN = truncate(stripLatex((f.magnitude || '').trim()), 14);
+    const label = magN && magN !== nameN ? `${nameN} = ${magN}` : nameN;
+    // Initial label spot: above the shaft midpoint for horizontal-ish
+    // arrows (never on the axis), just past the tip otherwise.
+    const perpStep = 14 * cluster; // extra separation for same-direction forces
+    let labelX: number;
+    let labelY: number;
+    if (horizontalish) {
+      labelX = (startX + tipX) / 2;
+      labelY = (startY + tipY) / 2 - 16 - perpStep;
+    } else {
       const labelOffset = 16;
-      const perpX = -dirY;
-      const perpY = dirX;
-      const perpStep = 14 * cluster; // 0 for first, 14 for second, etc.
-      const labelX = tipX + dirX * labelOffset + perpX * perpStep;
-      const labelY = tipY + dirY * labelOffset + perpY * perpStep;
-      // Defensive label hygiene. The model sometimes sends (a) LaTeX commands
-      // in magnitude, which don't render in plain SVG text, (b) long descriptive
-      // phrases in name, which overflow and collide with other labels, and (c)
-      // redundant "X = X" where magnitude echoes the name. Sanitize all three.
-      const stripLatex = (s: string): string => s
-        .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2') // \frac{a}{b} → a/b
-        .replace(/\\sqrt\{([^{}]+)\}/g, '√($1)')             // \sqrt{x} → √(x)
-        .replace(/\\text\{([^{}]+)\}/g, '$1')                // \text{x} → x
-        .replace(/\\(theta|pi|alpha|beta|mu|Delta|omega|phi|rho|sigma|gamma)\b/g, (_, n) => {
-          const map: Record<string, string> = {
-            theta: 'θ', pi: 'π', alpha: 'α', beta: 'β', mu: 'μ',
-            Delta: 'Δ', omega: 'ω', phi: 'φ', rho: 'ρ', sigma: 'σ', gamma: 'γ',
-          };
-          return map[n] || n;
-        })
-        .replace(/\\[a-zA-Z]+/g, '')   // strip any remaining LaTeX commands
-        .replace(/[{}]/g, '')
-        .trim();
-      const truncate = (s: string, max: number): string =>
-        s.length > max ? `${s.slice(0, max - 1)}…` : s;
-      const nameN = truncate(stripLatex((f.name || '').trim()), 8);
-      const magN = truncate(stripLatex((f.magnitude || '').trim()), 14);
-      const label = magN && magN !== nameN ? `${nameN} = ${magN}` : nameN;
-      // Expose the force as a targetable feature. Slug uses the original
-      // force name (not the truncated/sanitized display) so the tutor can
-      // predict it: "force-weight", "force-normal", "force-friction", etc.
-      const slug = (f.name || `force-${i + 1}`)
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '') || `force-${i + 1}`;
+      labelX = tipX + dirX * labelOffset + -dirY * perpStep;
+      labelY = tipY + dirY * labelOffset + dirX * perpStep;
+    }
+    // Keep the whole estimated label inside the viewbox.
+    labelX = Math.min(Math.max(labelX, estHalfW(label) + 4), VIEWBOX_W - estHalfW(label) - 4);
+    // Expose the force as a targetable feature. Slug uses the original
+    // force name (not the truncated/sanitized display) so the tutor can
+    // predict it: "force-weight", "force-normal", "force-friction", etc.
+    const slug = (f.name || `force-${i + 1}`)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || `force-${i + 1}`;
+    return { f, i, startX, startY, tipX, tipY, color, label, labelX, labelY, dirY, slug };
+  });
+
+  // Fixed geometry the labels must stay clear of.
+  const labelObstacles: DeoverlapObstacle[] = [
+    // Object glyph + caption block.
+    { left: objX - 38, right: objX + 38, top: objY - 38, bottom: objY + 40 },
+    // Every arrow shaft (padded).
+    ...forceGeoms.map((g): DeoverlapObstacle => ({
+      left: Math.min(g.startX, g.tipX) - 5,
+      right: Math.max(g.startX, g.tipX) + 5,
+      top: Math.min(g.startY, g.tipY) - 5,
+      bottom: Math.max(g.startY, g.tipY) + 5,
+    })),
+  ];
+  if (surface.type === 'inclined' && slopeBottomLeft) {
+    // θ annotation zone at the base-left vertex.
+    labelObstacles.push({
+      left: slopeBottomLeft.x, right: slopeBottomLeft.x + 90,
+      top: slopeBottomLeft.y - 30, bottom: slopeBottomLeft.y + 4,
+    });
+  }
+  const resolvedForceLabels = deoverlapLabels(
+    forceGeoms.map((g): DeoverlapLabel & { slug: string } => ({
+      x: g.labelX, y: g.labelY, text: g.label, fontSize: 13,
+      preferDir: g.dirY > 0.35 ? 'down' : 'up', slug: g.slug,
+    })),
+    FBD_VIEWBOX,
+    { obstacles: labelObstacles, baseline: 'middle' },
+  );
+
+  const renderForces = (): React.ReactElement[] =>
+    forceGeoms.map((g, idx) => {
+      const { f, i, startX, startY, tipX, tipY, color, label, slug } = g;
+      const placed = resolvedForceLabels[idx];
       const forceBBox = {
         cx: (startX + tipX) / 2,
         cy: (startY + tipY) / 2,
@@ -588,8 +652,8 @@ export default function FreeBodyDiagramRenderer({
             markerEnd={`url(#fbd-arrow-${color.replace('#', '')})`}
           />
           <text
-            x={labelX}
-            y={labelY}
+            x={placed.x}
+            y={placed.y}
             fontSize={13}
             fill={color}
             fontWeight={600}
@@ -601,8 +665,6 @@ export default function FreeBodyDiagramRenderer({
         </g>
       );
     });
-
-  const objectCaption = object.mass || object.label;
 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>

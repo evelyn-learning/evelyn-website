@@ -9,6 +9,7 @@
 
 import { useMemo } from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 
 // --- Prop types ---
 
@@ -254,6 +255,70 @@ export function NumberLineRenderer({
   // Helper: convert value to SVG x
   const toX = (v: number) => valueToX(v, min, max);
 
+  // ── Combined annotation-label layout (2026-07-16 live sessions) ──────
+  // Interval, segment and point labels were placed by three independent
+  // systems that all target the same above-line band, so cross-kind
+  // collisions ("diameter" segment label composited into a "diameter
+  // piece" point label) were structurally invisible to each of them.
+  // One deoverlapLabels pass now sees every annotation label plus the
+  // fixed geometry (axis band, tick numerals) as obstacles.
+  const resolvedLabels = useMemo(() => {
+    type AnnLabel = DeoverlapLabel & { key: string };
+    const labels: AnnLabel[] = [];
+    intervals.forEach((iv, i) => {
+      if (!iv.label) return;
+      const x = (valueToX(iv.from, min, max) + valueToX(iv.to, min, max)) / 2;
+      labels.push({ key: `iv-${i}`, x, y: LINE_Y - 16, text: iv.label, fontSize: 11, preferDir: 'up' });
+    });
+    segments.forEach((seg, i) => {
+      if (!seg.label) return;
+      const x = (valueToX(seg.from, min, max) + valueToX(seg.to, min, max)) / 2;
+      const y = seg.arc ? LINE_Y - ARC_HEIGHT - 14 : LINE_Y - 12;
+      labels.push({ key: `seg-${i}`, x, y, text: seg.label, fontSize: 11, preferDir: 'up' });
+    });
+    points.forEach((pt, i) => {
+      if (!pt.label) return;
+      const x = valueToX(pt.value, min, max);
+      // Original cluster-row heuristic, kept as the label's STARTING spot
+      // (rows only knew about other points; the shared pass below now
+      // resolves what the rows could not see).
+      const COLLISION_PX = 24;
+      let row = 0;
+      for (let j = 0; j < i; j++) {
+        if (Math.abs(valueToX(points[j].value, min, max) - x) < COLLISION_PX) row++;
+      }
+      const aboveLine = row % 2 === 0;
+      const ringIndex = Math.floor(row / 2);
+      const labelOffsetY = (POINT_RADIUS + 6 + ringIndex * 12) * (aboveLine ? -1 : 1)
+        + (aboveLine ? 0 : 12);
+      labels.push({
+        key: `pt-${i}`, x, y: LINE_Y + labelOffsetY, text: pt.label, fontSize: 11,
+        preferDir: aboveLine ? 'up' : 'down',
+      });
+    });
+
+    const obstacles: DeoverlapObstacle[] = [
+      // Axis line + ticks + point markers band.
+      { left: 0, right: SVG_WIDTH, top: LINE_Y - 9, bottom: LINE_Y + 9 },
+      // Tick numerals below the line.
+      ...ticks.map((v): DeoverlapObstacle => {
+        const x = valueToX(v, min, max);
+        const halfW = Math.max(8, (formatLabel(v).length * 11 * 0.55) / 2);
+        return { left: x - halfW, right: x + halfW, top: LINE_Y + TICK_HALF + 3, bottom: LINE_Y + TICK_HALF + 17 };
+      }),
+    ];
+
+    const resolved = deoverlapLabels(
+      labels,
+      { width: SVG_WIDTH, height: svgHeight },
+      { obstacles, baseline: 'alphabetic' },
+    );
+    return new Map(resolved.map((l) => [l.key, { x: l.x, y: l.y }]));
+  }, [intervals, segments, points, ticks, min, max, svgHeight]);
+
+  const labelPos = (key: string, fallbackX: number, fallbackY: number) =>
+    resolvedLabels.get(key) ?? { x: fallbackX, y: fallbackY };
+
   return (
     <div className="w-full flex flex-col items-center gap-2">
       {/* Optional title */}
@@ -392,11 +457,11 @@ export function NumberLineRenderer({
                 strokeWidth={2}
               />
 
-              {/* Optional interval label (centered above) */}
+              {/* Optional interval label (centered above; shared de-overlap pass) */}
               {iv.label && (
                 <text
-                  x={(x1 + x2) / 2}
-                  y={LINE_Y - 16}
+                  x={labelPos(`iv-${i}`, (x1 + x2) / 2, LINE_Y - 16).x}
+                  y={labelPos(`iv-${i}`, (x1 + x2) / 2, LINE_Y - 16).y}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="600"
@@ -433,11 +498,11 @@ export function NumberLineRenderer({
                 />
                 {/* Arrowhead at the end of the arc */}
                 <circle cx={x2} cy={LINE_Y} r={3} fill={color} />
-                {/* Label at the apex */}
+                {/* Label at the apex (shared de-overlap pass) */}
                 {seg.label && (
                   <text
-                    x={midX}
-                    y={arcY - 14}
+                    x={labelPos(`seg-${i}`, midX, arcY - 14).x}
+                    y={labelPos(`seg-${i}`, midX, arcY - 14).y}
                     textAnchor="middle"
                     fontSize={11}
                     fontWeight="600"
@@ -465,8 +530,8 @@ export function NumberLineRenderer({
               />
               {seg.label && (
                 <text
-                  x={(x1 + x2) / 2}
-                  y={LINE_Y - 12}
+                  x={labelPos(`seg-${i}`, (x1 + x2) / 2, LINE_Y - 12).x}
+                  y={labelPos(`seg-${i}`, (x1 + x2) / 2, LINE_Y - 12).y}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="600"
@@ -486,23 +551,10 @@ export function NumberLineRenderer({
           const color = pt.color ?? COLOR_POINT;
           const isFilled = pt.style !== 'open';
           const ptName = pt.label ? `point-${featSlug(pt.label)}` : `point-${i + 1}`;
-          // Cluster-aware label placement: points whose x-position is
-          // within ~24px of an EARLIER point get pushed to a higher
-          // (or lower) label row so labels don't pile up. Default
-          // position is above the line; alternate to BELOW the line
-          // when the row above is taken. Beyond 2 rows, alternate
-          // between far-above / far-below to spread further.
-          const COLLISION_PX = 24;
-          let row = 0;
-          for (let j = 0; j < i; j++) {
-            const prevX = toX(points[j].value);
-            if (Math.abs(prevX - x) < COLLISION_PX) row++;
-          }
-          // row 0 = above, row 1 = below, row 2 = further-above, row 3 = further-below, ...
-          const aboveLine = row % 2 === 0;
-          const ringIndex = Math.floor(row / 2);
-          const labelOffsetY = (POINT_RADIUS + 6 + ringIndex * 12) * (aboveLine ? -1 : 1)
-            + (aboveLine ? 0 : 12); // push down by font height when below
+          // Label position comes from the shared de-overlap pass above
+          // (which seeds each point with the historical cluster-row spot,
+          // then resolves against interval/segment labels + axis + ticks).
+          const pos = labelPos(`pt-${i}`, x, LINE_Y - (POINT_RADIUS + 6));
           return (
             <g key={`point-${i}`} {...feat(ptName, { cx: x, cy: LINE_Y, w: 28, h: 32 }, { width: SVG_WIDTH, height: svgHeight })}>
               <circle
@@ -515,8 +567,8 @@ export function NumberLineRenderer({
               />
               {pt.label && (
                 <text
-                  x={x}
-                  y={LINE_Y + labelOffsetY}
+                  x={pos.x}
+                  y={pos.y}
                   textAnchor="middle"
                   fontSize={11}
                   fontWeight="600"

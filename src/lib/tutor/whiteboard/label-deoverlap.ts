@@ -35,6 +35,20 @@ export interface DeoverlapLabel {
   fontSize: number;
   /** SVG text-anchor; default 'middle'. */
   anchor?: 'start' | 'middle' | 'end';
+  /** Nudge direction tried FIRST for this label when it collides
+   *  (falls back to the other direction). Overrides options.preferDir.
+   *  Lets a caller keep below-axis labels moving down and above-axis
+   *  labels moving up in one pass (NumberLineRenderer). */
+  preferDir?: 'down' | 'up';
+}
+
+/** Fixed rectangle labels must avoid but that never moves (axis bands,
+ *  arrow shafts, the diagram object itself...). */
+export interface DeoverlapObstacle {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
 }
 
 export interface DeoverlapOptions {
@@ -50,6 +64,13 @@ export interface DeoverlapOptions {
   baseline?: 'middle' | 'alphabetic';
   /** Keep boxes at least this far inside the bounds when clamping (default 1). */
   edgePad?: number;
+  /** Nudge direction tried first for colliding labels (default 'down').
+   *  A label's own preferDir wins over this. */
+  preferDir?: 'down' | 'up';
+  /** Fixed boxes labels must stay clear of (never moved, never reported).
+   *  Renderer geometry such as the number-line axis band or FBD arrow
+   *  shafts — added 2026-07-19 (label-collision live sessions). */
+  obstacles?: readonly DeoverlapObstacle[];
 }
 
 interface Box {
@@ -97,6 +118,8 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
     pad: options.pad ?? 1,
     baseline: options.baseline ?? 'middle',
     edgePad: options.edgePad ?? 1,
+    preferDir: options.preferDir ?? 'down',
+    obstacles: options.obstacles ?? [],
   };
 
   // Reading order: original y, then x, then input index (stable tiebreak).
@@ -105,7 +128,9 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
     .sort((a, b) => labels[a].y - labels[b].y || labels[a].x - labels[b].x || a - b);
 
   const out: T[] = new Array(labels.length);
-  const placed: Box[] = [];
+  // Obstacles are pre-placed immovable boxes: labels route around them
+  // exactly as they do around already-placed labels.
+  const placed: Box[] = o.obstacles.map((b) => ({ ...b }));
 
   /** y that puts the label's box top at `top`. */
   const yForTop = (l: T, top: number): number => {
@@ -146,10 +171,12 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
       placed.push(original);
       continue;
     }
-    // Prefer stacking DOWN (reading order flows downward); go UP only when
-    // the bottom of the canvas would clip; clamp as a last resort.
-    let y = resolve(l, 1);
-    if (y === null) y = resolve(l, -1);
+    // Prefer stacking in the label's / caller's preferred direction
+    // (default DOWN — reading order flows downward); fall back to the
+    // opposite side when the canvas edge would clip; clamp as a last resort.
+    const firstDir: 1 | -1 = (l.preferDir ?? o.preferDir) === 'up' ? -1 : 1;
+    let y = resolve(l, firstDir);
+    if (y === null) y = resolve(l, firstDir === 1 ? -1 : 1);
     if (y === null) {
       const h = l.fontSize * o.lineHeight;
       const down = resolveUnbounded(l, placed, o);
