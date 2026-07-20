@@ -1,0 +1,81 @@
+[
+  {
+    "id": "fx-m1-1",
+    "loId": "fx.lo1",
+    "topic": "Fixture",
+    "topicId": "fixture",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is 1 + 1?",
+    "choices": ["2", "3", "4", "5"],
+    "answer": "A",
+    "solutionText": "1 + 1 = 2, choice A.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "fx-m1-2",
+    "loId": "fx.lo1",
+    "topic": "Fixture",
+    "topicId": "fixture",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is 2 + 1?",
+    "choices": ["2", "3", "4", "5"],
+    "answer": "B",
+    "solutionText": "2 + 1 = 3, choice B.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "fx-m2e-1",
+    "loId": "fx.lo2",
+    "topic": "Fixture",
+    "topicId": "fixture",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is 3 + 1?",
+    "choices": ["2", "3", "4", "5"],
+    "answer": "A",
+    "solutionText": "3 + 1 = 4, choice A.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "fx-m2h-1",
+    "loId": "fx.lo2",
+    "topic": "Fixture",
+    "topicId": "fixture",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "What is 40 + 2?",
+    "answer": "42",
+    "solutionText": "40 + 2 = 42.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "fx-frq-1",
+    "loId": "fx.lo3",
+    "topic": "Fixture",
+    "topicId": "fixture",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Explain why the sum of two even integers is even.",
+    "answer": "see rubric",
+    "solutionText": "Any two even integers can be written as 2k and 2m; their sum 2k + 2m = 2(k + m) is even.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "States 2k+2m form",
+          "modelResponse": "Let the two even integers be 2k and 2m for integers k, m."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Concludes 2(k+m) is even",
+          "modelResponse": "Then 2k + 2m = 2(k + m), which is even since it is 2 times an integer."
+        }
+      ]
+    }
+  }
+]

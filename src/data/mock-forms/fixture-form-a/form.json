@@ -1,0 +1,22 @@
+{
+  "formId": "fixture-form-a",
+  "examKey": "fixture",
+  "topicIds": ["fixture"],
+  "label": "Fixture Form A",
+  "sections": [
+    {
+      "sectionId": "sec1",
+      "modules": [
+        { "moduleId": "m1", "itemIds": ["fx-m1-1", "fx-m1-2"] },
+        { "moduleId": "m2-easy", "itemIds": ["fx-m2e-1"] },
+        { "moduleId": "m2-hard", "itemIds": ["fx-m2h-1"] }
+      ]
+    },
+    {
+      "sectionId": "sec2",
+      "modules": [
+        { "moduleId": "frq", "itemIds": ["fx-frq-1"] }
+      ]
+    }
+  ]
+}
