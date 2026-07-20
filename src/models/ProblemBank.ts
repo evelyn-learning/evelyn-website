@@ -105,6 +105,26 @@ export interface IProblemBank extends Document {
   updatedAt: Date;
 }
 
+// FRQ rubric subdocuments (Task 2, mock-exams platform) — standalone
+// _id-less sub-schemas so rubric / rubric.parts[] serialize without a
+// stray Mongoose-injected _id (matches the MockAttempt cursor/scaled fix).
+const RubricPartSchema = new Schema(
+  {
+    criterionId: { type: String, required: true },
+    maxPoints: { type: Number, required: true },
+    scoringCriteria: { type: String, required: true },
+    modelResponse: { type: String, required: true },
+  },
+  { _id: false }
+);
+
+const RubricSchema = new Schema(
+  {
+    parts: { type: [RubricPartSchema], required: true },
+  },
+  { _id: false }
+);
+
 const ProblemBankSchema = new Schema<IProblemBank>(
   {
     id: { type: String, required: true, unique: true, trim: true },
@@ -118,14 +138,7 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     passageId: { type: String, required: false },
     bankScope: { type: String, enum: ['practice', 'mock'] },
     rubric: {
-      type: {
-        parts: [{
-          criterionId: { type: String, required: true },
-          maxPoints: { type: Number, required: true },
-          scoringCriteria: { type: String, required: true },
-          modelResponse: { type: String, required: true },
-        }],
-      },
+      type: RubricSchema,
       required: false,
       default: undefined,
     },
