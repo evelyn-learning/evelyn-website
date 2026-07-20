@@ -26,6 +26,7 @@
     "test:portal-assessment": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-assessment.ts",
     "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints && npm run test:portal-assessment",
     "test:mock-blueprints": "npx tsx src/lib/tutor/mock-exam/blueprints/blueprints.test.ts",
+    "test:mock-scoring": "npx tsx src/lib/tutor/mock-exam/scoring.test.ts",
     "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
