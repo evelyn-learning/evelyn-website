@@ -34,8 +34,8 @@
     "responseFormat": "mcq",
     "problemText": "What is 3 + 1?",
     "choices": ["2", "3", "4", "5"],
-    "answer": "A",
-    "solutionText": "3 + 1 = 4, choice A.",
+    "answer": "C",
+    "solutionText": "3 + 1 = 4, choice C.",
     "bankScope": "mock"
   },
   {
