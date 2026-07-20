@@ -121,6 +121,10 @@ async function queryBank(
   const filter: Record<string, unknown> = {
     topic,
     difficulty,
+    // Mock-form rows (bankScope:'mock') are full-length-exam-only content and
+    // must never leak into the adaptive-pacing practice pipeline (Task 2,
+    // mock-exams platform).
+    bankScope: { $ne: 'mock' },
   };
   // Lesson scoping (Round-18, tightened Round-22 after session
   // portal-cbd93b08 served course-wide corpus items into a limits lesson —

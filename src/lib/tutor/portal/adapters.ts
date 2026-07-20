@@ -52,7 +52,12 @@ function toBankLite(b: IProblemBank): BankLite {
 async function safeBankQuery(filter: Record<string, unknown>): Promise<BankLite[]> {
   try {
     await connectDB();
-    const rows = (await ProblemBank.find(filter).limit(50).lean()) as unknown as IProblemBank[];
+    // Mock-form rows (bankScope:'mock') are full-length-exam-only content and
+    // must never leak into practice/tutor serving — single choke point for
+    // both bankForLoId and bankForTopic (Task 2, mock-exams platform).
+    const rows = (await ProblemBank.find({ ...filter, bankScope: { $ne: 'mock' } })
+      .limit(50)
+      .lean()) as unknown as IProblemBank[];
     return rows.map(toBankLite);
   } catch {
     return [];
@@ -189,7 +194,9 @@ export async function resolveAssessmentItem(itemId: string): Promise<ResolvedAss
   // reference `answer` is the key). No cross-plan scan (that mis-resolved keys).
   try {
     await connectDB();
-    const b = (await ProblemBank.findOne({ id: itemId }).lean()) as unknown as IProblemBank | null;
+    // Mock-form rows never resolve as a gradable assessment item outside the
+    // mock-exam flow (Task 2, mock-exams platform).
+    const b = (await ProblemBank.findOne({ id: itemId, bankScope: { $ne: 'mock' } }).lean()) as unknown as IProblemBank | null;
     if (b) {
       const choices = b.choices?.map((t, i) => ({ id: String.fromCharCode(65 + i), text: t }));
       // Bank MCQs store the correct choice LETTER in `answer`. Surface it as

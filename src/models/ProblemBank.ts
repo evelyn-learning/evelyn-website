@@ -52,6 +52,19 @@ export interface IProblemBank extends Document {
   cedCode?: string;
   /** Optional shared stimulus passage this prompt analyzes (passages/store). */
   passageId?: string;
+  /** 'mock' rows belong to full-length mock forms and are EXCLUDED from all
+   *  practice/tutor/assessment serving. Absent/'practice' = normal bank row. */
+  bankScope?: 'practice' | 'mock';
+  /** FRQ rubric for mock free-response items (same shape as lesson-plan
+   *  FrqRubric / contract FrqRubricSchema). Absent for mcq/numeric. */
+  rubric?: {
+    parts: Array<{
+      criterionId: string;
+      maxPoints: number;
+      scoringCriteria: string;
+      modelResponse: string;
+    }>;
+  };
   /** Canonical problem statement, ready for show_problem. May
    *  contain LaTeX; markdown allowed. */
   problemText: string;
@@ -103,6 +116,19 @@ const ProblemBankSchema = new Schema<IProblemBank>(
     topicId: { type: String },
     cedCode: { type: String },
     passageId: { type: String, required: false },
+    bankScope: { type: String, enum: ['practice', 'mock'] },
+    rubric: {
+      type: {
+        parts: [{
+          criterionId: { type: String, required: true },
+          maxPoints: { type: Number, required: true },
+          scoringCriteria: { type: String, required: true },
+          modelResponse: { type: String, required: true },
+        }],
+      },
+      required: false,
+      default: undefined,
+    },
     problemText: { type: String, required: true },
     answer: { type: String, required: true },
     solutionText: { type: String },
@@ -128,6 +154,9 @@ ProblemBankSchema.index({ topic: 1, subtopic: 1, difficulty: 1 });
 // Gap-targeted practice retrieval (Phase 3(c)) — new, additive index.
 // Sparse so the existing un-tagged corpus isn't indexed.
 ProblemBankSchema.index({ loId: 1, difficulty: 1 }, { sparse: true });
+// Mock-form item fetches (Task 2, mock-exams platform) — sparse so the
+// existing practice corpus (bankScope absent) isn't indexed.
+ProblemBankSchema.index({ bankScope: 1, id: 1 }, { sparse: true });
 
 export const ProblemBank =
   mongoose.models.ProblemBank ||
