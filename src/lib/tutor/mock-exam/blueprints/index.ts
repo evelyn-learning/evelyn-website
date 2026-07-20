@@ -1,8 +1,10 @@
 import type { ExamBlueprint } from './types';
 import { FIXTURE_BLUEPRINT } from './fixture';
+import { DIGITAL_SAT_BLUEPRINT } from './digital-sat';
 
 const REGISTRY: Record<string, ExamBlueprint> = {
   [FIXTURE_BLUEPRINT.examKey]: FIXTURE_BLUEPRINT,
+  [DIGITAL_SAT_BLUEPRINT.examKey]: DIGITAL_SAT_BLUEPRINT,
 };
 
 export function getBlueprint(examKey: string): ExamBlueprint {

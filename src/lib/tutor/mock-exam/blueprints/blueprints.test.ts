@@ -29,6 +29,19 @@ async function run() {
     delete bp.scoring.curves[bp.sections[0].sectionId];
     assert.ok(validateBlueprint(bp).length > 0);
   });
+  await test('digital-sat blueprint: 2 sections, adaptive, correct counts/times', () => {
+    const bp = getBlueprint('digital-sat');
+    assert.deepEqual(bp.sections.map((s) => s.sectionId), ['rw', 'math']);
+    const rw = bp.sections[0], math = bp.sections[1];
+    assert.deepEqual(rw.modules.map((m) => m.questionCount), [27, 27, 27]);
+    assert.deepEqual(math.modules.map((m) => m.questionCount), [22, 22, 22]);
+    assert.equal(rw.modules[0].timeLimitMin, 32);
+    assert.equal(math.modules[0].timeLimitMin, 35);
+    assert.equal(rw.breakAfterMin, 10);
+    assert.equal(rw.tools.desmos, false);
+    assert.equal(math.tools.desmos, true);
+    assert.deepEqual(validateBlueprint(bp), []);
+  });
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }
