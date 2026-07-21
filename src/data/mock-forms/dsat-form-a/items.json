@@ -1,0 +1,3140 @@
+[
+  {
+    "id": "dsat-fa-rw1-001",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Mangrove trees survive in salty coastal waters that would kill most other plants. Their root systems act as natural filters, allowing fresh water to pass through while blocking much of the salt. Botanists describe this filtering ability as remarkably ______, since it lets mangroves thrive in conditions few competitors can tolerate.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "efficient",
+      "temporary",
+      "accidental",
+      "reversible"
+    ],
+    "answer": "A",
+    "solutionText": "The passage describes a filtering process that lets mangroves outcompete rivals, so the missing word should mean effective; 'efficient' fits, while the other options contradict the described success.",
+    "hints": [
+      "Look for a word that matches the described success of the filtering process."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-002",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Deep-sea anglerfish lure prey using a bioluminescent appendage that dangles above their mouths like bait. Because sunlight never reaches these depths, the glowing lure is ______ against the surrounding blackness, drawing curious prey close enough to be caught in an instant.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "invisible",
+      "conspicuous",
+      "redundant",
+      "fragile"
+    ],
+    "answer": "B",
+    "solutionText": "The passage explains that the lure stands out sharply against total blackness to attract prey, so the missing word must mean highly visible; 'conspicuous' fits best.",
+    "hints": [
+      "Consider what the surrounding blackness would make a bright light appear like."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-003",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When a small publishing house acquired the rights to an obscure translated novel, industry analysts called the move ______, since the house had never before invested in a foreign-language title and risked alienating its established readership.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "predictable",
+      "trivial",
+      "audacious",
+      "delayed"
+    ],
+    "answer": "C",
+    "solutionText": "The publisher took an unprecedented risk with an untested genre, so the missing word should convey boldness verging on riskiness; 'audacious' fits best.",
+    "hints": [
+      "Think about what makes an unprecedented business move risky."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-004",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city planner's report begins by describing the traffic congestion on Elm Street during rush hour. It then compares three possible solutions -- a new traffic light, a roundabout, and a dedicated bus lane -- weighing the cost and expected delay reduction of each before recommending the roundabout as the most cost-effective option.\n\nWhich choice best describes the overall structure of the text?",
+    "choices": [
+      "It narrates a historical event in chronological order.",
+      "It defines a technical term and provides examples.",
+      "It presents two opposing opinions without resolution.",
+      "It presents a problem, evaluates multiple solutions, and recommends one."
+    ],
+    "answer": "D",
+    "solutionText": "The passage first identifies a traffic problem, then compares three solutions with costs and benefits, then recommends one -- a classic problem/solutions/recommendation structure.",
+    "hints": [
+      "Track the passage's structure: problem, then solutions, then recommendation."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-005",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A historian's essay on the printing press opens by noting that handwritten manuscripts took months to produce. The essay then shifts to describe Gutenberg's movable-type press, emphasizing how quickly copies could be made once the technology spread. In its final paragraph, the essay notes that literacy rates in Europe did not rise sharply until nearly a century after the press was introduced, complicating any simple narrative of technological progress.\n\nWhich choice best describes the function of the final paragraph in the text as a whole?",
+    "choices": [
+      "It complicates the preceding narrative by noting a delayed effect.",
+      "It summarizes the essay's central claim about Gutenberg's engineering skill.",
+      "It introduces a new historical figure to contrast with Gutenberg.",
+      "It refutes the claim that the printing press was significant."
+    ],
+    "answer": "A",
+    "solutionText": "The final paragraph adds a complication (literacy didn't rise for a century) to the earlier, more straightforward account of the press's impact, so it complicates rather than simply summarizes or refutes.",
+    "hints": [
+      "Consider whether the final paragraph confirms or adds nuance to the earlier account."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-006",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: A behavioral economist argues that people underestimate how much a small daily expense, like a coffee purchase, adds up over a year, and that pointing this out to consumers reliably changes their spending habits.\n\nText 2: A separate study tracked consumers who were shown exactly this kind of yearly total for their small purchases and found that most continued spending at the same rate, suggesting that awareness of a cost rarely changes behavior on its own.\n\nBased on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
+    "choices": [
+      "By agreeing that awareness alone is generally sufficient to change spending habits.",
+      "By questioning whether awareness of cumulative costs reliably changes behavior.",
+      "By arguing that daily expenses are impossible to track accurately.",
+      "By suggesting that consumers already know how much small purchases cost."
+    ],
+    "answer": "B",
+    "solutionText": "Text 2's finding that awareness didn't change behavior directly challenges Text 1's claim that pointing out costs reliably changes habits, so the author of Text 2 would question that reliability.",
+    "hints": [
+      "Compare what Text 1 claims with what Text 2 actually found."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-007",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: An ecologist contends that reintroducing wolves to a region reduces deer overpopulation, which in turn allows overgrazed vegetation to recover, benefiting many other species indirectly.\n\nText 2: A wildlife manager who studied a similar reintroduction found that deer populations initially dropped but rebounded within a decade as deer adapted their grazing patterns to avoid wolf territory, leaving vegetation recovery uneven across the region.\n\nWhich choice best describes how the information in Text 2 relates to the claim in Text 1?",
+    "choices": [
+      "It confirms Text 1's claim without qualification.",
+      "It contradicts Text 1 by claiming deer populations continued declining indefinitely.",
+      "It suggests that the benefits described in Text 1 may be more limited or uneven than implied.",
+      "It shows that wolf reintroduction has no effect on deer populations."
+    ],
+    "answer": "C",
+    "solutionText": "Text 2 shows deer adapting and vegetation recovering unevenly, which qualifies rather than fully confirms or denies Text 1's claim about wolf reintroduction's benefits.",
+    "hints": [
+      "Notice that Text 2's outcome is partial, not a full confirmation or denial."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-008",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Lichens are not single organisms but partnerships between fungi and algae (or cyanobacteria). The fungus provides structure and protection, while the algae or cyanobacteria produce food through photosynthesis. This partnership allows lichens to survive in extreme environments, from Arctic tundra to bare rock faces, where neither partner could survive alone.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Lichens are fungi that have evolved to photosynthesize on their own.",
+      "Algae are more important to lichen survival than fungi are.",
+      "Lichens are found exclusively in Arctic environments.",
+      "Lichens survive harsh environments because they are cooperative partnerships between two organisms."
+    ],
+    "answer": "D",
+    "solutionText": "The passage's central claim is that lichens survive extreme environments because they are a cooperative partnership of two organisms.",
+    "hints": [
+      "Find the sentence that states why lichens can survive where neither partner could alone."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-009",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For decades, city planners assumed that widening highways would reduce traffic congestion by increasing road capacity. However, transportation researchers have repeatedly observed that added lanes tend to fill with new drivers within a few years, a phenomenon known as induced demand. As a result, many cities have shifted funding away from highway expansion and toward public transit projects, which do not appear to generate the same rebound in congestion.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Because added highway capacity tends to be absorbed by new traffic, some cities have redirected funding toward transit.",
+      "Highway widening is the most effective way to reduce traffic congestion.",
+      "Public transit projects are always cheaper to build than highways.",
+      "Traffic congestion has decreased in most major cities over the past decade."
+    ],
+    "answer": "A",
+    "solutionText": "The passage's main idea is that because added highway capacity tends to get absorbed by new traffic (induced demand), cities have shifted funding toward transit instead.",
+    "hints": [
+      "Look for the sentence explaining why cities changed their funding priorities."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-010",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A logistics manager noticed that delivery trucks assigned to routes with dedicated turn lanes completed their routes an average of twelve minutes faster than trucks on routes without such lanes, even though both sets of routes covered roughly the same total distance. She also observed that trucks on routes with turn lanes came to a complete stop at intersections far less often than the other trucks did.\n\nBased on the text, which choice most reasonably completes the implied explanation for the difference in route completion time?",
+    "choices": [
+      "the trucks assigned to routes with turn lanes carried lighter loads.",
+      "fewer complete stops at intersections allowed those trucks to maintain a more consistent speed.",
+      "the routes without turn lanes were monitored less closely by dispatchers.",
+      "the manager assigned her most experienced drivers to routes with turn lanes."
+    ],
+    "answer": "B",
+    "solutionText": "Because the trucks on turn-lane routes stopped less often at intersections, they could maintain more consistent speed, which best explains their faster completion times despite similar distances.",
+    "hints": [
+      "Compare how often each group of trucks had to stop at intersections, not just the distance covered."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-011",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A linguist studying an isolated island community found that younger residents used a certain vowel sound that appeared in no recordings of the community's speech from fifty years earlier. Oddly, the same vowel sound was common in a mainland dialect that island residents had almost no direct contact with, aside from a handful of radio broadcasts that began reaching the island roughly twenty years ago.\n\nBased on the text, which choice most reasonably explains the appearance of the vowel sound?",
+    "choices": [
+      "The vowel sound arose independently on the island through unrelated language change.",
+      "Island residents traveled frequently to the mainland and adopted the pronunciation directly.",
+      "Exposure to mainland speech through radio broadcasts may have influenced the island dialect.",
+      "The fifty-year-old recordings were inaccurate and failed to capture the vowel sound."
+    ],
+    "answer": "C",
+    "solutionText": "Because the vowel sound appears only after radio contact began and matches a mainland dialect, radio exposure is the most reasonable explanation among the choices.",
+    "hints": [
+      "Note the timing: the vowel sound appears only after mainland radio contact began."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-012",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nutritionist argues that snacking between meals does not necessarily lead to weight gain, contrary to popular belief.\n\nWhich finding, if true, would most directly support the nutritionist's claim?",
+    "choices": [
+      "A study found that participants who snacked on high-calorie foods between meals gained more weight than those who did not snack.",
+      "A survey found that most people believe snacking leads to weight gain.",
+      "A study found that skipping meals entirely led to greater weight loss than snacking.",
+      "A study found no significant difference in weight change between participants who snacked on modest portions and those who did not snack at all, when total daily calories were held constant."
+    ],
+    "answer": "D",
+    "solutionText": "A study showing no weight difference when snacking on modest portions with total calories controlled directly supports the claim that snacking doesn't necessarily cause weight gain.",
+    "hints": [
+      "Look for a finding that isolates snacking from total calorie intake."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-013",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A marine biologist claims that sea otters play a critical role in maintaining healthy kelp forest ecosystems by controlling sea urchin populations, which would otherwise overgraze the kelp.\n\nWhich finding, if true, would most directly support the marine biologist's claim?",
+    "choices": [
+      "Kelp forests without sea otters showed a sharp increase in sea urchins and a corresponding decline in kelp cover.",
+      "Sea otters spend most of their time floating on their backs near the ocean surface.",
+      "Sea urchins are also eaten by several species of fish.",
+      "Kelp forests are found in cold coastal waters around the world."
+    ],
+    "answer": "A",
+    "solutionText": "A direct observation that urchins increase and kelp declines specifically in the absence of otters is the strongest direct support for the claim that otters control urchins and protect kelp.",
+    "hints": [
+      "Look for the finding that directly links otter absence to urchin increase and kelp decline."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-014",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A public health researcher claims that a city's new streetlight program, which brightened poorly lit intersections, was the primary reason for the drop in nighttime pedestrian accidents last year.\n\nWhich finding would most directly weaken the researcher's claim?",
+    "choices": [
+      "The city's overall population grew by less than one percent that year.",
+      "Nighttime pedestrian accidents dropped by a similar percentage in a neighboring city that did not install new streetlights that year.",
+      "The streetlight program was completed on schedule and under budget.",
+      "The new streetlights used energy-efficient LED bulbs rather than traditional sodium-vapor bulbs."
+    ],
+    "answer": "B",
+    "solutionText": "If a neighboring city without new streetlights saw a similar drop in nighttime pedestrian accidents, some other factor besides the streetlights likely caused the decline, weakening the researcher's causal claim.",
+    "hints": [
+      "Look for a finding that shows the drop happened even without streetlights."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-015",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Researchers spent months cataloging fossils from three continents. To keep their notes organized, they built a detailed log______ carefully labeling each specimen by continent of origin.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "log; carefully",
+      "log. carefully",
+      "log, carefully",
+      "log carefully"
+    ],
+    "answer": "C",
+    "solutionText": "The phrase 'carefully labeling each specimen' is a participial phrase describing how the log was built, not an independent clause, so it should be set off with a comma rather than joined with a semicolon (which requires two independent clauses) or split into a fragment with a lowercase period break.",
+    "hints": [
+      "Ask whether what follows the blank is a complete, independent clause."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-016",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The research team faced a difficult choice______ delay the expedition until spring or risk crossing the mountains before the first snowfall.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "choice, delay",
+      "choice; delay",
+      "choice. Delay",
+      "choice: delay"
+    ],
+    "answer": "D",
+    "solutionText": "The phrase after the blank explains what the 'difficult choice' consists of, so a colon is the correct connector; a semicolon or period would require an independent clause, and a comma alone creates a weak, unclear connection.",
+    "hints": [
+      "Consider what kind of punctuation introduces an explanation of a preceding noun."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-017",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Each of the volunteers ______ assigned a specific task before the event began.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "was",
+      "were",
+      "are",
+      "have been"
+    ],
+    "answer": "A",
+    "solutionText": "The subject 'Each' is singular, so it takes the singular verb 'was' rather than a plural verb form.",
+    "hints": [
+      "Check whether 'each' is singular or plural."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-018",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Neither the coach nor the players expected the tournament to be rescheduled, but ______ adjusted quickly once the new dates were announced.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "it",
+      "they",
+      "he",
+      "each"
+    ],
+    "answer": "B",
+    "solutionText": "With 'neither...nor,' the pronoun agrees with the nearer noun, 'players,' which is plural, so 'they' is correct.",
+    "hints": [
+      "With 'neither...nor,' the verb or pronoun matches the noun closer to it."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-019",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "By the time the inspector arrived, the construction crew ______ the scaffolding around the entire building.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "has erected",
+      "erects",
+      "had erected",
+      "was erecting"
+    ],
+    "answer": "C",
+    "solutionText": "Because the crew's erecting was completed before the inspector's arrival (an earlier past action), the past perfect 'had erected' is required.",
+    "hints": [
+      "Determine which action happened first, relative to the inspector's arrival."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-020",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Scientists have long assumed that the ancient bridge, ______ by Roman engineers nearly two thousand years ago, could not have survived repeated flooding without significant repairs.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "building",
+      "having built",
+      "builds",
+      "built"
+    ],
+    "answer": "D",
+    "solutionText": "The passive participle 'built' correctly modifies 'bridge' (which was built by Roman engineers), while the other forms wrongly imply the bridge did the building or aren't valid modifiers here.",
+    "hints": [
+      "Ask who or what performed the action described by the modifier."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-021",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The two researchers presented ______ findings at the conference before taking questions from the audience.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "their",
+      "it's",
+      "its",
+      "there"
+    ],
+    "answer": "A",
+    "solutionText": "The plural possessive pronoun 'their' correctly matches the plural antecedent 'researchers.'",
+    "hints": [
+      "Determine whether the pronoun needs to be singular or plural, and possessive or not."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-022",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The bakery's new sourdough loaf uses a fermentation process that takes nearly three days to complete. ______, the finished bread has a noticeably tangier flavor than loaves made with a same-day process.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "However",
+      "As a result",
+      "For example",
+      "In contrast"
+    ],
+    "answer": "B",
+    "solutionText": "The longer fermentation process is the cause of the tangier flavor, so the result-indicating transition 'As a result' fits.",
+    "hints": [
+      "Look for the logical relationship between the fermentation time and the flavor result."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-023",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The new highway bypass was expected to reduce traffic through the town center significantly. ______, many drivers continued using the old route out of habit, and congestion downtown barely changed.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Similarly",
+      "Consequently",
+      "Instead",
+      "For instance"
+    ],
+    "answer": "C",
+    "solutionText": "The outcome (drivers stuck to the old route) is the opposite of what was expected, so the contrastive transition 'Instead' fits best.",
+    "hints": [
+      "Compare what was expected with what actually happened."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-024",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The committee had assumed that offering a later deadline would reduce the number of late submissions. ______, submissions arrived at roughly the same rate throughout the extended period as they had before, suggesting that the deadline itself was not the primary factor influencing when students worked.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Nevertheless",
+      "Likewise",
+      "Therefore",
+      "In fact"
+    ],
+    "answer": "D",
+    "solutionText": "'In fact' introduces a surprising detail that reveals the assumption was mistaken, fitting the reveal that submission timing didn't actually change.",
+    "hints": [
+      "Consider which transition best introduces a fact that undercuts an assumption."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-025",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "While researching sourdough bread, a student has taken the following notes:\n\u2022 Sourdough relies on a natural culture of wild yeast and bacteria rather than commercial yeast.\n\u2022 The fermentation process typically takes 12 to 72 hours, depending on temperature.\n\u2022 Longer fermentation breaks down more gluten, which some people with mild gluten sensitivity tolerate better.\n\u2022 Commercial yeast breads typically ferment in under 3 hours.\n\nThe student wants to explain why sourdough bread may be easier for some people to digest than bread made with commercial yeast. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Because sourdough's longer fermentation process breaks down more gluten, some people with mild gluten sensitivity find it easier to digest than commercial yeast bread.",
+      "Sourdough bread relies on wild yeast and bacteria, while commercial yeast breads ferment in under three hours.",
+      "Sourdough bread takes between 12 and 72 hours to ferment, depending on the surrounding temperature.",
+      "Commercial yeast has been used in bread-making for a much shorter time than wild yeast cultures have."
+    ],
+    "answer": "A",
+    "solutionText": "Choice A directly uses the note about longer fermentation breaking down more gluten to explain why sourdough may be easier to digest, matching the student's stated goal.",
+    "hints": [
+      "Find the note that connects fermentation length to digestibility."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-026",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "While researching two nearby wetlands, a student has taken the following notes:\n\u2022 Wetland A lost 15 percent of its native bird species over the past twenty years.\n\u2022 Wetland B, which sits just eight miles from Wetland A, lost only 3 percent of its native bird species over the same period.\n\u2022 Wetland A borders a rapidly expanding suburb, while Wetland B borders mostly undeveloped farmland.\n\u2022 Both wetlands receive similar annual rainfall and were surveyed using the same methodology.\n\nThe student wants to suggest that nearby development, rather than regional climate factors, most likely explains the difference in bird species loss between the two wetlands. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Wetland A and Wetland B receive similar annual rainfall and were surveyed using the same methodology, ensuring the comparison is reliable.",
+      "Because Wetland A borders a rapidly expanding suburb while similarly rainy Wetland B borders undeveloped farmland, nearby development is a more likely explanation for Wetland A's greater bird species loss than regional climate.",
+      "Wetland A lost 15 percent of its native bird species, while Wetland B lost only 3 percent, over the past twenty years.",
+      "Wetland B sits just eight miles from Wetland A and borders mostly undeveloped farmland."
+    ],
+    "answer": "B",
+    "solutionText": "Choice B combines the development-vs-farmland contrast with the shared rainfall/methodology notes to argue development, not climate, explains the difference in bird loss.",
+    "hints": [
+      "Find the notes that isolate development as the differing factor between the two wetlands."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw1-027",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "While researching two food delivery startups, a student has taken the following notes:\n\u2022 Startup X raised 2 million dollars in its first funding round and expanded to five cities within a year.\n\u2022 Startup Y raised 8 million dollars in its first funding round but expanded to only two cities within a year, citing driver shortages.\n\u2022 Startup X partnered with existing local taxi companies to supply drivers in each new city.\n\u2022 Startup Y attempted to recruit and train drivers independently in each new city.\n\nThe student wants to explain why Startup X expanded to more cities than Startup Y despite raising less money. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Startup X raised 2 million dollars while Startup Y raised 8 million dollars in their respective first funding rounds.",
+      "Startup Y cited driver shortages as a reason for its slower expansion into new cities.",
+      "By partnering with existing local taxi companies rather than recruiting drivers independently, Startup X was able to expand to more cities than the more heavily funded Startup Y.",
+      "Startup X expanded to five cities within a year, while Startup Y expanded to only two."
+    ],
+    "answer": "C",
+    "solutionText": "Choice C uses the note about partnering with existing taxi companies to explain how Startup X expanded faster despite less funding, directly matching the student's goal.",
+    "hints": [
+      "Find the note that explains how Startup X supplied drivers differently from Startup Y."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-001",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Grandmaster Ines Solano rarely takes risks at the board. She spends long stretches studying an opponent's habits before making a single move, and she is quick to abandon an aggressive plan the moment it looks shaky. Commentators describe her style as ______, noting that patience, not flash, wins her the tournaments she enters most.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "methodical",
+      "impulsive",
+      "erratic",
+      "careless"
+    ],
+    "answer": "A",
+    "solutionText": "The passage describes patient, careful, unhurried decision-making, which matches \"methodical.\" The other options describe hasty or unpredictable behavior, the opposite of what is shown.",
+    "hints": [
+      "Look for the word that matches slow, careful, patient behavior."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-002",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An octopus can change both the color and the texture of its skin in less than a second, blending almost perfectly into coral, sand, or rock. Biologists once assumed this skill required careful visual comparison, but new evidence suggests some of the color-matching happens through light-sensing cells scattered across the skin itself, a discovery that has left many researchers ______.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "unconvinced",
+      "astonished",
+      "indifferent",
+      "unsurprised"
+    ],
+    "answer": "B",
+    "solutionText": "The discovery that skin cells sense light independently is presented as unexpected and remarkable, matching \"astonished.\" The other choices suggest disbelief or a lack of reaction, which contradicts the passage's tone.",
+    "hints": [
+      "The finding is described as surprising to researchers \u2014 pick the word that matches surprise."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-003",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When Denny first opened his bakery, his sourdough loaves came out dense and flat more often than not. Rather than following a single recipe exactly, he adjusted the hydration, the rise time, and the oven temperature after every failed batch, keeping notes on what changed. His ______ approach eventually produced a loaf regulars now request by name.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "careless",
+      "rigid",
+      "experimental",
+      "hasty"
+    ],
+    "answer": "C",
+    "solutionText": "Denny kept changing variables and testing results after each failure, which is an experimental approach. \"Careless,\" \"rigid,\" and \"hasty\" all contradict his careful, iterative process.",
+    "hints": [
+      "He tried different approaches and adjusted based on results each time."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-004",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When the city council proposed replacing every streetlight downtown with a brighter, bluer LED model, residents packed the meeting hall to argue both sides. Supporters said the new lights would cut crime and energy costs; opponents said the glare would disturb sleep and hurt local wildlife. After three hours of testimony, the vote remained ______, with council members still divided.\n\nWhich choice completes the text with the most logical and precise word or phrase?",
+    "choices": [
+      "unanimous",
+      "routine",
+      "forgotten",
+      "contentious"
+    ],
+    "answer": "D",
+    "solutionText": "The vote remained divided after lengthy argument, matching \"contentious.\" \"Unanimous\" and \"routine\" contradict the division described, and \"forgotten\" does not fit a vote that just happened.",
+    "hints": [
+      "The council members were still split \u2014 find the word for ongoing disagreement."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-005",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Glass appears solid, yet some people point out that its atoms are arranged more like those of a liquid than a crystal. This has led to a popular claim that old windowpanes are thicker at the bottom because the glass has slowly flowed downward over centuries. In fact, the uneven thickness comes from how the panes were manufactured, not from any flow.\n\nWhich choice best describes the function of the last sentence in the text?",
+    "choices": [
+      "It corrects a common misconception introduced earlier in the text.",
+      "It introduces a new example unrelated to the glass claim.",
+      "It restates the popular claim in different words.",
+      "It questions whether glass is solid at all."
+    ],
+    "answer": "A",
+    "solutionText": "The last sentence explains the real reason for the uneven glass thickness, correcting the flawed \"glass flows\" explanation given earlier \u2014 that is a correction, not a new example or a restatement.",
+    "hints": [
+      "Compare what the last sentence says to the claim stated just before it."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-006",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A marine biologist studying migratory eels once assumed the animals swam in a fairly direct line from river to breeding ground. After attaching small trackers to dozens of eels, she found their paths looped and doubled back far more than expected, drifting with ocean currents rather than cutting straight across them. The trackers, she concluded, had turned a tidy assumption into a much messier picture.\n\nWhich choice best describes the structure of the text?",
+    "choices": [
+      "It presents a hypothesis and then reports data that supports it without complication.",
+      "It states an initial assumption and then describes findings that revise that assumption.",
+      "It compares two competing theories and endorses neither.",
+      "It narrates events in strict chronological order without evaluating them."
+    ],
+    "answer": "B",
+    "solutionText": "The passage opens with the biologist's assumption of a direct path, then reports tracking data that overturned that assumption \u2014 an initial idea followed by a revision, not simply supporting evidence or a neutral comparison.",
+    "hints": [
+      "Notice the shift from what she \"assumed\" to what the trackers actually showed."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-007",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: A city planner argues that removing street parking in favor of wider sidewalks will draw more pedestrians downtown, pointing to a nearby city where foot traffic rose after a similar change.\n\nText 2: A local shop owner counters that the same nearby city also added a free shuttle at the same time, so the rise in foot traffic cannot be credited to the sidewalks alone.\n\nBased on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?",
+    "choices": [
+      "By agreeing that removing parking was solely responsible for the increase",
+      "By pointing out that another factor may have contributed to the increase, making the cause uncertain",
+      "By denying that foot traffic increased in the nearby city at all",
+      "By proposing that parking be removed everywhere immediately"
+    ],
+    "answer": "B",
+    "solutionText": "Text 2 does not deny the increase in foot traffic; it points out that the shuttle could also explain it, which questions the sidewalk explanation without ruling it out or proposing citywide removal.",
+    "hints": [
+      "Text 2 adds another possible cause rather than denying the outcome altogether."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-008",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Lichens are not single organisms but partnerships between a fungus and an alga (or sometimes a cyanobacterium), living so closely together that they were long mistaken for one species. The fungus provides structure and protection, while the alga uses sunlight to produce food that both partners share. Neither organism grows nearly as well alone as it does in this pairing.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Lichens are a single species that scientists misclassified for centuries.",
+      "Fungi are more important to a lichen's survival than algae are.",
+      "Cyanobacteria are always present in every lichen.",
+      "A lichen is a mutually beneficial partnership between two or more organisms."
+    ],
+    "answer": "D",
+    "solutionText": "The passage explains that a lichen is a fungus and an alga together, each depending on the other \u2014 that partnership is the main idea, not any single organism's dominance or the historical misclassification detail.",
+    "hints": [
+      "Ask what the whole passage is fundamentally about, not just one detail."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-009",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For decades, most maps of ocean currents showed broad, steady rivers of water moving in predictable loops. Satellite data collected since the 1990s has revealed something messier: swirling eddies, some over a hundred miles wide, that break off from the main currents and drift independently for months, carrying heat and nutrients in unpredictable directions.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "Newer data has complicated the once-simple picture of how ocean currents move.",
+      "Ocean currents have remained essentially unchanged since the 1990s.",
+      "Eddies are more important to marine life than main currents are.",
+      "Satellites are unable to accurately track ocean currents."
+    ],
+    "answer": "A",
+    "solutionText": "The passage contrasts an older, simple view of currents with newer, messier satellite findings, so the main idea is that data has complicated the earlier picture, not that currents are unchanged or eddies matter more.",
+    "hints": [
+      "The passage's main point is about how understanding changed over time."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-010",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A small town's only hardware store had operated at the same corner for sixty years when a chain store opened fifteen minutes away with lower prices on nearly everything. A year later, the hardware store was still open, though its owner had started offering same-day tool repairs and free advice on home projects, services the chain store did not provide.\n\nWhich choice best describes what can reasonably be inferred from the text?",
+    "choices": [
+      "The chain store went out of business within a year.",
+      "The hardware store survived partly by offering services the chain store lacked.",
+      "The hardware store lowered its prices to match the chain store.",
+      "Customers stopped needing tool repairs after the chain store opened."
+    ],
+    "answer": "B",
+    "solutionText": "The passage shows the store still open a year later after adding services (repairs, advice) the chain lacked \u2014 supporting the inference that these services helped it survive, not that it matched prices or that the chain closed.",
+    "hints": [
+      "What new services did the store add, and what effect does the passage imply this had?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-011",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher tracking a colony of prairie dogs noticed that individuals gave different alarm calls depending on the type of predator approaching \u2014 one call for hawks, another for coyotes, and a third for humans. When she played a recording of the hawk call with no hawk present, the prairie dogs still dove into their burrows, even though nothing in the sky posed any threat.\n\nWhich choice best describes what can reasonably be inferred from the text?",
+    "choices": [
+      "Prairie dogs can visually distinguish humans from coyotes at long distances.",
+      "The prairie dogs learned to recognize the researcher's equipment.",
+      "The prairie dogs responded to the call itself rather than to an actual hawk.",
+      "Prairie dogs only respond to alarm calls made by other prairie dogs they know personally."
+    ],
+    "answer": "C",
+    "solutionText": "Since the prairie dogs dove for cover even with no real hawk present, they must have been responding to the recorded call itself, not to an actual predator or to familiarity with the researcher.",
+    "hints": [
+      "The hawk was not really there \u2014 what triggered the reaction?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-012",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In an experiment, researchers injected a solution containing a radioactive carbon isotope into a large \"donor\" tree so that any carbon absorbed by the tree could be tracked. Weeks later, they detected trace amounts of the same isotope in the tissue of neighboring trees of a different species that were not physically touching the donor tree, but that were connected to it through threads of soil fungus.\n\nWhich finding from the text most directly supports the claim that trees can share resources through underground fungal networks?",
+    "choices": [
+      "The donor tree was injected with a radioactive isotope.",
+      "The neighboring trees were a different species from the donor tree.",
+      "The radioactive isotope appeared in neighboring trees connected only through fungal threads.",
+      "Researchers waited several weeks before testing the neighboring trees."
+    ],
+    "answer": "C",
+    "solutionText": "The clearest evidence connecting fungal networks to resource sharing is that the isotope appeared in neighboring trees linked only by fungal threads, not the other details about injection or timing.",
+    "hints": [
+      "Find the detail that directly links a fungal connection to resource transfer."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-013",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A historian claims that a medieval town's sudden wealth in the 1300s came primarily from wool exports rather than from a nearby silver mine, as local legend held. Records from the period show that the mine's output declined sharply after 1290, while shipping manifests from the same decades list wool as the town's most frequently exported good by a wide margin.\n\nWhich choice most directly supports the historian's claim?",
+    "choices": [
+      "Shipping manifests show wool as by far the town's most exported good during the relevant decades.",
+      "Local legend attributed the town's wealth to the silver mine.",
+      "The town became wealthy sometime in the 1300s.",
+      "The mine had been profitable in earlier centuries."
+    ],
+    "answer": "A",
+    "solutionText": "The shipping manifests showing wool as the dominant export during the relevant period most directly back the historian's specific claim about wool over the mine.",
+    "hints": [
+      "Look for hard data that ties the town's wealth to wool exports specifically."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-014",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nutrition researcher wanted to know whether a new fertilizer changed the vitamin C content of strawberries. She grew two identical plots of the same strawberry variety, one with the new fertilizer and one without, and tested fruit from each plot at harvest. The untreated plot's berries averaged 58 milligrams of vitamin C per 100 grams; the treated plot's berries averaged 61 milligrams per 100 grams, a difference too small to be considered meaningful given normal variation between plants.\n\nWhich choice best states the finding that most directly supports the researcher's conclusion?",
+    "choices": [
+      "Both plots were grown from the same strawberry variety.",
+      "The difference in average vitamin C content between the two plots was minor.",
+      "The treated plot received the new fertilizer.",
+      "Vitamin C content can vary between individual strawberry plants."
+    ],
+    "answer": "B",
+    "solutionText": "The researcher's conclusion is that the fertilizer made no meaningful difference, and the small gap between 58 and 61 mg is the finding that most directly supports that conclusion.",
+    "hints": [
+      "Which detail speaks directly to whether the difference between the plots mattered?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-015",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The bakery closes at six on weekdays______it stays open until eight on weekends to catch the dinner crowd.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "weekdays, however",
+      "weekdays however,",
+      "weekdays; however,",
+      "weekdays. however"
+    ],
+    "answer": "C",
+    "solutionText": "Two independent clauses joined by a conjunctive adverb like \"however\" require a semicolon before it and a comma after it: \"...weekdays; however, it stays...\"",
+    "hints": [
+      "Both parts of the sentence are complete clauses \u2014 think semicolon before the transition word."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-016",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Owen spent the whole afternoon reorganizing the garage______sorting tools into labeled bins, stacking boxes by size, and sweeping the concrete floor twice.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "garage; sorting",
+      "garage sorting",
+      "garage, and sorting",
+      "garage, sorting"
+    ],
+    "answer": "D",
+    "solutionText": "The phrase after the blank is a participial phrase describing how Owen spent the afternoon, which should be set off with a comma, not joined as a run-on or treated as a separate clause.",
+    "hints": [
+      "The words after the blank describe the action rather than forming a new independent clause."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-017",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The stack of unopened letters on the hallway table ______ larger every week that Grandpa forgets to check the mailbox.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "grows",
+      "grow",
+      "growing",
+      "have grown"
+    ],
+    "answer": "A",
+    "solutionText": "The subject is the singular \"stack,\" not \"letters,\" so the singular verb \"grows\" is correct.",
+    "hints": [
+      "Find the true subject of the sentence \u2014 is it singular or plural?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-018",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Neither the coach nor the assistant referees ______ satisfied with how the final call was explained to the players.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "was",
+      "were",
+      "is",
+      "has been"
+    ],
+    "answer": "B",
+    "solutionText": "In a \"neither...nor\" construction, the verb agrees with the nearer subject, which here is the plural \"referees,\" so \"were\" is correct.",
+    "hints": [
+      "With \"neither...nor,\" the verb matches the noun closest to it."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-019",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "By the time the technicians arrived, the old server had already ______ twice that morning.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "crash",
+      "crashing",
+      "crashed",
+      "crashes"
+    ],
+    "answer": "C",
+    "solutionText": "The past perfect construction (\"had already ______\") requires the past participle \"crashed.\"",
+    "hints": [
+      "After \"had already,\" you need the past participle form of the verb."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-020",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "______, Priya still found the slides awkward when she finally stood in front of the class.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "Having rehearsed the presentation a dozen times, and",
+      "The presentation being rehearsed a dozen times",
+      "To have rehearsed the presentation a dozen times",
+      "Having rehearsed the presentation a dozen times"
+    ],
+    "answer": "D",
+    "solutionText": "\"Having rehearsed the presentation a dozen times\" logically modifies Priya, the person who did the rehearsing, avoiding a dangling modifier; the other choices are grammatically incomplete or illogical as sentence openers.",
+    "hints": [
+      "The opening phrase should describe an action that Priya herself performed."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-021",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The two research teams shared a single laboratory, and each team kept ______ equipment on opposite sides of the room to avoid mix-ups.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "its",
+      "their",
+      "it's",
+      "they're"
+    ],
+    "answer": "A",
+    "solutionText": "\"Each team\" is singular, so the singular possessive pronoun \"its\" is correct; \"their\" does not agree in number, and \"it's\"/\"they're\" are contractions, not possessives.",
+    "hints": [
+      "\"Each team\" is singular \u2014 which possessive pronoun matches?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-022",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city's public library extended its hours last year to include Sunday afternoons, hoping to attract more visitors. ______, weekday morning visits dropped by nearly the same amount that Sunday visits rose, suggesting the change mostly shifted when people came rather than how many came.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "For example",
+      "However",
+      "Similarly",
+      "As a result"
+    ],
+    "answer": "B",
+    "solutionText": "The second sentence reports an outcome that undercuts the library's goal (weekday visits dropped as Sunday visits rose), so a contrast word like \"however\" is needed.",
+    "hints": [
+      "Does the second sentence support or complicate the first sentence's hope?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-023",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A small vineyard switched from watering its grapevines on a fixed daily schedule to watering only when soil sensors detected the vines actually needed it. Water use dropped by nearly a third the first season. ______, the grapes themselves showed no difference in size or sugar content compared to previous years, so the switch cost the vineyard nothing in terms of fruit quality.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Consequently",
+      "In other words",
+      "Meanwhile",
+      "Therefore"
+    ],
+    "answer": "C",
+    "solutionText": "Both facts (lower water use, unchanged fruit quality) held true over the same season without one causing the other, so a simultaneous-time transition like \"meanwhile\" fits best.",
+    "hints": [
+      "Are the two facts cause-and-effect, or just true at the same time?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-024",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Many amateur astronomers prefer refracting telescopes because the sealed tube keeps dust and air currents from disturbing the image. ______, refracting telescopes of a given size tend to cost more to build than reflecting telescopes, since large curved lenses are harder to manufacture than large curved mirrors.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Similarly",
+      "For instance",
+      "In addition",
+      "On the other hand"
+    ],
+    "answer": "D",
+    "solutionText": "The second sentence names a downside (higher cost) to contrast with the first sentence's advantage (image quality), calling for a contrast transition like \"on the other hand.\"",
+    "hints": [
+      "The second sentence names a drawback \u2014 what kind of transition introduces a contrast?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-025",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 A city installed motion-sensor LED streetlights that dim to 20 percent brightness when no pedestrians or cars are detected.\n\u2022 Full brightness returns within two seconds of motion being detected nearby.\n\u2022 Over one year, the city's streetlight energy use dropped by 38 percent.\n\u2022 Residents reported no noticeable increase in nighttime accidents during the trial.\n\nThe student wants to emphasize the energy savings the new streetlights produced. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Over one year, the city's new motion-sensor streetlights cut energy use by 38 percent.",
+      "The new streetlights return to full brightness within two seconds of detecting motion.",
+      "Residents reported no noticeable increase in nighttime accidents during the trial.",
+      "The streetlights dim to 20 percent brightness when no motion is detected nearby."
+    ],
+    "answer": "A",
+    "solutionText": "This choice states the 38 percent energy reduction directly, which is exactly the energy-savings point the student wants to emphasize; the other choices describe unrelated details.",
+    "hints": [
+      "Which note is specifically about energy use going down?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-026",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 A caf\u00e9 began composting its coffee grounds instead of discarding them.\n\u2022 Local gardeners collect the grounds weekly to use as fertilizer.\n\u2022 The caf\u00e9 reduced its trash volume by roughly 25 percent.\n\u2022 The composting program cost the caf\u00e9 almost nothing to start.\n\nThe student wants to describe how the composting program benefited people outside the caf\u00e9 itself. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "The caf\u00e9 reduced its trash volume by roughly 25 percent after starting the program.",
+      "Local gardeners collect the caf\u00e9's coffee grounds weekly to use as fertilizer.",
+      "The composting program cost the caf\u00e9 almost nothing to start.",
+      "The caf\u00e9 began composting its coffee grounds instead of discarding them."
+    ],
+    "answer": "B",
+    "solutionText": "This choice describes gardeners outside the caf\u00e9 benefiting from the coffee grounds, directly addressing benefits to people beyond the caf\u00e9; the other notes describe effects on the caf\u00e9 itself.",
+    "hints": [
+      "Which detail involves people other than the caf\u00e9?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2e-027",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 A regional airline switched from paper boarding passes to a smartphone app for all flights.\n\u2022 Boarding times per flight dropped from an average of 22 minutes to 15 minutes.\n\u2022 The airline spent about 2 million dollars developing the app.\n\u2022 Passengers over age 70 were more likely to report confusion using the app than younger passengers were.\n\nThe student wants to present a drawback of the airline's switch to the app. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Boarding times per flight dropped from an average of 22 minutes to 15 minutes.",
+      "The airline spent about 2 million dollars developing the app.",
+      "Passengers over age 70 were more likely to report confusion using the app than younger passengers were.",
+      "The regional airline switched from paper boarding passes to a smartphone app for all flights."
+    ],
+    "answer": "C",
+    "solutionText": "This choice highlights a problem (older passengers' confusion) caused by the switch, which is the drawback the student wants to present; the other notes describe benefits or neutral facts.",
+    "hints": [
+      "Which detail describes a negative consequence of the app switch?"
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-001",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The sculptor Ines Baranyi is known for pieces that appear to teeter on the edge of collapse, their heavy stone forms balanced on impossibly narrow points of contact. Critics who once dismissed such precariousness as a gimmick now argue that it is central to her work's meaning: the sculptures' apparent instability forces viewers to confront how much of what feels solid and permanent is, in fact, held in place by forces we rarely notice.\n\nAs used in the text, the word \"precariousness\" most nearly means",
+    "choices": [
+      "instability",
+      "durability",
+      "simplicity",
+      "symmetry"
+    ],
+    "answer": "A",
+    "solutionText": "The passage describes forms that \"teeter on the edge of collapse\" and calls this quality \"apparent instability,\" so precariousness means instability.",
+    "hints": [
+      "Find the phrase later in the sentence that restates the same idea in different words."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-002",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A restaurant critic reviewing chef Owen Tal's tasting menu noted that each dish seemed to labor under its own ambition: towers of foam, edible soil, and liquid-nitrogen spheres piled onto plates until the food's flavors were nearly obscured by its architecture. The critic conceded the technical skill on display but suggested that a simpler plate would have let the ingredients, rather than the engineering, speak for themselves.\n\nAs used in the text, the word \"labor\" most nearly means",
+    "choices": [
+      "toil physically",
+      "struggle beneath the weight of",
+      "take pride in",
+      "rush through"
+    ],
+    "answer": "B",
+    "solutionText": "\"Labor under\" is an idiom meaning to be burdened or weighed down by something, matching the idea that the dishes were overwhelmed by their own ambitious presentation.",
+    "hints": [
+      "\"Labor under\" is an idiom \u2014 think about what it means for a dish to be weighed down by its own ambition, not about physical work."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-003",
+    "loId": "dsat.words-in-context",
+    "cedCode": "DSAT-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Geologists studying the region's fractured bedrock describe the landscape as restless: even without dramatic earthquakes, the ground shifts by fractions of an inch each year as buried fault lines slowly release accumulated strain. Buildings constructed atop these fault lines require foundations flexible enough to absorb the gradual creep without cracking.\n\nAs used in the text, the word \"restless\" most nearly means",
+    "choices": [
+      "energetic",
+      "anxious",
+      "unstable",
+      "noisy"
+    ],
+    "answer": "C",
+    "solutionText": "The passage explains that the ground \"shifts\" continually because of fault lines releasing strain, so restless describes geological instability, not an emotional state.",
+    "hints": [
+      "The rest of the sentence explains the ground physically shifting, not feeling anxious or energetic."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-004",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In her essay, economist Priya Nandi opens by describing a factory town that thrived for decades under a single dominant employer. She then pivots to describe the town's decline once that employer relocated overseas, and closes by arguing that towns should actively court multiple smaller employers rather than one large one.\n\nWhich choice best describes the overall structure of the text?",
+    "choices": [
+      "It presents a hypothesis, tests it against data, and rejects the hypothesis.",
+      "It compares two competing economic theories and endorses neither.",
+      "It summarizes a debate among economists without taking a position.",
+      "It narrates a town's rise and fall to build support for a policy recommendation."
+    ],
+    "answer": "D",
+    "solutionText": "The essay tells the town's story (rise, then decline) and uses it to argue for a specific policy \u2014 diversifying employers \u2014 so it narrates events to support a recommendation.",
+    "hints": [
+      "Notice that the essay ends with an argument for what towns should do, not a neutral summary."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-005",
+    "loId": "dsat.text-structure-purpose",
+    "cedCode": "DSAT-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A nature writer describes a desert river that flows year-round despite receiving almost no rainfall in its basin. She explains that the river's water originates as snowmelt hundreds of miles away, travels underground through porous rock, and re-emerges at a spring near the river's source \u2014 a hidden mechanism that only recent tracer studies have revealed.\n\nWhich choice best describes the function of the paragraph in the text as a whole?",
+    "choices": [
+      "It resolves an apparent contradiction by revealing an underlying mechanism.",
+      "It challenges a widely held assumption without offering an alternative.",
+      "It introduces two competing hypotheses and evaluates their evidence.",
+      "It criticizes earlier researchers for overlooking an obvious explanation."
+    ],
+    "answer": "A",
+    "solutionText": "The paragraph sets up a puzzle (a river flowing without rain) and then explains the hidden underground mechanism that solves it, so it resolves a contradiction by revealing a mechanism.",
+    "hints": [
+      "Ask what problem the paragraph raises first, then what it does with that problem by the end."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-006",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: A team of ecologists reports that reducing streetlight brightness in a set of suburban neighborhoods led to a measurable rise in moth populations within two years, suggesting that artificial light at night is a significant driver of pollinator decline.\n\nText 2: A separate research group found that even in neighborhoods where streetlight brightness was reduced, moth populations continued to fall, and argues that pesticide use, not lighting, is the dominant factor behind local pollinator losses.\n\nBased on the texts, how would the researchers in Text 2 most likely respond to the claim in Text 1 that reducing streetlight brightness increases moth populations?",
+    "choices": [
+      "They would agree entirely, since their own data also linked lighting changes to population changes.",
+      "They would express skepticism, since their findings suggest factors other than lighting better explain population trends.",
+      "They would argue that streetlight brightness has no measurable effect on any nocturnal species.",
+      "They would recommend replicating Text 1's study using a larger sample of neighborhoods."
+    ],
+    "answer": "B",
+    "solutionText": "Text 2's researchers found moth populations kept falling even after streetlight brightness was reduced, so they would be skeptical of Text 1's claim and instead point to pesticide use as the driving factor.",
+    "hints": [
+      "Compare what each research group found when streetlight brightness was reduced, not just what each group studied."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-007",
+    "loId": "dsat.cross-text-connections",
+    "cedCode": "DSAT-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Text 1: Structural engineer Dana Okafor argues that the 1987 collapse of the Millbrook rail bridge resulted from an original design flaw: the bridge's trusses were undersized for the loads they would eventually carry as rail traffic increased over the decades.\n\nText 2: A later investigation by a government panel found that the trusses, while modest, met the standards of their era and had been inspected and approved for increased loads; the panel instead attributed the collapse to decades of deferred maintenance, including corrosion that went unaddressed.\n\nBased on the texts, the government panel described in Text 2 would most likely respond to Okafor's claim in Text 1 by",
+    "choices": [
+      "agreeing that the trusses were too small from the outset",
+      "proposing that the bridge be redesigned using modern materials",
+      "contending that maintenance failures, not the original design, caused the collapse",
+      "suggesting that both explanations are equally well supported by the evidence"
+    ],
+    "answer": "C",
+    "solutionText": "The panel in Text 2 found the trusses met the standards of their era and were properly approved, and instead blamed unaddressed corrosion from deferred maintenance \u2014 directly countering Okafor's design-flaw claim.",
+    "hints": [
+      "Identify what the panel says caused the collapse instead of a design flaw."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-008",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A community orchestra that once struggled to fill seats began offering free admission to anyone who brought a canned food donation. Within a single season, attendance more than doubled, and the orchestra's partner food bank reported record donations. The orchestra's director now credits the program with saving the ensemble from financial collapse.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "The orchestra should return to charging admission now that it is popular again.",
+      "Canned food donations are a more reliable revenue source than ticket sales.",
+      "Food banks depend heavily on donations collected at cultural events.",
+      "A donation-based admission program revived both attendance and the orchestra's finances."
+    ],
+    "answer": "D",
+    "solutionText": "The passage explains that the canned-food admission program doubled attendance and, according to the director, saved the orchestra financially, so that program's dual benefit is the main idea.",
+    "hints": [
+      "Look for the sentence that ties the program to both attendance and financial outcomes."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-009",
+    "loId": "dsat.central-ideas-details",
+    "cedCode": "DSAT-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For decades, botanists assumed that a desert shrub called creosote bush survived drought by drawing water from unusually deep roots. Recent excavation studies, however, found that its roots rarely extend more than a meter down. Instead, the plant appears to tolerate drought chemically: its leaves produce a waxy coating that drastically slows water loss, allowing the shrub to function on a fraction of the water most plants would need.\n\nWhich choice best states the main idea of the text?",
+    "choices": [
+      "New evidence suggests creosote bush survives drought through water conservation rather than deep roots.",
+      "Creosote bush roots are shallower than those of most desert plants.",
+      "Botanists have abandoned the study of desert plant root systems.",
+      "Waxy leaf coatings are common among all drought-tolerant shrubs."
+    ],
+    "answer": "A",
+    "solutionText": "The passage overturns the old deep-root explanation and presents the new finding \u2014 a waxy coating that conserves water \u2014 as the real explanation for drought survival, which is the main idea.",
+    "hints": [
+      "The passage contrasts an old assumption with a new finding \u2014 the main idea is the new finding, not just one supporting detail."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-010",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A city's transit agency added express bus lanes on its busiest corridor, expecting the change to shorten commute times enough to lure drivers out of their cars. Ridership on that corridor did rise modestly, but agency data show that most new riders previously walked or biked the route rather than drove, and traffic congestion on the corridor remains largely unchanged.\n\nWhich choice most logically completes the inference the text invites about the express bus lanes?",
+    "choices": [
+      "The lanes succeeded in reducing car traffic on the corridor as intended.",
+      "The lanes mainly shifted people who already used other travel modes rather than converting drivers.",
+      "The lanes had no effect on ridership of any kind.",
+      "The lanes will likely be removed because ridership declined."
+    ],
+    "answer": "B",
+    "solutionText": "Since new riders mostly used to walk or bike rather than drive, and congestion is unchanged, the lanes mainly converted non-drivers to bus riders rather than pulling drivers out of cars.",
+    "hints": [
+      "Focus on where the new riders came from, not just whether ridership went up."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-011",
+    "loId": "dsat.inferences",
+    "cedCode": "DSAT-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A museum that digitized its entire archive expected online visits to substitute for in-person attendance, reducing revenue from ticket sales. Instead, in the two years following digitization, in-person attendance rose by nearly 15 percent, and exit surveys revealed that a majority of new visitors said they had first encountered a piece in the online collection before deciding to see it in the museum.\n\nWhich choice most logically completes the idea suggested by the text?",
+    "choices": [
+      "The online archive discouraged visitors from ever needing to see objects in person.",
+      "Ticket sales declined because visitors preferred the digital collection.",
+      "The online archive functioned less as a substitute for visiting and more as an invitation to visit.",
+      "The museum's digitization project was a financial failure."
+    ],
+    "answer": "C",
+    "solutionText": "Attendance rose rather than fell, and most new visitors said the online collection led them to visit in person, so the digital archive acted as an invitation rather than a substitute.",
+    "hints": [
+      "Compare what the museum expected with what the exit surveys actually showed about visitor behavior."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-012",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A public health researcher claims that a city's new bike-lane network reduced emergency-room visits for traffic collisions involving cyclists.\n\nWhich finding, if true, would provide the strongest support for the researcher's claim?",
+    "choices": [
+      "The city's population grew by 5 percent during the same period.",
+      "Cyclists surveyed said they felt safer riding in the new lanes.",
+      "The city spent 2 million dollars constructing the bike-lane network.",
+      "Emergency-room visits for cyclist collisions fell by 30 percent in the two years after the bike lanes were installed, while collisions involving pedestrians and drivers stayed flat."
+    ],
+    "answer": "D",
+    "solutionText": "A direct drop in cyclist-collision ER visits after the lanes were installed, without a similar drop for other road users, most directly supports the claim that the bike lanes specifically caused the reduction.",
+    "hints": [
+      "Look for the choice that directly measures the outcome named in the claim \u2014 emergency-room visits for cyclist collisions."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-013",
+    "loId": "dsat.textual-evidence",
+    "cedCode": "DSAT-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A nutrition researcher hypothesizes that a new snack bar's added fiber, rather than its reduced sugar content, is responsible for participants' reported reduction in mid-afternoon hunger.\n\nWhich finding, if true, would provide the strongest support for the researcher's hypothesis?",
+    "choices": [
+      "Participants who ate a version of the bar with the same fiber content but full sugar reported the same reduction in hunger as those who ate the low-sugar version.",
+      "Participants who ate the bar reported liking its taste more than a competitor's bar.",
+      "The bar containing both added fiber and reduced sugar reduced hunger more than a bar with neither.",
+      "Participants who ate no bar at all reported feeling hungrier by mid-afternoon."
+    ],
+    "answer": "A",
+    "solutionText": "Holding fiber constant while restoring full sugar and still seeing the same hunger reduction isolates fiber as the responsible factor, since removing the sugar reduction had no effect on the outcome.",
+    "hints": [
+      "The strongest evidence isolates fiber as the one variable that changes while sugar content is held fixed."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-014",
+    "loId": "dsat.quantitative-evidence",
+    "cedCode": "DSAT-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A transportation analyst argues that a city's new toll during rush hour successfully shifted commuters to off-peak travel times without simply pricing out low-income drivers. To support this claim, the analyst points out that overall crossings of the tolled bridge stayed almost the same before and after the toll began, while crossings during the tolled hours dropped by nearly a third and crossings in the two hours immediately before and after the toll window rose by a comparable amount.\n\nWhich choice best states the finding that most directly supports the analyst's argument?",
+    "choices": [
+      "Toll revenue exceeded the city's projections for the first year.",
+      "Total bridge crossings remained essentially unchanged, while a substantial share of trips simply moved to untolled hours rather than disappearing.",
+      "Traffic on nearby untolled bridges decreased after the toll began.",
+      "Survey respondents said they supported the toll program."
+    ],
+    "answer": "B",
+    "solutionText": "The unchanged total crossings combined with the shift of trips into the surrounding untolled hours directly shows that drivers rescheduled rather than being priced off the bridge entirely, supporting the analyst's claim.",
+    "hints": [
+      "Focus on the finding that shows the same trips still happening, just at different times."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-015",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After the storm ______ power crews worked through the night to restore electricity to every neighborhood.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "passed the town's",
+      "passed; the town's",
+      "passed, the town's",
+      "passed: the town's"
+    ],
+    "answer": "C",
+    "solutionText": "\"After the storm passed\" is an introductory dependent clause, so it must be followed by a comma before the independent clause \"the town's power crews worked...\"",
+    "hints": [
+      "An introductory dependent clause beginning with \"After\" needs a comma before the main clause that follows."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-016",
+    "loId": "dsat.boundaries",
+    "cedCode": "DSAT-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The bridge inspection revealed no structural damage_______ engineers still recommended closing one lane for a week of precautionary repairs.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "damage, however",
+      "damage however,",
+      "damage; however",
+      "damage; however,"
+    ],
+    "answer": "D",
+    "solutionText": "Two independent clauses joined by the conjunctive adverb \"however\" require a semicolon before \"however\" and a comma after it.",
+    "hints": [
+      "\"However\" joining two complete sentences needs a semicolon before it and a comma right after it."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-017",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The committee's list of recommendations_______ due to the board by Friday.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "is",
+      "are",
+      "were",
+      "have"
+    ],
+    "answer": "A",
+    "solutionText": "The subject of the sentence is the singular noun \"list\" (not the plural \"recommendations\"), so it takes the singular verb \"is.\"",
+    "hints": [
+      "Find the true subject of the sentence \u2014 it's \"list,\" not the noun in the prepositional phrase right before the blank."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-018",
+    "loId": "dsat.subject-verb-pronoun-agreement",
+    "cedCode": "DSAT-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Neither the museum's curators nor its director_______ satisfied with the proposed layout for the new wing.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "are",
+      "is",
+      "were",
+      "have"
+    ],
+    "answer": "B",
+    "solutionText": "With \"neither...nor,\" the verb agrees with the nearer subject, \"director,\" which is singular, so the correct verb is \"is.\"",
+    "hints": [
+      "With \"neither...nor,\" the verb must agree with the subject closest to it \u2014 here, \"director.\""
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-019",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Having spent months restoring the mural's faded colors, _______.\n\nWhich choice completes the text so that it avoids a dangling modifier?",
+    "choices": [
+      "the museum unveiled it to enthusiastic reviews",
+      "enthusiastic reviews greeted the museum's unveiling",
+      "the conservator felt a deep sense of pride at the unveiling",
+      "the mural's unveiling was met with enthusiastic reviews"
+    ],
+    "answer": "C",
+    "solutionText": "The opening phrase \"Having spent months restoring the mural's faded colors\" must logically modify the person who did the restoring, so the sentence needs \"the conservator\" as its subject.",
+    "hints": [
+      "Ask who logically \"spent months restoring the mural\" \u2014 the subject right after the comma must be that person."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-020",
+    "loId": "dsat.verb-forms-modifiers",
+    "cedCode": "DSAT-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "By the time the auditors arrived, the accountant_______ every discrepancy in the ledger, so the review took only an hour.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "found",
+      "has found",
+      "was finding",
+      "had found"
+    ],
+    "answer": "D",
+    "solutionText": "The accountant's action was completed before another past event (the auditors' arrival), which calls for the past perfect \"had found.\"",
+    "hints": [
+      "One past action finished before a second past action happened \u2014 that calls for the past perfect tense."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-021",
+    "loId": "dsat.plurals-possessives-confusables",
+    "cedCode": "DSAT-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The two architects presented_______ competing designs for the plaza before the city council chose one.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "their",
+      "they're",
+      "there",
+      "theirs"
+    ],
+    "answer": "A",
+    "solutionText": "The possessive pronoun \"their\" is needed to show that the designs belong to the architects, modifying the noun \"designs.\"",
+    "hints": [
+      "The blank needs a possessive word modifying \"designs,\" not a contraction of \"they are\" or a location word."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-022",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A small manufacturer switched its packaging from plastic to recycled cardboard, expecting the change to raise costs. _______, the new packaging turned out to be cheaper once the company factored in reduced shipping weight.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Similarly",
+      "Surprisingly",
+      "For example",
+      "In addition"
+    ],
+    "answer": "B",
+    "solutionText": "The outcome (lower cost) defies the company's expectation (higher cost), so \"Surprisingly\" correctly signals that the result contradicted what was anticipated.",
+    "hints": [
+      "Compare what the company expected with what actually happened \u2014 the transition should signal that contrast."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-023",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Economists generally agree that automation displaces certain jobs in the short term. _______, most long-run studies find that automation is associated with net job growth in the broader economy, as new roles emerge to support the new technology.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "Consequently",
+      "Similarly",
+      "Nevertheless",
+      "For instance"
+    ],
+    "answer": "C",
+    "solutionText": "Short-term job displacement and long-run net job growth are in tension, so \"Nevertheless\" is needed to signal that concession rather than a causal or additive relationship.",
+    "hints": [
+      "Notice that short-term displacement and long-run job growth are in tension, not a cause-and-effect chain."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-024",
+    "loId": "dsat.transitions",
+    "cedCode": "DSAT-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The hikers reached the summit just before sunset. _______, they set up camp quickly to avoid navigating the trail in the dark.\n\nWhich choice completes the text with the most logical transition?",
+    "choices": [
+      "However",
+      "In contrast",
+      "Otherwise",
+      "Therefore"
+    ],
+    "answer": "D",
+    "solutionText": "Setting up camp quickly is a direct consequence of reaching the summit near sunset, so the cause-and-effect transition \"Therefore\" is correct.",
+    "hints": [
+      "The second sentence describes a result of the first sentence, so look for a cause-and-effect transition."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-025",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 A city's downtown once had over 40 independent bookstores in the 1970s.\n\u2022 By 2020, fewer than five independent bookstores remained downtown.\n\u2022 Rising commercial rents and the growth of online retailers are cited as major causes.\n\u2022 A few surviving stores have adapted by hosting events and selling rare or out-of-print titles.\n\nThe student wants to explain why most of the downtown's independent bookstores closed. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Rising commercial rents and the growth of online retail were major factors in the decline of downtown's independent bookstores, which fell from more than 40 in the 1970s to fewer than five by 2020.",
+      "A few of downtown's surviving independent bookstores have adapted by hosting events and selling rare titles.",
+      "Downtown had more than 40 independent bookstores in the 1970s, a number that has since fallen sharply.",
+      "Independent bookstores across the country have struggled to compete with online retailers in recent decades."
+    ],
+    "answer": "A",
+    "solutionText": "Only choice A states the causes (rents, online retail) named in the notes and connects them to the specific decline in bookstore numbers, which matches the goal of explaining why the closures happened.",
+    "hints": [
+      "The goal is to explain a cause, so the answer needs the notes about rents and online retail, not just the numbers or the adaptation strategy."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-026",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 A university lab developed a low-cost water filter using layered sand and charcoal.\n\u2022 Lab tests removed 99% of common bacteria from contaminated samples.\n\u2022 Field trials in three villages showed the filter reduced reported illness by roughly a third.\n\u2022 The filter costs about four dollars to produce, compared to thirty dollars for commercial alternatives.\n\u2022 Researchers note the filter does not remove certain dissolved chemical contaminants.\n\nThe student wants to emphasize a limitation of the filter that the field trial results alone do not reveal. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "Field trials in three villages showed the filter reduced reported illness by roughly a third.",
+      "Despite its effectiveness against bacteria, the filter does not remove certain dissolved chemical contaminants.",
+      "The filter costs about four dollars to produce, far less than the thirty-dollar cost of commercial alternatives.",
+      "Lab tests showed the filter removed 99% of common bacteria from contaminated water samples."
+    ],
+    "answer": "B",
+    "solutionText": "The field trials only measured reported illness from bacterial contamination, so they would not reveal the separate limitation that the filter fails to remove dissolved chemical contaminants, which choice B states.",
+    "hints": [
+      "The field trial illness data only speaks to bacteria-related outcomes \u2014 look for the note describing a different, unmeasured limitation."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-rw2h-027",
+    "loId": "dsat.rhetorical-synthesis",
+    "cedCode": "DSAT-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "While researching a topic, a student has taken the following notes:\n\u2022 Two competing bridge designs were proposed for a river crossing: a suspension bridge and a truss bridge.\n\u2022 The suspension bridge would cost 80 million dollars and take four years to build.\n\u2022 The truss bridge would cost 55 million dollars and take two years to build.\n\u2022 Engineers note the suspension bridge could later be widened to add lanes; the truss bridge cannot.\n\u2022 City planners project traffic volume will not require additional lanes for at least 25 years.\n\nThe student wants to argue that the truss bridge is the more practical choice given current projections. Which choice most effectively uses relevant information from the notes to accomplish this goal?",
+    "choices": [
+      "The suspension bridge could later be widened to add lanes, while the truss bridge could not.",
+      "City planners project that traffic volume will not require additional lanes for at least 25 years.",
+      "Given that traffic volume is not projected to require additional lanes for at least 25 years, the truss bridge's lower cost and faster construction time make it the more practical choice.",
+      "The suspension bridge would cost 80 million dollars and take four years to build, compared to 55 million dollars and two years for the truss bridge."
+    ],
+    "answer": "C",
+    "solutionText": "Only choice C combines the traffic projection with the truss bridge's cost and time advantages to build the specific argument that the truss bridge is more practical, which the goal requires.",
+    "hints": [
+      "The goal needs an argument, so combine the traffic projection with the cost/time advantage rather than stating either fact alone."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-001",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If $6(x - 3) = 2x + 10$, what is the value of $x$?",
+    "choices": [
+      "7",
+      "5",
+      "6",
+      "8"
+    ],
+    "answer": "A",
+    "solutionText": "Distribute to get $6x - 18 = 2x + 10$, so $4x = 28$ and $x = 7$.",
+    "hints": [
+      "Distribute the 6 on the left side before combining like terms."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-002",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A landscaping company charges an initial fee of 60 dollars plus 18 dollars per hour of labor. If a customer's total bill was 204 dollars, how many hours of labor were billed?",
+    "answer": "8",
+    "solutionText": "Solve $60 + 18h = 204$: $18h = 144$, so $h = 8$.",
+    "hints": [
+      "Set up the equation total = fixed fee + rate times hours."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-003",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A line has a slope of $-\\dfrac{2}{3}$ and passes through the point $(6, 1)$. What is the $x$-intercept of this line?",
+    "choices": [
+      "4",
+      "7.5",
+      "6",
+      "9"
+    ],
+    "answer": "B",
+    "solutionText": "Using point-slope form, $y - 1 = -\\dfrac{2}{3}(x-6)$. Setting $y = 0$ gives $x = 7.5$.",
+    "hints": [
+      "The x-intercept is the point where y = 0."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-004",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A linear function $g$ satisfies $g(-1) = 4$ and $g(3) = -8$. What is $g(6)$?",
+    "choices": [
+      "-20",
+      "-14",
+      "-17",
+      "-11"
+    ],
+    "answer": "C",
+    "solutionText": "The slope is $\\dfrac{-8-4}{3-(-1)} = -3$, so $g(x) = 1 - 3x$. Then $g(6) = 1 - 18 = -17$.",
+    "hints": [
+      "Find the slope from the two given points first, then write the equation."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-005",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A concert venue sells lawn tickets for 25 dollars each and pavilion tickets for 60 dollars each. On a night when 400 tickets were sold, total revenue was 15,250 dollars. How many pavilion tickets were sold?",
+    "answer": "150",
+    "solutionText": "Let $p$ = pavilion tickets. Solving $25(400-p) + 60p = 15250$ gives $35p = 5250$, so $p = 150$.",
+    "hints": [
+      "Let the lawn tickets be 400 minus the pavilion tickets, then substitute into the revenue equation."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-006",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the largest integer value of $x$ that satisfies the inequality $3x + 7 < 25$?",
+    "choices": [
+      "4",
+      "6",
+      "7",
+      "5"
+    ],
+    "answer": "D",
+    "solutionText": "Solving gives $x < 6$, so the largest integer value is 5.",
+    "hints": [
+      "Solve the inequality first, then find the largest integer strictly less than the boundary."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-007",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For what value of $b$ does the equation $8x + 12 = b(2x + 3)$ have infinitely many solutions?",
+    "choices": [
+      "4",
+      "2",
+      "3",
+      "6"
+    ],
+    "answer": "A",
+    "solutionText": "Since $8x + 12 = 4(2x+3)$, the equation holds for all $x$ when $b = 4$.",
+    "hints": [
+      "Factor the left side to match the form of the right side."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-008",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Linear function $p$ satisfies $p(0) = 5$ and $p(4) = 17$. What is $p(10)$?",
+    "choices": [
+      "29",
+      "35",
+      "32",
+      "38"
+    ],
+    "answer": "B",
+    "solutionText": "The slope is $\\dfrac{17-5}{4-0} = 3$, so $p(x) = 5 + 3x$. Then $p(10) = 5 + 30 = 35$.",
+    "hints": [
+      "Use the two given values to find the slope and intercept, then evaluate at x = 10."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-009",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which expression is equivalent to $(2x - 3)(x + 4) - x^2$?",
+    "choices": [
+      "$x^2 - 5x - 12$",
+      "$3x^2 + 5x - 12$",
+      "$x^2 + 5x - 12$",
+      "$x^2 + 5x + 12$"
+    ],
+    "answer": "C",
+    "solutionText": "Expanding gives $2x^2 + 5x - 12$; subtracting $x^2$ leaves $x^2 + 5x - 12$.",
+    "hints": [
+      "Expand the product first, then subtract x squared and combine like terms."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-010",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What are the solutions to $x^2 - 2x - 15 = 0$?",
+    "choices": [
+      "$x = -5, 3$",
+      "$x = 3, -5$",
+      "$x = -5, -3$",
+      "$x = -3, 5$"
+    ],
+    "answer": "D",
+    "solutionText": "Factoring gives $(x-5)(x+3) = 0$, so $x = 5$ or $x = -3$.",
+    "hints": [
+      "Factor the quadratic into two binomials."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-011",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "For what positive value of $k$ does the equation $x^2 - 8x + k = 0$ have exactly one real solution?",
+    "answer": "16",
+    "solutionText": "Exactly one real solution requires the discriminant to equal 0: $64 - 4k = 0$, so $k = 16$.",
+    "hints": [
+      "Set the discriminant b squared minus 4ac equal to zero."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-012",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bacteria culture has an initial population of 400 and triples every 6 hours. Which function models the population $P$ after $t$ hours?",
+    "choices": [
+      "$P(t) = 400 \\cdot 3^{t/6}$",
+      "$P(t) = 400 \\cdot 3^{6t}$",
+      "$P(t) = 400 \\cdot 6^{t/3}$",
+      "$P(t) = 3 \\cdot 400^{t/6}$"
+    ],
+    "answer": "A",
+    "solutionText": "Since the population triples every 6 hours, the exponent must be $t/6$ with base 3: $P(t) = 400 \\cdot 3^{t/6}$.",
+    "hints": [
+      "The growth factor is 3, and the exponent should equal 1 whole growth cycle when t = 6."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-013",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The function $f$ is defined by $f(x) = -(x-4)^2 + 9$. What is the maximum value of $f$?",
+    "choices": [
+      "4",
+      "9",
+      "5",
+      "13"
+    ],
+    "answer": "B",
+    "solutionText": "Since $-(x-4)^2 \\le 0$ for all $x$, the maximum occurs when $(x-4)^2 = 0$, giving a maximum value of 9.",
+    "hints": [
+      "This is vertex form; the maximum equals the constant term when the squared term is zero."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-014",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the solution set of $\\sqrt{2x + 1} = x - 1$?",
+    "choices": [
+      "$\\{0\\}$",
+      "$\\{0, 4\\}$",
+      "$\\{4\\}$",
+      "$\\{-4\\}$"
+    ],
+    "answer": "C",
+    "solutionText": "Squaring gives $x^2 - 4x = 0$, so $x = 0$ or $x = 4$. Checking in the original equation, $x = 0$ is extraneous, so the solution set is $\\{4\\}$.",
+    "hints": [
+      "After squaring both sides, check each candidate solution in the original equation for extraneous roots."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-015",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = x^2$ is shifted 3 units left and 5 units down to create the graph of $y = g(x)$. Which equation defines $g$?",
+    "choices": [
+      "$(x-3)^2 - 5$",
+      "$(x+3)^2 + 5$",
+      "$(x-3)^2 + 5$",
+      "$(x+3)^2 - 5$"
+    ],
+    "answer": "D",
+    "solutionText": "Shifting left 3 replaces $x$ with $x+3$, and shifting down 5 subtracts 5: $g(x) = (x+3)^2 - 5$.",
+    "hints": [
+      "A shift left adds inside the parentheses; a shift down subtracts outside."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-016",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A printer produces pages at a constant rate. It prints 180 pages in 12 minutes. At this rate, how many pages does it print in 20 minutes?",
+    "choices": [
+      "300",
+      "240",
+      "270",
+      "330"
+    ],
+    "answer": "A",
+    "solutionText": "The rate is $180/12 = 15$ pages per minute, so in 20 minutes it prints $15 \\times 20 = 300$ pages.",
+    "hints": [
+      "Find the unit rate first, then multiply by the new time."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-017",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A laptop's price was reduced by 15 percent to a sale price of 425 dollars. What was the original price, in dollars?",
+    "answer": "500",
+    "solutionText": "The sale price is 85 percent of the original: $0.85x = 425$, so $x = 500$.",
+    "hints": [
+      "A 15 percent reduction means the sale price equals 85 percent of the original price."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-018",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A set of 6 quiz scores has a mean of 82. If five of the scores are 78, 85, 90, 74, and 88, what is the sixth score?",
+    "choices": [
+      "74",
+      "77",
+      "80",
+      "83"
+    ],
+    "answer": "B",
+    "solutionText": "The total of all 6 scores must be $82 \\times 6 = 492$. The five known scores sum to 415, so the sixth score is $492 - 415 = 77$.",
+    "hints": [
+      "Multiply the mean by the number of scores to find the total sum needed."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-019",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A box contains 6 red chips, 4 blue chips, and 5 green chips. Two chips are drawn at random without replacement. What is the probability that both chips are blue?",
+    "choices": [
+      "$\\dfrac{1}{15}$",
+      "$\\dfrac{4}{49}$",
+      "$\\dfrac{2}{35}$",
+      "$\\dfrac{1}{9}$"
+    ],
+    "answer": "C",
+    "solutionText": "There are 15 chips total. The probability is $\\dfrac{4}{15} \\times \\dfrac{3}{14} = \\dfrac{12}{210} = \\dfrac{2}{35}$.",
+    "hints": [
+      "Multiply the probability of the first draw by the probability of the second draw, adjusting the total for no replacement."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-020",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A rectangular prism has a length of 8, a width of 5, and a volume of 160. What is the height of the prism?",
+    "answer": "4",
+    "solutionText": "Since $V = l \\times w \\times h$, $160 = 8 \\times 5 \\times h = 40h$, so $h = 4$.",
+    "hints": [
+      "Use the volume formula for a rectangular prism and solve for the unknown dimension."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-021",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In triangle $XYZ$, the measure of angle $X$ is twice the measure of angle $Y$, and the measure of angle $Z$ is 24\u00b0 more than the measure of angle $Y$. What is the measure of angle $X$?",
+    "choices": [
+      "39\u00b0",
+      "63\u00b0",
+      "84\u00b0",
+      "78\u00b0"
+    ],
+    "answer": "D",
+    "solutionText": "Let angle $Y = y$. Then $2y + y + (y+24) = 180$, so $4y = 156$ and $y = 39$. Angle $X = 2y = 78\u00b0$.",
+    "hints": [
+      "Write each angle in terms of Y, then use the fact that the angles of a triangle sum to 180 degrees."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m1-022",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In right triangle $DEF$, angle $F$ is the right angle. If $\\tan(D) = \\dfrac{5}{12}$, what is $\\cos(D)$?",
+    "choices": [
+      "$\\dfrac{12}{13}$",
+      "$\\dfrac{5}{13}$",
+      "$\\dfrac{5}{12}$",
+      "$\\dfrac{12}{5}$"
+    ],
+    "answer": "A",
+    "solutionText": "Since $\\tan(D) = 5/12$, the legs are 5 and 12, giving a hypotenuse of 13 (a 5-12-13 triangle). So $\\cos(D) = 12/13$.",
+    "hints": [
+      "Use the tangent ratio to find the two legs, then apply the Pythagorean theorem to find the hypotenuse."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-001",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A landscaper charges a \\$45 setup fee plus \\$15 per hour of labor. If a completed job cost \\$135 total, how many hours of labor were billed?",
+    "choices": [
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "answer": "A",
+    "solutionText": "Setting up $45 + 15h = 135$ gives $15h = 90$, so $h = 6$.",
+    "hints": [
+      "Subtract the flat fee first, then divide by the hourly rate."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-002",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Twelve is subtracted from three times a number, and the result is 27. What is the number?",
+    "answer": "13",
+    "solutionText": "The equation $3n - 12 = 27$ gives $3n = 39$, so $n = 13$.",
+    "hints": [
+      "Translate the sentence into an equation before solving."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-003",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A line has a slope of 4 and passes through the point $(-2, 3)$. What is the value of $y$ when $x = 5$?",
+    "choices": [
+      "15",
+      "31",
+      "35",
+      "27"
+    ],
+    "answer": "B",
+    "solutionText": "Using point-slope form, $y - 3 = 4(x + 2)$. At $x = 5$: $y = 3 + 4(7) = 31$.",
+    "hints": [
+      "Write the point-slope equation first, then substitute $x = 5$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-004",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The function $f(x) = 7x + 4$ gives the cost, in dollars, of renting a bike for $x$ hours. What is $f(6)$?",
+    "choices": [
+      "42",
+      "50",
+      "46",
+      "39"
+    ],
+    "answer": "C",
+    "solutionText": "Substituting $x = 6$: $f(6) = 7(6) + 4 = 46$.",
+    "hints": [
+      "Plug $x = 6$ directly into the function rule."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-005",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A candle burns at a constant rate. After burning for 2 hours, it is 18 centimeters tall; after burning for 5 hours, it is 9 centimeters tall. Assuming the rate stays constant, how tall will the candle be after 6 hours?",
+    "choices": [
+      "12",
+      "9",
+      "3",
+      "6"
+    ],
+    "answer": "D",
+    "solutionText": "The rate of change is $\\dfrac{9-18}{5-2} = -3$ cm per hour. From $t=5$ to $t=6$, the height drops another 3 cm: $9 - 3 = 6$.",
+    "hints": [
+      "Find the constant rate of change per hour first."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-006",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A gym offers two membership plans. Plan A costs 20 dollars per month with no enrollment fee. Plan B costs 10 dollars per month plus a one-time 50 dollar enrollment fee. After how many months do the two plans cost the same total amount?",
+    "answer": "5",
+    "solutionText": "Setting the totals equal: $20m = 10m + 50$, so $10m = 50$ and $m = 5$.",
+    "hints": [
+      "Write a total-cost expression for each plan and set them equal."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-007",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the inequality: $5x + 3 \\le 28$.",
+    "choices": [
+      "$x \\le 5$",
+      "$x \\le 8$",
+      "$x \\ge 5$",
+      "$x \\le 25$"
+    ],
+    "answer": "A",
+    "solutionText": "Subtracting 3 gives $5x \\le 25$, so $x \\le 5$.",
+    "hints": [
+      "Isolate $x$ the same way you would solve an equation, keeping the inequality direction."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-008",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The equation $kx - 8 = 5(3x - 4) + 12$ has infinitely many solutions for all $x$. What is the value of $k$?",
+    "choices": [
+      "5",
+      "15",
+      "20",
+      "3"
+    ],
+    "answer": "B",
+    "solutionText": "Expanding the right side gives $15x - 20 + 12 = 15x - 8$. Since the constants already match, infinitely many solutions require $k = 15$.",
+    "hints": [
+      "Expand and simplify the right side first, then match coefficients of $x$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-009",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which expression is equivalent to $3(2x + 5) - 4x$?",
+    "choices": [
+      "$6x+15$",
+      "$2x+5$",
+      "$2x+15$",
+      "$10x+15$"
+    ],
+    "answer": "C",
+    "solutionText": "Distributing gives $6x + 15 - 4x = 2x + 15$.",
+    "hints": [
+      "Distribute the 3 first, then combine like terms."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-010",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What are the solutions to $x^2 - 9x + 20 = 0$?",
+    "choices": [
+      "$x=-4 \\text{ or } x=-5$",
+      "$x=4 \\text{ or } x=-5$",
+      "$x=2 \\text{ or } x=10$",
+      "$x=4 \\text{ or } x=5$"
+    ],
+    "answer": "D",
+    "solutionText": "Factoring gives $(x-4)(x-5) = 0$, so $x = 4$ or $x = 5$.",
+    "hints": [
+      "Find two numbers that multiply to 20 and add to -9."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-011",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The equation $x^2 - 6x + c = 0$ has exactly one solution. What is the value of $c$?",
+    "answer": "9",
+    "solutionText": "Exactly one solution requires the discriminant to be zero: $36 - 4c = 0$, so $c = 9$.",
+    "hints": [
+      "Set the discriminant $b^2 - 4ac$ equal to 0."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-012",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An investment account balance is modeled by $A(t) = 4000(1.05)^t$, where $t$ is the number of years since the account was opened. What was the initial balance of the account, in dollars?",
+    "choices": [
+      "\\$4,000",
+      "\\$4,200",
+      "\\$3,800",
+      "\\$5,250"
+    ],
+    "answer": "A",
+    "solutionText": "The initial balance occurs at $t = 0$: $A(0) = 4000(1.05)^0 = 4000$.",
+    "hints": [
+      "The initial value of an exponential model is the coefficient in front, found by setting $t=0$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-013",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = -3x^2 + 12x - 7$ is a parabola. What is the $x$-coordinate of its vertex?",
+    "choices": [
+      "-2",
+      "2",
+      "4",
+      "6"
+    ],
+    "answer": "B",
+    "solutionText": "The vertex $x$-coordinate is $-\\dfrac{b}{2a} = -\\dfrac{12}{2(-3)} = 2$.",
+    "hints": [
+      "Use the vertex formula $x = -\\dfrac{b}{2a}$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-014",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "Solve for $x$: $\\sqrt{x - 3} = 6$.",
+    "answer": "39",
+    "solutionText": "Squaring both sides gives $x - 3 = 36$, so $x = 39$.",
+    "hints": [
+      "Square both sides to eliminate the square root."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-015",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for $x$: $\\dfrac{5}{x+2} = \\dfrac{1}{3}$.",
+    "choices": [
+      "5",
+      "17",
+      "13",
+      "45"
+    ],
+    "answer": "C",
+    "solutionText": "Cross-multiplying gives $15 = x + 2$, so $x = 13$.",
+    "hints": [
+      "Cross-multiply to clear the fractions."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-016",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cyclist rides at a constant speed and covers 18 miles in 1.5 hours. At this same rate, how many miles will she cover in 4 hours?",
+    "choices": [
+      "42",
+      "54",
+      "36",
+      "48"
+    ],
+    "answer": "D",
+    "solutionText": "Her rate is $18 \\div 1.5 = 12$ miles per hour, so in 4 hours she covers $12 \\times 4 = 48$ miles.",
+    "hints": [
+      "Find the unit rate (miles per hour) first."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-017",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A photography studio marks up its prints by 40% over its production cost. If a print costs the studio 25 dollars to produce, what is the marked-up price, in dollars?",
+    "answer": "35",
+    "solutionText": "The marked-up price is $25 \\times 1.40 = 35$ dollars.",
+    "hints": [
+      "Multiply the cost by 1 plus the markup percentage as a decimal."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-018",
+    "loId": "dsat.one-variable-data",
+    "cedCode": "DSAT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A set of 6 quiz scores has a mean of 82. If five of the scores are 78, 85, 90, 76, and 88, what is the sixth score?",
+    "choices": [
+      "75",
+      "80",
+      "70",
+      "79"
+    ],
+    "answer": "A",
+    "solutionText": "The total of all 6 scores must be $82 \\times 6 = 492$. The five known scores sum to $417$, so the sixth score is $492 - 417 = 75$.",
+    "hints": [
+      "Multiply the mean by the number of values to find the required total sum."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-019",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A raffle box contains 40 tickets: 18 are yellow, 10 are pink, and the rest are green. If one ticket is drawn at random, what is the probability that it is green?",
+    "choices": [
+      "$\\dfrac{2}{5}$",
+      "$\\dfrac{3}{10}$",
+      "$\\dfrac{1}{4}$",
+      "$\\dfrac{9}{20}$"
+    ],
+    "answer": "B",
+    "solutionText": "There are $40 - 18 - 10 = 12$ green tickets, so the probability is $\\dfrac{12}{40} = \\dfrac{3}{10}$.",
+    "hints": [
+      "Find the number of green tickets first, then divide by the total."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-020",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A shipping crate shaped like a rectangular prism has a length of 8 feet, a width of 3 feet, and a height of 5 feet. What is its volume, in cubic feet?",
+    "choices": [
+      "40",
+      "96",
+      "120",
+      "136"
+    ],
+    "answer": "C",
+    "solutionText": "Volume equals length times width times height: $8 \\times 3 \\times 5 = 120$ cubic feet.",
+    "hints": [
+      "Multiply length, width, and height together."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-021",
+    "loId": "dsat.lines-angles-triangles",
+    "cedCode": "DSAT-4.2",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "In a triangle, one angle measures 42 degrees and a second angle measures 65 degrees. What is the measure, in degrees, of the third angle?",
+    "answer": "73",
+    "solutionText": "The angles of a triangle sum to 180 degrees: $180 - 42 - 65 = 73$.",
+    "hints": [
+      "The interior angles of any triangle sum to 180 degrees."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2e-022",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has legs of length 9 and 12. What is the length of the hypotenuse?",
+    "choices": [
+      "21",
+      "13",
+      "18",
+      "15"
+    ],
+    "answer": "D",
+    "solutionText": "By the Pythagorean theorem, $\\sqrt{9^2 + 12^2} = \\sqrt{225} = 15$.",
+    "hints": [
+      "Apply the Pythagorean theorem: $a^2 + b^2 = c^2$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-001",
+    "loId": "dsat.linear-equations-one-var",
+    "cedCode": "DSAT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A community center fundraiser charges \\$8 per ticket plus a one-time \\$45 room fee. If the total revenue collected was \\$493, how many tickets were sold?",
+    "choices": [
+      "56",
+      "51",
+      "62",
+      "67"
+    ],
+    "answer": "A",
+    "solutionText": "Solve $8x + 45 = 493$: $8x = 448$, so $x = 56$.",
+    "hints": [
+      "Set up total revenue = (price per ticket)(number of tickets) + fee."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-002",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tree's height, in inches, is a linear function of time since it was planted. When the tree was planted ($t = 0$), it was 14 inches tall. Three years later, it was 50 inches tall. Assuming the growth rate stays constant, what will the tree's height be, in inches, at $t = 7$?",
+    "choices": [
+      "86",
+      "98",
+      "92",
+      "110"
+    ],
+    "answer": "B",
+    "solutionText": "The growth rate is $(50-14)/3 = 12$ inches per year, so $h(t) = 14 + 12t$. At $t=7$: $h(7) = 14 + 84 = 98$.",
+    "hints": [
+      "Find the slope first using the two given (time, height) points."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-003",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A theater sells balcony and orchestra tickets. On Friday, 3 balcony tickets and 2 orchestra tickets sold for a total of \\$152. On Saturday, 5 balcony tickets and 4 orchestra tickets sold for a total of \\$276. What is the price, in dollars, of one orchestra ticket?",
+    "choices": [
+      "28",
+      "38",
+      "34",
+      "22"
+    ],
+    "answer": "C",
+    "solutionText": "Multiplying the first equation by 2 gives $6b+4o=304$. Subtracting $5b+4o=276$ gives $b=28$. Substituting back into $3b+2o=152$: $84+2o=152$, so $o=34$.",
+    "hints": [
+      "Scale one equation so a variable's coefficient matches the other equation, then subtract."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-004",
+    "loId": "dsat.linear-inequalities",
+    "cedCode": "DSAT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For which value of $x$ is the inequality $3x - 7 \\le 11$ NOT satisfied?",
+    "choices": [
+      "4",
+      "6",
+      "5",
+      "7"
+    ],
+    "answer": "D",
+    "solutionText": "Solving gives $x \\le 6$. Since $7 > 6$, $x = 7$ does not satisfy the inequality.",
+    "hints": [
+      "Solve the inequality first, then check which choice falls outside the solution set."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-005",
+    "loId": "dsat.equivalent-forms-solution-counts",
+    "cedCode": "DSAT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For what value of $k$ does the equation $4x + 12 = k(x + 3)$ have infinitely many solutions?",
+    "choices": [
+      "4",
+      "3",
+      "6",
+      "12"
+    ],
+    "answer": "A",
+    "solutionText": "Rewrite the right side as $kx + 3k$. For infinitely many solutions the equations must be identical: $k=4$ and $3k=12$, both giving $k=4$.",
+    "hints": [
+      "Expand the right side and match coefficients with the left side."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-006",
+    "loId": "dsat.linear-equations-two-vars",
+    "cedCode": "DSAT-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Line $\\ell$ passes through the point $(4, -1)$ and is perpendicular to the line $2x - 5y = 10$. What is the $y$-intercept of line $\\ell$?",
+    "choices": [
+      "7",
+      "9",
+      "11",
+      "-9"
+    ],
+    "answer": "B",
+    "solutionText": "The given line has slope $2/5$, so $\\ell$ has slope $-5/2$. Using point-slope form: $y+1 = -\\dfrac{5}{2}(x-4)$, which simplifies to $y = -\\dfrac{5}{2}x + 9$. The $y$-intercept is $9$.",
+    "hints": [
+      "Rewrite the given line in slope-intercept form to find its slope, then take the negative reciprocal."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-007",
+    "loId": "dsat.linear-functions",
+    "cedCode": "DSAT-1.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "The function $f$ is linear. If $f(-2) = 13$ and $f(6) = -11$, what is the value of $f(1)$?",
+    "answer": "4",
+    "solutionText": "The slope is $(-11-13)/(6-(-2)) = -3$. So $f(x) = 13 - 3(x+2) = 7 - 3x$, and $f(1) = 7 - 3 = 4$.",
+    "hints": [
+      "Find the slope from the two given function values, then write the equation of the line."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-008",
+    "loId": "dsat.systems-of-linear-equations",
+    "cedCode": "DSAT-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A chemist mixes a 15% acid solution with a 60% acid solution to create 20 liters of a 24% acid solution. How many liters of the 15% solution are used?",
+    "choices": [
+      "4",
+      "12",
+      "16",
+      "18"
+    ],
+    "answer": "C",
+    "solutionText": "Let $x$ be liters of the 15% solution and $y$ liters of the 60% solution. Then $x+y=20$ and $0.15x+0.60y=4.8$. Solving gives $y=4$ and $x=16$.",
+    "hints": [
+      "Set up one equation for total volume and one for total acid content."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-009",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For what positive value of $p$ does the equation $x^2 - 10x + p = 0$ have two real solutions that differ by 4?",
+    "choices": [
+      "16",
+      "24",
+      "9",
+      "21"
+    ],
+    "answer": "D",
+    "solutionText": "If the roots are $r$ and $r+4$, their sum is $10$ (from $-(-10)/1$), so $2r+4=10$ giving $r=3$; the roots are $3$ and $7$. Their product is $p=21$.",
+    "hints": [
+      "Use the fact that the sum of the roots equals 10, and let the roots be $r$ and $r+4$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-010",
+    "loId": "dsat.exponential-functions",
+    "cedCode": "DSAT-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The number of downloads of a mobile app is modeled by $D(t) = 400 \\cdot 3^{t/4}$, where $t$ is the number of days since launch. According to the model, after how many days does the number of downloads first reach 10,800?",
+    "answer": "12",
+    "solutionText": "Setting $400\\cdot 3^{t/4}=10800$ gives $3^{t/4}=27=3^3$, so $t/4=3$ and $t=12$.",
+    "hints": [
+      "Divide both sides by 400 and write 27 as a power of 3."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-011",
+    "loId": "dsat.equivalent-expressions",
+    "cedCode": "DSAT-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which expression is equivalent to $\\dfrac{6x^2 - 24}{2x - 4}$ for $x \\neq 2$?",
+    "choices": [
+      "$3x+6$",
+      "$3x-6$",
+      "$3x+12$",
+      "$6x+6$"
+    ],
+    "answer": "A",
+    "solutionText": "Factor: $\\dfrac{6(x-2)(x+2)}{2(x-2)} = 3(x+2) = 3x+6$.",
+    "hints": [
+      "Factor both the numerator and denominator completely before canceling."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-012",
+    "loId": "dsat.nonlinear-functions-graphs",
+    "cedCode": "DSAT-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A parabola has vertex $(3, -8)$ and passes through the point $(5, 4)$. What is the $y$-intercept of the parabola?",
+    "choices": [
+      "10",
+      "19",
+      "27",
+      "-8"
+    ],
+    "answer": "B",
+    "solutionText": "Using vertex form $y=a(x-3)^2-8$ and the point $(5,4)$: $4=4a-8$, so $a=3$. At $x=0$: $y=3(9)-8=19$.",
+    "hints": [
+      "Write the parabola in vertex form and use the given point to solve for $a$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-013",
+    "loId": "dsat.rational-radical-absolute",
+    "cedCode": "DSAT-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the solution set to $|3x - 4| = 2x + 6$?",
+    "choices": [
+      "$x=10$ only",
+      "$x=-10$ and $x=\\dfrac{2}{5}$",
+      "$x=-\\dfrac{2}{5}$ and $x=10$",
+      "$x=-\\dfrac{2}{5}$ only"
+    ],
+    "answer": "C",
+    "solutionText": "Case 1: $3x-4=2x+6$ gives $x=10$ (valid since $2x+6\\ge 0$). Case 2: $-(3x-4)=2x+6$ gives $x=-\\dfrac{2}{5}$ (also valid). Both check in the original equation.",
+    "hints": [
+      "Split into two cases based on the definition of absolute value, then verify each solution."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-014",
+    "loId": "dsat.nonlinear-systems-transformations",
+    "cedCode": "DSAT-2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y = x^2$ is vertically stretched by a factor of 2, then translated 3 units right and 5 units down. What is the resulting equation?",
+    "choices": [
+      "$y=2(x+3)^2-5$",
+      "$y=2(x-3)^2+5$",
+      "$y=(x-3)^2-5$",
+      "$y=2(x-3)^2-5$"
+    ],
+    "answer": "D",
+    "solutionText": "A vertical stretch by 2 gives $y=2x^2$. Translating 3 units right replaces $x$ with $x-3$: $y=2(x-3)^2$. Translating 5 units down subtracts 5: $y=2(x-3)^2-5$.",
+    "hints": [
+      "Apply the stretch first, then the horizontal shift, then the vertical shift, in order."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-015",
+    "loId": "dsat.quadratic-equations",
+    "cedCode": "DSAT-2.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "What is the positive solution to $x^2 - 6x - 27 = 0$?",
+    "answer": "9",
+    "solutionText": "Factoring gives $(x-9)(x+3)=0$, so $x=9$ or $x=-3$. The positive solution is $9$.",
+    "hints": [
+      "Factor the quadratic into two binomials."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-016",
+    "loId": "dsat.ratios-rates-units",
+    "cedCode": "DSAT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A printer produces flyers at a constant rate, printing 180 flyers in 15 minutes. At this rate, how many flyers will it print in 40 minutes?",
+    "choices": [
+      "480",
+      "420",
+      "450",
+      "500"
+    ],
+    "answer": "A",
+    "solutionText": "The rate is $180/15=12$ flyers per minute, so in 40 minutes it prints $12 \\times 40 = 480$ flyers.",
+    "hints": [
+      "Find the unit rate (flyers per minute) first."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-017",
+    "loId": "dsat.percentages",
+    "cedCode": "DSAT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A store marks up the wholesale price of a jacket by 40% to set the retail price. During a sale, the retail price is discounted by 25%. If the sale price is \\$84, what was the original wholesale price?",
+    "choices": [
+      "70",
+      "80",
+      "75",
+      "90"
+    ],
+    "answer": "B",
+    "solutionText": "The sale price is $0.75 \\times 1.40 \\times w = 1.05w$. Setting $1.05w=84$ gives $w=80$.",
+    "hints": [
+      "Combine the markup and discount into a single multiplier applied to the wholesale price."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-018",
+    "loId": "dsat.two-variable-data",
+    "cedCode": "DSAT-3.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A line of best fit relating a car's mileage (in thousands of miles, $x$) to its resale value (in dollars, $y$) is $y = 24{,}000 - 850x$. According to this model, what is the predicted decrease in resale value, in dollars, for every additional 10,000 miles driven?",
+    "answer": "8500",
+    "solutionText": "The slope is $-850$ dollars per thousand miles, so for 10,000 miles (10 units of $x$) the predicted decrease is $850 \\times 10 = 8500$ dollars.",
+    "hints": [
+      "The slope of the line gives the change in $y$ per unit of $x$; scale it to 10 units."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-019",
+    "loId": "dsat.probability",
+    "cedCode": "DSAT-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A box contains 5 red marbles, 4 blue marbles, and 3 green marbles. Two marbles are drawn at random without replacement. What is the probability that both marbles are the same color?",
+    "choices": [
+      "$\\dfrac{12}{66}$",
+      "$\\dfrac{1}{3}$",
+      "$\\dfrac{19}{66}$",
+      "$\\dfrac{19}{144}$"
+    ],
+    "answer": "C",
+    "solutionText": "Total ways to choose 2 of 12 marbles: $\\binom{12}{2}=66$. Same-color ways: $\\binom{5}{2}+\\binom{4}{2}+\\binom{3}{2}=10+6+3=19$. Probability $=19/66$.",
+    "hints": [
+      "Count same-color pairs for each color separately, then divide by the total number of pairs."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-020",
+    "loId": "dsat.right-triangle-trig",
+    "cedCode": "DSAT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In right triangle $ABC$, angle $C$ is the right angle, $AC = 9$, and $BC = 12$. What is $\\cos(A)$?",
+    "choices": [
+      "$\\dfrac{4}{5}$",
+      "$\\dfrac{4}{3}$",
+      "$\\dfrac{3}{4}$",
+      "$\\dfrac{3}{5}$"
+    ],
+    "answer": "D",
+    "solutionText": "The hypotenuse $AB=\\sqrt{9^2+12^2}=15$. Since $AC$ is the leg adjacent to angle $A$, $\\cos(A)=AC/AB=9/15=3/5$.",
+    "hints": [
+      "Find the hypotenuse with the Pythagorean theorem, then identify the leg adjacent to angle $A$."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-021",
+    "loId": "dsat.circles",
+    "cedCode": "DSAT-4.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A circle is defined by the equation $x^2 + y^2 - 8x + 6y + 9 = 0$. What is the radius of the circle?",
+    "answer": "4",
+    "solutionText": "Completing the square: $(x-4)^2 + (y+3)^2 = -9+16+9=16$, so the radius is $\\sqrt{16}=4$.",
+    "hints": [
+      "Complete the square separately for the $x$ terms and the $y$ terms."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  },
+  {
+    "id": "dsat-fa-m2h-022",
+    "loId": "dsat.area-volume",
+    "cedCode": "DSAT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular box has a length of 8, a width of 5, and a volume of 120. What is the height of the box?",
+    "choices": [
+      "3",
+      "2",
+      "4",
+      "6"
+    ],
+    "answer": "A",
+    "solutionText": "Volume $=l\\times w\\times h$: $120=8\\times5\\times h=40h$, so $h=3$.",
+    "hints": [
+      "Use the volume formula for a rectangular box and solve for the missing dimension."
+    ],
+    "topic": "digital-sat",
+    "topicId": "digital-sat",
+    "bankScope": "mock"
+  }
+]
