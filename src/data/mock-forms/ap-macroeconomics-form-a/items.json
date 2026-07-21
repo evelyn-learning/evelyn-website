@@ -292,15 +292,15 @@
     "topicId": "ap-macroeconomics",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The table below shows the cost of a fixed market basket of goods and services in the fictional economy of Larenmoor.\n\n| Year | Cost of Market Basket |\n|---|---|\n| Base year (2018) | \\$400 |\n| Current year (2026) | \\$460 |\n\nUsing this data, calculate the Consumer Price Index (CPI) for the current year (base year CPI = 100).",
+    "problemText": "The table below shows the cost of a fixed market basket of goods and services in the fictional economy of Aldermere.\n\n| Year | Cost of Market Basket |\n|---|---|\n| Base year (2015) | \\$250 |\n| Current year (2026) | \\$320 |\n\nUsing this data, calculate the Consumer Price Index (CPI) for the current year (base year CPI = 100).",
     "choices": [
-      "92",
-      "100",
-      "160",
-      "115"
+      "78",
+      "128",
+      "170",
+      "28"
     ],
-    "answer": "D",
-    "solutionText": "CPI = (cost of the market basket in the current year ÷ cost of the market basket in the base year) × 100 = (\\$460 ÷ \\$400) × 100 = 115. A CPI of 115 means the same basket of goods that cost \\$400 in the base year now costs 15% more, or \\$460, in the current year.",
+    "answer": "B",
+    "solutionText": "CPI = (cost of the market basket in the current year ÷ cost of the market basket in the base year) × 100 = (\\$320 ÷ \\$250) × 100 = 128. A CPI of 128 means the same basket of goods that cost \\$250 in the base year now costs 28% more, or \\$320, in the current year.",
     "bankScope": "mock"
   },
   {
@@ -463,7 +463,7 @@
     "topicId": "ap-macroeconomics",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Suppose the price level in the small open economy of Kestrel Bay falls, while the nominal money supply is held constant and all other determinants of aggregate demand are unchanged. According to the interest-rate effect that underlies the aggregate demand curve, what happens to the equilibrium interest rate in the money market and to the quantity of investment spending demanded, as shown by a movement along the AD curve?",
+    "problemText": "Suppose the price level in the small open economy of Harborlight falls, while the nominal money supply is held constant and all other determinants of aggregate demand are unchanged. According to the interest-rate effect that underlies the aggregate demand curve, what happens to the equilibrium interest rate in the money market and to the quantity of investment spending demanded, as shown by a movement along the AD curve?",
     "choices": [
       "The interest rate rises, and the quantity of investment spending demanded decreases",
       "The interest rate falls, and the quantity of investment spending demanded decreases",
@@ -731,12 +731,12 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following best describes the defining characteristic of a highly liquid financial asset?",
     "choices": [
-      "It can be converted into cash quickly with little or no loss of value.",
       "It guarantees a fixed rate of return above the rate of inflation.",
-      "It cannot be bought or sold on secondary markets.",
-      "Its market value is set exclusively by the federal government."
+      "Its market value is set exclusively by the federal government.",
+      "It can be converted into cash quickly with little or no loss of value.",
+      "It cannot be bought or sold on secondary markets."
     ],
-    "answer": "A",
+    "answer": "C",
     "solutionText": "Liquidity refers to how quickly and easily an asset can be converted into cash without losing value. Currency itself is the most liquid asset, while assets such as real estate or long-term bonds are less liquid because converting them into cash quickly often requires accepting a lower price. Rate of return, tradability on secondary markets, and government price-setting describe other asset characteristics, not liquidity.",
     "bankScope": "mock"
   },
@@ -750,12 +750,12 @@
     "responseFormat": "mcq",
     "problemText": "A bond pays a nominal interest rate of 5 percent per year. If the expected rate of inflation is 2 percent per year, what is the approximate real interest rate on the bond?",
     "choices": [
-      "2%",
       "3%",
+      "2%",
       "5%",
       "7%"
     ],
-    "answer": "B",
+    "answer": "A",
     "solutionText": "The approximate real interest rate equals the nominal interest rate minus the expected inflation rate: 5% − 2% = 3%. The real interest rate reflects the actual increase in purchasing power the lender gains from the loan.",
     "bankScope": "mock"
   },
@@ -807,12 +807,12 @@
     "responseFormat": "mcq",
     "problemText": "Corrian National Bank receives a new checkable deposit of \\$8,000. The required reserve ratio is 20 percent, and the bank currently holds zero excess reserves. Assuming the bank wants to hold zero excess reserves after this deposit, what is the maximum amount the bank can loan out from this deposit?",
     "choices": [
-      "\\$6,400",
       "\\$1,600",
+      "\\$6,400",
       "\\$4,000",
       "\\$8,000"
     ],
-    "answer": "A",
+    "answer": "B",
     "solutionText": "Required reserves equal the reserve ratio times the deposit: 0.20 × \\$8,000 = \\$1,600. The bank must hold this amount as reserves and can loan out the remainder of the deposit: \\$8,000 − \\$1,600 = \\$6,400.",
     "bankScope": "mock"
   },
@@ -845,12 +845,12 @@
     "responseFormat": "mcq",
     "problemText": "Suppose real GDP in the economy increases while the price level and the money supply remain constant. Using the money market model, with the nominal interest rate on the vertical axis and the quantity of money on the horizontal axis, what happens to the equilibrium nominal interest rate?",
     "choices": [
+      "It rises, because money demand increases.",
       "It falls, because money demand decreases.",
       "It rises, because money supply decreases.",
-      "It rises, because money demand increases.",
       "It remains unchanged, because money supply is fixed."
     ],
-    "answer": "C",
+    "answer": "A",
     "solutionText": "An increase in real GDP raises the transactions demand for money at every interest rate, shifting the money demand curve rightward. Because the money supply curve is vertical (fixed by the Federal Reserve) and unchanged, the rightward shift in demand raises the equilibrium nominal interest rate.",
     "bankScope": "mock"
   },
@@ -883,12 +883,12 @@
     "responseFormat": "mcq",
     "problemText": "The economy is currently experiencing a recessionary gap with high unemployment. To close this gap, the Federal Reserve conducts an open market purchase of government bonds. Which of the following correctly describes the short-run chain of effects on the money market and the goods market?",
     "choices": [
-      "The money supply increases, the nominal interest rate falls, investment spending increases, and aggregate demand increases.",
       "The money supply decreases, the nominal interest rate rises, investment spending decreases, and aggregate demand decreases.",
       "The money supply increases, the nominal interest rate rises, investment spending decreases, and aggregate demand decreases.",
-      "The money supply remains unchanged, but the nominal interest rate falls because banks voluntarily lower rates."
+      "The money supply remains unchanged, but the nominal interest rate falls because banks voluntarily lower rates.",
+      "The money supply increases, the nominal interest rate falls, investment spending increases, and aggregate demand increases."
     ],
-    "answer": "A",
+    "answer": "D",
     "solutionText": "An open market purchase injects reserves into the banking system, increasing the money supply. With money demand unchanged, the increase in supply lowers the equilibrium nominal interest rate. A lower interest rate reduces the cost of borrowing, so investment spending (and other interest-sensitive spending) rises, shifting aggregate demand rightward — appropriate for closing a recessionary gap.",
     "bankScope": "mock"
   },
@@ -922,11 +922,11 @@
     "problemText": "The federal government's budget deficit increases substantially due to higher spending on infrastructure, while private saving behavior is unchanged. Using the loanable funds market model, with the real interest rate on the vertical axis and the quantity of loanable funds on the horizontal axis, what is the effect of this increased deficit on the market for loanable funds?",
     "choices": [
       "The supply of loanable funds decreases, raising the equilibrium real interest rate and decreasing the equilibrium quantity of loanable funds.",
-      "The demand for loanable funds decreases, lowering the equilibrium real interest rate and increasing the equilibrium quantity of loanable funds.",
       "The demand for loanable funds increases, raising the equilibrium real interest rate and increasing the equilibrium quantity of loanable funds.",
+      "The demand for loanable funds decreases, lowering the equilibrium real interest rate and increasing the equilibrium quantity of loanable funds.",
       "The demand for loanable funds increases, raising the equilibrium real interest rate and decreasing the equilibrium quantity of loanable funds."
     ],
-    "answer": "C",
+    "answer": "B",
     "solutionText": "A larger deficit means the government must borrow more, increasing the demand for loanable funds (the demand curve shifts rightward). With the supply of loanable funds unchanged, the new equilibrium occurs at a higher real interest rate and a larger equilibrium quantity of funds borrowed and lent, reflecting a movement up along the supply curve.",
     "bankScope": "mock"
   },
@@ -940,12 +940,12 @@
     "responseFormat": "mcq",
     "problemText": "In the loanable funds market, the government increases its budget deficit, shifting the demand for loanable funds to the right and raising the equilibrium real interest rate from 3 percent to 6 percent. As a result, the quantity of loanable funds demanded by private firms for investment purposes falls, even though total government borrowing rises. Which statement correctly explains why the equilibrium quantity of loanable funds does not increase by the full amount of the government's additional borrowing?",
     "choices": [
+      "The higher real interest rate induces households to save more and firms to borrow less for investment, so private investment is partially crowded out, offsetting part of the increase in government borrowing.",
       "The higher real interest rate causes the supply of loanable funds to shift left, fully offsetting the increase in government borrowing.",
       "The central bank automatically increases the money supply to match any increase in government borrowing, keeping the real interest rate constant.",
-      "Private firms are legally prohibited from borrowing when the government runs a deficit, so all loanable funds are absorbed by the government.",
-      "The higher real interest rate induces households to save more and firms to borrow less for investment, so private investment is partially crowded out, offsetting part of the increase in government borrowing."
+      "Private firms are legally prohibited from borrowing when the government runs a deficit, so all loanable funds are absorbed by the government."
     ],
-    "answer": "D",
+    "answer": "A",
     "solutionText": "The rise in the real interest rate is a movement along, not a shift of, the supply curve: it increases the quantity of funds households are willing to save while decreasing the quantity of funds firms wish to borrow for investment. Because private investment borrowing falls as government borrowing rises, this crowding out means the increase in the equilibrium quantity of loanable funds is smaller than the increase in government borrowing alone.",
     "bankScope": "mock"
   },
@@ -959,12 +959,12 @@
     "responseFormat": "mcq",
     "problemText": "In the short run, which combination of a policy action and its most direct effect on the economy is correctly matched, assuming the economy starts at full-employment output?",
     "choices": [
-      "An increase in government spending shifts aggregate demand rightward, increasing real GDP and the price level above their initial levels in the short run.",
       "An increase in government spending shifts aggregate supply rightward, increasing real GDP without affecting the price level.",
       "A decrease in taxes shifts aggregate demand leftward, decreasing real GDP and the price level.",
+      "An increase in government spending shifts aggregate demand rightward, increasing real GDP and the price level above their initial levels in the short run.",
       "An increase in the required reserve ratio shifts aggregate demand rightward, increasing real GDP and the price level."
     ],
-    "answer": "A",
+    "answer": "C",
     "solutionText": "Government spending is a direct component of aggregate demand, so an increase in it shifts the AD curve rightward. Starting from full employment, this rightward shift moves the economy along the short-run aggregate supply curve, raising both real GDP (above potential) and the price level in the short run.",
     "bankScope": "mock"
   },
@@ -1035,12 +1035,12 @@
     "responseFormat": "mcq",
     "problemText": "A country runs persistent, large budget deficits for over a decade, financed by borrowing in the loanable funds market. Which of the following best describes the most likely long-run consequence for the economy's production capacity and growth, and the mechanism that produces it?",
     "choices": [
-      "Persistently higher real interest rates crowd out private investment in physical capital over time, slowing the growth of the capital stock and shifting the long-run aggregate supply curve rightward more slowly than it otherwise would.",
       "Persistently higher real interest rates increase private investment in physical capital over time, accelerating capital accumulation and shifting the long-run aggregate supply curve rightward more quickly.",
+      "Persistently higher real interest rates crowd out private investment in physical capital over time, slowing the growth of the capital stock and shifting the long-run aggregate supply curve rightward more slowly than it otherwise would.",
       "The deficits have no effect on private investment because government borrowing and private borrowing draw from separate, unrelated markets for funds.",
       "The deficits automatically lower the real interest rate over time because increased government borrowing increases the supply of loanable funds."
     ],
-    "answer": "A",
+    "answer": "B",
     "solutionText": "Sustained deficits raise government demand for loanable funds year after year, keeping the equilibrium real interest rate persistently higher than it would otherwise be. Higher borrowing costs discourage private investment in physical capital — long-run crowding out. Because investment in capital is a key driver of long-run economic growth, a smaller capital stock means the long-run aggregate supply curve (and the economy's production possibilities) expands more slowly over time than it would without the crowding out.",
     "bankScope": "mock"
   },
@@ -1054,12 +1054,12 @@
     "responseFormat": "mcq",
     "problemText": "Verdania's real GDP per capita has grown at a sustainable annual rate for the past decade due to steady increases in the average years of schooling completed by its workforce and rising spending on vocational training programs. Using economic growth theory, which of the following best explains why this trend leads to a sustained increase in real GDP per capita over time, rather than only a one-time increase in output?",
     "choices": [
-      "Investment in human capital increases consumer spending in the short run, which shifts aggregate demand rightward and permanently raises the price level.",
       "Investment in human capital raises worker productivity, which increases the quantity of goods and services each worker can produce; because this productivity gain persists and can continue to build over successive years of training, it shifts the production possibilities curve and long-run aggregate supply outward on an ongoing basis.",
+      "Investment in human capital increases consumer spending in the short run, which shifts aggregate demand rightward and permanently raises the price level.",
       "Investment in human capital increases the size of the labor force only, with no effect on output per worker, so real GDP per capita remains unchanged.",
       "Investment in human capital is a form of government spending that increases the budget deficit, which reduces real GDP per capita through crowding out."
     ],
-    "answer": "B",
+    "answer": "A",
     "solutionText": "Human capital (education, training, skills) raises labor productivity, the output each worker can produce. Because productivity improvements compound and continue as training continues, they generate an ongoing outward shift in the production possibilities curve and long-run aggregate supply, producing sustained growth in real GDP per capita rather than a one-time, demand-driven bump in output.",
     "bankScope": "mock"
   },
@@ -1130,12 +1130,12 @@
     "responseFormat": "mcq",
     "problemText": "The verd appreciates significantly against the cass. Verdania and Cassaria are major trading partners. Holding all else equal, which of the following correctly traces the short-run effect of this appreciation on Verdania's net exports and real GDP?",
     "choices": [
-      "Verdania's net exports fall, but because aggregate demand depends only on domestic consumption, real GDP is unaffected in the short run.",
       "Verdania's exports become more expensive to Cassarian buyers and Cassaria's exports become cheaper to Verdanian buyers, so Verdania's net exports fall, aggregate demand decreases, and real GDP falls in the short run.",
+      "Verdania's net exports fall, but because aggregate demand depends only on domestic consumption, real GDP is unaffected in the short run.",
       "The appreciation has no effect on trade flows because exchange rate changes only affect financial asset prices, not the prices of goods and services.",
       "Verdania's exports become cheaper to Cassarian buyers and Cassaria's exports become more expensive to Verdanian buyers, so Verdania's net exports rise, aggregate demand increases, and real GDP rises in the short run."
     ],
-    "answer": "B",
+    "answer": "A",
     "solutionText": "When the verd appreciates, each verd buys more cass, making Verdanian goods relatively more expensive for Cassarian buyers (exports fall) and Cassarian goods relatively cheaper for Verdanian buyers (imports rise). The resulting decline in net exports, a component of aggregate demand, shifts AD leftward, reducing real GDP in the short run, holding other factors constant.",
     "bankScope": "mock"
   },
