@@ -1,0 +1,1271 @@
+[
+  {
+    "id": "apmacro-fa-mc-001",
+    "loId": "apmacro.scarcity",
+    "cedCode": "AP-MACRO-1.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best defines the fundamental economic problem of scarcity?",
+    "choices": [
+      "The condition in which unlimited human wants exceed the limited resources available to satisfy them",
+      "Governments failing to redistribute income equally among citizens",
+      "A temporary shortage of a specific good caused by a supply chain disruption",
+      "The inability of a firm to sell all of the output it produces at the current market price"
+    ],
+    "answer": "A",
+    "solutionText": "Scarcity is the basic economic problem that arises because human wants for goods and services are unlimited while the resources — land, labor, capital, and entrepreneurship — available to produce them are limited. This forces individuals, firms, and societies to make choices about how to allocate resources. Choice B describes an equity/redistribution issue, not scarcity itself. Choice C describes a temporary market shortage, a different (and narrower) concept than scarcity. Choice D describes a market surplus, the opposite situation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-002",
+    "loId": "apmacro.resource-allocation",
+    "cedCode": "AP-MACRO-1.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a market economic system (as opposed to a centrally planned system), the decisions of what goods to produce, how to produce them, and for whom to produce them are primarily determined by:",
+    "choices": [
+      "A central planning board that issues production quotas to firms",
+      "Historical traditions and customs passed down through generations",
+      "The interaction of supply and demand through the price mechanism",
+      "Random allocation of resources determined by lottery"
+    ],
+    "answer": "C",
+    "solutionText": "In a market economy, prices act as signals that coordinate the decentralized decisions of buyers and sellers. Rising prices signal firms to produce more of a good and ration it toward the buyers who value it most; falling prices signal the opposite. This price mechanism — not a central planner (choice A), tradition (choice B), or random allocation (choice D) — answers the what, how, and for whom questions in a market system.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-003",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows four attainable production possibilities for the fictional nation of Kestralia, which produces only solar panels and textbooks.\n\n| Combination | Solar Panels | Textbooks |\n|---|---|---|\n| P | 0 | 60 |\n| Q | 10 | 50 |\n| R | 20 | 30 |\n| S | 30 | 0 |\n\nAccording to the table, what is the opportunity cost of increasing solar panel production from 10 to 20 units (moving from combination Q to combination R)?",
+    "choices": [
+      "10 textbooks",
+      "20 textbooks",
+      "30 textbooks",
+      "50 textbooks"
+    ],
+    "answer": "B",
+    "solutionText": "Moving from combination Q to combination R, solar panel production rises from 10 to 20 units (a gain of 10 panels), while textbook production falls from 50 to 30 units (a loss of 20 textbooks). The opportunity cost of that increase in panels is therefore 20 textbooks. Note that moving from P to Q cost only 10 textbooks for the same 10-unit gain in panels — the rising opportunity cost as more panels are produced is what gives the production possibilities curve its bowed-out shape.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-004",
+    "loId": "apmacro.ppc",
+    "cedCode": "AP-MACRO-1.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The fictional nation of Doravia produces only wheat and machinery. On a production possibilities curve (PPC) for Doravia with wheat on one axis and machinery on the other, point M lies inside the curve (not on it). Which statement is best supported by this information?",
+    "choices": [
+      "Doravia is experiencing economic growth",
+      "Doravia's resources are being used efficiently and are fully employed",
+      "Doravia cannot produce that combination of wheat and machinery given its current resources and technology",
+      "Doravia's resources are unemployed or being used inefficiently"
+    ],
+    "answer": "D",
+    "solutionText": "Any point inside the PPC represents a combination of output that is attainable but not efficient — it indicates that some resources are unemployed (for example, idle factories or workers) or are not being used in their most productive way. A point on the curve, not inside it, represents full and efficient use of resources (choice B). A point outside the curve is currently unattainable (choice C), the opposite of the situation described. Economic growth (choice A) is represented by an outward shift of the entire curve, not by a single interior point.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-005",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two independent producers, Oskar and Petra, each work one day. In that day, Oskar can produce either 8 bushels of wheat or 4 bales of wool, and Petra can produce either 6 bushels of wheat or 6 bales of wool (each producer must choose one good or the other; production possibilities are linear).\n\nBased on this information, which of the following correctly identifies who has a comparative advantage in wheat, and why?",
+    "choices": [
+      "Oskar has a comparative advantage in wool because he can produce more wool per day than Petra",
+      "Petra has a comparative advantage in wheat because she can produce it using fewer resources than Oskar",
+      "Oskar has a comparative advantage in wheat because his opportunity cost of producing wheat (0.5 bale of wool per bushel) is lower than Petra's (1 bale of wool per bushel)",
+      "Neither producer has a comparative advantage in anything, because Oskar has an absolute advantage in both goods"
+    ],
+    "answer": "C",
+    "solutionText": "Comparative advantage is based on opportunity cost, not raw output. Oskar's opportunity cost of one bushel of wheat is 4 wool ÷ 8 wheat = 0.5 bale of wool; Petra's opportunity cost of one bushel of wheat is 6 wool ÷ 6 wheat = 1 bale of wool. Since Oskar gives up less wool per bushel of wheat, he has the comparative advantage in wheat. Note that choice D is also factually wrong: Oskar does not have an absolute advantage in both goods — Petra can produce more wool (6) than Oskar (4) in a day, so Petra has the absolute advantage in wool.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-006",
+    "loId": "apmacro.comparative-advantage",
+    "cedCode": "AP-MACRO-1.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Using the same production data as above — in one day, Oskar can produce either 8 bushels of wheat or 4 bales of wool, and Petra can produce either 6 bushels of wheat or 6 bales of wool — for trade between Oskar and Petra to be mutually beneficial, the terms of trade for one bale of wool (expressed in bushels of wheat) must fall within which range?",
+    "choices": [
+      "Between 0.5 and 1 bushel of wheat per bale of wool",
+      "Between 1 and 2 bushels of wheat per bale of wool",
+      "Exactly 1 bushel of wheat per bale of wool",
+      "Between 2 and 4 bushels of wheat per bale of wool"
+    ],
+    "answer": "B",
+    "solutionText": "Petra's opportunity cost of one bale of wool is 1 bushel of wheat (6 wheat ÷ 6 wool), while Oskar's opportunity cost of one bale of wool is 2 bushels of wheat (8 wheat ÷ 4 wool). For trade to benefit both producers, the agreed terms of trade must lie strictly between each producer's own opportunity cost — otherwise one party would do better producing the good domestically instead of trading. Any price between 1 and 2 bushels of wheat per bale of wool lets both Oskar and Petra gain from specializing and trading.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-007",
+    "loId": "apmacro.cost-benefit",
+    "cedCode": "AP-MACRO-1.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The town of Brindlewood is deciding how many hours per night to fund additional police patrol. The table below shows the marginal benefit (MB) and marginal cost (MC) of each additional hour of patrol.\n\n| Hours of Patrol | Marginal Benefit | Marginal Cost |\n|---|---|---|\n| 1 | \\$500 | \\$100 |\n| 2 | \\$400 | \\$150 |\n| 3 | \\$300 | \\$200 |\n| 4 | \\$200 | \\$250 |\n| 5 | \\$100 | \\$300 |\n\nUsing marginal (cost-benefit) analysis, what is the economically efficient number of patrol hours for Brindlewood to fund?",
+    "choices": [
+      "3 hours, because that is the last hour for which marginal benefit meets or exceeds marginal cost",
+      "2 hours, because that is the level with the lowest marginal cost",
+      "4 hours, because total benefit is maximized at that point",
+      "5 hours, because that provides the most total patrol coverage"
+    ],
+    "answer": "A",
+    "solutionText": "The efficient quantity of an activity is found where marginal benefit equals marginal cost, or at the last unit for which MB is still greater than or equal to MC. At hour 3, MB (\\$300) exceeds MC (\\$200), so funding this hour still adds net value. At hour 4, MC (\\$250) exceeds MB (\\$200), so adding a 4th hour would cost more than it's worth. Therefore 3 hours is the efficient level — funding beyond that point makes Brindlewood worse off even though 'more patrol' might sound better.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-008",
+    "loId": "apmacro.marginal-analysis-consumer",
+    "cedCode": "AP-MACRO-1.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Théo eats scoops of gelato in one sitting. The marginal utility of the 1st scoop is 20 utils, the 2nd scoop is 14 utils, the 3rd scoop is 8 utils, and the 4th scoop is 2 utils. What is Théo's total utility after eating exactly 3 scoops of gelato?",
+    "choices": [
+      "8 utils",
+      "20 utils",
+      "42 utils",
+      "44 utils"
+    ],
+    "answer": "C",
+    "solutionText": "Total utility is the sum of the marginal utilities of all units consumed so far: 20 + 14 + 8 = 42 utils after 3 scoops. Notice that marginal utility is falling with each additional scoop (20 > 14 > 8), illustrating the law of diminishing marginal utility — but total utility is still increasing overall as long as marginal utility remains positive.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-009",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the basic circular flow model of a market economy, wages, rent, interest, and profit are payments that flow from firms to households through the:",
+    "choices": [
+      "Product market, in exchange for goods and services",
+      "Foreign exchange market, in exchange for foreign currency",
+      "Loanable funds market, in exchange for savings",
+      "Factor market, in exchange for the productive resources households provide"
+    ],
+    "answer": "D",
+    "solutionText": "Households own the factors of production — land, labor, capital, and entrepreneurship — and supply them to firms through the factor market. In exchange, firms pay households rent (for land), wages (for labor), interest (for capital), and profit (for entrepreneurship). This is distinct from the product market (choice A), where the flow runs the opposite direction: households pay firms for finished goods and services.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-010",
+    "loId": "apmacro.circular-flow-gdp",
+    "cedCode": "AP-MACRO-2.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Using the expenditure approach, GDP is calculated by summing which four components?",
+    "choices": [
+      "Consumption, investment, government spending, and net exports",
+      "Wages, rent, interest, and profit",
+      "Taxes, transfer payments, subsidies, and tariffs",
+      "Imports, exports, savings, and exchange rates"
+    ],
+    "answer": "A",
+    "solutionText": "The expenditure approach defines GDP as GDP = C + I + G + NX, where C is household consumption spending, I is gross private investment, G is government purchases of goods and services, and NX is net exports (exports minus imports). Wages, rent, interest, and profit (choice B) are instead the components of the income approach to GDP.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-011",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "GDP is intended to measure the total market value of final goods and services produced within a country's borders in a given time period. Which of the following economic activities is excluded from officially measured GDP?",
+    "choices": [
+      "Wages paid to a factory worker producing machinery for export",
+      "The value of unpaid childcare a parent provides to their own children at home",
+      "Government spending on public school teacher salaries",
+      "A homeowner's spending on a professionally installed kitchen renovation"
+    ],
+    "answer": "B",
+    "solutionText": "GDP only counts market transactions — goods and services that are bought and sold. Non-market production, such as unpaid household labor like childcare or housework a person performs for their own family, has real economic value but is never bought or sold in a market, so it is excluded from GDP. Wages for exported machinery (choice A), government salary spending (choice C), and a paid renovation (choice D) are all market transactions that are captured in GDP.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-012",
+    "loId": "apmacro.gdp-limitations",
+    "cedCode": "AP-MACRO-2.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The fictional country of Halvenmark has a large informal sector: many workers are paid in unreported cash wages, and street vendors sell goods without reporting the sales to tax or statistical authorities. All else equal, this informal economic activity is most likely to cause Halvenmark's officially reported GDP to:",
+    "choices": [
+      "Overstate the country's true level of production",
+      "Have no effect, since GDP always captures total production regardless of whether it is reported",
+      "Only affect real GDP but leave nominal GDP unaffected",
+      "Understate the country's true level of production"
+    ],
+    "answer": "D",
+    "solutionText": "Official GDP statistics are compiled from reported market transactions — tax records, business surveys, and similar formal data sources. Economic activity that occurs 'off the books' in the informal or underground economy, such as unreported cash wages and unrecorded street sales, still represents real production, but because it is never reported it is left out of the official GDP figures. This causes officially measured GDP to understate the economy's true total output.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-013",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table below describes the working-age population of the fictional town of Ashgrove Township.\n\n| Category | Number of People |\n|---|---|\n| Employed | 27,000 |\n| Unemployed (actively seeking work) | 3,000 |\n| Not in the labor force | 20,000 |\n\nUsing this data, calculate Ashgrove Township's unemployment rate.",
+    "choices": [
+      "6%",
+      "10%",
+      "40%",
+      "60%"
+    ],
+    "answer": "B",
+    "solutionText": "The labor force includes only people who are employed or actively seeking work: 27,000 + 3,000 = 30,000. People who are not in the labor force (such as retirees, full-time students, or discouraged workers no longer searching) are excluded from this calculation entirely. The unemployment rate = unemployed ÷ labor force = 3,000 ÷ 30,000 = 10%.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-014",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Priya has worked for ten years as a structural drafter using traditional blueprint software. Her firm adopts new AI-assisted design software that automates most of her previous tasks, and she is laid off because she lacks the programming skills the redesigned role now requires. Which type of unemployment does Priya's situation best illustrate?",
+    "choices": [
+      "Structural unemployment",
+      "Frictional unemployment",
+      "Cyclical unemployment",
+      "Seasonal unemployment"
+    ],
+    "answer": "A",
+    "solutionText": "Structural unemployment occurs when there is a mismatch between the skills workers have and the skills employers need, often caused by permanent changes in technology or the structure of an industry. Priya was not laid off because of a general economic downturn (which would be cyclical unemployment) or because she is voluntarily between jobs while searching for a good match (frictional unemployment) — she was displaced because automation permanently changed the skill requirements of her occupation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-015",
+    "loId": "apmacro.unemployment",
+    "cedCode": "AP-MACRO-2.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A country's natural rate of unemployment — the sum of its frictional and structural unemployment — is estimated at 5%. During a recession, the country's actual unemployment rate rises to 8%. Which of the following best explains the additional 3 percentage points of unemployment above the natural rate?",
+    "choices": [
+      "It reflects an increase in frictional unemployment, as more workers voluntarily search for better job matches",
+      "It reflects an increase in structural unemployment caused by a permanent change in the skills required by employers",
+      "It reflects cyclical unemployment caused by a decline in aggregate demand for labor during the economic downturn",
+      "It indicates that the natural rate of unemployment itself has risen to 8%"
+    ],
+    "answer": "C",
+    "solutionText": "When actual unemployment rises above the natural rate, the gap is attributed to cyclical unemployment — job losses driven by a downturn in the business cycle, in which falling aggregate demand for goods and services reduces firms' demand for labor. This is distinct from frictional and structural unemployment, which are already included in the natural rate and don't fluctuate with the business cycle. The natural rate itself does not automatically change just because actual unemployment rises (choice D is incorrect).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-016",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows the cost of a fixed market basket of goods and services in the fictional economy of Larenmoor.\n\n| Year | Cost of Market Basket |\n|---|---|\n| Base year (2018) | \\$400 |\n| Current year (2026) | \\$460 |\n\nUsing this data, calculate the Consumer Price Index (CPI) for the current year (base year CPI = 100).",
+    "choices": [
+      "92",
+      "100",
+      "160",
+      "115"
+    ],
+    "answer": "D",
+    "solutionText": "CPI = (cost of the market basket in the current year ÷ cost of the market basket in the base year) × 100 = (\\$460 ÷ \\$400) × 100 = 115. A CPI of 115 means the same basket of goods that cost \\$400 in the base year now costs 15% more, or \\$460, in the current year.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-017",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Consumer Price Index (CPI) for the small economy of Wrenholt was 110 in Year 1 and 121 in Year 2. What was the rate of inflation between Year 1 and Year 2?",
+    "choices": [
+      "5%",
+      "10%",
+      "11%",
+      "21%"
+    ],
+    "answer": "B",
+    "solutionText": "The inflation rate between two years is calculated as [(CPI in later year − CPI in earlier year) ÷ CPI in earlier year] × 100. Here, that is [(121 − 110) ÷ 110] × 100 = (11 ÷ 110) × 100 = 10%. Note that the 11-point rise in the index itself is not the inflation rate — the change must be divided by the starting CPI value.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-018",
+    "loId": "apmacro.price-indices-inflation",
+    "cedCode": "AP-MACRO-2.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When the price of beef rises sharply in a country, many consumers substitute toward chicken, whose price has risen much less. Because the CPI's market basket is fixed and updated only periodically, this substitution behavior causes the CPI to:",
+    "choices": [
+      "Overstate the true increase in the cost of living, because it assumes consumers keep buying the same fixed basket even as they substitute toward relatively cheaper goods",
+      "Understate the true increase in the cost of living, since it exactly captures the savings consumers achieve by substituting",
+      "Have no effect on measured inflation, since beef and chicken are counted in separate, unrelated indices",
+      "Precisely measure the true change in the cost of living, since the basket is reweighted every month to reflect consumer behavior"
+    ],
+    "answer": "A",
+    "solutionText": "This is known as substitution bias. Because the CPI's market basket is fixed for an extended period rather than adjusted in real time, it assumes consumers keep buying beef in the same quantity even as its relative price rises, when in reality many consumers shift toward the cheaper substitute (chicken) to soften the impact on their budget. By ignoring this substitution, the fixed-basket CPI overstates how much a flexible consumer's true cost of living has actually risen.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-019",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mateus borrows \\$20,000 from a bank at a fixed 5% nominal annual interest rate, at a time when both Mateus and the bank expect inflation of about 2% per year. Instead, inflation unexpectedly rises to 6% per year for the life of the loan, while the nominal interest rate on the loan stays fixed at 5%. Who benefits from this unanticipated inflation?",
+    "choices": [
+      "The bank (lender), because the real interest rate it receives on the loan turns out higher than expected",
+      "Mateus (the borrower), because the real interest rate he pays on the loan turns out lower than expected",
+      "Neither party is affected, because nominal interest rates automatically adjust to match actual inflation",
+      "Both parties benefit equally, because inflation affects lenders and borrowers in the exact same way"
+    ],
+    "answer": "B",
+    "solutionText": "The real interest rate approximately equals the nominal interest rate minus the inflation rate. Mateus and the bank expected a real rate of about 5% − 2% = 3%. Because actual inflation rose to 6%, the real rate that Mateus actually pays falls to about 5% − 6% = −1%, meaning he repays the loan with dollars that are worth less than either party anticipated. Unanticipated inflation systematically redistributes purchasing power away from lenders and toward borrowers who are locked into fixed-rate contracts.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-020",
+    "loId": "apmacro.costs-of-inflation",
+    "cedCode": "AP-MACRO-2.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An economy experiences a sudden, unanticipated jump in inflation. Consider two effects of this jump: (1) a retailer must repeatedly reprint its in-store price tags and update prices across its website and mobile app, and (2) a household holding fixed-rate government bonds purchased before the inflation jump finds that the bonds' fixed payments buy less than expected. Which pair of terms correctly identifies the cost illustrated by (1) and the direction of wealth redistribution illustrated by (2)?",
+    "choices": [
+      "(1) Shoe-leather costs; (2) redistribution from borrowers to lenders",
+      "(1) Menu costs; (2) redistribution from borrowers to lenders",
+      "(1) Menu costs; (2) redistribution from lenders to borrowers",
+      "(1) Shoe-leather costs; (2) redistribution from lenders to borrowers"
+    ],
+    "answer": "C",
+    "solutionText": "Menu costs are the real resource costs firms incur when they must update posted prices — reprinting tags, republishing catalogs and websites — in response to inflation; that describes scenario (1). Shoe-leather costs instead refer to the cost of the extra trips to the bank and cash-management effort people undertake to minimize holding depreciating cash, which is not what's described here. For (2), the household holding fixed-rate bonds is acting as a lender; when inflation is higher than expected, the fixed interest and principal they receive are worth less in real terms, so purchasing power is effectively redistributed away from lenders (savers/bondholders) toward borrowers (the bond issuer), who repay their fixed obligations with less valuable dollars.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-021",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows nominal GDP and the GDP price deflator for the economy of Solmere in two consecutive years.\n\n| Year | Nominal GDP | GDP Deflator (base year = 100) |\n|---|---|---|\n| Year 1 | \\$800 billion | 100 |\n| Year 2 | \\$900 billion | 120 |\n\nUsing this data, calculate Solmere's real GDP for Year 2, expressed in Year-1 dollars.",
+    "choices": [
+      "\\$750 billion",
+      "\\$650 billion",
+      "\\$900 billion",
+      "\\$1,080 billion"
+    ],
+    "answer": "A",
+    "solutionText": "Real GDP = (Nominal GDP ÷ GDP deflator) × 100. For Year 2: (\\$900 billion ÷ 120) × 100 = \\$750 billion. Because the deflator rose above 100, part of the rise in nominal GDP reflects higher prices rather than more actual output; real GDP strips out that price effect by valuing Year-2 production at Year-1 price levels.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-022",
+    "loId": "apmacro.real-vs-nominal-gdp",
+    "cedCode": "AP-MACRO-2.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows nominal GDP and the GDP price deflator for the economy of Solmere in two consecutive years.\n\n| Year | Nominal GDP | GDP Deflator (base year = 100) |\n|---|---|---|\n| Year 1 | \\$800 billion | 100 |\n| Year 2 | \\$900 billion | 120 |\n\nBased on this data, which statement correctly compares nominal and real GDP growth for Solmere between Year 1 and Year 2?",
+    "choices": [
+      "Both nominal and real GDP grew, showing that Solmere produced more goods and services in Year 2",
+      "Nominal GDP grew while real GDP fell, showing that rising prices — not increased output — accounted for the entire rise in nominal GDP, and that Solmere's actual production shrank",
+      "Real GDP grew faster than nominal GDP, showing that output growth outpaced inflation",
+      "Nominal and real GDP are always identical whenever the deflator is reported in index form, so no meaningful comparison is possible"
+    ],
+    "answer": "B",
+    "solutionText": "Real GDP in Year 1 = \\$800 billion ÷ 100 × 100 = \\$800 billion. Real GDP in Year 2 = \\$900 billion ÷ 120 × 100 = \\$750 billion. Nominal GDP rose by 12.5% (\\$800 billion to \\$900 billion), but real GDP actually fell by about 6.25% (\\$800 billion to \\$750 billion). This means the entire increase in nominal GDP — and more — was driven by rising prices (inflation), while Solmere's actual production of goods and services contracted. This is exactly why economists rely on real GDP, not nominal GDP, to measure genuine economic growth.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-023",
+    "loId": "apmacro.business-cycle",
+    "cedCode": "AP-MACRO-2.7",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economy has just experienced two consecutive quarters of declining real GDP, along with rising unemployment and falling business investment. Which phase of the business cycle is this economy most likely experiencing?",
+    "choices": [
+      "Expansion",
+      "Peak",
+      "Trough",
+      "Contraction (recession)"
+    ],
+    "answer": "D",
+    "solutionText": "A period of falling real GDP accompanied by rising unemployment and declining investment describes a contraction, informally identified in practice (though not strictly defined) by at least two consecutive quarters of declining real GDP. The peak is the high point marking the end of an expansion and the start of a downturn; the trough is the low point marking the end of a contraction and the start of recovery; expansion is the growth phase that follows the trough.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-024",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which combination of effects best explains why the aggregate demand (AD) curve is downward sloping — that is, why a decrease in the price level, ceteris paribus, increases the quantity of real GDP demanded?",
+    "choices": [
+      "The real-balances (wealth) effect, the interest-rate effect, and the exchange-rate (net exports) effect together explain why a lower price level increases the quantity of real GDP demanded",
+      "The law of diminishing marginal returns, which raises the cost of producing additional units of output as the price level rises",
+      "The substitution effect between domestic and imported final goods only, with no role played by interest rates",
+      "An upward-sloping money demand curve that causes nominal wages to adjust instantly to changes in the price level"
+    ],
+    "answer": "A",
+    "solutionText": "The AD curve slopes downward because of three linked effects, all holding the non-price determinants of AD constant: (1) the real-balances (wealth) effect — a lower price level raises the real value of money holdings and other fixed-value assets, so households feel wealthier and increase consumption; (2) the interest-rate effect — a lower price level reduces money demand, lowering interest rates and increasing interest-sensitive investment (and durable-goods consumption); and (3) the exchange-rate (net exports) effect — a lower price level (and the lower interest rates it causes) tends to depreciate the currency, making domestic goods relatively cheaper and increasing net exports. Diminishing marginal returns explains the upward slope of the SRAS curve, not the downward slope of AD. The substitution effect between domestic and imported goods is only one piece of the net-exports effect and ignores the wealth and interest-rate effects, and nominal wages adjusting 'instantly' describes neither AD nor the effects that generate it.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-025",
+    "loId": "apmacro.aggregate-demand",
+    "cedCode": "AP-MACRO-3.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Suppose the price level in the small open economy of Kestrel Bay falls, while the nominal money supply is held constant and all other determinants of aggregate demand are unchanged. According to the interest-rate effect that underlies the aggregate demand curve, what happens to the equilibrium interest rate in the money market and to the quantity of investment spending demanded, as shown by a movement along the AD curve?",
+    "choices": [
+      "The interest rate rises, and the quantity of investment spending demanded decreases",
+      "The interest rate falls, and the quantity of investment spending demanded decreases",
+      "The interest rate is unaffected, and the quantity of investment spending demanded increases",
+      "The interest rate falls, and the quantity of investment spending demanded increases"
+    ],
+    "answer": "D",
+    "solutionText": "A lower price level, with the nominal money supply fixed, increases the real value of money balances that households and firms hold. At the original interest rate, people now hold more real money than they want to, so they lend out the excess, pushing the equilibrium interest rate down in the money market. A lower interest rate reduces the cost of borrowing, which increases the quantity of interest-sensitive investment spending demanded. This is the interest-rate effect, one of the three reasons the AD curve slopes downward — it describes a movement along a fixed AD curve (caused by a price-level change), not a shift of the curve itself.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-026",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the nation of Thornfield, the marginal propensity to consume (MPC) is $0.75$. The government increases spending by \\$20 million, with no change in taxes. Assuming no crowding out, a constant price level, and no other changes to aggregate demand, what is the maximum possible increase in real GDP resulting from the spending multiplier effect?",
+    "choices": [
+      "\\$15 million",
+      "\\$80 million",
+      "\\$26.7 million",
+      "\\$100 million"
+    ],
+    "answer": "B",
+    "solutionText": "The spending multiplier is $\\dfrac{1}{1-MPC} = \\dfrac{1}{1-0.75} = \\dfrac{1}{0.25} = 4$. Multiplying the initial change in government spending by the multiplier gives the maximum change in real GDP: \\$20 million × 4 = \\$80 million. This is a theoretical maximum because it assumes a constant price level (i.e., a horizontal SRAS over the relevant range) and no crowding out; in practice, part of this effect would be dissipated by a rising price level and/or higher interest rates.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-027",
+    "loId": "apmacro.multipliers",
+    "cedCode": "AP-MACRO-3.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Real GDP in the nation of Calderwood is currently \\$40 billion below its potential (full-employment) GDP — a recessionary gap. The marginal propensity to consume (MPC) is $0.8$. If policymakers want to close this gap solely through a change in government spending (with no change in taxes), and assuming no crowding out and a constant price level, by how much should government spending increase?",
+    "choices": [
+      "\\$5 billion",
+      "\\$32 billion",
+      "\\$8 billion",
+      "\\$40 billion"
+    ],
+    "answer": "C",
+    "solutionText": "The spending multiplier is $\\dfrac{1}{1-MPC} = \\dfrac{1}{1-0.8} = \\dfrac{1}{0.2} = 5$. To close a \\$40 billion recessionary gap, the required increase in government spending is the gap divided by the multiplier: \\$40 billion ÷ 5 = \\$8 billion. An \\$8 billion increase in government spending, multiplied through the economy by the spending multiplier of 5, produces the full \\$40 billion increase in real GDP needed to reach potential GDP, under the stated simplifying assumptions.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-028",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best explains why the short-run aggregate supply (SRAS) curve is upward sloping?",
+    "choices": [
+      "In the short run, all input prices, including nominal wages, adjust fully and instantly to changes in the price level",
+      "In the short run, the economy always produces at potential GDP regardless of the price level",
+      "In the short run, a higher price level causes the entire labor supply curve to shift rightward",
+      "In the short run, nominal wages and other input prices are sticky, so a higher price level raises firms' per-unit profit margins and induces them to increase output"
+    ],
+    "answer": "D",
+    "solutionText": "In the short run, many input prices — especially nominal wages, which are often fixed by contracts — are 'sticky' and do not adjust immediately to changes in the overall price level. When the price level rises while input costs remain temporarily fixed, firms' per-unit profit margins increase, making it profitable to expand output. This is why SRAS slopes upward: a higher price level is associated with a greater quantity of real GDP supplied in the short run. Full, instant adjustment of all input prices describes the long run, which is why the LRAS curve is vertical, not why SRAS slopes upward. The other options describe neither a real mechanism nor the accepted explanation for the SRAS slope.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-029",
+    "loId": "apmacro.short-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Suppose the world price of crude oil rises sharply, increasing production costs for firms across the economy of Brightmoor, while aggregate demand and long-run aggregate supply remain unchanged. In the short run, this shock will cause the SRAS curve to shift in which direction, and what will happen to the short-run equilibrium price level and real GDP?",
+    "choices": [
+      "SRAS shifts leftward; the equilibrium price level rises and equilibrium real GDP falls",
+      "SRAS shifts rightward; the equilibrium price level falls and equilibrium real GDP rises",
+      "SRAS shifts leftward; the equilibrium price level falls and equilibrium real GDP falls",
+      "AD shifts leftward; the equilibrium price level falls and equilibrium real GDP falls"
+    ],
+    "answer": "A",
+    "solutionText": "A sharp rise in a key input price like oil raises production costs for firms throughout the economy, reducing the quantity of output firms are willing to supply at every price level — this shifts the SRAS curve leftward (a decrease in short-run aggregate supply). With AD unchanged, the new short-run equilibrium occurs where the same AD curve intersects the new, leftward-shifted SRAS curve: the equilibrium price level rises and equilibrium real GDP falls. This combination of a rising price level and falling output is known as stagflation and is the classic result of an adverse supply-side shock — it should not be confused with a demand-side shock, which would shift AD rather than SRAS.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-030",
+    "loId": "apmacro.long-run-aggregate-supply",
+    "cedCode": "AP-MACRO-3.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An increase in which of the following would cause the long-run aggregate supply (LRAS) curve to shift rightward?",
+    "choices": [
+      "A decrease in the price level",
+      "A significant, economy-wide improvement in production technology",
+      "An increase in consumer confidence",
+      "A decrease in the nominal wage rate caused by a temporary surplus of workers"
+    ],
+    "answer": "B",
+    "solutionText": "The vertical LRAS curve is positioned at potential (full-employment) GDP, which depends on the quantity and quality of an economy's resources (labor, capital, land) and its level of technology — not on the price level. A significant, economy-wide improvement in production technology allows the economy to produce more output with the same resources, increasing potential GDP and shifting LRAS rightward. A change in the price level only causes movement along the AD and SRAS curves, not a shift of LRAS. An increase in consumer confidence shifts AD, not LRAS. A temporary wage surplus is a short-run phenomenon that affects SRAS, not the economy's long-run productive capacity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-031",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the AD-AS model, short-run macroeconomic equilibrium occurs at the price level and real GDP where which of the following is true?",
+    "choices": [
+      "Real GDP equals potential GDP",
+      "The unemployment rate equals the natural rate of unemployment",
+      "The quantity of real GDP demanded equals the quantity of real GDP supplied, shown where the AD curve intersects the SRAS curve",
+      "The AD curve intersects the LRAS curve exclusively"
+    ],
+    "answer": "C",
+    "solutionText": "Short-run macroeconomic equilibrium is defined as the price level and real GDP at which the quantity of real GDP demanded equals the quantity of real GDP supplied in the short run — graphically, the intersection of the AD curve and the SRAS curve. This equilibrium does not have to coincide with potential GDP; the economy can be in short-run equilibrium with a recessionary gap, an inflationary gap, or exactly at potential GDP. Because real GDP need not equal potential GDP at short-run equilibrium, the unemployment rate need not equal the natural rate either — both describe only the special case of long-run equilibrium, not the general definition of short-run equilibrium.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-032",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Currently, the economy of Wrenfield is producing short-run equilibrium real GDP of \\$620 billion, while potential (full-employment) GDP is \\$650 billion. Which of the following describes this situation and the expected long-run adjustment if policymakers take no action?",
+    "choices": [
+      "An inflationary gap exists; in the long run, SRAS will shift leftward, raising the price level until equilibrium returns to potential GDP",
+      "A recessionary gap exists; in the long run, LRAS will shift leftward to meet the current short-run equilibrium",
+      "An inflationary gap exists; in the long run, AD will shift rightward to restore equilibrium",
+      "A recessionary gap exists; in the long run, SRAS will shift rightward as nominal wages fall, returning the economy to potential GDP at a lower price level"
+    ],
+    "answer": "D",
+    "solutionText": "Because equilibrium real GDP (\\$620 billion) is below potential GDP (\\$650 billion), the economy has a recessionary gap. Without policy intervention, the resulting slack in labor and resource markets (unemployment above the natural rate) puts downward pressure on nominal wages and other input costs over time. This causes the SRAS curve to shift rightward, and short-run equilibrium moves along the unchanged AD curve until real GDP returns to potential GDP — at a lower price level than the original short-run equilibrium. The LRAS curve does not shift simply because short-run equilibrium differs from potential GDP; LRAS only shifts when the economy's actual productive capacity changes.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-033",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Suppose that, ceteris paribus except as noted, consumer confidence in the nation of Ashgrove falls sharply — reducing planned consumption spending at every price level — at the same time that a new environmental regulation raises compliance costs for firms across the economy. In the short run, which of the following correctly describes the combined effect on the equilibrium price level and equilibrium real GDP?",
+    "choices": [
+      "Real GDP definitely falls; the price level change is ambiguous, depending on the relative size of the two shifts",
+      "Real GDP definitely rises; the price level definitely falls",
+      "Real GDP definitely falls; the price level definitely falls",
+      "Both the real GDP change and the price level change are ambiguous"
+    ],
+    "answer": "A",
+    "solutionText": "Falling consumer confidence reduces consumption spending at every price level, shifting the AD curve leftward. Rising compliance costs raise firms' production costs, shifting the SRAS curve leftward. A leftward shift of AD alone would decrease both the price level and real GDP. A leftward shift of SRAS alone would increase the price level but decrease real GDP. Combining the two: real GDP falls unambiguously, because both shifts independently push real GDP down. The price level, however, is ambiguous — the AD shift pushes it down while the SRAS shift pushes it up, and the net direction depends on which shift is relatively larger, information not given here. Recognizing which outcomes are determinate versus ambiguous when two curves shift simultaneously in opposing directions on price level is a key AD-AS reasoning skill.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-034",
+    "loId": "apmacro.changes-ad-as-short-run",
+    "cedCode": "AP-MACRO-3.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the economy of Pinehaven, the marginal propensity to consume (MPC) is $0.6$. The government's only fiscal action is to cut taxes by \\$50 billion. Independently of the tax cut, a new efficiency-improving technology becomes available to firms economy-wide; this technological change affects long-run aggregate supply but does not directly shift short-run aggregate supply. Considering only the short-run AD shift caused by the tax cut, what is the direction of the short-run change in the equilibrium price level and real GDP, and what is the maximum possible horizontal shift of the AD curve caused by the tax cut?",
+    "choices": [
+      "Price level falls and real GDP falls in the short run; the AD curve shifts leftward by a maximum of \\$75 billion",
+      "Price level rises and real GDP rises in the short run; the AD curve shifts rightward by a maximum of \\$75 billion",
+      "Price level rises and real GDP rises in the short run; the AD curve shifts rightward by a maximum of \\$30 billion",
+      "Price level and real GDP are both unchanged in the short run because the technology improvement offsets the tax cut"
+    ],
+    "answer": "B",
+    "solutionText": "The tax multiplier is $\\dfrac{-MPC}{1-MPC} = \\dfrac{-0.6}{1-0.6} = \\dfrac{-0.6}{0.4} = -1.5$. A tax cut of \\$50 billion is a change in taxes of −\\$50 billion, so the maximum change in spending — and the maximum horizontal shift of the AD curve at the initial price level — is (−1.5) × (−\\$50 billion) = \\$75 billion rightward. Because SRAS is upward sloping, a rightward AD shift raises both the equilibrium price level and equilibrium real GDP in the short run; the actual increase in real GDP will be somewhat less than the full \\$75 billion because part of the shift is absorbed by a higher price level rather than by more output. The technology improvement affects LRAS (the economy's long-run productive capacity), not the short-run AD or SRAS curves directly, so it does not offset the short-run effect of the tax cut described here.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-035",
+    "loId": "apmacro.long-run-self-adjustment",
+    "cedCode": "AP-MACRO-3.7",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The economy of Millbridge is currently producing real GDP above its potential (full-employment) GDP — an inflationary gap — and policymakers take no fiscal or monetary action. According to the long-run self-correction mechanism in the AD-AS model, which sequence of events is expected to occur?",
+    "choices": [
+      "Nominal wages fall due to high unemployment, shifting SRAS rightward until real GDP returns to potential GDP at a lower price level",
+      "AD shifts further rightward as firms increase investment, pushing real GDP even higher above potential GDP permanently",
+      "Nominal wages rise due to a tight labor market, shifting SRAS leftward until real GDP returns to potential GDP at a higher price level",
+      "LRAS shifts rightward to accommodate the higher level of real GDP, making the inflationary gap the new potential GDP"
+    ],
+    "answer": "C",
+    "solutionText": "With real GDP above potential GDP, unemployment is below the natural rate and labor markets are tight. Over time, workers and firms bid up nominal wages, which raises firms' production costs and shifts the SRAS curve leftward. This continues until short-run equilibrium output falls back to potential GDP — but at a permanently higher price level than the original short-run equilibrium, since AD has not changed. The mirror-image process (falling wages, SRAS shifting rightward, a lower final price level) describes self-correction from a recessionary gap, not an inflationary one. Without new changes to AD, resources, or technology, real GDP cannot permanently exceed potential GDP, and potential GDP itself does not redefine itself around a temporary inflationary gap.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-036",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The economy of Thistledown is experiencing a recessionary gap, with real GDP below potential GDP and rising cyclical unemployment. Which of the following discretionary fiscal policy actions would be most appropriate to close this gap, according to the AD-AS model?",
+    "choices": [
+      "Decrease government spending to reduce the price level",
+      "Increase taxes to reduce disposable income and consumption spending",
+      "Decrease the money supply to raise interest rates",
+      "Increase government spending and/or decrease taxes to shift the AD curve rightward"
+    ],
+    "answer": "D",
+    "solutionText": "A recessionary gap calls for expansionary fiscal policy. Increasing government spending directly raises a component of aggregate demand, while cutting taxes raises households' disposable income and, through the marginal propensity to consume, raises consumption spending — both actions shift the AD curve rightward, moving equilibrium real GDP back toward potential GDP (at the cost of some increase in the price level, given an upward-sloping SRAS curve). Decreasing government spending and increasing taxes are contractionary fiscal actions appropriate for closing an inflationary gap, not a recessionary one. Decreasing the money supply is a contractionary monetary policy tool, not a discretionary fiscal policy tool, and would worsen rather than close a recessionary gap.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-037",
+    "loId": "apmacro.fiscal-policy",
+    "cedCode": "AP-MACRO-3.8",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "To close a recessionary gap, the government of Hollowmere increases spending by \\$60 billion, financing the increase entirely through additional borrowing in the loanable funds market. The economy's simple spending multiplier is $5$. Once the crowding-out effect is taken into account, which of the following best describes the actual effect on aggregate demand?",
+    "choices": [
+      "AD shifts rightward by exactly \\$300 billion, because crowding out affects only the long-run aggregate supply curve, not aggregate demand",
+      "AD still shifts rightward, but by less than the simple-multiplier prediction of \\$300 billion, because the additional government borrowing raises real interest rates and reduces private investment spending",
+      "AD shifts leftward, because crowding out always outweighs the direct effect of increased government spending",
+      "AD is completely unaffected, because crowding out always exactly offsets government spending dollar-for-dollar"
+    ],
+    "answer": "B",
+    "solutionText": "The simple-multiplier prediction is \\$60 billion × 5 = \\$300 billion, which assumes no other spending changes occur. In reality, when the government borrows \\$60 billion to finance the spending increase, it raises the demand for loanable funds, pushing up the real interest rate. A higher interest rate makes borrowing more expensive for private firms and households, reducing private investment (and some interest-sensitive consumption) spending — this is the crowding-out effect. Crowding out partially, but not completely, offsets the expansionary effect of the government spending increase, so the actual rightward shift in AD is positive but smaller than the full \\$300 billion simple-multiplier prediction.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-038",
+    "loId": "apmacro.automatic-stabilizers",
+    "cedCode": "AP-MACRO-3.9",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During an economic downturn in the nation of Windmere, real GDP falls and cyclical unemployment rises. Even though the legislature takes no new action, which of the following automatically occurs, and what is the resulting effect on the size of the economy's spending multiplier compared to an economy that has no such automatic stabilizers?",
+    "choices": [
+      "Tax revenue automatically rises and transfer payments automatically fall, shifting AD further leftward; the multiplier becomes larger",
+      "Neither tax revenue nor transfer payments change automatically; only discretionary legislation can affect the size of the multiplier",
+      "Tax revenue automatically falls (e.g., through a progressive income tax) and transfer payments such as unemployment insurance automatically rise, cushioning the fall in disposable income; the multiplier becomes smaller than it would be without automatic stabilizers",
+      "Tax revenue automatically falls and transfer payments automatically rise, cushioning the fall in disposable income; the multiplier becomes larger than it would be without automatic stabilizers"
+    ],
+    "answer": "C",
+    "solutionText": "Automatic stabilizers such as a progressive income tax and unemployment insurance change automatically with the state of the economy, without any new legislation. During a downturn, incomes fall, so households move into lower tax brackets and pay less in taxes overall, while more workers qualify for unemployment insurance and other transfer payments; both effects cushion the decline in disposable income and consumption spending relative to what would occur without these programs, moderating the swing in real GDP. Because taxes now change with income, they act as an additional leakage from the spending stream, so the economy's effective spending multiplier is smaller with automatic stabilizers in place than it would be in an otherwise identical economy without them — automatic stabilizers work precisely by damping, not amplifying, the multiplier process.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-039",
+    "loId": "apmacro.financial-assets",
+    "cedCode": "AP-MACRO-4.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes the defining characteristic of a highly liquid financial asset?",
+    "choices": [
+      "It can be converted into cash quickly with little or no loss of value.",
+      "It guarantees a fixed rate of return above the rate of inflation.",
+      "It cannot be bought or sold on secondary markets.",
+      "Its market value is set exclusively by the federal government."
+    ],
+    "answer": "A",
+    "solutionText": "Liquidity refers to how quickly and easily an asset can be converted into cash without losing value. Currency itself is the most liquid asset, while assets such as real estate or long-term bonds are less liquid because converting them into cash quickly often requires accepting a lower price. Rate of return, tradability on secondary markets, and government price-setting describe other asset characteristics, not liquidity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-040",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bond pays a nominal interest rate of 5 percent per year. If the expected rate of inflation is 2 percent per year, what is the approximate real interest rate on the bond?",
+    "choices": [
+      "2%",
+      "3%",
+      "5%",
+      "7%"
+    ],
+    "answer": "B",
+    "solutionText": "The approximate real interest rate equals the nominal interest rate minus the expected inflation rate: 5% − 2% = 3%. The real interest rate reflects the actual increase in purchasing power the lender gains from the loan.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-041",
+    "loId": "apmacro.nominal-vs-real-interest-rates",
+    "cedCode": "AP-MACRO-4.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A saver is deciding between two one-year certificates of deposit. Certificate X pays a nominal interest rate of 7 percent, and the expected inflation rate over the year is 4 percent. Certificate Y pays a nominal interest rate of 4 percent, and the expected inflation rate over the year is 2 percent. Based on approximate real interest rates, which certificate offers the saver a higher real return, and what is that real return?",
+    "choices": [
+      "Certificate Y, with a real return of 2%",
+      "Certificate X, with a real return of 7%",
+      "Certificate X, with a real return of 3%",
+      "Certificate Y, with a real return of 4%"
+    ],
+    "answer": "C",
+    "solutionText": "The approximate real interest rate equals the nominal rate minus expected inflation. Certificate X: 7% − 4% = 3%. Certificate Y: 4% − 2% = 2%. Since 3% is greater than 2%, Certificate X offers the saver a higher real return of 3%, even though its nominal rate is higher and its inflation exposure is also higher.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-042",
+    "loId": "apmacro.functions-of-money",
+    "cedCode": "AP-MACRO-4.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A furniture store lists the price of a wooden desk as \\$450 and the price of a matching chair as \\$120, allowing customers to easily compare the relative value of the two items. This use of money illustrates which function of money?",
+    "choices": [
+      "Medium of exchange",
+      "Store of value",
+      "Legal tender",
+      "Unit of account"
+    ],
+    "answer": "D",
+    "solutionText": "The unit-of-account function of money means money serves as a common measure of value, allowing prices of very different goods to be expressed in the same terms so their relative values can be compared. This is distinct from money's role as a medium of exchange (used to make purchases) or a store of value (used to hold wealth over time).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-043",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Corrian National Bank receives a new checkable deposit of \\$8,000. The required reserve ratio is 20 percent, and the bank currently holds zero excess reserves. Assuming the bank wants to hold zero excess reserves after this deposit, what is the maximum amount the bank can loan out from this deposit?",
+    "choices": [
+      "\\$6,400",
+      "\\$1,600",
+      "\\$4,000",
+      "\\$8,000"
+    ],
+    "answer": "A",
+    "solutionText": "Required reserves equal the reserve ratio times the deposit: 0.20 × \\$8,000 = \\$1,600. The bank must hold this amount as reserves and can loan out the remainder of the deposit: \\$8,000 − \\$1,600 = \\$6,400.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-044",
+    "loId": "apmacro.banking-money-creation",
+    "cedCode": "AP-MACRO-4.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The required reserve ratio in the banking system is 25 percent. The Federal Reserve purchases \\$2,000,000 of government securities from a bond dealer, who deposits the full amount into a checking account at Meridian Bank. Assuming every bank in the system holds zero excess reserves and there are no cash leakages, what is the maximum possible increase in the money supply that can result from this open market purchase?",
+    "choices": [
+      "\\$500,000",
+      "\\$8,000,000",
+      "\\$2,000,000",
+      "\\$6,000,000"
+    ],
+    "answer": "B",
+    "solutionText": "The money multiplier equals 1 divided by the required reserve ratio: 1 / 0.25 = 4. The maximum possible change in the money supply equals the initial deposit multiplied by the money multiplier: \\$2,000,000 × 4 = \\$8,000,000.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-045",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Suppose real GDP in the economy increases while the price level and the money supply remain constant. Using the money market model, with the nominal interest rate on the vertical axis and the quantity of money on the horizontal axis, what happens to the equilibrium nominal interest rate?",
+    "choices": [
+      "It falls, because money demand decreases.",
+      "It rises, because money supply decreases.",
+      "It rises, because money demand increases.",
+      "It remains unchanged, because money supply is fixed."
+    ],
+    "answer": "C",
+    "solutionText": "An increase in real GDP raises the transactions demand for money at every interest rate, shifting the money demand curve rightward. Because the money supply curve is vertical (fixed by the Federal Reserve) and unchanged, the rightward shift in demand raises the equilibrium nominal interest rate.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-046",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a hypothetical economy, the demand for money is given by $M_d = 900 - 20i$, where $M_d$ is the quantity of money demanded (in billions of dollars) and $i$ is the nominal interest rate (in percent). The Federal Reserve sets the money supply at \\$500 billion. What is the equilibrium nominal interest rate?",
+    "choices": [
+      "5%",
+      "10%",
+      "45%",
+      "20%"
+    ],
+    "answer": "D",
+    "solutionText": "Equilibrium occurs where money demand equals money supply: $900 - 20i = 500$. Solving gives $20i = 400$, so $i = 20$. The equilibrium nominal interest rate is 20%.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-047",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The economy is currently experiencing a recessionary gap with high unemployment. To close this gap, the Federal Reserve conducts an open market purchase of government bonds. Which of the following correctly describes the short-run chain of effects on the money market and the goods market?",
+    "choices": [
+      "The money supply increases, the nominal interest rate falls, investment spending increases, and aggregate demand increases.",
+      "The money supply decreases, the nominal interest rate rises, investment spending decreases, and aggregate demand decreases.",
+      "The money supply increases, the nominal interest rate rises, investment spending decreases, and aggregate demand decreases.",
+      "The money supply remains unchanged, but the nominal interest rate falls because banks voluntarily lower rates."
+    ],
+    "answer": "A",
+    "solutionText": "An open market purchase injects reserves into the banking system, increasing the money supply. With money demand unchanged, the increase in supply lowers the equilibrium nominal interest rate. A lower interest rate reduces the cost of borrowing, so investment spending (and other interest-sensitive spending) rises, shifting aggregate demand rightward — appropriate for closing a recessionary gap.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-048",
+    "loId": "apmacro.monetary-policy",
+    "cedCode": "AP-MACRO-4.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The economy is producing above full-employment output and the inflation rate is rising. The Federal Reserve responds by increasing the required reserve ratio. Using the money market and AD/AS models together, which sequence correctly traces the short-run effects of this policy on the interest rate, investment spending, real GDP, and the price level?",
+    "choices": [
+      "Money supply increases → interest rate falls → investment rises → aggregate demand increases → real GDP rises further above full employment and the price level rises further.",
+      "Money supply decreases → interest rate rises → investment falls → aggregate demand decreases → real GDP falls and the price level decreases relative to its prior trend, moving the economy back toward full employment.",
+      "Money supply decreases → interest rate falls → investment rises → aggregate demand increases → real GDP rises and the price level rises.",
+      "Money supply remains unchanged because reserve requirements only affect bank profits, not lending capacity, so there is no effect on interest rates, GDP, or the price level."
+    ],
+    "answer": "B",
+    "solutionText": "Raising the required reserve ratio forces banks to hold a larger fraction of deposits as reserves, reducing the excess reserves available to lend. This contracts the money supply, which — with money demand unchanged — raises the equilibrium nominal interest rate. The higher interest rate raises the cost of borrowing, so investment spending falls, shifting aggregate demand leftward. This reduces real GDP and moderates the price level, appropriately correcting the inflationary, above-full-employment gap.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-049",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The federal government's budget deficit increases substantially due to higher spending on infrastructure, while private saving behavior is unchanged. Using the loanable funds market model, with the real interest rate on the vertical axis and the quantity of loanable funds on the horizontal axis, what is the effect of this increased deficit on the market for loanable funds?",
+    "choices": [
+      "The supply of loanable funds decreases, raising the equilibrium real interest rate and decreasing the equilibrium quantity of loanable funds.",
+      "The demand for loanable funds decreases, lowering the equilibrium real interest rate and increasing the equilibrium quantity of loanable funds.",
+      "The demand for loanable funds increases, raising the equilibrium real interest rate and increasing the equilibrium quantity of loanable funds.",
+      "The demand for loanable funds increases, raising the equilibrium real interest rate and decreasing the equilibrium quantity of loanable funds."
+    ],
+    "answer": "C",
+    "solutionText": "A larger deficit means the government must borrow more, increasing the demand for loanable funds (the demand curve shifts rightward). With the supply of loanable funds unchanged, the new equilibrium occurs at a higher real interest rate and a larger equilibrium quantity of funds borrowed and lent, reflecting a movement up along the supply curve.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-050",
+    "loId": "apmacro.loanable-funds-market",
+    "cedCode": "AP-MACRO-4.7",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the loanable funds market, the government increases its budget deficit, shifting the demand for loanable funds to the right and raising the equilibrium real interest rate from 3 percent to 6 percent. As a result, the quantity of loanable funds demanded by private firms for investment purposes falls, even though total government borrowing rises. Which statement correctly explains why the equilibrium quantity of loanable funds does not increase by the full amount of the government's additional borrowing?",
+    "choices": [
+      "The higher real interest rate causes the supply of loanable funds to shift left, fully offsetting the increase in government borrowing.",
+      "The central bank automatically increases the money supply to match any increase in government borrowing, keeping the real interest rate constant.",
+      "Private firms are legally prohibited from borrowing when the government runs a deficit, so all loanable funds are absorbed by the government.",
+      "The higher real interest rate induces households to save more and firms to borrow less for investment, so private investment is partially crowded out, offsetting part of the increase in government borrowing."
+    ],
+    "answer": "D",
+    "solutionText": "The rise in the real interest rate is a movement along, not a shift of, the supply curve: it increases the quantity of funds households are willing to save while decreasing the quantity of funds firms wish to borrow for investment. Because private investment borrowing falls as government borrowing rises, this crowding out means the increase in the equilibrium quantity of loanable funds is smaller than the increase in government borrowing alone.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-051",
+    "loId": "apmacro.fiscal-monetary-short-run",
+    "cedCode": "AP-MACRO-5.1",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the short run, which combination of a policy action and its most direct effect on the economy is correctly matched, assuming the economy starts at full-employment output?",
+    "choices": [
+      "An increase in government spending shifts aggregate demand rightward, increasing real GDP and the price level above their initial levels in the short run.",
+      "An increase in government spending shifts aggregate supply rightward, increasing real GDP without affecting the price level.",
+      "A decrease in taxes shifts aggregate demand leftward, decreasing real GDP and the price level.",
+      "An increase in the required reserve ratio shifts aggregate demand rightward, increasing real GDP and the price level."
+    ],
+    "answer": "A",
+    "solutionText": "Government spending is a direct component of aggregate demand, so an increase in it shifts the AD curve rightward. Starting from full employment, this rightward shift moves the economy along the short-run aggregate supply curve, raising both real GDP (above potential) and the price level in the short run.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-052",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economy experiences an unexpected increase in aggregate demand. In the short run, using the Phillips curve model with the inflation rate on the vertical axis and the unemployment rate on the horizontal axis, what happens to the economy's position?",
+    "choices": [
+      "The economy moves down and to the right along a fixed short-run Phillips curve, as the inflation rate falls and the unemployment rate rises.",
+      "The economy moves up and to the left along a fixed short-run Phillips curve, as the inflation rate rises and the unemployment rate falls.",
+      "The short-run Phillips curve shifts rightward, and both the inflation rate and unemployment rate rise.",
+      "The short-run Phillips curve shifts leftward, and both the inflation rate and unemployment rate fall."
+    ],
+    "answer": "B",
+    "solutionText": "A rise in aggregate demand increases output and lowers unemployment in the short run while also raising the price level, so inflation increases. This is represented as a movement along a given short-run Phillips curve — up and to the left — illustrating the short-run tradeoff between lower unemployment and higher inflation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-053",
+    "loId": "apmacro.money-growth-inflation",
+    "cedCode": "AP-MACRO-5.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the quantity theory of money, if the money supply grows at 8 percent per year and the velocity of money and real output are both constant, what is the approximate long-run rate of inflation?",
+    "choices": [
+      "0%",
+      "4%",
+      "8%",
+      "16%"
+    ],
+    "answer": "C",
+    "solutionText": "The equation of exchange, $MV = PQ$, implies that the percentage change in the money supply plus the percentage change in velocity equals the percentage change in the price level (inflation) plus the percentage change in real output. If velocity and real output are constant (0 percent growth), inflation must equal the growth rate of the money supply: 8 percent.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-054",
+    "loId": "apmacro.deficits-debt",
+    "cedCode": "AP-MACRO-5.4",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At the start of a fiscal year, a country's national debt is \\$400 billion. During that year, the government collects \\$90 billion in tax revenue and spends \\$110 billion. Assuming this is the only change affecting the debt, what is the national debt at the end of the fiscal year?",
+    "choices": [
+      "\\$310 billion",
+      "\\$400 billion",
+      "\\$510 billion",
+      "\\$420 billion"
+    ],
+    "answer": "D",
+    "solutionText": "The budget deficit for the year equals spending minus revenue: \\$110 billion − \\$90 billion = \\$20 billion. The national debt is the accumulation of past deficits, so this year's deficit is added to the existing debt: \\$400 billion + \\$20 billion = \\$420 billion.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-055",
+    "loId": "apmacro.crowding-out-long-run",
+    "cedCode": "AP-MACRO-5.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A country runs persistent, large budget deficits for over a decade, financed by borrowing in the loanable funds market. Which of the following best describes the most likely long-run consequence for the economy's production capacity and growth, and the mechanism that produces it?",
+    "choices": [
+      "Persistently higher real interest rates crowd out private investment in physical capital over time, slowing the growth of the capital stock and shifting the long-run aggregate supply curve rightward more slowly than it otherwise would.",
+      "Persistently higher real interest rates increase private investment in physical capital over time, accelerating capital accumulation and shifting the long-run aggregate supply curve rightward more quickly.",
+      "The deficits have no effect on private investment because government borrowing and private borrowing draw from separate, unrelated markets for funds.",
+      "The deficits automatically lower the real interest rate over time because increased government borrowing increases the supply of loanable funds."
+    ],
+    "answer": "A",
+    "solutionText": "Sustained deficits raise government demand for loanable funds year after year, keeping the equilibrium real interest rate persistently higher than it would otherwise be. Higher borrowing costs discourage private investment in physical capital — long-run crowding out. Because investment in capital is a key driver of long-run economic growth, a smaller capital stock means the long-run aggregate supply curve (and the economy's production possibilities) expands more slowly over time than it would without the crowding out.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-056",
+    "loId": "apmacro.economic-growth",
+    "cedCode": "AP-MACRO-5.6",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Verdania's real GDP per capita has grown at a sustainable annual rate for the past decade due to steady increases in the average years of schooling completed by its workforce and rising spending on vocational training programs. Using economic growth theory, which of the following best explains why this trend leads to a sustained increase in real GDP per capita over time, rather than only a one-time increase in output?",
+    "choices": [
+      "Investment in human capital increases consumer spending in the short run, which shifts aggregate demand rightward and permanently raises the price level.",
+      "Investment in human capital raises worker productivity, which increases the quantity of goods and services each worker can produce; because this productivity gain persists and can continue to build over successive years of training, it shifts the production possibilities curve and long-run aggregate supply outward on an ongoing basis.",
+      "Investment in human capital increases the size of the labor force only, with no effect on output per worker, so real GDP per capita remains unchanged.",
+      "Investment in human capital is a form of government spending that increases the budget deficit, which reduces real GDP per capita through crowding out."
+    ],
+    "answer": "B",
+    "solutionText": "Human capital (education, training, skills) raises labor productivity, the output each worker can produce. Because productivity improvements compound and continue as training continues, they generate an ongoing outward shift in the production possibilities curve and long-run aggregate supply, producing sustained growth in real GDP per capita rather than a one-time, demand-driven bump in output.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-057",
+    "loId": "apmacro.public-policy-growth",
+    "cedCode": "AP-MACRO-5.7",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Policymakers in Verdania want to increase the economy's long-run rate of economic growth without directly increasing the government budget deficit. Which combination of policies is most consistent with standard economic growth theory for achieving this goal?",
+    "choices": [
+      "Increase the money supply rapidly to lower nominal interest rates permanently, since faster money growth is the primary long-run source of higher real GDP.",
+      "Impose price ceilings on capital goods to lower firms' investment costs, since price controls increase the quantity of capital goods supplied in the long run.",
+      "Provide tax incentives for private saving and research and development, and strengthen the legal protection of property rights and patents, to encourage capital accumulation and innovation funded largely by private resources.",
+      "Increase short-run government spending on consumption subsidies, since higher current consumption is the most direct source of long-run capital deepening."
+    ],
+    "answer": "C",
+    "solutionText": "Long-run growth theory identifies saving and investment in physical and human capital, technological innovation, and secure property rights and institutions as key sources of sustained growth. Tax incentives for saving and research and development, along with stronger property-rights protection, encourage private capital accumulation and innovation without directly enlarging the deficit. Money growth is a nominal, largely inflationary variable rather than a source of real growth; price ceilings cause shortages and reduce the quantity supplied; and consumption subsidies encourage spending rather than building the capital stock.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-058",
+    "loId": "apmacro.exchange-rates",
+    "cedCode": "AP-MACRO-6.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The value of Verdania's currency, the verd, rises relative to Cassaria's currency, the cass, so that one verd can now be exchanged for more cass than before. This change is best described as which of the following?",
+    "choices": [
+      "Depreciation of the verd",
+      "Devaluation of the cass",
+      "A trade deficit for Verdania",
+      "Appreciation of the verd"
+    ],
+    "answer": "D",
+    "solutionText": "When a currency can be exchanged for more units of another currency than before, its value has risen relative to that currency — this is called appreciation. Depreciation is the opposite (a market-driven fall in value), and devaluation refers to an official change in a fixed or pegged exchange rate, not a market-determined change.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-059",
+    "loId": "apmacro.fx-market",
+    "cedCode": "AP-MACRO-6.3",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Investors in Cassaria come to expect that interest rates in Verdania will rise substantially in the near future relative to interest rates in Cassaria. In the foreign exchange market for the verd, with the price of the verd in terms of cass on the vertical axis and the quantity of verd on the horizontal axis, what is the most likely immediate effect of this expectation?",
+    "choices": [
+      "The demand for verd increases, and the verd appreciates relative to the cass.",
+      "The demand for verd decreases, and the verd depreciates relative to the cass.",
+      "The supply of verd increases, and the verd depreciates relative to the cass.",
+      "The supply of verd decreases, and the verd appreciates relative to the cass, while demand remains unchanged."
+    ],
+    "answer": "A",
+    "solutionText": "Expectations of higher relative interest rates in Verdania make verd-denominated financial assets more attractive to foreign investors, increasing the demand for verd in the foreign exchange market. With supply unchanged, the increase in demand raises the equilibrium price of the verd in terms of cass — that is, the verd appreciates.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-mc-060",
+    "loId": "apmacro.fx-effects-on-economy",
+    "cedCode": "AP-MACRO-6.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The verd appreciates significantly against the cass. Verdania and Cassaria are major trading partners. Holding all else equal, which of the following correctly traces the short-run effect of this appreciation on Verdania's net exports and real GDP?",
+    "choices": [
+      "Verdania's net exports fall, but because aggregate demand depends only on domestic consumption, real GDP is unaffected in the short run.",
+      "Verdania's exports become more expensive to Cassarian buyers and Cassaria's exports become cheaper to Verdanian buyers, so Verdania's net exports fall, aggregate demand decreases, and real GDP falls in the short run.",
+      "The appreciation has no effect on trade flows because exchange rate changes only affect financial asset prices, not the prices of goods and services.",
+      "Verdania's exports become cheaper to Cassarian buyers and Cassaria's exports become more expensive to Verdanian buyers, so Verdania's net exports rise, aggregate demand increases, and real GDP rises in the short run."
+    ],
+    "answer": "B",
+    "solutionText": "When the verd appreciates, each verd buys more cass, making Verdanian goods relatively more expensive for Cassarian buyers (exports fall) and Cassarian goods relatively cheaper for Verdanian buyers (imports rise). The resulting decline in net exports, a component of aggregate demand, shifts AD leftward, reducing real GDP in the short run, holding other factors constant.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apmacro-fa-fr-01",
+    "loId": "apmacro.equilibrium-ad-as",
+    "cedCode": "AP-MACRO-3.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "The nation of Kestrel operates with a closed-economy aggregate demand–aggregate supply (AD-AS) model and is currently in long-run macroeconomic equilibrium: real GDP equals potential (full-employment) GDP, and the price level and inflation expectations are stable. A sudden, sustained increase in the world price of imported crude oil sharply raises production costs for firms throughout Kestrel's economy.\n\n(a) State which curve (aggregate demand or short-run aggregate supply) shifts as a direct result of the oil-price increase, and state the direction of the shift. Then describe, in words, the short-run effect on Kestrel's price level and real GDP relative to potential GDP. (No graph is required — provide a fully typed response.)\n\n(b) Kestrel's legislature considers a discretionary fiscal policy response intended to move real GDP back toward potential GDP. Identify one specific fiscal policy tool the legislature could use, and describe which curve it shifts and in which direction.\n\n(c) Kestrel's central bank considers a monetary policy response consistent with the same goal (returning real GDP to potential GDP). Identify one specific monetary policy tool the central bank could use, and describe the mechanism by which it affects the money supply, the nominal interest rate, and investment/consumption spending, and state which curve shifts as a result.\n\n(d) Assume both the fiscal policy from part (b) and the monetary policy from part (c) are implemented. Describe, in words, the resulting short-run equilibrium: state the direction of change in the price level and the direction of change in real GDP, each measured relative to the equilibrium that existed immediately after the oil-price shock (i.e., before the policy responses).\n\n(e) Now assume Kestrel engages in international trade and its currency trades on the foreign exchange market. Using the monetary policy action from part (c), explain the resulting effect on Kestrel's nominal interest rate relative to interest rates in the rest of the world, and describe the resulting effect on international capital flows, the value of Kestrel's currency (appreciation or depreciation), and Kestrel's net exports.",
+    "answer": "see rubric",
+    "solutionText": "A negative oil-price supply shock shifts SRAS left, raising the price level and lowering real GDP below potential; expansionary fiscal policy (e.g., higher government spending) and expansionary monetary policy (e.g., an open-market purchase) both shift AD right to restore real GDP toward potential (at the cost of a further price-level increase), while the monetary easing also lowers Kestrel's relative interest rate, causing capital outflows, currency depreciation, and higher net exports.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly identifying that short-run aggregate supply (SRAS) shifts LEFT (decreases) because the oil-price increase raises production costs. 1 point for correctly describing BOTH: the price level rises (or inflation) AND real GDP falls below potential GDP (a recessionary gap/stagflation) in the short run. Full credit requires both the SRAS-left identification point and the complete price-level-up/real-GDP-down description point; partial or reversed directions do not earn the respective point.",
+          "modelResponse": "The increase in the price of a key imported input raises production costs for firms across the economy, so the short-run aggregate supply (SRAS) curve shifts to the left (decreases). As a result, in the new short-run equilibrium the price level rises and real GDP falls below potential GDP, creating a recessionary gap (a situation of stagflation, since output falls while prices rise)."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for identifying a specific, correct expansionary fiscal policy tool (e.g., an increase in government spending, OR a decrease in personal/business taxes). 1 point for correctly stating that the identified tool shifts aggregate demand (AD) to the RIGHT (increases). No credit for vague tools (e.g., 'change fiscal policy') or for identifying a contractionary tool.",
+          "modelResponse": "The legislature could increase government spending (for example, on infrastructure projects). An increase in government spending directly raises total spending in the economy, which shifts the aggregate demand (AD) curve to the right (increases)."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for identifying a specific, correct expansionary monetary policy tool (e.g., an open-market purchase of government bonds by the central bank, OR a decrease in the reserve requirement, OR a decrease in the discount/policy interest rate target). 1 point for correctly describing the full mechanism in the right direction: the tool increases the money supply, which decreases the nominal interest rate, which increases investment and/or consumption spending, which shifts aggregate demand (AD) to the right. Full mechanism credit requires the money-supply-up AND interest-rate-down AND AD-right chain; missing or reversed links do not earn the point.",
+          "modelResponse": "Kestrel's central bank could conduct an open-market purchase, buying government bonds from banks and the public. This increases the money supply, which decreases the nominal interest rate. The lower interest rate makes borrowing cheaper, so investment spending (and interest-sensitive consumption spending) increases, which shifts the aggregate demand (AD) curve to the right."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly stating that the price level rises further (continues to increase) compared to the post-shock equilibrium, as a result of the AD increase from the policy responses. 1 point for correctly stating that real GDP rises (moves back toward, or to, potential GDP) compared to the post-shock equilibrium. Both directions must be stated relative to the post-shock (not the original pre-shock) equilibrium to earn credit.",
+          "modelResponse": "Because both the fiscal and monetary policy responses shift aggregate demand to the right, compared with the equilibrium immediately after the oil-price shock, the price level rises further and real GDP rises, moving back toward potential GDP."
+        },
+        {
+          "criterionId": "e",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly stating that the expansionary monetary policy from part (c) lowers Kestrel's nominal interest rate relative to foreign interest rates, causing a net outflow of financial capital as investors seek higher returns abroad. 1 point for correctly stating the resulting chain: the capital outflow decreases demand for (or increases supply of) Kestrel's currency on the foreign exchange market, causing Kestrel's currency to DEPRECIATE, which makes Kestrel's exports cheaper and imports more expensive, INCREASING net exports. Both the capital-flow point and the exchange-rate/net-export point must be directionally correct to earn full credit; reversed directions earn no credit for that point.",
+          "modelResponse": "The open-market purchase lowers Kestrel's nominal interest rate relative to interest rates in the rest of the world. Because foreign financial assets now offer relatively higher returns, financial capital flows out of Kestrel. This capital outflow decreases the demand for Kestrel's currency on the foreign exchange market, causing Kestrel's currency to depreciate. The weaker currency makes Kestrel's exports relatively cheaper for foreigners and imports relatively more expensive for Kestrel's residents, so Kestrel's net exports increase."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apmacro-fa-fr-02",
+    "loId": "apmacro.money-market",
+    "cedCode": "AP-MACRO-4.5",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "An investor deposits \\$8,000 in previously idle paper currency (money that had been kept outside the banking system) into a new checking account at Thornwell Bank. The required reserve ratio set by the central bank is 20 percent (0.20), and assume Thornwell Bank initially holds no excess reserves before this deposit.\n\n(a) Calculate the amount of excess reserves Thornwell Bank has available to lend immediately after the \\$8,000 deposit. Show your calculation.\n\n(b) Calculate the money (deposit) multiplier for this banking system. Show your calculation.\n\n(c) Assuming every bank in the system loans out all of its excess reserves, borrowers redeposit the full loan amounts back into checking accounts, and there is no cash leakage, calculate the maximum possible total increase in the money supply that could ultimately result from the initial \\$8,000 deposit. Show your calculation.\n\n(d) Now suppose that, separately, the central bank conducts an open-market purchase of government bonds. Holding money demand constant, describe, in words, which curve in the money market shifts and in which direction, and state the resulting effect on the nominal interest rate.",
+    "answer": "see rubric",
+    "solutionText": "A \\$8,000 new-money deposit at a 20% reserve ratio leaves \\$6,400 in excess reserves, implies a money multiplier of 5, and can expand the money supply by up to \\$40,000 through repeated lending and redepositing; separately, an open-market purchase shifts the money supply curve right and lowers the nominal interest rate.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires the correct numeric answer of \\$6,400 in excess reserves, with reasoning showing required reserves = \\$8,000 × 0.20 = \\$1,600, so excess reserves = \\$8,000 − \\$1,600 = \\$6,400. The final dollar figure must be correct; an unsupported correct number alone still earns the point, but the number must be exactly \\$6,400.",
+          "modelResponse": "Required reserves = \\$8,000 × 0.20 = \\$1,600. Excess reserves = \\$8,000 − \\$1,600 = \\$6,400."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires the correct money multiplier of 5, calculated as 1 divided by the required reserve ratio (1 / 0.20 = 5).",
+          "modelResponse": "Money multiplier = 1 / required reserve ratio = 1 / 0.20 = 5."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for applying the money multiplier to the initial \\$8,000 deposit (rather than to excess reserves or some other figure) as the basis of the calculation. 1 point for the correct final numeric answer of \\$40,000, calculated as \\$8,000 × 5 = \\$40,000. Both the correct method (deposit × multiplier) and the correct final dollar figure are required for full credit; a correct final number without the deposit × multiplier method earns only 1 point, and an incorrect final number earns at most 1 point even with the correct method shown.",
+          "modelResponse": "Because this \\$8,000 is newly injected money entering the banking system, the maximum possible increase in the money supply equals the initial deposit multiplied by the money multiplier: \\$8,000 × 5 = \\$40,000."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires stating that the money supply curve shifts to the RIGHT (increases) as a result of the open-market purchase, AND stating that the nominal interest rate DECREASES (falls) as a result. Both the correct curve/direction and the correct interest-rate direction must be present; stating only one of the two does not earn the point.",
+          "modelResponse": "An open-market purchase increases the amount of reserves in the banking system, which increases the money supply, shifting the money supply curve to the right. With money demand unchanged, this rightward shift causes the nominal interest rate to decrease."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apmacro-fa-fr-03",
+    "loId": "apmacro.phillips-curve",
+    "cedCode": "AP-MACRO-5.2",
+    "topic": "ap-macroeconomics",
+    "topicId": "ap-macroeconomics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "The nation of Vantry is currently operating at its natural rate of unemployment, with actual inflation equal to the inflation rate that workers and firms expect (fully anticipated inflation). Vantry's central bank then unexpectedly conducts a large-scale expansionary open-market purchase of government bonds, significantly increasing the money supply beyond what workers and firms had anticipated.\n\n(a) Describe, in words, the resulting short-run movement along Vantry's short-run Phillips curve (SRPC): state the direction of change in the unemployment rate and the direction of change in the inflation rate, each relative to their levels before the central bank's action.\n\n(b) Explain the economic mechanism that connects the central bank's expansionary monetary policy action to the changes in unemployment and inflation described in part (a).\n\n(c) Describe what happens in the long run as workers and firms fully adjust their inflation expectations to match the new, higher actual inflation rate. In your answer, state whether the SRPC shifts (and if so, in which direction) and state where Vantry's unemployment rate ends up relative to the natural rate of unemployment once expectations have fully adjusted.\n\n(d) Based on your answer to part (c), state the policy implication: explain why Vantry's central bank cannot use expansionary monetary policy to permanently keep the unemployment rate below the natural rate of unemployment.",
+    "answer": "see rubric",
+    "solutionText": "An unexpected expansionary monetary shock moves Vantry down along its short-run Phillips curve (unemployment falls, inflation rises), but once expectations catch up to the higher actual inflation the SRPC shifts up and unemployment returns to the natural rate, illustrating that there is no permanent unemployment-inflation tradeoff.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires stating BOTH that the unemployment rate falls (decreases) below the natural rate of unemployment AND that the inflation rate rises (increases) above the previously expected/anticipated rate, described as a movement along the existing SRPC (not a shift of the curve). Missing either direction, or describing this as a shift of the SRPC rather than a movement along it, does not earn the point.",
+          "modelResponse": "In the short run, the economy moves along the existing short-run Phillips curve: the unemployment rate falls below the natural rate of unemployment, while the inflation rate rises above the previously expected rate of inflation."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly linking the monetary policy action to the change in unemployment: the increase in the money supply lowers the nominal interest rate, which increases interest-sensitive investment and consumption spending, increasing aggregate demand, which leads firms to increase output and hire more workers, lowering unemployment. 1 point for correctly linking the same aggregate demand increase to the change in inflation: as aggregate demand rises against a given short-run aggregate supply (or as labor and product markets tighten), the price level rises faster, raising the inflation rate above what was expected. Both the unemployment-side mechanism and the inflation-side mechanism must be present for full credit.",
+          "modelResponse": "The open-market purchase increases the money supply, which lowers the nominal interest rate. The lower interest rate increases interest-sensitive investment and consumption spending, which increases aggregate demand. Facing higher demand, firms expand output and hire additional workers, so the unemployment rate falls. At the same time, the surge in aggregate demand pushes against limited short-run productive capacity, so firms raise prices faster than before, and the inflation rate rises above the rate that workers and firms had expected."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires stating that once inflation expectations fully adjust upward to match the new, higher actual inflation rate, the SRPC shifts RIGHT/UPWARD (to reflect the higher expected inflation rate), AND that Vantry's unemployment rate returns to the natural rate of unemployment (i.e., ends up back on the long-run/vertical Phillips curve at the natural rate). Missing the SRPC shift direction or the return to the natural rate does not earn the point.",
+          "modelResponse": "As workers and firms revise their expected inflation rate upward to match the new, higher actual inflation rate, the short-run Phillips curve shifts rightward/upward (to the position consistent with the higher expected inflation). Once expectations have fully adjusted, the unemployment rate rises back to the natural rate of unemployment, so the economy returns to a point on the long-run (vertical) Phillips curve at the natural rate, but now at a permanently higher inflation rate."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit requires explaining that because inflation expectations eventually adjust to actual inflation, any unemployment rate below the natural rate achieved through expansionary monetary policy is only temporary; in the long run, unemployment returns to the natural rate regardless of the inflation rate, so there is no permanent (long-run) tradeoff between unemployment and inflation, and repeated attempts to hold unemployment below the natural rate result only in progressively higher, permanent inflation.",
+          "modelResponse": "Because workers and firms eventually adjust their inflation expectations to match actual inflation, the lower unemployment rate achieved by expansionary monetary policy is only temporary. Once expectations catch up, unemployment returns to the natural rate regardless of the inflation rate, so there is no permanent tradeoff between unemployment and inflation. If the central bank kept trying to hold unemployment below the natural rate, the only lasting result would be progressively higher inflation, not permanently lower unemployment."
+        }
+      ]
+    }
+  }
+]
