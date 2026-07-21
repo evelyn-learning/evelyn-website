@@ -263,6 +263,24 @@ async function lintForm(
     }
   }
 
+  // ap-composite: each FRQ-bearing section's rubric-point total must equal the
+  // curve's final-anchor rawMax, or composite/section scoring silently drifts.
+  if (bp.scoring.kind === 'ap-composite') {
+    for (const sec of form.sections) {
+      const anchors = bp.scoring.curves[sec.sectionId]?.default ?? [];
+      if (!anchors.length) continue;
+      const sectionItems = sec.modules.flatMap((m) => m.itemIds).map((id) => itemsById.get(id)).filter(Boolean) as SeedableItem[];
+      const frqItems = sectionItems.filter((it) => it.responseFormat === 'frq');
+      if (!frqItems.length) continue;
+      const rubricSum = frqItems.reduce(
+        (s, it) => s + (it.rubric?.parts ?? []).reduce((p, part) => p + (part.maxPoints || 0), 0), 0);
+      const curveMax = anchors[anchors.length - 1][0];
+      if (rubricSum !== curveMax) {
+        errors.push(`${sec.sectionId}: FRQ rubric points sum ${rubricSum} != blueprint curve rawMax ${curveMax}`);
+      }
+    }
+  }
+
   return { errors, warnings };
 }
 
