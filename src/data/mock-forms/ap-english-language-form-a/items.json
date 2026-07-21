@@ -736,7 +736,7 @@
       "Kept, because it gives a specific, human example of the intangible benefit named in sentence (17)."
     ],
     "answer": "D",
-    "solutionText": "Sentence (16) offers a vivid individual case of the connection the garden fostered, which concretely supports the paragraph's point that it 'also grew something harder to name' (17). The specific example is a strength, not a flaw, so A is wrong; it gives an anecdote, not statistics, so B is wrong; and (15) is about children finding a place to play, a different detail, so C is wrong.",
+    "solutionText": "Sentence (16) offers a vivid individual case of the connection the garden fostered, which concretely supports the paragraph's point that the garden 'gave the neighborhood more than vegetables' (17). The specific example is a strength, not a flaw, so A is wrong; it gives an anecdote, not statistics, so B is wrong; and (15) is about children finding a place to play, a different detail, so C is wrong.",
     "bankScope": "mock"
   },
   {
@@ -748,7 +748,7 @@
     "difficulty": 3,
     "responseFormat": "mcq",
     "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
-    "problemText": "Which choice would most effectively conclude the fourth paragraph (sentences 13\u201317) by capturing the larger point the paragraph builds toward?",
+    "problemText": "The writer wants to revise sentence (17) so that it more effectively concludes the fourth paragraph (sentences 13\u201317) by capturing the larger point the paragraph builds toward. Which choice best accomplishes this goal?",
     "choices": [
       "In the end, the garden produced far more vegetables than anyone had expected.",
       "Ms. Alvarez was proud of everything the neighborhood had accomplished together.",
@@ -756,7 +756,7 @@
       "Community gardens like this one have become popular in cities across the country."
     ],
     "answer": "C",
-    "solutionText": "The paragraph moves from vegetables to conversations, renewed relationships, and companionship, so the ideal close names the intangible human benefit those details point to, which choice C does. Choice A returns to literal produce and misses the point; choice B narrows to one person's feelings; choice D drifts to an off-topic national generalization.",
+    "solutionText": "The paragraph moves from vegetables to conversations, renewed relationships, and companionship, so the strongest concluding sentence names the intangible human benefit those details point to, which choice C does with its pointed turn from the food the garden grew to the 'something harder to name.' Choice A returns to literal produce and misses the point; choice B narrows to one person's feelings; choice D drifts to an off-topic national generalization.",
     "bankScope": "mock"
   },
   {
