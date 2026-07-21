@@ -46,6 +46,15 @@ test('cap of 8 with unit round-robin for MCQ misses; remainder returned', () => 
   assert.equal(remaining.length, 4);
   // round-robin: first two picks are one from each unit
   assert.notEqual(focus[0].loId, focus[1].loId);
+  assert.equal(focus.filter((i) => i.loId === 'x.algebra').length, 4);
+  assert.equal(focus.filter((i) => i.loId === 'x.geometry').length, 4);
+});
+
+test('an ungraded FRQ (no frqGrade) counts as a miss', () => {
+  const it = { ...frq('f9', 'x.u4', 0, 9) };
+  delete (it as { frqGrade?: unknown }).frqGrade;
+  const { focus } = selectMockReviewFocus([it]);
+  assert.deepEqual(focus.map((i) => i.itemId), ['f9']);
 });
 
 test('buildMockReviewContext: totals, per-unit remainder summary, passage truncation', () => {

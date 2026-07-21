@@ -10,7 +10,7 @@ import type { MockReviewItem } from '@evelyn/portal-contract/v1';
 
 export const FOCUS_CAP = 8;
 const FRQ_MISS_RATIO = 0.7;
-const PASSAGE_EXCERPT_CHARS = 1197;
+const PASSAGE_EXCERPT_CHARS = 1197; // + 13-char ' […truncated]' marker = 1210, the context bound
 
 export interface MockReviewFocusItem {
   sectionLabel: string;
@@ -35,7 +35,10 @@ export interface MockReviewContext {
 
 function frqRatio(it: MockReviewItem): number {
   const g = it.frqGrade;
-  if (!g || g.maxPoints <= 0) return 1;
+  // No grade at all (expired-partial reviews never grade FRQs): treat as a
+  // miss — "ungraded" must not read as "perfect" in a review-focus feature.
+  if (!g) return 0;
+  if (g.maxPoints <= 0) return 1;
   return g.totalPoints / g.maxPoints;
 }
 
