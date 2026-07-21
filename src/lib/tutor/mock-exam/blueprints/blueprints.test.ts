@@ -42,6 +42,18 @@ async function run() {
     assert.equal(math.tools.desmos, true);
     assert.deepEqual(validateBlueprint(bp), []);
   });
+  await test('act blueprint: 4 sections in order, correct counts/times, science excluded, math desmos', () => {
+    const bp = getBlueprint('act');
+    assert.deepEqual(bp.sections.map((s) => s.sectionId), ['english', 'math', 'reading', 'science']);
+    const [english, math, reading, science] = bp.sections;
+    assert.deepEqual(bp.sections.map((s) => s.modules[0].questionCount), [50, 45, 36, 40]);
+    assert.deepEqual(bp.sections.map((s) => s.modules[0].timeLimitMin), [35, 50, 40, 40]);
+    assert.equal(science.inComposite, false);
+    assert.equal(math.tools.desmos, true);
+    assert.equal(english.tools.desmos, false);
+    assert.equal(reading.tools.desmos, false);
+    assert.deepEqual(validateBlueprint(bp), []);
+  });
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

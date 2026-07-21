@@ -13,8 +13,8 @@ export interface Passage {
   year: number;
   /** Canonical public-domain source (Wikisource/Gutenberg/archives). */
   sourceUrl: string;
-  license: 'public-domain';
-  genre: 'speech' | 'essay' | 'letter' | 'sermon' | 'pamphlet' | 'memoir' | 'document' | 'political-cartoon' | 'constitution';
+  license: 'public-domain' | 'internal-original';
+  genre: 'speech' | 'essay' | 'letter' | 'sermon' | 'pamphlet' | 'memoir' | 'document' | 'political-cartoon' | 'constitution' | 'fiction' | 'informational' | 'science';
   /** Paragraph-delimited full text (\n\n between paragraphs). AP-typical
    *  excerpt length ~600-800 words to keep grader prompts affordable. */
   fullText: string;

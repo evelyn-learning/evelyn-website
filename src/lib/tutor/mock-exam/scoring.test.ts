@@ -49,6 +49,24 @@ async function run() {
     // mcq 8/10 = 0.8, frq 2/4 = 0.5 → 0.65 → score 4
     assert.equal(apCompositeScore(0.8, 0.5, spec.ap), 4);
   });
+  await test('act-composite: sections scale via curves, composite averages only inComposite!==false sections', () => {
+    const bp = getBlueprint('act');
+    const rawSections = [
+      { sectionId: 'english', rawCorrect: 41, rawTotal: 50 },
+      { sectionId: 'math', rawCorrect: 35, rawTotal: 45 },
+      { sectionId: 'reading', rawCorrect: 30, rawTotal: 36 },
+      { sectionId: 'science', rawCorrect: 20, rawTotal: 40 },
+    ];
+    const { scaled, composite } = applyCurves(bp, rawSections, [], {});
+    const byId = Object.fromEntries(scaled.sections.map((s) => [s.sectionId, s]));
+    assert.equal(byId.english.scaled, 28);
+    assert.equal(byId.math.scaled, 28);
+    assert.equal(byId.reading.scaled, 29);
+    assert.equal(byId.science.scaled, 20);
+    assert.equal(byId.science.inComposite, false);
+    assert.equal(composite, 28);   // round(mean(28,28,29)) — science excluded
+    assert.equal(scaled.composite, 28);
+  });
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }
