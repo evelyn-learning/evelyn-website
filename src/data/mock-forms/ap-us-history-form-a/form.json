@@ -1,0 +1,110 @@
+{
+  "formId": "ap-us-history-form-a",
+  "examKey": "ap-us-history",
+  "topicIds": [
+    "ap-us-history"
+  ],
+  "label": "AP U.S. History Practice Exam A",
+  "sections": [
+    {
+      "sectionId": "mcq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apush-fa-mc-001",
+            "apush-fa-mc-002",
+            "apush-fa-mc-003",
+            "apush-fa-mc-004",
+            "apush-fa-mc-005",
+            "apush-fa-mc-006",
+            "apush-fa-mc-007",
+            "apush-fa-mc-008",
+            "apush-fa-mc-009",
+            "apush-fa-mc-010",
+            "apush-fa-mc-011",
+            "apush-fa-mc-012",
+            "apush-fa-mc-013",
+            "apush-fa-mc-014",
+            "apush-fa-mc-015",
+            "apush-fa-mc-016",
+            "apush-fa-mc-017",
+            "apush-fa-mc-018",
+            "apush-fa-mc-019",
+            "apush-fa-mc-020",
+            "apush-fa-mc-021",
+            "apush-fa-mc-022",
+            "apush-fa-mc-023",
+            "apush-fa-mc-024",
+            "apush-fa-mc-025",
+            "apush-fa-mc-026",
+            "apush-fa-mc-027",
+            "apush-fa-mc-028",
+            "apush-fa-mc-029",
+            "apush-fa-mc-030",
+            "apush-fa-mc-031",
+            "apush-fa-mc-032",
+            "apush-fa-mc-033",
+            "apush-fa-mc-034",
+            "apush-fa-mc-035",
+            "apush-fa-mc-036",
+            "apush-fa-mc-037",
+            "apush-fa-mc-038",
+            "apush-fa-mc-039",
+            "apush-fa-mc-040",
+            "apush-fa-mc-041",
+            "apush-fa-mc-042",
+            "apush-fa-mc-043",
+            "apush-fa-mc-044",
+            "apush-fa-mc-045",
+            "apush-fa-mc-046",
+            "apush-fa-mc-047",
+            "apush-fa-mc-048",
+            "apush-fa-mc-049",
+            "apush-fa-mc-050",
+            "apush-fa-mc-051",
+            "apush-fa-mc-052",
+            "apush-fa-mc-053",
+            "apush-fa-mc-054",
+            "apush-fa-mc-055"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "saq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apush-fa-fr-01",
+            "apush-fa-fr-02",
+            "apush-fa-fr-03"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "dbq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apush-fa-fr-04"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "leq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apush-fa-fr-05"
+          ]
+        }
+      ]
+    }
+  ]
+}

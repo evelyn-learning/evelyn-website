@@ -137,12 +137,15 @@ import { ACT_MOCK_C_SCIENCE_PASSAGES } from './seeds/act-mock-c-science';
 import { APPSYCH_MOCK_A_PASSAGES } from './seeds/appsych-mock-a';
 // AP English Language mock Form A — 3 reading + 2 writing-draft + RA speech + synthesis packet
 import { APENGLANG_MOCK_A_PASSAGES } from './seeds/apenglang-mock-a';
+// AP U.S. History mock Form A — 15 MCQ stimulus passages + 2 SAQ stimuli + DBQ packet
+import { APUSH_MOCK_A_PASSAGES } from './seeds/apush-mock-a';
 
 export const SEED_PASSAGES: Passage[] = [
   ...ACT_MOCK_A_READING_PASSAGES,
   ...ACT_MOCK_A_SCIENCE_PASSAGES,
   ...APPSYCH_MOCK_A_PASSAGES,
   ...APENGLANG_MOCK_A_PASSAGES,
+  ...APUSH_MOCK_A_PASSAGES,
   ...ACT_MOCK_B_READING_PASSAGES,
   ...ACT_MOCK_B_SCIENCE_PASSAGES,
   ...ACT_MOCK_C_READING_PASSAGES,
