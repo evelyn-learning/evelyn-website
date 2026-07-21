@@ -90,6 +90,7 @@ import {
   looksLikePunnett,
 } from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
+import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
@@ -234,6 +235,10 @@ interface VoiceTutorRealtimeProps {
   // so both .pcm16 tracks align with the chat timeline in the replay UI.
   sessionStartedAtMs?: number;
   sessionGoal: SessionGoal;
+  /** Task WS3: mock-review context for a mock-review session. When present the
+   *  brain receives a `<mock_review>` block every turn (missed items + answer
+   *  key + review directives). Absent ⇒ block omitted, session unchanged. */
+  mockReview?: MockReviewContext;
   /** Optional lesson plan id. When set, the brain runs in plan-driven
    *  mode: each turn carries lessonPlanContext (current segment + plan
    *  metadata) and segment transitions are managed via advance_lesson /
@@ -542,6 +547,7 @@ export function VoiceTutorRealtime({
   sessionId,
   sessionStartedAtMs,
   sessionGoal,
+  mockReview,
   lessonPlanId,
   studentId,
   socialMemory,
@@ -1274,6 +1280,13 @@ export function VoiceTutorRealtime({
   // a progress strip outside this control row.
   const onLessonPlanProgressRef = useRef(onLessonPlanProgress);
   useEffect(() => { onLessonPlanProgressRef.current = onLessonPlanProgress; }, [onLessonPlanProgress]);
+
+  // Task WS3: mock-review context mirrored to a ref. The embed fetches it
+  // asynchronously AFTER mount, and callBrainOnce (memoized, mockReview not in
+  // its deps) closes over this ref so a late-arriving context still reaches the
+  // brain payload without a stale-closure miss.
+  const mockReviewRef = useRef(mockReview);
+  useEffect(() => { mockReviewRef.current = mockReview; }, [mockReview]);
 
   // Milestone reporting (mirrored to a ref so the emit helper has stable
   // identity and never goes stale inside the tool dispatch). Each milestone
@@ -7491,6 +7504,11 @@ export function VoiceTutorRealtime({
             // contract (token = launch context, override = in-session
             // intent that wins while set).
             practiceMode: derivePracticeMode(sessionGoal, practiceOverrideRef.current),
+            // Task WS3: durable mock-review context (undefined for non-mock-
+            // review sessions or when the embed's context fetch failed —
+            // degrade, never block). Read from the ref so a late async arrival
+            // isn't missed by this memoized callback.
+            mockReview: mockReviewRef.current,
             grade: level,
             // Lever A tools-array subject filter (server-side, behind
             // TUTOR_TOOL_SUBJECT_FILTER; off ⇒ ignored). Configured

@@ -33,6 +33,7 @@ import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
+import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
@@ -76,6 +77,9 @@ export interface TutorSessionProps {
   sessionId: string;
   sessionStartedAtMs?: number;
   sessionGoal: SessionGoal;
+  /** Task WS3: mock-review context, forwarded to the runtime. Present only for
+   *  a mock-review session whose context fetch succeeded. */
+  mockReview?: MockReviewContext;
   lessonPlanId?: string;
   voice: OpenAIVoice;
   voiceEngine: TutorSessionVoiceEngine;
@@ -187,7 +191,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
-    sessionGoal, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
+    sessionGoal, mockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -776,6 +780,7 @@ export default function TutorSession(props: TutorSessionProps) {
         sessionId={sessionId}
         sessionStartedAtMs={sessionStartedAtMs}
         sessionGoal={sessionGoal}
+        mockReview={mockReview}
         lessonPlanId={selectedLessonPlanId || undefined}
         captionSlot={dockCaptionEl}
         hideEndButton
