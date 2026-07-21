@@ -1,0 +1,101 @@
+{
+  "formId": "ap-calculus-bc-form-a",
+  "examKey": "ap-calculus-bc",
+  "topicIds": [
+    "ap-calculus-bc"
+  ],
+  "label": "AP Calculus BC Practice Exam A",
+  "sections": [
+    {
+      "sectionId": "mcq-nocalc",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apcalcbc-fa-mc-001",
+            "apcalcbc-fa-mc-002",
+            "apcalcbc-fa-mc-003",
+            "apcalcbc-fa-mc-004",
+            "apcalcbc-fa-mc-005",
+            "apcalcbc-fa-mc-006",
+            "apcalcbc-fa-mc-007",
+            "apcalcbc-fa-mc-008",
+            "apcalcbc-fa-mc-009",
+            "apcalcbc-fa-mc-010",
+            "apcalcbc-fa-mc-011",
+            "apcalcbc-fa-mc-012",
+            "apcalcbc-fa-mc-013",
+            "apcalcbc-fa-mc-014",
+            "apcalcbc-fa-mc-015",
+            "apcalcbc-fa-mc-016",
+            "apcalcbc-fa-mc-017",
+            "apcalcbc-fa-mc-018",
+            "apcalcbc-fa-mc-019",
+            "apcalcbc-fa-mc-020",
+            "apcalcbc-fa-mc-021",
+            "apcalcbc-fa-mc-022",
+            "apcalcbc-fa-mc-023",
+            "apcalcbc-fa-mc-024",
+            "apcalcbc-fa-mc-025",
+            "apcalcbc-fa-mc-026",
+            "apcalcbc-fa-mc-027",
+            "apcalcbc-fa-mc-028",
+            "apcalcbc-fa-mc-029",
+            "apcalcbc-fa-mc-030"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "mcq-calc",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apcalcbc-fa-mc-031",
+            "apcalcbc-fa-mc-032",
+            "apcalcbc-fa-mc-033",
+            "apcalcbc-fa-mc-034",
+            "apcalcbc-fa-mc-035",
+            "apcalcbc-fa-mc-036",
+            "apcalcbc-fa-mc-037",
+            "apcalcbc-fa-mc-038",
+            "apcalcbc-fa-mc-039",
+            "apcalcbc-fa-mc-040",
+            "apcalcbc-fa-mc-041",
+            "apcalcbc-fa-mc-042",
+            "apcalcbc-fa-mc-043",
+            "apcalcbc-fa-mc-044",
+            "apcalcbc-fa-mc-045"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "frq-calc",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apcalcbc-fa-fr-01",
+            "apcalcbc-fa-fr-02"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "frq-nocalc",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apcalcbc-fa-fr-03",
+            "apcalcbc-fa-fr-04",
+            "apcalcbc-fa-fr-05",
+            "apcalcbc-fa-fr-06"
+          ]
+        }
+      ]
+    }
+  ]
+}
