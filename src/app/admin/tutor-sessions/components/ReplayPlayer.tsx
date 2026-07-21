@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { Play, Pause, RotateCcw, X, MessageSquareText } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
+import { InlineMathText } from '@/app/tutor/components/whiteboard/InlineMathText';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
 import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
@@ -76,7 +77,9 @@ export function TranscriptBubble({ entry }: { entry: { role: string; text: strin
             {new Date(entry.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>
         </div>
-        <p className="whitespace-pre-wrap leading-relaxed">{entry.text}</p>
+        {/* Tutor speech carries $…$ KaTeX (live round-4: replay showed raw
+            \dfrac source) — render through the shared segmenter. */}
+        <p className="whitespace-pre-wrap leading-relaxed"><InlineMathText text={entry.text} /></p>
       </div>
     </div>
   );

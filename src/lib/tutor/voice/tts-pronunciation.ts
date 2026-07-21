@@ -1329,10 +1329,24 @@ const PART_LETTER_SPOKEN: Record<string, string> = {
 // STANDALONE token ("part apple" never matches) and lets the optional closing
 // paren be consumed cleanly — a plain \b after \)? would backtrack the paren
 // off and orphan it ("part (b)" → "part bee)").
-const PART_LETTER_RE = /\b(parts?|questions?)\s+\(?([a-h])\)?(?![a-z])/gi;
+// Parenthesized labels — "part (a)" — are unambiguous references, rewrite
+// unconditionally. Bare b–h can't be English articles, so any non-letter
+// continuation is safe. Bare "a" IS the article ("for the most part a
+// student sees…", "question a witness" — live round-4 concern), so it only
+// rewrites when the continuation reads like a label reference: punctuation,
+// dash, end-of-text, or a connective/verb that follows a label, never a
+// fresh noun phrase.
+const PART_LETTER_PAREN_RE = /\b(parts?|questions?)\s+\(([a-h])\)/gi;
+const PART_LETTER_BARE_BH_RE = /\b(parts?|questions?)\s+([b-h])(?![a-z])/gi;
+const PART_LETTER_BARE_A_RE =
+  /\b(parts?|questions?)\s+(a)(?=\s*[.,;:!?)\]"'—–-]|\s+(?:of|and|or|then|first|next|now|again|here|together|too|asks?|says?|is|are|was|has|wants?|needs?|gives?|shows?|does|did|will|would|should)\b|\s*$)/gi;
 function rewritePartLetters(t: string): string {
-  return t.replace(PART_LETTER_RE, (_m, label: string, letter: string) =>
-    `${label} ${PART_LETTER_SPOKEN[letter.toLowerCase()]}`);
+  const spoken = (_m: string, label: string, letter: string) =>
+    `${label} ${PART_LETTER_SPOKEN[letter.toLowerCase()]}`;
+  return t
+    .replace(PART_LETTER_PAREN_RE, spoken)
+    .replace(PART_LETTER_BARE_BH_RE, spoken)
+    .replace(PART_LETTER_BARE_A_RE, spoken);
 }
 
 /**

@@ -492,6 +492,15 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Non-matches: "partial" (no space after "part") stays a word; a letter
   // outside a–h (roman-numeral / citation territory) is left alone.
   eq('The partial derivative here.', 'The partial derivative here.', 'partial-untouched');
+  // Bare "a" as the ARTICLE must never rewrite (round-4 tightening): a fresh
+  // noun phrase follows, not a label continuation.
+  eq('For the most part a student sees this.', 'For the most part a student sees this.', 'article-a-prose');
+  eq('They question a witness.', 'They question a witness.', 'article-a-witness');
+  // …but label-shaped continuations still do.
+  // (the pipeline's dash rule later renders the em dash as a comma pause)
+  eq("Let's start with part a — what expression?", "Let's start with part ay, what expression?", 'part-a-dash');
+  eq('Part a asks for the setup.', 'Part ay asks for the setup.', 'part-a-verb');
+  eq('Try part a of the problem.', 'Try part ay of the problem.', 'part-a-of');
 
   console.log('OK — Agenda round 4 (part-letter TTS)');
 }
