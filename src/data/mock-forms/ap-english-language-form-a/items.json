@@ -1,0 +1,1009 @@
+[
+  {
+    "id": "apenglang-fa-mc-001",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The passage's central claim is best summarized as which of the following?",
+    "choices": [
+      "Good writing depends primarily on collecting an ample vocabulary of vivid words.",
+      "Effective writing depends on hearing how sentences sound, not merely on how they look on the page.",
+      "Rules of grammar are the surest foundation for a beginning writer.",
+      "A writer should always compose with a specific reader in mind."
+    ],
+    "answer": "B",
+    "solutionText": "The narrator states that writing is \"not first an act of the hand but an act of the ear,\" making B the thesis. A is the belief he explicitly says he had \"backward,\" and C is rejected when he calls rules \"the scaffolding, not the building.\"",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-002",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The comparison of the great-aunt to a piano tuner who \"hears a string gone slightly sharp\" primarily emphasizes",
+    "choices": [
+      "her formal training as a musician",
+      "the harshness of her criticism",
+      "the difficulty of pleasing her",
+      "her fine-tuned sensitivity to small flaws in the sound of a sentence"
+    ],
+    "answer": "D",
+    "solutionText": "The analogy stresses her ability to detect a \"false note\" in a sentence's sound, so D is correct. A misreads the comparison literally, and the simile is about acuity of hearing, not the severity or difficulty implied by B and C.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-003",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The great-aunt's single-word command, \"Again,\" rendered as its own sentence, primarily works to",
+    "choices": [
+      "suggest that she was impatient and unkind to the narrator",
+      "indicate that she rarely spoke to the narrator",
+      "convey the brevity and firmness of her insistence on revision",
+      "show that she had grown tired of dictating"
+    ],
+    "answer": "C",
+    "solutionText": "The clipped one-word sentence enacts her terse, non-negotiable demand that a flawed sentence be redone, supporting C. A overstates her manner (the narrator only \"resented this at first\"), and the passage shows her dictating and speaking readily, contradicting B and D.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-004",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The primary function of the sentences \"The ear is an honest editor. It will not be flattered, and it cannot be argued with\" is to",
+    "choices": [
+      "introduce a new anecdote about the great-aunt",
+      "personify the ear in order to characterize it as an impartial judge of prose",
+      "concede that the narrator's method sometimes fails",
+      "shift the passage's focus from writing to music"
+    ],
+    "answer": "B",
+    "solutionText": "By treating the ear as an \"honest editor\" that cannot be flattered or argued with, the passage personifies it to establish its impartiality, so B is correct. No new anecdote appears, no failure is conceded, and the subject remains writing rather than music.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-005",
+    "loId": "apenglang.diction-and-tone",
+    "cedCode": "AP-ENGLANG-4.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The narrator's overall attitude toward his great-aunt is best described as",
+    "choices": [
+      "grateful and admiring",
+      "resentful and dismissive",
+      "puzzled and indifferent",
+      "nostalgic but critical of her"
+    ],
+    "answer": "A",
+    "solutionText": "The narrator kept her habit for life and credits her lesson, making A correct. His resentment was only initial (\"at first\"), so B is wrong, and the passage voices no lasting criticism or indifference toward her.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-006",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "In stating that rules \"are the scaffolding, not the building,\" the narrator most nearly argues that rules",
+    "choices": [
+      "are useless to a serious writer",
+      "must be memorized before one can write well",
+      "are a temporary aid rather than the substance of good writing",
+      "are more important than listening to one's sentences"
+    ],
+    "answer": "C",
+    "solutionText": "Scaffolding supports construction but is not the finished structure, so the metaphor casts rules as a temporary aid, not the substance itself (C). A overstates his view (\"Rules have their place\"), while B and D reverse his argument that listening, not memorized rules, matters most.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-007",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The primary purpose of the fourth paragraph, in which the narrator reads aloud \"to an empty room, occasionally to a patient dog,\" is to",
+    "choices": [
+      "illustrate how the narrator now practices the lesson he learned from his great-aunt",
+      "confess that the narrator has become eccentric and lonely",
+      "argue that writers should perform their work for live audiences",
+      "explain why the narrator gave up writing for performance"
+    ],
+    "answer": "A",
+    "solutionText": "The paragraph opens \"I have kept her habit\" and shows the narrator applying her read-aloud practice, so A is correct. The dog and empty-room details are self-deprecating humor, not a confession of loneliness, and the passage insists reading is a silent, private performance, ruling out C and D.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-008",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc1.v1",
+    "problemText": "The closing statement, \"that the page is silent, but the sentence is not,\" chiefly serves to",
+    "choices": [
+      "introduce a new distinction the passage has not previously explored",
+      "qualify the narrator's earlier praise of his great-aunt",
+      "concede that reading aloud has limited usefulness",
+      "restate the passage's governing idea in a compressed, paradoxical form"
+    ],
+    "answer": "D",
+    "solutionText": "The seemingly contradictory line distills the passage's thesis that writing must be heard, not merely seen, into a compact paradox, so D is correct. It repeats rather than introduces an idea, does not qualify the great-aunt's role, and affirms rather than limits the value of hearing prose.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-009",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The central argument of the passage is that",
+    "choices": [
+      "public libraries should replace private businesses in city centers",
+      "free public gathering spaces are essential to civic life and should be funded, not cut",
+      "cities can no longer afford to maintain community services",
+      "screens and phones have made physical libraries unnecessary"
+    ],
+    "answer": "B",
+    "solutionText": "The essay argues that \"third places\" are part of what a city is for and urges keeping them funded, so B is the thesis. C and D are objections the author explicitly rebuts, and A is never claimed.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-010",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The passage's opening reference to \"Every city budget season\" primarily establishes",
+    "choices": [
+      "the author's expertise as a professional economist",
+      "a nostalgic memory of the author's childhood city",
+      "the occasion the author is responding to: recurring proposals to cut public services",
+      "that the author opposes all forms of government spending"
+    ],
+    "answer": "C",
+    "solutionText": "The opening frames the essay as a response to the recurring budget-season argument that public services are the first to be trimmed, making C correct. The passage offers no claim of economic credentials, no childhood memory, and no blanket opposition to spending.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-011",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The list of the teenager, the new arrival, and the recently widowed man chiefly functions to",
+    "choices": [
+      "give concrete human examples of needs the library meets beyond information",
+      "prove that libraries are financially self-sustaining",
+      "suggest that only vulnerable people use public spaces",
+      "contrast urban and rural uses of libraries"
+    ],
+    "answer": "A",
+    "solutionText": "These vignettes make vivid the claim that people go to the library \"to be among others while remaining themselves,\" not just for information, so A is correct. They illustrate rather than restrict who uses the space, and they say nothing about finances or a rural contrast.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-012",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The claim \"Isolation is not merely sad; it is expensive\" advances the author's argument primarily by",
+    "choices": [
+      "reframing loneliness as a practical, economic cost rather than only an emotional one",
+      "conceding that community spaces are too costly to maintain",
+      "appealing to readers' sympathy for lonely individuals",
+      "introducing statistics about public health spending"
+    ],
+    "answer": "A",
+    "solutionText": "The sentence pivots from emotion (\"sad\") to cost (\"expensive\"), reframing isolation as a practical expense a city ultimately pays, so A is correct. It moves beyond mere sympathy (C), concedes nothing about cost (B), and cites no statistics (D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-013",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The metaphor of deferring \"a larger bill\" paid \"in a currency harder to earn back than dollars\" primarily emphasizes that",
+    "choices": [
+      "closing public spaces produces immediate financial savings",
+      "cities should raise taxes to fund libraries",
+      "the social costs of isolation are real and harder to recover than money",
+      "libraries generate more revenue than they cost"
+    ],
+    "answer": "C",
+    "solutionText": "The financial metaphor insists that cutting these spaces does not save money but incurs a costlier social debt, so C is correct. A directly contradicts \"does not save money,\" and neither a tax proposal (B) nor a revenue claim (D) is made.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-014",
+    "loId": "apenglang.audience-context",
+    "cedCode": "AP-ENGLANG-1.5",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The paragraph beginning \"I do not pretend that budgets are limitless\" primarily serves to",
+    "choices": [
+      "acknowledge the opposing concern about limited budgets to strengthen the author's credibility",
+      "abandon the author's argument in favor of budget cuts",
+      "propose a specific new tax plan",
+      "accuse city officials of dishonesty"
+    ],
+    "answer": "A",
+    "solutionText": "By granting that \"Hard choices are real,\" the author concedes the opposition's valid concern and thereby appears fair-minded, making A correct. The paragraph then redirects to the true stakes rather than abandoning the argument, and it offers no tax plan or accusation of dishonesty.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-015",
+    "loId": "apenglang.syntax-for-effect",
+    "cedCode": "AP-ENGLANG-6.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The passage's shift to direct imperatives (\"So keep the lights on. Fund the branch that stays open late, the pool ... the center\") in the final paragraph primarily works to",
+    "choices": [
+      "soften the argument into a tentative suggestion",
+      "signal that the author is uncertain of the conclusion",
+      "return the essay to its opening anecdote",
+      "transform the analysis into a direct call to action addressed to those who set budgets"
+    ],
+    "answer": "D",
+    "solutionText": "The move from analysis to commands turns the essay into a pointed appeal urging decision-makers to fund these spaces, so D is correct. Imperatives sharpen rather than soften the argument, convey conviction rather than uncertainty, and the essay opened with an argument, not an anecdote to revisit.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-016",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc2.v1",
+    "problemText": "The concluding sentences \u2014 \"They are not luxuries a city affords once it is rich. They are part of what makes a city worth being rich for\" \u2014 primarily function to",
+    "choices": [
+      "concede that only wealthy cities can support such spaces",
+      "redefine public spaces from optional rewards of wealth into part of a city's very purpose",
+      "summarize statistics presented earlier in the passage",
+      "shift blame onto individual taxpayers"
+    ],
+    "answer": "B",
+    "solutionText": "The parallel sentences overturn the \"luxury\" framing, recasting third places as part of a city's purpose rather than a reward of prosperity, so B is correct. This contradicts A, cites no statistics (C), and assigns no blame to taxpayers (D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-017",
+    "loId": "apenglang.reading-for-claim",
+    "cedCode": "AP-ENGLANG-1.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The central idea of the passage is best expressed as which of the following?",
+    "choices": [
+      "Old maps are more beautiful than modern ones.",
+      "Honestly marking the limits of one's knowledge is a form of truthfulness worth imitating.",
+      "Early cartographers were more skilled than modern surveyors.",
+      "Blank spaces on a map indicate laziness or carelessness."
+    ],
+    "answer": "B",
+    "solutionText": "The author praises the blank space as \"the most truthful part of the map\" and wishes to learn its humility, making B the thesis. D is the view the author argues against, and neither beauty (A) nor a skill comparison (C) is the passage's point.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-018",
+    "loId": "apenglang.figurative-language-schemes",
+    "cedCode": "AP-ENGLANG-6.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The image of a writer who \"has decorated the interior with monsters and called it a map\" primarily criticizes",
+    "choices": [
+      "writers who fill gaps in knowledge with confident invention",
+      "mapmakers who failed to draw accurate coastlines",
+      "readers who prefer illustrated books",
+      "historians who admit the limits of the record"
+    ],
+    "answer": "A",
+    "solutionText": "The \"monsters\" stand for plausible-sounding invention used to fill genuine gaps, so the image criticizes writers who fabricate rather than admit ignorance (A). It concerns filling the unknown interior, not coastlines (B), and targets the opposite of the honest historians in D.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-019",
+    "loId": "apenglang.methods-of-development",
+    "cedCode": "AP-ENGLANG-4.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The paragraph beginning \"I think often of this when I read history\" primarily functions to",
+    "choices": [
+      "abandon the essay's focus on maps in favor of autobiography",
+      "provide statistical evidence about historical records",
+      "extend the map metaphor to writing, history, and memory",
+      "concede that seamless stories are usually the most accurate"
+    ],
+    "answer": "C",
+    "solutionText": "The paragraph applies the blank-space lesson to history, science, and memory, extending the map metaphor to human accounts, so C is correct. The map figure is carried forward rather than abandoned, no statistics appear, and the author calls the seamless story \"usually the dishonest one,\" contradicting D.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-020",
+    "loId": "apenglang.diction-connotation-tone",
+    "cedCode": "AP-ENGLANG-6.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "In context, the phrase \"ragged edges\" most nearly conveys that genuine knowledge",
+    "choices": [
+      "is worthless unless it is complete",
+      "can be smoothed into a seamless narrative without loss",
+      "improves steadily over time",
+      "is naturally incomplete and uneven where evidence runs out"
+    ],
+    "answer": "D",
+    "solutionText": "\"Ragged edges\" describes how real knowledge trails off \"where the records were lost\" and witnesses disagreed, so D is correct. The passage values such incompleteness rather than dismissing it (A) and warns that smoothing it is dishonest (B); steady improvement (C) is never claimed.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-021",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The author's remark that \"the coastlines, after all, are drawn with care, and hard-won\" primarily serves to",
+    "choices": [
+      "admit that the honest mapmaker knew nothing at all",
+      "clarify that valuing the blank space does not mean abandoning the pursuit of real knowledge",
+      "argue that coastlines are the only reliable part of any map",
+      "contradict the author's earlier praise of blank spaces"
+    ],
+    "answer": "B",
+    "solutionText": "The clause qualifies the argument, showing that honoring the blank space (\"It does not mean giving up the effort to know\") still demands rigorous, hard-won knowledge where evidence exists, so B is correct. It refutes A, overstates nothing about coastlines (C), and complements rather than contradicts the praise of blanks (D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-022",
+    "loId": "apenglang.analyzing-style",
+    "cedCode": "AP-ENGLANG-6.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The final paragraph's distinction between \"the edge of the world and the edge of one's knowledge\" primarily works to",
+    "choices": [
+      "suggest the atlas is valuable only as an antique",
+      "express regret that the blank spaces have been filled in",
+      "crystallize the essay's theme by naming the kind of honesty the author admires",
+      "return the essay to a purely geographical subject"
+    ],
+    "answer": "C",
+    "solutionText": "The distinction names the \"rarer kind of accuracy\" the essay has been praising, condensing its theme into a single formulation, so C is correct. The atlas is kept as a lesson, not an antique (A); the tone is admiring, not regretful (B); and the paragraph moves toward a moral point rather than back to geography (D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-023",
+    "loId": "apenglang.rhetorical-situation",
+    "cedCode": "AP-ENGLANG-1.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-rc3.v1",
+    "problemText": "The author's primary purpose in the passage as a whole is to",
+    "choices": [
+      "provide practical instructions for drawing accurate maps",
+      "commend intellectual humility and urge readers to mark the limits of what they know",
+      "trace the history of cartography from ancient to modern times",
+      "mourn the loss of an inherited family atlas"
+    ],
+    "answer": "B",
+    "solutionText": "Using old maps as an extended analogy, the author champions the honesty of admitting the boundaries of one's knowledge, so B is correct. The essay gives no how-to instructions (A), is not a historical survey (C), and treats the atlas as a device rather than an object of mourning (D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-024",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "Which transition, inserted at the beginning of sentence (7) (\"______ students who are chronically short on sleep show measurable declines in memory, attention, and mood\"), best signals the relationship between sentence (6) and sentence (7)?",
+    "choices": [
+      "However",
+      "Therefore",
+      "For example",
+      "Nevertheless"
+    ],
+    "answer": "C",
+    "solutionText": "Sentence (6) announces that researchers have documented 'the consequences of this mismatch'; sentence (7) then names those specific consequences, so it functions as an illustration, making 'For example' the correct signal. 'However' and 'Nevertheless' signal contrast, and 'Therefore' signals a cause-effect conclusion, none of which fits an elaboration.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-025",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "Which choice most effectively combines sentences (2) (\"They are not lazy.\") and (3) (\"They are tired, and there is a growing body of research that explains why.\") to emphasize the contrast between the two ideas?",
+    "choices": [
+      "They are not lazy, they are tired, and there is a growing body of research that explains why.",
+      "They are not lazy; they are tired, and there is a growing body of research that explains why.",
+      "They are not lazy and tired, and there is a growing body of research that explains why.",
+      "They are not lazy, so they are tired, and there is a growing body of research that explains why."
+    ],
+    "answer": "B",
+    "solutionText": "The semicolon joins two independent clauses and sets the corrective 'they are tired' directly against 'they are not lazy,' preserving the intended contrast. Choice A is a comma splice; choice C illogically negates both adjectives ('not lazy and tired'); choice D invents a false causal relationship ('so they are tired').",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-026",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "The writer is considering deleting sentence (5) (\"Asking a teenager to be alert at 7:25 is a little like asking an adult to think clearly at four in the morning.\"). Should the sentence be kept?",
+    "choices": [
+      "Kept, because it introduces statistical evidence that supports the paragraph's claim.",
+      "Deleted, because it merely restates the data presented earlier in the paragraph.",
+      "Kept, because the analogy translates the biological explanation in sentence (4) into a vivid comparison readers can grasp.",
+      "Deleted, because its informal tone conflicts with the essay's argument."
+    ],
+    "answer": "C",
+    "solutionText": "Sentence (5) takes the technical claim in (4) about the adolescent sleep cycle and recasts it as a relatable analogy, helping readers feel the mismatch, so it should be kept for that rhetorical reason. Choice A is false (the sentence gives no statistics); the analogy adds a new frame rather than restating data, so B is wrong; and the comparison suits the persuasive, accessible tone, so D is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-027",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "The writer wants to add a sentence after sentence (7) that offers a concrete, measurable example of the 'declines' it describes. Which choice best accomplishes this goal?",
+    "choices": [
+      "Sleep is, after all, one of the most important things a person can do for their overall health.",
+      "It is obvious to any teacher that tired students do not perform as well as rested ones.",
+      "Teenagers today face more academic pressure than any previous generation did.",
+      "For instance, in one study sleep-deprived students scored nearly a full letter grade lower on tests of recall than their well-rested classmates."
+    ],
+    "answer": "D",
+    "solutionText": "Choice D supplies a concrete, measurable instance of the declines named in (7) (memory, attention, mood) by quantifying a drop in recall performance. Choice A is a vague generalization about sleep; choice B asserts the point without measurable support; choice C shifts to academic pressure, which is off the goal of illustrating cognitive decline.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-028",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "Which transition, inserted at the beginning of sentence (13) (\"______ parents who leave for work early may worry about leaving younger children unsupervised\"), best signals the relationship between sentence (12) and sentence (13)?",
+    "choices": [
+      "In addition",
+      "However",
+      "For example",
+      "As a result"
+    ],
+    "answer": "A",
+    "solutionText": "Sentence (12) lists logistical objections (bus schedules, jobs, sports); sentence (13) adds a further, distinct objection about childcare, so 'In addition' correctly signals another item in the same list of concerns. 'For example' is the trap, but the childcare worry is not an instance of the scheduling complications in (12); 'However' and 'As a result' wrongly signal contrast or consequence.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-029",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "In sentence (20), the writer is choosing a word for the blank: \"A schedule built for the ______ of adults is being applied to the biology of teenagers, and the mismatch is doing real harm.\" Which choice best sharpens the contrast the writer draws between adults and teenagers?",
+    "choices": [
+      "convenience",
+      "needs",
+      "benefit",
+      "schedules"
+    ],
+    "answer": "A",
+    "solutionText": "'Convenience' frames the adult side of the contrast as mere preference or ease, which sets it in pointed opposition to the 'biology of teenagers' and supports the charge that the mismatch does 'real harm.' 'Needs' and 'benefit' would concede that the schedule serves a legitimate purpose, weakening the contrast; 'schedules' is redundant with 'schedule' and states no value at all.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-030",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "Which choice most effectively combines sentences (14) (\"These concerns are real.\") and (15) (\"They are also, in most cases, solvable with planning, and several districts have already shown that the schedule can be rearranged without disaster.\") to emphasize that the concerns can be solved?",
+    "choices": [
+      "These concerns are real; they are also, in most cases, solvable with planning, and several districts have already shown that the schedule can be rearranged without disaster.",
+      "These concerns are real, they are also solvable with planning, and several districts have already shown that the schedule can be rearranged without disaster.",
+      "Although these concerns are real, they are, in most cases, solvable with planning, and several districts have already shown that the schedule can be rearranged without disaster.",
+      "These concerns are real and solvable with planning, and several districts have already shown that the schedule can be rearranged without disaster."
+    ],
+    "answer": "C",
+    "solutionText": "Subordinating the concession ('Although these concerns are real') pushes the main clause about solvability into the emphatic position, which matches the writer's goal of stressing that the concerns can be solved. The semicolon in choice A is grammatical but weights the two clauses equally rather than subordinating the concession; choice B is a comma splice; choice D flattens the concession into a simple compound predicate and loses the acknowledge-then-answer move.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-031",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "The writer is considering deleting sentence (22) (\"There will still be hard classes, long nights, and the ordinary difficulty of growing up.\"). Should the sentence be kept?",
+    "choices": [
+      "Kept, because it supports the concession in sentence (21) and makes the pivot in sentence (23) more persuasive.",
+      "Kept, because it provides statistical support for the essay's central claim.",
+      "Deleted, because it contradicts the essay's argument that later start times help students.",
+      "Deleted, because it introduces evidence that belongs in the second paragraph."
+    ],
+    "answer": "A",
+    "solutionText": "Sentence (21) concedes that a later bell will not 'solve every problem'; sentence (22) makes that concession concrete, and by admitting the limits of the claim it earns the emphatic pivot in (23) ('But of all the obstacles ... this one is unusual'). Choice B is false (no statistics); the sentence supports rather than contradicts the argument, so C is wrong; and it is not misplaced evidence, so D is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-032",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "In sentence (12), the writer is choosing a verb for the blank: \"A later start can ______ bus schedules, after-school jobs, and sports practices, which often depend on the current timetable.\" The writer wants to concede a genuine difficulty without overstating it. Which choice best fits that purpose?",
+    "choices": [
+      "destroy",
+      "affect",
+      "complicate",
+      "ruin"
+    ],
+    "answer": "C",
+    "solutionText": "'Complicate' concedes a real logistical difficulty while keeping the measured, fair tone the paragraph promises ('these deserve a fair hearing'). 'Destroy' and 'ruin' overstate the disruption into catastrophe, undercutting that fairness; 'affect' is too weak and vague to acknowledge a genuine problem.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-033",
+    "loId": "apenglang.line-of-reasoning-argument",
+    "cedCode": "AP-ENGLANG-2.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "The writer is considering deleting sentence (16) (\"I understand that changing the start time is not as simple as moving the hands of a clock.\"). Should the sentence be kept?",
+    "choices": [
+      "Kept, because it offers concrete evidence of the schedule's costs.",
+      "Kept, because it acknowledges the difficulty of the change and establishes a reasonable tone before the writer presses the argument in sentence (17).",
+      "Deleted, because it concedes too much and weakens the essay's position beyond repair.",
+      "Deleted, because it repeats the point already made in sentence (11)."
+    ],
+    "answer": "B",
+    "solutionText": "Sentence (16) grants that the change is genuinely complex, which builds the writer's credibility and sets up the 'But' pivot in (17) toward the schedule's costs. Choice A misdescribes the sentence, which offers no evidence; the concession is measured and immediately balanced by (17), so C overstates its effect; and (11) discusses critics' objections, not the difficulty of change, so D is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-034",
+    "loId": "apenglang.revision-and-sophistication",
+    "cedCode": "AP-ENGLANG-9.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr1.v1",
+    "problemText": "The writer wants to revise sentence (10) (\"Later start times are better for adolescent health and learning.\") so that it states the claim without overstating it. Which choice best accomplishes this goal?",
+    "choices": [
+      "Later start times will fix the problems adolescents face with health and learning.",
+      "Later start times might possibly be somewhat better for at least some adolescents in certain situations.",
+      "Later start times are the single most important factor in adolescent health and learning.",
+      "For most adolescents, later start times support better health and learning."
+    ],
+    "answer": "D",
+    "solutionText": "Choice D adds a precise qualifier ('For most adolescents') and a measured verb ('support'), keeping the claim clear without promising too much. Choices A and C overstate ('will fix,' 'single most important factor'), and choice B collapses into vague over-hedging ('might possibly be somewhat better ... in certain situations') that drains the claim of force.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-035",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "Which transition, inserted at the beginning of sentence (14) (\"______ neighbors who had lived beside one another for years without speaking now traded gardening advice across the fence\"), best signals the relationship between sentence (13) and sentence (14)?",
+    "choices": [
+      "However",
+      "For example",
+      "Therefore",
+      "Meanwhile"
+    ],
+    "answer": "B",
+    "solutionText": "Sentence (13) states that the conversations surprised the writer most; sentence (14) gives a specific instance of such a conversation, so 'For example' correctly signals illustration. 'However' signals contrast, 'Therefore' signals consequence, and 'Meanwhile' signals simultaneous action, none of which fits an example.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-036",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "Which choice most effectively combines sentences (1) (\"For as long as I could remember, the lot at the corner of Third and Maple had been an eyesore.\") and (2) (\"It was a fenced rectangle of cracked concrete and stubborn weeds, collecting litter and little else.\")?",
+    "choices": [
+      "For as long as I could remember, the lot at the corner of Third and Maple had been an eyesore \u2014 a fenced rectangle of cracked concrete and stubborn weeds, collecting litter and little else.",
+      "For as long as I could remember, the lot at the corner of Third and Maple had been an eyesore; the truth is that it was a fenced rectangle of cracked concrete and stubborn weeds, and it collected litter and little else.",
+      "For as long as I could remember, the lot at the corner of Third and Maple had been an eyesore, it was a fenced rectangle of cracked concrete and stubborn weeds, collecting litter and little else.",
+      "For as long as I could remember, the lot at the corner of Third and Maple had been an eyesore and a fenced rectangle of cracked concrete and stubborn weeds, collecting litter and little else."
+    ],
+    "answer": "A",
+    "solutionText": "The dash sets off an appositive that concisely defines what made the lot 'an eyesore,' the most economical and emphatic combination. Choice B correctly joins two independent clauses with a semicolon but is wordy and padded ('the truth is that,' 'and it collected'), so it is grammatical yet far less effective; choice C is a comma splice; choice D illogically coordinates the lot's being 'an eyesore and a fenced rectangle' as if these were two separate things.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-037",
+    "loId": "apenglang.selecting-evidence",
+    "cedCode": "AP-ENGLANG-2.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "The writer is considering deleting sentence (16) (\"An elderly man who lived alone told Ms. Alvarez that the garden had given him a reason to leave his apartment each morning.\"). Should the sentence be kept?",
+    "choices": [
+      "Deleted, because it focuses on a single person rather than the whole neighborhood.",
+      "Kept, because it provides statistical evidence of the garden's impact.",
+      "Deleted, because it repeats the idea already stated in sentence (15).",
+      "Kept, because it gives a specific, human example of the intangible benefit named in sentence (17)."
+    ],
+    "answer": "D",
+    "solutionText": "Sentence (16) offers a vivid individual case of the connection the garden fostered, which concretely supports the paragraph's point that the garden 'gave the neighborhood more than vegetables' (17). The specific example is a strength, not a flaw, so A is wrong; it gives an anecdote, not statistics, so B is wrong; and (15) is about children finding a place to play, a different detail, so C is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-038",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "The writer wants to revise sentence (17) so that it more effectively concludes the fourth paragraph (sentences 13\u201317) by capturing the larger point the paragraph builds toward. Which choice best accomplishes this goal?",
+    "choices": [
+      "In the end, the garden produced far more vegetables than anyone had expected.",
+      "Ms. Alvarez was proud of everything the neighborhood had accomplished together.",
+      "The garden grew food, but it also grew something harder to name.",
+      "Community gardens like this one have become popular in cities across the country."
+    ],
+    "answer": "C",
+    "solutionText": "The paragraph moves from vegetables to conversations, renewed relationships, and companionship, so the strongest concluding sentence names the intangible human benefit those details point to, which choice C does with its pointed turn from the food the garden grew to the 'something harder to name.' Choice A returns to literal produce and misses the point; choice B narrows to one person's feelings; choice D drifts to an off-topic national generalization.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-039",
+    "loId": "apenglang.reasoning-and-paragraphing",
+    "cedCode": "AP-ENGLANG-5.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "The writer is considering deleting sentence (9) (\"The early weeks were not glamorous.\"). Should the sentence be kept?",
+    "choices": [
+      "Kept, because it serves as the paragraph's topic sentence, setting up the description of hard, unglamorous labor in sentences (10) and (11).",
+      "Kept, because it provides specific evidence of the volunteers' progress.",
+      "Deleted, because it states an opinion the rest of the paragraph does not support.",
+      "Deleted, because it duplicates the description of the lot in sentence (2)."
+    ],
+    "answer": "A",
+    "solutionText": "Sentence (9) frames the paragraph, and the details that follow \u2014 hauling concrete, trucking soil, building beds, slow progress \u2014 bear out its claim that the early weeks 'were not glamorous.' It is a framing generalization, not itself specific evidence, so B is wrong; the paragraph clearly supports it, so C is wrong; and it describes the work, not the lot's original appearance in (2), so D is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-040",
+    "loId": "apenglang.organizing-for-effect",
+    "cedCode": "AP-ENGLANG-5.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "The writer is considering deleting sentence (22) (\"I used to walk past that corner without a second glance.\"). Should the sentence be kept?",
+    "choices": [
+      "Deleted, because it shifts attention to the writer instead of the garden.",
+      "Kept, because it establishes the writer's earlier indifference and sets up the change in perspective expressed in sentence (23).",
+      "Kept, because it provides the essay's central piece of evidence.",
+      "Deleted, because it belongs in the first paragraph with the other description of the lot."
+    ],
+    "answer": "B",
+    "solutionText": "Sentence (22) records the writer's former indifference, and that 'used to' establishes the before against which the transformed 'Now I understand' of (23) lands, driving the reflective close. The personal frame is the point of the concluding paragraph, so A is wrong; it is a framing detail, not central evidence, so C overstates it; and it opens the reflective turn rather than belonging with the opening description, so D is wrong.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-041",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "Which transition, inserted at the beginning of sentence (20) (\"______ these problems were worked out in the same way the garden itself had been built, through argument, compromise, and shared labor\"), best signals the relationship between sentence (19) and sentence (20)?",
+    "choices": [
+      "Therefore",
+      "For example",
+      "However",
+      "Similarly"
+    ],
+    "answer": "C",
+    "solutionText": "Sentence (19) lists the setbacks (a storm, a dispute); sentence (20) reverses course to say the problems were resolved, so 'However' correctly signals the contrast. 'Therefore' signals consequence, 'For example' signals illustration, and 'Similarly' signals likeness, none of which captures the turn from problem to resolution.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-042",
+    "loId": "apenglang.unity-and-coherence",
+    "cedCode": "AP-ENGLANG-5.2",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "In sentence (23), the writer is choosing a word for the blank: \"Now I understand that a vacant lot is never really empty; it is a ______ the neighborhood has not yet answered.\" Which choice best fits the writer's meaning and sets up the final sentence (24)?",
+    "choices": [
+      "problem",
+      "question",
+      "space",
+      "reminder"
+    ],
+    "answer": "B",
+    "solutionText": "'Question' pairs with the verb 'answered' later in (23) and is picked up directly by 'Ours answered it with a garden' in (24), giving the two sentences a tight metaphorical link. 'Problem' would carry a purely negative sense at odds with the hopeful ending; 'space' is flat and breaks the answering metaphor; 'reminder' is not something one 'answers.'",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-043",
+    "loId": "apenglang.transitions-cohesion",
+    "cedCode": "AP-ENGLANG-5.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "Which transition, inserted at the beginning of sentence (15) (\"______ children who had nowhere to play discovered a plot of their own to tend\"), best signals the relationship between sentence (14) and sentence (15)?",
+    "choices": [
+      "However",
+      "For example",
+      "As a result",
+      "In addition"
+    ],
+    "answer": "D",
+    "solutionText": "Sentences (14) and (15) are parallel examples of the garden transforming the neighborhood's relationships, so 'In addition' correctly signals another item in that series. 'For example' is the trap, but (15) is a further instance alongside (14), not an illustration of it; 'However' and 'As a result' wrongly signal contrast or consequence.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-044",
+    "loId": "apenglang.intros-conclusions",
+    "cedCode": "AP-ENGLANG-2.5",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "The writer wants the end of sentence (3) to forecast the essay's focus on the people and relationships the garden fostered rather than on gardening itself. Sentence (3): \"Last spring, a group of neighbors decided to do something about it, and the transformation that followed taught me ______.\" Which choice best accomplishes this goal?",
+    "choices": [
+      "how much a single stretch of ground can mean to the people around it",
+      "a great deal about how to grow vegetables in poor, rocky soil",
+      "that improving a neighborhood's appearance takes real effort",
+      "that hard work will always be rewarded in the end"
+    ],
+    "answer": "A",
+    "solutionText": "Choice A points explicitly to 'the people around it,' previewing the essay's real subject \u2014 the connections the garden created. Choice B forecasts a how-to essay about gardening technique; choice C narrows the focus to appearance and effort; choice D offers a generic maxim that does not name the human-community theme the essay develops.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-mc-045",
+    "loId": "apenglang.mcq-writing-editing",
+    "cedCode": "AP-ENGLANG-9.3",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "passageId": "evelyn.passage.apenglang-mock-a-wr2.v1",
+    "problemText": "Which choice most effectively combines sentences (18) (\"The project was not without setbacks.\") and (19) (\"A summer storm flattened half the tomato plants, and a dispute over watering schedules briefly divided the volunteers.\") so that the second part specifies the setbacks announced in the first?",
+    "choices": [
+      "The project was not without setbacks: a summer storm flattened half the tomato plants, and a dispute over watering schedules briefly divided the volunteers.",
+      "The project was not without setbacks; a summer storm flattened half the tomato plants, and a dispute over watering schedules briefly divided the volunteers.",
+      "The project was not without setbacks, a summer storm flattened half the tomato plants, and a dispute over watering schedules briefly divided the volunteers.",
+      "The project was not without setbacks, and a summer storm flattened half the tomato plants, and a dispute over watering schedules briefly divided the volunteers."
+    ],
+    "answer": "A",
+    "solutionText": "The colon announces that what follows will specify the 'setbacks' just named, which is exactly the relationship the writer wants between the general statement and its two concrete examples. The semicolon in choice B is grammatical but merely links two independent statements without signaling that the second enumerates the first; choice C is a comma splice; choice D strings the clauses together with repeated 'and,' producing a choppy, unemphatic sentence.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-fr-01",
+    "loId": "apenglang.the-synthesis-task",
+    "cedCode": "AP-ENGLANG-3.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apenglang-mock-a-syn.v1",
+    "problemText": "Suggested time: 40 minutes. This question counts for one-third of the total essay section score.\n\nMany communities have debated whether to adopt \"dark-sky\" ordinances \u2014 local rules that limit the brightness, direction, or hours of outdoor lighting at night \u2014 in order to reduce light pollution.\n\nCarefully read the six sources in the packet above, including any introductory information. Then write an essay that synthesizes material from at least THREE of the sources and develops your own position on whether your community should adopt a dark-sky ordinance restricting nighttime outdoor lighting.\n\nYour argument should be the focus of your essay. Use the sources to develop your argument and explain the reasoning for it. Avoid merely summarizing the sources. Indicate clearly which sources you are drawing from, both through direct quotation and paraphrase; you may cite them as Source A, Source B, etc., or by the parenthetical author names in the packet (for example, \"(Source A)\" or \"(Whitfield)\").",
+    "answer": "see rubric",
+    "solutionText": "A successful response states a defensible position on adopting a dark-sky ordinance, cites and integrates at least three sources (not merely summarizing them), and develops a clear line of reasoning. Strong responses use Source C and Source D to dissolve the false 'bright vs. dark' choice, acknowledge the safety concern in Source B and the small-business burden in Source E as counterpoints to be answered, and draw on Sources A and F for the values and ecological stakes. Full sophistication credit rewards responses that qualify their position (for example, endorsing a shielded-fixture, timed ordinance rather than a blanket blackout) or situate the debate in a broader tension between public goods and private cost.",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Responds to the prompt with a defensible thesis that presents the writer's own position on whether the community should adopt a dark-sky ordinance. The thesis must take a clear, arguable stance (for, against, or a well-defined qualified position); it may appear anywhere in the response. Do NOT award the point for a thesis that only restates the prompt, only lists the sources, or merely says the issue is 'complicated' without staking out a position. 0 points if there is no defensible thesis.",
+          "modelResponse": "Communities should adopt dark-sky ordinances, but the right kind: rules that require shielded, warm, and time-limited lighting rather than a blanket reduction in brightness, so that a darker sky and a safe street are pursued together rather than traded against each other."
+        },
+        {
+          "criterionId": "evidence-commentary",
+          "maxPoints": 4,
+          "scoringCriteria": "Score 0-4 for Evidence AND Commentary, using this ladder. 0: the response restates the thesis, repeats provided information, or references no sources. 1: the response provides evidence that is mostly general (summarizes sources or refers to them vaguely) with little or no explanation, and cites fewer than the required sources. 2: the response provides SOME specific evidence drawn from at least three sources, but the commentary mostly summarizes rather than explains how the evidence supports the argument. 3: the response provides specific evidence from at least three sources AND explains how MOST of that evidence supports its argument, though the line of reasoning may have gaps or a source may be used loosely. 4: the response consistently provides specific evidence from at least three sources AND for each piece explains how it supports a coherent LINE OF REASONING that advances the writer's position (for example, answering the safety objection with the data in Source D and the technology in Source C). Attribution must be clear (Source A / author names). Award the score for the highest row the response fully satisfies.",
+          "modelResponse": "The strongest objection to an ordinance is safety: Ruiz warns that darker streets could leave 'a stairwell or a crosswalk dangerously dark' (Source B). But this assumes brightness and darkness are the only options. Okafor shows they are not \u2014 fully shielded fixtures 'direct light downward, where it is needed,' and motion sensors 'keep lights off when no one is present' (Source C), so a town can light its crosswalks and still darken its sky. The survey data confirm that the tradeoff Ruiz fears may be illusory: across forty municipalities, nighttime sky brightness fell 18 percent and lighting energy costs fell 23 percent, while reported nighttime street crime showed 'no statistically significant change' (Source D). That last figure directly answers the safety worry \u2014 darker skies did not make streets more dangerous. Weighed against these modest, well-managed costs are real gains: Hollis notes that reducing light is 'among the cheapest conservation measures available,' sparing migrating birds and sea turtles (Source F). Delacroix's fear for his shop's sign (Source E) is legitimate, but an intelligent ordinance regulates aim and timing, not a business's right to be seen. The evidence therefore points not toward darkness for its own sake but toward smarter light."
+        },
+        {
+          "criterionId": "sophistication",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Demonstrates sophistication of thought and/or a complex understanding of the rhetorical situation. This can be earned by (a) crafting a nuanced argument that acknowledges and answers the tensions among the sources (e.g., reconciling safety, cost, and conservation rather than dismissing one), (b) situating the argument in a broader context (public goods vs. private cost; what a community owes future generations), or (c) sustaining a vivid, controlled, and persuasive style throughout. Do NOT award for a single moment of insight, a formulaic acknowledgment of the 'other side,' or grand generalizations. The sophistication must be part of the argument's fabric, not decoration.",
+          "modelResponse": "The dark-sky debate looks like a quarrel about lighting, but underneath it is an older question: what a community owes to things that show up on no one's individual bill \u2014 a migrating bird, a child's first sight of the Milky Way, a neighbor's sense of safety. Framed that way, the ordinance is not a restriction but a decision about whose interests the public purse should defend when they cannot defend themselves."
+        }
+      ]
+    },
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-fr-02",
+    "loId": "apenglang.analyzing-line-of-reasoning",
+    "cedCode": "AP-ENGLANG-4.4",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apenglang-mock-a-ra.v1",
+    "problemText": "Suggested time: 40 minutes. This question counts for one-third of the total essay section score.\n\nThe passage above is an address delivered by Mayor Adelaide Croft at the opening of a new municipal waterworks in the fictional town of Meridian in 1897, following a deadly summer of fever. In the address, Croft urges her fellow citizens not only to celebrate the new waterworks but to commit to funding and defending it.\n\nRead the passage carefully. Then, in a well-written essay, analyze the rhetorical choices Croft makes to advance her argument that the community should support the public waterworks. In your response you should do the following:\n- Respond to the prompt with a thesis that analyzes the writer's rhetorical choices.\n- Select and use evidence to support your line of reasoning.\n- Explain how the evidence supports your line of reasoning.\n- Demonstrate an understanding of the rhetorical situation.",
+    "answer": "see rubric",
+    "solutionText": "A successful response advances a defensible thesis about HOW Croft's rhetorical choices work to persuade Meridian's citizens, not merely what she says. Rich choices to analyze: her reframing of the plain 'brick and iron' as a moral 'promise'; her invocation of the shared grief of 'the summer of the fever' to bind audience and speaker ('an act of neglect \u2014 ours'); her refutation of the self-reliance objection by arguing disease 'does not respect' property lines; the leveling image of 'the washerwoman... the same source as the banker on the hill' to cast public water as justice; and her closing shift from asking the audience to 'applaud' to asking them to 'defend' the works against 'false economy.' Strong essays tie these choices to a coherent line of reasoning and show awareness of the post-epidemic civic occasion.",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Responds to the prompt with a defensible thesis that analyzes the writer's rhetorical choices. The thesis must make an interpretive claim about HOW Croft persuades her audience (her strategy or the effect of her choices) \u2014 not merely restate her position, summarize the speech, or name devices without a claim about their purpose. It may appear anywhere in the response. 0 points for a thesis that only restates the prompt or reports what the speech is about.",
+          "modelResponse": "By transforming an unglamorous public-works project into a moral reckoning with the town's own neglect, Croft persuades her audience that funding the waterworks is not an expense but an act of justice they owe to the dead and to one another."
+        },
+        {
+          "criterionId": "evidence-commentary",
+          "maxPoints": 4,
+          "scoringCriteria": "Score 0-4 for Evidence AND Commentary using this ladder. 0: restates the thesis, repeats the passage, or offers no textual evidence. 1: evidence is mostly general \u2014 the response summarizes the speech or mentions devices ('she uses pathos') with little or no explanation of effect. 2: the response references SOME specific choices from the passage (specific words, images, or moves) but the commentary mostly summarizes or merely labels devices rather than explaining how they persuade. 3: the response identifies specific rhetorical choices AND explains how MOST of them advance Croft's argument, though some analysis may be underdeveloped or a claim may drift toward summary. 4: the response consistently analyzes specific, well-chosen rhetorical choices AND explains how each contributes to a coherent LINE OF REASONING about Croft's persuasive strategy (e.g., how her shared-grief appeal, her refutation of self-reliance, and her justice imagery build cumulatively). Award the highest row the response fully meets.",
+          "modelResponse": "Croft's first move is to deny her audience the comfort of seeing 'a plain brick building and a length of iron pipe' as merely practical; she recasts the pipe as 'a promise, made in brick and iron,' loading a civic object with moral weight so that opposing it will feel like breaking a vow. She then reaches for the audience's shared wound, 'the summer of the fever,' but refuses to let them call it fate: the fever 'did not fall upon us like weather... It followed the bad water,' and the blame was 'ours.' By converting grief into responsibility, she makes funding the works a form of atonement rather than expenditure. Against the objector who says 'a city owes no man his water,' she does not moralize but argues from contagion \u2014 disease 'does not stay in the crowded lanes... it rides the same streetcars we all ride' \u2014 turning self-interest itself into a reason for public action. Finally, her image of 'the washerwoman on Canal Street' drawing 'from the same source as the banker on the hill' frames equal access not as charity but as 'the plainest justice a city can perform,' and her closing pivot from 'applaud' to 'defend' recasts the audience from spectators into guardians against 'false economy.' Each choice narrows the room for refusal."
+        },
+        {
+          "criterionId": "sophistication",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Demonstrates sophistication of thought and/or a complex understanding of the rhetorical situation. Earn it by (a) analyzing the complexities or tensions in Croft's rhetoric (e.g., how she concedes the works are unfinished to strengthen, not weaken, her call to defend them), (b) situating her choices within the broader rhetorical situation (a mayor addressing grieving, cost-wary citizens just after an epidemic, needing ongoing funding), or (c) sustaining a vivid and persuasive analytical style. Do NOT award for a single insight, formulaic device-listing, or sweeping generalization. Must be woven through the analysis.",
+          "modelResponse": "What makes the address more than a plea for money is Croft's willingness to build her argument on an admission of guilt. Rather than flatter Meridian as a victim of misfortune, she indicts it \u2014 'an act of neglect \u2014 ours' \u2014 and gambles that a community shamed into responsibility will hold a commitment longer than one merely persuaded of a benefit. Her rhetoric works precisely because it refuses the consolation the occasion invites."
+        }
+      ]
+    },
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenglang-fa-fr-03",
+    "loId": "apenglang.building-an-argument",
+    "cedCode": "AP-ENGLANG-2.1",
+    "topic": "ap-english-language",
+    "topicId": "ap-english-language",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Suggested time: 40 minutes. This question counts for one-third of the total essay section score.\n\nIn discussions of how societies change, some people argue that meaningful progress requires a willingness to abandon established traditions and ways of doing things. Others contend that the most durable progress preserves and builds upon what is valuable in the past rather than discarding it.\n\nWrite an essay that argues your own position on the relationship between progress and tradition. Use appropriate, specific evidence \u2014 from your reading, observation, study, or experience \u2014 to develop your argument.\n\nIn your response you should do the following:\n- Respond to the prompt with a defensible thesis that presents your argument.\n- Provide specific evidence to support a line of reasoning.\n- Explain how your evidence supports your line of reasoning.\n- Use appropriate grammar and punctuation in communicating your argument.",
+    "answer": "see rubric",
+    "solutionText": "This is an open argument question with no source; any defensible position on the progress/tradition relationship can earn full credit. Weak responses assert that progress simply means discarding the old (or vice versa) and pile on unexplained examples. Strong responses stake a nuanced claim \u2014 for instance, that lasting progress reforms traditions rather than erasing them, or distinguishes traditions worth keeping from those worth abandoning \u2014 and support it with specific, well-explained evidence (historical, literary, scientific, or personal) tied to a clear line of reasoning. Sophistication credit rewards genuine complexity (e.g., recognizing that 'tradition' and 'progress' are not opposites) or a controlled, persuasive style.",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Responds to the prompt with a defensible thesis that presents the writer's own position on the relationship between progress and tradition. The thesis must be arguable and take a clear stance (progress requires abandoning tradition, progress must build on tradition, or a well-defined qualified/third position). It may appear anywhere. Do NOT award for restating the prompt, naming both sides without choosing, or a vague claim that 'both matter' with no arguable position. 0 points if no defensible thesis.",
+          "modelResponse": "Genuine progress does not require abandoning tradition; it requires the harder discipline of distinguishing the traditions worth reforming from those worth keeping, because a society that discards its past wholesale loses the very standards by which it could call any change an improvement."
+        },
+        {
+          "criterionId": "evidence-commentary",
+          "maxPoints": 4,
+          "scoringCriteria": "Score 0-4 for Evidence AND Commentary using this ladder. 0: restates the thesis or provides no relevant evidence. 1: evidence is mostly general or hypothetical, with little explanation (e.g., naming 'technology' or 'the past' without specifics). 2: the response provides SOME specific evidence (a particular event, text, figure, or experience) but the commentary mostly narrates the example rather than explaining how it supports the position. 3: the response provides specific evidence AND explains how MOST of it supports the argument, though the line of reasoning may have gaps or an example may be thin. 4: the response consistently provides specific, well-chosen evidence AND explains how each piece advances a coherent LINE OF REASONING supporting the thesis. Evidence may be historical, literary, scientific, cultural, or personal, but it must be specific and purposefully connected. Award the highest row the response fully satisfies.",
+          "modelResponse": "Consider the reform of medicine. The shift to evidence-based practice was undeniably progress, yet it did not begin by throwing out the physician's tradition of careful bedside observation; it disciplined that tradition with the controlled trial. The oldest habit \u2014 watching the patient closely \u2014 survived, while the untested authority of 'because we have always done it this way' was pared away. The distinction matters: progress here was surgical, not demolitional. Contrast this with reforms that discard indiscriminately. A city that razes every old building in the name of the modern soon finds it has erased the landmarks by which residents knew their neighborhood, and must spend a generation manufacturing a sense of place it destroyed for free. Even in language, the point holds: writers who abandon every inherited convention in pursuit of the new often become unreadable, because communication itself depends on shared, traditional forms. In each case, what looked like a fight between progress and tradition was really a matter of judgment \u2014 knowing which threads to cut and which to keep weaving."
+        },
+        {
+          "criterionId": "sophistication",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point: Demonstrates sophistication of thought and/or a complex understanding of the rhetorical situation. Earn it by (a) developing a nuanced argument that recognizes complexity or tension in the progress/tradition relationship (e.g., that the two are not true opposites, or that 'tradition' itself was once innovation), (b) situating the argument in a broader context or implication, or (c) sustaining a vivid and persuasive style throughout. Do NOT award for a single insightful sentence, a formulaic counterargument, or broad generalizations ('throughout human history...'). The complexity must run through the argument.",
+          "modelResponse": "The dichotomy the prompt offers is itself worth questioning, for today's tradition is only yesterday's successful innovation grown familiar. The controlled trial that now feels like sacred method was once a radical break; the neighborhood landmark was once a new building someone resented. Seen this way, progress and tradition are not enemies but the same process viewed at different distances in time, and the real question is never whether to change but whether we are honest about what we are choosing to carry forward."
+        }
+      ]
+    },
+    "bankScope": "mock"
+  }
+]

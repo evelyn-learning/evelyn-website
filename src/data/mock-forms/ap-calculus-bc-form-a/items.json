@@ -1,0 +1,1103 @@
+[
+  {
+    "id": "apcalcbc-fa-mc-001",
+    "loId": "apcalcbc.defining-limits",
+    "cedCode": "AP-CALCBC-1.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to 2} (2x^2 - 3x + 1)$.",
+    "choices": [
+      "$2$",
+      "$3$",
+      "$11$",
+      "$15$"
+    ],
+    "answer": "B",
+    "solutionText": "The function $2x^2-3x+1$ is a polynomial, so it is continuous everywhere and the limit equals the function value at $x=2$: $2(2)^2-3(2)+1 = 8-6+1 = 3$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-002",
+    "loId": "apcalcbc.limits-algebraic-manipulation",
+    "cedCode": "AP-CALCBC-1.6",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to -2} \\dfrac{x^2+5x+6}{x+2}$.",
+    "choices": [
+      "The limit does not exist",
+      "$-5$",
+      "$0$",
+      "$1$"
+    ],
+    "answer": "D",
+    "solutionText": "Direct substitution gives $0/0$, so factor the numerator: $x^2+5x+6=(x+2)(x+3)$. Cancel the common factor $(x+2)$ to get $\\lim_{x\\to -2}(x+3)$. Substituting $x=-2$ gives $-2+3=1$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-003",
+    "loId": "apcalcbc.continuity",
+    "cedCode": "AP-CALCBC-1.11-1.12",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x) = \\begin{cases} x^2+k & x \\le 1 \\\\ 3x+2 & x > 1 \\end{cases}$. For what value of $k$ is $f$ continuous at $x=1$?",
+    "choices": [
+      "$2$",
+      "$4$",
+      "$5$",
+      "$6$"
+    ],
+    "answer": "B",
+    "solutionText": "For continuity at $x=1$, the left-hand limit must equal the right-hand limit. The left piece gives $\\lim_{x\\to 1^-}(x^2+k) = 1+k$, and the right piece gives $\\lim_{x\\to 1^+}(3x+2) = 3(1)+2 = 5$. Setting $1+k=5$ gives $k=4$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-004",
+    "loId": "apcalcbc.derivative-definition",
+    "cedCode": "AP-CALCBC-2.1-2.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x) = x^2+3x$. Use the limit definition $f'(2) = \\lim_{h\\to 0}\\dfrac{f(2+h)-f(2)}{h}$ to find $f'(2)$.",
+    "choices": [
+      "$4$",
+      "$7$",
+      "$10$",
+      "$11$"
+    ],
+    "answer": "B",
+    "solutionText": "Compute $f(2+h) = (2+h)^2+3(2+h) = 4+4h+h^2+6+3h = h^2+7h+10$, and $f(2)=4+6=10$. Then $\\dfrac{f(2+h)-f(2)}{h} = \\dfrac{h^2+7h+10-10}{h} = \\dfrac{h^2+7h}{h} = h+7$. Taking $h\\to 0$ gives $f'(2)=7$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-005",
+    "loId": "apcalcbc.power-rule",
+    "cedCode": "AP-CALCBC-2.5-2.6",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(3x^4 - 2x^{-2} + 7\\right)$.",
+    "choices": [
+      "$12x^3 - 4x^{-3}$",
+      "$12x^4 + 4x^{-3}$",
+      "$12x^3 + 4x^{-1}$",
+      "$12x^3 + 4x^{-3}$"
+    ],
+    "answer": "D",
+    "solutionText": "Apply the power rule term by term: $\\dfrac{d}{dx}(3x^4)=12x^3$; $\\dfrac{d}{dx}(-2x^{-2}) = -2(-2)x^{-3} = 4x^{-3}$; $\\dfrac{d}{dx}(7)=0$. Summing gives $12x^3+4x^{-3}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-006",
+    "loId": "apcalcbc.transcendental-derivatives",
+    "cedCode": "AP-CALCBC-2.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left(5e^x - 4\\ln x + 2\\cos x\\right)$.",
+    "choices": [
+      "$5e^x - \\dfrac{4}{x} - 2\\sin x$",
+      "$5e^x - \\dfrac{4}{x} + 2\\sin x$",
+      "$5e^x - 4\\ln x - 2\\sin x$",
+      "$5xe^{x-1} - \\dfrac{4}{x} - 2\\sin x$"
+    ],
+    "answer": "A",
+    "solutionText": "Differentiate term by term: $\\dfrac{d}{dx}(5e^x)=5e^x$; $\\dfrac{d}{dx}(-4\\ln x) = -\\dfrac{4}{x}$; $\\dfrac{d}{dx}(2\\cos x) = -2\\sin x$. Summing gives $5e^x - \\dfrac{4}{x} - 2\\sin x$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-007",
+    "loId": "apcalcbc.chain-rule",
+    "cedCode": "AP-CALCBC-3.1",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find $\\dfrac{d}{dx}\\left[e^{\\sin(2x)}\\right]$.",
+    "choices": [
+      "$2\\cos(2x)e^{\\sin(2x)}$",
+      "$\\cos(2x)e^{\\sin(2x)}$",
+      "$2\\cos(2x)e^{\\cos(2x)}$",
+      "$e^{\\sin(2x)}$"
+    ],
+    "answer": "A",
+    "solutionText": "Let $u=\\sin(2x)$, so the function is $e^u$. By the chain rule, $\\dfrac{d}{dx}e^u = e^u\\cdot\\dfrac{du}{dx}$. Since $\\dfrac{du}{dx} = \\cos(2x)\\cdot 2 = 2\\cos(2x)$ (chain rule applied again to $\\sin(2x)$), the result is $2\\cos(2x)e^{\\sin(2x)}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-008",
+    "loId": "apcalcbc.implicit-differentiation",
+    "cedCode": "AP-CALCBC-3.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the curve $x^2y + y^3 = 10$, find $\\dfrac{dy}{dx}$.",
+    "choices": [
+      "$\\dfrac{-2xy}{x^2+3y^2}$",
+      "$\\dfrac{-2xy}{x^2+y^2}$",
+      "$\\dfrac{2xy}{x^2+3y^2}$",
+      "$\\dfrac{-2xy-3y^2}{x^2}$"
+    ],
+    "answer": "A",
+    "solutionText": "Differentiate both sides with respect to $x$. For $x^2y$, use the product rule: $\\dfrac{d}{dx}(x^2y) = 2xy + x^2y'$. For $y^3$, use the chain rule: $\\dfrac{d}{dx}(y^3) = 3y^2y'$. So $2xy + x^2y' + 3y^2y' = 0$. Collecting the $y'$ terms: $y'(x^2+3y^2) = -2xy$, giving $y' = \\dfrac{-2xy}{x^2+3y^2}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-009",
+    "loId": "apcalcbc.higher-order-derivatives",
+    "cedCode": "AP-CALCBC-3.5-3.6",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle moves along a line with position $s(t) = t^4 - 4t^3 + 2t$. Find its acceleration $a(t) = s''(t)$.",
+    "choices": [
+      "$12t^2 - 24t$",
+      "$12t^2 - 12t$",
+      "$4t^3-12t^2+2$",
+      "$12t^2+24t$"
+    ],
+    "answer": "A",
+    "solutionText": "First find velocity: $s'(t) = 4t^3-12t^2+2$. Then differentiate again to find acceleration: $s''(t) = 12t^2-24t$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-010",
+    "loId": "apcalcbc.derivative-in-context",
+    "cedCode": "AP-CALCBC-4.1-4.3",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The temperature of a cup of coffee is $T(t)$ degrees Fahrenheit, where $t$ is measured in minutes after it is poured. What is the best interpretation of $T'(6) = -3$?",
+    "choices": [
+      "At $t=6$ minutes, the coffee's temperature is decreasing at a rate of $3$ degrees Fahrenheit per minute.",
+      "At $t=6$ minutes, the coffee's temperature is $3$ degrees Fahrenheit.",
+      "Over the first $6$ minutes, the coffee's temperature decreased by a total of $3$ degrees Fahrenheit.",
+      "At $t=6$ minutes, the coffee's temperature is increasing at a rate of $3$ degrees Fahrenheit per minute."
+    ],
+    "answer": "A",
+    "solutionText": "$T'(t)$ is the instantaneous rate of change of temperature with respect to time, in degrees Fahrenheit per minute. A negative value means the temperature is decreasing, so $T'(6)=-3$ means that at $t=6$ minutes, the coffee's temperature is decreasing at a rate of $3$ degrees Fahrenheit per minute.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-011",
+    "loId": "apcalcbc.lhopital",
+    "cedCode": "AP-CALCBC-4.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to 0} \\dfrac{e^{2x}-1-2x}{x^2}$ using L'Hopital's rule.",
+    "choices": [
+      "$0$",
+      "$1$",
+      "$2$",
+      "The limit does not exist"
+    ],
+    "answer": "C",
+    "solutionText": "At $x=0$ both numerator and denominator equal $0$, so apply L'Hopital's rule: $\\lim_{x\\to 0}\\dfrac{2e^{2x}-2}{2x}$. This is again $0/0$ at $x=0$, so apply L'Hopital's rule a second time: $\\lim_{x\\to 0}\\dfrac{4e^{2x}}{2}$. Substituting $x=0$ gives $\\dfrac{4(1)}{2}=2$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-012",
+    "loId": "apcalcbc.mvt-evt",
+    "cedCode": "AP-CALCBC-5.1-5.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x) = x^3 - 3x$ on the interval $[0,2]$. Find the value of $c$ guaranteed by the Mean Value Theorem.",
+    "choices": [
+      "$c = \\dfrac{2\\sqrt{3}}{3}$",
+      "$c = \\dfrac{\\sqrt{3}}{3}$",
+      "$c = 2$",
+      "$c = \\dfrac{4}{3}$"
+    ],
+    "answer": "A",
+    "solutionText": "Since $f$ is a polynomial, it is continuous and differentiable everywhere, so the MVT applies. The average rate of change is $\\dfrac{f(2)-f(0)}{2-0} = \\dfrac{(8-6)-0}{2} = \\dfrac{2}{2}=1$. Since $f'(x)=3x^2-3$, set $3c^2-3=1$, giving $c^2=\\dfrac{4}{3}$, so $c=\\dfrac{2}{\\sqrt{3}}=\\dfrac{2\\sqrt{3}}{3}$ (the negative root is outside $[0,2]$).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-013",
+    "loId": "apcalcbc.first-derivative-analysis",
+    "cedCode": "AP-CALCBC-5.3-5.5",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Given $f'(x) = (x+2)(x-1)(x-3)$, at which value of $x$ does $f$ have a local maximum?",
+    "choices": [
+      "$-2$",
+      "$1$",
+      "$3$",
+      "$0$"
+    ],
+    "answer": "B",
+    "solutionText": "The critical points are $x=-2,1,3$. Testing the sign of $f'$ in each interval: on $(-\\infty,-2)$, $f'$ is negative (e.g. at $x=-3$: $(-1)(-4)(-6)=-24$); on $(-2,1)$, $f'$ is positive (e.g. at $x=0$: $(2)(-1)(-3)=6$); on $(1,3)$, $f'$ is negative (e.g. at $x=2$: $(4)(1)(-1)=-4$); on $(3,\\infty)$, $f'$ is positive (e.g. at $x=4$: $(6)(3)(1)=18$). At $x=1$, $f'$ changes from positive to negative, so $f$ has a local maximum there.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-014",
+    "loId": "apcalcbc.concavity-second-derivative",
+    "cedCode": "AP-CALCBC-5.6-5.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For $f(x) = x^4 - 4x^3$, find all $x$-values where $f$ has an inflection point.",
+    "choices": [
+      "$x=0$ only",
+      "$x=2$ only",
+      "$x=0$ and $x=2$",
+      "$x=0$, $x=2$, and $x=3$"
+    ],
+    "answer": "C",
+    "solutionText": "First find $f'(x) = 4x^3-12x^2$, then $f''(x) = 12x^2-24x = 12x(x-2)$, which is zero at $x=0$ and $x=2$. Checking signs: on $(-\\infty,0)$, $f''$ is positive (e.g. at $x=-1$: $12(-1)(-3)=36$); on $(0,2)$, $f''$ is negative (e.g. at $x=1$: $12(1)(-1)=-12$); on $(2,\\infty)$, $f''$ is positive (e.g. at $x=3$: $12(3)(1)=36$). Since concavity changes at both $x=0$ (up to down) and $x=2$ (down to up), both are inflection points.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-015",
+    "loId": "apcalcbc.basic-antiderivatives",
+    "cedCode": "AP-CALCBC-6.8",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\displaystyle\\int \\left(8x^3 - \\frac{6}{x^2} + 4e^x - \\cos x\\right) dx$.",
+    "choices": [
+      "$2x^4 + \\dfrac{6}{x} + 4e^x - \\sin x + C$",
+      "$2x^4 - \\dfrac{6}{x} + 4e^x - \\sin x + C$",
+      "$2x^4 + \\dfrac{6}{x} + 4e^x + \\sin x + C$",
+      "$24x^2 + \\dfrac{6}{x} + 4e^x - \\sin x + C$"
+    ],
+    "answer": "A",
+    "solutionText": "Rewrite $\\dfrac{6}{x^2}$ as $6x^{-2}$ and integrate term by term: $\\int 8x^3\\,dx = 2x^4$; $\\int -6x^{-2}\\,dx = -6\\cdot\\dfrac{x^{-1}}{-1} = 6x^{-1} = \\dfrac{6}{x}$; $\\int 4e^x\\,dx = 4e^x$; $\\int -\\cos x\\,dx = -\\sin x$. Summing with a constant of integration gives $2x^4 + \\dfrac{6}{x} + 4e^x - \\sin x + C$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-016",
+    "loId": "apcalcbc.u-substitution",
+    "cedCode": "AP-CALCBC-6.9",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate the indefinite integral $\\displaystyle\\int 6x^2(x^3+5)^3\\,dx$.",
+    "choices": [
+      "$\\dfrac{(x^3+5)^4}{2}+C$",
+      "$\\dfrac{(x^3+5)^4}{4}+C$",
+      "$\\dfrac{3(x^3+5)^4}{2}+C$",
+      "$(x^3+5)^3+C$"
+    ],
+    "answer": "A",
+    "solutionText": "Let $u=x^3+5$, so $du=3x^2\\,dx$, i.e. $x^2\\,dx=\\dfrac{du}{3}$. Then $6x^2(x^3+5)^3\\,dx = 6u^3\\cdot\\dfrac{du}{3}=2u^3\\,du$. Integrating: $\\displaystyle\\int 2u^3\\,du = \\dfrac{2u^4}{4}+C=\\dfrac{u^4}{2}+C$. Substituting back: $\\dfrac{(x^3+5)^4}{2}+C$. Check by differentiating: $\\dfrac{d}{dx}\\left[\\dfrac{(x^3+5)^4}{2}\\right]=\\dfrac{4(x^3+5)^3\\cdot 3x^2}{2}=6x^2(x^3+5)^3$, which matches the integrand.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-017",
+    "loId": "apcalcbc.integration-by-parts",
+    "cedCode": "AP-CALCBC-6.11",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\displaystyle\\int_0^{\\pi} x\\sin x\\,dx$.",
+    "choices": [
+      "$\\pi$",
+      "$-\\pi$",
+      "$1$",
+      "$\\pi-2$"
+    ],
+    "answer": "A",
+    "solutionText": "Use integration by parts with $u=x$, $dv=\\sin x\\,dx$, so $du=dx$ and $v=-\\cos x$. Then $\\displaystyle\\int x\\sin x\\,dx = -x\\cos x+\\int\\cos x\\,dx = -x\\cos x+\\sin x+C$. Evaluate from $0$ to $\\pi$: at $x=\\pi$, $-\\pi\\cos\\pi+\\sin\\pi = -\\pi(-1)+0=\\pi$. At $x=0$, $-0\\cdot\\cos 0+\\sin 0=0$. So the definite integral equals $\\pi-0=\\pi$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-018",
+    "loId": "apcalcbc.partial-fractions",
+    "cedCode": "AP-CALCBC-6.12",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\displaystyle\\int_0^1 \\dfrac{3}{(x+1)(x+4)}\\,dx$.",
+    "choices": [
+      "$\\ln\\dfrac{8}{5}$",
+      "$\\ln\\dfrac{5}{8}$",
+      "$\\ln\\dfrac{2}{5}$",
+      "$\\ln\\dfrac{5}{2}$"
+    ],
+    "answer": "A",
+    "solutionText": "Write $\\dfrac{3}{(x+1)(x+4)}=\\dfrac{A}{x+1}+\\dfrac{B}{x+4}$, so $3=A(x+4)+B(x+1)$. Setting $x=-1$: $3=3A$, so $A=1$. Setting $x=-4$: $3=-3B$, so $B=-1$. Thus the integrand equals $\\dfrac{1}{x+1}-\\dfrac{1}{x+4}$, with antiderivative $\\ln|x+1|-\\ln|x+4|=\\ln\\left|\\dfrac{x+1}{x+4}\\right|$. Evaluating from $0$ to $1$: at $x=1$, $\\ln\\dfrac{2}{5}$; at $x=0$, $\\ln\\dfrac{1}{4}$. The definite integral is $\\ln\\dfrac{2}{5}-\\ln\\dfrac{1}{4}=\\ln\\left(\\dfrac{2}{5}\\cdot 4\\right)=\\ln\\dfrac{8}{5}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-019",
+    "loId": "apcalcbc.modeling-verifying-de",
+    "cedCode": "AP-CALCBC-7.1-7.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A tank's water volume $V$ decreases at a rate proportional to the square root of $V$ itself. Which differential equation models this situation? (Assume $k>0$ is the constant of proportionality.)",
+    "choices": [
+      "$\\dfrac{dV}{dt}=-k\\sqrt{V}$",
+      "$\\dfrac{dV}{dt}=k\\sqrt{V}$",
+      "$\\dfrac{dV}{dt}=-kV^2$",
+      "$\\dfrac{dV}{dt}=-\\sqrt{kV}$"
+    ],
+    "answer": "A",
+    "solutionText": "\"Rate of change ... proportional to the square root of $V$\" translates to $\\dfrac{dV}{dt}=k\\sqrt{V}$ for some constant $k$. Since the volume is decreasing, the rate of change must be negative, so the correct model is $\\dfrac{dV}{dt}=-k\\sqrt{V}$ with $k>0$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-020",
+    "loId": "apcalcbc.eulers-method",
+    "cedCode": "AP-CALCBC-7.5",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Given $\\dfrac{dy}{dx}=2x-y$ with $y(0)=3$, use one step of Euler's method with step size $h=0.5$ to approximate $y(0.5)$.",
+    "choices": [
+      "$\\dfrac{3}{2}$",
+      "$0$",
+      "$2$",
+      "$\\dfrac{9}{2}$"
+    ],
+    "answer": "A",
+    "solutionText": "Euler's method: $y_1=y_0+h\\cdot f(x_0,y_0)$. Here $f(x,y)=2x-y$, $x_0=0$, $y_0=3$, so $f(0,3)=2(0)-3=-3$. Then $y_1=3+0.5\\cdot(-3)=3-1.5=\\dfrac{3}{2}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-021",
+    "loId": "apcalcbc.area-between-curves",
+    "cedCode": "AP-CALCBC-8.4",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find the area of the region enclosed by $y=8-x^2$ and $y=x^2$.",
+    "choices": [
+      "$\\dfrac{64}{3}$",
+      "$\\dfrac{32}{3}$",
+      "$\\dfrac{128}{3}$",
+      "$16$"
+    ],
+    "answer": "A",
+    "solutionText": "Set the curves equal to find intersections: $8-x^2=x^2 \\Rightarrow 8=2x^2 \\Rightarrow x^2=4 \\Rightarrow x=\\pm 2$. On $[-2,2]$, $8-x^2\\ge x^2$, so the area is $\\displaystyle\\int_{-2}^{2}\\left[(8-x^2)-x^2\\right]dx=\\int_{-2}^{2}(8-2x^2)\\,dx=\\left[8x-\\dfrac{2x^3}{3}\\right]_{-2}^{2}$. At $x=2$: $16-\\dfrac{16}{3}=\\dfrac{32}{3}$. At $x=-2$: $-16+\\dfrac{16}{3}=-\\dfrac{32}{3}$. The area is $\\dfrac{32}{3}-\\left(-\\dfrac{32}{3}\\right)=\\dfrac{64}{3}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-022",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The base of a solid is the region bounded by $y=x^2$ and $y=4$. Cross sections of the solid perpendicular to the $x$-axis are squares with one side lying in the base. What is the volume of the solid?",
+    "choices": [
+      "$\\dfrac{512}{15}$",
+      "$\\dfrac{256}{15}$",
+      "$\\dfrac{512}{3}$",
+      "$\\dfrac{1024}{15}$"
+    ],
+    "answer": "A",
+    "solutionText": "The curves $y=x^2$ and $y=4$ intersect where $x^2=4$, i.e. $x=\\pm 2$. For each $x$ in $[-2,2]$, the square cross section has side length $4-x^2$ (the vertical distance between the curves), so its area is $(4-x^2)^2$. The volume is $\\displaystyle\\int_{-2}^{2}(4-x^2)^2\\,dx=\\int_{-2}^{2}\\left(16-8x^2+x^4\\right)dx$. Evaluating: $\\displaystyle\\int_{-2}^{2}16\\,dx=64$, $\\displaystyle\\int_{-2}^{2}8x^2\\,dx=8\\left[\\dfrac{x^3}{3}\\right]_{-2}^{2}=8\\cdot\\dfrac{16}{3}=\\dfrac{128}{3}$, and $\\displaystyle\\int_{-2}^{2}x^4\\,dx=\\left[\\dfrac{x^5}{5}\\right]_{-2}^{2}=\\dfrac{64}{5}$. Summing: $64-\\dfrac{128}{3}+\\dfrac{64}{5}=\\dfrac{960-640+192}{15}=\\dfrac{512}{15}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-023",
+    "loId": "apcalcbc.volumes-revolution",
+    "cedCode": "AP-CALCBC-8.9",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The region bounded by $y=x+2$ and $y=x^2$ is revolved about the $x$-axis. Find the volume of the resulting solid.",
+    "choices": [
+      "$\\dfrac{72\\pi}{5}$",
+      "$21\\pi$",
+      "$\\dfrac{72}{5}$",
+      "$\\dfrac{184\\pi}{15}$"
+    ],
+    "answer": "A",
+    "solutionText": "Find intersections: $x+2=x^2 \\Rightarrow x^2-x-2=0 \\Rightarrow (x-2)(x+1)=0$, so $x=-1$ and $x=2$. On $[-1,2]$, the line $y=x+2$ lies above the parabola $y=x^2$ (both are nonnegative on this interval), so by the washer method the volume is $\\displaystyle\\pi\\int_{-1}^{2}\\left[(x+2)^2-x^4\\right]dx$. An antiderivative is $\\dfrac{(x+2)^3}{3}-\\dfrac{x^5}{5}$. At $x=2$: $\\dfrac{64}{3}-\\dfrac{32}{5}=\\dfrac{320-96}{15}=\\dfrac{224}{15}$. At $x=-1$: $\\dfrac{1}{3}-\\left(-\\dfrac{1}{5}\\right)=\\dfrac{1}{3}+\\dfrac{1}{5}=\\dfrac{8}{15}$. The volume is $\\pi\\left(\\dfrac{224}{15}-\\dfrac{8}{15}\\right)=\\pi\\cdot\\dfrac{216}{15}=\\dfrac{72\\pi}{5}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-024",
+    "loId": "apcalcbc.arc-length",
+    "cedCode": "AP-CALCBC-8.13",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find the arc length of $y=\\dfrac{1}{3}x^3+\\dfrac{1}{4x}$ from $x=1$ to $x=2$.",
+    "choices": [
+      "$\\dfrac{59}{24}$",
+      "$\\dfrac{61}{24}$",
+      "$\\dfrac{53}{24}$",
+      "$\\dfrac{5}{2}$"
+    ],
+    "answer": "A",
+    "solutionText": "Differentiate: $y'=x^2-\\dfrac{1}{4x^2}$. Then $1+(y')^2 = 1+x^4-\\dfrac{1}{2}+\\dfrac{1}{16x^4}=x^4+\\dfrac{1}{2}+\\dfrac{1}{16x^4}=\\left(x^2+\\dfrac{1}{4x^2}\\right)^2$, a perfect square. So $\\sqrt{1+(y')^2}=x^2+\\dfrac{1}{4x^2}$ (positive for $x>0$). The arc length is $\\displaystyle\\int_1^2\\left(x^2+\\dfrac{1}{4x^2}\\right)dx=\\left[\\dfrac{x^3}{3}-\\dfrac{1}{4x}\\right]_1^2$. At $x=2$: $\\dfrac{8}{3}-\\dfrac{1}{8}=\\dfrac{64-3}{24}=\\dfrac{61}{24}$. At $x=1$: $\\dfrac{1}{3}-\\dfrac{1}{4}=\\dfrac{1}{12}=\\dfrac{2}{24}$. The arc length is $\\dfrac{61}{24}-\\dfrac{2}{24}=\\dfrac{59}{24}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-025",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.1",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A curve is defined parametrically by $x(t)=t^3+2t$ and $y(t)=t^2-4t$. Find $\\dfrac{dy}{dx}$ at $t=1$.",
+    "choices": [
+      "$-\\dfrac{2}{5}$",
+      "$\\dfrac{2}{5}$",
+      "$-\\dfrac{5}{2}$",
+      "$-\\dfrac{2}{3}$"
+    ],
+    "answer": "A",
+    "solutionText": "$\\dfrac{dx}{dt}=3t^2+2$ and $\\dfrac{dy}{dt}=2t-4$. At $t=1$: $\\dfrac{dx}{dt}=3(1)+2=5$ and $\\dfrac{dy}{dt}=2(1)-4=-2$. Then $\\dfrac{dy}{dx}=\\dfrac{dy/dt}{dx/dt}=\\dfrac{-2}{5}=-\\dfrac{2}{5}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-026",
+    "loId": "apcalcbc.vector-valued",
+    "cedCode": "AP-CALCBC-9.4",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A particle's position is given by $\\vec r(t)=\\langle 3t,\\ 4t^2\\rangle$. Find the speed of the particle at $t=\\dfrac{1}{2}$.",
+    "choices": [
+      "$5$",
+      "$\\sqrt{7}$",
+      "$7$",
+      "$25$"
+    ],
+    "answer": "A",
+    "solutionText": "The velocity vector is $\\vec v(t)=\\vec r\\,'(t)=\\langle 3,\\ 8t\\rangle$. At $t=\\dfrac{1}{2}$: $\\vec v\\left(\\dfrac{1}{2}\\right)=\\langle 3,\\ 4\\rangle$. Speed is the magnitude: $\\left|\\vec v\\right|=\\sqrt{3^2+4^2}=\\sqrt{9+16}=\\sqrt{25}=5$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-027",
+    "loId": "apcalcbc.polar-coordinates",
+    "cedCode": "AP-CALCBC-9.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the polar curve $r=3+2\\cos\\theta$, find $\\dfrac{dy}{dx}$ at $\\theta=\\dfrac{\\pi}{2}$.",
+    "choices": [
+      "$\\dfrac{2}{3}$",
+      "$-\\dfrac{2}{3}$",
+      "$\\dfrac{3}{2}$",
+      "$-\\dfrac{3}{2}$"
+    ],
+    "answer": "A",
+    "solutionText": "With $x=r\\cos\\theta$ and $y=r\\sin\\theta$, use the product rule: $\\dfrac{dy}{d\\theta}=r'\\sin\\theta+r\\cos\\theta$ and $\\dfrac{dx}{d\\theta}=r'\\cos\\theta-r\\sin\\theta$, where $r'=\\dfrac{dr}{d\\theta}=-2\\sin\\theta$. At $\\theta=\\dfrac{\\pi}{2}$: $r=3+2\\cos\\dfrac{\\pi}{2}=3$, $r'=-2\\sin\\dfrac{\\pi}{2}=-2$, $\\sin\\theta=1$, $\\cos\\theta=0$. So $\\dfrac{dy}{d\\theta}=(-2)(1)+(3)(0)=-2$ and $\\dfrac{dx}{d\\theta}=(-2)(0)-(3)(1)=-3$. Then $\\dfrac{dy}{dx}=\\dfrac{-2}{-3}=\\dfrac{2}{3}$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-028",
+    "loId": "apcalcbc.series-convergence",
+    "cedCode": "AP-CALCBC-10.1-10.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What does the $n$th-term test conclude about $\\displaystyle\\sum_{n=1}^{\\infty}\\dfrac{4n^2+1}{3n^2+2n}$?",
+    "choices": [
+      "The series diverges, since $\\lim_{n\\to\\infty}a_n=\\dfrac{4}{3}\\neq 0$.",
+      "The series converges, since $\\lim_{n\\to\\infty}a_n=\\dfrac{4}{3}$.",
+      "The series diverges, since $\\lim_{n\\to\\infty}a_n=0$.",
+      "The test is inconclusive, since $\\lim_{n\\to\\infty}a_n$ does not exist."
+    ],
+    "answer": "A",
+    "solutionText": "Divide numerator and denominator by $n^2$: $a_n=\\dfrac{4n^2+1}{3n^2+2n}=\\dfrac{4+1/n^2}{3+2/n}\\to\\dfrac{4}{3}$ as $n\\to\\infty$. Since $\\lim_{n\\to\\infty}a_n=\\dfrac{4}{3}\\neq 0$, the $n$th-term test guarantees the series diverges.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-029",
+    "loId": "apcalcbc.convergence-tests",
+    "cedCode": "AP-CALCBC-10.3-10.6",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Apply the ratio test to $\\displaystyle\\sum_{n=1}^{\\infty}\\dfrac{n^2}{3^n}$. What is $\\displaystyle\\lim_{n\\to\\infty}\\left|\\dfrac{a_{n+1}}{a_n}\\right|$, and what does the ratio test conclude?",
+    "choices": [
+      "$\\dfrac{1}{3}$; the series converges.",
+      "$3$; the series diverges.",
+      "$\\dfrac{1}{3}$; the series diverges.",
+      "$1$; the test is inconclusive."
+    ],
+    "answer": "A",
+    "solutionText": "With $a_n=\\dfrac{n^2}{3^n}$, $\\dfrac{a_{n+1}}{a_n}=\\dfrac{(n+1)^2}{3^{n+1}}\\cdot\\dfrac{3^n}{n^2}=\\dfrac{(n+1)^2}{3n^2}$. As $n\\to\\infty$, $\\dfrac{(n+1)^2}{n^2}\\to 1$, so the limit equals $\\dfrac{1}{3}$. Since $\\dfrac{1}{3}<1$, the ratio test guarantees the series converges.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-030",
+    "loId": "apcalcbc.power-series",
+    "cedCode": "AP-CALCBC-10.13",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Find the interval of convergence of the power series $\\displaystyle\\sum_{n=1}^{\\infty}\\dfrac{(x-2)^n}{n\\cdot 4^n}$.",
+    "choices": [
+      "$[-2,6)$",
+      "$(-2,6)$",
+      "$(-2,6]$",
+      "$[-2,6]$"
+    ],
+    "answer": "A",
+    "solutionText": "By the ratio test, $\\left|\\dfrac{a_{n+1}}{a_n}\\right|=\\dfrac{|x-2|^{n+1}}{(n+1)4^{n+1}}\\cdot\\dfrac{n\\cdot 4^n}{|x-2|^n}=\\dfrac{|x-2|}{4}\\cdot\\dfrac{n}{n+1}\\to\\dfrac{|x-2|}{4}$. This is less than $1$ when $|x-2|<4$, i.e. $-2<x<6$, giving radius of convergence $4$. Check the endpoints: at $x=6$, the series becomes $\\sum\\dfrac{4^n}{n\\cdot 4^n}=\\sum\\dfrac{1}{n}$, the harmonic series, which diverges. At $x=-2$, the series becomes $\\sum\\dfrac{(-4)^n}{n\\cdot 4^n}=\\sum\\dfrac{(-1)^n}{n}$, the alternating harmonic series, which converges (conditionally) by the alternating series test. So the interval of convergence is $[-2,6)$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-031",
+    "loId": "apcalcbc.limits-at-infinity-horizontal-asymptotes",
+    "cedCode": "AP-CALCBC-1.15",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\lim_{x\\to\\infty}\\dfrac{5x+7}{\\sqrt{7x^2+9}}$. Give your answer as a decimal rounded to four decimal places.",
+    "choices": [
+      "0.7143",
+      "2.6458",
+      "1.8898",
+      "3.5714"
+    ],
+    "answer": "C",
+    "solutionText": "As $x\\to\\infty$ (so $x>0$), $\\sqrt{7x^2+9}=x\\sqrt{7+9/x^2}\\to x\\sqrt7$. So $\\dfrac{5x+7}{\\sqrt{7x^2+9}}\\to\\dfrac{5x}{x\\sqrt7}=\\dfrac{5}{\\sqrt7}=\\dfrac{5}{2.645751\\ldots}\\approx1.8898$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-032",
+    "loId": "apcalcbc.quotient-rule",
+    "cedCode": "AP-CALCBC-2.9-2.10",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x)=\\dfrac{e^{x}}{\\ln x}$. Find $f'(2)$, rounded to four decimal places.",
+    "choices": [
+      "-2.9705",
+      "2.9705",
+      "10.6602",
+      "2.0588"
+    ],
+    "answer": "B",
+    "solutionText": "By the quotient rule, $f'(x)=\\dfrac{e^{x}\\ln x-e^{x}\\cdot\\frac1x}{(\\ln x)^2}=\\dfrac{e^{x}\\left(\\ln x-\\frac1x\\right)}{(\\ln x)^2}$. At $x=2$: $e^2\\approx7.389056$, $\\ln 2\\approx0.693147$, so $\\ln 2-\\frac12\\approx0.193147$. The numerator is $\\approx7.389056\\times0.193147\\approx1.427175$, and the denominator is $(\\ln2)^2\\approx0.480453$. So $f'(2)\\approx1.427175/0.480453\\approx2.9705$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-033",
+    "loId": "apcalcbc.derivatives-inverse-functions",
+    "cedCode": "AP-CALCBC-3.3-3.4",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Let $f(x)=x^3+2x+1$, so that $f(2)=13$. If $g=f^{-1}$, find $g'(13)$, rounded to four decimal places.",
+    "choices": [
+      "14",
+      "0.1250",
+      "0.0020",
+      "0.0714"
+    ],
+    "answer": "D",
+    "solutionText": "Since $f(2)=13$, we have $g(13)=2$. By the inverse function derivative rule, $g'(13)=\\dfrac{1}{f'(2)}$. Here $f'(x)=3x^2+2$, so $f'(2)=3(4)+2=14$. Thus $g'(13)=\\dfrac{1}{14}\\approx0.0714$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-034",
+    "loId": "apcalcbc.related-rates",
+    "cedCode": "AP-CALCBC-4.4-4.5",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A conical tank (vertex pointing down) has height $12$ ft and top radius $4$ ft. Water flows into the tank at a rate of $6$ ft$^3$/min. At the instant the water depth is $h=5$ ft, find $\\dfrac{dh}{dt}$, rounded to four decimal places (in ft/min).",
+    "choices": [
+      "0.6875",
+      "0.2292",
+      "2.1600",
+      "1.3751"
+    ],
+    "answer": "A",
+    "solutionText": "By similar triangles, $\\dfrac{r}{h}=\\dfrac{4}{12}=\\dfrac13$, so $r=\\dfrac{h}{3}$. Then $V=\\dfrac13\\pi r^2h=\\dfrac13\\pi\\left(\\dfrac{h}{3}\\right)^2h=\\dfrac{\\pi h^3}{27}$. Differentiating with respect to $t$: $\\dfrac{dV}{dt}=\\dfrac{\\pi h^2}{9}\\dfrac{dh}{dt}$. At $h=5$: $6=\\dfrac{\\pi(25)}{9}\\dfrac{dh}{dt}$, so $\\dfrac{dh}{dt}=\\dfrac{54}{25\\pi}\\approx\\dfrac{54}{78.5398}\\approx0.6875$ ft/min.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-035",
+    "loId": "apcalcbc.optimization",
+    "cedCode": "AP-CALCBC-5.10-5.11",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An open-top cylindrical can must hold a volume of $500$ cm$^3$. Find the radius, in cm, that minimizes the total surface area of the can (there is no top). Round your answer to two decimal places.",
+    "choices": [
+      "4.30",
+      "10.84",
+      "5.42",
+      "6.83"
+    ],
+    "answer": "C",
+    "solutionText": "Let $r$ be the radius and $h$ the height. Volume: $V=\\pi r^2h=500$, so $h=\\dfrac{500}{\\pi r^2}$. Surface area (no top): $S=\\pi r^2+2\\pi rh=\\pi r^2+\\dfrac{1000}{r}$. Then $S'(r)=2\\pi r-\\dfrac{1000}{r^2}$. Setting $S'(r)=0$ gives $2\\pi r^3=1000$, so $r^3=\\dfrac{500}{\\pi}\\approx159.1549$, giving $r\\approx5.42$ cm. Since $S'(r)<0$ for smaller $r$ and $S'(r)>0$ for larger $r$, this is a minimum.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-036",
+    "loId": "apcalcbc.riemann-sums",
+    "cedCode": "AP-CALCBC-6.1-6.3",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tank's fill rate $R(t)$ (in gallons per minute) is measured at several times $t$ (in minutes) and recorded in the table below.\n\n$t$: $0,\\ 2,\\ 5,\\ 9,\\ 12$\n\n$R(t)$: $3.1,\\ 4.6,\\ 7.2,\\ 10.5,\\ 12.8$\n\nUse a trapezoidal sum with these four subintervals to approximate $\\int_0^{12}R(t)\\,dt$, the total gallons that entered the tank.",
+    "choices": [
+      "95.75",
+      "80.30",
+      "111.20",
+      "91.68"
+    ],
+    "answer": "A",
+    "solutionText": "Trapezoidal sum $=\\sum(\\Delta t)\\cdot\\dfrac{R(t_i)+R(t_{i+1})}{2}$: on $[0,2]$: $2\\cdot\\dfrac{3.1+4.6}{2}=7.7$; on $[2,5]$: $3\\cdot\\dfrac{4.6+7.2}{2}=17.7$; on $[5,9]$: $4\\cdot\\dfrac{7.2+10.5}{2}=35.4$; on $[9,12]$: $3\\cdot\\dfrac{10.5+12.8}{2}=34.95$. Sum $=7.7+17.7+35.4+34.95=95.75$ gallons.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-037",
+    "loId": "apcalcbc.integral-properties",
+    "cedCode": "AP-CALCBC-6.6",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Suppose $\\int_1^4 f(x)\\,dx=6.2$, $\\int_4^9 f(x)\\,dx=-3.5$, and $\\int_1^9 g(x)\\,dx=10.8$. Find $\\int_1^9\\big[3f(x)-2g(x)\\big]\\,dx$.",
+    "choices": [
+      "-3.0",
+      "29.7",
+      "7.5",
+      "-13.5"
+    ],
+    "answer": "D",
+    "solutionText": "By additivity, $\\int_1^9 f(x)\\,dx=\\int_1^4 f(x)\\,dx+\\int_4^9 f(x)\\,dx=6.2+(-3.5)=2.7$. By linearity, $\\int_1^9\\big[3f(x)-2g(x)\\big]\\,dx=3(2.7)-2(10.8)=8.1-21.6=-13.5$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-038",
+    "loId": "apcalcbc.ftc",
+    "cedCode": "AP-CALCBC-6.4-6.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Let $g(x)=\\int_1^{x^2}\\ln(t+3)\\,dt$. Find $g'(2)$, rounded to four decimal places.",
+    "choices": [
+      "1.9459",
+      "7.7836",
+      "6.4378",
+      "5.9459"
+    ],
+    "answer": "B",
+    "solutionText": "By the Fundamental Theorem of Calculus combined with the chain rule, $g'(x)=\\ln(x^2+3)\\cdot\\dfrac{d}{dx}(x^2)=2x\\ln(x^2+3)$. At $x=2$: $g'(2)=4\\ln(7)\\approx4(1.945910)\\approx7.7836$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-039",
+    "loId": "apcalcbc.integration-strategy",
+    "cedCode": "AP-CALCBC-6.14",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate $\\int_0^2 e^{-x^2}\\,dx$, rounded to four decimal places.",
+    "choices": [
+      "0.8821",
+      "0.8862",
+      "1.7642",
+      "0.4410"
+    ],
+    "answer": "A",
+    "solutionText": "The integrand $e^{-x^2}$ has no elementary antiderivative, so this integral must be evaluated numerically. A calculator's numerical-integration routine gives $\\int_0^2 e^{-x^2}\\,dx\\approx0.8821$. (Compare: the improper integral $\\int_0^\\infty e^{-x^2}\\,dx=\\frac{\\sqrt\\pi}{2}\\approx0.8862$, but the requested interval stops at $x=2$, giving a slightly smaller value.)",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-040",
+    "loId": "apcalcbc.separation-of-variables",
+    "cedCode": "AP-CALCBC-7.6-7.7",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quantity $y$ satisfies the differential equation $\\dfrac{dy}{dx}=0.3xy$ with initial condition $y(0)=2$. Find $y(3)$, rounded to four decimal places.",
+    "choices": [
+      "3.8574",
+      "0.5185",
+      "4.9192",
+      "7.7149"
+    ],
+    "answer": "D",
+    "solutionText": "Separating variables: $\\dfrac{dy}{y}=0.3x\\,dx$. Integrating: $\\ln|y|=0.15x^2+C$. Since $y(0)=2$, $\\ln2=C$, so $y=2e^{0.15x^2}$. At $x=3$: $y=2e^{0.15(9)}=2e^{1.35}\\approx2(3.857426)\\approx7.7149$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-041",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.1",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Water flows into a tank at a rate of $R_{in}(t)=20+5\\cos t$ liters per minute and flows out at a rate of $R_{out}(t)=8+0.5t$ liters per minute, for $0\\le t\\le6$ minutes ($t$ in radians for the cosine term). Find the net change in the amount of water in the tank over this interval, rounded to four decimal places.",
+    "choices": [
+      "118.6029",
+      "-61.6029",
+      "61.6029",
+      "79.6029"
+    ],
+    "answer": "C",
+    "solutionText": "Net change $=\\int_0^6\\big[R_{in}(t)-R_{out}(t)\\big]\\,dt=\\int_0^6\\big[12+5\\cos t-0.5t\\big]\\,dt=\\Big[12t+5\\sin t-0.25t^2\\Big]_0^6$. At $t=6$: $12(6)+5\\sin(6)-0.25(36)=72+5(-0.279415)-9\\approx72-1.397077-9\\approx61.6029$ liters.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-042",
+    "loId": "apcalcbc.washer-other-axes",
+    "cedCode": "AP-CALCBC-8.12",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The region in the first quadrant bounded by $y=3x$ and $y=x^2$ is revolved about the line $y=-2$. Find the volume of the resulting solid, rounded to four decimal places.",
+    "choices": [
+      "158.3363",
+      "101.7876",
+      "180.9557",
+      "14.1372"
+    ],
+    "answer": "A",
+    "solutionText": "The curves meet where $3x=x^2$, i.e. $x=0$ and $x=3$, with $3x\\ge x^2$ on $[0,3]$. Measured from the axis $y=-2$, the outer radius is $R(x)=3x+2$ and the inner radius is $r(x)=x^2+2$. By the washer method, $V=\\pi\\int_0^3\\big[R(x)^2-r(x)^2\\big]\\,dx=\\pi\\int_0^3\\Big[(9x^2+12x+4)-(x^4+4x^2+4)\\Big]\\,dx=\\pi\\int_0^3\\big[5x^2+12x-x^4\\big]\\,dx$. An antiderivative is $\\tfrac53x^3+6x^2-\\tfrac{x^5}5$. At $x=3$: $\\tfrac53(27)+6(9)-\\tfrac{243}5=45+54-48.6=50.4$. So $V=50.4\\pi\\approx158.3363$. (A common error is revolving about the $x$-axis instead of $y=-2$, giving $32.4\\pi\\approx101.7876$; another is a sign slip in expanding $R(x)^2-r(x)^2$, giving $57.6\\pi\\approx180.9557$; another is forgetting to square the radii, giving $4.5\\pi\\approx14.1372$.)",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-043",
+    "loId": "apcalcbc.polar-area",
+    "cedCode": "AP-CALCBC-9.8",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Find the area of the region swept out by the polar curve $r=3+\\sin(2\\theta)$ as $\\theta$ ranges from $0$ to $1.2$ (radians), rounded to four decimal places.",
+    "choices": [
+      "8.3684",
+      "16.7367",
+      "8.0061",
+      "5.7623"
+    ],
+    "answer": "A",
+    "solutionText": "Polar area: $A=\\frac12\\int_0^{1.2}(3+\\sin2\\theta)^2\\,d\\theta=\\frac12\\int_0^{1.2}\\big[9+6\\sin2\\theta+\\sin^22\\theta\\big]\\,d\\theta$. Term 1: $\\int_0^{1.2}9\\,d\\theta=10.8$. Term 2: $\\int_0^{1.2}6\\sin2\\theta\\,d\\theta=\\big[-3\\cos2\\theta\\big]_0^{1.2}=-3\\cos(2.4)+3\\approx2.212181+3=5.212181$. Term 3: using $\\sin^2u=\\frac{1-\\cos2u}2$, $\\int_0^{1.2}\\sin^22\\theta\\,d\\theta=\\big[\\tfrac{\\theta}2-\\tfrac{\\sin4\\theta}8\\big]_0^{1.2}=0.6-\\tfrac{\\sin4.8}{8}\\approx0.6-(-0.124521)=0.724521$. Sum $=10.8+5.212181+0.724521=16.736702$. So $A=\\tfrac12(16.736702)\\approx8.3684$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-044",
+    "loId": "apcalcbc.alternating-series",
+    "cedCode": "AP-CALCBC-10.7-10.10",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The alternating series $\\displaystyle\\sum_{n=1}^{\\infty}\\dfrac{(-1)^{n+1}}{n^2+1}$ converges. If $S_5$ denotes the sum of its first 5 terms, use the alternating series error bound to find the smallest bound guaranteed for $|S-S_5|$, rounded to four decimal places.",
+    "choices": [
+      "0.0385",
+      "0.0270",
+      "0.0200",
+      "0.0278"
+    ],
+    "answer": "B",
+    "solutionText": "The terms $b_n=\\dfrac{1}{n^2+1}$ are positive, decreasing, and $\\to0$, so the alternating series error bound applies: $|S-S_5|\\le b_6$, the magnitude of the first omitted (6th) term. $b_6=\\dfrac{1}{6^2+1}=\\dfrac{1}{37}\\approx0.0270$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-mc-045",
+    "loId": "apcalcbc.maclaurin-series",
+    "cedCode": "AP-CALCBC-10.14-10.15",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Let $P_4(x)=1-\\dfrac{x^2}{2}+\\dfrac{x^4}{24}$ be the fourth-degree Maclaurin polynomial for $\\cos x$. Use $P_4(x)$ to approximate $\\cos(1.1)$, rounded to four decimal places.",
+    "choices": [
+      "0.3340",
+      "0.7610",
+      "0.3950",
+      "0.4560"
+    ],
+    "answer": "D",
+    "solutionText": "The Maclaurin series for $\\cos x$ is $1-\\dfrac{x^2}{2!}+\\dfrac{x^4}{4!}-\\cdots$, so $P_4(x)=1-\\dfrac{x^2}{2}+\\dfrac{x^4}{24}$. At $x=1.1$: $x^2=1.21$ and $x^4=1.4641$. So $P_4(1.1)=1-\\dfrac{1.21}{2}+\\dfrac{1.4641}{24}=1-0.605+0.061004\\approx0.4560$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apcalcbc-fa-fr-01",
+    "loId": "apcalcbc.integral-applications",
+    "cedCode": "AP-CALCBC-8.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A ski resort opens its lift at time $t=0$. For $0 \\le t \\le 6$ (hours), skiers arrive at the base of the lift at a rate modeled by $R(t) = 30 + 20\\cos\\left(\\dfrac{\\pi t}{6}\\right)$ skiers per hour, and skiers leave the base to ride the lift at a constant rate of $E(t) = 25$ skiers per hour. At time $t=0$, there are $50$ skiers waiting at the base.\n\n(a) Find the net change in the number of skiers waiting at the base of the lift over the time interval $0 \\le t \\le 6$.\n\n(b) Is the number of skiers waiting at the base increasing or decreasing at time $t=4$? Give a reason for your answer.\n\n(c) Using your answer to part (a), find the number of skiers waiting at the base of the lift at time $t=6$.\n\n(d) At what time $t$, for $0 \\le t \\le 6$, is the number of skiers waiting at the base a maximum? Justify your answer, and find the maximum number of skiers waiting.",
+    "answer": "see rubric",
+    "solutionText": "Uses $\\int[R(t)-E(t)]\\,dt$ for net change/total accumulation; compares $R(t)$ to $E(t)$ pointwise for increasing/decreasing; adds net change to the initial value; and solves $R(t)=E(t)$ (with a sign-change justification) to locate and evaluate the maximum. Key values: net change $=30$; $W(6)=80$; maximum $\\approx104.4$ skiers at $t\\approx3.483$ hr.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): sets up and evaluates $\\int_0^6 [R(t)-E(t)]\\,dt = \\int_0^6 \\left[5+20\\cos\\left(\\frac{\\pi t}{6}\\right)\\right]dt = 30$ skiers (a net INCREASE of 30). 1 pt for correct integral setup $\\int_0^6[R(t)-E(t)]\\,dt$ with a correct antiderivative attempt even if the final evaluation has an arithmetic error; full 2 pts require the correct numeric value $30$ (accept $29.5$-$30.5$) with the correct sign/interpretation (increase).",
+          "modelResponse": "Net change $= \\int_0^6 [R(t)-E(t)]\\,dt = \\int_0^6 \\left[5+20\\cos\\left(\\frac{\\pi t}{6}\\right)\\right]dt = \\left[5t+\\frac{120}{\\pi}\\sin\\left(\\frac{\\pi t}{6}\\right)\\right]_0^6 = \\left(30+\\frac{120}{\\pi}\\sin\\pi\\right)-0 = 30+0=30$. The number of skiers waiting increases by $30$ over $[0,6]$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): correctly evaluates $R(4)=30+20\\cos\\left(\\frac{2\\pi}{3}\\right)=30+20(-0.5)=20$ and $E(4)=25$, notes $R(4)-E(4)=-5<0$, and concludes the number of skiers waiting is DECREASING at $t=4$ (since skiers are leaving faster than they are arriving). 1 pt for correctly computing $R(4)=20$ (or an equivalent correct comparison) without stating the correct increasing/decreasing conclusion; 1 pt for the correct conclusion with correct reasoning even with a minor arithmetic slip in $R(4)$.",
+          "modelResponse": "$R(4) = 30+20\\cos\\left(\\frac{4\\pi}{6}\\right)=30+20\\cos\\left(\\frac{2\\pi}{3}\\right)=30+20\\left(-\\frac12\\right)=30-10=20$ skiers/hr. $E(4)=25$ skiers/hr. Since $R(4)-E(4)=20-25=-5<0$, skiers are leaving faster than they are arriving at $t=4$, so the number of skiers waiting at the base is decreasing at $t=4$."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): adds the net change from part (a) to the initial amount: $50+30=80$ skiers waiting at $t=6$. 1 pt for the correct method (initial amount plus net change) even if the value carried from part (a) was incorrect (follow-through credit); 2 pts require the correct final value of $80$ using a correct part (a) value of $30$.",
+          "modelResponse": "Number of skiers waiting at $t=6$ equals the initial amount plus the net change: $50+30=80$ skiers."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): (i) sets $R(t)=E(t)$: $30+20\\cos\\left(\\frac{\\pi t}{6}\\right)=25 \\Rightarrow \\cos\\left(\\frac{\\pi t}{6}\\right)=-0.25 \\Rightarrow t=\\frac{6}{\\pi}\\arccos(-0.25)\\approx 3.483$ hours [1 pt for correct equation/setup]; (ii) justifies this is a maximum because $R(t)-E(t)$ changes from positive to negative at this $t$ (First Derivative Test on the amount function), and it is the only critical point in $(0,6)$ [1 pt for justification]; (iii) computes the maximum amount $W(3.483) = 50+\\int_0^{3.483}[R(t)-E(t)]\\,dt \\approx 50+54.40 \\approx 104.4$ skiers [1 pt for correct maximum value; accept $103.5$-$105.5$]. Accept $t$ in the range $3.40$-$3.55$ hours as correct given calculator precision.",
+          "modelResponse": "Set $R(t)-E(t)=0$: $5+20\\cos\\left(\\frac{\\pi t}{6}\\right)=0 \\Rightarrow \\cos\\left(\\frac{\\pi t}{6}\\right)=-0.25 \\Rightarrow \\frac{\\pi t}{6}=\\arccos(-0.25)\\approx1.8235 \\Rightarrow t\\approx3.483$ hours. Since $\\cos\\left(\\frac{\\pi t}{6}\\right)$ is strictly decreasing on $[0,6]$, $R(t)-E(t)$ is strictly decreasing from $25$ (at $t=0$) to $-15$ (at $t=6$), so it changes sign from positive to negative exactly once, at $t\\approx3.483$; by the First Derivative Test this is a local maximum, and since it exceeds both endpoint amounts $W(0)=50$ and $W(6)=80$, it is the absolute maximum on $[0,6]$. The maximum amount is $W(3.483)=50+\\int_0^{3.483}\\left[5+20\\cos\\left(\\frac{\\pi t}{6}\\right)\\right]dt\\approx50+54.40\\approx104.4$ skiers."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apcalcbc-fa-fr-02",
+    "loId": "apcalcbc.parametric",
+    "cedCode": "AP-CALCBC-9.2",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A particle moves in the $xy$-plane so that at time $t$, $0 \\le t \\le 3$ (seconds), its velocity components are given by $\\dfrac{dx}{dt} = 3\\sin(t)$ and $\\dfrac{dy}{dt} = 4\\cos(t)$, where $x$ and $y$ are measured in meters. At time $t=0$, the particle is at position $(5,2)$.\n\n(a) Find the position of the particle at time $t=1$.\n\n(b) Find the velocity vector of the particle and its speed at time $t=1$.\n\n(c) Is the particle moving toward or away from the origin at time $t=1$? Give a reason for your answer.\n\n(d) Find the total distance traveled by the particle over the time interval $0 \\le t \\le 3$.",
+    "answer": "see rubric",
+    "solutionText": "Position by integrating each velocity component from the given initial point; velocity/speed by evaluating $(x'(t),y'(t))$ and its magnitude at $t=1$; toward/away by the sign of $xx'+yy'$ (rate of change of squared distance from the origin); total distance by the arc-length integral $\\int_0^3\\sqrt{x'(t)^2+y'(t)^2}\\,dt$ evaluated numerically ($\\approx10.486$ m).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): $x(1)=5+\\int_0^1 3\\sin(t)\\,dt = 5+3(1-\\cos1)\\approx6.379$ and $y(1)=2+\\int_0^1 4\\cos(t)\\,dt=2+4\\sin1\\approx5.366$, so position $\\approx(6.379,\\,5.366)$ (accept $x\\in[6.35,6.41]$, $y\\in[5.33,5.40]$). 1 pt for two correct integral setups, $x(1)=5+\\int_0^1 3\\sin t\\,dt$ and $y(1)=2+\\int_0^1 4\\cos t\\,dt$, even if the final numeric evaluation is off; full 2 pts require both correct numeric coordinates.",
+          "modelResponse": "$x(1)=5+\\int_0^1 3\\sin(t)\\,dt = 5+\\big[-3\\cos t\\big]_0^1 = 5+3(1-\\cos1)=5+3(1-0.5403)\\approx6.379$. $y(1)=2+\\int_0^1 4\\cos(t)\\,dt=2+\\big[4\\sin t\\big]_0^1=2+4\\sin1\\approx2+3.366=5.366$. Position at $t=1$ is approximately $(6.379,\\,5.366)$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): velocity vector $\\left(\\frac{dx}{dt},\\frac{dy}{dt}\\right)\\Big|_{t=1}=\\big(3\\sin1,\\,4\\cos1\\big)\\approx(2.524,\\,2.161)$, and speed $=\\sqrt{(3\\sin1)^2+(4\\cos1)^2}\\approx3.323$ m/s (accept $3.30$-$3.35$). 1 pt for the correct velocity vector; 1 pt for the correct speed computed as its magnitude (follow-through from an incorrect vector is acceptable for this point if the magnitude is computed correctly from that vector).",
+          "modelResponse": "Velocity vector at $t=1$: $\\left(3\\sin(1),\\,4\\cos(1)\\right)\\approx(2.524,\\,2.161)$ m/s. Speed $=\\sqrt{(2.524)^2+(2.161)^2}=\\sqrt{6.373+4.671}=\\sqrt{11.044}\\approx3.323$ m/s."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): uses position $(x(1),y(1))\\approx(6.379,5.366)$ and velocity $(2.524,2.161)$ from parts (a)/(b) to evaluate $x(1)x'(1)+y(1)y'(1)$ [proportional to $\\frac{d}{dt}(\\text{distance from origin})^2$]; gets $\\approx6.379(2.524)+5.366(2.161)\\approx27.70>0$, and concludes the particle is moving AWAY from the origin at $t=1$ since the distance from the origin is increasing. 1 pt for the correct method/setup ($xx'+yy'$, or equivalent reasoning about the angle between the position and velocity vectors) even with a numeric slip; 2 pts require the correct positive value and the correct 'away' conclusion.",
+          "modelResponse": "Let $D(t)$ be the distance from the origin, so $D^2=x^2+y^2$ and $2D\\,D'=2xx'+2yy'$, i.e. $D$ is increasing exactly when $xx'+yy'>0$. At $t=1$: $x(1)x'(1)+y(1)y'(1)\\approx(6.379)(2.524)+(5.366)(2.161)\\approx16.10+11.60=27.70>0$. Since this is positive, the distance from the origin is increasing, so the particle is moving away from the origin at $t=1$."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): sets up total distance $=\\int_0^3\\sqrt{\\left(\\frac{dx}{dt}\\right)^2+\\left(\\frac{dy}{dt}\\right)^2}\\,dt=\\int_0^3\\sqrt{9\\sin^2t+16\\cos^2t}\\,dt$ [1 pt for correct arc-length integral setup], and evaluates numerically to $\\approx10.486$ meters (accept $10.40$-$10.60$) [2 pts for correct numeric evaluation; award 1 of these 2 pts for a value outside that range but inside $10.0$-$11.0$ that reflects a correctly set-up integral evaluated with a coarser numerical method].",
+          "modelResponse": "Total distance $=\\int_0^3\\sqrt{(3\\sin t)^2+(4\\cos t)^2}\\,dt=\\int_0^3\\sqrt{9\\sin^2t+16\\cos^2t}\\,dt$. Using a calculator to evaluate this integral numerically gives total distance $\\approx10.486$ meters."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apcalcbc-fa-fr-03",
+    "loId": "apcalcbc.taylor-polynomial",
+    "cedCode": "AP-CALCBC-10.11-10.12",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "Let $f$ be a function with derivatives of all orders for all real numbers $x$. Suppose $f(1)=2$, and the Taylor series for $f$ about $x=1$ is\n$$f(x) = 2+\\sum_{n=1}^{\\infty} \\frac{(-1)^{n+1}(x-1)^n}{n\\cdot 3^n} = 2+\\frac{x-1}{3}-\\frac{(x-1)^2}{2\\cdot3^2}+\\frac{(x-1)^3}{3\\cdot3^3}-\\frac{(x-1)^4}{4\\cdot3^4}+\\cdots$$\n\n(a) Write the third-degree Taylor polynomial $T_3(x)$ for $f$ about $x=1$.\n\n(b) Use $T_3(x)$ from part (a) to approximate $f(1.3)$. Express your answer as an exact fraction.\n\n(c) Find the radius of convergence and the interval of convergence of the Taylor series for $f$ about $x=1$.\n\n(d) It is known that $\\left|f^{(4)}(x)\\right|\\le0.15$ for $1\\le x\\le1.3$. Use the Lagrange error bound to bound the error $\\left|f(1.3)-T_3(1.3)\\right|$.",
+    "answer": "see rubric",
+    "solutionText": "Read $T_3$ directly from the given series; substitute $x=1.3$ and simplify exactly to $\\frac{3143}{1500}$; apply the Ratio Test for the radius of convergence, then test both endpoints separately (alternating harmonic series converges, negated harmonic series diverges) to get the interval $(-2,4]$; apply the Lagrange error bound formula with the given bound $M=0.15$ on $f^{(4)}$ to get error $\\le\\frac{81}{1{,}600{,}000}\\approx5.06\\times10^{-5}$.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): correctly writes $T_3(x) = 2+\\frac{x-1}{3}-\\frac{(x-1)^2}{18}+\\frac{(x-1)^3}{81}$ (the first four terms, $n=0$ through $n=3$, of the given series). 1 pt if three of the four terms are correct (e.g. a sign or coefficient error in exactly one term); 2 pts require all four terms exactly correct, in simplified or unsimplified form (equivalent unsimplified coefficients such as $\\frac{1}{1\\cdot3}$ for the linear term are acceptable).",
+          "modelResponse": "Reading off the $n=0,1,2,3$ terms of the given series: $T_3(x)=2+\\frac{x-1}{3}-\\frac{(x-1)^2}{2\\cdot3^2}+\\frac{(x-1)^3}{3\\cdot3^3}=2+\\frac{x-1}{3}-\\frac{(x-1)^2}{18}+\\frac{(x-1)^3}{81}$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): substitutes $x-1=0.3=\\frac{3}{10}$ into $T_3(x)$ and correctly evaluates $T_3(1.3)=2+\\frac{1}{10}-\\frac{1}{200}+\\frac{1}{3000}=\\frac{3143}{1500}\\approx2.0953$. 1 pt for correct substitution/setup with at least one arithmetic error in the final sum; 2 pts require the correct final value $\\frac{3143}{1500}$ (or an equivalent correct fraction/decimal $\\approx2.0953$, accept $2.093$-$2.098$).",
+          "modelResponse": "With $x-1=0.3$: $T_3(1.3)=2+\\frac{0.3}{3}-\\frac{(0.3)^2}{18}+\\frac{(0.3)^3}{81}=2+0.1-0.005+0.0003\\overline{3}$. As exact fractions (using $x-1=\\frac{3}{10}$): $2+\\frac{1}{10}-\\frac{1}{200}+\\frac{1}{3000}=\\frac{6000+300-15+1}{3000}=\\frac{6286}{3000}=\\frac{3143}{1500}\\approx2.0953$."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): applies the Ratio Test to the general term $b_n=\\frac{(-1)^{n+1}(x-1)^n}{n\\cdot3^n}$, finding $\\lim_{n\\to\\infty}\\left|\\frac{b_{n+1}}{b_n}\\right|=\\frac{|x-1|}{3}$, so the series converges for $\\frac{|x-1|}{3}<1$, giving radius of convergence $R=3$ [1 pt]; and correctly tests both endpoints - at $x=4$ the series becomes $\\sum\\frac{(-1)^{n+1}}{n}$, the alternating harmonic series, which CONVERGES (Alternating Series Test); at $x=-2$ the series becomes $-\\sum\\frac1n$, the (negated) harmonic series, which DIVERGES - concluding the interval of convergence is $(-2,4]$ [1 pt; both endpoints must be correctly classified for this point].",
+          "modelResponse": "Ratio test: $\\left|\\frac{b_{n+1}}{b_n}\\right|=\\left|\\frac{(x-1)^{n+1}}{(n+1)3^{n+1}}\\cdot\\frac{n\\cdot3^n}{(x-1)^n}\\right|=\\frac{|x-1|}{3}\\cdot\\frac{n}{n+1}\\to\\frac{|x-1|}{3}$. Converges when $\\frac{|x-1|}{3}<1$, i.e. $|x-1|<3$, so $R=3$ and the series converges (before endpoint checks) for $-2<x<4$. At $x=4$: terms become $\\frac{(-1)^{n+1}(3)^n}{n\\cdot3^n}=\\frac{(-1)^{n+1}}{n}$, the alternating harmonic series - converges (conditionally) by the Alternating Series Test. At $x=-2$: terms become $\\frac{(-1)^{n+1}(-3)^n}{n\\cdot3^n}=\\frac{(-1)^{n+1}(-1)^n}{n}=\\frac{-1}{n}$, i.e. $-\\sum\\frac1n$, which diverges (harmonic series). So the interval of convergence is $(-2,4]$, radius $R=3$."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): correctly states the Lagrange error bound $\\left|R_3(1.3)\\right|\\le\\frac{M}{4!}|1.3-1|^4$ with $M=0.15$ [1 pt for correct formula/setup with $n=3$, i.e. $4!=24$ in the denominator]; correctly computes $|1.3-1|^4=(0.3)^4=0.0081$ [1 pt]; and computes the final bound $\\left|R_3(1.3)\\right|\\le\\frac{0.15}{24}(0.0081)=\\frac{81}{1{,}600{,}000}\\approx0.0000506$ (accept $5\\times10^{-5}$ to $5.1\\times10^{-5}$, or any equivalent correctly-reduced fraction/decimal) [1 pt].",
+          "modelResponse": "Lagrange error bound: $\\left|R_3(1.3)\\right|\\le\\frac{M}{(3+1)!}|1.3-1|^{3+1}=\\frac{0.15}{24}(0.3)^4=\\frac{0.15}{24}(0.0081)=\\frac{0.001215}{24}=\\frac{81}{1{,}600{,}000}\\approx0.0000506$. So the error in using $T_3(1.3)$ to approximate $f(1.3)$ is at most about $5.06\\times10^{-5}$."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apcalcbc-fa-fr-04",
+    "loId": "apcalcbc.slope-fields",
+    "cedCode": "AP-CALCBC-7.3-7.4",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Consider the differential equation $\\dfrac{dy}{dx}=\\dfrac{x^2}{y}$, where $y\\neq0$. Let $y=g(x)$ be the particular solution to this differential equation satisfying $g(1)=-3$.\n\n(a) State the slope of the segments in the slope field for this differential equation at each of the following three points: $(1,-3)$, $(0,2)$, and $(2,1)$.\n\n(b) For the fixed value $x=1$, describe how the slope $\\dfrac{dy}{dx}$ behaves as $y\\to0^{+}$ and as $y\\to0^{-}$, and explain why the differential equation is undefined at points where $y=0$.\n\n(c) Find the particular solution $y=g(x)$ satisfying $g(1)=-3$, expressing $y$ explicitly as a function of $x$.\n\n(d) Use the particular solution from part (c) to find $g(2)$ (as an exact value), and determine whether $g$ is increasing or decreasing at $x=2$.",
+    "answer": "see rubric",
+    "solutionText": "Slopes at named points come from direct substitution into $dy/dx=x^2/y$; the $y\\to0^\\pm$ behavior follows from the vertical-asymptote behavior of $1/y$; the particular solution is found by separation of variables ($y\\,dy=x^2\\,dx$) with the initial condition selecting the negative branch $g(x)=-\\sqrt{(2x^3+25)/3}$; evaluating at $x=2$ and re-substituting into the differential equation shows $g$ is decreasing there.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts) requires all three slopes correct: $-\\frac13$ at $(1,-3)$; $0$ at $(0,2)$; $4$ at $(2,1)$. Award 1 pt if exactly two of the three slopes are correct; award 0 pts if fewer than two are correct.",
+          "modelResponse": "$\\frac{dy}{dx}=\\frac{x^2}{y}$. At $(1,-3)$: $\\frac{1^2}{-3}=-\\frac13$. At $(0,2)$: $\\frac{0^2}{2}=0$. At $(2,1)$: $\\frac{2^2}{1}=4$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): notes that at $x=1$, $\\frac{dy}{dx}=\\frac{1}{y}$; as $y\\to0^{+}$, $\\frac{dy}{dx}\\to+\\infty$ (slope becomes steep and positive, segments nearly vertical pointing up); as $y\\to0^{-}$, $\\frac{dy}{dx}\\to-\\infty$ (segments nearly vertical pointing down); and explains that at $y=0$ itself the expression $\\frac{x^2}{y}$ involves division by zero, so no slope (and no segment) is defined there. 1 pt for correctly identifying the $\\pm\\infty$ behavior as $y\\to0^{\\pm}$; 1 pt for correctly explaining the division-by-zero reason the equation is undefined at $y=0$.",
+          "modelResponse": "At $x=1$, $\\frac{dy}{dx}=\\frac{1}{y}$. As $y\\to0^{+}$ (through positive values), $\\frac{1}{y}\\to+\\infty$, so the slope-field segments become nearly vertical, pointing steeply upward. As $y\\to0^{-}$, $\\frac{1}{y}\\to-\\infty$, so segments become nearly vertical, pointing steeply downward. At $y=0$ itself, $\\frac{x^2}{y}$ requires dividing by $0$, which is undefined, so the differential equation (and the slope field) has no defined segment anywhere on the line $y=0$."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): separates variables correctly, $y\\,dy=x^2\\,dx$ [1 pt]; integrates both sides and applies the initial condition $g(1)=-3$ to solve for the constant, e.g. $\\frac{y^2}{2}=\\frac{x^3}{3}+C$, $\\frac{9}{2}=\\frac13+C \\Rightarrow C=\\frac{25}{6}$, giving $y^2=\\frac{2x^3+25}{3}$ [1 pt]; and correctly selects the negative square-root branch (required since $g(1)=-3<0$) to write the EXPLICIT solution $g(x)=-\\sqrt{\\frac{2x^3+25}{3}}$ [1 pt - this point requires explicit justification or clear indication of choosing the negative branch, not just '$\\pm$'].",
+          "modelResponse": "Separating variables: $y\\,dy=x^2\\,dx$. Integrating: $\\frac{y^2}{2}=\\frac{x^3}{3}+C$. Using $g(1)=-3$: $\\frac{(-3)^2}{2}=\\frac{1^3}{3}+C \\Rightarrow \\frac92=\\frac13+C \\Rightarrow C=\\frac92-\\frac13=\\frac{25}{6}$. So $\\frac{y^2}{2}=\\frac{x^3}{3}+\\frac{25}{6} \\Rightarrow y^2=\\frac{2x^3+25}{3}$. Since $g(1)=-3<0$, the particular solution takes the negative branch: $g(x)=-\\sqrt{\\frac{2x^3+25}{3}}$."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): correctly evaluates $g(2)=-\\sqrt{\\frac{2(8)+25}{3}}=-\\sqrt{\\frac{41}{3}}=-\\frac{\\sqrt{123}}{3}\\approx-3.697$ [1 pt]; and correctly determines $g$ is DECREASING at $x=2$ by substituting into the original differential equation, $g'(2)=\\frac{2^2}{g(2)}=\\frac{4}{-\\sqrt{41/3}}<0$ (positive numerator divided by negative $g(2)$ gives a negative slope) [1 pt].",
+          "modelResponse": "$g(2)=-\\sqrt{\\frac{2(2)^3+25}{3}}=-\\sqrt{\\frac{16+25}{3}}=-\\sqrt{\\frac{41}{3}}=-\\frac{\\sqrt{123}}{3}\\approx-3.697$. Using the differential equation, $g'(2)=\\frac{(2)^2}{g(2)}=\\frac{4}{-\\sqrt{41/3}}<0$ since the numerator is positive and $g(2)$ is negative. So $g$ is decreasing at $x=2$."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apcalcbc-fa-fr-05",
+    "loId": "apcalcbc.volumes-cross-sections",
+    "cedCode": "AP-CALCBC-8.8",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 2,
+    "responseFormat": "frq",
+    "problemText": "Let $R$ be the region in the first quadrant bounded by the curves $y=\\sqrt{x}$ and $y=\\dfrac{x}{2}$, between their two points of intersection.\n\n(a) Find the area of region $R$.\n\n(b) Find the volume of the solid whose base is $R$ and whose cross-sections perpendicular to the $x$-axis are squares.\n\n(c) Find the volume of the solid whose base is $R$ and whose cross-sections perpendicular to the $x$-axis are semicircles, where the diameter of each semicircle stretches across $R$.\n\n(d) Find the volume of the solid generated when $R$ is revolved about the $x$-axis.",
+    "answer": "see rubric",
+    "solutionText": "Area between the curves via $\\int(\\sqrt x-x/2)\\,dx$ on $[0,4]$ gives $4/3$; the square and semicircle cross-sectional volumes both build on $\\int_0^4(\\sqrt x-x/2)^2\\,dx=8/15$ (giving $8/15$ and $\\pi/15$ respectively); the washer-method revolution about the $x$-axis gives $8\\pi/3$.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): finds intersection points $x=0$ and $x=4$ (solving $\\sqrt x=\\frac x2 \\Rightarrow x=\\frac{x^2}{4}\\Rightarrow x^2-4x=0\\Rightarrow x=0,4$), sets up $\\int_0^4\\left(\\sqrt x-\\frac x2\\right)dx$ using $\\sqrt x\\ge\\frac x2$ on $(0,4)$, and evaluates to $\\frac43$. 1 pt for correct bounds/setup (integrand and limits) even with an evaluation error; 2 pts require the correct final value $\\frac43$.",
+          "modelResponse": "Intersections: $\\sqrt x=\\frac x2\\Rightarrow x=\\frac{x^2}4\\Rightarrow x^2-4x=0\\Rightarrow x=0,4$. On $(0,4)$, $\\sqrt x\\ge\\frac x2$. Area $=\\int_0^4\\left(\\sqrt x-\\frac x2\\right)dx=\\left[\\frac23x^{3/2}-\\frac{x^2}4\\right]_0^4=\\frac23(8)-4=\\frac{16}3-4=\\frac43$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): sets up $V=\\int_0^4\\left(\\sqrt x-\\frac x2\\right)^2dx$ (square side $=$ the vertical distance between the curves) [1 pt for correct setup], and correctly evaluates to $V=\\frac{8}{15}$ [1 pt for correct value; accept equivalent forms like $0.5\\overline{3}$].",
+          "modelResponse": "Side length of each square $=\\sqrt x-\\frac x2$, so $V=\\int_0^4\\left(\\sqrt x-\\frac x2\\right)^2dx=\\int_0^4\\left(x-x^{3/2}+\\frac{x^2}4\\right)dx=\\left[\\frac{x^2}2-\\frac25x^{5/2}+\\frac{x^3}{12}\\right]_0^4=8-\\frac{64}5+\\frac{16}3=\\frac{120-192+80}{15}=\\frac{8}{15}$."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): sets up $V=\\int_0^4\\frac\\pi2\\left(\\frac{\\sqrt x-x/2}{2}\\right)^2dx=\\frac\\pi8\\int_0^4\\left(\\sqrt x-\\frac x2\\right)^2dx$ (semicircle area $=\\frac12\\pi r^2$ with radius $=$ half the diameter $\\sqrt x-\\frac x2$) [1 pt for correct setup], and correctly evaluates, using the part (b) integral value $\\frac8{15}$, to get $V=\\frac\\pi8\\cdot\\frac8{15}=\\frac\\pi{15}$ [1 pt for correct final value].",
+          "modelResponse": "Diameter $=\\sqrt x-\\frac x2$, so radius $=\\frac12\\left(\\sqrt x-\\frac x2\\right)$, and semicircle cross-sectional area $=\\frac12\\pi r^2=\\frac\\pi8\\left(\\sqrt x-\\frac x2\\right)^2$. $V=\\frac\\pi8\\int_0^4\\left(\\sqrt x-\\frac x2\\right)^2dx=\\frac\\pi8\\cdot\\frac8{15}=\\frac{\\pi}{15}$ (using the integral value found in part (b))."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): recognizes the washer method is needed with $\\sqrt x$ as the outer radius and $\\frac x2$ as the inner radius (both measured from the $x$-axis, since $R$ lies above the $x$-axis for $0<x<4$) [1 pt]; sets up $V=\\pi\\int_0^4\\left[(\\sqrt x)^2-\\left(\\frac x2\\right)^2\\right]dx=\\pi\\int_0^4\\left(x-\\frac{x^2}4\\right)dx$ [1 pt]; and evaluates to $V=\\frac{8\\pi}3$ [1 pt].",
+          "modelResponse": "By the washer method (outer radius $\\sqrt x$, inner radius $\\frac x2$): $V=\\pi\\int_0^4\\left[(\\sqrt x)^2-\\left(\\frac x2\\right)^2\\right]dx=\\pi\\int_0^4\\left(x-\\frac{x^2}4\\right)dx=\\pi\\left[\\frac{x^2}2-\\frac{x^3}{12}\\right]_0^4=\\pi\\left(8-\\frac{16}3\\right)=\\pi\\cdot\\frac83=\\frac{8\\pi}3$."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apcalcbc-fa-fr-06",
+    "loId": "apcalcbc.graphing-f-fp-fpp",
+    "cedCode": "AP-CALCBC-5.8-5.9",
+    "topic": "ap-calculus-bc",
+    "topicId": "ap-calculus-bc",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Let $f$ be a twice-differentiable function defined for all real numbers $x$ on the closed interval $[-4,6]$, with $f(-4)=5$ and $\\int_{-4}^{4}f'(x)\\,dx=12$. The function $f'$, the first derivative of $f$, is continuous on $[-4,6]$. Selected values of $f'(x)$ are given in the table below, and $f'(x)\\neq0$ for any $x$ not listed in the table. On each open interval between consecutive $x$-values in the table, $f'$ does not change sign and is strictly monotonic in a single direction (i.e., $f'$ is either strictly increasing throughout that interval or strictly decreasing throughout it, consistent with the endpoint values shown):\n\n| $x$ | $-4$ | $-1$ | $1$ | $4$ | $6$ |\n|---|---|---|---|---|---|\n| $f'(x)$ | $-2$ | $0$ | $5$ | $0$ | $-6$ |\n\nGiven this data, $f'$ is increasing on $(-4,-1)$, increasing on $(-1,1)$, decreasing on $(1,4)$, and decreasing on $(4,6)$.\n\n(a) Find the intervals on which $f$ is increasing and the intervals on which $f$ is decreasing on $[-4,6]$. Justify your answer.\n\n(b) Find the $x$-coordinate(s) of any local extrema of $f$ on the open interval $(-4,6)$, and classify each as a local minimum or local maximum. Justify your answer.\n\n(c) Find the intervals on which the graph of $f$ is concave up and the intervals on which it is concave down on $(-4,6)$, and find the $x$-coordinate(s) of any points of inflection. Justify your answer.\n\n(d) Does $f$ have an absolute maximum on $[-4,6]$? If so, find the value of the absolute maximum and justify your answer using the given information.",
+    "answer": "see rubric",
+    "solutionText": "The sign of $f'$ on each sub-interval (from the given monotonic behavior) gives increasing/decreasing intervals for $f$ and, via the First Derivative Test, a local min at $x=-1$ and a local max at $x=4$; whether $f'$ itself is increasing/decreasing gives concavity, with an inflection point at $x=1$; combining the given $f(-4)=5$ and $\\int_{-4}^4 f'(x)\\,dx=12$ via the Fundamental Theorem of Calculus gives $f(4)=17$, which by comparison to the other candidates (endpoints/critical points) is the absolute maximum on $[-4,6]$.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): correctly identifies the sign of $f'$ on each sub-interval from the table/behavior data - $f'<0$ on $(-4,-1)$ (since $f'$ increases from $-2$ to $0$), $f'>0$ on $(-1,4)$ (since $f'$ increases from $0$ to $5$ then decreases from $5$ back to $0$, staying positive throughout the open interval), $f'<0$ on $(4,6)$ (since $f'$ decreases from $0$ to $-6$) - and concludes $f$ is DECREASING on $(-4,-1)$, INCREASING on $(-1,4)$, DECREASING on $(4,6)$. 1 pt for correctly determining the sign of $f'$ (and hence the monotonicity of $f$) on at least two of the three sub-intervals; 2 pts require all three intervals correct with the sign-of-$f'$ justification.",
+          "modelResponse": "Since $f'(-4)=-2$ and $f'$ increases to $f'(-1)=0$, $f'<0$ on $(-4,-1)$, so $f$ is decreasing there. Since $f'$ increases from $f'(-1)=0$ to $f'(1)=5$ and then decreases from $f'(1)=5$ back to $f'(4)=0$, $f'>0$ throughout $(-1,4)$ (it only equals $0$ at the endpoints), so $f$ is increasing on $(-1,4)$. Since $f'$ decreases from $f'(4)=0$ to $f'(6)=-6$, $f'<0$ on $(4,6)$, so $f$ is decreasing there. Summary: $f$ is decreasing on $(-4,-1)$, increasing on $(-1,4)$, and decreasing on $(4,6)$."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): identifies $x=-1$ as a local MINIMUM of $f$ (since $f'$ changes from negative to positive there - First Derivative Test) and $x=4$ as a local MAXIMUM of $f$ (since $f'$ changes from positive to negative there). 1 pt for correctly identifying and classifying one of the two extrema with correct justification; 2 pts require both, each with the sign-change justification.",
+          "modelResponse": "At $x=-1$: $f'$ changes from negative (on $(-4,-1)$) to positive (on $(-1,4)$), so by the First Derivative Test $f$ has a local minimum at $x=-1$. At $x=4$: $f'$ changes from positive (on $(-1,4)$) to negative (on $(4,6)$), so $f$ has a local maximum at $x=4$."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2 pts): notes $f'$ is increasing on $(-4,1)$ so $f''>0$ and $f$ is CONCAVE UP on $(-4,1)$; $f'$ is decreasing on $(1,6)$ so $f''<0$ and $f$ is CONCAVE DOWN on $(1,6)$; and identifies $x=1$ as an inflection point since concavity changes there (equivalently, $f'$ has a local maximum at $x=1$, so $f''$ changes from positive to negative). 1 pt for correctly identifying both concavity intervals; 1 pt for correctly identifying $x=1$ as the (only) inflection point with justification.",
+          "modelResponse": "$f'$ is increasing on $(-4,1)$ (given as increasing on $(-4,-1)$ and on $(-1,1)$), which means $f''>0$ there, so $f$ is concave up on $(-4,1)$. $f'$ is decreasing on $(1,6)$ (given as decreasing on $(1,4)$ and on $(4,6)$), which means $f''<0$ there, so $f$ is concave down on $(1,6)$. Since the concavity of $f$ changes from up to down at $x=1$, $f$ has an inflection point at $x=1$."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 3,
+          "scoringCriteria": "Full credit (3 pts): recognizes $f$ is continuous on the closed interval $[-4,6]$ (given twice-differentiable, hence continuous), so by the Extreme Value Theorem $f$ has an absolute maximum, attained either at a critical point ($x=-1$ or $x=4$) or an endpoint ($x=-4$ or $x=6$) [1 pt]; computes $f(4)=f(-4)+\\int_{-4}^{4}f'(x)\\,dx=5+12=17$ using the given information [1 pt]; and correctly argues $f(4)=17$ is the absolute maximum - because $f(-1)$ is a local minimum with $f(-1)<f(-4)=5$ (as $f$ decreases on $(-4,-1)$), and $f(6)<f(4)=17$ (as $f$ decreases on $(4,6)$), so $f(4)=17$ exceeds all other candidates [1 pt].",
+          "modelResponse": "$f$ is continuous on the closed interval $[-4,6]$ (it is given to be twice-differentiable there), so by the Extreme Value Theorem $f$ attains an absolute maximum on $[-4,6]$, which must occur at $x=-4$, $x=-1$, $x=4$, or $x=6$ (endpoints and critical points). Using the given information, $f(4)=f(-4)+\\int_{-4}^{4}f'(x)\\,dx=5+12=17$. Since $f$ is decreasing on $(-4,-1)$, $f(-1)<f(-4)=5<17$. Since $f$ is decreasing on $(4,6)$, $f(6)<f(4)=17$. So $f(4)=17$ is greater than $f(-4)$, $f(-1)$, and $f(6)$, and is therefore the absolute maximum value of $f$ on $[-4,6]$, occurring at $x=4$."
+        }
+      ]
+    }
+  }
+]

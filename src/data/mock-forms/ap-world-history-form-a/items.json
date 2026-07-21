@@ -1,0 +1,1310 @@
+[
+  {
+    "id": "apworld-fa-mc-001",
+    "loId": "apworld.east-asia-song",
+    "cedCode": "AP-APWORLD-1.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table describes Song China's bureaucracy as staffed \"increasingly through competitive written examinations on Confucian texts.\" This method of recruitment most directly promoted which of the following?",
+    "choices": [
+      "The rise of a scholar-gentry class whose status rested on educational merit rather than hereditary landholding",
+      "The transfer of governing authority to regional military governors independent of the emperor",
+      "The replacement of Confucian ideas with Buddhist doctrine as the basis of state administration",
+      "The exclusion of commerce and manufacturing from the imperial economy"
+    ],
+    "answer": "A",
+    "solutionText": "Merit-based civil service exams elevated a scholar-gentry class defined by mastery of Confucian learning rather than noble birth. Regional military governors describe the earlier Tang collapse, not Song centralization; the exams reinforced Confucianism rather than replacing it with Buddhism; and Song China's economy was famously commercialized, not closed to trade.",
+    "passageId": "evelyn.passage.apworld-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-002",
+    "loId": "apworld.dar-al-islam",
+    "cedCode": "AP-APWORLD-1.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that centers of learning in Dar al-Islam were \"preserving and extending Greek, Persian, and Indian knowledge.\" This activity is best understood as evidence that Islamic scholars—",
+    "choices": [
+      "rejected all pre-Islamic learning as incompatible with the faith",
+      "translated and built upon the intellectual traditions of conquered and neighboring peoples",
+      "confined scholarship exclusively to the study of the Quran",
+      "depended on Latin Christian universities for scientific texts"
+    ],
+    "answer": "B",
+    "solutionText": "Institutions like the House of Wisdom in Baghdad translated Greek, Persian, and Indian works into Arabic and advanced them in fields such as mathematics, medicine, and astronomy. They embraced rather than rejected earlier learning; scholarship extended well beyond the Quran; and the flow of knowledge ran from the Islamic world toward Europe, not the reverse.",
+    "passageId": "evelyn.passage.apworld-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-003",
+    "loId": "apworld.medieval-europe",
+    "cedCode": "AP-APWORLD-1.6",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table states that in Latin Christian Europe \"monarchs shared power with landholding nobles who owed military service.\" This arrangement is best identified as—",
+    "choices": [
+      "a centralized bureaucratic empire",
+      "a theocracy governed directly by the church",
+      "a feudal political order",
+      "a merchant republic ruled by trading guilds"
+    ],
+    "answer": "C",
+    "solutionText": "Kings granting land to nobles in exchange for military obligation is the defining feature of European feudalism. Medieval Europe was politically decentralized rather than a centralized bureaucratic empire; it was not a theocracy despite the church's influence; and merchant republics were exceptions, not the general order described.",
+    "passageId": "evelyn.passage.apworld-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-004",
+    "loId": "apworld.south-southeast-asia",
+    "cedCode": "AP-APWORLD-1.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table describes South and Southeast Asian port kingdoms as \"taxing and provisioning the merchant ships\" crossing the Indian Ocean. A historian could best use this feature to explain which broader development in the region?",
+    "choices": [
+      "The disappearance of Hinduism and Buddhism from Southeast Asia before 1200",
+      "The isolation of Southeast Asian states from foreign cultural influence",
+      "The spread of religions and cultural practices carried by the merchants these states hosted",
+      "The reliance of these kingdoms on subsistence farming rather than trade revenue"
+    ],
+    "answer": "C",
+    "solutionText": "Entrepot states such as Srivijaya grew wealthy on sea trade, and the merchants they hosted diffused Hinduism, Buddhism, and later Islam into the region. Hinduism and Buddhism spread into, not out of, Southeast Asia; hosting foreign traders increased rather than blocked cultural contact; and these kingdoms depended on trade revenue, as the passage states.",
+    "passageId": "evelyn.passage.apworld-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-005",
+    "loId": "apworld.americas-africa-states",
+    "cedCode": "AP-APWORLD-1.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the table, kingdoms in Mali and the West African Sahel were \"enriched by control of gold fields and of the trade in gold and salt.\" The wealth of these states depended most directly on their position along which network?",
+    "choices": [
+      "The trans-Saharan caravan routes",
+      "The Silk Roads of Central Asia",
+      "The Grand Canal of China",
+      "The trans-Atlantic slave trade"
+    ],
+    "answer": "A",
+    "solutionText": "Mali's prosperity came from controlling gold-and-salt commerce carried by camel caravans across the Sahara. The Silk Roads and China's Grand Canal lay far to the east; and the trans-Atlantic slave trade did not begin until after 1450, centuries after the period described.",
+    "passageId": "evelyn.passage.apworld-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-006",
+    "loId": "apworld.silk-roads",
+    "cedCode": "AP-APWORLD-2.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The note on the Silk Roads says they \"carried high-value, low-bulk goods such as silk and porcelain.\" Merchants concentrated on such goods on these routes primarily because—",
+    "choices": [
+      "religious law forbade the transport of heavy items overland",
+      "the high cost of long-distance overland transport made only valuable, compact goods profitable",
+      "no one along the routes was interested in agricultural products",
+      "camels were unable to carry heavy loads across Central Asia"
+    ],
+    "answer": "B",
+    "solutionText": "Overland caravan transport was slow and expensive, so only compact goods with high value per unit of weight, like silk and porcelain, justified the journey. No religious law banned heavy cargo; demand for staples existed but they were too cheap and bulky to move profitably overland; and camels were prized precisely for their load-bearing capacity.",
+    "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-007",
+    "loId": "apworld.indian-ocean-trade",
+    "cedCode": "AP-APWORLD-2.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The note on the Indian Ocean states that ships \"timed their voyages to the seasonal reversal of the monsoon winds.\" Knowledge of these wind patterns most directly enabled merchants to—",
+    "choices": [
+      "avoid all contact with foreign ports and cultures",
+      "abandon sailing in favor of overland caravans",
+      "schedule predictable round-trip voyages that expanded long-distance sea commerce",
+      "eliminate the need for large cargo ships"
+    ],
+    "answer": "C",
+    "solutionText": "Because the monsoons reversed direction seasonally, sailors could plan reliable outbound and return voyages, greatly expanding Indian Ocean trade. Predictable voyages increased port contact rather than avoiding it; the winds encouraged sea travel over caravans; and dependable routes supported larger cargo ships carrying bulk goods.",
+    "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-008",
+    "loId": "apworld.trans-saharan-trade",
+    "cedCode": "AP-APWORLD-2.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The map marks trans-Saharan routes \"carrying gold northward and salt and other goods southward.\" Beyond commodities, this same network is best known for facilitating which of the following in West Africa?",
+    "choices": [
+      "The introduction and spread of Islam among West African rulers and traders",
+      "The migration of Bantu-speaking peoples out of West Africa",
+      "The collapse of long-distance trade after 1200",
+      "The spread of Buddhism from the Mediterranean into the Sahel"
+    ],
+    "answer": "A",
+    "solutionText": "Muslim merchants crossing the Sahara carried Islam into West Africa, where rulers and trading elites in states like Mali adopted it. The Bantu migrations predate this era and moved southward and eastward; trans-Saharan trade grew rather than collapsed after 1200; and it was Islam, not Buddhism, that diffused along these routes.",
+    "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-009",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The note on the Mongol domains observes that under their rule \"merchants, envoys, and ideas — and, later, disease — moved unusually freely from China to the edge of Europe.\" This description best supports the conclusion that Mongol rule—",
+    "choices": [
+      "permanently severed commercial ties between East and West",
+      "lowered the barriers to Eurasian exchange, spreading both goods and pathogens",
+      "confined all long-distance trade to sea routes",
+      "prevented any transfer of technology between civilizations"
+    ],
+    "answer": "B",
+    "solutionText": "The Pax Mongolica secured overland routes and eased travel, boosting exchange of goods and ideas while also spreading the plague westward. Mongol unification strengthened rather than severed East-West ties; it revitalized overland routes rather than confining trade to the sea; and it accelerated technology transfer such as gunpowder and printing.",
+    "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-010",
+    "loId": "apworld.cultural-diffusion",
+    "cedCode": "AP-APWORLD-2.6",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Taken together, the map's four routes show goods and ideas moving in many directions across Afro-Eurasia. Which of the following is the strongest example of a technology diffusing westward along these networks during 1200-1450?",
+    "choices": [
+      "The movement of maize and potatoes from the Americas into China",
+      "The spread of gunpowder and papermaking from China toward the Islamic world and Europe",
+      "The transfer of steam-engine designs from Britain to the Ottoman Empire",
+      "The diffusion of Christianity from Europe into East Asia"
+    ],
+    "answer": "B",
+    "solutionText": "Gunpowder spread westward across Eurasia via the Silk Roads and Mongol networks in this period; papermaking, already transmitted to the Islamic world as early as the eighth century, continued diffusing further west into Europe by the thirteenth century. Maize and potatoes are American crops that only entered Afro-Eurasia after 1492; the steam engine is an eighteenth-century development; and Christianity's spread ran outward from Europe rather than being a Chinese technology moving west.",
+    "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-011",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The minister's opening boast that \"our armies have again enlarged the realm this season\" reflects a process most characteristic of which type of early-modern state?",
+    "choices": [
+      "Maritime empires that projected power mainly through scattered naval bases and coastal trading posts",
+      "Land-based \"gunpowder empires\" that expanded their frontiers through conquest using firearms and artillery",
+      "Feudal monarchies whose kings could act only through the private armies of independent vassals",
+      "Merchant city-states that grew powerful chiefly through long-distance commerce rather than territory"
+    ],
+    "answer": "B",
+    "solutionText": "The empire is a composite of the great sixteenth- and seventeenth-century land empires (Ottoman, Safavid, Mughal, Ming-Qing, Russia) that historians call gunpowder empires because they enlarged their realms through military conquest backed by firearms and cannon. Maritime empires (A) relied on ships and enclaves, not the seasonal expansion of land frontiers; feudal monarchies (C) and commercial city-states (D) describe political forms the passage's centralized conquest state does not match.",
+    "passageId": "evelyn.passage.apworld-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-012",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The minister's advice to \"appoint to high office men raised up and salaried by the crown, who owe their standing to you and not to birth\" describes a strategy the Ottoman Empire pursued most directly through the—",
+    "choices": [
+      "requirement that all high officials be drawn from an established landed aristocracy",
+      "sale of hereditary noble titles and offices to the highest bidders",
+      "devshirme system, which levied and trained administrators and soldiers bound personally to the sultan",
+      "grant to autonomous provincial princes of the right to raise their own standing armies"
+    ],
+    "answer": "C",
+    "solutionText": "Staffing the state with men who owe their position to the ruler rather than to noble birth is the logic of the Ottoman devshirme, which recruited and trained a bureaucratic and military corps (including the Janissaries) loyal to the sultan alone. Drawing officials from a hereditary aristocracy (A) or selling offices and titles (B) would tie them to birth and wealth, not the crown, and empowering autonomous princes with armies (D) is the opposite of centralized, crown-loyal administration.",
+    "passageId": "evelyn.passage.apworld-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-013",
+    "loId": "apworld.unit3-land-empires",
+    "cedCode": "AP-WORLD-3.1-3.5",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Taken as a whole, the report suggests that the empire's long-term stability depended less on continued conquest than on—",
+    "choices": [
+      "eliminating all religious and ethnic diversity among its subject peoples",
+      "abandoning systematic taxation in favor of irregular tribute from the conquered",
+      "relocating the capital away from densely settled and productive regions",
+      "accommodating local elites and diverse populations while centralizing key offices and revenue"
+    ],
+    "answer": "D",
+    "solutionText": "The minister argues that conquest alone does not hold an empire: leaving local notables in place in exchange for loyalty, taxes, and troops keeps provinces quiet, while pressing on subjects' beliefs provokes revolt. Stability thus rests on balancing accommodation of diverse elites with centralized, salaried offices and an assessed tax base (D). The report explicitly warns against forcing religious uniformity (A), relies on surveyed taxation rather than abandoning it (B), and says nothing about moving the capital (C).",
+    "passageId": "evelyn.passage.apworld-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-014",
+    "loId": "apworld.empires-belief-systems",
+    "cedCode": "AP-APWORLD-3.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The ruler on the left, who \"styled himself a defender and patron of the faith and built grand houses of worship,\" illustrates a common early-modern strategy in which monarchs—",
+    "choices": [
+      "used religious patronage and building to legitimize their political authority",
+      "rejected organized religion in favor of purely secular law codes",
+      "claimed personal divinity that required subjects to worship the monarch himself",
+      "subordinated their governments entirely to an independent priesthood"
+    ],
+    "answer": "A",
+    "solutionText": "Sponsoring religious institutions and posing as protector of the faith—as Ottoman sultans did with grand mosques or Mughal and European rulers with monumental religious building—was a standard way to convert religious prestige into political legitimacy (A). The panel shows the ruler embracing religion, not rejecting it (B); early-modern land-empire rulers did not demand worship of themselves as gods (C); and patronage made the ruler the sponsor of religion, not the servant of an autonomous clergy (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-015",
+    "loId": "apworld.empires-administration",
+    "cedCode": "AP-APWORLD-3.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The right-hand ruler, whose \"officials were chosen through examinations,\" is depicted using a merit-based bureaucratic method most fully developed in—",
+    "choices": [
+      "the Ottoman Empire",
+      "Ming and Qing China",
+      "Tokugawa Japan",
+      "Safavid Persia"
+    ],
+    "answer": "B",
+    "solutionText": "Selecting officials through competitive civil-service examinations, tied here to the altar of Heaven and the Mandate of Heaven, is the hallmark of imperial China, refined under the Ming and Qing (B). The Ottomans staffed their bureaucracy chiefly through the devshirme (A), Tokugawa Japan relied on a hereditary samurai class (C), and Safavid Persia drew on religious and tribal elites rather than an examination system (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-016",
+    "loId": "apworld.empires-expansion",
+    "cedCode": "AP-APWORLD-3.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The panel's closing line — \"Different thrones, the same task — to make obedience appear as the natural order of things\" — together with the three rulers depicted, best supports which conclusion about early-modern land empires?",
+    "choices": [
+      "By the seventeenth century these empires had largely abandoned military expansion",
+      "Religious uniformity was a strict precondition for political stability in every case",
+      "Bureaucratic examinations had replaced monarchy as the basis of rule across Eurasia",
+      "Rulers of very different empires relied on cultural and religious legitimation, not force alone, to secure obedience"
+    ],
+    "answer": "D",
+    "solutionText": "The panel juxtaposes a Muslim patron of the faith, a religiously tolerant patron of the arts, and a Confucian holder of the Mandate of Heaven to make one point: however they conquered, all three had to manufacture consent by making their rule seem natural and legitimate (D). The rulers are shown consolidating, not renouncing, expansion (A); the tolerant central ruler shows uniformity was not required everywhere (B); and examinations supplement, rather than replace, monarchy (C).",
+    "passageId": "evelyn.passage.apworld-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-017",
+    "loId": "apworld.maritime-exploration",
+    "cedCode": "AP-APWORLD-4.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that \"Portuguese ships reached the Indian Ocean around Africa.\" A primary motive driving voyages like this was—",
+    "choices": [
+      "the desire to gain direct access to Asian spices and trade while bypassing overland intermediaries",
+      "the need to escape religious persecution by settling new lands",
+      "an acute shortage of farmland forcing mass emigration from Iberia",
+      "the search for known deposits of American silver"
+    ],
+    "answer": "A",
+    "solutionText": "Portugal's push around Africa aimed to reach the lucrative Indian Ocean spice trade directly, cutting out the Muslim and Venetian middlemen who controlled the overland routes (A). Iberian voyages of exploration were commercial and religious-crusading ventures by states, not flights from persecution (B) or responses to land hunger (C); and American silver (D) was not discovered until after the Atlantic crossings and postdates the motive for the African route.",
+    "passageId": "evelyn.passage.apworld-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-018",
+    "loId": "apworld.columbian-exchange-global",
+    "cedCode": "AP-APWORLD-4.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table pairs population growth in Afro-Eurasia with the death of \"a large share of the Indigenous American population within a century.\" This contrast is best explained by—",
+    "choices": [
+      "warfare among European powers competing for American territory",
+      "a period of global cooling that sharply reduced Afro-Eurasian harvests",
+      "the transfer of nutrient-rich American crops in one direction and lethal Old World diseases in the other",
+      "the collapse of the trans-Saharan trade routes after 1500"
+    ],
+    "answer": "C",
+    "solutionText": "The Columbian Exchange moved calorie-rich crops such as maize and potatoes into Afro-Eurasia, supporting population growth, while carrying Old World epidemics like smallpox to Indigenous Americans who had no immunity, causing catastrophic die-offs (C). Intra-European warfare (A) was not the main killer, the era's demographic swing was driven by crops and germs rather than climate (B), and the trans-Saharan routes did not collapse in this period (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-019",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table states that silver from Spanish America flowed across both oceans, \"much of it ending up in China.\" This flow is best understood as evidence that—",
+    "choices": [
+      "China had abandoned the use of money by the sixteenth century",
+      "silver tied American mines, European carriers, and Asian markets together into a single global economy",
+      "American silver had little economic effect beyond the Americas",
+      "the Ming state prohibited all foreign trade throughout this period"
+    ],
+    "answer": "B",
+    "solutionText": "Silver dug at places like Potosí and Zacatecas moved east across the Atlantic and west across the Pacific (via Manila) into China, whose demand for silver to monetize its economy drew in bullion from around the world—knitting the hemispheres into one interconnected system (B). China's economy was intensely monetized, not moneyless (A); the far-reaching flow disproves any claim of limited effect (C); and although trade was regulated, the Ming did not ban all foreign commerce, as the silver inflow itself shows (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-020",
+    "loId": "apworld.atlantic-slave-trade",
+    "cedCode": "AP-APWORLD-4.6",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The overseer reports that \"we bury more of the enslaved than are born here; only the ships that come each year from the African coast keep the gangs at their full number.\" This describes a defining feature of Caribbean sugar slavery, namely—",
+    "choices": [
+      "a self-sustaining enslaved population that grew steadily through natural increase",
+      "a labor force made up mainly of European indentured servants",
+      "the gradual replacement of enslaved labor with paid wage workers",
+      "deadly working conditions that produced a negative rate of natural growth, requiring continual imports of captives"
+    ],
+    "answer": "D",
+    "solutionText": "The brutal regime of the cane fields and boiling houses killed enslaved people faster than they reproduced, so Caribbean plantations depended on a constant stream of newly imported Africans to maintain their workforce (D). This is the opposite of a population growing by natural increase (A); by the mid-eighteenth century sugar work was done overwhelmingly by enslaved Africans rather than European indentured servants (B); and wage labor did not replace slavery on these estates in this era (C).",
+    "passageId": "evelyn.passage.apworld-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-021",
+    "loId": "apworld.resistance-accommodation",
+    "cedCode": "AP-APWORLD-4.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The behaviors the overseer describes — runaways forming hidden hill villages, breaking tools, feigning sickness, slowing the pace of work, and plotting a \"rising\" — are best categorized by historians as—",
+    "choices": [
+      "a spectrum of enslaved resistance ranging from everyday sabotage to open revolt",
+      "evidence that enslaved people generally accepted their condition",
+      "ordinary features of disputes between free wage laborers and employers",
+      "forms of resistance found only on the North American mainland"
+    ],
+    "answer": "A",
+    "solutionText": "The letter catalogs the full range of resistance among enslaved people: escape to autonomous maroon communities, day-to-day sabotage such as breaking tools and feigning illness, work slowdowns, and outright plots for rebellion (A). Such widespread defiance shows the enslaved did not accept bondage (B); these were coerced laborers, not free workers in a labor dispute (C); and this resistance was common across the Atlantic slave societies, especially in the Caribbean and Brazil, not unique to North America (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-022",
+    "loId": "apworld.unit4-transoceanic",
+    "cedCode": "AP-WORLD-4.1-4.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The overseer concludes that \"the wealth this island sends home rests upon a great and watchful cruelty, and upon a fresh supply of captives.\" This assessment best captures which broader feature of the transoceanic system after 1500?",
+    "choices": [
+      "Colonial wealth was generated chiefly through voluntary migration and free-market exchange",
+      "Caribbean plantations remained economically marginal to Europe's empires",
+      "Atlantic plantation economies linked European capital, coerced African labor, and American land into an interdependent and brutally violent system",
+      "The plantation economy functioned with little dependence on the transatlantic slave trade"
+    ],
+    "answer": "C",
+    "solutionText": "The overseer's account distills the Atlantic system: European investment and markets, enslaved African labor sustained by continual imports, and American plantation land combined to produce staple wealth through organized coercion and violence (C). That wealth came from forced labor, not voluntary migration or free exchange (A); sugar colonies were among the most profitable possessions in Europe's empires, not marginal (B); and the enterprise depended directly on the slave trade, as the overseer himself insists (D).",
+    "passageId": "evelyn.passage.apworld-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-023",
+    "loId": "apworld.enlightenment",
+    "cedCode": "AP-APWORLD-5.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The pamphlet declares that \"Authority that does not rest upon the consent of the governed is mere force dressed in ceremony.\" This statement most directly reflects which Enlightenment idea?",
+    "choices": [
+      "Monarchs rule by divine right and are answerable only to God",
+      "Economic strength is best built through mercantilist regulation",
+      "Legitimate political authority derives from the consent of the governed",
+      "Society functions best under a fixed hierarchy of inherited ranks"
+    ],
+    "answer": "C",
+    "solutionText": "Enlightenment thinkers such as Locke and Rousseau argued that governments derive their legitimacy from the consent of the governed rather than from divine or hereditary right, directly challenging absolute monarchy. The other options describe the divine-right, mercantilist, and hierarchical views the pamphlet rejects.",
+    "passageId": "evelyn.passage.apworld-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-024",
+    "loId": "apworld.atlantic-revolutions-era",
+    "cedCode": "AP-APWORLD-5.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The closing claim that \"What has been done across the ocean, and is now attempted here, can be done wherever men dare to reason and to act\" best reflects—",
+    "choices": [
+      "a connected wave of revolutions across the Atlantic world sharing common ideals",
+      "the transfer of industrial machinery from Britain to the European continent",
+      "the late-nineteenth-century scramble for colonies in Africa and Asia",
+      "religious reformers breaking away from established state churches"
+    ],
+    "answer": "A",
+    "solutionText": "The American, French, Haitian, and Latin American revolutions formed an interconnected Atlantic wave in which shared Enlightenment ideals spread from one society to another, exactly the diffusion the pamphlet urges. Industrialization, New Imperialism, and the Reformation are unrelated developments.",
+    "passageId": "evelyn.passage.apworld-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-025",
+    "loId": "apworld.atlantic-revolutions",
+    "cedCode": "AP-WORLD-5.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the pamphlet, the revolutions of this era were inspired primarily by—",
+    "choices": [
+      "a desire to restore traditional dynastic monarchies",
+      "Enlightenment ideas about natural rights and self-government",
+      "the doctrines of a single organized church",
+      "the economic theories of the Industrial Revolution"
+    ],
+    "answer": "B",
+    "solutionText": "The pamphlet invokes rights that \"no king bestowed,\" government by consent, and rule by reason and nature — the core Enlightenment ideas that motivated the Atlantic revolutions. It explicitly opposes dynastic rule and does not appeal to a church or to industrial economics.",
+    "passageId": "evelyn.passage.apworld-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-026",
+    "loId": "apworld.nationalism-unification",
+    "cedCode": "AP-APWORLD-5.2b",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The vision of \"a people bound together not by obedience to a dynasty but by common laws we ourselves consent to, and by a shared devotion to the land\" most directly anticipates which later nineteenth-century development?",
+    "choices": [
+      "the restoration of dynastic empires by the Congress of Vienna after 1815",
+      "the abolition of the transatlantic slave trade by Britain",
+      "the negotiation of global free-trade agreements",
+      "the unification of Germany and Italy around a shared national identity"
+    ],
+    "answer": "D",
+    "solutionText": "Defining the state by a people sharing common laws and a homeland rather than by loyalty to a ruling dynasty is the core principle of nationalism, which drove the unification of Germany and Italy. The Congress of Vienna reasserted dynastic legitimacy, while abolition and free trade address different issues.",
+    "passageId": "evelyn.passage.apworld-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-027",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "According to the table, the many-fold rise in coal and iron production was most directly driven by—",
+    "choices": [
+      "the mechanization of agriculture on large plantations",
+      "government ownership and operation of all major industries",
+      "steam engines that powered factory machinery, railways, and steamships",
+      "the discovery of new deposits of gold and silver"
+    ],
+    "answer": "C",
+    "solutionText": "The Industrial Revolution's surge in coal and iron output was fueled by coal-burning steam engines that drove factories, railways, and steamships. State ownership, plantation agriculture, and precious-metal discoveries were not the mechanism behind industrial production.",
+    "passageId": "evelyn.passage.apworld-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-028",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The shift described under \"Where People Worked\" — from farming and household crafts toward wage labor in mills and factories — most directly contributed to—",
+    "choices": [
+      "the emergence of a wage-earning industrial working class",
+      "a sharp decline in the population of towns and cities",
+      "the disappearance of distinctions between social classes",
+      "the return of most laborers to rural cottage industry"
+    ],
+    "answer": "A",
+    "solutionText": "Moving production into factories created a large new class of workers who depended on wages, including many women and children — the industrial proletariat. Urbanization rose rather than declined, class distinctions sharpened rather than vanished, and cottage industry receded.",
+    "passageId": "evelyn.passage.apworld-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-029",
+    "loId": "apworld.industrial-society",
+    "cedCode": "AP-APWORLD-5.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The note that \"Contemporaries disagreed sharply over these changes — some hailed the rising output... while others condemned the crowding, pollution, and hardship\" best supports which conclusion about industrialization?",
+    "choices": [
+      "Its benefits and costs were universally regarded as unambiguous progress",
+      "Its social consequences were contested and prompted demands for reform",
+      "It left both rural and urban life essentially unchanged",
+      "It was opposed almost exclusively by factory owners"
+    ],
+    "answer": "B",
+    "solutionText": "The note captures how industrialization's effects were genuinely disputed, with defenders emphasizing rising output and critics highlighting urban misery, spurring reform movements. The other choices contradict the note's explicit statement of sharp disagreement or misidentify who objected.",
+    "passageId": "evelyn.passage.apworld-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-030",
+    "loId": "apworld.imperial-expansion",
+    "cedCode": "AP-APWORLD-6.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The cartoon's image of European figures drawing lines across a map of \"AFRICA\" and \"carving it into blocks marked with their own colors\" most directly depicts—",
+    "choices": [
+      "the collapse of Europe's overseas colonial empires",
+      "the voluntary federation of independent African states",
+      "the abolition of colonial rule across the African continent",
+      "the partition of Africa among competing industrial powers"
+    ],
+    "answer": "D",
+    "solutionText": "The cartoon portrays the New Imperialism \"Scramble for Africa,\" in which industrial powers divided the continent among themselves with little regard for its peoples. It depicts partition and conquest, not decolonization, federation, or African self-rule.",
+    "passageId": "evelyn.passage.apworld-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-031",
+    "loId": "apworld.imperialism",
+    "cedCode": "AP-WORLD-6.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The banner reading \"BRINGING THE BLESSINGS OF CIVILIZATION,\" drawn in a \"mock-solemn tone\" above figures armed with a hidden rifle, most likely served to—",
+    "choices": [
+      "criticize the civilizing-mission rhetoric used to justify conquest",
+      "celebrate the genuine humanitarian aims of the colonizers",
+      "urge the immediate withdrawal of all powers from the colonies",
+      "promote free and equal trade among partner nations"
+    ],
+    "answer": "A",
+    "solutionText": "The cartoonist's mock-solemn banner, paired with concealed weapons and excluded local peoples, satirizes the \"civilizing mission\" that imperial powers used to mask conquest and exploitation. The image is a critique, not a sincere celebration, a call for withdrawal, or an argument for equal trade.",
+    "passageId": "evelyn.passage.apworld-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-032",
+    "loId": "apworld.economic-imperialism",
+    "cedCode": "AP-APWORLD-6.5",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The crates labeled \"MACHINE GOODS\" beside the steamship and the smaller label \"IN SEARCH OF MARKETS AND RAW MATERIALS\" most directly illustrate—",
+    "choices": [
+      "missionary campaigns to spread Christianity abroad",
+      "the strategic value of overseas naval coaling stations",
+      "economic motives for empire: colonies as sources of raw materials and markets for manufactures",
+      "the two-way exchange of scientific knowledge between continents"
+    ],
+    "answer": "C",
+    "solutionText": "Industrial economies sought colonies both to supply raw materials for their factories and to serve as captive markets for finished manufactured goods, exactly what the machine-goods crates and \"markets and raw materials\" label signal. Missionary, naval, and scientific motives, while real elsewhere, are not what these labels depict.",
+    "passageId": "evelyn.passage.apworld-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-033",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The \"small figure representing the colonized peoples\" who \"reaches toward the map in protest and is ignored\" while none of them sit at the table best represents—",
+    "choices": [
+      "European public opinion turning against overseas empire",
+      "the exclusion of colonized peoples from decisions about their own lands and their resistance to it",
+      "rival industrial powers competing over the same territory",
+      "reform-minded officials within the colonial administrations"
+    ],
+    "answer": "B",
+    "solutionText": "By placing the protesting colonized figure outside the table and ignored, the cartoon highlights how imperial powers made decisions about African territory without the consent of its peoples, who nonetheless resisted. The other options misidentify the figure as Europeans, rival powers, or colonial officials.",
+    "passageId": "evelyn.passage.apworld-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-034",
+    "loId": "apworld.global-migration",
+    "cedCode": "AP-APWORLD-6.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The narrator's account of signing \"a paper I could not fully read, binding me to labor for a term of years on a plantation in a distant colony\" best exemplifies—",
+    "choices": [
+      "the transatlantic slave trade at its height",
+      "voluntary settler colonization of temperate frontiers",
+      "the return migration of Europeans to their homelands",
+      "nineteenth-century indentured labor migration from Asia"
+    ],
+    "answer": "D",
+    "solutionText": "After slavery's abolition, millions of South Asian and Chinese workers migrated under indenture contracts to labor for fixed terms on colonial plantations, matching the narrator's experience of debt-bound plantation work. This system was legally distinct from chattel slavery and unlike settler or return migration.",
+    "passageId": "evelyn.passage.apworld-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-035",
+    "loId": "apworld.reform-responses",
+    "cedCode": "AP-APWORLD-6.4b",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The \"educated men\" who argued that \"the empire took far more from us than it gave\" and that \"our people should have a voice in our own governing\" best reflect—",
+    "choices": [
+      "the emergence of nationalist demands for self-rule within colonized societies",
+      "colonial subjects rallying to preserve continued imperial administration",
+      "the growth of industrial labor unions in the factories of Europe",
+      "religious revival movements that rejected all forms of Western learning"
+    ],
+    "answer": "A",
+    "solutionText": "Critiques that empire was exploitative and demands for political voice mark the rise of anti-colonial nationalism among colonized peoples, a key response to imperial rule. The other options reverse the men's position or describe unrelated European labor and religious movements.",
+    "passageId": "evelyn.passage.apworld-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-036",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The account suggests that, by the later nineteenth century, anti-colonial sentiment was increasingly being voiced by—",
+    "choices": [
+      "indentured plantation laborers organizing entirely on their own",
+      "European colonial administrators sympathetic to their subjects",
+      "Western-educated elites who turned their education against imperial rule",
+      "foreign missionaries stationed throughout the colonies"
+    ],
+    "answer": "C",
+    "solutionText": "The narrator credits \"educated men of my own homeland\" with articulating the case for self-governance; across colonized regions it was Western-educated elites who founded and led nationalist movements against empire. The laborer himself notes no one asked his opinion, and administrators and missionaries were not the leaders of resistance.",
+    "passageId": "evelyn.passage.apworld-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-037",
+    "loId": "apworld.wwi-causes",
+    "cedCode": "AP-WORLD-7.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The official writes that the alliances \"we bound ourselves to in peacetime have dragged every great power into a single quarrel.\" This observation best illustrates which cause of the First World War?",
+    "choices": [
+      "A single assassination in the Balkans was, by itself, powerful enough to force a war the great powers otherwise wished to avoid",
+      "Interlocking alliance commitments transformed a local dispute into a war among all the major powers",
+      "Competition over overseas colonies was the sole reason the powers chose to go to war",
+      "The powers went to war chiefly to spread democratic government across Europe"
+    ],
+    "answer": "B",
+    "solutionText": "The memorandum stresses that peacetime alliance obligations pulled every great power into one war, illustrating how the system of entangling alliances turned a regional conflict into a general European war. (A) overstates a single trigger while ignoring the alliance mechanism the passage emphasizes; (C) treats one long-term rivalry as the only cause; (D) misstates the powers' aims.",
+    "passageId": "evelyn.passage.apworld-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-038",
+    "loId": "apworld.wwi-global",
+    "cedCode": "AP-APWORLD-7.2",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The description of \"the rapid gun, the barbed wire, the shell fired from beyond sight\" and armies that \"dig into the earth and die by the hundred thousand for a few miles of mud\" best characterizes the fighting of the First World War as —",
+    "choices": [
+      "a war of swift cavalry charges and rapid maneuver that produced quick, decisive victories",
+      "a conflict fought mainly at sea, with little sustained combat on land",
+      "an industrialized war in which new weapons produced a deadly stalemate and enormous casualties for little territorial gain",
+      "a series of small clashes in which soldiers avoided direct combat by relying on aerial bombing alone"
+    ],
+    "answer": "C",
+    "solutionText": "New industrial weapons made offensives extraordinarily costly, forcing armies into entrenched positions and producing a bloody stalemate typified by trench warfare. (A) describes an older style of warfare the new technology made obsolete; (B) ignores the passage's focus on land combat; (D) misdescribes the trench fighting the passage depicts.",
+    "passageId": "evelyn.passage.apworld-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-039",
+    "loId": "apworld.interwar-world",
+    "cedCode": "AP-APWORLD-7.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The official's fear that \"the old order that entered this war will not survive it\" most directly anticipated which development in the years after 1918?",
+    "choices": [
+      "The collapse of long-standing empires and monarchies and the rise of nationalist challenges to imperial rule",
+      "The permanent strengthening of Europe's ruling dynasties as a result of the war",
+      "A lasting return to prewar balance-of-power diplomacy with little political change",
+      "The immediate and complete abolition of every colonial empire by 1919"
+    ],
+    "answer": "A",
+    "solutionText": "The war toppled several empires and monarchies and, as the memo also anticipates, fueled nationalist movements against imperial rule. (B) and (C) contradict the official's expectation of upheaval; (D) is too sweeping and immediate, since decolonization unfolded over decades rather than in 1919.",
+    "passageId": "evelyn.passage.apworld-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-040",
+    "loId": "apworld.conflict-legacies",
+    "cedCode": "AP-APWORLD-7.8",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The memorandum notes that the government would \"summon soldiers and laborers from our colonies overseas to fight and toil in a European quarrel.\" This mobilization contributed most directly to which longer-term development?",
+    "choices": [
+      "The voluntary surrender of independence claims by colonized peoples after the war",
+      "A permanent decline in nationalist sentiment across Asia and Africa",
+      "The rapid, self-sustaining industrialization of the colonies during the war itself",
+      "Postwar demands for self-rule as colonized peoples pointed to their wartime service and sacrifice"
+    ],
+    "answer": "D",
+    "solutionText": "Colonial peoples who served in the war used that contribution to press claims for greater autonomy or independence, strengthening anti-colonial nationalism. (A) and (B) reverse the actual trend; (C) misreads wartime demands as lasting industrialization, which did not generally occur in the colonies.",
+    "passageId": "evelyn.passage.apworld-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-041",
+    "loId": "apworld.interwar-world",
+    "cedCode": "AP-APWORLD-7.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the table, the Great Depression spread \"from one industrial economy to another\" primarily through —",
+    "choices": [
+      "the outbreak of open warfare among the major powers",
+      "the deliberate closing of every international border",
+      "the interconnected ties of global trade and finance",
+      "a coordinated decision by governments to reduce production"
+    ],
+    "answer": "C",
+    "solutionText": "The passage reports only that the collapse spread from one industrial economy to another, not why; the mechanism was the ties of global trade and finance that bound industrial economies together, so a downturn in one quickly transmitted to its trading and lending partners. (A) confuses the Depression with the later war; (B) and (D) describe responses to the crisis, not the channel through which it spread.",
+    "passageId": "evelyn.passage.apworld-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-042",
+    "loId": "apworld.wwii-global",
+    "cedCode": "AP-APWORLD-7.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The table's note that the Second World War's deadliness for civilians \"far exceeded that of earlier wars\" is best explained by —",
+    "choices": [
+      "a return to limited wars fought only between small professional armies",
+      "the total mobilization of whole societies and the use of industrial and technological means — including the bombing of cities and deliberate mass murder — against civilian populations",
+      "the confinement of the fighting to a single continent",
+      "the absence of any new weapons compared with the First World War"
+    ],
+    "answer": "B",
+    "solutionText": "The war's unprecedented civilian toll came from total mobilization and the deliberate targeting of civilians through aerial bombing, genocide, and famine, capped by atomic weapons. (A) and (C) contradict the passage's account of a globe-spanning total war; (D) is false, as the war saw major new weapons including the atomic bomb.",
+    "passageId": "evelyn.passage.apworld-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-043",
+    "loId": "apworld.conflict-legacies",
+    "cedCode": "AP-APWORLD-7.8",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The \"Political Responses\" described in the table best illustrate which consequence of the Great Depression?",
+    "choices": [
+      "Economic hardship and disorder helped aggressive, militarized regimes rejecting democracy come to power in several countries",
+      "Democratic institutions were strengthened everywhere as a direct result of the crisis",
+      "Governments universally withdrew from any role in managing their economies",
+      "Colonial empires were peacefully dissolved in order to relieve economic pressure"
+    ],
+    "answer": "A",
+    "solutionText": "The table links Depression-era hardship to the rise of aggressive, anti-democratic regimes promising national revival and expansion. (B) reverses the political effect the passage describes; (C) contradicts the noted deeper government intervention in economies; (D) is unrelated to the interwar political responses described.",
+    "passageId": "evelyn.passage.apworld-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-044",
+    "loId": "apworld.cold-war-global",
+    "cedCode": "AP-APWORLD-8.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The leader states his nation is \"born into a world divided between two great powers, each pressing us to take its side and join its camp.\" This best reflects which condition after 1945?",
+    "choices": [
+      "a multipolar world in which many states were roughly equal in power",
+      "the absence of any great-power rivalry in the postwar decades",
+      "a single world government directly administering the newly independent states",
+      "the Cold War, in which two superpower blocs pressured other nations to align with one side or the other"
+    ],
+    "answer": "D",
+    "solutionText": "The passage describes the bipolar pressure of the Cold War, as the United States and Soviet Union each sought to draw new nations into their bloc. (A) and (B) deny the superpower rivalry the passage depicts; (C) misdescribes the era, which had no single governing authority.",
+    "passageId": "evelyn.passage.apworld-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-045",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The leader's statement that \"empires across Asia and Africa are going in these years\" refers to —",
+    "choices": [
+      "the rapid expansion of European empires in the mid-twentieth century",
+      "the wave of decolonization in which European empires gave way to independent nations after 1945",
+      "the unification of Asia and Africa into a single empire",
+      "the voluntary migration of Europeans out of the colonies for economic reasons"
+    ],
+    "answer": "B",
+    "solutionText": "The speech, delivered around 1960, describes the postwar wave of decolonization that produced dozens of newly independent nations across Asia and Africa. (A) reverses the trend; (C) invents a unification that did not occur; (D) misreads the political end of empire as mere emigration.",
+    "passageId": "evelyn.passage.apworld-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-046",
+    "loId": "apworld.new-states",
+    "cedCode": "AP-APWORLD-8.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The leader's complaint that \"the empire left us only fields and mines\" points to which challenge facing many newly independent nations?",
+    "choices": [
+      "Colonial rule had oriented their economies toward exporting raw materials, leaving little developed industry",
+      "The empire had over-industrialized the colony, building far too many factories",
+      "The colony possessed no natural resources of any kind",
+      "European rulers had fully educated and trained the local population before departing"
+    ],
+    "answer": "A",
+    "solutionText": "Colonial economies were typically structured to supply agricultural goods and minerals to the imperial power, leaving new nations without much industry and facing the task of economic development. (B) contradicts the extractive pattern described; (C) misreads the reference to fields and mines; (D) contradicts the leader's stated need to educate his people.",
+    "passageId": "evelyn.passage.apworld-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-047",
+    "loId": "apworld.decolonization",
+    "cedCode": "AP-WORLD-8.5-8.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The leader's call to \"stand with the other new nations\" and \"chart a path of our own between the rival blocs\" best expresses —",
+    "choices": [
+      "a decision to join the Soviet bloc firmly against the West",
+      "a rejection of independence in favor of continued colonial rule",
+      "the nonaligned approach by which many newly independent nations refused to commit to either Cold War bloc",
+      "a plan to assemble a new colonial empire of their own"
+    ],
+    "answer": "C",
+    "solutionText": "The passage voices nonalignment, the stance many decolonizing nations took in seeking a path independent of both Cold War superpowers. (A) contradicts the refusal to join either camp; (B) contradicts the celebration of independence; (D) misreads the pledge to cooperate among new nations as imperial ambition.",
+    "passageId": "evelyn.passage.apworld-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-048",
+    "loId": "apworld.cold-war",
+    "cedCode": "AP-WORLD-8",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that the two superpowers competed \"without ever fighting each other directly on the battlefield.\" This best describes which feature of the Cold War?",
+    "choices": [
+      "frequent large-scale battles fought directly between American and Soviet armies",
+      "a rivalry waged through an arms race, propaganda, and proxy conflicts rather than direct war between the superpowers",
+      "a complete absence of any military competition between the two blocs",
+      "the merging of the two superpowers into a single military alliance"
+    ],
+    "answer": "B",
+    "solutionText": "The Cold War pitted the superpowers against each other indirectly — through an arms race, propaganda, rival alliances, and proxy wars — while avoiding direct combat between them. (A) contradicts the note about no direct fighting; (C) ignores the intense indirect competition; (D) is false, as the blocs remained rivals.",
+    "passageId": "evelyn.passage.apworld-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-049",
+    "loId": "apworld.end-cold-war",
+    "cedCode": "AP-APWORLD-8.9",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The developments listed under \"The End of the Cold War\" (about 1989-1991) resulted most directly in —",
+    "choices": [
+      "the strengthening and territorial expansion of the Soviet Union",
+      "the collapse of the Soviet bloc and the emergence of the United States as the world's foremost power",
+      "the division of the world into three new rival superpower blocs",
+      "the immediate reunification of every former colony with its former imperial ruler"
+    ],
+    "answer": "B",
+    "solutionText": "The fall of Eastern European communist governments and the breakup of the Soviet Union ended the bipolar order and left the United States as the leading power. (A) contradicts the Soviet collapse the table describes; (C) and (D) invent outcomes not supported by the passage.",
+    "passageId": "evelyn.passage.apworld-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-050",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The growth in UN member states from about 50 in 1945 to about 185 in 1995 is best explained by —",
+    "choices": [
+      "the division of long-established European nations into many smaller states",
+      "a rule requiring every major city to join the United Nations separately",
+      "the entry of many newly independent former colonies in Asia, Africa, and the Caribbean",
+      "the admission of newly founded European colonial empires"
+    ],
+    "answer": "C",
+    "solutionText": "The note explains that most new members were formerly colonized nations that had gained independence, and the great wave of decolonization after 1945 ran through Asia, Africa, and the Caribbean, so the membership surge reflects that wave. (A) misattributes the growth to European fragmentation; (B) invents a nonexistent rule; (D) contradicts the era's decline of empires.",
+    "passageId": "evelyn.passage.apworld-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-051",
+    "loId": "apworld.global-economy",
+    "cedCode": "AP-APWORLD-9.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table's observation that \"trade grew far faster than population,\" with goods made in globe-spanning supply chains and shipped in standardized containers, best illustrates —",
+    "choices": [
+      "a retreat by nations into self-sufficient, closed economies",
+      "the collapse of international commerce over the twentieth century",
+      "the deepening economic globalization of the twentieth century and after",
+      "a widespread return to local barter as the main form of exchange"
+    ],
+    "answer": "C",
+    "solutionText": "Faster-than-population trade growth, global supply chains, containerization, and multinational corporations are hallmarks of intensifying economic globalization. (A), (B), and (D) all describe a retreat from global integration that contradicts the data in the table.",
+    "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-052",
+    "loId": "apworld.technology-communication",
+    "cedCode": "AP-APWORLD-9.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the table, the spread of the telephone, radio, television, and finally the internet and mobile phone most directly enabled —",
+    "choices": [
+      "information, money, and culture to move almost instantly across borders",
+      "a marked slowdown in the movement of information across borders",
+      "the growing isolation of the world's societies from one another",
+      "the end of nearly all long-distance communication"
+    ],
+    "answer": "A",
+    "solutionText": "The table describes each technology compressing the time news and ideas took to cross the world — the technological engine behind the era's rapid, near-instant movement of information, money, and culture across borders. (B), (C), and (D) each describe reduced connection, the opposite of the trend the table describes.",
+    "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-053",
+    "loId": "apworld.environment-disease",
+    "cedCode": "AP-APWORLD-9.6",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The note under \"Environment and Disease\" best supports which conclusion about twentieth-century global interconnection?",
+    "choices": [
+      "Interconnection eliminated the worldwide spread of infectious disease",
+      "The same connections that sped global exchange also spread disease and, through rising industrial and fossil-fuel use, drove pollution and long-term climate change",
+      "Industrial growth in the twentieth century had essentially no effect on the environment",
+      "Diseases spread more slowly as global travel and trade increased"
+    ],
+    "answer": "B",
+    "solutionText": "The passage links intensifying global connection to both the faster spread of disease and the environmental costs of industrial and fossil-fuel growth. (A) and (D) contradict the note on disease; (C) contradicts the note on pollution and climate change.",
+    "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-054",
+    "loId": "apworld.culture-rights-migration",
+    "cedCode": "AP-APWORLD-9.8",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The note under \"Peoples and Rights\" best illustrates which tension produced by globalization?",
+    "choices": [
+      "Global media, migration, and human-rights movements spread a shared culture while also provoking movements to defend local and national identities",
+      "Global culture completely and permanently erased all local and national identities",
+      "Migration and international human-rights movements had no measurable cultural effect",
+      "Local identities grew stronger only because global exchange had entirely ceased"
+    ],
+    "answer": "A",
+    "solutionText": "The passage captures globalization's double edge: as media, migration, and international human-rights activism connected societies more closely, cross-border media and migration also spread common culture while sparking defensive movements asserting local and national identity. (B) overstates homogenization; (C) denies any effect; (D) contradicts the reality of continued global exchange.",
+    "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-mc-055",
+    "loId": "apworld.unit9-globalization",
+    "cedCode": "AP-WORLD-9.1-9.7",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Taken together, the trends summarized in the table best support which conclusion about the period from about 1900 to 2010?",
+    "choices": [
+      "The world became both less interconnected and less populous over the century",
+      "Technological and economic change affected only a handful of wealthy nations",
+      "Global population fell sharply as medicine and food supply declined",
+      "Advances in medicine and food supply drove rapid population growth alongside deepening global interconnection through trade, technology, and culture"
+    ],
+    "answer": "D",
+    "solutionText": "The table shows population multiplying more than fourfold as death rates fell, together with expanding trade, communication, and cultural exchange — a picture of rapid growth amid intensifying interconnection. (A) and (C) contradict the population and connectivity data; (B) ignores the global scope the table emphasizes.",
+    "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apworld-fa-fr-01",
+    "loId": "apworld.mongol-empire",
+    "cedCode": "AP-APWORLD-2.1",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apworld-mock-a-saq1.v1",
+    "problemText": "Use the passage, a historian's argument about the Mongol Empire, to answer (a), (b), and (c).\n\n(a) Describe ONE major claim the historian makes in the passage.\n(b) Explain ONE specific piece of historical evidence from the period c. 1200-1450 that would SUPPORT the historian's argument.\n(c) Explain ONE specific piece of historical evidence from the period c. 1200-1450 that could be used to CHALLENGE or complicate the historian's argument.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response describes one of the historian's claims (e.g., that the Mongols connected Eurasia and acted as integrators despite their destructiveness), supplies one specific c. 1200-1450 fact that supports it (e.g., the Pax Mongolica protecting Silk Road trade), and supplies one specific fact that challenges it (e.g., the 1258 sack of Baghdad).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-claim",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for accurately describing ONE claim the historian makes in the passage. Acceptable descriptions include: that the Mongols, despite their destructiveness, were among the great integrators or unifiers of the pre-modern world; that Mongol rule made Eurasia a single connected space for about a century; that the Mongols protected trade routes and moved craftsmen/administrators across their domains; that the Mongols tolerated the religions of their subjects; that the Mongols carried technologies and ideas (printing, gunpowder, geography, medicine) from East to West; or that the same routes spread the plague. The response must reflect what the passage actually argues, not a general statement about the Mongols. No point for merely restating the prompt, describing the Mongols generically without reference to a claim in the passage, or misreading the argument.",
+          "modelResponse": "One major claim the historian makes is that the Mongols, although remembered for terrible destruction, should also be seen as great integrators who tied the whole of Eurasia together into a single connected space for roughly a century by protecting trade routes and moving goods, people, technologies, and ideas across their empire."
+        },
+        {
+          "criterionId": "b-support-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE specific piece of historical evidence from c. 1200-1450 that supports the historian's integrationist argument, with enough explanation to connect it to the claim. Acceptable evidence includes: the Pax Mongolica securing and protecting long-distance Silk Road trade; Mongol resettlement of skilled artisans and administrators across the empire; Mongol religious tolerance of Islam, Christianity, Buddhism, and other faiths; the westward transfer of gunpowder, printing, or Greco-Islamic/Chinese medicine and geographic knowledge; Mongol adoption of the Uyghur script and use of foreign administrators; or the spread of the Black Death along Mongol trade routes as evidence of the connections they created. The response must both name a specific development and explain how it supports the argument. No point for a vague reference to trade, an inaccurate fact, or evidence outside the period.",
+          "modelResponse": "The Pax Mongolica supports the historian's argument: because a single Mongol authority governed the routes across Central Asia, merchants along the Silk Roads could travel from the Mediterranean to China in relative safety, which increased the flow of goods, missionaries, and travelers (such as Marco Polo and Ibn Battuta) across Eurasia and shows the Mongols connecting distant regions into one commercial network."
+        },
+        {
+          "criterionId": "c-challenge-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE specific piece of historical evidence from c. 1200-1450 that challenges or complicates the integrationist argument, with enough explanation to show how it undercuts or qualifies the claim. Acceptable evidence includes: the massacres and destruction of major cities, such as the 1258 sack of Baghdad and the killing of the caliph, or the destruction of Central Asian cities like Nishapur or Merv; the catastrophic death toll of the Black Death spread along Mongol routes; the fact that the Mongols largely built upon pre-existing trade networks rather than creating them; or that Mongol-era integration was uneven and short-lived, fragmenting after the empire split into rival khanates. The response must name a specific development and explain how it challenges the argument. No point for a vague statement that the Mongols were violent without a specific example, or for evidence that does not actually complicate the claim.",
+          "modelResponse": "The 1258 sack of Baghdad complicates the historian's claim: the Mongols under Hulegu destroyed the Abbasid capital, executed the caliph, slaughtered much of the population, and wrecked the city's libraries and irrigation, which suggests that the same conquests that connected Eurasia also devastated one of its major centers of learning and commerce, so the picture of the Mongols as integrators must be balanced against the destruction they inflicted."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apworld-fa-fr-02",
+    "loId": "apworld.imperial-resistance",
+    "cedCode": "AP-APWORLD-6.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apworld-mock-a-saq2.v1",
+    "problemText": "Use the passage, an anti-colonial nationalist address delivered around 1910, to answer (a), (b), and (c).\n\n(a) Describe the author's point of view about imperial rule and self-government as expressed in the passage.\n(b) Explain ONE specific development in the period c. 1850-1914 that gave rise to views like those expressed by the author.\n(c) Explain ONE specific effect that anti-colonial or nationalist movements had in the period c. 1900-1950.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response describes the author's point of view (that imperial rule exploited and excluded colonized peoples and that they should selectively adopt Western learning to demand self-rule), explains one c. 1850-1914 development that produced such views (e.g., economic imperialism and deindustrialization), and explains one c. 1900-1950 effect of nationalist movements (e.g., the growth of the Indian National Congress and Gandhi's mass movements).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-pov",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for accurately describing the author's point of view about imperial rule and/or self-government. Acceptable descriptions include: that imperial rule, though justified as trade or a gift, is really exploitative and has ruined local crafts, reoriented agriculture to imperial markets, extracted taxes, and excluded natives from governing; that the author resents being told the colonized are unfit to rule themselves; that the colonized should selectively adopt Western learning (science, schools, ideas of liberty and nation) and turn it to their own purpose; and that the people must unite and demand or take the right to self-rule rather than wait for it to be granted. The response must reflect the author's actual stance. No point for merely restating the prompt, misreading the passage as pro-imperial, or a generic statement unconnected to the author's view.",
+          "modelResponse": "The author's point of view is that imperial rule is exploitative and hypocritical: it has ruined native crafts, turned farmland toward imperial markets, taxed the people, and barred them from governing their own land, all while claiming they are unfit to rule themselves. At the same time the author believes the colonized should selectively learn from the West, including its sciences and its own ideas of liberty and nation, and use that learning to unite as one people and demand, and if necessary seize, the right to self-rule."
+        },
+        {
+          "criterionId": "b-cause-development",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE specific development in c. 1850-1914 that gave rise to anti-colonial and nationalist views, with enough explanation to connect it to such views. Acceptable developments include: economic imperialism and deindustrialization (e.g., the decline of Indian handloom weaving under machine-made British cloth); the reorientation of colonial agriculture toward cash crops and exports for imperial markets; the ideology of the 'civilizing mission' that justified excluding natives from power; Western-style education that created an educated colonial elite exposed to liberal and nationalist ideas; the Indian Rebellion of 1857 and subsequent direct British Crown rule; or the Berlin Conference (1884-85) and the scramble for Africa. The response must name a specific development and explain how it produced grievances or ideas like the author's. No point for vague or inaccurate statements.",
+          "modelResponse": "The spread of Western-style education in the colonies helped give rise to views like the author's: colonial powers trained a native elite in European-style schools to staff the lower administration, but that education exposed the elite to European ideas of liberty, representative government, and nationalism. These educated colonial subjects then turned those ideas against imperial rule, arguing that the same liberties Europeans claimed at home should apply to the colonized, which is exactly the argument the author makes."
+        },
+        {
+          "criterionId": "c-effect-movement",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE specific effect that anti-colonial or nationalist movements had in c. 1900-1950, with enough explanation to show the effect. Acceptable effects include: the rise and growing influence of the Indian National Congress; Gandhi's mass movements such as noncooperation, the Salt March, or Quit India, and the mobilization of ordinary people in mass protest; heightened anticolonial mobilization after World War I, as colonial troops' wartime service and Wilsonian self-determination raised expectations; the formation and activity of the African National Congress; or the momentum toward eventual decolonization after World War II. The response must name a specific movement or organization and explain a concrete effect. No point for vague claims or effects outside the period.",
+          "modelResponse": "One effect of nationalist movements in this period was the transformation of the Indian National Congress into a mass movement under Gandhi: through campaigns such as the noncooperation movement and the 1930 Salt March, Congress mobilized millions of ordinary Indians in nonviolent resistance to British rule, made the demand for self-government a popular cause rather than an elite one, and put sustained pressure on Britain that helped set India on the path to independence in 1947."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apworld-fa-fr-03",
+    "loId": "apworld.decolonization-wave",
+    "cedCode": "AP-APWORLD-8.5",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Answer (a), (b), and (c). (No stimulus is provided for this question.)\n\n(a) Describe ONE cause of decolonization in Asia or Africa in the period c. 1945-1975.\n(b) Explain ONE method that colonized peoples used to achieve independence in the period c. 1945-1975.\n(c) Explain ONE challenge that a newly independent nation faced after achieving independence in this period.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response describes one cause of decolonization (e.g., WWII weakening the European colonial powers), explains one method used to win independence (e.g., Gandhi's nonviolent mass movement in India or armed struggle in Algeria/Vietnam), and explains one post-independence challenge (e.g., ethnic and religious conflict along arbitrary colonial borders, as in the Partition of India).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-cause",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for accurately describing ONE cause of decolonization in Asia or Africa in c. 1945-1975. Acceptable causes include: the weakening of European colonial powers (Britain, France, the Netherlands) by World War II, financially and militarily; the wartime service of colonial troops, which raised expectations of political rights; the spread of nationalist ideology and the growth of nationalist parties; Cold War pressure, as both the United States and the Soviet Union positioned themselves against old-style European colonialism; or the role of the United Nations and the principle of self-determination in legitimizing independence. The response must identify a specific cause clearly. No point for vague statements or causes outside the period.",
+          "modelResponse": "One cause of decolonization was the devastation World War II inflicted on the European colonial powers. Britain and France emerged from the war financially exhausted and militarily overstretched, which made it far harder and more expensive to hold on to distant colonies against rising nationalist demands, so many colonies were able to press successfully for independence in the two decades after 1945."
+        },
+        {
+          "criterionId": "b-explain-method",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE method colonized peoples used to achieve independence in c. 1945-1975, with enough explanation to show how the method worked. Acceptable methods include: nonviolent mass movements and civil disobedience (e.g., the Indian independence movement culminating in 1947, drawing on Gandhi's methods); armed struggle or guerrilla insurgency (e.g., the Algerian war against France, or the Vietnamese struggle against France and later the United States); or negotiated transfers of power through political parties and elections (e.g., Ghana's independence in 1957 under Kwame Nkrumah). The response must name a specific method and example and explain how it advanced independence. No point for vague or inaccurate answers.",
+          "modelResponse": "One method was armed struggle. In Algeria, the National Liberation Front (FLN) waged a guerrilla war against French rule beginning in 1954, using insurgency and urban attacks to make continued occupation costly and politically unsustainable for France. The prolonged and brutal conflict eventually forced France to negotiate, and Algeria won independence in 1962."
+        },
+        {
+          "criterionId": "c-explain-challenge",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point for explaining ONE challenge a newly independent nation faced after achieving independence in this period, with enough explanation to show the challenge. Acceptable challenges include: arbitrary colonial borders producing ethnic or religious conflict (e.g., the violence of the Partition of India in 1947, or civil war in Nigeria); economies left dependent on a narrow base of cash-crop or mineral exports; the shortage of trained administrators, infrastructure, and capital left by colonial rule; Cold War pressure to align with one superpower bloc; or political instability leading to authoritarian regimes and military coups. The response must name a specific challenge and explain its impact. No point for vague statements or challenges outside the period.",
+          "modelResponse": "One challenge was ethnic and religious conflict rooted in borders drawn without regard to local populations. When British India was partitioned into India and Pakistan in 1947, millions of Hindus, Muslims, and Sikhs fled across the new borders, and communal violence killed hundreds of thousands and displaced millions, leaving the new states to cope with refugees, hostility, and disputes such as Kashmir that persisted for decades."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apworld-fa-fr-04",
+    "loId": "apworld.industrial-revolution",
+    "cedCode": "AP-APWORLD-5.3",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apworld-mock-a-dbq-packet.v1",
+    "problemText": "Using the seven documents in the packet and your knowledge of the period, write an essay that responds to the following prompt:\n\nEvaluate the extent to which industrialization changed economic and social life around the world in the period from 1750 to 1900.\n\nIn your response you should do the following:\n- Respond to the prompt with a historically defensible thesis or claim that establishes a line of reasoning.\n- Describe a broader historical context relevant to the prompt.\n- Support an argument in response to the prompt using at least four of the seven documents.\n- Use at least one additional piece of specific historical evidence (beyond that found in the documents) relevant to an argument about the prompt.\n- For at least three documents, explain how or why the document's point of view, purpose, historical situation, and/or audience is relevant to an argument.\n- Demonstrate a complex understanding of the historical development that is the focus of the prompt, using evidence to corroborate, qualify, or modify an argument.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit essay presents a defensible thesis about the extent of industrialization's economic and social effects worldwide, situates it in a broader context, uses at least four documents plus outside evidence to support the argument, sources at least three documents, and demonstrates complex understanding (e.g., contrasting industrializing cores with exploited colonies, or change alongside continuity).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "A-thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Thesis/Claim) for responding to the prompt with a historically defensible thesis or claim that establishes a line of reasoning about the extent to which industrialization changed economic and social life around the world from 1750 to 1900. The thesis must make a claim that could be defended (e.g., that industrialization transformed economic and social life dramatically but unevenly, benefiting industrial cores while exploiting workers and colonies) and must consist of one or more sentences located in one place, either the introduction or the conclusion. No point for restating the prompt, offering only a phrase, or listing documents without a claim.",
+          "modelResponse": "Between 1750 and 1900 industrialization profoundly transformed economic and social life across the globe, creating unprecedented productive wealth and a new industrial working class in the factory nations, but it did so unevenly: while industrialized regions grew rich and powerful, colonized and non-industrial societies were deindustrialized and reoriented to supply raw materials and markets, so the change was global in reach yet deeply unequal in its benefits."
+        },
+        {
+          "criterionId": "B-contextualization",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Contextualization) for describing a broader historical context relevant to the prompt, such as events, developments, or processes before, during, or continuing after the time frame of the prompt. The description must be more than a phrase or reference and should relate the topic to broader historical events or processes. Acceptable context includes the origins of the Industrial Revolution in Britain (access to coal, capital, colonies, and agricultural change), the earlier commercial revolution and Atlantic trade, the Enlightenment, or the global spread of industrial and imperial competition. No point for a passing mention unconnected to an argument.",
+          "modelResponse": "Industrialization emerged first in late-eighteenth-century Britain, where abundant coal and iron, capital accumulated from Atlantic trade and colonies, agricultural improvements that freed up labor, and access to markets combined to launch mechanized factory production. This built on an earlier commercial revolution that had already knit together global trade, and it set the stage for other states to industrialize and to compete for colonies and resources across the nineteenth century."
+        },
+        {
+          "criterionId": "C-document-evidence",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2/2): uses the CONTENT of at least FOUR of the seven documents to SUPPORT an argument in response to the prompt (documents grouped around claims, not summarized one at a time). Partial (1/2): accurately describes (addresses the content of) at least THREE documents, whether or not they support the argument. No credit (0/2): content of fewer than three documents used, or documents are misdescribed. Doc1 shows a British mill owner celebrating steam, coal, and cheap cloth for world markets; Doc2 gives a child worker's testimony of 13-hour days, dust, and poverty; Doc3 is a table showing machine cloth flooding a South Asian colony while local hand-weavers were ruined; Doc4 is a reforming Asian official urging defensive industrialization to preserve independence; Doc5 is a European editorial arguing factories require colonies for raw materials and markets; Doc6 describes a cartoon of a global loom fed by colonies with owners pocketing the gold; Doc7 is a labor organizer urging unions and the ballot box for the new working class.",
+          "modelResponse": "The documents support the argument that industrialization brought both new wealth and new exploitation on a global scale. Doc1's mill owner boasts that steam and coal let one factory outproduce a whole county of hand-weavers and sell cloth cheaply in world markets, showing the leap in productivity. Doc2's child worker, laboring thirteen-hour days amid cotton dust while the whole family lives in one room, shows the human cost borne by the new working class, a theme Doc7's labor organizer answers by calling workers to unite in unions and at the ballot box. Doc3's table demonstrates the global reach of the change: as cheap machine cloth flooded a South Asian colony, local hand-weavers were ruined, showing deindustrialization abroad. Doc5's editorial and Doc6's cartoon together reveal how industrial economies drove imperialism, with colonies feeding raw materials into the machine while factory owners pocketed the profits."
+        },
+        {
+          "criterionId": "D-outside-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Evidence Beyond the Documents) for using at least one specific piece of historical evidence relevant to an argument about the prompt that is NOT found in the documents. The evidence must be specific, more than a phrase, and used to support an argument, not merely mentioned. Acceptable outside evidence includes specific inventions (the spinning jenny, water frame, or Watt's steam engine), the British factory system, the Meiji Restoration in Japan, the Opium Wars and unequal treaties opening China, the Berlin Conference and New Imperialism, Marx and Engels and socialism, railroads or the Suez Canal, the Second Industrial Revolution (steel, electricity), or British Factory Acts and labor reforms. No point for evidence that merely repeats a document or is too vague to support an argument.",
+          "modelResponse": "Beyond the documents, the Meiji Restoration in Japan illustrates defensive industrialization in action: after 1868 Japanese leaders, having seen China humbled in the Opium Wars, abolished feudal structures, built railways and state-run arsenals and factories, and sent students abroad to study Western science, allowing Japan to industrialize rapidly and preserve its independence, exactly the strategy Doc4's official recommends."
+        },
+        {
+          "criterionId": "E-sourcing",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Sourcing / Analysis of Documents) for explaining, for at least THREE documents, how or why the document's point of view, purpose, historical situation, and/or audience is relevant to an argument. For each of the three documents the explanation must go beyond identifying the source and must connect a specific aspect (POV, purpose, situation, or audience) to an argument about the prompt. For example: Doc1's mill owner has a self-interested point of view celebrating profit and may downplay costs; Doc2's worker testimony, likely given to reformers, is intended to expose factory abuses; Doc4's official writes to preserve his state's independence, shaping his call for defensive industrialization; Doc5's editorial seeks to justify imperialism to a national audience; Doc7's organizer writes to rally workers. No point unless at least three documents are sourced with a clear link to an argument.",
+          "modelResponse": "The sourcing of several documents sharpens the argument. Doc1 is written by a mill owner whose point of view is self-interested; because his purpose is to celebrate the profits of steam-powered production, he emphasizes cheap cloth and world markets while ignoring the workers' suffering, so his glowing account must be read against Doc2. Doc2 is a worker's testimony probably given before a reform inquiry, and its purpose is to expose the abuses of the factory system, which is why it dwells on long hours, dust, and poverty. Doc4 is a memorandum by a reforming official whose situation, watching neighbors fall to Western gunboats, drives his purpose of urging railways and arsenals to preserve his state's independence, showing that industrialization was also a defensive strategy for non-Western states."
+        },
+        {
+          "criterionId": "F-complexity",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Complexity) for demonstrating a complex understanding of the extent to which industrialization changed economic and social life, using evidence to corroborate, qualify, or modify an argument. This can be earned by explaining nuance (e.g., that industrialization simultaneously created wealth and misery, or transformed industrial cores while deindustrializing colonies), by making connections across regions or between economic and social change, by qualifying an argument with change and continuity, or by corroborating an argument with insightful use of multiple documents and outside evidence. The complex understanding must be part of an argument, not a single phrase. No point for a claim of complexity that is not developed.",
+          "modelResponse": "A complex understanding recognizes that industrialization's effects were simultaneously transformative and profoundly unequal. In the industrial cores it multiplied output (Doc1) yet degraded the lives of a new working class (Doc2, Doc7), while abroad it deindustrialized colonies (Doc3) and drove a new imperialism that turned distant lands into suppliers of raw materials and captive markets (Doc5, Doc6). Yet the change was not uniform: states like Japan (Meiji) and the reformer of Doc4 show that some non-Western societies harnessed industrialization defensively to preserve their independence rather than being subordinated, revealing that industrialization reshaped the whole world but along divergent paths of empowerment and exploitation."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apworld-fa-fr-05",
+    "loId": "apworld.maritime-empires",
+    "cedCode": "AP-APWORLD-4.4",
+    "topic": "ap-world-history",
+    "topicId": "ap-world-history",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "Answer the following question. (No documents are provided for this question.)\n\nEvaluate the extent to which the growth of transoceanic maritime empires transformed the Americas in the period from 1450 to 1750.\n\nIn your response you should do the following:\n- Respond to the prompt with a historically defensible thesis or claim that establishes a line of reasoning.\n- Describe a broader historical context relevant to the prompt.\n- Support an argument in response to the prompt using at least two pieces of specific and relevant evidence.\n- Use historical reasoning (such as comparison, causation, or continuity and change) to frame or structure an argument that addresses the prompt.\n- Demonstrate a complex understanding of the historical development that is the focus of the prompt.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit essay presents a defensible thesis about the extent of transoceanic empires' transformation of the Americas, provides broader context, supports the argument with at least two specific pieces of evidence (e.g., the Columbian Exchange and demographic collapse, coerced labor systems, silver, or the Atlantic slave trade), uses historical reasoning, and demonstrates complex understanding such as change alongside continuity.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "A-thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Thesis/Claim) for responding to the prompt with a historically defensible thesis or claim that establishes a line of reasoning about the extent to which transoceanic maritime empires transformed the Americas from 1450 to 1750. The thesis must make a defensible claim (e.g., that maritime empires transformed the Americas profoundly through demographic catastrophe, coerced labor, and new racial and economic systems, though some Indigenous structures persisted) and must consist of one or more sentences in one place, either the introduction or the conclusion. No point for restating the prompt or offering only a phrase without a line of reasoning.",
+          "modelResponse": "The growth of Spanish and Portuguese maritime empires transformed the Americas to a profound extent between 1450 and 1750: the Columbian Exchange and epidemic disease destroyed Indigenous populations, conquest and coerced labor systems reorganized economies around silver and plantation crops, and a new racially stratified colonial society emerged. Yet the transformation was not total, since some Indigenous practices, structures, and beliefs persisted and blended into the new colonial order."
+        },
+        {
+          "criterionId": "B-contextualization",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Contextualization) for describing a broader historical context relevant to the prompt, such as events, developments, or processes before, during, or continuing after 1450-1750. The description must be more than a passing phrase and should connect the topic to broader processes. Acceptable context includes the motives and technologies behind European maritime expansion (the search for direct access to Asian trade, new ship designs and navigation, gunpowder), the pre-Columbian civilizations of the Aztecs and Inca, or the growth of a global economy linking the Americas to Afro-Eurasia. No point for a vague reference unconnected to an argument.",
+          "modelResponse": "In the fifteenth century European states, seeking direct access to the lucrative Asian spice and luxury trade and aided by new navigational tools and ship designs like the caravel, launched voyages of exploration across the Atlantic. Columbus's 1492 landing brought Europeans into contact with the densely populated and sophisticated Aztec and Inca empires, and this contact initiated a linking of the Americas to Afro-Eurasia that would reshape economies and societies across the globe."
+        },
+        {
+          "criterionId": "C-evidence",
+          "maxPoints": 2,
+          "scoringCriteria": "This part is worth up to 2 points for evidence. Award 1 point for providing at least ONE specific and relevant piece of historical evidence about the topic. Award BOTH points (2) for using at least TWO specific and relevant pieces of evidence to support an argument in response to the prompt. Evidence must be specific and used to support the argument, not merely mentioned. Acceptable evidence includes: the Columbian Exchange of crops and animals; the demographic catastrophe caused by smallpox and other diseases; the Spanish conquest of the Aztec and Inca empires; the encomienda and mita coerced labor systems; the Atlantic slave trade and plantation (sugar) economies; silver mined at Potosi and Zacatecas flowing into a global economy; the casta racial hierarchy and mestizaje; or syncretic religion blending Catholicism with Indigenous and African practices. One specific piece earns 1 point; two used in an argument earn 2. No point for vague or inaccurate references.",
+          "modelResponse": "Two developments show the depth of the transformation. First, the demographic catastrophe of the Columbian Exchange devastated the Americas: Old World diseases such as smallpox, to which Indigenous peoples had no immunity, killed an estimated 80 to 90 percent of the population in many regions within a century, hollowing out societies and easing European conquest. Second, colonial powers reorganized American economies around coerced labor and silver: the Spanish used the encomienda and the mita to force Indigenous people to labor in mines such as Potosi, whose silver flowed across the Pacific and Atlantic into a global economy, while on plantations in Brazil and the Caribbean enslaved Africans produced sugar for European markets."
+        },
+        {
+          "criterionId": "D-analysis-reasoning",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Analysis and Reasoning) for using historical reasoning (comparison, causation, or continuity and change over time) to frame or structure an argument that addresses the prompt. The response must demonstrate a clear line of reasoning; a good response uses reasoning to organize the essay, such as tracing the causes and effects of maritime empires on American demography, labor, and society, or comparing the transformation across regions. The reasoning must be more than an isolated statement. No point if the reasoning is not connected to an argument.",
+          "modelResponse": "Structured through causation, the argument traces how European maritime expansion set off a chain of transformations in the Americas: the arrival of Europeans caused the introduction of Old World diseases, which caused demographic collapse, which in turn caused labor shortages that drove colonizers to impose the encomienda, the mita, and ultimately the Atlantic slave trade. These coerced labor systems then produced the silver and plantation economies that reshaped American society and tied it into a global economic system, showing how one initial contact cascaded into wholesale transformation."
+        },
+        {
+          "criterionId": "E-complexity",
+          "maxPoints": 1,
+          "scoringCriteria": "Award 1 point (Complexity) for demonstrating a complex understanding of the extent to which maritime empires transformed the Americas. This can be earned by exploring nuance (e.g., that transformation coexisted with continuity), by qualifying an argument through change and continuity or comparison (e.g., contrasting Spanish and other empires, or different American regions), or by corroborating an argument with multiple pieces of well-integrated evidence. The complex understanding must be developed as part of an argument. No point for an undeveloped claim of complexity.",
+          "modelResponse": "A complex understanding balances dramatic change against real continuity. While disease, conquest, and coerced labor transformed the Americas, Indigenous structures and cultures often persisted and blended into the colonial order: the Spanish adapted the pre-existing Inca mita labor draft to their silver mines, Indigenous languages and agricultural practices survived, and religion became syncretic as Catholicism merged with Indigenous and African beliefs, producing new mestizo and casta societies. Thus the maritime empires did not simply erase the Americas but fused conquest with continuity, and the degree of transformation varied by region, being far more thorough in the silver and plantation zones than in more remote or less accessible interior areas."
+        }
+      ]
+    }
+  }
+]

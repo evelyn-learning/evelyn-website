@@ -1,0 +1,978 @@
+[
+  {
+    "id": "apstats-fa-mc-001",
+    "loId": "apstats.categorical-data",
+    "cedCode": "AP-STATS-1.1-1.4",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A car dealership records four pieces of information about each vehicle sold: the sale price (in dollars), the number of previous owners, the color of the vehicle, and the fuel efficiency (in miles per gallon). Which of these four variables is categorical?",
+    "choices": [
+      "Sale price",
+      "Color of the vehicle",
+      "Number of previous owners",
+      "Fuel efficiency"
+    ],
+    "answer": "B",
+    "solutionText": "A categorical variable places individuals into groups or categories rather than measuring a numerical quantity. Color is a categorical label (e.g., red, blue, silver), while sale price, number of previous owners, and fuel efficiency are all numerical (quantitative) variables that can be measured and averaged.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-002",
+    "loId": "apstats.quantitative-graphs",
+    "cedCode": "AP-STATS-1.5",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The histogram below shows the commute times (in minutes) for 30 employees at a company.\n\n| Commute time (minutes) | Frequency |\n|---|---|\n| 0 to less than 10 | 4 |\n| 10 to less than 20 | 9 |\n| 20 to less than 30 | 12 |\n| 30 to less than 40 | 5 |\n\nHow many of the 30 employees have a commute time of at least 20 minutes?",
+    "choices": [
+      "12",
+      "21",
+      "17",
+      "30"
+    ],
+    "answer": "C",
+    "solutionText": "\"At least 20 minutes\" includes both intervals starting at 20 minutes: the 12 employees in the 20-to-less-than-30 interval plus the 5 employees in the 30-to-less-than-40 interval, giving 12 + 5 = 17 employees.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-003",
+    "loId": "apstats.distribution-shape",
+    "cedCode": "AP-STATS-1.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On an unusually easy quiz, most students scored close to the maximum of 20 points, but a few students who had been absent for part of the review scored much lower, creating a long tail stretching toward the low end of the distribution. This distribution of quiz scores is skewed to the left. Which relationship between the mean and the median is most likely for this distribution?",
+    "choices": [
+      "The mean is less than the median",
+      "The mean is equal to the median",
+      "The mean is greater than the median",
+      "The relationship cannot be determined from this information"
+    ],
+    "answer": "A",
+    "solutionText": "In a left-skewed distribution, the long tail of low values pulls the mean toward the low end, while the median is more resistant to a small number of extreme values. As a result, the mean is typically less than the median.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-004",
+    "loId": "apstats.summary-statistics",
+    "cedCode": "AP-STATS-1.7-1.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A data set of weekly hours worked by part-time employees has Q1 = 15 hours and Q3 = 24 hours. One employee, whose hours were not among those used to compute the quartiles, worked 45 hours that week. Using the 1.5 x IQR rule, is 45 hours a high outlier for this data set?",
+    "choices": [
+      "No, because 45 is less than double Q3",
+      "Yes, because 45 is greater than the mean",
+      "No, because the 1.5 x IQR rule only flags low outliers",
+      "Yes, because 45 exceeds the upper boundary of 37.5"
+    ],
+    "answer": "D",
+    "solutionText": "The upper boundary for high outliers is Q3 + 1.5(IQR) = 24 + 1.5(24 - 15) = 24 + 13.5 = 37.5. Since 45 exceeds 37.5, it is flagged as a high outlier. The rule is based on the quartiles and IQR, not the mean, and it can flag outliers on either end of the distribution.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-005",
+    "loId": "apstats.comparing-distributions",
+    "cedCode": "AP-STATS-1.9",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two classes took the same 100-point test. Boxplot summaries of the scores are shown below.\n\n| Class | Min | Q1 | Median | Q3 | Max | IQR |\n|---|---|---|---|---|---|---|\n| Class A | 52 | 68 | 78 | 85 | 95 | 17 |\n| Class B | 60 | 74 | 76 | 80 | 88 | 6 |\n\nBased on these boxplots, which statement is best supported by the data?",
+    "choices": [
+      "Class A has a much higher median than Class B, and less variability",
+      "Class A and Class B have approximately the same median, but Class B's scores are much less variable (smaller IQR) than Class A's",
+      "Class B has a much higher median than Class A",
+      "Both classes have identical spread but different medians"
+    ],
+    "answer": "B",
+    "solutionText": "The medians are close (78 for Class A versus 76 for Class B), so the centers of the two distributions are approximately the same. However, Class A's IQR of 17 is nearly three times Class B's IQR of 6, so Class B's test scores are considerably less spread out than Class A's.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-006",
+    "loId": "apstats.normal-distribution",
+    "cedCode": "AP-STATS-1.10",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The lifetimes of a certain brand of batteries are approximately Normally distributed with mean mu = 40 hours and standard deviation sigma = 4 hours. What proportion of batteries last more than 46 hours?",
+    "choices": [
+      "\u22480.0668",
+      "\u22480.9332",
+      "\u22480.4332",
+      "\u22480.1336"
+    ],
+    "answer": "A",
+    "solutionText": "The z-score is z = (46 - 40)/4 = 1.5. The proportion of a standard Normal distribution greater than z = 1.5 is approximately 0.0668 (from normalcdf(1.5, 1E99) or 1 - 0.9332 using a standard Normal table).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-007",
+    "loId": "apstats.two-categorical-relationships",
+    "cedCode": "AP-STATS-2.1-2.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The two-way table below classifies 240 employees at a company by department and whether they work remotely.\n\n| | Remote | In-Office | Total |\n|---|---|---|---|\n| Sales | 40 | 60 | 100 |\n| Engineering | 84 | 56 | 140 |\n| Total | 124 | 116 | 240 |\n\nWhat proportion of ALL 240 employees work in Engineering?",
+    "choices": [
+      "84/240 \u2248 0.350",
+      "116/240 \u2248 0.483",
+      "140/240 \u2248 0.583",
+      "84/140 \u2248 0.600"
+    ],
+    "answer": "C",
+    "solutionText": "The marginal distribution of department is found using only the row totals: 140 of the 240 total employees are in Engineering, so the proportion is 140/240 \u2248 0.583. The other options use the wrong variable (in-office total), a joint frequency (remote and Engineering), or a conditional frequency (remote given Engineering) instead of the marginal frequency.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-008",
+    "loId": "apstats.correlation",
+    "cedCode": "AP-STATS-2.5",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As the listing price of a house increases, the number of days it stays on the market before selling tends to decrease. In a scatterplot of these two variables, the points fall very close to a downward-sloping straight line. Which value of r is most consistent with this description?",
+    "choices": [
+      "r = 0.93",
+      "r = -0.15",
+      "r = 0",
+      "r = -0.93"
+    ],
+    "answer": "D",
+    "solutionText": "A strong downward (negative) linear trend corresponds to a correlation close to -1. Among the choices, r = -0.93 reflects both the negative direction of the association and the tight linear clustering described, while the other values are either positive, near zero, or too weak to match a tight linear pattern.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-009",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A least-squares regression line predicts a household's monthly heating cost, in dollars, from the average outdoor temperature that month, in degrees Fahrenheit: predicted cost = 180 - 2.5(temperature). Which statement correctly interprets the slope of this line in context?",
+    "choices": [
+      "For each 1\u00b0F increase in average outdoor temperature, the predicted monthly heating cost decreases by \\$2.50",
+      "For each \\$1 increase in heating cost, the average temperature decreases by 2.5\u00b0F",
+      "When the average temperature is 0\u00b0F, the predicted heating cost is \\$2.50",
+      "The average outdoor temperature explains 2.5% of the variation in heating cost"
+    ],
+    "answer": "A",
+    "solutionText": "In predicted y = a + bx, the slope b is the predicted change in the response variable for each one-unit increase in the explanatory variable. Here that means predicted heating cost decreases by \\$2.50 for each 1\u00b0F increase in temperature. The other choices reverse the explanatory and response variables, confuse the slope with the intercept, or confuse the slope with r-squared.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-010",
+    "loId": "apstats.sampling-methods",
+    "cedCode": "AP-STATS-3.1-3.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city's parks department wants a sample of 40 park visitors. Every visitor's name is written on a slip of paper, all the slips are placed in a bin and mixed thoroughly, and 40 slips are drawn without looking, so that every possible group of 40 visitors has the same chance of being chosen. What sampling method is this?",
+    "choices": [
+      "Stratified random sample",
+      "Simple random sample",
+      "Cluster sample",
+      "Systematic sample"
+    ],
+    "answer": "B",
+    "solutionText": "Because every possible group of 40 visitors has an equal chance of being selected, this satisfies the definition of a simple random sample (SRS). There is no division into subgroups (ruling out stratified or cluster sampling) and no fixed interval-based selection (ruling out systematic sampling).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-011",
+    "loId": "apstats.sampling-bias",
+    "cedCode": "AP-STATS-3.4",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A high school newspaper wants to know the opinions of ALL students at the school, but the reporter only distributes the survey to students in AP classes, since those are the classes she has access to. What source of bias does this sampling design suffer from?",
+    "choices": [
+      "Voluntary response bias, because students chose to enroll in AP classes",
+      "Nonresponse bias, because some AP students may not return the survey",
+      "Undercoverage, because students not enrolled in AP classes have no chance of being selected",
+      "Response bias, because students may misreport their opinions"
+    ],
+    "answer": "C",
+    "solutionText": "Students who are not enrolled in any AP class have no chance whatsoever of being included in this sample, which is the defining feature of undercoverage. This is different from nonresponse (where selected people fail to respond), voluntary response (where people self-select into the sample), or response bias (inaccurate answers from respondents).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-012",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A company wants to test whether a new ergonomic keyboard reduces wrist pain among data-entry workers. They randomly assign 50 workers to two groups: 25 workers use the new ergonomic keyboard for one month, and the other 25 workers continue using their standard keyboard for one month. Wrist pain is measured using a standardized survey at the end of the month. In this experiment, what serves as the control group?",
+    "choices": [
+      "The 25 workers using their standard keyboard",
+      "The 25 workers using the new ergonomic keyboard",
+      "The wrist pain measured by the survey",
+      "The random assignment process"
+    ],
+    "answer": "A",
+    "solutionText": "The control group is the group that does not receive the treatment under study, providing a baseline for comparison. Here, that is the 25 workers who continued using their standard keyboard, while the 25 workers using the new ergonomic keyboard make up the treatment group.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-013",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gym trainer wants to test whether a new pre-workout supplement improves bench press performance. He allows each gym member to choose for themselves whether to take the supplement before their max-lift test, then compares the average bench press weights between the group that chose to take the supplement and the group that chose not to. What is the main flaw in this experiment's design?",
+    "choices": [
+      "The study lacked a comparison group, since everyone eventually took the supplement",
+      "The bench press weights were not measured using a standardized method",
+      "The sample size of gym members was too small for meaningful comparison",
+      "Members were not randomly assigned to groups, so factors like existing strength or motivation could be confounded with supplement use"
+    ],
+    "answer": "D",
+    "solutionText": "Because members chose their own group instead of being randomly assigned, any difference in bench press performance could be caused by a confounding variable (such as existing strength or motivation) rather than the supplement itself. A comparison group does exist here (those who chose not to take the supplement), so the flaw is the lack of random assignment, not the absence of a comparison group.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-014",
+    "loId": "apstats.inference-experiments",
+    "cedCode": "AP-STATS-3.7",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A study selects 500 people using a simple random sample from a national registry. Participants are then allowed to choose for themselves whether to adopt a new sleep-tracking habit, and researchers compare outcomes between the two self-selected groups. Which statement correctly describes the scope of conclusions that can be drawn from this study?",
+    "choices": [
+      "Causation can be established, but the results cannot be generalized beyond the study",
+      "The results can be generalized to the national registry population, but a causal link between sleep tracking and the outcome cannot be established",
+      "Both causation and generalization to the population are justified",
+      "Neither causation nor generalization is justified"
+    ],
+    "answer": "B",
+    "solutionText": "Random selection from the national registry allows the findings to be generalized to that population. However, because participants were not randomly assigned to groups (they self-selected whether to adopt the habit), this is an observational study, and only an association, not causation, can be concluded.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-015",
+    "loId": "apstats.probability-basics",
+    "cedCode": "AP-STATS-4.1-4.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "At a school fundraiser, tickets are sold for a raffle. The probability that a randomly selected ticket wins the grand prize is 0.04, and the probability it wins a runner-up prize is 0.11. No single ticket can win both prizes. What is the probability that a randomly selected ticket wins EITHER the grand prize or a runner-up prize?",
+    "choices": [
+      "0.0044",
+      "0.85",
+      "0.15",
+      "0.07"
+    ],
+    "answer": "C",
+    "solutionText": "Since a ticket cannot win both prizes, the two events are mutually exclusive. For mutually exclusive events, P(grand prize or runner-up) = P(grand prize) + P(runner-up) = 0.04 + 0.11 = 0.15.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-016",
+    "loId": "apstats.conditional-independence",
+    "cedCode": "AP-STATS-4.4-4.5",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The two-way table below classifies 300 students by whether they own a pet and whether they have at least one sibling.\n\n| | Sibling: Yes | Sibling: No | Total |\n|---|---|---|---|\n| Pet: Yes | 90 | 60 | 150 |\n| Pet: No | 60 | 90 | 150 |\n| Total | 150 | 150 | 300 |\n\nBased on this table, are owning a pet and having a sibling independent events?",
+    "choices": [
+      "No, because P(pet)=0.50 but P(pet | sibling)=0.60, so having a sibling changes the probability of owning a pet",
+      "Yes, because both totals equal 150",
+      "No, because the joint frequencies are not all equal",
+      "Yes, because P(pet and sibling)=90/300=0.30, which is positive"
+    ],
+    "answer": "A",
+    "solutionText": "Two events are independent if P(A given B) equals P(A). Here P(pet) = 150/300 = 0.50, while P(pet given sibling) = 90/150 = 0.60. Since these two values differ, owning a pet and having a sibling are not independent. Equal totals, unequal joint frequencies, and a positive joint probability are not the correct criteria for checking independence.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-017",
+    "loId": "apstats.random-variables",
+    "cedCode": "AP-STATS-4.6-4.7",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The number of pets owned by a randomly selected household has the probability distribution below.\n\n| Number of pets (x) | 0 | 1 | 2 | 3 |\n|---|---|---|---|---|\n| P(x) | 0.30 | 0.40 | 0.20 | 0.10 |\n\nFind mu, the mean number of pets owned per household.",
+    "choices": [
+      "1.5",
+      "2.0",
+      "0.775",
+      "1.1"
+    ],
+    "answer": "D",
+    "solutionText": "The mean of a discrete random variable is mu = sum of x times P(x): mu = 0(0.30) + 1(0.40) + 2(0.20) + 3(0.10) = 0 + 0.40 + 0.40 + 0.30 = 1.1 pets.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-018",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A commuter's travel time to work (X) has mean 32 minutes and standard deviation 6 minutes. Her independent travel time back home (Y) has mean 35 minutes and standard deviation 8 minutes. Find the standard deviation of her total daily round-trip commute time, X + Y.",
+    "choices": [
+      "14 minutes",
+      "10 minutes",
+      "7 minutes",
+      "100 minutes"
+    ],
+    "answer": "B",
+    "solutionText": "For independent random variables, variances add, even when finding the variance of a sum: Var(X+Y) = 6^2 + 8^2 = 36 + 64 = 100, so SD(X+Y) = sqrt(100) = 10 minutes. Simply adding the standard deviations directly (6 + 8 = 14) is a common but incorrect shortcut.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-019",
+    "loId": "apstats.binomial-distribution",
+    "cedCode": "AP-STATS-4.9-4.10",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gardener plants 8 seeds, and each seed germinates independently with probability 0.75. What is the probability that exactly 6 of the 8 seeds germinate?",
+    "choices": [
+      "\u22480.750",
+      "\u22480.679",
+      "\u22480.311",
+      "\u22480.004"
+    ],
+    "answer": "C",
+    "solutionText": "Using the binomial formula P(X=k) = C(n,k) p^k (1-p)^(n-k) with n=8, k=6, p=0.75: P(X=6) = C(8,6)(0.75)^6(0.25)^2 = 28(0.177979)(0.0625) \u2248 0.311. Using 0.75 directly, computing P(X \u2265 6) instead of P(X = 6), or swapping p and 1-p in the formula all lead to the other, incorrect choices.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-020",
+    "loId": "apstats.geometric-distribution",
+    "cedCode": "AP-STATS-4.11",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A salesperson makes independent sales calls, and each call results in a sale with probability 0.15. Let X be the number of calls made up to and including the first sale. What is the probability that the salesperson needs MORE than 3 calls to make the first sale (that is, none of the first 3 calls results in a sale)?",
+    "choices": [
+      "\u22480.614",
+      "\u22480.386",
+      "\u22480.150",
+      "\u22480.003"
+    ],
+    "answer": "A",
+    "solutionText": "For a geometric random variable, P(X > n) = (1-p)^n, since it requires the first n trials to all be failures. Here P(X > 3) = (0.85)^3 \u2248 0.614. The value 0.386 is the complement, the probability of succeeding within the first 3 calls, and 0.003 comes from mistakenly using p instead of 1-p in the calculation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-021",
+    "loId": "apstats.sampling-distribution-concept",
+    "cedCode": "AP-STATS-5.1-5.4",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A statistician wants to estimate the mean weight of all packages shipped by a company using a statistic computed from a random sample. Which property must this sample statistic have in order to be called an UNBIASED estimator of the population mean?",
+    "choices": [
+      "The statistic gives the exact population mean in every single sample",
+      "The statistic has a small standard deviation",
+      "The sample size used to compute the statistic must be at least 30",
+      "The mean of the statistic's sampling distribution, averaged over all possible samples, equals the true population mean"
+    ],
+    "answer": "D",
+    "solutionText": "A statistic is unbiased if the mean of its sampling distribution equals the parameter it estimates. This does not mean any single sample gives the exact population value; rather, averaged across all possible samples, the statistic shows no systematic tendency to overestimate or underestimate the parameter. A small standard deviation and a sample size of at least 30 describe precision and the Central Limit Theorem guideline, not bias.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-022",
+    "loId": "apstats.central-limit-theorem",
+    "cedCode": "AP-STATS-5.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two populations are sampled repeatedly: Population X is only mildly skewed, and Population Y is strongly skewed with several extreme outliers. For samples of the same size n, which statement about using a Normal distribution to approximate the sampling distribution of x-bar is most accurate?",
+    "choices": [
+      "The same minimum sample size works equally well for both populations, since the CLT guideline of n \u2265 30 applies uniformly regardless of skewness",
+      "A smaller sample size is needed for the sampling distribution of x-bar from Population X to look approximately Normal than for Population Y, because less severe skewness requires less averaging to overcome",
+      "Population Y will need a smaller sample size than Population X, because more extreme values average out more efficiently",
+      "Neither population's sampling distribution of x-bar can ever be approximated by a Normal distribution, regardless of sample size"
+    ],
+    "answer": "B",
+    "solutionText": "The more skewed a population is, the larger n must be for the sampling distribution of x-bar to become approximately Normal. A mildly skewed population reaches approximate normality with a smaller n than a strongly skewed population with extreme outliers. The commonly cited n \u2265 30 is a rough guideline, not a fixed cutoff that applies identically regardless of skewness, and the CLT does eventually apply to both populations given a large enough n.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-023",
+    "loId": "apstats.proportions-sampling-dist",
+    "cedCode": "AP-STATS-5.5-5.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A polling organization believes that 8% of all voters in a small town support a particular ballot measure. The organization plans to take a random sample of n = 100 voters. Which statement is correct regarding using a Normal distribution to approximate the sampling distribution of p-hat?",
+    "choices": [
+      "The Normal approximation should be used, because n(1-p) = 92, which is much greater than 10",
+      "The Normal approximation should be used, because n = 100 \u2265 30",
+      "The Normal approximation should NOT be used, because np = 8, which is less than 10",
+      "The Normal approximation should NOT be used, because sigma_p-hat = sqrt(0.08 x 0.92 / 100) is negative"
+    ],
+    "answer": "C",
+    "solutionText": "The Large Counts condition requires BOTH np \u2265 10 and n(1-p) \u2265 10. Here np = 100(0.08) = 8, which fails the condition, so the Normal approximation is not appropriate even though n(1-p) = 92 is large \u2014 both conditions must hold. The n \u2265 30 guideline is used for the sampling distribution of a sample mean, not a sample proportion, and sigma_p-hat is a square root of a positive quantity, so it cannot be negative.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-024",
+    "loId": "apstats.means-sampling-dist",
+    "cedCode": "AP-STATS-5.7-5.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Bags of rice produced by a factory have weights that are approximately Normally distributed with mean mu = 500 grams and standard deviation sigma = 8 grams. A quality control inspector randomly selects a sample of 16 bags. What is the probability that the sample mean weight of these 16 bags is less than 496 grams?",
+    "choices": [
+      "\u22480.0228",
+      "\u22480.3085",
+      "\u22480.4772",
+      "\u22480.9772"
+    ],
+    "answer": "A",
+    "solutionText": "Since the population is Normal, the sampling distribution of x-bar is Normal with mean 500 and standard deviation sigma_x-bar = sigma/sqrt(n) = 8/sqrt(16) = 2. The z-score is z = (496 - 500)/2 = -2, and P(Z < -2) \u2248 0.0228. Using the population standard deviation of 8 instead of sigma_x-bar (giving z = -0.5) leads to the incorrect 0.3085.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-025",
+    "loId": "apstats.confidence-intervals",
+    "cedCode": "AP-STATS-UNC-3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A pollster constructs a 95% confidence interval for the proportion of city residents who support a new recycling program, based on a single random sample. Which statement correctly interprets the 95% confidence level?",
+    "choices": [
+      "There is a 95% probability that the true population proportion lies within this particular computed interval.",
+      "If the sampling procedure were repeated many times, approximately 95% of the resulting confidence intervals would capture the true population proportion.",
+      "95% of city residents support the recycling program.",
+      "95% of all possible sample proportions will fall within this interval."
+    ],
+    "answer": "B",
+    "solutionText": "\"95% confidence\" describes the long-run success rate of the interval-construction method across repeated sampling, not a probability about this one already-computed interval. The true proportion is a fixed (though unknown) number, so it either is or is not in this specific interval -- no probability attaches to that. The other choices misapply the confidence level to a probability about the fixed parameter, to the population directly, or to individual sample proportions rather than to the interval-capture rate.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-026",
+    "loId": "apstats.one-prop-ci",
+    "cedCode": "AP-STATS-6.1-6.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A marine biologist randomly samples n = 150 fish from a lake and finds that 27 have a certain parasite, so p-hat = 27/150 = 0.18, with standard error SE = sqrt(p-hat(1-p-hat)/n) \u2248 0.0314. Using z* = 1.645 for a 90% confidence interval, what is the margin of error, rounded to the nearest thousandth?",
+    "choices": [
+      "0.031",
+      "0.062",
+      "0.052",
+      "0.002"
+    ],
+    "answer": "C",
+    "solutionText": "The margin of error is ME = z* \u00d7 SE = 1.645 \u00d7 0.0314 \u2248 0.052. Reporting the standard error alone (0.031) skips the multiplication by the critical value entirely; using z* = 1.96 (the 95% critical value) instead of 1.645 gives 0.062; and multiplying by the variance p-hat(1-p-hat)/n instead of the standard error (i.e. forgetting to take the square root before multiplying) gives an implausibly tiny value near 0.002.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-027",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A theme park claims that 80% of visitors would recommend the park to a friend. A consumer advocacy group suspects the true percentage differs from this claim. In a random sample of 250 visitors, 184 said they would recommend the park (p-hat = 184/250 = 0.736). Let p be the true population proportion of visitors who would recommend the park. Which hypotheses are appropriate for testing the consumer group's suspicion?",
+    "choices": [
+      "H0: p = 0.80, Ha: p \u2260 0.80",
+      "H0: p-hat = 0.80, Ha: p-hat \u2260 0.80",
+      "H0: p = 0.736, Ha: p \u2260 0.736",
+      "H0: p = 0.80, Ha: p < 0.80"
+    ],
+    "answer": "A",
+    "solutionText": "Hypotheses are always stated about the population parameter p, using the theme park's claimed value 0.80 as the null; since the group suspects only that the true proportion 'differs' from the claim, without a stated direction, the alternative must be two-sided. Writing the hypotheses in terms of p-hat incorrectly treats a sample statistic as if it were the fixed unknown parameter; using 0.736 as the hypothesized value confuses the observed sample result with the claimed value being tested; and a one-sided Ha: p < 0.80 is not justified because the group's suspicion was non-directional.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-028",
+    "loId": "apstats.test-errors",
+    "cedCode": "AP-STATS-6.7",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A factory's automated inspection system tests H0: p = 0.03 versus Ha: p > 0.03, where p is the true proportion of defective circuit boards on the line, in order to decide whether to shut the line down for recalibration. Suppose the true defective proportion actually is 0.03 (the line is fine), but the test rejects H0 and the line is shut down unnecessarily. This is an example of:",
+    "choices": [
+      "A Type II error",
+      "A correct decision, since shutting down for recalibration is never harmful",
+      "A decrease in the power of the test",
+      "A Type I error"
+    ],
+    "answer": "D",
+    "solutionText": "Since H0 (the line is fine, p = 0.03) is actually true, and the test rejects it, this is a Type I error -- rejecting a true null hypothesis. A Type II error would instead describe failing to detect a real increase in the defect rate; treating the unnecessary shutdown as automatically 'correct' ignores that an unwarranted rejection of a true H0 has real costs; and this scenario describes a single realized outcome, not a change in the test's long-run power.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-029",
+    "loId": "apstats.two-prop-ci",
+    "cedCode": "AP-STATS-6.8-6.9",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In neighborhood A, 84 of 120 randomly sampled households have high-speed internet (p-hat1 = 0.70). In neighborhood B, 96 of 160 randomly sampled households have high-speed internet (p-hat2 = 0.60). The two samples are independent, and the standard error for p-hat1 - p-hat2 is SE \u2248 0.057. Using z* = 1.96, which is the correct 95% confidence interval for p1 - p2 (neighborhood A minus neighborhood B)?",
+    "choices": [
+      "(0.006, 0.194)",
+      "(-0.012, 0.212)",
+      "(0.043, 0.157)",
+      "(-0.212, 0.012)"
+    ],
+    "answer": "B",
+    "solutionText": "The point estimate is 0.70 - 0.60 = 0.10, and the margin of error is 1.96 \u00d7 0.057 \u2248 0.112, giving 0.10 \u00b1 0.112 = (-0.012, 0.212). Using the wrong critical value z* = 1.645 (the 90% value) instead of 1.96 produces (0.006, 0.194); adding and subtracting the standard error itself instead of the margin of error (SE not multiplied by z*) produces (0.043, 0.157); and reversing the subtraction order to p2 - p1 produces (-0.212, 0.012).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-030",
+    "loId": "apstats.two-prop-test",
+    "cedCode": "AP-STATS-6.10-6.11",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A company runs an A/B test comparing conversion rates for two website designs. In the control group, 45 of 500 visitors convert (p-hat1 = 0.09). In the redesigned group, 65 of 500 visitors convert (p-hat2 = 0.13). Let p1 and p2 be the true conversion rates for the control and redesigned versions. Testing H0: p1 = p2 versus Ha: p1 < p2 at alpha = 0.01 gives a test statistic z = -2.02 and a one-sided p-value of 0.0217. What should the company conclude?",
+    "choices": [
+      "Since the p-value (0.0217) is greater than alpha (0.01), fail to reject H0; there is not enough evidence at the 1% level that the redesign increases the true conversion rate.",
+      "Since the p-value (0.0217) is less than 0.05, reject H0 and conclude the redesign increases the true conversion rate.",
+      "Since z = -2.02 is negative, reject H0 and conclude the redesign decreases the true conversion rate.",
+      "Since p-hat2 (0.13) is greater than p-hat1 (0.09) in the sample, reject H0 and conclude the true conversion rates differ."
+    ],
+    "answer": "A",
+    "solutionText": "The p-value must be compared to the stated significance level, alpha = 0.01, not to a different default like 0.05. Since 0.0217 > 0.01, the evidence is not strong enough to reject H0 at the 1% level, even though the sample proportions differ in the direction the company hoped for. Comparing the p-value to 0.05 instead of the stated alpha = 0.01 is not valid here; a negative z-statistic supports Ha (p1 < p2, i.e. the redesign is better) rather than the opposite conclusion that it decreases conversion; and basing a conclusion purely on the sample proportions, bypassing the p-value/alpha comparison entirely, ignores sampling variability.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-031",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A researcher constructs a one-sample t-confidence interval for a population mean mu using a random sample of n = 19 measurements. What are the degrees of freedom for the t-distribution used in this procedure?",
+    "choices": [
+      "19",
+      "17",
+      "18",
+      "20"
+    ],
+    "answer": "C",
+    "solutionText": "For a one-sample t-procedure, df = n - 1. With n = 19, df = 19 - 1 = 18. Using n directly, subtracting 2 (the rule for slope inference, not a one-sample mean), or adding 1 all give the wrong degrees of freedom for this procedure.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-032",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A manufacturer claims that its light bulbs last an average of 1000 hours (mu0 = 1000). A consumer group suspects the true mean lifetime is less than claimed and tests H0: mu = 1000 versus Ha: mu < 1000 using a random sample of n = 16 bulbs, which gives x-bar = 980 hours and s = 40 hours. What is the value of the test statistic?",
+    "choices": [
+      "t = -0.50",
+      "t = -8.00",
+      "t = 2.00",
+      "t = -2.00"
+    ],
+    "answer": "D",
+    "solutionText": "t = (x-bar - mu0)/(s/sqrt(n)) = (980 - 1000)/(40/sqrt(16)) = -20/10 = -2.00, with df = 15. Dividing the difference by s directly instead of by s/sqrt(n) gives -0.50; dividing s by n instead of sqrt(n) gives -8.00; and the value 2.00 has the right magnitude but the wrong sign, which would misrepresent x-bar as being above rather than below the claimed mean.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-033",
+    "loId": "apstats.two-mean-ci",
+    "cedCode": "AP-STATS-7.7-7.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An economics teacher compares mean final-exam scores for two independent sections taught with different review methods. Section 1: n1 = 14, s1 = 9. Section 2: n2 = 18, s2 = 11. What is the standard error for a two-sample t-confidence interval for mu1 - mu2 (the true difference in mean scores), computed as sqrt(s1^2/n1 + s2^2/n2)?",
+    "choices": [
+      "12.51",
+      "3.54",
+      "20.00",
+      "2.51"
+    ],
+    "answer": "B",
+    "solutionText": "SE = sqrt(s1^2/n1 + s2^2/n2) = sqrt(81/14 + 121/18) = sqrt(5.79 + 6.72) = sqrt(12.51) \u2248 3.54. Reporting the value under the square root (12.51) without taking the square root is a common shortcut error; simply adding the two standard deviations (9 + 11 = 20.00) ignores the formula entirely; and pooling the variances as sqrt((s1^2 + s2^2)/(n1 + n2)) -- which is not used for the two-sample t-interval -- gives 2.51.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-034",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tech reviewer compares mean battery life for two independent phone models using separate random samples of units. Model X: n1 = 20, x-bar1 = 11.2 hours, s1 = 1.5 hours. Model Y: n2 = 20, x-bar2 = 10.4 hours, s2 = 1.8 hours. Testing H0: mu1 = mu2 versus Ha: mu1 \u2260 mu2, what is the value of the test statistic t = (x-bar1 - x-bar2)/sqrt(s1^2/n1 + s2^2/n2)?",
+    "choices": [
+      "t \u2248 1.53",
+      "t \u2248 2.16",
+      "t \u2248 -1.53",
+      "t \u2248 0.34"
+    ],
+    "answer": "A",
+    "solutionText": "SE = sqrt(1.5^2/20 + 1.8^2/20) = sqrt(0.1125 + 0.162) = sqrt(0.2745) \u2248 0.524, so t = (11.2 - 10.4)/0.524 \u2248 1.53. Incorrectly pooling the variances as sqrt((s1^2 + s2^2)/(n1 + n2)) instead of dividing each variance by its own sample size gives 2.16; reversing which mean is subtracted gives the correct magnitude but the wrong sign, -1.53; and omitting the division of each variance by its sample size before summing (sqrt(s1^2 + s2^2)) gives 0.34.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-035",
+    "loId": "apstats.one-mean-ci",
+    "cedCode": "AP-STATS-7.1-7.4",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A physical therapist measures the grip strength (in kg) of the same 10 patients before and after a 6-week rehabilitation program. For each patient, the difference (after minus before) is computed. The n = 10 differences have mean d-bar = 4.2 kg and standard deviation sd = 3.1 kg. What is the 95% confidence interval for the true mean difference mu_d (after minus before) in grip strength, using t* = 2.262 (df = 9)?",
+    "choices": [
+      "(2.28, 6.12)",
+      "(-2.81, 11.21)",
+      "(1.98, 6.42)",
+      "(3.50, 4.90)"
+    ],
+    "answer": "C",
+    "solutionText": "Because the same patients are measured before and after, this is a paired design, so the procedure is a one-sample t-interval applied to the 10 differences: SE = sd/sqrt(n) = 3.1/sqrt(10) \u2248 0.98, and ME = t* \u00d7 SE = 2.262 \u00d7 0.98 \u2248 2.22, giving 4.2 \u00b1 2.22 = (1.98, 6.42). Using a z* critical value (1.96) instead of t* gives (2.28, 6.12); forgetting to divide sd by sqrt(n) and using sd itself as the standard error gives the far-too-wide (-2.81, 11.21); and dividing sd by n instead of sqrt(n) gives the far-too-narrow (3.50, 4.90).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-036",
+    "loId": "apstats.two-mean-test",
+    "cedCode": "AP-STATS-7.9-7.10",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Researchers compare mean task-completion times for two independent groups of users randomly assigned to Interface 1 or Interface 2. Interface 1: n1 = 25, x-bar1 = 42.5 seconds, s1 = 6.0. Interface 2: n2 = 22, x-bar2 = 39.1 seconds, s2 = 5.5. Let mu1 and mu2 be the true mean completion times. Testing H0: mu1 = mu2 versus Ha: mu1 > mu2 at alpha = 0.05 gives t \u2248 2.03 and a one-sided p-value of approximately 0.028. What is the correct conclusion?",
+    "choices": [
+      "Since the p-value (0.028) is less than alpha (0.05), reject H0; there is convincing evidence that Interface 1 and Interface 2 have different true mean completion times, but the direction cannot be determined from a one-sided test.",
+      "Since t = 2.03 is positive, fail to reject H0; there is not enough evidence of a difference.",
+      "Since the p-value (0.028) is greater than alpha/2 (0.025), fail to reject H0.",
+      "Since the p-value (0.028) is less than alpha (0.05), reject H0; there is convincing evidence that the true mean completion time for Interface 1 is greater than for Interface 2."
+    ],
+    "answer": "D",
+    "solutionText": "The p-value (0.028) is less than the stated alpha = 0.05, so we reject H0 in favor of the one-sided alternative Ha: mu1 > mu2, concluding there is convincing evidence that Interface 1's true mean completion time exceeds Interface 2's. Because Ha was already stated as directional, the test's conclusion does support a specific direction, not just 'a difference'; a positive t-statistic here is exactly what a low p-value in the direction of Ha looks like, not a reason to fail to reject; and comparing the one-sided p-value to alpha/2 is a step used only when converting from a two-sided test, which does not apply when Ha and alpha were already given for a one-sided test.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-037",
+    "loId": "apstats.chi-square-goodness-of-fit",
+    "cedCode": "AP-STATS-8.1-8.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car dealership claims that among its sold vehicles, 40% are sedans, 35% are SUVs, and 25% are trucks. To test this claim with a chi-square goodness-of-fit test, a manager records the type of the next n = 180 vehicles sold. What is the expected count for SUVs under the null hypothesis?",
+    "choices": [
+      "45",
+      "63",
+      "72",
+      "35"
+    ],
+    "answer": "B",
+    "solutionText": "Expected count = n \u00d7 (hypothesized proportion) = 180 \u00d7 0.35 = 63 for SUVs. The value 45 is actually the expected count for trucks (180 \u00d7 0.25), and 72 is the expected count for sedans (180 \u00d7 0.40) -- both are expected counts for the wrong category. The value 35 mistakes the stated claimed percentage itself for an expected count.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-038",
+    "loId": "apstats.chi-square-twoway",
+    "cedCode": "AP-STATS-8.4-8.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A single random sample of 400 students is classified by class year (Freshman, Sophomore, Junior, Senior) and by preferred study location (Library, Dorm, Cafe) to test whether class year and study-location preference are independent. In the resulting two-way table, the Junior row has a total of 90 students, the Library column has a total of 160 students, and the grand total is 400. What is the expected count for the Junior/Library cell under H0?",
+    "choices": [
+      "36",
+      "90",
+      "160",
+      "14400"
+    ],
+    "answer": "A",
+    "solutionText": "Expected count = (row total \u00d7 column total)/grand total = (90 \u00d7 160)/400 = 14400/400 = 36. Reporting the row total (90) or the column total (160) directly mistakes a marginal total for the expected count of a single cell; and computing the numerator (row total \u00d7 column total = 14400) but forgetting to divide by the grand total gives a value far too large to be a plausible cell count.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-039",
+    "loId": "apstats.slope-ci",
+    "cedCode": "AP-STATS-9.1-9.3",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A least-squares regression is used to model monthly sales (y, in thousands of dollars) based on advertising spend (x, in thousands of dollars) for a random sample of n = 15 stores (df = 13). A 95% confidence interval for the true slope beta, using t* = 2.160, is (1.10, 3.70). Which is the correct interpretation of this interval?",
+    "choices": [
+      "95% of all stores have a slope between 1.10 and 3.70.",
+      "We are 95% confident that the true mean monthly sales, for stores with average advertising spend, is between \\$1100 and \\$3700.",
+      "We are 95% confident that the true mean increase in monthly sales for each additional \\$1000 of advertising spend, across the population of stores, is between \\$1100 and \\$3700.",
+      "There is a 95% probability that the sample slope b falls between 1.10 and 3.70."
+    ],
+    "answer": "C",
+    "solutionText": "The slope beta represents the true mean change in y (sales, in \\$1000s) associated with a one-unit increase in x (a \\$1000 increase in advertising spend), so the correct interpretation is that we are 95% confident the true mean increase in sales per additional \\$1000 spent on advertising, across the population relationship, is between \\$1100 and \\$3700. Individual stores do not each have their own 'slope' -- the slope describes the population trend, not individual stores; the interval describes a rate of change, not the predicted mean level of sales itself; and confidence describes the method's long-run capture rate, not a probability statement about the already-computed sample slope b.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-mc-040",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An agricultural researcher studies x = seasonal rainfall (inches) and y = crop yield (bushels per acre) for a random sample of n = 20 farms, fitting a least-squares regression line. To test whether rainfall is a useful linear predictor of yield, the researcher tests H0: beta = 0 versus Ha: beta \u2260 0, where beta is the true population slope. Computer output gives sample slope b = 4.2 and SE_b = 1.5. Using df = 18 and alpha = 0.05, what is the test statistic, and what should the researcher conclude if the resulting two-sided p-value is 0.012?",
+    "choices": [
+      "t = 2.80; since the p-value (0.012) is less than alpha (0.05), fail to reject H0 -- there is not enough evidence of a linear relationship.",
+      "t = 2.80; since the p-value (0.012) is less than alpha (0.05), reject Ha in favor of H0 -- the data suggest beta = 0.",
+      "t = 0.36; since the p-value (0.012) is less than alpha (0.05), reject H0 -- there is convincing evidence of a true linear relationship between rainfall and crop yield.",
+      "t = 2.80; since the p-value (0.012) is less than alpha (0.05), reject H0 -- there is convincing evidence of a true linear relationship between rainfall and crop yield."
+    ],
+    "answer": "D",
+    "solutionText": "t = b/SE_b = 4.2/1.5 = 2.80, with df = n - 2 = 18. Since the p-value (0.012) is less than alpha = 0.05, we reject H0: beta = 0 in favor of Ha: beta \u2260 0, concluding there is convincing evidence of a true linear relationship between rainfall and crop yield. A p-value below alpha calls for rejecting H0, not failing to reject; a small p-value supports rejecting H0 in favor of Ha, not the reverse (H0 is never what gets 'accepted' as a conclusion); and computing the test statistic upside-down as SE_b/b instead of b/SE_b gives the incorrect value 0.36.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apstats-fa-fr-01",
+    "loId": "apstats.linear-regression",
+    "cedCode": "AP-STATS-2.6-2.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A tutoring center wants to study the relationship between how many hours per week a student meets with a tutor and the student's score on a 25-point unit test. The table below shows data for 5 students.\n\n| Hours of tutoring per week ($x$) | 1 | 2 | 3 | 4 | 5 |\n|---|---|---|---|---|---|\n| Unit-test score ($y$, out of 25) | 16 | 19 | 18 | 23 | 24 |\n\n(a) Find the equation of the least-squares regression line for predicting unit-test score from hours of tutoring per week, and interpret the slope of the line in context.\n\n(b) Compute the residual for the student who received 3 hours of tutoring per week.\n\n(c) Interpret the residual from part (b) in context.",
+    "answer": "see rubric",
+    "solutionText": "Compute the least-squares regression line from the given data (\u0177 = 14 + 2x), interpret the slope in context, then find and interpret the residual for the student with x = 3 hours.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly computing/stating the least-squares regression equation \u0177 = 14 + 2x (or equivalent, e.g. predicted score = 14 + 2\u00b7hours) using the given data; 1 point for correctly interpreting the slope in context: for each additional hour of tutoring per week, the model predicts an increase of about 2 points in unit-test score, on average.",
+          "modelResponse": "Using the data, the least-squares regression line is \u0177 = 14 + 2x, where x = hours of tutoring per week and \u0177 = predicted unit-test score. Interpretation of slope: for each additional hour per week a student spends with a tutor, the model predicts the unit-test score to increase by about 2 points, on average."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly computing the residual for the student with x=3 hours: residual = actual \u2212 predicted = 18 \u2212 20 = \u22122 (accept 18 - [14+2(3)] = -2; sign must be correct).",
+          "modelResponse": "For the student with x = 3 hours, the predicted score is \u0177 = 14 + 2(3) = 20. The student's actual score was 18. Residual = actual \u2212 predicted = 18 \u2212 20 = \u22122."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly interpreting the residual in context: the least-squares line overpredicted this student's score \u2014 the model predicted a score of 20, but the student actually scored 18, which is 2 points lower than the line's prediction.",
+          "modelResponse": "The residual of \u22122 means the least-squares line overpredicted this student's score: the model predicted a score of 20, but the student actually scored 18, which is 2 points lower than the line's prediction."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apstats-fa-fr-02",
+    "loId": "apstats.experimental-design",
+    "cedCode": "AP-STATS-3.5-3.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A tutor has 8 students of similar ability who are all preparing for the same vocabulary exam. The tutor wants to compare two study methods \u2014 Spaced Practice (studying in short sessions spread out over many days) and Massed Practice (studying in one long session) \u2014 to see which produces better retention. The students are numbered 1 through 8.\n\nThe tutor will use the following string of random digits, read from left to right, to randomly assign 4 students to Spaced Practice (Group A) and the remaining 4 students to Massed Practice (Group B):\n\n`5 3 9 0 7 1 4 8 6 2`\n\n(a) Describe a complete method for using the random digits above to assign students to Group A and Group B, and state which students (by number) end up in each group.\n\n(b) Explain why it is important that the tutor randomly assign students to the two groups rather than, for example, letting students choose their preferred method.\n\n(c) Suppose students in Group A score significantly higher than students in Group B on the retention exam. Based on the design of this study, is it appropriate to conclude that spaced practice caused the higher retention scores? To what population, if any, can this conclusion be generalized? Explain.",
+    "answer": "see rubric",
+    "solutionText": "Use the random digit string to randomly assign students to two treatment groups, explain why random assignment matters, and evaluate what conclusions the resulting randomized experiment supports.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for a valid method that uses the digits correctly: read the digits one at a time from left to right; assign a student to Group A the first time each digit 1\u20138 appears, skipping repeated digits and skipping any digit that is 0 or 9, and stopping once 4 distinct students (digits) have been selected for Group A; the remaining 4 students are assigned to Group B. 1 point for correctly applying the stated method to the given digit string to get Group A = students 1, 3, 5, 7 and Group B = students 2, 4, 6, 8 (credit an internally consistent alternative grouping if the student's own valid method, correctly applied, produces a different result).",
+          "modelResponse": "Read the random digits one at a time from left to right: 5, 3, 9, 0, 7, 1, 4, 8, 6, 2. Ignore any digit that is 0, 9, or a repeat of a digit already used. Assign the corresponding student to Group A (Spaced Practice) each time a new valid digit (1\u20138) appears, until 4 students have been selected. Following this rule: 5 (keep), 3 (keep), 9 (skip, out of range), 0 (skip, out of range), 7 (keep), 1 (keep) \u2014 stop, 4 students selected. So Group A (Spaced Practice) = Students 1, 3, 5, 7. The remaining students, Group B (Massed Practice) = Students 2, 4, 6, 8."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for explaining that random assignment balances confounding/lurking variables (such as prior vocabulary knowledge, motivation, or general study habits) between the two groups on average, so that any difference in retention scores can be attributed to the study method rather than to pre-existing differences between the students in each group.",
+          "modelResponse": "Randomly assigning students to the two groups helps balance out other variables that could affect retention \u2014 such as each student's prior vocabulary knowledge, motivation, or general study skill \u2014 roughly evenly between Group A and Group B. This way, if there is a difference in retention scores between the groups, it can be attributed to the study method itself rather than to pre-existing differences between the students."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly stating both parts: (i) because students were randomly assigned to treatments, a cause-and-effect conclusion is justified for these 8 students \u2014 spaced practice caused the higher retention; AND (ii) because the students were not randomly selected from a larger population, the conclusion cannot be generalized beyond students similar to this specific group of 8.",
+          "modelResponse": "Because the tutor used random assignment, this is a randomized experiment, so a cause-and-effect conclusion is justified for these 8 students: spaced practice caused the higher retention scores observed in Group A. However, since the 8 students were not randomly selected from some larger population of students, the results cannot be generalized beyond students similar to this particular group of 8 \u2014 we cannot conclude the effect would hold for all students in general."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apstats-fa-fr-03",
+    "loId": "apstats.combining-rv",
+    "cedCode": "AP-STATS-4.8",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A bakery makes custom cakes. Let $X$ = the time (in minutes) required to bake a cake, and let $Y$ = the time (in minutes) required to decorate a cake. Based on historical records, $X$ and $Y$ are independent and approximately normally distributed with the following parameters:\n\n| Random variable | Mean | Standard deviation |\n|---|---|---|\n| $X$ (baking time) | 45 min | 8 min |\n| $Y$ (decorating time) | 30 min | 5 min |\n\nLet $T = X + Y$ be the total time (baking plus decorating) required to complete one custom cake order.\n\n(a) Find the mean of $T$, and interpret it in context.\n\n(b) Find the standard deviation of $T$. Show your work.\n\n(c) A customer's order must be completed within 90 minutes. Assuming $T$ is approximately normally distributed, find the probability that a randomly selected cake order takes more than 90 minutes to complete.",
+    "answer": "see rubric",
+    "solutionText": "Use the addition rule for means and the addition rule for variances of independent random variables to find the mean and SD of the total time T = X + Y, then use the normal distribution of T to find a probability.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly computing the mean of T as E(T) = E(X)+E(Y) = 45+30 = 75 minutes AND interpreting it in context (e.g., on average, a custom cake order takes about 75 minutes total to bake and decorate).",
+          "modelResponse": "E(T) = E(X) + E(Y) = 45 + 30 = 75 minutes. On average, a custom cake order takes about 75 minutes total to bake and decorate."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly computing the standard deviation of T using the fact that X and Y are independent, so variances (not standard deviations) add: SD(T) = sqrt(8^2 + 5^2) = sqrt(89) \u2248 9.43 minutes. (Full credit requires adding variances, not standard deviations directly.)",
+          "modelResponse": "Because X and Y are independent, the variances add: Var(T) = Var(X) + Var(Y) = 8^2 + 5^2 = 64 + 25 = 89. So SD(T) = sqrt(89) \u2248 9.43 minutes."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for a correct setup: standardizing using z = (90-75)/9.43 \u2248 1.59, based on T ~ N(75, 9.43); 1 point for the correct probability, P(T>90) = P(Z>1.59) \u2248 0.056 (accept 0.055\u20130.057).",
+          "modelResponse": "Since X and Y are independent and approximately normal, T is approximately normal with mean 75 and SD 9.43, i.e., T ~ N(75, 9.43). Standardizing: z = (90-75)/9.43 \u2248 1.59. From the standard normal table, P(Z>1.59) = 1 - 0.9441 = 0.0559. So there is about a 5.6% chance that a randomly selected cake order takes more than 90 minutes to complete."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apstats-fa-fr-04",
+    "loId": "apstats.one-prop-test",
+    "cedCode": "AP-STATS-6.4-6.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A shipping company claims that 80% of its packages arrive within 2 days of shipping. A consumer watchdog group suspects the true on-time rate is lower than claimed. They randomly select 60 packages shipped by the company and find that 42 of them arrived within 2 days.\n\nDo these data provide convincing statistical evidence, at the $\\alpha = 0.05$ significance level, that the true proportion of the company's packages that arrive within 2 days is less than 80%?\n\n(a) State the appropriate hypotheses in terms of the correct population parameter.\n\n(b) Identify the appropriate inference procedure and check that the conditions for using it are met.\n\n(c) Calculate the test statistic and p-value.\n\n(d) State a conclusion, in context, in terms of the p-value and $\\alpha = 0.05$.",
+    "answer": "see rubric",
+    "solutionText": "Carry out a one-sample z-test for a proportion: state hypotheses about p, check conditions, compute the test statistic and p-value, and draw a conclusion in context.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly defining p = the true proportion of all packages shipped by the company that arrive within 2 days, and stating H0: p = 0.80 and Ha: p < 0.80 using this population parameter (not sample-proportion notation).",
+          "modelResponse": "Let p = the true proportion of all packages shipped by the company that arrive within 2 days. H0: p = 0.80. Ha: p < 0.80."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for identifying a one-sample z-test for a proportion AND checking all three conditions: Random (the 60 packages were randomly selected, as stated); 10% condition (60 packages is less than 10% of all packages the company ships, so independence is reasonable); Large counts (np0 = 60(0.8) = 48 \u2265 10 and n(1-p0) = 60(0.2) = 12 \u2265 10).",
+          "modelResponse": "This calls for a one-sample z-test for a proportion. Conditions: Random \u2014 the 60 packages were randomly selected. 10% condition \u2014 60 packages is almost certainly less than 10% of all packages the company ships, so treating the observations as independent is reasonable. Large counts \u2014 under H0, np0 = 60(0.80) = 48 \u2265 10 and n(1-p0) = 60(0.20) = 12 \u2265 10, so the sampling distribution of p-hat is approximately normal. All conditions are met."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for a correct test statistic and p-value: sample proportion p-hat = 42/60 = 0.70; z = (0.70-0.80)/sqrt(0.80(0.20)/60) \u2248 -1.94; p-value = P(Z<-1.94) \u2248 0.026 (accept 0.025\u20130.027).",
+          "modelResponse": "p-hat = 42/60 = 0.70. z = (0.70 - 0.80) / sqrt(0.80(0.20)/60) = -0.10 / 0.0516 \u2248 -1.94. p-value = P(Z < -1.94) \u2248 0.026."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for a correct conclusion in context that references the p-value and alpha: because the p-value (\u22480.026) is less than alpha=0.05, reject H0; there is convincing statistical evidence that the true proportion of the company's packages that arrive within 2 days is less than 80%.",
+          "modelResponse": "Because the p-value (\u22480.026) is less than \u03b1 = 0.05, we reject H0. There is convincing statistical evidence that the true proportion of this company's packages that arrive within 2 days is less than 80%."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apstats-fa-fr-05",
+    "loId": "apstats.one-mean-test",
+    "cedCode": "AP-STATS-7.5-7.6",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A running coach records the mile times (in minutes) of 6 runners before and after they complete a 6-week interval-training program.\n\n| Runner | 1 | 2 | 3 | 4 | 5 | 6 |\n|---|---|---|---|---|---|---|\n| Before (min) | 9.20 | 8.50 | 9.80 | 7.90 | 9.40 | 8.30 |\n| After (min) | 8.40 | 8.40 | 9.20 | 7.70 | 8.50 | 7.90 |\n\nThe coach wants to know whether the training program tends to reduce runners' mile times.\n\n(a) State appropriate hypotheses, in terms of the correct population parameter, for testing whether the training program reduces mile time.\n\n(b) Identify the appropriate inference procedure, and check that the conditions for its use are met.\n\n(c) Calculate the test statistic and p-value.\n\n(d) Using $\\alpha = 0.05$, state a conclusion in context.",
+    "answer": "see rubric",
+    "solutionText": "Carry out a paired (matched-pairs) t-test on the before/after differences: state hypotheses about the mean difference, check conditions, compute the test statistic and p-value, and draw a conclusion in context.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly defining mu_d = the true mean difference (Before \u2212 After) in mile time for the population of runners like these, and stating H0: mu_d = 0 and Ha: mu_d > 0 in terms of this population parameter.",
+          "modelResponse": "Let \u03bc_d = the true mean difference (Before \u2212 After) in mile time for the population of runners represented by this sample. H0: \u03bc_d = 0. Ha: \u03bc_d > 0."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for identifying a paired t-test for a mean difference AND checking conditions: Random (assume the 6 runners can be treated as representative of the population of interest); Independent/10% (each runner's before/after times form one pair; the differences for different runners can be treated as independent, and 6 runners is less than 10% of all possible runners); Normal/large sample (n=6 < 30, so the sample of differences must be checked for strong skewness or outliers \u2014 the differences 0.10 to 0.90 show no extreme outliers or strong skew, so it is reasonable to proceed).",
+          "modelResponse": "This is a paired t-test for a mean difference, since the same runners are measured twice (before and after). Conditions: Random \u2014 assume these runners can be treated as representative of the population of interest. Independent \u2014 the differences for different runners can be treated as independent of one another, and 6 runners is less than 10% of all runners who might complete this program. Normal/large sample \u2014 with n = 6 < 30, we need the sample of differences to show no strong skewness or outliers; the 6 differences (0.10, 0.20, 0.40, 0.60, 0.80, 0.90) are reasonably spread with no extreme outliers, so it's reasonable to proceed with a t-procedure."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly computing the differences, mean difference, standard deviation of differences, and test statistic: differences (Before\u2212After) = 0.80, 0.10, 0.60, 0.20, 0.90, 0.40; d-bar = 0.50; s_d \u2248 0.322; t = (0.50-0)/(0.322/sqrt(6)) \u2248 3.80, df = 5, p-value \u2248 0.007 (accept 0.005\u20130.01).",
+          "modelResponse": "Differences (Before \u2212 After) in minutes: 0.80, 0.10, 0.60, 0.20, 0.90, 0.40. d-bar = (0.80+0.10+0.60+0.20+0.90+0.40)/6 = 0.50 minutes. s_d \u2248 0.322 minutes. t = (0.50-0)/(0.322/sqrt(6)) \u2248 3.80, with df = 5. Using technology, p-value \u2248 0.007."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for a correct conclusion in context referencing the p-value and alpha: because the p-value (\u22480.007) is less than alpha=0.05, reject H0; there is convincing statistical evidence that the training program reduces (population) mean mile time.",
+          "modelResponse": "Because the p-value (\u22480.007) is less than \u03b1 = 0.05, we reject H0. There is convincing statistical evidence that the interval-training program reduces runners' mean mile time."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apstats-fa-fr-06",
+    "loId": "apstats.slope-test",
+    "cedCode": "AP-STATS-9.4-9.5",
+    "topic": "ap-statistics",
+    "topicId": "ap-statistics",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A tutoring center collected data on $n = 10$ students who used its SAT prep program during one semester: $x$ = number of practice sessions attended, and $y$ = increase in a student's SAT composite score (in points) from the start to the end of the semester. Computer output for the least-squares regression of $y$ on $x$ is shown below:\n\n| Predictor | Coefficient | SE Coefficient |\n|---|---|---|\n| Intercept | 20 | \u2014 |\n| Sessions ($x$) | 15 | 4.2 |\n\n(with $n=10$, so $df = n-2 = 8$)\n\n(a) Using this output, carry out an appropriate test to determine whether there is convincing evidence, at $\\alpha = 0.05$, of a positive linear relationship between number of practice sessions attended and increase in SAT score for the population of students who use this program. State hypotheses in terms of the appropriate population parameter, calculate the test statistic and p-value, and state a conclusion in context.\n\n(b) Based on the center's broader records, 75% of students who attend at least 8 practice sessions increase their SAT score by more than 100 points. Suppose 6 such students (each of whom attended at least 8 sessions) are selected at random, and let $W$ = the number of these 6 students who increase their score by more than 100 points.\n\n(i) Explain why $W$ can be modeled by a binomial random variable, and give the values of its parameters.\n\n(ii) Find the probability that at least 5 of the 6 selected students increase their score by more than 100 points.",
+    "answer": "see rubric",
+    "solutionText": "First test the significance of the regression slope using the given computer output (t-test for slope), then treat the described binomial scenario separately to compute the probability that at least 5 of 6 randomly selected students improve by more than 100 points.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly stating H0: beta1 = 0 and Ha: beta1 > 0, where beta1 = the true population slope of the linear relationship between number of practice sessions and SAT score increase, AND computing the test statistic t = b1/SE_b1 = 15/4.2 \u2248 3.57 with df=8; 1 point for a correct p-value (p < 0.005, or a numeric estimate around 0.003\u20130.004 from technology) and a conclusion in context that correctly compares the p-value to alpha=0.05 and rejects H0, concluding convincing evidence of a positive linear relationship between sessions attended and score increase.",
+          "modelResponse": "Let \u03b21 = the true population slope of the linear relationship between number of practice sessions attended and increase in SAT score, for all students who use this program. H0: \u03b21 = 0. Ha: \u03b21 > 0. Test statistic: t = b1/SE_b1 = 15/4.2 \u2248 3.57, with df = n-2 = 8. Using a t-distribution with df=8, this t-value gives a p-value of about 0.0037 (p < 0.005, since 3.57 exceeds the df=8 critical value of 3.355 for a one-sided area of 0.005). Since the p-value is less than \u03b1 = 0.05, we reject H0. There is convincing statistical evidence of a positive linear relationship between the number of practice sessions a student attends and their increase in SAT score."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for part (i): correctly explaining that W is binomial because there is a fixed number of trials (n=6 students), each student either does or does not increase their score by more than 100 points (two outcomes), the probability of success is the same for each student (p=0.75), and the students' outcomes are independent (random selection); giving parameters n=6, p=0.75. 1 point for part (ii): correctly computing P(W \u2265 5) = P(W=5)+P(W=6) \u2248 0.356 + 0.178 = 0.534 (accept 0.53\u20130.54).",
+          "modelResponse": "(i) W can be modeled as a binomial random variable because: there is a fixed number of trials (n = 6 students); each student either does increase their score by more than 100 points or does not (two outcomes, 'success'/'failure'); the probability of success is the same for each student, p = 0.75; and the students were selected at random, so their outcomes are independent. So W ~ B(n=6, p=0.75). (ii) P(W \u2265 5) = P(W=5) + P(W=6). P(W=5) = C(6,5)(0.75)^5(0.25)^1 = 6(0.2373)(0.25) \u2248 0.3560. P(W=6) = C(6,6)(0.75)^6(0.25)^0 = (0.75)^6 \u2248 0.1780. P(W \u2265 5) \u2248 0.3560 + 0.1780 = 0.5340."
+        }
+      ]
+    }
+  }
+]

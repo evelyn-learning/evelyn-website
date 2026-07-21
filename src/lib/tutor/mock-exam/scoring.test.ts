@@ -67,6 +67,26 @@ async function run() {
     assert.equal(composite, 28);   // round(mean(28,28,29)) — science excluded
     assert.equal(scaled.composite, 28);
   });
+  await test('ap-us-history golden: 40/55 MCQ + 15/22 FRQ points -> composite 5', () => {
+    const bp = getBlueprint('ap-us-history');
+    const rawSections = [
+      { sectionId: 'mcq', rawCorrect: 40, rawTotal: 55 },
+      { sectionId: 'saq', rawCorrect: 0, rawTotal: 0 },
+      { sectionId: 'dbq', rawCorrect: 0, rawTotal: 0 },
+      { sectionId: 'leq', rawCorrect: 0, rawTotal: 0 },
+    ];
+    const frq = {
+      saq: { points: 6, max: 9 },
+      dbq: { points: 5, max: 7 },
+      leq: { points: 4, max: 6 },
+    };
+    const { scaled, composite } = applyCurves(bp, rawSections, [], frq);
+    // weighted = .4*(40/55) + .6*(15/22) = 0.7 >= cut-5 0.68
+    assert.equal(composite, 5);
+    assert.equal(scaled.compositeMax, 5);
+    const mcq = scaled.sections.find((s) => s.sectionId === 'mcq')!;
+    assert.ok(mcq.scaled >= 1 && mcq.scaled <= 5);
+  });
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

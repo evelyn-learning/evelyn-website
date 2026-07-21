@@ -1,0 +1,1310 @@
+[
+  {
+    "id": "apush-fa-mc-001",
+    "loId": "apush.columbian-exchange",
+    "cedCode": "AP-APUSH-1.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that sugar cultivation, once transferred to the Americas, \"relied increasingly on the forced labor of enslaved Africans.\" This detail most directly helps explain the origins of \u2014",
+    "choices": [
+      "the growth of the transatlantic slave trade to supply plantation labor in the Americas",
+      "the abolition of Indigenous tribute systems across Spanish America",
+      "a colonial shift away from cash crops toward subsistence farming",
+      "the collapse of European demand for New World commodities"
+    ],
+    "answer": "A",
+    "solutionText": "Linking American sugar plantations to enslaved African labor points to the transatlantic slave trade, which expanded to meet plantation demand. B, C, and D describe developments that did not occur \u2014 Native tribute persisted, plantation cash-cropping grew, and European demand rose.",
+    "passageId": "evelyn.passage.apush-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-002",
+    "loId": "apush.spanish-colonization",
+    "cedCode": "AP-APUSH-1.6",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The biological transfers in the table accompanied European efforts to organize colonial production. Spanish colonization of densely settled regions such as Mexico and Peru differed from later English colonization of North America chiefly in that Spain \u2014",
+    "choices": [
+      "relied from the outset almost entirely on enslaved African plantation labor",
+      "built its colonies around fur-trade partnerships with Native nations",
+      "extracted labor and tribute from large, already-settled Indigenous populations",
+      "discouraged colonists from demanding any form of Native labor"
+    ],
+    "answer": "C",
+    "solutionText": "Spain conquered populous empires and compelled Native labor and tribute through the encomienda, unlike English North America. A describes the later plantation-slavery pattern, B describes French colonization, and D contradicts the coercive Spanish labor system.",
+    "passageId": "evelyn.passage.apush-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-003",
+    "loId": "apush.native-societies",
+    "cedCode": "AP-APUSH-1.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that horses, once reintroduced to the Great Plains, \"reshaped the mobility and hunting practices of several Native nations.\" Which change among Plains peoples best illustrates this effect?",
+    "choices": [
+      "They abandoned hunting for permanent irrigated agriculture",
+      "Many adopted mounted buffalo hunting and more mobile, nomadic ways of life",
+      "They consolidated into a single centralized empire like the Aztecs",
+      "They ended all trade and contact with neighboring nations"
+    ],
+    "answer": "B",
+    "solutionText": "Horses let Plains nations hunt bison on horseback and range more widely, making many more nomadic. A, C, and D describe transformations that did not follow from the horse's introduction.",
+    "passageId": "evelyn.passage.apush-mock-a-st01.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-004",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The planter's economy centers on shipping tobacco to England for sale by merchants. An economy built on exporting tobacco as its dominant cash crop most distinguished which colonial region?",
+    "choices": [
+      "New England",
+      "The Chesapeake",
+      "The Middle Colonies",
+      "Spanish Florida"
+    ],
+    "answer": "B",
+    "solutionText": "Tobacco was the defining staple export of the Chesapeake (Virginia and Maryland). New England relied on mixed farming and commerce, the Middle Colonies on grain, and Spanish Florida was not an English tobacco economy.",
+    "passageId": "evelyn.passage.apush-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-005",
+    "loId": "apush.slavery-colonies",
+    "cedCode": "AP-APUSH-2.6",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The planter ties his purchase of enslaved workers to \"the late rising here,\" when former servants \"marched against the governor and burned Jamestown.\" Historians identify this as Bacon's Rebellion (1676), which encouraged the expansion of slavery because it \u2014",
+    "choices": [
+      "led elites to prefer laborers held for life over former servants who became landless and rebellious",
+      "immediately halted all tobacco planting in Virginia",
+      "prompted Parliament to outlaw indentured servitude throughout the empire",
+      "resulted in Virginia granting its western lands to Native nations"
+    ],
+    "answer": "A",
+    "solutionText": "The revolt of discontented former servants pushed planters toward enslaved Africans, seen as more controllable because bound for life. B, C, and D describe outcomes that did not occur.",
+    "passageId": "evelyn.passage.apush-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-006",
+    "loId": "apush.colonial-society",
+    "cedCode": "AP-APUSH-2.7",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The planter observes that his county \"fills with great tobacco estates worked by enslaved hands, while the small men drift to the frontier.\" This best illustrates the emergence in the early-1700s Chesapeake of \u2014",
+    "choices": [
+      "a broadly equal society of independent small farmers",
+      "a wage-earning factory workforce concentrated in towns",
+      "a society in which racial distinctions carried no social weight",
+      "a sharply stratified society topped by a wealthy planter elite, with enslaved Africans at its base"
+    ],
+    "answer": "D",
+    "solutionText": "By 1700 the Chesapeake was dividing into a great-planter elite, poorer whites pushed toward the frontier, and enslaved Africans at the bottom. A, B, and C contradict this hierarchical, slavery-based social order.",
+    "passageId": "evelyn.passage.apush-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-007",
+    "loId": "apush.transatlantic-economy",
+    "cedCode": "AP-APUSH-2.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The planter notes that although his tobacco \"fills the ships again this season,\" the price merchants offer \"falls a little each year.\" This situation reflects the Chesapeake planters' position within \u2014",
+    "choices": [
+      "an Atlantic mercantile economy in which they exported a single staple through English merchants and were exposed to falling prices and debt",
+      "a self-sufficient local economy insulated from world markets",
+      "an industrial wage economy centered on colonial factories",
+      "a free-trade system open to every European buyer without restriction"
+    ],
+    "answer": "A",
+    "solutionText": "Under mercantilism and the Navigation Acts, planters shipped tobacco through English merchants and were price-takers who often fell into debt. B ignores their export dependence, C is anachronistic, and D ignores imperial trade restrictions.",
+    "passageId": "evelyn.passage.apush-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-008",
+    "loId": "apush.colonial-regions",
+    "cedCode": "AP-APUSH-2.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Compared with the New England colonies in the same period, the Chesapeake society the planter describes was distinctive chiefly in that it \u2014",
+    "choices": [
+      "was organized around Puritan religious congregations and town meetings",
+      "produced grain as its principal export while avoiding staple cash crops",
+      "depended heavily on enslaved labor and a single export staple rather than family farms, mixed agriculture, and commerce",
+      "contained no distinctions of wealth or social rank among its colonists"
+    ],
+    "answer": "C",
+    "solutionText": "The Chesapeake's plantation-and-slavery, single-staple economy contrasted with New England's family farms, mixed agriculture, and commerce. A describes New England, B misdescribes both regions, and D contradicts the planter's own account of great estates.",
+    "passageId": "evelyn.passage.apush-mock-a-st02.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-009",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The excerpt names \"Life, Liberty and the pursuit of Happiness\" as among people's unalienable rights. In adapting a well-known Enlightenment formulation for this list, Jefferson replaced which right that John Locke had originally named?",
+    "choices": [
+      "property",
+      "equality",
+      "religion",
+      "representation"
+    ],
+    "answer": "A",
+    "solutionText": "Locke's triad was \"life, liberty, and property\"; Jefferson substituted \"the pursuit of Happiness.\" The other options were not part of Locke's original formulation.",
+    "passageId": "evelyn.passage.apush-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-010",
+    "loId": "apush.revolutionary-ideals",
+    "cedCode": "AP-APUSH-3.3",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The final paragraph concedes that governments \"long established should not be changed for light and transient causes.\" Within the Declaration's larger argument, this concession functions to \u2014",
+    "choices": [
+      "urge the colonists to abandon the idea of independence",
+      "defend the divine right of the British king",
+      "portray independence as a reluctant last resort after long-endured abuses, not a rash act",
+      "argue that no government should ever be altered under any circumstances"
+    ],
+    "answer": "C",
+    "solutionText": "By granting that revolution should not be undertaken lightly, the Declaration frames the break as justified only after prolonged abuses. A and D reverse the document's purpose, and B contradicts its rejection of monarchy.",
+    "passageId": "evelyn.passage.apush-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-011",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Second Continental Congress adopted this document in July 1776. Which development most directly led the colonies to this formal break with Britain?",
+    "choices": [
+      "the alliance with France formed during the French and Indian War",
+      "a decade of disputes over taxation and imperial authority that escalated into armed conflict at Lexington and Concord",
+      "the ratification debates over the new federal Constitution",
+      "the outbreak of the Whiskey Rebellion against a federal excise tax"
+    ],
+    "answer": "B",
+    "solutionText": "Rising conflict over taxation and imperial control after 1763, culminating in fighting at Lexington and Concord (1775), drove the colonies to independence. A misdates the French alliance, and C and D describe post-independence events.",
+    "passageId": "evelyn.passage.apush-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-012",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Declaration proclaims that \"all men are created equal.\" At the moment it was adopted, however, this ideal stood in tension with the fact that \u2014",
+    "choices": [
+      "slavery had already been abolished in every one of the thirteen states",
+      "women had secured the right to vote in most of the states",
+      "the phrase was universally understood to grant immediate legal equality to all people",
+      "slavery was legal throughout the states and political rights were largely confined to propertied white men"
+    ],
+    "answer": "D",
+    "solutionText": "In 1776 slavery was legal everywhere and political participation was mostly limited to propertied white men, exposing a gap between ideal and practice. A, B, and C describe conditions that did not exist in 1776.",
+    "passageId": "evelyn.passage.apush-mock-a-st03.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-013",
+    "loId": "apush.articles-of-confederation",
+    "cedCode": "AP-APUSH-3.9",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The delegate cites \"the risings of debtors in Massachusetts\" that the Confederation could not answer. This episode \u2014 Shays' Rebellion \u2014 is historically significant chiefly because it \u2014",
+    "choices": [
+      "succeeded in overthrowing the Massachusetts state government",
+      "directly triggered the War of 1812 with Britain",
+      "alarmed national leaders about the Confederation's weakness and spurred the movement to draft a stronger Constitution",
+      "demonstrated that the Confederation government was already strong enough to keep order"
+    ],
+    "answer": "C",
+    "solutionText": "Shays' Rebellion convinced many leaders the Confederation was dangerously weak, helping prompt the Constitutional Convention. A and D misstate its outcome, and B is chronologically unrelated.",
+    "passageId": "evelyn.passage.apush-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-014",
+    "loId": "apush.constitution-ratification",
+    "cedCode": "AP-APUSH-3.10",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The delegate says he will \"ratify it if we must\" but insists that \"amendments be added at once\" to secure trial by jury and liberty of the press. This position best identifies the speaker as \u2014",
+    "choices": [
+      "an Anti-Federalist whose demand for guarantees of rights helped bring about the Bill of Rights",
+      "a Federalist who opposed adding any bill of rights to the Constitution",
+      "a Loyalist opposed to American independence",
+      "a supporter of restoring the British monarchy"
+    ],
+    "answer": "A",
+    "solutionText": "Reluctant ratification paired with a demand for amendments protecting rights marks an Anti-Federalist; such demands produced the Bill of Rights. B reverses the stance, and C and D concern independence and monarchy, not ratification.",
+    "passageId": "evelyn.passage.apush-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-015",
+    "loId": "apush.new-republic",
+    "cedCode": "AP-APUSH-3.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The delegate's demand that \"amendments be added at once\" to protect the press and trial by jury was answered in the new republic by \u2014",
+    "choices": [
+      "the passage of the Alien and Sedition Acts",
+      "the ratification of the Bill of Rights in 1791",
+      "the Supreme Court's decision in Marbury v. Madison",
+      "the Louisiana Purchase"
+    ],
+    "answer": "B",
+    "solutionText": "The first ten amendments (the Bill of Rights), ratified in 1791, met Anti-Federalist demands for protections like jury trial and press freedom. A restricted rights, and C and D are unrelated to those guarantees.",
+    "passageId": "evelyn.passage.apush-mock-a-st04.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-016",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table shows U.S. railroad mileage rising from fewer than 40 miles in 1830 to about 2,800 in 1840, alongside the new canal and steamboat routes. This growth advanced the market revolution mainly by \u2014",
+    "choices": [
+      "allowing goods and people to move faster and more cheaply, widening the reach of commercial markets",
+      "ending all canal and steamboat traffic in the United States by 1840",
+      "shifting the national economy back toward local self-sufficiency",
+      "concentrating the nation's manufacturing in the rural South"
+    ],
+    "answer": "A",
+    "solutionText": "Faster, cheaper transport let producers reach distant buyers, deepening commercial exchange. B is false (canals still dominated), C reverses the trend, and D misplaces manufacturing, which was concentrated in the Northeast.",
+    "passageId": "evelyn.passage.apush-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-017",
+    "loId": "apush.jefferson-era",
+    "cedCode": "AP-APUSH-4.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Erie Canal shown in the table was financed and built by New York State rather than by the federal government. This reflects a recurring constitutional debate of the Jefferson\u2013Madison era over \u2014",
+    "choices": [
+      "whether individual states could coin their own money",
+      "whether slavery could expand into the western territories",
+      "whether the national bank should be rechartered",
+      "whether the federal government had constitutional authority to fund internal improvements"
+    ],
+    "answer": "D",
+    "solutionText": "Jeffersonian strict constructionists doubted federal power to fund roads and canals, leaving projects like the Erie Canal to the states. A, B, and C were live issues of the era but not the reason internal improvements fell to the states.",
+    "passageId": "evelyn.passage.apush-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-018",
+    "loId": "apush.market-revolution",
+    "cedCode": "AP-APUSH-4.5",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The improvements in the table chiefly connected the Northeast with the rapidly growing Old Northwest. Historians treat this integration as significant because it \u2014",
+    "choices": [
+      "caused the South to industrialize more rapidly than the North",
+      "strengthened commercial and eventually political ties between North and West, while the South's cotton economy developed along a separate track",
+      "erased regional economic differences across the entire nation",
+      "cut the Northeast off from western markets"
+    ],
+    "answer": "B",
+    "solutionText": "Canals and railroads bound the Northeast and Old Northwest into a shared market and later a shared political orientation, diverging from the cotton South. A and C overstate the change, and D reverses the actual effect.",
+    "passageId": "evelyn.passage.apush-mock-a-st05.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-019",
+    "loId": "apush.jacksonian-democracy",
+    "cedCode": "AP-APUSH-4.8",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The proliferation of citizen-organized voluntary reform societies like the one that issued this circular in the 1830s most directly reflected which broader development of the Jacksonian era?",
+    "choices": [
+      "The federal government's assumption of direct responsibility for public welfare and moral improvement",
+      "A retreat from public life as Americans withdrew into strictly private religious devotion",
+      "An expansion of popular participation, as ordinary citizens organized associations to shape society",
+      "The concentration of moral and political authority in a small, propertied gentry"
+    ],
+    "answer": "C",
+    "solutionText": "The Jacksonian era broadened popular participation, and the flourishing of citizen-run voluntary associations was part of that democratic culture. The federal government took no such welfare role then (A); the outward activism refutes a retreat into private devotion (B); and the trend democratized rather than concentrated authority (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-020",
+    "loId": "apush.reform-awakening",
+    "cedCode": "AP-APUSH-4.10",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The society's appeal to \"the same awakening of the spirit that has filled our meeting-houses\" identifies the chief inspiration for its reform impulse as \u2014",
+    "choices": [
+      "the Enlightenment rationalism of the eighteenth-century Founders",
+      "the spread of Social Darwinist theory",
+      "the nativist movement against Catholic immigration",
+      "the religious revivals of the Second Great Awakening"
+    ],
+    "answer": "D",
+    "solutionText": "The circular's language of spiritual rebirth ties directly to the Second Great Awakening, whose revivalism fueled antebellum reform. Enlightenment rationalism (A) predates and differs from evangelical revivalism; Social Darwinism (B) belongs to the late 19th century; nativism (C) is unrelated to the society's stated spiritual source.",
+    "passageId": "evelyn.passage.apush-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-021",
+    "loId": "apush.slavery-south",
+    "cedCode": "AP-APUSH-4.12",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The circular's pledge that \"no human being shall be held as property upon American soil\" expressed a Northern position that white Southern leaders increasingly countered in the 1830s by \u2014",
+    "choices": [
+      "quietly conceding that slavery was a temporary evil destined to fade away",
+      "defending slavery as a \"positive good\" while suppressing antislavery expression in the South",
+      "joining Northern reform societies to pursue gradual, compensated emancipation",
+      "abolishing slavery in the Upper South while retaining it only in the Deep South"
+    ],
+    "answer": "B",
+    "solutionText": "In response to militant abolitionism after about 1830, Southern leaders abandoned older \"necessary evil\" apologies for a \"positive good\" defense (Calhoun) and suppressed antislavery speech and mailings. Choice A describes the earlier view they were rejecting; C and D never occurred.",
+    "passageId": "evelyn.passage.apush-mock-a-st06.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-022",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The rapid territorial gains depicted on this map \u2014 Texas, Oregon, and the Mexican Cession \u2014 are most closely associated with the 1840s belief that \u2014",
+    "choices": [
+      "the United States was destined to expand across the continent to the Pacific",
+      "the United States should acquire new territory only by purchase, never by war",
+      "further national expansion should halt at the Mississippi River",
+      "the federal government lacked any constitutional authority to acquire territory"
+    ],
+    "answer": "A",
+    "solutionText": "The clustered acquisitions of 1845-1848 embodied \"manifest destiny,\" the belief that continental expansion to the Pacific was inevitable and providential. The Mexican Cession came through war, refuting B; C and D contradict the very expansion the map documents.",
+    "passageId": "evelyn.passage.apush-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-023",
+    "loId": "apush.manifest-destiny",
+    "cedCode": "AP-APUSH-5.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The treaty that formally ended the U.S.-Mexican War and transferred the shaded Mexican Cession shown on the map to the United States was \u2014",
+    "choices": [
+      "the Treaty of Paris",
+      "the Adams-On\u00eds Treaty",
+      "the Treaty of Guadalupe Hidalgo",
+      "the Gadsden Purchase treaty"
+    ],
+    "answer": "C",
+    "solutionText": "The Treaty of Guadalupe Hidalgo (1848) ended the war and ceded the Southwest to the United States. The Treaty of Paris ended other conflicts (A); Adams-On\u00eds (B, 1819) transferred Florida; the Gadsden Purchase (D, 1853) added a separate strip later.",
+    "passageId": "evelyn.passage.apush-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-024",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the years after 1846, one widely proposed method for deciding slavery's status in the new territories shown here was \"popular sovereignty,\" which held that \u2014",
+    "choices": [
+      "Congress would ban slavery in all territory lying north of the 36\u00b030\u2032 line",
+      "the settlers of each territory would themselves vote to permit or prohibit slavery",
+      "the Supreme Court would decide each territory's status case by case",
+      "slavery would automatically be permitted in every territory taken from Mexico"
+    ],
+    "answer": "B",
+    "solutionText": "Popular sovereignty proposed letting a territory's own settlers decide the slavery question, a formula later applied in the Compromise of 1850 and the Kansas-Nebraska Act. Choice A describes extending the older Missouri line, while C and D misstate the doctrine.",
+    "passageId": "evelyn.passage.apush-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-025",
+    "loId": "apush.sectional-crisis",
+    "cedCode": "AP-APUSH-5.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "This map and its caption would best serve a historian as evidence for which argument about the coming of the Civil War?",
+    "choices": [
+      "Territorial expansion in the 1840s permanently settled the status of slavery in the West",
+      "Contemporaries treated western expansion and the slavery question as unrelated matters",
+      "The Missouri Compromise line of 1820 continued to govern all new territory without challenge",
+      "Acquiring new western land intensified, rather than resolved, the sectional conflict over slavery"
+    ],
+    "answer": "D",
+    "solutionText": "The newly acquired territory reopened the question of slavery's westward extension, driving the Wilmot Proviso fight, the Compromise of 1850, and later crises \u2014 intensifying sectional conflict rather than easing it. The ensuing decade of disputes directly contradicts A, B, and C.",
+    "passageId": "evelyn.passage.apush-mock-a-st07.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-026",
+    "loId": "apush.secession-civil-war",
+    "cedCode": "AP-APUSH-5.7",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The soldier's shift from believing he \"enlisted to save the Union and not to free the slaves\" toward seeing the war as truly about ending bondage best reflects \u2014",
+    "choices": [
+      "a broadening of Union war aims, after the Emancipation Proclamation, to include ending slavery",
+      "the Confederacy's decision to arm enslaved people early in the war",
+      "the North's abandonment of the goal of preserving the Union",
+      "a formal peace settlement reached between North and South in early 1863"
+    ],
+    "answer": "A",
+    "solutionText": "The Emancipation Proclamation of January 1863 broadened the Union's purpose from reunion alone to reunion plus emancipation, the change the soldier describes. The Union did not abandon reunion (C); the Confederacy did not arm the enslaved early (B); and no 1863 peace settlement occurred (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-027",
+    "loId": "apush.emancipation",
+    "cedCode": "AP-APUSH-5.9",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The soldier's observation that the incoming \"contrabands\" might \"gladly carry a musket beside us\" most directly anticipates which development of 1863?",
+    "choices": [
+      "the return of escaped enslaved people to their owners under the Fugitive Slave Act",
+      "the resettlement of formerly enslaved people in colonies outside the United States",
+      "the enlistment of formerly enslaved and free Black men as United States soldiers",
+      "the immediate ratification of the Thirteenth Amendment abolishing slavery"
+    ],
+    "answer": "C",
+    "solutionText": "Following the Emancipation Proclamation, the Union began formally enlisting Black soldiers in 1863, forming U.S. Colored Troops. The Union did not return contrabands (A); colonization was set aside as policy (B); and the Thirteenth Amendment was not ratified until 1865, not 1863 (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-028",
+    "loId": "apush.reconstruction-era",
+    "cedCode": "AP-APUSH-5.10",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The soldier hopes for a postwar Union no longer \"built on holding men in bondage.\" Which measure most directly secured that permanent, nationwide end of slavery in law?",
+    "choices": [
+      "the Fourteenth Amendment's guarantee of birthright citizenship and equal protection",
+      "the Fifteenth Amendment's protection of Black men's right to vote",
+      "the Emancipation Proclamation's wartime order of January 1863",
+      "the Thirteenth Amendment's abolition of slavery throughout the United States"
+    ],
+    "answer": "D",
+    "solutionText": "The Thirteenth Amendment (1865) abolished slavery permanently and nationwide, the durable legal end the soldier hoped for. The 1863 Proclamation (C) was only a wartime measure that did not reach the loyal border states, while the Fourteenth (A) and Fifteenth (B) Amendments addressed citizenship and suffrage rather than abolition itself.",
+    "passageId": "evelyn.passage.apush-mock-a-st08.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-029",
+    "loId": "apush.the-west-new-south",
+    "cedCode": "AP-APUSH-6.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The growth of railroad track from about 35,000 to about 193,000 miles shown in the table most directly contributed to which development in the West?",
+    "choices": [
+      "the depopulation of eastern cities as their residents moved permanently to farms",
+      "the rapid settlement of the Great Plains and the decline of the bison herds and Plains Indian nations",
+      "the return of most western territory to tribal control under newly negotiated treaties",
+      "a sharp fall in western agricultural production destined for national markets"
+    ],
+    "answer": "B",
+    "solutionText": "Expanding rail lines opened the Great Plains to settlement, accelerated the slaughter of the bison, and undermined the Plains nations that depended on them. Eastern cities grew rather than emptied (A); western land was taken from tribes, not returned (C); and railroads increased, not reduced, farm output for market (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-030",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The surge in steel production shown in the table was central to which broader transformation of the American economy?",
+    "choices": [
+      "the rise of heavy industry that made possible railroads, bridges, skyscrapers, and mass production",
+      "a return to an agrarian, household-based economy centered on subsistence farming",
+      "the decline of the large corporation as a form of business organization",
+      "the end of American industry's reliance on immigrant labor"
+    ],
+    "answer": "A",
+    "solutionText": "Cheap, abundant steel underpinned the era's heavy industry \u2014 rails, bridges, skyscrapers, and machinery. The other options each contradict the industrializing, corporate, immigrant-fueled economy the table describes.",
+    "passageId": "evelyn.passage.apush-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-031",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table's note that this growth brought \"the rise of large corporations\" and \"sharp inequalities of wealth\" characterizes a Gilded Age economy in which \u2014",
+    "choices": [
+      "wealth was distributed more equally than in any earlier period of American history",
+      "small independent artisans replaced large firms as the dominant producers",
+      "the federal government aggressively redistributed corporate profits to industrial workers",
+      "enormous fortunes concentrated among industrialists alongside widespread working-class poverty"
+    ],
+    "answer": "D",
+    "solutionText": "The Gilded Age paired vast industrial fortunes with low wages and widespread poverty among workers. Choice A inverts the era's rising inequality; B ignores the dominance of large corporations; C misstates a laissez-faire government that did not redistribute wealth.",
+    "passageId": "evelyn.passage.apush-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-032",
+    "loId": "apush.labor-movement",
+    "cedCode": "AP-APUSH-6.7",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The \"repeated, sometimes violent, conflict between organized labor and management\" noted in the table found expression in which events of the late nineteenth century?",
+    "choices": [
+      "federal laws guaranteeing workers the right to unionize and bargain collectively",
+      "the disappearance of labor unions from American industry by 1900",
+      "major strikes such as the Homestead (1892) and Pullman (1894) strikes, often broken by state or federal force",
+      "a constitutional amendment establishing an eight-hour workday nationwide"
+    ],
+    "answer": "C",
+    "solutionText": "Bitter strikes like Homestead (1892) and Pullman (1894) marked the era's labor conflict and were frequently suppressed by state militias, federal troops, or court injunctions. Federal collective-bargaining protection did not arrive until the 1930s (A); unions such as the AFL grew rather than vanished (B); and no such amendment was ever adopted (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st09.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-033",
+    "loId": "apush.immigration-urbanization",
+    "cedCode": "AP-APUSH-6.8",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "While this Kansas farmer voiced rural grievances, the same decades filled American cities with millions of immigrant industrial workers. That contrast between Populism's largely rural base and the urban immigrant workforce helps explain why Populism \u2014",
+    "choices": [
+      "drew its strongest support from the immigrant neighborhoods of the large eastern cities",
+      "struggled to build a lasting alliance with urban industrial workers and immigrants",
+      "succeeded in electing a Populist candidate to the presidency in 1892",
+      "focused chiefly on restricting immigration rather than on currency and railroad policy"
+    ],
+    "answer": "B",
+    "solutionText": "Populism's agrarian, largely native-born base never firmly allied with the urban, heavily immigrant industrial workforce, a divide that limited the movement's reach. It was weak in the cities (A), elected no president (C), and centered on money and railroads rather than immigration (D), as the speech itself shows.",
+    "passageId": "evelyn.passage.apush-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-034",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The speaker's demands \u2014 public control of railroads and the telegraph, an enlarged currency, and direct election of U.S. senators \u2014 together reflect the Populist conviction that \u2014",
+    "choices": [
+      "active government intervention was needed to protect farmers and ordinary citizens from powerful corporations",
+      "the federal government should withdraw entirely from the nation's economic affairs",
+      "the gold standard should be strengthened to protect the interests of creditors",
+      "political power should be shifted from voters to the state legislatures"
+    ],
+    "answer": "A",
+    "solutionText": "Populists sought a more active government to check corporate power on behalf of farmers and workers. The demands call for more, not less, government involvement (B), for an enlarged rather than gold-backed currency (C), and for direct election of senators, giving voters more power, not less (D).",
+    "passageId": "evelyn.passage.apush-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-035",
+    "loId": "apush.gilded-politics-populism",
+    "cedCode": "AP-APUSH-6.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The farmer complains that \"the money of the country has been made dear on purpose,\" so that debts \"must be paid back in coin worth twice what we borrowed.\" This grievance describes the effect of \u2014",
+    "choices": [
+      "rising protective tariffs on imported manufactured goods",
+      "inflation steadily eroding the value of the dollar",
+      "a new federal income tax levied on farm earnings",
+      "deflation, which raised the real value of money and the real burden of farmers' fixed debts"
+    ],
+    "answer": "D",
+    "solutionText": "A contracting money supply made the dollar \"dear\" (deflation), so debts incurred earlier had to be repaid in more valuable money, deepening farmers' burden and driving the demand to expand the currency. Inflation would have eased debts (B), while tariffs (A) and an income tax (C) are unrelated to the described debt dynamic.",
+    "passageId": "evelyn.passage.apush-mock-a-st10.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-036",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The cartoon's caption asks, \"Which promise will he keep?\" Which of the following best states the point the cartoonist is making?",
+    "choices": [
+      "The United States should annex the Philippines in order to secure Asian markets.",
+      "American expansion into the Philippines conflicts with the nation's stated principle of government by consent.",
+      "The Philippines posed a military threat that required American occupation.",
+      "European powers, not the United States, bore responsibility for unrest in the Philippines."
+    ],
+    "answer": "B",
+    "solutionText": "The scroll marked \"consent of the governed\" set against the businessman labeled \"trade\" and the Filipinos demanding self-rule frames the cartoon as an anti-imperialist argument that empire betrays America's founding principle. The pro-annexation and blame-shifting options invert the cartoonist's clear sympathies.",
+    "passageId": "evelyn.passage.apush-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-037",
+    "loId": "apush.imperialism",
+    "cedCode": "AP-APUSH-7.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The tension the cartoon depicts was most directly borne out when the United States annexed the Philippines under the Treaty of Paris. What followed?",
+    "choices": [
+      "The United States granted the Philippines immediate independence in 1899.",
+      "Spain reconquered the Philippines after its war with the United States.",
+      "Filipino nationalists, denied independence, fought a years-long war against U.S. rule.",
+      "The Philippines were returned to Spanish control under the Treaty of Paris."
+    ],
+    "answer": "C",
+    "solutionText": "The Filipinos who \"want self-rule\" in the cartoon in fact waged the Philippine-American War (1899-1902) against U.S. forces after annexation, exactly the outcome the anti-imperialist warning anticipated. Independence did not come until 1946, and Spain had ceded, not reclaimed, the islands.",
+    "passageId": "evelyn.passage.apush-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-038",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The same turn-of-the-century decades that produced this imperial debate also produced Progressive reform at home. Which statement best captures a tension within the period?",
+    "choices": [
+      "Reforms expanding democratic self-government at home coexisted with the denial of self-government to peoples abroad.",
+      "Progressives uniformly opposed all overseas expansion.",
+      "Overseas expansion required abandoning every domestic reform.",
+      "Progressivism and imperialism were pursued by entirely separate generations."
+    ],
+    "answer": "A",
+    "solutionText": "The Progressive Era expanded democratic mechanisms (initiative, referendum, direct election of senators) at home while the nation simultaneously governed colonized peoples without their consent, a contradiction the cartoon highlights. Progressives were in fact divided over empire, and the two impulses belonged to the same generation.",
+    "passageId": "evelyn.passage.apush-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-039",
+    "loId": "apush.wwi",
+    "cedCode": "AP-APUSH-7.6",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The dilemma this cartoon poses, between professed ideals of self-government and the pursuit of national interest, reappeared most clearly about two decades later when \u2014",
+    "choices": [
+      "the United States granted independence to all its territories before entering World War I.",
+      "Wilson abandoned all idealistic language once the United States entered World War I.",
+      "the United States refused to take any position on European colonial empires.",
+      "Wilson proclaimed self-determination during World War I even as the U.S. retained colonial rule over the Philippines."
+    ],
+    "answer": "D",
+    "solutionText": "Wilson's wartime call to \"make the world safe for democracy\" and his advocacy of self-determination stood in tension with continued U.S. colonial rule over the Philippines, the same gap between ideals and interest the 1899 cartoon dramatizes. Wilson did not abandon his idealistic rhetoric, and the territories were not freed before 1917.",
+    "passageId": "evelyn.passage.apush-mock-a-st11.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-040",
+    "loId": "apush.twenties",
+    "cedCode": "AP-APUSH-7.9",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table shows unemployment leaping from about 3 percent in 1929 to about 25 percent in 1933. Which feature of the 1920s economy is most commonly identified as a cause of that collapse?",
+    "choices": [
+      "Widespread stock speculation on margin and an uneven distribution of income during the 1920s.",
+      "Heavy federal regulation of banks and the stock market throughout the 1920s.",
+      "A decade-long agricultural boom that steadily raised farm incomes.",
+      "Sharply rising real wages shared equally across every sector."
+    ],
+    "answer": "A",
+    "solutionText": "Buying stocks on margin and a concentration of income at the top left the 1920s economy fragile and demand weak, conditions historians link to the crash. The decade was marked by weak financial regulation and an ongoing farm depression, not a farm boom or evenly shared wages.",
+    "passageId": "evelyn.passage.apush-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-041",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The unemployment figures for 1933, 1937, and 1940 best support which conclusion about the New Deal?",
+    "choices": [
+      "The New Deal eliminated unemployment by 1937.",
+      "Unemployment fell sharply from its 1933 peak but stayed high, showing the New Deal eased but did not end the Depression.",
+      "Unemployment rose steadily every year from 1929 through 1940.",
+      "The New Deal had no measurable effect on unemployment at any point."
+    ],
+    "answer": "B",
+    "solutionText": "The drop from about 25 percent (1933) to about 14 percent (1937), followed by a rise back toward 15 percent, shows real relief without full recovery. The numbers refute both the claim of elimination and the claim of no effect.",
+    "passageId": "evelyn.passage.apush-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-042",
+    "loId": "apush.depression-new-deal",
+    "cedCode": "AP-APUSH-7.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table refers to a new federal \"deposit-insurance law\" adopted in 1933. Which New Deal creation carried out that function?",
+    "choices": [
+      "the Federal Deposit Insurance Corporation (FDIC), which insured bank deposits.",
+      "the Interstate Commerce Commission, which regulated railroad rates.",
+      "the Federal Reserve, newly created in 1933 to insure deposits.",
+      "the Securities and Exchange Commission, which insured bank deposits."
+    ],
+    "answer": "A",
+    "solutionText": "The FDIC, created by the 1933 Banking Act, insured deposits and helped end bank runs. The Federal Reserve dates to 1913 and does not insure deposits, and the SEC regulated securities markets rather than guaranteeing deposits.",
+    "passageId": "evelyn.passage.apush-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-043",
+    "loId": "apush.wwii-era",
+    "cedCode": "AP-APUSH-7.13",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table shows unemployment still near 15 percent in 1940. This persistent joblessness was most decisively ended by \u2014",
+    "choices": [
+      "the Social Security Act's old-age pension payments.",
+      "the closing of American factories during the war years.",
+      "the massive government spending and labor demand of World War II mobilization.",
+      "a return to balanced federal budgets after 1937."
+    ],
+    "answer": "C",
+    "solutionText": "Wartime defense production and military enlistment after 1941 absorbed the remaining unemployed, achieving the full recovery New Deal programs alone had not. Factories expanded rather than closed, and deficit spending, not a balanced budget, drove the boom.",
+    "passageId": "evelyn.passage.apush-mock-a-st12.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-044",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The memo urges \"economic aid that restores prosperity and hope to war-ruined nations, so that they need not turn to communism out of despair.\" This recommendation was realized in 1948 as \u2014",
+    "choices": [
+      "Lend-Lease, the wartime program supplying arms to Britain.",
+      "the Marshall Plan, which sent U.S. economic aid to rebuild Western Europe.",
+      "the Truman Doctrine's military aid to Greece and Turkey.",
+      "the founding of the United Nations."
+    ],
+    "answer": "B",
+    "solutionText": "The Marshall Plan (European Recovery Program, 1948) delivered exactly this reconstruction aid to prevent economic desperation from feeding communism. Lend-Lease was a wartime arms program, and the Truman Doctrine's aid was primarily military.",
+    "passageId": "evelyn.passage.apush-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-045",
+    "loId": "apush.cold-war-origins",
+    "cedCode": "AP-APUSH-8.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The memo also calls for \"a standing commitment to resist further Soviet advances.\" This idea of a permanent collective defense pledge was institutionalized in 1949 by the creation of \u2014",
+    "choices": [
+      "the League of Nations.",
+      "the Warsaw Pact, the Soviet bloc's military alliance.",
+      "the Marshall Plan economic-aid program.",
+      "the North Atlantic Treaty Organization (NATO), a mutual-defense alliance."
+    ],
+    "answer": "D",
+    "solutionText": "NATO (1949) gave lasting form to the memo's call for a standing commitment to resist Soviet expansion, marking a historic break from peacetime isolation. The Warsaw Pact was the rival Soviet alliance formed later, and the Marshall Plan was economic rather than a defense pledge.",
+    "passageId": "evelyn.passage.apush-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-046",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The anticommunist outlook expressed in this 1947 memo had a domestic counterpart. At home, fear of communist subversion in these years produced \u2014",
+    "choices": [
+      "the repeal of the Smith Act and other anticommunist laws.",
+      "a sharp decline in U.S. defense spending and military budgets.",
+      "the Second Red Scare, including loyalty investigations and McCarthyism.",
+      "the formal protection of Communist Party membership in federal employment."
+    ],
+    "answer": "C",
+    "solutionText": "The same containment mindset abroad fed a domestic Second Red Scare of loyalty oaths, HUAC hearings, and McCarthyism. Defense budgets rose rather than fell, and anticommunist laws were enforced, not repealed.",
+    "passageId": "evelyn.passage.apush-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-047",
+    "loId": "apush.postwar-society",
+    "cedCode": "AP-APUSH-8.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The memo assumes that prosperity keeps nations from turning to communism. Within the United States itself, the two decades after 1945 were marked chiefly by \u2014",
+    "choices": [
+      "a decade-long depression deeper than that of the 1930s.",
+      "a sustained economic boom and the expansion of a suburban middle class.",
+      "the mass emigration of Americans to Europe.",
+      "a prolonged collapse of American consumer spending."
+    ],
+    "answer": "B",
+    "solutionText": "The postwar United States enjoyed a long boom that produced rising incomes, the GI Bill, and rapid suburban growth. There was no new depression, emigration wave, or collapse in consumer spending.",
+    "passageId": "evelyn.passage.apush-mock-a-st13.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-048",
+    "loId": "apush.civil-rights-movement",
+    "cedCode": "AP-APUSH-8.9",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The organizer describes training \"to keep our hands still when we were struck\" and to \"answer insult with silence\" while seated at a lunch counter. These methods are examples of \u2014",
+    "choices": [
+      "armed self-defense against segregationists.",
+      "emigration out of the segregated South.",
+      "nonviolent direct action, such as the lunch-counter sit-ins.",
+      "lobbying Congress exclusively through legal channels."
+    ],
+    "answer": "C",
+    "solutionText": "Disciplined refusal to retaliate while occupying a segregated space is the signature of nonviolent direct action, epitomized by the 1960 sit-in movement. The account explicitly rejects both violence and a purely legal, lobbying approach.",
+    "passageId": "evelyn.passage.apush-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-049",
+    "loId": "apush.sixties-vietnam",
+    "cedCode": "AP-APUSH-8.11",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The youth-led, disciplined protest model described here influenced the wider 1960s most directly by \u2014",
+    "choices": [
+      "ending U.S. involvement in Vietnam by 1962.",
+      "discouraging all further mass protest after 1960.",
+      "persuading activists to abandon nonviolence in favor of armed revolt.",
+      "inspiring the tactics of the antiwar and student movements later in the decade."
+    ],
+    "answer": "D",
+    "solutionText": "Sit-ins and organized civil disobedience became a template for the antiwar demonstrations and campus activism that spread across the later 1960s. U.S. involvement in Vietnam deepened rather than ended in this period, and the movement expanded protest rather than discouraging it.",
+    "passageId": "evelyn.passage.apush-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-050",
+    "loId": "apush.seventies-crisis",
+    "cedCode": "AP-APUSH-8.14",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The organizer's confidence that pressure \"worked\" reflects the early-1960s movement. By contrast, the later 1960s and the 1970s saw \u2014",
+    "choices": [
+      "growing frustration that legal victories had not ended economic inequality, spurring more militant and diverse rights movements.",
+      "the collapse of all civil rights organizing after 1965.",
+      "the federal government's complete withdrawal from civil rights enforcement.",
+      "a return to the pre-Brown doctrine of \"separate but equal.\""
+    ],
+    "answer": "A",
+    "solutionText": "After the landmark laws of 1964-1965, persistent poverty and de facto segregation fueled Black Power, urban unrest, and rights movements among women, Latinos, and others. Organizing continued and federal enforcement persisted, and \"separate but equal\" was not revived.",
+    "passageId": "evelyn.passage.apush-mock-a-st14.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-051",
+    "loId": "apush.conservative-resurgence",
+    "cedCode": "AP-APUSH-9.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table notes \"a resurgence of political conservatism beginning around 1980.\" This resurgence is most directly associated with \u2014",
+    "choices": [
+      "the expansion of Great Society welfare programs.",
+      "the election of Ronald Reagan and policies of tax cuts and deregulation.",
+      "a strengthening of the New Deal Democratic coalition.",
+      "a sharp increase in federal economic regulation."
+    ],
+    "answer": "B",
+    "solutionText": "Reagan's 1980 victory brought tax cuts, deregulation, and efforts to restrain domestic spending, the core of the conservative resurgence. It ran against, rather than extending, the Great Society and the New Deal coalition, and it sought less regulation, not more.",
+    "passageId": "evelyn.passage.apush-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-052",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table reports manufacturing's share of employment falling from about one in five workers in 1980 to about one in eleven in 2010, \"as production shifted overseas and toward automation.\" These figures most directly document \u2014",
+    "choices": [
+      "a massive expansion of American factory employment.",
+      "the complete disappearance of all U.S. manufacturing by 2010.",
+      "a return to pre-1980 industrial employment levels.",
+      "the deindustrialization of the U.S. economy and a shift toward services and automation."
+    ],
+    "answer": "D",
+    "solutionText": "A falling manufacturing share amid offshoring and automation is the textbook profile of deindustrialization and the move toward a service economy. Manufacturing shrank as a share of jobs but did not vanish, and employment did not expand or return to earlier levels.",
+    "passageId": "evelyn.passage.apush-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-053",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The table contrasts early-20th-century immigrants (chiefly from southern and eastern Europe) with those of 1980-2010 (chiefly from Latin America and Asia). This contrast is best understood as \u2014",
+    "choices": [
+      "a decline in total immigration to near zero by 2010.",
+      "a permanent end to European immigration imposed by law.",
+      "continuity in the United States as a magnet for immigrants, alongside a change in their principal regions of origin.",
+      "a reversal in which most immigrants came from Africa."
+    ],
+    "answer": "C",
+    "solutionText": "Across both eras the United States remained a leading destination for immigrants; what changed was the dominant source region, from Europe to Latin America and Asia. Immigration did not cease, European arrivals were not legally banned, and Africa did not become the leading source.",
+    "passageId": "evelyn.passage.apush-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-054",
+    "loId": "apush.america-since-2001",
+    "cedCode": "AP-APUSH-9.6",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The table notes that after the September 11, 2001, attacks the United States entered \"a lengthy U.S. engagement in conflicts in the Middle East.\" That engagement most directly included \u2014",
+    "choices": [
+      "the invasions of Afghanistan (2001) and Iraq (2003) in a \"War on Terror.\"",
+      "an immediate withdrawal from all overseas commitments.",
+      "a formal alliance with al-Qaeda.",
+      "the peaceful end of the Cold War."
+    ],
+    "answer": "A",
+    "solutionText": "The U.S. response to 9/11 launched the War on Terror, beginning with the 2001 invasion of Afghanistan and the 2003 invasion of Iraq. The United States expanded, rather than withdrew from, overseas commitments, and al-Qaeda was the enemy, not an ally.",
+    "passageId": "evelyn.passage.apush-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-mc-055",
+    "loId": "apush.globalization-tech",
+    "cedCode": "AP-APUSH-9.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table shows the share of households owning a personal computer rising from about 8 percent in 1984 to about 77 percent in 2010, \"with the internet reshaping commerce, work, and communication.\" This data best illustrates \u2014",
+    "choices": [
+      "a decline in Americans' use of digital technology.",
+      "the federal government's nationalization of the computer industry.",
+      "personal computers remaining rare luxuries through 2010.",
+      "the information-technology revolution transforming American economic and social life."
+    ],
+    "answer": "D",
+    "solutionText": "Rapid adoption of personal computers and the internet reflects the information-technology revolution that reshaped work, commerce, and daily life. The figures show growth, not decline or continued scarcity, and the industry remained private.",
+    "passageId": "evelyn.passage.apush-mock-a-st15.v1",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apush-fa-fr-01",
+    "loId": "apush.reconstruction-era",
+    "cedCode": "AP-APUSH-5.10",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apush-mock-a-saq1.v1",
+    "problemText": "Using the secondary-source excerpt on Reconstruction, answer (a), (b), and (c).\n\n(a) Briefly describe ONE major claim the historian makes about Reconstruction.\n(b) Briefly explain ONE specific piece of historical evidence from the period 1865-1877 that supports the historian's argument.\n(c) Briefly explain ONE specific piece of historical evidence that could be used to challenge or complicate the historian's argument.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response identifies the historian's argument that Reconstruction was not simply a failure but was 'overthrown,' leaving lasting constitutional foundations; supports it with a concrete achievement of 1865-1877; and complicates it with concrete evidence of Reconstruction's collapse or limits.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-argument",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): accurately describes ONE major claim the historian makes \u2014 e.g., that Reconstruction should not be dismissed as a simple failure because it produced real, lasting achievements (especially the Fourteenth and Fifteenth Amendments), or that Reconstruction was 'overthrown' rather than having failed on its own. No credit for merely restating the prompt, describing the period generally without the historian's argument, or misstating the argument.",
+          "modelResponse": "The historian argues that Reconstruction should not be written off as a mere failure: although it was overthrown after federal troops left the South in 1877, it achieved lasting change \u2014 above all by writing birthright citizenship, equal protection, and voting rights into the Constitution through the Fourteenth and Fifteenth Amendments."
+        },
+        {
+          "criterionId": "b-support-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific piece of historical evidence from 1865-1877 that SUPPORTS the historian's argument (must name a specific development and connect it to the claim, not just list a term). Acceptable examples: ratification of the 14th Amendment (1868) establishing birthright citizenship and equal protection; the 15th Amendment (1870) barring denial of the vote based on race; the election of African American officeholders such as Hiram Revels and Blanche Bruce to the U.S. Senate; the founding of Black churches, schools, and colleges; the Freedmen's Bureau's role in education. No credit for a vague reference with no specific evidence or no link to the argument.",
+          "modelResponse": "The Fifteenth Amendment (1870) prohibited states from denying the vote on account of race, and under it hundreds of African American men were elected to office during Reconstruction, including Hiram Revels and Blanche Bruce, who served in the U.S. Senate. This supports the historian's claim that Reconstruction produced genuine, and in the case of the amendments enduring, gains for the freedpeople."
+        },
+        {
+          "criterionId": "c-challenge-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific piece of historical evidence that CHALLENGES or COMPLICATES the historian's argument. Acceptable examples: the Compromise of 1877 and withdrawal of federal troops; the rise of the Ku Klux Klan and racial terror; the imposition of Black Codes and later Jim Crow segregation; disenfranchisement through poll taxes, literacy tests, and grandfather clauses; sharecropping trapping freedpeople in debt; the Supreme Court's narrowing of the Reconstruction amendments (e.g., the Civil Rights Cases, Plessy v. Ferguson). No credit for a vague claim of 'failure' with no specific evidence.",
+          "modelResponse": "The end of Reconstruction after the Compromise of 1877 allowed Southern states to strip Black men of the vote through poll taxes, literacy tests, and grandfather clauses, and to impose Jim Crow segregation later upheld in Plessy v. Ferguson (1896). This complicates the historian's argument by showing that the constitutional guarantees he emphasizes went largely unenforced for generations."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apush-fa-fr-02",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apush-mock-a-saq2.v1",
+    "problemText": "Using the excerpt from the muckraking magazine report, answer (a), (b), and (c).\n\n(a) Briefly describe the author's point of view about the proper role of government.\n(b) Briefly explain ONE specific historical development in the period 1890-1920 that gave rise to views like the author's.\n(c) Briefly explain ONE specific effect that reformers who shared this point of view had on American government or society in the period 1890-1920.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response identifies the author's view that government (law and public inspection), not private charity, must regulate industry to protect citizens; explains a specific development of 1890-1920 that produced such views (industrial/urban conditions, muckraking); and explains a specific Progressive effect (regulatory legislation such as the Pure Food and Drug Act or Meat Inspection Act).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-pov",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): accurately describes the author's point of view \u2014 that private charity and self-regulation are inadequate and that government must actively regulate industry through law and public inspection to protect ordinary people (workers and consumers). No credit for merely summarizing the scene described without the author's argument about government, or for misstating the view (e.g., claiming the author favors laissez-faire).",
+          "modelResponse": "The author believes that charity and the market cannot fix the abuses of industrial life; only active government \u2014 laws and inspectors who answer to the public rather than to the companies \u2014 can protect workers and consumers from being 'ground up for profit.'"
+        },
+        {
+          "criterionId": "b-explain-cause",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific historical development of 1890-1920 that produced such views. Acceptable: rapid industrialization and the growth of large corporations/trusts; dangerous factory and tenement conditions; urbanization and immigration crowding cities; the rise of muckraking journalism (e.g., Upton Sinclair's The Jungle, Jacob Riis, Ida Tarbell). Must name a specific development and connect it to the emergence of the view. No credit for vague references.",
+          "modelResponse": "The explosive growth of large-scale industry after the Civil War concentrated workers in dangerous factories and packing plants and immigrants in overcrowded tenements; muckraking journalists such as Upton Sinclair, whose novel The Jungle (1906) exposed the meatpacking industry, publicized these conditions and convinced many Americans that private remedies were insufficient."
+        },
+        {
+          "criterionId": "c-explain-effect",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific effect Progressive reformers had on government or society in 1890-1920. Acceptable: the Pure Food and Drug Act and Meat Inspection Act (1906); the Federal Reserve Act (1913); the Sixteenth (income tax) and Seventeenth (direct election of senators) Amendments; the Eighteenth (Prohibition) and Nineteenth (woman suffrage) Amendments; state child-labor and workplace-hour laws; creation of regulatory commissions (e.g., the FTC, 1914). Must name a specific effect and explain its significance. No credit for a vague claim that 'things improved.'",
+          "modelResponse": "Public outrage stoked by such reporting helped push Congress to pass the Pure Food and Drug Act and the Meat Inspection Act in 1906, which for the first time gave the federal government authority to inspect and regulate food and drugs \u2014 a concrete expansion of government's role of exactly the kind the author demands."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apush-fa-fr-03",
+    "loId": "apush.causes-of-revolution",
+    "cedCode": "AP-APUSH-3.2",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Answer (a), (b), and (c). (No stimulus is provided for this question.)\n\n(a) Briefly describe ONE specific cause of colonial resistance to British imperial authority in the period from 1763 to 1776.\n(b) Briefly explain ONE specific way that colonial resistance in this period changed British policy or the relationship between Britain and the colonies.\n(c) Briefly explain ONE specific way that the ideals of the American Revolution affected a group in American society in the period from 1776 to 1800.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response names a specific post-1763 cause of resistance (e.g., new taxes such as the Stamp Act and the principle of 'no taxation without representation'), explains a specific consequence for British-colonial relations, and explains a specific effect of revolutionary ideals on a group between 1776 and 1800.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a-describe-cause",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): describes ONE specific cause of colonial resistance, 1763-1776. Acceptable: new revenue measures after the Seven Years' War (Sugar Act 1764, Stamp Act 1765, Townshend Acts 1767, Tea Act 1773) and the objection to 'taxation without representation'; the Proclamation of 1763 limiting westward settlement; the Quartering Act; the Coercive/Intolerable Acts (1774) after the Boston Tea Party; resentment of British efforts to tighten control and end 'salutary neglect.' Must be specific. No credit for a vague 'the colonists were angry.'",
+          "modelResponse": "After the Seven Years' War, Parliament tried to raise revenue from the colonies with measures like the Stamp Act of 1765, a direct tax on printed materials. Colonists objected that because they elected no members of Parliament, such taxes violated the principle of 'no taxation without representation.'"
+        },
+        {
+          "criterionId": "b-explain-change",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific way colonial resistance changed British policy or the imperial relationship. Acceptable: colonial boycotts and protest forcing repeal of the Stamp Act (1766) and most Townshend duties; Britain responding to the Boston Tea Party with the Coercive Acts (1774); the escalation to the First Continental Congress and armed conflict at Lexington and Concord (1775); the shift from petitions to declaring independence (1776). Must connect resistance to a specific change. No credit for a vague statement.",
+          "modelResponse": "Colonial boycotts and protests against the Stamp Act were so effective that Parliament repealed the tax in 1766 \u2014 but it simultaneously passed the Declaratory Act asserting its right to legislate for the colonies 'in all cases whatsoever,' which showed the crisis had hardened rather than resolved the constitutional dispute."
+        },
+        {
+          "criterionId": "c-explain-effect",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1 pt): explains ONE specific way revolutionary ideals affected a group in American society, 1776-1800. Acceptable: gradual emancipation laws in Northern states and growth of free Black communities; expanded ideas of 'republican motherhood' for women; the disestablishment of state churches and expansion of religious liberty (e.g., Virginia Statute for Religious Freedom, 1786); debates over slavery and the contradiction with liberty; heightened expectations among ordinary white men for political participation. Must name a group and a specific effect. No credit for vague claims of 'more freedom.'",
+          "modelResponse": "Revolutionary ideals of liberty and natural rights led several Northern states, such as Pennsylvania (1780) and Massachusetts, to abolish or gradually end slavery in the 1780s, expanding free Black communities in the North even as slavery persisted and grew in the South."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apush-fa-fr-04",
+    "loId": "apush.progressivism",
+    "cedCode": "AP-APUSH-7.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.apush-mock-a-dbq-packet.v1",
+    "problemText": "Using the seven documents in the packet and your knowledge of the period, write an essay that responds to the following prompt:\n\n\"Evaluate the extent to which Progressive Era reformers changed the role of the United States government in the period from 1890 to 1920.\"\n\nIn your response you should do the following: (1) respond to the prompt with a historically defensible thesis or claim that establishes a line of reasoning; (2) describe a broader historical context relevant to the prompt; (3) support an argument in response to the prompt using at least four of the seven documents; (4) use at least one additional piece of specific historical evidence beyond the documents; (5) for at least three documents, explain how or why the document's point of view, purpose, historical situation, and/or audience is relevant to your argument; and (6) demonstrate a complex understanding of the historical development that is the focus of the prompt.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit essay argues that Progressive reformers substantially expanded the regulatory role of government (using Documents 1-5 and 7) while acknowledging real limits and opposition (Document 6), supports the argument with at least four documents used as evidence, adds an outside example (e.g., the Pure Food and Drug Act or the Sixteenth/Seventeenth Amendments), sources at least three documents by purpose/POV/situation/audience, and complicates the verdict.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "A-thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): the thesis makes a historically defensible claim responding to the prompt (the extent to which Progressive reformers changed the role of government, 1890-1920) AND establishes a line of reasoning \u2014 not a restatement of the prompt and not a bare list. No credit (0/1) for a thesis that only restates the prompt, is not historically defensible, or offers a list with no reasoning.",
+          "modelResponse": "Between 1890 and 1920, Progressive reformers fundamentally expanded the role of the federal and state governments \u2014 turning them from passive referees into active regulators of business, protectors of workers and consumers, and instruments of political reform \u2014 even though this expansion was contested and left significant limits in place."
+        },
+        {
+          "criterionId": "B-contextualization",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): describes, in at least a full sentence of specific detail, a broader historical context relevant to the prompt \u2014 e.g., the rapid industrialization, urbanization, and rise of trusts in the Gilded Age that produced the problems reformers targeted. No credit (0/1) for a single vague phrase or context lifted directly from a document without elaboration.",
+          "modelResponse": "The Progressive movement arose out of the Gilded Age, when explosive industrialization, the rise of giant corporations and trusts, mass immigration, and rapid urban growth produced sharp inequality, dangerous working and living conditions, and widespread corruption that laissez-faire government had done little to address."
+        },
+        {
+          "criterionId": "C-document-evidence",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2/2): uses the CONTENT of at least FOUR of the seven documents to SUPPORT an argument responding to the prompt (documents grouped around claims, not summarized one at a time). Partial (1/2): accurately describes (addresses the content of) at least THREE documents, whether or not they support the argument. No credit (0/2): content of fewer than three documents used, or documents are misdescribed.",
+          "modelResponse": "Documents 1 and 4 establish the problem and the reformers' turn from charity to law: the muckraker (Doc 1) argues only public control of 'the common necessities of life' can stop epidemics the private water company ignores, and the settlement-house worker (Doc 4) explains she turned from 'soup and lessons' to lobbying for laws limiting hours and child labor. Documents 2 and 5 show government actually acting: the reform governor (Doc 2) demands a commission with 'real power' to set railroad rates and inspect labor, and the data table (Doc 5) shows child labor falling from 120,000 to 25,000 as state and federal laws took hold. Document 3's cartoon dramatizes why such action was needed \u2014 the 'Trusts' literally sitting atop the Capitol \u2014 while Document 7, the Nineteenth Amendment, shows reform reaching the Constitution itself by guaranteeing woman suffrage. Together these document a broad expansion of government's regulatory and democratic role."
+        },
+        {
+          "criterionId": "D-outside-evidence",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): uses ONE specific piece of historical evidence NOT found in the documents, relevant to the argument, and explains its relevance. Acceptable: the Pure Food and Drug Act / Meat Inspection Act (1906); the Sixteenth Amendment (income tax) or Seventeenth Amendment (direct election of senators); the Federal Reserve Act (1913); the Clayton Antitrust Act or FTC (1914); trust-busting under Theodore Roosevelt (Northern Securities); Muller v. Oregon (1908). No credit (0/1) for merely naming a fact with no explanation, or for evidence drawn from the documents.",
+          "modelResponse": "Beyond the documents, the Sixteenth and Seventeenth Amendments (both 1913) show the same expansion of government: the Sixteenth authorized a federal income tax that gave Washington a durable new revenue source, and the Seventeenth required the direct popular election of U.S. senators, taking that power away from the state legislatures the trusts in Document 3 were shown dominating."
+        },
+        {
+          "criterionId": "E-sourcing",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): for at least THREE documents, explains how or why the document's point of view, purpose, historical situation, or intended audience is relevant to the argument \u2014 not just naming author/type. No credit (0/1) for fewer than three documents sourced, or sourcing that only restates what the document is without explaining relevance to the argument.",
+          "modelResponse": "The muckraker (Doc 1) wrote for a mass magazine audience, so its purpose was to provoke public outrage into political action, which is why it frames clean water as a government duty rather than a private matter. The reform governor's speech (Doc 2) was addressed to a state legislature with the purpose of persuading it to pass regulatory laws, so it deliberately casts regulation as restoring the people's control over 'creatures of the law.' The factory owner's letter (Doc 6), by contrast, was written by someone whose economic interest was directly threatened by regulation, which explains its insistence that reform 'smothers' enterprise \u2014 a point of view that reveals how contested this expansion of government was."
+        },
+        {
+          "criterionId": "F-complexity",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): demonstrates a complex understanding earned across the essay \u2014 e.g., using Document 6's opposition to qualify the extent of change, weighing continuity against change, or explaining the limits of Progressive reform (its exclusions or the persistence of laissez-faire ideas). No credit (0/1) if the essay treats the change as total and uncontested with no qualification.",
+          "modelResponse": "The change, though real, was neither total nor uncontested. Document 6's factory owner shows that a powerful strand of opinion still defended laissez-faire and saw regulation as tyranny, and even the reforms that passed often left major gaps \u2014 the same era that produced the woman-suffrage amendment (Doc 7) did little for African Americans, who faced deepening disenfranchisement and segregation. Progressive reform thus marked a decisive but partial and hotly contested redefinition of what government was for."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apush-fa-fr-05",
+    "loId": "apush.industrialization-big-business",
+    "cedCode": "AP-APUSH-6.4",
+    "topic": "ap-us-history",
+    "topicId": "ap-us-history",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "Answer the following question. (No documents are provided for this question.)\n\n\"Evaluate the extent to which industrialization changed United States society in the period from 1865 to 1900.\"\n\nIn your response you should do the following: (1) respond to the prompt with a historically defensible thesis or claim that establishes a line of reasoning; (2) describe a broader historical context relevant to the prompt; (3) support an argument in response to the prompt with at least two pieces of specific and relevant evidence; (4) use historical reasoning (such as causation, comparison, or continuity and change) to frame or structure an argument that addresses the prompt; and (5) demonstrate a complex understanding of the historical development that is the focus of the prompt.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit essay argues that industrialization transformed U.S. society between 1865 and 1900 (urbanization, immigration, new class structure, labor conflict), supports it with at least two specific examples, uses historical reasoning, and complicates the argument with continuities or uneven effects.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "A-thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): the thesis makes a historically defensible claim responding to the prompt (the extent to which industrialization changed U.S. society, 1865-1900) AND establishes a line of reasoning. No credit (0/1) for a restatement of the prompt, a claim that is not historically defensible, or a list with no line of reasoning.",
+          "modelResponse": "Between 1865 and 1900, industrialization transformed American society far more than it left unchanged: it drove explosive urban growth and immigration, created a new industrial working class alongside enormous concentrations of corporate wealth, and provoked organized labor conflict that reshaped the relationship between workers, employers, and government."
+        },
+        {
+          "criterionId": "B-contextualization",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): describes, in at least a full sentence of specific detail, a broader context relevant to the prompt \u2014 e.g., the post-Civil War conditions (transcontinental railroad, abundant resources, national markets, immigration) that enabled rapid industrialization. No credit (0/1) for a single vague phrase.",
+          "modelResponse": "In the decades after the Civil War, the completion of the transcontinental railroad in 1869, vast reserves of coal, iron, and oil, a growing national market, and a flood of immigrant labor combined to make the United States the world's leading industrial producer by 1900."
+        },
+        {
+          "criterionId": "C-evidence",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2/2): supports an ARGUMENT responding to the prompt with at least TWO specific and relevant pieces of historical evidence (used to advance the argument, not merely listed). Partial (1/2): provides at least ONE specific and relevant piece of evidence, or two that are named but not tied to the argument. No credit (0/2): no specific relevant evidence. Acceptable evidence: the rise of trusts/corporations (Carnegie steel, Rockefeller's Standard Oil); labor unrest (Great Railroad Strike of 1877, Haymarket 1886, Homestead 1892, Pullman 1894); unions (Knights of Labor, AFL); the New Immigration from southern and eastern Europe; rapid urbanization and tenement life; the growth of railroads; Gilded Age inequality and political machines.",
+          "modelResponse": "The scale of the new economy is clear in the rise of vertically and horizontally integrated giants such as Carnegie Steel and Rockefeller's Standard Oil trust, which concentrated unprecedented wealth and market power. That concentration provoked fierce labor conflict \u2014 the Great Railroad Strike of 1877, the Homestead Strike of 1892, and the Pullman Strike of 1894 \u2014 and the growth of national unions like the Knights of Labor and the American Federation of Labor, as workers organized to resist wage cuts and dangerous conditions. Together these show industrialization remaking both the structure of the economy and the daily experience and collective action of ordinary Americans."
+        },
+        {
+          "criterionId": "D-analysis-reasoning",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): uses historical reasoning (causation, comparison, or continuity and change) to frame or structure an argument that addresses the prompt \u2014 e.g., analyzing how industrialization caused urbanization and immigration, or comparing pre- and post-1865 society. No credit (0/1) if evidence is merely listed with no reasoning connecting it to the prompt's 'extent of change.'",
+          "modelResponse": "Structured as an argument about change over time, the essay shows a clear causal chain: the concentration of production in factories and mills (cause) drew millions of rural Americans and southern and eastern European immigrants into rapidly growing cities (effect), which in turn transformed the class structure and made labor-versus-capital conflict a central feature of national life that had scarcely existed on this scale before the war."
+        },
+        {
+          "criterionId": "E-complexity",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): demonstrates a complex understanding earned across the essay \u2014 e.g., weighing change against continuity, noting that industrialization's effects were uneven (regional differences, the largely agrarian South and West, persistence of older patterns), or explaining both the benefits (rising output, new opportunities) and costs (inequality, exploitation). No credit (0/1) if the essay presents a single flat verdict with no qualification.",
+          "modelResponse": "Yet the transformation was uneven: while the industrial Northeast and Midwest were remade, much of the South remained agrarian and impoverished under sharecropping, and the West was still being incorporated as an extractive and farming frontier. Industrialization thus produced dazzling aggregate growth and new opportunity for some even as it deepened inequality and hardship for others \u2014 a change best understood as profound but unequally distributed rather than uniform."
+        }
+      ]
+    }
+  }
+]

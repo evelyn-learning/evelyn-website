@@ -1,0 +1,113 @@
+{
+  "formId": "ap-environmental-science-form-a",
+  "examKey": "ap-environmental-science",
+  "topicIds": [
+    "ap-environmental-science"
+  ],
+  "label": "AP Environmental Science Practice Exam A",
+  "sections": [
+    {
+      "sectionId": "mcq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apenvsci-fa-mc-001",
+            "apenvsci-fa-mc-002",
+            "apenvsci-fa-mc-003",
+            "apenvsci-fa-mc-004",
+            "apenvsci-fa-mc-005",
+            "apenvsci-fa-mc-006",
+            "apenvsci-fa-mc-007",
+            "apenvsci-fa-mc-008",
+            "apenvsci-fa-mc-009",
+            "apenvsci-fa-mc-010",
+            "apenvsci-fa-mc-011",
+            "apenvsci-fa-mc-012",
+            "apenvsci-fa-mc-013",
+            "apenvsci-fa-mc-014",
+            "apenvsci-fa-mc-015",
+            "apenvsci-fa-mc-016",
+            "apenvsci-fa-mc-017",
+            "apenvsci-fa-mc-018",
+            "apenvsci-fa-mc-019",
+            "apenvsci-fa-mc-020",
+            "apenvsci-fa-mc-021",
+            "apenvsci-fa-mc-022",
+            "apenvsci-fa-mc-023",
+            "apenvsci-fa-mc-024",
+            "apenvsci-fa-mc-025",
+            "apenvsci-fa-mc-026",
+            "apenvsci-fa-mc-027",
+            "apenvsci-fa-mc-028",
+            "apenvsci-fa-mc-029",
+            "apenvsci-fa-mc-030",
+            "apenvsci-fa-mc-031",
+            "apenvsci-fa-mc-032",
+            "apenvsci-fa-mc-033",
+            "apenvsci-fa-mc-034",
+            "apenvsci-fa-mc-035",
+            "apenvsci-fa-mc-036",
+            "apenvsci-fa-mc-037",
+            "apenvsci-fa-mc-038",
+            "apenvsci-fa-mc-039",
+            "apenvsci-fa-mc-040",
+            "apenvsci-fa-mc-041",
+            "apenvsci-fa-mc-042",
+            "apenvsci-fa-mc-043",
+            "apenvsci-fa-mc-044",
+            "apenvsci-fa-mc-045",
+            "apenvsci-fa-mc-046",
+            "apenvsci-fa-mc-047",
+            "apenvsci-fa-mc-048",
+            "apenvsci-fa-mc-049",
+            "apenvsci-fa-mc-050",
+            "apenvsci-fa-mc-051",
+            "apenvsci-fa-mc-052",
+            "apenvsci-fa-mc-053",
+            "apenvsci-fa-mc-054",
+            "apenvsci-fa-mc-055",
+            "apenvsci-fa-mc-056",
+            "apenvsci-fa-mc-057",
+            "apenvsci-fa-mc-058",
+            "apenvsci-fa-mc-059",
+            "apenvsci-fa-mc-060",
+            "apenvsci-fa-mc-061",
+            "apenvsci-fa-mc-062",
+            "apenvsci-fa-mc-063",
+            "apenvsci-fa-mc-064",
+            "apenvsci-fa-mc-065",
+            "apenvsci-fa-mc-066",
+            "apenvsci-fa-mc-067",
+            "apenvsci-fa-mc-068",
+            "apenvsci-fa-mc-069",
+            "apenvsci-fa-mc-070",
+            "apenvsci-fa-mc-071",
+            "apenvsci-fa-mc-072",
+            "apenvsci-fa-mc-073",
+            "apenvsci-fa-mc-074",
+            "apenvsci-fa-mc-075",
+            "apenvsci-fa-mc-076",
+            "apenvsci-fa-mc-077",
+            "apenvsci-fa-mc-078",
+            "apenvsci-fa-mc-079",
+            "apenvsci-fa-mc-080"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "frq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apenvsci-fa-fr-01",
+            "apenvsci-fa-fr-02",
+            "apenvsci-fa-fr-03"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1529 @@
+[
+  {
+    "id": "appsych-fa-mc-001",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which division of the peripheral nervous system controls voluntary skeletal muscle movements, such as raising an arm to answer a question in class?",
+    "choices": [
+      "Autonomic nervous system",
+      "Sympathetic nervous system",
+      "Somatic nervous system",
+      "Parasympathetic nervous system"
+    ],
+    "answer": "C",
+    "solutionText": "The somatic nervous system carries motor commands to skeletal muscles for voluntary movement, distinguishing it from the autonomic nervous system, which regulates involuntary functions like heart rate and digestion.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-002",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A neurologist explains that a tumor pressing on a patient's pituitary gland is disrupting the release of hormones that regulate the patient's growth, metabolism, and reproductive cycle \u2014 and is even affecting hormone secretion from the patient's thyroid and adrenal glands. This case illustrates that the pituitary gland functions as the body's:",
+    "choices": [
+      "\"Master gland,\" releasing hormones that in turn regulate hormone output from other endocrine glands",
+      "Primary structure for monitoring blood chemistry to directly regulate hunger and body temperature",
+      "Site where neurotransmitters diffuse across the synaptic gap between neurons",
+      "Structure most responsible for consolidating new experiences into long-term declarative memory"
+    ],
+    "answer": "A",
+    "solutionText": "The pituitary gland is often called the body's \"master gland\" because it releases hormones that regulate the activity of other endocrine glands, which is why a pituitary tumor can disrupt hormone secretion from the thyroid and adrenal glands as well.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-003",
+    "loId": "appsych.nervous-endocrine",
+    "cedCode": "AP-PSYCH-1.1-1.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a lab demonstration, a physician taps just below a volunteer's kneecap with a small reflex hammer, and the volunteer's lower leg kicks outward within a fraction of a second \u2014 well before the volunteer consciously registers the tap. This rapid, involuntary response is best explained by neural processing occurring primarily in the:",
+    "choices": [
+      "Cerebral cortex, where conscious sensory experience is processed",
+      "Sympathetic branch of the autonomic nervous system, which prepares the body for action",
+      "Endocrine system, via a rapid hormonal feedback loop",
+      "Spinal cord, through a reflex arc that bypasses the brain for a faster response"
+    ],
+    "answer": "D",
+    "solutionText": "Simple reflexes like the knee-jerk are processed through a reflex arc in the spinal cord, allowing a rapid motor response to occur before the sensory signal even reaches the brain for conscious processing.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-004",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which structure insulates the axon of many neurons, allowing the electrical signal to jump between gaps and travel down the axon more quickly?",
+    "choices": [
+      "Terminal buttons",
+      "Myelin sheath",
+      "Dendrites",
+      "Cell body (soma)"
+    ],
+    "answer": "B",
+    "solutionText": "The myelin sheath is a fatty insulating layer wrapped around many axons; the electrical signal jumps between the uninsulated gaps (nodes of Ranvier), which speeds conduction down the axon.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-005",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Botulinum toxin (Botox) prevents synaptic vesicles from releasing their contents into the synapse, blocking transmission at the neuromuscular junction and causing temporary muscle paralysis. Botulinum toxin is best classified as an acetylcholine:",
+    "choices": [
+      "Reuptake inhibitor, because it prevents the reabsorption of acetylcholine into the sending neuron",
+      "Agonist, because it increases muscle activity beyond normal levels",
+      "Enzyme, because it synthesizes new acetylcholine molecules within the axon terminal",
+      "Antagonist, because it blocks acetylcholine's normal release and effect at the synapse"
+    ],
+    "answer": "D",
+    "solutionText": "Because botulinum toxin blocks the release and effect of acetylcholine at the synapse rather than mimicking or enhancing it, it functions as an antagonist, producing paralysis by preventing normal neuromuscular signaling.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-006",
+    "loId": "appsych.neurons-neurotransmitters",
+    "cedCode": "AP-PSYCH-1.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A single subthreshold signal reaching a neuron's dendrites is not enough, on its own, to trigger an action potential. However, when the same presynaptic neuron fires several rapid, subthreshold signals in quick succession, their combined effect finally pushes the postsynaptic neuron's membrane potential past threshold. This phenomenon is best described as:",
+    "choices": [
+      "Temporal summation, because rapidly repeated signals from a single input combine over time",
+      "Spatial summation, because signals from multiple different neurons combine at the same moment",
+      "The refractory period, during which the neuron is temporarily unable to fire again",
+      "The all-or-none law, because a neuron only fires once its threshold is reached"
+    ],
+    "answer": "A",
+    "solutionText": "When rapid, repeated subthreshold signals from the same neuron combine over time to reach threshold, this is temporal summation, distinct from spatial summation, which combines simultaneous inputs from multiple different neurons.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-007",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which limbic system structure plays the primary role in processing fear and triggering the body's fear response?",
+    "choices": [
+      "Hippocampus",
+      "Thalamus",
+      "Amygdala",
+      "Hypothalamus"
+    ],
+    "answer": "C",
+    "solutionText": "The amygdala, part of the limbic system, plays the central role in processing fear and triggering the physiological and behavioral components of the fear response.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-008",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A patient suffers a stroke that damages Broca's area in the left frontal lobe. The patient can understand spoken conversation without difficulty, but speech is slow, effortful, and grammatically fragmented (\"want... coffee... now\"). This pattern of symptoms is best known as:",
+    "choices": [
+      "Wernicke's aphasia, marked by fluent but meaningless or nonsensical speech",
+      "Prosopagnosia, an inability to recognize familiar faces",
+      "Anterograde amnesia, an inability to form new long-term memories",
+      "Broca's aphasia, marked by halting, effortful, non-fluent speech with comprehension largely intact"
+    ],
+    "answer": "D",
+    "solutionText": "Damage to Broca's area produces Broca's aphasia, characterized by slow, effortful, grammatically simplified speech with relatively preserved comprehension \u2014 the mirror image of Wernicke's aphasia.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-009",
+    "loId": "appsych.brain-structures",
+    "cedCode": "AP-PSYCH-1.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two patients undergo the same visual testing after separate strokes. Patient X has damage confined to the primary visual cortex in the occipital lobe and reports seeing nothing at all in the affected portion of her visual field. Patient Y has damage limited to visual association areas beyond the primary visual cortex \u2014 her primary visual cortex is intact \u2014 and she can tell that something is there but cannot identify or make sense of what she is looking at. This comparison best illustrates that:",
+    "choices": [
+      "Both patients have identical deficits, because all regions of the visual cortex perform the same function",
+      "The primary visual cortex is necessary for basic visual sensation, while visual association areas are needed to interpret and give meaning to what is sensed",
+      "The primary visual cortex handles object recognition, while visual association areas are responsible for basic sensory detection",
+      "Visual association areas, rather than the primary visual cortex, are responsible for detecting the presence of light"
+    ],
+    "answer": "B",
+    "solutionText": "Damage limited to the primary visual cortex eliminates basic visual sensation, while damage to visual association areas (with primary cortex intact) leaves basic detection intact but impairs the ability to interpret and recognize what is sensed \u2014 illustrating the distinction between sensation and perception.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-010",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every night, Renata's breathing repeatedly stops for several seconds while she sleeps, causing her to briefly wake gasping for air dozens of times without remembering it the next morning. She wakes up exhausted despite spending eight hours in bed. This pattern of symptoms most closely fits:",
+    "choices": [
+      "Sleep apnea",
+      "Narcolepsy",
+      "Insomnia",
+      "Somnambulism (sleepwalking)"
+    ],
+    "answer": "A",
+    "solutionText": "Repeated breathing interruptions during sleep that cause brief, often unremembered awakenings and severe daytime fatigue despite adequate time in bed are the hallmark of sleep apnea.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-011",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a flight from Los Angeles to Tokyo \u2014 an 11-hour time difference \u2014 Devon feels wide awake at 3 a.m. Tokyo time and intensely drowsy in the middle of the Tokyo afternoon for several days after landing. Devon's symptoms are best explained by a temporary mismatch between his:",
+    "choices": [
+      "REM sleep and NREM sleep cycles, which have become desynchronized",
+      "Levels of endorphins and circulating cortisol",
+      "Internal circadian rhythm and the external light-dark cycle of his new environment",
+      "Sleep spindles and slow-wave sleep patterns"
+    ],
+    "answer": "C",
+    "solutionText": "Crossing many time zones creates a mismatch between the body's internal circadian clock and the new environment's light-dark cycle, producing jet-lag symptoms until the clock re-entrains.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-012",
+    "loId": "appsych.consciousness-sleep",
+    "cedCode": "AP-PSYCH-1.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Stage 3 NREM sleep (slow-wave sleep) is the deepest sleep stage, marked by dramatically slowed brain waves and associated with the release of growth hormone and physical restoration. A person abruptly awakened from this stage would most likely feel:",
+    "choices": [
+      "Immediately alert, since no dreaming was occurring",
+      "Groggy and disoriented for several minutes, a state known as sleep inertia",
+      "Energized, due to elevated REM-related brain activity",
+      "Unable to recall ever having been asleep"
+    ],
+    "answer": "B",
+    "solutionText": "Awakening abruptly from slow-wave (Stage 3 NREM) sleep typically produces sleep inertia \u2014 a period of grogginess and disorientation \u2014 because this is the deepest, most restorative sleep stage.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-013",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When Layla closes one eye and then the other while looking at a finger held just a few inches from her face, the finger appears to jump sideways relative to the background behind it. This experience demonstrates that Layla's two eyes receive slightly different images of the same scene \u2014 a depth cue known as:",
+    "choices": [
+      "Motion parallax, based on the relative speed of objects as the viewer moves",
+      "Interposition, in which one object partially blocks another",
+      "Linear perspective, in which parallel lines appear to converge with distance",
+      "Binocular disparity, the difference between the images received by each retina"
+    ],
+    "answer": "D",
+    "solutionText": "Binocular (retinal) disparity refers to the slightly different images each eye receives because of their separation; the brain uses this difference to judge depth, which is why closing one eye and then the other shifts the apparent position of a near object.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-014",
+    "loId": "appsych.sensation-perception",
+    "cedCode": "AP-PSYCH-1.6+2.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a crowded party with dozens of overlapping conversations, Marco instantly notices when someone across the room says his name, even though he had not consciously been listening to that conversation. This phenomenon is best known as:",
+    "choices": [
+      "The cocktail party effect, an example of selective attention operating on unattended information",
+      "Sensory adaptation to repeated auditory stimulation",
+      "A criterion shift as described by signal detection theory",
+      "Subliminal perception of stimuli below the absolute threshold"
+    ],
+    "answer": "A",
+    "solutionText": "The cocktail party effect describes how selective attention filters out most background noise while remaining primed to detect personally significant stimuli, such as one's own name, even outside conscious focus.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-015",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A team of researchers wants to determine whether background noise causes a change in visual reaction time. They recruit 80 volunteers and randomly assign 40 of them to complete a computerized reaction-time task in a silent room, while the other 40 complete the identical task while continuous white noise plays in the background. Which research method are the researchers using, and why?",
+    "choices": [
+      "Naturalistic observation, because behavior is being recorded as it occurs in a real-world setting without intervention",
+      "Experiment, because the researchers are manipulating an independent variable (noise condition) and randomly assigning participants to measure its effect on a dependent variable (reaction time)",
+      "Case study, because the researchers are conducting an in-depth analysis of a small number of individuals",
+      "Survey, because the researchers are collecting self-reported data from a large sample of participants"
+    ],
+    "answer": "B",
+    "solutionText": "Because the researchers manipulated an independent variable (noise condition) and randomly assigned participants to conditions in order to measure its effect on a dependent variable (reaction time), this is an experiment \u2014 the only method among the choices that supports a causal conclusion.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-016",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Echoic memory is the sensory register for auditory information. Because of it, a person can mentally 'replay' the last few words someone just said even if they weren't fully listening at the time. Approximately how long does echoic memory persist after an auditory stimulus ends?",
+    "choices": [
+      "About 200 milliseconds",
+      "About 3 to 4 seconds",
+      "About 30 minutes",
+      "About 24 hours"
+    ],
+    "answer": "B",
+    "solutionText": "Echoic memory is estimated to last roughly 3-4 seconds, notably longer than iconic (visual sensory) memory's fraction of a second, which is why a recently heard sentence can still be mentally 'replayed.'",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-017",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "While mentally rotating a 3-D shape in her head to solve a spatial-reasoning puzzle, Priya is primarily relying on which component of Baddeley's working memory model?",
+    "choices": [
+      "Phonological loop",
+      "Episodic buffer",
+      "Long-term store",
+      "Visuospatial sketchpad"
+    ],
+    "answer": "D",
+    "solutionText": "The visuospatial sketchpad temporarily holds and manipulates visual and spatial information, such as mentally rotating a shape, distinguishing it from the phonological loop's verbal/auditory role.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-018",
+    "loId": "appsych.memory-models",
+    "cedCode": "AP-PSYCH-2.3-2.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pianist needs to remember a 12-digit access code. She finds she cannot hold all twelve digits in mind as separate items, but when she recites the same code as three groups of four ('3829 - 1057 - 6412'), she can hold the whole code in mind at once. This improvement is best explained by:",
+    "choices": [
+      "Chunking, which reorganizes items into fewer, larger meaningful units within short-term memory's limited capacity",
+      "Elaborative rehearsal, which links the digits to prior personal knowledge",
+      "The recency effect, which favors items encountered most recently",
+      "Long-term potentiation, which strengthens synaptic connections between the digit groups"
+    ],
+    "answer": "A",
+    "solutionText": "Grouping individual digits into fewer, larger units (chunks) reduces the number of items short-term memory must hold, unlike elaborative rehearsal (which adds meaning, not grouping) or the recency effect (a serial-recall phenomenon, not applicable here).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-019",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Being able to state the definition of 'photosynthesis' without recalling the specific moment or classroom in which you first learned it is an example of which type of long-term memory?",
+    "choices": [
+      "Episodic memory",
+      "Procedural memory",
+      "Semantic memory",
+      "Iconic memory"
+    ],
+    "answer": "C",
+    "solutionText": "Semantic memory stores general facts and concepts (like a word's definition) independent of the personal context in which they were learned, unlike episodic memory, which is tied to a specific time and place.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-020",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jordan memorized his lines for a play while feeling jittery from too much caffeine. Backstage on opening night, feeling calm and relaxed, he blanks on several lines \u2014 yet during a stressful dress rehearsal the day before, when he again felt jittery, he recalled them perfectly. This pattern best illustrates:",
+    "choices": [
+      "Context-dependent memory",
+      "State-dependent memory",
+      "The serial position effect",
+      "Retrograde amnesia"
+    ],
+    "answer": "B",
+    "solutionText": "State-dependent memory refers to retrieval being improved when a person's internal physiological or emotional state at recall matches their state during encoding \u2014 here, feeling jittery in both instances, rather than a match in external environment.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-021",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In an experiment, participants first view a word list that includes 'assassin.' Later, in a seemingly unrelated task, they are asked to complete the fragment 'ass _ _ _ in' with the first word that comes to mind. Participants who saw 'assassin' earlier complete the fragment correctly far more often than participants who did not \u2014 even though most cannot consciously recall seeing the word on the earlier list. This pattern best demonstrates:",
+    "choices": [
+      "Priming of implicit memory, which does not require conscious recollection",
+      "Elaborative rehearsal of explicit episodic memory",
+      "The recency effect from short-term memory",
+      "State-dependent retrieval triggered by the testing context"
+    ],
+    "answer": "A",
+    "solutionText": "The key detail is that performance is influenced despite the absence of conscious recall \u2014 this is the hallmark of implicit memory, demonstrated here through priming, as opposed to explicit memory, which requires conscious recollection.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-022",
+    "loId": "appsych.memory-storage-retrieval",
+    "cedCode": "AP-PSYCH-2.5-2.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Most people who describe exactly where they were and what they were doing when they first heard shocking national news report high confidence in the vividness and accuracy of that memory, even years later. However, when researchers compare these later reports to accounts the same people gave within 24 hours of the event, significant inaccuracies are common. Psychologists most often use this pattern to illustrate that:",
+    "choices": [
+      "Flashbulb memories are stored in a separate, decay-proof memory system",
+      "Confidence in a memory's accuracy is a reliable indicator of how accurate that memory truly is",
+      "Emotional arousal at encoding guarantees permanent, unaltered storage of the details",
+      "Flashbulb memories, despite feeling vivid and certain, are still subject to distortion and are not perfectly accurate"
+    ],
+    "answer": "D",
+    "solutionText": "Research on flashbulb memories shows that although these memories feel unusually vivid and are held with high confidence, they are reconstructed like other memories and can drift from the original event over time.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-023",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every day, Wei walks past a coin-operated newspaper vending machine but has never noticed exactly where the coin slot is located, even though he has passed the machine hundreds of times. When asked to draw the machine from memory, he cannot accurately place the slot. This is best explained by:",
+    "choices": [
+      "Decay of a well-established long-term memory",
+      "Retroactive interference from newer memories",
+      "Encoding failure \u2014 the detail was never attended to closely enough to be encoded in the first place",
+      "Anterograde amnesia caused by hippocampal damage"
+    ],
+    "answer": "C",
+    "solutionText": "Because the detail was never attended to, it was never encoded into memory at all \u2014 this is encoding failure, distinct from decay or interference, which both assume the information was successfully stored at some point.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-024",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers teach participants a list of paired associates at 9 PM. One group sleeps normally for the next 8 hours before being tested; a second group stays awake, going about ordinary daytime activities, for the same 8-hour interval before being tested. Despite equal elapsed time, the sleep group recalls significantly more pairs. This finding is best explained by:",
+    "choices": [
+      "The recency effect, because sleep preserves items studied most recently",
+      "State-dependent memory, because the internal arousal state during evening encoding matches nighttime testing",
+      "Anterograde amnesia, because staying awake prevents the formation of any new memories",
+      "Retroactive interference \u2014 waking activity introduces new, competing information that disrupts memory consolidation, while sleep protects memories from this interference"
+    ],
+    "answer": "D",
+    "solutionText": "Since elapsed time is held constant across groups, simple decay cannot explain the difference; the classic interpretation (Jenkins & Dallenbach) is that waking activity creates retroactive interference that disrupts consolidation, while sleep shields memories from competing input.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-025",
+    "loId": "appsych.memory-forgetting",
+    "cedCode": "AP-PSYCH-2.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A therapist notes that a client has no conscious memory of a frightening dog attack from childhood, though relatives confirm the event occurred. Years later, under hypnosis, the client describes the attack in vivid detail matching the relatives' account, and afterward can recall it without hypnosis. Which concept, as traditionally used in Freudian theory, best accounts for the client's original inability to recall the event?",
+    "choices": [
+      "Decay \u2014 the memory trace weakened irreversibly over time",
+      "Repression \u2014 the threatening memory was unconsciously pushed out of awareness and remained retrievable through therapeutic techniques",
+      "Retroactive interference \u2014 later encounters with dogs overwrote the original memory",
+      "Source amnesia \u2014 the client formed the memory but forgot from whom it was learned"
+    ],
+    "answer": "B",
+    "solutionText": "The fact that the memory was fully retrievable and intact once accessed through hypnosis rules out decay and interference (both of which would degrade or overwrite the trace) and instead fits the Freudian concept of repression, in which a threatening memory is kept out of conscious awareness but not destroyed.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-026",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After seeing extensive news coverage of a shark attack at a nearby beach, Elena becomes convinced that shark attacks are common and refuses to swim in the ocean all summer, even though shark attacks are statistically far rarer than drowning from rip currents. Elena's judgment best illustrates:",
+    "choices": [
+      "The availability heuristic \u2014 vivid, easily recalled examples inflate her perceived probability of an event",
+      "The representativeness heuristic \u2014 she compares the situation to a mental prototype of a 'dangerous beach'",
+      "Functional fixedness \u2014 she cannot see an alternative use for the beach",
+      "An algorithm \u2014 she is using a guaranteed step-by-step rule to assess risk"
+    ],
+    "answer": "A",
+    "solutionText": "Because a vivid, memorable example (the news coverage) is skewing her estimate of how common an event is, this is the availability heuristic, not a comparison to a category prototype (representativeness).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-027",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A manager believes that employees who arrive early are more productive. When reviewing performance records, he carefully notes every early-arriving high performer but overlooks early arrivers who underperform and late arrivers who excel. Over time, this selective attention strengthens his original belief. This best illustrates:",
+    "choices": [
+      "The representativeness heuristic",
+      "The availability heuristic",
+      "Confirmation bias \u2014 the tendency to seek out and favor information that supports one's existing beliefs while ignoring disconfirming evidence",
+      "The framing effect"
+    ],
+    "answer": "C",
+    "solutionText": "The manager is selectively attending to evidence that fits his prior belief while ignoring contradictory cases, which is the defining pattern of confirmation bias, not a heuristic based on memorability or similarity to a prototype.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-028",
+    "loId": "appsych.thinking-language",
+    "cedCode": "AP-PSYCH-2.2+3.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "To find a forgotten 4-digit locker combination, one student tries every possible combination from 0000 to 9999 in sequence until the locker opens \u2014 a method guaranteed eventually to succeed but requiring up to 10,000 attempts. A second student instead guesses combinations that 'feel right' based on patterns typical of combinations she has seen before, arriving at an answer faster but with no guarantee of success. The first student's strategy is best classified as a(n):",
+    "choices": [
+      "Algorithm \u2014 a systematic, step-by-step procedure that is guaranteed to eventually produce a correct solution",
+      "Heuristic \u2014 a mental shortcut that trades accuracy and certainty for speed",
+      "Insight \u2014 a sudden, non-stepwise realization of a solution",
+      "Prototype-matching \u2014 comparing the problem to a typical mental example"
+    ],
+    "answer": "A",
+    "solutionText": "The first student's exhaustive, systematic method that is guaranteed to eventually find the answer is the defining feature of an algorithm, in contrast to the second student's faster but unreliable heuristic approach.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-029",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which term is the current, APA-preferred diagnostic label for significantly below-average intellectual functioning combined with limitations in adaptive functioning, replacing the outdated term 'mental retardation'?",
+    "choices": [
+      "Learning disability",
+      "Autism spectrum disorder",
+      "Cognitive dissonance",
+      "Intellectual disability"
+    ],
+    "answer": "D",
+    "solutionText": "'Intellectual disability' is the current APA-endorsed clinical term for significantly below-average intellectual functioning paired with deficits in adaptive behavior; it replaced the outdated and stigmatizing term 'mental retardation.'",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-030",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 70-year-old retired librarian scores exceptionally high on a vocabulary and general-knowledge subtest but shows a marked slowdown on a timed test requiring her to identify the next shape in an unfamiliar visual sequence she has never encountered before. Her strong vocabulary/knowledge performance best reflects:",
+    "choices": [
+      "Fluid intelligence",
+      "Crystallized intelligence \u2014 accumulated knowledge and skills built up over a lifetime",
+      "Practical (contextual) intelligence",
+      "Emotional intelligence"
+    ],
+    "answer": "B",
+    "solutionText": "Vocabulary and general-knowledge performance reflect crystallized intelligence, accumulated learning that tends to hold steady or grow with age, in contrast to fluid intelligence (novel abstract reasoning), which tends to decline.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-031",
+    "loId": "appsych.intelligence",
+    "cedCode": "AP-PSYCH-2.8",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Wechsler Adult Intelligence Scale (WAIS) is standardized so that scores form a normal distribution with a mean of 100 and a standard deviation of 15. A test-taker who scores 130 falls approximately at which percentile relative to the general population?",
+    "choices": [
+      "50th percentile",
+      "84th percentile",
+      "98th percentile \u2014 approximately two standard deviations above the mean",
+      "16th percentile"
+    ],
+    "answer": "C",
+    "solutionText": "A score of 130 is exactly two standard deviations above the mean (100 + 2\u00d715). By the empirical rule for a normal distribution, this corresponds to roughly the 98th percentile.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-032",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to know whether a new mnemonic-training app improves memory in adults. She recruits 80 volunteers who signed up specifically because they were already worried about their forgetfulness, and compares their pre- and post-training recall scores to normative recall scores from the general population reported in an unrelated published study. Which methodological problem MOST threatens her ability to conclude that the app caused any observed improvement?",
+    "choices": [
+      "The study lacks a valid dependent variable",
+      "The sample size of 80 volunteers is too small to yield meaningful statistics",
+      "The recall measure used lacks test-retest reliability",
+      "There is no equivalent control group tested under the same conditions and time frame, so the improvement could stem from practice effects, regression to the mean, or other confounds rather than the app itself"
+    ],
+    "answer": "D",
+    "solutionText": "Without a control group tested under matching conditions, the study cannot rule out alternative explanations for the improvement \u2014 such as practice effects or regression to the mean \u2014 which threatens the causal claim that the app itself was responsible.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-033",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The debate over whether development is a smooth, gradual process versus one that unfolds through qualitatively distinct stages is known in developmental psychology as the:",
+    "choices": [
+      "Nature versus nurture debate",
+      "Stability versus change debate",
+      "Continuity versus discontinuity debate",
+      "Universal versus context-specific debate"
+    ],
+    "answer": "C",
+    "solutionText": "The continuity-discontinuity debate asks whether development is gradual and quantitative or occurs in qualitatively distinct stages; stage theorists like Piaget favored discontinuity, while many learning theorists favor continuity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-034",
+    "loId": "appsych.developmental-themes-methods",
+    "cedCode": "AP-PSYCH-3.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to study emotional regulation across childhood but is worried both about cohort effects (from comparing different age groups) and about attrition and cost (from tracking one group for many years). She selects three groups of children \u2014 ages 4, 6, and 8 \u2014 and follows each group for four additional years, retesting them periodically as they age. This hybrid design is best classified as a:",
+    "choices": [
+      "Cross-sequential (cohort-sequential) study",
+      "Case study",
+      "Twin study",
+      "Correlational study"
+    ],
+    "answer": "A",
+    "solutionText": "A cross-sequential (cohort-sequential) design combines cross-sectional and longitudinal methods by following multiple age cohorts over a shorter span of time, helping separate true age effects from cohort effects while limiting attrition and cost.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-035",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An 8-year-old can arrange sticks in order from shortest to longest and can mentally reverse the steps of a subtraction problem to check her work, but she still struggles to reason abstractly about hypothetical situations she has never experienced. According to Piaget, this child is in the:",
+    "choices": [
+      "Sensorimotor stage",
+      "Preoperational stage",
+      "Formal operational stage",
+      "Concrete operational stage"
+    ],
+    "answer": "D",
+    "solutionText": "Seriation and mental reversibility are hallmark accomplishments of Piaget's concrete operational stage (roughly ages 7-11); abstract, hypothetical reasoning about untested possibilities does not emerge until the formal operational stage.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-036",
+    "loId": "appsych.cognitive-development",
+    "cedCode": "AP-PSYCH-3.2+3.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A toddler who has learned the word 'doggy' for the family's Labrador sees a cat for the first time and calls it 'doggy' too. After his mother corrects him and explains that the animal is a 'cat,' he begins using the two words correctly. The toddler's initial labeling of the cat as 'doggy' best illustrates _______, while his eventual correct use of the word 'cat' best illustrates _______.",
+    "choices": [
+      "Accommodation; assimilation",
+      "Assimilation; accommodation",
+      "Object permanence; conservation",
+      "Egocentrism; centration"
+    ],
+    "answer": "B",
+    "solutionText": "Assimilation is fitting new information into an existing schema (calling the cat 'doggy'); accommodation is modifying or creating a new schema to fit new information (learning the separate category 'cat').",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-037",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The set of behaviors, attitudes, and expectations that a culture associates with being male or female is known as a person's:",
+    "choices": [
+      "Gender identity",
+      "Sexual orientation",
+      "Gender role",
+      "Biological sex"
+    ],
+    "answer": "C",
+    "solutionText": "Gender role refers to the culturally defined behaviors and expectations attached to being male or female, which is distinct from gender identity (one's internal sense of gender) and biological sex.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-038",
+    "loId": "appsych.gender-sexual-orientation",
+    "cedCode": "AP-PSYCH-3.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jordan was assigned male at birth and has always identified as male. Jordan enjoys wearing clothing and jewelry that are culturally associated with women, and is romantically and sexually attracted exclusively to women. Which statement correctly applies psychological terminology to Jordan's case?",
+    "choices": [
+      "Jordan's gender expression indicates that Jordan is transgender",
+      "Jordan's romantic attraction to women means Jordan's gender identity is female",
+      "Jordan's clothing choices determine Jordan's sexual orientation",
+      "Jordan's gender identity, gender expression, and sexual orientation are three independent dimensions that do not have to align in stereotypical ways"
+    ],
+    "answer": "D",
+    "solutionText": "Gender identity, gender expression, and sexual orientation are conceptually independent dimensions; a person's clothing choices or romantic attractions do not determine or reveal the others.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-039",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 9-year-old feels proud when she completes her homework and masters new skills at school, but feels increasingly discouraged and views herself as 'not good at anything' when she repeatedly struggles to keep up with her classmates. According to Erikson, this child is navigating the psychosocial conflict of:",
+    "choices": [
+      "Industry versus inferiority",
+      "Initiative versus guilt",
+      "Autonomy versus shame and doubt",
+      "Identity versus role confusion"
+    ],
+    "answer": "A",
+    "solutionText": "Erikson placed the industry-versus-inferiority conflict in middle childhood (roughly ages 6-12), when children's sense of competence hinges on mastering skills and comparing themselves to peers.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-040",
+    "loId": "appsych.social-emotional-moral",
+    "cedCode": "AP-PSYCH-3.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During Ainsworth's Strange Situation procedure, a 14-month-old shows little distress when her mother leaves the room and continues playing with toys. When the mother returns, the infant largely ignores her and does not seek contact or comfort. This pattern of behavior is most consistent with:",
+    "choices": [
+      "Secure attachment",
+      "Avoidant attachment",
+      "Anxious-ambivalent (resistant) attachment",
+      "Disorganized attachment"
+    ],
+    "answer": "B",
+    "solutionText": "Avoidantly attached infants show little distress at separation and actively avoid or ignore the caregiver upon reunion, in contrast to the distress-then-comfort pattern of secure attachment.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-041",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A team of researchers wants to examine how vocabulary size changes as children grow. They recruit 90 children and divide them into three groups by age \u2014 3-year-olds, 5-year-olds, and 7-year-olds \u2014 then administer the same vocabulary test to all 90 children during a single two-week testing period. This study design is best classified as:",
+    "choices": [
+      "A longitudinal study, because the same children are tracked as they age",
+      "An experiment, because age is manipulated by the researchers",
+      "A case study, because the sample size is very small",
+      "A cross-sectional study, because different age groups are compared at a single point in time"
+    ],
+    "answer": "D",
+    "solutionText": "Because three different age groups of children are each tested once, during the same short window, rather than the same children being followed over years, this is a cross-sectional design.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-042",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every time shoppers pass a bakery stall, a bell chimes right before an employee hands out warm, free samples of bread, which the shoppers find delicious. After several days, shoppers begin to salivate at the sound of the bell alone, even before any bread is handed out. In this scenario, the delicious taste of the bread is the:",
+    "choices": [
+      "Conditioned stimulus",
+      "Conditioned response",
+      "Unconditioned stimulus",
+      "Neutral stimulus"
+    ],
+    "answer": "C",
+    "solutionText": "The taste of the bread naturally and automatically triggers salivation without any prior learning, making it the unconditioned stimulus; the bell becomes the conditioned stimulus only after repeated pairing with the bread.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-043",
+    "loId": "appsych.classical-conditioning",
+    "cedCode": "AP-PSYCH-3.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A gym teacher blows a loud whistle immediately before every fire drill, and students have learned to feel a jolt of anxiety at the sound of the whistle alone, even on days with no drill. Separately, the same students receive extra recess time whenever they line up quietly within 30 seconds of the whistle, and over the term they have gotten faster at lining up. Which statement correctly identifies the learning process underlying EACH behavior?",
+    "choices": [
+      "The anxiety response to the whistle was acquired through classical conditioning (whistle paired with the fire drill); the faster lining-up was shaped through operant conditioning (reinforced by extra recess)",
+      "Both behaviors were acquired entirely through operant conditioning, since a whistle is used to trigger both",
+      "Both behaviors were acquired entirely through classical conditioning, since the same whistle triggers both responses",
+      "The anxiety response is operant conditioning because it involves a voluntary behavior; the lining-up is classical conditioning because it is reflexive"
+    ],
+    "answer": "A",
+    "solutionText": "A previously neutral stimulus (the whistle) paired with an aversive event (the fire drill) producing an automatic emotional response is classical conditioning, whereas the increase in a voluntary behavior (lining up) due to a rewarding consequence (extra recess) is operant conditioning.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-044",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In operant conditioning terminology, the word 'negative' refers specifically to:",
+    "choices": [
+      "An unpleasant or aversive stimulus",
+      "The removal or subtraction of a stimulus from the situation",
+      "A decrease in the frequency of a behavior",
+      "A punishment procedure only, never a reinforcement procedure"
+    ],
+    "answer": "B",
+    "solutionText": "In operant conditioning, 'positive' and 'negative' refer to whether a stimulus is added or removed, not to whether the outcome is pleasant; 'negative' specifically means that something is taken away.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-045",
+    "loId": "appsych.operant-conditioning",
+    "cedCode": "AP-PSYCH-3.8",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A supervisor checks in on employees' work unpredictably \u2014 sometimes twice in a morning, sometimes not at all for two days. Employees who happen to be working diligently whenever the supervisor checks in receive a compliment. As a result, employees tend to work at a fairly steady, moderate pace throughout the day rather than only right before an expected check. This reinforcement pattern best illustrates a:",
+    "choices": [
+      "Fixed-ratio schedule",
+      "Fixed-interval schedule",
+      "Variable-ratio schedule",
+      "Variable-interval schedule"
+    ],
+    "answer": "D",
+    "solutionText": "Variable-interval schedules, in which the amount of time before reinforcement becomes available varies unpredictably, tend to produce slow, steady responding rather than the bursts seen with ratio schedules or the scallop pattern seen with fixed-interval schedules.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-046",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a community garden, children who watch an older gardener calmly demonstrate how to plant seeds \u2014 without receiving any reward themselves \u2014 often begin planting seeds the same way on their own the very next day. This change in the children's behavior, produced simply by watching a skilled model with no reinforcement delivered to the observers, best illustrates:",
+    "choices": [
+      "Observational learning",
+      "Operant shaping through successive approximations",
+      "Classical conditioning through stimulus pairing",
+      "Negative reinforcement"
+    ],
+    "answer": "A",
+    "solutionText": "The children changed their behavior simply by watching a model perform the skill, with no direct reinforcement delivered to the observers themselves \u2014 the defining feature of observational learning.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-047",
+    "loId": "appsych.observational-learning",
+    "cedCode": "AP-PSYCH-3.9",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A boy watches, with great interest, a professional skateboarder perform a complex trick online and can accurately describe every step of the trick from memory a week later. However, the boy still cannot perform the trick himself because his balance and coordination are not yet developed enough. According to Bandura, which of the four components of observational learning is the limiting factor here?",
+    "choices": [
+      "Attention",
+      "Retention",
+      "Motor reproduction",
+      "Motivation"
+    ],
+    "answer": "C",
+    "solutionText": "Motor reproduction is the physical capability to perform a modeled behavior; the boy has attended to and retained the trick (he can describe it in detail) but lacks the physical coordination to reproduce it.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-048",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which term refers to the tendency to explain one's own behavior in terms of situational factors while explaining another person's similar behavior in terms of that person's disposition or character?",
+    "choices": [
+      "Fundamental attribution error",
+      "Actor-observer bias",
+      "Self-serving bias",
+      "Cognitive dissonance"
+    ],
+    "answer": "B",
+    "solutionText": "This self-versus-other asymmetry is actor-observer bias. It differs from the fundamental attribution error, which describes explaining only others' behavior dispositionally with no self-comparison, and from self-serving bias, which concerns success versus failure rather than self versus other.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-049",
+    "loId": "appsych.attribution-attitudes",
+    "cedCode": "AP-PSYCH-4.1-4.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Every week when Naomi arrives late to her study group, she points to construction traffic on her commute as the reason. But when a fellow group member, Jarrett, arrives late to the same meeting, Naomi assumes he simply doesn't take the group seriously. Naomi's differing explanations for the same behavior \u2014 her own lateness versus Jarrett's \u2014 BEST illustrate:",
+    "choices": [
+      "Fundamental attribution error",
+      "Self-serving bias",
+      "Cognitive dissonance",
+      "Actor-observer bias"
+    ],
+    "answer": "D",
+    "solutionText": "Naomi attributes her own lateness to a situational factor (traffic) but attributes Jarrett's identical behavior to a disposition (not caring) \u2014 the defining self-versus-other pattern of actor-observer bias, distinct from self-serving bias (a success/failure asymmetry) and cognitive dissonance (discomfort from conflicting cognitions).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-050",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student who has lived her whole life in a small town says, 'People from my town are all really different from each other \u2014 we've got artists, athletes, and everyone in between. But people from that city two hours away? They're all pretty much the same.' This statement BEST illustrates:",
+    "choices": [
+      "The out-group homogeneity effect",
+      "In-group bias",
+      "Scapegoating",
+      "The just-world hypothesis"
+    ],
+    "answer": "A",
+    "solutionText": "Perceiving greater diversity within one's own group than within an unfamiliar out-group is the out-group homogeneity effect, which differs from in-group bias (favoring one's own group) because it concerns perceived variability rather than evaluation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-051",
+    "loId": "appsych.prejudice-stereotypes",
+    "cedCode": "AP-PSYCH-4.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Before a difficult math exam, a researcher tells one group of female students that the test has historically shown a gender gap favoring men, and tells a second group of female students that the same test shows no gender differences. Despite no actual difference in mathematical ability between the two groups, the first group scores significantly lower. This performance decline is BEST explained by:",
+    "choices": [
+      "The just-world hypothesis",
+      "Scapegoating",
+      "Stereotype threat",
+      "In-group bias"
+    ],
+    "answer": "C",
+    "solutionText": "Awareness of a negative stereotype about one's group can create anxiety that impairs performance on a stereotype-relevant task \u2014 this is stereotype threat, not scapegoating (displaced blame onto a convenient target) or the just-world hypothesis (belief that people get what they deserve).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-052",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following BEST defines obedience, as distinguished from conformity and compliance?",
+    "choices": [
+      "Adjusting one's behavior to match a peer group's behavior without any direct order",
+      "Agreeing to a specific request made by a person with no particular authority",
+      "Privately changing one's beliefs to align with a group's position after being persuaded by the group's arguments",
+      "Changing one's behavior in response to a direct or implied command from an authority figure"
+    ],
+    "answer": "D",
+    "solutionText": "Obedience specifically involves changing behavior because an authority figure issued a command, unlike conformity (matching peers with no direct order), compliance (agreeing to a request from someone without special authority), or internalization through persuasion.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-053",
+    "loId": "appsych.social-influence",
+    "cedCode": "AP-PSYCH-4.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A negotiator first proposes an expensive five-year service contract, which a client firmly declines. The negotiator then offers a much smaller one-year contract, and the client accepts. The negotiator's strategy relies on:",
+    "choices": [
+      "The foot-in-the-door phenomenon",
+      "The door-in-the-face technique",
+      "Normative social influence",
+      "Obedience to authority"
+    ],
+    "answer": "B",
+    "solutionText": "Opening with a large request expected to be refused, then following with a smaller one, is the door-in-the-face technique \u2014 the reverse sequence from the foot-in-the-door phenomenon, which starts small and escalates.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-054",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Carl Jung, the collective unconscious refers to:",
+    "choices": [
+      "A universal, inherited reservoir of images and ideas shared by all humans",
+      "Memories and experiences unique to an individual that have been repressed into unawareness",
+      "The rational part of personality that mediates between impulses and external reality",
+      "A set of measurable trait dimensions used to describe individual differences"
+    ],
+    "answer": "A",
+    "solutionText": "Jung proposed the collective unconscious as a shared, inherited layer of the unconscious containing universal archetypes, distinct from Freud's personal unconscious (repressed individual memories) or the ego (the rational mediator).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-055",
+    "loId": "appsych.personality-theories",
+    "cedCode": "AP-PSYCH-4.4-4.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "As a child, Dario was physically small and frequently teased by older siblings for being weak. As an adult, he becomes an elite competitive weightlifter, driven by an intense need to prove his physical strength to himself and others. Alfred Adler would MOST likely explain this pattern in terms of:",
+    "choices": [
+      "Fixation at the phallic stage of psychosexual development",
+      "A well-developed sense of unconditional positive regard from caregivers",
+      "Compensation for childhood feelings of inferiority",
+      "Reciprocal determinism between environment and behavior"
+    ],
+    "answer": "C",
+    "solutionText": "Adler proposed that people strive to compensate for childhood feelings of inferiority, sometimes developing exceptional abilities in the very domain where they once felt weak \u2014 distinct from Freudian psychosexual stages or Bandura's reciprocal determinism.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-056",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A research team gives 500 participants a new 40-item conscientiousness scale in a single sitting, then splits the scale into odd-numbered and even-numbered items. The two halves correlate at r = 0.88. This procedure provides evidence of the scale's:",
+    "choices": [
+      "Predictive validity",
+      "Test-retest reliability",
+      "Construct validity",
+      "Internal consistency"
+    ],
+    "answer": "D",
+    "solutionText": "Correlating two halves of the same test administered at one time estimates internal consistency (split-half reliability), not test-retest reliability, which requires two separate administrations over time, or validity, which concerns whether the test measures the intended construct.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-057",
+    "loId": "appsych.personality-assessment",
+    "cedCode": "AP-PSYCH-4.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A company designs a 'leadership potential' test. Employees who retake the test six months later receive highly consistent scores. However, follow-up data show that scores on the test do not correlate with employees' actual on-the-job leadership performance ratings. This pattern demonstrates that a test can be:",
+    "choices": [
+      "Reliable without being valid",
+      "Valid without being reliable",
+      "Both reliable and valid",
+      "Neither reliable nor standardized"
+    ],
+    "answer": "A",
+    "solutionText": "The test produces consistent scores over time (reliable) but does not measure what it claims to predict (not valid), illustrating that reliability does not guarantee validity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-058",
+    "loId": "appsych.motivation",
+    "cedCode": "AP-PSYCH-4.6",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A manager restructures her team's projects so that employees can choose their own working methods (autonomy) and receive regular feedback that helps them feel skilled (competence). According to self-determination theory, a third need that must also be supported to sustain intrinsic motivation \u2014 feeling connected to and supported by coworkers \u2014 is:",
+    "choices": [
+      "Extrinsic reward maximization",
+      "Relatedness",
+      "Optimal arousal maintenance",
+      "Drive reduction"
+    ],
+    "answer": "B",
+    "solutionText": "Self-determination theory identifies autonomy, competence, and relatedness (the need for connection with others) as the three needs that sustain intrinsic motivation, distinct from arousal-based or drive-reduction accounts of motivation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-059",
+    "loId": "appsych.emotion",
+    "cedCode": "AP-PSYCH-4.7",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers find that patients with high spinal cord injuries, who have greatly reduced sensory feedback from their bodies, report that the subjective intensity of their emotions has decreased since the injury \u2014 even though the events that trigger those emotions have not changed. This finding provides support for:",
+    "choices": [
+      "The Cannon-Bard theory",
+      "The Schachter-Singer two-factor theory",
+      "The James-Lange theory",
+      "Lazarus's cognitive-appraisal theory"
+    ],
+    "answer": "C",
+    "solutionText": "The James-Lange theory holds that the subjective experience of emotion arises from awareness of one's own bodily response, so reduced bodily feedback predicting reduced emotional intensity fits this theory \u2014 unlike Cannon-Bard, which holds that arousal and emotion arise independently and simultaneously.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-060",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher wants to test whether being observed by an authority figure increases conformity to a group's stated opinion during a discussion task. Participants in the 'observed' condition are seated near the front of the room under bright lighting, while participants in the 'unobserved' condition are seated in a dim corner at the back. Conformity rates are higher in the 'observed' condition. A colleague argues that the difference in lighting and seating position \u2014 not the presence of an observer \u2014 could explain the difference in conformity rates. The colleague is identifying:",
+    "choices": [
+      "A sampling bias resulting from non-random assignment to conditions",
+      "A demand characteristic created during the informed-consent process",
+      "A problem with the operational definition of the dependent variable",
+      "A confounding variable that threatens the internal validity of the causal claim"
+    ],
+    "answer": "D",
+    "solutionText": "Lighting and seating position vary systematically along with the manipulated variable (observation), making it impossible to isolate which factor caused the outcome \u2014 this is a confounding variable, which threatens internal validity rather than reflecting a sampling, consent, or operational-definition problem.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-061",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In Richard Lazarus's transactional model of stress, primary appraisal refers to the process of:",
+    "choices": [
+      "Evaluating whether one has sufficient resources and coping strategies to manage a demand",
+      "The automatic physiological arousal that occurs before any conscious evaluation of a stimulus",
+      "Judging whether an event is irrelevant, benign-positive, or a potential threat to one's well-being",
+      "Recalling how similar situations were successfully handled in the past"
+    ],
+    "answer": "C",
+    "solutionText": "Primary appraisal is the first step in Lazarus's model, in which a person evaluates the personal significance of an event (irrelevant, benign, or threatening); secondary appraisal \u2014 evaluating coping resources \u2014 comes next.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-062",
+    "loId": "appsych.stress-health",
+    "cedCode": "AP-PSYCH-5.1",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Despite working an average of 65-hour weeks as an ER trauma surgeon, Dr. Osei reports remarkably few stress-related illnesses. She describes her demanding schedule as a deeply meaningful commitment to her patients, feels a strong sense of control over her clinical decisions, and views frequent changes to hospital protocol as interesting challenges rather than threats. Dr. Osei's profile most closely matches the stress-resistant personality style known as:",
+    "choices": [
+      "Hardiness, characterized by commitment, control, and viewing change as challenge",
+      "The Type A behavior pattern, characterized by time urgency and competitive drive",
+      "Learned helplessness, which results from a history of uncontrollable outcomes",
+      "The tend-and-befriend response, an alternative to the fight-or-flight pattern"
+    ],
+    "answer": "A",
+    "solutionText": "Kobasa's concept of hardiness describes individuals who resist the negative health effects of stress through three C's: commitment, control, and viewing change as a challenge rather than a threat \u2014 exactly what Dr. Osei displays.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-063",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Deci and Ryan's self-determination theory, sustained intrinsic motivation and psychological well-being depend on the ongoing satisfaction of three basic psychological needs. Which set correctly identifies these needs?",
+    "choices": [
+      "Achievement, power, and affiliation",
+      "Safety, esteem, and self-actualization",
+      "Autonomy, competence, and relatedness",
+      "Positive emotion, engagement, and meaning"
+    ],
+    "answer": "C",
+    "solutionText": "Self-determination theory proposes that autonomy (feeling self-directed), competence (feeling effective), and relatedness (feeling connected to others) are the three innate needs that, when met, foster intrinsic motivation and well-being.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-064",
+    "loId": "appsych.positive-psychology",
+    "cedCode": "AP-PSYCH-5.2",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Six months after purchasing his dream car, Marcus reports that the initial excitement has faded and his day-to-day happiness has returned to roughly the same level it was before the purchase, even though he still owns and enjoys the car. This pattern best illustrates:",
+    "choices": [
+      "Flow, a state of complete absorption in a well-matched challenge",
+      "Hedonic adaptation, the tendency for happiness to return to a baseline level after a positive or negative change",
+      "Post-traumatic growth, positive psychological change following adversity",
+      "The broaden-and-build effect of sustained positive emotion"
+    ],
+    "answer": "B",
+    "solutionText": "Hedonic adaptation (the 'hedonic treadmill') describes how people quickly adjust to positive or negative life changes, with well-being drifting back toward a stable baseline over time.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-065",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A defense attorney argues that her client was 'legally insane' at the time of the offense. A psychology student who has studied the classification of psychological disorders correctly points out that:",
+    "choices": [
+      "'Insanity' is a legal term describing a judgment about criminal responsibility, not a diagnostic category found in the DSM-5",
+      "'Insanity' is synonymous with 'psychosis' as defined in the DSM-5",
+      "Being found legally insane automatically qualifies as a DSM-5 diagnosis of schizophrenia",
+      "The DSM-5 requires a finding of legal insanity before any psychotic disorder can be diagnosed"
+    ],
+    "answer": "A",
+    "solutionText": "'Insanity' is a legal, not clinical or diagnostic, term \u2014 courts use it to determine criminal responsibility, while the DSM-5 provides the actual diagnostic criteria clinicians use to classify disorders.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-066",
+    "loId": "appsych.classifying-disorders",
+    "cedCode": "AP-PSYCH-5.3",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clinician evaluates a recent immigrant who reports intense, persistent fear that blushing, making eye contact, or having noticeable body odor will embarrass or offend other people \u2014 a concern that is well documented as a culturally recognized pattern within the client's culture of origin but rarely diagnosed in the clinician's own cultural context. This scenario best illustrates the concept of:",
+    "choices": [
+      "Labeling theory, in which a diagnostic label changes how others perceive a person's behavior",
+      "The medical model, which attributes psychological symptoms to underlying physical pathology",
+      "The diathesis-stress model, in which a genetic vulnerability requires an environmental trigger",
+      "A culture-bound syndrome, a pattern of distress that is shaped by, and more commonly recognized within, a particular cultural context"
+    ],
+    "answer": "D",
+    "solutionText": "Culture-bound syndromes are patterns of psychological distress that are recognized and expressed in culturally specific ways; the DSM-5 acknowledges that cultural context shapes how symptoms are experienced and understood.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-067",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Whenever Marcus needs a blood draw, he experiences a sudden drop in blood pressure and heart rate \u2014 sometimes fainting \u2014 rather than the racing heart typical of most fear responses. He goes to great lengths to avoid any medical procedure involving needles, but experiences no unusual distress in other areas of his life. Marcus's presentation is most consistent with:",
+    "choices": [
+      "Panic disorder, marked by recurrent unexpected panic attacks",
+      "A specific phobia, blood-injection-injury type",
+      "Generalized Anxiety Disorder",
+      "Agoraphobia, marked by fear of situations where escape might be difficult"
+    ],
+    "answer": "B",
+    "solutionText": "Marcus's fear is confined to a single, specific trigger (needles/blood draws), and the fainting response with dropping heart rate and blood pressure is the hallmark of the blood-injection-injury subtype of specific phobia, distinct from the racing-heart pattern of other anxiety responses.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-068",
+    "loId": "appsych.anxiety-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For the past eight months, Priya has avoided grocery stores, public buses, and crowded concerts \u2014 not because of one specific panic attack that occurred there, but because of a persistent fear that if she became distressed in these settings, escape would be difficult or help unavailable. She has never actually experienced a panic attack. Which diagnosis best fits this presentation?",
+    "choices": [
+      "Panic disorder, which requires recurrent unexpected panic attacks",
+      "Social Anxiety Disorder, centered on fear of negative judgment by others",
+      "A specific phobia limited to a single triggering situation",
+      "Agoraphobia, marked by fear across two or more situations due to anticipated difficulty escaping or getting help, which can occur without a history of panic attacks"
+    ],
+    "answer": "D",
+    "solutionText": "Agoraphobia involves marked fear or avoidance of two or more situations (e.g., public transportation, open or enclosed spaces, crowds) due to anticipated difficulty escaping or obtaining help, persisting six months or more \u2014 and, per DSM-5, it can be diagnosed independently of panic disorder, unlike Priya's case which lacks any panic attack history.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-069",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Persistent Depressive Disorder (dysthymia) is diagnosed in adults when depressed mood is present for most of the day, more days than not, for a minimum continuous duration of:",
+    "choices": [
+      "Two weeks",
+      "Six months",
+      "One year",
+      "Two years"
+    ],
+    "answer": "D",
+    "solutionText": "Persistent Depressive Disorder requires a chronic, lower-grade depressed mood lasting at least two years in adults (one year in children and adolescents), distinguishing it from the two-week minimum required for a Major Depressive Episode.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-070",
+    "loId": "appsych.mood-disorders",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the past three winters, Hannah has developed a predictable pattern each November: oversleeping up to 11 hours a night, intense cravings for carbohydrates, weight gain, and low energy. Each spring, her mood and energy return fully to normal without treatment. This pattern is most consistent with:",
+    "choices": [
+      "Major Depressive Disorder with a seasonal pattern",
+      "Bipolar II Disorder with rapid cycling",
+      "Persistent Depressive Disorder (dysthymia)",
+      "Cyclothymic Disorder"
+    ],
+    "answer": "A",
+    "solutionText": "A recurring depressive pattern tied to a specific season, with full remission at other times of year, matches the DSM-5 'with seasonal pattern' specifier for Major Depressive Disorder, commonly known as seasonal affective disorder.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-071",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After the sudden death of her spouse, Renata develops disorganized speech and a delusion that hospital staff are impersonators \u2014 symptoms that resolve completely within three weeks, with no residual signs afterward. Which diagnosis best fits this episode?",
+    "choices": [
+      "Schizophrenia, which requires continuous signs of disturbance for at least six months",
+      "Brief Psychotic Disorder, involving sudden-onset psychotic symptoms, often triggered by extreme stress, lasting less than one month",
+      "Schizoaffective Disorder, which requires a concurrent major mood episode alongside psychotic symptoms",
+      "Antisocial Personality Disorder"
+    ],
+    "answer": "B",
+    "solutionText": "Brief Psychotic Disorder involves sudden onset of psychotic symptoms \u2014 often precipitated by a major stressor like bereavement \u2014 that fully resolve within one month, unlike schizophrenia (6+ months) or schizophreniform disorder (1-6 months).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-072",
+    "loId": "appsych.schizo-personality",
+    "cedCode": "AP-PSYCH-5.4",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Since her late teens, Isabel has experienced a repeating pattern of intense, unstable relationships that swing between idealizing and devaluing the same person, chronic feelings of emptiness, frantic efforts to avoid real or imagined abandonment, and impulsive self-harming behavior during emotional crises. This pattern is most consistent with:",
+    "choices": [
+      "Borderline Personality Disorder",
+      "Histrionic Personality Disorder",
+      "Narcissistic Personality Disorder",
+      "Avoidant Personality Disorder"
+    ],
+    "answer": "A",
+    "solutionText": "Borderline Personality Disorder is marked by unstable relationships alternating between idealization and devaluation, chronic emptiness, abandonment fears, and impulsive or self-harming behavior \u2014 the specific combination Isabel displays.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-073",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A therapist working with a client who has contamination-related OCD has the client touch a public door handle and then delay \u2014 and eventually refrain from \u2014 the usual handwashing ritual, while remaining in the situation until anxiety naturally decreases. This behavioral technique is best described as:",
+    "choices": [
+      "Systematic desensitization, which pairs a fear hierarchy with relaxation training",
+      "Free association, a psychoanalytic technique for accessing unconscious material",
+      "Exposure and Response Prevention (ERP), which involves confronting a feared trigger while blocking the accompanying compulsive ritual",
+      "Aversion therapy, which pairs an undesirable behavior with an unpleasant stimulus"
+    ],
+    "answer": "C",
+    "solutionText": "Exposure and Response Prevention (ERP) is the frontline behavioral treatment for OCD: the client is exposed to the obsessive trigger while being prevented from performing the compulsive ritual, allowing anxiety to extinguish naturally.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-074",
+    "loId": "appsych.therapy",
+    "cedCode": "AP-PSYCH-5.5",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During a psychodynamic therapy session, a client unexpectedly reacts to her therapist with intense anger and accusations of favoritism \u2014 feelings that closely mirror how she describes reacting to her older sister throughout childhood. The therapist recognizes that the client is redirecting feelings originally tied to a significant relationship onto the therapist. This phenomenon is best identified as:",
+    "choices": [
+      "Countertransference, in which the therapist redirects feelings toward the client",
+      "Transference, in which the client redirects feelings originally directed at a significant other onto the therapist",
+      "Resistance, in which the client unconsciously resists exploring threatening material",
+      "Free association, in which the client reports thoughts without censorship"
+    ],
+    "answer": "B",
+    "solutionText": "Transference occurs when a client unconsciously redirects feelings and reactions originally tied to an important relationship (here, her sister) onto the therapist; countertransference is the reverse \u2014 the therapist's feelings toward the client.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-mc-075",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clinic reports that patients beginning a new anxiety treatment show noticeably reduced symptom severity by their sixth session compared to their intake scores, and concludes that the treatment is effective. A methodologist objects that patients typically seek treatment precisely when their symptoms are at their worst, that symptom severity naturally fluctuates and often eases somewhat over time even without any intervention, and that the clinic used no comparison group. The methodologist's objection illustrates the problem of:",
+    "choices": [
+      "Sampling bias, because the patients were not randomly selected from the population",
+      "Social desirability bias, because patients likely overstated their improvement to please the clinic",
+      "A poorly operationalized dependent variable",
+      "Regression toward the mean, in which extreme intake scores naturally drift toward the average over time regardless of treatment, absent a control group"
+    ],
+    "answer": "D",
+    "solutionText": "Because patients tend to enter treatment when symptoms are unusually severe, scores will often naturally improve somewhat at the next measurement even without any real treatment effect \u2014 this is regression toward the mean, which a control/comparison group is needed to rule out.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "appsych-fa-fr-01",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.appsych-mock-a-aaq.v1",
+    "problemText": "Read the study summary above, then respond to the following.\n\n(a) Identify the research method used in this study, and justify your identification using a specific feature of the study's design.\n\n(b) Provide an operational definition of the dependent variable (sustained attention) as it was measured in this study.\n\n(c) Interpret the descriptive statistic reported for the two groups' CPT scores in the context of this study.\n\n(d) Evaluate the extent to which the results of this study can be generalized beyond the sample that was studied.\n\n(e) Identify a specific ethical guideline or safeguard used by the researchers, and explain the purpose it served in this study.\n\n(f) Explain how random assignment strengthens the researchers' ability to draw a cause-and-effect conclusion in this study.\n\n(g) Propose a specific change to the study's design that would address one of its limitations, and explain how your proposed change would address that limitation.",
+    "answer": "see rubric",
+    "solutionText": "Identify the true-experiment design (manipulation + random assignment); operationally define sustained attention as CPT correct responses out of 100; interpret the 82.4 vs. 74.7 mean difference as a statistically significant advantage for the breathing group; evaluate generalizability given the single-school, single-course sample; identify informed consent/parental consent/right-to-withdraw/IRB approval/debriefing as ethical safeguards; explain how random assignment isolates the causal effect of activity type; and propose a specific, limitation-targeted design change (e.g., multi-school replication).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for identifying the study as a true (controlled) experiment AND justifying the identification with a specific design feature from the passage: the researchers manipulated the independent variable (10-minute breathing exercise vs. silent reading) and randomly assigned the 120 students to the two conditions. Naming 'experiment' alone without the random-assignment/manipulation justification does not earn the point.",
+          "modelResponse": "This study used a true experiment. The researchers manipulated the independent variable (type of 10-minute activity: guided breathing vs. silent reading) and randomly assigned the 120 participating students to one of the two conditions, which is the defining feature of a true experiment."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly operationally defining sustained attention as it was measured in the study: the number of correct target-letter responses out of 100 possible trials on the 10-minute computerized continuous performance task (CPT), completed immediately after the assigned activity. Must reference the CPT and the 0-100 scoring, not just say 'attention was measured.'",
+          "modelResponse": "In this study, sustained attention was operationally defined as the number of correct target-letter responses a student made out of 100 possible trials on the 10-minute computerized continuous performance task (CPT) completed immediately after the assigned activity."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for correctly interpreting the statistic in context: the breathing group's mean CPT score (82.4) was higher than the control group's mean (74.7), a difference of about 7.7 points, and this difference was statistically significant (t(118) = 6.85, p < .001), meaning it is very unlikely to be due to chance.",
+          "modelResponse": "The breathing group's mean CPT score (82.4, SD = 6.1) was about 7.7 points higher than the control group's mean score (74.7, SD = 7.3). Because this difference was statistically significant, t(118) = 6.85, p < .001, it is very unlikely to have occurred by chance alone, suggesting the breathing exercise was associated with better sustained attention on this task."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for evaluating generalizability with reference to the sample limitation stated in the passage: all 120 participants came from introductory psychology classes at a single suburban high school (ages 15-17), so the sample is not diverse in school setting, socioeconomic background, or geographic region, limiting how broadly the results can be generalized.",
+          "modelResponse": "Generalizability is limited because all 120 participants were drawn from introductory psychology classes at a single suburban high school. Because the sample is not diverse in school setting, socioeconomic background, or geographic region, the results may not generalize to adolescents outside this specific population."
+        },
+        {
+          "criterionId": "e",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for identifying a specific ethical safeguard mentioned in the passage (informed consent from students and parents, the right to withdraw without penalty, institutional review board approval, or debriefing) AND explaining the purpose it served (protecting participants' autonomy/well-being, ensuring understanding given participants are minors, or minimizing harm/deception).",
+          "modelResponse": "The researchers obtained informed consent from both the students and their parents before the study began, and told students they could withdraw at any time without penalty. Because the participants are minors, this protects their autonomy and well-being by ensuring both the students and their guardians understood and agreed to what participation involved."
+        },
+        {
+          "criterionId": "f",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for explaining how random assignment strengthens the causal claim: it evenly distributes individual-difference variables (e.g., pre-existing attention ability, motivation, sleep) across the two groups by chance, making the groups roughly equivalent before the activity, so any later difference in CPT scores can be more confidently attributed to the activity type rather than pre-existing group differences.",
+          "modelResponse": "Random assignment strengthens the causal claim because it evenly distributes individual differences (such as pre-existing attention ability, motivation, or how much sleep a student got the night before) across the two groups by chance. This makes the two groups roughly equivalent before the activity, so any difference in CPT scores afterward can be more confidently attributed to the type of activity (breathing vs. reading) rather than to pre-existing differences between the groups."
+        },
+        {
+          "criterionId": "g",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for proposing a specific, reasonable design change tied to an actual limitation identified in the passage (e.g., recruiting from multiple schools/regions to improve generalizability, adding a delayed follow-up CPT to test how long any effect lasts, or adding an active-control condition to rule out a placebo/attention effect) AND explaining how that change would address the limitation.",
+          "modelResponse": "To address the generalizability limitation, the researchers could replicate the study using students recruited from multiple high schools across different socioeconomic and geographic settings rather than a single suburban school. This would let the researchers test whether the breathing exercise's effect on attention holds across a more diverse population of adolescents, rather than being specific to the original sample."
+        }
+      ]
+    }
+  },
+  {
+    "id": "appsych-fa-fr-02",
+    "loId": "appsych.research-methods",
+    "cedCode": "AP-PSYCH-SF",
+    "topic": "ap-psychology",
+    "topicId": "ap-psychology",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "passageId": "evelyn.passage.appsych-mock-a-ebq.v1",
+    "problemText": "Psychologists disagree about the relationship between adolescent social media use and psychological well-being. Using evidence from AT LEAST TWO of the three sources above, write a response that does the following:\n\n(a) States a specific, defensible claim about the relationship between adolescent social media use and psychological well-being.\n\n(b)-(c) Choose TWO of the three sources (Source A, Source B, and Source C). For EACH of the two sources you choose, provide one piece of evidence from that source that could be used to support your claim, and explain the reasoning that connects that evidence to your claim. Identify each source by name (Source A, Source B, or Source C) when you use it.\n\n(d) Explain how the two pieces of evidence you cited work together to build a cohesive argument for your claim (for example, because they use complementary methods, because their findings converge, or because one source addresses a limitation of the other).",
+    "answer": "see rubric",
+    "solutionText": "State a specific, defensible claim about adolescent social media use and well-being (e.g., that heavy/passive use is associated with lower well-being, or that the type of engagement matters more than the amount). Then choose any two of Source A (correlational survey, r = .35 between use and anxiety), Source B (randomized restricted-use experiment, higher life satisfaction after restricting use), and Source C (active vs. passive use, passive use linked to lower well-being independent of total time); cite the specific evidence from each chosen source and explain how it supports the claim. Finally, explain how the two pieces of evidence work together (e.g., Source B's randomized experiment supplies causal evidence that addresses the correlational limitation of Source A, or Source B and Source C converge on the same conclusion despite using different methods).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "claim",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for stating a specific, defensible claim about the relationship between adolescent social media use and psychological well-being that goes beyond simply restating the question (e.g., 'heavier or more passive social media use is associated with lower adolescent well-being' or 'the type of social media engagement, not the total amount of time, most affects adolescent well-being'). Any claim consistent with the source material may earn the point; a vague or non-specific claim ('social media affects teens') does not.",
+          "modelResponse": "Claim: Adolescent social media use is associated with lower psychological well-being, but the effect depends heavily on how adolescents use social media rather than simply how much time they spend on it."
+        },
+        {
+          "criterionId": "evidence-1",
+          "maxPoints": 2,
+          "scoringCriteria": "The student may choose ANY ONE of Source A, Source B, or Source C for this point (the two evidence parts must ultimately draw on two DIFFERENT sources, but either may be used first). 1 point for citing a specific piece of evidence from the chosen source, explicitly naming it (Source A, Source B, or Source C): Source A = the positive correlation (r = .35) between average daily social media use and self-reported anxiety among the 800 surveyed adolescents; Source B = adolescents randomly assigned to restrict social media use to 30 minutes/day for one week reported significantly higher life-satisfaction scores than the unrestricted control group; Source C = adolescents who primarily engaged in passive social media use (scrolling without interacting) showed lower well-being scores than adolescents who engaged in active use or rare use, even after controlling for total time spent on social media. 1 additional point for reasoning that explicitly connects the cited evidence to the stated claim. No credit for evidence that does not name/identify a source, or that misstates that source's finding.",
+          "modelResponse": "Source A found that among 800 surveyed adolescents, average daily social media use was positively correlated with self-reported anxiety scores (r = .35) \u2014 adolescents who used social media more also tended to report more anxiety. This supports my claim because higher anxiety is an indicator of lower psychological well-being, so this evidence is consistent with the idea that greater social media use is associated with reduced well-being."
+        },
+        {
+          "criterionId": "evidence-2",
+          "maxPoints": 2,
+          "scoringCriteria": "The student must cite evidence from a SECOND source, different from whichever source was used for evidence-1 (the response as a whole must draw on two of the three sources, not the same source twice). 1 point for citing a specific piece of evidence from that second source, explicitly naming it, using the same source-content list as evidence-1 (Source A = the r = .35 correlation between social media use and anxiety; Source B = randomized restricted-use group reported higher life satisfaction than the unrestricted control group; Source C = passive use linked to lower well-being than active or rare use, independent of total time). 1 additional point for reasoning that explicitly connects that evidence to the claim (for Source B, ideally noting that random assignment supports a causal, not just correlational, link; for Source C, ideally noting the 'type of use matters more than amount' point). No credit if this evidence draws on the same source already used for evidence-1, or does not name/identify its source.",
+          "modelResponse": "Source B found that adolescents randomly assigned to restrict their social media use to 30 minutes per day for one week reported significantly higher life-satisfaction scores than adolescents in the unrestricted control condition. Because participants were randomly assigned to conditions, this evidence supports my claim by showing that reducing social media use can cause an improvement in well-being, not just correlate with it."
+        },
+        {
+          "criterionId": "synthesis",
+          "maxPoints": 2,
+          "scoringCriteria": "Award these points only if evidence-1 and evidence-2 cite two DIFFERENT sources. 1 point for explicitly connecting the two pieces of cited evidence to one another (rather than presenting them as two separate, unrelated points) \u2014 e.g., noting that they use different methods (correlational vs. experimental), draw on different samples, or converge on the same conclusion. 1 additional point for explaining HOW that connection strengthens the overall argument for the claim \u2014 for example, that a randomized experiment (Source B) provides causal evidence that addresses the correlational limitation acknowledged in a correlational source (Source A), or that two sources' findings converge on the same conclusion despite using different methods, which increases confidence in the claim. No credit for a response that merely repeats or summarizes the two pieces of evidence separately without an explicit statement connecting them.",
+          "modelResponse": "Source A and Source B work together to strengthen this argument: Source A's correlational finding raises the concern that some third variable, such as pre-existing anxiety, could explain why social media use and anxiety are related, but Source B addresses that limitation directly \u2014 because adolescents were randomly assigned to the restricted-use or control condition, the resulting improvement in life satisfaction cannot be explained by pre-existing differences between the groups. Taken together, the correlational and experimental evidence converge on the same conclusion and make a stronger causal case that reducing social media use improves adolescent well-being than either source could on its own."
+        }
+      ]
+    }
+  }
+]
