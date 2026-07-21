@@ -128,6 +128,10 @@ interface EmbedConfig {
    *  attempt and threads it to the brain. Absent ⇒ plain mock-review greeting
    *  session (degrade, never block). */
   mock_attempt_id?: string;
+  /** Review agenda — item ids the student pinned for review (from the mock
+   *  report screen). Passed to the context fetch as the `items` param so the
+   *  pinned questions lead the focus list. Absent ⇒ pure miss-priority order. */
+  mock_item_ids?: string[];
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -340,11 +344,14 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const [mockReview, setMockReview] = useState<MockReviewContext | undefined>(undefined);
   useEffect(() => {
     if (sessionGoal !== 'mock-review' || !config.mock_attempt_id) return;
-    fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}`)
+    const pinned = config.mock_item_ids?.length
+      ? `&items=${encodeURIComponent(config.mock_item_ids.join(','))}`
+      : '';
+    fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}${pinned}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`context ${r.status}`))))
       .then(setMockReview)
       .catch((e) => console.error('[mock-review] context fetch failed — session continues without it:', e));
-  }, [sessionGoal, config.mock_attempt_id, config.student_id]);
+  }, [sessionGoal, config.mock_attempt_id, config.student_id, config.mock_item_ids]);
 
   const topicDisplayName = useMemo(
     () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,

@@ -11,8 +11,14 @@ export async function GET(req: NextRequest) {
   if (!attemptId || !studentId) {
     return NextResponse.json({ error: 'attemptId and studentId are required' }, { status: 400 });
   }
+  // Optional pinned-item ids: comma-separated, max 8, each ≤64 chars.
+  // Invalid entries are dropped (degrade, never 400) — absent ⇒ no pins.
+  const itemsParam = req.nextUrl.searchParams.get('items');
+  const pinItemIds = itemsParam
+    ? itemsParam.split(',').map((s) => s.trim()).filter((s) => s.length > 0 && s.length <= 64).slice(0, 8)
+    : undefined;
   try {
-    const ctx = await getMockReviewContext(mongoMockStores(), studentId, attemptId);
+    const ctx = await getMockReviewContext(mongoMockStores(), studentId, attemptId, pinItemIds);
     return NextResponse.json(ctx);
   } catch (e) {
     const msg = (e as Error).message;

@@ -23,6 +23,7 @@ import {
   MessageSquareText, X, Target, Upload, ArrowDown, Wrench,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
+import type { MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import {
@@ -98,6 +99,14 @@ export interface SessionStageProps {
   quickActions?: ReactNode;      // promoted chips (optional)
   // student tools → existing onStudentInput pipeline
   onStudentInput: (type: 'text' | 'drawing' | 'image', content: string) => void;
+  /** Mock-review pre-start "review agenda". When non-empty, the generic starter
+   *  chips (Upload / Practice / Explain) are REPLACED by a tappable numbered
+   *  list of the pinned/missed questions — tapping a row starts the session on
+   *  that item (fires its utterance via onStudentInput). Empty ⇒ generic chips. */
+  mockAgenda?: MockReviewAgendaItem[];
+  /** Muted "+ N more missed in <units>…" line shown under the agenda list;
+   *  null when there are no further misses. */
+  mockAgendaRemaining?: string | null;
   /** Task Y1: true while the "Practice problems" chip's durable override is
    *  set (mirrored from VoiceTutorRealtime via onPracticeOverrideChange).
    *  Drives the chip's active state (Humor ✓ idiom). Absent ⇒ chip never
@@ -136,6 +145,7 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
+    mockAgenda, mockAgendaRemaining,
     practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
   } = props;
@@ -366,9 +376,40 @@ export default function SessionStage(props: SessionStageProps) {
                 </p>
               </>
             )}
-            {/* Quick ways in — Upload (de-emphasized, the cluster camera does
+            {/* Mock-review "review agenda" (replaces the generic starters when a
+                review context is present): a tappable numbered list of the
+                pinned/missed questions. Tapping a row starts the session on that
+                item; the mic alone takes them in order. Falls back to the generic
+                chips for every other session (and degraded mock-review). */}
+            {mockAgenda && mockAgenda.length > 0 ? (
+              <div className="mt-7 w-full max-w-md pointer-events-auto">
+                <p className="text-center text-lg font-semibold text-slate-800">Your review agenda</p>
+                <p className="mt-1 text-center text-sm text-slate-500">
+                  Tap a question to start there — or just tap the mic and we&apos;ll take them in order.
+                </p>
+                <div className="mt-4 flex flex-col gap-2 max-h-[46vh] overflow-y-auto">
+                  {mockAgenda.map((item) => (
+                    <button
+                      key={item.n}
+                      onClick={() => onStudentInput('text', item.utterance)}
+                      className="flex items-start gap-3 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left shadow-sm hover:bg-slate-50"
+                    >
+                      <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{item.n}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-slate-800">{item.label}</span>
+                        <span className="block text-xs text-slate-500">{item.result}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                {mockAgendaRemaining && (
+                  <p className="mt-3 text-center text-xs text-slate-400">{mockAgendaRemaining}</p>
+                )}
+              </div>
+            ) : (
+            /* Quick ways in — Upload (de-emphasized, the cluster camera does
                 the same), plus generic starters. Shown in every session so the
-                student always has something to act on. */}
+                student always has something to act on. */
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2 pointer-events-auto">
               <label className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-300 text-slate-700 px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-50 cursor-pointer">
                 <Upload className="w-4 h-4 text-slate-500" /> Upload a problem
@@ -395,6 +436,7 @@ export default function SessionStage(props: SessionStageProps) {
               </Chip>
               <Chip onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
             </div>
+            )}
           </div>
         )}
       </div>

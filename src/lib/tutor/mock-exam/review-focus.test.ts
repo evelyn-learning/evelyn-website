@@ -57,6 +57,55 @@ test('an ungraded FRQ (no frqGrade) counts as a miss', () => {
   assert.deepEqual(focus.map((i) => i.itemId), ['f9']);
 });
 
+test('pinned item is placed first even when it was not the top miss', () => {
+  const items = [
+    mcq('m1', 'x.u1', false, true),   // marked miss -> normally first
+    mcq('m2', 'x.u2', false),
+    mcq('m3', 'x.u3', false),
+  ];
+  const { focus } = selectMockReviewFocus(items, 8, ['m3']);
+  assert.equal(focus[0].itemId, 'm3');
+  assert.deepEqual(focus.map((i) => i.itemId).slice(1).sort(), ['m1', 'm2']);
+});
+
+test('a pinned CORRECT item is included; misses-only totals unchanged', () => {
+  const items = [
+    mcq('c1', 'x.u1', true),          // correct — never selected normally
+    mcq('m1', 'x.u1', false),
+  ];
+  const { focus, remaining, totalMissed } = selectMockReviewFocus(items, 8, ['c1']);
+  assert.equal(focus[0].itemId, 'c1');
+  assert.ok(focus.some((i) => i.itemId === 'm1'));
+  assert.equal(totalMissed, 1);       // only m1 is a miss
+  assert.equal(remaining.length, 0);
+});
+
+test('pinned items take priority within the cap', () => {
+  const items = Array.from({ length: 10 }, (_, i) => mcq(`u1-${i}`, 'x.algebra', false));
+  const { focus } = selectMockReviewFocus(items, 8, ['u1-9', 'u1-8']);
+  assert.equal(focus.length, 8);
+  assert.deepEqual(focus.slice(0, 2).map((i) => i.itemId), ['u1-9', 'u1-8']);
+  assert.equal(focus.filter((i) => i.itemId === 'u1-9').length, 1);   // pinned once only
+});
+
+test('unknown pin ids are ignored', () => {
+  const items = [mcq('m1', 'x.u1', false), mcq('m2', 'x.u2', false)];
+  const { focus } = selectMockReviewFocus(items, 8, ['nope', 'm2']);
+  assert.equal(focus[0].itemId, 'm2');
+  assert.equal(focus.length, 2);
+});
+
+test('buildMockReviewContext: focusItems carry itemId and honor pins', () => {
+  const items = [
+    mcq('c-ok', 'x.algebra', true),
+    ...Array.from({ length: 9 }, (_, i) => mcq(`r${i}`, 'x.geometry', false)),
+  ];
+  const ctx = buildMockReviewContext({ formLabel: 'Form A', composite: 3, compositeMax: 5, items, pinItemIds: ['c-ok'] });
+  assert.equal(ctx.focusItems[0].itemId, 'c-ok');   // pinned correct first
+  assert.equal(ctx.totalMissed, 9);                 // correct item is not a miss
+  assert.equal(ctx.focusItems.length, 8);
+});
+
 test('buildMockReviewContext: totals, per-unit remainder summary, passage truncation', () => {
   const longPassage = 'p'.repeat(2000);
   const items: MockReviewItem[] = [

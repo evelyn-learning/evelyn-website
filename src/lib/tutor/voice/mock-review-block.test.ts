@@ -11,7 +11,7 @@ function test(name: string, fn: () => void): void {
 const ctx: MockReviewContext = {
   formLabel: 'AP Statistics Practice Exam A', composite: 3, compositeMax: 5, totalMissed: 12,
   focusItems: [{
-    sectionLabel: 'Section I', problemText: 'What is the median of 1,2,9?',
+    itemId: 'i1', sectionLabel: 'Section I', problemText: 'What is the median of 1,2,9?',
     choices: ['1', '2', '4', '9'], studentAnswer: 'C', correctAnswer: 'B',
     solutionText: 'Order the values; the middle one is 2.', loId: 'apstats.summary-stats',
   }],

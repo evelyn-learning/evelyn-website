@@ -2,6 +2,26 @@ import { strict as assert } from 'node:assert';
 import { memoryMockStores, startOrResume, saveResponses, advance } from './service';
 import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
 import { getMockReviewContext } from './review-context';
+import { getReport } from './report';
+import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
+
+// Minimal fakes so getReport can flip the fixture (which has an FRQ) to
+// 'completed' without a model call or a Mongo profile store.
+const fakeGradeDeps: GradeDeps = {
+  async gradeRubricPart(args) { return { pointsAwarded: args.maxPoints, feedback: 'ok' }; },
+  async judgeSingleAnswer() { return { correct: true, feedback: 'ok' }; },
+};
+function fakeProfileStore() {
+  const profiles = new Map<string, Record<string, unknown>>();
+  return {
+    async getOrCreate(id: string) {
+      const p = profiles.get(id) ?? { id, mastery: {}, gaps: [], recentSessions: [] };
+      profiles.set(id, p); return p;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async save(p: any) { profiles.set(p.id, p); return p; },
+  };
+}
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => Promise<void>): Promise<void> {
@@ -40,6 +60,15 @@ async function run() {
     const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
     const attemptId = await completeFixtureAttempt(stores, 'stu-1');
     await assert.rejects(() => getMockReviewContext(stores, 'intruder', attemptId), /forbidden|attempt_not_open|not_found/);
+  });
+
+  await test('pinItemIds flow through to focusItems ordering', async () => {
+    const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    const attemptId = await completeFixtureAttempt(stores, 'stu-1');
+    // Grade the FRQ so the attempt flips to 'completed' (idempotent grader).
+    await getReport(stores, 'stu-1', attemptId, { gradeDeps: fakeGradeDeps, profileStore: fakeProfileStore() });
+    const ctx = await getMockReviewContext(stores, 'stu-1', attemptId, ['fx-m2e-1']);
+    assert.equal(ctx.focusItems[0]?.itemId, 'fx-m2e-1');   // pinned item first
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -9,6 +9,7 @@ export async function getMockReviewContext(
   stores: MockStores,
   studentId: string,
   attemptId: string,
+  pinItemIds?: string[],
 ): Promise<MockReviewContext> {
   const review = await getReview(stores, studentId, attemptId);
   const attempt = await stores.findAttempt(attemptId);
@@ -19,5 +20,6 @@ export async function getMockReviewContext(
     composite: attempt.scaled?.composite ?? 0,
     compositeMax: attempt.scaled?.compositeMax ?? 0,
     items: review.items,
+    pinItemIds,
   });
 }

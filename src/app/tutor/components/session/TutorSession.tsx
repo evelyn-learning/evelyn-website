@@ -33,7 +33,7 @@ import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
+import type { MockReviewContext, MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
@@ -249,6 +249,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime's internal ref via onPracticeOverrideChange so the
   // "Practice problems" chip can render its active state (Humor ✓ idiom).
   const [practiceOverrideActive, setPracticeOverrideActive] = useState(false);
+  // Mock-review pre-start agenda — mirrored from VoiceTutorRealtime via
+  // onMockAgendaChange. Non-empty ⇒ SessionStage shows the tappable question
+  // list instead of the generic starter chips.
+  const [mockAgenda, setMockAgenda] = useState<MockReviewAgendaItem[]>([]);
+  const [mockAgendaRemaining, setMockAgendaRemaining] = useState<string | null>(null);
   // #7 hybrid (2026-07-17): standing difficulty preference — mirrored from
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
@@ -818,6 +823,7 @@ export default function TutorSession(props: TutorSessionProps) {
         }}
         onSpeakingRateChange={setSpeakingRate}
         onPracticeOverrideChange={setPracticeOverrideActive}
+        onMockAgendaChange={(agenda, remainingLine) => { setMockAgenda(agenda); setMockAgendaRemaining(remainingLine); }}
         onDifficultyBiasChange={setDifficultyBias}
         onPracticeStatsChange={(s) => { setPracticeStats(s); onPracticeStatsChange?.(s); }}
         onInterruptedChange={setIsPerceptionInterrupted}
@@ -1033,7 +1039,13 @@ export default function TutorSession(props: TutorSessionProps) {
       )}
       <SessionStage
         lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
-        subtitle={lessonProgress.plan ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}` : `${topicDisplayName || 'Open practice'} · Free practice`}
+        subtitle={
+          lessonProgress.plan
+            ? `${topicDisplayName} · grade ${lessonProgress.plan.grade}`
+            : (mockReview || sessionGoal === 'mock-review')
+              ? `${topicDisplayName || 'Mock exam'} · Mock exam review`
+              : `${topicDisplayName || 'Open practice'} · Free practice`
+        }
         headerBrand={headerBrand}
         hasPlan={!!lessonProgress.plan}
         isFreePractice={!lessonProgress.plan}
@@ -1059,6 +1071,8 @@ export default function TutorSession(props: TutorSessionProps) {
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}
         quickActions={quickActionsEl}
         onStudentInput={handleStudentInput}
+        mockAgenda={mockAgenda}
+        mockAgendaRemaining={mockAgendaRemaining}
         practiceOverrideActive={practiceOverrideActive}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}

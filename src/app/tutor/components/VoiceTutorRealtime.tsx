@@ -8,7 +8,7 @@
  * a single real-time WebSocket connection to OpenAI.
  */
 
-import { useState, useCallback, useEffect, useRef, type FormEvent, type ReactNode } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
 import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
@@ -90,7 +90,8 @@ import {
   looksLikePunnett,
 } from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
+import type { MockReviewContext, MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
+import { buildMockReviewAgenda } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
@@ -448,6 +449,13 @@ interface VoiceTutorRealtimeProps {
    *  Chip). See practiceOverrideRef below + derivePracticeMode for the
    *  full precedence contract. */
   onPracticeOverrideChange?: (active: boolean) => void;
+  /** Mock-review pre-start agenda. Fires (on mount + whenever mockReview
+   *  changes) with the tappable question list derived from the review context
+   *  plus the muted "+ N more missed…" line (null when none). The parent holds
+   *  it in state and passes it to SessionStage, which replaces the generic
+   *  starter chips with the agenda. Empty array + null ⇒ no context (degraded
+   *  mock-review or non-mock session): SessionStage keeps the generic chips. */
+  onMockAgendaChange?: (agenda: MockReviewAgendaItem[], remainingLine: string | null) => void;
   /** Voice Perception Q9 (2026-06-16). Fires true when a perception
    *  cancel fires (yellow-flash window opens) and false ~300ms later
    *  when the window closes. Parent uses this to render a visible
@@ -591,6 +599,7 @@ export function VoiceTutorRealtime({
   onPracticeStatsChange,
   onSpeakingRateChange,
   onPracticeOverrideChange,
+  onMockAgendaChange,
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
@@ -1287,6 +1296,18 @@ export function VoiceTutorRealtime({
   // brain payload without a stale-closure miss.
   const mockReviewRef = useRef(mockReview);
   useEffect(() => { mockReviewRef.current = mockReview; }, [mockReview]);
+
+  // Pre-start "review agenda" (deliverable 4): derive the tappable question
+  // list + "+ N more" line from the review context and report it up so
+  // SessionStage can replace the generic starter chips with the agenda. Memoized
+  // on mockReview; reported via a stable ref so a changing callback identity
+  // doesn't re-fire it. Empty/degraded ⇒ ([], null) ⇒ generic chips stay.
+  const onMockAgendaChangeRef = useRef(onMockAgendaChange);
+  useEffect(() => { onMockAgendaChangeRef.current = onMockAgendaChange; }, [onMockAgendaChange]);
+  const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
+  useEffect(() => {
+    onMockAgendaChangeRef.current?.(mockAgenda.agenda, mockAgenda.remainingLine);
+  }, [mockAgenda]);
 
   // Milestone reporting (mirrored to a ref so the emit helper has stable
   // identity and never goes stale inside the tool dispatch). Each milestone
