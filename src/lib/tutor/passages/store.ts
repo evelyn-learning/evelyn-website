@@ -139,6 +139,8 @@ import { APPSYCH_MOCK_A_PASSAGES } from './seeds/appsych-mock-a';
 import { APENGLANG_MOCK_A_PASSAGES } from './seeds/apenglang-mock-a';
 // AP U.S. History mock Form A — 15 MCQ stimulus passages + 2 SAQ stimuli + DBQ packet
 import { APUSH_MOCK_A_PASSAGES } from './seeds/apush-mock-a';
+// AP World History mock Form A — 15 MCQ stimulus passages + 2 SAQ stimuli + DBQ packet
+import { APWORLD_MOCK_A_PASSAGES } from './seeds/apworld-mock-a';
 
 export const SEED_PASSAGES: Passage[] = [
   ...ACT_MOCK_A_READING_PASSAGES,
@@ -146,6 +148,7 @@ export const SEED_PASSAGES: Passage[] = [
   ...APPSYCH_MOCK_A_PASSAGES,
   ...APENGLANG_MOCK_A_PASSAGES,
   ...APUSH_MOCK_A_PASSAGES,
+  ...APWORLD_MOCK_A_PASSAGES,
   ...ACT_MOCK_B_READING_PASSAGES,
   ...ACT_MOCK_B_SCIENCE_PASSAGES,
   ...ACT_MOCK_C_READING_PASSAGES,
