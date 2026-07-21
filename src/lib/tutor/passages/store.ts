@@ -141,6 +141,8 @@ import { APENGLANG_MOCK_A_PASSAGES } from './seeds/apenglang-mock-a';
 import { APUSH_MOCK_A_PASSAGES } from './seeds/apush-mock-a';
 // AP World History mock Form A — 15 MCQ stimulus passages + 2 SAQ stimuli + DBQ packet
 import { APWORLD_MOCK_A_PASSAGES } from './seeds/apworld-mock-a';
+// AP U.S. Government mock Form A — 1 compiled foundational-document excerpt (Federalist 10 + 51)
+import { APGOV_MOCK_A_PASSAGES } from './seeds/apgov-mock-a';
 
 export const SEED_PASSAGES: Passage[] = [
   ...ACT_MOCK_A_READING_PASSAGES,
@@ -149,6 +151,7 @@ export const SEED_PASSAGES: Passage[] = [
   ...APENGLANG_MOCK_A_PASSAGES,
   ...APUSH_MOCK_A_PASSAGES,
   ...APWORLD_MOCK_A_PASSAGES,
+  ...APGOV_MOCK_A_PASSAGES,
   ...ACT_MOCK_B_READING_PASSAGES,
   ...ACT_MOCK_B_SCIENCE_PASSAGES,
   ...ACT_MOCK_C_READING_PASSAGES,

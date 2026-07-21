@@ -1,0 +1,1201 @@
+[
+  {
+    "id": "apgov-fa-mc-001",
+    "loId": "apgov.constitution",
+    "cedCode": "AP-GOV-1.B",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following most precisely describes what the Supreme Court held in Marbury v. Madison (1803)?",
+    "choices": [
+      "The president, not the courts, holds final authority to determine whether an act of Congress is constitutional.",
+      "Section 13 of the Judiciary Act of 1789, which attempted to expand the Supreme Court's original jurisdiction beyond what Article III of the Constitution allows, was itself unconstitutional and therefore void.",
+      "Congress lacks the constitutional power to create any lower federal courts below the Supreme Court.",
+      "State courts, not federal courts, hold the ultimate authority to strike down an unconstitutional act of Congress."
+    ],
+    "answer": "B",
+    "solutionText": "In Marbury v. Madison (1803), Chief Justice Marshall held that Section 13 of the Judiciary Act of 1789 — which purported to give the Supreme Court original jurisdiction to issue writs of mandamus — exceeded the original jurisdiction Article III grants the Court, and was therefore unconstitutional and void. This established the principle of judicial review: the power of federal courts, not the president (A), to declare acts of Congress unconstitutional. The case says nothing about Congress's power to create lower federal courts (C), which Article III explicitly authorizes, and it is federal courts, not state courts (D), that exercise this power over federal statutes.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-002",
+    "loId": "apgov.federalism",
+    "cedCode": "AP-GOV-CON-3",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Suppose a state legislature, unhappy that a federal student-loan servicing agency maintains offices within its borders, imposes a special state tax on the agency's operations. A federal court cites McCulloch v. Maryland (1819) in striking down the tax. Which principle from McCulloch supports this ruling?",
+    "choices": [
+      "States may tax any federal institution operating within their borders as an exercise of their reserved Tenth Amendment powers.",
+      "The Necessary and Proper Clause allows Congress to charter institutions like a national bank, but it does not limit a state's power to tax them.",
+      "The Tenth Amendment reserves all taxing power exclusively to the states, so federal agencies are immune from state law only during wartime.",
+      "Because federal law is supreme, a state may not tax a legitimate instrument of the federal government, since, as the Court put it, 'the power to tax involves the power to destroy.'"
+    ],
+    "answer": "D",
+    "solutionText": "McCulloch v. Maryland (1819) held both that Congress has implied power under the Necessary and Proper Clause to create institutions like a national bank, and that a state may not tax a legitimate federal institution, because the power to tax could be used to destroy it — a violation of federal supremacy under Article VI. Choice A states the opposite of the holding. Choice B is wrong because the case explicitly did limit state taxation of federal institutions. Choice C invents a 'wartime' exception that appears nowhere in the case.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-003",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In United States v. Lopez (1995), the Supreme Court struck down a federal law banning gun possession near schools. In doing so, the majority held that Congress's commerce power did NOT extend to regulating this conduct because —",
+    "choices": [
+      "gun possession near a school is not itself an economic activity that substantially affects interstate commerce.",
+      "the Second Amendment specifically forbids Congress from passing any law that regulates firearms.",
+      "states, not Congress, hold exclusive authority over all criminal law under the Tenth Amendment.",
+      "the law had never been used to prosecute a single defendant by the time the case reached the Court."
+    ],
+    "answer": "A",
+    "solutionText": "Lopez (1995) was the first case since the New Deal era in which the Court limited Congress's Commerce Clause power, holding that possessing a gun near a school is not economic activity and lacks a substantial connection to interstate commerce. The ruling did not rest on the Second Amendment (B) — that issue was not the basis of the decision. Choice C overstates the holding: Congress retains extensive commerce authority over activity that IS economic. Choice D describes an irrelevant procedural fact not tied to the Court's constitutional reasoning.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-004",
+    "loId": "apgov.constitution-ratification",
+    "cedCode": "AP-APGOV-1.4/1.5",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Document 1 — Federalist No. 10 (James Madison, 1787): \"By a faction, I understand a number of citizens, whether amounting to a majority or minority of the whole, who are united and actuated by some common impulse of passion, or of interest, adverse to the rights of other citizens, or to the permanent and aggregate interests of the community... Extend the sphere, and you take in a greater variety of parties and interests; you make it less probable that a majority of the whole will have a common motive to invade the rights of other citizens.\"\n\nDocument 2 — Federalist No. 51 (James Madison, 1788): \"Ambition must be made to counteract ambition... If men were angels, no Government would be necessary. If angels were to govern men, neither external nor internal controls on government would be necessary. In framing a government which is to be administered by men over men, the great difficulty lies in this: you must first enable the government to control the governed; and in the next place oblige it to control itself.\"\n\nAccording to Document 1, Madison argues that the surest way to control the negative effects of faction in a large, diverse republic is to —",
+    "choices": [
+      "eliminate political parties entirely so that no faction can ever organize.",
+      "grant a single national leader emergency powers to suppress factions directly.",
+      "rely on a multiplicity of competing interests and parties, which makes it difficult for any single faction to form a tyrannical majority.",
+      "shrink the republic to a small, more homogeneous population so that citizens naturally share the same interests."
+    ],
+    "answer": "C",
+    "solutionText": "Document 1 argues that extending the sphere of a republic takes in 'a greater variety of parties and interests,' making it 'less probable that a majority... will have a common motive to invade the rights of other citizens' — in other words, a multiplicity of competing interests checks factional tyranny. Madison explicitly rejects the small-republic solution (D), and neither eliminating parties (A) nor a single empowered leader (B) appears anywhere in his argument — both actually resemble the concentrated power Madison feared.",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.apgov-mock-a-federalist-10-51.v1"
+  },
+  {
+    "id": "apgov-fa-mc-005",
+    "loId": "apgov.separation-of-powers",
+    "cedCode": "AP-APGOV-1.6",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Document 1 — Federalist No. 10 (James Madison, 1787): \"By a faction, I understand a number of citizens, whether amounting to a majority or minority of the whole, who are united and actuated by some common impulse of passion, or of interest, adverse to the rights of other citizens, or to the permanent and aggregate interests of the community... Extend the sphere, and you take in a greater variety of parties and interests; you make it less probable that a majority of the whole will have a common motive to invade the rights of other citizens.\"\n\nDocument 2 — Federalist No. 51 (James Madison, 1788): \"Ambition must be made to counteract ambition... If men were angels, no Government would be necessary. If angels were to govern men, neither external nor internal controls on government would be necessary. In framing a government which is to be administered by men over men, the great difficulty lies in this: you must first enable the government to control the governed; and in the next place oblige it to control itself.\"\n\nDocuments 1 and 2 both address the danger of concentrated or factional power, but they rely on different remedies. Document 2's remedy, unlike Document 1's, depends primarily on —",
+    "choices": [
+      "expanding the size and diversity of the republic so that no single interest can ever dominate.",
+      "internal structural checks — separating governmental powers so that each branch's ambition counteracts the ambitions of the others.",
+      "educating citizens so thoroughly in civic virtue that ambition disappears from public life.",
+      "empowering a single strong executive to police the ambitions of the legislative branch."
+    ],
+    "answer": "B",
+    "solutionText": "Document 1 (Federalist 10) locates the remedy for faction in the size and diversity of the republic itself. Document 2 (Federalist 51) instead locates the remedy in the structure of government — 'ambition must be made to counteract ambition' through separated powers and checks and balances, precisely because 'if men were angels, no Government would be necessary' (i.e., civic virtue alone, choice C, cannot be relied upon). Choice A restates Document 1's solution, not Document 2's. Choice D misdescribes separation of powers as one branch policing another, rather than a mutual, reciprocal check among all branches.",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.apgov-mock-a-federalist-10-51.v1"
+  },
+  {
+    "id": "apgov-fa-mc-006",
+    "loId": "apgov.constitution-ratification",
+    "cedCode": "AP-APGOV-1.4/1.5",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Brutus No. 1, an influential Anti-Federalist essay published in 1787, argues that the Necessary and Proper Clause and the Supremacy Clause together give the national government such sweeping authority that it will eventually absorb the powers of the state governments. Which of the following best describes how Brutus No. 1's position on the ideal size of a republic responds to the argument James Madison later makes in Federalist No. 10?",
+    "choices": [
+      "Brutus directly rejects Madison's claim, arguing instead that only a small, more homogeneous republic can preserve liberty and provide genuine representation.",
+      "Brutus agrees that a large, diverse republic best protects liberty, but worries the proposed Constitution fails to create one.",
+      "Brutus and Madison agree completely that the Necessary and Proper Clause poses no real threat to state authority.",
+      "Brutus argues that liberty is best protected by abolishing the state governments and relying entirely on the national government."
+    ],
+    "answer": "A",
+    "solutionText": "Brutus No. 1 takes the opposite position from Madison's Federalist No. 10: where Madison argues an extended, diverse republic best controls faction, Brutus argues that a republic covering so vast and varied a territory cannot preserve liberty or represent its people, favoring smaller, more homogeneous republics instead. Choice B misstates Brutus's view (he does not think a large republic can protect liberty at all). Choice C is false — Brutus's central warning is that the Necessary and Proper and Supremacy Clauses THREATEN state authority. Choice D goes further than Brutus argues; he warns about excessive national power but does not call for abolishing the states.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-007",
+    "loId": "apgov.democratic-ideals",
+    "cedCode": "AP-APGOV-1.1",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Declaration of Independence (1776) states: \"We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness. That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed.\" This passage most directly reflects which political theory?",
+    "choices": [
+      "divine right of kings, in which a monarch's authority comes directly from God and cannot be questioned",
+      "judicial supremacy, in which courts hold final authority to define the scope of natural rights",
+      "states' rights theory, in which the national government's powers are limited to those expressly listed in a written constitution",
+      "social contract theory, in which government's legitimacy rests on the consent of those it governs"
+    ],
+    "answer": "D",
+    "solutionText": "The passage's claim that governments 'deriv[e] their just powers from the consent of the governed' is the core of social contract theory, associated with thinkers like Locke: government exists to secure natural rights and is legitimate only with the people's consent. It directly contradicts divine right of kings (A), which grounds authority in God rather than consent. Judicial supremacy (B) and states' rights/enumerated-powers theory (C) are constitutional-structure concepts not addressed by this 1776 document, which predates the Constitution.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-008",
+    "loId": "apgov.separation-of-powers",
+    "cedCode": "AP-APGOV-1.6",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following scenarios best illustrates the constitutional principle of separation of powers?",
+    "choices": [
+      "The president vetoes a bill, and Congress overrides the veto with a two-thirds vote in each chamber.",
+      "The Senate votes to confirm or reject the president's nominee to a federal judgeship.",
+      "Congress writes and passes tax legislation, the president decides how to enforce it, and the courts resolve legal disputes that arise under it — each branch exercising a distinct governmental function.",
+      "The Supreme Court declares a state law unconstitutional under the Fourteenth Amendment."
+    ],
+    "answer": "C",
+    "solutionText": "Separation of powers refers to the division of distinct governmental functions — legislative, executive, and judicial — among three separate branches, each exercising its own function, as in choice C. Choices A and B instead illustrate checks and balances, where one branch exercises a specific power over another (a veto override, a confirmation vote), not merely a distinct function. Choice D illustrates judicial review over state law, a federalism issue, not separation of powers among national branches.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-009",
+    "loId": "apgov.federalism-foundations",
+    "cedCode": "AP-APGOV-1.7/1.8/1.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Concurrent powers under the U.S. federal system are best defined as powers that —",
+    "choices": [
+      "belong exclusively to the national government and may never be exercised by state governments",
+      "are exercised independently by both the national and state governments at the same time, such as the power to levy taxes",
+      "are denied to both the national and state governments by the Constitution",
+      "are reserved exclusively to the states under the Tenth Amendment"
+    ],
+    "answer": "B",
+    "solutionText": "Concurrent powers, such as the power to tax, borrow money, or establish courts, may be exercised by both the national and state governments simultaneously. Choice A describes delegated (or exclusive national) powers. Choice C describes prohibited powers. Choice D describes reserved powers, which belong to the states alone.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-010",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Prior to Baker v. Carr (1962), federal courts had generally treated legislative redistricting disputes as 'political questions' outside the judiciary's proper role, leaving some state legislative districts unchanged for decades even as population shifted dramatically between them. In Baker v. Carr, the Supreme Court held that —",
+    "choices": [
+      "redistricting disputes must be resolved exclusively by state legislatures, with no role for the federal courts.",
+      "the Constitution requires legislative districts to be redrawn only once per century, regardless of population change.",
+      "only the U.S. Senate, not the federal courts, may resolve disputes over how a state legislature draws district lines.",
+      "federal courts do have jurisdiction to hear constitutional challenges to legislative apportionment, because such claims are justiciable rather than a nonjusticiable political question."
+    ],
+    "answer": "D",
+    "solutionText": "Baker v. Carr (1962) held that malapportionment claims are justiciable — federal courts may hear them — rejecting the argument that redistricting is purely a nonjusticiable 'political question' reserved to the legislatures (contradicting choice A). The ruling opened the door to the 'one person, one vote' line of cases. Choice B invents a fictitious constitutional rule, and choice C wrongly assigns this authority to the Senate rather than the courts.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-011",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A state legislature redraws a congressional district into a narrow, winding shape connecting several disconnected minority neighborhoods across hundreds of miles; mapmakers acknowledge that race was the single most important factor in drawing the district's boundaries. A group of voters sues, arguing the district is an unconstitutional racial gerrymander. Under Shaw v. Reno (1993), a court evaluating this claim would apply which standard?",
+    "choices": [
+      "strict scrutiny, because race was the predominant factor in drawing the district's boundaries",
+      "rational basis review, upholding the district so long as the legislature had any conceivable reason for its shape",
+      "no judicial review at all, because redistricting is a nonjusticiable political question",
+      "intermediate scrutiny, the same standard the Court applies to gender-based classifications"
+    ],
+    "answer": "A",
+    "solutionText": "Shaw v. Reno (1993) held that a redistricting plan predominantly based on race is subject to strict scrutiny under the Equal Protection Clause, even when adopted to increase minority representation. Rational basis (B) is far too lenient a standard for a racial classification. Choice C misstates the law — Baker v. Carr (1962) already established that redistricting claims ARE justiciable. Intermediate scrutiny (D) applies to gender, not race, classifications.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-012",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Alexander Hamilton, in Federalist No. 70, argued that vesting executive power in a single president rather than in a council or committee of executives was essential to good government, warning that a plural executive 'tends to conceal faults, and destroy responsibility.' Which scenario best illustrates the accountability problem Hamilton believed a plural executive would create?",
+    "choices": [
+      "A single president decides, without consulting Congress, to redeploy troops already stationed abroad.",
+      "A three-member executive council disagrees over whether to launch a military operation, and after the mission fails, each member blames the other two, leaving voters unable to identify who was responsible.",
+      "Congress holds public hearings to investigate the causes of a failed military operation.",
+      "The Senate rejects a treaty that the president had personally negotiated."
+    ],
+    "answer": "B",
+    "solutionText": "Hamilton's objection to a plural executive was that shared authority lets officials 'conceal faults' by shifting blame onto one another, destroying the public's ability to hold any one person 'responsib[le]' — exactly what happens in choice B. Choice A actually shows a single president acting alone, the opposite scenario. Choices C and D describe legislative oversight and treaty rejection, which are checks-and-balances mechanisms unrelated to Hamilton's plural-executive argument.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-013",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Federalist No. 78, Hamilton defends granting federal judges life tenure 'during good behaviour' rather than fixed terms. Which of the following best explains Hamilton's reasoning for this design choice?",
+    "choices": [
+      "Life tenure ensures that federal judges will always rule in favor of the national government over the states.",
+      "Life tenure was necessary because the Constitution gives federal judges the power to initiate legislation on their own.",
+      "Permanent tenure frees judges from depending on the president or Congress for reappointment, allowing them to rule against popular or politically powerful positions without fear of losing their position.",
+      "Life tenure guarantees that a judge's rulings can never be reviewed by a higher appellate court."
+    ],
+    "answer": "C",
+    "solutionText": "Hamilton argued that life tenure insulates judges from political pressure, letting them exercise independent judgment — including striking down popular but unconstitutional laws — without fearing retaliation through non-reappointment. Choice A invents a pro-federal bias that isn't part of Hamilton's argument. Choice B falsely attributes a legislative power to judges. Choice D confuses life tenure with appellate immunity — lower federal court rulings remain reviewable on appeal regardless of a judge's tenure.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-014",
+    "loId": "apgov.congress",
+    "cedCode": "AP-GOV-2.A",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "After a bill is introduced in the House of Representatives, it is typically referred first to —",
+    "choices": [
+      "the full House for an immediate floor vote",
+      "the Senate for review before the House considers it further",
+      "the president for a preliminary signature",
+      "a standing committee with jurisdiction over the bill's subject matter"
+    ],
+    "answer": "D",
+    "solutionText": "Bills are typically referred to the relevant standing committee, where they may be studied, amended, or left to die, before any floor vote. Bills do not go directly to a floor vote (A), to the other chamber first (B), or to the president (C) — the president acts only after both chambers have passed identical legislation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-015",
+    "loId": "apgov.congress",
+    "cedCode": "AP-GOV-2.A",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows the roll-call vote in the U.S. Senate on a bipartisan infrastructure funding bill.\n\n| Party | Yes | No |\n|---|---|---|\n| Majority party (54 seats) | 50 | 4 |\n| Minority party (46 seats) | 12 | 34 |\n\nBased on the roll-call results in the table, which of the following is an accurate conclusion about this vote?",
+    "choices": [
+      "The bill received a filibuster-proof three-fifths supermajority, since total Yes votes (50 + 12 = 62) exceed the 60 votes needed to invoke cloture.",
+      "The bill failed to pass, since a majority of the minority party voted No.",
+      "The vote reflects strict party-line voting, with every majority-party senator voting Yes and every minority-party senator voting No.",
+      "The bill needed only a simple majority of all 100 senators to overcome a Senate filibuster."
+    ],
+    "answer": "A",
+    "solutionText": "Adding the Yes votes from both parties (50 + 12 = 62) shows the bill cleared the 60-vote threshold needed to invoke cloture and overcome a filibuster — a filibuster-proof supermajority. Choice B is wrong: with 62 Yes votes out of 100, the bill passed. Choice C is contradicted by the table — 4 majority-party senators voted No and 12 minority-party senators voted Yes, so the vote was not strictly along party lines. Choice D misstates Senate rules: ending a filibuster on ordinary legislation requires 60 votes (three-fifths), not a simple majority.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-016",
+    "loId": "apgov.presidency",
+    "cedCode": "AP-GOV-2.B",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a FORMAL power the Constitution explicitly grants to the president?",
+    "choices": [
+      "issuing executive orders that direct federal agencies",
+      "negotiating executive agreements with foreign leaders without Senate ratification",
+      "granting reprieves and pardons for federal offenses",
+      "using the 'bully pulpit' to appeal directly to public opinion"
+    ],
+    "answer": "C",
+    "solutionText": "Article II, Section 2 explicitly grants the president 'Power to grant Reprieves and Pardons for Offences against the United States' — a formal, textually enumerated power. Executive orders (A), executive agreements (B), and going public via the bully pulpit (D) are all informal powers presidents have developed in practice; none is explicitly listed in the constitutional text.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-017",
+    "loId": "apgov.presidency",
+    "cedCode": "AP-GOV-2.B",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows a president's quarterly approval and disapproval ratings.\n\n| Quarter | Approval % | Disapproval % |\n|---|---|---|\n| Q1 | 58 | 34 |\n| Q2 | 61 | 33 |\n| Q3 | 47 | 46 |\n| Q4 | 44 | 49 |\n\nDuring Q3, the president delivered a series of televised addresses directly to the public urging support for a controversial energy policy — a strategy political scientists call 'going public.' Based on the table, which conclusion about the effectiveness of this going-public strategy is best supported by the data?",
+    "choices": [
+      "The strategy succeeded, since approval rose in every quarter after Q3.",
+      "The strategy does not appear to have reversed the decline in approval, since both approval fell and disapproval rose in the quarter immediately following the addresses.",
+      "The data shows that public opinion is entirely unaffected by presidential communication strategies in all circumstances.",
+      "The president's approval rating remained above his disapproval rating throughout the entire period shown."
+    ],
+    "answer": "B",
+    "solutionText": "Comparing Q3 to Q4, approval continued falling (47% to 44%) and disapproval continued rising (46% to 49%) even after the Q3 addresses — the opposite of what a successful going-public campaign would produce. Choice A is contradicted by the Q4 numbers. Choice C draws an unsupported sweeping generalization from a single instance. Choice D is false: in Q4, disapproval (49%) exceeded approval (44%).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-018",
+    "loId": "apgov.congress-structure",
+    "cedCode": "AP-APGOV-2.1/2.2/2.3",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When the House and Senate pass different versions of the same bill, a temporary committee made up of members from both chambers may be formed to reconcile the differences between the two versions. This is called a —",
+    "choices": [
+      "select committee",
+      "standing committee",
+      "discharge petition",
+      "conference committee"
+    ],
+    "answer": "D",
+    "solutionText": "A conference committee is a temporary, joint House-Senate committee formed to reconcile differing versions of the same bill into a single version both chambers can pass. A select committee (A) is typically formed for a specific investigation or special purpose, not bill reconciliation. A standing committee (B) is a permanent committee with ongoing subject-matter jurisdiction. A discharge petition (C) is an unrelated procedure used to force a bill out of committee and onto the floor.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-019",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Unlike a formal treaty, an executive agreement between the United States and a foreign government —",
+    "choices": [
+      "does not require ratification by a two-thirds vote of the Senate to take effect",
+      "automatically becomes permanently binding on all future presidential administrations",
+      "must be approved by a simple majority vote in both the House and the Senate before taking effect",
+      "can only be used to establish military alliances, never economic or diplomatic arrangements"
+    ],
+    "answer": "A",
+    "solutionText": "Executive agreements, unlike treaties, do not require Senate ratification and can be made solely on the president's authority, which is why presidents often prefer them for reaching international arrangements quickly. Choice B is wrong — because they rest on presidential authority alone, executive agreements are generally easier for a successor to modify or abandon than a ratified treaty. Choice C invents a congressional-approval requirement that doesn't apply. Choice D is too narrow; executive agreements cover a wide range of economic, diplomatic, and military matters.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-020",
+    "loId": "apgov.judiciary-independence",
+    "cedCode": "AP-APGOV-2.8/2.9/2.10/2.11",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two Supreme Court justices agree that a state law violates the Constitution, but they reach that conclusion through different interpretive approaches. Justice X argues the law violates a right the Constitution's framers would have recognized as fundamental, based on the text's meaning at the time of ratification. Justice Y argues instead that the Constitution's protections must be read in light of society's evolving standards, and that a right of this kind falls within that evolving understanding today. Justice X's approach is best described as —",
+    "choices": [
+      "stare decisis",
+      "judicial restraint",
+      "originalism",
+      "living constitutionalism"
+    ],
+    "answer": "C",
+    "solutionText": "Justice X's approach — interpreting the Constitution based on its meaning at the time it was written or ratified — is originalism. Justice Y's approach, reading the Constitution's protections as evolving with society, is living constitutionalism (D), which is the opposite interpretive philosophy. Stare decisis (A) refers to following precedent, a separate issue not described here. Judicial restraint (B) refers to deferring to the elected branches rather than to a particular method of constitutional interpretation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-021",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An 'iron triangle' in the federal bureaucracy refers to the stable, mutually beneficial relationship that typically forms among —",
+    "choices": [
+      "the president, the vice president, and the White House Chief of Staff",
+      "a congressional committee, a federal agency, and an interest group, each sharing a stake in a particular policy area",
+      "the House, the Senate, and the Supreme Court, jointly checking the bureaucracy",
+      "three competing federal agencies that all regulate the same industry"
+    ],
+    "answer": "B",
+    "solutionText": "An iron triangle describes the durable, mutually reinforcing relationship among a congressional committee (which funds and authorizes), a federal agency (which implements policy), and an interest group (which lobbies and provides political support) within a specific policy area. The other options describe different institutional groupings that are not what political scientists mean by the term.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-022",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows rulemaking activity for a federal regulatory agency over four years.\n\n| Year | Proposed Rules | Final Rules Issued | Avg. Public Comment Period (days) |\n|---|---|---|---|\n| 2019 | 210 | 165 | 45 |\n| 2020 | 180 | 140 | 60 |\n| 2021 | 240 | 205 | 30 |\n| 2022 | 260 | 230 | 30 |\n\nBased on the table, which of the following claims about the agency's rulemaking is best supported by the data?",
+    "choices": [
+      "The agency finalized every rule it proposed in each year shown.",
+      "The average public comment period increased steadily every year from 2019 to 2022.",
+      "Congress eliminated the agency's rulemaking authority after 2021, since final rules exceeded proposed rules that year.",
+      "Between 2020 and 2022, the agency both increased its rulemaking output and shortened the average public comment period on proposed rules."
+    ],
+    "answer": "D",
+    "solutionText": "Comparing 2020 to 2022: final rules issued rose from 140 to 230 (increased output), while the average comment period fell from 60 to 30 days (shortened comment period) — both trends support choice D. Choice A is contradicted every year, since proposed rules always exceed final rules issued. Choice B is contradicted by the drop from 60 days (2020) to 30 days (2021). Choice C's premise is false — in 2021, final rules (205) were still fewer than proposed rules (240), and the table gives no information about any change in the agency's legal authority.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-023",
+    "loId": "apgov.bureaucracy-accountability",
+    "cedCode": "AP-APGOV-2.12/2.13/2.14",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Congress passes a law creating a new federal job-training program and 'authorizing' spending of up to 2 billion dollars per year for the program over five years. Two years later, the Appropriations Committee votes to fund the program at only 900 million dollars for the upcoming fiscal year. Which of the following best explains why this is constitutionally and procedurally permissible?",
+    "choices": [
+      "The Appropriations Committee acted illegally, because an authorization bill legally guarantees that the full authorized amount must be spent every year.",
+      "Only the president's Office of Management and Budget, not Congress, has constitutional authority to set an agency's final funding level.",
+      "An authorization bill establishes a program and sets a ceiling on possible funding, but a separate appropriations bill must actually provide the money, and Congress is not required to appropriate the full authorized amount.",
+      "Because the authorization already passed, the program's funding is automatically renewed at the full authorized level each year without further congressional action."
+    ],
+    "answer": "C",
+    "solutionText": "Authorization and appropriations are two distinct steps: an authorization bill creates a program and sets a maximum funding ceiling, but the program only receives money once a separate appropriations bill actually provides it — and Congress is free to appropriate less than the authorized ceiling. Choice A misunderstands authorization as a spending guarantee, which it is not. Choice B wrongly removes Congress's constitutional power of the purse. Choice D is false; appropriations must be renewed through further congressional action, typically annually, rather than occurring automatically.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-024",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "After a midterm election, one party controls the House of Representatives while the opposing party controls the Senate and the presidency. The president's major legislative priority passes the Senate but stalls in the House Rules Committee and never receives a floor vote. Which of the following best explains why divided government of this kind commonly produces this kind of legislative gridlock?",
+    "choices": [
+      "Committee leadership and House leaders from the opposing party can use their agenda-setting power to prevent a bill from ever reaching a floor vote, even after it clears the other chamber.",
+      "The Constitution requires unanimous consent of both chambers and the president before any bill may even be debated on the floor.",
+      "The Supreme Court must certify that a bill enjoys majority public support in both chambers before it may proceed to a vote.",
+      "A president whose party is in the minority in Congress automatically loses the constitutional power to sign or veto legislation."
+    ],
+    "answer": "A",
+    "solutionText": "Committees and chamber leadership control the legislative agenda, deciding which bills reach the floor; under divided government, leaders from the president's opposing party can simply decline to schedule a floor vote, killing a bill without a formal rejection. Choice B invents a unanimous-consent requirement that does not exist. Choice C fabricates a role for the Supreme Court in the legislative process. Choice D is false — the president's formal signing and veto powers are constitutionally fixed and do not depend on which party controls Congress.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-025",
+    "loId": "apgov.checks-in-practice",
+    "cedCode": "AP-APGOV-2.15",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The House of Representatives votes to impeach a federal judge on two articles of impeachment: Article I passes 230-198, and Article II fails 190-238. The case then moves to the Senate. Which of the following accurately describes what happens next under the Constitution?",
+    "choices": [
+      "The judge is removed from office immediately upon the House's vote to impeach, before any Senate trial occurs.",
+      "The Senate will hold a trial on Article I, since impeachment requires only a simple House majority on at least one article, while removal requires a two-thirds Senate vote to convict.",
+      "The judge cannot be tried by the Senate at all, because Article I passed by a simple majority rather than a two-thirds majority in the House.",
+      "Because Article II failed, the House's entire impeachment action is void, and Article I is automatically dismissed as well."
+    ],
+    "answer": "B",
+    "solutionText": "Impeachment (a formal accusation) requires only a simple majority in the House on at least one article; conviction and removal require a two-thirds vote in the Senate. Since Article I passed the House, the Senate will hold a trial on that article. Choice A confuses impeachment with removal — impeachment alone does not remove an official from office. Choice C wrongly imports the Senate's two-thirds conviction threshold into the House vote. Choice D is incorrect; each article is considered separately, so the failure of Article II has no bearing on Article I.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-026",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A New York State agency composed a short prayer and had public school students recite it together at the start of each school day. Reciting the prayer was voluntary, and the wording did not endorse any specific religious denomination. In Engel v. Vitale (1962), what did the Supreme Court hold?",
+    "choices": [
+      "The recitation was constitutional because the prayer did not name a specific religious denomination",
+      "The recitation violated the Establishment Clause because a government body had composed and sponsored the prayer for public school students",
+      "The recitation was constitutional because students who objected could remain silent or decline to participate",
+      "The recitation violated the Free Exercise Clause rather than the Establishment Clause"
+    ],
+    "answer": "B",
+    "solutionText": "Engel v. Vitale (1962) held that government-composed, government-sponsored prayer in public schools violates the Establishment Clause, because the problem is government authorship and sponsorship of religious exercise, not the prayer's wording. Choice A is wrong because the Court held that nondenominational wording does not cure an Establishment Clause violation. Choice C is wrong because the Court held that voluntary participation does not cure the violation either — the harm is the state's act of composing and sponsoring the prayer. Choice D is wrong because Engel is an Establishment Clause case, not a Free Exercise Clause case; no one was being forced to practice a religion against their will.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-027",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Wisconsin required all children to attend school until age 16. A group of Amish parents refused, on religious grounds, to send their children to school past eighth grade and were prosecuted for violating the compulsory-attendance law. In Wisconsin v. Yoder (1972), how did the Supreme Court rule?",
+    "choices": [
+      "The parents had to comply with the law because compulsory-education laws apply equally to every family regardless of religious belief",
+      "The law was struck down entirely because requiring any child to attend school violates the Establishment Clause",
+      "The parents could not be compelled to comply with the law beyond eighth grade because their free-exercise interest outweighed the state's interest in this case",
+      "The parents could not be compelled to comply because the state lacks any constitutional authority to require school attendance"
+    ],
+    "answer": "C",
+    "solutionText": "Yoder held that, on these facts, the Amish parents' First Amendment free-exercise interest in directing their children's religious upbringing outweighed the state's interest in compelling school attendance past eighth grade, so the parents could not be prosecuted. Choice A states the opposite of the actual outcome. Choice B is wrong because Yoder is a Free Exercise Clause case about a burden on religious practice, not an Establishment Clause case about government promoting religion. Choice D overstates the holding — the Court did not deny that states generally have authority to require school attendance; it recognized a narrow exemption for this specific religious burden.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-028",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During World War I, Charles Schenck was convicted under the Espionage Act for mailing leaflets urging men to resist the military draft. He argued the Espionage Act violated his First Amendment right to free speech. In Schenck v. United States (1919), the Supreme Court —",
+    "choices": [
+      "upheld the conviction, holding that speech creating a clear and present danger of a substantive evil that Congress may prevent is not protected by the First Amendment",
+      "overturned the conviction, holding that political speech may be restricted only if it is directed to inciting imminent lawless action and is likely to produce it",
+      "overturned the conviction, holding that wartime conditions do not expand Congress's power to regulate speech at all",
+      "upheld the conviction, holding that any speech critical of a war effort automatically forfeits First Amendment protection"
+    ],
+    "answer": "A",
+    "solutionText": "Schenck upheld the Espionage Act conviction and articulated the \"clear and present danger\" test: speech that creates a clear and present danger of a substantive evil Congress has the power to prevent is not constitutionally protected. Choice B describes the later \"imminent lawless action\" standard from a different, subsequent case, not Schenck's own holding. Choice C is wrong on outcome — the conviction was upheld, not overturned. Choice D overstates the rule as an automatic, blanket forfeiture of protection for any war criticism, which is broader than the fact-specific \"clear and present danger\" standard the Court actually applied.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-029",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Public school students wore black armbands to protest the Vietnam War; school officials suspended them for defying a policy that banned the armbands, even though the students caused no disturbance in class. In Tinker v. Des Moines Independent Community School District (1969), what did the Supreme Court hold?",
+    "choices": [
+      "School officials may ban any form of student expression they find distracting, without needing to show any disruption",
+      "Students lose their free-speech rights the moment they enter public school property",
+      "The armbands were unprotected conduct rather than speech, so the First Amendment did not apply at all",
+      "Students retain First Amendment speech rights at school, and officials may restrict student expression only if it would substantially disrupt school operations"
+    ],
+    "answer": "D",
+    "solutionText": "Tinker held that public school students do not shed their First Amendment speech rights at school, and officials may only restrict student expression that would materially and substantially disrupt school operations or invade the rights of others — a standard the silent, non-disruptive armband protest did not meet. Choice A describes a much looser standard than the one the Court actually required. Choice B and choice C both contradict the holding directly: the Court found students do retain speech rights at school, and it treated the armbands as protected symbolic speech, not unprotected conduct.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-030",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In 1971, the federal government asked federal courts to block the New York Times and Washington Post from publishing the classified \"Pentagon Papers,\" a secret history of U.S. involvement in Vietnam, arguing that publication would harm national security. In New York Times Co. v. United States, the Supreme Court —",
+    "choices": [
+      "refused to block publication, holding that the government had not met the heavy burden required to justify a prior restraint on the press",
+      "refused to block publication, holding that classified information can never be the basis of any lawsuit against a newspaper",
+      "blocked publication, holding that national security concerns automatically override the First Amendment",
+      "blocked publication temporarily, holding that any classified leak must first be reviewed by Congress before release"
+    ],
+    "answer": "A",
+    "solutionText": "The Court refused to enjoin publication, holding that a prior restraint on the press carries a heavy presumption against its constitutionality and that the government had not met the demanding burden needed to overcome that presumption. Choice B overstates the ruling as a blanket immunity for classified information rather than a heavy-burden standard applied to this specific injunction request. Choices C and D both describe the government winning and publication being blocked, which is the opposite of the actual outcome.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-031",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Supreme Court held in District of Columbia v. Heller (2008) that the Second Amendment protects an individual right to keep a handgun in the home, but that case involved only the federal government, since Washington, D.C. is not a state. Two years later, a resident of a U.S. city challenged that city's handgun ban, arguing the same Second Amendment right should also bind city government. Which precedent most directly supports the resident's argument, and why?",
+    "choices": [
+      "McDonald v. City of Chicago (2010), because it incorporated the Second Amendment right against state and local governments through the Equal Protection Clause",
+      "Gideon v. Wainwright (1963), because it first established that any enumerated Bill of Rights protection can bind state governments",
+      "McDonald v. City of Chicago (2010), because it incorporated the Second Amendment right against state and local governments through the Due Process Clause",
+      "Heller itself, because its holding already applied automatically to every state and local government in the country"
+    ],
+    "answer": "C",
+    "solutionText": "McDonald v. Chicago (2010) held that the Second Amendment right recognized in Heller is incorporated against state and local governments via the Due Process Clause of the Fourteenth Amendment, which directly supports the resident's challenge to the city's ban. Choice A names the right case but the wrong mechanism — incorporation runs through the Due Process Clause, not the Equal Protection Clause. Choice B names the wrong case; Gideon incorporated the Sixth Amendment right to counsel specifically, not a general rule that any right automatically binds states. Choice D is wrong because Heller addressed only the federal government (D.C.); it took McDonald, a separate later case, to extend the right to states and localities.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-032",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A group of Black schoolchildren challenged a state's practice of assigning students to separate public schools by race, even where the physical facilities provided to each race were said to be comparable. In Brown v. Board of Education (1954), what did the Supreme Court hold?",
+    "choices": [
+      "Racial segregation in public education is constitutional as long as the physical facilities provided to each race are truly equal",
+      "Racial segregation in public education is unconstitutional because separate educational facilities are inherently unequal, overturning \"separate but equal\" as applied to schools",
+      "Racial segregation in public education violates the Due Process Clause but not the Equal Protection Clause",
+      "Racial segregation in public education is a matter reserved entirely to state legislatures under the Tenth Amendment"
+    ],
+    "answer": "B",
+    "solutionText": "Brown held that racially segregated public schools violate the Equal Protection Clause of the Fourteenth Amendment because separate educational facilities are inherently unequal, overturning \"separate but equal\" as it applied to public education. Choice A restates the old \"separate but equal\" doctrine that Brown rejected. Choice C names the wrong clause — Brown's holding rests on the Equal Protection Clause. Choice D is wrong because the Court held segregated schooling raises a federal constitutional violation, not merely a matter left to state discretion.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-033",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In his 1963 \"Letter from Birmingham Jail,\" Martin Luther King Jr. writes that \"injustice anywhere is a threat to justice everywhere,\" responding to fellow clergy who urged him to pursue change only through the courts and negotiation rather than public protest. Elsewhere in the letter, which additional argument does King make?",
+    "choices": [
+      "All laws passed by a democratically elected legislature are by definition just and must be obeyed without exception",
+      "Civil disobedience is only legitimate once a court has formally ruled the law being violated unconstitutional",
+      "Injustice in one community is a purely local matter that does not concern people living elsewhere",
+      "A just law is one that aligns with a higher moral law, an unjust law degrades human personality, and a person who breaks an unjust law openly and accepts the penalty is exercising a legitimate form of protest"
+    ],
+    "answer": "D",
+    "solutionText": "King distinguishes a \"just law,\" which squares with a higher moral law, from an \"unjust law,\" which degrades human personality, and argues that openly breaking an unjust law while accepting the penalty is a legitimate way to draw attention to injustice — a view consistent with his opening claim that injustice anywhere threatens justice everywhere. Choice A contradicts King's central argument, since he explicitly says not all enacted laws are just. Choice B invents a court-approval precondition King never states; his argument is that individuals may act before or without a court ruling. Choice C directly contradicts the quoted line, which says injustice anywhere concerns everyone, not just the local community.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-034",
+    "loId": "apgov.civil-liberties",
+    "cedCode": "AP-GOV-3",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Political scientists and constitutional scholars typically distinguish between \"civil liberties\" and \"civil rights.\" Which statement correctly describes that distinction?",
+    "choices": [
+      "Civil liberties are protections of individual freedom from government interference; civil rights are protections against discriminatory treatment, especially on the basis of characteristics such as race, sex, or religion",
+      "Civil liberties apply only to freedom of speech and religion, while civil rights apply only to voting and employment",
+      "Civil liberties are guaranteed solely by state constitutions, while civil rights are guaranteed solely by federal statutes",
+      "Civil liberties and civil rights are simply two different names for the exact same set of constitutional protections"
+    ],
+    "answer": "A",
+    "solutionText": "Civil liberties are personal freedoms protected from government intrusion (such as speech, religion, and due process), while civil rights concern protection from discriminatory treatment and the guarantee of equal treatment under the law. Choice B is too narrow — both categories cover far more than the examples listed. Choice C misdescribes the sources of these protections, which come from both federal and state constitutions and statutes, not one source per category. Choice D erases a real and commonly tested distinction between the two terms.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-035",
+    "loId": "apgov.civil-liberties",
+    "cedCode": "AP-GOV-3",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When a government law or policy substantially burdens a person's exercise of a fundamental civil liberty, courts applying the most rigorous level of judicial review generally ask two questions before upholding it. Which pair of questions reflects that review?",
+    "choices": [
+      "Does the government have any legitimate interest, and is the law rationally related to achieving it in some conceivable way?",
+      "Does the government have an important interest, and is the law substantially related to achieving that interest?",
+      "Does the government have a compelling interest, and is the law narrowly tailored to achieve that interest through the least restrictive means?",
+      "Does a majority of the public support the law, and would repealing it create administrative inconvenience for government agencies?"
+    ],
+    "answer": "C",
+    "solutionText": "The most rigorous level of judicial review asks whether government has a compelling interest and whether the challenged law is narrowly tailored, using the least restrictive means available, to achieve that interest. Choice A describes the far more deferential rational basis test, reserved for ordinary economic or social legislation, not burdens on fundamental liberties. Choice B describes intermediate scrutiny, a middle-tier standard used in different contexts. Choice D lists factors — public opinion and administrative convenience — that play no role in this constitutional test at all.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-036",
+    "loId": "apgov.press-assembly-arms",
+    "cedCode": "AP-APGOV-3.5/3.6",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A city ordinance requires any group planning a march of more than 50 people on public sidewalks to obtain a permit 48 hours in advance specifying the date, time, and route, regardless of the topic or viewpoint of the marchers. A civil liberties group challenges the ordinance as violating its First Amendment right to peaceably assemble. Under First Amendment doctrine, how would a court most likely evaluate this ordinance?",
+    "choices": [
+      "As a content-based restriction subject to strict scrutiny, because it regulates when and where a march may occur",
+      "As a content-neutral time, place, and manner restriction, which is permissible if it is narrowly tailored to a significant government interest and leaves ample alternative channels for expression",
+      "As an unconstitutional prior restraint, because any advance permit requirement for a public march is automatically invalid",
+      "As entirely outside First Amendment protection, because marching is conduct rather than speech and receives no constitutional protection"
+    ],
+    "answer": "B",
+    "solutionText": "Because the ordinance applies to any march regardless of topic or viewpoint, it is a content-neutral time, place, and manner regulation, which courts uphold if it serves a significant government interest, is narrowly tailored, and leaves ample alternative channels for expression. Choice A mischaracterizes the ordinance as content-based, but nothing in it depends on what marchers say. Choice C overstates the rule; reasonable, content-neutral permit requirements are not automatically unconstitutional prior restraints. Choice D is wrong because peaceable assembly and expressive marches receive First Amendment protection, even though they involve conduct alongside speech.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-037",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A state passes a law allowing police to search a person's home without a warrant whenever officers have a mere hunch of wrongdoing, well below the \"probable cause\" standard the Fourth Amendment requires of federal officers. A resident challenges the law, arguing that the Fourth Amendment's protection against unreasonable searches binds state governments as well as the federal government. Which argument would best support the resident's position?",
+    "choices": [
+      "The Fourth Amendment has been selectively incorporated against the states through the Due Process Clause of the Fourteenth Amendment, so it now binds state and local governments too",
+      "The Fourth Amendment automatically bound state governments from the moment it was ratified in 1791, without any need for incorporation",
+      "The Fourth Amendment binds the states only in whichever specific state a Supreme Court incorporation case originated in",
+      "The Fourth Amendment cannot bind state governments at all, because by its own terms the Bill of Rights restrains only the federal government"
+    ],
+    "answer": "A",
+    "solutionText": "Through selective incorporation, the Supreme Court has applied the Fourth Amendment's protections to state and local governments via the Due Process Clause of the Fourteenth Amendment, so the resident's state is bound by it. Choice B is historically inaccurate — the Bill of Rights originally restrained only the federal government, and applying it to states required later incorporation, not automatic application in 1791. Choice C misunderstands incorporation, which is a nationwide constitutional rule once established, not limited to the state where a particular case arose. Choice D describes the pre-incorporation original rule but ignores that incorporation doctrine has since extended the Fourth Amendment to the states, which is exactly what makes the resident's challenge viable.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-038",
+    "loId": "apgov.due-process-incorporation",
+    "cedCode": "AP-APGOV-3.7/3.8/3.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A state passes a law banning a married couple from using a particular form of contraception, even in the privacy of their own home. The couple challenges the law, arguing that no set of procedures could make such a law constitutional because it invades a fundamental right that government may not touch at all, regardless of what process it follows. This argument relies on which due process concept?",
+    "choices": [
+      "Procedural due process, which asks only whether the government followed fair notice-and-hearing procedures before acting",
+      "Selective incorporation, which asks whether a specific Bill of Rights protection has been extended to bind state governments",
+      "Equal protection, which asks whether government has treated similarly situated people differently without adequate justification",
+      "Substantive due process, which asks whether government may regulate certain fundamental matters at all, not merely whether it followed fair procedures"
+    ],
+    "answer": "D",
+    "solutionText": "The couple's argument — that the law is invalid regardless of what procedures accompany it, because it touches a fundamental right government may not reach at all — is a substantive due process claim, which asks whether the substance of the law itself is permissible. Choice A is wrong because procedural due process concerns fair process, which is exactly what the couple says is beside the point. Choice B is a different doctrine entirely, about extending Bill of Rights protections to the states, not about limits on what any government may regulate. Choice C is also a distinct doctrine, concerned with unequal treatment between groups rather than an inherent limit on government power over a fundamental matter.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-039",
+    "loId": "apgov.civil-rights-equality",
+    "cedCode": "AP-APGOV-3.10/3.11/3.12/3.13",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A public university adopts an admissions policy that considers an applicant's race as one factor among several, aiming to promote a diverse student body. A rejected applicant sues, arguing the policy violates the Equal Protection Clause. Because the policy classifies applicants in part by race, which standard of judicial review would a court apply, and what must the university show to survive that review?",
+    "choices": [
+      "Rational basis review; the university need only show the policy is rationally related to some legitimate educational goal",
+      "Strict scrutiny; the university must show the policy serves a compelling interest and is narrowly tailored to that interest, since race-based classifications receive the most rigorous review",
+      "Intermediate scrutiny; the university must show the policy serves an important interest and is substantially related to it, the same standard used for classifications based on gender",
+      "No judicial review applies, because admissions decisions by universities are a private matter outside the reach of the Equal Protection Clause"
+    ],
+    "answer": "B",
+    "solutionText": "Because the policy classifies applicants in part by race, a court applies strict scrutiny, the most demanding standard of Equal Protection review, requiring the university to show the policy serves a compelling interest and is narrowly tailored to that interest. Choice A names the wrong, far more deferential standard, which is not used for race-based classifications. Choice C names intermediate scrutiny, the standard applied to gender classifications, not race. Choice D is wrong because public universities are government actors, and their admissions policies are squarely subject to Equal Protection Clause review.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-040",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A high school civics course requires students to participate in a mock legislative session, debate a bill, and vote on its passage, with the explicit goal of building lasting habits of civic participation. Which agent of political socialization does this scenario best illustrate?",
+    "choices": [
+      "Family, since students often discuss the mock legislative session with their parents at home afterward",
+      "Schools, a formal institution that deliberately teaches civic knowledge and participatory habits through structured curriculum and activities",
+      "Peers, whose casual conversations about the assignment matter more than the assignment's structured content",
+      "Media, since news coverage of actual legislatures is the primary source of the students' civic knowledge in this scenario"
+    ],
+    "answer": "B",
+    "solutionText": "Schools are a formal, deliberate agent of socialization that use structured curricula and activities—like a mock legislative session—to build civic knowledge and participatory habits; that deliberate, institutional design is exactly what the scenario describes. Family is a real agent of socialization but is only a secondary effect here (students happening to discuss the activity at home), not the source of the activity itself. Peers typically shape attitudes through informal social influence, not through a structured classroom assignment. Media plays no role in this scenario at all—no news coverage or broadcast content is mentioned.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-041",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Adults who entered the workforce during a severe, prolonged economic recession report distinctly more favorable views of financial-industry regulation than do adults who entered the workforce during the preceding decade's sustained economic growth—and this gap between the two groups has persisted essentially unchanged for over ten years since. Political scientists most commonly attribute a gap of this kind, one that persists over time rather than fading, to—",
+    "choices": [
+      "a lifecycle effect, in which the same individuals' views shift automatically as they personally grow older",
+      "sampling error, since any two groups surveyed at different times will show some difference in reported opinion",
+      "a push poll, since the survey question itself was designed to steer respondents toward a predetermined answer",
+      "a generational (cohort) effect, in which each group's formative economic experience continues to shape its outlook for years afterward"
+    ],
+    "answer": "D",
+    "solutionText": "A durable gap between two groups defined by when they came of age, one that persists rather than converging as both groups age, is the signature of a generational (cohort) effect: each group's formative experience—here, entering the workforce during a recession versus a boom—continues to shape its outlook for years. A lifecycle effect would predict both groups converge as they age through the same life stages, not that the gap persists unchanged. Sampling error is a generic statistical caveat, not an explanation for a specific, persistent, decade-long pattern. Nothing in the scenario describes a poll question at all, let alone one designed to steer responses, so push poll does not apply.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-042",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A national poll asks respondents whether they approve of a proposed federal plan to increase funding for public transit infrastructure. Results by age group are shown below.\n\n| Age group | Approve | Disapprove | No opinion |\n|---|---|---|---|\n| 18-29 | 58% | 30% | 12% |\n| 30-44 | 51% | 39% | 10% |\n| 45-64 | 44% | 47% | 9% |\n| 65+ | 39% | 53% | 8% |\n\nBased on the table, which statement is accurate?",
+    "choices": [
+      "Approval falls and disapproval rises at every successive age-group interval shown, moving in opposite directions across the full range of ages",
+      "The share expressing no opinion increases as age increases, more than offsetting the decline in approval",
+      "Approval of the plan among the 65-and-older group is lower than disapproval of the plan among the 18-to-29 group",
+      "The 45-64 and 65-and-older age groups combined show majority approval of the plan, exceeding disapproval, in both groups"
+    ],
+    "answer": "A",
+    "solutionText": "Reading down each column confirms it: approval falls at every step (58%, 51%, 44%, 39%) while disapproval rises at every step (30%, 39%, 47%, 53%), moving in opposite directions across the whole range. The 'no opinion' share does not increase with age—it actually falls slightly (12%, 10%, 9%, 8%), so the second choice misreads that column. The third choice is a numeric misread: 39% (65+ approval) is not lower than 30% (18-29 disapproval)—39 is greater than 30. The fourth choice is false for the 45-64 group specifically, where disapproval (47%) already exceeds approval (44%); only the 65+ group shows disapproval exceeding approval, and even there it is not 'majority approval' as claimed.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-043",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pollster tests two versions of the same underlying policy question on separate samples of similar size. Version 1 asks, \"Do you support providing tax credits to help struggling small businesses stay open?\" and finds 88% support. Version 2 asks, \"Do you support increasing tax credits for businesses, which will add to the federal budget deficit?\" and finds 46% support. Both polls report their full results. What best explains the large difference between the two results?",
+    "choices": [
+      "Sampling error, since even two properly random samples of similar size will typically produce results this far apart",
+      "The Version 2 poll must be a push poll, since it was designed purely to persuade respondents rather than measure opinion",
+      "Question wording, since the two versions frame the identical underlying policy differently by invoking sympathetic small businesses in one version and the deficit in the other",
+      "Social desirability bias, since respondents in the Version 2 poll were less willing to admit their true opinion to an interviewer"
+    ],
+    "answer": "C",
+    "solutionText": "The two versions describe the same underlying policy but frame it very differently—one version emphasizes struggling small businesses, the other foregrounds the deficit—and that shift in framing, not a change in the underlying policy, is the far more likely driver of an 88%-to-46% swing. A gap this large between two properly random samples of similar size is not what ordinary sampling error produces. Both polls report their full results, which rules out calling Version 2 a push poll, since a push poll is a persuasion tactic that is not designed to record or report genuine results. The scenario gives no information about interviewer tone or respondent discomfort, so social desirability bias is not supported by anything given.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-044",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A commentator summarizes one ideological tradition in American politics as generally favoring an active federal government that expands access to health care, funds social-welfare programs, and uses regulation to address problems such as pollution that the commentator argues the market will not correct on its own. This description matches which ideological label, as the term is generally used in American politics?",
+    "choices": [
+      "Libertarianism, which favors minimal government intervention in both economic and social policy",
+      "Liberalism, which generally favors government action to expand social programs and regulate the economy",
+      "Conservatism, which generally favors less government regulation and a smaller role for federal social programs",
+      "Populism, a style of political appeal to ordinary people against elites rather than a specific set of policy commitments"
+    ],
+    "answer": "B",
+    "solutionText": "The description—active government expanding health-care access, funding social programs, and regulating to correct market failures—matches the standard definition of liberalism used in this course. Libertarianism is nearly the opposite, favoring minimal government in both economic and social policy. Conservatism generally favors less regulation and a smaller government role in social programs, the reverse of what is described. Populism describes a rhetorical style of appealing to ordinary people against elites, not a defined package of policy positions, so it does not match a specific description like this one.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-045",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two policymakers debate a proposed increase in the federal minimum wage. Policymaker X argues the increase will raise low-wage workers' income and reduce their need for public assistance, and supports using government mandates to achieve that goal directly. Policymaker Y argues the increase will raise employers' labor costs and could reduce hiring, and argues wage levels are best set by the market rather than by government mandate. Policymaker X's position is most consistent with which ideological orientation regarding government's proper role in the economy, and why?",
+    "choices": [
+      "Liberal, because it favors direct government intervention in the market, such as a wage mandate, to improve worker welfare",
+      "Conservative, because raising the minimum wage through government mandate aligns with a preference for free-market outcomes",
+      "Libertarian, because increasing government wage mandates matches a libertarian preference for minimal economic regulation",
+      "Moderate, because minimum-wage debates are inherently unrelated to any broader ideological view of government's role"
+    ],
+    "answer": "A",
+    "solutionText": "Policymaker X favors using a direct government mandate to intervene in the market and improve worker welfare, which is the hallmark of the liberal position on government's economic role in this course's framework. The conservative choice has it backwards: a market-set wage with no government mandate, not a government-mandated increase, is the free-market position associated with conservatism. The libertarian choice also has it backwards: libertarianism favors minimal government regulation of the market, not an active wage mandate. The moderate choice is incorrect because this debate is a clear application of the same liberal-versus-market-oriented divide over government's proper economic role that runs through many specific policy debates, not something separate from ideology.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-046",
+    "loId": "apgov.public-opinion-measurement",
+    "cedCode": "AP-APGOV-4.5",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A polling organization tracks ideological self-identification in a national survey conducted every ten years, shown below.\n\n| Year | Liberal | Moderate | Conservative |\n|---|---|---|---|\n| 2002 | 19% | 40% | 38% |\n| 2012 | 21% | 38% | 38% |\n| 2022 | 25% | 34% | 38% |\n\nBased on the table, which statement is accurate?",
+    "choices": [
+      "Conservative identification declined while liberal identification rose, causing the two groups to converge by 2022",
+      "Moderate identification increased slightly across the period, even as liberal identification also increased",
+      "In every survey year shown, moderates made up an outright majority, more than 50%, of respondents",
+      "The share identifying as conservative remained essentially unchanged across the two decades shown, while the share identifying as moderate declined and the share identifying as liberal rose"
+    ],
+    "answer": "D",
+    "solutionText": "Conservative identification holds steady at 38% in all three years, while moderate identification falls (40% to 38% to 34%) and liberal identification rises (19% to 21% to 25%)—exactly what the fourth choice describes. The first choice is wrong because conservative identification did not decline at all, and the two groups are still 13 points apart in 2022 (38% vs. 25%), not converged. The second choice is wrong because moderate identification fell over the period rather than increasing. The third choice is wrong because moderate identification never exceeds 40% in any year shown, well short of an outright majority.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-047",
+    "loId": "apgov.ideology-policy",
+    "cedCode": "AP-APGOV-4.6/4.7/4.8/4.9",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Survey research finds that a majority of respondents describe themselves as favoring \"a smaller government providing fewer services\" when asked in the abstract, yet the same respondents, when asked about specific programs such as Social Security, Medicare, and federal education funding, favor maintaining or expanding funding for each. Political scientists describe this pattern as evidence of—",
+    "choices": [
+      "non-attitudes, meaning respondents lack any genuine opinion on either question and are essentially guessing at random",
+      "a lifecycle effect, in which respondents change their answers as they personally age from one survey to the next",
+      "the symbolic-operational ideology gap, in which citizens' abstract, symbolic preference for smaller government coexists with support for specific existing programs",
+      "sampling bias, in which the survey's respondents are not representative of the broader population's political views"
+    ],
+    "answer": "C",
+    "solutionText": "This is the well-documented gap between symbolic ideology (an abstract preference for \"smaller government\") and operational ideology (concrete support for specific programs like Social Security and Medicare); many Americans hold both at once, which is exactly what the third choice names. Non-attitudes would mean respondents have no real opinion at all, but the scenario shows patterned, specific, and repeated responses on both questions, not random guessing. A lifecycle effect concerns individuals changing views as they age across separate surveys, which is not what this single-survey pattern describes. Sampling bias is an unsupported claim here—nothing in the scenario suggests the sample is unrepresentative; the pattern instead reflects how respondents actually think about government at different levels of abstraction.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-048",
+    "loId": "apgov.parties-elections",
+    "cedCode": "AP-GOV-PRD-1",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Political scientists describe political parties as a \"linkage institution\" in American democracy. Which of the following best explains what this description means?",
+    "choices": [
+      "Parties connect citizens' preferences to government action, chiefly by recruiting candidates, mobilizing voters, and organizing officeholders once elected",
+      "Parties formally administer the mechanics of elections, such as setting polling-place hours and certifying vote counts",
+      "Parties function as one of three co-equal branches of the federal government established directly by the Constitution",
+      "Parties are best understood as a type of interest group, distinguished from other interest groups mainly by charging much higher membership dues"
+    ],
+    "answer": "A",
+    "solutionText": "A linkage institution connects citizens to their government, and parties do this chiefly through recruiting candidates, mobilizing voters to participate, and organizing officeholders once elected—exactly what the first choice describes. Administering elections (setting polling hours, certifying results) is a function of state and local election officials and boards, not of parties themselves. Parties are not a constitutional branch of government at all; the Constitution establishes the legislative, executive, and judicial branches, not political parties. Parties are also not simply a variety of interest group; they perform distinct functions like nominating candidates for office and organizing government that interest groups do not, regardless of dues structure.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-049",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is most likely to reduce voter turnout, based on political science research on U.S. elections?",
+    "choices": [
+      "Allowing eligible citizens to register and vote on election day itself, known as same-day registration",
+      "Automatically registering eligible citizens to vote when they interact with a state motor-vehicle agency",
+      "Requiring citizens to register to vote at least 30 days before election day, well before most campaign interest and media coverage peak",
+      "Extending the number of days on which citizens may cast an early, in-person ballot before election day"
+    ],
+    "answer": "C",
+    "solutionText": "An advance registration deadline set weeks before election day, before most voters' interest and attention typically peak, is a well-documented barrier that keeps otherwise-eligible citizens from voting because they simply have not registered by the cutoff. Same-day registration, automatic registration through the DMV, and expanded early voting all remove barriers and are each associated with higher, not lower, turnout in research on U.S. elections.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-050",
+    "loId": "apgov.voting-rights-behavior",
+    "cedCode": "AP-APGOV-5.1/5.2",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below reports turnout among U.S. citizens by educational attainment in two recent midterm elections.\n\n| Educational attainment | Turnout, 2018 midterm | Turnout, 2022 midterm |\n|---|---|---|\n| No high school diploma | 21% | 24% |\n| High school diploma | 34% | 37% |\n| Some college | 44% | 46% |\n| Bachelor's degree or higher | 58% | 61% |\n\nBased on the table, which statement is accurate?",
+    "choices": [
+      "Turnout rose by exactly the same number of percentage points, three, for every educational-attainment group shown between 2018 and 2022",
+      "In both years shown, turnout among those with a bachelor's degree or higher was at least double the turnout among those without a high school diploma",
+      "Turnout declined for at least one educational-attainment group between the 2018 and 2022 midterms",
+      "The gap in turnout between the highest and lowest educational-attainment groups narrowed from 2018 to 2022"
+    ],
+    "answer": "B",
+    "solutionText": "In 2018, 58% turnout among bachelor's-degree-or-higher citizens is more than double the 21% among those without a high school diploma (58 is more than 2 x 21 = 42); in 2022, 61% is more than double 24% (2 x 24 = 48), so the \"at least double\" relationship holds in both years, making the second choice accurate. The first choice is false because the \"some college\" group rose by only two points (44% to 46%), not three, breaking the claimed uniform three-point rise. The third choice is false because turnout rose for every group shown; none declined. The fourth choice is false because the gap between the highest and lowest groups is 37 points in both years (58-21=37 and 61-24=37), so it stayed the same rather than narrowing.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-051",
+    "loId": "apgov.political-parties",
+    "cedCode": "AP-APGOV-5.3/5.4/5.5",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Over several decades, a growing share of American voters describe themselves as political independents rather than identifying with either major party on surveys, even though most of these self-described independents still consistently vote for the same party's candidates each election. Political scientists refer to this decline in voters' formal, self-reported attachment to either major party as—",
+    "choices": [
+      "realignment, a durable shift in which social or demographic groups support which party",
+      "a critical election, a single election that produces a lasting shift in party coalitions",
+      "an issue network, a broad and shifting set of policy actors engaged on a single issue",
+      "dealignment, a decline in the strength or salience of voters' formal attachment to either major party"
+    ],
+    "answer": "D",
+    "solutionText": "A decline in voters' formal, self-reported party attachment—even while many still vote consistently for one party—is precisely what political scientists call dealignment. Realignment describes a durable shift in which groups support which party, not a decline in attachment to parties generally. A critical election is a single election event producing a realignment, not a gradual multi-decade trend. An issue network is a set of policy actors working on a specific issue, unrelated to voters' party attachment.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-052",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A nonprofit advocacy corporation wants to spend 2 million dollars from its own general treasury funds on television ads urging voters to reject a candidate for Congress. The corporation does not coordinate the ad's content, timing, or strategy with any candidate's campaign. Under the Supreme Court's holding in Citizens United v. FEC (2010), which statement correctly describes the constitutional status of this spending, and how it differs from a direct contribution to a candidate's campaign?",
+    "choices": [
+      "The spending is unconstitutional, because Citizens United held that corporations lose First Amendment protection for political speech, unlike individual citizens",
+      "The spending is constitutionally protected, and Citizens United also eliminated all preexisting limits on how much a corporation may contribute directly to a candidate's own campaign",
+      "The spending is constitutionally protected as independent political speech; Citizens United left separate, still-standing limits on direct contributions to a candidate's campaign undisturbed",
+      "The spending is constitutionally protected only if the corporation first obtains the candidate's approval of the ad's content, since coordination is what triggers First Amendment protection"
+    ],
+    "answer": "C",
+    "solutionText": "Citizens United held that independent expenditures by corporations and unions—money spent advocating for or against a candidate without coordinating with that candidate's campaign—are protected political speech under the First Amendment, so this uncoordinated $2 million ad spend is protected; critically, the ruling did not touch the separate, still-standing legal limits on direct contributions a corporation may give straight to a candidate's own campaign, so the third choice states both halves correctly. The first choice reverses the actual holding, which extended First Amendment protection to corporate political speech rather than stripping it. The second choice wrongly claims direct-contribution limits were eliminated; Citizens United addressed independent expenditures only and left contribution limits in place. The fourth choice also has the logic backwards: coordination with a candidate is what would strip an expenditure of this independent protection and treat it more like a regulated contribution, not what is required to earn protection in the first place.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-053",
+    "loId": "apgov.elections-campaign-finance",
+    "cedCode": "AP-APGOV-5.8/5.9/5.10/5.11",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows illustrative political action committee (PAC) contribution totals to congressional candidates during a single election cycle, broken down by economic sector.\n\n| Sector | Total PAC contributions | Number of active PACs |\n|---|---|---|\n| Finance/insurance | 40 million dollars | 320 |\n| Healthcare | 28 million dollars | 250 |\n| Labor unions | 24 million dollars | 150 |\n| Energy | 10 million dollars | 110 |\n\nBased on the table, which statement is accurate?",
+    "choices": [
+      "Finance/insurance PACs contributed both the highest total amount and the highest average contribution per PAC",
+      "On average, each labor union PAC contributed more than each finance/insurance PAC, even though labor unions' total contributions were lower than finance/insurance's total",
+      "Healthcare and energy sectors combined contributed more in total than the finance/insurance sector alone",
+      "Labor unions had more active PACs than any other single sector shown in the table"
+    ],
+    "answer": "B",
+    "solutionText": "Average contribution per PAC is total contributions divided by number of PACs: labor unions average $24 million / 150 = $160,000 per PAC, while finance/insurance averages $40 million / 320 = $125,000 per PAC—so labor's per-PAC average is higher even though its $24 million total trails finance/insurance's $40 million total, exactly as the second choice states. The first choice is false because, while finance/insurance does have the highest total, $125,000 per PAC is lower than labor unions' $160,000 per PAC, so finance/insurance does not also have the highest average. The third choice is false because healthcare and energy combined ($28 million + $10 million = $38 million) fall short of finance/insurance's $40 million alone. The fourth choice is false because finance/insurance has the most active PACs (320), well above labor unions' 150.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-054",
+    "loId": "apgov.interest-groups",
+    "cedCode": "AP-APGOV-5.6/5.7",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An interest group is not a party to a major case pending before the Supreme Court, but it submits a formal written legal filing presenting arguments and evidence supporting one side of the case, hoping to influence the Court's reasoning even though the group has no vote in the outcome. This tactic is best described as—",
+    "choices": [
+      "grassroots mobilization, organizing members of the public to pressure officials directly",
+      "direct lobbying of committee staff, meeting privately with legislative aides to request technical changes to a bill",
+      "a selective incentive, a member-only benefit used to counteract the free-rider problem",
+      "filing an amicus curiae ('friend of the court') brief, a tactic used to influence a court's reasoning without being a party to the case"
+    ],
+    "answer": "D",
+    "solutionText": "A written legal filing submitted by a non-party group to influence a court's reasoning is, by definition, an amicus curiae ('friend of the court') brief—the fourth choice names this litigation-based tactic correctly. Grassroots mobilization involves organizing the public to pressure officials, not filing a legal brief with a court. Direct lobbying of committee staff involves legislative aides and bill language, not judicial proceedings. A selective incentive is a member-only benefit meant to solve the free-rider problem, unrelated to influencing a court case.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-mc-055",
+    "loId": "apgov.media-linkage",
+    "cedCode": "AP-APGOV-5.12/5.13",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A viewer with strong political opinions deliberately watches only news programs whose commentators already share those opinions and avoids programs presenting differing viewpoints. Unlike a filter bubble, which results from an algorithm's automatic content curation, this voluntary pattern of media choice is best described as—",
+    "choices": [
+      "selective exposure, the tendency of individuals to seek out information confirming their existing beliefs while avoiding conflicting information",
+      "agenda setting, the media's influence over which issues the public regards as important",
+      "horse-race coverage, framing political coverage around who is winning rather than policy substance",
+      "media consolidation, the concentration of media ownership among fewer large corporations"
+    ],
+    "answer": "A",
+    "solutionText": "Deliberately choosing media sources that already match one's views, and avoiding those that don't, is the definition of selective exposure—a voluntary behavioral pattern distinct from a filter bubble's algorithmic curation, which the question explicitly sets aside. Agenda setting concerns which issues the media leads a viewer to consider important, not which sources a viewer chooses to watch. Horse-race coverage concerns how campaigns are framed as a competition, not viewer selection behavior. Media consolidation concerns corporate ownership structure, which is not addressed anywhere in this scenario.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apgov-fa-fr-01",
+    "loId": "apgov.congress",
+    "cedCode": "AP-GOV-2.A",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A second-term member of the House of Representatives from a competitive suburban district votes for a bipartisan infrastructure bill that funds a new bridge and highway expansion in the district, even though most members of her own party's leadership oppose the bill and pressure her to vote no. Local news coverage credits the vote with bringing hundreds of construction jobs to the district, and the representative highlights the vote heavily in her re-election campaign the following year.\n\n(a) Describe the linkage institution or activity illustrated by the representative's decision to publicize her vote during her re-election campaign.\n\n(b) In the context of the scenario, explain how the electoral incentive to secure federal funding for the district (rather than following party leadership) influenced the representative's voting behavior.\n\n(c) In the context of the scenario, explain how the House's institutional rules or leadership structure (a factor separate from the electoral incentive described in part (b)) could make it harder for the representative to cast votes that break with her party.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response describes the representative's campaign highlighting of the vote as a form of political linkage (campaigning/advertising to constituents), explains that the electoral connection and desire for re-election in a competitive district pushed her to prioritize district-benefiting funding over party loyalty, and explains a separate institutional factor, such as party leadership's control over committee assignments or the whip system, that creates pressure to vote with the party regardless of electoral incentives.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): accurately describes a linkage institution or activity shown in the scenario — specifically, that the representative is using campaigning/advertising (publicizing her vote and its results to constituents) to connect her legislative record to voters ahead of an election, OR describes the underlying behavior as constituent service / credit-claiming (taking credit for a tangible benefit, the bridge and jobs, delivered to the district). The description must be grounded in the scenario's specific details (the vote, the jobs, the re-election campaign), not a generic definition with no connection to the facts given. No credit (0/1) for a description that only restates the prompt without identifying the linkage activity (e.g., 'she is running for re-election') or that names an unrelated institution (e.g., a political party or interest group) not depicted in the scenario.",
+          "modelResponse": "The scenario illustrates credit-claiming, a form of campaigning in which an elected official publicizes a specific, tangible benefit she delivered to her district — here, the construction jobs and infrastructure funding from the bridge and highway vote — in order to build a personal record that she can advertise directly to constituents during her re-election campaign."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): explains, using specific details from the scenario, how the representative's electoral self-interest (winning re-election in a competitive suburban district) explains why she prioritized delivering tangible local benefits (the bridge, highway jobs) over following her party's leadership. The explanation must connect the district's competitiveness or the visible local benefit to the voting choice, not merely assert 'she wanted votes' without tying it to the scenario. No credit (0/1) for a generic statement about representatives wanting re-election that does not reference the competitive district or the tangible funding/jobs benefit.",
+          "modelResponse": "Because she represents a competitive suburban district where the outcome is not guaranteed for either party, the representative has a strong electoral incentive to prioritize actions that make a visible, direct difference for her constituents over loyalty to her party's leadership; delivering hundreds of construction jobs and infrastructure funding gives her concrete, popular achievements to run on, which is more likely to secure swing voters than a party-line vote that district residents would not directly see or benefit from."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): explains a specific institutional factor, distinct from the electoral incentive in part (b), that could pressure the representative to vote with her party — acceptable answers include party leadership's control over committee assignments, control over which bills reach the floor (agenda-setting power of the Speaker/majority leadership), the whip system's use of persuasion or threats of reduced campaign support, or leadership's influence over a member's future leadership positions. The explanation must describe how this institutional lever specifically constrains or pressures a member's voting choice, not just name the institution. No credit (0/1) for restating the electoral-incentive explanation from part (b), or for naming an institutional actor without explaining how it creates pressure to conform.",
+          "modelResponse": "Separate from her electoral calculation, House party leadership controls valuable institutional resources — such as favorable committee assignments and the scheduling of bills the representative cares about — and can use the whip system to pressure members to vote with the party; if leadership decides to withhold those resources or campaign support in retaliation for this vote, it could make future defections more costly for the representative, creating an institutional check on how often she can break from her party regardless of what her district wants."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apgov-fa-fr-02",
+    "loId": "apgov.socialization-opinion",
+    "cedCode": "AP-APGOV-4.1/4.2/4.3/4.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A nonpartisan research organization surveyed a national sample of registered voters across three age groups in three different presidential election years, asking whether they voted in that year's election. The results are shown below.\n\n| Age Group | 2012 Turnout | 2016 Turnout | 2020 Turnout |\n|---|---|---|---|\n| 18-29 | 45% | 46% | 51% |\n| 30-49 | 57% | 58% | 63% |\n| 50-64 | 66% | 67% | 71% |\n| 65+ | 70% | 71% | 74% |\n\n(a) Identify which age group had the lowest voter turnout in the 2020 election.\n\n(b) Describe one difference between the 18-29 age group and the 65+ age group shown in the table.\n\n(c) Draw a conclusion about voter turnout that is supported by the data in the table.\n\n(d) Explain how a specific factor illustrated by the data relates to political socialization or political efficacy.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response identifies the 18-29 age group as having the lowest 2020 turnout (51%), describes the turnout gap between the youngest and oldest age groups (roughly 23 percentage points in 2020), draws a supported conclusion such as turnout rising across all age groups from 2012 to 2020 while the age gap persists, and explains how factors like accumulated life experience, civic habit formation, or lower political efficacy among younger voters relate to political socialization and the turnout gap shown in the table.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): correctly identifies the 18-29 age group as having the lowest turnout in the 2020 column, citing the value of 51 percent (the lowest of the four 2020 values: 51%, 63%, 71%, 74%). No credit (0/1) for identifying any other age group, or for an answer that does not specify 2020 or the correct age group.",
+          "modelResponse": "The 18-29 age group had the lowest voter turnout in 2020, at 51 percent, compared to 63 percent for 30-49, 71 percent for 50-64, and 74 percent for 65+."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): describes an accurate difference between the 18-29 row and the 65+ row using specific values from the table — e.g., that in every election year shown, the 65+ group's turnout was substantially higher than the 18-29 group's turnout (a gap of 25 points in 2012, 25 points in 2016, and 23 points in 2020), or that the 65+ group's turnout stayed above 70% in all three years while the 18-29 group never reached 55%. No credit (0/1) for a vague comparison with no specific values cited, or for a comparison that misreads the table (e.g., claiming the 18-29 group had higher turnout).",
+          "modelResponse": "In every election year shown, the 65+ age group had noticeably higher turnout than the 18-29 age group — for example, in 2020 the 65+ group's turnout was 74 percent while the 18-29 group's was only 51 percent, a gap of 23 percentage points."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): draws a reasonable, data-supported conclusion that goes beyond restating a single cell — acceptable conclusions include: turnout increased across all four age groups from 2012 to 2020 (e.g., 18-29 rose from 45% to 51%, 65+ rose from 70% to 74%), OR that despite rising turnout overall, the gap between younger and older voters persisted across all three elections (older groups consistently outvoted younger groups by double digits in every year shown), OR that turnout rises with age in every year in the table. The conclusion must be an inference drawn from comparing multiple data points, not a single value restated. No credit (0/1) for restating one cell's value with no comparison or inference, or for a conclusion the table does not support.",
+          "modelResponse": "The data support the conclusion that while voter turnout increased for every age group between 2012 and 2020 (for instance, the 30-49 group rose from 57% to 63%), the persistent age-based turnout gap did not close — older age groups consistently voted at higher rates than younger age groups in all three election years."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): explains how a factor illustrated by the data (the consistently lower turnout of younger voters, or the general age-turnout gradient) relates to political socialization or political efficacy as course concepts — e.g., explaining that younger voters have had fewer years to be socialized into the civic habit of voting through repeated participation, have less experience with how government policy (Social Security, Medicare, taxes) directly affects their lives, or report lower levels of political efficacy (the belief that their vote or participation matters) than older, more established voters. The explanation must connect the data pattern to the named concept, not just define the concept in isolation. No credit (0/1) for defining political socialization or efficacy without connecting it to the turnout pattern in the table.",
+          "modelResponse": "The consistently lower turnout among 18-29 year-olds across all three elections reflects political socialization: voting is a habit reinforced by repetition and by direct life experience with government programs, so older voters — who have had more elections, more direct contact with policies like Social Security and Medicare, and more time to be socialized into civic participation by family, community, and workplace — report higher political efficacy and turn out at higher rates than younger voters who are still forming those habits and attitudes."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apgov-fa-fr-03",
+    "loId": "apgov.religion-speech-liberties",
+    "cedCode": "AP-APGOV-3.1/3.2/3.3/3.4",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "Required case: Tinker v. Des Moines (1969).\n\nNon-required case: In the fictional case Delgado v. Riverbend Unified School District, a group of high school students wore small pins reading \"Support Our Teachers\" to school during a week when the district's teachers were negotiating a new contract with the school board. School administrators, who were on the school board's side of the negotiation, ordered the students to remove the pins, arguing that the pins created tension among staff. No disruption to classes, assemblies, or school operations occurred, and no teacher or student complained about the pins during the week they were worn. The students sued, arguing that the school violated their free-speech rights by punishing them for a peaceful, silent expression of opinion on a subject of public concern that caused no disruption to the school's ability to function.\n\n(a) Identify the constitutional clause common to both Tinker v. Des Moines and Delgado v. Riverbend Unified School District.\n\n(b) Explain how the facts and holding of Tinker v. Des Moines relate to the issue raised in Delgado v. Riverbend Unified School District.\n\n(c) Explain how the reasoning of Tinker v. Des Moines could apply to a future case in which a public school seeks to restrict a different form of silent, non-disruptive student expression.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit response identifies the Free Speech Clause of the First Amendment as common to both cases, accurately states that Tinker involved public school students wearing black armbands to silently protest the Vietnam War and that the Court held students retain free-speech rights at school unless the expression would substantially disrupt school operations or invade others' rights, applies that standard to explain that the pins in Delgado (which caused no proven disruption) would likely also be protected, and explains that Tinker's substantial-disruption standard would similarly govern future restrictions on other forms of silent, non-disruptive student expression.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): identifies the Free Speech Clause of the First Amendment (or equivalently, 'freedom of speech under the First Amendment') as the constitutional provision common to both the required case and the non-required case. No credit (0/1) for identifying a different clause (e.g., Establishment Clause, Due Process Clause) or for a vague answer that does not name the Free Speech Clause / First Amendment specifically.",
+          "modelResponse": "Both cases center on the Free Speech Clause of the First Amendment, which protects individuals' right to express opinions, including symbolic or silent expression, without unjustified government restriction."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "Full credit (2/2) requires BOTH accurate facts and an accurate holding, explained in relation to the non-required case. Facts component (worth 1 of the 2 points): accurately states that in Tinker v. Des Moines, public school students wore black armbands to school to silently protest the Vietnam War and were punished/suspended by school officials for doing so, with no evidence the armbands caused a substantial disruption. Holding component (worth 1 of the 2 points): accurately states that the Supreme Court held that public school students do not lose their First Amendment free-speech rights at school, and that school officials may only restrict student expression if they can reasonably forecast that it would cause a substantial disruption to school operations or invade the rights of others; merely wanting to avoid discomfort or controversy is not enough. To earn full credit, the response must also connect this holding to Delgado — explaining that because the pins caused no proven disruption (like the armbands), the same substantial-disruption standard would likely mean the Riverbend students' pins are also protected speech. Partial credit (1/2): accurately states either the facts OR the holding of Tinker, but not both, or states both with only a weak/unclear connection to Delgado. No credit (0/2): misstates the facts and holding of Tinker, or omits any connection to the non-required case.",
+          "modelResponse": "In Tinker v. Des Moines, public school students were suspended for wearing black armbands to school to silently protest the Vietnam War, even though the armbands caused no disturbance to classes or school activities. The Supreme Court held that students do not 'shed their constitutional rights to freedom of speech...at the schoolhouse gate,' and that school officials may restrict student expression only if they can reasonably forecast that it would cause a substantial disruption of school operations or invade the rights of others — a desire to avoid discomfort or unpopularity is not sufficient justification. Applying that standard to Delgado, the students' pins, like the armbands in Tinker, were a silent, passive form of political expression that caused no proven disruption to classes or school functioning, so under Tinker's substantial-disruption test the school district's order to remove the pins would likely be found to violate the students' free-speech rights."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): explains how Tinker's substantial-disruption standard would apply to a FUTURE situation involving a different form of silent, non-disruptive student expression (e.g., wearing a button, a t-shirt with a political message, a wristband, or a moment of silent protest), explaining that school officials would similarly need to show a reasonable forecast of substantial disruption or invasion of others' rights before restricting it, rather than being able to ban it simply because it addresses a controversial topic. No credit (0/1) for a vague statement that 'the case would apply' without explaining the substantial-disruption standard or its future application, or for restating part (b) without addressing a future/different situation.",
+          "modelResponse": "Because Tinker established that public school officials can only restrict student expression when they can reasonably forecast substantial disruption, the same standard would apply to a future case involving, for example, a student wearing a t-shirt with a political slogan: as long as school administrators cannot show that the shirt is likely to substantially disrupt classes or school operations, they could not lawfully prohibit it simply because the message is controversial or unpopular with staff or other students."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apgov-fa-fr-04",
+    "loId": "apgov.presidency-power",
+    "cedCode": "AP-APGOV-2.4/2.5/2.6/2.7",
+    "topic": "ap-us-government",
+    "topicId": "ap-us-government",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "Develop an argument about whether the expansion of unilateral presidential power (such as the use of executive orders and executive agreements) has been beneficial or harmful to the constitutional system of checks and balances.\n\nUse at least TWO of the following foundational documents as evidence in your essay:\n- Federalist No. 51\n- Federalist No. 70\n- Brutus No. 1\n\nIn your response you should do the following: (1) articulate a defensible thesis or claim that responds to the prompt and establishes a line of reasoning; (2) support your thesis using at least TWO pieces of accurate and relevant evidence, with at least two of those pieces drawn from RELEVANT foundational documents (relevant means the document's content or argument actually bears on presidential power and/or checks and balances); (3) use reasoning to explain how or why the evidence supports your thesis; and (4) respond to an opposing or alternative perspective using a rebuttal, counterargument, or explanation of the limits of that perspective.",
+    "answer": "see rubric",
+    "solutionText": "A full-credit essay takes a clear position on whether expanded unilateral presidential power helps or harms checks and balances, supports it with at least two pieces of evidence — at least two drawn from relevant foundational documents such as Federalist No. 70's case for energetic single executive, Federalist No. 51's argument that ambition must counteract ambition across separated branches, or Brutus No. 1's warning about concentrated and unchecked power — explains how that evidence supports the thesis, and directly addresses and responds to a counterargument.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "thesis",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): the thesis takes a clear, defensible position on whether the expansion of unilateral presidential power has been beneficial or harmful to checks and balances, AND establishes a line of reasoning that previews the argument to follow. No credit (0/1) for a thesis that merely restates the prompt, presents a list with no discernible claim, or fails to take a clear position.",
+          "modelResponse": "The expansion of unilateral presidential power through tools such as executive orders and executive agreements has, on balance, harmed the constitutional system of checks and balances by allowing presidents to bypass the legislative process the Framers designed and to concentrate policymaking authority in a single branch that the other branches struggle to effectively restrain."
+        },
+        {
+          "criterionId": "evidence",
+          "maxPoints": 3,
+          "scoringCriteria": "This part is scored on a 0-3 ladder based on the quantity and sourcing of evidence used to SUPPORT the thesis (not merely mentioned). 1/3: the essay uses ONE piece of evidence relevant to the thesis — this may be a specific historical/current example of presidential power (e.g., a president's use of executive orders to make policy without Congress) OR content from one of the three named foundational documents (Federalist No. 51, Federalist No. 70, Brutus No. 1). 2/3: the essay uses TWO pieces of relevant evidence supporting the thesis, AND at least ONE of the two is accurately drawn from one of the three named foundational documents. 3/3: the essay uses TWO OR MORE pieces of relevant evidence supporting the thesis, AND AT LEAST TWO of them are accurately drawn from the named foundational documents (e.g., citing both Federalist No. 70's argument for an energetic, unified executive able to act with 'decision, activity, secrecy, and dispatch' and Federalist No. 51's argument that constitutional structure must give each branch 'the necessary constitutional means and personal motives to resist encroachments' by the others, or pairing either of these with Brutus No. 1's warning that a government with power not 'defined and bounded' will tend to increase that power over time). Evidence must be used to support the thesis's claim, not simply summarized or mentioned in passing with no connection to the argument.",
+          "modelResponse": "Federalist No. 70 shows that the Framers deliberately built the presidency to be capable of independent, energetic action — Hamilton argued that a single executive provides 'decision, activity, secrecy, and dispatch,' which is precisely the capacity presidents now use to issue sweeping executive orders on immigration, environmental regulation, and other major policy areas without new legislation. But Federalist No. 51 explains why that energy was supposed to remain checked: Madison argued that the constitutional structure must give each branch 'the necessary constitutional means and personal motives to resist encroachments of the others,' relying on Congress's power of the purse and oversight to counteract presidential ambition. When presidents increasingly act unilaterally, they sidestep the very process of interbranch bargaining and resistance that Madison's design assumed would check executive power, showing that the expansion of unilateral authority has undercut the balance the Framers intended."
+        },
+        {
+          "criterionId": "reasoning",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): explains HOW or WHY the evidence presented supports the thesis, connecting the specific evidence to the claim with an explicit line of reasoning (not simply listing evidence and asserting a conclusion). No credit (0/1) if the essay lists evidence without explaining the logical connection between the evidence and the thesis.",
+          "modelResponse": "The reasoning connecting this evidence to the thesis is that the Framers' own design in Federalist No. 51 depended on each branch having both the motive and the constitutional tools to resist the others in an ongoing, active way; when a president can achieve major policy outcomes through executive orders that do not require Congress's affirmative agreement, Congress is reduced to a reactive role (overriding a veto or cutting funding after the fact) rather than the co-equal, resisting partner Madison envisioned, which is precisely why the growth of unilateral tools weakens rather than strengthens the constitutional balance among the branches."
+        },
+        {
+          "criterionId": "alternative-perspective",
+          "maxPoints": 1,
+          "scoringCriteria": "Full credit (1/1): states a plausible alternative or opposing perspective (e.g., that unilateral presidential power is beneficial because it allows swift, decisive action in emergencies or when Congress is gridlocked, consistent with Hamilton's argument in Federalist No. 70 for energetic government) AND responds to it with a rebuttal, limitation, or contextualization (e.g., explaining that this benefit does not outweigh the long-term erosion of legislative checks, or that emergency justifications have been used to justify unilateral action well beyond genuine emergencies). Both the statement of the counterargument AND the response/rebuttal are required. No credit (0/1) for stating a counterargument with no response, or for a response with no counterargument stated.",
+          "modelResponse": "One could argue, following Hamilton's logic in Federalist No. 70, that unilateral presidential tools are actually beneficial because they let the government respond quickly to emergencies or overcome legislative gridlock that would otherwise leave urgent problems unaddressed. However, this benefit does not outweigh the long-term costs: because 'emergency' and 'gridlock' justifications are easy to invoke and hard for Congress or the courts to police in the moment, presidents have used unilateral tools well beyond genuine emergencies, entrenching a pattern where major policy changes bypass the deliberative, resistance-based process that Federalist No. 51 relied on to keep any one branch from accumulating too much power."
+        }
+      ]
+    }
+  }
+]

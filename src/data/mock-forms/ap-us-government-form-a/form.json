@@ -1,0 +1,38 @@
+{
+  "formId": "ap-us-government-form-a",
+  "examKey": "ap-us-government",
+  "topicIds": ["ap-us-government"],
+  "label": "AP U.S. Government Practice Exam A",
+  "sections": [
+    {
+      "sectionId": "mcq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apgov-fa-mc-001","apgov-fa-mc-002","apgov-fa-mc-003","apgov-fa-mc-004","apgov-fa-mc-005",
+            "apgov-fa-mc-006","apgov-fa-mc-007","apgov-fa-mc-008","apgov-fa-mc-009","apgov-fa-mc-010",
+            "apgov-fa-mc-011","apgov-fa-mc-012","apgov-fa-mc-013","apgov-fa-mc-014","apgov-fa-mc-015",
+            "apgov-fa-mc-016","apgov-fa-mc-017","apgov-fa-mc-018","apgov-fa-mc-019","apgov-fa-mc-020",
+            "apgov-fa-mc-021","apgov-fa-mc-022","apgov-fa-mc-023","apgov-fa-mc-024","apgov-fa-mc-025",
+            "apgov-fa-mc-026","apgov-fa-mc-027","apgov-fa-mc-028","apgov-fa-mc-029","apgov-fa-mc-030",
+            "apgov-fa-mc-031","apgov-fa-mc-032","apgov-fa-mc-033","apgov-fa-mc-034","apgov-fa-mc-035",
+            "apgov-fa-mc-036","apgov-fa-mc-037","apgov-fa-mc-038","apgov-fa-mc-039","apgov-fa-mc-040",
+            "apgov-fa-mc-041","apgov-fa-mc-042","apgov-fa-mc-043","apgov-fa-mc-044","apgov-fa-mc-045",
+            "apgov-fa-mc-046","apgov-fa-mc-047","apgov-fa-mc-048","apgov-fa-mc-049","apgov-fa-mc-050",
+            "apgov-fa-mc-051","apgov-fa-mc-052","apgov-fa-mc-053","apgov-fa-mc-054","apgov-fa-mc-055"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "frq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": ["apgov-fa-fr-01", "apgov-fa-fr-02", "apgov-fa-fr-03", "apgov-fa-fr-04"]
+        }
+      ]
+    }
+  ]
+}
