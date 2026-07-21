@@ -18,10 +18,20 @@ test('resolvePassage returns undefined for unknown id', () => {
   assert.equal(resolvePassage('nope'), undefined);
 });
 
-test('all passages are public-domain with unique ids', () => {
+test('all passages carry an allowed license and unique ids', () => {
   const ids = SEED_PASSAGES.map((p) => p.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate passage ids');
-  for (const p of SEED_PASSAGES) assert.equal(p.license, 'public-domain');
+  // 'public-domain' = sourced historical texts; 'internal-original' =
+  // Evelyn-authored (e.g. ACT mock reading/science passages).
+  for (const p of SEED_PASSAGES) {
+    assert.ok(
+      p.license === 'public-domain' || p.license === 'internal-original',
+      `unexpected license ${p.license} on ${p.id}`,
+    );
+    if (p.license === 'internal-original') {
+      assert.ok(p.author.startsWith('Evelyn'), `internal-original passage ${p.id} must credit Evelyn as author`);
+    }
+  }
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

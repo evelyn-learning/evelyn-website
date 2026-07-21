@@ -126,8 +126,13 @@ import { PASSAGE_APWORLD_FOURTEEN_POINTS } from './seeds/apworld-fourteen-points
 import { PASSAGE_APWORLD_VERSAILLES } from './seeds/apworld-versailles';
 import { PASSAGE_APWORLD_WWI_PROPAGANDA_VISUAL } from './seeds/apworld-wwi-propaganda-visual';
 import { PASSAGE_APWORLD_DEPRESSION_TABLE } from './seeds/apworld-depression-table';
+// ACT mock Form A — original reading + science passages (internal-original)
+import { ACT_MOCK_A_READING_PASSAGES } from './seeds/act-mock-a-reading';
+import { ACT_MOCK_A_SCIENCE_PASSAGES } from './seeds/act-mock-a-science';
 
 export const SEED_PASSAGES: Passage[] = [
+  ...ACT_MOCK_A_READING_PASSAGES,
+  ...ACT_MOCK_A_SCIENCE_PASSAGES,
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
   PASSAGE_HENRY_GIVE_ME_LIBERTY,
   PASSAGE_SWIFT_MODEST_PROPOSAL,
