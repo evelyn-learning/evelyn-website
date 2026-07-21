@@ -180,6 +180,28 @@ export function isPureGreeting(text: string): boolean {
   return false;
 }
 
+/**
+ * Whether the opening-turn greeting guard applies: on a freestyle session's
+ * first turn(s), a pure greeting must not trigger unsolicited problem cards
+ * or board equations. Sessions that arrive WITH an agenda are exempt: an
+ * authored lesson plan, or a mock-review context (the tutor is REQUIRED to
+ * present the student's missed exam item unprompted — the 2026-07-21
+ * live-gate bug was this guard dropping that card into a retry/kill loop).
+ */
+export function computeGreetingGuard(input: {
+  lessonPlanActive: boolean;
+  priorStudentTurns: number;
+  lastStudentText: string;
+  mockReviewActive: boolean;
+}): boolean {
+  return (
+    !input.lessonPlanActive &&
+    !input.mockReviewActive &&
+    input.priorStudentTurns <= 1 &&
+    isPureGreeting(input.lastStudentText)
+  );
+}
+
 // ------------------------------------------------------------------
 // Final-answer claim detection.
 // When the tutor says "the final answer is X", "your full solution is X",

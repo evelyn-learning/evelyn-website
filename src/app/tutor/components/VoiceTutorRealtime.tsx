@@ -73,7 +73,7 @@ import {
   extractIntegrand,
   extractFinalAnswerClaim,
   normalizeRenamedFunction,
-  isPureGreeting,
+  computeGreetingGuard,
   isRejection,
   isWalkThroughRequest,
   isNewProblemRequest,
@@ -2971,7 +2971,15 @@ export function VoiceTutorRealtime({
     // whiteboard. Disable the guard whenever the orchestrator has a
     // plan loaded.
     const lessonPlanActive = !!lessonPlanRef.current;
-    const greetingGuardActive = !lessonPlanActive && priorStudentTurns <= 1 && isPureGreeting(lastStudentText);
+    // Mock-review sessions arrive with an agenda (the student's missed exam
+    // items) — presenting the first one unprompted is the whole point, so the
+    // greeting guard must not eat it (2026-07-21 live-gate retry/kill loop).
+    const greetingGuardActive = computeGreetingGuard({
+      lessonPlanActive,
+      priorStudentTurns,
+      lastStudentText,
+      mockReviewActive: !!mockReviewRef.current,
+    });
 
     // Continuation guard: if the student's last utterance was clearly a
     // continuation of the current problem ("got it, next?", "ok next",

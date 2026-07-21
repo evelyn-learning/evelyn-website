@@ -42,7 +42,7 @@ export interface ITutorSession extends Document {
   subject: string;
   topic: string;
   level: string;
-  sessionGoal: "practice" | "homework-help" | "concept-review" | "test-prep" | "catch-up" | "challenge";
+  sessionGoal: "practice" | "homework-help" | "concept-review" | "test-prep" | "catch-up" | "challenge" | "mock-review";
   inputMode: "text" | "voice";
   voiceEngine?: "classic" | "realtime" | "realtime-2" | "realtime-validated" | "claude-brain" | "gemini-live";
   startedAt: Date;
@@ -213,7 +213,7 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     },
     sessionGoal: {
       type: String,
-      enum: ["practice", "homework-help", "concept-review", "test-prep", "catch-up", "challenge"],
+      enum: ["practice", "homework-help", "concept-review", "test-prep", "catch-up", "challenge", "mock-review"],
       required: true,
     },
     inputMode: {

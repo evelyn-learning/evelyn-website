@@ -1926,7 +1926,7 @@ export async function exportTutorSessionPDF(
     drawWrappedText(subjectLine, margin, contentWidth, { size: 11, style: 'bold', color: [26, 32, 44], lineHeight: 6 });
   }
   drawWrappedText(`Topic: ${topicName}`, margin, contentWidth, { size: subjectLine ? 10 : 11, style: subjectLine ? 'normal' : 'bold', color: subjectLine ? [55, 65, 81] : [26, 32, 44], lineHeight: 6 });
-  const goalLabel = sessionGoal === 'homework-help' ? 'Homework Help' : sessionGoal === 'concept-review' ? 'Concept Review' : sessionGoal === 'test-prep' ? 'Test Prep' : sessionGoal === 'explain' ? 'Explain' : sessionGoal === 'test' ? 'Test' : 'Practice';
+  const goalLabel = sessionGoal === 'homework-help' ? 'Homework Help' : sessionGoal === 'concept-review' ? 'Concept Review' : sessionGoal === 'test-prep' ? 'Test Prep' : sessionGoal === 'mock-review' ? 'Mock Review' : sessionGoal === 'explain' ? 'Explain' : sessionGoal === 'test' ? 'Test' : 'Practice';
   drawWrappedText(`Goal: ${goalLabel}${studentName ? ` | Student: ${studentName}` : ''}`, margin, contentWidth, { size: 10, color: [100, 116, 139], lineHeight: 6 });
   const studentMessages = transcript.filter(m => m.role === 'student').length;
   const tutorMessages = transcript.filter(m => m.role === 'tutor').length;
