@@ -617,7 +617,7 @@
   "topicId": "ap-us-government",
   "difficulty": 2,
   "responseFormat": "mcq",
-  "problemText": "In his 1963 \"Letter from Birmingham Jail,\" Martin Luther King Jr. writes that \"injustice anywhere is a threat to justice everywhere,\" responding to fellow clergy who urged him to pursue change only through the courts and negotiation rather than public protest. Elsewhere in the letter, which additional argument does King make?",
+  "problemText": "In his 1963 \"Letter from Birmingham Jail,\" Martin Luther King Jr. argues that injustice occurring in any community endangers justice in every community, responding to fellow clergy who urged him to pursue change only through the courts and negotiation rather than public protest. Elsewhere in the letter, which additional argument does King make?",
   "choices": [
    "All laws passed by a democratically elected legislature are by definition just and must be obeyed without exception",
    "Civil disobedience is only legitimate once a court has formally ruled the law being violated unconstitutional",
@@ -625,7 +625,7 @@
    "A just law is one that aligns with a higher moral law, an unjust law degrades human personality, and a person who breaks an unjust law openly and accepts the penalty is exercising a legitimate form of protest"
   ],
   "answer": "D",
-  "solutionText": "King distinguishes a \"just law,\" which squares with a higher moral law, from an \"unjust law,\" which degrades human personality, and argues that openly breaking an unjust law while accepting the penalty is a legitimate way to draw attention to injustice — a view consistent with his opening claim that injustice anywhere threatens justice everywhere. Choice A contradicts King's central argument, since he explicitly says not all enacted laws are just. Choice B invents a court-approval precondition King never states; his argument is that individuals may act before or without a court ruling. Choice C directly contradicts the quoted line, which says injustice anywhere concerns everyone, not just the local community.",
+  "solutionText": "King distinguishes a just law, which squares with a higher moral law, from an unjust law, which degrades human personality, and argues that openly breaking an unjust law while accepting the penalty is a legitimate way to draw attention to injustice — a view consistent with his broader claim that injustice in one place endangers justice everywhere. Choice A contradicts King's central argument, since he explicitly says not all enacted laws are just. Choice B invents a court-approval precondition King never states; his argument is that individuals may act before or without a court ruling. Choice C directly contradicts King's argument that injustice anywhere concerns everyone, not just the local community.",
   "bankScope": "mock"
  },
  {
