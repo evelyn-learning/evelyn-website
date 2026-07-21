@@ -257,7 +257,7 @@ export const APWORLD_MOCK_A_PASSAGES: Passage[] = [
     fullText:
       `The table below was compiled for this exam to summarize global developments between the two world wars and during the Second World War. It is an original composition, not a transcription of any historical source.\n\n` +
       `THE GREAT DEPRESSION\n` +
-      `Beginning around 1929, a collapse that spread from one industrial economy to another through the ties of global trade and finance, throwing millions out of work worldwide and leading many governments to intervene far more deeply in their economies.\n\n` +
+      `Beginning around 1929, a financial collapse spread from one industrial economy to another, throwing millions out of work worldwide and leading many governments to intervene far more deeply in their economies.\n\n` +
       `POLITICAL RESPONSES\n` +
       `In several countries the hardship and disorder helped bring to power aggressive, militarized regimes that promised national revival, rejected democracy, and prepared for territorial expansion.\n\n` +
       `THE SECOND WORLD WAR\n` +
@@ -299,9 +299,9 @@ export const APWORLD_MOCK_A_PASSAGES: Passage[] = [
       `1945: about 50\n` +
       `1970: about 130\n` +
       `1995: about 185\n` +
-      `A note reads that most of the new members were nations in Asia, Africa, and the Caribbean that had gained independence from European empires.\n\n` +
+      `A note reads that most of the new members were nations that had thrown off European colonial rule in the decades after 1945.\n\n` +
       `THE COLD WAR\n` +
-      `For over four decades the United States and the Soviet Union, each leading a bloc of allies, competed through an arms race, rival alliances, propaganda, and proxy conflicts, without fighting each other directly.\n\n` +
+      `For over four decades the United States and the Soviet Union, each leading a bloc of allies, contended for global influence without ever fighting each other directly on the battlefield.\n\n` +
       `THE END OF THE COLD WAR\n` +
       `Between about 1989 and 1991 the communist governments of Eastern Europe fell and the Soviet Union broke apart into separate states, leaving the United States as the world's foremost power and ending the division of the world into two rival superpower blocs.`,
     lineNumbered: false,
@@ -323,13 +323,13 @@ export const APWORLD_MOCK_A_PASSAGES: Passage[] = [
       `1900: about 1.6 billion\n` +
       `2010: about 6.9 billion, as better medicine, sanitation, and food supply sharply reduced death rates.\n\n` +
       `COMMUNICATION AND TECHNOLOGY\n` +
-      `Over the century the telephone, radio, television, and finally the internet and mobile phone spread across the world, allowing information, money, and culture to move almost instantly across borders.\n\n` +
+      `Over the century the telephone, radio, television, and finally the internet and mobile phone spread across the world, each new device shrinking the time it took news and ideas to travel from one place to another.\n\n` +
       `THE GLOBAL ECONOMY\n` +
       `Trade grew far faster than population as goods were increasingly made in globe-spanning supply chains and shipped in standardized containers; large corporations operated across many countries at once.\n\n` +
       `ENVIRONMENT AND DISEASE\n` +
       `A note reads that the same interconnection sped the spread of some diseases across the globe, and that rising industrial output and fossil-fuel use drove pollution and long-term changes in the earth's climate.\n\n` +
       `PEOPLES AND RIGHTS\n` +
-      `A note reads that migration, international human-rights movements, and global media both spread shared culture and provoked movements to defend local and national identities.`,
+      `A note reads that as people, ideas, and images crossed borders more freely than ever, many communities also pushed back, working to safeguard their own traditions against outside influence.`,
     lineNumbered: false,
     wordCount: 200,
   },

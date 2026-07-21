@@ -195,7 +195,7 @@
       "The diffusion of Christianity from Europe into East Asia"
     ],
     "answer": "B",
-    "solutionText": "Chinese innovations such as gunpowder and papermaking spread westward across Eurasia via the Silk Roads and Mongol networks in this period. Maize and potatoes are American crops that only entered Afro-Eurasia after 1492; the steam engine is an eighteenth-century development; and Christianity's spread ran outward from Europe rather than being a Chinese technology moving west.",
+    "solutionText": "Gunpowder spread westward across Eurasia via the Silk Roads and Mongol networks in this period; papermaking, already transmitted to the Islamic world as early as the eighth century, continued diffusing further west into Europe by the thirteenth century. Maize and potatoes are American crops that only entered Afro-Eurasia after 1492; the steam engine is an eighteenth-century development; and Christianity's spread ran outward from Europe rather than being a Chinese technology moving west.",
     "passageId": "evelyn.passage.apworld-mock-a-st02.v1",
     "bankScope": "mock"
   },
@@ -815,7 +815,7 @@
       "a coordinated decision by governments to reduce production"
     ],
     "answer": "C",
-    "solutionText": "The table states the collapse spread through the ties of global trade and finance, showing how economic interdependence transmitted the downturn worldwide. (A) confuses the Depression with the later war; (B) and (D) describe responses to the crisis, not the channel through which it spread.",
+    "solutionText": "The passage reports only that the collapse spread from one industrial economy to another, not why; the mechanism was the ties of global trade and finance that bound industrial economies together, so a downturn in one quickly transmitted to its trading and lending partners. (A) confuses the Depression with the later war; (B) and (D) describe responses to the crisis, not the channel through which it spread.",
     "passageId": "evelyn.passage.apworld-mock-a-st12.v1",
     "bankScope": "mock"
   },
@@ -950,12 +950,12 @@
     "problemText": "The table notes that the two superpowers competed \"without fighting each other directly.\" This best describes which feature of the Cold War?",
     "choices": [
       "frequent large-scale battles fought directly between American and Soviet armies",
+      "a rivalry waged through an arms race, propaganda, and proxy conflicts rather than direct war between the superpowers",
       "a complete absence of any military competition between the two blocs",
-      "the merging of the two superpowers into a single military alliance",
-      "a rivalry waged through an arms race, propaganda, and proxy conflicts rather than direct war between the superpowers"
+      "the merging of the two superpowers into a single military alliance"
     ],
-    "answer": "D",
-    "solutionText": "The Cold War pitted the superpowers against each other indirectly — through an arms race, propaganda, rival alliances, and proxy wars — while avoiding direct combat between them. (A) contradicts the note about no direct fighting; (B) ignores the intense indirect competition; (C) is false, as the blocs remained rivals.",
+    "answer": "B",
+    "solutionText": "The Cold War pitted the superpowers against each other indirectly — through an arms race, propaganda, rival alliances, and proxy wars — while avoiding direct combat between them. (A) contradicts the note about no direct fighting; (C) ignores the intense indirect competition; (D) is false, as the blocs remained rivals.",
     "passageId": "evelyn.passage.apworld-mock-a-st14.v1",
     "bankScope": "mock"
   },
@@ -989,13 +989,13 @@
     "responseFormat": "mcq",
     "problemText": "The growth in UN member states from about 50 in 1945 to about 185 in 1995 is best explained by —",
     "choices": [
-      "the entry of many newly independent former colonies in Asia, Africa, and the Caribbean",
       "the division of long-established European nations into many smaller states",
       "a rule requiring every major city to join the United Nations separately",
+      "the entry of many newly independent former colonies in Asia, Africa, and the Caribbean",
       "the admission of newly founded European colonial empires"
     ],
-    "answer": "A",
-    "solutionText": "The note explains that most new members were formerly colonized nations that had gained independence, so the membership surge reflects decolonization. (B) misattributes the growth to European fragmentation; (C) invents a nonexistent rule; (D) contradicts the era's decline of empires.",
+    "answer": "C",
+    "solutionText": "The note explains that most new members were formerly colonized nations that had gained independence, and the great wave of decolonization after 1945 ran through Asia, Africa, and the Caribbean, so the membership surge reflects that wave. (A) misattributes the growth to European fragmentation; (B) invents a nonexistent rule; (D) contradicts the era's decline of empires.",
     "passageId": "evelyn.passage.apworld-mock-a-st14.v1",
     "bankScope": "mock"
   },
@@ -1029,13 +1029,13 @@
     "responseFormat": "mcq",
     "problemText": "According to the table, the spread of the telephone, radio, television, and finally the internet and mobile phone most directly enabled —",
     "choices": [
+      "information, money, and culture to move almost instantly across borders",
       "a marked slowdown in the movement of information across borders",
       "the growing isolation of the world's societies from one another",
-      "the end of nearly all long-distance communication",
-      "information, money, and culture to move almost instantly across borders"
+      "the end of nearly all long-distance communication"
     ],
-    "answer": "D",
-    "solutionText": "The table states these communication technologies let information, money, and culture move almost instantly across the world. (A), (B), and (C) each describe reduced connection, the opposite of the effect the passage attributes to these technologies.",
+    "answer": "A",
+    "solutionText": "The table describes each technology compressing the time news and ideas took to cross the world — the technological engine behind the era's rapid, near-instant movement of information, money, and culture across borders. (B), (C), and (D) each describe reduced connection, the opposite of the trend the table describes.",
     "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
     "bankScope": "mock"
   },
@@ -1075,7 +1075,7 @@
       "Local identities grew stronger only because global exchange had entirely ceased"
     ],
     "answer": "A",
-    "solutionText": "The passage captures globalization's double edge: cross-border media and migration spread common culture while also sparking defensive movements asserting local and national identity. (B) overstates homogenization; (C) denies any effect; (D) contradicts the reality of continued global exchange.",
+    "solutionText": "The passage captures globalization's double edge: as media, migration, and international human-rights activism connected societies more closely, cross-border media and migration also spread common culture while sparking defensive movements asserting local and national identity. (B) overstates homogenization; (C) denies any effect; (D) contradicts the reality of continued global exchange.",
     "passageId": "evelyn.passage.apworld-mock-a-st15.v1",
     "bankScope": "mock"
   },
@@ -1236,7 +1236,7 @@
         {
           "criterionId": "C-document-evidence",
           "maxPoints": 2,
-          "scoringCriteria": "This part is worth up to 2 points for use of the documents. Award 1 point for accurately describing (rather than simply quoting) the content of at least TWO of the seven documents and using them to address the prompt. Award BOTH points (2) for supporting an argument in response to the prompt by accurately using the content of at least FOUR documents. Documents must be used to support an argument about the extent to which industrialization changed economic and social life, not merely summarized in isolation. Doc1 shows a British mill owner celebrating steam, coal, and cheap cloth for world markets; Doc2 gives a child worker's testimony of 13-hour days, dust, and poverty; Doc3 is a table showing machine cloth flooding a South Asian colony while local hand-weavers were ruined; Doc4 is a reforming Asian official urging defensive industrialization to preserve independence; Doc5 is a European editorial arguing factories require colonies for raw materials and markets; Doc6 describes a cartoon of a global loom fed by colonies with owners pocketing the gold; Doc7 is a labor organizer urging unions and the ballot box for the new working class. No point for merely quoting without explanation or for inaccurate use.",
+          "scoringCriteria": "Full credit (2/2): uses the CONTENT of at least FOUR of the seven documents to SUPPORT an argument in response to the prompt (documents grouped around claims, not summarized one at a time). Partial (1/2): accurately describes (addresses the content of) at least THREE documents, whether or not they support the argument. No credit (0/2): content of fewer than three documents used, or documents are misdescribed. Doc1 shows a British mill owner celebrating steam, coal, and cheap cloth for world markets; Doc2 gives a child worker's testimony of 13-hour days, dust, and poverty; Doc3 is a table showing machine cloth flooding a South Asian colony while local hand-weavers were ruined; Doc4 is a reforming Asian official urging defensive industrialization to preserve independence; Doc5 is a European editorial arguing factories require colonies for raw materials and markets; Doc6 describes a cartoon of a global loom fed by colonies with owners pocketing the gold; Doc7 is a labor organizer urging unions and the ballot box for the new working class.",
           "modelResponse": "The documents support the argument that industrialization brought both new wealth and new exploitation on a global scale. Doc1's mill owner boasts that steam and coal let one factory outproduce a whole county of hand-weavers and sell cloth cheaply in world markets, showing the leap in productivity. Doc2's child worker, laboring thirteen-hour days amid cotton dust while the whole family lives in one room, shows the human cost borne by the new working class, a theme Doc7's labor organizer answers by calling workers to unite in unions and at the ballot box. Doc3's table demonstrates the global reach of the change: as cheap machine cloth flooded a South Asian colony, local hand-weavers were ruined, showing deindustrialization abroad. Doc5's editorial and Doc6's cartoon together reveal how industrial economies drove imperialism, with colonies feeding raw materials into the machine while factory owners pocketed the profits."
         },
         {
