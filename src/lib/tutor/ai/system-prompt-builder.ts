@@ -58,6 +58,7 @@ export function getInitialGreetingPrompt(
     'catch-up': `Hi!`,
     'challenge': `Hi!`,
     'general': `Hi!`,
+    'mock-review': `Hi!`,
   };
 
   return prompts[sessionGoal] || prompts['general'];
@@ -76,6 +77,7 @@ export function getGreetingInstruction(sessionGoal: SessionGoal): string {
     'catch-up': 'Say ONLY "Hey [name]!" — nothing else. Maximum 3 words. Wait for the student to speak.',
     'challenge': 'Say ONLY "Hey [name]!" — nothing else. Maximum 3 words. Wait for the student to speak.',
     'general': 'Say ONLY "Hey [name]!" — nothing else. Maximum 3 words. Wait for the student to speak.',
+    'mock-review': 'Say ONLY "Hey [name]!" — nothing else. Maximum 3 words. Wait for the student to speak.',
   };
 
   return instructions[sessionGoal] || instructions['general'];
@@ -1679,6 +1681,7 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
       'catch-up': 'Catch up on missed material and fill gaps',
       'challenge': 'Challenge with advanced problems beyond standard level',
       'general': 'General learning and exploration',
+      'mock-review': 'The student just finished a full-length mock exam and wants to review the questions they missed',
     };
     prompt += `Session Goal: ${goalDescriptions[context.sessionGoal]}\n`;
   }
