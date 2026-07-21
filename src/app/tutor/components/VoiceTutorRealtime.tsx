@@ -1339,6 +1339,12 @@ export function VoiceTutorRealtime({
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
 
+  // One-time session-start sequence (clock + unlockAudio + hasStarted), owned
+  // by the handleRef effect below where the state setters live, and mirrored
+  // here so pickAgendaItem can fire it inside the tap's gesture stack. Default
+  // no-op until that effect assigns the real function.
+  const gestureSessionStartRef = useRef<() => void>(() => {});
+
   // Drawer row tap: switch the tutor to a specific missed item. Stable identity
   // (reads refs) so re-firing onMockAgendaChange doesn't churn. If the item is
   // ALREADY in the current focus list, just nudge to its number; the numbered
@@ -1350,6 +1356,14 @@ export function VoiceTutorRealtime({
   const pickAgendaItem = useCallback(async (itemId: string) => {
     const ctx = mockReviewRef.current;
     if (!ctx) return;
+    // Agenda round 4 (Round-16 reincarnation): a pick IS the student's first
+    // real gesture in an agenda-only session. Fire the one-time session start
+    // (clock + unlockAudio + hasStarted) NOW, synchronously in this tap's call
+    // stack — the beyond-focus branch below awaits a refetch before send(),
+    // which would leave the gesture context and make the marker-driven start
+    // (in sendTextMessage) too late for unlockAudio to resume the AudioContext.
+    // Idempotent, so the marker's own start call is a harmless no-op.
+    gestureSessionStartRef.current();
     // A pick is navigation, not an answer: relay a bracketed control marker (no
     // "Student wrote:" board card, suppressed from the visible transcript).
     // Fall back to the legacy student-input path only when the control channel
@@ -13083,6 +13097,24 @@ export function VoiceTutorRealtime({
 
   // Expose sendTextMessage + session summary to parent via handleRef.
   useEffect(() => {
+    // One-time "session start" side effects that MUST run inside a real
+    // user-gesture call stack (unlockAudio can only resume a suspended
+    // AudioContext from a gesture). Idempotent — both guards no-op once the
+    // session has started. Shared by sendTextMessage (real typed/board/agenda
+    // input) and pickAgendaItem via gestureSessionStartRef.
+    const runGestureSessionStart = () => {
+      if (voiceSessionStartedAtMsRef.current === null) {
+        voiceSessionStartedAtMsRef.current = Date.now();
+        onSessionStartedRef.current?.();
+      }
+      if (!hasStartedRef.current && !resumeState) {
+        hasStartedRef.current = true;
+        setHasStarted(true);
+        setIsWarmingUp(true);
+        realtime.unlockAudio();
+      }
+    };
+    gestureSessionStartRef.current = runGestureSessionStart;
     if (handleRef) {
       handleRef.current = {
         sendTextMessage: (text: string) => {
@@ -13103,12 +13135,17 @@ export function VoiceTutorRealtime({
           // sources never fire onended → dock wedged on SPEAKING for 9
           // minutes), and hasStarted stayed false so the eventual mic tap
           // fired a redundant [start lesson] re-opener.
-          const isStudentBoardAction = /^\s*\[The student (?:wrote|drew|uploaded)/i.test(text);
+          // Agenda round 4 (Round-16 reincarnation): the mock-review agenda
+          // markers ("[Via their review-agenda menu, …]") are the SAME class
+          // of real gesture — a student tapping a question row to begin — so
+          // they too must start the clock + unlockAudio, else an agenda-only
+          // session (never touching the mic) shows 0:00 forever with a
+          // wedged AudioContext. They join the board-action exception here;
+          // pickAgendaItem additionally fires the start sequence synchronously
+          // inside the tap's own stack (its refetch path awaits before this
+          // marker lands, which would leave the gesture context).
+          const isStudentBoardAction = /^\s*\[(?:The student (?:wrote|drew|uploaded)|Via their review-agenda menu)/i.test(text);
           const isSynthetic = /^\s*\[/.test(text) && !isStudentBoardAction;
-          if (!isSynthetic && voiceSessionStartedAtMsRef.current === null) {
-            voiceSessionStartedAtMsRef.current = Date.now();
-            onSessionStartedRef.current?.();
-          }
           // Round-16 Issue 1: a real input landing BEFORE the mic-tap start
           // runs the same one-time session-start sequence the tap would —
           // most critically unlockAudio(), which must execute inside this
@@ -13116,12 +13153,9 @@ export function VoiceTutorRealtime({
           // brain turn this message triggers replaces the [start lesson]
           // kickoff (hasStarted=true makes the later mic tap skip it).
           // Resume sessions keep their dedicated resumeContinue gesture.
-          if (!isSynthetic && !hasStartedRef.current && !resumeState) {
-            hasStartedRef.current = true;
-            setHasStarted(true);
-            setIsWarmingUp(true);
-            realtime.unlockAudio();
-          }
+          // Shared with pickAgendaItem via gestureSessionStartRef so an
+          // agenda pick fires it inside its own tap stack too (idempotent).
+          if (!isSynthetic) runGestureSessionStart();
           // Task X10: a non-bracketed external send is a real typed/text
           // message; bracketed strings are synthetic (kickoff / reactions /
           // harness) and get the voice-style fallback path. Student-board

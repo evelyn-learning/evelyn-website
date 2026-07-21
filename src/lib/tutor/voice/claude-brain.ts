@@ -1103,7 +1103,7 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
   if (!ctx) return '';
   const items = ctx.focusItems.map((it, i) => {
     const lines = [
-      `Item ${i + 1} (${it.sectionLabel}${it.loId ? `, ${it.loId}` : ''}):`,
+      `Item ${i + 1} (${it.sectionLabel}, Q${it.qNum}${it.loId ? `, ${it.loId}` : ''}):`,
       it.passageExcerpt ? `Stimulus: ${it.passageExcerpt}` : '',
       `Question: ${it.problemText}`,
       it.choices?.length ? `Choices: ${it.choices.map((c, j) => `${'ABCD'[j]}. ${c}`).join(' | ')}` : '',

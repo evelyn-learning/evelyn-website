@@ -245,5 +245,41 @@ test('mathSafeSnippet: escaped \\$ currency is not a math delimiter', () => {
   assert.ok(out.includes('\\$2.50'), 'currency stays intact');
 });
 
+// ─── real exam question numbers (qNum) ──────────────────────────────────────
+test('qNum = real exam question number: 1-based within sectionLabel over the FULL served list', () => {
+  const item = (id: string, section: string, isCorrect: boolean): MockReviewItem => ({
+    itemId: id, sectionId: 'x', sectionLabel: section, responseFormat: 'mcq',
+    problemText: `stem ${id}`, choices: ['a', 'b', 'c', 'd'], correctAnswer: 'A',
+    studentAnswer: isCorrect ? 'A' : 'B', isCorrect, loId: 'x.u1',
+  });
+  // Served exam order, two sections, misses interleaved with correct items.
+  const items = [
+    item('s1', 'Section I', true),
+    item('s2', 'Section I', false),
+    item('s3', 'Section I', false),
+    item('s4', 'Section I', true),
+    item('t1', 'Section II', false),
+    item('t2', 'Section II', true),
+    item('t3', 'Section II', false),
+  ];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  const qByMiss = new Map(ctx.allMisses.map((m) => [m.itemId, m.qNum]));
+  // Correct items still consume a number — numbering counts every item.
+  assert.equal(qByMiss.get('s2'), 2);
+  assert.equal(qByMiss.get('s3'), 3);
+  // Per-section counter resets for Section II.
+  assert.equal(qByMiss.get('t1'), 1);
+  assert.equal(qByMiss.get('t3'), 3);
+  // focusItems carry the same real numbers.
+  const qByFocus = new Map(ctx.focusItems.map((f) => [f.itemId, f.qNum]));
+  assert.equal(qByFocus.get('s2'), 2);
+  assert.equal(qByFocus.get('t3'), 3);
+  // Agenda + drawer view-models expose qNum for the badge.
+  const { agenda } = buildMockReviewAgenda(ctx);
+  assert.ok(agenda.every((a) => typeof a.qNum === 'number'));
+  const rows = buildMockReviewDrawer(ctx);
+  assert.equal(new Map(rows.map((r) => [r.itemId, r.qNum])).get('t1'), 1);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

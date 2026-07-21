@@ -1304,6 +1304,38 @@ function rewriteLegalV(t: string): string {
 }
 
 /**
+ * Sub-question labels "part A" / "parts (b)" / "question C" — a bare single
+ * letter after "part"/"question" that Cartesia voices as the ARTICLE or a
+ * schwa ("part uh") rather than the letter NAME (agenda round 4, mock-exam
+ * review: "let's do part a" spoke "part /æ/"). Respell the letter to its
+ * spoken name using the SAME phonetic idiom the variable-respelling rules
+ * above already rely on ('a'→'ay', 'b'→'bee', 'c'→'see' …) — that respelling
+ * is the file's established, proven-for-Cartesia way to make a lone letter
+ * read as its name (see A_VARIABLE_REPLACEMENTS / LETTER_RESPELLING_REPLACEMENTS
+ * and VAR_SPOKEN); an uppercased glyph ("part A") has NO such precedent here,
+ * so we deliberately don't use it.
+ *
+ * Gated to a–h, the only letters real exam parts use — i/v/x are excluded so
+ * document roman numerals ("Part VI" → rewriteRomanNumerals) and any citation
+ * "Part I" keep their own handling, and letters past h stay untouched.
+ * Optional surrounding parens are consumed. The \b after the letter plus the
+ * required whitespace after "part" mean "partial", "particle", "partake" never
+ * match (no space) and neither does a bare "part" with no following letter.
+ */
+const PART_LETTER_SPOKEN: Record<string, string> = {
+  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'ef', g: 'jee', h: 'aitch',
+};
+// The trailing (?![a-z]) (case-insensitive under /i) both keeps the letter a
+// STANDALONE token ("part apple" never matches) and lets the optional closing
+// paren be consumed cleanly — a plain \b after \)? would backtrack the paren
+// off and orphan it ("part (b)" → "part bee)").
+const PART_LETTER_RE = /\b(parts?|questions?)\s+\(?([a-h])\)?(?![a-z])/gi;
+function rewritePartLetters(t: string): string {
+  return t.replace(PART_LETTER_RE, (_m, label: string, letter: string) =>
+    `${label} ${PART_LETTER_SPOKEN[letter.toLowerCase()]}`);
+}
+
+/**
  * Bare `-` (ASCII hyphen) between numeric/variable operands (Task Y3, live
  * bug: "2 - 2" spoken with the minus SKIPPED — Cartesia reads the bare glyph
  * as a pause, not "minus"). X1's `wordifyMathOperators` already converts
@@ -1514,6 +1546,11 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // doesn't matter (disjoint token shapes).
   t = rewriteRomanNumerals(t);
   t = rewriteLegalV(t);
+  // Sub-question labels ("part a" → "part ay"). Runs AFTER rewriteRomanNumerals
+  // so "Part VI" is already the citation reading (a–h can't collide with roman
+  // I/V/X anyway) and BEFORE the letter-respelling pass so the letter is fixed
+  // to its spoken name here rather than left for the article-ambiguous 'a' rule.
+  t = rewritePartLetters(t);
   // Math verbalization (Task X1): $-delimited card-field math and any
   // bare LaTeX notation both need converting to SPOKEN WORDS before
   // anything downstream (letter respelling, the bare-equals rule below,

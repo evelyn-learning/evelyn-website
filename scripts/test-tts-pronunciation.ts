@@ -474,6 +474,28 @@ console.log('OK — tts-pronunciation rewrites validated');
   console.log('OK — Task X8 (roman numeral citations, legal "v.")');
 }
 
+// Agenda round 4: sub-question labels "part a" spoken as the letter NAME
+// ("part ay"), not the article/schwa. Uses the file's phonetic respelling
+// idiom (a→ay, b→bee, …). Letters a–h only; "partial" and similar never match.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('Now do part a.', 'Now do part ay.', 'part-a');
+  eq('Look at part (b) next.', 'Look at part bee next.', 'part-paren-b');
+  eq('Part c asks for the slope.', 'Part see asks for the slope.', 'Part-c-capitalized');
+  eq('Try part d then part e.', 'Try part dee then part ee.', 'part-d-and-part-e');
+  eq('Both parts f and g.', 'Both parts ef and g.', 'parts-f-plural');
+  eq('Answer question h now.', 'Answer question aitch now.', 'question-h');
+  // Non-matches: "partial" (no space after "part") stays a word; a letter
+  // outside a–h (roman-numeral / citation territory) is left alone.
+  eq('The partial derivative here.', 'The partial derivative here.', 'partial-untouched');
+
+  console.log('OK — Agenda round 4 (part-letter TTS)');
+}
+
 // X8 review (C1): case-insensitivity broke the never-bare-I invariant.
 // ROMAN_NUMERAL_RE used to run with the 'gi' flag, so a LOWERCASE
 // keyword-shaped word immediately before a bare "I" (the pronoun) matched

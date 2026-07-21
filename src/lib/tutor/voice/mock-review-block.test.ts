@@ -12,7 +12,7 @@ const ctx: MockReviewContext = {
   formLabel: 'AP Statistics Practice Exam A', composite: 3, compositeMax: 5, totalMissed: 12,
   pinnedCount: 0,
   focusItems: [{
-    itemId: 'i1', sectionLabel: 'Section I', problemText: 'What is the median of 1,2,9?',
+    itemId: 'i1', sectionLabel: 'Section I', qNum: 18, problemText: 'What is the median of 1,2,9?',
     choices: ['1', '2', '4', '9'], studentAnswer: 'C', correctAnswer: 'B',
     solutionText: 'Order the values; the middle one is 2.', loId: 'apstats.summary-stats',
   }],
@@ -25,6 +25,8 @@ test('renders score, items, answers, remainder, directives', () => {
   const block = formatMockReviewBlock(ctx);
   assert.ok(block.startsWith('<mock_review>'));
   assert.ok(block.includes('3 / 5'));
+  // Item header carries the REAL exam question number (Q18), not the list slot.
+  assert.ok(block.includes('Item 1 (Section I, Q18, apstats.summary-stats):'));
   assert.ok(block.includes('What is the median of 1,2,9?'));
   assert.ok(block.includes('Student answered: C'));
   assert.ok(block.includes('Correct answer: B'));

@@ -263,6 +263,12 @@ export default function TutorSession(props: TutorSessionProps) {
   // the header "Agenda" button + the jump panel.
   const [mockDrawer, setMockDrawer] = useState<MockReviewDrawerRow[]>([]);
   const pickAgendaItemRef = useRef<(itemId: string) => void>(() => {});
+  // Agenda round 4: one-way latch flipped the instant a pre-start agenda row
+  // or a drawer row is picked (both route through handleControlMessage / the
+  // pick handler). SessionStage collapses the lingering pre-start chips to a
+  // muted "Starting…" line so the list can't be double-tapped before the board
+  // renders. Never reset — the board content hides the overlay from then on.
+  const [agendaEngaged, setAgendaEngaged] = useState(false);
   // #7 hybrid (2026-07-17): standing difficulty preference — mirrored from
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
@@ -394,6 +400,9 @@ export default function TutorSession(props: TutorSessionProps) {
   // suppresses from the visible transcript. The marker itself carries the full
   // framing, so we just relay it verbatim.
   const handleControlMessage = useCallback((marker: string) => {
+    // Agenda round 4: any control marker here is an agenda/drawer pick — latch
+    // the pre-start cluster closed immediately (one-way).
+    setAgendaEngaged(true);
     realtimeHandleRef.current?.sendTextMessage(marker);
   }, [realtimeHandleRef]);
 
@@ -1101,6 +1110,7 @@ export default function TutorSession(props: TutorSessionProps) {
         mockAgendaRemaining={mockAgendaRemaining}
         mockDrawer={mockDrawer}
         onPickAgendaItem={(itemId) => pickAgendaItemRef.current?.(itemId)}
+        agendaEngaged={agendaEngaged}
         practiceOverrideActive={practiceOverrideActive}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}

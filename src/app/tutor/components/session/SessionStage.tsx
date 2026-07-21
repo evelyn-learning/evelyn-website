@@ -121,6 +121,12 @@ export interface SessionStageProps {
   /** Fires with the tapped row's itemId (VoiceTutorRealtime.pickAgendaItem):
    *  switches the tutor to that question, refetching/pinning it when needed. */
   onPickAgendaItem?: (itemId: string) => void;
+  /** One-way latch (agenda round 4): set the instant the student taps a
+   *  pre-start agenda row or a drawer row, BEFORE the board renders. While set,
+   *  the pre-start hero + starter/agenda cluster collapse to a single muted
+   *  "Starting…" line so the list can't be double-tapped in the gap. The board
+   *  content appearing (boardEmpty=false) hides the whole overlay as usual. */
+  agendaEngaged?: boolean;
   /** Task Y1: true while the "Practice problems" chip's durable override is
    *  set (mirrored from VoiceTutorRealtime via onPracticeOverrideChange).
    *  Drives the chip's active state (Humor ✓ idiom). Absent ⇒ chip never
@@ -159,7 +165,7 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage, onBack,
-    mockAgenda, mockAgendaRemaining, mockDrawer, onPickAgendaItem,
+    mockAgenda, mockAgendaRemaining, mockDrawer, onPickAgendaItem, agendaEngaged = false,
     practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
   } = props;
@@ -380,7 +386,13 @@ export default function SessionStage(props: SessionStageProps) {
             {/* Once started, the tutor's WORDS live in the small Caption Strip
                 at the bottom — NOT as a wall of big text here. The center stays
                 calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
-            {started ? (
+            {agendaEngaged ? (
+              // Agenda round 4: a pick has fired; hold a calm placeholder until
+              // the board content arrives (which hides this whole overlay).
+              <p className="ss-cap max-w-xl text-center text-base text-slate-400">
+                Starting… — the tutor is pulling up your question.
+              </p>
+            ) : started ? (
               isFreePractice && !liveCaption ? (
                 <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
               ) : null
@@ -406,7 +418,7 @@ export default function SessionStage(props: SessionStageProps) {
                 pinned/missed questions. Tapping a row starts the session on that
                 item; the mic alone takes them in order. Falls back to the generic
                 chips for every other session (and degraded mock-review). */}
-            {mockAgenda && mockAgenda.length > 0 ? (
+            {agendaEngaged ? null : mockAgenda && mockAgenda.length > 0 ? (
               <div className="mt-7 w-full max-w-md pointer-events-auto">
                 <p className="text-center text-lg font-semibold text-slate-800">Your review agenda</p>
                 <p className="mt-1 text-center text-sm text-slate-500">
@@ -428,7 +440,10 @@ export default function SessionStage(props: SessionStageProps) {
                       }}
                       className="flex items-start gap-3 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left shadow-sm hover:bg-slate-50"
                     >
-                      <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{item.n}</span>
+                      {/* Real EXAM question number (agenda round 4) — students
+                          recall "Q18", not the agenda-row position. The tap
+                          marker still carries the brain-block "Item n". */}
+                      <span className="shrink-0 inline-grid place-items-center h-6 min-w-6 px-1.5 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">Q{item.qNum}</span>
                       <span className="min-w-0 flex-1">
                         {/* Labels carry `$…$` math (live-test #2) — render via
                             InlineMathText, not raw text. */}
@@ -739,7 +754,7 @@ export default function SessionStage(props: SessionStageProps) {
                   onClick={() => { onPickAgendaItem?.(row.itemId); setAgendaOpen(false); }}
                   className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm hover:bg-slate-50"
                 >
-                  <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{row.n}</span>
+                  <span className="shrink-0 inline-grid place-items-center h-6 min-w-6 px-1.5 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">Q{row.qNum}</span>
                   <span className="min-w-0 flex-1">
                     {row.isFocus && (
                       <span className="mb-0.5 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-600">up next</span>

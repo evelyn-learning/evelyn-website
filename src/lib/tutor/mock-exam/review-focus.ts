@@ -15,6 +15,11 @@ const PASSAGE_EXCERPT_CHARS = 1197; // + 13-char ' […truncated]' marker = 1210
 export interface MockReviewFocusItem {
   itemId: string;
   sectionLabel: string;
+  /** The item's REAL exam question number — its 1-based position within its
+   *  sectionLabel over the full served exam (every item counted, correct or
+   *  not), NOT its position in the focus/agenda list. Students remember "Q18",
+   *  not "the 3rd row of my review agenda". Derived in buildMockReviewContext. */
+  qNum: number;
   responseFormat?: 'mcq' | 'numeric' | 'frq';
   problemText: string;
   choices?: string[];
@@ -42,6 +47,9 @@ export interface MockReviewFocusItem {
 export interface MockReviewMiss {
   itemId: string;
   sectionLabel: string;
+  /** Real exam question number (1-based within sectionLabel over the full
+   *  exam) — see MockReviewFocusItem.qNum. */
+  qNum: number;
   snippet: string;
   responseFormat: 'mcq' | 'numeric' | 'frq';
   studentAnswer?: string;
@@ -142,6 +150,19 @@ export function buildMockReviewContext(args: {
   const { focus, remaining, totalMissed } = selectMockReviewFocus(args.items, FOCUS_CAP, args.pinItemIds ?? []);
   const label = args.unitLabelOf ?? ((loId: string) => loId);
 
+  // Real exam question numbers: args.items arrives in served exam order
+  // (getReview builds it module-by-module), so a per-sectionLabel running
+  // counter over the FULL list — every item counted, correct or not, since
+  // exam numbering includes all — gives each item its authentic "Qn".
+  const qNumById = new Map<string, number>();
+  const sectionCounters = new Map<string, number>();
+  for (const it of args.items) {
+    const next = (sectionCounters.get(it.sectionLabel) ?? 0) + 1;
+    sectionCounters.set(it.sectionLabel, next);
+    qNumById.set(it.itemId, next);
+  }
+  const qNumOf = (itemId: string): number => qNumById.get(itemId) ?? 0;
+
   // Resolve the valid, unique pinned ids (same rules as selectMockReviewFocus:
   // an id must match a real item; duplicates/unknowns are dropped). A focus
   // item is "pinned" iff its id is in this set; pinnedCount is how many of the
@@ -159,7 +180,7 @@ export function buildMockReviewContext(args: {
 
   // allMisses = every MISS, focus-first then the remainder, stable order. A
   // pinned-but-correct focus item is not a miss, so it never appears here.
-  const allMisses: MockReviewMiss[] = [...focus.filter(isMiss), ...remaining].map(toMiss);
+  const allMisses: MockReviewMiss[] = [...focus.filter(isMiss), ...remaining].map((it) => toMiss(it, qNumOf(it.itemId)));
 
   return {
     formLabel: args.formLabel,
@@ -171,6 +192,7 @@ export function buildMockReviewContext(args: {
       itemId: it.itemId,
       pinned: pinnedIdSet.has(it.itemId) || undefined,
       sectionLabel: it.sectionLabel,
+      qNum: qNumOf(it.itemId),
       responseFormat: it.responseFormat,
       problemText: it.problemText,
       choices: it.choices,
@@ -205,10 +227,11 @@ function missFormat(rf: MockReviewItem['responseFormat']): 'mcq' | 'numeric' | '
   return 'mcq';
 }
 
-function toMiss(it: MockReviewItem): MockReviewMiss {
+function toMiss(it: MockReviewItem, qNum: number): MockReviewMiss {
   return {
     itemId: it.itemId,
     sectionLabel: it.sectionLabel,
+    qNum,
     snippet: mathSafeSnippet(it.problemText, 90),
     responseFormat: missFormat(it.responseFormat),
     studentAnswer: it.studentAnswer?.trim() ? it.studentAnswer : 'no answer',
@@ -224,8 +247,11 @@ function toMiss(it: MockReviewItem): MockReviewMiss {
 // ---------------------------------------------------------------------------
 
 export interface MockReviewAgendaItem {
-  /** 1-based position in the agenda list. */
+  /** 1-based position in the agenda list (drives the brain-block "Item N"
+   *  marker on tap — NOT what the student sees). */
   n: number;
+  /** Real exam question number for display (see MockReviewFocusItem.qNum). */
+  qNum: number;
   /** `${sectionLabel} — <first ~56 chars of the plain problem text>`. */
   label: string;
   /** MCQ/numeric: `✗ you: … · correct: …` or `✓ …`; FRQ: `points/max`. */
@@ -291,6 +317,7 @@ export function buildMockReviewAgenda(ctx: MockReviewContext | undefined): {
     const n = i + 1;
     return {
       n,
+      qNum: it.qNum,
       label: `${it.sectionLabel} — ${mathSafeSnippet(it.problemText, 56)}`,
       result: agendaResult(it),
     };
@@ -316,6 +343,8 @@ export function buildMockReviewAgenda(ctx: MockReviewContext | undefined): {
 export interface MockReviewDrawerRow {
   /** 1-based position over ALL misses. */
   n: number;
+  /** Real exam question number for display (see MockReviewFocusItem.qNum). */
+  qNum: number;
   /** Item id — passed to the pick handler on tap. */
   itemId: string;
   /** `${sectionLabel} — <math-safe snippet>` (keeps `$…$`). */
@@ -339,6 +368,7 @@ export function buildMockReviewDrawer(ctx: MockReviewContext | undefined): MockR
   const focusIds = new Set(ctx.focusItems.map((f) => f.itemId));
   return ctx.allMisses.map((m, i) => ({
     n: i + 1,
+    qNum: m.qNum,
     itemId: m.itemId,
     label: `${m.sectionLabel} — ${m.snippet}`,
     result: missResult(m),
