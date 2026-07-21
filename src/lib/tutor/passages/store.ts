@@ -129,10 +129,14 @@ import { PASSAGE_APWORLD_DEPRESSION_TABLE } from './seeds/apworld-depression-tab
 // ACT mock Form A — original reading + science passages (internal-original)
 import { ACT_MOCK_A_READING_PASSAGES } from './seeds/act-mock-a-reading';
 import { ACT_MOCK_A_SCIENCE_PASSAGES } from './seeds/act-mock-a-science';
+import { ACT_MOCK_B_READING_PASSAGES } from './seeds/act-mock-b-reading';
+import { ACT_MOCK_B_SCIENCE_PASSAGES } from './seeds/act-mock-b-science';
 
 export const SEED_PASSAGES: Passage[] = [
   ...ACT_MOCK_A_READING_PASSAGES,
   ...ACT_MOCK_A_SCIENCE_PASSAGES,
+  ...ACT_MOCK_B_READING_PASSAGES,
+  ...ACT_MOCK_B_SCIENCE_PASSAGES,
   PASSAGE_DOUGLASS_FOURTH_OF_JULY,
   PASSAGE_HENRY_GIVE_ME_LIBERTY,
   PASSAGE_SWIFT_MODEST_PROPOSAL,

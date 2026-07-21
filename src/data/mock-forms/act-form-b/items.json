@@ -1,0 +1,3840 @@
+[
+  {
+    "id": "act-fb-en-001",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The old paper mill closed for good in 1968______ the building sat empty until a historical society restored it as a museum two decades later.",
+    "choices": [
+      ", the building sat empty until a historical society restored it as a museum two decades later",
+      "; the building sat empty until a historical society restored it as a museum two decades later",
+      " the building sat empty until a historical society restored it as a museum two decades later",
+      ". the building sat empty until a historical society restored it as a museum two decades later"
+    ],
+    "answer": "B",
+    "solutionText": "Both parts of the sentence are independent clauses, so they need a semicolon (or a period) rather than a comma alone. Choice C creates a run-on, and choice D incorrectly lowercases the start of what should be a new sentence.",
+    "hints": [
+      "Check whether both halves of the sentence could stand alone as complete sentences, then choose punctuation strong enough to join two independent clauses."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-002",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The soil scientist sorted the samples into three groups______ clay-heavy, sandy, and loam.",
+    "choices": [
+      ":",
+      ";",
+      ",",
+      "and"
+    ],
+    "answer": "A",
+    "solutionText": "A colon correctly introduces a list after a complete independent clause. A semicolon joins two independent clauses (the list isn't one), a comma alone is too weak to introduce the list, and \"and\" can't grammatically precede the list here.",
+    "hints": [
+      "Ask whether the words before the blank already form a complete sentence that is simply introducing a list."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-003",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The two neighboring farmers had used the same irrigation ditch for decades, and the ______ agreement about water rights was never written down.",
+    "choices": [
+      "farmers'",
+      "farmer's",
+      "farmers's",
+      "farmers"
+    ],
+    "answer": "A",
+    "solutionText": "Two farmers jointly hold the agreement, so the plural noun \"farmers\" takes an apostrophe after the final s: \"farmers'.\"",
+    "hints": [
+      "Decide how many farmers share the agreement, then place the apostrophe accordingly."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-004",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following versions of the sentence is punctuated correctly?",
+    "choices": [
+      "The glacier researcher's data \u2014 collected over twelve field seasons \u2014 revealed a startling rate of retreat.",
+      "The glacier researcher's data, collected over twelve field seasons \u2014 revealed a startling rate of retreat.",
+      "The glacier researcher's data \u2014 collected over twelve field seasons, revealed a startling rate of retreat.",
+      "The glacier researcher's data collected, over twelve field seasons \u2014 revealed a startling rate of retreat."
+    ],
+    "answer": "A",
+    "solutionText": "A parenthetical interruption set off by dashes needs a dash on both sides. Choice A matches the dashes correctly; the other choices mix a dash with a comma or place a stray comma inside the verb phrase.",
+    "hints": [
+      "Check that the punctuation marks bracketing the interrupting phrase match on both sides."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-005",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice punctuates the sentence correctly?",
+    "choices": [
+      "Renata Cole who trained in Belgium for six years now teaches evening classes at the community center.",
+      "Renata Cole, who trained in Belgium for six years now teaches evening classes at the community center.",
+      "Renata Cole, who trained in Belgium for six years, now teaches evening classes at the community center.",
+      "Renata Cole who trained in Belgium for six years, now teaches evening classes at the community center."
+    ],
+    "answer": "C",
+    "solutionText": "\"Who trained in Belgium for six years\" is nonessential information about Renata Cole (already identified by name) and must be set off by commas on both sides, as in choice C.",
+    "hints": [
+      "Since the person is already named, the descriptive clause is extra information \u2014 extra information needs commas on both ends."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-006",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The cyclist had mapped a route along the old rail trail______ recent flooding had washed out two of the bridges along the way.",
+    "choices": [
+      ", but",
+      ", however",
+      " but",
+      "; but"
+    ],
+    "answer": "A",
+    "solutionText": "Two independent clauses in a contrasting relationship need a comma before the coordinating conjunction \"but.\" \"However\" is a conjunctive adverb and cannot follow a comma alone (choice B is a comma splice); choice C omits the required comma before the conjunction; choice D pairs a semicolon with a coordinating conjunction, which is non-standard.",
+    "hints": [
+      "\"But\" is a coordinating conjunction joining two complete sentences \u2014 recall what punctuation belongs right before it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-007",
+    "loId": "act.punctuation",
+    "cedCode": "ACT-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The automated weather station recorded steady rainfall for three days before ______ sensors finally malfunctioned in the humidity.",
+    "choices": [
+      "it's",
+      "its",
+      "its'",
+      "it is"
+    ],
+    "answer": "B",
+    "solutionText": "The sentence needs a possessive pronoun describing the sensors belonging to the station: \"its,\" with no apostrophe. \"It's\" and \"it is\" are contractions meaning \"it is,\" and \"its'\" isn't a word.",
+    "hints": [
+      "Decide whether the blank needs a contraction of \"it is\" or a possessive \u2014 then check whether possessive \"its\" ever takes an apostrophe."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-008",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Workers moving quickly through the rows before the first autumn frost ______ the last of the grapes for the season's final pressing.",
+    "choices": [
+      "picking",
+      "picked",
+      "having picked",
+      "to pick"
+    ],
+    "answer": "B",
+    "solutionText": "As written, the sentence has no main verb \u2014 \"moving\" is a participle describing the workers. The blank must supply a finite verb to complete the sentence, and \"picked\" does that.",
+    "hints": [
+      "Read the sentence and ask whether it currently has a main verb, or only a descriptive phrase attached to the subject."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-009",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most effectively combines the two sentences into one?\n\nThe grain mill stopped operating in 1954. It had powered nearly every farm in the county for a century.",
+    "choices": [
+      "The grain mill stopped operating in 1954, having powered nearly every farm in the county for a century.",
+      "The grain mill stopping operating in 1954 had powered nearly every farm in the county for a century.",
+      "The grain mill stopped operating in 1954, it had powered nearly every farm in the county for a century.",
+      "The grain mill, stopped operating in 1954, having powered nearly every farm in the county for a century."
+    ],
+    "answer": "A",
+    "solutionText": "Choice A turns the second sentence into a participial phrase that correctly modifies \"the grain mill.\" Choice B misuses \"stopping\" as if it were a finite verb, choice C is a comma splice, and choice D has no main verb at all.",
+    "hints": [
+      "Look for the choice that keeps one clear main verb and turns the second idea into a modifying phrase."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-010",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice is a complete sentence?",
+    "choices": [
+      "Even though the wind died down just before noon.",
+      "Because the forecast called for gusts strong enough to lift the largest kites.",
+      "The organizer, checking the wind gauge every ten minutes.",
+      "The organizer checked the wind gauge every ten minutes."
+    ],
+    "answer": "D",
+    "solutionText": "Choices A and B are subordinate clauses with no independent clause attached, and choice C has only a participial phrase with no main verb. Only choice D has a subject and a finite main verb that can stand alone.",
+    "hints": [
+      "A complete sentence needs an independent clause \u2014 check each choice for a subject paired with a main verb that isn't attached to a subordinator or participle."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-011",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "______ the runner had logged over four hundred miles that spring, her coach still wanted to see faster splits in practice.",
+    "choices": [
+      "Although",
+      "Because",
+      "Since",
+      "Now that"
+    ],
+    "answer": "A",
+    "solutionText": "The sentence sets up a contrast: despite the high mileage, the coach still wanted more speed. \"Although\" correctly signals that concessive relationship; the other choices imply the mileage was the reason for the coach's demand, which reverses the logic.",
+    "hints": [
+      "Decide whether the coach's reaction follows logically from the mileage or runs counter to what you'd expect."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-012",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most logically and grammatically combines the two sentences?\n\nThe stone mason repaired the collapsed section of the wall. She matched each replacement stone to the original quarry's color.",
+    "choices": [
+      "The stone mason repaired the collapsed section of the wall, matching each replacement stone to the original quarry's color.",
+      "Repairing the collapsed section of the wall, the original quarry's color was matched to each replacement stone by the stone mason.",
+      "The stone mason repaired the collapsed section of the wall matching each replacement stone, to the original quarry's color.",
+      "The stone mason repaired the collapsed section of the wall, and it matched each replacement stone to the original quarry's color."
+    ],
+    "answer": "A",
+    "solutionText": "Choice A attaches the participial phrase \"matching...\" correctly to the mason, who performed the matching. Choice B's modifier illogically attaches to \"the original quarry's color,\" choice C misplaces the comma, and choice D's pronoun \"it\" has no logical antecedent that could do the matching.",
+    "hints": [
+      "Identify who is doing the matching, and make sure the modifying phrase clearly attaches to that person."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-013",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "______ the origami club folded more than two thousand paper cranes for the hospital fundraiser.",
+    "choices": [
+      "Meeting every Tuesday afternoon after school,",
+      "They met every Tuesday afternoon after school,",
+      "Having met every Tuesday afternoon after school",
+      "Because they met every Tuesday afternoon after school"
+    ],
+    "answer": "A",
+    "solutionText": "Choice A supplies a participial phrase that correctly modifies \"the origami club\" and is followed by the required comma. Choice B creates a comma splice (two independent clauses joined by only a comma), and choices C and D omit the comma needed after a long introductory element.",
+    "hints": [
+      "The blank should introduce the main clause with a modifying phrase, not a second independent clause \u2014 and check whether it needs a comma before the subject."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-014",
+    "loId": "act.sentence-structure",
+    "cedCode": "ACT-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice is grammatically correct?",
+    "choices": [
+      "The installer climbed onto the roof, she measured the angle of the sun before marking positions for the panels.",
+      "The installer climbed onto the roof and measured the angle of the sun before marking positions for the panels.",
+      "Climbing onto the roof and measuring the angle of the sun before, the installer marked positions for the panels.",
+      "The installer climbed onto the roof to measuring the angle of the sun before marking positions for the panels."
+    ],
+    "answer": "B",
+    "solutionText": "Choice B joins two verbs sharing the same subject (\"installer\") with a simple \"and,\" requiring no comma. Choice A is a comma splice, choice C leaves \"before\" dangling with no object, and choice D incorrectly pairs \"to\" with a gerund instead of the base verb \"measure.\"",
+    "hints": [
+      "Check whether the second verb phrase shares its subject with the first, and watch for a dangling word with nothing to attach to."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-015",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The proceeds from this year's quilting guild auction ______ directly to the children's hospital's art therapy program.",
+    "choices": [
+      "goes",
+      "go",
+      "is going",
+      "has gone"
+    ],
+    "answer": "B",
+    "solutionText": "The subject is the plural noun \"proceeds,\" so it takes the plural verb \"go.\" \"Goes,\" \"is going,\" and \"has gone\" are all singular-agreeing forms.",
+    "hints": [
+      "Find the true subject of the sentence and decide whether it is singular or plural."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-016",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Either the humidity levels or the temperature in the aging cellar ______ responsible for the uneven rind on this batch of cheese.",
+    "choices": [
+      "are",
+      "is",
+      "were",
+      "have been"
+    ],
+    "answer": "B",
+    "solutionText": "With subjects joined by \"or,\" the verb agrees with the closer subject, \"temperature,\" which is singular, so \"is\" is correct.",
+    "hints": [
+      "When subjects are joined by \"or,\" the verb agrees with the subject nearest to it \u2014 identify that subject first."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-017",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every member of the jazz quartet ______ personal sheet music annotated with tempo changes.",
+    "choices": [
+      "keep",
+      "have kept",
+      "keeps",
+      "are keeping"
+    ],
+    "answer": "C",
+    "solutionText": "\"Every member\" is singular, so the intervening phrase \"of the jazz quartet\" doesn't change the required singular verb, \"keeps.\"",
+    "hints": [
+      "Find the actual subject of the verb, ignoring the phrase that comes between the subject and the blank."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-018",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Each pair of hiking boots the shoemaker resoles gets a stamped date so that ______ owner knows when the next resoling is due.",
+    "choices": [
+      "their",
+      "its'",
+      "its",
+      "it's"
+    ],
+    "answer": "C",
+    "solutionText": "The antecedent is \"each pair,\" a singular noun, so the singular possessive pronoun \"its\" is correct. \"Their\" wrongly treats the antecedent as plural, \"its'\" isn't a word, and \"it's\" is a contraction of \"it is.\"",
+    "hints": [
+      "Identify the antecedent the pronoun refers back to, and check whether it is singular or plural."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-019",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The tallies the organizer collects from each cleanup, including counts of plastic bottles, cigarette filters, and food wrappers, ______ posted to the city's environmental website within a week.\n\nWhich choice completes the text so that it conforms to the conventions of Standard English?",
+    "choices": [
+      "is",
+      "was",
+      "has been",
+      "are"
+    ],
+    "answer": "D",
+    "solutionText": "The subject is the plural noun \"tallies,\" so the plural verb \"are\" agrees \u2014 the long interrupting phrase (\"including counts of...\") does not change the subject.",
+    "hints": [
+      "Strip out the long modifying phrase set off by commas, and identify the true subject the verb must agree with."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-020",
+    "loId": "act.agreement",
+    "cedCode": "ACT-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A number of records in the genealogist's file, some dating back to the 1870s, ______ still missing key birth dates.",
+    "choices": [
+      "is",
+      "was",
+      "has been",
+      "are"
+    ],
+    "answer": "D",
+    "solutionText": "\"A number of\" functions as a plural quantifier and takes a plural verb, so \"are\" is correct \u2014 this contrasts with \"the number of,\" which would take a singular verb.",
+    "hints": [
+      "Compare how \"a number of\" and \"the number of\" behave differently when it comes to verb agreement."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-021",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Every spring, the marine biologist ______ back to the same kelp forest to count juvenile fish.",
+    "choices": [
+      "returns",
+      "will have returned",
+      "returned",
+      "was returning"
+    ],
+    "answer": "A",
+    "solutionText": "\"Every spring\" signals a repeated, habitual action, so the simple present tense \"returns\" is correct.",
+    "hints": [
+      "Look for a word signaling a repeated, ongoing habit rather than a single past or future event."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-022",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "By the time the cartographer finished redrawing the trail map, the park service ______ two new switchbacks that weren't on any existing chart.",
+    "choices": [
+      "had already built",
+      "already built",
+      "builds",
+      "was already building"
+    ],
+    "answer": "A",
+    "solutionText": "The switchbacks were built before the cartographer finished the map \u2014 an earlier past action relative to another past action \u2014 so the past perfect \"had already built\" is correct.",
+    "hints": [
+      "Determine which event happened first, then choose the verb form that shows an action completed before another past action."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-023",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If the greenhouse manager ______ the humidity sensors sooner, this season's tomato blight might never have spread.",
+    "choices": [
+      "recalibrated",
+      "would recalibrate",
+      "had recalibrated",
+      "recalibrates"
+    ],
+    "answer": "C",
+    "solutionText": "The sentence describes a hypothetical situation contrary to past fact (\"might never have spread\"), which requires the past perfect \"had recalibrated\" in the if-clause.",
+    "hints": [
+      "Notice that the result clause uses \"might have\" \u2014 that signals a specific verb form is required in the if-clause describing an unreal past condition."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-024",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The trainer recommended ______ the puppies in short five-minute sessions rather than one long class.",
+    "choices": [
+      "to train",
+      "to training",
+      "training",
+      "trained"
+    ],
+    "answer": "C",
+    "solutionText": "\"Recommend\" is followed by a gerund, not an infinitive, so \"training\" is correct.",
+    "hints": [
+      "Some verbs must be followed by a gerund (-ing form) rather than an infinitive \u2014 recall which category \"recommend\" falls into."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-025",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers realized that the historian ______ the same set of property maps for nearly a decade before a digitized county archive finally confirmed her theory.",
+    "choices": [
+      "studied",
+      "has studied",
+      "was studying",
+      "had been studying"
+    ],
+    "answer": "D",
+    "solutionText": "The historian's study was an ongoing action that continued up until an earlier past event (the archive's confirmation), so the past perfect continuous \"had been studying\" is correct.",
+    "hints": [
+      "Identify the two past events and decide which one was an ongoing action leading up to the other."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-026",
+    "loId": "act.verb-tense-form",
+    "cedCode": "ACT-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The producer insisted that the cellist ______ the final movement twice more before the recording session ended, even though the take already sounded flawless.",
+    "choices": [
+      "played",
+      "would play",
+      "plays",
+      "play"
+    ],
+    "answer": "D",
+    "solutionText": "After a verb of demand like \"insisted that,\" English requires the subjunctive \u2014 the base form of the verb regardless of subject \u2014 so \"play\" is correct, not \"plays,\" \"played,\" or \"would play.\"",
+    "hints": [
+      "\"Insisted that\" is a demand construction \u2014 recall what verb form English requires in the clause that follows this kind of verb."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-027",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The wildlife photographer's routine before dawn includes checking her camera settings, packing extra batteries, and ______ to the blind in total silence.",
+    "choices": [
+      "to walk",
+      "walking",
+      "she walks",
+      "walk"
+    ],
+    "answer": "B",
+    "solutionText": "The list already uses gerunds (\"checking,\" \"packing\"), so the third item must match with \"walking\" to stay parallel.",
+    "hints": [
+      "Check the grammatical form of the other items already in the list before choosing the form for the last item."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-028",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For the costume designer, sketching a design was far less time-consuming than ______ it by hand.",
+    "choices": [
+      "to sew",
+      "sewing",
+      "sew",
+      "she sewed"
+    ],
+    "answer": "B",
+    "solutionText": "The comparison pairs two activities; since the first is the gerund \"sketching,\" the second must also be a gerund, \"sewing,\" to remain parallel.",
+    "hints": [
+      "Look at the grammatical form of the first activity in the comparison, then match it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-029",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice avoids a dangling modifier?",
+    "choices": [
+      "Blending the new scent for hours, the studio grew heavy with the smell of jasmine.",
+      "After blending the new scent for hours, jasmine filled the small studio.",
+      "After blending the new scent for hours, the perfume maker noticed the small studio was heavy with jasmine.",
+      "Having blended the new scent for hours, the small studio smelled of jasmine to the perfume maker."
+    ],
+    "answer": "C",
+    "solutionText": "The introductory phrase describes an action a person performs, so the subject right after the comma must be that person. Only choice C follows the modifier with \"the perfume maker\"; the other choices illogically attach the blending to the studio or the jasmine.",
+    "hints": [
+      "Ask who is doing the blending described in the introductory phrase, then check what noun immediately follows the comma."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-030",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The new rooftop panels not only ______ the household's electricity bill but also reduced its reliance on the regional power grid during storms.",
+    "choices": [
+      "lowering",
+      "to lower",
+      "lowered",
+      "have lowered"
+    ],
+    "answer": "C",
+    "solutionText": "The correlative pair \"not only...but also\" must join grammatically parallel elements; since the second verb is the simple past \"reduced,\" the first must also be simple past, \"lowered.\"",
+    "hints": [
+      "Find the verb form used after \"but also,\" then match the verb before \"not only\" to it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-031",
+    "loId": "act.modifiers-parallelism",
+    "cedCode": "ACT-1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which choice places the modifier so that the sentence's meaning is clear and unambiguous?",
+    "choices": [
+      "The designer showed the council members renderings of the skate park wearing safety pads.",
+      "Wearing safety pads, the designer showed the council members renderings of the skate park.",
+      "The designer showed the council members renderings, wearing safety pads, of the skate park.",
+      "The designer showed the council members renderings of skaters wearing safety pads at the new park."
+    ],
+    "answer": "D",
+    "solutionText": "The intended meaning is that the skaters shown in the renderings wear safety pads. Only choice D attaches \"wearing safety pads\" directly to \"skaters\"; the other choices misplace the phrase so it seems to modify the park, the designer, or nothing clearly at all.",
+    "hints": [
+      "Figure out who is actually supposed to be wearing the safety pads, then find the choice where the modifier sits right next to that noun."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-032",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The drumline practiced the same eight-measure phrase ______ until every accent landed together.",
+    "choices": [
+      "repeatedly",
+      "over and over again and again",
+      "again and again repeatedly",
+      "repeatedly over and over"
+    ],
+    "answer": "A",
+    "solutionText": "\"Repeatedly\" alone conveys the idea; the other choices needlessly repeat the same meaning with redundant phrasing.",
+    "hints": [
+      "Ask whether any part of the underlined phrase just repeats an idea already expressed by another part of it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-033",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Due to the fact that the channel had silted up, the ferry captain ______ a longer route around the point.",
+    "choices": [
+      "was in the process of taking",
+      "took",
+      "took, in the end,",
+      "ended up taking, as a result,"
+    ],
+    "answer": "B",
+    "solutionText": "\"Took\" states the action directly and concisely; the other choices add wordy, redundant phrasing without adding meaning.",
+    "hints": [
+      "Look for the option that says the same thing in the fewest words without losing any meaning."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-034",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The reason the plant sorts bottles by color before crushing them ______ contaminated batches lower the resale value of recycled glass.",
+    "choices": [
+      "is because",
+      "is due to the fact that",
+      "is that",
+      "is on account of the fact that"
+    ],
+    "answer": "C",
+    "solutionText": "\"The reason...is that\" is the concise, standard construction; the other choices are redundant or wordy restatements of \"because.\"",
+    "hints": [
+      "\"The reason...is\" is already doing the work of explaining cause \u2014 check whether the rest of each choice adds anything new."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-035",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The woodworking teacher sanded the hull smooth, repeating the same circular motion ______ she had used on every canoe she'd ever built.",
+    "choices": [
+      "that she had always used, each and every time,",
+      "that was the same exact motion",
+      "that, in point of fact, was identical to",
+      "that"
+    ],
+    "answer": "D",
+    "solutionText": "A plain relative pronoun, \"that,\" conveys the idea concisely; the other choices pile on redundant phrases like \"each and every time\" or \"in point of fact\" that add no meaning.",
+    "hints": [
+      "Compare how much of each choice is doing real grammatical work versus just repeating an idea already stated."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-036",
+    "loId": "act.conciseness",
+    "cedCode": "ACT-1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice most effectively combines the sentences while eliminating unnecessary wordiness?\n\nThe river guide checked the water levels every morning. This was a daily habit that she had practiced for the entire ten years she had worked on the river.",
+    "choices": [
+      "The river guide checked the water levels every morning, a habit she had kept for all ten years on the river.",
+      "The river guide checked the water levels every morning, which was a daily habit that she had practiced for the entire ten-year period during which she had worked on the river.",
+      "Checking the water levels every morning was a daily habit of the river guide's for the ten years that she worked on the river, which she had practiced.",
+      "For ten years on the river, the river guide's daily habit, practiced every single morning, of checking the water levels continued."
+    ],
+    "answer": "A",
+    "solutionText": "Choice A conveys the same information clearly and without repeating words like \"daily,\" \"entire,\" and \"practiced\" that restate ideas already established elsewhere in the sentence, as the other choices do.",
+    "hints": [
+      "Look for the choice that keeps all the original information but drops repeated words like \"daily,\" \"entire,\" and \"practiced.\""
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-037",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The podcast producer had scripted every line of the interview in advance. ______, her best segment turned out to be the two minutes the guest spoke completely off script.",
+    "choices": [
+      "For instance,",
+      "Ironically,",
+      "Likewise,",
+      "As a result,"
+    ],
+    "answer": "B",
+    "solutionText": "The sentence highlights an unexpected contrast between the careful scripting and the unscripted moment turning out best, which \"Ironically\" correctly signals; the other choices suggest an example, similarity, or a direct result.",
+    "hints": [
+      "Decide whether the second sentence is an example of the first, similar to it, a result of it, or a surprising contrast to it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-038",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The community radio station spent months upgrading its transmitter for digital broadcast. ______, listeners with older analog radios can no longer pick up the signal at all.",
+    "choices": [
+      "For example,",
+      "Similarly,",
+      "As a result,",
+      "In contrast,"
+    ],
+    "answer": "C",
+    "solutionText": "The upgrade directly caused the loss of signal for analog listeners, a cause-and-effect relationship that \"As a result\" correctly signals; the other choices suggest an example, a similarity, or a contrast.",
+    "hints": [
+      "Ask whether the second sentence describes a consequence that followed from the first sentence's action."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-039",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The new crosswalk design added a pedestrian island in the middle of the intersection. ______, planners lowered the speed limit on the surrounding block to fifteen miles per hour.",
+    "choices": [
+      "However,",
+      "For example,",
+      "In addition,",
+      "Otherwise,"
+    ],
+    "answer": "C",
+    "solutionText": "The second sentence describes another, related safety measure added alongside the first, which \"In addition\" correctly signals; the other choices suggest contrast, an example of the first sentence, or a conditional consequence, none of which fit.",
+    "hints": [
+      "Notice that both sentences describe separate safety measures being added \u2014 look for a transition that signals addition."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-040",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Historians had long assumed that the paper mill closed because cheaper synthetic fibers made rag-based paper obsolete. Recently uncovered payroll ledgers suggest ______ the mill's closure had more to do with a labor dispute that emptied the workforce in a single week.",
+    "choices": [
+      "consequently",
+      "similarly",
+      "for example",
+      "instead"
+    ],
+    "answer": "D",
+    "solutionText": "The new evidence corrects the earlier assumption, a contrast that \"instead\" signals; the other choices wrongly suggest the new claim is a result, a similarity, or an example related to the old assumption.",
+    "hints": [
+      "Decide whether the ledgers confirm the old assumption or replace it with a different explanation."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-041",
+    "loId": "act.transitions",
+    "cedCode": "ACT-1.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The glassblowing demonstration at the county fair always draws the largest crowd of the afternoon. ______, organizers still schedule it in the same cramped tent they've used for fifteen years.",
+    "choices": [
+      "Specifically,",
+      "As a result,",
+      "For instance,",
+      "Even so,"
+    ],
+    "answer": "D",
+    "solutionText": "The sentence concedes an unexpected fact: despite the demonstration's popularity, organizers haven't upgraded its space. \"Even so\" correctly signals that concession; the other choices suggest specificity, a result, or an example.",
+    "hints": [
+      "Notice that the second sentence describes something surprising given how popular the demonstration is \u2014 look for a transition that signals a concession."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-042",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph about the origami club's hospital fundraiser reads: 'Every Tuesday after school, members folded paper cranes from squares of recycled wrapping paper. By December, the club had assembled more than two thousand cranes, strung into garlands for the hospital's lobby.' The writer wants to add a sentence that explains why the club chose cranes specifically for a hospital fundraiser.\n\nWhich sentence, if added, would best accomplish the writer's goal?",
+    "choices": [
+      "Wrapping paper comes in many different colors and patterns.",
+      "In Japanese tradition, a thousand folded cranes are said to bring a wish for healing and good luck.",
+      "The club meets in Room 114, right next to the art studio.",
+      "Paper cranes require about a dozen careful folds to complete."
+    ],
+    "answer": "B",
+    "solutionText": "The goal is to explain why cranes fit a hospital fundraiser specifically. Only choice B connects cranes to healing, which is directly relevant to a hospital; the others are irrelevant details about paper, the room, or folding technique.",
+    "hints": [
+      "Look for the one choice that directly ties the crane-folding tradition to healing or a hospital setting."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-043",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph about the crosswalk redesign reads: 'The city added a raised pedestrian island at the center of the intersection. Sensors in the new island count how many people cross each hour. Planners also repainted the crosswalk lines in a brighter, reflective white.' The writer is considering deleting the second sentence (the one about sensors counting how many people cross). Should the sentence be kept or deleted?",
+    "choices": [
+      "Kept, because it explains how the reflective paint is manufactured.",
+      "Kept, because it describes the exact cost of the pedestrian island.",
+      "Deleted, because it interrupts the paragraph's focus on physical safety changes to the intersection with an unrelated detail about data collection.",
+      "Deleted, because the paragraph already mentions pedestrian counts elsewhere."
+    ],
+    "answer": "C",
+    "solutionText": "The paragraph otherwise focuses on physical changes made to improve safety (the island, the repainted lines); the sentence about sensor data collection is off-topic for that focus, so it should be deleted, as choice C explains.",
+    "hints": [
+      "Identify the paragraph's main focus, then check whether the sentence in question actually supports that focus or shifts to a different topic."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-044",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph about the paper mill's payroll ledgers reads: [1] A volunteer found the ledgers in a water-damaged crate in the mill's old basement. [2] The mill's closure, long blamed on cheap synthetic fibers, now looked more like the result of a labor dispute. [3] The historian cross-referenced the names in the ledgers with a labor union roster from the same year. [4] Nearly every name on the roster stopped appearing in the payroll within a single week in 1958. For the sake of the logic and coherence of the paragraph, sentence 2 should be placed:",
+    "choices": [
+      "before sentence 1",
+      "after sentence 3",
+      "after sentence 4",
+      "where it is now"
+    ],
+    "answer": "C",
+    "solutionText": "The paragraph should move from discovering the ledgers (1), to comparing them with the roster (3), to the specific finding that names vanished within a week (4), and only then to the interpretive conclusion that the closure looked like a labor dispute (2) \u2014 so sentence 2 belongs after sentence 4.",
+    "hints": [
+      "Trace the paragraph's logic: evidence should be discovered and examined before a conclusion is drawn from it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-045",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph about the county fair's glassblowing demonstration reads: 'Each August, a retired glassblower sets up a portable furnace near the fairgrounds' east gate. Visitors watch as she gathers molten glass on a long pipe, then shapes it into ornaments before it cools. The demonstration takes less than ten minutes from start to finish.' Which choice most effectively concludes the paragraph by emphasizing how the brief demonstration still captures the craft's difficulty?",
+    "choices": [
+      "The furnace runs on propane rather than the coal older glassblowers once used.",
+      "The fairgrounds' east gate is also where the parking attendants direct visitors.",
+      "She has demonstrated the craft at the fair for eleven consecutive summers.",
+      "Even in those few minutes, a single wrong movement can collapse the piece entirely, a risk the crowd senses in her steady, unhurried hands."
+    ],
+    "answer": "D",
+    "solutionText": "The goal is to emphasize the craft's difficulty despite the demonstration's brevity. Only choice D ties the short timeframe to real risk and skill; the others describe fuel type, gate location, or years of experience without addressing difficulty.",
+    "hints": [
+      "Look for the choice that connects the demonstration's short length to how much skill or risk is actually involved."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-046",
+    "loId": "act.rhetorical-skills",
+    "cedCode": "ACT-1.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer drafting a paragraph about a jazz quartet's rehearsal process wants to emphasize how the group's improvisation depends on rigorous preparation, not spontaneity alone. The writer is considering adding this sentence: 'The bassist studies each song's chord chart for hours before ever picking up his instrument.' Should the writer add this sentence?",
+    "choices": [
+      "Yes, because it shows the quartet plays chord charts written by outside composers.",
+      "No, because it focuses on the bassist rather than the whole quartet.",
+      "No, because it suggests the bassist rarely practices with his instrument.",
+      "Yes, because it directly supports the point that the quartet's improvisation is grounded in careful preparation rather than pure spontaneity."
+    ],
+    "answer": "D",
+    "solutionText": "The writer's stated goal is to show that improvisation rests on preparation. The sentence about the bassist studying chord charts for hours before playing is direct evidence of that preparation, so it should be added, as choice D explains; the other choices either misread the sentence's point or object on irrelevant grounds.",
+    "hints": [
+      "Reread the writer's stated goal carefully, then check whether the proposed sentence provides direct evidence for that specific point."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-047",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The inspector's report noted that the walk-in cooler's temperature had ______ risen above the safe storage threshold during the afternoon inspection.",
+    "choices": [
+      "briefly",
+      "kinda",
+      "sorta",
+      "majorly"
+    ],
+    "answer": "A",
+    "solutionText": "The report is a formal document, so the precise, neutral word \"briefly\" fits; \"kinda,\" \"sorta,\" and \"majorly\" are too casual for the register.",
+    "hints": [
+      "Consider what kind of document this is and whether each choice matches that level of formality."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-048",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In her field notes, the photographer wrote that the owl's call was not loud but ______, barely audible over the wind.",
+    "choices": [
+      "deafening",
+      "faint",
+      "booming",
+      "thunderous"
+    ],
+    "answer": "B",
+    "solutionText": "The sentence explicitly contrasts \"not loud\" with the missing word, so \"faint\" fits; the other choices all describe loud sounds, contradicting the sentence's meaning.",
+    "hints": [
+      "Notice the contrast set up by \"not loud but ______\" \u2014 the missing word should mean close to the opposite of loud."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-049",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In her published article, the historian described the payroll ledgers' disappearance as leaving a ______ in the archival evidence, one that later research filled only through careful cross-referencing of union archives.\n\nWhich choice best maintains the formal, precise tone of the article?",
+    "choices": [
+      "hunch",
+      "big mystery",
+      "gap",
+      "whodunit"
+    ],
+    "answer": "C",
+    "solutionText": "The formal, academic register calls for the precise, neutral word \"gap,\" which also fits the verb \"filled\"; \"hunch,\" \"big mystery,\" and \"whodunit\" are too informal or imprecise.",
+    "hints": [
+      "Remember this word appears in a published academic article \u2014 weigh each choice's formality, not just its meaning."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-en-050",
+    "loId": "act.word-choice-tone",
+    "cedCode": "ACT-1.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The perfume maker's shop description called the new scent ______ rather than overpowering, a distinction regular customers said they could immediately smell.",
+    "choices": [
+      "pungent",
+      "acrid",
+      "cloying",
+      "subtle"
+    ],
+    "answer": "D",
+    "solutionText": "The sentence sets up a contrast with \"overpowering,\" so the word must denote a mild, understated quality; \"subtle\" fits, while \"pungent,\" \"acrid,\" and \"cloying\" all describe strong or unpleasant intensity, undercutting the intended contrast.",
+    "hints": [
+      "The word must contrast with \"overpowering\" \u2014 check whether each choice actually describes something mild or, despite sounding different, still implies strong intensity."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-001",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hardware store sells screws in boxes of 24. If a contractor needs 130 screws for a job, what is the minimum number of boxes she must buy?",
+    "choices": [
+      "6",
+      "5",
+      "7",
+      "24"
+    ],
+    "answer": "A",
+    "solutionText": "$130/24 \\approx 5.4$, so she must buy 6 full boxes to have enough screws.",
+    "hints": [
+      "Divide 130 by 24 and round up to the next whole box."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-002",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the greatest common factor of 84 and 126?",
+    "choices": [
+      "6",
+      "42",
+      "14",
+      "21"
+    ],
+    "answer": "B",
+    "solutionText": "$84 = 2^2\\cdot3\\cdot7$ and $126 = 2\\cdot3^2\\cdot7$, so the GCF is $2\\cdot3\\cdot7 = 42$.",
+    "hints": [
+      "Write the prime factorization of each number and multiply the shared factors."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-003",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A trail mix blend combines peanuts, raisins, and pretzels in the ratio $4:3:5$ by weight. A batch contains 15 ounces of raisins. What is the total weight of the batch, in ounces?",
+    "choices": [
+      "45",
+      "50",
+      "60",
+      "75"
+    ],
+    "answer": "C",
+    "solutionText": "Raisins are 3 of the 12 total ratio parts, so 15 ounces corresponds to $15/3 = 5$ ounces per part; the total is $12\\times5 = 60$ ounces.",
+    "hints": [
+      "Find the weight represented by one ratio part, then multiply by the total number of parts."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-004",
+    "loId": "act.prealgebra-review",
+    "cedCode": "ACT-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A warehouse's inventory count dropped from 640 units to 480 units after a clearance sale. By what percent did the inventory decrease?",
+    "choices": [
+      "20%",
+      "30%",
+      "33%",
+      "25%"
+    ],
+    "answer": "D",
+    "solutionText": "The decrease is $640-480=160$ units, and $160/640 = 0.25 = 25\\%$.",
+    "hints": [
+      "Divide the amount of decrease by the original amount."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-005",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for $x$: $\\dfrac{3x-5}{4} = x+1$.",
+    "choices": [
+      "$-9$",
+      "$-1$",
+      "$1$",
+      "$9$"
+    ],
+    "answer": "A",
+    "solutionText": "Multiplying both sides by 4 gives $3x-5 = 4x+4$, so $-9 = x$.",
+    "hints": [
+      "Clear the fraction first by multiplying both sides by 4."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-006",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The formula for the perimeter of a rectangle is $P = 2\\ell + 2w$. Which expression correctly solves this formula for $w$?",
+    "choices": [
+      "$w = P - 2\\ell$",
+      "$w = \\dfrac{P-2\\ell}{2}$",
+      "$w = \\dfrac{P}{2}+\\ell$",
+      "$w = 2P - \\ell$"
+    ],
+    "answer": "B",
+    "solutionText": "Subtract $2\\ell$ from both sides to get $P-2\\ell = 2w$, then divide both sides by 2.",
+    "hints": [
+      "Isolate the term with $w$ first, then divide."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-007",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for $x$: $|2x-3|\\le 7$.",
+    "choices": [
+      "$-2 \\le x \\le 10$",
+      "$-5 \\le x \\le 2$",
+      "$-2 \\le x \\le 5$",
+      "$2 \\le x \\le 5$"
+    ],
+    "answer": "C",
+    "solutionText": "The inequality means $-7 \\le 2x-3 \\le 7$, so $-4 \\le 2x \\le 10$, giving $-2 \\le x \\le 5$.",
+    "hints": [
+      "Rewrite the absolute value inequality as a compound inequality before solving."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-008",
+    "loId": "act.linear-equations-inequalities",
+    "cedCode": "ACT-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What value of $x$ satisfies the equation $5(x-2)+3 = 2(x+7)$?",
+    "choices": [
+      "$5$",
+      "$6$",
+      "$9$",
+      "$7$"
+    ],
+    "answer": "D",
+    "solutionText": "Expanding gives $5x-7 = 2x+14$, so $3x = 21$ and $x = 7$.",
+    "hints": [
+      "Distribute on both sides before combining like terms."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-009",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: $3x + 2y = 16$ and $x - y = 2$. What is the value of $x+y$?",
+    "choices": [
+      "$6$",
+      "$4$",
+      "$5$",
+      "$8$"
+    ],
+    "answer": "A",
+    "solutionText": "From the second equation, $x = y+2$. Substituting gives $3(y+2)+2y=16$, so $y=2$ and $x=4$; thus $x+y=6$.",
+    "hints": [
+      "Solve the second equation for $x$ and substitute into the first."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-010",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cafe sells small and large coffees. Two small coffees and three large coffees cost 13.25 dollars. One small coffee and one large coffee cost 5.25 dollars. What is the price of one large coffee?",
+    "choices": [
+      "2.25 dollars",
+      "2.75 dollars",
+      "2.50 dollars",
+      "3.00 dollars"
+    ],
+    "answer": "B",
+    "solutionText": "Let $s$ and $l$ be the prices. Since $s+l=5.25$, substitute $s=5.25-l$ into $2s+3l=13.25$ to get $l=2.75$.",
+    "hints": [
+      "Solve the simpler equation for one variable, then substitute into the other."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-011",
+    "loId": "act.systems",
+    "cedCode": "ACT-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system: $5x + 2y = 19$ and $5x - 3y = 4$. What is the value of $y$?",
+    "choices": [
+      "$2$",
+      "$4$",
+      "$3$",
+      "$5$"
+    ],
+    "answer": "C",
+    "solutionText": "Subtracting the second equation from the first eliminates $x$: $5y = 15$, so $y = 3$.",
+    "hints": [
+      "Subtract the two equations to eliminate $x$ directly."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-012",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What are the solutions to $x^2 + 2x - 24 = 0$?",
+    "choices": [
+      "$x=6$ and $x=-4$",
+      "$x=-8$ and $x=6$",
+      "$x=-3$ and $x=8$",
+      "$x=-6$ and $x=4$"
+    ],
+    "answer": "D",
+    "solutionText": "Factoring gives $(x+6)(x-4)=0$, so $x=-6$ or $x=4$.",
+    "hints": [
+      "Find two numbers that multiply to $-24$ and add to $2$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-013",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The expression $x^2-10x+21$ can be written as $(x-a)(x-b)$ for integers $a$ and $b$. What is the value of $a+b$?",
+    "choices": [
+      "10",
+      "7",
+      "21",
+      "24"
+    ],
+    "answer": "A",
+    "solutionText": "Factoring gives $(x-3)(x-7)$, so $a=3$ and $b=7$ (in either order), and $a+b=10$.",
+    "hints": [
+      "Find two numbers that multiply to 21 and add to 10."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-014",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Expand and simplify: $(2x-3)^2 - (x+4)(x-4)$.",
+    "choices": [
+      "$3x^2-12x-7$",
+      "$3x^2-12x+25$",
+      "$5x^2-12x-7$",
+      "$3x^2+12x+25$"
+    ],
+    "answer": "B",
+    "solutionText": "$(2x-3)^2 = 4x^2-12x+9$ and $(x+4)(x-4)=x^2-16$. Subtracting gives $3x^2-12x+25$.",
+    "hints": [
+      "Expand each part separately before subtracting."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-015",
+    "loId": "act.quadratics-polynomials",
+    "cedCode": "ACT-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For what value of $c$ does the equation $x^2+8x+c=0$ have exactly one real solution?",
+    "choices": [
+      "8",
+      "32",
+      "16",
+      "64"
+    ],
+    "answer": "C",
+    "solutionText": "A quadratic has exactly one real solution when its discriminant is 0: $8^2-4c=0$, so $c=16$.",
+    "hints": [
+      "Set the discriminant $b^2-4ac$ equal to 0 and solve for $c$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-016",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "If $f(x) = -2x^2+5$, what is $f(3)$?",
+    "choices": [
+      "$-1$",
+      "$13$",
+      "$23$",
+      "$-13$"
+    ],
+    "answer": "D",
+    "solutionText": "$f(3) = -2(9)+5 = -18+5 = -13$.",
+    "hints": [
+      "Substitute 3 for $x$ and evaluate carefully with order of operations."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-017",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "If $f(x) = \\dfrac{2x+5}{3}$, what is $f^{-1}(x)$?",
+    "choices": [
+      "$\\dfrac{3x-5}{2}$",
+      "$\\dfrac{3x+5}{2}$",
+      "$\\dfrac{2x-5}{3}$",
+      "$\\dfrac{x-5}{2}$"
+    ],
+    "answer": "A",
+    "solutionText": "Set $y=\\frac{2x+5}{3}$, swap $x$ and $y$ to get $x=\\frac{2y+5}{3}$, then solve for $y$: $y=\\frac{3x-5}{2}$.",
+    "hints": [
+      "Swap $x$ and $y$, then solve the new equation for $y$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-018",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The graph of $y=f(x)$ has a minimum point at $(4,-3)$. What is the minimum point of the graph of $y=f(x-2)+5$?",
+    "choices": [
+      "$(2, 2)$",
+      "$(6, 2)$",
+      "$(6, -8)$",
+      "$(2, -8)$"
+    ],
+    "answer": "B",
+    "solutionText": "Replacing $x$ with $x-2$ shifts the graph right 2 units, and adding 5 shifts it up 5 units: $(4+2, -3+5) = (6,2)$.",
+    "hints": [
+      "Shift the $x$-coordinate right 2 and the $y$-coordinate up 5."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-019",
+    "loId": "act.functions-graphs",
+    "cedCode": "ACT-2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A function is defined by $f(x) = 3x-1$ for $x<2$ and $f(x)=x^2+1$ for $x\\ge2$. What is $f(2)+f(1)$?",
+    "choices": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "answer": "C",
+    "solutionText": "Since $2\\ge2$, $f(2)=2^2+1=5$. Since $1<2$, $f(1)=3(1)-1=2$. So $f(2)+f(1)=5+2=7$.",
+    "hints": [
+      "Use the correct piece of the function for each input value."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-020",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: $\\dfrac{x^9\\cdot x^2}{x^4}$.",
+    "choices": [
+      "$x^5$",
+      "$x^6$",
+      "$x^{15}$",
+      "$x^7$"
+    ],
+    "answer": "D",
+    "solutionText": "$\\dfrac{x^9\\cdot x^2}{x^4} = x^{9+2-4} = x^7$.",
+    "hints": [
+      "Add exponents when multiplying, subtract when dividing."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-021",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of $8^{-2/3}$?",
+    "choices": [
+      "$\\dfrac{1}{4}$",
+      "$-\\dfrac{4}{3}$",
+      "$\\dfrac{1}{16}$",
+      "$4$"
+    ],
+    "answer": "A",
+    "solutionText": "$8^{2/3} = (\\sqrt[3]{8})^2 = 2^2=4$, so $8^{-2/3} = \\dfrac{1}{4}$.",
+    "hints": [
+      "Take the cube root of 8 first, square it, then apply the negative exponent."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-022",
+    "loId": "act.exponents-roots-logs",
+    "cedCode": "ACT-2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "If $\\log_5(x-3) = 2$, what is the value of $x$?",
+    "choices": [
+      "$8$",
+      "$28$",
+      "$22$",
+      "$25$"
+    ],
+    "answer": "B",
+    "solutionText": "$\\log_5(x-3)=2$ means $5^2=x-3$, so $x-3=25$ and $x=28$.",
+    "hints": [
+      "Rewrite the logarithmic equation in exponential form."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-023",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For what value of $k$ are the points $(2,5)$, $(4,9)$, and $(7,k)$ collinear?",
+    "choices": [
+      "$13$",
+      "$17$",
+      "$15$",
+      "$19$"
+    ],
+    "answer": "C",
+    "solutionText": "The slope between $(2,5)$ and $(4,9)$ is $2$. For the points to be collinear, the slope from $(4,9)$ to $(7,k)$ must also be $2$: $\\frac{k-9}{3}=2$, so $k=15$.",
+    "hints": [
+      "Set the slope between the second and third points equal to the slope between the first two."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-024",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the equation of a circle with center $(-2,5)$ and radius 4?",
+    "choices": [
+      "$(x-2)^2+(y+5)^2=16$",
+      "$(x+2)^2+(y-5)^2=4$",
+      "$(x-2)^2+(y-5)^2=16$",
+      "$(x+2)^2+(y-5)^2=16$"
+    ],
+    "answer": "D",
+    "solutionText": "A circle centered at $(h,k)$ with radius $r$ has equation $(x-h)^2+(y-k)^2=r^2$; here $h=-2,k=5,r=4$.",
+    "hints": [
+      "Substitute the center coordinates and radius into the standard circle equation."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-025",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the perimeter of a triangle with vertices at $(0,0)$, $(6,0)$, and $(6,8)$?",
+    "choices": [
+      "$24$",
+      "$20$",
+      "$22$",
+      "$28$"
+    ],
+    "answer": "A",
+    "solutionText": "The side lengths are 6, 8, and $\\sqrt{6^2+8^2}=10$ (a 6-8-10 right triangle), so the perimeter is $6+8+10=24$.",
+    "hints": [
+      "Use the distance formula for the diagonal side; the other two sides are horizontal and vertical."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-026",
+    "loId": "act.coordinate-geometry",
+    "cedCode": "ACT-2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Line $p$ has equation $y=3x-5$ and line $q$ has equation $y=-x+7$. At what point do lines $p$ and $q$ intersect?",
+    "choices": [
+      "$(4,3)$",
+      "$(3,4)$",
+      "$(2,1)$",
+      "$(3,-4)$"
+    ],
+    "answer": "B",
+    "solutionText": "Setting the expressions equal: $3x-5=-x+7$ gives $4x=12$, so $x=3$ and $y=3(3)-5=4$.",
+    "hints": [
+      "Set the two expressions for $y$ equal to each other and solve for $x$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-027",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A regular pentagon has a perimeter of 45 inches. What is the length of one side?",
+    "choices": [
+      "5",
+      "7",
+      "9",
+      "15"
+    ],
+    "answer": "C",
+    "solutionText": "A regular pentagon has 5 equal sides, so each side is $45/5=9$ inches.",
+    "hints": [
+      "Divide the perimeter by the number of sides."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-028",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a triangle, the measures of the three angles are in the ratio $2:3:4$. What is the measure of the largest angle?",
+    "choices": [
+      "60",
+      "100",
+      "120",
+      "80"
+    ],
+    "answer": "D",
+    "solutionText": "The ratio parts sum to 9, and the angles sum to $180\u00b0$, so each part is $20\u00b0$; the largest angle is $4(20\u00b0)=80\u00b0$.",
+    "hints": [
+      "Divide 180 by the sum of the ratio parts, then multiply by the largest part."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-029",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cylinder has a radius of 5 cm and a height of 12 cm. What is its volume, in terms of $\\pi$?",
+    "choices": [
+      "$300\\pi$",
+      "$60\\pi$",
+      "$150\\pi$",
+      "$600\\pi$"
+    ],
+    "answer": "A",
+    "solutionText": "Volume $=\\pi r^2h = \\pi(5^2)(12)=300\\pi$ cubic centimeters.",
+    "hints": [
+      "Use the formula $V=\\pi r^2h$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-030",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two similar rectangles have a ratio of corresponding sides of $3:5$. If the area of the smaller rectangle is 27 square inches, what is the area of the larger rectangle, in square inches?",
+    "choices": [
+      "$45$",
+      "$75$",
+      "$60$",
+      "$81$"
+    ],
+    "answer": "B",
+    "solutionText": "The ratio of areas of similar figures is the square of the ratio of sides: $(5/3)^2=25/9$. So the larger area is $27\\times\\frac{25}{9}=75$.",
+    "hints": [
+      "Square the ratio of the sides to get the ratio of the areas."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-031",
+    "loId": "act.plane-geometry",
+    "cedCode": "ACT-2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has one leg of length 8 and a hypotenuse of length 17. What is the length of the other leg?",
+    "choices": [
+      "$9$",
+      "$12$",
+      "$15$",
+      "$20$"
+    ],
+    "answer": "C",
+    "solutionText": "By the Pythagorean theorem, the other leg is $\\sqrt{17^2-8^2}=\\sqrt{225}=15$.",
+    "hints": [
+      "Apply $a^2+b^2=c^2$ and solve for the missing leg."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-032",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a right triangle, angle $B$ is the right angle. If angle $A$ measures $37\u00b0$ and the side opposite angle $A$ has length 6, which expression gives the length of the hypotenuse?",
+    "choices": [
+      "$\\dfrac{6}{\\cos 37\u00b0}$",
+      "$6\\sin 37\u00b0$",
+      "$6\\tan 37\u00b0$",
+      "$\\dfrac{6}{\\sin 37\u00b0}$"
+    ],
+    "answer": "D",
+    "solutionText": "Since $\\sin(37\u00b0) = \\frac{\\text{opposite}}{\\text{hypotenuse}} = \\frac{6}{\\text{hyp}}$, the hypotenuse is $\\frac{6}{\\sin 37\u00b0}$.",
+    "hints": [
+      "Identify which trig ratio relates the opposite side and the hypotenuse."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-033",
+    "loId": "act.trigonometry",
+    "cedCode": "ACT-2.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of $\\sin(60\u00b0)\\cdot\\cos(30\u00b0) + \\cos(60\u00b0)\\cdot\\sin(30\u00b0)$?",
+    "choices": [
+      "$1$",
+      "$\\dfrac12$",
+      "$\\dfrac{\\sqrt3}{2}$",
+      "$\\sqrt3$"
+    ],
+    "answer": "A",
+    "solutionText": "This matches the sine sum identity $\\sin(A+B)=\\sin A\\cos B+\\cos A\\sin B$, so the expression equals $\\sin(90\u00b0)=1$.",
+    "hints": [
+      "Recognize the expression as the expansion of $\\sin(A+B)$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-034",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A class of 18 students has a mean quiz score of 72. A second class of 12 students has a mean quiz score of 82. What is the mean quiz score of all 30 students combined?",
+    "choices": [
+      "$75$",
+      "$76$",
+      "$77$",
+      "$79$"
+    ],
+    "answer": "B",
+    "solutionText": "The combined total is $18(72)+12(82) = 1296+984 = 2280$. Dividing by 30 students gives a mean of $2280/30 = 76$.",
+    "hints": [
+      "Find each class's total score, add them, then divide by the combined number of students."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-035",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A bag contains 6 yellow marbles and 4 green marbles. If two marbles are drawn at random without replacement, what is the probability that both are yellow?",
+    "choices": [
+      "$\\dfrac{3}{5}$",
+      "$\\dfrac{9}{25}$",
+      "$\\dfrac{1}{3}$",
+      "$\\dfrac{2}{5}$"
+    ],
+    "answer": "C",
+    "solutionText": "$P=\\frac{6}{10}\\times\\frac{5}{9}=\\frac{30}{90}=\\frac{1}{3}$.",
+    "hints": [
+      "Multiply the probability of the first draw by the probability of the second draw, adjusting the denominator."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-036",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The scores on a quiz for 8 students are: 72, 85, 90, 78, 88, 95, 82, 84. What is the median score?",
+    "choices": [
+      "$84$",
+      "$85$",
+      "$86$",
+      "$84.5$"
+    ],
+    "answer": "D",
+    "solutionText": "Sorted, the middle two values are 84 and 85, so the median is $(84+85)/2=84.5$.",
+    "hints": [
+      "Sort the data and average the two middle values."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-037",
+    "loId": "act.statistics-probability",
+    "cedCode": "ACT-2.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A data set has a range of 24 and a minimum value of 11. If the maximum value increases by 6 while the minimum stays the same, what is the new range?",
+    "choices": [
+      "30",
+      "18",
+      "24",
+      "35"
+    ],
+    "answer": "A",
+    "solutionText": "The original range means max$-$min$=24$. Increasing the max by 6 increases the range to $24+6=30$.",
+    "hints": [
+      "Range depends only on the max and min; increasing the max increases the range by the same amount."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-038",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a geometric sequence, the first term is 5 and the common ratio is $-2$. What is the 4th term?",
+    "choices": [
+      "-20",
+      "-40",
+      "20",
+      "40"
+    ],
+    "answer": "B",
+    "solutionText": "The terms are $5, -10, 20, -40$, so the 4th term is $-40$.",
+    "hints": [
+      "Multiply by the common ratio three times to reach the 4th term."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-039",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Given matrices $A = \\begin{bmatrix} 2 & -1 \\\\ 0 & 3 \\end{bmatrix}$ and $B = \\begin{bmatrix} -4 & 5 \\\\ 2 & 1 \\end{bmatrix}$, what is $A - B$?",
+    "choices": [
+      "$\\begin{bmatrix} -2 & 4 \\\\ 2 & 4 \\end{bmatrix}$",
+      "$\\begin{bmatrix} -6 & 6 \\\\ 2 & -2 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 6 & -6 \\\\ -2 & 2 \\end{bmatrix}$",
+      "$\\begin{bmatrix} 6 & 6 \\\\ -2 & 2 \\end{bmatrix}$"
+    ],
+    "answer": "C",
+    "solutionText": "Subtract corresponding entries: $\\begin{bmatrix} 2-(-4) & -1-5 \\\\ 0-2 & 3-1 \\end{bmatrix} = \\begin{bmatrix} 6 & -6 \\\\ -2 & 2 \\end{bmatrix}$.",
+    "hints": [
+      "Subtract each entry of $B$ from the corresponding entry of $A$."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-040",
+    "loId": "act.sequences-matrices-complex",
+    "cedCode": "ACT-2.11",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the value of $i^{23}$, where $i$ is the imaginary unit?",
+    "choices": [
+      "$i$",
+      "$1$",
+      "$-1$",
+      "$-i$"
+    ],
+    "answer": "D",
+    "solutionText": "Powers of $i$ cycle every 4: $i^1=i, i^2=-1, i^3=-i, i^4=1$. Since $23 = 4(5)+3$, $i^{23}=i^3=-i$.",
+    "hints": [
+      "Divide the exponent by 4 and use the remainder to find the equivalent power in the cycle."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-041",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A copy machine prints 45 pages per minute. At this constant rate, how many minutes will it take to print 675 pages?",
+    "choices": [
+      "15",
+      "12",
+      "18",
+      "20"
+    ],
+    "answer": "A",
+    "solutionText": "$675/45 = 15$ minutes.",
+    "hints": [
+      "Divide the total pages by the pages printed per minute."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-042",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a scale drawing, 2.5 inches represents 40 actual feet. If a hallway is drawn as 7 inches long, what is the actual length of the hallway, in feet?",
+    "choices": [
+      "$100$",
+      "$112$",
+      "$105$",
+      "$120$"
+    ],
+    "answer": "B",
+    "solutionText": "The scale is $40/2.5=16$ feet per inch, so 7 inches represents $7\\times16=112$ feet.",
+    "hints": [
+      "Find the actual feet represented by one inch, then multiply by 7."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-043",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The sum of three consecutive even integers is 138. What is the value of the largest integer?",
+    "choices": [
+      "$44$",
+      "$46$",
+      "$48$",
+      "$50$"
+    ],
+    "answer": "C",
+    "solutionText": "Let the integers be $n, n+2, n+4$. Then $3n+6=138$, so $n=44$ and the largest integer is $48$.",
+    "hints": [
+      "Represent the three consecutive even integers algebraically and set their sum equal to 138."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-044",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cyclist rides at an average speed of 14 miles per hour for the first part of a trip, then slows to 8 miles per hour for the remaining 1.5 hours, completing a total of 40 miles. How many hours did the cyclist ride at 14 miles per hour?",
+    "choices": [
+      "$1.5$",
+      "$2.5$",
+      "$3$",
+      "$2$"
+    ],
+    "answer": "D",
+    "solutionText": "The last 1.5 hours cover $8\\times1.5=12$ miles, so the first part covers $40-12=28$ miles at 14 mph, taking $28/14=2$ hours.",
+    "hints": [
+      "Find the distance covered in the second part first, then subtract from the total."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-ma-045",
+    "loId": "act.word-problems-modeling",
+    "cedCode": "ACT-2.12",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A company's monthly profit, in thousands of dollars, is modeled by $P(x) = -2x^2+40x-150$, where $x$ is the number of units sold, in hundreds. The company breaks even when $P(x)=0$. What is the lesser of the two break-even values of $x$?",
+    "choices": [
+      "$5$",
+      "$10$",
+      "$15$",
+      "$20$"
+    ],
+    "answer": "A",
+    "solutionText": "Setting $P(x)=0$ and dividing by $-2$ gives $x^2-20x+75=0$, which factors as $(x-5)(x-15)=0$, so $x=5$ or $x=15$; the lesser value is 5.",
+    "hints": [
+      "Set the profit function equal to 0 and solve the resulting quadratic."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock"
+  },
+  {
+    "id": "act-fb-re-001",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best describes the central concern of the passage as a whole?",
+    "choices": [
+      "An apprentice boatbuilder comes to understand that repeated failure, kept in view and examined honestly, is what makes real skill possible.",
+      "An apprentice struggles to choose between two equally appealing trades before abandoning boatbuilding for insurance work.",
+      "A boatbuilder explains the technical steps required to replace a rib in a fishing boat's hull.",
+      "A mother and son reconcile after years of disagreement about his choice of career."
+    ],
+    "answer": "A",
+    "solutionText": "Ilsa nails Dario's successful stave beside the broken ones \"not because it had failed, she told him, but so he would remember what the difference between a rushed rib and a patient one actually felt like under his hand.\" This shows the passage's focus on learning through visible failure.",
+    "hints": [
+      "Consider what Ilsa repeatedly emphasizes about keeping broken staves in view."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-002",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Why does the narrator include the detail that Ilsa nails Dario's successful rib to the rafter beside the two broken ones, rather than placing it among the boatyard's finished repairs?",
+    "choices": [
+      "To suggest that Ilsa doubts the quality of the finished rib despite it fitting flush against the hull.",
+      "To emphasize that remembering the felt difference between rushed and patient work matters more than displaying a finished success.",
+      "To imply that the rafter beam is simply the only storage space left in the shop.",
+      "To show that Ilsa has forgotten which staves failed and which one finally succeeded."
+    ],
+    "answer": "B",
+    "solutionText": "Ilsa nails the stave to the rafter \"not because it had failed, she told him, but so he would remember what the difference between a rushed rib and a patient one actually felt like under his hand.\"",
+    "hints": [
+      "Look at what Ilsa says right after she nails the successful stave to the rafter."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-003",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the passage, how many tries did it take Dario to successfully replace the Kestrel's rib?",
+    "choices": [
+      "Two",
+      "Four",
+      "Three",
+      "Five"
+    ],
+    "answer": "C",
+    "solutionText": "\"The new rib took him three tries.\"",
+    "hints": [
+      "This detail opens the paragraph describing his repair attempts."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-004",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following problems occurred during Dario's first attempt at bending the new rib?",
+    "choices": [
+      "He clamped the stave against a knot he hadn't noticed running through the grain.",
+      "He set the clamps out of order, tightening the nearest one first.",
+      "He failed to check the grain direction before cutting the stave.",
+      "He pulled the stave from the steam box too slowly, and it cooled and cracked at the tightest curve."
+    ],
+    "answer": "D",
+    "solutionText": "\"On the first attempt, he pulled the stave from the steam box a few seconds too slowly, and by the time he had it clamped against the hull form, the oak had cooled past the point where it would bend without complaint; it cracked cleanly at the tightest curve, the same way the old rib had.\"",
+    "hints": [
+      "The first and second attempts are described in the same paragraph, in order."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-005",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Based on the passage, where did Ilsa place Dario's two broken staves after his first and second attempts?",
+    "choices": [
+      "On the rafter beam above the workbench, where he would see them every time he reached for a tool.",
+      "On the same shelf where the Kestrel's finished repairs were displayed.",
+      "In a barrel by the shop's front door.",
+      "She discarded them to save space in the shop."
+    ],
+    "answer": "A",
+    "solutionText": "\"She nailed both broken staves to the rafter beam above the workbench, where he would see them every time he reached for a tool.\"",
+    "hints": [
+      "Note the specific location, described right after the second failed attempt."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-006",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The passage most strongly suggests that, before the third attempt, Dario's approach to bending the rib had primarily been characterized by:",
+    "choices": [
+      "an unwillingness to accept Ilsa's guidance on technique.",
+      "working at a pace driven by urgency rather than careful attention.",
+      "a lack of any prior experience handling steamed oak.",
+      "a deliberate effort to test how much the wood could withstand."
+    ],
+    "answer": "B",
+    "solutionText": "On the third attempt, \"he had not been racing the wood to beat a mistake to the finish.\" This implies the earlier two attempts had been rushed, consistent with the cooled stave and the unnoticed knot.",
+    "hints": [
+      "Compare what changed on the third attempt to what is implied about the first two."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-007",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "It can reasonably be inferred that Dario's mother would most likely have reacted to the rib's successful repair by:",
+    "choices": [
+      "insisting that Dario immediately accept his uncle's clerking job.",
+      "visiting the boatyard to congratulate Ilsa personally.",
+      "remaining unaware of the accomplishment, since Dario chose not to mention it.",
+      "demanding that Dario leave the boatyard regardless of his progress."
+    ],
+    "answer": "C",
+    "solutionText": "\"Dario did not mention the rib to his mother that week, or the rafter, or the clerking job he had quietly turned down for the second time.\" This directly indicates the mother did not learn of the repair.",
+    "hints": [
+      "Check what the final paragraph says\u2014or doesn't say\u2014about what Dario told his mother."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-008",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"She worked with an unstudied economy of motion that made forty years of practice look like nothing at all,\" the word economy most nearly means:",
+    "choices": [
+      "a system of trade and industry",
+      "a period of financial hardship",
+      "a discount or reduced price",
+      "an efficient, sparing use of movement"
+    ],
+    "answer": "D",
+    "solutionText": "In context, \"an unstudied economy of motion\" describes Ilsa's efficient, practiced physical movements, not a financial system.",
+    "hints": [
+      "Think about what quality would pair naturally with 'motion' in describing someone's practiced movements."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-009",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"he realized he was no longer bracing for the argument he had been rehearsing in his head for months,\" the word bracing most nearly means:",
+    "choices": [
+      "mentally preparing for something unpleasant",
+      "physically supporting a structure",
+      "traveling at a brisk pace",
+      "celebrating an accomplishment"
+    ],
+    "answer": "A",
+    "solutionText": "Dario had long been dreading a conversation with his mother; \"he realized he was no longer bracing for the argument he had been rehearsing in his head for months\" \u2014 here bracing means mentally steeling himself for that unpleasant argument, not physically supporting anything.",
+    "hints": [
+      "Consider what someone does when anticipating an unpleasant conversation they haven't yet had."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-1.v1"
+  },
+  {
+    "id": "act-fb-re-010",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best expresses the main purpose of the passage?",
+    "choices": [
+      "To argue that participatory budgeting should replace conventional municipal elections entirely.",
+      "To explain how participatory budgeting works and to weigh its main benefits and criticisms.",
+      "To criticize city governments for refusing to adopt participatory budgeting more widely.",
+      "To trace the personal biographies of the officials who first proposed participatory budgeting."
+    ],
+    "answer": "B",
+    "solutionText": "The passage explains the participatory budgeting mechanism, then weighs benefits against criticisms, noting that \"Proponents generally concede the turnout numbers but argue they measure the wrong thing.\" This matches a balanced explanatory purpose.",
+    "hints": [
+      "Notice that the passage devotes roughly equal space to how the process works, its benefits, and criticisms of it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-011",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The final paragraph primarily serves to:",
+    "choices": [
+      "refute the criticism about turnout raised earlier in the passage.",
+      "explain why municipal employees remain skeptical of resident-led budgeting.",
+      "describe the model's growth into new categories of spending and note an unresolved question about whether it can scale.",
+      "argue that operating budgets should never be subject to participatory processes."
+    ],
+    "answer": "C",
+    "solutionText": "The final paragraph notes cities experimenting with applying the process to operating expenses and states, \"Whether the model can be extended meaningfully beyond small, discretionary sums remains an open question.\"",
+    "hints": [
+      "Read the last paragraph for its overall function relative to the paragraphs before it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-012",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the passage, what determines which proposals put to a vote actually get funded?",
+    "choices": [
+      "a majority vote by the city council",
+      "approval from the mayor's office",
+      "a lottery among all submitted proposals",
+      "whichever proposals receive enough votes from residents"
+    ],
+    "answer": "D",
+    "solutionText": "\"whichever projects receive enough votes get built, without a further vote by any elected body.\"",
+    "hints": [
+      "This detail appears in the first paragraph, describing how results become binding."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-013",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Based on the passage, roughly how long after the practice was first developed did it reach city councils and school districts in the United States?",
+    "choices": [
+      "roughly two decades",
+      "about a decade",
+      "nearly a century",
+      "within the same year"
+    ],
+    "answer": "A",
+    "solutionText": "\"It reached city councils and school districts in the United States roughly two decades later\", after first being developed abroad in the 1980s.",
+    "hints": [
+      "The second paragraph gives the model's origins and when it reached the United States."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-014",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "According to the passage, at what age can residents begin voting in some of the most expansive participatory budgeting processes?",
+    "choices": [
+      "sixteen",
+      "eleven",
+      "eighteen",
+      "twenty-one"
+    ],
+    "answer": "B",
+    "solutionText": "\"some of the most expansive allow any resident of a district \u2014 regardless of citizenship status, and starting at an age as young as eleven \u2014 to vote on the final project list.\"",
+    "hints": [
+      "This detail appears in the third paragraph, describing who is eligible to vote."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-015",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The passage's discussion of who participates in participatory budgeting most strongly implies that:",
+    "choices": [
+      "participatory budgeting voters are, on average, less informed than attendees of conventional public hearings.",
+      "noncitizen residents are barred from participating in participatory budgeting in every city that uses it.",
+      "participatory budgeting tends to draw in some residents who are structurally excluded from other forms of local civic participation.",
+      "teenagers who vote in participatory budgeting are also eligible to vote in general municipal elections."
+    ],
+    "answer": "C",
+    "solutionText": "The passage states that participatory budgeting reaches residents \"that traditional public engagement structurally excludes, even if it does not reach a majority of any given district.\"",
+    "hints": [
+      "Focus on what the passage concludes participatory budgeting voters have in common with each other."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-016",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "It can reasonably be inferred that a city considering applying participatory budgeting to its operating budget, rather than only its capital budget, would most likely need to:",
+    "choices": [
+      "abandon the requirement that the results of the vote be binding.",
+      "lower the minimum voting age below eleven in every district.",
+      "eliminate the involvement of city engineers and budget staff.",
+      "address more complex trade-offs than choosing among a list of already-costed capital projects."
+    ],
+    "answer": "D",
+    "solutionText": "The passage notes that \"running a fair, well-informed vote becomes substantially harder once the choices involve trade-offs between, for instance, hiring more staff and fixing more streets rather than simply choosing among a list of discrete, already-costed projects.\"",
+    "hints": [
+      "Look at the reasoning given in the final paragraph about extending the process to operating expenses."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-017",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"Participatory budgeting inverts part of that process,\" the word inverts most nearly means:",
+    "choices": [
+      "reverses or turns upside down",
+      "invests financially in",
+      "translates into another language",
+      "postpones indefinitely"
+    ],
+    "answer": "A",
+    "solutionText": "\"Participatory budgeting inverts part of that process.\" In context, inverts describes how participatory budgeting flips who makes spending decisions, from officials to residents\u2014reverses or turns upside down.",
+    "hints": [
+      "Consider what changes about who makes the decision, compared with a conventional budget process."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-018",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"a way of building goodwill around discretionary funds while decisions over the much larger operating budget remain entirely with elected officials,\" the word discretionary most nearly means:",
+    "choices": [
+      "legally mandated and fixed",
+      "available to be spent at someone's own judgment",
+      "borrowed and required to be repaid",
+      "permanently withheld from any budget"
+    ],
+    "answer": "B",
+    "solutionText": "\"a way of building goodwill around discretionary funds while decisions over the much larger operating budget remain entirely with elected officials and department heads.\" Here discretionary funds refers to the flexible, capital-budget sum set aside for residents to allocate by their own judgment, distinct from the fixed, much larger operating budget.",
+    "hints": [
+      "This is a multiple-meaning word; here it describes a type of budget, not a personality trait."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-2.v1"
+  },
+  {
+    "id": "act-fb-re-019",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best states the main idea of the passage?",
+    "choices": [
+      "Historic pipe organs are too fragile to be played safely and should be preserved only for display.",
+      "Modern piano-tuning technology has made pipe organ restoration largely unnecessary.",
+      "Restoring a historic pipe organ combines demanding, on-site craft skill with difficult judgment calls about authenticity that mechanical methods cannot fully resolve.",
+      "Wood pipes are inherently inferior to metal pipes and are being phased out of organ restoration."
+    ],
+    "answer": "C",
+    "solutionText": "The passage explains organ restoration's dependence on hands-on skill\u2014\"a restorer must still stand in the room, listen to how a single pipe sounds against the pipes around it, and adjust by hand\"\u2014and closes with the disputed authenticity tradeoff over historical temperament.",
+    "hints": [
+      "Consider what the passage covers throughout: hands-on restoration skill and difficult authenticity choices."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-020",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The passage's discussion of temperament in the fifth paragraph primarily serves to:",
+    "choices": [
+      "argue that historic temperaments should always be abandoned in favor of equal temperament.",
+      "explain why organ restoration no longer requires any tuning at all.",
+      "show that wood pipes are more affected by temperament than metal pipes are.",
+      "illustrate a specific authenticity tradeoff restorers face beyond the instrument's basic mechanics."
+    ],
+    "answer": "D",
+    "solutionText": "The paragraph opens, \"Perhaps the thorniest decision in restoring a historic organ concerns not its mechanics but its tuning system, or temperament.\" This introduces a new kind of tradeoff.",
+    "hints": [
+      "Look at what kind of decision this paragraph says is distinct from the earlier, mechanical restoration problems."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-021",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the passage, what is releathering?",
+    "choices": [
+      "stripping and replacing the old, brittle leather in an organ's joints and seams",
+      "tuning each pipe to a historic temperament",
+      "casting new metal pipes from tin and lead alloys",
+      "adjusting the width of a pipe's mouth opening"
+    ],
+    "answer": "A",
+    "solutionText": "\"Restorers address this through a process called releathering, stripping the old, brittle leather from every joint and seam and replacing it, piece by piece, with new leather cut and glued to match the original dimensions exactly, since a seam even slightly too loose will leak and one too tight will bind and refuse to move.\"",
+    "hints": [
+      "This definition appears in the second paragraph, describing how restorers fix leaking leather."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-022",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Based on the passage, why do wood pipes pose a different restoration challenge than metal pipes do?",
+    "choices": [
+      "Wood pipes are more resistant to denting than metal pipes.",
+      "Wood pipes expand and contract with humidity changes far more than metal pipes do.",
+      "Wood pipes cannot be voiced by ear the way metal pipes can.",
+      "Wood pipes require releathering, while metal pipes do not."
+    ],
+    "answer": "B",
+    "solutionText": "\"wood pipes expand and contract with changes in humidity far more than the metal pipes standing beside them, and a wood pipe that has warped even slightly can produce a note that sounds flat, breathy, or unstable compared with its neighbors.\"",
+    "hints": [
+      "This detail is given in the third paragraph, contrasting wood pipes with metal ones."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-023",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "According to the passage, what two adjustments does a restorer make while voicing an individual pipe?",
+    "choices": [
+      "releathering the pipe's seams and monitoring its humidity with sensors",
+      "casting a new tin-and-lead alloy and adjusting the wind chest's pallet",
+      "adjusting the width of the pipe's mouth opening and cutting small notches, called nicks, along the edge where the air stream splits",
+      "retuning the pipe to equal temperament and testing it with an electronic tuning device"
+    ],
+    "answer": "C",
+    "solutionText": "\"A restorer adjusts the width of a pipe's mouth opening and cuts small notches, called nicks, along the edge where the air stream first splits, shaping the specific character of the tone one pipe at a time, entirely by ear.\"",
+    "hints": [
+      "This detail appears in the fourth paragraph, describing the physical steps of voicing a pipe."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-024",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The passage's comparison between organ voicing and piano tuning most strongly suggests that:",
+    "choices": [
+      "piano tuning never relies on mechanical or electronic precision.",
+      "organ voicing is a less technically demanding skill than piano tuning.",
+      "piano tuning and organ voicing rely on identical methods and tools.",
+      "organ voicing has resisted the kind of standardized, instrument-based shortcut that piano tuning now commonly uses."
+    ],
+    "answer": "D",
+    "solutionText": "The passage states that \"Piano technicians today can rely on electronic tuning devices to set a piano's pitch with mechanical precision, but organ voicing has no equivalent shortcut\", implying voicing still depends on judgment with no standardized replacement.",
+    "hints": [
+      "Compare what tool piano technicians can rely on with what organ voicing lacks."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-025",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "It can reasonably be inferred from the passage that an organ restored to its original historical temperament would most likely:",
+    "choices": [
+      "be unable to comfortably accompany later repertoire written for equal temperament.",
+      "play equally well in every musical key without any tradeoff.",
+      "no longer require any releathering or voicing work.",
+      "sound identical to an organ tuned in modern equal temperament."
+    ],
+    "answer": "A",
+    "solutionText": "\"it also means the instrument cannot comfortably play later repertoire written for equal temperament, a genuine loss for a working church organ expected to accompany music from many centuries.\"",
+    "hints": [
+      "Consider the tradeoff the passage describes for restoring an organ to its historical temperament."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-026",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"a task that resists standardization more than almost any other part of the work,\" the word resists most nearly means:",
+    "choices": [
+      "physically pushes against",
+      "withstands or does not yield to",
+      "argues persuasively for",
+      "quickly adapts to"
+    ],
+    "answer": "B",
+    "solutionText": "In context, voicing \"resists standardization\" because it cannot be reduced to a repeatable mechanical procedure\u2014that is, it withstands or does not yield to standardization.",
+    "hints": [
+      "Think about what it would mean for a task to be difficult to make uniform or automated."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-027",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "As used in the sentence \"a tradeoff musicians of the period called a wolf interval,\" the word tradeoff most nearly means:",
+    "choices": [
+      "a financial transaction between two parties",
+      "a musical duet performed by two instruments",
+      "a balance in which gaining one benefit means losing another",
+      "an error made during a live performance"
+    ],
+    "answer": "C",
+    "solutionText": "\"a tradeoff musicians of the period called a wolf interval\" \u2014 the passage describes how making certain keys sound sweeter came at the cost of making other keys sound harsh, a balance in which gaining one benefit means losing another, not a financial transaction.",
+    "hints": [
+      "Consider what it means for one key to sound sweeter only because another key sounds harsher."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-3.v1"
+  },
+  {
+    "id": "act-fb-re-028",
+    "loId": "act.main-idea-purpose",
+    "cedCode": "ACT-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best describes the overall relationship between Passage A and Passage B?",
+    "choices": [
+      "Passage A and Passage B agree entirely on both the age and the origin of Saturn's rings.",
+      "Passage A dismisses any possibility that the rings could be old, while Passage B dismisses any possibility that they could be young.",
+      "Passage A and Passage B both conclude that the rings' true age can never be determined with current evidence.",
+      "Passage A argues the rings are young because of a recent tidal disruption, while Passage B argues they could be old and continuously cleaned by ring rain, though each also raises challenges to its own view."
+    ],
+    "answer": "D",
+    "solutionText": "Passage A presents the tidal-disruption hypothesis for a young ring age and Passage B presents the ring-rain explanation for an old ring system; the passage closes noting \"what remains unresolved is whether the rings are merely young, or whether an old ring system continuously scrubbed by ring rain could explain the same observations without a recent catastrophic origin at all.\"",
+    "hints": [
+      "Consider what each passage identifies as its central explanation, and note that both raise counterarguments against their own view."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-029",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Passage A, roughly how old might Saturn's rings be under the young-ring hypothesis?",
+    "choices": [
+      "a few hundred million years old",
+      "more than four and a half billion years old",
+      "about one million years old",
+      "less than a thousand years old"
+    ],
+    "answer": "A",
+    "solutionText": "\"has convinced a growing number of researchers that the rings are instead remarkably young, perhaps only a few hundred million years old, younger than many of the dinosaurs that once walked on Earth.\"",
+    "hints": [
+      "This age estimate is given in the first paragraph of Passage A."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-030",
+    "loId": "act.detail-sequence",
+    "cedCode": "ACT-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "According to Passage A, what did Cassini's measurements of the rings' mass reveal?",
+    "choices": [
+      "The rings are more massive than any of Saturn's moons combined.",
+      "The rings contain substantially less material than earlier estimates suggested, only a small fraction of the mass of Saturn's icy moon Mimas.",
+      "The rings' mass has remained exactly as originally estimated for over a century.",
+      "The rings' mass could not be measured with any of Cassini's instruments."
+    ],
+    "answer": "B",
+    "solutionText": "\"The rings turned out to contain substantially less material than earlier estimates suggested, only a small fraction of the mass of Saturn's icy moon Mimas.\"",
+    "hints": [
+      "This finding is described in the paragraph discussing mass, the second line of evidence in Passage A."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-031",
+    "loId": "act.inference-generalization",
+    "cedCode": "ACT-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Passage B's discussion of ring rain is most likely included to:",
+    "choices": [
+      "prove that meteoroid bombardment never deposits dark material onto Saturn's rings.",
+      "suggest that Saturn's magnetic field has weakened significantly in recent centuries.",
+      "explain how old rings could still appear bright and icy despite billions of years of accumulated pollution.",
+      "argue that the rings cannot be older than a few hundred million years."
+    ],
+    "answer": "C",
+    "solutionText": "\"proponents of an old-ring hypothesis argue the rings could accumulate dark material for billions of years and still look bright and icy today, simply because ring rain carries the pollution away roughly as fast as it arrives, rather than building up as a simple accumulation model assumes.\"",
+    "hints": [
+      "Consider what problem ring rain solves for someone arguing the rings are old."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-032",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "As used in Passage A in the sentence \"gradually dulling the rings' brightness the way exposed snow darkens as dust settles onto it,\" the word dulling most nearly means:",
+    "choices": [
+      "sharpening",
+      "completely erasing",
+      "speeding up",
+      "making less bright"
+    ],
+    "answer": "D",
+    "solutionText": "\"gradually dulling the rings' brightness the way exposed snow darkens as dust settles onto it.\"",
+    "hints": [
+      "Think about what happens to snow's brightness as dust settles on it."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-033",
+    "loId": "act.vocabulary-in-context",
+    "cedCode": "ACT-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As used in Passage B in the sentence \"these researchers argue, would likely still show signs of that chaotic origin,\" the word chaotic most nearly means:",
+    "choices": [
+      "disordered and irregular",
+      "highly organized and predictable",
+      "extremely gradual",
+      "entirely undetectable"
+    ],
+    "answer": "A",
+    "solutionText": "\"would likely still show signs of that chaotic origin, rather than the smooth structure Cassini's cameras actually recorded.\" This contrasts a disordered, irregular origin with the smooth structure actually observed.",
+    "hints": [
+      "Consider what kind of origin would contrast with a 'smooth structure.'"
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-034",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Passage A and Passage B would most likely disagree about which of the following claims?",
+    "choices": [
+      "Cassini gathered data on Saturn's rings over more than a decade.",
+      "The rings' low measured mass is best explained by a relatively young origin rather than by ongoing cleaning of an old ring system.",
+      "Saturn's rings are made mostly of water ice.",
+      "Saturn's rings display a layered structure of ringlets and gaps."
+    ],
+    "answer": "B",
+    "solutionText": "Passage A attributes the rings' low mass to material shed recently from a disrupted object\u2014\"more consistent with material shed recently from a single disrupted object than with a primordial disk\"\u2014while Passage B attributes the same low mass to ring rain continuously cleaning an old ring system, making this the central point of disagreement; the other choices are facts both passages accept.",
+    "hints": [
+      "Look for the claim that represents each passage's core explanation for the same observation, not a shared background fact."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-035",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A reader who accepts Passage B's argument about ring structure would most likely respond to Passage A's tidal-disruption hypothesis by pointing out that:",
+    "choices": [
+      "Saturn's rings have never been observed to contain any ice at all.",
+      "Cassini never measured the mass of Saturn's rings.",
+      "a ring system suddenly flung outward by a disrupted moon would likely still show signs of a chaotic origin rather than the settled structure actually observed.",
+      "the Roche limit does not apply to any of Saturn's moons."
+    ],
+    "answer": "C",
+    "solutionText": "\"A ring system flung outward by the sudden tidal disruption of a single icy moon, these researchers argue, would likely still show signs of that chaotic origin, rather than the smooth structure Cassini's cameras actually recorded.\"",
+    "hints": [
+      "Consider what evidence Passage B raises about the ring system's structure."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-re-036",
+    "loId": "act.paired-passages",
+    "cedCode": "ACT-3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Based on Passage B, which statement best characterizes the current state of scientific opinion on the age of Saturn's rings?",
+    "choices": [
+      "Nearly all researchers now reject any possibility that the rings are young.",
+      "Nearly all researchers now reject any possibility that the rings are old.",
+      "The debate has been fully resolved in favor of the primordial, planet-aged ring system.",
+      "Researchers agree the rings are probably less massive and younger than once assumed, but still disagree about whether an old, continuously cleaned ring system remains possible."
+    ],
+    "answer": "D",
+    "solutionText": "\"Most researchers who have examined the Cassini results now accept the rings are almost certainly less massive, and probably younger, than the twentieth-century assumption of a primordial, planet-aged system; what remains unresolved is whether the rings are merely young, or whether an old ring system continuously scrubbed by ring rain could explain the same observations without a recent catastrophic origin at all.\"",
+    "hints": [
+      "This assessment appears in the final sentence of Passage B."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-reading-4.v1"
+  },
+  {
+    "id": "act-fb-sc-001",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Under a load of 6 newtons (N), how far did Spring A stretch?",
+    "choices": [
+      "6 cm",
+      "9 cm",
+      "12 cm",
+      "3 cm"
+    ],
+    "answer": "B",
+    "solutionText": "The passage lists Spring A stretching 9 cm under a 6 N load.",
+    "hints": [
+      "Find the Spring A value stated for a 6 N load."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-002",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Spring B stretched exactly 2 cm under which load?",
+    "choices": [
+      "4 N",
+      "2 N",
+      "6 N",
+      "8 N"
+    ],
+    "answer": "A",
+    "solutionText": "Spring B is listed as stretching 1 cm at 2 N, 2 cm at 4 N, 3 cm at 6 N, and 4 cm at 8 N, so a 2 cm stretch occurred at 4 N.",
+    "hints": [
+      "Scan the Spring B values for the one equal to 2 cm."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-003",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Based on the trend, a 5 N load on Spring A would stretch it closest to which value?",
+    "choices": [
+      "6 cm",
+      "6.5 cm",
+      "7.5 cm",
+      "9 cm"
+    ],
+    "answer": "C",
+    "solutionText": "Spring A stretches 6 cm at 4 N and 9 cm at 6 N; a 5 N load falls halfway between, (6 + 9) / 2 = 7.5 cm.",
+    "hints": [
+      "A 5 N load lies between the 4 N and 6 N readings."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-004",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Spring A stretches in fixed proportion to the load, at 1.5 cm for each newton applied. How far would a 10 N load stretch Spring A?",
+    "choices": [
+      "10 cm",
+      "12 cm",
+      "13.5 cm",
+      "15 cm"
+    ],
+    "answer": "D",
+    "solutionText": "At 1.5 cm per newton, a 10 N load gives 1.5 x 10 = 15 cm.",
+    "hints": [
+      "Multiply the per-newton stretch by the number of newtons."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-005",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If the pattern continued, a 12 N load on Spring B would stretch it about how far?",
+    "choices": [
+      "4.5 cm",
+      "6 cm",
+      "5 cm",
+      "8 cm"
+    ],
+    "answer": "B",
+    "solutionText": "Spring B stretches 0.5 cm per newton (1 cm at 2 N, 4 cm at 8 N), so 12 N gives 0.5 x 12 = 6 cm.",
+    "hints": [
+      "Find how many cm Spring B stretches per newton, then extend to 12 N."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-006",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Under an 8 N load, Spring A stretched how many times as far as Spring B?",
+    "choices": [
+      "1.5 times",
+      "2 times",
+      "3 times",
+      "4 times"
+    ],
+    "answer": "C",
+    "solutionText": "At 8 N, Spring A stretched 12 cm and Spring B stretched 4 cm; 12 / 4 = 3 times.",
+    "hints": [
+      "Divide the 8 N stretch of Spring A by that of Spring B."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-1.v1"
+  },
+  {
+    "id": "act-fb-sc-007",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What sediment load did Stream P carry when it flowed at 0.6 m/s?",
+    "choices": [
+      "18 g/L",
+      "8 g/L",
+      "32 g/L",
+      "9 g/L"
+    ],
+    "answer": "A",
+    "solutionText": "The passage lists Stream P carrying 18 g/L at 0.6 m/s.",
+    "hints": [
+      "Find the Stream P value stated for 0.6 m/s."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-008",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Stream Q carried a load of 9 g/L at which flow speed?",
+    "choices": [
+      "0.2 m/s",
+      "0.4 m/s",
+      "0.8 m/s",
+      "0.6 m/s"
+    ],
+    "answer": "D",
+    "solutionText": "Stream Q is listed as carrying 9 g/L at 0.6 m/s.",
+    "hints": [
+      "Scan the Stream Q values for the speed paired with 9 g/L."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-009",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "If the pattern continued, Stream P's sediment load at a flow speed of 1.0 m/s would be about which value?",
+    "choices": [
+      "40 g/L",
+      "44 g/L",
+      "50 g/L",
+      "64 g/L"
+    ],
+    "answer": "C",
+    "solutionText": "Stream P's load equals 50 times the square of the speed; at 1.0 m/s that is 50 x (1.0)^2 = 50 g/L.",
+    "hints": [
+      "The passage says load = 50 x speed squared for Stream P."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-010",
+    "loId": "act.scientific-math-units",
+    "cedCode": "ACT-4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For Stream P the sediment load (in g/L) equals 50 times the square of the flow speed (in m/s). What load would Stream P carry at 0.5 m/s?",
+    "choices": [
+      "10 g/L",
+      "12.5 g/L",
+      "13 g/L",
+      "25 g/L"
+    ],
+    "answer": "B",
+    "solutionText": "50 x (0.5)^2 = 50 x 0.25 = 12.5 g/L.",
+    "hints": [
+      "Square 0.5 first, then multiply by 50."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-011",
+    "loId": "act.data-representation",
+    "cedCode": "ACT-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a flow speed of 0.8 m/s, Stream P carried how many times as much sediment as Stream Q?",
+    "choices": [
+      "2 times",
+      "3 times",
+      "4 times",
+      "1.5 times"
+    ],
+    "answer": "A",
+    "solutionText": "At 0.8 m/s, Stream P carried 32 g/L and Stream Q carried 16 g/L; 32 / 16 = 2 times.",
+    "hints": [
+      "Divide the 0.8 m/s load of Stream P by that of Stream Q."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-012",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For Stream Q, as the flow speed doubled from 0.4 m/s to 0.8 m/s, the sediment load was:",
+    "choices": [
+      "multiplied by 2",
+      "unchanged",
+      "multiplied by 3",
+      "multiplied by 4"
+    ],
+    "answer": "D",
+    "solutionText": "Stream Q carried 4 g/L at 0.4 m/s and 16 g/L at 0.8 m/s; 16 / 4 = 4, so the load was multiplied by 4.",
+    "hints": [
+      "Compare Stream Q's loads at 0.4 and 0.8 m/s."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-2.v1"
+  },
+  {
+    "id": "act-fb-sc-013",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, how many bubbles per minute did the plant release when the lamp was 20 cm away?",
+    "choices": [
+      "60",
+      "30",
+      "20",
+      "15"
+    ],
+    "answer": "B",
+    "solutionText": "Experiment 1 lists 30 bubbles per minute at a lamp distance of 20 cm.",
+    "hints": [
+      "Find the Experiment 1 value stated for 20 cm."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-014",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What was the independent variable (the factor deliberately changed) in Experiment 2?",
+    "choices": [
+      "the CO2 concentration",
+      "the lamp distance",
+      "the number of bubbles per minute",
+      "the water temperature"
+    ],
+    "answer": "A",
+    "solutionText": "Experiment 2 held the lamp distance and temperature constant while varying the dissolved CO2, making CO2 concentration the independent variable.",
+    "hints": [
+      "Which factor did Experiment 2 change from trial to trial?"
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-015",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Why did the class hold the temperature at 20\u00b0C in all three experiments?",
+    "choices": [
+      "to make the plant grow faster",
+      "because temperature cannot be measured",
+      "so that changes in temperature would not affect the results",
+      "to increase the total number of bubbles"
+    ],
+    "answer": "C",
+    "solutionText": "Keeping temperature fixed ensures any change in bubble rate is caused by the factor being varied, not by temperature.",
+    "hints": [
+      "A held-constant variable removes one possible cause of the change."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-016",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 2 the rate rose sharply from 0 to 2 percent CO2 (5, 25, 40 bubbles) but changed little from 3 to 4 percent (48, 50 bubbles). Which conclusion best fits these data?",
+    "choices": [
+      "CO2 has no effect on the bubble rate",
+      "the rate keeps rising without limit as CO2 increases",
+      "higher CO2 always lowers the rate",
+      "the rate rises with CO2 until it levels off near a maximum"
+    ],
+    "answer": "D",
+    "solutionText": "The rate increases with CO2 at first, then flattens near 50 bubbles per minute, indicating it rises until it levels off at a maximum.",
+    "hints": [
+      "Compare how much the rate changes at low versus high CO2 levels."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-017",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, the lamp distance multiplied by the bubble count equals 600 at every listed distance. At a distance of 15 cm, the bubble count would be closest to:",
+    "choices": [
+      "45",
+      "50",
+      "40",
+      "35"
+    ],
+    "answer": "C",
+    "solutionText": "If distance x count = 600, then at 15 cm the count is 600 / 15 = 40 bubbles per minute.",
+    "hints": [
+      "Divide 600 by the distance of 15 cm."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-018",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 3, which color of light produced the lowest bubble rate?",
+    "choices": [
+      "red",
+      "green",
+      "blue",
+      "white"
+    ],
+    "answer": "B",
+    "solutionText": "Experiment 3 gives red 45, orange 30, green 8, blue 40, and white 50 bubbles per minute; green produced the lowest rate at 8.",
+    "hints": [
+      "Find the smallest bubble count among the colors."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-019",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Combining the results of all three experiments, which set of conditions would produce the greatest bubble rate?",
+    "choices": [
+      "lamp 40 cm away, 0 percent CO2, green light",
+      "lamp 20 cm away, 2 percent CO2, red light",
+      "lamp 10 cm away, 1 percent CO2, green light",
+      "lamp 10 cm away, 4 percent CO2, white light"
+    ],
+    "answer": "D",
+    "solutionText": "The rate is highest at the closest lamp distance (10 cm), the highest CO2 (4 percent), and with white light (50), so lamp 10 cm, 4 percent CO2, and white light maximizes the rate.",
+    "hints": [
+      "Pick the best-performing value of each factor from its experiment."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-3.v1"
+  },
+  {
+    "id": "act-fb-sc-020",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 2, how much rust formed on the nail kept at 30\u00b0C?",
+    "choices": [
+      "18 mg",
+      "12 mg",
+      "24 mg",
+      "6 mg"
+    ],
+    "answer": "A",
+    "solutionText": "Experiment 2 lists 18 mg of rust at 30\u00b0C.",
+    "hints": [
+      "Find the Experiment 2 value stated for 30\u00b0C."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-021",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What was the independent variable in Experiment 3?",
+    "choices": [
+      "the mass of rust formed",
+      "the salt concentration",
+      "the type of surface coating",
+      "the temperature"
+    ],
+    "answer": "C",
+    "solutionText": "Experiment 3 held salt and temperature constant while testing uncoated, oil, paint, and zinc surfaces, so the coating type was the independent variable.",
+    "hints": [
+      "Which factor did Experiment 3 change between nails?"
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-022",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Why was the salt kept at 1 percent in both Experiment 2 and Experiment 3?",
+    "choices": [
+      "because a higher salt level speeds up rusting",
+      "so that any change in rust came from the factor being tested, not the salt",
+      "to keep the nails from dissolving",
+      "because 1 percent salt stops rust from forming"
+    ],
+    "answer": "B",
+    "solutionText": "Holding the salt constant ensures the measured differences in rust are due to temperature (Experiment 2) or coating (Experiment 3) rather than salt.",
+    "hints": [
+      "A controlled variable rules out one alternative cause."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-023",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, the rust increased by 8 mg for each additional 1 percent of salt (4, 12, 20, 28 mg). Following this pattern, how much rust would form at 4 percent salt?",
+    "choices": [
+      "28 mg",
+      "30 mg",
+      "32 mg",
+      "36 mg"
+    ],
+    "answer": "D",
+    "solutionText": "At 3 percent salt the rust was 28 mg; adding 8 mg for the next 1 percent gives 28 + 8 = 36 mg at 4 percent.",
+    "hints": [
+      "Add one more 8 mg step beyond the 3 percent value."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-024",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 2, the rust rose by 6 mg for each 10\u00b0C increase (6, 12, 18, 24 mg). If the pattern held, how much rust would form at 50\u00b0C?",
+    "choices": [
+      "30 mg",
+      "24 mg",
+      "28 mg",
+      "36 mg"
+    ],
+    "answer": "A",
+    "solutionText": "At 40\u00b0C the rust was 24 mg; adding 6 mg for the next 10\u00b0C gives 24 + 6 = 30 mg at 50\u00b0C.",
+    "hints": [
+      "Extend the 6-mg-per-10\u00b0C step one more step past 40\u00b0C."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-025",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Based on Experiment 3, which coating prevented rust most effectively?",
+    "choices": [
+      "oil",
+      "paint",
+      "zinc",
+      "no coating"
+    ],
+    "answer": "C",
+    "solutionText": "In Experiment 3 the zinc-coated nail formed 0 mg of rust, the least of any coating tested.",
+    "hints": [
+      "Find the coating with the smallest rust value."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-026",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which conclusion is best supported by Experiment 1 and Experiment 2 together?",
+    "choices": [
+      "salt matters but temperature does not",
+      "increasing either the salt concentration or the temperature increased rusting",
+      "temperature matters but salt does not",
+      "neither factor affected the amount of rusting"
+    ],
+    "answer": "B",
+    "solutionText": "In Experiment 1 rust rose as salt increased, and in Experiment 2 rust rose as temperature increased, so raising either factor increased rusting.",
+    "hints": [
+      "Check the direction of the trend in each experiment."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-4.v1"
+  },
+  {
+    "id": "act-fb-sc-027",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, how long did a helicopter with 8 cm wings take to fall?",
+    "choices": [
+      "2.0 s",
+      "2.6 s",
+      "3.8 s",
+      "3.2 s"
+    ],
+    "answer": "D",
+    "solutionText": "Experiment 1 lists a fall time of 3.2 s for 8 cm wings.",
+    "hints": [
+      "Find the Experiment 1 value stated for 8 cm wings."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-028",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What was the independent variable in Experiment 3?",
+    "choices": [
+      "the drop height",
+      "the fall time",
+      "the wing length",
+      "the number of paperclips"
+    ],
+    "answer": "A",
+    "solutionText": "Experiment 3 held wing length and paperclip count constant while changing the drop height, so drop height was the independent variable.",
+    "hints": [
+      "Which factor did Experiment 3 change from trial to trial?"
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-029",
+    "loId": "act.variables-controls",
+    "cedCode": "ACT-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, why was the drop height kept at 4 m for every trial?",
+    "choices": [
+      "to make each helicopter fall faster",
+      "so that differences in fall time came from wing length, not drop height",
+      "because 4 m is the tallest height available",
+      "to allow more paperclips to be added"
+    ],
+    "answer": "B",
+    "solutionText": "Fixing the drop height ensures the change in fall time is due to wing length, the variable being tested, rather than to height.",
+    "hints": [
+      "A controlled variable isolates the effect being studied."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-030",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 3, the fall time rose 1.3 s for each additional 2 m of height (1.3, 2.6, 3.9, 5.2 s). Following this pattern, the fall time from 10 m would be about:",
+    "choices": [
+      "5.9 s",
+      "6.0 s",
+      "6.5 s",
+      "7.8 s"
+    ],
+    "answer": "C",
+    "solutionText": "At 8 m the fall took 5.2 s; adding 1.3 s for the next 2 m gives 5.2 + 1.3 = 6.5 s at 10 m.",
+    "hints": [
+      "Extend the 1.3-s-per-2-m step one more step past 8 m."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-031",
+    "loId": "act.trends-extrapolation",
+    "cedCode": "ACT-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Experiment 1, the fall time rose 0.6 s for each additional 2 cm of wing length (2.0, 2.6, 3.2, 3.8 s). Following this pattern, a helicopter with 12 cm wings would fall in about:",
+    "choices": [
+      "3.8 s",
+      "4.0 s",
+      "4.2 s",
+      "4.4 s"
+    ],
+    "answer": "D",
+    "solutionText": "At 10 cm the fall took 3.8 s; adding 0.6 s for the next 2 cm gives 3.8 + 0.6 = 4.4 s at 12 cm.",
+    "hints": [
+      "Extend the 0.6-s-per-2-cm step one more step past 10 cm."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-032",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What does Experiment 2 show about the effect of adding paperclips to the helicopter's body?",
+    "choices": [
+      "adding paperclips decreased the fall time",
+      "adding paperclips increased the fall time",
+      "adding paperclips had no effect on the fall time",
+      "adding paperclips first increased then decreased the fall time"
+    ],
+    "answer": "A",
+    "solutionText": "In Experiment 2 the fall time dropped from 2.6 s (0 clips) to 1.4 s (3 clips), so adding paperclips decreased the fall time.",
+    "hints": [
+      "Compare the fall time with 0 clips to that with 3 clips."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-033",
+    "loId": "act.research-summaries",
+    "cedCode": "ACT-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Based on all three experiments, which helicopter design would descend most slowly (take the longest to fall from a given height)?",
+    "choices": [
+      "4 cm wings with 3 paperclips",
+      "6 cm wings with 1 paperclip",
+      "10 cm wings with 0 paperclips",
+      "8 cm wings with 2 paperclips"
+    ],
+    "answer": "C",
+    "solutionText": "Experiment 1 shows longer wings slow the fall and Experiment 2 shows added paperclips speed it up, so the longest wings (10 cm) with no paperclips descends most slowly.",
+    "hints": [
+      "Longer wings slow the fall; paperclips speed it up."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-5.v1"
+  },
+  {
+    "id": "act-fb-sc-034",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Scientist 1, how were the boulders carried the 150 km to the plain?",
+    "choices": [
+      "rolled along by a fast-moving flood",
+      "frozen into the base of an advancing ice sheet",
+      "thrown outward by a volcanic eruption",
+      "blown across the plain by strong winds"
+    ],
+    "answer": "B",
+    "solutionText": "Scientist 1 states an ice sheet froze boulders into its base and dragged them across the 150 km.",
+    "hints": [
+      "Reread Scientist 1's account of how the boulders moved."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-035",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best summarizes Scientist 2's explanation?",
+    "choices": [
+      "termites gradually moved the boulders into place",
+      "the boulders formed in place out of the limestone bedrock",
+      "slow-moving ice dropped the boulders as it melted",
+      "a sudden high-speed flood rolled the boulders across the plain"
+    ],
+    "answer": "D",
+    "solutionText": "Scientist 2 attributes the boulders to a violent flood, released by a burst ice dam, that rolled them across the plain.",
+    "hints": [
+      "Focus on the mechanism Scientist 2 proposes."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-036",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On which point would both scientists most likely AGREE?",
+    "choices": [
+      "the boulders originated in mountains about 150 km away",
+      "no ice was ever present anywhere in the region",
+      "the boulders formed where they now rest",
+      "water moving 30 km per hour shaped the plain"
+    ],
+    "answer": "A",
+    "solutionText": "Both accounts begin with granite boulders that came from mountains about 150 km away; they differ only on the transport mechanism.",
+    "hints": [
+      "Find the starting fact both explanations share."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-037",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which finding would most strongly support Scientist 1 over Scientist 2?",
+    "choices": [
+      "the boulders are rounded and worn smooth",
+      "the largest boulders lie together nearest the mountains",
+      "boulders of all sizes lie jumbled together and are angular, not rounded",
+      "the boulders are neatly sorted by size"
+    ],
+    "answer": "C",
+    "solutionText": "Scientist 1 predicts ice drops boulders of all sizes jumbled together with sharp, unworn edges, so an unsorted, angular jumble favors Scientist 1.",
+    "hints": [
+      "Match the finding to Scientist 1's prediction about size mixing and shape."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-038",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which finding would most strongly support Scientist 2 over Scientist 1?",
+    "choices": [
+      "boulders of every size are mixed together at random",
+      "the boulders are rounded and sorted by size, with the largest nearest where the flood first slowed",
+      "grooves are scratched into the exposed bedrock",
+      "the boulders are sharp-edged and unsorted"
+    ],
+    "answer": "B",
+    "solutionText": "Scientist 2 predicts a flood rounds the boulders and sorts them by size, dropping the heaviest first, so rounded, sorted boulders favor Scientist 2.",
+    "hints": [
+      "Match the finding to Scientist 2's prediction about rounding and sorting."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-039",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To test Scientist 2's claim that only water faster than 30 km per hour could roll an 8-tonne boulder, the best approach would be to:",
+    "choices": [
+      "count the number of termite nests beneath the boulders",
+      "measure the age of the limestone bedrock",
+      "compare the plain's yearly rainfall today with the past",
+      "measure the water speed needed to roll boulders of known mass in a test channel"
+    ],
+    "answer": "D",
+    "solutionText": "Scientist 2's claim links water speed to the mass it can move, so measuring the speed required to roll boulders of known mass directly tests it.",
+    "hints": [
+      "The claim connects water speed to boulder mass; test that link directly."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  },
+  {
+    "id": "act-fb-sc-040",
+    "loId": "act.conflicting-viewpoints",
+    "cedCode": "ACT-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Scientist 2 states that doubling the water's speed increases the largest movable mass about 64-fold. If water at 30 km per hour can just move an 8-tonne boulder, then water at 15 km per hour (half that speed) could move a boulder of about:",
+    "choices": [
+      "about 0.13 tonne",
+      "about 4 tonnes",
+      "about 0.5 tonne",
+      "about 2 tonnes"
+    ],
+    "answer": "A",
+    "solutionText": "Halving the speed divides the largest movable mass by about 64: 8 / 64 = 0.125, or about 0.13 tonne.",
+    "hints": [
+      "Halving speed reverses the 64-fold increase, so divide 8 tonnes by 64."
+    ],
+    "topic": "act",
+    "topicId": "act",
+    "bankScope": "mock",
+    "passageId": "evelyn.passage.act-mock-b-science-6.v1"
+  }
+]
