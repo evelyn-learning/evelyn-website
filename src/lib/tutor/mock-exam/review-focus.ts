@@ -224,11 +224,13 @@ export function mathSafeSnippet(text: string, maxLen: number): string {
   const s = text.replace(/\s+/g, ' ').trim();
   if (s.length <= maxLen) return s;
 
-  // Pair up `$` delimiters into [openIdx, closeIdx] span ranges.
+  // Pair up `$` delimiters into [openIdx, closeIdx] span ranges. `\$` is
+  // escaped currency (Macro/EnvSci stems), not a delimiter — mirror
+  // InlineMathText's escape semantics or currency pairs into phantom spans.
   const spans: Array<[number, number]> = [];
   let open = -1;
   for (let i = 0; i < s.length; i++) {
-    if (s[i] === '$') {
+    if (s[i] === '$' && s[i - 1] !== '\\') {
       if (open === -1) open = i;
       else { spans.push([open, i]); open = -1; }
     }

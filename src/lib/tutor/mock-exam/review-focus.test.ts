@@ -201,5 +201,16 @@ test('buildMockReviewDrawer: one numbered row per miss, focus rows flagged', () 
   assert.deepEqual(rows.map((r) => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
 });
 
+
+test('mathSafeSnippet: escaped \\$ currency is not a math delimiter', () => {
+  const s = 'A firm charges \\$40 per unit and \\$2.50 per mile, where $x \\ge 0$ is miles driven and revenue grows';
+  const out = mathSafeSnippet(s, 56);
+  // cut lands in prose between the currency figures and the math span —
+  // must not treat \\$40/\\$2.50 as span delimiters (phantom pairing).
+  assert.ok(out.endsWith('…'));
+  assert.ok(!out.includes('$x'), 'cut should fall before the real math span');
+  assert.ok(out.includes('\\$2.50'), 'currency stays intact');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
