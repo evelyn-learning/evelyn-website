@@ -1,0 +1,76 @@
+{
+  "formId": "ap-statistics-form-a",
+  "examKey": "ap-statistics",
+  "topicIds": [
+    "ap-statistics"
+  ],
+  "label": "AP Statistics Practice Exam A",
+  "sections": [
+    {
+      "sectionId": "mcq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apstats-fa-mc-001",
+            "apstats-fa-mc-002",
+            "apstats-fa-mc-003",
+            "apstats-fa-mc-004",
+            "apstats-fa-mc-005",
+            "apstats-fa-mc-006",
+            "apstats-fa-mc-007",
+            "apstats-fa-mc-008",
+            "apstats-fa-mc-009",
+            "apstats-fa-mc-010",
+            "apstats-fa-mc-011",
+            "apstats-fa-mc-012",
+            "apstats-fa-mc-013",
+            "apstats-fa-mc-014",
+            "apstats-fa-mc-015",
+            "apstats-fa-mc-016",
+            "apstats-fa-mc-017",
+            "apstats-fa-mc-018",
+            "apstats-fa-mc-019",
+            "apstats-fa-mc-020",
+            "apstats-fa-mc-021",
+            "apstats-fa-mc-022",
+            "apstats-fa-mc-023",
+            "apstats-fa-mc-024",
+            "apstats-fa-mc-025",
+            "apstats-fa-mc-026",
+            "apstats-fa-mc-027",
+            "apstats-fa-mc-028",
+            "apstats-fa-mc-029",
+            "apstats-fa-mc-030",
+            "apstats-fa-mc-031",
+            "apstats-fa-mc-032",
+            "apstats-fa-mc-033",
+            "apstats-fa-mc-034",
+            "apstats-fa-mc-035",
+            "apstats-fa-mc-036",
+            "apstats-fa-mc-037",
+            "apstats-fa-mc-038",
+            "apstats-fa-mc-039",
+            "apstats-fa-mc-040"
+          ]
+        }
+      ]
+    },
+    {
+      "sectionId": "frq",
+      "modules": [
+        {
+          "moduleId": "main",
+          "itemIds": [
+            "apstats-fa-fr-01",
+            "apstats-fa-fr-02",
+            "apstats-fa-fr-03",
+            "apstats-fa-fr-04",
+            "apstats-fa-fr-05",
+            "apstats-fa-fr-06"
+          ]
+        }
+      ]
+    }
+  ]
+}
