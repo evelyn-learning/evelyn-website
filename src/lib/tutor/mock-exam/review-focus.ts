@@ -24,7 +24,24 @@ export interface MockReviewFocusItem {
   solutionText?: string;
   passageExcerpt?: string;
   frqFeedback?: Array<{ criterionId: string; pointsAwarded: number; maxPoints: number; feedback: string }>;
+  /** FRQ score straight off frqGrade.totalPoints/maxPoints — NOT the part sum.
+   *  A skipped FRQ grades as totalPoints/maxPoints = 0/9 with EMPTY parts, so
+   *  summing parts wrongly reads "0/0". Present only for graded FRQs. */
+  frqScore?: { points: number; max: number };
   loId?: string;
+}
+
+/** One missed item, condensed for the in-session Agenda drawer. Every miss
+ *  (not just the focus cap) becomes one of these — see MockReviewContext.allMisses.
+ *  `snippet` is a math-safe truncation of the problem text (keeps `$…$`). */
+export interface MockReviewMiss {
+  itemId: string;
+  sectionLabel: string;
+  snippet: string;
+  responseFormat: 'mcq' | 'numeric' | 'frq';
+  studentAnswer?: string;
+  correctAnswer?: string;
+  frqScore?: { points: number; max: number };
 }
 
 export interface MockReviewContext {
@@ -34,6 +51,10 @@ export interface MockReviewContext {
   focusItems: MockReviewFocusItem[];
   remainingMissSummary: Array<{ unitLabel: string; missed: number }>;
   totalMissed: number;
+  /** EVERY miss (focus first, then remaining, stable order) — the data source
+   *  for the mid-session Agenda drawer. NOT rendered into the brain block
+   *  (formatMockReviewBlock stays capped at the focus items). */
+  allMisses: MockReviewMiss[];
 }
 
 function frqRatio(it: MockReviewItem): number {
@@ -118,6 +139,10 @@ export function buildMockReviewContext(args: {
     summary.set(key, (summary.get(key) ?? 0) + 1);
   }
 
+  // allMisses = every MISS, focus-first then the remainder, stable order. A
+  // pinned-but-correct focus item is not a miss, so it never appears here.
+  const allMisses: MockReviewMiss[] = [...focus.filter(isMiss), ...remaining].map(toMiss);
+
   return {
     formLabel: args.formLabel,
     composite: args.composite,
@@ -138,9 +163,37 @@ export function buildMockReviewContext(args: {
           (it.passage.text.length > PASSAGE_EXCERPT_CHARS ? ' […truncated]' : '')
         : undefined,
       frqFeedback: it.frqGrade?.parts,
+      frqScore: frqScoreOf(it),
       loId: it.loId,
     })),
     remainingMissSummary: Array.from(summary.entries()).map(([unitLabel, missed]) => ({ unitLabel, missed })),
+    allMisses,
+  };
+}
+
+/** FRQ points off the grade header (NOT the part sum), for graded FRQs only. */
+function frqScoreOf(it: MockReviewItem): { points: number; max: number } | undefined {
+  if (it.responseFormat !== 'frq') return undefined;
+  const g = it.frqGrade;
+  return g ? { points: g.totalPoints, max: g.maxPoints } : undefined;
+}
+
+/** Narrow a portal response-format to the three the review UI distinguishes. */
+function missFormat(rf: MockReviewItem['responseFormat']): 'mcq' | 'numeric' | 'frq' {
+  if (rf === 'frq') return 'frq';
+  if (rf === 'numeric') return 'numeric';
+  return 'mcq';
+}
+
+function toMiss(it: MockReviewItem): MockReviewMiss {
+  return {
+    itemId: it.itemId,
+    sectionLabel: it.sectionLabel,
+    snippet: mathSafeSnippet(it.problemText, 90),
+    responseFormat: missFormat(it.responseFormat),
+    studentAnswer: it.studentAnswer?.trim() ? it.studentAnswer : 'no answer',
+    correctAnswer: it.correctAnswer,
+    frqScore: frqScoreOf(it),
   };
 }
 
@@ -162,19 +215,40 @@ export interface MockReviewAgendaItem {
   utterance: string;
 }
 
-/** Strip KaTeX `$` delimiters + light markdown so problem text reads as a
- *  plain one-line label; collapse whitespace. */
-function stripInlineForLabel(s: string): string {
-  return s
-    .replace(/\$/g, '')
-    .replace(/[*_`#>]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+/** Truncate `text` to ~`maxLen` visible chars WITHOUT ever cutting inside a
+ *  `$…$` math span (an unbalanced `$` renders as raw LaTeX — Image evidence).
+ *  Whitespace is collapsed first. If the cut point falls inside a span, back up
+ *  to just before that span opens; a leading span that alone exceeds `maxLen`
+ *  is kept whole (never split). Appends `…` only when actually truncated. */
+export function mathSafeSnippet(text: string, maxLen: number): string {
+  const s = text.replace(/\s+/g, ' ').trim();
+  if (s.length <= maxLen) return s;
+
+  // Pair up `$` delimiters into [openIdx, closeIdx] span ranges.
+  const spans: Array<[number, number]> = [];
+  let open = -1;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '$') {
+      if (open === -1) open = i;
+      else { spans.push([open, i]); open = -1; }
+    }
+  }
+
+  // A span that CONTAINS the intended cut (strictly past its opening `$`, up to
+  // and including its closing `$`) — cutting here would split the math.
+  const hit = spans.find(([a, b]) => maxLen > a && maxLen <= b);
+  let cut = maxLen;
+  if (hit) cut = hit[0] > 0 ? hit[0] : hit[1] + 1; // before it, or keep whole if it leads
+  const head = s.slice(0, cut).trimEnd();
+  return cut < s.length ? head + '…' : head;
 }
 
 function agendaResult(it: MockReviewFocusItem): string {
-  // FRQ (detected by rubric feedback presence): points/max from part sums.
-  if (it.responseFormat === 'frq' || it.frqFeedback) {
+  // FRQ: use the grade header (frqScore) so a skipped FRQ reads 0/9, not the
+  // empty-parts sum of 0/0. Fall back to the part sum only when frqScore is
+  // absent (e.g. an ungraded FRQ).
+  if (it.responseFormat === 'frq' || it.frqScore || it.frqFeedback) {
+    if (it.frqScore) return `${it.frqScore.points}/${it.frqScore.max}`;
     const parts = it.frqFeedback ?? [];
     const points = parts.reduce((s, p) => s + p.pointsAwarded, 0);
     const max = parts.reduce((s, p) => s + p.maxPoints, 0);
@@ -185,7 +259,9 @@ function agendaResult(it: MockReviewFocusItem): string {
 }
 
 /** Build the pre-start agenda (tappable list + the "+ N more" muted line)
- *  from a review context. Empty agenda when there's no context / no focus. */
+ *  from a review context. Empty agenda when there's no context / no focus.
+ *  Labels KEEP `$…$` spans (math-safely truncated) so the UI renders them via
+ *  InlineMathText instead of showing raw LaTeX. */
 export function buildMockReviewAgenda(ctx: MockReviewContext | undefined): {
   agenda: MockReviewAgendaItem[];
   remainingLine: string | null;
@@ -194,23 +270,62 @@ export function buildMockReviewAgenda(ctx: MockReviewContext | undefined): {
 
   const agenda: MockReviewAgendaItem[] = ctx.focusItems.map((it, i) => {
     const n = i + 1;
-    const plain = stripInlineForLabel(it.problemText);
-    // Append the ellipsis only when actually truncated (so short stems don't
-    // read "2 + 2 = ?…").
-    const clipped = plain.length > 56 ? plain.slice(0, 56).trimEnd() + '…' : plain;
-    const firstWords = plain.split(' ').slice(0, 8).join(' ');
     return {
       n,
-      label: `${it.sectionLabel} — ${clipped}`,
+      label: `${it.sectionLabel} — ${mathSafeSnippet(it.problemText, 56)}`,
       result: agendaResult(it),
-      utterance: `Let's start with item ${n} — the one that begins "${firstWords}"`,
+      // The brain's numbered agenda block makes the item unambiguous — quoting
+      // the (often math-laden) stem here rendered a huge raw-TeX student card.
+      utterance: `Let's start with item ${n}.`,
     };
   });
 
-  const remainingMissed = ctx.remainingMissSummary.reduce((s, r) => s + r.missed, 0);
-  const units = ctx.remainingMissSummary.map((r) => r.unitLabel).join(', ');
+  // Condensed footer: a count only — the old per-loId list overflowed under
+  // the mic bar. count = misses NOT in the focus list.
+  const remainingMissed = ctx.totalMissed - ctx.focusItems.length;
   const remainingLine =
-    remainingMissed > 0 ? `+ ${remainingMissed} more missed in ${units} — just ask to include them` : null;
+    remainingMissed > 0
+      ? `+ ${remainingMissed} more missed — open the agenda (top right) to jump to any of them.`
+      : null;
 
   return { agenda, remainingLine };
+}
+
+// ---------------------------------------------------------------------------
+// Mid-session "Agenda drawer" — every miss as a tappable numbered row. Same
+// idiom as the pre-start list, but over ALL misses (not just the focus cap),
+// with the focus items flagged so the drawer can badge them "up next".
+// ---------------------------------------------------------------------------
+
+export interface MockReviewDrawerRow {
+  /** 1-based position over ALL misses. */
+  n: number;
+  /** Item id — passed to the pick handler on tap. */
+  itemId: string;
+  /** `${sectionLabel} — <math-safe snippet>` (keeps `$…$`). */
+  label: string;
+  /** MCQ/numeric: `✗ you: … · correct: …`; FRQ: `points/max`. */
+  result: string;
+  /** In the current focus list ⇒ show an "up next" badge. */
+  isFocus: boolean;
+}
+
+function missResult(m: MockReviewMiss): string {
+  if (m.responseFormat === 'frq' || m.frqScore) {
+    return m.frqScore ? `${m.frqScore.points}/${m.frqScore.max}` : '—';
+  }
+  return `✗ you: ${m.studentAnswer ?? 'no answer'} · correct: ${m.correctAnswer ?? '—'}`;
+}
+
+/** Build the mid-session drawer rows (all misses) from a review context. */
+export function buildMockReviewDrawer(ctx: MockReviewContext | undefined): MockReviewDrawerRow[] {
+  if (!ctx) return [];
+  const focusIds = new Set(ctx.focusItems.map((f) => f.itemId));
+  return ctx.allMisses.map((m, i) => ({
+    n: i + 1,
+    itemId: m.itemId,
+    label: `${m.sectionLabel} — ${m.snippet}`,
+    result: missResult(m),
+    isFocus: focusIds.has(m.itemId),
+  }));
 }

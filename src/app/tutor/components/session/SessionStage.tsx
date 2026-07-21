@@ -20,10 +20,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
-  MessageSquareText, X, Target, Upload, ArrowDown, Wrench,
+  MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
-import type { MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
+import type { MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
 import { stripLatexForTitle } from '@/lib/tutor/whiteboard/board-title';
 import { InlineMathText } from '../whiteboard/InlineMathText';
 import {
@@ -107,6 +107,14 @@ export interface SessionStageProps {
   /** Muted "+ N more missed in <units>…" line shown under the agenda list;
    *  null when there are no further misses. */
   mockAgendaRemaining?: string | null;
+  /** Mid-session Agenda drawer: EVERY miss as a tappable numbered row (focus
+   *  items flagged "up next"). Non-empty ⇒ an "Agenda" button appears in the
+   *  header that toggles a right-side panel; a row tap fires onPickAgendaItem
+   *  and closes the panel. Empty ⇒ no button. */
+  mockDrawer?: MockReviewDrawerRow[];
+  /** Fires with the tapped row's itemId (VoiceTutorRealtime.pickAgendaItem):
+   *  switches the tutor to that question, refetching/pinning it when needed. */
+  onPickAgendaItem?: (itemId: string) => void;
   /** Task Y1: true while the "Practice problems" chip's durable override is
    *  set (mirrored from VoiceTutorRealtime via onPracticeOverrideChange).
    *  Drives the chip's active state (Humor ✓ idiom). Absent ⇒ chip never
@@ -145,7 +153,7 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onBack,
-    mockAgenda, mockAgendaRemaining,
+    mockAgenda, mockAgendaRemaining, mockDrawer, onPickAgendaItem,
     practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
   } = props;
@@ -177,6 +185,10 @@ export default function SessionStage(props: SessionStageProps) {
   // session start was disorienting (it dimmed the whole stage). The nudge
   // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Mid-session Agenda drawer (mock-review): a right-side panel listing every
+  // miss. Closed by default; the header Agenda button toggles it.
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const showAgendaButton = !!mockDrawer && mockDrawer.length > 0;
   // The dock caption (rendered inside VoiceTutorRealtime via captionSlot —
   // composed in TutorSession, two levels up from this component's slots)
   // opens the transcript drawer through this window-event bridge: the drawer
@@ -327,7 +339,14 @@ export default function SessionStage(props: SessionStageProps) {
         {/* presence overlay when the board is empty. pb clears the floating
             caption+dock bar so the starter chips never sit under it. */}
         {boardEmpty && (
-          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center px-6 pt-4 pb-32 overflow-y-auto pointer-events-none">
+          // `m-auto` on the inner wrapper (not `justify-center` on the scroll
+          // container) so a TALL cluster — the mock-review agenda pushed the
+          // whole thing past the stage height — scrolls from the TOP instead of
+          // centering and clipping the hero under the header (live-test #1);
+          // a short cluster (orb-only presence) still centers. pt-14 keeps the
+          // top clear of the floating header even at the scroll origin.
+          <div className="absolute inset-0 z-[5] flex flex-col px-6 pt-14 pb-32 overflow-y-auto pointer-events-none">
+          <div className="m-auto w-full flex flex-col items-center">
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
                 <Target className="w-4 h-4" /> {objective}
@@ -387,7 +406,7 @@ export default function SessionStage(props: SessionStageProps) {
                 <p className="mt-1 text-center text-sm text-slate-500">
                   Tap a question to start there — or just tap the mic and we&apos;ll take them in order.
                 </p>
-                <div className="mt-4 flex flex-col gap-2 max-h-[46vh] overflow-y-auto">
+                <div className="mt-4 flex flex-col gap-2 max-h-[40vh] overflow-y-auto">
                   {mockAgenda.map((item) => (
                     <button
                       key={item.n}
@@ -396,8 +415,10 @@ export default function SessionStage(props: SessionStageProps) {
                     >
                       <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{item.n}</span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium text-slate-800">{item.label}</span>
-                        <span className="block text-xs text-slate-500">{item.result}</span>
+                        {/* Labels carry `$…$` math (live-test #2) — render via
+                            InlineMathText, not raw text. */}
+                        <InlineMathText text={item.label} className="block text-sm font-medium text-slate-800" />
+                        <InlineMathText text={item.result} className="block text-xs text-slate-500" />
                       </span>
                     </button>
                   ))}
@@ -438,6 +459,7 @@ export default function SessionStage(props: SessionStageProps) {
             </div>
             )}
           </div>
+          </div>
         )}
       </div>
 
@@ -458,6 +480,20 @@ export default function SessionStage(props: SessionStageProps) {
                 there is genuinely nothing to show. */}
             {beats && <div className="hidden lg:flex mx-auto min-w-0 max-w-[46%] overflow-x-auto">{beats}</div>}
             <div className="shrink-0 ml-auto flex items-center gap-1.5 sm:gap-2.5">
+              {/* Mock-review Agenda — mid-session jump list of every miss.
+                  Shown only in a mock-review session (mockDrawer non-empty).
+                  Sits with the header controls; the panel it opens clears the
+                  header so End/Pause stay reachable. */}
+              {showAgendaButton && (
+                <button
+                  onClick={() => setAgendaOpen((o) => !o)}
+                  title="Review agenda"
+                  className={`inline-flex items-center gap-1.5 h-9 px-2.5 rounded-full text-sm font-medium ${agendaOpen ? 'bg-blue-50 text-blue-700' : 'hover:bg-slate-100 text-slate-600'}`}
+                >
+                  <ListChecks className="w-[18px] h-[18px]" />
+                  <span className="hidden sm:inline">Agenda</span>
+                </button>
+              )}
               {/* Transcript trigger — header icon at ALL sizes (R1 2026-07-14;
                   the old md+ bottom-left floating chip covered board ink and
                   is gone). */}
@@ -667,6 +703,41 @@ export default function SessionStage(props: SessionStageProps) {
           </div>
         </div>
       </div>
+
+      {/* ===== Mock-review Agenda panel (mid-session) — a right-side card
+              listing EVERY miss. Backdrop starts BELOW the header (top-14) so
+              End/Pause stay tappable; the panel itself clears the header
+              (top-16). z-40: above the board + overlays + header, below the
+              tool modals (z-[45]) and the transcript drawer (z-50). ===== */}
+      {agendaOpen && showAgendaButton && mockDrawer && (
+        <>
+          <div className="absolute inset-x-0 top-14 bottom-0 z-40" onClick={() => setAgendaOpen(false)} />
+          <div className="absolute top-16 bottom-2 right-2 z-40 w-[min(88vw,360px)] flex flex-col rounded-2xl bg-white border border-slate-200 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+              <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><ListChecks className="w-4 h-4 text-slate-400" /> Review agenda</h2>
+              <button onClick={() => setAgendaOpen(false)} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-2.5 flex flex-col gap-2">
+              {mockDrawer.map((row) => (
+                <button
+                  key={row.itemId}
+                  onClick={() => { onPickAgendaItem?.(row.itemId); setAgendaOpen(false); }}
+                  className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm hover:bg-slate-50"
+                >
+                  <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{row.n}</span>
+                  <span className="min-w-0 flex-1">
+                    {row.isFocus && (
+                      <span className="mb-0.5 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-600">up next</span>
+                    )}
+                    <InlineMathText text={row.label} className="block text-sm font-medium text-slate-800" />
+                    <InlineMathText text={row.result} className="block text-xs text-slate-500" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ===== Transcript drawer ===== */}
       {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setDrawerOpen(false)} />}

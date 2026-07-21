@@ -90,8 +90,8 @@ import {
   looksLikePunnett,
 } from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { MockReviewContext, MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
-import { buildMockReviewAgenda } from '@/lib/tutor/mock-exam/review-focus';
+import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
+import { buildMockReviewAgenda, buildMockReviewDrawer } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
@@ -455,7 +455,23 @@ interface VoiceTutorRealtimeProps {
    *  it in state and passes it to SessionStage, which replaces the generic
    *  starter chips with the agenda. Empty array + null ⇒ no context (degraded
    *  mock-review or non-mock session): SessionStage keeps the generic chips. */
-  onMockAgendaChange?: (agenda: MockReviewAgendaItem[], remainingLine: string | null) => void;
+  onMockAgendaChange?: (
+    agenda: MockReviewAgendaItem[],
+    remainingLine: string | null,
+    /** Mid-session Agenda drawer rows (every miss). */
+    drawer: MockReviewDrawerRow[],
+    /** Stable pick handler for a drawer row — see pickAgendaItem. */
+    onPickAgendaItem: (itemId: string) => void,
+  ) => void;
+  /** Re-fetch the mock-review context, optionally PINNING extra item ids so
+   *  they lead the focus list (drawer "switch to this question" path). Returns
+   *  the fresh context (and also setMockReview's it in the parent). Provided by
+   *  the embed page; absent ⇒ the drawer can only jump to already-focused items. */
+  refetchMockReview?: (pinItemIds?: string[]) => Promise<MockReviewContext | undefined>;
+  /** Render a student turn on the board + send it to the brain — the SAME
+   *  pipeline the SessionStage starter chips use (TutorSession.handleStudentInput).
+   *  Used by pickAgendaItem to fire the "switch to item" utterance. */
+  onStudentInput?: (type: 'text' | 'drawing' | 'image', content: string) => void;
   /** Voice Perception Q9 (2026-06-16). Fires true when a perception
    *  cancel fires (yellow-flash window opens) and false ~300ms later
    *  when the window closes. Parent uses this to render a visible
@@ -600,6 +616,8 @@ export function VoiceTutorRealtime({
   onSpeakingRateChange,
   onPracticeOverrideChange,
   onMockAgendaChange,
+  refetchMockReview,
+  onStudentInput,
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
@@ -1297,17 +1315,55 @@ export function VoiceTutorRealtime({
   const mockReviewRef = useRef(mockReview);
   useEffect(() => { mockReviewRef.current = mockReview; }, [mockReview]);
 
-  // Pre-start "review agenda" (deliverable 4): derive the tappable question
-  // list + "+ N more" line from the review context and report it up so
-  // SessionStage can replace the generic starter chips with the agenda. Memoized
-  // on mockReview; reported via a stable ref so a changing callback identity
-  // doesn't re-fire it. Empty/degraded ⇒ ([], null) ⇒ generic chips stay.
+  // Pre-start "review agenda" (deliverable 4) + mid-session Agenda drawer:
+  // derive the pre-start list + "+ N more" line AND the drawer rows (every
+  // miss) from the review context and report them up so SessionStage can
+  // render both. Memoized on mockReview; reported via a stable ref so a
+  // changing callback identity doesn't re-fire it. Empty/degraded ⇒ generic
+  // chips stay + no Agenda button.
   const onMockAgendaChangeRef = useRef(onMockAgendaChange);
   useEffect(() => { onMockAgendaChangeRef.current = onMockAgendaChange; }, [onMockAgendaChange]);
+  const refetchMockReviewRef = useRef(refetchMockReview);
+  useEffect(() => { refetchMockReviewRef.current = refetchMockReview; }, [refetchMockReview]);
+  const onStudentInputRef = useRef(onStudentInput);
+  useEffect(() => { onStudentInputRef.current = onStudentInput; }, [onStudentInput]);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
+  const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
+
+  // Drawer row tap: switch the tutor to a specific missed item. Stable identity
+  // (reads refs) so re-firing onMockAgendaChange doesn't churn. If the item is
+  // ALREADY in the current focus list, just nudge to its number; the numbered
+  // brain block makes it unambiguous. Otherwise refetch the context PINNING it
+  // (so the fresh block puts it at Item 1) and, critically, set mockReviewRef
+  // DIRECTLY before firing the utterance — the next brain turn reads the ref
+  // synchronously and would otherwise beat the prop-driven re-render. On a
+  // refetch failure we log and do nothing (no broken utterance).
+  const pickAgendaItem = useCallback(async (itemId: string) => {
+    const ctx = mockReviewRef.current;
+    if (!ctx) return;
+    const focusIdx = ctx.focusItems.findIndex((f) => f.itemId === itemId);
+    if (focusIdx >= 0) {
+      onStudentInputRef.current?.('text', `Let's move to item ${focusIdx + 1}.`);
+      return;
+    }
+    const refetch = refetchMockReviewRef.current;
+    if (!refetch) {
+      console.warn('[mock-review] agenda pick: item not in focus and no refetch available — ignoring');
+      return;
+    }
+    try {
+      const fresh = await refetch([itemId]);
+      if (!fresh) { console.warn('[mock-review] agenda pick: refetch returned no context — ignoring'); return; }
+      mockReviewRef.current = fresh; // beat the prop-render race for the next brain turn
+      onStudentInputRef.current?.('text', "Let's switch to the question I just picked from my review list.");
+    } catch (e) {
+      console.error('[mock-review] agenda pick: refetch failed — ignoring:', e);
+    }
+  }, []);
+
   useEffect(() => {
-    onMockAgendaChangeRef.current?.(mockAgenda.agenda, mockAgenda.remainingLine);
-  }, [mockAgenda]);
+    onMockAgendaChangeRef.current?.(mockAgenda.agenda, mockAgenda.remainingLine, mockDrawer, pickAgendaItem);
+  }, [mockAgenda, mockDrawer, pickAgendaItem]);
 
   // Milestone reporting (mirrored to a ref so the emit helper has stable
   // identity and never goes stale inside the tool dispatch). Each milestone

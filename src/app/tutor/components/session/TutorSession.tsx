@@ -33,7 +33,7 @@ import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { MockReviewContext, MockReviewAgendaItem } from '@/lib/tutor/mock-exam/review-focus';
+import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
@@ -80,6 +80,10 @@ export interface TutorSessionProps {
   /** Task WS3: mock-review context, forwarded to the runtime. Present only for
    *  a mock-review session whose context fetch succeeded. */
   mockReview?: MockReviewContext;
+  /** Re-fetch the mock-review context, optionally pinning extra item ids
+   *  (Agenda drawer "switch to this question"). Forwarded straight to the
+   *  runtime. Absent ⇒ the drawer can only jump to already-focused items. */
+  refetchMockReview?: (pinItemIds?: string[]) => Promise<MockReviewContext | undefined>;
   lessonPlanId?: string;
   voice: OpenAIVoice;
   voiceEngine: TutorSessionVoiceEngine;
@@ -191,7 +195,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -254,6 +258,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // list instead of the generic starter chips.
   const [mockAgenda, setMockAgenda] = useState<MockReviewAgendaItem[]>([]);
   const [mockAgendaRemaining, setMockAgendaRemaining] = useState<string | null>(null);
+  // Mid-session Agenda drawer rows + pick handler — also mirrored from
+  // VoiceTutorRealtime via onMockAgendaChange. Non-empty ⇒ SessionStage shows
+  // the header "Agenda" button + the jump panel.
+  const [mockDrawer, setMockDrawer] = useState<MockReviewDrawerRow[]>([]);
+  const pickAgendaItemRef = useRef<(itemId: string) => void>(() => {});
   // #7 hybrid (2026-07-17): standing difficulty preference — mirrored from
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
@@ -823,7 +832,12 @@ export default function TutorSession(props: TutorSessionProps) {
         }}
         onSpeakingRateChange={setSpeakingRate}
         onPracticeOverrideChange={setPracticeOverrideActive}
-        onMockAgendaChange={(agenda, remainingLine) => { setMockAgenda(agenda); setMockAgendaRemaining(remainingLine); }}
+        onMockAgendaChange={(agenda, remainingLine, drawer, onPick) => {
+          setMockAgenda(agenda); setMockAgendaRemaining(remainingLine);
+          setMockDrawer(drawer); pickAgendaItemRef.current = onPick;
+        }}
+        refetchMockReview={refetchMockReview}
+        onStudentInput={handleStudentInput}
         onDifficultyBiasChange={setDifficultyBias}
         onPracticeStatsChange={(s) => { setPracticeStats(s); onPracticeStatsChange?.(s); }}
         onInterruptedChange={setIsPerceptionInterrupted}
@@ -1073,6 +1087,8 @@ export default function TutorSession(props: TutorSessionProps) {
         onStudentInput={handleStudentInput}
         mockAgenda={mockAgenda}
         mockAgendaRemaining={mockAgendaRemaining}
+        mockDrawer={mockDrawer}
+        onPickAgendaItem={(itemId) => pickAgendaItemRef.current?.(itemId)}
         practiceOverrideActive={practiceOverrideActive}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}

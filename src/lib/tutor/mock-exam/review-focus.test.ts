@@ -1,6 +1,14 @@
 import { strict as assert } from 'node:assert';
 import type { MockReviewItem } from '@evelyn/portal-contract/v1';
-import { selectMockReviewFocus, buildMockReviewContext } from './review-focus';
+import {
+  selectMockReviewFocus,
+  buildMockReviewContext,
+  buildMockReviewAgenda,
+  buildMockReviewDrawer,
+  mathSafeSnippet,
+} from './review-focus';
+
+const dollarCount = (s: string) => (s.match(/\$/g) ?? []).length;
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void): void {
@@ -118,6 +126,79 @@ test('buildMockReviewContext: totals, per-unit remainder summary, passage trunca
   assert.ok(ctx.focusItems[0].passageExcerpt!.length <= 1210);
   const geo = ctx.remainingMissSummary.find((s) => s.unitLabel === 'x.geometry');
   assert.ok(geo && geo.missed === 2);
+});
+
+// ─── mathSafeSnippet ────────────────────────────────────────────────────────
+test('mathSafeSnippet: string shorter than max is returned unchanged', () => {
+  assert.equal(mathSafeSnippet('short stem', 90), 'short stem');
+});
+
+test('mathSafeSnippet: prose cut trims and appends an ellipsis', () => {
+  assert.equal(mathSafeSnippet('The quick brown fox jumps over', 10), 'The quick…');
+});
+
+test('mathSafeSnippet: a cut that lands mid-span backs up before the span', () => {
+  const out = mathSafeSnippet('abc $x+y+z+w$ def', 8);
+  assert.equal(out, 'abc…');
+  assert.equal(dollarCount(out) % 2, 0);  // never leaves an unbalanced $
+});
+
+test('mathSafeSnippet: a leading span longer than maxLen is kept whole (never split)', () => {
+  const out = mathSafeSnippet('$\\frac{a+b+c+d}{g}$ tail', 5);
+  assert.ok(out.includes('\\frac'));
+  assert.equal(dollarCount(out) % 2, 0);
+  assert.ok(out.endsWith('…'));
+});
+
+// ─── frqScore (skipped-FRQ 0/9 bug) ─────────────────────────────────────────
+test('skipped FRQ (empty parts) reports frqScore from totalPoints/maxPoints; agenda shows 0/9 not 0/0', () => {
+  const it = frq('f1', 'x.u1', 0, 9);   // parts:[], totalPoints 0, maxPoints 9
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 0, compositeMax: 5, items: [it] });
+  assert.deepEqual(ctx.focusItems[0].frqScore, { points: 0, max: 9 });
+  const { agenda } = buildMockReviewAgenda(ctx);
+  assert.equal(agenda[0].result, '0/9');
+});
+
+// ─── agenda label keeps math; utterance references only the number ──────────
+test('agenda label keeps $..$ math and the utterance names only the item number', () => {
+  const it = { ...mcq('m1', 'x.u1', false), problemText: 'Find $\\lim_{x\\to2}(2x^2-3x+1)$ now' };
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items: [it] });
+  const { agenda } = buildMockReviewAgenda(ctx);
+  assert.ok(agenda[0].label.includes('$'));
+  assert.equal(dollarCount(agenda[0].label) % 2, 0);
+  assert.equal(agenda[0].utterance, "Let's start with item 1.");
+});
+
+// ─── condensed footer (no loId dump) ────────────────────────────────────────
+test('remainingLine is the condensed footer with a count and no loId list', () => {
+  const items = Array.from({ length: 12 }, (_, i) => mcq(`m${i}`, 'x.algebra', false));
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  const { remainingLine } = buildMockReviewAgenda(ctx);
+  assert.equal(remainingLine, '+ 4 more missed — open the agenda (top right) to jump to any of them.');
+});
+
+// ─── allMisses (drawer data source) ─────────────────────────────────────────
+test('buildMockReviewContext: allMisses lists every miss, focus-first, with snippet fields', () => {
+  const items = [
+    ...Array.from({ length: 5 }, (_, i) => mcq(`a${i}`, 'x.algebra', false)),
+    ...Array.from({ length: 5 }, (_, i) => mcq(`g${i}`, 'x.geometry', false)),
+  ];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  assert.equal(ctx.allMisses.length, 10);
+  assert.equal(ctx.totalMissed, 10);
+  const focusIds = ctx.focusItems.map((f) => f.itemId);
+  assert.deepEqual(ctx.allMisses.slice(0, focusIds.length).map((m) => m.itemId), focusIds);
+  assert.ok(ctx.allMisses.every((m) => typeof m.snippet === 'string' && !!m.sectionLabel && !!m.responseFormat));
+});
+
+// ─── drawer view-model ──────────────────────────────────────────────────────
+test('buildMockReviewDrawer: one numbered row per miss, focus rows flagged', () => {
+  const items = Array.from({ length: 9 }, (_, i) => mcq(`a${i}`, 'x.algebra', false));
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  const rows = buildMockReviewDrawer(ctx);
+  assert.equal(rows.length, 9);
+  assert.equal(rows.filter((r) => r.isFocus).length, 8);
+  assert.deepEqual(rows.map((r) => r.n), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

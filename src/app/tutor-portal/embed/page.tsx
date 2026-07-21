@@ -342,16 +342,34 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // network failure logs and leaves mockReview undefined, so the session still
   // starts as a plain mock-review greeting session.
   const [mockReview, setMockReview] = useState<MockReviewContext | undefined>(undefined);
+  // Fetch (and re-fetch) the mock-review context. `pinItemIds` pins extra
+  // items so they lead the focus list — the Agenda drawer's "switch to this
+  // question" path. Always setMockReview's the fresh context AND returns it so
+  // the caller (VoiceTutorRealtime.pickAgendaItem) can set its ref directly and
+  // beat the prop-render race. Degrade, never block: a failure logs and returns
+  // undefined, leaving the session running on whatever context it already had.
+  const refetchMockReview = useCallback(
+    async (pinItemIds?: string[]): Promise<MockReviewContext | undefined> => {
+      if (!config.mock_attempt_id) return undefined;
+      const ids = pinItemIds?.length ? pinItemIds : config.mock_item_ids;
+      const pinned = ids?.length ? `&items=${encodeURIComponent(ids.join(','))}` : '';
+      try {
+        const r = await fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}${pinned}`);
+        if (!r.ok) throw new Error(`context ${r.status}`);
+        const ctx = (await r.json()) as MockReviewContext;
+        setMockReview(ctx);
+        return ctx;
+      } catch (e) {
+        console.error('[mock-review] context fetch failed — session continues without it:', e);
+        return undefined;
+      }
+    },
+    [config.mock_attempt_id, config.student_id, config.mock_item_ids],
+  );
   useEffect(() => {
     if (sessionGoal !== 'mock-review' || !config.mock_attempt_id) return;
-    const pinned = config.mock_item_ids?.length
-      ? `&items=${encodeURIComponent(config.mock_item_ids.join(','))}`
-      : '';
-    fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}${pinned}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`context ${r.status}`))))
-      .then(setMockReview)
-      .catch((e) => console.error('[mock-review] context fetch failed — session continues without it:', e));
-  }, [sessionGoal, config.mock_attempt_id, config.student_id, config.mock_item_ids]);
+    void refetchMockReview();
+  }, [sessionGoal, config.mock_attempt_id, refetchMockReview]);
 
   const topicDisplayName = useMemo(
     () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,
@@ -751,6 +769,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         sessionId={sessionId}
         sessionGoal={sessionGoal}
         mockReview={mockReview}
+        refetchMockReview={refetchMockReview}
         lessonPlanId={config.curriculum_module || undefined}
         voice={openAIVoice}
         voiceEngine="claude-brain"

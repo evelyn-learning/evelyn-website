@@ -16,6 +16,7 @@ const ctx: MockReviewContext = {
     solutionText: 'Order the values; the middle one is 2.', loId: 'apstats.summary-stats',
   }],
   remainingMissSummary: [{ unitLabel: 'apstats.inference', missed: 4 }],
+  allMisses: [],
 };
 
 test('empty without context', () => assert.equal(formatMockReviewBlock(undefined), ''));
