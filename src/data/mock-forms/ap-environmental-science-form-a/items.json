@@ -1,0 +1,1657 @@
+[
+  {
+    "id": "apenvsci-fa-mc-001",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which biome is characterized by long, cold winters, short cool summers, nutrient-poor acidic soil, and dominance by coniferous evergreen trees such as spruce and fir, with lower species diversity than forests closer to the equator?",
+    "choices": [
+      "Temperate deciduous forest",
+      "Tundra",
+      "Taiga (boreal forest)",
+      "Temperate grassland"
+    ],
+    "answer": "C",
+    "solutionText": "Taiga (boreal forest) is defined by long, cold winters, short summers, and dominance by coniferous evergreens like spruce and fir, which tolerate nutrient-poor, acidic soils; species diversity is lower than in temperate deciduous forests or grasslands. Tundra lacks tree cover, and temperate deciduous forest and temperate grassland have milder winters and different dominant vegetation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-002",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which nitrogen-cycle process converts atmospheric nitrogen gas ($N_2$) into ammonia or related compounds that plants can use, and is carried out mainly by specialized bacteria such as *Rhizobium* living in nodules on legume roots?",
+    "choices": [
+      "Nitrogen fixation",
+      "Denitrification",
+      "Nitrification",
+      "Ammonification (mineralization)"
+    ],
+    "answer": "A",
+    "solutionText": "Nitrogen fixation converts inert atmospheric N2 into ammonia/ammonium that plants can absorb, and is performed by free-living and symbiotic bacteria such as Rhizobium in legume root nodules. Nitrification converts ammonia to nitrite/nitrate, denitrification converts nitrate back to N2 gas, and ammonification releases ammonia from decomposing organic matter — none of these fix atmospheric N2 as the first step.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-003",
+    "loId": "apenvsci.carbon-water-cycles",
+    "cedCode": "AP-ENVSCI-1.4+1.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer begins irrigating a field in a semi-arid region using water pumped from a deep aquifer. In the weeks after irrigation starts, the air directly above the field becomes noticeably more humid. Which pair of water-cycle processes is most directly responsible for this increase in local humidity?",
+    "choices": [
+      "Runoff and infiltration",
+      "Sublimation and deposition",
+      "Percolation and groundwater recharge",
+      "Evaporation (from wet soil) and transpiration (from crops)"
+    ],
+    "answer": "D",
+    "solutionText": "Irrigating soil adds water that evaporates directly from the wet soil surface, while crops draw up that water and release it as vapor through transpiration; together (evapotranspiration) these processes raise local humidity quickly. Runoff, infiltration, and percolation move water into or through the soil rather than into the air, and sublimation/deposition involve ice-to-vapor transitions that are not relevant here.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-004",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phytoplankton in a lake capture solar energy and convert it into chemical energy through photosynthesis. Before any of that energy is used for the phytoplankton's own cellular respiration, the total amount of chemical energy captured is called the ecosystem's...",
+    "choices": [
+      "Net primary productivity",
+      "Gross primary productivity",
+      "Secondary productivity",
+      "Standing crop biomass"
+    ],
+    "answer": "B",
+    "solutionText": "Gross primary productivity (GPP) is the total chemical energy captured by producers via photosynthesis before subtracting the energy producers use for their own respiration. Net primary productivity (NPP) is GPP minus respiration, secondary productivity refers to consumers rather than producers, and biomass is a stored mass measurement, not a rate of energy capture.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-005",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a freshwater pond food web, frogs eat aquatic insects and are in turn eaten by herons. A newly introduced parasite causes a sharp decline in the frog population, while heron and aquatic-insect numbers are not directly affected by the parasite. Which of the following is the most likely direct short-term consequence for the aquatic insect population?",
+    "choices": [
+      "It increases, because reduced frog predation releases the insects from a major source of predation pressure.",
+      "It decreases, because frogs and aquatic insects compete for the same food resources.",
+      "It stays the same, because herons will simply prey on aquatic insects instead of frogs.",
+      "It goes extinct, because frogs are the insects' only natural predator."
+    ],
+    "answer": "A",
+    "solutionText": "Because frogs are a major predator of aquatic insects, a sharp drop in the frog population releases the insects from predation pressure, so their numbers are most likely to increase in the short term. Frogs and insects are predator and prey, not competitors; herons alone cannot fully replace frog predation pressure; and losing one predator does not cause the prey species to go extinct.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-006",
+    "loId": "apenvsci.ecosystems-biomes",
+    "cedCode": "AP-ENVSCI-1.1-1.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A field researcher records the following average annual data for two ecosystems, both located between 10° and 30° latitude:\n\n| Site | Avg. annual precipitation | Precipitation pattern | Dominant vegetation |\n|---|---|---|---|\n| Site X | 110 cm | Distinct wet and dry seasons | Scattered trees, dense grasses |\n| Site Y | 40 cm | Fairly even year-round | Grasses, almost no trees |\n\nBased on this data, Site X and Site Y are most likely which two biomes, respectively?",
+    "choices": [
+      "Tropical rainforest and Desert, respectively",
+      "Savanna and Temperate grassland, respectively",
+      "Temperate grassland and Savanna, respectively",
+      "Chaparral and Tundra, respectively"
+    ],
+    "answer": "B",
+    "solutionText": "Site X's high, strongly seasonal rainfall (110 cm/yr with distinct wet/dry seasons) plus scattered trees over dense grass matches a savanna, while Site Y's lower, evenly distributed rainfall (40 cm/yr) with grasses and almost no trees matches a temperate grassland. The precipitation totals and patterns given are inconsistent with tropical rainforest, desert, chaparral, or tundra.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-007",
+    "loId": "apenvsci.nitrogen-phosphorus-cycles",
+    "cedCode": "AP-ENVSCI-1.5-1.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A classroom aquarium with fish but no live plants builds up ammonia from fish waste, which nitrifying bacteria convert first to nitrite and then to nitrate. The class then adds a large number of fast-growing live aquatic plants to the tank. Over the following two weeks, what is the most likely change in the tank's nitrate concentration, and why?",
+    "choices": [
+      "Nitrate concentration will increase, because the plants perform denitrification and release nitrate into the water.",
+      "Nitrate concentration will stay the same, because plants cannot absorb nitrogen in the nitrate form.",
+      "Nitrate concentration will decrease, because the plants take up nitrate through their roots and leaves as a nitrogen source for growth (assimilation).",
+      "Nitrate concentration will increase, because plant decay adds new organic nitrogen faster than nitrification can process it."
+    ],
+    "answer": "C",
+    "solutionText": "Aquatic plants absorb nitrate from the water through assimilation and use it to build proteins and other biomolecules, so adding fast-growing, healthy plants removes nitrate from the water and its concentration falls. Plants do not perform denitrification (that requires anaerobic bacteria converting nitrate to N2 gas), and plant uptake — not decay — is the dominant effect for actively growing plants.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-008",
+    "loId": "apenvsci.productivity-energy-flow",
+    "cedCode": "AP-ENVSCI-1.8-1.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a coral reef ecosystem, algae (primary producers) have a net primary productivity of $90{,}000 \\text{ kcal/m}^2/\\text{yr}$. Assuming a 10% trophic efficiency at each energy transfer, how much energy is available to secondary consumers (the third trophic level)?",
+    "choices": [
+      "90 kcal/m²/yr",
+      "9,000 kcal/m²/yr",
+      "8,100 kcal/m²/yr",
+      "900 kcal/m²/yr"
+    ],
+    "answer": "D",
+    "solutionText": "NPP of 90,000 kcal/m²/yr transferred at 10% efficiency to primary consumers yields 9,000 kcal/m²/yr; transferring that at 10% efficiency again to secondary consumers yields 900 kcal/m²/yr. The value 9,000 is the energy available to primary (not secondary) consumers, while 90 and 8,100 result from applying the 10% rule incorrectly.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-009",
+    "loId": "apenvsci.food-webs",
+    "cedCode": "AP-ENVSCI-1.11",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a temperate forest, a fungal pathogen causes a sharp decline in the population of soil fungi that are the primary decomposers of leaf litter. Which of the following best predicts the most direct multi-step consequence for the forest's food web and nutrient cycling over the following two years?",
+    "choices": [
+      "Leaf litter accumulates as decomposition slows; nutrient release (such as nitrogen) to the soil declines, gradually reducing the primary productivity available to herbivores.",
+      "Bacteria fully replace the fungal decomposers within weeks, so decomposition rates and nutrient cycling remain essentially unchanged.",
+      "Herbivore populations increase immediately, because the extra leaf litter itself becomes a new, abundant food source for them.",
+      "Decomposition slows, but because the nitrogen and carbon cycles operate independently of each other, plant productivity is unaffected."
+    ],
+    "answer": "A",
+    "solutionText": "Fungal decomposers break down leaf litter and release its stored nutrients, such as nitrogen, back into the soil; losing them slows decomposition, so litter accumulates while less nitrogen becomes available to plant roots, which over time reduces the primary productivity supporting the herbivore food web. Bacteria alone typically cannot fully replace fungal decomposition capacity that quickly, undecomposed litter is not itself edible to most forest herbivores, and the carbon and nitrogen cycles are linked through decomposition rather than independent.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-010",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the equilibrium theory of island biogeography, which two characteristics of an island most directly determine its equilibrium number of species?",
+    "choices": [
+      "Elevation and average annual rainfall",
+      "Human population density and tourism level",
+      "Distance from the mainland and island area",
+      "Underlying rock type and soil pH"
+    ],
+    "answer": "C",
+    "solutionText": "Island biogeography theory holds that species richness at equilibrium is set by the balance of immigration and extinction rates, which are governed primarily by an island's distance from the mainland (affects immigration rate) and its area (affects extinction rate). Rainfall, tourism, and rock type are not core variables in the model.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-011",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four islands in the fictional Kestrel archipelago have the following characteristics:\n\n| Island | Distance from mainland | Area |\n|---|---|---|\n| Alder | Near | Large |\n| Birch | Near | Small |\n| Cedar | Far | Large |\n| Driftwood | Far | Small |\n\nAccording to island biogeography theory, which island would be expected to have the highest rate of species turnover (extinction and colonization both occurring frequently)?",
+    "choices": [
+      "Birch (near, small)",
+      "Alder (near, large)",
+      "Cedar (far, large)",
+      "Driftwood (far, small)"
+    ],
+    "answer": "A",
+    "solutionText": "Islands that are both near the mainland and small have the highest species turnover: proximity keeps immigration rates high while small area keeps extinction rates high, so species are constantly going locally extinct and being replaced. Near-large islands have high immigration but low extinction (high richness, lower turnover); far-large islands have the lowest turnover of the four.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-012",
+    "loId": "apenvsci.biodiversity-island-biogeo",
+    "cedCode": "AP-ENVSCI-2.1+2.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A newly formed volcanic island lies a few kilometers from the mainland. Over the following century, ecologists observe that the number of species on the island rises quickly at first, then levels off near a stable number — even though individual species occasionally go locally extinct and are replaced by new colonizers. This pattern is best explained by which concept?",
+    "choices": [
+      "Primary succession",
+      "The intermediate disturbance hypothesis",
+      "Allopatric speciation",
+      "The equilibrium model of island biogeography"
+    ],
+    "answer": "D",
+    "solutionText": "A species count that rises and then levels off, while remaining stable despite ongoing local extinctions and recolonizations, is the signature of the dynamic equilibrium described by the island biogeography model: total richness stabilizes even as which species are present keeps changing. This is not succession (directional community change within one area) or speciation.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-013",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On a range-of-tolerance curve for an environmental factor such as temperature, the region located between the optimal range and the zones of intolerance — where organisms can survive but are physiologically stressed — is called the:",
+    "choices": [
+      "Zone of intolerance",
+      "Zone of physiological stress",
+      "Limiting factor threshold",
+      "Ecological optimum"
+    ],
+    "answer": "B",
+    "solutionText": "On a range-of-tolerance curve, the areas flanking the optimal range — where organisms survive but are under measurable physiological stress — are called zones of physiological stress; beyond those, survival becomes impossible in the zones of intolerance.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-014",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A trout species in Lake Marsden has an optimal water temperature range of 14-18°C and can survive, though stressed, between 9-22°C; temperatures outside 9-22°C are lethal. In August, runoff from a nearby quarry raises the lake's temperature from 16°C to 21°C. Which best describes the effect on the trout population?",
+    "choices": [
+      "The trout have moved from the optimal range into a zone of physiological stress but can still survive",
+      "The trout are now in a zone of intolerance and will die immediately",
+      "The temperature change has no effect because 21°C is within the original optimal range",
+      "The trout will evolve a wider tolerance range within one generation"
+    ],
+    "answer": "A",
+    "solutionText": "At 21°C, the trout are outside their 14-18°C optimal range but still within their 9-22°C survivable range, placing them in a zone of physiological stress rather than a zone of intolerance (which begins above 22°C). Evolving a wider tolerance range within a single generation is not a plausible mechanism.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-015",
+    "loId": "apenvsci.tolerance-adaptations",
+    "cedCode": "AP-ENVSCI-2.4+2.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two amphibian species in Riverbend County have the following salinity tolerance ranges:\n\n| Species | Survivable salinity range (ppt) | Optimal salinity (ppt) |\n|---|---|---|\n| Spring peeper | 0-3 | 0.5 |\n| Salt-marsh frog | 0-18 | 6 |\n\nA drought causes salinity in a shared breeding pond to rise gradually from 1 ppt to 10 ppt over one season. Based on their tolerance ranges, what is the most likely outcome?",
+    "choices": [
+      "Both species will be eliminated once salinity exceeds 3 ppt",
+      "The salt-marsh frog will be eliminated first because its tolerance range is wider and therefore less adapted",
+      "The spring peeper will be eliminated as salinity rises past its tolerance limit, while the salt-marsh frog persists near its optimum",
+      "Neither species is affected because amphibians are not sensitive to salinity"
+    ],
+    "answer": "C",
+    "solutionText": "The salt-marsh frog's optimal salinity (6 ppt) falls well within the range the pond reaches (up to 10 ppt), and its tolerance extends to 18 ppt, so it persists near its optimum. The spring peeper's survivable range tops out at 3 ppt, so it is eliminated once salinity exceeds that threshold. A wider tolerance range reflects broader adaptation, not weaker fitness, so that reasoning is backwards.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-016",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer in Elm County abandons a wheat field in 2020. By 2026, ecologists observe that the field has been colonized by grasses, then shrubs, and is beginning to show young pine saplings, while the original topsoil and seed bank remained intact throughout. This pattern of ecological change is an example of:",
+    "choices": [
+      "Primary succession",
+      "Ecological restoration",
+      "Climax community formation",
+      "Secondary succession"
+    ],
+    "answer": "D",
+    "solutionText": "Because the original topsoil and seed bank remained intact, recolonization did not have to start from bare substrate — this is the defining feature of secondary succession, as opposed to primary succession, which begins on newly exposed surfaces with no soil or seed bank.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-017",
+    "loId": "apenvsci.disruptions-succession",
+    "cedCode": "AP-ENVSCI-2.5+2.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two similar sections of temperate forest in Hollow Ridge State Park experience wind disturbances of different severity. Section A loses only its canopy (scattered treefall gaps), while Section B is completely leveled and its topsoil is scoured away down to bare subsoil. Thirty years later, Section A has returned to a forest resembling its pre-disturbance state, but Section B is still dominated by early-successional grasses and shrubs with only scattered tree seedlings. Which factor most directly explains why Section B's recovery has been slower and followed a different trajectory than Section A's?",
+    "choices": [
+      "Section B experienced a more severe disturbance that removed the soil and seed bank, forcing it to begin succession from an earlier stage with fewer biotic legacies (surviving roots, seeds, organic matter) than Section A retained",
+      "Section B receives less annual sunlight than Section A, which is the primary driver of successional rate",
+      "Grasses and shrubs are inherently unable to be replaced by trees once established, regardless of disturbance history",
+      "Section A's faster recovery indicates it underwent primary succession, which is always faster than secondary succession"
+    ],
+    "answer": "A",
+    "solutionText": "Section B's more intense disturbance destroyed the soil and seed bank, removing the biotic legacies (surviving roots, seeds, organic matter, seedlings) that let a site recover quickly; Section A retained these legacies, allowing it to return to something like its original state on the same timeframe. Primary succession is actually typically slower than secondary succession, not faster, so that option reverses the relationship.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-018",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which type of survivorship curve is characterized by relatively low mortality throughout early and middle life, with most individuals dying only in old age?",
+    "choices": [
+      "Type III",
+      "Type I",
+      "Type II",
+      "Type IV"
+    ],
+    "answer": "B",
+    "solutionText": "A Type I survivorship curve stays high and flat through early and middle life, with deaths concentrated near the maximum lifespan (old age). Type III curves show the opposite pattern (high early mortality), and Type II shows a roughly constant mortality rate across the lifespan. There is no standard \"Type IV\" curve.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-019",
+    "loId": "apenvsci.survivorship-r-k",
+    "cedCode": "AP-ENVSCI-3.1-3.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Species X produces thousands of wind-dispersed seeds each year, matures within a single growing season, provides no parental care, and colonizes disturbed sites quickly but is often outcompeted once other plants establish. Species Y produces only a few seeds every several years, takes decades to reach reproductive maturity, and can live for centuries once established in a stable forest. Based on these life-history traits, which pairing of reproductive strategy and expected survivorship curve is correct?",
+    "choices": [
+      "Species X is K-selected with a Type I curve; Species Y is r-selected with a Type III curve",
+      "Species X is r-selected with a Type I curve; Species Y is K-selected with a Type III curve",
+      "Both species share the same reproductive strategy because they are both plants",
+      "Species X is r-selected with a Type III curve; Species Y is K-selected with a Type I curve"
+    ],
+    "answer": "D",
+    "solutionText": "Species X's traits — many offspring, no parental care, fast maturation, poor competitive ability — are classic r-selected traits, which produce Type III survivorship (high mortality among the many young). Species Y's traits — few offspring, long maturation, long lifespan once established — are classic K-selected traits, which produce Type I survivorship (low mortality until old age).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-020",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pond in Hazelbrook Park has a carrying capacity of 400 largemouth bass. The current population is 250 bass. Based on the logistic growth model, which best describes the population's growth at this point?",
+    "choices": [
+      "The population is at zero growth because it has already reached carrying capacity",
+      "The population is growing, and its growth rate will continue to accelerate indefinitely",
+      "The population is growing, but the rate of growth will slow as it approaches 400 individuals due to increasing resource competition",
+      "The population is shrinking because it has exceeded its carrying capacity"
+    ],
+    "answer": "C",
+    "solutionText": "Under the logistic growth model, growth rate slows as a population approaches carrying capacity because resources become increasingly limited by competition; at 250 of 400, the pond population is still below carrying capacity and growing, but not at an unconstrained rate. It has not reached zero growth (that occurs at carrying capacity) and growth does not accelerate indefinitely under logistic, as opposed to exponential, growth.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-021",
+    "loId": "apenvsci.carrying-capacity-growth",
+    "cedCode": "AP-ENVSCI-3.4-3.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A deer population on a nature reserve has a carrying capacity of K = 600. After two mild winters in a row, the population overshoots to 950 individuals before a harsh winter with limited food causes a die-off. \"Overshoot\" is defined as the amount by which the population exceeds K. If the die-off brings the population down to a level 40% below K, what is the population after the die-off, and what was the overshoot?",
+    "choices": [
+      "The post-die-off population is 360; the overshoot was 600 individuals above K",
+      "The post-die-off population is 360; the overshoot was 350 individuals above K",
+      "The post-die-off population is 240; the overshoot was 350 individuals above K",
+      "The post-die-off population is 840; the overshoot was 950 individuals above K"
+    ],
+    "answer": "B",
+    "solutionText": "Overshoot is the amount by which the population exceeds K: 950 minus 600 = 350. A die-off that brings the population 40% below K leaves it at 600 times 0.60 = 360 (60% of K remaining). One distractor miscalculates the overshoot as equal to K itself, another mistakenly treats 40% of K as the remaining population instead of the amount removed, and the last reverses the pre- and post-die-off numbers.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-022",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Country Q has the following population age breakdown:\n\n| Age group | % of population |\n|---|---|\n| 0-14 | 40% |\n| 15-64 | 52% |\n| 65+ | 8% |\n\nBased on this data, which of the following is the most likely near-term population trend for Country Q?",
+    "choices": [
+      "Continued population growth, since a large proportion of the population is young and has not yet entered reproductive age",
+      "Rapid population decline, since more than half the population is already past reproductive age",
+      "A stable, unchanging population size, since the working-age group is the largest category",
+      "Population growth driven primarily by immigration rather than births"
+    ],
+    "answer": "A",
+    "solutionText": "A population in which 40% is under age 15 has a large cohort not yet old enough to reproduce; as that cohort ages into its reproductive years, births will continue to exceed deaths for some time, driving continued growth even before accounting for current fertility rates. A large working-age share does not by itself imply a stable population size, and nothing in the data points to immigration as the driver.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-023",
+    "loId": "apenvsci.age-structure-fertility",
+    "cedCode": "AP-ENVSCI-3.6-3.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table below shows age-specific fertility rates (ASFR, births per woman) for five-year age groups in Meadowcrest County. To estimate the total fertility rate (TFR), multiply each ASFR by 5 (the width of each age group in years) and sum the results.\n\n| Age group | ASFR |\n|---|---|\n| 15-19 | 0.02 |\n| 20-24 | 0.08 |\n| 25-29 | 0.10 |\n| 30-34 | 0.06 |\n| 35-39 | 0.02 |\n\nWhat is Meadowcrest County's estimated TFR?",
+    "choices": [
+      "0.28",
+      "2.80",
+      "1.68",
+      "1.40"
+    ],
+    "answer": "D",
+    "solutionText": "Summing the ASFRs gives 0.02 + 0.08 + 0.10 + 0.06 + 0.02 = 0.28; multiplying by the 5-year width of each age group gives 0.28 times 5 = 1.40. One distractor stops after summing and skips the multiplication step, while the other two result from multiplying by the wrong factor.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-024",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the fictional nation of Baymoor, death rates fell sharply after 1960 due to a nationwide vaccination and sanitation campaign, while birth rates remained high through the 1980s. As a direct result of this gap between birth and death rates, Baymoor's population:",
+    "choices": [
+      "Declined steadily throughout this period",
+      "Remained essentially unchanged because birth and death rates moved together",
+      "Grew rapidly, since more people were being born than were dying",
+      "Shrank due to increased emigration caused by the vaccination campaign"
+    ],
+    "answer": "C",
+    "solutionText": "When death rates fall while birth rates remain high, births consistently outnumber deaths, producing rapid population growth — this is the classic mechanism driving the growth surge in the early stages of the demographic transition. Emigration is not mentioned or implied by a vaccination campaign, and the rates did not move together (death rates fell while birth rates stayed high).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-025",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The table shows birth and death rates (per 1,000 people) for two countries in 2026:\n\n| Country | Birth rate | Death rate |\n|---|---|---|\n| Thornwick | 42 | 38 |\n| Faircastle | 11 | 9 |\n\nBoth countries have similarly slow rates of natural increase, but for different structural reasons. Which statement correctly distinguishes their positions in the demographic transition?",
+    "choices": [
+      "Both countries are in the same stage of the demographic transition because their rates of natural increase are numerically similar",
+      "Thornwick's slow growth reflects a pre-transition society with both high birth and high death rates, while Faircastle's slow growth reflects a post-transition society where both rates have fallen to low levels",
+      "Faircastle must have a younger population than Thornwick, since low birth and death rates always indicate a younger age structure",
+      "Thornwick's high death rate indicates it has completed the demographic transition, while Faircastle is just beginning it"
+    ],
+    "answer": "B",
+    "solutionText": "Thornwick's high birth AND high death rates reflect a society earlier in the demographic transition, while Faircastle's low birth AND low death rates reflect a society that has completed the transition — both happen to produce similarly low rates of natural increase despite being at opposite ends of the transition. A similar rate of natural increase does not mean two countries are in the same stage, and low vital rates typically indicate an older, not younger, age structure.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-026",
+    "loId": "apenvsci.demographic-transition",
+    "cedCode": "AP-ENVSCI-3.8-3.9",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The nation of Aldermere has a birth rate of 10 per 1,000 and a death rate of 11 per 1,000 in 2026, giving it a slightly negative rate of natural increase. However, census data show Aldermere's total population grew by 1.8% that year. Which explanation is most consistent with both pieces of data?",
+    "choices": [
+      "The birth and death rate data must be incorrect, since population cannot grow when the death rate exceeds the birth rate",
+      "Aldermere is in Stage 1 of the demographic transition, where both birth and death rates are high",
+      "The population growth reflects a delayed effect of past high fertility working its way through the age structure (population momentum), unrelated to migration",
+      "Net immigration into Aldermere was large enough to offset natural decrease and drive overall population growth"
+    ],
+    "answer": "D",
+    "solutionText": "Total population change equals natural increase (births minus deaths) plus net migration; a country can have negative natural increase and still grow overall if net immigration is large enough to offset it. Population momentum would explain continued growth from an already-young age structure built up over decades, but nothing here describes Aldermere's age structure or fertility history, so migration is the better-supported explanation for this single year's data. Aldermere's low, similar birth and death rates also rule out Stage 1.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-027",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which set of factors determines the properties of soil formed at a given location over time?",
+    "choices": [
+      "Latitude, ocean currents, wind speed, and plate boundary type",
+      "Climate, organisms, relief (topography), parent material, and time",
+      "Soil pH, nutrient content, and microbial biomass only",
+      "Precipitation amount and average annual temperature only"
+    ],
+    "answer": "B",
+    "solutionText": "Soil formation is controlled by five interacting factors -- climate, organisms, relief/topography, parent material, and time (often abbreviated CLORPT). The other options each name only a subset of the true controlling factors or unrelated variables.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-028",
+    "loId": "apenvsci.plate-tectonics-soil",
+    "cedCode": "AP-ENVSCI-4.1-4.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A region near the equator receives very heavy year-round rainfall and supports lush rainforest vegetation, yet the exposed soil is thin, reddish, and notably poor in plant-available nutrients. Which process best explains why heavy rainfall in this climate produces nutrient-poor soil despite the dense vegetation?",
+    "choices": [
+      "The dense plant canopy blocks sunlight from reaching the soil, preventing decomposer organisms from breaking down leaf litter",
+      "High rainfall lowers soil temperature, which slows all chemical weathering of the parent rock",
+      "The rainforest's shallow-rooted trees absorb nutrients before they ever reach the soil, leaving none behind",
+      "Heavy rainfall rapidly leaches soluble nutrients (like nitrogen and potassium) down through the soil profile faster than decomposition can replace them, while iron and aluminum oxides remain and give the soil its color"
+    ],
+    "answer": "D",
+    "solutionText": "In humid tropical climates, intense precipitation leaches most soluble nutrients out of the topsoil, while insoluble iron and aluminum oxides accumulate and give lateritic soils their reddish color; most nutrients in these ecosystems are actually stored in the living biomass, not the soil. The other options describe mechanisms that don't match the actual chemistry of tropical leaching.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-029",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A meteoroid entering Earth's atmosphere burns up completely due to friction with air molecules before it can reach the ground. In which atmospheric layer does this burning up primarily occur?",
+    "choices": [
+      "Troposphere",
+      "Stratosphere",
+      "Mesosphere",
+      "Thermosphere"
+    ],
+    "answer": "C",
+    "solutionText": "Most meteoroids vaporize in the mesosphere, roughly 50-85 km above Earth's surface, due to frictional heating from the thin but present air molecules there -- earning it the nickname 'meteor layer.' It lies between the stratosphere below and the thermosphere above, neither of which matches this description.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-030",
+    "loId": "apenvsci.atmosphere-wind",
+    "cedCode": "AP-ENVSCI-4.4-4.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The polar jet stream is a narrow band of very fast-moving air found near the boundary between cold polar air and warmer mid-latitude air, roughly 9-12 km above the surface. Which statement best explains why the jet stream's wind speed increases when the temperature contrast across this boundary becomes sharper (i.e., the temperature difference between the two air masses grows larger)?",
+    "choices": [
+      "A steeper temperature gradient creates a steeper air pressure gradient at that altitude, and stronger pressure gradients drive faster winds",
+      "Colder air always moves faster than warm air regardless of pressure, so a bigger temperature difference simply means the cold air itself is moving faster",
+      "The jet stream's speed depends only on how humid the air masses are, not on temperature or pressure differences at all",
+      "A sharper temperature contrast causes more precipitation, and precipitation friction accelerates the surrounding air"
+    ],
+    "answer": "A",
+    "solutionText": "Wind speed is driven by the pressure gradient force: a larger temperature difference between two air masses produces a steeper horizontal pressure gradient at altitude, which accelerates the air, so the jet stream intensifies. The other options misattribute speed to temperature directly, to humidity, or to a precipitation effect that does not cause wind acceleration this way.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-031",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A ridge of high land separates two neighboring watersheds so that rain falling on one side flows toward one river system, while rain falling on the other side flows toward a completely different river system. What is this topographic boundary called?",
+    "choices": [
+      "A floodplain",
+      "An aquifer recharge zone",
+      "A drainage channel",
+      "A watershed divide"
+    ],
+    "answer": "D",
+    "solutionText": "A watershed divide (or drainage divide) is the elevated boundary that separates two adjacent watersheds, directing precipitation on each side into different river systems. A floodplain is low-lying land next to a river that floods, an aquifer recharge zone is where water infiltrates to replenish groundwater, and a drainage channel is where water flows within a watershed, not the boundary between two.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-032",
+    "loId": "apenvsci.watersheds-solar",
+    "cedCode": "AP-ENVSCI-4.6-4.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Earth's tropics receive more incoming solar radiation than they radiate back to space, creating a net energy surplus there, while the polar regions radiate more energy to space than they receive, creating a net energy deficit. Which of the following is the most direct consequence of this latitudinal energy imbalance?",
+    "choices": [
+      "It causes the tropics to steadily warm every year while the poles steadily cool every year, with no equilibrium",
+      "It drives large-scale atmospheric and oceanic circulation patterns that transport heat from the tropics toward the poles",
+      "It has no significant effect on global circulation because Earth's total energy budget is balanced overall",
+      "It causes the poles to receive more direct sunlight than the tropics during the winter months to compensate"
+    ],
+    "answer": "B",
+    "solutionText": "Because the tropics gain more energy than they lose and the poles lose more than they gain, winds and ocean currents continuously transport heat poleward, which is what keeps both regions in a roughly stable long-term temperature range rather than diverging indefinitely. The imbalance is real at each latitude even though the whole-Earth budget balances, and the poles do not receive more direct sunlight than the tropics in winter.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-033",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a La Niña event, unusually strong trade winds push more warm surface water than usual toward the western Pacific, which allows cold, nutrient-rich water to rise more strongly along the South American coast. What is the most likely effect of this intensified upwelling on the coastal fishing industry there?",
+    "choices": [
+      "Fish populations tend to increase because the nutrient-rich upwelled water boosts plankton growth, supporting more fish",
+      "Fish populations decline because the colder water is too cold for fish to survive",
+      "Fish populations are unaffected because upwelling only changes water temperature, not nutrient levels",
+      "Fish populations decline because upwelling pushes fish populations further out to sea, away from coastal fishing fleets"
+    ],
+    "answer": "A",
+    "solutionText": "Upwelled water is rich in nutrients like nitrogen and phosphorus, which fuels phytoplankton blooms at the base of the food web and typically supports larger fish populations near the coast. The other options describe effects that don't occur, and upwelling's main ecological importance is precisely its nutrient input, not just a temperature change.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-034",
+    "loId": "apenvsci.climate-enso",
+    "cedCode": "AP-ENVSCI-4.8-4.9",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During La Niña events, wind shear (the change in wind speed and direction with altitude) over the tropical Atlantic Ocean tends to weaken compared to El Niño years. Given that strong wind shear tends to disrupt a developing hurricane's structure, what effect would weaker wind shear during La Niña most likely have on Atlantic hurricane activity?",
+    "choices": [
+      "Atlantic hurricane activity tends to decrease, since weaker wind shear reduces the ocean heat available to storms",
+      "Atlantic hurricane activity is unaffected, since wind shear only influences Pacific storms, not Atlantic ones",
+      "Atlantic hurricane activity tends to increase, since weaker wind shear allows storms to organize and strengthen more easily",
+      "Atlantic hurricane activity becomes impossible to predict, since wind shear has no known relationship to storm formation"
+    ],
+    "answer": "C",
+    "solutionText": "Wind shear disrupts a storm's vertical structure and can tear a developing hurricane apart, so when shear weakens (as it tends to during La Niña), tropical storms in the Atlantic can organize and intensify more readily, contributing to more active Atlantic hurricane seasons. The other options incorrectly link wind shear to ocean heat content, wrongly limit its effect to the Pacific, or contradict the well-established relationship described in the stem.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-035",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer in Marsh Hollow switches from conventional plowing (tillage) to no-till farming, in which seeds are planted directly into the residue of the previous crop without turning over the soil. Which outcome is the farmer most likely to observe over the following few growing seasons?",
+    "choices": [
+      "Increased soil erosion, because the leftover crop residue prevents new roots from anchoring the soil",
+      "No change in soil erosion or organic matter, because tillage has no effect on soil structure",
+      "Increased soil compaction so severe that the field becomes unusable for farming within one season",
+      "Reduced soil erosion and increased soil organic matter, because the undisturbed soil structure and residue cover protect the surface from wind and water"
+    ],
+    "answer": "D",
+    "solutionText": "No-till farming leaves crop residue on the surface and avoids disturbing soil structure, which reduces erosion from wind and water and allows organic matter to build up over time. The other options either have the mechanism backwards, incorrectly claim tillage has no effect, or describe an extreme and inaccurate outcome.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-036",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Farmers sometimes plant a 'cover crop,' such as clover, in a field between the main growing seasons rather than leaving the soil bare. What is the primary purpose of planting a cover crop?",
+    "choices": [
+      "To generate a second cash crop that can be sold for extra income",
+      "To protect and enrich the soil by reducing erosion and adding organic matter and nutrients",
+      "To attract more pest insects away from the main crop planted the following season",
+      "To permanently replace the need for any other soil fertilization method"
+    ],
+    "answer": "B",
+    "solutionText": "Cover crops are planted primarily to protect bare soil from erosion, suppress weeds, and add organic matter and (in the case of legumes like clover) nitrogen back into the soil, rather than to be sold or to permanently replace fertilization. The other options misidentify the purpose or describe the opposite of a common benefit.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-037",
+    "loId": "apenvsci.agriculture",
+    "cedCode": "AP-ENVSCI-5.3-5.7+5.14-5.16",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A persistent pesticide is measured at a concentration of $0.0015\\text{ ppm}$ in algae. At each higher trophic level, the pesticide's concentration is magnified by a factor of 6 due to biomagnification. What is the pesticide's approximate concentration in a fish that feeds three trophic levels above the algae (algae to zooplankton to small fish to this fish)?",
+    "choices": [
+      "$0.009\\text{ ppm}$",
+      "$0.054\\text{ ppm}$",
+      "$0.324\\text{ ppm}$",
+      "$1.944\\text{ ppm}$"
+    ],
+    "answer": "C",
+    "solutionText": "Each trophic level multiplies the concentration by 6, so after 3 levels: $0.0015 \\times 6^3 = 0.0015 \\times 216 = 0.324\\text{ ppm}$. The first choice results from multiplying by 6 only once (1 level), the second from multiplying by 6 twice (2 levels), and the fourth from multiplying by 6 four times (one level too many).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-038",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lakeshore City has a population of 40,000 people. Each resident has an average ecological footprint of $6.2$ global hectares (gha), while the region's biocapacity provides only $2.4$ gha per person. What is Lakeshore City's total ecological deficit, in global hectares?",
+    "choices": [
+      "$96{,}000\\text{ gha}$",
+      "$152{,}000\\text{ gha}$",
+      "$248{,}000\\text{ gha}$",
+      "$344{,}000\\text{ gha}$"
+    ],
+    "answer": "B",
+    "solutionText": "The per-person deficit is $6.2 - 2.4 = 3.8\\text{ gha}$; multiplied by the population of 40,000 gives a total deficit of $3.8 \\times 40{,}000 = 152{,}000\\text{ gha}$. The first choice comes from using only the biocapacity value (2.4) instead of the deficit, the third from using only the footprint value (6.2), and the fourth from adding the two values (6.2 + 2.4 = 8.6) instead of subtracting them.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-039",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In fisheries management, what term describes the maximum population size of a fish species that a given marine ecosystem can sustainably support over the long term, given its available food, space, and other resources?",
+    "choices": [
+      "Carrying capacity",
+      "Population density",
+      "Biotic potential",
+      "Trophic efficiency"
+    ],
+    "answer": "A",
+    "solutionText": "Carrying capacity is the maximum population size an environment can sustain indefinitely given its resources. Population density simply describes how many individuals occupy a given area (not a limit), biotic potential describes a population's maximum reproductive rate under ideal conditions, and trophic efficiency describes energy transfer between feeding levels -- none of which define a sustainable population limit.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-040",
+    "loId": "apenvsci.commons-fishing-footprint",
+    "cedCode": "AP-ENVSCI-5.1+5.8+5.11+5.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Off the coast of Port Callahan, a mackerel population has a carrying capacity ($K$) of $24{,}000$ metric tons and an intrinsic growth rate ($r$) of $0.18$ per year. If the current population ($N$) is $9{,}000$ metric tons, what is the population's growth rate ($dN/dt$), in metric tons per year, using the logistic growth equation $dN/dt = rN(1-N/K)$?",
+    "choices": [
+      "$607.5\\text{ metric tons/year}$",
+      "$4{,}320\\text{ metric tons/year}$",
+      "$1{,}620\\text{ metric tons/year}$",
+      "$1{,}012.5\\text{ metric tons/year}$"
+    ],
+    "answer": "D",
+    "solutionText": "First, $N/K = 9{,}000/24{,}000 = 0.375$, so $1-N/K = 0.625$. Then $rN = 0.18 \\times 9{,}000 = 1{,}620$. Multiplying, $dN/dt = 1{,}620 \\times 0.625 = 1{,}012.5$ metric tons/year. The first choice mistakenly multiplies $rN$ by $N/K$ (0.375) instead of $(1-N/K)$; the third stops after computing $rN$ and forgets the density-dependent factor; the second mistakenly computes $r \\times K$ instead of $r \\times N$.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-041",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A company plants a new forest on land that has been open grassland for as long as anyone can remember, with no record of it ever having been forested before. The company's goal is to increase long-term carbon storage in the area. This practice of establishing forest on previously non-forested land is best classified as:",
+    "choices": [
+      "Reforestation",
+      "Selective harvesting",
+      "Afforestation",
+      "Agroforestry"
+    ],
+    "answer": "C",
+    "solutionText": "Afforestation is the establishment of forest on land that was not previously forested, which matches the grassland-to-forest scenario described. Reforestation specifically refers to replanting land that was forested before and then cleared, selective harvesting is a method of removing individual trees from an existing forest, and agroforestry integrates trees with crops or livestock on the same land.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-042",
+    "loId": "apenvsci.forestry-mining",
+    "cedCode": "AP-ENVSCI-5.2+5.9+5.17",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "At the Silver Hollow Mine, low-grade gold ore is stacked into large heaps and sprayed with a dilute cyanide solution, which dissolves the gold as it trickles down through the ore; the gold-bearing solution is then collected in a lined pond at the base of the heap. During an unusually heavy storm, the lined pond overflows and cyanide-laden water reaches a nearby creek. Which statement best describes the most significant immediate environmental concern from this overflow?",
+    "choices": [
+      "The cyanide will cause acute toxicity to fish and other aquatic organisms in the creek, since cyanide interferes with cellular oxygen use even at low concentrations",
+      "There is no real concern, because cyanide breaks down into harmless compounds within seconds of contact with any water",
+      "The main concern is that the cyanide will permanently and irreversibly raise the creek's water temperature, which is what harms aquatic life",
+      "The main concern is that the added liquid volume will dilute the creek's dissolved oxygen so much that fish suffocate, regardless of the cyanide itself"
+    ],
+    "answer": "A",
+    "solutionText": "Cyanide is acutely toxic to aquatic organisms because it blocks cellular respiration (oxygen utilization) even at fairly low concentrations, making a sudden release into a creek an immediate poisoning hazard. The other options overstate how quickly cyanide degrades, confuse toxicity with an unrelated and incorrect temperature effect, or misattribute the danger to dilution/oxygen effects rather than to the toxin itself, which is the dominant immediate hazard here.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-043",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Planners in Cedar Crossing choose to redevelop a former industrial site downtown (a 'brownfield') into new apartments and shops, instead of building the same development on undisturbed farmland just outside the city limits. What is the most direct environmental benefit of choosing the brownfield site over the undisturbed farmland?",
+    "choices": [
+      "It eliminates the need for any stormwater management in the city",
+      "It avoids converting undisturbed farmland or open space into new development, preserving that habitat and reducing sprawl",
+      "It automatically removes all historical soil or groundwater contamination at the site without any cleanup effort",
+      "It guarantees lower construction costs than building on farmland, regardless of site conditions"
+    ],
+    "answer": "B",
+    "solutionText": "Redeveloping an already-disturbed urban site avoids paving over farmland or open space that would otherwise be converted, which helps limit sprawl and preserve surrounding habitat. The other options make unsupported blanket claims about stormwater and cost, or incorrectly assume brownfield contamination is removed automatically, when it typically requires deliberate cleanup (remediation).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-044",
+    "loId": "apenvsci.urbanization-water",
+    "cedCode": "AP-ENVSCI-5.10+5.13",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A city updates its zoning rules to encourage new construction that mixes homes, shops, and offices within walking distance of each other and near public transit stops, rather than continuing to build spread-out, car-dependent subdivisions on the city's outskirts. This land-use planning approach is best described as:",
+    "choices": [
+      "Urban blight policy",
+      "Slash-and-burn zoning",
+      "Exclusionary zoning",
+      "Smart growth"
+    ],
+    "answer": "D",
+    "solutionText": "Smart growth is a planning approach that promotes compact, mixed-use, transit-accessible development to reduce car dependence and limit sprawl, which matches the scenario described. Urban blight refers to the deterioration of urban areas (not a planning strategy), slash-and-burn is an agricultural clearing technique unrelated to zoning, and exclusionary zoning refers to rules that restrict certain types of housing (like multi-family units), the opposite of the mixed-use approach described.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-045",
+    "loId": "apenvsci.energy-overview-fossil",
+    "cedCode": "AP-ENVSCI-6.1-6.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Coal is classified into ranks based on the degree of transformation it has undergone through heat and pressure over geologic time. Which of the following correctly ranks coal types from LOWEST to HIGHEST energy content per unit mass?",
+    "choices": [
+      "Anthracite, bituminous, lignite",
+      "Lignite, bituminous, anthracite",
+      "Bituminous, lignite, anthracite",
+      "Anthracite, lignite, bituminous"
+    ],
+    "answer": "B",
+    "solutionText": "As coal undergoes greater heat, pressure, and time, its carbon content and energy density increase. Lignite (least altered, lowest energy) progresses to bituminous and finally anthracite (most altered, highest energy content per unit mass), so option B lists them correctly from lowest to highest.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-046",
+    "loId": "apenvsci.energy-overview-fossil",
+    "cedCode": "AP-ENVSCI-6.1-6.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mining company plans to extract bitumen from oil sand (tar sand) deposits using open-pit surface mining, followed by processing to convert the bitumen into synthetic crude oil. Which environmental impact is most directly associated with this extraction method?",
+    "choices": [
+      "Rapid depletion of the stratospheric ozone layer",
+      "Increased risk of a nuclear meltdown at nearby facilities",
+      "Acidification of rainfall across the surrounding region",
+      "Large-scale destruction of boreal forest and wetland habitat, plus high freshwater use for processing"
+    ],
+    "answer": "D",
+    "solutionText": "Surface mining of oil sands strips away vegetation and soil over large areas, destroying forest and wetland habitat, and the bitumen extraction and upgrading process requires large volumes of freshwater. The other options describe impacts unrelated to this extraction method.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-047",
+    "loId": "apenvsci.nuclear-biomass",
+    "cedCode": "AP-ENVSCI-6.6-6.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a nuclear fission reactor, operators insert control rods made of materials such as boron or cadmium into the reactor core. What is the primary function of these control rods?",
+    "choices": [
+      "Absorb excess neutrons to slow or stop the fission chain reaction",
+      "Convert the reactor's thermal energy directly into electricity",
+      "Cool the reactor core by circulating water through the rods",
+      "Shield workers from gamma radiation outside the reactor vessel"
+    ],
+    "answer": "A",
+    "solutionText": "Control rods are made of neutron-absorbing materials. Inserting them further into the core absorbs more free neutrons, slowing the fission chain reaction and allowing operators to regulate or shut down reactor power output.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-048",
+    "loId": "apenvsci.nuclear-biomass",
+    "cedCode": "AP-ENVSCI-6.6-6.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A medical facility stores 96 g of cobalt-60, which has a half-life of 5.27 years. Approximately how many years will it take for the sample to decay to 12 g?",
+    "choices": [
+      "5.27 years",
+      "10.54 years",
+      "15.81 years",
+      "21.08 years"
+    ],
+    "answer": "C",
+    "solutionText": "Going from 96 g to 12 g requires three halvings: 96 g to 48 g to 24 g to 12 g, which is 3 half-lives. 3 × 5.27 years = 15.81 years.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-049",
+    "loId": "apenvsci.renewables",
+    "cedCode": "AP-ENVSCI-6.8-6.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly describes how a hydrogen fuel cell generates electricity?",
+    "choices": [
+      "It burns hydrogen gas directly to spin a turbine connected to a generator",
+      "It combines hydrogen and oxygen in an electrochemical reaction that produces electricity, heat, and water as byproducts",
+      "It splits water into hydrogen and oxygen using solar photovoltaic cells",
+      "It stores compressed hydrogen gas and releases it to directly power an electric motor"
+    ],
+    "answer": "B",
+    "solutionText": "A hydrogen fuel cell produces electricity through an electrochemical, non-combustion reaction between hydrogen and oxygen, releasing water and heat as the only byproducts. This distinguishes it from a combustion engine (choice A) and from electrolysis, which is the reverse process (choice C).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-050",
+    "loId": "apenvsci.renewables",
+    "cedCode": "AP-ENVSCI-6.8-6.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A utility company is comparing a proposed run-of-river hydroelectric facility, which uses the natural flow of a river with little to no reservoir storage, to a conventional large-dam hydroelectric project. What is the main environmental advantage of the run-of-river design?",
+    "choices": [
+      "It generates more total electricity per year than a large dam of equal capacity",
+      "It eliminates any impact on fish populations in the river",
+      "It can operate reliably even during periods of low river flow",
+      "It avoids flooding large areas of land and largely preserves the river's natural flow pattern, reducing habitat disruption upstream"
+    ],
+    "answer": "D",
+    "solutionText": "Because run-of-river systems do not require a large reservoir, they avoid flooding extensive upstream land and better preserve natural flow patterns and habitat connectivity. They still affect fish passage to some degree and generate less consistent power during low-flow periods, so choices B and C overstate the benefits.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-051",
+    "loId": "apenvsci.renewables",
+    "cedCode": "AP-ENVSCI-6.8-6.12",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A homeowner installs a solar photovoltaic array with a total surface area of 15 m². At solar noon, sunlight strikes the array at an intensity of 800 W/m², and the panels convert sunlight to electricity at 18% efficiency. What is the array's electrical power output at that moment?",
+    "choices": [
+      "216 W",
+      "1,440 W",
+      "2,160 W",
+      "10,800 W"
+    ],
+    "answer": "C",
+    "solutionText": "Power output = area × insolation × efficiency = 15 m² × 800 W/m² × 0.18 = 2,160 W. Choice A results from misplacing a decimal, choice B from mistakenly using 12% efficiency, and choice D from mistakenly using 90% efficiency.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-052",
+    "loId": "apenvsci.energy-conservation",
+    "cedCode": "AP-ENVSCI-6.13",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A homeowner spends \\$2,700 to upgrade attic insulation and seal air leaks throughout the house. The homeowner receives a one-time \\$300 utility rebate for the upgrade, and the improvements reduce the home's annual heating and cooling costs by \\$200 per year. Based on the NET cost after the rebate, how many years will it take for the energy savings to pay back the cost of the upgrade?",
+    "choices": [
+      "9 years",
+      "10.5 years",
+      "12 years",
+      "13.5 years"
+    ],
+    "answer": "C",
+    "solutionText": "Net cost after rebate = \\$2,700 - \\$300 = \\$2,400. Payback period = net cost ÷ annual savings = \\$2,400 ÷ \\$200 per year = 12 years. Using the pre-rebate cost of \\$2,700 would incorrectly give 13.5 years (choice D).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-053",
+    "loId": "apenvsci.energy-conservation",
+    "cedCode": "AP-ENVSCI-6.13",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A household replaces an old refrigerator that consumes 1,150 kWh of electricity per year with a new energy-efficient model that consumes only 480 kWh per year. If electricity costs \\$0.16 per kWh, how much money does the household save on electricity costs annually by switching to the new refrigerator?",
+    "choices": [
+      "\\$107.20",
+      "\\$76.80",
+      "\\$184.00",
+      "\\$260.80"
+    ],
+    "answer": "A",
+    "solutionText": "Energy saved = 1,150 kWh - 480 kWh = 670 kWh per year. Annual savings = 670 kWh × \\$0.16 per kWh = \\$107.20.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-054",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Air pollution sources are often classified as either 'point sources' (a single, identifiable source of emissions) or 'nonpoint sources' (diffuse emissions from many small or mobile sources spread over an area). Which of the following is the best example of a point source of air pollution?",
+    "choices": [
+      "Exhaust from thousands of individual cars commuting across a metropolitan area",
+      "Dust blown from agricultural fields across a county",
+      "Wood smoke from residential fireplaces throughout a neighborhood",
+      "A single coal-fired power plant smokestack releasing emissions from one fixed location"
+    ],
+    "answer": "D",
+    "solutionText": "A point source is a single, identifiable, stationary source of emissions, such as one factory smokestack. The other options describe emissions released from many dispersed or mobile sources, which are classified as nonpoint sources.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-055",
+    "loId": "apenvsci.air-pollution-sources",
+    "cedCode": "AP-ENVSCI-7.1+7.4+7.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A manufacturing plant emits nitrogen oxides (NOx) at a constant rate of 2.5 kg/hr during operation. The plant operates 16 hours per day, 250 days per year. What is the plant's total annual NOx emissions, in metric tons (1 metric ton = 1,000 kg)?",
+    "choices": [
+      "4 metric tons",
+      "6.25 metric tons",
+      "10 metric tons",
+      "16 metric tons"
+    ],
+    "answer": "C",
+    "solutionText": "Total emissions = 2.5 kg/hr × 16 hr/day × 250 days/yr = 10,000 kg/yr = 10 metric tons.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-056",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Large cities often experience an 'urban heat island' effect, in which extensive pavement, buildings, and reduced vegetation cause the city center to be several degrees warmer than surrounding rural areas. How does this effect contribute to worsening photochemical smog in urban areas?",
+    "choices": [
+      "It increases wind speeds, dispersing pollutants more quickly out of the city",
+      "It cools the lower atmosphere, causing pollutants to sink and settle into the soil",
+      "It reduces the amount of sunlight reaching street level, slowing pollutant-forming reactions",
+      "The added heat and reduced air circulation between buildings favor the reactions that form ozone and other smog components while trapping pollutants near the surface"
+    ],
+    "answer": "D",
+    "solutionText": "Urban heat islands raise local temperatures and reduce air circulation between densely packed buildings. Both effects favor the temperature-dependent reactions that produce photochemical smog and prevent pollutants from dispersing away from the surface.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-057",
+    "loId": "apenvsci.smog-inversion",
+    "cedCode": "AP-ENVSCI-7.2-7.3",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In Pinecrest Valley, meteorologists record a surface air temperature of 9°C. At an altitude of 250 m above the surface, the air temperature is 14°C. Under normal atmospheric conditions, air temperature decreases with increasing altitude. What atmospheric condition do these readings indicate, and what effect does it have on air quality?",
+    "choices": [
+      "A normal lapse rate, which allows pollutants to disperse freely upward",
+      "A temperature inversion, which traps a layer of cooler, denser surface air (and any pollutants within it) beneath the warmer air above",
+      "An updraft, which rapidly lifts pollutants into the stratosphere",
+      "A drought condition, which has no effect on how pollutants disperse vertically"
+    ],
+    "answer": "B",
+    "solutionText": "Because temperature increases with altitude here, from 9°C at the surface to 14°C at 250 m, instead of the normal decrease, this is a temperature inversion. The warmer air aloft acts as a cap, trapping cooler, denser surface air, and any pollutants in it, close to the ground.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-058",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coal-fired power plant installs a 'baghouse' emission-control device, which forces flue gas through thousands of long fabric filter bags before the gas exits the smokestack. Which type of pollutant is this device primarily designed to remove?",
+    "choices": [
+      "Particulate matter (soot and ash particles), which are physically trapped by the fabric as gas passes through",
+      "Carbon dioxide, which is absorbed by the fabric fibers",
+      "Sulfur dioxide gas, which reacts chemically with the fabric",
+      "Radon gas, which is filtered out by the fine weave of the fabric"
+    ],
+    "answer": "A",
+    "solutionText": "A baghouse works like a large fabric filter: flue gas is forced through fine cloth bags that physically trap solid particulate matter such as ash, soot, and dust, while gases pass through. It is not designed to remove gaseous pollutants like carbon dioxide, sulfur dioxide, or radon.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-059",
+    "loId": "apenvsci.air-quality-mitigation",
+    "cedCode": "AP-ENVSCI-7.6+7.8",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Flue gas leaving a power plant's combustion chamber contains a particulate matter concentration of 5,000 µg/m³. The gas first passes through an electrostatic precipitator that removes 90% of the particulates, and then through a wet scrubber that removes an additional 60% of the particulates remaining after the precipitator stage. What is the particulate matter concentration in the gas after passing through both devices?",
+    "choices": [
+      "200 µg/m³",
+      "50 µg/m³",
+      "500 µg/m³",
+      "2,000 µg/m³"
+    ],
+    "answer": "A",
+    "solutionText": "After the precipitator removes 90%, 10% of the original concentration remains: 5,000 × 0.10 = 500 µg/m³. The scrubber then removes 60% of that remaining amount, leaving 500 × 0.40 = 200 µg/m³. Choice C stops after only the first stage, and choice D reflects applying only a single 60% removal to the original concentration.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-060",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "As acid deposition lowers the pH of soil in a forested watershed, aluminum ions (Al³⁺) that were previously bound to soil particles are released into solution and wash into nearby streams and lakes. What is the primary ecological consequence of this process?",
+    "choices": [
+      "The dissolved aluminum fertilizes algae, causing a beneficial increase in fish food supply",
+      "The aluminum evaporates from the water surface, reducing local air quality",
+      "Mobilized aluminum is toxic to fish, damaging gill tissue, and can interfere with the survival of fish eggs, reducing aquatic populations",
+      "The aluminum binds excess acid in the water, neutralizing the lake back to a neutral pH"
+    ],
+    "answer": "C",
+    "solutionText": "Acid-mobilized aluminum is toxic to aquatic life. It damages fish gill tissue and impairs the survival of fish eggs and juveniles, contributing to declines in fish populations in acidified lakes and streams.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-061",
+    "loId": "apenvsci.acid-rain",
+    "cedCode": "AP-ENVSCI-7.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The water in Crystal Hollow Lake has a pH of 6.2 before a period of heavy acid deposition. Afterward, testing shows the lake's pH has dropped to 3.2. Given that the pH scale is logarithmic, approximately how many times more acidic (in terms of hydrogen ion concentration) is the lake water after this change?",
+    "choices": [
+      "3 times more acidic",
+      "1,000 times more acidic",
+      "100 times more acidic",
+      "3,200 times more acidic"
+    ],
+    "answer": "B",
+    "solutionText": "Each whole-number drop in pH represents a tenfold increase in hydrogen ion concentration. A drop of 3 pH units, from 6.2 to 3.2, corresponds to 10³ = 1,000 times greater acidity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-062",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During municipal wastewater treatment, primary treatment removes solids by settling. What is the main purpose of the secondary treatment stage that follows?",
+    "choices": [
+      "Disinfecting the water with chlorine or UV light to kill pathogens",
+      "Using microorganisms to biologically break down dissolved and suspended organic matter",
+      "Filtering the water through sand and gravel beds to remove sediment",
+      "Adding chemical coagulants to bind and precipitate heavy metals"
+    ],
+    "answer": "B",
+    "solutionText": "Secondary treatment relies on bacteria and other microorganisms (often in an aeration tank or trickling filter) to metabolize dissolved organic matter that settling alone cannot remove. Disinfection is typically a later step, sand filtration is a separate physical process, and chemical coagulation for metals is not the defining feature of secondary treatment.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-063",
+    "loId": "apenvsci.water-pollution-sources",
+    "cedCode": "AP-ENVSCI-8.1+8.2+8.4",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two factories discharge treated effluent into separate stretches of the same river. Effluent from Factory X has a biochemical oxygen demand (BOD) of 220 mg/L, while effluent from Factory Y has a BOD of 45 mg/L. Assuming similar discharge volumes and river flow conditions, which statement is best supported?",
+    "choices": [
+      "Factory Y's effluent will cause a greater drop in dissolved oxygen downstream than Factory X's",
+      "Both effluents will have identical effects on dissolved oxygen because BOD does not affect DO",
+      "Neither effluent will affect dissolved oxygen unless it also contains toxic chemicals",
+      "Factory X's effluent will cause a greater drop in dissolved oxygen downstream than Factory Y's"
+    ],
+    "answer": "D",
+    "solutionText": "BOD measures how much oxygen microorganisms consume while decomposing organic matter in water. A higher BOD (220 mg/L for Factory X) means more oxygen-demanding organic material, so decomposer activity will deplete more dissolved oxygen downstream compared to the lower-BOD effluent from Factory Y.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-064",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Elemental mercury released from a coal-fired power plant settles into wetland sediment, where anaerobic bacteria convert it into methylmercury. Why is this transformation significant for aquatic food webs?",
+    "choices": [
+      "Methylmercury binds readily to fatty tissue and is absorbed efficiently, allowing it to accumulate in organisms and increase in concentration up the food chain",
+      "Methylmercury evaporates quickly, so it leaves the ecosystem before reaching organisms",
+      "Methylmercury is water-soluble and is excreted rapidly, preventing accumulation",
+      "Methylmercury breaks down into harmless compounds once it enters an organism's bloodstream"
+    ],
+    "answer": "A",
+    "solutionText": "Methylmercury is lipid-soluble and binds strongly to tissue proteins, so organisms absorb it efficiently but excrete it slowly. This allows it to accumulate within individuals and increase in concentration at each successive trophic level, unlike the inorganic form.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-065",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pesticide has an LD50 of 15 mg/kg of body mass in laboratory rats. Based on this value, approximately what total dose would be expected to be lethal to 50% of a population of 45 kg animals of similar sensitivity?",
+    "choices": [
+      "15 mg",
+      "300 mg",
+      "675 mg",
+      "3,000 mg"
+    ],
+    "answer": "C",
+    "solutionText": "LD50 is expressed per kilogram of body mass, so the total dose scales with body mass: $15\\text{ mg/kg} \\times 45\\text{ kg} = 675\\text{ mg}$. The other options result from arithmetic errors, such as ignoring the mass scaling or using the wrong multiplier.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-066",
+    "loId": "apenvsci.toxics-pops-biomag",
+    "cedCode": "AP-ENVSCI-8.3+8.7+8.8",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Researchers measured concentrations of a persistent toxin in a coastal food web: algae contained 0.03 ppm, mussels that graze on algae contained 0.51 ppm, and sea otters that eat mussels contained 8.67 ppm. Approximately how many times higher is the toxin concentration in sea otters compared to mussels?",
+    "choices": [
+      "About 2 times higher",
+      "About 9 times higher",
+      "About 29 times higher",
+      "About 17 times higher"
+    ],
+    "answer": "D",
+    "solutionText": "Dividing the sea otter concentration by the mussel concentration: $8.67 \\div 0.51 \\approx 17$. This large jump between trophic levels illustrates biomagnification of a persistent toxin as it moves up the food chain.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-067",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A riverside power plant uses river water for cooling and discharges it several degrees warmer, and fish in the immediate area have become acclimated to living in this warmed water year-round. When the plant shuts down abruptly for two weeks of scheduled maintenance in winter, many fish near the outfall die. What best explains this fish kill?",
+    "choices": [
+      "The plant shutdown causes a sudden drop in dissolved oxygen levels that suffocates the fish",
+      "The sudden temperature drop causes cold shock, which fish acclimated to warmer water cannot physiologically tolerate",
+      "The plant shutdown releases stored heavy metals that were previously diluted by the warm discharge",
+      "The fish were dependent on the plant's discharge pipe as their only source of food"
+    ],
+    "answer": "B",
+    "solutionText": "Fish that have acclimated to an artificially warm thermal regime can experience 'cold shock' — a sudden, physiologically stressful temperature drop — when the heat source is removed abruptly. This is the reverse of typical thermal pollution and directly explains the fish kill; the other options do not logically follow from a plant shutdown.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-068",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A shallow pond receiving phosphorus runoff from surrounding farmland develops a dense algal bloom over the summer, with chlorophyll-a rising from 5 µg/L in spring to 45 µg/L by August. Fish kills in the pond are observed most often in the early morning hours, just before sunrise. What best explains the timing of these fish kills?",
+    "choices": [
+      "Overnight, algae and decomposers continue respiring and consuming oxygen without photosynthesis replenishing it, so dissolved oxygen reaches its lowest point just before sunrise",
+      "Algae only photosynthesize at night, releasing toxic byproducts before dawn",
+      "Water temperature is coldest just before dawn, which directly suffocates fish",
+      "Predatory fish are most active at night, consuming more oxygen than during the day"
+    ],
+    "answer": "A",
+    "solutionText": "Without sunlight, algae and decomposers still respire and consume dissolved oxygen, but photosynthetic oxygen production stops overnight. Because nothing replenishes oxygen while respiration continues, dissolved oxygen steadily declines through the night and hits its lowest point just before sunrise, which is when fish kills are most likely.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-069",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A municipality is considering building a waste-to-energy incineration facility that would burn municipal solid waste to generate electricity for the local grid. Which of the following is a legitimate environmental trade-off officials should weigh against the benefit of reduced landfill volume?",
+    "choices": [
+      "Incineration facilities cannot process any plastic or paper waste",
+      "Incineration produces no ash or byproducts that require disposal",
+      "Incineration emits air pollutants and requires costly scrubbers/filters to control emissions",
+      "Incineration increases the total mass of waste that must eventually be landfilled"
+    ],
+    "answer": "C",
+    "solutionText": "Burning solid waste generates air pollutants such as particulates, dioxins, and acid gases, so incineration facilities require emission-control equipment like scrubbers and filters. Incineration does still produce ash requiring disposal and can process most combustible waste streams, so the other options misstate the trade-off.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-070",
+    "loId": "apenvsci.solid-waste",
+    "cedCode": "AP-ENVSCI-8.9-8.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Riverbend County generates 18,400 tons of municipal solid waste per month. Of this, 22% is diverted to composting and 15% is diverted to recycling programs. Approximately how many tons per month are sent to landfill or incineration?",
+    "choices": [
+      "4,048 tons",
+      "6,808 tons",
+      "14,352 tons",
+      "11,592 tons"
+    ],
+    "answer": "D",
+    "solutionText": "Composting and recycling together divert $22\\% + 15\\% = 37\\%$ of waste, leaving $63\\%$ for landfill or incineration: $18{,}400 \\times 0.63 \\approx 11{,}592$ tons. The other choices come from using only one diversion percentage or miscalculating the remainder.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-071",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Hydrofluorocarbons (HFCs) were widely adopted to replace ozone-depleting CFCs in refrigeration and air conditioning. HFCs do not break down stratospheric ozone, but they are still an environmental concern because they are...",
+    "choices": [
+      "extremely potent greenhouse gases that trap heat in the atmosphere",
+      "highly toxic to aquatic organisms when they enter waterways",
+      "the primary cause of acid rain in industrial regions",
+      "responsible for depleting the ozone layer at a slower rate than CFCs"
+    ],
+    "answer": "A",
+    "solutionText": "HFCs were adopted specifically because they lack the chlorine or bromine atoms needed to catalytically destroy ozone. However, many HFCs have very high global warming potential, so replacing CFCs with HFCs traded an ozone problem for a climate problem, which is why later agreements target phasing down HFCs as well.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-072",
+    "loId": "apenvsci.ozone",
+    "cedCode": "AP-ENVSCI-9.1-9.2",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Satellite monitoring shows that the stratospheric ozone column density above a mid-latitude city has decreased by about 10% over several decades. Which human health consequence is the most direct expected result of this change?",
+    "choices": [
+      "Increased incidence of respiratory illness due to higher ground-level ozone concentrations",
+      "Increased incidence of skin cancer and cataracts due to greater UV-B radiation reaching the surface",
+      "Decreased incidence of vitamin D deficiency due to more sunlight reaching the surface",
+      "Increased incidence of waterborne illness due to warmer surface temperatures"
+    ],
+    "answer": "B",
+    "solutionText": "Stratospheric ozone absorbs most incoming UV-B radiation. When the ozone column thins, more UV-B reaches the surface, directly increasing the risk of skin cancers and cataracts in exposed populations. The other options describe effects not directly caused by stratospheric ozone loss.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-073",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Global fossil fuel combustion releases approximately 37 billion metric tons of CO2 per year. Natural carbon sinks (oceans and land ecosystems combined) absorb roughly 50% of this annual output. Approximately how many billion metric tons of CO2 accumulate in the atmosphere each year as a result?",
+    "choices": [
+      "9.25 billion metric tons",
+      "12.3 billion metric tons",
+      "18.5 billion metric tons",
+      "27.75 billion metric tons"
+    ],
+    "answer": "C",
+    "solutionText": "If sinks absorb 50% of the 37 billion metric tons emitted, then $37 \\times 0.50 = 18.5$ billion metric tons remain in the atmosphere annually. This atmospheric accumulation is what drives rising atmospheric CO2 concentrations over time.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-074",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Nitrous oxide (N2O) is a greenhouse gas with a global warming potential roughly 265 times that of CO2 per molecule over a 100-year period. Which human activity is the primary anthropogenic source of atmospheric N2O?",
+    "choices": [
+      "Application of synthetic nitrogen fertilizers to agricultural soils",
+      "Combustion of coal in power plants",
+      "Refrigerant leaks from air conditioning units",
+      "Decomposition of plastic waste in landfills"
+    ],
+    "answer": "A",
+    "solutionText": "Soil bacteria convert excess nitrogen from synthetic fertilizers through nitrification and denitrification, releasing N2O as a byproduct. This makes agricultural fertilizer use the dominant human source of atmospheric nitrous oxide, distinct from the primary sources of CO2 (fossil fuel combustion) or fluorinated gases (refrigerants).",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-075",
+    "loId": "apenvsci.greenhouse-climate",
+    "cedCode": "AP-ENVSCI-9.3-9.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Boreal forests store large amounts of carbon in both living biomass and soil. As global temperatures rise, boreal wildfires are becoming larger and more frequent, burning through areas that previously acted as long-term carbon reservoirs. How does this trend function as a positive feedback loop in the climate system?",
+    "choices": [
+      "Burned forests immediately regrow denser vegetation that absorbs more CO2 than before the fire",
+      "Wildfire smoke reflects sunlight away from Earth, causing regional cooling that offsets warming",
+      "Wildfires convert forest soil into a more effective long-term carbon sink than before the burn",
+      "Burning releases stored carbon as CO2 and reduces the forest's future capacity to sequester carbon, which further amplifies atmospheric CO2 and warming"
+    ],
+    "answer": "D",
+    "solutionText": "When boreal forests burn, carbon stored in trees and soil is released as CO2, and the burned area's reduced vegetation absorbs less carbon going forward. More CO2 in the atmosphere drives further warming, which increases wildfire risk — completing a self-reinforcing (positive) feedback loop.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-076",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ocean surface pH in a monitored region decreased from 8.10 to 7.90 over several decades due to increased CO2 absorption. Because pH is measured on a logarithmic scale, approximately how many times greater is the hydrogen ion (H+) concentration now compared to several decades ago?",
+    "choices": [
+      "About 0.2 times (a decrease)",
+      "About 1.58 times",
+      "About 1.1 times",
+      "About 20 times"
+    ],
+    "answer": "B",
+    "solutionText": "The pH dropped by 0.20 units. Because pH is $-\\log_{10}[\\text{H}^+]$, the change in H+ concentration is $10^{0.20} \\approx 1.58$. A full one-unit pH drop would represent a 10-fold change, but this smaller 0.20-unit drop corresponds to roughly a 58% increase in H+ concentration, not a 10- or 20-fold jump.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-077",
+    "loId": "apenvsci.ocean-changes",
+    "cedCode": "AP-ENVSCI-9.6-9.7",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A marine biologist observes that a coral reef experiencing a prolonged marine heatwave is bleaching extensively, and coral colonies are dying at an unusually high rate. Which additional ocean stressor, acting alongside the heat stress, would most likely make it harder for surviving corals to rebuild their skeletons?",
+    "choices": [
+      "Decreased wave action, which reduces the physical delivery of nutrients to the reef",
+      "Increased salinity from evaporation, which has no effect on coral skeletal growth",
+      "Increased ocean acidification, which reduces the availability of carbonate ions corals need to build calcium carbonate skeletons",
+      "Increased dissolved oxygen levels, which slow coral metabolic rates"
+    ],
+    "answer": "C",
+    "solutionText": "Rising atmospheric CO2 drives both ocean warming (contributing to bleaching) and ocean acidification (lowering carbonate ion availability in seawater). Reduced carbonate ions make it harder for already-stressed corals to calcify and rebuild skeletons, compounding the damage from heat stress alone.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-078",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kudzu, a fast-growing vine introduced to the southeastern United States for erosion control, now blankets large areas of forest edge, climbing over and shading out native trees and shrubs. A land manager wants to explain to residents why kudzu has caused declines in native plant diversity in affected areas. Which mechanism should the land manager cite?",
+    "choices": [
+      "Kudzu releases toxins into the soil that directly poison native tree roots",
+      "Kudzu attracts predators that consume native seedlings before they can mature",
+      "Kudzu depletes soil nitrogen faster than native plants can replenish it",
+      "Kudzu grows so densely and quickly that it blocks sunlight from reaching native vegetation, outcompeting it for light"
+    ],
+    "answer": "D",
+    "solutionText": "Kudzu's rapid growth and dense canopy smother native vegetation by blocking access to sunlight — a form of competitive exclusion for a limiting resource. This resource-based competition, rather than chemical toxicity, predation, or nitrogen depletion, is the primary mechanism by which invasive vines like kudzu reduce native plant diversity.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-079",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Commercial fishing fleets have selectively targeted the largest individuals of a grouper species for decades, since larger fish fetch the highest market price. Over time, biologists have observed a shift toward smaller average body size and earlier reproductive maturity in the remaining population. What best explains this trend?",
+    "choices": [
+      "Selective removal of the largest individuals acts as an artificial evolutionary pressure, favoring genes for smaller size and earlier maturity that were previously less common",
+      "The fishing fleets are removing older fish, which has no effect on the genetic makeup of the population",
+      "Warmer ocean temperatures alone are causing all individuals in the species to grow more slowly",
+      "Smaller fish are migrating into the area from unrelated populations and interbreeding with the locals"
+    ],
+    "answer": "A",
+    "solutionText": "Consistently harvesting the largest individuals removes genes associated with large size and late maturity from the breeding population each generation. Over time, this selective pressure shifts the population toward smaller body size and earlier maturity — a pattern known as fisheries-induced evolution — rather than a purely environmental or migration-driven effect.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-mc-080",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A population of an endangered salamander species has declined to about 40 individuals living in a fragmented wetland surrounded by development. Over the past two generations, biologists have documented an increasing rate of developmental abnormalities and reduced hatching success in this population. Which explanation best accounts for this pattern?",
+    "choices": [
+      "Wetland water chemistry naturally causes these abnormalities regardless of population size",
+      "The salamanders have evolved a beneficial mutation that will improve population fitness within a few more generations",
+      "The small population size has led to inbreeding depression, as reduced genetic diversity increases the expression of harmful recessive traits",
+      "The population is too large for the wetland's carrying capacity, causing density-dependent stress"
+    ],
+    "answer": "C",
+    "solutionText": "In very small, isolated populations, genetic diversity declines and closely related individuals are more likely to mate, increasing the chance that offspring inherit two copies of a harmful recessive allele — a pattern called inbreeding depression. This explains the rising rate of developmental abnormalities and reduced hatching success far better than a beneficial mutation, water chemistry alone, or overcrowding, none of which fit the scenario's details.",
+    "bankScope": "mock"
+  },
+  {
+    "id": "apenvsci-fa-fr-01",
+    "loId": "apenvsci.eutrophication-thermal",
+    "cedCode": "AP-ENVSCI-8.5-8.6",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "A middle school environmental science club is concerned about nitrogen-rich runoff flowing from the sports fields at Kestrel Ridge Middle School into Otter Pond, a small retention pond on campus that has recently developed thick mats of green algae each spring. The club proposes planting a 4-meter-wide strip of native grasses and shrubs (a vegetated buffer strip) along the edge of the fields closest to the pond, and wants to design an investigation to test whether the buffer strip reduces the amount of nitrogen reaching the pond after rainstorms.\n\n(a) State a testable hypothesis for the club's investigation.\n\n(b) Describe an experimental design for testing this hypothesis. Your description should identify the independent variable, the dependent variable, an appropriate control, and at least one variable the club should hold constant.\n\n(c) Identify the data the club should collect and describe how that data should be analyzed to support a conclusion.\n\n(d) Predict the results of the investigation and justify your prediction using environmental science reasoning.\n\n(e) Describe ONE limitation of this investigation's design OR ONE way the club could extend the investigation to strengthen its conclusions.",
+    "answer": "see rubric",
+    "solutionText": "A strong response states a directional hypothesis (buffer strip reduces nitrogen runoff), designs a comparison between buffered and unbuffered field edges (or before/after buffer installation) with runoff nitrogen concentration as the dependent variable, identifies a control section with no buffer, holds rainfall/fertilizer application constant, specifies water sampling and nitrate-concentration testing (e.g., colorimetric test kit or lab analysis) with a comparison of means, predicts lower nitrogen concentration in buffered runoff because vegetation and soil in the buffer take up and filter dissolved nitrogen before it reaches the pond, and identifies a limitation (e.g., confound of storm intensity/timing, small sample size) or an extension (e.g., testing multiple buffer widths, replicating across multiple storm events).",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 1,
+          "scoringCriteria": "1 point for a testable, directional hypothesis that relates presence/width of the vegetated buffer strip to nitrogen concentration in runoff reaching the pond (e.g., 'If a vegetated buffer strip is planted along the field edge, then the concentration of nitrogen in runoff reaching Otter Pond will decrease, because plant roots and soil will absorb and filter dissolved nitrogen before it drains into the pond.'). Accept any hypothesis that is falsifiable and specifies the predicted direction of the relationship; a vague statement with no predicted direction ('the buffer will affect nitrogen levels') earns 0.",
+          "modelResponse": "If a vegetated buffer strip is planted between the sports fields and Otter Pond, then the nitrogen concentration in runoff water reaching the pond will decrease, because the roots and soil microbes in the buffer will take up and filter dissolved nitrogen before it can drain into the pond."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 3,
+          "scoringCriteria": "Up to 3 points, 1 each for: (1) correctly identifying the independent variable as presence/absence (or width) of the buffer strip and the dependent variable as the nitrogen concentration (e.g., nitrate, mg/L) measured in runoff water; (2) describing an appropriate control — a comparable section of field edge draining directly into the pond with NO buffer strip, sampled using the same method; (3) identifying at least one variable that must be held constant across both the buffer and no-buffer sections for a valid comparison (e.g., same fertilizer application rate/timing, same slope, same rainfall event, same soil type, same sampling method/timing).",
+          "modelResponse": "Independent variable: whether a section of field edge has a vegetated buffer strip (buffer vs. no buffer). Dependent variable: nitrogen (nitrate) concentration, in mg/L, measured in runoff water collected where each section drains toward the pond. Control: a section of field edge left unbuffered, draining directly toward the pond, sampled the same way as the buffered section. Held constant: both sections receive the same fertilizer application rate and timing, have similar slope and soil type, and are sampled during the same rainstorm events using the same collection and testing method."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for identifying appropriate data to collect (nitrate/nitrogen concentration of runoff water samples, collected from both buffered and unbuffered sections after multiple rainstorms, with replicate samples per section); 1 point for describing a reasonable method of analysis (e.g., calculate and compare the mean nitrogen concentration of the buffered samples vs. the unbuffered/control samples, such as with a t-test or simple percent-difference comparison, across multiple storm events to account for variability).",
+          "modelResponse": "The club should collect water samples from the runoff at both the buffered and unbuffered (control) sections after several separate rainstorms, testing each sample's nitrate concentration (mg/L) with a water-quality test kit, and taking multiple replicate samples per section per storm. They should then calculate the mean nitrogen concentration for the buffered group and the unbuffered group and compare the two means (e.g., using a t-test or by calculating percent difference) across the multiple storm events to determine whether the buffer strip is associated with a real reduction in nitrogen concentration."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for a prediction consistent with the hypothesis (buffered runoff will show lower nitrogen concentration than unbuffered runoff); 1 point for justification grounded in environmental science mechanism (plant/soil nitrogen uptake, filtration/infiltration reducing surface runoff velocity and volume, microbial denitrification in buffer soils, or increased infiltration time allowing nitrogen to be taken up before reaching the pond).",
+          "modelResponse": "The buffered section is predicted to show a lower average nitrogen concentration in its runoff than the unbuffered control section. This is because the buffer strip's plant roots take up dissolved nitrogen for growth, the vegetation and soil slow the runoff and increase infiltration (giving more time for nitrogen to be absorbed or denitrified by soil microbes before reaching the pond), and the buffer's root mat traps sediment-bound nitrogen that would otherwise wash directly into Otter Pond."
+        },
+        {
+          "criterionId": "e",
+          "maxPoints": 2,
+          "scoringCriteria": "2 points for a clearly explained limitation OR extension that is specific to this investigation (not generic). Acceptable limitations: storms vary in intensity/duration, confounding the comparison unless multiple storms are sampled and averaged; small sample size / single buffer strip limits generalizability; other uncontrolled variables (e.g., differences in slope or soil between sections) could confound results. Acceptable extensions: test multiple buffer widths to find a minimum effective width; replicate the design at additional schools/ponds; measure additional water-quality variables (phosphorus, turbidity) or long-term algae cover in the pond itself. Award 1 point for a limitation/extension that is only generic (e.g., 'do more trials') without connecting it to this scenario.",
+          "modelResponse": "One limitation is that rainstorms vary naturally in intensity and duration, and a single storm's runoff volume could confound the comparison between buffered and unbuffered sections; the club should sample multiple storms of similar intensity and average the results to control for this variability. Alternatively, the club could extend the investigation by testing several buffer widths (e.g., 2 m, 4 m, 8 m) to determine the minimum width needed to meaningfully reduce nitrogen runoff before recommending a campus-wide buffer design."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apenvsci-fa-fr-02",
+    "loId": "apenvsci.biodiversity-threats",
+    "cedCode": "AP-ENVSCI-9.8-9.10",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 3,
+    "responseFormat": "frq",
+    "problemText": "Silverlake Valley is an agricultural region where fruit orchards depend heavily on native bee species for pollination. Over the past decade, beekeepers and orchard owners in the valley have reported a sharp decline in native bee abundance, and several orchards have experienced reduced fruit set (fewer fruits developing per tree) as a result.\n\n(a) Describe the environmental problem in Silverlake Valley and explain the ecological process (in terms of the relationship between bees and the orchard crops) that has been disrupted.\n\n(b) Explain TWO distinct causes of the native bee decline in Silverlake Valley and, for each cause, explain how it leads to fewer bees.\n\n(c) Propose a realistic solution that Silverlake Valley's orchard owners could adopt to help reverse the bee decline, and justify why it would be effective.\n\n(d) Evaluate ONE drawback or tradeoff associated with the solution you proposed in part (c).",
+    "answer": "see rubric",
+    "solutionText": "A strong response identifies the problem as declining native bee populations disrupting the mutualistic pollination relationship between bees and orchard crops (fewer bees -> less pollination -> lower fruit set/yield), explains two causes such as habitat/floral resource loss from monoculture orchard planting and systemic pesticide (e.g., neonicotinoid) exposure impairing bee foraging, navigation, and reproduction, proposes a solution such as planting pesticide-free wildflower hedgerows/buffer strips to provide forage and nesting habitat while reducing pesticide drift, and evaluates a tradeoff such as the economic cost of taking productive orchard land out of production or added maintenance labor/cost for growers.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 3,
+          "scoringCriteria": "Up to 3 points: 1 point for correctly identifying the problem as a decline in native bee (pollinator) abundance in Silverlake Valley; 1 point for identifying the ecological relationship between bees and orchard crops as a mutualism (bees gain food/nectar and pollen, crops gain pollination services); 1 point for explaining the disrupted process in context — fewer bees visiting orchard flowers means less pollen is transferred between flowers, which directly reduces fruit set/crop yield in the orchards.",
+          "modelResponse": "The environmental problem is a sharp decline in native bee (pollinator) populations in Silverlake Valley. Bees and the orchard fruit trees have a mutualistic relationship: bees visit flowers to collect nectar and pollen for food, and in doing so they transfer pollen between flowers, which is required for the trees to produce fruit. With fewer bees available to visit and pollinate the orchard flowers, less pollen is transferred, so fewer flowers are successfully fertilized — directly explaining the reduced fruit set reported by orchard owners."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 3,
+          "scoringCriteria": "Up to 3 points for TWO distinct, correctly explained causes (may be split 1.5/1.5 conceptually but award as whole points: 1 point per cause correctly identified, plus 0.5-1 point per cause for a correct mechanistic explanation of how it reduces bee numbers — grader should award up to 3 total across both causes). Acceptable causes: (1) habitat/floral-resource loss from converting land to monoculture orchards or removing hedgerows/wildflowers, reducing the diversity and availability of nectar/pollen sources and bee nesting sites; (2) exposure to systemic pesticides (e.g., neonicotinoids) applied to crops, which impair bee foraging behavior, navigation/homing ability, immune function, or reproduction, leading to colony decline; (3) loss of nesting habitat (bare ground, dead wood, hedgerows removed for farming); (4) disease/parasites facilitated by stress from the above factors. Any two well-explained, distinct causes earn full credit.",
+          "modelResponse": "First, converting surrounding land to monoculture orchards and removing hedgerows has reduced the diversity of flowering plants available to bees outside of the brief orchard bloom period, leaving bees with too little food (nectar and pollen) for the rest of the year and reducing colony survival. Second, systemic pesticides such as neonicotinoids, applied to orchard crops and absorbed into pollen and nectar, impair bees' navigation and foraging ability and weaken their immune systems, making bee colonies more likely to decline or collapse."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for a realistic, specific solution (e.g., planting pesticide-free wildflower hedgerows/buffer strips around orchards to provide season-long forage and nesting habitat; reducing or timing pesticide applications to avoid bloom periods when bees are foraging; adopting integrated pest management to cut overall pesticide use); 1 point for justification connecting the solution back to the mechanism identified in part (b) (e.g., hedgerows restore floral diversity and reduce pesticide exposure, directly addressing both causes).",
+          "modelResponse": "Orchard owners could plant pesticide-free wildflower hedgerows or buffer strips along the edges of their orchards. This would provide bees with a diverse, season-long source of nectar and pollen beyond the short orchard bloom period, and by keeping these strips pesticide-free, it would give bees a safe refuge from pesticide exposure, directly addressing both the floral-resource loss and pesticide-exposure causes identified above."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 2,
+          "scoringCriteria": "2 points for a specific, well-explained drawback/tradeoff of the proposed solution. Acceptable answers include: economic cost of taking productive orchard acreage out of production to plant hedgerows; added labor/maintenance cost of establishing and maintaining hedgerows; time lag before hedgerows mature and provide benefit; need for grower buy-in/cooperation across the valley for the strategy to meaningfully increase regional bee populations. Award 1 point for a drawback that is only generic ('it costs money') without any scenario-specific reasoning.",
+          "modelResponse": "One drawback is that planting hedgerows requires taking some orchard land out of direct fruit production, at least temporarily, which reduces the grower's short-term harvestable acreage and represents a real economic cost and tradeoff against the long-term benefit of improved pollination from a larger bee population."
+        }
+      ]
+    }
+  },
+  {
+    "id": "apenvsci-fa-fr-03",
+    "loId": "apenvsci.energy-overview-fossil",
+    "cedCode": "AP-ENVSCI-6.1-6.5",
+    "topic": "ap-environmental-science",
+    "topicId": "ap-environmental-science",
+    "difficulty": 4,
+    "responseFormat": "frq",
+    "problemText": "The town of Millbrook Falls currently gets its electricity from an aging natural-gas power plant and is evaluating a plan to add solar capacity and efficiency upgrades. Use the given values for each part; show your work for all calculations.\n\n(a) The natural-gas plant takes in $720\\text{ MJ}$ of chemical energy (from burning fuel) and produces $216\\text{ MJ}$ of usable electrical energy, with the remainder lost as waste heat. Calculate the plant's energy efficiency, as a percentage.\n\n(b) A Millbrook Falls household runs an electric water heater rated at $3.6\\text{ kW}$ for $1.5$ hours per day, every day of the year. Electricity costs \\$0.16 per kWh. Calculate the household's annual cost of operating this water heater.\n\n(c) The plant's exhaust stream contains nitrogen oxides (NOx) at a concentration of $45\\text{ mg/m}^3$, and the plant releases $2{,}000{,}000\\text{ m}^3$ of exhaust gas per day. Calculate the total mass of NOx the plant releases per day, in kilograms.\n\n(d) Millbrook Falls' electricity demand is currently growing at a constant rate of $3.5\\%$ per year. Using the rule of 70, calculate the approximate doubling time, in years, for the town's electricity demand.\n\n(e) Beyond adding solar capacity, describe ONE additional non-quantitative strategy Millbrook Falls could adopt to further reduce its reliance on fossil-fuel electricity or reduce the pollutant emissions calculated above, and explain why it would be effective.",
+    "answer": "see rubric",
+    "solutionText": "(a) Efficiency = useful output / total input = 216/720 = 0.30 = 30%. (b) Daily energy = 3.6 kW x 1.5 h = 5.4 kWh; annual energy = 5.4 x 365 = 1,971 kWh; annual cost = 1,971 x \\$0.16 = \\$315.36 (accept \\$305-\\$325). (c) Mass = 45 mg/m3 x 2,000,000 m3 = 90,000,000 mg = 90 kg/day. (d) Doubling time = 70 / 3.5 = 20 years. (e) Any well-justified non-quantitative demand-reduction or emissions-reduction strategy (e.g., energy-efficiency retrofits, building codes, public transit investment, demand-response programs, fuel-switching to lower-carbon natural gas turbines, cap-and-trade participation) earns credit if the mechanism is explained.",
+    "bankScope": "mock",
+    "rubric": {
+      "parts": [
+        {
+          "criterionId": "a",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for setting up efficiency = (useful energy output / total energy input) x 100; 1 point for the correct numeric answer of 30% (accept 29-31% for minor rounding), computed as 216 MJ / 720 MJ = 0.30 = 30%. Work must be shown (the division), not just the final number, to earn both points.",
+          "modelResponse": "Efficiency = (useful electrical output / total energy input) x 100% = (216 MJ / 720 MJ) x 100% = 0.30 x 100% = 30%."
+        },
+        {
+          "criterionId": "b",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly computing annual energy use: 3.6 kW x 1.5 h/day = 5.4 kWh/day, and 5.4 kWh/day x 365 days = 1,971 kWh/year (accept 1,950-1,990 kWh for rounding); 1 point for correctly multiplying by the given rate to get annual cost: 1,971 kWh x \\$0.16/kWh = \\$315.36 (accept any answer in the range \\$305-\\$325 that shows correct work, to allow for reasonable rounding of the intermediate kWh figure). Full credit requires showing both the kWh calculation and the cost calculation.",
+          "modelResponse": "Daily energy use = 3.6 kW x 1.5 h = 5.4 kWh/day. Annual energy use = 5.4 kWh/day x 365 days/year = 1,971 kWh/year. Annual cost = 1,971 kWh x \\$0.16/kWh = \\$315.36 per year."
+        },
+        {
+          "criterionId": "c",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly setting up mass = concentration x volume: 45 mg/m3 x 2,000,000 m3 = 90,000,000 mg; 1 point for correctly converting to kilograms (dividing by 1,000,000, since 1 kg = 1,000,000 mg) to get 90 kg/day (accept 88-92 kg for minor rounding). Both the multiplication and the unit conversion must be shown for full credit.",
+          "modelResponse": "Total NOx mass = 45 mg/m3 x 2,000,000 m3 = 90,000,000 mg per day. Converting to kilograms: 90,000,000 mg / 1,000,000 mg per kg = 90 kg of NOx released per day."
+        },
+        {
+          "criterionId": "d",
+          "maxPoints": 2,
+          "scoringCriteria": "1 point for correctly applying the rule of 70 formula: doubling time = 70 / (annual growth rate as a percentage); 1 point for the correct numeric answer of 20 years, computed as 70 / 3.5 = 20.",
+          "modelResponse": "Using the rule of 70: doubling time = 70 / growth rate (%) = 70 / 3.5 = 20 years."
+        },
+        {
+          "criterionId": "e",
+          "maxPoints": 2,
+          "scoringCriteria": "2 points for a specific, realistic non-quantitative strategy with a correct explanation of the mechanism by which it would reduce fossil-fuel electricity demand or pollutant emissions. Acceptable answers include: building energy-efficiency codes/retrofits (insulation, efficient appliances) that lower overall electricity demand so less gas-fired generation is needed; investing in public transit or demand-response/time-of-use pricing programs that shift or reduce peak electricity demand; switching the plant to a more efficient combined-cycle gas turbine to reduce fuel burned (and thus NOx) per unit of electricity produced. Award 1 point for a vague or generic answer (e.g., 'use less energy') without a mechanism connecting it to reduced demand or emissions.",
+          "modelResponse": "Millbrook Falls could adopt building energy-efficiency codes requiring better insulation and high-efficiency appliances in new and renovated buildings. Because efficient buildings need less electricity to heat, cool, and operate, overall electricity demand from the town would grow more slowly, meaning the natural-gas plant would need to burn less fuel to meet demand — directly reducing both its fuel consumption and its NOx emissions."
+        }
+      ]
+    }
+  }
+]
