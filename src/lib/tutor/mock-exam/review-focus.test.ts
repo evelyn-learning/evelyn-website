@@ -5,6 +5,7 @@ import {
   buildMockReviewContext,
   buildMockReviewAgenda,
   buildMockReviewDrawer,
+  buildMockReviewCorrectRows,
   mathSafeSnippet,
 } from './review-focus';
 
@@ -246,7 +247,7 @@ test('mathSafeSnippet: escaped \\$ currency is not a math delimiter', () => {
 });
 
 // ─── real exam question numbers (qNum) ──────────────────────────────────────
-test('qNum = real exam question number: 1-based within sectionLabel over the FULL served list', () => {
+test('qNum = real exam question number: CONTINUOUS 1-based position over the FULL served list', () => {
   const item = (id: string, section: string, isCorrect: boolean): MockReviewItem => ({
     itemId: id, sectionId: 'x', sectionLabel: section, responseFormat: 'mcq',
     problemText: `stem ${id}`, choices: ['a', 'b', 'c', 'd'], correctAnswer: 'A',
@@ -267,18 +268,54 @@ test('qNum = real exam question number: 1-based within sectionLabel over the FUL
   // Correct items still consume a number — numbering counts every item.
   assert.equal(qByMiss.get('s2'), 2);
   assert.equal(qByMiss.get('s3'), 3);
-  // Per-section counter resets for Section II.
-  assert.equal(qByMiss.get('t1'), 1);
-  assert.equal(qByMiss.get('t3'), 3);
+  // Continuous: Section II's first item CONTINUES the count (no per-section
+  // restart) — t1 is the 5th served item, t3 the 7th.
+  assert.equal(qByMiss.get('t1'), 5);
+  assert.equal(qByMiss.get('t3'), 7);
   // focusItems carry the same real numbers.
   const qByFocus = new Map(ctx.focusItems.map((f) => [f.itemId, f.qNum]));
   assert.equal(qByFocus.get('s2'), 2);
-  assert.equal(qByFocus.get('t3'), 3);
+  assert.equal(qByFocus.get('t3'), 7);
   // Agenda + drawer view-models expose qNum for the badge.
   const { agenda } = buildMockReviewAgenda(ctx);
   assert.ok(agenda.every((a) => typeof a.qNum === 'number'));
   const rows = buildMockReviewDrawer(ctx);
-  assert.equal(new Map(rows.map((r) => [r.itemId, r.qNum])).get('t1'), 1);
+  assert.equal(new Map(rows.map((r) => [r.itemId, r.qNum])).get('t1'), 5);
+});
+
+// ─── correct items (drawer "show correct too" toggle) ───────────────────────
+test('buildMockReviewContext: correctItems = every non-miss served item, condensed', () => {
+  const items = [
+    mcq('c1', 'x.algebra', true),
+    mcq('m1', 'x.algebra', false),
+    mcq('c2', 'x.geometry', true),
+    frq('f1', 'x.u2', 8, 9),          // ratio .89 -> NOT a miss -> correct
+    frq('f2', 'x.u2', 2, 9),          // ratio .22 -> miss
+  ];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  assert.deepEqual(ctx.correctItems.map((c) => c.itemId).sort(), ['c1', 'c2', 'f1']);
+  assert.equal(ctx.totalMissed, 2);   // m1 + f2 only
+  // Same condensed shape as a miss row (snippet/qNum present).
+  assert.ok(ctx.correctItems.every((c) => typeof c.snippet === 'string' && typeof c.qNum === 'number'));
+  // A correct FRQ still carries its frqScore for the ✓/points display.
+  assert.deepEqual(ctx.correctItems.find((c) => c.itemId === 'f1')?.frqScore, { points: 8, max: 9 });
+});
+
+test('a pinned CORRECT item appears in correctItems (never in allMisses)', () => {
+  const items = [mcq('c1', 'x.u1', true), mcq('m1', 'x.u1', false)];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items, pinItemIds: ['c1'] });
+  assert.ok(ctx.correctItems.some((c) => c.itemId === 'c1'));
+  assert.ok(!ctx.allMisses.some((m) => m.itemId === 'c1'));
+});
+
+test('buildMockReviewCorrectRows: one row per correct item with a ✓ result; pinned-correct flagged', () => {
+  const items = [mcq('c1', 'x.u1', true), mcq('m1', 'x.u1', false), mcq('c2', 'x.u2', true)];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items, pinItemIds: ['c1'] });
+  const rows = buildMockReviewCorrectRows(ctx);
+  assert.equal(rows.length, 2);   // c1, c2
+  assert.ok(rows.every((r) => r.result.startsWith('✓')));
+  assert.equal(rows.find((r) => r.itemId === 'c1')?.isFocus, true);   // pinned-correct is "up next"
+  assert.equal(rows.find((r) => r.itemId === 'c2')?.isFocus, false);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -18,6 +18,7 @@ const ctx: MockReviewContext = {
   }],
   remainingMissSummary: [{ unitLabel: 'apstats.inference', missed: 4 }],
   allMisses: [],
+  correctItems: [],
 };
 
 test('empty without context', () => assert.equal(formatMockReviewBlock(undefined), ''));

@@ -91,7 +91,7 @@ import {
 } from '@/lib/tutor/validation/biology';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
-import { buildMockReviewAgenda, buildMockReviewDrawer } from '@/lib/tutor/mock-exam/review-focus';
+import { buildMockReviewAgenda, buildMockReviewDrawer, buildMockReviewCorrectRows } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
@@ -462,6 +462,9 @@ interface VoiceTutorRealtimeProps {
     drawer: MockReviewDrawerRow[],
     /** Stable pick handler for a drawer row — see pickAgendaItem. */
     onPickAgendaItem: (itemId: string) => void,
+    /** Agenda round 5: drawer rows for every CORRECT (non-miss) item, shown
+     *  behind the "show correct questions too" disclosure. Same pick handler. */
+    correctDrawer: MockReviewDrawerRow[],
   ) => void;
   /** Re-fetch the mock-review context, optionally PINNING extra item ids so
    *  they lead the focus list (drawer "switch to this question" path). Returns
@@ -1338,6 +1341,7 @@ export function VoiceTutorRealtime({
   useEffect(() => { onControlMessageRef.current = onControlMessage; }, [onControlMessage]);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
+  const mockCorrectDrawer = useMemo(() => buildMockReviewCorrectRows(mockReview), [mockReview]);
 
   // One-time session-start sequence (clock + unlockAudio + hasStarted), owned
   // by the handleRef effect below where the state setters live, and mirrored
@@ -1393,8 +1397,8 @@ export function VoiceTutorRealtime({
   }, []);
 
   useEffect(() => {
-    onMockAgendaChangeRef.current?.(mockAgenda.agenda, mockAgenda.remainingLine, mockDrawer, pickAgendaItem);
-  }, [mockAgenda, mockDrawer, pickAgendaItem]);
+    onMockAgendaChangeRef.current?.(mockAgenda.agenda, mockAgenda.remainingLine, mockDrawer, pickAgendaItem, mockCorrectDrawer);
+  }, [mockAgenda, mockDrawer, mockCorrectDrawer, pickAgendaItem]);
 
   // Milestone reporting (mirrored to a ref so the emit helper has stable
   // identity and never goes stale inside the tool dispatch). Each milestone

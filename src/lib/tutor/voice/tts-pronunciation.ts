@@ -1308,12 +1308,12 @@ function rewriteLegalV(t: string): string {
  * letter after "part"/"question" that Cartesia voices as the ARTICLE or a
  * schwa ("part uh") rather than the letter NAME (agenda round 4, mock-exam
  * review: "let's do part a" spoke "part /æ/"). Respell the letter to its
- * spoken name using the SAME phonetic idiom the variable-respelling rules
- * above already rely on ('a'→'ay', 'b'→'bee', 'c'→'see' …) — that respelling
- * is the file's established, proven-for-Cartesia way to make a lone letter
- * read as its name (see A_VARIABLE_REPLACEMENTS / LETTER_RESPELLING_REPLACEMENTS
- * and VAR_SPOKEN); an uppercased glyph ("part A") has NO such precedent here,
- * so we deliberately don't use it.
+ * spoken name: b–h use the file's phonetic idiom ('b'→'bee', 'c'→'see' …),
+ * the same the variable-respelling rules rely on (see
+ * A_VARIABLE_REPLACEMENTS / LETTER_RESPELLING_REPLACEMENTS and VAR_SPOKEN).
+ * The letter 'a' is the exception: its phonetic 'ay' was voiced as the WORD
+ * "aye" (agenda round 5), so in this label position it emits the capital
+ * GLYPH 'A' instead, which reads as the letter name — see the map below.
  *
  * Gated to a–h, the only letters real exam parts use — i/v/x are excluded so
  * document roman numerals ("Part VI" → rewriteRomanNumerals) and any citation
@@ -1323,7 +1323,13 @@ function rewriteLegalV(t: string): string {
  * match (no space) and neither does a bare "part" with no following letter.
  */
 const PART_LETTER_SPOKEN: Record<string, string> = {
-  a: 'ay', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'ef', g: 'jee', h: 'aitch',
+  // LIVE FAILURE (agenda round 5, mock-review): the phonetic respelling 'ay'
+  // was voiced by Cartesia as "aye" (/aɪ/, the word "aye"), NOT the letter
+  // name /eɪ/. In LABEL position ("part A", followed by punctuation or a verb
+  // per the PART_LETTER_*_RE gates) the capital GLYPH 'A' reads correctly as
+  // the letter name, so 'a' emits 'A' ("part A" / "part A."). Do NOT revert to
+  // 'ay'. b–h keep their respellings (those read correctly).
+  a: 'A', b: 'bee', c: 'see', d: 'dee', e: 'ee', f: 'ef', g: 'jee', h: 'aitch',
 };
 // The trailing (?![a-z]) (case-insensitive under /i) both keeps the letter a
 // STANDALONE token ("part apple" never matches) and lets the optional closing

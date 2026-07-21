@@ -483,7 +483,9 @@ console.log('OK — tts-pronunciation rewrites validated');
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
-  eq('Now do part a.', 'Now do part ay.', 'part-a');
+  // Agenda round 5: 'a' emits the capital GLYPH 'A' (phonetic 'ay' was voiced
+  // as the word "aye"); b–h keep their respellings.
+  eq('Now do part a.', 'Now do part A.', 'part-a');
   eq('Look at part (b) next.', 'Look at part bee next.', 'part-paren-b');
   eq('Part c asks for the slope.', 'Part see asks for the slope.', 'Part-c-capitalized');
   eq('Try part d then part e.', 'Try part dee then part ee.', 'part-d-and-part-e');
@@ -498,9 +500,9 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('They question a witness.', 'They question a witness.', 'article-a-witness');
   // …but label-shaped continuations still do.
   // (the pipeline's dash rule later renders the em dash as a comma pause)
-  eq("Let's start with part a — what expression?", "Let's start with part ay, what expression?", 'part-a-dash');
-  eq('Part a asks for the setup.', 'Part ay asks for the setup.', 'part-a-verb');
-  eq('Try part a of the problem.', 'Try part ay of the problem.', 'part-a-of');
+  eq("Let's start with part a — what expression?", "Let's start with part A, what expression?", 'part-a-dash');
+  eq('Part a asks for the setup.', 'Part A asks for the setup.', 'part-a-verb');
+  eq('Try part a of the problem.', 'Try part A of the problem.', 'part-a-of');
 
   console.log('OK — Agenda round 4 (part-letter TTS)');
 }

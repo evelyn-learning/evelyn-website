@@ -262,6 +262,18 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime via onMockAgendaChange. Non-empty ⇒ SessionStage shows
   // the header "Agenda" button + the jump panel.
   const [mockDrawer, setMockDrawer] = useState<MockReviewDrawerRow[]>([]);
+  // Agenda round 5: correct-question drawer rows (every non-miss served item),
+  // shown behind the drawer's "show correct questions too" disclosure.
+  const [mockCorrectDrawer, setMockCorrectDrawer] = useState<MockReviewDrawerRow[]>([]);
+  // Agenda round 5: the mid-session Agenda drawer open-state, OWNED here (lifted
+  // from SessionStage) so it can auto-open once at mock-review start and so the
+  // open flag can drive SessionStage's pre-start collapse. Threaded down as a
+  // controlled prop + change callback.
+  const [agendaDrawerOpen, setAgendaDrawerOpen] = useState(false);
+  // One-time latch: the drawer auto-opens exactly ONCE, when its data first
+  // arrives (empty→non-empty) during pre-start. Never re-opens on later data
+  // refreshes or after the student closes it.
+  const agendaAutoOpenedRef = useRef(false);
   const pickAgendaItemRef = useRef<(itemId: string) => void>(() => {});
   // Agenda round 4: one-way latch flipped the instant a pre-start agenda row
   // or a drawer row is picked (both route through handleControlMessage / the
@@ -547,6 +559,19 @@ export default function TutorSession(props: TutorSessionProps) {
     isProcessing ? 'thinking' : lastEntry?.role === 'tutor' ? 'speaking' : 'listening';
   const voiceState: VoiceState =
     liveVoiceState !== 'idle' ? liveVoiceState : started ? derivedVoiceState : 'idle';
+
+  // Agenda round 5: auto-open the Agenda drawer ONCE when its rows first arrive,
+  // but only during pre-start (session not yet started and no agenda pick made).
+  // The one-way latch means later data refreshes and a student-initiated close
+  // never re-trigger it. Pre-start + drawer-open makes SessionStage collapse the
+  // center agenda list to a hint (the drawer is now the single agenda surface).
+  useEffect(() => {
+    if (agendaAutoOpenedRef.current) return;
+    if (mockDrawer.length === 0) return;           // wait for data
+    if (started || agendaEngaged) return;          // pre-start only
+    agendaAutoOpenedRef.current = true;
+    setAgendaDrawerOpen(true);
+  }, [mockDrawer, started, agendaEngaged]);
   const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
   // Caption word-sync: stable poll getter for the CaptionTicker. Reads the
   // engine handle imperatively — no React state churn at poll frequency.
@@ -851,9 +876,10 @@ export default function TutorSession(props: TutorSessionProps) {
         }}
         onSpeakingRateChange={setSpeakingRate}
         onPracticeOverrideChange={setPracticeOverrideActive}
-        onMockAgendaChange={(agenda, remainingLine, drawer, onPick) => {
+        onMockAgendaChange={(agenda, remainingLine, drawer, onPick, correctDrawer) => {
           setMockAgenda(agenda); setMockAgendaRemaining(remainingLine);
           setMockDrawer(drawer); pickAgendaItemRef.current = onPick;
+          setMockCorrectDrawer(correctDrawer ?? []);
         }}
         refetchMockReview={refetchMockReview}
         onStudentInput={handleStudentInput}
@@ -1109,7 +1135,10 @@ export default function TutorSession(props: TutorSessionProps) {
         mockAgenda={mockAgenda}
         mockAgendaRemaining={mockAgendaRemaining}
         mockDrawer={mockDrawer}
+        mockCorrectDrawer={mockCorrectDrawer}
         onPickAgendaItem={(itemId) => pickAgendaItemRef.current?.(itemId)}
+        agendaDrawerOpen={agendaDrawerOpen}
+        onAgendaDrawerOpenChange={setAgendaDrawerOpen}
         agendaEngaged={agendaEngaged}
         practiceOverrideActive={practiceOverrideActive}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}

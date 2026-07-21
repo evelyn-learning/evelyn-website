@@ -15,10 +15,11 @@ const PASSAGE_EXCERPT_CHARS = 1197; // + 13-char ' […truncated]' marker = 1210
 export interface MockReviewFocusItem {
   itemId: string;
   sectionLabel: string;
-  /** The item's REAL exam question number — its 1-based position within its
-   *  sectionLabel over the full served exam (every item counted, correct or
-   *  not), NOT its position in the focus/agenda list. Students remember "Q18",
-   *  not "the 3rd row of my review agenda". Derived in buildMockReviewContext. */
+  /** The item's REAL exam question number — its CONTINUOUS 1-based position
+   *  over the FULL served exam (all sections in exam order, every item counted
+   *  correct or not), NOT its position in the focus/agenda list and NOT reset
+   *  per section. Students remember "Q18", not "the 3rd row of my review
+   *  agenda". Derived in buildMockReviewContext. */
   qNum: number;
   responseFormat?: 'mcq' | 'numeric' | 'frq';
   problemText: string;
@@ -47,8 +48,8 @@ export interface MockReviewFocusItem {
 export interface MockReviewMiss {
   itemId: string;
   sectionLabel: string;
-  /** Real exam question number (1-based within sectionLabel over the full
-   *  exam) — see MockReviewFocusItem.qNum. */
+  /** Real exam question number (continuous 1-based position over the full
+   *  served exam) — see MockReviewFocusItem.qNum. */
   qNum: number;
   snippet: string;
   responseFormat: 'mcq' | 'numeric' | 'frq';
@@ -72,6 +73,11 @@ export interface MockReviewContext {
    *  for the mid-session Agenda drawer. NOT rendered into the brain block
    *  (formatMockReviewBlock stays capped at the focus items). */
   allMisses: MockReviewMiss[];
+  /** EVERY served item that is NOT a miss (the complement of `isMiss` over the
+   *  full items array, exam order) — the data source for the drawer's optional
+   *  "show correct questions too" disclosure. Same condensed shape as allMisses;
+   *  a client renders each as a ✓ result. NOT rendered into the brain block. */
+  correctItems: MockReviewMiss[];
 }
 
 function frqRatio(it: MockReviewItem): number {
@@ -151,16 +157,13 @@ export function buildMockReviewContext(args: {
   const label = args.unitLabelOf ?? ((loId: string) => loId);
 
   // Real exam question numbers: args.items arrives in served exam order
-  // (getReview builds it module-by-module), so a per-sectionLabel running
-  // counter over the FULL list — every item counted, correct or not, since
-  // exam numbering includes all — gives each item its authentic "Qn".
+  // (getReview builds it module-by-module), so the item's CONTINUOUS 1-based
+  // position over the FULL list — all sections, exam order, every item counted
+  // correct or not — is its authentic "Qn". Continuous (not per-section) so the
+  // drawer never shows several "Q1"s: section II's first item follows on from
+  // section I's last, matching how the printed exam numbers questions.
   const qNumById = new Map<string, number>();
-  const sectionCounters = new Map<string, number>();
-  for (const it of args.items) {
-    const next = (sectionCounters.get(it.sectionLabel) ?? 0) + 1;
-    sectionCounters.set(it.sectionLabel, next);
-    qNumById.set(it.itemId, next);
-  }
+  args.items.forEach((it, i) => qNumById.set(it.itemId, i + 1));
   const qNumOf = (itemId: string): number => qNumById.get(itemId) ?? 0;
 
   // Resolve the valid, unique pinned ids (same rules as selectMockReviewFocus:
@@ -181,6 +184,9 @@ export function buildMockReviewContext(args: {
   // allMisses = every MISS, focus-first then the remainder, stable order. A
   // pinned-but-correct focus item is not a miss, so it never appears here.
   const allMisses: MockReviewMiss[] = [...focus.filter(isMiss), ...remaining].map((it) => toMiss(it, qNumOf(it.itemId)));
+  // correctItems = the complement of isMiss over the FULL served array, in exam
+  // order (skip nothing). A pinned-correct item is not a miss, so it lands here.
+  const correctItems: MockReviewMiss[] = args.items.filter((it) => !isMiss(it)).map((it) => toMiss(it, qNumOf(it.itemId)));
 
   return {
     formLabel: args.formLabel,
@@ -210,6 +216,7 @@ export function buildMockReviewContext(args: {
     })),
     remainingMissSummary: Array.from(summary.entries()).map(([unitLabel, missed]) => ({ unitLabel, missed })),
     allMisses,
+    correctItems,
   };
 }
 
@@ -372,6 +379,32 @@ export function buildMockReviewDrawer(ctx: MockReviewContext | undefined): MockR
     itemId: m.itemId,
     label: `${m.sectionLabel} — ${m.snippet}`,
     result: missResult(m),
+    isFocus: focusIds.has(m.itemId),
+  }));
+}
+
+/** Result line for a CORRECT drawer row — MCQ/numeric shows a ✓ with the
+ *  student's answer; a "correct" FRQ (scored at/above the miss ratio) shows its
+ *  points/max. Sibling of missResult for the drawer's correct-questions list. */
+function correctResult(m: MockReviewMiss): string {
+  if (m.responseFormat === 'frq' || m.frqScore) {
+    return m.frqScore ? `${m.frqScore.points}/${m.frqScore.max}` : '✓';
+  }
+  return `✓ ${m.studentAnswer ?? '—'}`;
+}
+
+/** Build the drawer's "correct questions too" rows (every non-miss served item)
+ *  from a review context. Same row shape as buildMockReviewDrawer; a
+ *  pinned-correct item is flagged isFocus so it can badge "up next". */
+export function buildMockReviewCorrectRows(ctx: MockReviewContext | undefined): MockReviewDrawerRow[] {
+  if (!ctx) return [];
+  const focusIds = new Set(ctx.focusItems.map((f) => f.itemId));
+  return ctx.correctItems.map((m, i) => ({
+    n: i + 1,
+    qNum: m.qNum,
+    itemId: m.itemId,
+    label: `${m.sectionLabel} — ${m.snippet}`,
+    result: correctResult(m),
     isFocus: focusIds.has(m.itemId),
   }));
 }

@@ -17,7 +17,7 @@
  */
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
   MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks,
@@ -118,9 +118,20 @@ export interface SessionStageProps {
    *  header that toggles a right-side panel; a row tap fires onPickAgendaItem
    *  and closes the panel. Empty ⇒ no button. */
   mockDrawer?: MockReviewDrawerRow[];
+  /** Agenda round 5: drawer rows for every CORRECT (non-miss) item. Rendered
+   *  behind a collapsed "Show correct questions too (N)" disclosure below the
+   *  miss list; each row taps through the SAME onPickAgendaItem handler. Empty
+   *  ⇒ no disclosure. */
+  mockCorrectDrawer?: MockReviewDrawerRow[];
   /** Fires with the tapped row's itemId (VoiceTutorRealtime.pickAgendaItem):
    *  switches the tutor to that question, refetching/pinning it when needed. */
   onPickAgendaItem?: (itemId: string) => void;
+  /** Agenda round 5: the Agenda drawer's open-state, OWNED by TutorSession
+   *  (controlled) so it can auto-open once at mock-review start. When provided,
+   *  it overrides the internal state; changes route through
+   *  onAgendaDrawerOpenChange. Absent ⇒ SessionStage keeps its own state. */
+  agendaDrawerOpen?: boolean;
+  onAgendaDrawerOpenChange?: (open: boolean) => void;
   /** One-way latch (agenda round 4): set the instant the student taps a
    *  pre-start agenda row or a drawer row, BEFORE the board renders. While set,
    *  the pre-start hero + starter/agenda cluster collapse to a single muted
@@ -165,7 +176,8 @@ export default function SessionStage(props: SessionStageProps) {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage, onBack,
-    mockAgenda, mockAgendaRemaining, mockDrawer, onPickAgendaItem, agendaEngaged = false,
+    mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
+    agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
   } = props;
@@ -198,9 +210,22 @@ export default function SessionStage(props: SessionStageProps) {
   // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
   // Mid-session Agenda drawer (mock-review): a right-side panel listing every
-  // miss. Closed by default; the header Agenda button toggles it.
-  const [agendaOpen, setAgendaOpen] = useState(false);
+  // miss. Closed by default; the header Agenda button toggles it. Controlled by
+  // TutorSession when agendaDrawerOpen is provided (agenda round 5 auto-open),
+  // else self-owned. setAgendaOpen routes to whichever owns the state.
+  const [agendaOpenInternal, setAgendaOpenInternal] = useState(false);
+  const agendaOpen = agendaDrawerOpen ?? agendaOpenInternal;
+  const setAgendaOpen = useCallback((open: boolean) => {
+    if (onAgendaDrawerOpenChange) onAgendaDrawerOpenChange(open);
+    else setAgendaOpenInternal(open);
+  }, [onAgendaDrawerOpenChange]);
+  // Agenda round 5: the drawer's "show correct questions too" disclosure state.
+  const [showCorrectQuestions, setShowCorrectQuestions] = useState(false);
   const showAgendaButton = !!mockDrawer && mockDrawer.length > 0;
+  // Pre-start + drawer open ⇒ the center agenda list would DUPLICATE the drawer
+  // (both showed side by side, live screenshot). Collapse the center list to a
+  // single hint line then; the drawer is the agenda surface.
+  const agendaDrawerOpenPreStart = agendaOpen && !started && !agendaEngaged;
   // The dock caption (rendered inside VoiceTutorRealtime via captionSlot —
   // composed in TutorSession, two levels up from this component's slots)
   // opens the transcript drawer through this window-event bridge: the drawer
@@ -419,6 +444,12 @@ export default function SessionStage(props: SessionStageProps) {
                 item; the mic alone takes them in order. Falls back to the generic
                 chips for every other session (and degraded mock-review). */}
             {agendaEngaged ? null : mockAgenda && mockAgenda.length > 0 ? (
+              agendaDrawerOpenPreStart ? (
+              // Drawer is open over the board — don't duplicate the list here.
+              <p className="mt-7 ss-cap max-w-md text-center text-sm text-slate-500">
+                Your review agenda is open on the right — tap a question to start there, or tap the mic.
+              </p>
+              ) : (
               <div className="mt-7 w-full max-w-md pointer-events-auto">
                 <p className="text-center text-lg font-semibold text-slate-800">Your review agenda</p>
                 <p className="mt-1 text-center text-sm text-slate-500">
@@ -457,6 +488,7 @@ export default function SessionStage(props: SessionStageProps) {
                   <p className="mt-3 text-center text-xs text-slate-400">{mockAgendaRemaining}</p>
                 )}
               </div>
+              )
             ) : (
             /* Quick ways in — Upload (de-emphasized, the cluster camera does
                 the same), plus generic starters. Shown in every session so the
@@ -516,7 +548,7 @@ export default function SessionStage(props: SessionStageProps) {
                   header so End/Pause stay reachable. */}
               {showAgendaButton && (
                 <button
-                  onClick={() => setAgendaOpen((o) => !o)}
+                  onClick={() => setAgendaOpen(!agendaOpen)}
                   title="Review agenda"
                   className={`inline-flex items-center gap-1.5 h-9 px-2.5 rounded-full text-sm font-medium ${agendaOpen ? 'bg-blue-50 text-blue-700' : 'hover:bg-slate-100 text-slate-600'}`}
                 >
@@ -764,6 +796,36 @@ export default function SessionStage(props: SessionStageProps) {
                   </span>
                 </button>
               ))}
+              {/* Agenda round 5: correct questions, behind a collapsed
+                  disclosure so the miss list stays visually primary. Rows use
+                  the SAME style + pick handler (a correct item can be pinned to
+                  revisit — it becomes Item 1). */}
+              {!!mockCorrectDrawer && mockCorrectDrawer.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setShowCorrectQuestions((v) => !v)}
+                    className="mt-1 flex items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 hover:bg-slate-50"
+                  >
+                    {showCorrectQuestions ? 'Hide' : 'Show'} correct questions too ({mockCorrectDrawer.length})
+                  </button>
+                  {showCorrectQuestions && mockCorrectDrawer.map((row) => (
+                    <button
+                      key={row.itemId}
+                      onClick={() => { onPickAgendaItem?.(row.itemId); setAgendaOpen(false); }}
+                      className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm hover:bg-slate-50"
+                    >
+                      <span className="shrink-0 inline-grid place-items-center h-6 min-w-6 px-1.5 rounded-full bg-emerald-50 text-xs font-semibold tabular-nums text-emerald-600">Q{row.qNum}</span>
+                      <span className="min-w-0 flex-1">
+                        {row.isFocus && (
+                          <span className="mb-0.5 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-600">up next</span>
+                        )}
+                        <InlineMathText text={row.label} className="block text-sm font-medium text-slate-800" />
+                        <InlineMathText text={row.result} className="block text-xs text-emerald-600" />
+                      </span>
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </>
