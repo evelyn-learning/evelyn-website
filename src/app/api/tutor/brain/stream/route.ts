@@ -88,6 +88,10 @@ interface BrainStreamRequestBody {
    *  embed token carried session_goal === 'practice'. Surfaces as the durable
    *  `<practice_session>` block. See BrainTurnInput.practiceMode. */
   practiceMode?: boolean;
+  /** Mock-review context (Task WS3). Present only for a mock-review session
+   *  whose embed context fetch succeeded. Surfaces as the durable
+   *  `<mock_review>` block. See BrainTurnInput.mockReview. */
+  mockReview?: BrainTurnInput['mockReview'];
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -594,6 +598,9 @@ export async function POST(req: NextRequest) {
           // a malformed client can't inject a truthy non-bool. Surfaces as the
           // `<practice_session>` block in the user content.
           practiceMode: body.practiceMode === true,
+          // Task WS3: durable mock-review context, forwarded verbatim. Absent
+          // for non-mock-review sessions ⇒ `<mock_review>` block omitted.
+          mockReview: body.mockReview,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

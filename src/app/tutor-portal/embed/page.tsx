@@ -45,6 +45,7 @@ const MILESTONE_RANK: Record<SessionMilestone, number> = {
   recap_reached: 3,
 };
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
+import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 
@@ -122,6 +123,11 @@ interface EmbedConfig {
    *  field existed. Only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is
    *  on. */
   readiness_note?: string;
+  /** Task WS3 — the completed mock attempt to review. When session_goal is
+   *  'mock-review' the engine fetches the missed-item review context for this
+   *  attempt and threads it to the brain. Absent ⇒ plain mock-review greeting
+   *  session (degrade, never block). */
+  mock_attempt_id?: string;
   branding?: {
     primary_color?: string;
     logo_url?: string;
@@ -325,6 +331,20 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     })();
     return () => { cancelled = true; };
   }, [wantsResume, sessionId]);
+
+  // Task WS3 — mock-review context boot. When the session is a mock-review and
+  // the token carries the completed attempt, fetch the missed-item review
+  // context and thread it to the brain. Degrade, never block: any non-200 /
+  // network failure logs and leaves mockReview undefined, so the session still
+  // starts as a plain mock-review greeting session.
+  const [mockReview, setMockReview] = useState<MockReviewContext | undefined>(undefined);
+  useEffect(() => {
+    if (sessionGoal !== 'mock-review' || !config.mock_attempt_id) return;
+    fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`context ${r.status}`))))
+      .then(setMockReview)
+      .catch((e) => console.error('[mock-review] context fetch failed — session continues without it:', e));
+  }, [sessionGoal, config.mock_attempt_id, config.student_id]);
 
   const topicDisplayName = useMemo(
     () => topic ? buildDisplayName(subject, level, topic) : `${subject} — ${level}`,
@@ -723,6 +743,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         studentId={config.student_id}
         sessionId={sessionId}
         sessionGoal={sessionGoal}
+        mockReview={mockReview}
         lessonPlanId={config.curriculum_module || undefined}
         voice={openAIVoice}
         voiceEngine="claude-brain"

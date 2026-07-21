@@ -23,6 +23,7 @@ import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing } from './sentence-spacing';
 import type { DemoStopPayload } from './demo-stop-mode';
+import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -121,6 +122,10 @@ export interface BrainTurnInput {
    *  turn and was lost on resume). Absent/false ⇒ block omitted ⇒ userContent
    *  byte-identical to before this field existed. */
   practiceMode?: boolean;
+  /** Task WS3: durable mock-review context — present only when the student
+   *  arrived from a completed full-length mock to review their misses.
+   *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
+  mockReview?: MockReviewContext;
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -1091,6 +1096,41 @@ export function formatPracticeSessionBlock(practiceMode?: boolean): string {
   return `<practice_session>\n${body}\n</practice_session>\n\n`;
 }
 
+/** Task WS3: durable mock-review mandate — the student just finished a
+ *  full-length mock and is here to review their missed questions. Exported
+ *  for mock-review-block.test.ts. */
+export function formatMockReviewBlock(ctx?: MockReviewContext): string {
+  if (!ctx) return '';
+  const items = ctx.focusItems.map((it, i) => {
+    const lines = [
+      `Item ${i + 1} (${it.sectionLabel}${it.loId ? `, ${it.loId}` : ''}):`,
+      it.passageExcerpt ? `Stimulus: ${it.passageExcerpt}` : '',
+      `Question: ${it.problemText}`,
+      it.choices?.length ? `Choices: ${it.choices.map((c, j) => `${'ABCD'[j]}. ${c}`).join(' | ')}` : '',
+      `Student answered: ${it.studentAnswer}`,
+      it.correctAnswer ? `Correct answer: ${it.correctAnswer}` : '',
+      it.solutionText ? `Solution: ${it.solutionText}` : '',
+      it.frqFeedback?.length
+        ? `Rubric feedback: ${it.frqFeedback.map((p) => `${p.criterionId} ${p.pointsAwarded}/${p.maxPoints} — ${p.feedback}`).join('; ')}`
+        : '',
+    ].filter(Boolean);
+    return lines.join('\n');
+  }).join('\n\n');
+
+  const remainder = ctx.remainingMissSummary.length
+    ? `\nBeyond these, the student also missed: ${ctx.remainingMissSummary.map((s) => `${s.missed} in ${s.unitLabel}`).join(', ')}.`
+    : '';
+
+  const body =
+    `This is a MOCK-EXAM REVIEW session. The student just completed "${ctx.formLabel}" and scored ${ctx.composite} / ${ctx.compositeMax}. They missed ${ctx.totalMissed} question(s); the highest-value ones are listed below with their answers. Hold this agenda for the WHOLE session.\n` +
+    `- Open by briefly acknowledging the score (one sentence, encouraging, no lecture), then recommend starting with Item 1 — but let the student pick any listed item or ask about something else from the exam.\n` +
+    `- For each item: have the student re-attempt or explain their thinking FIRST, then re-teach the underlying concept, and only then connect it to the specific wrong answer. Never just read out the correct answer.\n` +
+    `- Work ONE item at a time; never dump all the items at once or enumerate the whole list unprompted.\n` +
+    `- The answer key below is for YOUR eyes — reveal an item's correct answer only after the student has engaged with it.${remainder}\n\n` +
+    items;
+  return `<mock_review>\n${body}\n</mock_review>\n\n`;
+}
+
 /**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
@@ -1193,6 +1233,11 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (practiceSessionBlock) {
     console.log('[practice-mode] practice_session block attached');
   }
+  // Task WS3: durable mock-review mandate. '' when not a mock-review session.
+  const mockReviewBlock = formatMockReviewBlock(input.mockReview);
+  if (mockReviewBlock) {
+    console.log('[mock-review] mock_review block attached');
+  }
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1232,6 +1277,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     styleReminderBlock +
     demoStopBlock +
     practiceSessionBlock +
+    mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
     lessonBlock +
@@ -1382,6 +1428,11 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (practiceSessionBlock) {
     console.log('[practice-mode] practice_session block attached');
   }
+  // Task WS3: durable mock-review mandate. '' when not a mock-review session.
+  const mockReviewBlock = formatMockReviewBlock(input.mockReview);
+  if (mockReviewBlock) {
+    console.log('[mock-review] mock_review block attached');
+  }
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1416,6 +1467,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     styleReminderBlock +
     demoStopBlock +
     practiceSessionBlock +
+    mockReviewBlock +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
     lessonBlock +
