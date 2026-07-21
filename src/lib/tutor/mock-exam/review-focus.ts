@@ -29,6 +29,11 @@ export interface MockReviewFocusItem {
    *  summing parts wrongly reads "0/0". Present only for graded FRQs. */
   frqScore?: { points: number; max: number };
   loId?: string;
+  /** True when the student explicitly pinned this item for review (it appears
+   *  in pinItemIds). Pinned items are ordered first, so pinned focus items are
+   *  always Items 1..pinnedCount. Drives the "student just selected this" brain
+   *  directive; absent/false for naturally-selected misses. */
+  pinned?: boolean;
 }
 
 /** One missed item, condensed for the in-session Agenda drawer. Every miss
@@ -51,6 +56,10 @@ export interface MockReviewContext {
   focusItems: MockReviewFocusItem[];
   remainingMissSummary: Array<{ unitLabel: string; missed: number }>;
   totalMissed: number;
+  /** How many focus items the student explicitly pinned (0 when none). Pinned
+   *  items lead the focus list, so these are Items 1..pinnedCount — the brain
+   *  block uses this to tell the tutor a selection just happened. */
+  pinnedCount: number;
   /** EVERY miss (focus first, then remaining, stable order) — the data source
    *  for the mid-session Agenda drawer. NOT rendered into the brain block
    *  (formatMockReviewBlock stays capped at the focus items). */
@@ -133,6 +142,15 @@ export function buildMockReviewContext(args: {
   const { focus, remaining, totalMissed } = selectMockReviewFocus(args.items, FOCUS_CAP, args.pinItemIds ?? []);
   const label = args.unitLabelOf ?? ((loId: string) => loId);
 
+  // Resolve the valid, unique pinned ids (same rules as selectMockReviewFocus:
+  // an id must match a real item; duplicates/unknowns are dropped). A focus
+  // item is "pinned" iff its id is in this set; pinnedCount is how many of the
+  // focus items are pinned — since pins lead the list, that's Items 1..count.
+  const knownIds = new Set(args.items.map((it) => it.itemId));
+  const pinnedIdSet = new Set<string>();
+  for (const id of args.pinItemIds ?? []) if (knownIds.has(id)) pinnedIdSet.add(id);
+  const pinnedCount = focus.reduce((n, it) => n + (pinnedIdSet.has(it.itemId) ? 1 : 0), 0);
+
   const summary = new Map<string, number>();
   for (const r of remaining) {
     const key = r.loId ? label(r.loId) : '(uncategorized)';
@@ -148,8 +166,10 @@ export function buildMockReviewContext(args: {
     composite: args.composite,
     compositeMax: args.compositeMax,
     totalMissed,
+    pinnedCount,
     focusItems: focus.map((it) => ({
       itemId: it.itemId,
+      pinned: pinnedIdSet.has(it.itemId) || undefined,
       sectionLabel: it.sectionLabel,
       responseFormat: it.responseFormat,
       problemText: it.problemText,
@@ -210,9 +230,6 @@ export interface MockReviewAgendaItem {
   label: string;
   /** MCQ/numeric: `✗ you: … · correct: …` or `✓ …`; FRQ: `points/max`. */
   result: string;
-  /** Synthetic utterance fired when the row is tapped (starts the session on
-   *  this item). */
-  utterance: string;
 }
 
 /** Truncate `text` to ~`maxLen` visible chars WITHOUT ever cutting inside a
@@ -276,9 +293,6 @@ export function buildMockReviewAgenda(ctx: MockReviewContext | undefined): {
       n,
       label: `${it.sectionLabel} — ${mathSafeSnippet(it.problemText, 56)}`,
       result: agendaResult(it),
-      // The brain's numbered agenda block makes the item unambiguous — quoting
-      // the (often math-laden) stem here rendered a huge raw-TeX student card.
-      utterance: `Let's start with item ${n}.`,
     };
   });
 

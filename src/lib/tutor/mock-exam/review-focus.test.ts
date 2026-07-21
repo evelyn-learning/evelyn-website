@@ -159,14 +159,47 @@ test('skipped FRQ (empty parts) reports frqScore from totalPoints/maxPoints; age
   assert.equal(agenda[0].result, '0/9');
 });
 
-// ─── agenda label keeps math; utterance references only the number ──────────
-test('agenda label keeps $..$ math and the utterance names only the item number', () => {
+// ─── agenda label keeps math (no utterance field — rows send control markers) ─
+test('agenda label keeps $..$ math balanced (the row itself carries no utterance)', () => {
   const it = { ...mcq('m1', 'x.u1', false), problemText: 'Find $\\lim_{x\\to2}(2x^2-3x+1)$ now' };
   const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items: [it] });
   const { agenda } = buildMockReviewAgenda(ctx);
   assert.ok(agenda[0].label.includes('$'));
   assert.equal(dollarCount(agenda[0].label) % 2, 0);
-  assert.equal(agenda[0].utterance, "Let's start with item 1.");
+  assert.ok(!('utterance' in agenda[0]), 'utterance field was dropped');
+});
+
+// ─── pinned flags + pinnedCount ─────────────────────────────────────────────
+test('buildMockReviewContext: pinned focus items are flagged and counted', () => {
+  const items = [
+    mcq('m1', 'x.u1', false),
+    mcq('m2', 'x.u2', false),
+    mcq('m3', 'x.u3', false),
+  ];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items, pinItemIds: ['m3', 'm2'] });
+  assert.equal(ctx.pinnedCount, 2);
+  assert.equal(ctx.focusItems[0].itemId, 'm3');
+  assert.equal(ctx.focusItems[0].pinned, true);
+  assert.equal(ctx.focusItems[1].itemId, 'm2');
+  assert.equal(ctx.focusItems[1].pinned, true);
+  // The unpinned natural miss carries no pinned flag.
+  const m1 = ctx.focusItems.find((f) => f.itemId === 'm1');
+  assert.ok(m1 && !m1.pinned);
+});
+
+test('buildMockReviewContext: pinnedCount is 0 and no item is pinned without pins', () => {
+  const items = [mcq('m1', 'x.u1', false), mcq('m2', 'x.u2', false)];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items });
+  assert.equal(ctx.pinnedCount, 0);
+  assert.ok(ctx.focusItems.every((f) => !f.pinned));
+});
+
+test('buildMockReviewContext: unknown pin ids do not inflate pinnedCount', () => {
+  const items = [mcq('m1', 'x.u1', false), mcq('m2', 'x.u2', false)];
+  const ctx = buildMockReviewContext({ formLabel: 'F', composite: 1, compositeMax: 5, items, pinItemIds: ['nope', 'm2'] });
+  assert.equal(ctx.pinnedCount, 1);
+  assert.equal(ctx.focusItems[0].itemId, 'm2');
+  assert.equal(ctx.focusItems[0].pinned, true);
 });
 
 // ─── condensed footer (no loId dump) ────────────────────────────────────────

@@ -1121,7 +1121,16 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
     ? `\nBeyond these, the student also missed: ${ctx.remainingMissSummary.map((s) => `${s.missed} in ${s.unitLabel}`).join(', ')}.`
     : '';
 
+  // When the student just picked item(s) from their on-screen review agenda,
+  // the pinned focus items lead the list (Items 1..pinnedCount). Tell the brain
+  // a selection happened so it starts working immediately instead of asking
+  // "which question did you mean?".
+  const pinnedDirective = ctx.pinnedCount > 0
+    ? `IMPORTANT: the student just SELECTED Item 1${ctx.pinnedCount > 1 ? `–${ctx.pinnedCount}` : ''} from their on-screen review agenda. Do NOT ask which question they meant — begin working on Item 1 immediately.\n`
+    : '';
+
   const body =
+    pinnedDirective +
     `This is a MOCK-EXAM REVIEW session. The student just completed "${ctx.formLabel}" and scored ${ctx.composite} / ${ctx.compositeMax}. They missed ${ctx.totalMissed} question(s); the highest-value ones are listed below with their answers. Hold this agenda for the WHOLE session.\n` +
     `- Open by briefly acknowledging the score (one sentence, encouraging, no lecture), then recommend starting with Item 1 — but let the student pick any listed item or ask about something else from the exam.\n` +
     `- For each item: have the student re-attempt or explain their thinking FIRST, then re-teach the underlying concept, and only then connect it to the specific wrong answer. Never just read out the correct answer.\n` +

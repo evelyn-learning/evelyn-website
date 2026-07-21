@@ -99,6 +99,12 @@ export interface SessionStageProps {
   quickActions?: ReactNode;      // promoted chips (optional)
   // student tools → existing onStudentInput pipeline
   onStudentInput: (type: 'text' | 'drawing' | 'image', content: string) => void;
+  /** Control channel for navigation/selection markers (agenda picks). Unlike
+   *  onStudentInput, this does NOT render a "Student wrote:" board card or wrap
+   *  the text as a whiteboard action — the marker is relayed verbatim to the
+   *  brain and suppressed from the visible transcript. Falls back to
+   *  onStudentInput when absent. */
+  onControlMessage?: (marker: string) => void;
   /** Mock-review pre-start "review agenda". When non-empty, the generic starter
    *  chips (Upload / Practice / Explain) are REPLACED by a tappable numbered
    *  list of the pinned/missed questions — tapping a row starts the session on
@@ -152,7 +158,7 @@ export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
-    quickActions, onStudentInput, onBack,
+    quickActions, onStudentInput, onControlMessage, onBack,
     mockAgenda, mockAgendaRemaining, mockDrawer, onPickAgendaItem,
     practiceOverrideActive = false, onTogglePracticeOverride,
     boardPenActive, onToggleBoardPen,
@@ -410,7 +416,16 @@ export default function SessionStage(props: SessionStageProps) {
                   {mockAgenda.map((item) => (
                     <button
                       key={item.n}
-                      onClick={() => onStudentInput('text', item.utterance)}
+                      onClick={() => {
+                        // Navigation, not an answer: send a control marker (no
+                        // "Student wrote:" board card). The marker names the
+                        // item number so the brain block resolves it. Fall back
+                        // to the legacy student-input path when the control
+                        // channel isn't wired.
+                        const marker = `[Via their review-agenda menu, the student chose to start with Item ${item.n}. Begin working on it now.]`;
+                        if (onControlMessage) onControlMessage(marker);
+                        else onStudentInput('text', marker);
+                      }}
                       className="flex items-start gap-3 rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-left shadow-sm hover:bg-slate-50"
                     >
                       <span className="shrink-0 inline-grid place-items-center w-6 h-6 rounded-full bg-slate-100 text-xs font-semibold tabular-nums text-slate-600">{item.n}</span>

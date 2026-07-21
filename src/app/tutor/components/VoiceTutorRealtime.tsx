@@ -472,6 +472,12 @@ interface VoiceTutorRealtimeProps {
    *  pipeline the SessionStage starter chips use (TutorSession.handleStudentInput).
    *  Used by pickAgendaItem to fire the "switch to item" utterance. */
   onStudentInput?: (type: 'text' | 'drawing' | 'image', content: string) => void;
+  /** Control channel for navigation/selection markers (agenda picks). Unlike
+   *  onStudentInput this renders NO board card and applies no whiteboard
+   *  framing — the bracketed marker is relayed verbatim to the brain and
+   *  suppressed from the visible transcript. pickAgendaItem prefers this;
+   *  it falls back to onStudentInput when the prop is absent. */
+  onControlMessage?: (marker: string) => void;
   /** Voice Perception Q9 (2026-06-16). Fires true when a perception
    *  cancel fires (yellow-flash window opens) and false ~300ms later
    *  when the window closes. Parent uses this to render a visible
@@ -618,6 +624,7 @@ export function VoiceTutorRealtime({
   onMockAgendaChange,
   refetchMockReview,
   onStudentInput,
+  onControlMessage,
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
@@ -1327,6 +1334,8 @@ export function VoiceTutorRealtime({
   useEffect(() => { refetchMockReviewRef.current = refetchMockReview; }, [refetchMockReview]);
   const onStudentInputRef = useRef(onStudentInput);
   useEffect(() => { onStudentInputRef.current = onStudentInput; }, [onStudentInput]);
+  const onControlMessageRef = useRef(onControlMessage);
+  useEffect(() => { onControlMessageRef.current = onControlMessage; }, [onControlMessage]);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
 
@@ -1341,9 +1350,17 @@ export function VoiceTutorRealtime({
   const pickAgendaItem = useCallback(async (itemId: string) => {
     const ctx = mockReviewRef.current;
     if (!ctx) return;
+    // A pick is navigation, not an answer: relay a bracketed control marker (no
+    // "Student wrote:" board card, suppressed from the visible transcript).
+    // Fall back to the legacy student-input path only when the control channel
+    // isn't wired.
+    const send = (marker: string) => {
+      if (onControlMessageRef.current) onControlMessageRef.current(marker);
+      else onStudentInputRef.current?.('text', marker);
+    };
     const focusIdx = ctx.focusItems.findIndex((f) => f.itemId === itemId);
     if (focusIdx >= 0) {
-      onStudentInputRef.current?.('text', `Let's move to item ${focusIdx + 1}.`);
+      send(`[Via their review-agenda menu, the student switched to Item ${focusIdx + 1}. Move to it now.]`);
       return;
     }
     const refetch = refetchMockReviewRef.current;
@@ -1355,7 +1372,7 @@ export function VoiceTutorRealtime({
       const fresh = await refetch([itemId]);
       if (!fresh) { console.warn('[mock-review] agenda pick: refetch returned no context — ignoring'); return; }
       mockReviewRef.current = fresh; // beat the prop-render race for the next brain turn
-      onStudentInputRef.current?.('text', "Let's switch to the question I just picked from my review list.");
+      send('[Via their review-agenda menu, the student selected a new question — it is now Item 1 in your mock_review list. Move to it now.]');
     } catch (e) {
       console.error('[mock-review] agenda pick: refetch failed — ignoring:', e);
     }

@@ -387,6 +387,16 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.sendTextMessage(marker);
   }, []);
 
+  // Control channel: a navigation/selection marker for the brain (e.g. an
+  // agenda pick) that must NOT render a "Student wrote:" board card or get
+  // wrapped as "[The student wrote on the whiteboard: …]". Same idiom as the
+  // try-yourself marker — a bracketed synthetic send that relayUserTranscript
+  // suppresses from the visible transcript. The marker itself carries the full
+  // framing, so we just relay it verbatim.
+  const handleControlMessage = useCallback((marker: string) => {
+    realtimeHandleRef.current?.sendTextMessage(marker);
+  }, [realtimeHandleRef]);
+
   const handleStudentInput = useCallback((type: 'text' | 'drawing' | 'image', content: string) => {
     const cmd: WhiteboardCommand = type === 'image'
       ? { action: 'showSvgDiagram', title: 'Student Upload', svg: `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"><image href="${content}" x="5" y="5" width="390" height="290" preserveAspectRatio="xMidYMid meet"/></svg>` } as WhiteboardCommand
@@ -838,6 +848,7 @@ export default function TutorSession(props: TutorSessionProps) {
         }}
         refetchMockReview={refetchMockReview}
         onStudentInput={handleStudentInput}
+        onControlMessage={handleControlMessage}
         onDifficultyBiasChange={setDifficultyBias}
         onPracticeStatsChange={(s) => { setPracticeStats(s); onPracticeStatsChange?.(s); }}
         onInterruptedChange={setIsPerceptionInterrupted}
@@ -1085,6 +1096,7 @@ export default function TutorSession(props: TutorSessionProps) {
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}
         quickActions={quickActionsEl}
         onStudentInput={handleStudentInput}
+        onControlMessage={handleControlMessage}
         mockAgenda={mockAgenda}
         mockAgendaRemaining={mockAgendaRemaining}
         mockDrawer={mockDrawer}
