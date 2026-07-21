@@ -53,6 +53,12 @@ function looksLikeMath(inner: string): boolean {
     /[A-Za-z0-9)\]]\s*[-+*/·×^]\s*[A-Za-z0-9(\[]/.test(inner) &&
     !/[a-z]{3,}/.test(inner)
   ) return true;
+  //   5b. Function evaluation (mock-exam sweep 2026-07-20 — items showed
+  //      literal "$f(-3)$", "$h(10)$"): a 1–2 letter function name over a
+  //      short whitespace-free parenthesized argument. Prose like
+  //      "a(n) increase" never arrives wrapped in a $ pair, and longer
+  //      names ("cost(x)") carry a prose word and stay literal.
+  if (/^[A-Za-z]{1,2}\([^\s()]{1,8}\)$/.test(inner)) return true;
   //   6. Prime/derivative span (Round-23 — live transcript and problem card
   //      showed literal "$f'(x)$", "$h'(1)$"): a single letter with 1–2
   //      primes and an optional short parenthesized argument. The
