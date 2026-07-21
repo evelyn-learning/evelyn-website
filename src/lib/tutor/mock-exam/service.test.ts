@@ -349,6 +349,43 @@ async function run() {
     assert.deepEqual(attempt!.moduleRouting, []);
   });
 
+  await test('start on a non-live (draft) form rejects with form_not_live', async () => {
+    const draftForm = { ...FIXTURE_FORM, status: 'draft' as const };
+    const stores = memoryMockStores({ forms: [draftForm], items: FIXTURE_ITEMS });
+    await assert.rejects(
+      () => startOrResume(stores, START, T0),
+      /form_not_live/
+    );
+  });
+
+  await test('in-flight attempt started while live still resumes after form flips to draft', async () => {
+    const base = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+    // Wrap findForm so we can flip the stored form's status mid-test, simulating
+    // an admin pulling the form after a student has already begun.
+    let live = true;
+    const stores = {
+      ...base,
+      async findForm(formId: string) {
+        const f = await base.findForm(formId);
+        if (f && !live) f.status = 'draft';
+        return f;
+      },
+    };
+
+    const first = await startOrResume(stores, START, T0);
+    assert.equal(first.status, 'in_section');
+
+    // Form flips to draft mid-exam.
+    live = false;
+
+    // The pinned-snapshot rule: an already-open attempt still resumes, because
+    // the non-live guard sits on the new-attempt path only, after the in-flight
+    // branch has already returned.
+    const again = await startOrResume(stores, START, T0 + 60_000);
+    assert.equal(again.attemptId, first.attemptId);
+    assert.equal(again.status, 'in_section');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

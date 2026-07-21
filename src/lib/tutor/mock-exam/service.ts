@@ -676,6 +676,11 @@ export async function startOrResume(
     return buildAttemptState(stores, blueprint, inFlight);
   }
 
+  // Starting a NEW attempt requires the form to be live. In-flight attempts
+  // (handled above) still finish per the pinned-snapshot rule even if the form
+  // was since pulled, but no fresh attempt may begin on a non-live form.
+  if (form.status !== 'live') throw new Error('form_not_live');
+
   // None in-flight: start a fresh attempt at cursor {0,0}, pinning the
   // form's first section/module as servedModules[0].
   const priorAttempts = await stores.findAttempts(studentId, [formId]);
