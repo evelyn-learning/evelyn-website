@@ -145,6 +145,63 @@ function main() {
     assert.equal(flushableCount(b, 1), 2, 'both flush once the sketch resolved');
   });
 
+  // ── Task 3.2 (humanlike-latency): word-anchored flush (ACCELERATOR) ─────
+  // `anchorWord` = index of the referring word WITHIN the introducing
+  // sentence (sentence "number" anchorM — wordPos.sentenceIdx is the
+  // playback-started COUNT while a sentence plays, so introducer playing
+  // ⟺ sentenceIdx === anchorM ⟺ count === anchorM). With a live word
+  // clock the entry flushes the MOMENT the referring word is spoken —
+  // mid-introducer, before the sentence rule's count ≥ anchorM+1. Without
+  // wordPos (HTTP TTS path) it degrades to sentence semantics, never later.
+  test('word anchor: not yet flushable before the referring word (mid-introducer)', () => {
+    // Introducer (sentence 2) is playing: count=2, sentence rule needs ≥3.
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 3 } }), 0, 'word 3 < anchorWord 4');
+  });
+  test('word anchor: flushes the moment the referring word is spoken (before sentence completes)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 4 } }), 1, 'word 4 reached — sentence rule (count≥3) not yet satisfied');
+  });
+  test('word anchor: clock past the introducing sentence satisfies it', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 3, { wordPos: { sentenceIdx: 3, wordIdx: 0 } }), 1, 'sentence 3 playing > introducer 2 (sentence rule also ready — consistent)');
+  });
+  test('word anchor: earlier clock position never satisfies it', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 1, { wordPos: { sentenceIdx: 1, wordIdx: 99 } }), 0, 'still on sentence 1 — introducer not begun');
+  });
+  test('word anchor: without wordPos degrades to sentence semantics exactly', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 2), 0, 'sentence rule: count 2 < anchorM+1');
+    assert.equal(flushableCount(b, 3), 1, 'sentence rule: count 3 ≥ anchorM+1');
+  });
+  test('word anchor: stale clock cannot DELAY past sentence semantics', () => {
+    // Introducer had no timestamps (HTTP-path sentence): the clock idles on
+    // an older sentence while playback advances. Sentence rule still wins.
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 3, { wordPos: { sentenceIdx: 1, wordIdx: 2 } }), 1, 'count 3 ≥ anchorM+1 releases regardless of the stale clock');
+  });
+  test('word anchor: entries WITHOUT anchorWord ignore wordPos entirely', () => {
+    const b = buf(2);
+    assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 99 } }), 0, 'sentence 2 not complete; no word anchor to accelerate');
+  });
+  test('word anchor: pendingReanchor still holds (stale anchor, word or not)', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, anchorWord: 2, pendingReanchor: true }];
+    assert.equal(flushableCount(b, 9, { wordPos: { sentenceIdx: 5, wordIdx: 9 } }), 0);
+  });
+  test('word anchor: pendingAsync still never flushable', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, anchorWord: 1, pendingAsync: true }];
+    assert.equal(flushableCount(b, 9, { wordPos: { sentenceIdx: 2, wordIdx: 9 } }), 0);
+  });
+  test('word anchor: paused still flushes nothing', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }];
+    assert.equal(flushableCount(b, 9, { paused: true, wordPos: { sentenceIdx: 9, wordIdx: 9 } }), 0);
+  });
+  test('word anchor: FIFO prefix — word-ready front releases, later sentence-anchored entry still blocked', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }, { anchorM: 3 }];
+    assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 4 } }), 1, 'front via word (mid-introducer); second needs count≥4');
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   if (failed > 0) process.exit(1);
 }

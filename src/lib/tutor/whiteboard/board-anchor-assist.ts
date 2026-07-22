@@ -88,6 +88,45 @@ function latexToSymbolTokens(latex: string): string[] {
 }
 
 /**
+ * Task 3.2 (humanlike-latency): index of the REFERRING word within a
+ * sentence's word array — the earliest word that names the anchor's kind
+ * ("equation"/"graph"/…), repeats a distinctive title token, or begins a
+ * spoken symbol phrase ("delta g" — counted only when the sentence speaks
+ * ≥2 symbols, the same anti-noise rule as sentenceIntroducesAnchor).
+ * `words` are the sentence's SPOKEN words (the rewritten transcript the WS
+ * TTS timestamps — split on whitespace; punctuation is stripped per-word
+ * here). Returns undefined when nothing matches — the caller then leaves
+ * the entry on plain sentence semantics.
+ */
+export function anchorWordIndex(words: readonly string[], anchor: AnchorKeywords): number | undefined {
+  const norm = words.map((w) => String(w ?? '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  let best: number | undefined;
+  const consider = (idx: number) => {
+    if (best === undefined || idx < best) best = idx;
+  };
+  for (let i = 0; i < norm.length; i++) {
+    const w = norm[i];
+    if (!w) continue;
+    if (KIND_WORDS[anchor.kind].includes(w)) consider(i);
+    if (anchor.tokens.includes(w)) consider(i);
+  }
+  // Symbol phrases: ≥2 distinct symbol hits required; the referring index is
+  // the FIRST hit's position. A symbol token is a two-word phrase
+  // ("delta g") — match it against consecutive normalized words.
+  if (anchor.symbolTokens.length > 0) {
+    const hits: number[] = [];
+    for (const tok of anchor.symbolTokens) {
+      const [a, b] = tok.split(' ');
+      for (let i = 0; i + 1 < norm.length; i++) {
+        if (norm[i] === a && norm[i + 1] === b) { hits.push(i); break; }
+      }
+    }
+    if (hits.length >= 2) consider(Math.min(...hits));
+  }
+  return best;
+}
+
+/**
  * Does this sentence INTRODUCE the given anchor — i.e. is it the line the tutor
  * speaks as it brings the equation/figure up? True when the sentence names the
  * anchor's kind ("equation"/"graph"/…) or repeats a distinctive title word.

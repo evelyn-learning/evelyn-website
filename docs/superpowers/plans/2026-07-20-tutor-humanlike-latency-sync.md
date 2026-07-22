@@ -338,19 +338,21 @@ export interface FlushOpts {
 }
 ```
 
-- [ ] **Step 1: failing tests** in the render-sync suite: entry `{anchorM: 2, anchorWord: 4}` is NOT flushable at `wordPos {2,3}`, IS at `{2,4}` and `{3,0}`; without `wordPos` it degrades to the existing `playbackStartedCount >= anchorM+1` rule; FIFO-prefix ordering, `pendingAsync`/`pendingReanchor`/`drainAll`/`capExpired` behavior all unchanged (run the whole existing suite).
-- [ ] **Step 2-4:** fail → implement in `flushableCount` (one added condition beside `anchorReady`) → pass (`npm run test:render-sync`).
-- [ ] **Step 5: integration** behind `TUTOR_RENDER_WORD_ANCHOR`: at buffer time, when the tool call's introducing sentence text is known, compute `anchorWord` by matching tool content tokens (equation LHS tokens, title words) against the sentence's word array (reuse/extend the matching in board-anchor-assist — `scripts/test-board-anchor-assist.ts` covers it); flush on `word` progress events in addition to `sentence-start`. **Stall-timer fix folded in (mapped failure mode):** the shared `RENDER_SYNC_STALL_MS=6000` timer currently resets only on sentence progress (`VoiceTutorRealtime.tsx` ~2565-2574) — reset it on `word` ticks too, or a mid-sentence-anchored render in a long sentence false-triggers `drainAll`.
-- [ ] **Step 6:** e2e + live session: renders visibly land as the referring words are spoken; `npm run test:board-anchor-assist && npm run test:render-sync && npm run test:kill-keep` green (buffered-not-painted retraction on kill unchanged — word anchoring never paints earlier than validation allows, it only re-times the paint).
-- [ ] Commit.
+- [x] **Step 1: failing tests** in the render-sync suite (2026-07-22, 11 word-anchor cases added; whole suite 33). **Semantics clarified while writing them:** the spec's `wordPos.sentenceIdx` is the playback-started COUNT while a sentence plays (the module's own 1-based numbering — anchorM IS the introducing sentence's number), so the word anchor is a pure ACCELERATOR: it releases mid-introducer at the referring word, and the untouched sentence rule (`count >= anchorM+1`) is the fallback floor — a stale/absent clock can never delay past today's timing. (First draft misread sentenceIdx as 0-based, which would have anchored to the sentence AFTER the introducer and required a hold-past-sentence-start rule + staleness backstop — caught by the suite before integration.) The word clock's 'word' events were switched to emit count-based sentenceIdx to match.
+- [x] **Step 2-4:** implemented in `flushableCount` — one `wordReady` condition beside `anchorReady` (33/33 green).
+- [x] **Step 5: integration** behind `TUTOR_RENDER_WORD_ANCHOR` (default OFF, dev ON): `anchorWordIndex()` added to board-anchor-assist (earliest kind-word/title-token/2-symbol-phrase match; 10 new tests, suite 25/25) — matched against `rewriteForTTS(introducingSentence)` split on whitespace (the SPOKEN words the WS timestamps); computed at buffer time for non-pendingReanchor entries (`render_sync_buffer … word=N` debug marker); `lastWordPosRef` updated on 'word' events → flush attempt; stall-timer reset on word ticks folded in; cleared at per-turn reset + kill reset so a stale clock can't satisfy fresh anchors.
+- [x] **Step 6:** suites green (`board-anchor-assist` 25, `render-sync` 33, `kill-keep` 8, tsc clean). e2e coop-arith @ cartesia: 271 monotonic word events, 0 anomalies, render-sync 9 flushes/0 stalls — but every showEquation that session happened to be front-loaded (pending-reanchor, word-anchor skipped by design) so no live `word=` fired; second run on an equation-mid-turn scenario + the Phase-3 live round confirm the visible timing.
+- [x] Commit.
 
 ### Task 3.3: Audio-paced draw-on
 
 **Files:** Modify `src/app/tutor/components/whiteboard/useDrawOn.ts` (+ its planner `draw-on.ts`); `scripts/test-draw-on.ts` extension.
 
-- [ ] Pass the anchor sentence's audio duration (known exactly: `float32.length / 24000` on the HTTP path; sum of chunk durations on WS) into the draw-on timeline in place of the fixed durations, clamped to `[0.6s, 4s]`; keep `MAX_QUEUE_DELAY_MS=2000` backlog bail and `prefers-reduced-motion` behavior.
-- [ ] Extend `test:draw-on` with duration-mapping cases; enable `NEXT_PUBLIC_TUTOR_DRAW_ON=true` in dev; visual check: ink write-on finishes with (not after) the sentence.
-- [ ] Live-test round for Phase 3 as a unit; ship; record in ledger.
+- [x] Pass the anchor sentence's audio duration into the draw-on timeline, clamped `[0.6s, 4s]` (2026-07-22). Implementation: planners take `opts.targetMs` (`PlanOpts`, paced clamp 600–4000ms, non-finite/≤0 ignored → default budgets untouched); the duration reaches them as a REMAINING-audio hint — `flushReadyRenders` stamps `setDrawOnPaceHint(arrivedTotalSec − elapsedSec)` from `getSpokenProgress()` at flush time, and `animateItem` peeks it (2s TTL, batch-shared, not consumed) so only flush-driven mounts get paced; bulk rehydration mounts + render-sync-off paths see an expired hint. `MAX_QUEUE_DELAY_MS` bail and reduced-motion behavior untouched.
+- [x] `test:draw-on` extended with duration-mapping cases (34/34); `NEXT_PUBLIC_TUTOR_DRAW_ON` already true in dev. Visual finish-with-sentence check → live round.
+- [ ] Live-test round for Phase 3 as a unit; ship; record in ledger. **(dev flags ON: TUTOR_TTS_WS + TUTOR_RENDER_WORD_ANCHOR + DRAW_ON; prod flags OFF until this round passes)**
+
+**Follow-up candidate (post-live-round):** both e2e sessions showed the brain FRONT-LOADS its equations (pending-reanchor path), where the buffer-time word anchor is skipped by design — the naming sentence is only known at the RE-ANCHOR site (`speakOne`, VTR ~7983). Re-anchored entries already release at the naming sentence's START; landing them on the exact referring word would need the hold-within-sentence variant of the word rule (delay, not accelerate) — worth doing only if the live round shows start-of-sentence timing still reads early.
 
 ---
 

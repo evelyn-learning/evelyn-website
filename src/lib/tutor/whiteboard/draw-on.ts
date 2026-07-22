@@ -29,20 +29,38 @@ const FLOOR_MS = 800;
 const CEIL_MS = 1500;
 const PER_STROKE_MS = 80;
 const FADE_MS = 250;
+// Task 3.3 (humanlike-latency): audio-paced budget clamp. When the caller
+// knows the narrating sentence's audio duration, the ink is paced to finish
+// WITH the sentence — clamped so a one-word sentence still draws legibly
+// (0.6s) and a rambling one can't stretch a figure past 4s.
+const PACED_FLOOR_MS = 600;
+const PACED_CEIL_MS = 4000;
+
+export interface PlanOpts {
+  /** Audio duration of the narrating sentence (ms). Finite & >0 replaces
+   *  the stroke/row budget, clamped to [600, 4000]; otherwise ignored. */
+  targetMs?: number;
+}
+
+function pacedBudget(opts?: PlanOpts): number | null {
+  const t = opts?.targetMs;
+  if (typeof t !== 'number' || !Number.isFinite(t) || t <= 0) return null;
+  return Math.max(PACED_FLOOR_MS, Math.min(PACED_CEIL_MS, Math.round(t)));
+}
 
 function budgetFor(strokeCount: number): number {
   if (strokeCount === 0) return FLOOR_MS;
   return Math.max(FLOOR_MS, Math.min(CEIL_MS, strokeCount * PER_STROKE_MS));
 }
 
-export function planSvgDrawOn(drawables: Drawable[]): DrawPlan {
+export function planSvgDrawOn(drawables: Drawable[], opts?: PlanOpts): DrawPlan {
   if (drawables.length === 0) return { steps: [], totalMs: 0 };
   const strokeIdx = drawables
     .map((d, i) => ({ d, i }))
     .filter((x) => x.d.kind === 'stroke')
     .map((x) => x.i);
   const n = strokeIdx.length;
-  const total = budgetFor(n);
+  const total = pacedBudget(opts) ?? budgetFor(n);
 
   const steps: DrawStep[] = [];
   // Slot count: one per stroke up to STROKE_BATCH, then strokes share.
@@ -81,9 +99,9 @@ export function planSvgDrawOn(drawables: Drawable[]): DrawPlan {
   return { steps, totalMs: Math.max(total, maxEnd) };
 }
 
-export function planHtmlWipe(rowCount: number): DrawPlan {
+export function planHtmlWipe(rowCount: number, opts?: PlanOpts): DrawPlan {
   const rows = Math.max(1, rowCount);
-  const total = Math.max(FLOOR_MS, Math.min(CEIL_MS, rows * 200));
+  const total = pacedBudget(opts) ?? Math.max(FLOOR_MS, Math.min(CEIL_MS, rows * 200));
   // Floor at 120ms: with many rows sharing the fixed ceiling budget,
   // (total / rows) * 1.6 can shrink below a legible wipe duration — a
   // flicker instead of a wipe. Never let a row wipe faster than that.

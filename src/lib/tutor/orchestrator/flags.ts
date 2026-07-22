@@ -198,6 +198,13 @@ export const TUTOR_TTS_WS =
 // falling back to the HTTP path (spike 2026-07-22 measured first chunk well
 // under 1s; 4s tolerates a cold reconnect without stalling the turn).
 export const SONIC_WS_FIRST_CHUNK_TIMEOUT_MS = 4000;
+// Task 3.2 (humanlike-latency plan): word-anchored render flush — buffered
+// renders release the moment the introducing sentence speaks its REFERRING
+// word (word clock from TUTOR_TTS_WS) instead of at the sentence boundary.
+// Strictly an accelerator over sentence semantics. Default OFF.
+export const TUTOR_RENDER_WORD_ANCHOR =
+  process.env.NEXT_PUBLIC_TUTOR_RENDER_WORD_ANCHOR === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_RENDER_WORD_ANCHOR === 'true';
 // Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
 // first-turn interruption impossible — student spoke 12s over the opener,
 // unheard, in two sessions). Tuning history: 2500ms ("keeps talking over

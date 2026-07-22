@@ -58,10 +58,14 @@ import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import {
+  anchorWordIndex,
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
+import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
+import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
@@ -113,6 +117,7 @@ import {
   TUTOR_ACK_LAYER,
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
+  TUTOR_RENDER_WORD_ANCHOR,
   TUTOR_STUDENT_MARKS,
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_SKETCH,
@@ -1000,7 +1005,19 @@ export function VoiceTutorRealtime({
     // its primitives (mutated onto the command) or the entry is spliced out
     // (fail/timeout). See project_tutor_sketch_capability.
     pendingAsync?: boolean;
+    // Task 3.2 (word-anchored flush): index of the referring word within the
+    // introducing sentence's SPOKEN words — releases the render the moment
+    // that word plays (accelerator over sentence semantics; see render-sync).
+    anchorWord?: number;
   }>>([]);
+  // Task 3.2: latest word-clock position from 'word' playback-progress
+  // events. Cleared at per-turn reset + kill reset so a stale position from
+  // a prior turn can never satisfy a fresh entry's word anchor.
+  const lastWordPosRef = useRef<{ sentenceIdx: number; wordIdx: number } | null>(null);
+  // Task 3.3: live playback-position getter (wired after the realtime hook
+  // mounts, like the other realtime refs) — flushReadyRenders reads it to
+  // pace the draw-on ink to the narrating sentence's remaining audio.
+  const getSpokenProgressRef = useRef<(() => SpokenProgress) | null>(null);
   // In-flight doodle fetches — aborted on turn kill / buffer drop.
   const sketchAbortsRef = useRef<Set<AbortController>>(new Set());
   // Board-anchor assist, per turn: the narration spoken so far (for the
@@ -2688,9 +2705,22 @@ export function VoiceTutorRealtime({
     const n = flushableCount(buf, ttsPlaybackStartedCountRef.current, {
       drainAll: opts.drainAll,
       paused: renderBufferPausedRef.current,
+      // Task 3.2: word clock position (flag-gated; null degrades every
+      // entry to sentence semantics inside flushableCount).
+      wordPos: TUTOR_RENDER_WORD_ANCHOR ? lastWordPosRef.current ?? undefined : undefined,
     });
     if (n === 0) return;
     const ready = buf.splice(0, n);
+    // Task 3.3: pace the ink to the narrating sentence — stamp its REMAINING
+    // audio so the write-on finishes with (not after) the sentence. Cheap +
+    // best-effort; expired/absent hints fall back to default stroke budgets.
+    try {
+      const p = getSpokenProgressRef.current?.();
+      if (p?.playing && p.sentence) {
+        const remainMs = Math.round((p.arrivedTotalSec - p.elapsedSec) * 1000);
+        if (remainMs > 0) setDrawOnPaceHint(remainMs);
+      }
+    } catch { /* pacing is a hint, never a failure */ }
     for (const entry of ready) onWhiteboardCommand(entry.processed);
     if (onDebugEvent) {
       const flushedIds = ready.flatMap((e) =>
@@ -2891,8 +2921,27 @@ export function VoiceTutorRealtime({
         }
       }
     }
-    renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords });
-    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}`);
+    // Task 3.2 (flag-gated): word-level anchor — find the referring word in
+    // the introducing sentence's SPOKEN words (rewriteForTTS output, the
+    // words the WS TTS timestamps). Only meaningful when the entry is NOT
+    // pending-reanchor (that path re-times to a LATER sentence entirely).
+    // No match / no sentence → undefined → plain sentence semantics.
+    let anchorWord: number | undefined;
+    if (TUTOR_RENDER_WORD_ANCHOR && !pendingReanchor) {
+      const introSentence = turnNarrationRef.current[turnNarrationRef.current.length - 1] ?? '';
+      if (introSentence) {
+        const spokenWords = rewriteForTTS(introSentence, { studentName }).split(/\s+/).filter(Boolean);
+        for (const c of processed) {
+          const kw = extractAnchorKeywords(c);
+          if (kw) {
+            anchorWord = anchorWordIndex(spokenWords, kw);
+            if (anchorWord !== undefined) break;
+          }
+        }
+      }
+    }
+    renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords, anchorWord });
+    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}${anchorWord !== undefined ? ` word=${anchorWord}` : ''}`);
     armRenderStall();
     // A boundary may already have passed (e.g. anchor sentence completed
     // before this batch finished its synchronous validation) — try now.
@@ -6881,6 +6930,7 @@ export function VoiceTutorRealtime({
     flushAllRenderBuffer();
     ttsDispatchedCountRef.current = 0;
     ttsPlaybackStartedCountRef.current = 0;
+    lastWordPosRef.current = null; // Task 3.2: stale word clock must not satisfy fresh anchors
     renderBufferPausedRef.current = false;
     renderSyncActiveRef.current = true;
     // Board-anchor re-anchoring: fresh per-turn narration.
@@ -8214,6 +8264,7 @@ export function VoiceTutorRealtime({
           // retry re-anchors against its own fresh audio.
           ttsDispatchedCountRef.current = 0;
           ttsPlaybackStartedCountRef.current = 0;
+          lastWordPosRef.current = null; // Task 3.2: clock resets with the counts
           // Judge-kill Stage 3.1: capture the unplayed TTS tail BEFORE the
           // bridge's clearSpeechQueue drains it, so a restatement retry can
           // replay it instead of re-speaking the overlap. Armed only when
@@ -12027,7 +12078,7 @@ export function VoiceTutorRealtime({
     // 'sentence-start' = a new sentence's audio began (the prior one
     // completed) → release renders anchored to that prior sentence.
     // 'drain' = all dispatched audio has played → release the tail.
-    onTtsPlaybackProgress: (event) => {
+    onTtsPlaybackProgress: (event, wordPos) => {
       // Caption word-sync: a drain AFTER stream-end finalizes the caption
       // (the tracker ignores mid-stream drains itself).
       if (event === 'drain') captionSyncRef.current.notifyDrain();
@@ -12049,6 +12100,19 @@ export function VoiceTutorRealtime({
         // while sentences are steadily playing toward an anchor.
         if (renderBufferRef.current.length > 0) armRenderStall();
         flushReadyRenders();
+      } else if (event === 'word') {
+        // Task 3.2 (flag-gated): advance the word clock and try a
+        // word-anchored release. Word ticks ALSO reset the stall timer —
+        // a mid-sentence-anchored render in a long sentence would
+        // otherwise false-trigger the drainAll stall (the shared timer
+        // used to reset only on sentence progress).
+        if (TUTOR_RENDER_WORD_ANCHOR && wordPos) {
+          lastWordPosRef.current = wordPos;
+          if (renderBufferRef.current.length > 0) {
+            armRenderStall();
+            flushReadyRenders();
+          }
+        }
       } else if (event === 'drain') {
         // Turn audio drained → release the tail; no stall re-arm needed.
         // (Explicit branch — Task 3.1 adds 'word' events to this stream,
@@ -12074,6 +12138,7 @@ export function VoiceTutorRealtime({
   peekSpeechQueueRef.current = realtime.peekSpeechQueue;
   resumeSpeakTextRef.current = realtime.resumeSpeakText;
   getCurrentSentenceFractionRef.current = realtime.getCurrentSentenceFraction;
+  getSpokenProgressRef.current = realtime.getSpokenProgress; // Task 3.3 ink pacing
   signalBrainThinkingRef.current = realtime.signalBrainThinking;
 
   // ── Voice Perception Layer (Stage 0 — shadowed, logs only) ─────────────

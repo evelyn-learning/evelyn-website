@@ -39,6 +39,18 @@ export interface RenderSyncEntry {
    *  bounds how long it can block later renders to the doodler's hard cap.
    *  See project_tutor_sketch_capability. */
   pendingAsync?: boolean;
+  /** Task 3.2 (humanlike-latency): word-level anchor WITHIN the introducing
+   *  sentence. Sentence identity uses the same 1-based numbering as
+   *  `anchorM` itself (= the playback-started count while that sentence
+   *  plays — anchorM IS the introducing sentence's number, see the module
+   *  doc). `anchorWord` indexes the referring word in the REWRITTEN
+   *  transcript (the words the WS TTS timestamps — see sonic-ws.ts).
+   *  Strictly an ACCELERATOR: with a live word clock the entry becomes
+   *  flushable the moment the referring word is spoken — mid-introducer,
+   *  instead of waiting for the introducer to complete. The sentence rule
+   *  still releases on its own, so a stale/absent clock (HTTP TTS path)
+   *  degrades to exactly today's timing, never later. */
+  anchorWord?: number;
 }
 
 export interface FlushOpts {
@@ -48,6 +60,11 @@ export interface FlushOpts {
   /** Buffer is paused (a perception cancel is mid-flight, verdict pending)
    *  — flush nothing until the verdict resolves. */
   paused?: boolean;
+  /** Task 3.2: current playback word position from the word clock ('word'
+   *  playback-progress events). `sentenceIdx` is the playback-started
+   *  COUNT while that sentence plays (1-based, directly comparable to
+   *  anchorM). Absent on the HTTP TTS path. */
+  wordPos?: { sentenceIdx: number; wordIdx: number };
 }
 
 /**
@@ -76,7 +93,18 @@ export function flushableCount(
     // A pending-reanchor entry is held against its (stale) anchor — only the
     // turn-end drain or the cap may release it until it's been re-anchored.
     const anchorReady = !e.pendingReanchor && playbackStartedCount >= e.anchorM + 1;
-    if (opts.drainAll || anchorReady || e.capExpired) n++;
+    // Task 3.2 word-anchored ACCELERATOR: the referring word inside the
+    // introducing sentence has been spoken (or the clock is already past
+    // that sentence) — paint now instead of waiting for the introducer to
+    // complete. Purely additive beside anchorReady: a stale/absent word
+    // clock can only fall back to sentence timing, never delay past it.
+    const wordReady =
+      !e.pendingReanchor &&
+      e.anchorWord !== undefined &&
+      opts.wordPos !== undefined &&
+      (opts.wordPos.sentenceIdx > e.anchorM ||
+        (opts.wordPos.sentenceIdx === e.anchorM && opts.wordPos.wordIdx >= e.anchorWord));
+    if (opts.drainAll || anchorReady || wordReady || e.capExpired) n++;
     else break;
   }
   return n;

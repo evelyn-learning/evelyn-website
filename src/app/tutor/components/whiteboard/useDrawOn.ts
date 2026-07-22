@@ -29,6 +29,26 @@ export function drawOnEnabled(): boolean {
 
 const STROKE_SELECTOR = 'path, line, polyline, polygon, circle, ellipse, rect';
 
+// Task 3.3 (humanlike-latency): audio-pace hint. The orchestrator stamps the
+// narrating sentence's REMAINING audio (ms) as it flushes render-sync
+// entries; items mounting right after consume it so the ink finishes WITH
+// the sentence (planner clamps to [600, 4000]ms). Time-bounded: mounts that
+// aren't flush-driven (resume rehydration bulk mounts, render-sync-off
+// paths) see an expired hint and keep the default stroke budgets.
+let paceHint: { ms: number; atMs: number } | null = null;
+const PACE_HINT_TTL_MS = 2000;
+export function setDrawOnPaceHint(ms: number): void {
+  if (!Number.isFinite(ms) || ms <= 0) return;
+  paceHint = { ms, atMs: typeof performance !== 'undefined' ? performance.now() : 0 };
+}
+function peekPaceTarget(now: number): number | undefined {
+  if (!paceHint) return undefined;
+  if (now - paceHint.atMs > PACE_HINT_TTL_MS) { paceHint = null; return undefined; }
+  // Peek, not consume: a flush batch mounts several items in one commit and
+  // they should share the same pacing; the TTL retires the hint.
+  return paceHint.ms;
+}
+
 // Resume/reload/replay rehydration mounts a whole board in ONE React commit —
 // every item on the page becomes a fresh mount at once. Serial-queuing N
 // items (queueEndAtRef chains each item after the last) leaves later items
@@ -91,6 +111,9 @@ export function useDrawOn() {
       return;
     }
 
+    // Task 3.3: audio-paced budget for everything this mount animates.
+    const targetMs = peekPaceTarget(now);
+
     const iframe = wrapper.querySelector('iframe');
     // KaTeX emits inline <svg> for radicals/stretchy delimiters (e.g. a √
     // sign), so a plain `querySelector('svg')` misclassifies any equation
@@ -104,7 +127,7 @@ export function useDrawOn() {
       // equations, cards, tables): wipe/fade. Row-detect for tables.
       const rows = wrapper.querySelectorAll('tr');
       if (!iframe && rows.length > 1) {
-        const plan = planHtmlWipe(rows.length);
+        const plan = planHtmlWipe(rows.length, { targetMs });
         plan.steps.forEach((s) => {
           const el = rows[s.index] as HTMLElement;
           track(el.animate(
@@ -115,7 +138,7 @@ export function useDrawOn() {
         queueEndAtRef.current = now + baseDelay + plan.totalMs + SERIAL_SPACING_MS;
         return;
       }
-      const dur = iframe ? IFRAME_FADE_MS : planHtmlWipe(1).totalMs;
+      const dur = iframe ? IFRAME_FADE_MS : planHtmlWipe(1, { targetMs }).totalMs;
       const frames = iframe
         ? [{ opacity: 0, transform: 'scale(0.985)' }, { opacity: 1, transform: 'scale(1)' }]
         : [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }];
@@ -146,7 +169,7 @@ export function useDrawOn() {
         domFor.push(el);
       }
     }
-    const plan = planSvgDrawOn(drawables);
+    const plan = planSvgDrawOn(drawables, { targetMs });
     // Fades must land on the element's OWN computed opacity, not a hardcoded
     // 1: with fill:'backwards' the animation reverts to the cascaded value
     // when its active phase ends, so animating 0→1 on a shape with a

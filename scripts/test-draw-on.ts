@@ -105,5 +105,36 @@ const strokes = (n: number): Drawable[] =>
   check('serial spacing is 300ms', SERIAL_SPACING_MS === 300);
 }
 
+// ── Task 3.3 (humanlike-latency): audio-paced budget (targetMs) ──────────
+{
+  check('targetMs replaces the stroke budget (5 strokes, 2.5s of audio → 2500ms)',
+    planSvgDrawOn(strokes(5), { targetMs: 2500 }).totalMs === 2500);
+  check('targetMs clamps low → 600ms floor',
+    planSvgDrawOn(strokes(5), { targetMs: 300 }).totalMs === 600);
+  check('targetMs clamps high → 4000ms ceiling',
+    planSvgDrawOn(strokes(5), { targetMs: 9000 }).totalMs === 4000);
+  check('omitted targetMs → unchanged default budget',
+    planSvgDrawOn(strokes(12)).totalMs === 960);
+  check('non-finite/zero targetMs ignored → default budget',
+    planSvgDrawOn(strokes(12), { targetMs: 0 }).totalMs === 960
+    && planSvgDrawOn(strokes(12), { targetMs: Number.NaN }).totalMs === 960);
+  const paced = planSvgDrawOn(strokes(5), { targetMs: 2500 });
+  const pacedLast = paced.steps[paced.steps.length - 1];
+  check('paced plan still ends exactly at totalMs', pacedLast.delayMs + pacedLast.durMs === paced.totalMs);
+  const pacedStarts = paced.steps.map((s) => s.delayMs);
+  check('paced starts remain non-decreasing', pacedStarts.every((v, i) => i === 0 || v >= pacedStarts[i - 1]));
+  const pacedTrailing = planSvgDrawOn(
+    [{ kind: 'stroke', length: 50 }, { kind: 'fill' }],
+    { targetMs: 2000 },
+  );
+  const pacedMaxEnd = Math.max(...pacedTrailing.steps.map((s) => s.delayMs + s.durMs));
+  check('paced trailing fill: totalMs still covers the true end', pacedTrailing.totalMs === pacedMaxEnd);
+  check('HTML wipe honors targetMs with the same clamp',
+    planHtmlWipe(6, { targetMs: 2500 }).totalMs === 2500
+    && planHtmlWipe(6, { targetMs: 300 }).totalMs === 600
+    && planHtmlWipe(6, { targetMs: 9000 }).totalMs === 4000);
+  check('HTML wipe without targetMs unchanged', planHtmlWipe(6).totalMs === Math.max(800, Math.min(1500, 6 * 200)));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

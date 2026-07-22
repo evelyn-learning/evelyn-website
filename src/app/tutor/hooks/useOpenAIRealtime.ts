@@ -186,12 +186,15 @@ export interface RealtimeConfig {
    * Task 3.1 (humanlike-latency plan): `'word'` fires as playback crosses a
    * word boundary — only when the sentence was synthesized over the Cartesia
    * TTS WebSocket (TUTOR_TTS_WS), which returns word timestamps. `wordPos`
-   * accompanies ONLY 'word' events: `sentenceIdx` counts 'sentence-start'
-   * emissions since the last drain/kill (aligned with the consumer's
-   * playback-started count — both derive from this same event stream) and
-   * `wordIdx` indexes the REWRITTEN transcript's words (rewriteForTTS output
-   * — what is actually spoken). HTTP-path sentences emit no 'word' events;
-   * consumers must degrade to sentence-level semantics.
+   * accompanies ONLY 'word' events: `sentenceIdx` is the playback-started
+   * COUNT while the sentence plays (1-based — counts 'sentence-start'
+   * emissions since the last drain/kill, so it aligns with the consumer's
+   * own count and with render-sync's anchorM numbering), and `wordIdx`
+   * indexes the REWRITTEN transcript's words (rewriteForTTS output — what
+   * is actually spoken). HTTP-path sentences emit no 'word' events;
+   * consumers degrade to sentence-level semantics. After a mid-turn
+   * kill+resume this counter restarts while a consumer's may not — a
+   * too-low sentenceIdx can only fail to accelerate, never mis-release.
    */
   onTtsPlaybackProgress?: (event: 'sentence-start' | 'drain' | 'word', wordPos?: { sentenceIdx: number; wordIdx: number }) => void;
   /** Task 3.1: the Cartesia TTS WebSocket transport degraded permanently for
@@ -3667,10 +3670,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         clock.wordIdx = idx;
         if (process.env.NODE_ENV !== 'production') {
           // Dev-only: lets e2e console capture verify monotonic word progress.
-          console.log(`[WordClock] s${wsSentenceStartCountRef.current - 1} w${idx} "${entry.words[idx] ?? ''}" @${elapsedSec.toFixed(2)}s`);
+          console.log(`[WordClock] s${wsSentenceStartCountRef.current} w${idx} "${entry.words[idx] ?? ''}" @${elapsedSec.toFixed(2)}s`);
         }
         onTtsPlaybackProgressRef.current?.('word', {
-          sentenceIdx: wsSentenceStartCountRef.current - 1,
+          // The playback-started COUNT while this sentence plays (1-based)
+          // — directly comparable to render-sync's anchorM, which uses the
+          // same numbering (see flushableCount's word-anchor tests).
+          sentenceIdx: wsSentenceStartCountRef.current,
           wordIdx: idx,
         });
       }

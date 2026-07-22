@@ -6,6 +6,7 @@
  * Usage: npx tsx scripts/test-board-anchor-assist.ts
  */
 import {
+  anchorWordIndex,
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
 } from '../src/lib/tutor/whiteboard/board-anchor-assist';
@@ -54,6 +55,30 @@ check('intro: reported case "This one equation — delta G equals…" still matc
 check('symbols: hook sentence (no symbols, no kind word) does NOT match',
   !sentenceIntroducesAnchor("Here's a question — iron rusts but never turns back into iron. Why?", gibbs));
 
+
+// ── anchorWordIndex (Task 3.2 word-anchored flush) ──
+// Words are the SPOKEN (rewritten-transcript) sentence split on whitespace —
+// punctuation stays attached, the matcher normalizes per-word.
+const w = (s: string) => s.split(/\s+/).filter(Boolean);
+check('wordIdx: earliest kind word ("equation") is the referring index',
+  anchorWordIndex(w('Now look at the equation up top.'), masterEq) === 4);
+check('wordIdx: punctuation-attached kind word still matches ("equation,")',
+  anchorWordIndex(w('Take this equation, right here.'), masterEq) === 2);
+check('wordIdx: title token match ("master")',
+  anchorWordIndex(w('Now the master rule appears.'), masterEq) === 2);
+check('wordIdx: earliest of kind-vs-token wins',
+  anchorWordIndex(w('The master version of this equation.'), masterEq) === 1, String(anchorWordIndex(w('The master version of this equation.'), masterEq)));
+check('wordIdx: no match → undefined (caller keeps sentence semantics)',
+  anchorWordIndex(w("Here's a question about rust."), masterEq) === undefined);
+check('wordIdx: figure anchor does not match the word "equation"',
+  anchorWordIndex(w('Here is the equation we use.'), charles) === undefined);
+check('wordIdx: figure kind word ("graph") matches',
+  anchorWordIndex(w('Right, let me draw that graph out.'), charles) === 5);
+check('wordIdx: 2+ spoken symbols → FIRST symbol phrase index',
+  anchorWordIndex(w('Think of delta H as energy and delta S as chaos.'), gibbs) === 2);
+check('wordIdx: single symbol phrase does NOT match (anti-noise, mirrors intro rule)',
+  anchorWordIndex(w('So when delta G is negative it goes.'), gibbs) === undefined);
+check('wordIdx: empty words → undefined', anchorWordIndex([], masterEq) === undefined);
 
 // detectTransformation / detectAnalogy and their tests were removed with the
 // board-anchor AUTO-FIRE path (2026-07-10). The brain owns show_sketch; the
