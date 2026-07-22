@@ -31,6 +31,12 @@ import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
 const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
 
+// Debug-event types persisted for embed sessions (prefix match). Measurement
+// events only — keep this list short; every entry lands in Mongo for every
+// real student session. turn_latency: Phase-0 humanlike-latency baseline;
+// ack_/tts_ws_/render_dropped/rule8: later phases of the same plan.
+const EMBED_DEBUG_EVENT_PREFIXES = ['turn_latency', 'ack_', 'tts_ws_', 'render_dropped', 'rule8'];
+
 /** The contract's milestone enum (derived from SessionResult — the package
  *  exports the type via this field rather than a standalone alias). */
 type SessionMilestone = SessionResult['milestone'];
@@ -299,6 +305,17 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
   const sessionStartRef = useRef(new Date());
+  // Phase-0 instrumentation (humanlike-latency plan): the embed surface never
+  // wired onDebugEvent, so portal sessions persisted ZERO debug events and
+  // live latency baselines were uncapturable (found 2026-07-22). Persist a
+  // small ALLOWLISTED subset — measurement events only, one short line per
+  // turn — not the full /tutor-page firehose (real-student volume).
+  const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string }>>([]);
+  const lastSavedDebugCountRef = useRef(0);
+  const addDebugEvent = useCallback((type: string, message: string) => {
+    if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
+    debugEventsRef.current.push({ type, message, timestamp: new Date().toISOString() });
+  }, []);
 
   // E3 — resume boot. When the token asks to continue an existing session,
   // read the engine's persisted checkpoint and, if it's within
@@ -450,6 +467,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
           timestamp: capturedAt,
         })),
       } : {}),
+      // Delta-append allowlisted debug events (same batching convention as
+      // the /tutor page: count advances at send, at-most-once best-effort).
+      ...(() => {
+        const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
+        lastSavedDebugCountRef.current = debugEventsRef.current.length;
+        return newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {};
+      })(),
     };
     const body = JSON.stringify(payload);
 
@@ -784,6 +808,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         readinessNote={config.readiness_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}
+        onDebugEvent={addDebugEvent}
         handleRef={sessionHandleRef}
         isTrial={config.is_trial === true}
         targetKind={config.target_kind}
