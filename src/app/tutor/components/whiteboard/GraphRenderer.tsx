@@ -19,6 +19,7 @@ import {
 import 'mafs/core.css';
 import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@/lib/knowledge/types';
 import { parseFunctionString, parseFunctionOfYString } from '@/lib/tutor/whiteboard/math-expr';
+import { InlineMathText } from './InlineMathText';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -109,7 +110,13 @@ export function GraphRenderer({
   return (
     <div className={`graph-container ${className}`}>
       {title && (
-        <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+        // Graph titles are math-heavy and the brain emits $…$ despite the
+        // plain-text-fields prompt rule (2026-07-22 live session: literal
+        // "$f(x) = \frac{1}{x-2}$" shown). Render $-spans like the PDF
+        // export and problem titles already do; plain titles pass through.
+        <h4 className="text-center font-medium text-gray-800 mb-2">
+          <InlineMathText text={title} />
+        </h4>
       )}
 
       <div className="relative">
