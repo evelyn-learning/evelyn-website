@@ -56,5 +56,28 @@ export function validateToolCall(
     return { ok: true };
   }
 
+  if (n === 'showequation') {
+    // Self-application of a single-letter variable — "x(x)", "t(t)" — is
+    // never valid notation; it's the observed corruption of "f(x)" (live
+    // session 2026-07-22: the slip rendered, entered the board snapshot,
+    // and the brain kept reproducing it across turns). Rejecting here
+    // feeds the correction back via tool_result and breaks that echo loop.
+    // Deliberately narrow: inner content must be EXACTLY the same letter,
+    // so x(x+2), f(f(2)), v(t) all pass.
+    if (typeof args.latex === 'string') {
+      // Left boundary guard: the letter must not be the tail of a word
+      // ("\text{perimeter (r)}" ends in r followed by (r) — legit prose).
+      const selfApp = args.latex.match(/(?<![a-zA-Z])([a-zA-Z])\s*\(\s*\1\s*\)/);
+      if (selfApp) {
+        const m = `${selfApp[1]}(${selfApp[1]})`;
+        return {
+          ok: false,
+          reason: `showEquation: latex contains "${m}" — a variable applied to itself is malformed function notation (did you mean f(${selfApp[1]}) or ${selfApp[1]}^2?)`,
+        };
+      }
+    }
+    return { ok: true };
+  }
+
   return { ok: true };
 }
