@@ -56,6 +56,7 @@
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
     "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",
+    "test:turn-latency": "npx tsx scripts/test-turn-latency.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
     "test:ink-placement": "npx tsx scripts/test-ink-placement.ts",
