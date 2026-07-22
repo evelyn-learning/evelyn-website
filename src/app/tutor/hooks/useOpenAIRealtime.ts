@@ -15,8 +15,8 @@ import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDef
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
-import { readPcmHeadTail, type StreamedPcm } from '@/lib/tutor/voice/pcm-stream';
-import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
+import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-stream';
+import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // OpenAI Realtime voice options
@@ -2815,7 +2815,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // captions chain fully intact. Deliberately NOT cached: the result is
   // consumed by exactly one dispatch (prefetched sentences stay
   // whole-buffer; their bytes are ready before playback anyway).
-  const fetchCartesiaStreamedHead = useCallback(async (trimmed: string): Promise<StreamedPcm | null> => {
+  const fetchCartesiaStreamedHead = useCallback(async (trimmed: string): Promise<PcmChunkStream | null> => {
     const speed = speakingRateRef.current === 'slow' ? 'slow' : undefined;
     try {
       const res = await fetch('/api/tutor/tts-cartesia', {
@@ -2829,7 +2829,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         }),
       });
       if (!res.ok || !res.body) return null;
-      return await readPcmHeadTail(res.body, TTS_STREAM_HEAD_SAMPLES);
+      return await openPcmChunkStream(res.body, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES);
     } catch (err) {
       if ((err as { name?: string })?.name !== 'AbortError') {
         console.warn('[Realtime] streamed TTS fetch failed — falling back to whole-buffer:', err);
@@ -2881,34 +2881,48 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
           audioQueueRef.current.push(streamed.head);
           audioQueueSentenceRef.current.push(trimmed);
           audioQueueScriptIdRef.current.push(scriptId);
-          // Tail bookkeeping: SAME sentence text on the tail chunk, so
+          // Tail bookkeeping: follow-chunks carry the SAME sentence text, so
           // playNextAudio's transition guard skips the re-stamp (invariant 1)
-          // and sentence completion only fires on the true last chunk
-          // (invariant 2, together with the pending-tail hold).
-          const tailToken = { epoch: dispatchEpoch };
-          pendingTailRef.current = tailToken;
-          const tailTimeout = setTimeout(() => {
-            if (pendingTailRef.current === tailToken) {
-              console.warn('[Realtime] streamed tail timeout — ending sentence early (truncated)');
-              pendingTailRef.current = null;
-              if (!isPlayingRef.current) playNextAudio();
-            }
-          }, TTS_STREAM_TAIL_TIMEOUT_MS);
-          void streamed.tailPromise.then((tail) => {
-            clearTimeout(tailTimeout);
-            // Token mismatch = timed out, or a reset site cleared us
-            // (interrupt/pause don't bump the epoch) — drop the late tail.
-            if (pendingTailRef.current !== tailToken) return;
-            pendingTailRef.current = null;
-            if (dispatchEpoch !== speakEpochRef.current) return; // killed (invariant 3)
-            if (tail && tail.length > 0) {
-              onTutorAudioChunk?.(tail);
-              audioQueueRef.current.push(tail);
+          // and sentence completion only fires once the pump ends and the
+          // last chunk drains (invariant 2, via the pending-tail hold).
+          // Chunks are pumped INCREMENTALLY (~0.5s windows) — the 2026-07-22
+          // live round showed a single monolithic tail gaps audibly while
+          // the remainder synthesizes.
+          if (!streamed.done) {
+            const tailToken = { epoch: dispatchEpoch };
+            pendingTailRef.current = tailToken;
+            const tailTimeout = setTimeout(() => {
+              if (pendingTailRef.current === tailToken) {
+                console.warn('[Realtime] streamed tail timeout — ending sentence early (truncated)');
+                pendingTailRef.current = null;
+                if (!isPlayingRef.current) playNextAudio();
+              }
+            }, TTS_STREAM_TAIL_TIMEOUT_MS);
+            void streamed.pump((chunk) => {
+              // Token mismatch = timed out or a reset site cleared us
+              // (interrupt/pause don't bump the epoch); epoch mismatch =
+              // killed (invariant 3). Either way: stop pumping, reader
+              // cancels, no more pushes.
+              if (pendingTailRef.current !== tailToken) return false;
+              if (dispatchEpoch !== speakEpochRef.current) {
+                pendingTailRef.current = null;
+                return false;
+              }
+              onTutorAudioChunk?.(chunk);
+              audioQueueRef.current.push(chunk);
               audioQueueSentenceRef.current.push(trimmed);
               audioQueueScriptIdRef.current.push(scriptId);
-            }
-            if (!isPlayingRef.current) playNextAudio();
-          });
+              if (!isPlayingRef.current) playNextAudio();
+              return true;
+            }).then(() => {
+              clearTimeout(tailTimeout);
+              if (pendingTailRef.current !== tailToken) return;
+              pendingTailRef.current = null;
+              // Pump complete: if the queue already drained (held branch),
+              // re-enter so the sentence can end properly.
+              if (!isPlayingRef.current) playNextAudio();
+            });
+          }
           if (!isPlayingRef.current) playNextAudio();
           // Prefetch the NEXT queued sentence exactly as the whole-buffer
           // path does (those land in the cache and play whole-buffer).

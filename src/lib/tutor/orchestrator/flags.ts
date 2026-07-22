@@ -172,6 +172,11 @@ export const TUTOR_TTS_STREAM_HEAD =
   process.env.NEXT_PUBLIC_TUTOR_TTS_STREAM_HEAD === 'true';
 // 0.4s at the pipeline's hardcoded 24kHz playback rate.
 export const TTS_STREAM_HEAD_SAMPLES = 9_600;
+// Follow-chunk window (0.5s). Live round 2026-07-22: a single monolithic
+// tail gapped audibly at the head boundary (it waited for the WHOLE
+// remainder to synthesize); pumping ~0.5s windows pipelines playback
+// against synthesis.
+export const TTS_STREAM_FOLLOW_SAMPLES = 12_000;
 // A tail this late means the stream is wedged — end the sentence early
 // (truncation, flag-revertible) rather than holding the turn open forever.
 export const TTS_STREAM_TAIL_TIMEOUT_MS = 15_000;

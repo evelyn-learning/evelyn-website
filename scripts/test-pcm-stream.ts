@@ -1,4 +1,4 @@
-import { readPcmHeadTail } from '../src/lib/tutor/voice/pcm-stream';
+import { openPcmChunkStream } from '../src/lib/tutor/voice/pcm-stream';
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -20,51 +20,63 @@ function f32Bytes(samples: number[]): Uint8Array {
 }
 
 async function main() {
-  // Source: 24000 samples with a recognizable ramp.
   const N = 24000;
   const src = Array.from({ length: N }, (_, i) => (i % 997) / 997);
   const bytes = f32Bytes(src);
+  const HEAD = 9600;   // 0.4s at 24kHz
+  const CHUNK = 4800;  // 0.2s follow windows for the test
 
-  // Chunks deliberately split a Float32 mid-sample: 6 bytes + 7 bytes + rest.
-  const chunks = [bytes.slice(0, 6), bytes.slice(6, 13), bytes.slice(13)];
-
-  const HEAD = 9600; // 0.4s at 24kHz
-  const r1 = await readPcmHeadTail(streamOf(chunks), HEAD);
-  check('r1-nonnull', r1 !== null);
-  if (r1) {
-    check('head-length', r1.head.length === HEAD);
-    const tail = await r1.tailPromise;
-    check('tail-nonnull', tail !== null);
-    check('tail-length', (tail?.length ?? 0) === N - HEAD);
-    // head + tail byte-equal to source (misaligned boundaries carried right)
+  // Network chunks deliberately split Float32s mid-sample: 6 + 7 bytes,
+  // then the rest of the head, then a TRICKLING tail (1201-sample pieces,
+  // misaligned by 3 bytes each) so the pump must window + carry.
+  const netChunks = [bytes.slice(0, 6), bytes.slice(6, 13), bytes.slice(13, HEAD * 4)];
+  for (let off = HEAD * 4; off < bytes.length; off += 1201 * 4 + 3) {
+    netChunks.push(bytes.slice(off, Math.min(off + 1201 * 4 + 3, bytes.length)));
+  }
+  const s1 = await openPcmChunkStream(streamOf(netChunks), HEAD, CHUNK);
+  check('s1-nonnull', s1 !== null);
+  if (s1) {
+    check('head-length', s1.head.length === HEAD);
+    check('not-done', s1.done === false);
+    const emitted: Float32Array[] = [];
+    await s1.pump((c) => { emitted.push(c); });
+    const total = emitted.reduce((n, c) => n + c.length, 0);
+    check('tail-total', total === N - HEAD);
+    // Trickling input → multiple window emits, each (except the last)
+    // at least CHUNK samples.
+    check('tail-chunked', emitted.length >= 2 && emitted.slice(0, -1).every((c) => c.length >= CHUNK));
+    // head + emitted chunks reassemble the source exactly (f32-rounded)
     let equal = true;
-    for (let i = 0; i < HEAD; i++) if (r1.head[i] !== Math.fround(src[i])) { equal = false; break; }
-    if (tail) for (let i = 0; i < tail.length && equal; i++) if (tail[i] !== Math.fround(src[HEAD + i])) equal = false;
-    check('bytes-equal', equal);
+    let idx = 0;
+    const all = [s1.head, ...emitted];
+    for (const c of all) for (let i = 0; i < c.length; i++, idx++) {
+      if (c[i] !== Math.fround(src[idx])) { equal = false; break; }
+    }
+    check('bytes-equal', equal && idx === N);
   }
 
   // Empty stream → null
-  const r2 = await readPcmHeadTail(streamOf([]), HEAD);
-  check('empty-null', r2 === null);
+  check('empty-null', (await openPcmChunkStream(streamOf([]), HEAD, CHUNK)) === null);
 
-  // Stream shorter than headSamples → whole audio in head, tail resolves null
+  // Stream shorter than head → whole audio in head, done=true, pump no-op
   const short = f32Bytes(src.slice(0, 100));
-  const r3 = await readPcmHeadTail(streamOf([short.slice(0, 33), short.slice(33)]), HEAD);
-  check('short-nonnull', r3 !== null);
-  if (r3) {
-    check('short-head-100', r3.head.length === 100);
-    check('short-tail-null', (await r3.tailPromise) === null);
+  const s2 = await openPcmChunkStream(streamOf([short.slice(0, 33), short.slice(33)]), HEAD, CHUNK);
+  check('short-head-100', s2 !== null && s2.head.length === 100 && s2.done === true);
+  if (s2) {
+    let called = 0;
+    await s2.pump(() => { called++; });
+    check('short-pump-noop', called === 0);
   }
 
-  // Exact head-size stream → full head, tail null
-  const exact = f32Bytes(src.slice(0, HEAD));
-  const r4 = await readPcmHeadTail(streamOf([exact]), HEAD);
-  check('exact-head', r4 !== null && r4.head.length === HEAD);
-  check('exact-tail-null', r4 !== null && (await r4.tailPromise) === null);
+  // emit returning false aborts the pump (kill path)
+  const s3 = await openPcmChunkStream(streamOf([bytes]), HEAD, CHUNK);
+  if (s3) {
+    let calls = 0;
+    await s3.pump(() => { calls++; return false; });
+    check('abort-after-first', calls === 1);
+  }
 
-  // Reader error mid-tail → tailPromise RESOLVES (never rejects) with what
-  // accumulated. Pull-based: chunks must be CONSUMED before the error fires
-  // (error() discards anything still enqueued).
+  // Reader error mid-tail → pump RESOLVES with what arrived (never rejects)
   const errSeq = [bytes.slice(0, HEAD * 4), bytes.slice(HEAD * 4, HEAD * 4 + 400)];
   let errI = 0;
   const errStream = new ReadableStream<Uint8Array>({
@@ -73,24 +85,25 @@ async function main() {
       else controller.error(new Error('boom'));
     },
   });
-  const r5 = await readPcmHeadTail(errStream, HEAD);
-  check('err-head-ok', r5 !== null && r5.head.length === HEAD);
-  const t5 = r5 ? await r5.tailPromise.catch(() => 'REJECTED' as const) : null;
-  check('err-tail-resolves', t5 !== 'REJECTED');
-  check('err-tail-partial', t5 !== null && t5 !== 'REJECTED' && (t5 as Float32Array).length === 100);
+  const s4 = await openPcmChunkStream(errStream, HEAD, CHUNK);
+  check('err-head-ok', s4 !== null && s4.head.length === HEAD);
+  if (s4) {
+    const got: Float32Array[] = [];
+    const r = await s4.pump((c) => { got.push(c); }).catch(() => 'REJECTED' as const);
+    check('err-pump-resolves', r !== 'REJECTED');
+    check('err-partial-100', got.reduce((n, c) => n + c.length, 0) === 100);
+  }
 
-  // Error before head completes → head padded with what arrived (still non-null,
-  // playable), tail null
+  // Error before head completes → head has what arrived, done=true
   let earlyI = 0;
   const errEarly = new ReadableStream<Uint8Array>({
     pull(controller) {
-      if (earlyI++ === 0) controller.enqueue(bytes.slice(0, 400)); // 100 samples only
+      if (earlyI++ === 0) controller.enqueue(bytes.slice(0, 400));
       else controller.error(new Error('boom'));
     },
   });
-  const r6 = await readPcmHeadTail(errEarly, HEAD);
-  check('err-early-head', r6 !== null && r6.head.length === 100);
-  check('err-early-tail-null', r6 !== null && (await r6.tailPromise) === null);
+  const s5 = await openPcmChunkStream(errEarly, HEAD, CHUNK);
+  check('err-early-head', s5 !== null && s5.head.length === 100 && s5.done === true);
 
   if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
   console.log('test:pcm-stream PASS');
