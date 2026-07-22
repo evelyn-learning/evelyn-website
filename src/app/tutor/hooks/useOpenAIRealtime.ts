@@ -16,7 +16,9 @@ import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
 import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-stream';
-import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS, TUTOR_TTS_WS, SONIC_WS_FIRST_CHUNK_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
+import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
+import { useCartesiaSonicWS } from './useCartesiaSonicWS';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // OpenAI Realtime voice options
@@ -180,8 +182,24 @@ export interface RealtimeConfig {
    * (the turn's last sentence has finished playing). Additive + inert unless
    * consumed; only the claude-brain orchestrator wires it (gated on
    * NEXT_PUBLIC_TUTOR_RENDER_SYNC). See project_tutor_render_speech_sync.
+   *
+   * Task 3.1 (humanlike-latency plan): `'word'` fires as playback crosses a
+   * word boundary — only when the sentence was synthesized over the Cartesia
+   * TTS WebSocket (TUTOR_TTS_WS), which returns word timestamps. `wordPos`
+   * accompanies ONLY 'word' events: `sentenceIdx` counts 'sentence-start'
+   * emissions since the last drain/kill (aligned with the consumer's
+   * playback-started count — both derive from this same event stream) and
+   * `wordIdx` indexes the REWRITTEN transcript's words (rewriteForTTS output
+   * — what is actually spoken). HTTP-path sentences emit no 'word' events;
+   * consumers must degrade to sentence-level semantics.
    */
-  onTtsPlaybackProgress?: (event: 'sentence-start' | 'drain') => void;
+  onTtsPlaybackProgress?: (event: 'sentence-start' | 'drain' | 'word', wordPos?: { sentenceIdx: number; wordIdx: number }) => void;
+  /** Task 3.1: the Cartesia TTS WebSocket transport degraded permanently for
+   *  this session (connect ladder exhausted) — sentences now use the HTTP
+   *  path. Fires at most once; the caller emits the `tts_ws_fallback` debug
+   *  event. Per-sentence WS hiccups do NOT fire this (they fall back / retry
+   *  silently per sentence). */
+  onTtsTransportFallback?: (reason: string) => void;
   /**
    * TTS delivery trouble (2026-07-15, follow-up to the mid-turn wedge fix):
    * 'retrying' fires when a sentence's TTS fetch failed and is being
@@ -640,7 +658,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     useRealtimeV2 = false,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
-    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, onVoiceHiccupCaption, relayMode,
+    onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, onVoiceHiccupCaption, onTtsTransportFallback, relayMode,
   } = config;
   // Effective instructions: relay-mode overrides the caller's instructions
   // so the Realtime model behaves as a transport layer, not a tutor.
@@ -879,6 +897,101 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // the sentence text; cleared when the bytes are consumed.
   const ttsPrefetchCacheRef = useRef<Map<string, Promise<Float32Array | null>>>(new Map());
 
+  // ── Task 3.1 (humanlike-latency): Cartesia TTS WebSocket transport ──────
+  // One persistent WS synthesizes sentences with word timestamps. Each
+  // sentence is a WsSynthJob: chunks buffer in the job until its dispatch
+  // attaches a sink (then they flow straight into audioQueueRef, exactly
+  // like the HTTP streamed-head path's pump). Word timestamps accumulate on
+  // the job and are exposed to the word clock via sentenceWordsRef, keyed by
+  // the ORIGINAL sentence text (the same key space as
+  // audioQueueSentenceRef/currentSpeakTextRef labels).
+  const onTtsTransportFallbackRef = useRef(onTtsTransportFallback);
+  onTtsTransportFallbackRef.current = onTtsTransportFallback;
+  const sonicWS = useCartesiaSonicWS({
+    enabled: TUTOR_TTS_WS && isRelay && relayMode?.ttsProvider === 'cartesia',
+    onFallback: (reason) => onTtsTransportFallbackRef.current?.(reason),
+  });
+  interface WsSynthJob {
+    contextId: string;
+    /** Undelivered chunks; emptied into the audio queue when a sink attaches. */
+    chunks: Float32Array[];
+    /** Word timestamps (rewritten-transcript words; startSec relative to the
+     *  sentence's own audio). Live-appended — sentenceWordsRef holds this
+     *  same object, so the word clock sees late frames automatically. */
+    words: string[];
+    starts: number[];
+    done: boolean;
+    failed: boolean;
+    sink: ((chunk: Float32Array) => void) | null;
+    /** Dispatch-time hook run on done/error while attached (tail release). */
+    onTerminal: (() => void) | null;
+    /** Resolves at the first audio chunk or terminal event — the dispatch's
+     *  go/fallback decision point. */
+    firstEvent: Promise<'chunk' | 'done' | 'error'>;
+  }
+  const wsSynthJobsRef = useRef<Map<string, WsSynthJob>>(new Map());
+  const wsSynthSeqRef = useRef(0);
+  const sentenceWordsRef = useRef<Map<string, { words: string[]; starts: number[] }>>(new Map());
+  // Word clock: counts 'sentence-start' emissions since the last drain/kill
+  // (same stream the consumer counts) + the last announced word index.
+  const wsSentenceStartCountRef = useRef(0);
+  const wordClockRef = useRef<{ sentence: string | null; wordIdx: number }>({ sentence: null, wordIdx: -1 });
+
+  const startWsSynthJob = useCallback((trimmed: string): WsSynthJob | null => {
+    if (!TUTOR_TTS_WS || ttsProviderRef.current !== 'cartesia') return null;
+    // The slow-rate preset rides voice.__experimental_controls on the HTTP
+    // route; keep the WS request surface minimal and let slow-mode sentences
+    // use the proven HTTP path.
+    if (speakingRateRef.current === 'slow') return null;
+    const contextId = `s${speakEpochRef.current}-${wsSynthSeqRef.current++}`;
+    let resolveFirst: (v: 'chunk' | 'done' | 'error') => void = () => {};
+    const firstEvent = new Promise<'chunk' | 'done' | 'error'>((r) => { resolveFirst = r; });
+    const job: WsSynthJob = {
+      contextId, chunks: [], words: [], starts: [],
+      done: false, failed: false, sink: null, onTerminal: null, firstEvent,
+    };
+    // Same rewrite the HTTP route applies server-side (rounds 12–24
+    // pronunciation rules) — the WS transport sends transcripts verbatim.
+    const spoken = rewriteForTTS(trimmed, { studentName: studentNameRef.current });
+    void sonicWS
+      .synthesize(spoken, {
+        contextId,
+        voiceId: cartesiaVoiceIdRef.current,
+        onChunk: (chunk) => {
+          if (job.sink) job.sink(chunk);
+          else job.chunks.push(chunk);
+          resolveFirst('chunk');
+        },
+        onWords: (w, s) => { job.words.push(...w); job.starts.push(...s); },
+        onDone: () => { job.done = true; resolveFirst('done'); job.onTerminal?.(); },
+        onError: (msg) => {
+          job.failed = true;
+          console.warn('[Realtime] sonic-ws sentence failed (HTTP fallback):', msg);
+          resolveFirst('error');
+          job.onTerminal?.();
+        },
+      })
+      .then((accepted) => {
+        if (!accepted) { job.failed = true; resolveFirst('error'); job.onTerminal?.(); }
+      });
+    wsSynthJobsRef.current.set(trimmed, job);
+    return job;
+  }, [sonicWS]);
+
+  // Kill/supersede: cancel every WS synthesis (prefetched or in-flight) and
+  // drop their word timestamps. Called from clearSpeechQueue.
+  const cancelAllWsSynth = useCallback(() => {
+    for (const job of wsSynthJobsRef.current.values()) {
+      job.sink = null;
+      job.onTerminal = null;
+      sonicWS.cancel(job.contextId);
+    }
+    wsSynthJobsRef.current.clear();
+    sentenceWordsRef.current.clear();
+    wsSentenceStartCountRef.current = 0;
+    wordClockRef.current = { sentence: null, wordIdx: -1 };
+  }, [sonicWS]);
+
   // --- Parallel-connect plumbing ---------------------------------------------
   // Goal: shave ~1–2 s off session start-up. Previously we serialized
   //   buildInstructions → POST /realtime-token → open WS → send session.update.
@@ -1033,6 +1146,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // to advance to) — the turn's last dispatched sentence has finished.
       // Fire 'drain' so the orchestrator flushes any remaining buffered
       // tail renders (turn-tail anchor).
+      // Task 3.1 word clock: turn over — reset the sentence counter (the
+      // consumer resets its playback-started count on the same boundary)
+      // and drop this turn's word timestamps.
+      wsSentenceStartCountRef.current = 0;
+      wordClockRef.current = { sentence: null, wordIdx: -1 };
+      sentenceWordsRef.current.clear();
       onTtsPlaybackProgressRef.current?.('drain');
       // If mic is running, go straight back to listening
       if (audioProcessorRef.current && mediaStreamRef.current) {
@@ -1084,6 +1203,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         emitPlaybackStamp(currentScriptIdRef.current, 'end');
         emitPlaybackStamp(sentScriptId, 'start');
         currentScriptIdRef.current = sentScriptId;
+        // Task 3.1 word clock: count the same emission stream the consumer
+        // counts, so 'word' events' sentenceIdx aligns with its
+        // playback-started count.
+        wsSentenceStartCountRef.current++;
         onTtsPlaybackProgressRef.current?.('sentence-start');
         currentSentencePlayedSecRef.current = chunkSec;
         playedBeforeChunkSecRef.current = 0;                                  // caption clock: new sentence
@@ -2850,6 +2973,112 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // killed.
     const dispatchEpoch = speakEpochRef.current;
     try {
+      // Task 3.1 (humanlike-latency): Cartesia over WebSocket with word
+      // timestamps. Same gating as the streamed-head path below (Cartesia,
+      // breaker closed, cache miss) plus normal speaking rate (slow-mode
+      // rides the HTTP route's __experimental_controls). Every sentence —
+      // cold or WS-prefetched — flows through here, so the whole turn gets
+      // word timestamps; any per-sentence WS failure falls through to the
+      // battle-tested HTTP chain (streamed head → whole-buffer → retries →
+      // ElevenLabs → captions).
+      if (
+        TUTOR_TTS_WS &&
+        ttsProviderRef.current === 'cartesia' &&
+        speakingRateRef.current !== 'slow' &&
+        cartesiaConsecFailRef.current < 2 &&
+        !ttsPrefetchCacheRef.current.has(ttsCacheKey(trimmed))
+      ) {
+        const job = wsSynthJobsRef.current.get(trimmed) ?? startWsSynthJob(trimmed);
+        if (job) {
+          // Consumed by this dispatch — a repeat of the same text later
+          // starts a fresh synthesis.
+          wsSynthJobsRef.current.delete(trimmed);
+          // Wait (bounded) for the first audio chunk. 'done'/'error' without
+          // audio → fallback; a wedged WS must not stall the turn.
+          const first = await Promise.race([
+            job.firstEvent,
+            new Promise<'timeout'>((r) => setTimeout(() => r('timeout'), SONIC_WS_FIRST_CHUNK_TIMEOUT_MS)),
+          ]);
+          if (dispatchEpoch !== speakEpochRef.current) {
+            // Killed mid-wait — cancelAllWsSynth (via clearSpeechQueue)
+            // already dropped the job; same orphaned-fetch handling as the
+            // paths below (X3 wedge, invariant 3).
+            sonicWS.cancel(job.contextId);
+            if (
+              shouldDrainAfterOrphanedFetch({
+                isPlaying: isPlayingRef.current,
+                audioQueueLen: audioQueueRef.current.length,
+                speakTextInFlight: speakTextInFlightRef.current,
+                speakTextQueueLen: speakTextQueueRef.current.length,
+              })
+            ) {
+              playNextAudio();
+            }
+            return;
+          }
+          if ((first === 'chunk' || first === 'done') && job.chunks.length > 0) {
+            cartesiaConsecFailRef.current = 0;
+            // Word clock source: the job's live-appended words/starts.
+            sentenceWordsRef.current.set(trimmed, job);
+            const pushChunk = (chunk: Float32Array) => {
+              onTutorAudioChunk?.(chunk);
+              audioQueueRef.current.push(chunk);
+              audioQueueSentenceRef.current.push(trimmed);
+              audioQueueScriptIdRef.current.push(scriptId);
+            };
+            for (const c of job.chunks) pushChunk(c);
+            job.chunks = [];
+            if (!job.done && !job.failed) {
+              // Tail bookkeeping — identical semantics to the streamed-head
+              // path (invariants 1–3): same-text continuation chunks, one
+              // sentence-start stamp, pending-tail hold in playNextAudio.
+              const tailToken = { epoch: dispatchEpoch };
+              pendingTailRef.current = tailToken;
+              const tailTimeout = setTimeout(() => {
+                if (pendingTailRef.current === tailToken) {
+                  console.warn('[Realtime] sonic-ws tail timeout — ending sentence early (truncated)');
+                  pendingTailRef.current = null;
+                  job.sink = null;
+                  sonicWS.cancel(job.contextId);
+                  if (!isPlayingRef.current) playNextAudio();
+                }
+              }, TTS_STREAM_TAIL_TIMEOUT_MS);
+              job.sink = (chunk) => {
+                if (pendingTailRef.current !== tailToken) {
+                  job.sink = null;
+                  sonicWS.cancel(job.contextId);
+                  return;
+                }
+                if (dispatchEpoch !== speakEpochRef.current) {
+                  pendingTailRef.current = null;
+                  job.sink = null;
+                  sonicWS.cancel(job.contextId);
+                  return;
+                }
+                pushChunk(chunk);
+                if (!isPlayingRef.current) playNextAudio();
+              };
+              job.onTerminal = () => {
+                clearTimeout(tailTimeout);
+                if (pendingTailRef.current !== tailToken) return;
+                pendingTailRef.current = null;
+                if (!isPlayingRef.current) playNextAudio();
+              };
+            }
+            if (!isPlayingRef.current) playNextAudio();
+            // Prefetch the NEXT queued sentence over the WS too (replaces
+            // the HTTP prefetch on this path) so it ALSO carries word
+            // timestamps and its audio is already streaming at its dispatch.
+            const nextWs = speakTextQueueRef.current[0];
+            if (nextWs && !wsSynthJobsRef.current.has(nextWs)) void startWsSynthJob(nextWs);
+            return;
+          }
+          // No audio from the WS (error / timeout / empty done) → cancel and
+          // fall through to the HTTP paths below.
+          sonicWS.cancel(job.contextId);
+          sentenceWordsRef.current.delete(trimmed);
+        }
+      }
       // Task 1.1: stream the cold first dispatch (flag-gated; Cartesia only;
       // cache-miss only — invariant 5; breaker-closed only, so the sustained-
       // outage probe path stays whole-buffer with its fast fallback).
@@ -3018,7 +3247,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     } finally {
       ttsAbortRef.current = null;
     }
-  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise, emitPlaybackStamp, ttsCacheKey]);
+  }, [updateState, onTutorAudioChunk, playNextAudio, fetchTTSPromise, emitPlaybackStamp, ttsCacheKey, sonicWS, startWsSynthJob]);
   const sendOneSpeakTextViaOpenAITTSRef = useRef(sendOneSpeakTextViaOpenAITTS);
   sendOneSpeakTextViaOpenAITTSRef.current = sendOneSpeakTextViaOpenAITTS;
 
@@ -3051,6 +3280,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
     if (!text || !text.trim()) return;
     const trimmed = text.trim();
+    // Task 3.1: open the TTS WebSocket alongside the first sentence's
+    // dispatch (idempotent; no-op unless flag+provider match or once
+    // degraded) so the handshake overlaps brain latency instead of
+    // preceding audio.
+    if (TUTOR_TTS_WS && ttsProviderRef.current === 'cartesia') sonicWS.prewarm();
     if (speakTextInFlightRef.current) {
       speakTextQueueRef.current.push(trimmed);
       speakTextScriptIdQueueRef.current.push(scriptId); // V2: ∥ scriptId
@@ -3064,7 +3298,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     pendingDispatchSentenceRef.current = trimmed;
     pendingDispatchScriptIdRef.current = scriptId; // V2: ∥ scriptId
     dispatchSpeakText(trimmed, scriptId);
-  }, [dispatchSpeakText, isHttpTtsProvider]);
+  }, [dispatchSpeakText, isHttpTtsProvider, sonicWS]);
 
   // Stable ref so the response.done handler (long-lived closure) can
   // drain the queue without depending on speakText's identity.
@@ -3151,6 +3385,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // Drop any pre-fetched TTS bytes — they're for sentences we're
     // about to skip via clearSpeechQueue (validator-feedback retry).
     ttsPrefetchCacheRef.current.clear();
+    // Task 3.1: cancel WS syntheses (prefetched AND in-flight) the same way.
+    cancelAllWsSynth();
     // openai-mini path: abort any in-flight TTS fetch + stop playback.
     if (ttsAbortRef.current) {
       ttsAbortRef.current.abort();
@@ -3241,7 +3477,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       }
       setTimeout(done, 60);
     });
-  }, [isHttpTtsProvider, emitPlaybackStamp]);
+  }, [isHttpTtsProvider, emitPlaybackStamp, cancelAllWsSynth]);
 
   // Task X3 (2026-07-16) defensive stuck-SPEAKING watchdog. The confirmed root
   // cause (a barge-in's clearSpeechQueue firing during an inter-sentence gap,
@@ -3390,6 +3626,57 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       arrivedTotalSec: elapsedSec + remainingInChunk + queuedSec,
       playing: true,
     };
+  }, []);
+
+  // Task 3.1 (humanlike-latency): the word clock. A rAF loop compares the
+  // current sentence's playback position (same chunk-clock math as
+  // getSpokenProgress) against its WS word timestamps and emits a 'word'
+  // progress event each time the boundary index advances (≈ word rate,
+  // 2–5/s — an advance of several words in one frame emits ONE event with
+  // the latest index; it never regresses, see wordIndexAt). Sentences
+  // without timestamps (HTTP path, realtime path, silent mode) simply never
+  // match sentenceWordsRef and cost one Map lookup per frame while playing.
+  useEffect(() => {
+    if (!TUTOR_TTS_WS) return;
+    let raf = 0;
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      if (!isPlayingRef.current) return;
+      const sentence = currentSpeakTextRef.current;
+      if (!sentence) return;
+      const entry = sentenceWordsRef.current.get(sentence);
+      if (!entry || entry.starts.length === 0) return;
+      const clock = wordClockRef.current;
+      if (clock.sentence !== sentence) {
+        clock.sentence = sentence;
+        clock.wordIdx = -1;
+      }
+      let inFlight = 0;
+      try {
+        const ctx = getAudioContext();
+        inFlight = Math.max(0, Math.min(
+          ctx.currentTime - chunkStartCtxTimeRef.current,
+          currentChunkDurSecRef.current,
+        ));
+      } catch {
+        inFlight = currentChunkDurSecRef.current;
+      }
+      const elapsedSec = playedBeforeChunkSecRef.current + inFlight;
+      const idx = wordIndexAt(entry.starts, elapsedSec, clock.wordIdx);
+      if (idx > clock.wordIdx) {
+        clock.wordIdx = idx;
+        if (process.env.NODE_ENV !== 'production') {
+          // Dev-only: lets e2e console capture verify monotonic word progress.
+          console.log(`[WordClock] s${wsSentenceStartCountRef.current - 1} w${idx} "${entry.words[idx] ?? ''}" @${elapsedSec.toFixed(2)}s`);
+        }
+        onTtsPlaybackProgressRef.current?.('word', {
+          sentenceIdx: wsSentenceStartCountRef.current - 1,
+          wordIdx: idx,
+        });
+      }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   // Voice Perception Q9 (2026-06-16): enter the 'interrupted' transient

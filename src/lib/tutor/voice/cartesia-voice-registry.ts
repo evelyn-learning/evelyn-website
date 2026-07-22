@@ -247,7 +247,16 @@ export const CARTESIA_DEFAULT_VOICE_ID = TEACHER_VOICES['ms-elena-vasquez'].voic
  * request rate, and it keeps this module free of import-order env reads.
  */
 export function substituteCartesiaVoiceId(voiceId: string): string {
-  const raw = process.env.CARTESIA_VOICE_SUBSTITUTIONS;
+  return applyCartesiaVoiceSubstitutions(voiceId, process.env.CARTESIA_VOICE_SUBSTITUTIONS);
+}
+
+/**
+ * Pure form of the substitution above (Task 3.1, humanlike-latency plan):
+ * the browser-side TTS WebSocket path can't read the server env, so the
+ * cartesia-token route ships the raw mapping to the client (voice ids are
+ * not secrets) and useCartesiaSonicWS applies it here.
+ */
+export function applyCartesiaVoiceSubstitutions(voiceId: string, raw: string | undefined): string {
   if (!raw) return voiceId;
   for (const pair of raw.split(',')) {
     const [from, to] = pair.split(':').map((s) => s.trim());

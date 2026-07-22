@@ -69,7 +69,11 @@ export async function POST(_request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        grants: { stt: true },
+        // Task 3.1 (humanlike-latency plan): + tts grant so the same token
+        // also opens the TTS WebSocket (useCartesiaSonicWS). Verified live
+        // 2026-07-22 via scripts/spike-cartesia-ws-tts.ts — /access-token
+        // accepts a tts grant and the TTS WS accepts the resulting token.
+        grants: { stt: true, tts: true },
         expires_in: DEFAULT_EXPIRES_IN,
       }),
     } as const;
@@ -102,6 +106,11 @@ export async function POST(_request: NextRequest) {
       // Not returned by Cartesia — computed here so the client can drive
       // its own refresh-before-expiry logic without a round trip.
       expires_at: Date.now() + DEFAULT_EXPIRES_IN * 1000,
+      // Task 3.1: test-key voice remaps (see substituteCartesiaVoiceId).
+      // The HTTP TTS route applies these server-side; the TTS WebSocket
+      // path builds its generation requests in the browser, so it needs
+      // the raw mapping (voice ids only — not a secret). Unset in prod.
+      voice_substitutions: process.env.CARTESIA_VOICE_SUBSTITUTIONS ?? null,
     });
   } catch (error) {
     console.error('[Cartesia Token] Error:', error);

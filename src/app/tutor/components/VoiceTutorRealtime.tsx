@@ -12049,10 +12049,20 @@ export function VoiceTutorRealtime({
         // while sentences are steadily playing toward an anchor.
         if (renderBufferRef.current.length > 0) armRenderStall();
         flushReadyRenders();
-      } else {
+      } else if (event === 'drain') {
         // Turn audio drained → release the tail; no stall re-arm needed.
+        // (Explicit branch — Task 3.1 adds 'word' events to this stream,
+        // which MUST NOT drainAll; Task 3.2 will consume them for
+        // word-anchored flushes.)
         flushReadyRenders({ drainAll: true });
       }
+    },
+    // Task 3.1: the Cartesia TTS WebSocket degraded for this session
+    // (sentences fall back to the proven HTTP path — audible behavior
+    // unchanged, word-level render sync unavailable). Debug-event only;
+    // allowlisted for embed persistence via the tts_ws_ prefix.
+    onTtsTransportFallback: (reason) => {
+      onDebugEvent?.('tts_ws_fallback', reason);
     },
   });
 

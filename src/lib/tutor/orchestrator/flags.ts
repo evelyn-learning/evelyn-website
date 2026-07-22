@@ -187,6 +187,17 @@ export const TTS_STREAM_FOLLOW_SAMPLES = 12_000;
 // A tail this late means the stream is wedged — end the sentence early
 // (truncation, flag-revertible) rather than holding the turn open forever.
 export const TTS_STREAM_TAIL_TIMEOUT_MS = 15_000;
+// Task 3.1 (humanlike-latency plan): Cartesia TTS over WebSocket with
+// word-level timestamps (word clock for render↔speech sync). Cold sentences
+// synthesize over one persistent WS; any WS failure falls back to the HTTP
+// path for the session (debug event `tts_ws_fallback`). Default OFF.
+export const TUTOR_TTS_WS =
+  process.env.NEXT_PUBLIC_TUTOR_TTS_WS === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_TTS_WS === 'true';
+// How long a dispatched sentence waits for its FIRST WS audio chunk before
+// falling back to the HTTP path (spike 2026-07-22 measured first chunk well
+// under 1s; 4s tolerates a cold reconnect without stalling the turn).
+export const SONIC_WS_FIRST_CHUNK_TIMEOUT_MS = 4000;
 // Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
 // first-turn interruption impossible — student spoke 12s over the opener,
 // unheard, in two sessions). Tuning history: 2500ms ("keeps talking over
