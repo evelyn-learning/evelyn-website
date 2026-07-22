@@ -15,6 +15,8 @@ import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDef
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
+import { readPcmHeadTail, type StreamedPcm } from '@/lib/tutor/voice/pcm-stream';
+import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
 // OpenAI Realtime voice options
@@ -857,6 +859,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // turn's audio AND the retry's audio back-to-back — observed
   // 2026-05-04 Linear-Functions session.
   const speakEpochRef = useRef(0);
+  // Task 1.1 (humanlike-latency): non-null while a streamed sentence's HEAD
+  // has been queued but its TAIL is still arriving. Token identity (not just
+  // the epoch) guards the tail push — interrupt()/pause() clear this without
+  // bumping the epoch, and a tail-timeout swaps it to null so a late tail
+  // can't land mid-next-sentence. playNextAudio's empty-queue branch treats
+  // a live pending tail as an intra-sentence gap: no end stamp, no drain,
+  // no next-sentence advance.
+  const pendingTailRef = useRef<{ epoch: number } | null>(null);
   // Task X3: timestamp when the stuck-SPEAKING condition first became true, so
   // the watchdog fires only after the strand PERSISTS past the window (a normal
   // inter-sentence gap clears it long before). null = not currently stranded.
@@ -974,6 +984,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Play queued audio
   const playNextAudio = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
+      // Task 1.1: the streamed head finished but its tail is still arriving —
+      // an INTRA-sentence gap, not a sentence end. Hold: no end stamp, no
+      // drain, no next-sentence dispatch (audio order). The tail's resolution
+      // (or its timeout) re-enters playNextAudio. Epoch check: a killed
+      // sentence's pending tail must not hold the drain hostage.
+      if (pendingTailRef.current && pendingTailRef.current.epoch === speakEpochRef.current) {
+        isPlayingRef.current = false;
+        return;
+      }
       isPlayingRef.current = false;
       // V2 self-voice: the sentence whose audio just finished ends NOW. This
       // covers both the openai-mini inter-sentence gap (each sentence hits
@@ -2431,6 +2450,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // re-opening a window for an old, already-cut sentence.
     audioQueueSentenceRef.current = [];
     audioQueueScriptIdRef.current = [];
+    // Task 1.1: drop any in-flight streamed tail with the queue it belonged
+    // to (interrupt/pause don't bump the speak epoch — token identity in the
+    // tail handler does the rest).
+    pendingTailRef.current = null;
     isPlayingRef.current = false;
     // V2 self-voice fix wave (2026-07-15): this is a genuine barge-in cut —
     // the sentence WAS audible up to now, same as clearSpeechQueue's drain.
@@ -2473,6 +2496,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // arrays alongside audioQueueRef — see interrupt() above for why.
     audioQueueSentenceRef.current = [];
     audioQueueScriptIdRef.current = [];
+    // Task 1.1: drop any in-flight streamed tail with the queue it belonged
+    // to (interrupt/pause don't bump the speak epoch — token identity in the
+    // tail handler does the rest).
+    pendingTailRef.current = null;
     isPlayingRef.current = false;
     // V2 self-voice fix wave (2026-07-15): close the window on whatever was
     // playing when pause() cut it — see interrupt() above for why.
@@ -2780,6 +2807,37 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     return promise;
   }, [ttsCacheKey]);
 
+  // Task 1.1 (humanlike-latency): single-attempt streaming fetch for the
+  // COLD first dispatch of a Cartesia sentence. Resolves a playable ~0.4s
+  // head as soon as it arrives; the rest streams into tailPromise. Any
+  // failure (network, !ok, empty body) returns null and the caller falls
+  // back to fetchTTSPromise's whole-buffer path — retries + ElevenLabs +
+  // captions chain fully intact. Deliberately NOT cached: the result is
+  // consumed by exactly one dispatch (prefetched sentences stay
+  // whole-buffer; their bytes are ready before playback anyway).
+  const fetchCartesiaStreamedHead = useCallback(async (trimmed: string): Promise<StreamedPcm | null> => {
+    const speed = speakingRateRef.current === 'slow' ? 'slow' : undefined;
+    try {
+      const res = await fetch('/api/tutor/tts-cartesia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: trimmed,
+          voiceId: cartesiaVoiceIdRef.current,
+          studentName: studentNameRef.current,
+          ...(speed !== undefined ? { speed } : {}),
+        }),
+      });
+      if (!res.ok || !res.body) return null;
+      return await readPcmHeadTail(res.body, TTS_STREAM_HEAD_SAMPLES);
+    } catch (err) {
+      if ((err as { name?: string })?.name !== 'AbortError') {
+        console.warn('[Realtime] streamed TTS fetch failed — falling back to whole-buffer:', err);
+      }
+      return null;
+    }
+  }, []);
+
   // Alternative TTS path for relay mode: gpt-4o-mini-tts via HTTP. Returns
   // Float32 PCM at 24kHz, dropped directly into the audio playback queue.
   // Cheaper than Realtime audio output; chosen via relayMode.ttsProvider.
@@ -2792,6 +2850,74 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // killed.
     const dispatchEpoch = speakEpochRef.current;
     try {
+      // Task 1.1: stream the cold first dispatch (flag-gated; Cartesia only;
+      // cache-miss only — invariant 5; breaker-closed only, so the sustained-
+      // outage probe path stays whole-buffer with its fast fallback).
+      if (
+        TUTOR_TTS_STREAM_HEAD &&
+        ttsProviderRef.current === 'cartesia' &&
+        cartesiaConsecFailRef.current < 2 &&
+        !ttsPrefetchCacheRef.current.has(ttsCacheKey(trimmed))
+      ) {
+        const streamed = await fetchCartesiaStreamedHead(trimmed);
+        if (streamed) {
+          if (dispatchEpoch !== speakEpochRef.current) {
+            // Killed mid-fetch — same orphaned-fetch handling as the
+            // whole-buffer path below (X3 wedge, invariant 3).
+            if (
+              shouldDrainAfterOrphanedFetch({
+                isPlaying: isPlayingRef.current,
+                audioQueueLen: audioQueueRef.current.length,
+                speakTextInFlight: speakTextInFlightRef.current,
+                speakTextQueueLen: speakTextQueueRef.current.length,
+              })
+            ) {
+              playNextAudio();
+            }
+            return;
+          }
+          cartesiaConsecFailRef.current = 0;
+          onTutorAudioChunk?.(streamed.head);
+          audioQueueRef.current.push(streamed.head);
+          audioQueueSentenceRef.current.push(trimmed);
+          audioQueueScriptIdRef.current.push(scriptId);
+          // Tail bookkeeping: SAME sentence text on the tail chunk, so
+          // playNextAudio's transition guard skips the re-stamp (invariant 1)
+          // and sentence completion only fires on the true last chunk
+          // (invariant 2, together with the pending-tail hold).
+          const tailToken = { epoch: dispatchEpoch };
+          pendingTailRef.current = tailToken;
+          const tailTimeout = setTimeout(() => {
+            if (pendingTailRef.current === tailToken) {
+              console.warn('[Realtime] streamed tail timeout — ending sentence early (truncated)');
+              pendingTailRef.current = null;
+              if (!isPlayingRef.current) playNextAudio();
+            }
+          }, TTS_STREAM_TAIL_TIMEOUT_MS);
+          void streamed.tailPromise.then((tail) => {
+            clearTimeout(tailTimeout);
+            // Token mismatch = timed out, or a reset site cleared us
+            // (interrupt/pause don't bump the epoch) — drop the late tail.
+            if (pendingTailRef.current !== tailToken) return;
+            pendingTailRef.current = null;
+            if (dispatchEpoch !== speakEpochRef.current) return; // killed (invariant 3)
+            if (tail && tail.length > 0) {
+              onTutorAudioChunk?.(tail);
+              audioQueueRef.current.push(tail);
+              audioQueueSentenceRef.current.push(trimmed);
+              audioQueueScriptIdRef.current.push(scriptId);
+            }
+            if (!isPlayingRef.current) playNextAudio();
+          });
+          if (!isPlayingRef.current) playNextAudio();
+          // Prefetch the NEXT queued sentence exactly as the whole-buffer
+          // path does (those land in the cache and play whole-buffer).
+          const nextStreamed = speakTextQueueRef.current[0];
+          if (nextStreamed) void fetchTTSPromise(nextStreamed);
+          return;
+        }
+        // streamed === null → fall through to the standard whole-buffer path.
+      }
       const float32 = await fetchTTSPromise(trimmed);
       // Consume the cache entry now that we're playing it. Must use the same
       // ttsCacheKey() the fetch was stored under (Task W4: the key now folds
@@ -2999,6 +3125,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // a SUBSEQUENT cancel's snapshot.
     currentSpeakTextRef.current = null;
     audioQueueSentenceRef.current = [];
+    // Task 1.1: the epoch bump above already invalidates the tail push;
+    // clear the hold so the empty-queue branch can't misread a stale token.
+    pendingTailRef.current = null;
     pendingDispatchSentenceRef.current = null;
     // V2: clear the parallel id tracking in lockstep.
     currentScriptIdRef.current = undefined;

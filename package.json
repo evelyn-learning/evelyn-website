@@ -57,6 +57,7 @@
     "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",
     "test:turn-latency": "npx tsx scripts/test-turn-latency.ts",
+    "test:pcm-stream": "npx tsx scripts/test-pcm-stream.ts",
     "test:validate-tool-call": "npx tsx scripts/test-validate-tool-call.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",

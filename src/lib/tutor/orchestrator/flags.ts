@@ -164,6 +164,17 @@ export const TURN_CAP_WORDS = 110;
 //   - GATE_MAX_MS: safety cap so a pending gate never leaks a live interval if
 //     speech_stopped / a state change is somehow missed.
 export const BARGEIN_SUSTAIN_MS = 350;
+// Task 1.1 (humanlike-latency plan): stream the cold first sentence's
+// Cartesia audio — start playback at ~0.4s of PCM instead of waiting for
+// full-sentence synthesis. Default OFF; enable per env.
+export const TUTOR_TTS_STREAM_HEAD =
+  process.env.NEXT_PUBLIC_TUTOR_TTS_STREAM_HEAD === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_TTS_STREAM_HEAD === 'true';
+// 0.4s at the pipeline's hardcoded 24kHz playback rate.
+export const TTS_STREAM_HEAD_SAMPLES = 9_600;
+// A tail this late means the stream is wedged — end the sentence early
+// (truncation, flag-revertible) rather than holding the turn open forever.
+export const TTS_STREAM_TAIL_TIMEOUT_MS = 15_000;
 // Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
 // first-turn interruption impossible — student spoke 12s over the opener,
 // unheard, in two sessions). Much longer than BARGEIN_SUSTAIN_MS: the
