@@ -1,4 +1,4 @@
-import { createTurnLatencyLedger } from '../src/lib/tutor/voice/turn-latency';
+import { createTurnLatencyLedger, formatTurnLatency } from '../src/lib/tutor/voice/turn-latency';
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -43,6 +43,14 @@ const l4 = createTurnLatencyLedger();
 l4.mark('turnEnd', 100);
 l4.mark('brainFetch', 101);
 check('incomplete', l4.summarize().complete === false && l4.summarize().totalMs === null);
+
+// has(): stale-ledger detection for the wiring layer
+check('has', l4.has('turnEnd') === true && l4.has('firstAudio') === false);
+
+// formatter: exact rendering, nulls included
+check('format', formatTurnLatency(s1) ===
+  'eager→end=400ms end→fetch=2ms brain_first=1498ms tts→audio=695ms TOTAL=2200ms complete=true');
+check('formatNulls', formatTurnLatency(l4.summarize()).includes('TOTAL=nullms complete=false'));
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:turn-latency PASS');

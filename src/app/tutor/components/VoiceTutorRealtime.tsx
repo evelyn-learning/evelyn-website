@@ -63,6 +63,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -1095,6 +1096,15 @@ export function VoiceTutorRealtime({
   // renders degrade gracefully to cap-based flush.
   const ttsDispatchedCountRef = useRef(0);
   const ttsPlaybackStartedCountRef = useRef(0);
+  // Phase-0 instrumentation (humanlike-latency plan): per-turn latency ledger.
+  // Created lazily at eager_end/turn.end, emitted + nulled at brain_turn end.
+  // Marks use Date.now() — must stay consistent within a turn (never mix with
+  // performance.now()).
+  const turnLatencyRef = useRef<TurnLatencyLedger | null>(null);
+  // Set when the brain stream finished before the first audio stamp (short
+  // turns): the sentence-start handler owns the emit instead, so TOTAL is
+  // non-null on every turn that actually reaches the speaker.
+  const turnLatencyAwaitingAudioRef = useRef(false);
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -7921,6 +7931,7 @@ export function VoiceTutorRealtime({
           // buffered AFTER this point anchor to the new count, so they
           // flush only once this sentence (and all before it) has played.
           ttsDispatchedCountRef.current++;
+          turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
         };
         // Round-15 Issue 2 (2026-07-16): verdict hold. The first sentence
         // of a turn that opens with a judgment of the student's answer
@@ -8617,6 +8628,7 @@ export function VoiceTutorRealtime({
                   totalSentenceCount++;
                   totalWordCount += wordCount;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
+                  turnLatencyRef.current?.mark('firstSentence', Date.now());
                   // KEEP markdown emphasis (*word*, **strong**) in the
                   // chat-bound text so TranscriptView can render it as
                   // italic / bold. Strip ONLY for TTS — the speaking
@@ -8715,6 +8727,7 @@ export function VoiceTutorRealtime({
                         // Render↔speech sync: count the fast-opener too (it
                         // bypasses speakOne but still reaches the speaker).
                         ttsDispatchedCountRef.current++;
+                        turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
                       }
                     } else if (gateState === 'gated') {
                       if (vbsRolling) {
@@ -10723,6 +10736,20 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      {
+        const led = turnLatencyRef.current;
+        if (led) {
+          const lat = led.summarize();
+          if (!lat.complete && led.has('firstTtsFetch')) {
+            // Stream done but first audio hasn't stamped yet — defer the
+            // emit to the sentence-start handler so TOTAL lands non-null.
+            turnLatencyAwaitingAudioRef.current = true;
+          } else {
+            onDebugEvent?.('turn_latency', formatTurnLatency(lat));
+            turnLatencyRef.current = null;
+          }
+        }
+      }
       // Turn-length telemetry (always) + cap corrective (flag-gated). The cap
       // is on UNANCHORED monologue: sentences with zero whiteboard actions —
       // subject-agnostic by design (2026-07-15, user-approved). Telemetry
@@ -11135,6 +11162,11 @@ export function VoiceTutorRealtime({
       } else {
         console.error('[brain-orchestrator] error:', err);
         onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
+        if (turnLatencyRef.current) {
+          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+          turnLatencyRef.current = null;
+          turnLatencyAwaitingAudioRef.current = false;
+        }
         speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
         // Round-7+ Fix 9 (catch path): clear any residual streaming
         // entries + reset the active flag so the cursor doesn't keep
@@ -11429,6 +11461,10 @@ export function VoiceTutorRealtime({
       // post-cancel verdict can RESTORE (re-fire with these exact
       // args) or MERGE (re-fire with these + perception text).
       lastBrainCallContextRef.current = { transcript, opts };
+      // Typed turns never pass through perception (no eagerEnd/turnEnd) —
+      // create the ledger here so brain_first/tts→audio still measure.
+      turnLatencyRef.current ??= createTurnLatencyLedger();
+      turnLatencyRef.current.mark('brainFetch', Date.now());
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -11927,6 +11963,17 @@ export function VoiceTutorRealtime({
       // Caption word-sync: a drain AFTER stream-end finalizes the caption
       // (the tracker ignores mid-stream drains itself).
       if (event === 'drain') captionSyncRef.current.notifyDrain();
+      // turn_latency: first audible sentence of the turn (first-wins; must
+      // stamp BEFORE the render-sync flag gate — instrumentation is
+      // unconditional).
+      if (event === 'sentence-start') {
+        turnLatencyRef.current?.mark('firstAudio', Date.now());
+        if (turnLatencyAwaitingAudioRef.current && turnLatencyRef.current) {
+          turnLatencyAwaitingAudioRef.current = false;
+          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+          turnLatencyRef.current = null;
+        }
+      }
       if (!TUTOR_RENDER_SYNC) return;
       if (event === 'sentence-start') {
         ttsPlaybackStartedCountRef.current++;
@@ -12212,6 +12259,19 @@ export function VoiceTutorRealtime({
       console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+      // turn_latency: authoritative transcript. A leftover ledger that already
+      // has turnEnd belongs to a turn that never dispatched (noise/filtered)
+      // or whose deferred audio emit never fired (killed) — emit it as
+      // incomplete and start fresh so stale marks can't inflate this turn.
+      if (turnLatencyRef.current?.has('turnEnd')) {
+        if (turnLatencyAwaitingAudioRef.current) {
+          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+        }
+        turnLatencyRef.current = null;
+      }
+      turnLatencyAwaitingAudioRef.current = false;
+      turnLatencyRef.current ??= createTurnLatencyLedger();
+      turnLatencyRef.current.mark('turnEnd', Date.now());
       // Checkpoint watchdog (2026-07-15 TTS-wedge incident): a checkpoint is
       // only ever cleared inside applyPerceptionVerdict — if its verdict
       // never arrives (e.g. input_audio_buffer.cleared with no transcript),
@@ -12843,6 +12903,10 @@ export function VoiceTutorRealtime({
   }, [onDebugEvent, perceptionStage, realtime]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
+      // turn_latency: provisional endpoint (Ink-2 fires this on turn.eager_end).
+      // First-wins keeps the ORIGINAL endpoint across turn.resume re-fires.
+      turnLatencyRef.current ??= createTurnLatencyLedger();
+      turnLatencyRef.current.mark('eagerEnd', Date.now());
       // Task V1: the utterance ended — if a sustained-energy barge-in gate is
       // still pending, the onset never sustained (echo blip / brief noise), so
       // cancel it. The gate's own energy check would reach the same verdict; this

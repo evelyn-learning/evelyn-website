@@ -31,7 +31,19 @@ export interface TurnLatencySummary {
 
 export interface TurnLatencyLedger {
   mark(name: TurnLatencyMark, tMs: number): void;
+  /** Whether a mark was recorded. Lets the caller detect a stale ledger
+   *  (e.g. a noise turn that marked turnEnd but never dispatched). */
+  has(name: TurnLatencyMark): boolean;
   summarize(): TurnLatencySummary;
+}
+
+/** One-line debug-event rendering shared by every emit site. */
+export function formatTurnLatency(s: TurnLatencySummary): string {
+  return (
+    `eager→end=${s.eagerToEndMs}ms end→fetch=${s.endToBrainFetchMs}ms ` +
+    `brain_first=${s.brainFirstSentenceMs}ms tts→audio=${s.ttsToFirstAudioMs}ms ` +
+    `TOTAL=${s.totalMs}ms complete=${s.complete}`
+  );
 }
 
 export function createTurnLatencyLedger(): TurnLatencyLedger {
@@ -42,6 +54,7 @@ export function createTurnLatencyLedger(): TurnLatencyLedger {
   };
   return {
     mark(name, tMs) { if (!marks.has(name)) marks.set(name, tMs); },
+    has(name) { return marks.has(name); },
     summarize() {
       const totalMs = diff('turnEnd', 'firstAudio');
       return {
