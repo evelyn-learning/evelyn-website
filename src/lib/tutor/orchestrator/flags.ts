@@ -189,12 +189,13 @@ export const TTS_STREAM_FOLLOW_SAMPLES = 12_000;
 export const TTS_STREAM_TAIL_TIMEOUT_MS = 15_000;
 // Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
 // first-turn interruption impossible — student spoke 12s over the opener,
-// unheard, in two sessions). Longer than BARGEIN_SUSTAIN_MS (350) because
-// an aborted opener costs more than a cut mid-lesson sentence, but short
-// enough to feel responsive: round-2 live test showed 2500ms reads as
-// "tutor keeps talking over me". Echo phantoms measure ~264ms; 900ms keeps
-// 3.4× margin with the kill landing ~1s after the student starts.
-export const OPENER_BARGEIN_SUSTAIN_MS = 900;
+// unheard, in two sessions). Tuning history: 2500ms ("keeps talking over
+// me", round 3) → 900ms (still read as not-fixed, round 4) → aligned with
+// the production-proven mid-lesson BARGEIN_SUSTAIN_MS (350ms; echo blips
+// measure ~264ms and disarm on speech_stopped). The 2026-07-04 phantom
+// class this guard exists for was TRANSCRIPT-driven retro-cancels, which
+// remain fully suppressed during the opener regardless of this value.
+export const OPENER_BARGEIN_SUSTAIN_MS = 350;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;

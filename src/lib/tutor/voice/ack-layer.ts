@@ -23,12 +23,18 @@
  * repeats the previous ack's phrase on consecutive acks.
  */
 
+// Complete short utterances with periods — NOT trailing em-dashes. The ack
+// bypasses the brain-sentence TTS normalization (which strips em-dashes),
+// and Cartesia renders a dangling "—" with clipped, odd prosody (live
+// round 4, 2026-07-22: "the gap fillers sound a little weird"). A dangling
+// connective also promises a continuation the separate next synthesis
+// never delivers.
 export const ACK_PHRASES = [
-  'Hmm, let me think—',
-  "Okay, let's see—",
-  'Let me see—',
-  'Mm, one moment—',
-  "Let's look at that—",
+  'Hmm, let me think.',
+  "Okay, let's see.",
+  'Let me see.',
+  'Mm, one moment.',
+  "Let's look at that.",
 ] as const;
 
 export interface AckInput {
