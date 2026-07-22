@@ -75,6 +75,40 @@ export function validateToolCall(
           reason: `showEquation: latex contains "${m}" — a variable applied to itself is malformed function notation (did you mean f(${selfApp[1]}) or ${selfApp[1]}^2?)`,
         };
       }
+      // Letter-collapse family (2026-07-22 quotient-rule session: narration
+      // said f/g, latex collapsed every function name to h; the corrupted
+      // cards then entrenched via the board snapshot across repair turns).
+      // Rule A — the same name DEFINED twice with different bodies is
+      // always letter drift... except piecewise, whose branches legitimately
+      // repeat the name (\begin{cases} or "\text{if/for/when/otherwise}").
+      const latex = args.latex;
+      const piecewise = /\\begin\{cases\}|\\text\{\s*(if|for|when|otherwise)\b/i.test(latex);
+      if (!piecewise) {
+        const defs = new Map<string, string>();
+        for (const m of latex.matchAll(/([a-zA-Z])\s*\(\s*[a-zA-Z]\s*\)\s*=\s*([^,;=]+)/g)) {
+          const body = m[2].replace(/\s+/g, '');
+          const prior = defs.get(m[1]);
+          if (prior !== undefined && prior !== body) {
+            return {
+              ok: false,
+              reason: `showEquation: the latex defines "${m[1]}(…)" more than once with different bodies — this is letter drift (writing one function's name where your narration uses another). Give each function the letter your narration uses.`,
+            };
+          }
+          defs.set(m[1], body);
+        }
+      }
+      // Rule B — a function defined in terms of ITSELF with the same
+      // argument ("h(x) = h(x)/h(x)") is always malformed; shifted
+      // arguments (recurrences like f(x) = f(x-1) + 2) stay legal.
+      for (const d of latex.matchAll(/([a-zA-Z])('*)\s*\(\s*([a-zA-Z])\s*\)\s*=([^,;]+)/g)) {
+        const selfRef = new RegExp(`${d[1]}${d[2] ? "'".repeat(d[2].length) : ''}\\s*\\(\\s*${d[3]}\\s*\\)`);
+        if (selfRef.test(d[4])) {
+          return {
+            ok: false,
+            reason: `showEquation: "${d[1]}${d[2]}(${d[3]})" is defined in terms of itself with the same argument — the right-hand side must use the OTHER functions' names from your narration (e.g. f and g), not the one being defined.`,
+          };
+        }
+      }
     }
     return { ok: true };
   }

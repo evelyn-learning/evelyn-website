@@ -33,5 +33,42 @@ check('prose-label-ok', validateToolCall('show_equation', {
   latex: 'P = 2l + 2w \\text{ where perimeter (r) is in cm}',
 }).ok === true);
 
+// Letter-collapse family (2026-07-22 quotient-rule live session: brain
+// narrated f/g correctly but latex collapsed every name to h; the client
+// round-21 guard failed open and 4 corrupted cards rendered + entrenched
+// via the board snapshot). All four observed cards must reject:
+check('dup-def-triple', validateToolCall('show_equation', {
+  latex: 'h(x) = \\frac{x^2}{\\sin x}, \\quad h(x) = x^2,\\ h(x) = \\sin x',
+}).ok === false);
+check('dup-def-pair', validateToolCall('show_equation', {
+  latex: 'h(x) = x^2,\\quad h(x) = \\sin x',
+}).ok === false);
+check('dup-def-derivs', validateToolCall('show_equation', {
+  latex: "h(x) = x^2,\\ h'(x) = 2x \\qquad h(x) = \\sin x,\\ h'(x) = \\cos x",
+}).ok === false);
+check('self-ref', validateToolCall('show_equation', {
+  latex: 'h(x) = \\frac{h(x)}{h(x)}',
+}).ok === false);
+check('self-ref-quotient-rule', validateToolCall('show_equation', {
+  latex: "h'(x) = \\frac{h(x)h'(x) - h(x)h'(x)}{[h(x)]^2}",
+}).ok === false);
+
+// Legit notation stays legal
+check('quotient-rule-ok', validateToolCall('show_equation', {
+  latex: "h'(x) = \\frac{f'(x)g(x) - f(x)g'(x)}{[g(x)]^2}",
+}).ok === true);
+check('identity-ok', validateToolCall('show_equation', {
+  latex: '\\tan x = \\frac{\\sin x}{\\cos x}',
+}).ok === true);
+check('recurrence-ok', validateToolCall('show_equation', {
+  latex: 'f(x) = f(x-1) + 2',
+}).ok === true);
+check('piecewise-ok', validateToolCall('show_equation', {
+  latex: 'f(x) = x^2 \\text{ if } x > 0, f(x) = -x \\text{ if } x \\le 0',
+}).ok === true);
+check('same-def-repeat-ok', validateToolCall('show_equation', {
+  latex: 'f(x) = x^2, \\quad f(x) = x^2',
+}).ok === true);
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:validate-tool-call PASS');
