@@ -64,6 +64,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
+import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -109,6 +110,7 @@ import type { InteractionType } from '@/hooks/useDemoTracking';
 
 import {
   TUTOR_BRAIN_FAST_OPENER,
+  TUTOR_ACK_LAYER,
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
   TUTOR_STUDENT_MARKS,
@@ -1106,6 +1108,13 @@ export function VoiceTutorRealtime({
   // turns): the sentence-start handler owns the emit instead, so TOTAL is
   // non-null on every turn that actually reaches the speaker.
   const turnLatencyAwaitingAudioRef = useRef(false);
+  // Phase 2 (humanlike-latency): acknowledgment micro-turn timer + rotation
+  // state. Armed per dispatch in handleStudentTranscriptForBrain; cleared at
+  // first-sentence arrival, closeGate, perception kill/verdict. Fire-time
+  // guards (ack-layer.ts) re-check everything, so a stray late fire is safe.
+  const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ackTurnCounterRef = useRef(0);
+  const lastAckIndexRef = useRef<number | null>(null);
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -8122,6 +8131,9 @@ export function VoiceTutorRealtime({
         };
         const closeGate = () => {
           clearVbsCap();
+          // Phase 2: a closing gate means this turn is being killed or
+          // rejected — an ack after that would voice over the retry.
+          if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
           // Validate-before-speak: if a kill/abort closes the gate while we
           // were rolling, the buffered (un-played) sentences are dropped
           // BEFORE the speaker — the headline win. Log the count so a live
@@ -8630,6 +8642,9 @@ export function VoiceTutorRealtime({
                   totalWordCount += wordCount;
                   if (firstSentenceMs === null) firstSentenceMs = Date.now() - t0;
                   turnLatencyRef.current?.mark('firstSentence', Date.now());
+                  // Phase 2: brain sentence-0 arrived — a pending ack is now
+                  // redundant (fire-time guard would refuse anyway).
+                  if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
                   // KEEP markdown emphasis (*word*, **strong**) in the
                   // chat-bound text so TranscriptView can render it as
                   // italic / bold. Strip ONLY for TTS — the speaking
@@ -11466,6 +11481,55 @@ export function VoiceTutorRealtime({
       // create the ledger here so brain_first/tts→audio still measure.
       turnLatencyRef.current ??= createTurnLatencyLedger();
       turnLatencyRef.current.mark('brainFetch', Date.now());
+      // Phase 2: arm the acknowledgment micro-turn. Only REAL dispatches
+      // reach this point (classify/noise-filter run upstream; retries live
+      // inside callBrainOnce and never re-arm), so classification='clean'
+      // and attempt=0 hold by construction. All other guards re-check at
+      // fire time via live refs.
+      if (TUTOR_ACK_LAYER) {
+        if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+        const ackTurnIndex = ++ackTurnCounterRef.current;
+        const ackArmedAt = Date.now();
+        const ackTranscript = transcript;
+        ackTimerRef.current = setTimeout(() => {
+          ackTimerRef.current = null;
+          const input: AckInput = {
+            classification: 'clean',
+            attempt: 0,
+            skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
+            fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
+            brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
+            msSinceTurnEnd: Date.now() - ackArmedAt,
+            turnIndex: ackTurnIndex,
+          };
+          if (!shouldSpeakAck(input)) {
+            const reason = input.brainSentence0Dispatched ? 'sentence0'
+              : input.fastOpenerSpoken ? 'tts-already-dispatched'
+              : input.skipTurn ? 'skip-turn' : 'damping';
+            onDebugEvent?.('ack_suppressed', reason);
+            return;
+          }
+          // Same gate the fast opener respects (perception-cancel window).
+          if (Date.now() < speakTextBlockedUntilRef.current) {
+            onDebugEvent?.('ack_suppressed', 'speak-gate');
+            return;
+          }
+          const { text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current);
+          lastAckIndexRef.current = index;
+          // Fast-opener call shape: perception self-voice push + speak.
+          const ackScriptId = pushTtsScriptForPerception(text);
+          speakTextRef.current?.(text, ackScriptId);
+          // Render↔speech sync: count the ack the same way the fast opener
+          // is counted — symmetric dispatch+playback increments keep
+          // anchorM aligned (verified at the opener call site).
+          ttsDispatchedCountRef.current++;
+          // turn_latency: with the ack layer on, the turn's first audio IS
+          // the ack — mark its fetch too so tts→audio stays coherent and
+          // TOTAL reads as perceived-first-sound (the Phase-2 metric).
+          turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+          onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}`);
+        }, 450);
+      }
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -11608,6 +11672,9 @@ export function VoiceTutorRealtime({
     // calls' first sentences typically arrive 1-3s later, well after
     // this 600ms gate expires.
     speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+    // Phase 2: a verdict is resolving a cancelled turn (FRESH/RESTORE/MERGE
+    // re-dispatch will re-arm their own ack) — drop any pending ack.
+    if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
     const elapsedMs = Date.now() - checkpoint.cancelledAt;
     const cleanPerceptionText = (perceptionText || '').trim();
     const stage = checkpoint.cancelledDuringState;
@@ -12697,6 +12764,8 @@ export function VoiceTutorRealtime({
           return;
         }
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
+        // Phase 2: the student is interrupting — never ack over them.
+        if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
         console.warn(
           `[PERCEPTION] ${stageLabel} cancel: aborting in '${cancelStage}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
         );

@@ -164,6 +164,13 @@ export const TURN_CAP_WORDS = 110;
 //   - GATE_MAX_MS: safety cap so a pending gate never leaks a live interval if
 //     speech_stopped / a state change is somehow missed.
 export const BARGEIN_SUSTAIN_MS = 350;
+// Phase 2 (humanlike-latency plan): acknowledgment micro-turn — a neutral
+// "thinking" phrase ~450ms after turn.end iff brain sentence-0 hasn't
+// arrived. Default OFF; enable per env.
+export const TUTOR_ACK_LAYER =
+  process.env.NEXT_PUBLIC_TUTOR_ACK_LAYER === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_ACK_LAYER === 'true';
+
 // Task 1.1 (humanlike-latency plan): stream the cold first sentence's
 // Cartesia audio — start playback at ~0.4s of PCM instead of waiting for
 // full-sentence synthesis. Default OFF; enable per env.
@@ -182,10 +189,12 @@ export const TTS_STREAM_FOLLOW_SAMPLES = 12_000;
 export const TTS_STREAM_TAIL_TIMEOUT_MS = 15_000;
 // Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
 // first-turn interruption impossible — student spoke 12s over the opener,
-// unheard, in two sessions). Much longer than BARGEIN_SUSTAIN_MS: the
-// 2026-07-04 self-echo phantoms this replaces measured ~264ms, so 2.5s of
-// sustained speech during the opener is unambiguously a real student.
-export const OPENER_BARGEIN_SUSTAIN_MS = 2_500;
+// unheard, in two sessions). Longer than BARGEIN_SUSTAIN_MS (350) because
+// an aborted opener costs more than a cut mid-lesson sentence, but short
+// enough to feel responsive: round-2 live test showed 2500ms reads as
+// "tutor keeps talking over me". Echo phantoms measure ~264ms; 900ms keeps
+// 3.4× margin with the kill landing ~1s after the student starts.
+export const OPENER_BARGEIN_SUSTAIN_MS = 900;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;
