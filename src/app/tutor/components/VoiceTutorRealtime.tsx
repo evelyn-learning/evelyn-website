@@ -136,6 +136,7 @@ import {
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
   BARGEIN_SUSTAIN_MS,
+  OPENER_BARGEIN_SUSTAIN_MS,
   BARGEIN_ENERGY_THRESHOLD,
   BARGEIN_GATE_POLL_MS,
   BARGEIN_GATE_MAX_MS,
@@ -12670,16 +12671,6 @@ export function VoiceTutorRealtime({
       // existing checkpoint will dispatch and dedupe handles followups.
       const canStage2 = perceptionStage >= 2 && prodState === 'processing';
       const canStage3 = perceptionStage >= 3 && prodState === 'speaking';
-      // Opening-turn guard: suppress barge-in on the synthetic kickoff turn —
-      // ambient noise here would abort the lesson before it ever started.
-      // Covers text AND audio delivery (see firstTurnAudioDoneRef): the
-      // opener's TTS keeps playing long after the text stream completes,
-      // and self-echo phantoms were aborting it mid-sentence (2026-07-04).
-      if ((canStage2 || canStage3) && !openingTurnFullyDelivered()) {
-        console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
-        onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
-        return;
-      }
       // ── The stage-2/3 kill body, extracted so it can fire EITHER instantly
       // (non-'speaking' states — today's behavior) OR deferred behind the
       // sustained-energy gate (Task V1, 'speaking' only). Reads live refs, so
@@ -12806,6 +12797,43 @@ export function VoiceTutorRealtime({
       if (bargeInDeferredKillRef.current) {
         clearTimeout(bargeInDeferredKillRef.current);
         bargeInDeferredKillRef.current = null;
+      }
+      // Opening-turn guard (rewritten 2026-07-22). History: blanket
+      // suppression until the FULL opener delivered (2026-07-04, self-echo
+      // phantoms aborting the kickoff) made real first-turn barge-ins
+      // impossible — a student spoke 12 straight seconds over the opener,
+      // unheard (APUSH + mock-review live sessions). Echo phantoms are
+      // short (~264ms measured); genuine speech sustains. So during
+      // 'speaking' with opener audio underway, DEFER the kill behind the
+      // longer OPENER_BARGEIN_SUSTAIN_MS window (speech_stopped disarms it,
+      // a fresh onset supersedes it, and every runPerceptionKill guard —
+      // checkpoint / ctx / cancel-storm — still applies at fire time).
+      // 'processing' cancels stay suppressed: the instant stage-2 kill has
+      // no gate and could still abort the kickoff before any audio played.
+      if ((canStage2 || canStage3) && !openingTurnFullyDelivered()) {
+        if (canStage3 && firstTurnSawSpeakingRef.current) {
+          const armedAt = Date.now();
+          onDebugEvent?.('perception_bargein_deferred_armed', `sustain=${OPENER_BARGEIN_SUSTAIN_MS}ms (opening turn)`);
+          bargeInDeferredKillRef.current = setTimeout(() => {
+            bargeInDeferredKillRef.current = null;
+            const fire = shouldFireDeferredBargeInKill({
+              state: productionStateRef.current,
+              speechStopped: false,
+              elapsedMs: Date.now() - armedAt,
+              sustainMs: OPENER_BARGEIN_SUSTAIN_MS,
+            });
+            if (fire) {
+              onDebugEvent?.('perception_bargein_deferred_passed', `latencyMs=${Date.now() - armedAt} (opening turn)`);
+              runPerceptionKill('speaking');
+            } else {
+              onDebugEvent?.('perception_bargein_deferred_abandoned', `prod=${productionStateRef.current} (opening turn)`);
+            }
+          }, OPENER_BARGEIN_SUSTAIN_MS);
+        } else {
+          console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
+          onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
+        }
+        return;
       }
       // Stage 2 ('processing'): INSTANT kill — unchanged, no energy gate. The
       // brain is only thinking (no TTS to echo), so there is nothing for the

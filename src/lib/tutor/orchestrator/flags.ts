@@ -164,6 +164,12 @@ export const TURN_CAP_WORDS = 110;
 //   - GATE_MAX_MS: safety cap so a pending gate never leaks a live interval if
 //     speech_stopped / a state change is somehow missed.
 export const BARGEIN_SUSTAIN_MS = 350;
+// Opening-turn barge-in sustain (2026-07-22 live: blanket suppression made
+// first-turn interruption impossible — student spoke 12s over the opener,
+// unheard, in two sessions). Much longer than BARGEIN_SUSTAIN_MS: the
+// 2026-07-04 self-echo phantoms this replaces measured ~264ms, so 2.5s of
+// sustained speech during the opener is unambiguously a real student.
+export const OPENER_BARGEIN_SUSTAIN_MS = 2_500;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;
