@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import type { GraphData, GraphFunction, GraphFunctionOfY } from '@/lib/knowledge/types';
+import { InlineMathText } from './InlineMathText';
 
 // Color palette matching our existing design
 const COLORS = [
@@ -357,7 +358,12 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
     if (!desmosLoaded) {
       return (
         <div className={`graph-container ${className}`}>
-          {data.title && <h4 className="text-center font-medium text-gray-800 mb-2">{data.title}</h4>}
+          {/* Graph titles are math-heavy and the brain emits $…$ despite the
+            plain-text-fields prompt rule (2026-07-22 live, twice) — render
+            $-spans like problem titles do; plain titles pass through. This is
+            the PRIMARY showGraph renderer (Desmos loaded) — the Mafs
+            GraphRenderer fallback has the same fix. */}
+        {data.title && <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={data.title} /></h4>}
           <div className="flex items-center justify-center h-[300px] bg-gray-50 text-gray-400 text-sm">
             Loading graph...
           </div>
@@ -367,7 +373,12 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
 
     return (
       <div className={`graph-container ${className}`}>
-        {data.title && <h4 className="text-center font-medium text-gray-800 mb-2">{data.title}</h4>}
+        {/* Graph titles are math-heavy and the brain emits $…$ despite the
+            plain-text-fields prompt rule (2026-07-22 live, twice) — render
+            $-spans like problem titles do; plain titles pass through. This is
+            the PRIMARY showGraph renderer (Desmos loaded) — the Mafs
+            GraphRenderer fallback has the same fix. */}
+        {data.title && <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={data.title} /></h4>}
         <div
           ref={containerRef}
           className="w-full"
@@ -381,13 +392,13 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             {(data.functions || []).filter(f => f.label).map((fn, i) => (
               <div key={`fn-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[i % COLORS.length] }} />
-                <span>{fn.label}</span>
+                <span><InlineMathText text={fn.label!} /></span>
               </div>
             ))}
             {(data.functionsOfY || []).filter(f => f.label).map((fn, i) => (
               <div key={`fny-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[((data.functions?.length || 0) + i) % COLORS.length] }} />
-                <span>{fn.label}</span>
+                <span><InlineMathText text={fn.label!} /></span>
               </div>
             ))}
           </div>
