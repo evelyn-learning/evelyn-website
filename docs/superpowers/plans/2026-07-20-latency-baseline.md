@@ -1,7 +1,7 @@
 # Tutor latency baseline (Phase 0 — humanlike-latency plan)
 
-Status: **instrumentation shipped, awaiting live capture** (2026-07-21).
-Every later phase's success criterion references the medians in this file.
+Status: **BASELINE CAPTURED** (2026-07-22, production, 2 sessions / 12 turns —
+see table). Every later phase's success criterion references this file.
 
 ## How to capture (exact steps — ~15 min per session, 3+ sessions)
 
@@ -30,20 +30,41 @@ Pull `turn_latency` events for the session ids (or timestamp range) from Mongo,
 filter `complete=true`, compute per-segment medians + p90, and fill the table
 below.
 
-## Baseline numbers (TO FILL from live sessions)
+## Baseline numbers (captured 2026-07-22, PRODUCTION)
+
+Sessions: `6a60e3310329ef651e461490` (APUSH U3.2, voice) +
+`6a60e4de0329ef651e461493` (Calc BC U2.8, voice), crimsora.com prod, real
+Cartesia + real brain. 12 turns; 8 clean complete turns after excluding
+killed/incomplete turns and one contaminated row (see Known artifacts).
 
 | Segment | Median | p90 | n |
 |---|---|---|---|
-| eager→end (Ink-2 semantic confirm) | | | |
-| end→fetch (client classify/dispatch) | | | |
-| brain_first (fetch → first sentence SSE) | | | |
-| tts→audio (first TTS fetch → first audio) | | | |
-| **TOTAL (turn.end → first audio)** | | | |
+| eager→end (Ink-2 semantic confirm) | **~125ms** | 313ms | 6 |
+| end→fetch (client classify/dispatch) | **2ms** | 5ms | 7 |
+| brain_first (fetch → first sentence SSE) | **2725ms** | 9229ms | 7 |
+| tts→audio (first TTS fetch → first audio) | **~1144ms** | 1392ms | 8 |
+| **TOTAL (turn.end → first audio)** | **~4669ms** | 11396ms | 8 |
 
-Sessions used: (ids/dates here)
+## Consequences for the plan (decided by this data)
 
-## Phase decisions gated on this table
+- **Task 1.3 (Ink threshold tuning): CLOSED — not worth it.** Median
+  eager→end ≈125ms, far under the 300ms gate.
+- **Phase 5 (eager dispatch): CLOSED — not worth it.** Same number vs the
+  ~500ms gate. The endpointing pipeline is NOT the problem.
+- **Task 1.1 (streaming first-audio): high value.** tts→audio ~1.1s median
+  is almost entirely whole-sentence synthesis wait; expect −0.5–0.8s.
+- **Phase 2 (ack layer): high value.** brain_first median 2.7s, p90 9.2s —
+  and one observed 63s brain turn (slow model stream, 254 output tokens
+  over ~60s, retries=0; APUSH "thinking pause"). The ack covers the head of
+  every one of these; nothing client-side can shorten the stream itself.
+- end→fetch (2ms) needs nothing.
 
-- Task 1.3 (Ink threshold tuning): only if median `eager→end` ≥ 300ms.
-- Phase 5 (eager dispatch): only if median `eager→end` ≥ ~500ms.
-- Task 1.1 / Phase 2 success: measured as deltas against TOTAL here.
+## Known instrumentation artifacts (follow-up, low priority)
+
+- One turn emitted `brain_first=-1976ms`: student speech arriving
+  mid-stream can null the live turn's ledger (stale-guard) and interleave
+  marks across attempts/queue-drain dispatches. Exclude negative rows.
+- Turns dispatched via the queue-drain path (`callBrainOnce(combined)`,
+  VoiceTutorRealtime ~11523) carry no eagerEnd/turnEnd → null segments.
+- Fix idea: skip the stale-guard reset while a brain stream is in flight;
+  mark `brainFetch` at the queue-drain call site too.
