@@ -80,6 +80,8 @@ export function useAudioRecorder({
   // audibly talked over the student, session-1784194326500).
   const studentSamplesWrittenRef = useRef(0);
   const tutorSamplesWrittenRef = useRef(0);
+  // Guards double-finalize (explicit end + unmount cleanup both fire).
+  const finalizedRef = useRef(false);
 
   const sendChunk = useCallback(async (
     role: 'student' | 'tutor',
@@ -98,6 +100,9 @@ export function useAudioRecorder({
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
         body: audio ?? new ArrayBuffer(0),
+        // Finalize signals are empty-bodied and must survive page/component
+        // teardown (unmount-finalize below) — keepalive keeps them alive.
+        keepalive: finalize,
       });
     } catch (err) {
       console.error(`[AudioRecorder] Failed to send ${role} chunk ${chunkIndex}:`, err);
@@ -147,7 +152,8 @@ export function useAudioRecorder({
   }, [sendChunk]);
 
   const finalize = useCallback(async () => {
-    if (!enabledRef.current) return;
+    if (!enabledRef.current || finalizedRef.current) return;
+    finalizedRef.current = true;
 
     // Flush remaining buffers
     await flush();
@@ -205,15 +211,24 @@ export function useAudioRecorder({
     return () => clearInterval(interval);
   }, [enabled, flushIntervalMs, flush]);
 
-  // Flush on unmount
+  // Flush + finalize on unmount. Flush-only used to leave any session that
+  // ended via remount/navigation (rather than the explicit End button) as a
+  // stuck-"active" audio recording with no finalizedAt — observed as zombie
+  // audio sessions in the session-id double-mint investigation (2026-07-24
+  // pre-Phase-4 find). Finalize is guarded (finalizedRef) so the explicit
+  // End-path call stays the primary one; this is the safety net.
   useEffect(() => {
     return () => {
-      if (enabledRef.current && (studentBufferRef.current.length > 0 || tutorBufferRef.current.length > 0)) {
-        // Best-effort flush on unmount — can't await in cleanup
-        flush();
+      if (!enabledRef.current || finalizedRef.current) return;
+      const everSentAudio = studentChunkIndexRef.current > 0 || tutorChunkIndexRef.current > 0
+        || studentBufferRef.current.length > 0 || tutorBufferRef.current.length > 0;
+      if (everSentAudio) {
+        // Best-effort — can't await in cleanup; sendChunk uses keepalive for
+        // the finalize signal so it survives teardown.
+        void finalize().catch(() => {});
       }
     };
-  }, [flush]);
+  }, [finalize]);
 
   return { pushStudentChunk, pushTutorChunk, flush, finalize };
 }

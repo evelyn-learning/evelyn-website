@@ -583,6 +583,20 @@ function TutorPage() {
     });
   }, []);
 
+  // Session-id mint telemetry — evidence hook for the double-mint find
+  // (2026-07-24 pre-Phase-4: /tutor minted 2 ids ~9s apart; audio landed
+  // under the first as a stuck-active zombie, transcript under the second).
+  // Fires on the initial mint and on every re-mint, with the stage at mint
+  // time; persisted via debug events so prod sessions carry the trail.
+  const prevMintRef = useRef<string | null>(null);
+  useEffect(() => {
+    const prev = prevMintRef.current;
+    prevMintRef.current = sessionId;
+    console.log(`[session-mint] ${sessionId} stage=${stage}${prev ? ` prev=${prev}` : ' (initial)'}`);
+    addDebugEvent('session_mint', `${sessionId} stage=${stage}${prev ? ` prev=${prev}` : ' initial'}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
   // Save session usage to DB (fire-and-forget, tolerates failures)
   const saveSessionUsage = useCallback((status: 'active' | 'completed' | 'abandoned' = 'active') => {
     if (!selectedTopicId || stage === 'setup') return;

@@ -71,5 +71,32 @@ const props = {
   check('resolveTarget("(-3, 0)") hits the negative vertex', neg.ok && neg.canonical === 'point-neg3-0');
 }
 
+// ── fuzzy token-subset fallback: wordier/reordered scribble targets ──
+// (2026-07-24 find: target "bar fraction 1" vs canonical "bar-1" silent-
+// dropped as no_match; resolver now accepts full token containment with
+// ≥2 overlapping tokens after every stricter phase misses.)
+{
+  const catalog = new WhiteboardCatalog();
+  catalog.append({
+    itemId: 'showFractionBar-1',
+    action: 'showFractionBar',
+    title: 'Comparing fractions',
+    features: [
+      { kind: 'region', name: 'bar-1', labels: ['bar 1'] },
+      { kind: 'region', name: 'bar-2', labels: ['bar 2'] },
+    ] as unknown as Parameters<WhiteboardCatalog['append']>[0]['features'],
+  });
+  const f1 = catalog.resolveTarget('bar fraction 1');
+  check('fuzzy: "bar fraction 1" → bar-1', f1.ok && f1.canonical === 'bar-1');
+  const f2 = catalog.resolveTarget('the fraction bar 2');
+  check('fuzzy: "the fraction bar 2" → bar-2', f2.ok && f2.canonical === 'bar-2');
+  const exact = catalog.resolveTarget('bar 1');
+  check('exact label still wins for "bar 1"', exact.ok && exact.canonical === 'bar-1');
+  const miss = catalog.resolveTarget('slice 3');
+  check('fuzzy: unrelated "slice 3" still no_match', !miss.ok);
+  const weak = catalog.resolveTarget('mark 1');
+  check('fuzzy: "mark 1" cannot hijack (needs ≥2-token overlap)', !weak.ok);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

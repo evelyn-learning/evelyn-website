@@ -913,6 +913,47 @@ export class WhiteboardCatalog {
       }
     }
 
+    // Token-subset fuzzy fallback. The brain sometimes names a feature by a
+    // WORDIER or reordered phrase than its slug — "bar fraction 1" for
+    // canonical "bar-1" (2026-07-24 pre-Phase-4 find: the scribble
+    // silent-dropped as no_match). After every exact/normalized/kind-prefix
+    // phase has missed, accept a feature whose full token set is contained in
+    // the query's tokens (or the query's in the feature's), requiring ≥2
+    // overlapping tokens so a bare "1" can never hijack. Highest overlap
+    // wins; ties go newest-first, matching the resolver's global bias.
+    if (matches.size === 0) {
+      const qTokens = new Set(q.split('-'));
+      // Digit-ish tokens ("1", "2", "neg3") are the DISCRIMINATORS in targets
+      // like "bar fraction 1" — a candidate that covers them beats one with
+      // more overlap on filler words (the item's "the fraction bar" title
+      // label out-overlaps bar-2 on "the fraction bar 2" while missing the 2).
+      const qDigits = [...qTokens].filter((t) => /^(neg)?\d+$/.test(t));
+      let best: { item: CatalogItem; feature: CatalogFeature; score: number } | null = null;
+      for (let i = this.items.length - 1; i >= 0; i--) {
+        const item = this.items[i];
+        for (const f of item.features) {
+          for (const cand of [f.canonical, ...f.labels]) {
+            const fTokens = normalizeToken(cand).split('-').filter(Boolean);
+            if (fTokens.length === 0) continue;
+            const fSet = new Set(fTokens);
+            const fInQ = fTokens.every((t) => qTokens.has(t));
+            const qInF = [...qTokens].every((t) => fSet.has(t));
+            if (!fInQ && !qInF) continue;
+            const overlap = fTokens.filter((t) => qTokens.has(t)).length;
+            if (overlap < 2) continue;
+            // Score: digit-discriminator coverage dominates, then overlap,
+            // then prefer a SPECIFIC feature over the synthesized whole-item
+            // feature (canonical === itemId) — "bar fraction 1" must land on
+            // bar-1, not the item's "Fraction Bar" title label.
+            const coversDigits = qDigits.every((t) => fSet.has(t));
+            const score = (coversDigits ? 100 : 0) + overlap * 2 + (f.canonical === item.itemId ? 0 : 1);
+            if (!best || score > best.score) best = { item, feature: f, score };
+          }
+        }
+      }
+      if (best) return this.ok(best.item, best.feature);
+    }
+
     if (matches.size === 0) {
       const where = opts?.page != null ? ` (page ${opts.page} or anywhere on the board)` : '';
       return {
