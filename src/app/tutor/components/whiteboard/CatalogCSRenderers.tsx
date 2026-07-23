@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   flowchartSimpleFeatureNames,
@@ -59,7 +60,7 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
       data-feature={N.chart}
       data-feature-label={title || 'flowchart'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {edges.map((e, i) => {
           const a = positions.get(e.from)!;
@@ -326,7 +327,7 @@ export function CatalogStateMachineRenderer({ figure }: { figure: StateMachineFi
       data-feature={N.machine}
       data-feature-label={title || 'state machine'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {transitions.map((t, i) => {
           const a = positions.get(t.from)!;
@@ -469,7 +470,7 @@ export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure
       data-feature={N.tree}
       data-feature-label={title || 'binary tree'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {positions.map((p, i) => p.parent ? (
           <line key={`l-${i}`} x1={p.parent.x} y1={p.parent.y + 18} x2={p.x} y2={p.y - 18} stroke="#6b7280" strokeWidth={1.5} />
@@ -507,7 +508,7 @@ export function CatalogTruthTableRenderer({ figure }: { figure: TruthTableFigure
       data-feature={N.table}
       data-feature-label={title || 'truth table'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <table className="border-collapse">
         <thead>
           <tr>
@@ -560,7 +561,7 @@ export function CatalogLogicGateRenderer({ figure }: { figure: LogicGateFigure }
       data-feature={N.gate}
       data-feature-label={title || `${gate} gate`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px]">
         <GateShape gate={gate} cx={cx} cy={cy} W={W} H={H} bodyFeature={N.body} />
         {inputs.map((label, i) => {

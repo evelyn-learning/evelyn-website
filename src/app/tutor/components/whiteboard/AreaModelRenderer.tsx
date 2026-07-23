@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { AreaModelFigure } from '@/lib/tutor/diagrams/catalog/kinds/area-model';
 
@@ -20,7 +21,7 @@ export function AreaModelRenderer({ figure }: { figure: AreaModelFigure }) {
   let yCursor = 32;
   return (
     <div className="area-model-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Column labels along the top */}
         {(() => {

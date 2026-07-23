@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { periodicTableHighlightFeatureNames, type PeriodicTableHighlightFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
@@ -25,7 +26,7 @@ export function CatalogPeriodicTableHighlightRenderer({ figure }: { figure: Peri
   const H = 7 * cell + 14;
   return (
     <div className="periodic-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[640px]"

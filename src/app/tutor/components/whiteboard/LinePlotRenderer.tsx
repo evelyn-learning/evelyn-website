@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { LinePlotFigure } from '@/lib/tutor/diagrams/catalog/kinds/line-plot';
 
@@ -17,7 +18,7 @@ export function LinePlotRenderer({ figure }: { figure: LinePlotFigure }) {
   const H = baseY + 50;
   return (
     <div className="line-plot-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[680px]">
         {/* Axis */}
         <line x1={PAD_X - 12} y1={baseY} x2={W - PAD_X + 12} y2={baseY} stroke="#1f2937" strokeWidth={2} />

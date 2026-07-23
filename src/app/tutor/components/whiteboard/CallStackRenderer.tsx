@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Call Stack Renderer
  *
@@ -43,7 +44,7 @@ export default function CallStackRenderer({
     <div className="call-stack-renderer">
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-2">
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <div className="flex flex-col items-stretch max-w-md mx-auto gap-1">

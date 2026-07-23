@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { InclinedPlaneFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
@@ -87,7 +88,7 @@ export function InclinedPlaneRenderer({ figure }: { figure: InclinedPlaneFigure 
   const anglePos = labelPos.get('angle') ?? { x: startX + 70, y: baseY - 10 };
   return (
     <div className="incline-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* Triangle */}
         <polygon points={`${startX},${baseY} ${apexX},${baseY} ${apexX},${apexY}`} fill="#f3f4f6" stroke="#374151" strokeWidth={2} />

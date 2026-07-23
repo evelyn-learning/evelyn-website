@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   slopeFieldFeatureNames,
@@ -53,7 +54,7 @@ export function SlopeFieldRenderer({ figure }: { figure: SlopeFieldFigure }) {
       data-feature={N.diagram}
       data-feature-label={title || 'slope field'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {/* equation as a caption above the plot — the slope field fills the plot,
           so an in-plot label always collided with segments + the border. */}
       {exprLabel && <div className="text-xs -mt-1 mb-2" style={{ color: COLOR_SOL }}>{exprLabel}</div>}

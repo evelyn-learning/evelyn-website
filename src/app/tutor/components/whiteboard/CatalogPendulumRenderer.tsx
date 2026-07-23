@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { PendulumFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -15,7 +16,7 @@ export function CatalogPendulumRenderer({ figure }: { figure: PendulumFigure }) 
   const restY = pivotY + length;
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[420px]">
         {/* Mount */}
         <line x1={pivotX - 40} y1={pivotY} x2={pivotX + 40} y2={pivotY} stroke="#374151" strokeWidth={3} />

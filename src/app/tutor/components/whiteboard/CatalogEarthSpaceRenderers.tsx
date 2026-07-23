@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   phasesOfMoonFeatureNames,
@@ -74,7 +75,7 @@ export function CatalogPhasesOfMoonRenderer({ figure }: { figure: PhasesOfMoonFi
       data-feature={N.moon}
       data-feature-label={title || `${phaseHuman} moon`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[280px]">
         <defs>
           <clipPath id="moon-mask">
@@ -154,7 +155,7 @@ export function CatalogSolarSystemRenderer({ figure }: { figure: SolarSystemFigu
       data-feature={N.system}
       data-feature-label={title || 'solar system'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[760px]">
         {/* Sun */}
         <circle
@@ -219,7 +220,7 @@ export function CatalogEarthLayersRenderer({ figure }: { figure: EarthLayersFigu
       data-feature={N.earth}
       data-feature-label={title || "Earth's layers"}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[560px]">
         {layers.map((l, i) => {
           const rOuter = maxR - i * step;
@@ -284,7 +285,7 @@ export function CatalogEclipseDiagramRenderer({ figure }: { figure: EclipseDiagr
       data-feature={N.eclipse}
       data-feature-label={title || `${type} eclipse`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[680px]">
         <circle
           cx={sun.cx} cy={sun.cy} r={sun.r}
@@ -385,7 +386,7 @@ export function CatalogSeasonsDiagramRenderer({ figure }: { figure: SeasonsDiagr
       data-feature={N.orbit}
       data-feature-label={title || 'seasons diagram'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[560px]">
         <ellipse cx={cx} cy={cy} rx={orbitRx} ry={orbitRy} fill="none" stroke="#9ca3af" strokeWidth={1.5} strokeDasharray="4 3" />
         <circle
@@ -442,7 +443,7 @@ export function CatalogPlateTectonicsRenderer({ figure }: { figure: PlateTectoni
       data-feature={N.boundary}
       data-feature-label={title || `${boundary} boundary`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Two plates */}
         <rect
@@ -561,7 +562,7 @@ export function CatalogGeologicCrossSectionRenderer({ figure }: { figure: Geolog
       data-feature={N.section}
       data-feature-label={title || 'geologic cross-section'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[720px]">
         <defs>
           <clipPath id="geo-left">
@@ -692,7 +693,7 @@ export function CatalogHRDiagramRenderer({ figure }: { figure: HRDiagramFigure }
       data-feature={N.diagram}
       data-feature-label={title || 'H–R diagram'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[700px]">
         {/* Plot background (space). */}
         <rect x={px0} y={py0} width={px1 - px0} height={py1 - py0} fill="#0b1026" />
@@ -800,7 +801,7 @@ export function CatalogVolcanoCrossSectionRenderer({ figure }: { figure: Volcano
       data-feature={N.volcano}
       data-feature-label={title || 'stratovolcano'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[700px]">
         {/* Sky */}
         <rect x={0} y={0} width={W} height={groundY} fill="#dbeafe" />
@@ -922,7 +923,7 @@ export function CatalogAtmosphereLayersRenderer({ figure }: { figure: Atmosphere
       data-feature={N.atmosphere}
       data-feature-label={title || "Earth's atmosphere"}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[700px]">
         {/* Layer bands */}
         {bands.map((b, i) => {

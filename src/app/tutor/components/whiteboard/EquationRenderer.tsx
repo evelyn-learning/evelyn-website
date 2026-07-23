@@ -309,7 +309,7 @@ export function DerivationRenderer({ steps, title }: DerivationRendererProps) {
   return (
     <div className="derivation-container space-y-3">
       {title && (
-        <h4 className="font-medium text-gray-800">{title}</h4>
+        <h4 className="font-medium text-gray-800"><InlineMathText text={title} /></h4>
       )}
       {steps.map((step, index) => (
         <div key={index} className="flex items-start gap-4">

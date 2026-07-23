@@ -1,5 +1,7 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
+import { InlineMathText } from './InlineMathText';
 /**
  * Collision Diagram Renderer
  *
@@ -114,7 +116,7 @@ function Panel({
         fontWeight={600}
         textAnchor="middle"
       >
-        {title}
+        {mathifyDollarSpans(title)}
       </text>
     </g>
   );
@@ -655,7 +657,7 @@ export default function CollisionRenderer({
             color: COLORS.text,
           }}
         >
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <svg

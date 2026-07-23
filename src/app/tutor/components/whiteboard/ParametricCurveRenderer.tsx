@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   parametricCurveFeatureNames,
@@ -67,7 +68,7 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
       data-feature={N.diagram}
       data-feature-label={title || 'parametric curve'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         <defs>
           <marker id="arrowhead-param" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">

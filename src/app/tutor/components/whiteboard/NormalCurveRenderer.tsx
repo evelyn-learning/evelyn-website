@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   normalCurveFeatureNames,
@@ -97,7 +98,7 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
       data-feature={FN.diagram}
       data-feature-label={title || `N(${mean}, ${sd})`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* shade */}
         {shadePath && (

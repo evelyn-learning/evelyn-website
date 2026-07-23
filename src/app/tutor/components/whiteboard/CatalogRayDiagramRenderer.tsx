@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { RayDiagramFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -34,7 +35,7 @@ export function CatalogRayDiagramRenderer({ figure }: { figure: RayDiagramFigure
   const iy = AXIS_Y - imgHeight;
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[720px]">
         {/* Principal axis */}
         <line x1={20} y1={AXIS_Y} x2={W - 20} y2={AXIS_Y} stroke="#9ca3af" strokeWidth={1.5} />

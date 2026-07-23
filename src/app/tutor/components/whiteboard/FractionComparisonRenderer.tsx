@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { FractionComparisonFigure } from '@/lib/tutor/diagrams/catalog/kinds/fraction-comparison';
 
@@ -9,7 +10,7 @@ export function FractionComparisonRenderer({ figure }: { figure: FractionCompari
   const { fractions, style, title } = figure;
   return (
     <div className="fraction-comparison-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-3">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-3"><InlineMathText text={title} /></div>}
       {style === 'bar' ? <Bars fractions={fractions} /> : <Circles fractions={fractions} />}
     </div>
   );

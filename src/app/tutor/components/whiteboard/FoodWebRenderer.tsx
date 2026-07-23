@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Food Web Renderer
  *
@@ -133,7 +134,7 @@ export default function FoodWebRenderer({
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
-        <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 4, color: DIAGRAM_COLORS.text }}>{title}</div>
+        <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 4, color: DIAGRAM_COLORS.text }}><InlineMathText text={title} /></div>
       )}
       <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: 400 }}>
         <ArrowMarkers idPrefix="fw-arrow" />

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { LeverFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -13,7 +14,7 @@ export function LeverRenderer({ figure }: { figure: LeverFigure }) {
   const fx = PAD + fulcrumPosition * usableW;
   return (
     <div className="lever-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         <line x1={PAD} y1={cy} x2={W - PAD} y2={cy} stroke="#374151" strokeWidth={5} strokeLinecap="round" />
         <polygon points={`${fx - 18},${cy + 30} ${fx + 18},${cy + 30} ${fx},${cy + 4}`} fill="#6b7280" />

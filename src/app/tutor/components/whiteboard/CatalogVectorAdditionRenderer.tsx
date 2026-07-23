@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { VectorAdditionFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
@@ -96,7 +97,7 @@ export function CatalogVectorAdditionRenderer({ figure }: { figure: VectorAdditi
 
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[560px]">
         {/* Origin axis lines */}
         <line x1={px(minX) - 20} y1={py(0)} x2={px(maxX) + 20} y2={py(0)} stroke="#e5e7eb" strokeWidth={1} />

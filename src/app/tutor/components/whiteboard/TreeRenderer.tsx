@@ -1,5 +1,6 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 /**
  * Tree Renderer
  *
@@ -596,7 +597,7 @@ export function TreeRenderer({
           fontSize={16}
           fontWeight={700}
         >
-          {title}
+          {mathifyDollarSpans(title)}
         </text>
       );
     }

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Timeline Renderer
  *
@@ -330,7 +331,7 @@ function renderSwimlane({ title, events, xs, plotLeft, plotRight, ticks, categor
     <div className="timeline-renderer">
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-2">
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <svg
@@ -551,7 +552,7 @@ function renderAxis({ title, events, xs, ticks }: AxisArgs) {
     <div className="timeline-renderer">
       {title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-2">
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <svg

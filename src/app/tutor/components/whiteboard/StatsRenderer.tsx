@@ -1,5 +1,6 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 /**
  * Stats Renderer
  *
@@ -1281,7 +1282,7 @@ export function StatsRenderer(props: StatsRendererProps) {
       {/* Title */}
       {title && (
         <text x={WIDTH / 2} y={22} textAnchor="middle" fontSize={15} fill="#111827" fontWeight={600}>
-          {title}
+          {mathifyDollarSpans(title)}
         </text>
       )}
 

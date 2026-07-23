@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { BalanceScaleFigure, BalanceScaleItem } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -19,7 +20,7 @@ export function BalanceScaleRenderer({ figure }: { figure: BalanceScaleFigure })
   const ry = FY + HALF * Math.sin(rad);
   return (
     <div className="balance-scale-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         <line x1={CX - 200} y1={FY + 80} x2={CX + 200} y2={FY + 80} stroke="#9ca3af" strokeWidth={1.5} />
         <polygon points={`${CX - 28},${FY + 80} ${CX + 28},${FY + 80} ${CX},${FY}`} fill="#6b7280" stroke="#374151" />

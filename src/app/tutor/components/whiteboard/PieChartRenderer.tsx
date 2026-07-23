@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { PieChartFigure } from '@/lib/tutor/diagrams/catalog/kinds/pie-chart';
 
@@ -15,7 +16,7 @@ export function PieChartRenderer({ figure }: { figure: PieChartFigure }) {
   let acc = 0;
   return (
     <div className="pie-chart-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         {slices.map((s, i) => {
           const a0 = -Math.PI / 2 + acc * 2 * Math.PI;

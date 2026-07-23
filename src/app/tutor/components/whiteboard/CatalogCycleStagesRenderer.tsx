@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { cycleStagesFeatureNames, type CycleStagesFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
@@ -20,7 +21,7 @@ export function CatalogCycleStagesRenderer({ figure }: { figure: CycleStagesFigu
   });
   return (
     <div className="cycle-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {/* `data-feature` on the inner SVG flips the ScribbleOverlays
           measurer into SVG mode. The whole-cycle feature is the
           full viewBox; per-stage features carry normalized

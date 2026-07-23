@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { WaveFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -22,7 +23,7 @@ export function CatalogWaveDiagramRenderer({ figure }: { figure: WaveFigure }) {
   }
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[680px]">
         {/* Axis */}
         <line x1={PAD} y1={cy} x2={W - PAD} y2={cy} stroke="#9ca3af" strokeWidth={1.5} />

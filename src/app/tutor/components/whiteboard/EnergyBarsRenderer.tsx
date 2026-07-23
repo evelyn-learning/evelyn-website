@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Energy Bar Chart Renderer
  *
@@ -269,7 +270,7 @@ export default function EnergyBarsRenderer({
             color: COLORS.text,
           }}
         >
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <svg

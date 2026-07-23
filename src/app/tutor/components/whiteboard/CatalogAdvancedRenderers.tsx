@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { CellContent } from './CellContent';
 import { useFitScale } from './useFitScale';
@@ -58,7 +59,7 @@ export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure
       data-feature={N.circle}
       data-feature-label={title || 'unit circle'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[420px]">
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1f2937" strokeWidth={2} />
         <line x1={cx - r - 20} y1={cy} x2={cx + r + 20} y2={cy} stroke="#9ca3af" strokeWidth={1} />
@@ -185,7 +186,7 @@ export function CatalogTransformationRenderer({ figure }: { figure: Transformati
       data-feature={N.diagram}
       data-feature-label={title || `${transform.type} transformation`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         <line x1={0} y1={cy} x2={W} y2={cy} stroke="#e5e7eb" strokeWidth={1} />
         <line x1={cx} y1={0} x2={cx} y2={H} stroke="#e5e7eb" strokeWidth={1} />
@@ -260,7 +261,7 @@ export function CatalogInequalityGraphRenderer({ figure }: { figure: InequalityG
       data-feature={N.numberLine}
       data-feature-label={title || 'number line'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         <line x1={PAD - 12} y1={cy} x2={W - PAD + 12} y2={cy} stroke="#1f2937" strokeWidth={2} />
         <polygon points={`${PAD - 12},${cy} ${PAD - 4},${cy - 5} ${PAD - 4},${cy + 5}`} fill="#1f2937" />
@@ -335,7 +336,7 @@ export function CatalogSentenceDiagramRenderer({ figure }: { figure: SentenceDia
   const objW = ((W - 40) - verbEnd) / W;
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[720px]"
@@ -419,7 +420,7 @@ export function CatalogArgumentStructureRenderer({ figure }: { figure: ArgumentF
   const N = argumentStructureFeatureNames;
   return (
     <div data-feature={N.argument} className="w-full flex flex-col items-center gap-3">
-      {title && <div className="text-base font-semibold text-gray-800">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800"><InlineMathText text={title} /></div>}
       <div data-feature={N.claim} data-feature-label="Claim" className="px-5 py-3 rounded-lg bg-blue-50 border-2 border-blue-400 max-w-[600px] w-full">
         <div className="text-xs font-bold uppercase text-blue-700 mb-1">Claim</div>
         <div className="text-base text-blue-900">{claim}</div>
@@ -501,7 +502,7 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
   const altOffsets = [-100, 70, -70, 100, -80, 80];
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[820px]"
@@ -570,7 +571,7 @@ export function CatalogGovernmentBranchesRenderer({ figure }: { figure: Governme
   const PALETTE = ['#3b82f6', '#16a34a', '#dc2626', '#8b5cf6'];
   return (
     <div data-feature={N.branches} className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <div data-feature={N.country} data-feature-label={country} className="text-sm text-gray-600 mb-3">{country}</div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[760px] w-full">
         {branches.map((b, i) => {
@@ -620,7 +621,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
   // src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social.ts.
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <div
         ref={containerRef}
         className="w-full max-w-full overflow-x-auto"
@@ -855,7 +856,7 @@ export function CatalogHierarchyPyramidRenderer({ figure }: { figure: HierarchyP
   const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#dc2626', '#8b5cf6', '#ec4899'];
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[520px]"
@@ -928,7 +929,7 @@ export function CatalogComplexPlaneRenderer({ figure }: { figure: ComplexPlaneFi
 
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[440px]"

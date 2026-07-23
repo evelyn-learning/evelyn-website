@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Unit Circle Renderer
  *
@@ -236,7 +237,7 @@ export function UnitCircleRenderer({
       {/* Optional title */}
       {title && (
         <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1 text-center">
-          {title}
+          <InlineMathText text={title} />
         </h3>
       )}
 

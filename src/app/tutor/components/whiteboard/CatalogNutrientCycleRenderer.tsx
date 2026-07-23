@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   nutrientCycleFeatureNames,
@@ -49,7 +50,7 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
 
   return (
     <div className="nutrient-cycle-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full max-w-[600px]"

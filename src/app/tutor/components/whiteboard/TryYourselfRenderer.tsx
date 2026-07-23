@@ -77,7 +77,7 @@ export function TryYourselfRenderer({
   return (
     <div className="my-3 p-4 bg-amber-50 border-2 border-amber-300 rounded-lg max-w-xl">
       <div className="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
-        {title}
+        <InlineMathText text={title} />
       </div>
       <div className="text-base text-gray-900 mb-3"><InlineMathText text={problem} /></div>
 

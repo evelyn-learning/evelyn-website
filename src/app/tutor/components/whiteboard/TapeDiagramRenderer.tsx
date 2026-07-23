@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Tape Diagram Renderer (bar model).
  *
@@ -44,7 +45,7 @@ export function TapeDiagramRenderer({ figure }: TapeDiagramRendererProps) {
 
   return (
     <div className="tape-diagram-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[700px] h-auto" data-feature="tape-diagram">
         {bars.map((bar, bi) => {
           const total = totalOf(bar);

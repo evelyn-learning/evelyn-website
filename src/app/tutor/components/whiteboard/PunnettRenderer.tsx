@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Punnett Square Renderer
  *
@@ -131,7 +132,7 @@ export function PunnettRenderer({
 
   return (
     <div className="p-3 bg-white rounded-lg border border-gray-200">
-      {title && <h4 className="font-semibold text-gray-800 mb-1">{title}</h4>}
+      {title && <h4 className="font-semibold text-gray-800 mb-1"><InlineMathText text={title} /></h4>}
       {trait && <p className="text-xs text-gray-500 mb-2">{trait}</p>}
       <p className="text-xs text-gray-600 mb-2">
         Parents: <span className="font-mono text-gray-800">{parent1}</span> × <span className="font-mono text-gray-800">{parent2}</span>

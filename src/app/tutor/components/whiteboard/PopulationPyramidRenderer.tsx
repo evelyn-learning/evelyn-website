@@ -1,5 +1,6 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 import React from 'react';
 import {
   populationPyramidFeatureNames,
@@ -64,7 +65,7 @@ export function PopulationPyramidRenderer({ figure }: { figure: PopulationPyrami
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {title && (
           <text x={W / 2} y={20} fontSize={14} fontWeight={700} textAnchor="middle" fill="#111827">
-            {title}
+            {mathifyDollarSpans(title)}
           </text>
         )}
 

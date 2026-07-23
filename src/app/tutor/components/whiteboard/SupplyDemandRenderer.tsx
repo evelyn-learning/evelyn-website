@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   supplyDemandFeatureNames,
@@ -85,7 +86,7 @@ export function SupplyDemandRenderer({ figure }: { figure: SupplyDemandFigure })
       data-feature={N.diagram}
       data-feature-label={title || `Supply & demand (${good})`}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {subtitle && <div className="text-xs italic text-gray-600 -mt-1 mb-2">{subtitle}</div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[600px]">
         {/* axes */}

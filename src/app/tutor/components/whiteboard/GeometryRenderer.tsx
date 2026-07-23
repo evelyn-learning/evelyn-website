@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Geometry Renderer
  *
@@ -1569,7 +1570,7 @@ export function GeometryRenderer({
   return (
     <div className={`geometry-renderer ${className}`}>
       {title && (
-        <div className="text-center text-sm font-semibold text-gray-700 mb-1">{title}</div>
+        <div className="text-center text-sm font-semibold text-gray-700 mb-1"><InlineMathText text={title} /></div>
       )}
       <svg
         viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}

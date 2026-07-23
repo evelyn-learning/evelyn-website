@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { PulleyFigure, AtwoodSide } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
@@ -16,7 +17,7 @@ export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
   if (mode === 'atwood' || mode === 'table-pulley' || mode === 'incline-pulley') {
     return (
       <div className="pulley-renderer w-full flex flex-col items-center">
-        {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+        {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
           <pattern id="pulley-hatch" width={10} height={10} patternUnits="userSpaceOnUse">
             <line x1="0" y1="0" x2="10" y2="10" stroke="#9ca3af" strokeWidth="1" />
@@ -48,7 +49,7 @@ export function PulleySystemRenderer({ figure }: { figure: PulleyFigure }) {
   const movableStartX = (W - Math.max(movableCount, 1) * fixedSpacing) / 2 + fixedSpacing / 2;
   return (
     <div className="pulley-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         {/* Ceiling */}
         <line x1={20} y1={ceilingY} x2={W - 20} y2={ceilingY} stroke="#6b7280" strokeWidth={3} />

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Equation Balance Renderer — math (NOT chemistry).
  *
@@ -91,7 +92,7 @@ export function EquationBalanceRenderer({ figure }: EquationBalanceRendererProps
 
   return (
     <div className="equation-balance-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px] h-auto" data-feature="balance-scale">
         {/* Floor */}
         <line x1={CENTER_X - 200} y1={FULCRUM_Y + 80} x2={CENTER_X + 200} y2={FULCRUM_Y + 80} stroke="#9ca3af" strokeWidth={1.5} />

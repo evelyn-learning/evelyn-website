@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Matrix Renderer
  *
@@ -287,7 +288,7 @@ export function MatrixRenderer({
     <div className="flex flex-col items-center gap-2 py-4">
       {/* Title */}
       {title && (
-        <div className="text-sm font-semibold text-gray-700 mb-1">{title}</div>
+        <div className="text-sm font-semibold text-gray-700 mb-1"><InlineMathText text={title} /></div>
       )}
 
       <div className="flex items-center gap-4 flex-wrap justify-center">

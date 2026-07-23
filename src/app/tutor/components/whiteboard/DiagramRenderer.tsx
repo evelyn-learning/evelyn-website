@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Diagram Renderer
  *
@@ -336,7 +337,7 @@ export function VectorDiagram({
 
   return (
     <div className="diagram-container">
-      <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       <Mafs
         ssr
         height={320}
@@ -686,7 +687,7 @@ export function MotionDiagram({
 
   return (
     <div className="diagram-container">
-      <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       <Mafs ssr height={250} viewBox={bounds}>
         {/* Ground line */}
         <Line.Segment
@@ -1172,7 +1173,7 @@ export function CircularPathDiagram({
 
   return (
     <div className="diagram-container">
-      <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       <Mafs
         ssr
         height={300}
@@ -1344,7 +1345,7 @@ export function PipeFlowDiagram({
 
   return (
     <div className="diagram-container">
-      <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+      <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       <Mafs ssr height={300} viewBox={{ x: [-10, 10], y: [-5, 5] }}>
         {/* Wide section — top wall */}
         <Line.Segment point1={[-8, wideHalf]} point2={[-2, wideHalf]} color="#475569" weight={3} />
@@ -1447,7 +1448,7 @@ export function SvgDiagram({ title, description, svg }: SvgDiagramProps) {
   return (
     <div className="diagram-container">
       {title && (
-        <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+        <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       )}
       <div
         className="flex justify-center items-center bg-white rounded-lg border border-gray-200 p-2 overflow-hidden"

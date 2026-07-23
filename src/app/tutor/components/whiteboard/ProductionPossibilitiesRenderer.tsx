@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   productionPossibilitiesFeatureNames,
@@ -89,7 +90,7 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
       data-feature={N.diagram}
       data-feature-label={title || 'PPC'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
         {/* Grid lines */}
         {xTicks.map((t) => (

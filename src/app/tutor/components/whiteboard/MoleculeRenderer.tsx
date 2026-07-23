@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Molecule Renderer
  *
@@ -121,7 +122,7 @@ export default function MoleculeRenderer({
   if (error) {
     return (
       <div className={`molecule-container ${className}`}>
-        {title && <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>}
+        {title && <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>}
         <div className="bg-red-50 rounded-xl border border-red-200 p-6 text-center">
           <p className="text-red-600 text-sm">Could not load chemistry editor</p>
           <p className="font-mono text-xs text-gray-500 mt-2">SMILES: {smiles}</p>
@@ -143,7 +144,7 @@ export default function MoleculeRenderer({
   return (
     <div className={`molecule-container ${className}`}>
       {title && (
-        <h4 className="text-center font-medium text-gray-800 mb-2">{title}</h4>
+        <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       )}
       {description && (
         <p className="text-center text-sm text-gray-500 mb-2">{description}</p>
@@ -164,7 +165,7 @@ export default function MoleculeRenderer({
         <div className="px-4 py-2 border-t border-blue-100 bg-blue-50/50 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs">🧪</span>
-            {title && <span className="text-sm font-medium text-gray-700">{title}</span>}
+            {title && <span className="text-sm font-medium text-gray-700"><InlineMathText text={title} /></span>}
             <span className="font-mono text-xs text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-100">
               {infoLabel}
             </span>

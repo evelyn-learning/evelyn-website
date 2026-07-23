@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { SpringMassFigure } from '@/lib/tutor/diagrams/catalog/kinds/physics';
 
@@ -15,7 +16,7 @@ export function CatalogSpringMassRenderer({ figure }: { figure: SpringMassFigure
     const massSize = 50;
     return (
       <div className="w-full flex flex-col items-center">
-        {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+        {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[360px]">
           <line x1={50} y1={ceilingY} x2={W - 50} y2={ceilingY} stroke="#374151" strokeWidth={3} />
           <SpringV cx={W / 2} y1={ceilingY} y2={massY - massSize / 2} />
@@ -38,7 +39,7 @@ export function CatalogSpringMassRenderer({ figure }: { figure: SpringMassFigure
   const massX = eqX + displacement;
   return (
     <div className="w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[520px]">
         <line x1={wallX} y1={cy - 60} x2={wallX} y2={cy + 60} stroke="#374151" strokeWidth={4} />
         <SpringH cx={cy} x1={wallX} x2={massX - 25} />

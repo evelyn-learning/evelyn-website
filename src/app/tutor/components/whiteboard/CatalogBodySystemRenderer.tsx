@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { bodySystemFeatureNames, type BodySystemFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
@@ -8,7 +9,7 @@ export function CatalogBodySystemRenderer({ figure }: { figure: BodySystemFigure
   const N = bodySystemFeatureNames;
   return (
     <div className="body-system-renderer w-full flex flex-col items-center">
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {/* Subtitle is intentionally suppressed when the title already
           mentions the system — observed 2026-05-13 session #14 image #49:
           title "The Digestive System" + subtitle "Digestive System" read

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Annotated Passage Renderer
  *
@@ -116,7 +117,7 @@ export default function AnnotatedPassageRenderer({
   return (
     <div className="annotated-passage-renderer bg-amber-50/40 rounded-lg border border-amber-200 p-4">
       {title && (
-        <h4 className="text-sm font-semibold text-gray-800 mb-1">{title}</h4>
+        <h4 className="text-sm font-semibold text-gray-800 mb-1"><InlineMathText text={title} /></h4>
       )}
       {source && (
         <div className="text-xs text-gray-500 italic mb-3">{source}</div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Free Body Diagram Renderer
  *
@@ -694,7 +695,7 @@ export default function FreeBodyDiagramRenderer({
             color: '#0f172a',
           }}
         >
-          {title}
+          <InlineMathText text={title} />
         </div>
       )}
       <svg

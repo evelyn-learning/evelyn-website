@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   riemannSumFeatureNames,
@@ -53,7 +54,7 @@ export function RiemannSumRenderer({ figure }: { figure: RiemannSumFigure }) {
       data-feature={N.diagram}
       data-feature-label={title || 'Riemann sum'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       {/* method + areas as a caption above the plot — keeps them off the curve. */}
       {method && (
         <div className="text-xs text-gray-600 -mt-1 mb-2">

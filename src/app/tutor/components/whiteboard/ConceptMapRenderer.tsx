@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Concept Map Renderer
  *
@@ -624,7 +625,7 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   return (
     <div style={{ padding: 12, background: 'white', borderRadius: 6 }}>
       {title && (
-        <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 6, color: DIAGRAM_COLORS.text }}>{title}</div>
+        <div style={{ textAlign: 'center', fontWeight: 600, fontSize: 16, marginBottom: 6, color: DIAGRAM_COLORS.text }}><InlineMathText text={title} /></div>
       )}
       <svg viewBox={`0 0 ${VIEWBOX_W} ${viewBoxH}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', maxHeight: viewBoxH > VIEWBOX_H ? 600 : 400 }}>
         <ArrowMarkers idPrefix="cm-arrow" />

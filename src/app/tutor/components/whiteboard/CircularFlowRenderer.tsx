@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import {
   circularFlowFeatureNames,
@@ -89,7 +90,7 @@ export function CircularFlowRenderer({ figure }: { figure: CircularFlowFigure })
       data-feature={N.diagram}
       data-feature-label={title || 'Circular flow'}
     >
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[680px]">
         {/* ── money flow (outer loop, green): HH→PM→Firms→RM→HH ── */}
         {showMoneyFlow && (

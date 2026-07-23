@@ -39,7 +39,7 @@ export default function PassageRenderer({
   return (
     <div className="passage-renderer my-3 p-4 bg-stone-50 border-2 border-stone-300 rounded-lg max-w-2xl">
       {title && (
-        <h4 className="text-sm font-semibold text-gray-800 mb-2">{title}</h4>
+        <h4 className="text-sm font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       )}
 
       <blockquote className="max-h-96 overflow-y-auto pr-1 font-serif text-[17px] leading-relaxed text-gray-800 border-l-4 border-stone-300 pl-4">

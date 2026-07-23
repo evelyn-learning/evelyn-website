@@ -1,5 +1,6 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 /**
  * Venn Diagram Renderer
  *
@@ -390,7 +391,7 @@ export function VennDiagramRenderer({
           fontWeight={700}
           fill="#0f172a"
         >
-          {title}
+          {mathifyDollarSpans(title)}
         </text>
       )}
 

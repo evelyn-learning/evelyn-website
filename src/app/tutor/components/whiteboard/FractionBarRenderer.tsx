@@ -1,5 +1,6 @@
 'use client';
 
+import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 /**
  * Fraction Bar Renderer
  *
@@ -427,7 +428,7 @@ export function FractionBarRenderer({
           fill={LABEL_COLOR}
           fontFamily="system-ui, sans-serif"
         >
-          {title}
+          {mathifyDollarSpans(title)}
         </text>
       )}
 

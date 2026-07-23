@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * SketchRenderer — draws a doodler-authored SketchPrimitive[] as a rough,
  * hand-drawn doodle. Renderer half of the tutor sketch capability (grilled
@@ -30,7 +31,7 @@ export function SketchRenderer({
 
   return (
     <div className="w-full flex flex-col items-center" role="img" aria-label={description || title || 'sketch'}>
-      {title && <div className="text-base font-semibold text-gray-800 mb-2">{title}</div>}
+      {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[420px]" data-feature="sketch" style={{ overflow: 'visible' }}>
         {drawn.map(({ paths }, i) => (
           <g key={`s${i}`}>

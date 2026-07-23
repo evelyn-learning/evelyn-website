@@ -1,5 +1,6 @@
 'use client';
 
+import { InlineMathText } from './InlineMathText';
 /**
  * Number Line Renderer
  *
@@ -323,7 +324,7 @@ export function NumberLineRenderer({
     <div className="w-full flex flex-col items-center gap-2">
       {/* Optional title */}
       {title && (
-        <h3 className="text-sm font-semibold text-slate-700 text-center">{title}</h3>
+        <h3 className="text-sm font-semibold text-slate-700 text-center"><InlineMathText text={title} /></h3>
       )}
 
       <svg
