@@ -83,7 +83,7 @@ export function buildProjectileMotionManifest(props: ProjectileMotionProps): Fea
   entries.push({
     name: 'trajectory',
     kind: 'curve',
-    description: `parabolic trajectory (v₀ = ${formatValue(props.v0)}, angle = ${formatValue(props.angle)}°)`,
+    description: `parabolic trajectory (v₀ = ${formatValue(props.v0)}, angle = ${formatValue(props.angle)}°, g = ${formatValue(g)}${props.notes ? ` — ${String(props.notes).slice(0, 100)}` : ''})`,
     labels: ['trajectory', 'path', 'parabola', 'the trajectory', 'flight path', 'curve', 'arc', 'projectile path'],
   });
   entries.push({

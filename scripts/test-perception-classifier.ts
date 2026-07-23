@@ -1007,5 +1007,39 @@ console.log('\n=== Task X6: echo anchor (speechStartedAt <= spokenEndedAt + ε) 
   }
 }
 
+console.log('\n=== Offered-option echo exemption (live round 5, 2026-07-23, session-1784778855564) ===');
+{
+  // Live repro: tutor asked "…or should we move to free body diagrams
+  // next?", student answered "Free body diagrams." — containment scored
+  // sv=1.00 and the answer was dropped as self-voice; the student had to
+  // repeat it. Picking a tutor-OFFERED option from a QUESTION, while
+  // LISTENING, without echoing the question's final word, is an answer.
+  const OPTION_Q = 'Want to try one with a twist, or should we move to free body diagrams next?';
+  const optionScripts: RecentTtsScript[] = [
+    { text: OPTION_Q, spokenStartedAt: 990_000, spokenEndedAt: 998_800 },
+  ];
+  // Onset 999_500 = clearly after playback end (998_800) + the 200ms ε slop
+  // (the exemption requires a post-playback onset; at exactly end+ε it must
+  // still drop — covered by the Task X6 boundary test above).
+  const run = (transcript: string, productionState: ProductionStateForClassifier) =>
+    classifyHeuristic({ transcript, productionState, recentTtsScripts: optionScripts, now: 1_000_000, speechStartedAt: 999_500 });
+
+  const pick = run('Free body diagrams.', 'listening');
+  check('option pick in listening → NOT dropped as self-voice', pick.verdict !== 'drop_self_voice', `verdict=${pick.verdict} (${pick.reason})`);
+  check('option pick classifies as a turn', pick.verdict === 'new_turn', `verdict=${pick.verdict}`);
+
+  const tail = run('free body diagrams next', 'listening');
+  check('tail echo (includes final word) → still dropped', tail.verdict === 'drop_self_voice', `verdict=${tail.verdict}`);
+
+  const overtalk = run('Free body diagrams.', 'speaking');
+  check('same text during speaking → still dropped', overtalk.verdict === 'drop_self_voice', `verdict=${overtalk.verdict}`);
+
+  const stmtScripts: RecentTtsScript[] = [
+    { text: 'We should move to free body diagrams next.', spokenStartedAt: 990_000, spokenEndedAt: 998_800 },
+  ];
+  const nonQ = classifyHeuristic({ transcript: 'Free body diagrams.', productionState: 'listening', recentTtsScripts: stmtScripts, now: 1_000_000, speechStartedAt: 999_500 });
+  check('echo of a NON-question statement → still dropped', nonQ.verdict === 'drop_self_voice', `verdict=${nonQ.verdict}`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

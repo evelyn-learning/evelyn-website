@@ -116,6 +116,16 @@ export function buildMotionDiagramManifest(props: MotionDiagramProps): FeatureMa
       description: `${s.kind} vs time panel (${label})`,
       labels: panelLabels,
     });
+    // Data VALUES as a snapshot-visible feature (value-blindness audit,
+    // 2026-07-23): the region entry above is filtered out of getSnapshot,
+    // so the plotted numbers were entirely invisible to the brain.
+    const pts = s.points.slice(0, 8).map((p) => `(${p.t}, ${p.value})`).join(' ');
+    entries.push({
+      name: `${s.kind}-data`,
+      kind: 'other',
+      description: `${s.kind} data (t, ${s.kind}): ${pts}${s.points.length > 8 ? ` … +${s.points.length - 8} more` : ''}`,
+      labels: [`${s.kind}-data`, `${s.kind} data`, `${s.kind} values`],
+    });
   }
   return entries;
 }

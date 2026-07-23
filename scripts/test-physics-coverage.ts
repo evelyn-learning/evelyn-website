@@ -277,6 +277,16 @@ function runCurated(): void {
   tts('Permeability μ₀ is small.', 'Permeability mu 0 is small.', 'mu-naught-glyph');
   tts('Friction obeys $F = \\mu N$ here.', 'Friction obeys F equals mu N here.', 'mu-friction');
 
+  // Round-29 (live 2026-07-23, session-1784778855564): PROSE "F equals m
+  // times a" left the bare m for Cartesia, which read it as "meter". The
+  // in-span rules never see prose; anchor m after "equals" / before "times".
+  tts('The formula is F equals m times a — so you need to rearrange.', 'The formula is F equals em times ay, so you need to rearrange.', 'prose-equals-m-times-a');
+  tts('Net force is m times a.', 'Net force is em times ay.', 'prose-m-before-times');
+  tts('Force equals m a.', 'Force equals em ay.', 'prose-equals-m-bare');
+  // Units guards: digit-anchored m stays a unit; m/s untouched by the new anchors.
+  tts('The hallway is 5 m long.', 'The hallway is 5 meters long.', 'prose-unit-m-guard');
+  tts('It moves at 3 m/s here.', 'It moves at 3 meters per second here.', 'prose-unit-ms-guard');
+
   // ── 9. Canonical equations ───────────────────────────────────────
   tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em ay compactly.', 'f-equals-ma');
   tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals em c squared famously.', 'e-mc2');

@@ -51,8 +51,27 @@ const GRID_H = ROWS * (CELL_H + GAP) + 16; // extra vertical gap between row 7 a
  * for a given set of props. MUST stay in sync with the feat() calls below.
  * The table renders ALL elements from the ELEMENTS table — one feature per element.
  */
-export function buildPeriodicTableManifest(_props: PeriodicTableRendererProps): FeatureManifestEntry[] {
-  return ELEMENTS.map((el) => {
+export function buildPeriodicTableManifest(props: PeriodicTableRendererProps): FeatureManifestEntry[] {
+  // Highlight selection surfaced (value-blindness audit, 2026-07-23): the
+  // pedagogically-chosen highlight — the whole POINT of the render — was
+  // invisible to the brain (props were ignored entirely).
+  const highlights: FeatureManifestEntry[] = [];
+  const hl = [
+    Array.isArray(props.highlight) && props.highlight.length ? `elements ${props.highlight.join(', ')}` : '',
+    props.highlightGroup !== undefined ? `group ${props.highlightGroup}` : '',
+    props.highlightPeriod !== undefined ? `period ${props.highlightPeriod}` : '',
+    typeof (props as { highlightCategory?: unknown }).highlightCategory === 'string'
+      ? `category ${(props as { highlightCategory?: string }).highlightCategory}` : '',
+  ].filter(Boolean).join('; ');
+  if (hl) {
+    highlights.push({
+      name: 'highlight',
+      kind: 'annotation',
+      description: `highlighted: ${hl}`,
+      labels: ['highlight', 'the highlight', 'highlighted elements', 'the highlighted'],
+    });
+  }
+  return highlights.concat(ELEMENTS.map((el) => {
     const labels = new Set<string>([
       `element-${el.symbol}`,
       el.symbol,
@@ -70,7 +89,7 @@ export function buildPeriodicTableManifest(_props: PeriodicTableRendererProps): 
       description: `${el.name} (${el.symbol}, Z=${el.z}, period ${el.row}, group ${el.col})`,
       labels: Array.from(labels),
     };
-  });
+  }));
 }
 
 export default function PeriodicTableRenderer({

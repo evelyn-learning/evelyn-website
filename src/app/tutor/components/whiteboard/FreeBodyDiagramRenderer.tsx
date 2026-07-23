@@ -224,9 +224,25 @@ export function buildFreeBodyDiagramManifest(props: FreeBodyDiagramProps): Featu
   entries.push({
     name: 'object',
     kind: 'object',
-    description: `${shape} representing the body${props.object.label ? ` (${props.object.label})` : ''}`,
+    // Mass VALUE included (live round 5, 2026-07-23): the snapshot was the
+    // brain's only possible source for "m = 10 kg" and it wasn't there —
+    // the brain accepted the student's "20 kg" and wrote a = 45/20.
+    description: `${shape} representing the body${props.object.label ? ` (${props.object.label})` : ''}${props.object.mass ? `, mass ${props.object.mass}` : ''}`,
     labels: objectLabels,
   });
+
+  // Given values ride the snapshot verbatim (live round 5): the incline
+  // FBD's numbers (60 N, f_k = 10 N, m = 10 kg) lived ONLY in `notes` +
+  // symbolic magnitudes, so later turns had no source for them anywhere —
+  // the brain hallucinated f_k = 15 N against its own board.
+  if (props.notes && String(props.notes).trim()) {
+    entries.push({
+      name: 'givens',
+      kind: 'annotation',
+      description: `given values: ${String(props.notes).trim()}`,
+      labels: ['givens', 'given values', 'the givens', 'notes', 'the given information'],
+    });
+  }
 
   (props.forces ?? []).forEach((f, i) => {
     const slug = (f.name || `force-${i + 1}`)

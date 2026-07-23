@@ -161,10 +161,19 @@ export function buildEnergyBarsManifest(props: EnergyBarsProps): FeatureManifest
     seg('gravitational potential energy', 'PE', (p.pe ?? 0) !== 0);
     seg('spring potential energy', 'spring PE', (p.spring ?? 0) !== 0);
     seg('thermal energy', 'thermal', (p.thermal ?? 0) !== 0);
+    // Component VALUES in the description (value-blindness audit,
+    // 2026-07-23): only the total survived; the per-component joules the
+    // tutor narrates with were invisible to the board snapshot.
+    const comps = [
+      (p.ke ?? 0) !== 0 ? `KE ${formatValue(p.ke ?? 0)} J` : '',
+      (p.pe ?? 0) !== 0 ? `PE ${formatValue(p.pe ?? 0)} J` : '',
+      (p.spring ?? 0) !== 0 ? `spring ${formatValue(p.spring ?? 0)} J` : '',
+      (p.thermal ?? 0) !== 0 ? `thermal ${formatValue(p.thermal ?? 0)} J` : '',
+    ].filter(Boolean).join(', ');
     entries.push({
       name,
       kind: 'shape',
-      description: `stacked energy bar at position "${fullLabel || i + 1}" (total ${formatValue(totals[i])} J)`,
+      description: `stacked energy bar at position "${fullLabel || i + 1}" (total ${formatValue(totals[i])} J${comps ? `: ${comps}` : ''})`,
       labels: Array.from(new Set(barLabels.filter(Boolean))),
     });
   });

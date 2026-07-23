@@ -127,6 +127,14 @@ function Panel({
  * the after panel emits a single combined object (object-1-after).
  */
 export function buildCollisionManifest(props: CollisionProps): FeatureManifestEntry[] {
+  // Velocity in the description (value-blindness audit, 2026-07-23): the
+  // momentum quantity — the number the tutor teaches WITH — was dropped;
+  // only mass survived to the board snapshot.
+  const vOf = (b: CollisionBody): string => {
+    if (b.velocity != null) return `, v = ${b.velocity}`;
+    if (b.vx != null || b.vy != null) return `, v = (${b.vx ?? 0}, ${b.vy ?? 0})`;
+    return '';
+  };
   const entries: FeatureManifestEntry[] = [];
   const dimension = props.dimension ?? '1D';
   const type = props.type ?? 'elastic';
@@ -140,7 +148,7 @@ export function buildCollisionManifest(props: CollisionProps): FeatureManifestEn
     entries.push({
       name: `object-${idx}-before`,
       kind: 'object',
-      description: `body "${label}" in the "before" panel${b.mass != null ? `, m = ${b.mass}` : ''}`,
+      description: `body "${label}" in the "before" panel${b.mass != null ? `, m = ${b.mass}` : ''}${vOf(b)}`,
       labels: [
         `object-${idx}-before`,
         `object ${idx} before`,
@@ -163,7 +171,7 @@ export function buildCollisionManifest(props: CollisionProps): FeatureManifestEn
     entries.push({
       name: 'object-1-after',
       kind: 'object',
-      description: `merged object "${mergedLabel}" in the "after" panel (perfectly inelastic)`,
+      description: `merged object "${mergedLabel}" in the "after" panel (perfectly inelastic)${after[0] ? vOf(after[0]) : ''}`,
       labels: [
         'object-1-after',
         'object 1 after',
@@ -185,7 +193,7 @@ export function buildCollisionManifest(props: CollisionProps): FeatureManifestEn
       entries.push({
         name: `object-${idx}-after`,
         kind: 'object',
-        description: `body "${label}" in the "after" panel${b.mass != null ? `, m = ${b.mass}` : ''}`,
+        description: `body "${label}" in the "after" panel${b.mass != null ? `, m = ${b.mass}` : ''}${vOf(b)}`,
         labels: [
           `object-${idx}-after`,
           `object ${idx} after`,

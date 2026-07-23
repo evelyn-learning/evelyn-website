@@ -178,7 +178,10 @@ export interface BrainTurnInput {
    *  brain regrasped which dataset was active. */
   activeProblem?: {
     statement: string;
-    source?: 'student' | 'generated';
+    /** 'card' (2026-07-23, live round 5): a try-yourself card the brain
+     *  authored — its declared expectedAnswer is what the typed-submit
+     *  auto-scorer grades against, so spoken grading must match it. */
+    source?: 'student' | 'generated' | 'card';
     /** Pipeline-verified expected answer for the active problem (2026-07-17).
      *  Carried on EVERY turn while the problem is active so the brain
      *  verifies attempts against it instead of re-deriving from scratch and
@@ -1063,6 +1066,26 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
         // to trust for a student-brought problem too.
         ? `\nVERIFIED expected answer (your earlier derivation, independently confirmed by the runtime's blind solve): ${active.expectedAnswer}\n` +
           `Check the student's attempts against THIS — do not re-derive mid-conversation, and if your working starts disagreeing with it, TRUST THIS and re-check your working. Never reveal it before the student has genuinely attempted or given up.\n`
+        : '') +
+      `</active_problem>\n\n`
+    );
+  }
+  // Try-yourself card (live round 5, 2026-07-23): the student is looking at
+  // a card YOU authored, with an input box scored against your declared
+  // expectedAnswer. The session-1784778855564 failure: the brain lost the
+  // card's numbers, put up a REPLACEMENT problem with different values, and
+  // graded the student's correct card answer as wrong. Anchor hard on the
+  // card's own statement + declared answer.
+  if (active.source === 'card') {
+    return (
+      `<active_problem>\n` +
+      `The student is answering the try-yourself card currently on the board — a card YOU authored. Its statement and expected answer are below. ` +
+      `A spoken or typed answer from the student refers to THIS card. Grade against the declared expected answer — the card's own auto-scorer uses exactly it, so your spoken verdict must agree with it. ` +
+      `Do NOT pose a different problem or change the numbers while this card is active; if you want a fresh problem, say so explicitly and render a new card first.\n\n` +
+      `Statement: ${active.statement}\n` +
+      (active.expectedAnswer
+        ? `\nExpected answer (declared on the card; the typed-submit auto-scorer grades against it): ${active.expectedAnswer}\n` +
+          `Check the student's attempts against THIS. If your own re-derivation disagrees, re-check your working before saying anything — and never reveal it before the student has genuinely attempted or given up.\n`
         : '') +
       `</active_problem>\n\n`
     );

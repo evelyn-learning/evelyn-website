@@ -629,6 +629,57 @@ function scoreSpeakingEchoOverlap(
  *  isn't fragile. */
 export const SPEAKING_ECHO_OVERLAP_THRESHOLD = 0.5;
 
+/**
+ * Offered-option echo exemption (live round 5, 2026-07-23,
+ * session-1784778855564): the tutor asked "…or should we move to free body
+ * diagrams next?" and the student answered by PICKING the offered option
+ * verbatim — "Free body diagrams." Containment scored sv=1.00 and the
+ * answer was dropped as self-voice; the student had to repeat it.
+ *
+ * A short utterance is treated as an option-pick ANSWER (not echo) when ALL
+ * of these hold — each one narrows the echo risk:
+ *  - production state is 'listening' (the tutor is silent; live overtalk
+ *    echo keeps today's drop);
+ *  - the matched in-window script is a QUESTION (ends with '?') — a student
+ *    only "picks" from something that was asked;
+ *  - every content token of the utterance appears in that question
+ *    (it IS an echo of offered words — that's the point);
+ *  - the utterance does NOT contain the question's final word: a mic echo
+ *    replays the contiguous TAIL ("…free body diagrams next"), while a
+ *    student picking an option drops the trailing word(s);
+ *  - speech ONSET is known and lands clearly AFTER the question finished
+ *    playing (past the ε VAD-onset slop) — an onset during playback is the
+ *    speaker in the mic, not a student answering; unknown onset fails safe
+ *    to today's drop.
+ */
+export function isOfferedOptionEcho(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+  productionState: ProductionStateForClassifier,
+  speechStartedAt: number | undefined,
+  now: number,
+): boolean {
+  if (productionState !== 'listening') return false;
+  if (speechStartedAt === undefined) return false;
+  const tTokens = tokenize(transcript);
+  const tContent = contentTokens(tTokens);
+  if (tContent.length === 0 || tContent.length > 5) return false;
+  const studentT = speechStartedAt;
+  for (const s of recentTtsScripts) {
+    if (!scriptWindowContains(s, studentT, now)) continue;
+    if (!s.text.trim().endsWith('?')) continue;
+    if (s.spokenEndedAt == null || studentT <= s.spokenEndedAt + ECHO_ANCHOR_EPSILON_MS) continue;
+    const qTokens = tokenize(s.text);
+    if (qTokens.length < 2) continue;
+    const qSet = new Set(contentTokens(qTokens));
+    if (!tContent.every((t) => qSet.has(t))) continue;
+    const lastWord = qTokens[qTokens.length - 1];
+    if (tTokens.includes(lastWord)) continue;
+    return true;
+  }
+  return false;
+}
+
 // ── Heuristic ────────────────────────────────────────────────────────
 
 export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
@@ -649,7 +700,15 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     text, input.recentTtsScripts, input.speechStartedAt, input.now,
   );
   const selfVoiceScore = Math.max(selfVoiceTextScore, selfVoicePhonScore);
-  if (selfVoiceScore >= SELF_VOICE_THRESHOLD) {
+  // Offered-option pick beats the echo drop (see isOfferedOptionEcho doc):
+  // exemption granted → fall through to the normal state-aware
+  // classification below, which lands the utterance as a real turn.
+  const offeredOptionPick =
+    selfVoiceScore >= SELF_VOICE_THRESHOLD &&
+    isOfferedOptionEcho(
+      text, input.recentTtsScripts, input.productionState, input.speechStartedAt, input.now,
+    );
+  if (selfVoiceScore >= SELF_VOICE_THRESHOLD && !offeredOptionPick) {
     // Fix wave (2026-07-15, review finding 3): when the drop verdict was
     // reached ONLY via the phonetic pass (text score alone stayed under
     // threshold), say so distinctly in the reason string so the Stage-1 FP

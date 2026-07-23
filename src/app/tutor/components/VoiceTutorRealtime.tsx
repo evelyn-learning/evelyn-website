@@ -151,6 +151,7 @@ import {
 } from '@/lib/tutor/orchestrator/flags';
 import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
+import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -1610,7 +1611,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated'; expectedAnswer?: string; hasChoices?: boolean } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean } | null>(null);
   // 2026-07-17 (expectedAnswer pin): the most recent generate_problem
   // resolution, delivered via the 'generated-problem' SSE event. When the
   // brain's follow-up show_problem renders the matching canonicalText, the
@@ -4309,6 +4310,30 @@ export function VoiceTutorRealtime({
             currentTopicRef.current = topic;
             if (!topicsCoveredRef.current.includes(topic)) topicsCoveredRef.current.push(topic);
           }
+        }
+      }
+      // Live round 5 (session-1784778855564): a try-yourself card is ALSO the
+      // active problem — without this the brain had no record of the card's
+      // numbers ("A 5 kg box … 30 N"), invented a replacement problem with
+      // different values, and graded the student's correct card answer wrong.
+      // source:'card' gets its own <active_problem> wording (the declared
+      // expectedAnswer is what the typed-submit auto-scorer uses, so spoken
+      // grading must agree with it).
+      if (cmd.action === 'showTryYourself') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tyAny = cmd as any;
+        const statement = String(tyAny.problem ?? '').trim();
+        if (statement) {
+          const declared = typeof tyAny.expectedAnswer === 'string' ? tyAny.expectedAnswer.trim() : '';
+          currentProblemRef.current = {
+            statement,
+            kind: 'generic',
+            source: 'card',
+            hasChoices: Array.isArray(tyAny.choices) && tyAny.choices.length > 0,
+            ...(declared ? { expectedAnswer: declared } : {}),
+          };
+          walkThroughInsistenceRef.current = 0;
+          console.log('[VoiceTutorRealtime] Tracked current problem (try-yourself card):', statement.slice(0, 80));
         }
       }
       if (cmd.action === 'newPage') {
@@ -8573,6 +8598,23 @@ export function VoiceTutorRealtime({
                     await performKill();
                     console.warn('[brain-orchestrator] cross-sentence contradiction vs held verdict — retrying:', `held="${verdictHeldText.slice(0, 60)}" now="${updatedSentence.slice(0, 60)}"`);
                     onDebugEvent?.('contradiction_inversion_retry', `held="${verdictHeldText.slice(0, 40)}" + "${updatedSentence.slice(0, 40)}"`);
+                    continue;
+                  }
+                  // Live round 5 (2026-07-23, session-1784778855564): praise +
+                  // value-reveal to a NON-answer ("Oh, okay." → "Exactly.4
+                  // meters per second squared"). The per-turn <verdict_guard>
+                  // was attached and the model blew through it under praise-
+                  // opener momentum — this is the deterministic backstop, same
+                  // tier as the contradiction-inversion kill above. Narrow by
+                  // construction (closed ack-phrase list + praise-then-digit
+                  // shape); see nonanswer-praise.ts.
+                  const nonAnswerTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                  if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && shouldKillNonAnswerPraise(transcript, nonAnswerTextSoFar)) {
+                    rejectionsThisAttempt.push({ action: 'nonanswer_praise', reason: nonAnswerPraiseFeedback(transcript) });
+                    judgeRetriesUsed++;
+                    await performKill();
+                    console.warn('[brain-orchestrator] praise+reveal to a non-answer — retrying:', `student="${transcript.slice(0, 40)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
+                    onDebugEvent?.('nonanswer_praise_retry', `student="${transcript.slice(0, 30)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
                     continue;
                   }
                   // Round-7++ meta-narration filter. The system prompt

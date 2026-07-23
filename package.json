@@ -61,6 +61,8 @@
     "test:sonic-ws": "npx tsx scripts/test-sonic-ws.ts",
     "test:verdict-guard": "npx tsx scripts/test-verdict-guard.ts",
     "test:rule8-repair": "npx tsx scripts/test-rule8-repair.ts",
+    "test:nonanswer-praise": "npx tsx scripts/test-nonanswer-praise.ts",
+    "test:manifest-coverage": "npx tsx scripts/test-manifest-coverage.ts",
     "test:ack-layer": "npx tsx scripts/test-ack-layer.ts",
     "test:validate-tool-call": "npx tsx scripts/test-validate-tool-call.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",

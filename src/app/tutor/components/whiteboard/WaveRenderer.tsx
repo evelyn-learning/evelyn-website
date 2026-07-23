@@ -75,7 +75,7 @@ export function buildWaveManifest(props: WaveProps): FeatureManifestEntry[] {
   entries.push({
     name: 'wave',
     kind: 'curve',
-    description: `primary wave (λ = ${formatValue(props.wave.wavelength)}, A = ${formatValue(props.wave.amplitude)})`,
+    description: `primary wave (λ = ${formatValue(props.wave.wavelength)}, A = ${formatValue(props.wave.amplitude)}${props.frequency != null ? `, f = ${formatValue(props.frequency)} Hz` : ''})`,
     labels: ['wave', 'the wave', 'primary wave', 'sine wave', 'waveform', 'curve', props.wave.label || 'wave'],
   });
 

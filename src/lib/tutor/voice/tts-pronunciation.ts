@@ -1176,6 +1176,21 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   // abbreviations ("a.m."); lowercase only, same tier as 'a'.
   { pattern: /(?<!['’.])\bm\b(?=\s*(?:=|equals?\b|should\b|must\b|will\s+be\b|is\s+equal\b))/g, replacement: 'em' },
   { pattern: /(?<=\b(?:substitute|solve for|value of|values of|find)\s)m\b(?!['’])/g, replacement: 'em' },
+  // Round-29 (live 2026-07-23): prose "F equals m times a" — the m sits
+  // AFTER equals, so the rule above misses it and Cartesia reads the bare
+  // token as "meter". Two anchors, both variable-only by construction:
+  //  - m right after "equals" ("equals m times a", "equals m a"); a unit m
+  //    never directly follows the word "equals".
+  //  - m right before "times" ("is m times a"), digit-guarded so a measured
+  //    "5 m times as long" keeps its unit reading (units with digits have
+  //    already converted in the earlier unit pass anyway).
+  //  - the compound "equals m a" respells BOTH letters ("em ay") — the
+  //    article-guarded 'a' rules can't touch a sentence-final bare a, so
+  //    the phrase rule handles it whole (must precede the single-m rule,
+  //    which would otherwise consume the m first).
+  { pattern: /(?<=\bequals\s+)m\s+a\b(?=[\s.,;!?]|$)/g, replacement: 'em ay' },
+  { pattern: /(?<=\bequals\s+)m\b(?!['’.])/g, replacement: 'em' },
+  { pattern: /(?<!\d)(?<!\d\s)\bm\b(?=\s+times\b)/g, replacement: 'em' },
   { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
   { pattern: new RegExp(`\\bB\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];

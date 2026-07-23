@@ -871,10 +871,13 @@ export function buildStatsManifest(props: StatsRendererProps): FeatureManifestEn
         boxLabels.add(`${ds.label} boxplot`);
         boxLabels.add(`box plot for ${ds.label}`);
       }
+      // Five-number summary in the description (value-blindness audit,
+      // 2026-07-23): only the median value survived to the snapshot.
+      const fiveNum = `min ${fmt(ds.min)}, Q1 ${fmt(ds.q1)}, median ${fmt(ds.median)}, Q3 ${fmt(ds.q3)}, max ${fmt(ds.max)}`;
       entries.push({
         name: boxName,
         kind: 'shape',
-        description: ds.label ? `box plot for "${ds.label}"` : `box plot ${i + 1}`,
+        description: `${ds.label ? `box plot for "${ds.label}"` : `box plot ${i + 1}`} (${fiveNum})`,
         labels: Array.from(boxLabels),
       });
       const medianLabels = new Set<string>([

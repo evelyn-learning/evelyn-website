@@ -687,7 +687,13 @@ function buildProblemManifest(cmd: { problem?: any }): FeatureManifestEntry[] {
     {
       name: 'statement',
       kind: 'label',
-      description: 'the problem statement text',
+      // Statement VERBATIM (value-blindness audit, 2026-07-23): the snapshot
+      // is the brain's only way to re-read an EARLIER problem card (the
+      // active-problem channel tracks just the latest) — a placeholder here
+      // left every prior card's numbers invisible.
+      description: problem.statement
+        ? `problem statement: ${String(problem.statement).slice(0, 240)}`
+        : 'the problem statement text',
       labels: ['statement', 'the statement', 'the problem statement', 'the prompt', 'the question text'],
       scribbleable: true,
     },
@@ -899,11 +905,45 @@ function detectMathClassLabels(latex: string): string[] {
  * tutor can still scroll to them via tutor_scroll_whiteboard, and the
  * scribble handler redirects on attempt with a helpful message.
  */
-function buildGraphManifest(): FeatureManifestEntry[] {
+function buildGraphManifest(cmd?: { data?: Record<string, unknown> }): FeatureManifestEntry[] {
+  // Plotted content in the description (value-blindness audit, 2026-07-23):
+  // the builder used to take NO args, so the brain could never re-read what
+  // its own graph plots — every expression, point, and range was invisible.
+  const data = (cmd?.data ?? {}) as Record<string, unknown>;
+  const exprOf = (f: unknown): string => {
+    if (typeof f === 'string') return f;
+    if (f && typeof f === 'object') {
+      const fo = f as { expr?: unknown; label?: unknown };
+      const e = typeof fo.expr === 'string' ? fo.expr : '';
+      const l = typeof fo.label === 'string' && fo.label ? ` (${fo.label})` : '';
+      return e ? `${e}${l}` : '';
+    }
+    return '';
+  };
+  const fns = ([] as unknown[])
+    .concat(Array.isArray(data.functions) ? data.functions : [])
+    .concat(Array.isArray(data.functionsOfY) ? data.functionsOfY : [])
+    .map(exprOf)
+    .filter(Boolean)
+    .slice(0, 6);
+  const points = (Array.isArray(data.points) ? data.points : [])
+    .map((p: unknown) => {
+      const po = (p ?? {}) as { x?: unknown; y?: unknown; label?: unknown };
+      if (typeof po.x === 'number' && typeof po.y === 'number') {
+        return `(${po.x}, ${po.y})${typeof po.label === 'string' && po.label ? ` ${po.label}` : ''}`;
+      }
+      return '';
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+  const detail = [
+    fns.length ? `plots: ${fns.join('; ')}` : '',
+    points.length ? `points: ${points.join(', ')}` : '',
+  ].filter(Boolean).join(' · ');
   return [{
     name: 'graph',
     kind: 'object',
-    description: 'the function graph (Desmos iframe)',
+    description: `the function graph (Desmos iframe)${detail ? ` — ${detail.slice(0, 280)}` : ''}`,
     labels: [
       'graph', 'the graph', 'the function graph', 'function graph',
       'desmos', 'the desmos graph', 'plot', 'the plot', 'the chart',
@@ -912,11 +952,12 @@ function buildGraphManifest(): FeatureManifestEntry[] {
   }];
 }
 
-function buildMoleculeManifest(): FeatureManifestEntry[] {
+function buildMoleculeManifest(cmd?: { smiles?: unknown; title?: unknown }): FeatureManifestEntry[] {
+  const smiles = typeof cmd?.smiles === 'string' ? cmd.smiles.trim() : '';
   return [{
     name: 'molecule',
     kind: 'object',
-    description: 'the molecular structure (Ketcher iframe)',
+    description: `the molecular structure (Ketcher iframe)${smiles ? ` — SMILES: ${smiles.slice(0, 120)}` : ''}`,
     labels: [
       'molecule', 'the molecule', 'the structure', 'molecular structure',
       'the chemical structure', 'compound', 'the compound', 'ketcher',
@@ -925,19 +966,96 @@ function buildMoleculeManifest(): FeatureManifestEntry[] {
   }];
 }
 
+// ── Generic content fallback (value-blindness audit, 2026-07-23) ──────
+// Root cause behind live round 5's hallucinated values (session-
+// 1784778855564): a card with no manifest case surfaces ONLY its title in
+// the board snapshot — getSnapshot even filters kind:'region' features —
+// so every value on the card (matrix cells, Punnett genotypes, call-stack
+// locals, worked-example numbers, …) is invisible to the brain, which then
+// free-recalls and drifts. Rather than a bespoke builder per renderer,
+// any content-bearing command that would otherwise yield no visible
+// features gets a compact value summary harvested from its own args.
+
+/** Arg keys that are styling/bookkeeping, never content. */
+const GENERIC_CONTENT_SKIP_KEYS = new Set([
+  'action', 'id', '__pdfPageTitle', 'title', 'color', 'colors', 'stroke',
+  'fill', 'style', 'rounded', 'revising', 'scribbleable',
+]);
+
+function collectContentValues(v: unknown, depth: number, out: string[]): void {
+  if (out.length >= 20 || depth > 4) return;
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (s && s.length <= 120 && !out.includes(s)) out.push(s);
+    return;
+  }
+  if (typeof v === 'number' && Number.isFinite(v)) {
+    const s = String(v);
+    out.push(s);
+    return;
+  }
+  if (Array.isArray(v)) {
+    for (const item of v) collectContentValues(item, depth + 1, out);
+    return;
+  }
+  if (v && typeof v === 'object') {
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (GENERIC_CONTENT_SKIP_KEYS.has(k)) continue;
+      collectContentValues(val, depth + 1, out);
+    }
+  }
+}
+
+/** Exported for tests. Returns null when the command carries no harvestable
+ *  content (the item then registers title-only, as before). */
+export function buildGenericContentManifest(cmd: Record<string, unknown>): FeatureManifestEntry[] | null {
+  const action = String(cmd.action ?? '');
+  if (!/^show[A-Z]/.test(action) && action !== 'drawVector') return null;
+  const out: string[] = [];
+  for (const [k, val] of Object.entries(cmd)) {
+    if (GENERIC_CONTENT_SKIP_KEYS.has(k)) continue;
+    collectContentValues(val, 0, out);
+  }
+  if (out.length === 0) return null;
+  return [{
+    name: 'content',
+    kind: 'label',
+    description: `card content: ${out.join(' · ').slice(0, 300)}`,
+    labels: ['content', 'the content', 'the card'],
+    scribbleable: false,
+  }];
+}
+
+/** Does this manifest surface ANYTHING in getSnapshot? (Region features are
+ *  filtered there, so a region-only manifest is as blind as none.) */
+function hasVisibleFeatures(m: FeatureManifestEntry[] | null): boolean {
+  return !!m && m.some((f) => f.kind !== 'region' && !!f.description);
+}
+
 export function buildManifestForCommand(cmd: WhiteboardCommand): FeatureManifestEntry[] | null {
   const action = String((cmd as { action?: string }).action ?? '');
   try {
-    return dispatch(cmd, action);
+    const m = dispatch(cmd, action);
+    if (hasVisibleFeatures(m)) return m;
+    // No snapshot-visible features from the bespoke path → append the
+    // generic content summary so the card's values reach the brain.
+    const generic = buildGenericContentManifest(cmd as unknown as Record<string, unknown>);
+    if (!generic) return m;
+    return m ? [...m, ...generic] : generic;
   } catch (err) {
     // A builder threw on a malformed or incomplete payload (e.g., the tutor
     // emitted showWave without a `wave` object, or a field the builder
     // expected is undefined). Manifests are best-effort metadata — a crash
     // here must NOT take down the whole command pipeline (which would leave
-    // the student with an empty whiteboard). Log and fall back to null; the
+    // the student with an empty whiteboard). Log and fall back to the
+    // generic content summary (the values still reach the brain); the
     // prompt's catalog handles the tutor's next feature-name lookup.
-    console.warn(`[manifests] Builder for action="${action}" threw; falling back to null:`, err);
-    return null;
+    console.warn(`[manifests] Builder for action="${action}" threw; falling back to generic content:`, err);
+    try {
+      return buildGenericContentManifest(cmd as unknown as Record<string, unknown>);
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -987,8 +1105,8 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     case 'showTimeline':          return buildTimelineManifest(cmd as any);
     case 'showMap':               return buildMapManifest(cmd as any);
     // Iframe-backed (whole-item, non-scribbleable)
-    case 'showGraph':             return buildGraphManifest();
-    case 'showMolecule':          return buildMoleculeManifest();
+    case 'showGraph':             return buildGraphManifest(cmd as any);
+    case 'showMolecule':          return buildMoleculeManifest(cmd as any);
     // HTML-backed (whole-item via data-feature on wrapper div)
     case 'showEquation':          return buildEquationManifest(cmd as any);
     case 'showSolution':          return buildSolutionManifest(cmd as any);
@@ -1004,6 +1122,7 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     // back-to-back, none dedup'd.
     case 'showDiagram':           return buildDiagramManifest(cmd as any);
     case 'showSketch':            return buildSketchManifest(cmd as any);
+    case 'showTryYourself':       return buildTryYourselfManifest(cmd as any);
     case 'showFallbackCard':      return buildFallbackCardManifest(cmd as any);
     case 'handwrite':             return buildHandwriteManifest(cmd as any);
     default:                      return null;
@@ -1025,6 +1144,37 @@ function buildSketchManifest(cmd: { concept?: string; title?: string }): Feature
     kind: 'shape',
     description: `sketch: ${desc}`,
     labels: ['sketch', 'doodle', 'drawing', 'the sketch', 'the drawing', ...(title ? [title] : [])],
+    scribbleable: true,
+  }];
+}
+
+/** Manifest for `showTryYourself` cards (live round 5, 2026-07-23:
+ *  session-1784778855564). Previously NO case → null manifest → the card's
+ *  problem statement never reached the brain's board snapshot; combined
+ *  with a numbers-free narration the brain had no record of its own
+ *  problem, invented a replacement with different values, and graded the
+ *  student's correct answer as wrong. The statement AND the declared
+ *  expected answer ride the descriptions so every later turn can re-read
+ *  them from <whiteboard_state>. */
+function buildTryYourselfManifest(cmd: {
+  problem?: string;
+  expectedAnswer?: string;
+  title?: string;
+  choices?: unknown[];
+}): FeatureManifestEntry[] {
+  const statement = String(cmd.problem ?? '').trim();
+  const answer = typeof cmd.expectedAnswer === 'string' ? cmd.expectedAnswer.trim() : '';
+  const title = String(cmd.title ?? '').trim();
+  return [{
+    name: 'try-yourself',
+    kind: 'label',
+    description:
+      `try-yourself card${title ? ` "${title}"` : ''}: ${statement || '(no statement)'}` +
+      (answer ? ` [expected answer: ${answer}]` : ''),
+    labels: [
+      'try yourself', 'the try yourself', 'your turn', 'the problem', 'this problem',
+      'the question', ...(title ? [title] : []),
+    ],
     scribbleable: true,
   }];
 }
