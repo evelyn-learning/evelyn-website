@@ -16,7 +16,14 @@ export interface DeclaredFunction {
 
 // Matches "f(x) = <rhs>", "y = <rhs>", "g'(x) = <rhs>" on left side of equation.
 // Captures: 1=name, 2=argVar (optional), 3=primes (optional), 4=rhs
-const DECL_PATTERN = /\b([a-zA-Z])\s*(?:\(\s*([a-zA-Z])\s*\))?\s*('+)?\s*=\s*(.+?)(?:$|\\\\|\n)/;
+// R34 (session-1784833891496): ANCHORED to the start of the latex. The old
+// unanchored pattern matched a mid-latex SOLUTION step — "… \Rightarrow
+// x = \pm 2" — and "declared" the function x; the rename pass then
+// "corrected" the brain's proper f''(x) to the nonsense x''(x) on the board.
+// A declaration is the card's opening statement, never an interior step.
+// R34 also fixed: primes may sit BEFORE the parens ("f'(x) = …", the usual
+// derivative form) — the old ordering (parens then primes) never matched it.
+const DECL_PATTERN = /^\s*([a-zA-Z])\s*('+)?\s*(?:\(\s*([a-zA-Z])\s*\))?\s*('+)?\s*=\s*(.+?)(?:$|\\\\|\n)/;
 
 export function extractDeclarations(latex: string): DeclaredFunction[] {
   if (!latex) return [];
@@ -26,11 +33,14 @@ export function extractDeclarations(latex: string): DeclaredFunction[] {
   const m = cleaned.match(DECL_PATTERN);
   if (m) {
     const name = m[1];
-    const argVar = m[2] || 'x';
-    const primes = m[3] || '';
-    const body = m[4].trim();
+    const argVar = m[3] || 'x';
+    const primes = m[2] || m[4] || '';
+    const body = m[5].trim();
     // Only treat single-letter left-side as a declaration (skip "sin(x)=...", "P = ...").
-    if (/^[a-zA-Z]$/.test(name) && !['e', 'i', 'd'].includes(name)) {
+    // R34: a paren-less "x = …" is a variable being SOLVED, not a function
+    // declaration — x is the independent variable by convention. ("y = …"
+    // stays a legitimate declaration.)
+    if (/^[a-zA-Z]$/.test(name) && !['e', 'i', 'd'].includes(name) && !(name === 'x' && !m[3])) {
       out.push({ name: primes ? `${name}${primes}` : name, argVar, body, declaredAt: Date.now() });
     }
   }
@@ -110,7 +120,7 @@ export function normalizeRenamedFunction(
   const canonicalBase = declaredBases[0];
 
   // Find names present in the incoming latex. Looking for "X[primes](var)" patterns.
-  type Use = { full: string; base: string; primes: string };
+  type Use = { full: string; base: string; primes: string; arg: string };
   const uses: Use[] = [];
   const usedPattern = /\b([a-zA-Z])('*)\s*\(\s*([a-zA-Z])\s*\)/g;
   const reserved = new Set(['sin', 'cos', 'tan', 'log', 'ln', 'exp', 'e', 'i', 'd']);
@@ -119,7 +129,7 @@ export function normalizeRenamedFunction(
     const base = m[1];
     const primes = m[2] || '';
     if (reserved.has(base)) continue;
-    uses.push({ full: base + primes, base, primes });
+    uses.push({ full: base + primes, base, primes, arg: m[3] });
   }
 
   let out = latex;
@@ -129,6 +139,11 @@ export function normalizeRenamedFunction(
 
   for (const u of uses) {
     if (u.base === canonicalBase) continue; // already the declared name
+    // R34 defense-in-depth: never rewrite a function name INTO its own
+    // argument — "f''(x)" with canonical base "x" would become the
+    // self-application "x''(x)", which is always nonsense. Whatever state
+    // led here, leaving the brain's name is strictly safer.
+    if (canonicalBase === u.arg) continue;
     const target = canonicalBase + u.primes;
     // Escape primes for regex construction.
     const esc = u.full.replace(/'/g, "'");

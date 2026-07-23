@@ -32,7 +32,12 @@ export interface DesmosGraphRef {
 // brain's requested bounds. Shapes (circles, conics, geometry) sit well under
 // this and still aspect-lock. ~6× chosen so a tall parabola/ellipse still locks
 // but a disparate-unit data graph does not.
-const ASPECT_LOCK_MAX_SPAN_RATIO = 6;
+// R34 (session-1784833891496): was 6 — a cubic-analysis graph with spans
+// 8×45 (ratio 5.6) got equalized, stretching x to ±40 and squeezing the
+// curves into a sliver. The lock exists for SHAPES, and the rationale above
+// says shapes have ratio ~1–3; cap it there so function graphs with honest
+// unequal spans keep the brain's framing.
+const ASPECT_LOCK_MAX_SPAN_RATIO = 3;
 
 interface DesmosGraphRendererProps {
   type: string;

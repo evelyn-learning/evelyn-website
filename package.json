@@ -56,6 +56,7 @@
     "test:secant-tangent": "npx tsx scripts/test-secant-tangent.ts",
     "test:equation-guards": "npx tsx scripts/test-equation-guards.ts",
     "test:graph-js-expr": "npx tsx scripts/test-graph-js-expr.ts",
+    "test:continuity": "npx tsx scripts/test-continuity.ts",
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
     "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",
