@@ -2135,6 +2135,23 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<string, any>): WhiteboardCommand | null {
+  // Phase-3 live round (2026-07-23, Matrices/conics session): the brain
+  // writes markdown emphasis into labels ("Look at equation **(A)**:") —
+  // chat bubbles render it, but board renderers print label/title strings
+  // verbatim, so the student sees literal asterisks. Strip paired emphasis
+  // markers from the display-string fields at this single chokepoint (all
+  // renderers inherit). LaTeX is untouched — labels never legitimately
+  // carry ** (exponentiation is ^ in every latex field; sanitizeExpr
+  // introduces ** only AFTER mapping, on expr fields).
+  const stripMdEmphasis = (v: unknown): unknown =>
+    typeof v === 'string'
+      ? v.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(?<![\w*])\*([^*\s][^*]*?)\*(?![\w*])/g, '$1')
+      : v;
+  if (funcArgs && typeof funcArgs === 'object') {
+    for (const k of ['label', 'title']) {
+      if (typeof funcArgs[k] === 'string') funcArgs = { ...funcArgs, [k]: stripMdEmphasis(funcArgs[k]) };
+    }
+  }
   if (funcName === 'new_page') {
     return { action: 'newPage', title: funcArgs.title };
   }
