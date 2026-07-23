@@ -356,8 +356,12 @@ export type BrainStreamEvent =
    *  client to wait before the next sentence (used after dense
    *  explanations or when `<show_*>` just landed). */
   | { type: 'sentence'; text: string; pauseAfter?: 'small' | 'medium' | 'large' }
-  /** A tool call whose input JSON is fully assembled. Dispatch inline. */
-  | { type: 'tool-call'; id: string; name: string; args: Record<string, unknown> }
+  /** A tool call whose input JSON is fully assembled. Dispatch inline.
+   *  `anchorSentence` (Phase 4.1 Rule-8 repair): present only on repair
+   *  frames emitted AFTER `done` — the 1-based number of the sentence that
+   *  spoke the content, so the client can anchor the render to it instead
+   *  of the (already-finished) dispatch count. */
+  | { type: 'tool-call'; id: string; name: string; args: Record<string, unknown>; anchorSentence?: number }
   /** A tool call whose payload failed validation (e.g. empty showTable
    *  rows, blank showMolecule smiles). Not dispatched to the whiteboard
    *  renderer. Consumers may log it to debugEvents for telemetry. */

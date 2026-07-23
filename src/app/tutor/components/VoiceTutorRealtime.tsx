@@ -2859,8 +2859,8 @@ export function VoiceTutorRealtime({
   // Buffer one render batch (or dispatch immediately when render-sync is
   // off / not on the brain-stream path). Anchored to the count of
   // sentences dispatched to TTS so far this turn.
-  const dispatchVisualRef = useRef<(processed: WhiteboardCommand[]) => void>(() => {});
-  dispatchVisualRef.current = (processed: WhiteboardCommand[]) => {
+  const dispatchVisualRef = useRef<(processed: WhiteboardCommand[], anchorOverride?: number) => void>(() => {});
+  dispatchVisualRef.current = (processed: WhiteboardCommand[], anchorOverride?: number) => {
     // Task B3 (flag-gated): count valid (post-validation, about-to-render)
     // board renders this batch contributes toward the opener turn, so the
     // finally-block check can tell "opener drew nothing" from "opener drew
@@ -2874,7 +2874,10 @@ export function VoiceTutorRealtime({
       onWhiteboardCommand(processed);
       return;
     }
-    const anchorM = ttsDispatchedCountRef.current;
+    // A Rule-8 repair frame carries its own introducing-sentence number
+    // (the dispatch count has already run past it by the time it arrives);
+    // everything else anchors to the live TTS dispatch count as before.
+    const anchorM = anchorOverride ?? ttsDispatchedCountRef.current;
     // Async doodle: a show_sketch request can't render yet (no primitives). Hold
     // a pendingAsync slot per sketch + kick the doodler; flush non-sketch
     // commands in the same batch normally (preserving order). Sketches arrive
@@ -2910,7 +2913,10 @@ export function VoiceTutorRealtime({
     // Fail-safe: drain/cap release it at turn-end.
     let pendingReanchor = false;
     let anchorKeywords: AnchorKeywords | undefined;
-    if (TUTOR_BOARD_ANCHOR_ASSIST && anchorM <= RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR) {
+    // Both assists key off "the sentence being dispatched RIGHT NOW" — for a
+    // post-turn repair frame that sentence is unrelated, so neither applies:
+    // the server-provided anchor is already the introducing sentence.
+    if (anchorOverride === undefined && TUTOR_BOARD_ANCHOR_ASSIST && anchorM <= RENDER_SYNC_FRONT_LOAD_MAX_ANCHOR) {
       const lastSentence = turnNarrationRef.current[turnNarrationRef.current.length - 1] ?? '';
       for (const c of processed) {
         const kw = extractAnchorKeywords(c);
@@ -2927,7 +2933,7 @@ export function VoiceTutorRealtime({
     // pending-reanchor (that path re-times to a LATER sentence entirely).
     // No match / no sentence → undefined → plain sentence semantics.
     let anchorWord: number | undefined;
-    if (TUTOR_RENDER_WORD_ANCHOR && !pendingReanchor) {
+    if (anchorOverride === undefined && TUTOR_RENDER_WORD_ANCHOR && !pendingReanchor) {
       const introSentence = turnNarrationRef.current[turnNarrationRef.current.length - 1] ?? '';
       if (introSentence) {
         const spokenWords = rewriteForTTS(introSentence, { studentName }).split(/\s+/).filter(Boolean);
@@ -2941,7 +2947,7 @@ export function VoiceTutorRealtime({
       }
     }
     renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords, anchorWord });
-    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}${anchorWord !== undefined ? ` word=${anchorWord}` : ''}`);
+    onDebugEvent?.('render_sync_buffer', `anchor=${anchorM} depth=${renderBufferRef.current.length}${pendingReanchor ? ' pending-reanchor' : ''}${anchorWord !== undefined ? ` word=${anchorWord}` : ''}${anchorOverride !== undefined ? ' repair-anchor' : ''}`);
     armRenderStall();
     // A boundary may already have passed (e.g. anchor sentence completed
     // before this batch finished its synchronous validation) — try now.
@@ -3032,7 +3038,11 @@ export function VoiceTutorRealtime({
   }, []);
 
   // Handle whiteboard commands from tool calls — validates geometry + optionally validates math via Claude
-  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[]): Promise<WhiteboardCommandResult> => {
+  // opts.anchorSentence (Phase 4.1 Rule-8 repair): a server repair frame
+  // arrives AFTER the turn's `done`, so the live TTS dispatch count no
+  // longer describes its introducing sentence — the server tells us which
+  // 1-based sentence spoke the content and the render buffers against THAT.
+  const handleWhiteboardCommand = useCallback(async (commands: WhiteboardCommand[], opts?: { anchorSentence?: number }): Promise<WhiteboardCommandResult> => {
     turnHadToolCallRef.current = true;
     // Structured entry log — gives us the shape of every batch arriving
     // at the handler (from Realtime function_call, from text-parse, or
@@ -5765,7 +5775,7 @@ export function VoiceTutorRealtime({
     // catalog mirror, transcript attach, the synchronously-returned
     // assignedIds/boardSnapshot/rejected — runs NOW regardless, so brain
     // retry-feedback + dedup ordering are unaffected (catalog leads pixels).
-    dispatchVisualRef.current(processed);
+    dispatchVisualRef.current(processed, opts?.anchorSentence);
     // Mirror into our local running log so targetId lookups across future
     // batches can walk the full session history without round-tripping
     // through the parent's state.
@@ -9657,7 +9667,18 @@ export function VoiceTutorRealtime({
                   }
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
-                    const result = await handleWhiteboardCommand([cmd]);
+                    // Phase 4.1: a Rule-8 repair frame (post-`done`) names its
+                    // introducing sentence; sanitize and pass it through so the
+                    // render buffers against that sentence, not the dead count.
+                    const rawAnchor = (ev as { anchorSentence?: unknown }).anchorSentence;
+                    const repairAnchor =
+                      typeof rawAnchor === 'number' && Number.isInteger(rawAnchor) && rawAnchor >= 1
+                        ? rawAnchor
+                        : undefined;
+                    const result = await handleWhiteboardCommand(
+                      [cmd],
+                      repairAnchor !== undefined ? { anchorSentence: repairAnchor } : undefined,
+                    );
                     // Track what actually landed so a later kill can
                     // roll exactly these renders back off the board.
                     if (result?.assignedIds?.length) {

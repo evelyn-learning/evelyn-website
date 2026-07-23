@@ -37,6 +37,13 @@ import {
 import { TUTOR_CONTENT_VARIETY } from '@/lib/tutor/orchestrator/flags';
 import { searchImage } from '@/lib/tutor/image-search';
 import { classifyBrainError, decideBrainRetry, withInactivityTimeout } from '@/lib/tutor/voice/brain-retry';
+import {
+  RULE8_PROMISE_REGEX,
+  detectRepairNeed,
+  generateRule8Repairs,
+  toToolCallFrames,
+} from '@/lib/tutor/voice/rule8-repair';
+import { validateToolCall } from '@/lib/tutor/whiteboard/validate-tool-call';
 
 /** Task X10: max whole-turn retries the route performs on a transient /
  *  overloaded failure that produced ZERO content. Sits on top of the SDK
@@ -426,6 +433,10 @@ export async function POST(req: NextRequest) {
       let firstSentenceMs: number | null = null;
       let firstToolMs: number | null = null;
       const toolNames: string[] = [];
+      // Phase 4.1: the turn's real sentence list, in emission order — the
+      // Rule-8 repair detector runs over these (1-based index = anchorM
+      // numbering on the client).
+      const turnSentences: string[] = [];
       let fullText = '';
       let stopReason = 'unknown';
       const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
@@ -642,6 +653,7 @@ export async function POST(req: NextRequest) {
           }
           if (ev.type === 'sentence') {
             sentenceCount++;
+            turnSentences.push(ev.text);
             if (firstSentenceMs === null) firstSentenceMs = Date.now() - startedAt;
           } else if (ev.type === 'tool-call') {
             toolNames.push(ev.name);
@@ -798,11 +810,53 @@ export async function POST(req: NextRequest) {
           break;
         }
         } // end whole-turn retry loop
+
+        // ── Phase 4.1: Rule-8 repair pass (flag: TUTOR_RULE8_REPAIR) ──
+        // The turn is done (its `done` frame is already sent) but the SSE
+        // stream is still open. If the brain spoke math / promised a visual
+        // and drew NOTHING, one bounded Haiku call transcribes what was
+        // literally said into ≤3 repair frames, each validated by the same
+        // server validator as brain tool calls and emitted as a normal
+        // tool-call frame + `anchorSentence` — the client's validator/dedup
+        // stack then treats them exactly like brain-emitted renders. Every
+        // failure path is fail-to-nothing (the turn already played fine).
+        if (
+          process.env.TUTOR_RULE8_REPAIR === 'on' &&
+          !clientGone && !gaveUp && stopReason !== 'error'
+        ) {
+          const detection = detectRepairNeed(turnSentences, toolNames.length);
+          if (detection.needed) {
+            const repairStarted = Date.now();
+            const repairs = await generateRule8Repairs(turnSentences, detection);
+            let repaired = 0, rejected = 0;
+            for (const frame of toToolCallFrames(repairs)) {
+              const v = validateToolCall(frame.name, frame.args);
+              if (!v.ok) {
+                rejected++;
+                console.log(`[rule8.repair] validator rejected ${frame.name}: ${v.reason}`);
+                continue;
+              }
+              send({
+                type: 'tool-call',
+                id: `rule8-repair-${repaired}`,
+                name: frame.name,
+                args: frame.args,
+                anchorSentence: frame.anchorSentence,
+              });
+              repaired++;
+            }
+            console.log(
+              `[rule8.repair] promised=${detection.promisedVisual} ` +
+              `math=[${detection.mathSentences.join(',')}] defs=[${detection.definitionSentences.join(',')}] ` +
+              `model→${repairs.length} repaired=${repaired} rejected=${rejected} ` +
+              `(dedup happens client-side) in ${Date.now() - repairStarted}ms`,
+            );
+          }
+        }
       } finally {
         const totalMs = Date.now() - startedAt;
         const textSnippet = fullText.slice(0, 120).replace(/\n/g, ' ');
-        const promiseRegex = /\b(let me|i['’]ll|i will|here['’]s|here is|i['’]m going to)\s+(draw|plot|show|sketch|display|render|graph|create)\b/i;
-        const promisedVisual = promiseRegex.test(fullText);
+        const promisedVisual = RULE8_PROMISE_REGEX.test(fullText);
         const violatedRule8 = promisedVisual && toolNames.length === 0;
         console.log(
           `[brain.stream] student="${studentSnippet}${body.studentTranscript.length > 80 ? '…' : ''}" ` +
