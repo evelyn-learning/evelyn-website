@@ -341,7 +341,9 @@ export default function SessionStage(props: SessionStageProps) {
     if (!d || d.pointerId !== e.pointerId) return;
     if (d.dragging) {
       setQpinDragged(true); // no auto-collapse this turn
-      qpinJustDragged.current = true;
+      // pointercancel never produces a trailing click — arming the click
+      // suppressor there would swallow the NEXT legitimate tap instead.
+      if (e.type === 'pointerup') qpinJustDragged.current = true;
     }
     qpinDrag.current = null;
   };
