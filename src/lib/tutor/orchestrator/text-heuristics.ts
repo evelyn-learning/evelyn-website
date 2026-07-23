@@ -138,6 +138,35 @@ export function latexProseFiller(latex: string): string | null {
   return m ? m[1] : null;
 }
 
+/** Round-21 dup-def guard, extracted + hardened (2026-07-23). A show_equation
+ *  latex that defines the SAME function name twice with DIFFERENT bodies is
+ *  always an authoring error (letter drift: card says "g(x)=2x^2-3, g(x)=x+4"
+ *  while the narration says f and g). The original inline VTR version failed
+ *  open on real cards because (a) a `\\` line break swallowed the second
+ *  definition into the first body capture — multi-line cards were never
+ *  checked — and (b) `f\left(x\right)=` broke the name pattern. Normalizes
+ *  both before matching. Returns the duplicated name, or null when clean. */
+export function duplicateFunctionDef(latex: string): string | null {
+  if (!latex) return null;
+  const s = String(latex)
+    .replace(/\\left|\\right/g, '')
+    // Line breaks / spacing commands act as definition separators — turn
+    // them into ',' so the body capture stops there and the NEXT definition
+    // is seen. (Truncating a body at `\,` only affects both copies equally.)
+    .replace(/\\\\|\\quad\b|\\qquad\b|\\;|\\,/g, ',');
+  const defs = new Map<string, string>();
+  // Name: single letter with optional simple subscript, not preceded by a
+  // letter or backslash (so `\sin(x)=…` can't register a function "n").
+  for (const m of s.matchAll(/(?<![a-zA-Z\\])([a-zA-Z](?:_\{?[a-zA-Z0-9]+\}?)?)\s*\(\s*[a-zA-Z]\s*\)\s*=\s*([^,;=]+)/g)) {
+    const name = m[1];
+    const body = m[2].replace(/\s+/g, '');
+    const prior = defs.get(name);
+    if (prior !== undefined && prior !== body) return name;
+    defs.set(name, body);
+  }
+  return null;
+}
+
 export function isVerdictOpener(s: string): boolean {
   const t = s.trim();
   if (!t || /\?\s*$/.test(t)) return false; // a question is a prompt, not a verdict

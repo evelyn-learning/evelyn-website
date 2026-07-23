@@ -169,6 +169,7 @@ import {
   deepEqualParams,
   isMuteMeCommand,
   latexProseFiller,
+  duplicateFunctionDef,
 } from '@/lib/tutor/orchestrator/text-heuristics';
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
@@ -3320,15 +3321,10 @@ export function VoiceTutorRealtime({
       // identical definitions pass untouched.
       if (cmd.action === 'showEquation') {
         const latex = String(cmdAny.latex ?? '');
-        const defs = new Map<string, string>();
-        let dupName: string | null = null;
-        for (const m of latex.matchAll(/([a-zA-Z])\s*\(\s*[a-zA-Z]\s*\)\s*=\s*([^,;=]+)/g)) {
-          const name = m[1];
-          const body = m[2].replace(/\s+/g, '');
-          const prior = defs.get(name);
-          if (prior !== undefined && prior !== body) { dupName = name; break; }
-          defs.set(name, body);
-        }
+        // Extracted to text-heuristics (duplicateFunctionDef) and hardened
+        // 2026-07-23: the inline version failed open on `\\`-separated
+        // multi-line cards and on `\left(x\right)` argument delimiters.
+        const dupName = duplicateFunctionDef(latex);
         if (dupName) {
           const reason = `Your show_equation latex defines the function "${dupName}" TWICE with different bodies (${latex.slice(0, 140)}). One of them is a DIFFERENT function — this is copy-paste letter drift (e.g. writing g(x) where your narration says f(x)). Re-emit the equation with each function under the letter your NARRATION uses; every letter in the latex must match what you speak.`;
           console.warn('[VoiceTutorRealtime] Dropping show_equation — duplicate function definition:', dupName);
