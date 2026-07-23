@@ -58,7 +58,7 @@ import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
-import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib/tutor/whiteboard/graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import { validateSecantTangentGraph } from '@/lib/tutor/whiteboard/secant-tangent-validator';
 import {
   anchorWordIndex,
@@ -3778,6 +3778,16 @@ export function VoiceTutorRealtime({
         // its own labeled points (e.g. V=0.667·T plotted against (300,2)/(600,4)
         // — should be 0.00667·T). See graph-consistency-validator.
         const afterLinear = validateGraphLinearConsistency(afterSecTan);
+        // Last resort AFTER all repairs: a single curve missing its own
+        // value-claim labeled points ("f(5) = 7") can't be refit — reject
+        // with a corrective so the brain re-emits (R32 "The Puzzle" graph).
+        const valuePoints = validateFunctionValuePoints(afterLinear);
+        if (!valuePoints.ok) {
+          console.warn('[VoiceTutorRealtime] showGraph value-point mismatch:', valuePoints.reason);
+          onDebugEvent?.('tool_call', `Rejected show_function_graph: ${valuePoints.reason}`);
+          rejected.push({ action: 'show_function_graph', reason: valuePoints.reason });
+          return [];
+        }
         if (afterLinear !== original) {
           if (afterConic !== original) {
             console.log('[VoiceTutorRealtime] Conic validator fixed graph data');

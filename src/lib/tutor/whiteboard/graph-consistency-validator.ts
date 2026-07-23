@@ -1,3 +1,5 @@
+import { latexToJs } from './intersection-validator';
+
 /**
  * Graph slope/point-consistency guard.
  *
@@ -50,6 +52,70 @@ export function validateFunctionGraphVars(
     }
   }
   return { ok: true };
+}
+
+/**
+ * R32 (2026-07-23, session-1784825448372 "The Puzzle" graph): the brain
+ * plotted a single curve with value-claim labeled points ("f(1) = -3",
+ * "f(5) = 7") that the curve visibly missed — the curve left the viewport
+ * near x=4 while the labeled f(5)=7 dot floated in space. The points are the
+ * pedagogical givens and an arbitrary nonlinear curve can't be refit safely
+ * (see validateGraphLinearConsistency's scope note), so this is a REJECT
+ * with a pointed corrective — the brain re-emits with a curve that actually
+ * passes through its own claimed values (observed working: it drew the
+ * correct graph on retry when the student asked).
+ *
+ * Scope: exactly ONE y=f(x) curve, no x=f(y) curves, and only points whose
+ * label makes an explicit function-value claim ("f(1) = -3", "g(2) ≈ 5").
+ * Bare-named points (a/b/c — the MVT shapes the secant-tangent validator
+ * repairs) and coordinate-style labels (intersection validator's territory)
+ * are ignored. Unparseable curve → pass (never reject what we can't check).
+ */
+const VALUE_CLAIM_LABEL_RE = /^\s*[a-zA-Z]\s*\(\s*-?[\d.]+\s*\)\s*[=≈]\s*(-?[\d.]+)/;
+export function validateFunctionValuePoints(
+  data: {
+    functions?: Array<{ latex?: string; fn?: string; domain?: [number, number] }>;
+    functionsOfY?: Array<unknown>;
+    points?: Array<{ x: number; y: number; label?: string }>;
+    yRange?: [number, number];
+  },
+): { ok: true } | { ok: false; reason: string } {
+  const fns = data.functions ?? [];
+  if (fns.length !== 1 || (data.functionsOfY ?? []).length > 0) return { ok: true };
+  const points = data.points ?? [];
+  const claimed = points.filter((p) => VALUE_CLAIM_LABEL_RE.test(p.label ?? ''));
+  if (claimed.length === 0) return { ok: true };
+
+  const expr = fns[0].latex || fns[0].fn || '';
+  const js = latexToJs(expr, 'x');
+  if (!js) return { ok: true };
+  let f: (x: number) => number;
+  try {
+    // eslint-disable-next-line no-new-func
+    const compiled = new Function('x', `"use strict"; return (${js});`) as (x: number) => unknown;
+    f = (x) => { try { const r = compiled(x); return typeof r === 'number' ? r : NaN; } catch { return NaN; } };
+  } catch {
+    return { ok: true };
+  }
+
+  const ySpan = Math.abs((data.yRange?.[1] ?? 0) - (data.yRange?.[0] ?? 0)) || 1;
+  const tol = Math.max(0.15 * ySpan, 0.5);
+  const misses: string[] = [];
+  for (const p of claimed) {
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+    const d = fns[0].domain;
+    if (d && (p.x < d[0] - 1e-9 || p.x > d[1] + 1e-9)) continue;
+    const actual = f(p.x);
+    if (!Number.isFinite(actual)) continue;
+    if (Math.abs(actual - p.y) > tol) {
+      misses.push(`"${p.label}" is plotted at (${p.x}, ${p.y}) but your curve gives f(${p.x}) = ${parseFloat(actual.toPrecision(4))}`);
+    }
+  }
+  if (misses.length === 0) return { ok: true };
+  return {
+    ok: false,
+    reason: `show_function_graph: your curve "${expr}" does not pass through your own labeled point(s): ${misses.join('; ')}. The labeled values are the givens — re-emit with an expression that actually passes through them (or correct the point coordinates).`,
+  };
 }
 
 /** Parse a simple straight line `m*x + b` (or LaTeX `mx+b`) → {m,b}. Returns

@@ -8,7 +8,7 @@
  * Falls back to the legacy Mafs-based GraphRenderer if Desmos isn't loaded.
  */
 
-import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
+import { useEffect, useRef, useState, useCallback, useImperativeHandle, useMemo, forwardRef } from 'react';
 import type { GraphData, GraphFunction, GraphFunctionOfY } from '@/lib/knowledge/types';
 import { InlineMathText } from './InlineMathText';
 
@@ -138,7 +138,21 @@ function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string = 'x'):
 }
 
 const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererProps>(
-  function DesmosGraphRendererInner({ data, className = '' }, ref) {
+  function DesmosGraphRendererInner({ data: rawData, className = '' }, ref) {
+    // xRange/yRange crash guard (R13 backlog item): a brain payload with a
+    // missing or degenerate range crashed applyUniformBounds (reads
+    // data.xRange[0] unconditionally). Normalize once here — invalid or
+    // reversed ranges fall back to sane defaults instead of a dead card.
+    const data = useMemo(() => {
+      const okRange = (r: unknown): r is [number, number] =>
+        Array.isArray(r) && Number.isFinite(r[0]) && Number.isFinite(r[1]) && r[1] > r[0];
+      if (okRange(rawData?.xRange) && okRange(rawData?.yRange)) return rawData;
+      return {
+        ...rawData,
+        xRange: okRange(rawData?.xRange) ? rawData.xRange : [-10, 10] as [number, number],
+        yRange: okRange(rawData?.yRange) ? rawData.yRange : [-10, 10] as [number, number],
+      };
+    }, [rawData]);
     const containerRef = useRef<HTMLDivElement>(null);
     const calculatorRef = useRef<Desmos.Calculator | null>(null);
     const [desmosLoaded, setDesmosLoaded] = useState(!!window.Desmos);

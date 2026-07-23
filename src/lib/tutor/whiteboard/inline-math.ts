@@ -172,7 +172,12 @@ const FN_CALL_OR_SCRIPT_RE = new RegExp(`(?<![A-Za-z])(?:${FN_ALT})[_(]`, 'i');
 // A short (1-2 char) variable immediately followed by ^ or _ and then a
 // digit or a brace group: x^2, x_{1}, y_2. Deliberately excludes a bare
 // letter run after the script marker (x_ray) — that's prose, not math.
-const SHORT_VAR_SCRIPT_RE = /\b[A-Za-z]{1,2}[\^_](?:\{|\d)/;
+// R32 (session-1784825448372): a single-LETTER exponent is math too — the
+// Try Yourself card printed "e^x = 2x + 1" with a raw caret because this
+// gate only accepted `{` or a digit after ^/_. A caret never appears in
+// prose, so letter^letter is unambiguous; the \b keeps it to a single
+// letter ("e^x", "a_n") without claiming longer words.
+const SHORT_VAR_SCRIPT_RE = /\b[A-Za-z]{1,2}[\^_](?:\{|\d|[A-Za-z]\b)/;
 const BACKSLASH_CMD_RE = /\\[a-zA-Z]+/;
 const BACKSLASH_CMD_RE_G = /\\[a-zA-Z]+/g;
 // Characters that show up in a bare math run (digits, operators, parens,

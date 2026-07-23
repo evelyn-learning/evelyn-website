@@ -26,7 +26,7 @@ import { stripWbEmphasisText } from './wb-emphasis-strip';
 import { validateGeometryCommand, type GeometryCommand } from './geometry-validator';
 import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
-import { validateGraphLinearConsistency, validateFunctionGraphVars } from './graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints } from './graph-consistency-validator';
 import { validateSecantTangentGraph } from './secant-tangent-validator';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from './conic-construction';
 import { validateCircuit } from '../diagrams/circuit-validator';
@@ -241,6 +241,11 @@ export function processToolCall(
     // runs BEFORE the linear guard so the refit sees corrected points.
     const afterSecTan = validateSecantTangentGraph(afterIntersections);
     const afterLinear = validateGraphLinearConsistency(afterSecTan);
+    // Last resort AFTER all repairs: a single curve that misses its own
+    // value-claim labeled points ("f(5) = 7") can't be refit — reject with
+    // a corrective so the brain re-emits (R32 "The Puzzle" graph).
+    const valuePoints = validateFunctionValuePoints(afterLinear);
+    if (!valuePoints.ok) return { ok: false, reason: valuePoints.reason };
     if (afterLinear !== original) {
       return { ok: true, command: { ...command, data: afterLinear } };
     }

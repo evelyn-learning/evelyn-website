@@ -330,5 +330,16 @@ console.log('\n=== Round-23: display-side sentence-gap normalization ===');
   );
 }
 
+// R32 (session-1784825448372): letter exponent is a strong signal — the Try
+// Yourself card printed "e^x = 2x + 1" with a raw caret.
+{
+  const wrapped = autoWrapLatex('Use IVT to show that the equation e^x = 2x + 1 has a solution in (0, 2).');
+  check('letter exponent e^x auto-wraps', wrapped.includes('$e^x = 2x + 1$'), wrapped);
+  const parts = segment(wrapped);
+  check('e^x span segments as math', parts.some((p) => p.kind === 'math' && p.body === 'e^x = 2x + 1'));
+  check('prose with caret-free words untouched',
+    autoWrapLatex('The next section covers limits.') === 'The next section covers limits.');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

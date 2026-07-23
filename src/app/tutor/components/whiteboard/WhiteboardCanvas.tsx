@@ -8,6 +8,10 @@
  */
 
 import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
+// KaTeX styles for every card that renders InlineMathText (which itself
+// carries no CSS import so renderer files stay node-importable — see the
+// note in InlineMathText.tsx).
+import 'katex/dist/katex.min.css';
 import { createPortal } from 'react-dom';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';

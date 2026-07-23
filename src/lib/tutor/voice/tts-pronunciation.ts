@@ -1682,6 +1682,26 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // order between the two doesn't matter, but keeping ASCII-operator rules
   // together mirrors the existing equals-sign placement).
   t = rewriteBareMinusForSpeech(t);
+  // R32 live (session-1784825448372): "$f(\pi/2)$" reached Cartesia as
+  // "f of pie /2" — the pi glyph/command converts, but a plain-slash
+  // fraction has no \frac braces so nothing voiced the "/" and Cartesia
+  // read "slash". Narrow by design: only fires when one side is the spoken
+  // pi (unambiguously math); general X/Y prose ("and/or", URLs) untouched.
+  // Runs AFTER span conversion so it sees the emitted "pie" token.
+  t = t.replace(/\b(\d*\s*pie?)\s*\/\s*(\d+|[a-z])\b/g, '$1 over $2');
+  t = t.replace(/\b(\d+)\s*\/\s*(\d*\s*pie?)\b/g, '$1 over $2');
+  // R32 live: "(0, 2)" spoke as "zero two" — Cartesia reads the comma as a
+  // pause, so an interval/point pair loses its separator. Voice the comma
+  // for a paren pair whose elements are numbers or a pi-form ("(0, pie
+  // over 2)") — correct for both points and intervals, and the paren shape
+  // plus operand gate keeps ordinary prose parentheticals untouched.
+  {
+    const PAIR_ELEM = String.raw`-?\d[\d.]*|(?:\d+\s*)?pie?(?:\s+over\s+(?:\d+|[a-z]))?`;
+    t = t.replace(
+      new RegExp(String.raw`\(\s*(${PAIR_ELEM})\s*,\s*(${PAIR_ELEM})\s*\)`, 'g'),
+      '($1 comma $2)',
+    );
+  }
   // Phase-3 live round (2026-07-23, SAT session): PROSE "b^2 - 4ac" spoke
   // "4ac" as "four-ack" — the caret rule handled b^2 but the
   // coefficient-glued variable product never reached any splitter (the

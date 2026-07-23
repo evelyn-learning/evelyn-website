@@ -27,7 +27,13 @@
 
 import { useEffect, useRef } from 'react';
 import katex from 'katex';
-import 'katex/dist/katex.min.css';
+// NOTE: no katex CSS import here — R31c made ~90 renderer files import this
+// component, and a CSS import would make every one of them (and the node
+// test scripts that import their manifest builders) un-importable outside
+// the bundler. The CSS is loaded once by the top-level surfaces instead:
+// WhiteboardCanvas, TranscriptView, ReplayPlayer (+ EquationRenderer's own
+// import). Any NEW top-level surface that renders InlineMathText outside
+// those trees must import 'katex/dist/katex.min.css' itself.
 import { segment, autoWrapUnicodeMath, autoWrapLatex, decodeHtmlEntities, preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
 
 interface InlineMathTextProps {

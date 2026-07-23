@@ -6,6 +6,7 @@
 import {
   parseLinear,
   validateGraphLinearConsistency,
+  validateFunctionValuePoints,
 } from '../src/lib/tutor/whiteboard/graph-consistency-validator';
 import type { GraphData } from '../src/lib/knowledge/types';
 
@@ -74,6 +75,54 @@ const scatterNotALine: GraphData = {
   points: [{ x: 1, y: 9 }, { x: 5, y: 1 }, { x: 8, y: 6 }], // not collinear
 };
 check('non-collinear points: guard does NOT refit (can\'t define a line)', validateGraphLinearConsistency(scatterNotALine) === scatterNotALine);
+
+// --- validateFunctionValuePoints (R32 "The Puzzle": curve misses its own labeled values) ---
+{
+  const puzzle = {
+    xRange: [-10, 16] as [number, number], yRange: [-5, 9] as [number, number],
+    functions: [{ latex: 'e^x - 4' }],
+    points: [
+      { x: 1, y: -3, label: 'f(1) = -3' },   // e^1-4 = -1.28, misses -3 by 1.7 (tol 2.1) → within
+      { x: 5, y: 7, label: 'f(5) = 7' },     // e^5-4 = 144.4 → wild miss
+    ],
+  };
+  const r = validateFunctionValuePoints(puzzle);
+  check('puzzle: wild value-point miss → reject', !r.ok);
+  check('puzzle: reason names the miss', !r.ok && /f\(5\) = 144/.test(r.reason), (!r.ok && r.reason) || '');
+
+  const ivt = {
+    xRange: [0, 2.2] as [number, number], yRange: [-1, 3] as [number, number],
+    functions: [{ latex: 'e^x - 2*x - 1' }],
+    points: [
+      { x: 0, y: 0, label: 'f(0) = 0 (boundary)' },
+      { x: 0.5, y: -0.351, label: 'f(0.5) ≈ −0.35 < 0' },
+      { x: 2, y: 2.389, label: 'f(2) ≈ 2.39 > 0' },
+      { x: 1.256, y: 0, label: 'c ≈ 1.26 (solution!)' },
+    ],
+  };
+  check('IVT session graph (correct values) → passes', validateFunctionValuePoints(ivt).ok);
+
+  const bareLabels = {
+    xRange: [0, 5] as [number, number], yRange: [4, 8] as [number, number],
+    functions: [{ latex: '6 + 0.22x(5 - x)' }],
+    points: [{ x: 0, y: 6, label: 'a' }, { x: 5, y: 5.75, label: 'b' }],
+  };
+  check('bare-named points (MVT territory) → ignored, passes', validateFunctionValuePoints(bareLabels).ok);
+
+  const twoCurves = {
+    xRange: [0, 5] as [number, number], yRange: [0, 9] as [number, number],
+    functions: [{ latex: 'x^2' }, { latex: '2x' }],
+    points: [{ x: 1, y: 5, label: 'f(1) = 5' }],
+  };
+  check('two curves → out of scope, passes', validateFunctionValuePoints(twoCurves).ok);
+
+  const unparseable = {
+    xRange: [0, 5] as [number, number], yRange: [0, 9] as [number, number],
+    functions: [{ latex: '\\operatorname{W}(x)' }],
+    points: [{ x: 1, y: 5, label: 'f(1) = 5' }],
+  };
+  check('unparseable curve → conservative pass', validateFunctionValuePoints(unparseable).ok);
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

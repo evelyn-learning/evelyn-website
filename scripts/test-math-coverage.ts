@@ -256,6 +256,12 @@ function runCurated(): void {
   tts('The expression x² - 4 factors nicely.', 'The expression x squared minus 4 factors nicely.', 'unicode-sup-bare-minus');
   tts('Compare 10² - 4 with the rest.', 'Compare 10 squared minus 4 with the rest.', 'unicode-sup-digit-bare-minus');
   tts('The war ran 1941 - 1945 overall.', 'The war ran 1941 - 1945 overall.', 'year-range-still-hyphen');
+  // R32 live (session-1784825448372): plain-slash pi fraction spoke "slash";
+  // paren pairs lost their comma ("zero two").
+  tts('Evaluate $f(\\pi/2)$ here.', 'Evaluate f of pie over 2 here.', 'pi-slash-fraction');
+  tts('So f(π/2) equals zero.', 'So f of pie over 2 equals zero.', 'pi-slash-prose');
+  tts('a solution in $(0, 2)$.', 'a solution in (0 comma 2).', 'interval-pair-comma');
+  tts('has a root in (0, π/2).', 'has a root in (0 comma pie over 2).', 'interval-pair-pi-comma');
   disp('\\sqrt[4]{16}', 'nth-root-display');
 
   // ── 4. Functions, composition, primes, inverses ──────────────────
@@ -336,7 +342,10 @@ function runCurated(): void {
   tts('But $A \\cap B = \\emptyset$ here.', 'But A intersect bee equals the empty set here.', 'empty-intersection');
 
   // ── 17. Vectors & complex ────────────────────────────────────────
-  tts('So $\\vec{v} = (3, 4)$ here.', 'So vector v equals (3, 4) here.', 'vector');
+  // R32: pair-comma voicing supersedes the earlier "reads fine as-is" call —
+  // live evidence (session-1784825448372) showed Cartesia speaks "(3, 4)"
+  // as "three four", dropping the separator.
+  tts('So $\\vec{v} = (3, 4)$ here.', 'So vector v equals (3 comma 4) here.', 'vector');
   tts('So $z = 3 + 4i$ has modulus 5.', 'So z equals 3 plus 4i has modulus 5.', 'complex-number');
   tts('Recall $i^2 = -1$ always.', 'Recall i squared equals minus 1 always.', 'i-squared');
 

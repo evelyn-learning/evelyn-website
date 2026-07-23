@@ -114,6 +114,13 @@ export function latexToJs(expr: string, variable: Variable): string | null {
   // Any remaining backslash = unsupported LaTeX command.
   if (/\\/.test(s)) return null;
 
+  // Bare Euler's e ("e^x - 4", the R32 IVT/Puzzle graphs) — the free
+  // variable is only ever x/y, so a standalone e is always the constant.
+  // Numeric literal (not Math.E) so the final whitelist check passes.
+  // Lookbehinds exclude letters AND digits so scientific-notation-ish
+  // tokens ("2e3") and multi-letter names are untouched.
+  s = s.replace(/(?<![A-Za-z0-9.])e(?![A-Za-z0-9])/g, '(2.718281828459045)');
+
   // Unicode superscripts.
   const superMap: Record<string, string> = {
     '²': '2', '³': '3', '⁴': '4', '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',

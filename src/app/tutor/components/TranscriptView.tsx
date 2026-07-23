@@ -7,6 +7,9 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+// KaTeX styles for the InlineMathText bubbles (InlineMathText itself carries
+// no CSS import so renderer files stay node-importable).
+import 'katex/dist/katex.min.css';
 import { User, Bot } from 'lucide-react';
 import type { TranscriptEntry } from '@/lib/tutor/types';
 // Brain-facing pacing-chip directives — shared with the SessionStage quick-
