@@ -204,7 +204,7 @@ function runCurated(): void {
   tts('The dihybrid ratio $9:3:3:1$ appears often.', 'The dihybrid ratio 9 to 3 to 3 to 1 appears often.', 'dihybrid-ratio');
   tts('A monohybrid ratio $3:1$ is typical.', 'A monohybrid ratio 3 to 1 is typical.', 'monohybrid-ratio');
   // Guards: a lowercase letter PRODUCT is not a genotype; prose is prose.
-  tts('The product $ab$ factors cleanly.', 'The product ay bee factors cleanly.', 'letter-product-guard');
+  tts('The product $ab$ factors cleanly.', 'The product A bee factors cleanly.', 'letter-product-guard');
   tts('The dominant allele B masks b.', 'The dominant allele B masks bee.', 'prose-allele-guard');
 
   // ── ECONOMICS ────────────────────────────────────────────────────
@@ -213,7 +213,7 @@ function runCurated(): void {
   tts('GDP hit \\$21 trillion overall.', 'GDP hit $21 trillion overall.', 'escaped-dollar-prose');
   tts('A \\$5 tariff shifts supply here.', 'A $5 tariff shifts supply here.', 'escaped-dollar-tariff');
   tts('Elasticity $E_d = \\frac{\\%\\Delta Q}{\\%\\Delta P}$ falls.', 'Elasticity E sub dee equals % Delta Q over % Delta P falls.', 'escaped-percent-frac');
-  tts('The set $A \\& B$ intersects.', 'The set ay and bee intersects.', 'escaped-ampersand');
+  tts('The set $A \\& B$ intersects.', 'The set A and bee intersects.', 'escaped-ampersand');
   // Equilibrium / marginal identities and the multiplier read fine already.
   tts('Firms produce where $MR = MC$ exactly.', 'Firms produce where MR equals MC exactly.', 'mr-mc');
   tts('The multiplier is $\\frac{1}{1 - MPC}$ overall.', 'The multiplier is 1 over 1 minus MPC overall.', 'multiplier');

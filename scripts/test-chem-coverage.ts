@@ -267,7 +267,7 @@ function runCurated(): void {
 
   // ── 7. Concentration brackets + equilibrium constants ────────────
   tts('Acidity uses $[H^+]$ directly.', 'Acidity uses the concentration of H plus directly.', 'concentration-brackets');
-  tts('The constant $K_a = \\frac{[H^+][A^-]}{[HA]}$ measures strength.', 'The constant K ay equals the concentration of H plus times the concentration of ay minus over the concentration of HA measures strength.', 'ka-expression');
+  tts('The constant $K_a = \\frac{[H^+][A^-]}{[HA]}$ measures strength.', 'The constant K A equals the concentration of H plus times the concentration of A minus over the concentration of HA measures strength.', 'ka-expression');
   tts('Here $pH = -\\log[H^+]$ defines acidity.', 'Here pH equals minus log the concentration of H plus defines acidity.', 'ph-definition');
   tts('Solubility uses $K_{sp} = 1.1 \\times 10^{-10}$ here.', 'Solubility uses K s p equals 1.1 times 10 to the minus 10 here.', 'ksp-sci');
   tts('Compare pKa values often.', 'Compare pKa values often.', 'pka-identity-guard');

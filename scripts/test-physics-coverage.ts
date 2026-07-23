@@ -254,8 +254,8 @@ function runCurated(): void {
   // Round-28: bare in-span "m" now respells to "em" (Cartesia read a
   // standalone m as "meter" in a live calc session) — these pins updated
   // deliberately to the spoken letterform, same as the ay/bee precedent.
-  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals em vector ay governs motion.', 'second-law-vectors');
-  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals em vector ay works too.', 'braceless-vec');
+  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals em vector A governs motion.', 'second-law-vectors');
+  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals em vector A works too.', 'braceless-vec');
   tts('Split it into $3\\hat{i} + 4\\hat{j}$ parts.', 'Split it into 3 i hat plus 4 j hat parts.', 'unit-vectors');
   tts('The direction î points east.', 'The direction i hat points east.', 'i-hat-glyph');
   tts('So $|\\vec{v}| = 5$ overall.', 'So the magnitude of vector v equals 5 overall.', 'vector-magnitude');
@@ -280,18 +280,18 @@ function runCurated(): void {
   // Round-29 (live 2026-07-23, session-1784778855564): PROSE "F equals m
   // times a" left the bare m for Cartesia, which read it as "meter". The
   // in-span rules never see prose; anchor m after "equals" / before "times".
-  tts('The formula is F equals m times a — so you need to rearrange.', 'The formula is F equals em times ay, so you need to rearrange.', 'prose-equals-m-times-a');
-  tts('Net force is m times a.', 'Net force is em times ay.', 'prose-m-before-times');
-  tts('Force equals m a.', 'Force equals em ay.', 'prose-equals-m-bare');
+  tts('The formula is F equals m times a — so you need to rearrange.', 'The formula is F equals em times A, so you need to rearrange.', 'prose-equals-m-times-a');
+  tts('Net force is m times a.', 'Net force is em times A.', 'prose-m-before-times');
+  tts('Force equals m a.', 'Force equals em A.', 'prose-equals-m-bare');
   // Units guards: digit-anchored m stays a unit; m/s untouched by the new anchors.
   tts('The hallway is 5 m long.', 'The hallway is 5 meters long.', 'prose-unit-m-guard');
   tts('It moves at 3 m/s here.', 'It moves at 3 meters per second here.', 'prose-unit-ms-guard');
 
   // ── 9. Canonical equations ───────────────────────────────────────
-  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em ay compactly.', 'f-equals-ma');
+  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em A compactly.', 'f-equals-ma');
   tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals em c squared famously.', 'e-mc2');
-  tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v sub 0 plus ay t for velocity.', 'kinematics-at');
-  tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v sub 0 t plus 1 over 2 ay t squared follows.', 'kinematics-x');
+  tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v sub 0 plus A t for velocity.', 'kinematics-at');
+  tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v sub 0 t plus 1 over 2 A t squared follows.', 'kinematics-x');
   tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 em v squared always.', 'kinetic-energy');
   tts('Work is $W = F d \\cos\\theta$ along the path.', 'Work is W equals F dee cosine theta along the path.', 'work-eq');
   tts('Waves follow $v = f\\lambda$ neatly.', 'Waves follow v equals f lambda neatly.', 'wave-eq');
@@ -302,7 +302,7 @@ function runCurated(): void {
   tts('Ideal gases follow $PV = nRT$ closely.', 'Ideal gases follow PV equals nRT closely.', 'ideal-gas-accepted');
 
   // ── 10. Uncertainty & percent ────────────────────────────────────
-  tts('Uncertainty is $g = 9.8 \\pm 0.2 \\, \\text{m/s}^2$ measured.', 'Uncertainty is g equals 9.8 plus or minus 0.2 meters per second squared measured.', 'pm-uncertainty');
+  tts('Uncertainty is $g = 9.8 \\pm 0.2 \\, \\text{m/s}^2$ measured.', 'Uncertainty is jee equals 9.8 plus or minus 0.2 meters per second squared measured.', 'pm-uncertainty');
   tts('The error is 5% at worst.', 'The error is 5% at worst.', 'percent-native');
 
   // ── 11. Display: physics spans classify + parse ──────────────────
@@ -321,4 +321,30 @@ function runCurated(): void {
   disp('\\omega = 2\\pi f', 'omega-display');
   disp('3\\hat{i} + 4\\hat{j}', 'unit-vector-display');
   dispProse('It costs $5 and the lab fee is $10.', 'currency-guard-physics');
+
+  // ── Live round 30 (session-1784787300963, AP Physics inclines) ────
+  // (a) "$a = 2.5$" spoke "ay equals" and Cartesia read "ay" with an
+  // article-'a' vowel. The letter-a token is now capital "A" — equation
+  // context makes the letter reading unambiguous (bare capitals N/F
+  // already read correctly live). The validated list rules ("ay, bee,
+  // and see") deliberately keep their token.
+  tts('Exactly. $a = 2.5$ m/s².', 'Exactly. A equals 2.5 meters per second squared.', 'R30 a=2.5 speaks capital-A');
+  tts('So $a = 5$ m/s² here.', 'So A equals 5 meters per second squared here.', 'R30 a=5 speaks capital-A');
+  // (b) "$N = mg$" / "$mg\sin\theta$" kept "mg" glued (span splitter
+  // excluded it as a unit) → Cartesia said "milligrams". In-span mg with
+  // no digit is the m·g product; digit-led doses converted earlier.
+  tts('On a flat surface, $N = mg$.', 'On a flat surface, N equals em jee.', 'R30 N=mg speaks em-jee');
+  tts('$mg\\sin\\theta$ pulls it down the slope.', 'em jee sine theta pulls it down the slope.', 'R30 mg sin theta product');
+  tts('Net force is just $mg\\cos\\theta$ there.', 'Net force is just em jee cosine theta there.', 'R30 mg cos theta product');
+  // (b-prose) "the case where normal force isn't mg" — anchored prose mg.
+  tts("That's the case where normal force isn't mg.", "That's the case where normal force isn't em jee.", 'R30 prose anchored mg');
+  tts('The parallel component is mg sine theta.', 'The parallel component is em jee sine theta.', 'R30 prose mg before sine');
+  // (b-guards) digit-led doses stay milligrams; kg untouched; article-a
+  // and unit-phrase mg untouched.
+  tts('Take 5 mg of caffeine daily.', 'Take 5 milligrams of caffeine daily.', 'R30 guard digit mg stays unit');
+  tts('The dose is measured in mg.', 'The dose is measured in mg.', 'R30 guard unit-phrase mg untouched');
+  tts('The mass is 5 kg here too.', 'The mass is 5 kilograms here too.', 'R30 guard kg unaffected');
+  tts('He has a cat.', 'He has a cat.', 'R30 guard article-a untouched');
+  // (b-bonus) in-span bare g is the gravity variable now that it respells.
+  tts('$g = 9.8$ on Earth.', 'jee equals 9.8 on Earth.', 'R30 bare g speaks jee');
 }

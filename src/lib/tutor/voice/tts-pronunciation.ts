@@ -529,7 +529,11 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   'ess', 'tee', 'vee', 'zee', 'mu', 'phi',
   // Physics round: unit vocabulary + words the unit pass emits — none may
   // be shredded into letter names ("kg" spoke as "k g" pre-round).
-  'per', 'ohm', 'amp', 'kg', 'mg', 'km', 'cm', 'mm', 'nm', 'ms', 'ns',
+  // Round-30 (live session-1784787300963): 'mg' REMOVED — "$N = mg$" /
+  // "$mg\sin\theta$" kept it glued and Cartesia said "milligrams". A
+  // standalone in-span mg is the m·g product (digit-led doses convert in
+  // the unit pass first, and digit-GLUED "5mg" is in DIGIT_RUN_EXCLUDE).
+  'per', 'ohm', 'amp', 'kg', 'km', 'cm', 'mm', 'nm', 'ms', 'ns',
   'mol', 'rad', 'amu', 'atm',
   // Chemistry round: words the chem rewrites emit into spans. NOT 'sp' or
   // 'eq' — those are K-constant subscripts the splitter SHOULD spell out.
@@ -552,6 +556,9 @@ const DIGIT_RUN_EXCLUDE = new Set([
   // digit-glued ("70mph", "500ml", "8gb"). Never letter-split them.
   'ml', 'kl', 'dl', 'gal', 'mph', 'kph', 'rpm', 'mpg', 'psi', 'bpm',
   'dpi', 'fps', 'ghz', 'mhz', 'khz', 'gb', 'mb', 'kb', 'tb', 'kwh',
+  // Round-30: digit-glued "5mg" is the dose unit. Standalone in-span "mg"
+  // is the m·g product (moved OUT of SPAN_PRODUCT_EXCLUDE — see below).
+  'mg',
 ]);
 function respellMathLetters(s: string): string {
   // Phase-3 live round (2026-07-23, SAT session: "b^2 - 4ac" spoke "4ac"
@@ -572,7 +579,12 @@ function respellMathLetters(s: string): string {
   s = s.replace(/\b([a-z]{2,3})\b/g, (m: string) =>
     SPAN_PRODUCT_EXCLUDE.has(m) ? m : m.split('').join(' '));
   return s
-    .replace(/\b[aA]\b/g, 'ay')
+    // Round-30 (live: "$a = 2.5$" → "ay equals" heard with an article-'a'
+    // vowel): the letter-a token is capital "A" — equation context makes
+    // the letter reading unambiguous, matching how bare capitals N/F
+    // already read correctly live. The user-validated prose list rules
+    // ("ay, bee, and see") deliberately keep their old token.
+    .replace(/\b[aA]\b/g, 'A')
     .replace(/\b[bB]\b/g, 'bee')
     .replace(/\b[yY]\b/g, 'why')
     .replace(/\bd\b/g, 'dee')
@@ -581,7 +593,12 @@ function respellMathLetters(s: string): string {
     // converted ("5 m" → "5 meters", "m/s" → compound) before this
     // respell runs, so a surviving standalone lowercase m in a declared
     // span is the variable. Capital M stays (molar / labels).
-    .replace(/\bm\b/g, 'em');
+    .replace(/\bm\b/g, 'em')
+    // Round-30: standalone lowercase g in a declared span is the gravity
+    // variable / the g of m·g (digit-led "5 g" already converted to grams
+    // by the unit pass; the chem path handles "(g)" state symbols before
+    // this). Capital G (gravitational constant) reads fine bare.
+    .replace(/\bg\b/g, 'jee');
 }
 // Round-15 Issue 4 (2026-07-16, live AP Calc): "$(x-2)$" leaked raw to
 // Cartesia — no ^ _ \ = inside, so the signal gate never fired, and the
@@ -1111,48 +1128,51 @@ function stripDollarMathForSpeech(t: string): string {
  *
  *  Tier 2 ('a' only, context-anchored): 'a' is the English article and
  *  can't be rewritten unconditionally ("a cat", "a question" must stay
- *  untouched). It's only rewritten to "ay" when a variable-defining
- *  phrase anchors it — kept deliberately conservative.
+ *  untouched). It's only rewritten when a variable-defining phrase
+ *  anchors it — kept deliberately conservative. Round-30: the emitted
+ *  token is capital "A" (live: Cartesia read "ay equals 2.5" with an
+ *  article-'a' vowel); only the user-validated comma-list rules
+ *  ("ay, bee, and see") and the genotype map keep the old token.
  */
 const MATH_ANCHOR_SRC = 'squared|cubed|equals|=|over|plus|minus|axis|coordinate|value|bar|hat|prime|tilde|intercept';
 
 const A_VARIABLE_REPLACEMENTS: Replacement[] = [
   // "a represents/denotes/stands for/equals/=" — 'a' as the named variable.
-  { pattern: /\ba\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+(?:represent(?:s|ed)?|denotes?|stands?\s+for|means?|equals|=))/gi, replacement: 'A' },
   // Round-19 (2026-07-17, live): "a squared minus b squared" spoke the
   // article. 'a' before squared/cubed is the variable when a math
   // continuation follows (operator word, a VERB — "a squared can be taken
   // common" — or another single-letter / respelled term). "a squared grid"
   // (squared as adjective before a noun) stays untouched.
-  { pattern: /\ba\b(?=\s+(?:squared|cubed)\s+(?:minus|plus|times|over|equals|divided|is\b|can\b|could\b|will\b|would\b|becomes?\b|gives?\b|gets?\b|cancels?\b|factors?\b|divides?\b|[a-z]\b|bee\b|why\b))/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+(?:squared|cubed)\s+(?:minus|plus|times|over|equals|divided|is\b|can\b|could\b|will\b|would\b|becomes?\b|gives?\b|gets?\b|cancels?\b|factors?\b|divides?\b|[a-z]\b|bee\b|why\b))/gi, replacement: 'A' },
   // Round-19b (user stress cases) — grammatically unambiguous variable
   // shapes an English article can never form:
   //   "a is a/the variable…"  (article + "is" is ungrammatical)
-  { pattern: /\ba\b(?=\s+is\s+(?:a|the)\s+(?:variable|constant|coefficient|term|factor|number|value|unknown)\b)/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+is\s+(?:a|the)\s+(?:variable|constant|coefficient|term|factor|number|value|unknown)\b)/gi, replacement: 'A' },
   //   "the a in/of/…"  ("the a" can only denote the letter/variable; the
   //   follower list keeps "the a cappella choir" safe)
-  { pattern: /(?<=\bthe\s)a\b(?=\s+(?:in|of|here|term|value|equals|is|and)\b)/gi, replacement: 'ay' },
+  { pattern: /(?<=\bthe\s)a\b(?=\s+(?:in|of|here|term|value|equals|is|and)\b)/gi, replacement: 'A' },
   //   "a when divided/…"  (article + "when" is ungrammatical; follower list
   //   guards hyphenless "a when-clause" prose)
-  { pattern: /\ba\b(?=\s+when\s+(?:divided|multiplied|squared|cubed|added|subtracted|raised|it\b|we\b|you\b))/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+when\s+(?:divided|multiplied|squared|cubed|added|subtracted|raised|it\b|we\b|you\b))/gi, replacement: 'A' },
   //   sentence-final "…over a." / "…divided by a," (an article must be
   //   followed by a noun — clause-final 'a' after a math preposition is
   //   always the variable)
-  { pattern: /(?<=\b(?:over|by|times|plus|minus)\s)a\b(?=\s*(?:[.,;:!?]|$))/gi, replacement: 'ay' },
+  { pattern: /(?<=\b(?:over|by|times|plus|minus)\s)a\b(?=\s*(?:[.,;:!?]|$))/gi, replacement: 'A' },
   // "substitute a" / "solve for a" / "value of a" / "values of a"
-  { pattern: /(?<=\b(?:substitute|solve for|value of|values of)\s)a\b/gi, replacement: 'ay' },
+  { pattern: /(?<=\b(?:substitute|solve for|value of|values of)\s)a\b/gi, replacement: 'A' },
   // "of a and b" — e.g. "the ratio of a and b"
-  { pattern: /(?<=\bof\s)a(?=\s+and\s+b\b)/gi, replacement: 'ay' },
+  { pattern: /(?<=\bof\s)a(?=\s+and\s+b\b)/gi, replacement: 'A' },
   // "value/values/find/for a and b" (same idea, without "of")
-  { pattern: /(?<=\b(?:value|values|find|for)\s)a(?=\s+and\s+b\b)/gi, replacement: 'ay' },
+  { pattern: /(?<=\b(?:value|values|find|for)\s)a(?=\s+and\s+b\b)/gi, replacement: 'A' },
   // "a, the ..." apposition — "substitute a, the number of apples"
-  { pattern: /\ba\b(?=,\s*the\b)/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=,\s*the\b)/gi, replacement: 'A' },
   // Round-28 (live 2026-07-18: "*a plus b* equals 5" spoke the article —
   // markdown italics, not a $-span, so no span respell applied): 'a'
   // before an operator word is the variable when a math-shaped term
   // follows (single letter, respelled letter word, or digit). "a plus
   // for the team" / "a plus sign" stay articles (multi-letter follower).
-  { pattern: /\ba\b(?=\s+(?:plus|minus|times|over)\s+(?:[a-z]\b|bee\b|why\b|dee\b|see\b|\d))/gi, replacement: 'ay' },
+  { pattern: /\ba\b(?=\s+(?:plus|minus|times|over)\s+(?:[a-z]\b|bee\b|why\b|dee\b|see\b|\d))/gi, replacement: 'A' },
 ];
 
 const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
@@ -1188,9 +1208,16 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   //    article-guarded 'a' rules can't touch a sentence-final bare a, so
   //    the phrase rule handles it whole (must precede the single-m rule,
   //    which would otherwise consume the m first).
-  { pattern: /(?<=\bequals\s+)m\s+a\b(?=[\s.,;!?]|$)/g, replacement: 'em ay' },
+  { pattern: /(?<=\bequals\s+)m\s+a\b(?=[\s.,;!?]|$)/g, replacement: 'em A' },
   { pattern: /(?<=\bequals\s+)m\b(?!['’.])/g, replacement: 'em' },
   { pattern: /(?<!\d)(?<!\d\s)\bm\b(?=\s+times\b)/g, replacement: 'em' },
+  // Round-30 (live: prose "normal force isn't mg" → Cartesia "milligrams"):
+  // standalone prose mg behind variable anchors, or ahead of a trig word,
+  // is the m·g product. Digit-guarded — "5 mg" converted to milligrams by
+  // the unit pass long before this; un-anchored unit phrases ("measured
+  // in mg") deliberately keep the milligram reading.
+  { pattern: /(?<!\d)(?<!\d\s)(?<=\b(?:is|isn't|isn’t|equals|just|not|than|force)\s)mg\b(?!['’])/g, replacement: 'em jee' },
+  { pattern: /(?<!\d)(?<!\d\s)\bmg\b(?=\s+(?:sine|cosine|sin\b|cos\b|times|over)\b)/g, replacement: 'em jee' },
   { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
   { pattern: new RegExp(`\\bB\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];
@@ -1211,7 +1238,9 @@ const ALL_REPLACEMENTS: Replacement[] = [
 /** Spoken names for single-letter math variables in derivative
  *  notation ("dee why", "dee ex"). Fallback: the letter itself. */
 const VAR_SPOKEN: Record<string, string> = {
-  a: 'ay', b: 'bee', c: 'see', e: 'ee', f: 'ef', g: 'jee',
+  // Round-30: a → capital 'A', not 'ay' (Cartesia read "ay" with an
+  // article-'a' vowel live; see respell comment above).
+  a: 'A', b: 'bee', c: 'see', e: 'ee', f: 'ef', g: 'jee',
   k: 'kay', m: 'em', n: 'en', p: 'pee', q: 'cue', r: 'ar',
   s: 'ess', t: 'tee', u: 'you', v: 'vee', x: 'ex', y: 'why', z: 'zee',
 };

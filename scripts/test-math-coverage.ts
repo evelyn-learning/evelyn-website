@@ -253,10 +253,10 @@ function runCurated(): void {
   disp('\\sqrt[4]{16}', 'nth-root-display');
 
   // ── 4. Functions, composition, primes, inverses ──────────────────
-  tts('Evaluate $f(g(2))$ step by step.', 'Evaluate f of g of 2 step by step.', 'composition');
+  tts('Evaluate $f(g(2))$ step by step.', 'Evaluate f of jee of 2 step by step.', 'composition');
   tts("the derivative $f'(x)$ gives the slope.", 'the derivative f prime of x gives the slope.', 'prime-r23');
   tts("then $f'''(x)$ is the jerk.", 'then f triple prime of x is the jerk.', 'triple-prime');
-  tts("even $g''''(x)$ appears in beam theory.", 'even g fourth derivative of x appears in beam theory.', 'fourth-derivative');
+  tts("even $g''''(x)$ appears in beam theory.", 'even jee fourth derivative of x appears in beam theory.', 'fourth-derivative');
   tts('that gives $f^{-1}(2)$ here.', 'that gives f inverse of 2 here.', 'function-inverse');
   disp("f'''(x)", 'triple-prime-display');
   disp("h''''(1)", 'fourth-prime-display');
@@ -310,7 +310,7 @@ function runCurated(): void {
   tts('The mean $\\bar{x} = 52$ here.', 'The mean x bar equals 52 here.', 'x-bar');
   tts('And $\\hat{p} = 0.4$ from the sample.', 'And p hat equals 0.4 from the sample.', 'p-hat');
   // "ay"/"bee" are the correct SPOKEN letter forms (in-span respell).
-  tts('So $P(A|B)$ differs from $P(A)$.', 'So the probability of ay given bee differs from P(ay).', 'conditional-probability');
+  tts('So $P(A|B)$ differs from $P(A)$.', 'So the probability of A given bee differs from P(A).', 'conditional-probability');
   tts('Population variance is $\\sigma^2$ overall.', 'Population variance is sigma squared overall.', 'sigma-squared');
   disp('P(A|B)', 'conditional-display');
   disp('\\bar{x}', 'x-bar-display');
@@ -326,8 +326,8 @@ function runCurated(): void {
   tts('Here $\\angle ABC = 50°$ exactly.', 'Here angle ABC equals 50 degrees exactly.', 'angle-measure');
 
   // ── 16. Sets ─────────────────────────────────────────────────────
-  tts('Since $x \\in A \\cup B$ we proceed.', 'Since x is in ay union bee we proceed.', 'set-union');
-  tts('But $A \\cap B = \\emptyset$ here.', 'But ay intersect bee equals the empty set here.', 'empty-intersection');
+  tts('Since $x \\in A \\cup B$ we proceed.', 'Since x is in A union bee we proceed.', 'set-union');
+  tts('But $A \\cap B = \\emptyset$ here.', 'But A intersect bee equals the empty set here.', 'empty-intersection');
 
   // ── 17. Vectors & complex ────────────────────────────────────────
   tts('So $\\vec{v} = (3, 4)$ here.', 'So vector v equals (3, 4) here.', 'vector');
@@ -335,7 +335,7 @@ function runCurated(): void {
   tts('Recall $i^2 = -1$ always.', 'Recall i squared equals minus 1 always.', 'i-squared');
 
   // ── 18. Sequences & subscripts ───────────────────────────────────
-  tts('The term $a_{n+1} = a_n + d$ recursively.', 'The term ay sub n plus 1 equals ay sub n plus dee recursively.', 'recursive-sequence');
+  tts('The term $a_{n+1} = a_n + d$ recursively.', 'The term A sub n plus 1 equals A sub n plus dee recursively.', 'recursive-sequence');
 
   // ── 19. Sentence hygiene with math ───────────────────────────────
   tts("Nailed it. $h'(1) = \\dfrac{1}{2}$.Now onward.", 'Nailed it. h prime of 1 equals 1 over 2. Now onward.', 'sentence-gap-r23');
@@ -388,8 +388,8 @@ function runCurated(): void {
   tts("I'm being careful there.", "I'm being careful there.", 'im-contraction-m-guard');
   // Article-'a' before an operator word with a math-shaped continuation
   // ("*a plus b*" spoke the article — markdown italics, not a $-span).
-  tts('and we are told a plus b equals 5.', 'and we are told ay plus bee equals 5.', 'prose-a-plus-b');
-  tts('so a minus b gives 2 here.', 'so ay minus bee gives 2 here.', 'prose-a-minus-b');
+  tts('and we are told a plus b equals 5.', 'and we are told A plus bee equals 5.', 'prose-a-plus-b');
+  tts('so a minus b gives 2 here.', 'so A minus bee gives 2 here.', 'prose-a-minus-b');
   tts('That is a plus for the team.', 'That is a plus for the team.', 'article-a-plus-guard');
   // Display side of the same incident: the pre-KaTeX "\n → newline"
   // de-escape must not eat the backslash off \n-prefixed commands
@@ -415,9 +415,9 @@ function runCurated(): void {
   // directly ("4 ay see" — bare split letters would re-enter the
   // article-'a' guards); spans split then respell per round-22.
   tts('what do we need b^2 - 4ac to equal?', 'what do we need bee squared - 4 ay see to equal?', 'prose-4ac-discriminant');
-  tts('plug a = 2, b = k, c = 8 into b^2 - 4ac = 0.', 'plug ay equals 2, bee equals k, see equals 8 into bee squared - 4 ay see equals 0.', 'prose-4ac-plugin');
+  tts('plug a = 2, b = k, c = 8 into b^2 - 4ac = 0.', 'plug A equals 2, bee equals k, see equals 8 into bee squared - 4 ay see equals 0.', 'prose-4ac-plugin');
   tts('So 2ab plus 4ac minus 3bc.', 'So 2 ay bee plus 4 ay see minus 3 bee see.', 'prose-coeff-products');
-  tts('The discriminant is $b^2 - 4ac$.', 'The discriminant is bee squared minus 4 ay c.', 'span-4ac');
+  tts('The discriminant is $b^2 - 4ac$.', 'The discriminant is bee squared minus 4 A c.', 'span-4ac');
   // Guards: ordinals, meridiems, units — digit-glued runs that must stay.
   tts('That is the 4th problem, due at 10am on the 2nd.', 'That is the 4th problem, due at 10am on the 2nd.', 'digit-run-ordinal-meridiem-guard');
   tts('It moves at 70mph and holds 500ml.', 'It moves at 70mph and holds 500ml.', 'digit-run-unit-guard');
