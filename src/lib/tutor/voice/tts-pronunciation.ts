@@ -1462,8 +1462,14 @@ function rewritePartLetters(t: string): string {
  * consistent with this module's math-speech mission than staying silent.
  */
 const MATH_OPERAND_SRC = String.raw`\d+(?:\.\d+)?|[A-Za-z]`;
+// Left operand may carry a unicode superscript run ("x² - 4"): this rule
+// runs BEFORE the superscript pass expands ² into " squared ", and the old
+// `\b\s+` shape required whitespace directly after the letter, so the ²
+// blocked the match and the minus stayed a silent hyphen (the residual
+// "x² - 4" gap from the pronunciation audit). The superscripts are captured
+// and re-emitted so the later pass still speaks "squared".
 const BARE_MINUS_RE = new RegExp(
-  `\\b(${MATH_OPERAND_SRC})\\b\\s+-\\s+(?=(${MATH_OPERAND_SRC})\\b)`,
+  `\\b(${MATH_OPERAND_SRC})([⁰¹²³⁴⁵⁶⁷⁸⁹]*)\\s+-\\s+(?=(${MATH_OPERAND_SRC})\\b)`,
   'g',
 );
 
@@ -1504,7 +1510,8 @@ function isSingleLetterChainLink(full: string, offset: number, matchLen: number,
 }
 
 function rewriteBareMinusForSpeech(t: string): string {
-  return t.replace(BARE_MINUS_RE, (m: string, left: string, right: string, offset: number, full: string) => {
+  return t.replace(BARE_MINUS_RE, (m: string, left: string, sup: string, right: string, offset: number, full: string) => {
+    if (sup) return `${left}${sup} minus `; // superscripted operand is unambiguously math — no year/chain shapes carry exponents
     if (isFourDigitYear(left) && isFourDigitYear(right)) return m; // year range — leave hyphen
     if (isSingleLetterChainLink(full, offset, m.length, left, right)) return m; // enumerated list, not subtraction
     return `${left} minus `;

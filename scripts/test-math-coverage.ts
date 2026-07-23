@@ -250,6 +250,12 @@ function runCurated(): void {
   tts('Then $\\sqrt[4]{16}$ equals 2.', 'Then the 4th root of 16 equals 2.', 'nth-root');
   tts('Recall $x^{1/2}$ is a square root.', 'Recall x to the 1/2 is a square root.', 'fractional-exponent');
   tts('but $x^{-1}$ means the reciprocal.', 'but x to the minus 1 means the reciprocal.', 'negative-exponent');
+  // Audit residual (2026-07-23 fix): unicode superscript directly on the left
+  // operand used to block the bare-minus rule — "x² - 4" spoke with a silent
+  // hyphen-pause instead of "minus".
+  tts('The expression x² - 4 factors nicely.', 'The expression x squared minus 4 factors nicely.', 'unicode-sup-bare-minus');
+  tts('Compare 10² - 4 with the rest.', 'Compare 10 squared minus 4 with the rest.', 'unicode-sup-digit-bare-minus');
+  tts('The war ran 1941 - 1945 overall.', 'The war ran 1941 - 1945 overall.', 'year-range-still-hyphen');
   disp('\\sqrt[4]{16}', 'nth-root-display');
 
   // ── 4. Functions, composition, primes, inverses ──────────────────
