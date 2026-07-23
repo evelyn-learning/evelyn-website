@@ -26,7 +26,7 @@ import { stripWbEmphasisText } from './wb-emphasis-strip';
 import { validateGeometryCommand, type GeometryCommand } from './geometry-validator';
 import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
-import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints } from './graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from './graph-consistency-validator';
 import { validateSecantTangentGraph } from './secant-tangent-validator';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from './conic-construction';
 import { validateCircuit } from '../diagrams/circuit-validator';
@@ -246,6 +246,10 @@ export function processToolCall(
     // a corrective so the brain re-emits (R32 "The Puzzle" graph).
     const valuePoints = validateFunctionValuePoints(afterLinear);
     if (!valuePoints.ok) return { ok: false, reason: valuePoints.reason };
+    // Feature labels (local max/min/inflection) must be true of the plotted
+    // curve — reject so the brain re-derives the expression (R35).
+    const features = validateFeaturePoints(afterLinear);
+    if (!features.ok) return { ok: false, reason: features.reason };
     if (afterLinear !== original) {
       return { ok: true, command: { ...command, data: afterLinear } };
     }

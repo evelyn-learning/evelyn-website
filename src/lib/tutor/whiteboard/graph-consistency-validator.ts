@@ -118,6 +118,93 @@ export function validateFunctionValuePoints(
   };
 }
 
+/**
+ * R35 (2026-07-23, session-1784835425227): asked to plot f/f'/f'' "for this
+ * problem", the brain invented a cubic whose FEATURE-labeled points were all
+ * mathematically false for the plotted curves — "local max (f)" at x=0 where
+ * f'(0)=1, "local min" at x=2 where f'(2)=-5/3, "inflection" at x=1 where
+ * f''(1)≠0, and one point not even on the curve. The labels encode the
+ * DISCUSSED problem's features, so the curve is what must change: REJECT
+ * with per-point numerics so the brain re-derives the expression (snapping
+ * labels to the wrong curve would erase the problem's intent).
+ *
+ * Scope: ≥1 parseable y=f(x) curve; points labeled local max/min/inflection.
+ * The base curve is the one labeled f/f(x) (else the first). All checks are
+ * sampled numerics with generous tolerances; unparseable → pass.
+ */
+const FEATURE_LABEL_RE = /\b(local\s+max|local\s+min|maximum|minimum|inflection)\b/i;
+export function validateFeaturePoints(
+  data: {
+    functions?: Array<{ latex?: string; fn?: string; label?: string }>;
+    points?: Array<{ x: number; y: number; label?: string }>;
+    xRange?: [number, number];
+    yRange?: [number, number];
+  },
+): { ok: true } | { ok: false; reason: string } {
+  const fns = data.functions ?? [];
+  const points = (data.points ?? []).filter((p) => FEATURE_LABEL_RE.test(p.label ?? ''));
+  if (fns.length === 0 || points.length === 0) return { ok: true };
+  if (!Array.isArray(data.xRange) || !(data.xRange[1] > data.xRange[0])) return { ok: true };
+
+  const base = fns.find((f) => /^f(\(x\))?\s*(=|$)|^f$/.test((f.label ?? '').trim())) ?? fns[0];
+  const js = latexToJs(base.latex || base.fn || '', 'x');
+  if (!js) return { ok: true };
+  let f: (x: number) => number;
+  try {
+    // eslint-disable-next-line no-new-func
+    const compiled = new Function('x', `"use strict"; return (${js});`) as (x: number) => unknown;
+    f = (x) => { try { const r = compiled(x); return typeof r === 'number' ? r : NaN; } catch { return NaN; } };
+  } catch {
+    return { ok: true };
+  }
+
+  const [x0, x1] = data.xRange;
+  const h = (x1 - x0) * 1e-4;
+  const d1 = (x: number) => (f(x + h) - f(x - h)) / (2 * h);
+  const d2 = (x: number) => (f(x + h) - 2 * f(x) + f(x - h)) / (h * h);
+
+  // Scales: median |f'| and |f''| over the window → "≈ 0" thresholds.
+  const median = (g: (x: number) => number) => {
+    const vals: number[] = [];
+    for (let i = 0; i <= 60; i++) {
+      const v = Math.abs(g(x0 + (i * (x1 - x0)) / 60));
+      if (Number.isFinite(v)) vals.push(v);
+    }
+    vals.sort((a, b) => a - b);
+    return vals[Math.floor(vals.length / 2)] ?? 0;
+  };
+  const slopeTol = Math.max(0.1 * median(d1), 1e-3);
+  const curvTol = Math.max(0.1 * median(d2), 1e-3);
+  const ySpan = Math.abs((data.yRange?.[1] ?? 0) - (data.yRange?.[0] ?? 0)) || 1;
+
+  const misses: string[] = [];
+  for (const p of points) {
+    if (!Number.isFinite(p.x)) continue;
+    const label = p.label ?? '';
+    const fy = f(p.x);
+    if (Number.isFinite(fy) && Number.isFinite(p.y) && Math.abs(fy - p.y) > Math.max(0.05 * ySpan, 0.1)) {
+      misses.push(`"${label}" plotted at (${p.x}, ${p.y}) but f(${p.x}) = ${parseFloat(fy.toPrecision(4))}`);
+      continue;
+    }
+    if (/inflection/i.test(label)) {
+      const c = d2(p.x);
+      if (Number.isFinite(c) && Math.abs(c) > curvTol) {
+        misses.push(`"${label}": f''(${p.x}) = ${parseFloat(c.toPrecision(3))} ≠ 0 — not an inflection of the plotted curve`);
+      }
+    } else {
+      const s = d1(p.x);
+      if (Number.isFinite(s) && Math.abs(s) > slopeTol) {
+        misses.push(`"${label}": f'(${p.x}) = ${parseFloat(s.toPrecision(3))} ≠ 0 — not a critical point of the plotted curve`);
+      }
+    }
+  }
+  if (misses.length === 0) return { ok: true };
+  return {
+    ok: false,
+    reason: `show_function_graph: your labeled features are false for the curve you plotted — ${misses.join('; ')}. The labels carry the problem's actual features: re-derive an expression whose critical/inflection points genuinely sit where your labels (and the problem's stated conditions) say, then re-emit.`,
+  };
+}
+
 /** Parse a simple straight line `m*x + b` (or LaTeX `mx+b`) → {m,b}. Returns
  *  null for anything that isn't a recognizable degree-1 line in x (powers,
  *  other variables, functions, fractions all disqualify). Eval-free. */

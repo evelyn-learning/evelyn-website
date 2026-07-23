@@ -58,7 +58,7 @@ import { loadModuleByParams } from '@/lib/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
-import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
+import { validateGraphLinearConsistency, validateFunctionGraphVars, validateFunctionValuePoints, validateFeaturePoints } from '@/lib/tutor/whiteboard/graph-consistency-validator';
 import { validateSecantTangentGraph } from '@/lib/tutor/whiteboard/secant-tangent-validator';
 import {
   anchorWordIndex,
@@ -3786,6 +3786,17 @@ export function VoiceTutorRealtime({
           console.warn('[VoiceTutorRealtime] showGraph value-point mismatch:', valuePoints.reason);
           onDebugEvent?.('tool_call', `Rejected show_function_graph: ${valuePoints.reason}`);
           rejected.push({ action: 'show_function_graph', reason: valuePoints.reason });
+          return [];
+        }
+        // Feature labels (local max/min/inflection) must be true of the
+        // plotted curve — reject so the brain re-derives the expression (R35:
+        // "plot f/f'/f'' for this problem" invented a cubic whose labeled
+        // max/min/inflection were all false for its own curves).
+        const features = validateFeaturePoints(afterLinear);
+        if (!features.ok) {
+          console.warn('[VoiceTutorRealtime] showGraph feature-point mismatch:', features.reason);
+          onDebugEvent?.('tool_call', `Rejected show_function_graph: ${features.reason}`);
+          rejected.push({ action: 'show_function_graph', reason: features.reason });
           return [];
         }
         if (afterLinear !== original) {

@@ -7,6 +7,7 @@ import {
   parseLinear,
   validateGraphLinearConsistency,
   validateFunctionValuePoints,
+  validateFeaturePoints,
 } from '../src/lib/tutor/whiteboard/graph-consistency-validator';
 import type { GraphData } from '../src/lib/knowledge/types';
 
@@ -122,6 +123,54 @@ check('non-collinear points: guard does NOT refit (can\'t define a line)', valid
     points: [{ x: 1, y: 5, label: 'f(1) = 5' }],
   };
   check('unparseable curve → conservative pass', validateFunctionValuePoints(unparseable).ok);
+}
+
+// --- validateFeaturePoints (R35: labeled max/min/inflection false for the plotted curve) ---
+{
+  // Exact session payload (session-1784835425227): the invented cubic's
+  // labeled features are all mathematically false for its own curves.
+  const r35 = {
+    xRange: [-1, 4] as [number, number], yRange: [-3, 3] as [number, number],
+    functions: [
+      { latex: '-(x^3)/3 + x^2/3 + x - 1/3', label: 'f(x)' },
+      { latex: '-x^2 + 2*x/3 + 1', label: "f'(x)" },
+      { latex: '-2*x + 2/3', label: "f''(x)" },
+    ],
+    points: [
+      { x: 0, y: -0.333, label: 'local max (f)' },
+      { x: 2, y: 1, label: 'local min (f)' },
+      { x: 1, y: 0.667, label: 'inflection (f)' },
+    ],
+  };
+  const r = validateFeaturePoints(r35);
+  check('R35 session graph: false features → reject', !r.ok);
+  check('R35 reason cites a non-critical point', !r.ok && /not a critical point/.test(r.reason), (!r.ok && r.reason) || '');
+
+  // Correct version: f = -x^3/3 + x^2 (max at x=2, min at x=0, inflection x=1)
+  const good = {
+    xRange: [-1, 4] as [number, number], yRange: [-2, 3] as [number, number],
+    functions: [{ latex: '-(x^3)/3 + x^2', label: 'f(x)' }],
+    points: [
+      { x: 2, y: 4 / 3, label: 'local max (f)' },
+      { x: 0, y: 0, label: 'local min (f)' },
+      { x: 1, y: 2 / 3, label: 'inflection (f)' },
+    ],
+  };
+  check('correct features pass', validateFeaturePoints(good).ok, JSON.stringify(validateFeaturePoints(good)));
+
+  const noFeatures = {
+    xRange: [0, 5] as [number, number], yRange: [0, 9] as [number, number],
+    functions: [{ latex: 'x^2' }],
+    points: [{ x: 1, y: 1, label: '(1, 1)' }],
+  };
+  check('no feature labels → pass', validateFeaturePoints(noFeatures).ok);
+
+  const unparse = {
+    xRange: [0, 5] as [number, number], yRange: [0, 9] as [number, number],
+    functions: [{ latex: '\\operatorname{W}(x)', label: 'f(x)' }],
+    points: [{ x: 1, y: 1, label: 'local max' }],
+  };
+  check('unparseable curve → conservative pass', validateFeaturePoints(unparse).ok);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
