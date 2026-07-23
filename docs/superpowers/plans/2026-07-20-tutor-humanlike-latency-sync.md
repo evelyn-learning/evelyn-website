@@ -370,20 +370,20 @@ Today `RULE8_VIOLATION` (anchor: `brain/stream/route.ts` ~797-799 — narration 
 - Each repair is emitted as a normal `tool-call` SSE frame **plus a new optional field `anchorSentence`** — client buffers it with `anchorM = anchorSentence` (and Task 3.2 `anchorWord` when resolvable) instead of `ttsDispatchedCountRef.current`, so late-arriving repairs still sync to their sentence (or paint on `drainAll` if that sentence already played — late ink beats no ink).
 - Repairs flow through `validateToolCall` server-side and the client validator/dedup stack **unchanged** — if the brain already drew it, dedup drops the repair (that is the desired resolution of the double-draw hazard; the brain remains the authority).
 
-- [ ] **Step 1:** pure test for the detector + repair-schema validation (feed transcripts with spoken-undrawn equations / definitions / neither; assert detection set and that malformed model output is rejected wholesale — fail-to-nothing, never partial garbage).
-- [ ] **Steps 2-4:** fail → implement pure module → pass.
-- [ ] **Step 5:** wire into the stream route behind the flag; add `[rule8.repair]` server log line with count + `repaired`/`deduped`/`rejected` outcomes.
-- [ ] **Step 6:** client: honor `anchorSentence` on incoming tool-call frames (small change at the buffer site where `anchorM` is assigned, anchor ~2702).
-- [ ] **Step 7:** verify — e2e scenario with a scripted spoken-formula-no-tool turn (the 2026-07-18 live failure class that motivated Rule 3a) now paints the equation; `npm run test:process-tool-call && npm run test:dispatch-dedupe` green; measure RULE8_VIOLATION rate across 3 live sessions vs baseline → target: near zero net-of-dedup.
-- [ ] Commit; live-test round; ship.
+- [x] **Step 1:** pure test for the detector + repair-schema validation (feed transcripts with spoken-undrawn equations / definitions / neither; assert detection set and that malformed model output is rejected wholesale — fail-to-nothing, never partial garbage).
+- [x] **Steps 2-4:** fail → implement pure module → pass (`rule8-repair.ts`, test:rule8-repair, 34 checks).
+- [x] **Step 5:** wired post-`done` pre-close; `[rule8.repair]` log line; detector runs over the turn's REAL sentence events (not a fullText re-split).
+- [x] **Step 6:** client honors `anchorSentence` (anchorOverride through handleWhiteboardCommand → dispatchVisual; front-load-reanchor + word-anchor assists bypassed for repair frames).
+- [x] **Step 7 (dev):** verify — wire test on :3006 paints both repair kinds (show_equation anchorSentence=2; tutor_handwrite for definitions); suites green. LIVE 3-session RULE8-rate measurement still pending. Original: verify — e2e scenario with a scripted spoken-formula-no-tool turn (the 2026-07-18 live failure class that motivated Rule 3a) now paints the equation; `npm run test:process-tool-call && npm run test:dispatch-dedupe` green; measure RULE8_VIOLATION rate across 3 live sessions vs baseline → target: near zero net-of-dedup.
+- [x] Committed b43eb4d5 (2026-07-23). Live-test round + ship pending.
 
 ### Task 4.2: Visible fallback for validator-dropped content + drop telemetry
 
 **Files:** Modify `src/lib/tutor/whiteboard/process-tool-call.ts` (client validators) and the `tool-rejected` handling; reuse the existing `SketchFallbackCard` pattern.
 
-- [ ] Add a debug event at EVERY silent drop site (client validator reject, dedup drop, kill retraction, doodler timeout, image-URL drop): `render_dropped(action, reason)` — one sweep, telemetry only, no behavior change. Commit separately.
-- [ ] For content-bearing rejects only (equation/table/definition with well-formed text but failed structural validation — NOT duplicates, NOT broken geometry), render a plain fallback card (title + raw LaTeX/text via the existing KaTeX inline path) instead of nothing, tagged so the brain's board snapshot sees it (preventing a blind re-emit loop). Behind `TUTOR_RENDER_FALLBACK_CARD=on`.
-- [ ] Verify with `npm run test:process-tool-call`; e2e; commit.
+- [x] (b2a64901) Add a debug event at EVERY silent drop site (client validator reject, dedup drop, kill retraction, doodler timeout, image-URL drop): `render_dropped(action, reason)` — one sweep, telemetry only, no behavior change. Commit separately.
+- [x] (e4ca882b) For content-bearing rejects only (equation/table/definition with well-formed text but failed structural validation — NOT duplicates, NOT broken geometry), render a plain fallback card (title + raw LaTeX/text via the existing KaTeX inline path) instead of nothing, tagged so the brain's board snapshot sees it (preventing a blind re-emit loop). Behind `TUTOR_RENDER_FALLBACK_CARD=on`.
+- [x] Verified: process-tool-call 128 checks; tsc clean. Committed e4ca882b.
 
 ---
 
