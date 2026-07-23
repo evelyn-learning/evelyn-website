@@ -63,6 +63,29 @@ export function lastQuestionSentence(text: string): string | null {
  *  function; the route returns a non-200 status for that case instead so
  *  the client can tell "deliberately nothing" from "we don't know". */
 export function parseGistReply(raw: string): string | null {
-  const trimmed = raw.trim();
-  return trimmed && trimmed !== 'NONE' && trimmed.length <= 200 ? trimmed : null;
+  let t = raw.trim();
+  if (!t) return null;
+  // R33 (session-1784830146734): the model sometimes ANNOTATES its verdict —
+  // "NONE\n(This is a follow-up prompt asking the student to elaborate…)" —
+  // and the exact-match check let the whole thing through, so the pin
+  // displayed "NONE" plus the model's meta-commentary. Any reply that
+  // STARTS with NONE is a NONE verdict; the trailing explanation is for us,
+  // never for the student.
+  if (/^NONE\b/.test(t)) return null;
+  // A reply that is entirely a parenthetical is meta-commentary, not a question.
+  if (/^\([\s\S]*\)$/.test(t)) return null;
+  // R33: self-correction chatter — "What is the first step?\nWait — let me
+  // rephrase to match the teaching context:\nIs $f(x)…$ continuous?" — the
+  // pin rendered all three lines. The model's FINAL question sentence is
+  // the one it settled on; keep only that. A multi-line reply with no "?"
+  // anywhere is meta → null.
+  if (/\n/.test(t) || /\?[\s\S]*\?/.test(t)) {
+    const questions = t.match(/[^?\n]{2,}\?/g);
+    if (!questions) return null;
+    t = questions[questions.length - 1].trim();
+  }
+  // Same-line rephrase preamble ("let me rephrase that: Is …?") — cut
+  // through the colon.
+  t = t.replace(/^.*\b(?:let me (?:rephrase|restate)|rephras\w+)\b[^:]*:\s*/i, '').trim();
+  return t && t.length <= 200 ? t : null;
 }

@@ -84,5 +84,30 @@ check('wordIdx: empty words → undefined', anchorWordIndex([], masterEq) === un
 // board-anchor AUTO-FIRE path (2026-07-10). The brain owns show_sketch; the
 // re-anchor helpers above are the module's remaining purpose.
 
+// R33 (session-1784830146734): label-less pure-math equation — the naming
+// sentence speaks the MATH, never the word "equation". Without mathTokens
+// the card held to the max-hold and painted ~2 sentences late.
+{
+  const eq = extractAnchorKeywords({
+    action: 'showEquation',
+    latex: 'f(0) = e^0 - 2(0) - 1 = 1 - 0 - 1 = 0',
+  })!;
+  check('mathTokens extracted for label-less equation', (eq.mathTokens?.length ?? 0) >= 4);
+  check('naming sentence (spoken math, small elisions) introduces',
+    sentenceIntroducesAnchor('Exactly, f of 0 equals e to the 0 minus 0 minus 1 equals 1 minus 0 minus 1 equals 0.', eq));
+  check('raw $-span sentence introduces',
+    sentenceIntroducesAnchor('Exactly — $f(0) = e^0 - 0 - 1 = 1 - 0 - 1 = 0$.', eq));
+  check('unrelated sentence does NOT introduce',
+    !sentenceIntroducesAnchor("Here's the trap — that solution is on the boundary, not inside.", eq));
+  const other = extractAnchorKeywords({ action: 'showEquation', latex: 'e^x = 2x + 1' })!;
+  check('different equation does NOT cross-match the sentence',
+    !sentenceIntroducesAnchor('Exactly, f of 0 equals e to the 0 minus 0 minus 1 equals 1 minus 0 minus 1 equals 0.', other));
+  const idx = anchorWordIndex('Exactly f of 0 equals e to the 0 minus 0 minus 1 equals 0'.split(' '), eq);
+  check('wordIdx: math-reading sentence anchors at the leading symbol', idx === 1, String(idx));
+  const f2 = extractAnchorKeywords({ action: 'showEquation', latex: 'f(2) = e^2 - 5 \\approx 2.39 > 0' })!;
+  check('second session case (f(2) card) introduces',
+    sentenceIntroducesAnchor('Hmm. f of 2 equals e squared minus 5, and e squared is about 7.39, so f of 2 is about 2.39 — positive.', f2));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

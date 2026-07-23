@@ -133,5 +133,37 @@ check(
   'Want another at this level, something harder, or move on?',
 );
 
+// R33 (session-1784830146734): model meta-commentary leaked into the pin.
+check(
+  'NONE with trailing annotation is still NONE',
+  parseGistReply("NONE\n(This is a follow-up prompt asking the student to elaborate on reasoning they've already started, not a standalone question the tutor is posing.)"),
+  null,
+);
+check(
+  'parenthetical-only reply is meta → null',
+  parseGistReply('(The turn poses no question.)'),
+  null,
+);
+check(
+  'self-correction keeps only the final question',
+  parseGistReply('What is the first step?\nWait — let me rephrase to match the teaching context:\nIs $f(x) = \\cos(x) - x$ continuous on $[0, \\pi/2]$?'),
+  'Is $f(x) = \\cos(x) - x$ continuous on $[0, \\pi/2]$?',
+);
+check(
+  'same-line rephrase preamble cut through the colon',
+  parseGistReply('Let me rephrase that: Is the function continuous on the interval?'),
+  'Is the function continuous on the interval?',
+);
+check(
+  'two-question single-line reply keeps the last',
+  parseGistReply('Ready to try? What sign does $f(0.5)$ have?'),
+  'What sign does $f(0.5)$ have?',
+);
+check(
+  'clean single question still passes verbatim',
+  parseGistReply('Is $f(x)$ continuous on $[0, 2]$?'),
+  'Is $f(x)$ continuous on $[0, 2]$?',
+);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

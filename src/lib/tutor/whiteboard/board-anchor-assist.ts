@@ -31,6 +31,10 @@ export interface AnchorKeywords {
    *  terms ("when delta G is negative…") without saying the word "equation".
    *  Requires ≥2 matches so a single vague symbol mention doesn't trigger. */
   symbolTokens: string[];
+  /** R33: the equation's alphanumeric atoms ("f 0 e 0 2 0 1 …") for the
+   *  label-less pure-math case — matched by in-order subsequence coverage
+   *  (see sentenceSpeaksMath). Empty for figures. */
+  mathTokens?: string[];
 }
 
 const STOPWORDS = new Set([
@@ -66,7 +70,51 @@ export function extractAnchorKeywords(cmd: unknown): AnchorKeywords | null {
     .split(/\s+/)
     .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
   const symbolTokens = kind === 'equation' ? latexToSymbolTokens(c.latex || '') : [];
-  return { kind, tokens, symbolTokens };
+  const mathTokens = kind === 'equation' ? latexToMathTokens(c.latex || '') : [];
+  return { kind, tokens, symbolTokens, mathTokens };
+}
+
+/** R33 (session-1784830146734): a label-less pure-math equation ("f(0) =
+ *  e^0 - 2(0) - 1 = 0") has NO title tokens and NO Greek pairs, so the
+ *  assist could never recognize its naming sentence — the narration speaks
+ *  the MATH ("f of 0 equals e to the 0…"), not the word "equation". The
+ *  card then sat in pending-reanchor until the max-hold and painted ~2
+ *  sentences AFTER being spoken. These are the equation's alphanumeric
+ *  atoms, matched against the sentence by in-order subsequence (LCS) so
+ *  spoken filler ("to the", "minus") and small elisions on either side
+ *  don't break the match. */
+function latexToMathTokens(latex: string): string[] {
+  return String(latex ?? '')
+    .toLowerCase()
+    .replace(/\\[a-z]+/g, ' ')
+    .replace(/[^a-z0-9]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 40);
+}
+
+/** Longest common subsequence LENGTH of two small token arrays. */
+function lcsLength(a: readonly string[], b: readonly string[]): number {
+  const dp = new Array<number>(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    let diag = 0;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? diag + 1 : Math.max(dp[j], dp[j - 1]);
+      diag = tmp;
+    }
+  }
+  return dp[b.length];
+}
+
+/** ≥4 atoms and ≥60% of them spoken in order → the sentence is reading the
+ *  equation aloud. Threshold tuned against the R33 case (10/11 atoms) and
+ *  against cross-matching a DIFFERENT on-screen equation (≤40%). */
+const MATH_TOKEN_MIN = 4;
+const MATH_TOKEN_COVERAGE = 0.6;
+function sentenceSpeaksMath(sentenceWords: readonly string[], mathTokens: readonly string[]): boolean {
+  if (mathTokens.length < MATH_TOKEN_MIN) return false;
+  return lcsLength(mathTokens, sentenceWords) / mathTokens.length >= MATH_TOKEN_COVERAGE;
 }
 
 const GREEK = ['alpha', 'beta', 'gamma', 'delta', 'theta', 'lambda', 'mu', 'sigma', 'omega', 'phi', 'psi', 'pi', 'rho', 'tau'];
@@ -123,6 +171,14 @@ export function anchorWordIndex(words: readonly string[], anchor: AnchorKeywords
     }
     if (hits.length >= 2) consider(Math.min(...hits));
   }
+  // R33 accelerator: when the sentence reads the equation's math aloud, the
+  // referring word is the first spoken word matching the equation's first
+  // atom (e.g. the "f" of "f of 0 equals…").
+  if (best === undefined && anchor.mathTokens && anchor.mathTokens.length >= MATH_TOKEN_MIN
+      && sentenceSpeaksMath(norm, anchor.mathTokens)) {
+    const first = norm.indexOf(anchor.mathTokens[0]);
+    if (first >= 0) consider(first);
+  }
   return best;
 }
 
@@ -146,6 +202,13 @@ export function sentenceIntroducesAnchor(sentence: string, anchor: AnchorKeyword
   for (const tok of anchor.symbolTokens) {
     if (s.includes(` ${tok} `)) symHits++;
     if (symHits >= 2) return true;
+  }
+  // R33: reads the equation's math aloud ("f of 0 equals e to the 0 minus…")
+  // — in-order atom coverage against the latex (label-less equations have no
+  // other signal; without this they held to the max-hold and painted late).
+  if (anchor.mathTokens && anchor.mathTokens.length >= MATH_TOKEN_MIN) {
+    const words = s.trim().split(' ').filter(Boolean);
+    if (sentenceSpeaksMath(words, anchor.mathTokens)) return true;
   }
   return false;
 }
