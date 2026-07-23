@@ -40,5 +40,27 @@ check('wrong branch', block.includes('do NOT state the correct value'));
 check('non-answer branch', block.includes('NO verdict word'));
 check('closes tag', block.trimEnd().endsWith('</verdict_guard>'));
 
+// ─── Continuation guard (live round 6, 2026-07-23, session-1784782504324):
+// "Yes." to "Ready for the next one?" drew "Exactly." + a re-summary + the
+// SAME question again — two turns stalled. A bare affirmative after a
+// continuation offer is consent, not an answer to grade.
+const OFFER = "That's the pattern. Ready for a fresh problem?";
+const contFires = (t: string, tutor: string) => formatVerdictGuardBlock(t, tutor).includes('<continuation_guard>');
+
+check('cont: "Yes." after offer → continuation guard', contFires('Yes.', OFFER));
+check('cont: "Uh, yes." (leading filler) → continuation guard', contFires('Uh, yes.', OFFER));
+check('cont: "Let\'s go!" after "Want to…?" → continuation guard', contFires("Let's go!", 'Want to try one on your own?'));
+check('cont: continuation guard replaces verdict guard', !formatVerdictGuardBlock('Yes.', OFFER).includes('<verdict_guard>'));
+check('cont: guard forbids verdict opener', formatVerdictGuardBlock('Yes.', OFFER).includes('do NOT open with a verdict word'));
+
+// "Yes." answering a CONTENT question keeps the ordinary verdict guard.
+check('cont: "Yes." after content question → verdict guard', !contFires('Yes.', 'Is the net force bigger than before?')
+  && formatVerdictGuardBlock('Yes.', 'Is the net force bigger than before?').includes('<verdict_guard>'));
+// Compound replies carry content — no continuation guard.
+check('cont: "yes but why…" → no continuation guard', !contFires('yes but why does mass matter?', OFFER));
+// No tutor context → unchanged behavior.
+check('cont: no prior tutor msg → verdict guard as before', formatVerdictGuardBlock('Yes.').includes('<verdict_guard>'));
+check('cont: bracketed injection → nothing', formatVerdictGuardBlock('[Skip-button-clicked]', OFFER) === '');
+
 if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
 console.log(`\nAll ${passed} verdict-guard tests passed.`);

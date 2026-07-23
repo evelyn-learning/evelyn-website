@@ -857,11 +857,38 @@ function formatStudentStateBlock(
  * conversational turns — the block must never dilute normal dialogue.
  * Exported for scripts/test-verdict-guard.ts.
  */
-export function formatVerdictGuardBlock(transcript: string): string {
+/** Continuation-offer tail: the tutor's prior turn ended by OFFERING the
+ *  next step ("Ready for the next one?"). Mirrors the orchestrator's
+ *  affirmative-no-advance advisory regex (VoiceTutorRealtime ~10155). */
+const CONTINUATION_QUESTION_RE =
+  /\b(?:ready (?:to|for)|want to|should we|shall we|on to the|move on|got it|next one)\b[^?]{0,80}\?\s*$/i;
+/** Bare affirmative (leading fillers stripped) — consent, not an answer. */
+const BARE_AFFIRMATIVE_RE =
+  /^(?:yes|yeah|yep|yup|yas|sure|ok|okay|ready|alright|sounds good|let'?s go|let'?s do it|onwards?|next|continue|go|good|cool|fine|great|all good)[\s.!,]*$/i;
+
+export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: string): string {
   const t = (transcript ?? '').trim();
   // Bracketed context injections (student marks, validator feedback,
   // kill-bridge) are not spoken answers.
   if (!t || t.startsWith('[')) return '';
+  // Live round 6 (2026-07-23, session-1784782504324): "Yes." to "Ready for
+  // the next one?" drew "Exactly." + a re-summary + the same question again
+  // — twice in a row. A bare affirmative after a continuation OFFER is
+  // consent, not an answer: swap in the continuation guard (the ordinary
+  // verdict branches would invite exactly the observed praise-and-stall).
+  const bare = t.replace(/^(?:um|uh|er|well|so|hmm)[,\s]+/i, '').trim();
+  if (
+    lastTutorMessage &&
+    BARE_AFFIRMATIVE_RE.test(bare) &&
+    CONTINUATION_QUESTION_RE.test(lastTutorMessage.trim())
+  ) {
+    return '<continuation_guard>\n'
+      + 'The student just AGREED to the offer your last turn ended with. This is consent, not an answer to grade: '
+      + 'do NOT open with a verdict word ("Exactly." / "Right." / "Correct.") and do NOT re-explain or re-summarize what was just covered. '
+      + 'Deliver the offered next step IMMEDIATELY — put up the next problem / advance to the next topic (with the matching tool call) '
+      + 'and keep the transition to a few words ("Here we go.").\n'
+      + '</continuation_guard>\n\n';
+  }
   const words = t.split(/\s+/);
   const hasNumber = /\d/.test(t);
   const bareOption = /^[a-eA-E][.)!?]?$/.test(t);
@@ -1342,8 +1369,9 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // "how" tier. Previously it sat near the end of userContent, after
   // truthBlock — this is the ordering-effect change; verified via the
   // node probe in scripts/ (see task-W3-report.md).
-  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript);
-  if (verdictGuardBlock) console.log('[verdict-guard] short-answer guard attached');
+  const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
+  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
+  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] short-answer guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1535,8 +1563,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // Task W3: same ordering change as runBrainTurn above — pace_preference
   // moved ahead of lessonBlock/truthBlock. Both twins must stay in lockstep
   // (see buildBrainMessages doc comment on cache-behavior consistency).
-  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript);
-  if (verdictGuardBlock) console.log('[verdict-guard] short-answer guard attached');
+  const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
+  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
+  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] short-answer guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
