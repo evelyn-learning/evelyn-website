@@ -193,3 +193,22 @@ if (failed > 0 || !wrapOk || !profanityPreserved || !spellcheckWorks) {
   if (classifyTranscript('x') !== 'clean') { console.error('FAIL: math var x must stay clean'); process.exit(1); }
   console.log('OK — short-answer whitelist (no/ok reach the brain)');
 }
+
+// ── Numeric answers (2026-07-23, session-1784762966829): the student
+//    answered "6." to "what number times 4 gives us 12?" — dropped by the
+//    same ≤2-char rule ("6" is one char, not a letter), the tutor never
+//    responded, and the session ended on that silence. Bare digits are
+//    answers, never fillers.
+{
+  const clean: string[] = ['6.', '3', '12', '42', '3.5', '0'];
+  for (const t of clean) {
+    const got = classifyTranscript(t);
+    if (got !== 'clean') { console.error(`FAIL numeric answer "${t}": got ${got}, want clean`); process.exit(1); }
+  }
+  // Fillers and empty/punctuation-only turns still drop.
+  for (const t of ['uh', 'hm', '', '.']) {
+    const got = classifyTranscript(t);
+    if (got !== 'noise') { console.error(`FAIL non-answer "${t}": got ${got}, want noise`); process.exit(1); }
+  }
+  console.log('OK — numeric answers reach the brain');
+}

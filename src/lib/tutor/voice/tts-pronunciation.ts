@@ -540,7 +540,31 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // "star" from the critical-value rule) into spans — never split them.
   'big', 'star',
 ]);
+// Phase-3 live round: letter runs that must stay glued to a PRECEDING
+// DIGIT specifically — ordinal suffixes, meridiems, and imperial/time
+// units not in the span vocabulary. Separate from SPAN_PRODUCT_EXCLUDE:
+// a standalone "th" inside a span should still split, but "4th" never.
+const DIGIT_RUN_EXCLUDE = new Set([
+  'th', 'st', 'nd', 'rd', 'am', 'pm', 'oz', 'lb', 'lbs', 'ft', 'yd',
+  'mi', 'hr', 'hrs',
+  // Units/rates the span vocabulary doesn't carry — the prose digit-run
+  // splitter (see rewriteForTTS) sees raw text where any of these can be
+  // digit-glued ("70mph", "500ml", "8gb"). Never letter-split them.
+  'ml', 'kl', 'dl', 'gal', 'mph', 'kph', 'rpm', 'mpg', 'psi', 'bpm',
+  'dpi', 'fps', 'ghz', 'mhz', 'khz', 'gb', 'mb', 'kb', 'tb', 'kwh',
+]);
 function respellMathLetters(s: string): string {
+  // Phase-3 live round (2026-07-23, SAT session: "b^2 - 4ac" spoke "4ac"
+  // as in "four-ack"): a COEFFICIENT-PREFIXED product ("4ac", "2ab") never
+  // hit the round-22 splitter below — between a digit and a letter there
+  // is no \b, so the letters aren't a standalone token. Split the letter
+  // run off the coefficient first ("4ac" → "4 a c") so the single-letter
+  // respells apply. Ordinals ("4th"), meridiems ("10am") and the shared
+  // exclude vocabulary (units like kg/cm, function names) stay glued.
+  s = s.replace(/\b(\d+)([a-z]{2,3})\b/g, (m: string, num: string, run: string) =>
+    DIGIT_RUN_EXCLUDE.has(run) || SPAN_PRODUCT_EXCLUDE.has(run)
+      ? m
+      : `${num} ${run.split('').join(' ')}`);
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
   // letter lowercase token inside a DECLARED span is a variable PRODUCT
   // ("ab", "xy") unless it's a known word/function — split into letters
@@ -1607,6 +1631,19 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // order between the two doesn't matter, but keeping ASCII-operator rules
   // together mirrors the existing equals-sign placement).
   t = rewriteBareMinusForSpeech(t);
+  // Phase-3 live round (2026-07-23, SAT session): PROSE "b^2 - 4ac" spoke
+  // "4ac" as "four-ack" — the caret rule handled b^2 but the
+  // coefficient-glued variable product never reached any splitter (the
+  // in-span rule in respellMathLetters only sees DECLARED spans). In tutor
+  // prose a digit glued to a 2-3 letter lowercase run that isn't an
+  // ordinal/meridiem/unit is algebra by construction — split it and speak
+  // the letter NAMES directly ("4ac" → "4 ay see"); emitting names (not
+  // bare letters) sidesteps the prose article guards that would leave a
+  // bare "a" ambiguous.
+  t = t.replace(/\b(\d+)([a-z]{2,3})\b/g, (m: string, num: string, run: string) =>
+    DIGIT_RUN_EXCLUDE.has(run) || SPAN_PRODUCT_EXCLUDE.has(run)
+      ? m
+      : `${num} ${run.split('').map((ch) => SPOKEN_ELEMENT_LETTERS[ch] ?? ch).join(' ')}`);
   // Unicode sub/superscript digits: Cartesia mangles them ("T₁" was
   // voiced roughly as "T-jash"). Speak the plain digit ("T 1").
   const SUBSCRIPT_DIGITS: Record<string, string> = {

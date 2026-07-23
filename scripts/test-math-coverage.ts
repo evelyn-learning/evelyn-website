@@ -407,4 +407,19 @@ function runCurated(): void {
   check('katex-preprocess: double-escaped command collapses',
     preprocessKatexBody('\\\\frac{1}{2}') === '\\frac{1}{2}',
     `got ${JSON.stringify(preprocessKatexBody('\\\\frac{1}{2}'))}`);
+
+  // ── 24. Phase-3 live round (2026-07-23, SAT session): coefficient-glued
+  // variable products. "b^2 - 4ac" spoke "4ac" as "four-ack" — no \b
+  // between digit and letter, so neither the in-span round-22 splitter
+  // nor any prose rule ever saw "ac" as a token. Prose emits letter NAMES
+  // directly ("4 ay see" — bare split letters would re-enter the
+  // article-'a' guards); spans split then respell per round-22.
+  tts('what do we need b^2 - 4ac to equal?', 'what do we need bee squared - 4 ay see to equal?', 'prose-4ac-discriminant');
+  tts('plug a = 2, b = k, c = 8 into b^2 - 4ac = 0.', 'plug ay equals 2, bee equals k, see equals 8 into bee squared - 4 ay see equals 0.', 'prose-4ac-plugin');
+  tts('So 2ab plus 4ac minus 3bc.', 'So 2 ay bee plus 4 ay see minus 3 bee see.', 'prose-coeff-products');
+  tts('The discriminant is $b^2 - 4ac$.', 'The discriminant is bee squared minus 4 ay c.', 'span-4ac');
+  // Guards: ordinals, meridiems, units — digit-glued runs that must stay.
+  tts('That is the 4th problem, due at 10am on the 2nd.', 'That is the 4th problem, due at 10am on the 2nd.', 'digit-run-ordinal-meridiem-guard');
+  tts('It moves at 70mph and holds 500ml.', 'It moves at 70mph and holds 500ml.', 'digit-run-unit-guard');
+  tts('A 4acre lot with 12oz cups.', 'A 4acre lot with 12oz cups.', 'digit-run-word-guard');
 }

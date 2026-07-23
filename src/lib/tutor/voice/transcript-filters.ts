@@ -402,9 +402,18 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   // which is the right layer for that decision — not the noise filter).
   const MATH_VAR_LETTERS = new Set(['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']);
   const SHORT_ANSWER_WORDS = new Set(['no', 'ok', 'up']);
+  // Phase-3 live round (2026-07-23, session-1784762966829): the student
+  // answered "6." to "what number times 4 gives us 12?" — dropped here as
+  // a ≤2-char single word, the tutor never responded, and the session
+  // ended on that silence. A pure-digit token is the single most common
+  // student turn in a math session ("3", "12", "42" — and "3.5", whose
+  // normalization strips the dot); it is an ANSWER, never a filler. Same
+  // bug class as the 2026-07-10 "No." incident this comment block already
+  // documents.
   if (
     words.length === 1
     && normalized.length <= 2
+    && !/^\d+$/.test(normalized)
     && !MATH_VAR_LETTERS.has(normalized)
     && !SHORT_ANSWER_WORDS.has(normalized)
   ) return true;
