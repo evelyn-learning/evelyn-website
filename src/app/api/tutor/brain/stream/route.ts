@@ -483,6 +483,20 @@ export async function POST(req: NextRequest) {
         }
       };
 
+      // Phase 4.2 drop telemetry: like send(), but does NOT count toward
+      // emittedToClient — a telemetry-only frame must never trip the
+      // zero-egress retry guard (a turn whose only egress was a drop
+      // notice is still safely retryable).
+      const sendTelemetry = (event: BrainStreamEvent) => {
+        if (clientGone) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        } catch (err) {
+          clientGone = true;
+          console.warn('[brain.stream] telemetry enqueue failed (client gone?):', err);
+        }
+      };
+
       // Lever A — flag-gated subject filter for the tools array (the
       // largest cached-prefix cost). Default OFF ⇒ pass WHITEBOARD_TOOLS
       // by reference, byte-identical to pre-Lever-A. Freestyle/pasted
@@ -693,6 +707,7 @@ export async function POST(req: NextRequest) {
               const diagramShaped = /\b(diagram|schematic|labeled|labelled|anatomy|structure(?: of)?|cross[-\s]?section|bilayer|molecule|molecular|chemical structure|microscope view|cell wall|organelle|pathway|cycle|model of)\b/i.test(query);
               if (diagramShaped) {
                 console.log(`[show_labeled_image] diagram-shaped query rejected: "${query}" — brain should use show_diagram / show_svg_diagram instead`);
+                sendTelemetry({ type: 'render-dropped', action: 'show_labeled_image', reason: `diagram-shaped query "${query.slice(0, 60)}"` });
                 if (clientGone) break;
                 continue;
               }
@@ -703,6 +718,7 @@ export async function POST(req: NextRequest) {
                 const found = await searchImage({ query });
                 if (!found) {
                   console.log(`[show_labeled_image] image-search MISS for query="${query}", dropping tool call`);
+                  sendTelemetry({ type: 'render-dropped', action: 'show_labeled_image', reason: `image-search miss "${query.slice(0, 60)}"` });
                   if (clientGone) break;
                   continue;
                 }
@@ -737,6 +753,7 @@ export async function POST(req: NextRequest) {
                 );
               } catch (err) {
                 console.warn(`[show_labeled_image] image-search threw, dropping:`, (err as Error).message);
+                sendTelemetry({ type: 'render-dropped', action: 'show_labeled_image', reason: 'image-search error' });
                 if (clientGone) break;
                 continue;
               }
@@ -745,12 +762,14 @@ export async function POST(req: NextRequest) {
               const ok = await validateImageUrl(existingSrc);
               if (!ok) {
                 console.log(`[show_labeled_image] URL precheck FAILED, dropping. src="${existingSrc.slice(0, 160)}"`);
+                sendTelemetry({ type: 'render-dropped', action: 'show_labeled_image', reason: 'url precheck failed' });
                 if (clientGone) break;
                 continue;
               }
             } else {
               // Neither query nor src — invalid call.
               console.log('[show_labeled_image] no query and no src, dropping');
+              sendTelemetry({ type: 'render-dropped', action: 'show_labeled_image', reason: 'no query and no src' });
               if (clientGone) break;
               continue;
             }

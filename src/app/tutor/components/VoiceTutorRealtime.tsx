@@ -2772,6 +2772,7 @@ export function VoiceTutorRealtime({
         catalogRef.current.removeByIds([cmdId]);
       }
       onDebugEvent?.('sketch_dropped', `${why} id=${cmdId ?? '?'}`);
+      onDebugEvent?.('render_dropped', `show_sketch — ${why}`);
       flushReadyRenders();
     },
     [onDebugEvent, flushReadyRenders],
@@ -2996,6 +2997,7 @@ export function VoiceTutorRealtime({
     }
     renderBufferPausedRef.current = false;
     onDebugEvent?.('render_sync_drop', `${dropped} buffered render(s) dropped + retracted (${ids.length} id)`);
+    onDebugEvent?.('render_dropped', `render_buffer — kill retraction of ${dropped} buffered (${ids.length} id)`);
   }, [onDebugEvent]);
 
   // Flush the ENTIRE buffer immediately, ignoring anchors (perception
@@ -3134,6 +3136,7 @@ export function VoiceTutorRealtime({
       // All commands in the batch were dedup-dropped. Return early with
       // the rejection list so the Realtime hook tells the tutor none
       // rendered.
+      for (const r of rejected) onDebugEvent?.('render_dropped', `${r.action} — ${r.reason.slice(0, 120)}`);
       return {
         rejected,
         assignedIds: [],
@@ -5154,6 +5157,7 @@ export function VoiceTutorRealtime({
         cmdWithId._duplicateOf = existing.itemId;
         console.warn('[VoiceTutor] show_*-dedup: %s matched existing %s by signature', action, existing.itemId);
         onDebugEvent?.('show_dedup_skip', `${action} → ${existing.itemId}`);
+        onDebugEvent?.('render_dropped', `${action} — duplicate of ${existing.itemId}`);
         // The brain re-showed this figure because it's about to narrate it.
         // Dropping the duplicate is right; leaving the student on another
         // page is not (session-1783693044096: the tutor described the
@@ -5833,6 +5837,10 @@ export function VoiceTutorRealtime({
     // current board state so the tutor sees what's already drawn at
     // decision time and routes through scroll/scribble for repeats.
     const boardSnapshot = catalogRef.current.getSnapshot();
+    // Phase 4.2 drop telemetry: one uniform event per validator-rejected
+    // command (the per-site events above are heterogeneous; this is the
+    // grep-able / embed-persisted roll-up — see EMBED_DEBUG_EVENT_PREFIXES).
+    for (const r of rejected) onDebugEvent?.('render_dropped', `${r.action} — ${r.reason.slice(0, 120)}`);
     return { rejected, assignedIds, manifests, duplicates, boardSnapshot };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
 
@@ -7448,6 +7456,7 @@ export function VoiceTutorRealtime({
             `mirror-${prunedFromMirror} catalog-${prunedFromCatalog} [${unique.join(', ')}]`,
         );
         onDebugEvent?.('killed_render_rollback', `${unique.length}: ${unique.join(',')}`);
+        onDebugEvent?.('render_dropped', `painted — kill rollback of ${unique.length} render(s)`);
       };
 
       // #4 (2026-05-15): Skip-turn pre-emptive TTS gating. A correct
@@ -9840,6 +9849,11 @@ export function VoiceTutorRealtime({
                   } else {
                     console.warn('[brain-orchestrator] unmapped tool call:', name);
                   }
+                } else if (ev.type === 'render-dropped') {
+                  // Phase 4.2 drop telemetry: server dropped a render before
+                  // it ever reached us (image URL/search failures). Ledger
+                  // only — nothing to dispatch or roll back.
+                  onDebugEvent?.('render_dropped', `${(ev as { action?: string }).action ?? '?'} — ${(ev as { reason?: string }).reason ?? ''} (server)`);
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
                   attemptText = ((ev.fullText as string) ?? attemptText).trim();

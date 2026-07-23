@@ -366,6 +366,11 @@ export type BrainStreamEvent =
    *  rows, blank showMolecule smiles). Not dispatched to the whiteboard
    *  renderer. Consumers may log it to debugEvents for telemetry. */
   | { type: 'tool-rejected'; id: string; name: string; args: Record<string, unknown>; reason: string }
+  /** Phase 4.2 drop telemetry: a render the SERVER dropped before it ever
+   *  reached the client (e.g. show_labeled_image URL/search failures).
+   *  Client maps it to a `render_dropped` debug event — telemetry only,
+   *  never dispatched. */
+  | { type: 'render-dropped'; action: string; reason: string }
   /** Explicit pause directive emitted between sentences. The speakText
    *  layer waits this long before voicing the next sentence. Cancelled
    *  immediately if the student speaks (barge-in). */
