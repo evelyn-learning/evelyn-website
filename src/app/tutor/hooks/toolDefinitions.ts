@@ -107,7 +107,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
           items: {
             type: 'object',
             properties: {
-              expr: { type: 'string', description: 'LaTeX expression in x.' },
+              expr: { type: 'string', description: 'LaTeX expression in x (e.g. "e^{-1.5(x-3)}", "\\frac{x}{2}"). NEVER JavaScript syntax — no Math.exp/Math.sqrt/**; a JS expression cannot be plotted and the curve silently vanishes while its legend entry remains.' },
               color: { type: 'string' },
               label: { type: 'string' },
               domain: { type: 'array', items: { type: 'number' } },

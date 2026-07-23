@@ -90,13 +90,18 @@ function bracketExponents(s: string): string {
  * Convert a legacy JS function expression to LaTeX.
  * Handles common patterns from AI-generated expressions.
  */
-function jsExprToLatex(expr: string, variable: string = 'x'): string {
+export function jsExprToLatex(expr: string, variable: string = 'x'): string {
   let s = expr.trim();
 
   // Already looks like LaTeX (contains \frac, \sqrt, etc.)
   if (/\\(?:frac|sqrt|sin|cos|tan|log|ln)/.test(s)) return s;
 
   // JS Math functions → LaTeX
+  // Math.exp first, with ONE level of paren nesting — R32b live
+  // (session-1784829643398): the brain emitted
+  // "Math.exp(-1.5*(x-3))" and the flat [^)]+ pattern would stop at the
+  // inner ')' and mangle the argument.
+  s = s.replace(/Math\.exp\(((?:[^()]|\([^()]*\))*)\)/g, 'e^{$1}');
   s = s.replace(/Math\.sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
   s = s.replace(/Math\.sin\(([^)]+)\)/g, '\\sin\\left($1\\right)');
   s = s.replace(/Math\.cos\(([^)]+)\)/g, '\\cos\\left($1\\right)');
@@ -128,11 +133,17 @@ function jsExprToLatex(expr: string, variable: string = 'x'): string {
 /**
  * Get LaTeX for a graph function, preferring the latex field, falling back to JS conversion.
  */
-function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string = 'x'): string {
+export function getLatex(fn: GraphFunction | GraphFunctionOfY, variable: string = 'x'): string {
   // `expr` is the show_function_graph tool's documented LaTeX field; prefer it,
   // then the legacy `latex`/`fn`. Without this the brain's `expr` was ignored.
-  if (fn.expr) return normalizeBareLatex(fn.expr);
-  if (fn.latex) return normalizeBareLatex(fn.latex);
+  // R32b (session-1784829643398): the brain sometimes writes JAVASCRIPT into
+  // expr/latex ("Math.exp(-1.5*(x-3))", "x**2") — Desmos can't parse it and
+  // silently plots NOTHING while the legend/points still render (curve
+  // vanished from the IVT graph). Route JS-shaped expressions through the
+  // JS→LaTeX converter instead of feeding them to Desmos raw.
+  const looksLikeJs = (s: string) => /Math\.|\*\*/.test(s);
+  if (fn.expr) return looksLikeJs(fn.expr) ? jsExprToLatex(fn.expr, variable) : normalizeBareLatex(fn.expr);
+  if (fn.latex) return looksLikeJs(fn.latex) ? jsExprToLatex(fn.latex, variable) : normalizeBareLatex(fn.latex);
   if (fn.fn) return jsExprToLatex(fn.fn, variable);
   return variable;
 }

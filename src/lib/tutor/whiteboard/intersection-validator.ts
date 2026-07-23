@@ -153,7 +153,10 @@ export function latexToJs(expr: string, variable: Variable): string | null {
   // the `**` operator, the remaining string should only contain digits, the
   // free variable, arithmetic, parens, dots, commas, and whitespace.
   const residual = s
-    .replace(/Math\.(sqrt|sin|cos|tan|log|abs|PI|E|pow)/g, '')
+    // exp/floor/ceil/min/max: the brain sometimes hands the tool a raw JS
+    // expression ("Math.exp(-1.5*(x-3))", R32b session-1784829643398) — it
+    // is already evaluable JS, so let these tokens through the whitelist.
+    .replace(/Math\.(sqrt|sin|cos|tan|log|abs|PI|E|pow|exp|floor|ceil|min|max)/g, '')
     .replace(/\*\*/g, '');
   if (!new RegExp(`^[\\s0-9${v}+\\-*/().]*$`).test(residual)) {
     return null;
