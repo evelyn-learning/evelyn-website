@@ -1004,6 +1004,7 @@ function dispatch(cmd: WhiteboardCommand, action: string): FeatureManifestEntry[
     // back-to-back, none dedup'd.
     case 'showDiagram':           return buildDiagramManifest(cmd as any);
     case 'showSketch':            return buildSketchManifest(cmd as any);
+    case 'showFallbackCard':      return buildFallbackCardManifest(cmd as any);
     case 'handwrite':             return buildHandwriteManifest(cmd as any);
     default:                      return null;
   }
@@ -1024,6 +1025,22 @@ function buildSketchManifest(cmd: { concept?: string; title?: string }): Feature
     kind: 'shape',
     description: `sketch: ${desc}`,
     labels: ['sketch', 'doodle', 'drawing', 'the sketch', 'the drawing', ...(title ? [title] : [])],
+    scribbleable: true,
+  }];
+}
+
+/** Manifest for Phase-4.2 fallback cards (a content-bearing render that
+ *  failed structural validation, painted as a plain title+text card). The
+ *  description TELLS the brain the original render failed — the board
+ *  snapshot is how it learns not to blind re-emit the same broken call. */
+function buildFallbackCardManifest(cmd: { title?: string; sourceAction?: string }): FeatureManifestEntry[] {
+  const title = String(cmd.title ?? '').trim();
+  const src = String(cmd.sourceAction ?? '').trim();
+  return [{
+    name: 'fallback-card',
+    kind: 'label',
+    description: `simplified text card "${title || 'untitled'}"${src ? ` — your ${src} failed validation and was replaced by this card; fix the structure before re-emitting` : ''}`,
+    labels: ['fallback card', 'the card', ...(title ? [title, `"${title}"`] : [])],
     scribbleable: true,
   }];
 }

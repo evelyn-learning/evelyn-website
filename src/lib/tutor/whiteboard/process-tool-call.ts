@@ -243,3 +243,74 @@ export function processToolCall(
 
   return { ok: true, command };
 }
+
+// ─── Phase 4.2 (humanlike-latency): visible fallback for content-bearing rejects ───
+
+export interface FallbackCardSpec {
+  title: string;
+  body: string;
+}
+
+/** Collect short display strings from a nested params shape (organizer cells,
+ *  tree labels, table rows) — depth- and count-capped so a pathological
+ *  payload can't flood the card. */
+function collectDisplayStrings(v: unknown, depth: number, out: string[]): void {
+  if (out.length >= 12 || depth > 3) return;
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (s && s.length <= 80 && !out.includes(s)) out.push(s);
+    return;
+  }
+  if (Array.isArray(v)) {
+    for (const item of v) collectDisplayStrings(item, depth + 1, out);
+    return;
+  }
+  if (v && typeof v === 'object') {
+    for (const val of Object.values(v as Record<string, unknown>)) {
+      collectDisplayStrings(val, depth + 1, out);
+    }
+  }
+}
+
+/**
+ * Decide whether a REJECTED render deserves a plain fallback card instead of
+ * silence (flag TUTOR_RENDER_FALLBACK_CARD, wired in the orchestrator).
+ *
+ * Eligible: content-bearing structural failures — an organizer/diagram or
+ * tree whose TEXT is well-formed but whose shape failed validation (the
+ * "brain narrates the comparison table while the board shows nothing" class,
+ * 2026-05-04). NOT eligible, deliberately:
+ *  - duplicates (dedup is working as intended — the content IS on the board);
+ *  - equations (every showEquation reject class is a CORRECTNESS reject —
+ *    letter drift, self-application — and wrong math must never paint);
+ *  - geometry/graph/physics figures (broken geometry has no honest text form).
+ */
+export function decideFallbackCard(
+  action: string,
+  args: Record<string, unknown>,
+  reason: string,
+): FallbackCardSpec | null {
+  const a = toAction(action);
+  if (/duplicate/i.test(reason)) return null;
+  if (a !== 'showDiagram' && a !== 'showTree') return null;
+
+  const params = (args.params && typeof args.params === 'object' ? args.params : args) as Record<string, unknown>;
+  const title =
+    (typeof params.title === 'string' && params.title.trim()) ||
+    (typeof args.title === 'string' && args.title.trim()) ||
+    (typeof args.type === 'string' && args.type.trim().replace(/_/g, ' ')) ||
+    '';
+
+  const strings: string[] = [];
+  if (a === 'showTree') collectDisplayStrings(args.root, 0, strings);
+  else {
+    for (const key of ['items', 'attributes', 'cells', 'rows', 'columns', 'stages', 'left', 'right', 'branches']) {
+      if (key in params) collectDisplayStrings(params[key], 1, strings);
+    }
+  }
+  const body = strings.filter((s) => s !== title).join(' · ');
+  // A card needs something to say: a title plus at least two content strings
+  // (title alone reads as an empty promise; one string is usually a label).
+  if (!title || strings.length < 2) return null;
+  return { title, body };
+}

@@ -118,6 +118,7 @@ import {
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
   TUTOR_RENDER_WORD_ANCHOR,
+  TUTOR_RENDER_FALLBACK_CARD,
   TUTOR_STUDENT_MARKS,
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_SKETCH,
@@ -149,6 +150,7 @@ import {
   BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
 import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
+import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -3712,6 +3714,16 @@ export function VoiceTutorRealtime({
           // call never actually rendered, so it shouldn't count as "emitted".
           visualActionsThisTurnRef.current.delete('showTree');
           rejected.push({ action: 'show_tree', reason: err });
+          // Phase 4.2: the tree's TEXT is usually fine even when its shape
+          // isn't — paint the labels as a plain card in this batch's slot so
+          // the narration lands on something (brain still gets the reject).
+          if (TUTOR_RENDER_FALLBACK_CARD) {
+            const spec = decideFallbackCard('show_tree', cmd as unknown as Record<string, unknown>, err);
+            if (spec) {
+              onDebugEvent?.('render_fallback_card', `show_tree → "${spec.title}"`);
+              return [{ action: 'showFallbackCard', ...spec, sourceAction: 'show_tree' } as WhiteboardCommand];
+            }
+          }
           return [];
         }
       }
@@ -9666,10 +9678,23 @@ export function VoiceTutorRealtime({
                         const msg = err instanceof Error ? err.message : String(err);
                         console.warn(`[brain-orchestrator] show_diagram solver pre-check rejected: ${msg}`);
                         onDebugEvent?.('show_diagram_solver_rejected', `${diagType}: ${msg.slice(0, 100)}`);
+                        onDebugEvent?.('render_dropped', `show_diagram — solver pre-check: ${msg.slice(0, 100)}`);
                         rejectionsThisAttempt.push({
                           action: 'show_diagram',
                           reason: `Your show_diagram call (type="${diagType}") failed structural validation: ${msg}. Re-emit show_diagram with corrected params that satisfy the schema for kind "${diagType}". If you can't produce valid params for this diagram kind, fall back to show_table for tabular comparisons, show_equation for formulas, or describe the idea verbally without a render.`,
                         });
+                        // Phase 4.2: organizer text is usually well-formed even
+                        // when the structure fails the solver — paint it as a
+                        // plain card so the narration lands on the content.
+                        if (TUTOR_RENDER_FALLBACK_CARD) {
+                          const spec = decideFallbackCard('show_diagram', args, msg);
+                          if (spec) {
+                            onDebugEvent?.('render_fallback_card', `show_diagram(${diagType}) → "${spec.title}"`);
+                            void handleWhiteboardCommand([
+                              { action: 'showFallbackCard', ...spec, sourceAction: 'show_diagram' } as WhiteboardCommand,
+                            ]);
+                          }
+                        }
                         continue;
                       }
                     }
@@ -9848,6 +9873,26 @@ export function VoiceTutorRealtime({
                     }
                   } else {
                     console.warn('[brain-orchestrator] unmapped tool call:', name);
+                  }
+                } else if (ev.type === 'tool-rejected') {
+                  // Server-side validateToolCall reject (claude-brain). Was
+                  // silently ignored here; now at least ledgered — and, with
+                  // the fallback flag on, content-bearing rejects paint a
+                  // plain card (current server reject classes are all
+                  // correctness/emptiness, so decideFallbackCard usually
+                  // returns null — the hook is for future validator classes).
+                  const rejName = (ev as { name?: string }).name ?? '?';
+                  const rejReason = (ev as { reason?: string }).reason ?? '';
+                  onDebugEvent?.('render_dropped', `${rejName} — ${rejReason.slice(0, 120)} (server-validate)`);
+                  if (TUTOR_RENDER_FALLBACK_CARD) {
+                    const rejArgs = ((ev as { args?: unknown }).args ?? {}) as Record<string, unknown>;
+                    const spec = decideFallbackCard(rejName, rejArgs, rejReason);
+                    if (spec) {
+                      onDebugEvent?.('render_fallback_card', `${rejName} → "${spec.title}"`);
+                      void handleWhiteboardCommand([
+                        { action: 'showFallbackCard', ...spec, sourceAction: rejName } as WhiteboardCommand,
+                      ]);
+                    }
                   }
                 } else if (ev.type === 'render-dropped') {
                   // Phase 4.2 drop telemetry: server dropped a render before

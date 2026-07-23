@@ -14,6 +14,7 @@ import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { SketchRenderer } from './SketchRenderer';
 import { SketchFallbackCard } from './SketchFallbackCard';
+import { RenderFallbackCard } from './RenderFallbackCard';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 import { TryYourselfRenderer } from './TryYourselfRenderer';
 import { computeTryYourselfVerdict } from './tryYourselfAnswer';
@@ -2606,6 +2607,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
 
     case 'showDiagram':
       return <DiagramDispatcher type={command.type} params={command.params} />;
+
+    // Phase 4.2: plain title+text stand-in for a content-bearing render that
+    // failed structural validation (see decideFallbackCard).
+    case 'showFallbackCard':
+      return <RenderFallbackCard title={command.title} body={command.body} />;
 
     case 'showSketch': {
       // A doodle only renders once its primitives have resolved (async). A

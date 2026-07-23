@@ -198,6 +198,14 @@ export const TUTOR_TTS_WS =
 // falling back to the HTTP path (spike 2026-07-22 measured first chunk well
 // under 1s; 4s tolerates a cold reconnect without stalling the turn).
 export const SONIC_WS_FIRST_CHUNK_TIMEOUT_MS = 4000;
+// Phase 4.2 (humanlike-latency plan): content-bearing renders that fail
+// structural validation (organizer diagrams / trees with well-formed text)
+// paint a plain title+text fallback card instead of nothing, so
+// board-anchored narration never points at a blank board. Duplicates,
+// equations, and broken geometry stay dropped. Default OFF.
+export const TUTOR_RENDER_FALLBACK_CARD =
+  process.env.NEXT_PUBLIC_TUTOR_RENDER_FALLBACK_CARD === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_RENDER_FALLBACK_CARD === 'true';
 // Task 3.2 (humanlike-latency plan): word-anchored render flush — buffered
 // renders release the moment the introducing sentence speaks its REFERRING
 // word (word clock from TUTOR_TTS_WS) instead of at the sentence boundary.

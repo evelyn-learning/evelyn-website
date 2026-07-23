@@ -4,7 +4,7 @@
  *   npm run test:process-tool-call
  */
 import assert from 'node:assert';
-import { processToolCall, toAction, toWhiteboardCommand } from '../src/lib/tutor/whiteboard/process-tool-call';
+import { processToolCall, toAction, toWhiteboardCommand, decideFallbackCard } from '../src/lib/tutor/whiteboard/process-tool-call';
 
 let passed = 0;
 function check(label: string, fn: () => void) {
@@ -553,6 +553,44 @@ check('show_diagram character_web (bare, default) → ok', () => {
 check('show_diagram character_web custom nodes → ok', () => {
   const r = processToolCall('show_diagram', { type: 'character_web', params: { center: 'Scout', nodes: [{ label: 'Atticus', relation: 'father', kind: 'character' }, { label: 'Jem', relation: 'brother', kind: 'character' }, { label: 'Curious', kind: 'trait' }] } });
   assert.equal(r.ok, true);
+});
+
+console.log('\nprocess-tool-call: Phase-4.2 decideFallbackCard');
+check('organizer diagram with title + cells → card', () => {
+  const spec = decideFallbackCard('show_diagram', {
+    type: 'comparison_table',
+    params: { title: 'Mitosis vs Meiosis', items: ['Mitosis', 'Meiosis'], cells: [['2 daughter cells', '4 daughter cells']] },
+  }, 'comparison_table: cells rows must match items length');
+  assert.ok(spec, 'expected a card');
+  assert.equal(spec!.title, 'Mitosis vs Meiosis');
+  assert.ok(spec!.body.includes('daughter'));
+});
+check('tree with labels → card', () => {
+  const spec = decideFallbackCard('show_tree', {
+    title: 'Coin flips',
+    root: { label: 'Start', children: [{ label: 'H' }, { label: 'T' }] },
+  }, 'root.children[0] is missing the node field');
+  assert.ok(spec, 'expected a card');
+});
+check('duplicate reject → no card', () => {
+  const spec = decideFallbackCard('show_diagram', { type: 't_chart', params: { title: 'X', items: ['a', 'b'] } }, 'duplicate of item-3');
+  assert.equal(spec, null);
+});
+check('equation reject → no card (wrong math must not paint)', () => {
+  const spec = decideFallbackCard('show_equation', { latex: 'h(x) = h(x)/h(x)', label: 'Quotient' }, 'defined in terms of itself');
+  assert.equal(spec, null);
+});
+check('geometry reject → no card', () => {
+  const spec = decideFallbackCard('show_geometry', { title: 'Triangle', points: [] }, 'incomplete');
+  assert.equal(spec, null);
+});
+check('titleless diagram → no card', () => {
+  const spec = decideFallbackCard('show_diagram', { params: { items: ['a', 'b'] } }, 'bad shape');
+  assert.equal(spec, null);
+});
+check('content-poor diagram → no card', () => {
+  const spec = decideFallbackCard('show_diagram', { type: 't_chart', params: { title: 'Only title' } }, 'bad shape');
+  assert.equal(spec, null);
 });
 
 console.log(`\nprocess-tool-call: ${passed} checks passed`);

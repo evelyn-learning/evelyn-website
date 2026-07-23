@@ -795,6 +795,12 @@ export type WhiteboardCommand =
   // clean labeled card (from the title/concept/labels) in place of the sketch, so
   // board-anchored narration never lands on a blank board.
   | { action: 'showSketch'; concept?: string; labels?: string[]; title?: string; primitives?: unknown[]; description?: string; fallbackCard?: { title?: string; concept?: string; labels?: string[] } }
+  // Phase 4.2 (humanlike-latency): plain title+text card painted in place of a
+  // CONTENT-BEARING render that failed structural validation (organizer
+  // diagrams, trees) — so board-anchored narration lands on something instead
+  // of a blank board. body renders through the KaTeX inline path. Synthesized
+  // client-side (never brain-emitted); sourceAction = the render it stands for.
+  | { action: 'showFallbackCard'; title?: string; body?: string; sourceAction?: string }
   // ── New structured math diagram tools ──
   | { action: 'showNumberLine'; title?: string; min: number; max: number; step?: number; points?: NumberLinePoint[]; intervals?: NumberLineInterval[]; segments?: NumberLineSegment[]; fractionTicks?: { denominator: number; showLabels?: boolean } }
   | { action: 'showGeometry'; title?: string; points: GeometryPoint[]; segments?: GeometrySegment[]; polygons?: GeometryPolygon[]; circles?: GeometryCircle[]; arcs?: GeometryArc[]; angles?: GeometryAngle[]; conics?: GeometryConic[]; showGrid?: boolean; showAxes?: boolean; viewRange?: { x: [number, number]; y: [number, number] } }
