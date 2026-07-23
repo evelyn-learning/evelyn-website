@@ -96,9 +96,26 @@ function main() {
   });
 
   // ── Board-anchor re-anchor: pendingReanchor holds against the stale anchor ──
-  test('pendingReanchor: NOT anchor-flushable even when playback is way ahead', () => {
+  test('pendingReanchor: holds while the naming window is still open', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }];
-    assert.equal(flushableCount(b, 9), 0, 'held at front despite anchorM=0 satisfied');
+    assert.equal(flushableCount(b, 1), 0, 'count 1 — window open');
+    assert.equal(flushableCount(b, 2), 0, 'count 2 — window open (anchorM+1+cap = 3)');
+  });
+  test('pendingReanchor: hold-cap releases after REANCHOR_MAX_HOLD_SENTENCES (naming never came)', () => {
+    // Phase-3 live round 3 (session-1784768779243): front-loaded worked-
+    // solution cards were never named by the narration and rode to drain —
+    // 12–18s holds, painting with the NEXT question's render. The cap
+    // releases them mid-turn instead.
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }];
+    assert.equal(flushableCount(b, 3), 1, 'count 3 = anchorM+1+2 → released');
+    assert.equal(flushableCount(b, 9), 1, 'way past → released');
+    const b1: RenderSyncEntry[] = [{ anchorM: 1, pendingReanchor: true }];
+    assert.equal(flushableCount(b1, 3), 0, 'anchor 1: count 3 still held');
+    assert.equal(flushableCount(b1, 4), 1, 'anchor 1: count 4 → released');
+  });
+  test('pendingReanchor hold-cap: FIFO — expired front also unblocks a ready follower', () => {
+    const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }, { anchorM: 2 }];
+    assert.equal(flushableCount(b, 3), 2, 'front expired + follower anchor-ready → both');
   });
   test('pendingReanchor: drainAll still releases it (fail-safe to turn-end)', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }];
@@ -113,9 +130,9 @@ function main() {
     assert.equal(flushableCount(b, 3), 0, 'sentence 4 not started yet');
     assert.equal(flushableCount(b, 4), 1, 'sentence 4 started → flush');
   });
-  test('pendingReanchor front entry holds later ready entries (FIFO)', () => {
+  test('pendingReanchor front entry holds later ready entries (FIFO, within the naming window)', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 0, pendingReanchor: true }, { anchorM: 1 }];
-    assert.equal(flushableCount(b, 9), 0, 'second entry held behind the pending front');
+    assert.equal(flushableCount(b, 2), 0, 'second entry (ready at count 2) held behind the pending front');
   });
 
   // ── Async doodle: pendingAsync is content-less, NEVER flushable until resolved/removed ──
@@ -185,9 +202,9 @@ function main() {
     const b = buf(2);
     assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 99 } }), 0, 'sentence 2 not complete; no word anchor to accelerate');
   });
-  test('word anchor: pendingReanchor still holds (stale anchor, word or not)', () => {
+  test('word anchor: pendingReanchor still holds within the naming window (word clock cannot bypass)', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 0, anchorWord: 2, pendingReanchor: true }];
-    assert.equal(flushableCount(b, 9, { wordPos: { sentenceIdx: 5, wordIdx: 9 } }), 0);
+    assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 9 } }), 0);
   });
   test('word anchor: pendingAsync still never flushable', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 0, anchorWord: 1, pendingAsync: true }];

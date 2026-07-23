@@ -834,6 +834,37 @@ function formatStudentStateBlock(
 }
 
 /**
+ * Phase-3 live rounds (2026-07-23, sessions -1784766708920 / -1784768779243):
+ * short answers kept drawing reflexive praise-openers ("Right. 6 m/s²."
+ * right after the student said "5") even with the system-prompt HARD RULE —
+ * several consecutive legitimately-praised turns build in-context momentum
+ * that outweighs a rule ~1400 lines back in the cached prefix. When the
+ * student's utterance reads as a SHORT ANSWER (a bare number, an option
+ * letter, ≤2 words, or ≤4 words containing a number), pin a compact verdict
+ * guard DIRECTLY above <student_said>, where salience is highest. '' for
+ * conversational turns — the block must never dilute normal dialogue.
+ * Exported for scripts/test-verdict-guard.ts.
+ */
+export function formatVerdictGuardBlock(transcript: string): string {
+  const t = (transcript ?? '').trim();
+  // Bracketed context injections (student marks, validator feedback,
+  // kill-bridge) are not spoken answers.
+  if (!t || t.startsWith('[')) return '';
+  const words = t.split(/\s+/);
+  const hasNumber = /\d/.test(t);
+  const bareOption = /^[a-eA-E][.)!?]?$/.test(t);
+  const isShortAnswer = bareOption || (words.length <= 2) || (words.length <= 4 && hasNumber);
+  if (!isShortAnswer) return '';
+  return '<verdict_guard>\n'
+    + 'The utterance below reads as a short ANSWER. Before your first word, silently check it against the question you actually asked. '
+    + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent. '
+    + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
+    + 'If it does not parse as an answer to your question: NO verdict word — say what you heard and re-ask. '
+    + 'Never praise first and correct after.\n'
+    + '</verdict_guard>\n\n';
+}
+
+/**
  * Render the `<pace_preference>` block (Phase 3). Active only when the
  * student has clicked Slow down / Speed up OR uttered a matching verbal
  * cue ("slow down" / "faster" etc). Negative bias = student wants more
@@ -1279,6 +1310,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // "how" tier. Previously it sat near the end of userContent, after
   // truthBlock — this is the ordering-effect change; verified via the
   // node probe in scripts/ (see task-W3-report.md).
+  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript);
+  if (verdictGuardBlock) console.log('[verdict-guard] short-answer guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1297,6 +1330,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     studentStateBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
   // Initial messages: prior conversation + the student's just-said wrapper.
@@ -1469,6 +1503,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // Task W3: same ordering change as runBrainTurn above — pace_preference
   // moved ahead of lessonBlock/truthBlock. Both twins must stay in lockstep
   // (see buildBrainMessages doc comment on cache-behavior consistency).
+  const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript);
+  if (verdictGuardBlock) console.log('[verdict-guard] short-answer guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1487,6 +1523,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     studentStateBlock +
     topicNotesBlock +
     `<whiteboard_state>\n${whiteboardSummary}\n</whiteboard_state>\n\n` +
+    verdictGuardBlock +
     `<student_said>\n${input.studentTranscript}\n</student_said>`;
 
   let messages: Anthropic.MessageParam[] = buildBrainMessages(

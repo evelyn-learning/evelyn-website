@@ -53,6 +53,13 @@ export interface RenderSyncEntry {
   anchorWord?: number;
 }
 
+/** How many sentences past its stale anchor a pending-reanchor entry may
+ *  hold out for a naming sentence before releasing anyway. 2 ≈ the window
+ *  in which a narrated introduction actually arrives when it's coming at
+ *  all (observed across the board-anchor-assist live rounds); beyond it
+ *  the turn has moved on and the hold only delays the paint to drain. */
+export const REANCHOR_MAX_HOLD_SENTENCES = 2;
+
 export interface FlushOpts {
   /** Turn audio fully drained — every dispatched sentence has finished
    *  playing, so all currently-buffered renders are flushable. */
@@ -90,9 +97,25 @@ export function flushableCount(
     // drainAll/cap). It blocks its slot until the orchestrator resolves it
     // (clears pendingAsync) or splices it out. Stop the prefix here.
     if (e.pendingAsync) break;
-    // A pending-reanchor entry is held against its (stale) anchor — only the
-    // turn-end drain or the cap may release it until it's been re-anchored.
-    const anchorReady = !e.pendingReanchor && playbackStartedCount >= e.anchorM + 1;
+    // A pending-reanchor entry is held against its (stale) anchor — the
+    // turn-end drain, the cap, or the sentence-count hold-cap below may
+    // release it until it's been re-anchored.
+    //
+    // Hold-cap (Phase-3 live round 3, session-1784768779243): when the
+    // naming sentence NEVER comes (the brain front-loads a worked-solution
+    // card, says "Exactly. 5 kg." and pivots straight to the next problem),
+    // the entry used to ride all the way to drain — 12–18s holds, painting
+    // the solution together with the NEXT question's render after the
+    // whole narration. The shared stall timer can't catch this (word/
+    // sentence ticks keep resetting it — that IS progress). If no naming
+    // sentence matched within REANCHOR_MAX_HOLD_SENTENCES past the stale
+    // anchor, the front-load hold has failed its purpose — release now;
+    // mid-turn is strictly better than turn-end.
+    const reanchorExpired =
+      e.pendingReanchor === true &&
+      playbackStartedCount >= e.anchorM + 1 + REANCHOR_MAX_HOLD_SENTENCES;
+    const anchorReady =
+      (!e.pendingReanchor && playbackStartedCount >= e.anchorM + 1) || reanchorExpired;
     // Task 3.2 word-anchored ACCELERATOR: the referring word inside the
     // introducing sentence has been spoken (or the clock is already past
     // that sentence) — paint now instead of waiting for the introducer to
