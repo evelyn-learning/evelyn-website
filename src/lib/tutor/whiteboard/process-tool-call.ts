@@ -22,6 +22,7 @@
  */
 
 import { validateToolCall } from './validate-tool-call';
+import { stripWbEmphasisText } from './wb-emphasis-strip';
 import { validateGeometryCommand, type GeometryCommand } from './geometry-validator';
 import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
@@ -308,9 +309,14 @@ export function decideFallbackCard(
       if (key in params) collectDisplayStrings(params[key], 1, strings);
     }
   }
-  const body = strings.filter((s) => s !== title).join(' · ');
+  // This path is built server-side from the RAW brain args (it never passes
+  // through mapFunctionCallToCommand's deep strip on the client), so strip
+  // markdown emphasis here. Per-string BEFORE joining — joining first could
+  // pair stray asterisks ACROSS cells.
+  const cleanTitle = stripWbEmphasisText(title);
+  const body = strings.map(stripWbEmphasisText).filter((s) => s !== cleanTitle).join(' · ');
   // A card needs something to say: a title plus at least two content strings
   // (title alone reads as an empty promise; one string is usually a label).
-  if (!title || strings.length < 2) return null;
-  return { title, body };
+  if (!cleanTitle || strings.length < 2) return null;
+  return { title: cleanTitle, body };
 }

@@ -8,6 +8,7 @@
 
 import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
+import { deepStripWbEmphasis } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 
 export interface ToolParameter {
   type: string;
@@ -2135,22 +2136,16 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<string, any>): WhiteboardCommand | null {
-  // Phase-3 live round (2026-07-23, Matrices/conics session): the brain
-  // writes markdown emphasis into labels ("Look at equation **(A)**:") —
-  // chat bubbles render it, but board renderers print label/title strings
-  // verbatim, so the student sees literal asterisks. Strip paired emphasis
-  // markers from the display-string fields at this single chokepoint (all
-  // renderers inherit). LaTeX is untouched — labels never legitimately
-  // carry ** (exponentiation is ^ in every latex field; sanitizeExpr
-  // introduces ** only AFTER mapping, on expr fields).
-  const stripMdEmphasis = (v: unknown): unknown =>
-    typeof v === 'string'
-      ? v.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/(?<![\w*])\*([^*\s][^*]*?)\*(?![\w*])/g, '$1')
-      : v;
+  // Phase-3 live round (2026-07-23, Matrices/conics session) + round-6
+  // formatting audit (2026-07-24, "*same*" in a try-yourself card): the
+  // brain writes markdown emphasis into display strings — chat bubbles
+  // render it, but board renderers print strings verbatim, so the student
+  // sees literal asterisks. Deep-strip EVERY display field at this single
+  // chokepoint (all renderers inherit); math/code/data fields and lookup
+  // keys are protected by wb-emphasis-strip's SKIP_KEYS, and $...$ math
+  // spans plus bare multiplication/exponent asterisks survive inside prose.
   if (funcArgs && typeof funcArgs === 'object') {
-    for (const k of ['label', 'title']) {
-      if (typeof funcArgs[k] === 'string') funcArgs = { ...funcArgs, [k]: stripMdEmphasis(funcArgs[k]) };
-    }
+    funcArgs = deepStripWbEmphasis(funcArgs) as Record<string, any>;
   }
   if (funcName === 'new_page') {
     return { action: 'newPage', title: funcArgs.title };

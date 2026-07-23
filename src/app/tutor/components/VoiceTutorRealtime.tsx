@@ -22,6 +22,7 @@ import {
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
+import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
@@ -9605,7 +9606,10 @@ export function VoiceTutorRealtime({
                         resolvedCmd = {
                           action: 'showProblem',
                           problem: {
-                            statement: truth.problemText,
+                            // resolvedCmd short-circuits mapFunctionCallToCommand
+                            // (cmd = resolvedCmd ?? map(...)), so authored text
+                            // needs its own emphasis strip.
+                            statement: stripWbEmphasisText(truth.problemText),
                             format: 'free-response',
                             title: truth.kind === 'try_yourself' ? 'Try Yourself'
                               : truth.kind === 'worked_example' ? 'Worked Example'
@@ -9648,7 +9652,7 @@ export function VoiceTutorRealtime({
                           resolvedCmd = {
                             action: 'showProblem',
                             problem: {
-                              statement: body,
+                              statement: stripWbEmphasisText(body),
                               format: 'free-response',
                               title,
                             },
