@@ -59,6 +59,7 @@ import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/white
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars } from '@/lib/tutor/whiteboard/graph-consistency-validator';
+import { validateSecantTangentGraph } from '@/lib/tutor/whiteboard/secant-tangent-validator';
 import {
   anchorWordIndex,
   extractAnchorKeywords,
@@ -3772,10 +3773,15 @@ export function VoiceTutorRealtime({
         // mislabeled as an intersection of two curves), and backfill real
         // intersections when we can compute them deterministically.
         const afterIntersections = validateIntersectionPoints(afterConic);
+        // MVT-class repair: snap secant endpoints + c onto the curve, refit
+        // the secant, rewrite/backfill the true tangent at c, contain the
+        // curve in yRange (2026-07-23 AP Calc BC session: tangent rendered
+        // invisibly under the secant / was narrated but never plotted).
+        const afterSecTan = validateSecantTangentGraph(afterIntersections);
         // Slope guard: refit a straight line whose slope is inconsistent with
         // its own labeled points (e.g. V=0.667·T plotted against (300,2)/(600,4)
         // — should be 0.00667·T). See graph-consistency-validator.
-        const afterLinear = validateGraphLinearConsistency(afterIntersections);
+        const afterLinear = validateGraphLinearConsistency(afterSecTan);
         if (afterLinear !== original) {
           if (afterConic !== original) {
             console.log('[VoiceTutorRealtime] Conic validator fixed graph data');
@@ -3783,7 +3789,11 @@ export function VoiceTutorRealtime({
           if (afterIntersections !== afterConic) {
             console.log('[VoiceTutorRealtime] Intersection validator adjusted points');
           }
-          if (afterLinear !== afterIntersections) {
+          if (afterSecTan !== afterIntersections) {
+            console.log('[VoiceTutorRealtime] Secant/tangent validator repaired MVT-class graph');
+            onDebugEvent?.('tool_call', 'Secant/tangent validator repaired MVT-class graph data');
+          }
+          if (afterLinear !== afterSecTan) {
             console.log('[VoiceTutorRealtime] Linear-consistency guard refit slope to labeled points');
           }
           return [{ ...cmd, data: afterLinear } as WhiteboardCommand];

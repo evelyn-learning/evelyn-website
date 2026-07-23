@@ -65,6 +65,11 @@ export function parseLinear(expr: string): { m: number; b: number } | null {
   if (!s) return null;
   // Reject anything non-linear: powers, other letters, functions, fractions.
   if (/x\^|x\*x|\^|[a-wyz]|frac|sqrt|pi|sin|cos|tan|log|ln/i.test(s)) return null;
+  // Reject parenthesized forms — point-slope "7.29 - 0.05(x - 2.7)" was being
+  // garbage-parsed as m=1,b=7.29 (observed 2026-07-23 MVT session: that parse
+  // made a correct tangent look 100% wrong and got it refit onto the secant).
+  // Linear-in-x with parens is out of scope; null = "can't judge, leave as-is".
+  if (/[()]/.test(s)) return null;
   s = s.replace(/\*/g, '');
   if ((s.match(/x/g) || []).length !== 1) return null;
 
@@ -132,6 +137,11 @@ export function validateGraphLinearConsistency<T extends GraphLike>(data: T): T 
 
   let changed = false;
   const fixedFns = data.functions.map((fn) => {
+    // A tangent line touches the curve at ONE point — missing the other
+    // labeled points is by design, so refitting it through them rewrites the
+    // tangent onto the secant (observed 2026-07-23 MVT session: c misplaced
+    // onto the secant made a,c,b collinear and the tangent vanished under it).
+    if (/tangent/i.test(fn.label || '')) return fn;
     const expr = fn.latex || fn.fn;
     if (!expr) return fn;
     const lin = parseLinear(expr);

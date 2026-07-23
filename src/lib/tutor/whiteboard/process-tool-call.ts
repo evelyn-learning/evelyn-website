@@ -27,6 +27,7 @@ import { validateGeometryCommand, type GeometryCommand } from './geometry-valida
 import { validateConicGraph } from './conic-validator';
 import { validateIntersectionPoints } from './intersection-validator';
 import { validateGraphLinearConsistency, validateFunctionGraphVars } from './graph-consistency-validator';
+import { validateSecantTangentGraph } from './secant-tangent-validator';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from './conic-construction';
 import { validateCircuit } from '../diagrams/circuit-validator';
 import { validateCollision } from '../diagrams/collision-validator';
@@ -236,7 +237,10 @@ export function processToolCall(
     if (!vars.ok) return { ok: false, reason: vars.reason };
     const afterConic = validateConicGraph(original);
     const afterIntersections = validateIntersectionPoints(afterConic);
-    const afterLinear = validateGraphLinearConsistency(afterIntersections);
+    // MVT-class repair (snap points to curve, refit secant, true tangent at c)
+    // runs BEFORE the linear guard so the refit sees corrected points.
+    const afterSecTan = validateSecantTangentGraph(afterIntersections);
+    const afterLinear = validateGraphLinearConsistency(afterSecTan);
     if (afterLinear !== original) {
       return { ok: true, command: { ...command, data: afterLinear } };
     }
