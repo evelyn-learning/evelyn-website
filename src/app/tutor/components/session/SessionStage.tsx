@@ -32,7 +32,7 @@ import {
   holdBackUnbalancedMathTail,
   normalizeCaptionMath,
 } from '@/lib/tutor/whiteboard/caption-fit';
-import { qpinCollapseDeadline } from '@/lib/tutor/qpin-behavior';
+import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 
 export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
 
@@ -285,6 +285,81 @@ export default function SessionStage(props: SessionStageProps) {
     const t = window.setTimeout(() => setQpinMode('chip'), Math.max(0, deadline - Date.now()));
     return () => window.clearTimeout(t);
   }, [questionPin, questionPinKey, qpinMode, qpinDragged, qpinShownAt, qpinSpeechEndedAt]);
+
+  // Dragging: pointer events (one path for mouse + touch). A <5px press is a
+  // tap and falls through to the pin's own click (transcript). A real drag
+  // is a deliberate placement: it cancels auto-collapse for the turn and the
+  // fractional position is remembered for later pins this session.
+  const [qpinCustomPos, setQpinCustomPos] = useState<QpinFraction | null>(null);
+  const qpinBoxRef = useRef<HTMLDivElement>(null);
+  const qpinDrag = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number; // pin top-left relative to stage, px, at pointerdown
+    originY: number;
+    dragging: boolean;
+  } | null>(null);
+  const qpinJustDragged = useRef(false); // suppress the click that ends a drag
+
+  const onQpinPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const stage = stageRef.current?.getBoundingClientRect();
+    const box = qpinBoxRef.current?.getBoundingClientRect();
+    if (!stage || !box) return;
+    qpinDrag.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: box.left - stage.left,
+      originY: box.top - stage.top,
+      dragging: false,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onQpinPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = qpinDrag.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.dragging && !exceedsDragThreshold(dx, dy)) return;
+    d.dragging = true;
+    const stage = stageRef.current?.getBoundingClientRect();
+    const box = qpinBoxRef.current?.getBoundingClientRect();
+    if (!stage || !box || stage.width === 0 || stage.height === 0) return;
+    setQpinCustomPos(
+      clampQpinFraction(
+        { x: (d.originX + dx) / stage.width, y: (d.originY + dy) / stage.height },
+        stage,
+        { width: box.width, height: box.height },
+      ),
+    );
+  };
+
+  const onQpinPointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    const d = qpinDrag.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    if (d.dragging) {
+      setQpinDragged(true); // no auto-collapse this turn
+      qpinJustDragged.current = true;
+    }
+    qpinDrag.current = null;
+  };
+
+  // Custom position survives stage resizes/rotation via re-clamping.
+  useEffect(() => {
+    if (!qpinCustomPos) return;
+    const onResize = () => {
+      const stage = stageRef.current?.getBoundingClientRect();
+      const box = qpinBoxRef.current?.getBoundingClientRect();
+      if (!stage || !box || stage.width === 0 || stage.height === 0) return;
+      setQpinCustomPos((p) =>
+        p ? clampQpinFraction(p, stage, { width: box.width, height: box.height }) : p,
+      );
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [qpinCustomPos !== null]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stageRef = useRef<HTMLDivElement>(null);
   // Close the board-page dropdown on any pointerdown outside its container
@@ -768,7 +843,27 @@ export default function SessionStage(props: SessionStageProps) {
               over the board (drops below the page switcher when shown). An
               overlay, so it never collides with board ink. ===== */}
       {questionPin && qpinMode === 'expanded' && (
-        <div className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)]`}>
+        <div
+          ref={qpinBoxRef}
+          onPointerDown={onQpinPointerDown}
+          onPointerMove={onQpinPointerMove}
+          onPointerUp={onQpinPointerEnd}
+          onPointerCancel={onQpinPointerEnd}
+          onClickCapture={(e) => {
+            // A drag's trailing click must not open the transcript.
+            if (qpinJustDragged.current) {
+              qpinJustDragged.current = false;
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+          style={
+            qpinCustomPos
+              ? { left: `${qpinCustomPos.x * 100}%`, top: `${qpinCustomPos.y * 100}%`, transform: 'none' }
+              : undefined
+          }
+          className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
+        >
           {questionPin}
         </div>
       )}
