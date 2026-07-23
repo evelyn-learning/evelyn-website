@@ -41,12 +41,23 @@ export const RULE8_PROMISE_REGEX =
 const DEFINITION_REGEX =
   /\b(is defined as|we define|is called|we call (?:this|that|it))\b/i;
 
+/** v2 (round 6: spoken "trap question" never boarded): narration that
+ *  ANNOUNCES a problem being posed to the student. Deliberately requires an
+ *  announcement phrase — bare Socratic questions ("What do you think?") are
+ *  everywhere in tutoring and boarding them all would be noise. The noun must
+ *  be singular ("questions" fails the trailing \b), so "any questions?" and
+ *  praise like "that's a great question" don't fire (no announcement verb). */
+export const POSED_QUESTION_REGEX =
+  /\b(let me (?:give|pose|ask) you|i(?:['’]ll| will) (?:give|pose|ask) you|here['’]s|here is|i have|try this|let['’]s try)\b[^.?!]*?\b(question|problem|challenge|exercise|riddle|puzzle|one)\b/i;
+
 export interface Rule8Detection {
   needed: boolean;
   promisedVisual: boolean;
   /** 1-based indices into the turn's sentence list (= anchorM numbering). */
   mathSentences: number[];
   definitionSentences: number[];
+  /** v2: sentences announcing a problem posed to the student. */
+  posedQuestionSentences: number[];
 }
 
 /** Does this sentence carry $…$-worthy math? Same pipeline InlineMathText
@@ -67,14 +78,17 @@ export function detectRepairNeed(sentences: readonly string[], toolCount: number
   const promisedVisual = RULE8_PROMISE_REGEX.test(sentences.join(' '));
   const mathSentences: number[] = [];
   const definitionSentences: number[] = [];
+  const posedQuestionSentences: number[] = [];
   for (let i = 0; i < sentences.length; i++) {
     if (hasSpokenMath(sentences[i])) mathSentences.push(i + 1);
     else if (DEFINITION_REGEX.test(sentences[i])) definitionSentences.push(i + 1);
+    if (POSED_QUESTION_REGEX.test(sentences[i])) posedQuestionSentences.push(i + 1);
   }
   const needed =
     toolCount === 0 &&
-    (promisedVisual || mathSentences.length > 0 || definitionSentences.length > 0);
-  return { needed, promisedVisual, mathSentences, definitionSentences };
+    (promisedVisual || mathSentences.length > 0 || definitionSentences.length > 0 ||
+      posedQuestionSentences.length > 0);
+  return { needed, promisedVisual, mathSentences, definitionSentences, posedQuestionSentences };
 }
 
 export interface Rule8Repair {
@@ -135,6 +149,42 @@ export function parseRepairResponse(raw: unknown, maxSentence: number): Rule8Rep
   return out;
 }
 
+// ─── v2: client-initiated repair (net-of-client-drops) ───
+// Round 6: the turn HAD a server-side tool (show_equation) but the client
+// dedup-dropped it, so the board got nothing while the server saw toolCount=1
+// and skipped repair. Only the client knows what actually painted, so the
+// dropped-to-zero case is client-initiated: at stream end the client compares
+// "tools the server sent" against "renders that painted" and POSTs the turn's
+// spoken sentences to /api/tutor/rule8-repair. Mutually exclusive with the
+// server pass by construction: server fires ONLY at serverToolCount===0,
+// client fires ONLY at serverToolCount>0.
+
+export { shouldClientRequestRepair, type ClientRepairSignals } from './rule8-client';
+import { shouldClientRequestRepair } from './rule8-client';
+
+const MAX_REQUEST_SENTENCES = 60;
+const MAX_REQUEST_SENTENCE_LEN = 600;
+
+export interface ClientRepairRequest {
+  sentences: string[];
+  serverToolCount: number;
+  paintedCount: number;
+}
+
+/** Bounded validation of the client repair POST body — fail-to-null on
+ *  anything off, and the request must actually satisfy the client-side
+ *  decision predicate (the endpoint re-checks; never trusts the caller). */
+export function parseClientRepairRequest(raw: unknown): ClientRepairRequest | null {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const { sentences, serverToolCount, paintedCount } = raw as Record<string, unknown>;
+  if (!Array.isArray(sentences) || sentences.length === 0 || sentences.length > MAX_REQUEST_SENTENCES) return null;
+  if (!sentences.every((s) => typeof s === 'string' && s.length <= MAX_REQUEST_SENTENCE_LEN)) return null;
+  if (typeof serverToolCount !== 'number' || !Number.isInteger(serverToolCount) || serverToolCount < 0) return null;
+  if (typeof paintedCount !== 'number' || !Number.isInteger(paintedCount) || paintedCount < 0) return null;
+  if (!shouldClientRequestRepair({ serverToolCount, paintedCount, sentenceCount: sentences.length })) return null;
+  return { sentences: sentences as string[], serverToolCount, paintedCount };
+}
+
 export interface RepairToolCallFrame {
   name: 'show_equation' | 'tutor_handwrite';
   args: Record<string, unknown>;
@@ -191,6 +241,7 @@ Rules — all hard:
 - Prefer \`handwrite\` for a term, name, or short definition ("slope = rise over run"); use \`show_equation\` for an actual relation/expression (latex like "b^2 - 4ac = 0").
 - \`anchorSentence\` = the 1-based number of the sentence that spoke that content.
 - If a sentence only vaguely references math ("this formula", "the equation we saw") with no literal content to transcribe, emit NOTHING for it.
+- If the tutor POSED a question or problem to the student ("here's a trap question: …"), \`handwrite\` the question itself — the literally spoken question, trimmed to its core. Anchor to the sentence that contains the question.
 - Fewer is better. Zero repairs is a valid answer (empty list).`;
 
 let sharedClient: Anthropic | null = null;
@@ -209,6 +260,7 @@ export async function generateRule8Repairs(
     detection.promisedVisual ? 'The tutor verbally promised a visual.' : '',
     detection.mathSentences.length ? `Sentences with spoken math: ${detection.mathSentences.join(', ')}.` : '',
     detection.definitionSentences.length ? `Sentences with definitions: ${detection.definitionSentences.join(', ')}.` : '',
+    detection.posedQuestionSentences.length ? `Sentences announcing a question/problem posed to the student: ${detection.posedQuestionSentences.join(', ')} (the question itself may be in the following sentence).` : '',
   ].filter(Boolean).join(' ');
   try {
     const anthropic = client ?? (sharedClient ??= new Anthropic());

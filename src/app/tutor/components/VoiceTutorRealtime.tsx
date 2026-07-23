@@ -23,6 +23,7 @@ import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
+import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
@@ -120,6 +121,7 @@ import {
   TUTOR_RENDER_SYNC,
   TUTOR_RENDER_WORD_ANCHOR,
   TUTOR_RENDER_FALLBACK_CARD,
+  TUTOR_CLIENT_RULE8_REPAIR,
   TUTOR_STUDENT_MARKS,
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_SKETCH,
@@ -7358,6 +7360,12 @@ export function VoiceTutorRealtime({
       // becomes the first thing the student hears, which sounds wrong).
       let audibleSentenceCount = 0;
       let totalToolNamesSeen: string[] = [];
+      // Rule-8 v2: renders that actually landed on the board this turn.
+      // Counts assignedIds across attempts, so a killed attempt's rolled-back
+      // renders still count — the client repair then UNDER-fires (skips a
+      // turn it could have repaired), never double-paints. Conservative by
+      // design.
+      let totalPaintedCount = 0;
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
       let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
@@ -8030,8 +8038,11 @@ export function VoiceTutorRealtime({
           const scriptId = pushTtsScriptForPerception(s);
           speakTextRef.current?.(s, scriptId);
           audibleSentenceCount++;
+          // Always recorded (was gated behind TUTOR_BOARD_ANCHOR_ASSIST):
+          // the anchor assists read only the last element, and rule-8 v2's
+          // client repair needs the full spoken-sentence list at turn end.
+          turnNarrationRef.current.push(s);
           if (TUTOR_BOARD_ANCHOR_ASSIST) {
-            turnNarrationRef.current.push(s);
             // Re-anchor: if a held turn-opening anchor is NAMED by this sentence,
             // bind it here so it flushes as this sentence plays. anchorM =
             // sentences dispatched BEFORE this one = the current (pre-increment)
@@ -9763,6 +9774,7 @@ export function VoiceTutorRealtime({
                     // roll exactly these renders back off the board.
                     if (result?.assignedIds?.length) {
                       renderIdsThisAttempt.push(...result.assignedIds);
+                      totalPaintedCount += result.assignedIds.length;
                       // Keep-on-no-replacement: this attempt produced a render.
                       // If it turns out to be the winning attempt, the finally
                       // treats these as a replacement for any killed renders.
@@ -11252,6 +11264,62 @@ export function VoiceTutorRealtime({
           speakTextRef.current?.('Sorry, could you say that again?');
         }
         return;
+      }
+
+      // ── Rule-8 v2 (flag TUTOR_CLIENT_RULE8_REPAIR): the in-stream server
+      // repair pass fires only when the turn emitted ZERO tools — it cannot
+      // see client-side drops. If the server sent tools but every one was
+      // dropped here (dedup / validator / kill / solver pre-check), request
+      // repairs ourselves. Fire-and-forget: turn finalize below must not
+      // wait on Haiku; late ink beats no ink, but ink from a PREVIOUS turn
+      // must never land mid-next-turn (pageTurn staleness guard).
+      if (
+        TUTOR_CLIENT_RULE8_REPAIR &&
+        shouldClientRequestRepair({
+          serverToolCount: totalToolNamesSeen.length,
+          paintedCount: totalPaintedCount,
+          sentenceCount: turnNarrationRef.current.length,
+        })
+      ) {
+        const repairTurn = pageTurnRef.current;
+        const repairSentences = [...turnNarrationRef.current];
+        const repairToolCount = totalToolNamesSeen.length;
+        onDebugEvent?.('rule8_client_repair', `requesting: sent=${repairToolCount} painted=0 sentences=${repairSentences.length}`);
+        void (async () => {
+          try {
+            const res = await fetch('/api/tutor/rule8-repair', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sentences: repairSentences,
+                serverToolCount: repairToolCount,
+                paintedCount: 0,
+                sessionId: sessionIdRef.current,
+              }),
+            });
+            if (!res.ok) return;
+            const { frames } = (await res.json()) as {
+              frames?: Array<{ name: string; args: Record<string, unknown>; anchorSentence?: number }>;
+            };
+            if (!Array.isArray(frames) || frames.length === 0) return;
+            if (pageTurnRef.current !== repairTurn) {
+              onDebugEvent?.('rule8_client_repair', `stale: turn advanced, dropping ${frames.length} frame(s)`);
+              return;
+            }
+            let dispatched = 0;
+            for (const frame of frames) {
+              if (typeof frame?.name !== 'string' || typeof frame?.args !== 'object' || frame.args === null) continue;
+              const cmd = mapFunctionCallToCommand(frame.name, frame.args as Record<string, unknown>);
+              if (!cmd) continue;
+              const anchor = Number.isInteger(frame.anchorSentence) && (frame.anchorSentence as number) >= 1
+                ? { anchorSentence: frame.anchorSentence as number }
+                : undefined;
+              handleWhiteboardCommand([cmd], anchor);
+              dispatched++;
+            }
+            onDebugEvent?.('rule8_client_repair', `dispatched ${dispatched}/${frames.length} frame(s)`);
+          } catch { /* fail-to-nothing — the turn already played fine */ }
+        })();
       }
 
       // Finalize the tutor turn in transcriptRef. The streaming reveal

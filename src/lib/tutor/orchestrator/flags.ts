@@ -206,6 +206,16 @@ export const SONIC_WS_FIRST_CHUNK_TIMEOUT_MS = 4000;
 export const TUTOR_RENDER_FALLBACK_CARD =
   process.env.NEXT_PUBLIC_TUTOR_RENDER_FALLBACK_CARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_RENDER_FALLBACK_CARD === 'true';
+// Rule-8 repair v2 (round 6): the in-stream server repair pass fires only
+// when the turn emitted ZERO tools — it cannot see client-side drops. When
+// the server sent tools but every one was dropped client-side (dedup /
+// validator / kill), the client POSTs the turn's spoken sentences to
+// /api/tutor/rule8-repair at turn end and dispatches the returned frames
+// through the normal validator/dedup stack. Mutually exclusive with the
+// server pass by construction. Default OFF.
+export const TUTOR_CLIENT_RULE8_REPAIR =
+  process.env.NEXT_PUBLIC_TUTOR_CLIENT_RULE8_REPAIR === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_CLIENT_RULE8_REPAIR === 'true';
 // Task 3.2 (humanlike-latency plan): word-anchored render flush — buffered
 // renders release the moment the introducing sentence speaks its REFERRING
 // word (word clock from TUTOR_TTS_WS) instead of at the sentence boundary.
