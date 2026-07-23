@@ -260,6 +260,7 @@ export default function SessionStage(props: SessionStageProps) {
   const [qpinShownAt, setQpinShownAt] = useState(0);
   const [qpinSpeechEndedAt, setQpinSpeechEndedAt] = useState<number | null>(null);
   const [qpinDragged, setQpinDragged] = useState(false); // deliberate placement → no auto-collapse this turn
+  const qpinJustDragged = useRef(false); // suppress the click that ends a drag
 
   // New turn's pin → back to expanded at the default/custom spot.
   useEffect(() => {
@@ -268,6 +269,7 @@ export default function SessionStage(props: SessionStageProps) {
     setQpinDragged(false);
     setQpinShownAt(Date.now());
     setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
+    qpinJustDragged.current = false; // a new pin's turn starts a fresh gesture — never inherit suppression
     // voiceState deliberately not a dep: only the pin's identity resets the cycle.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionPinKey]);
@@ -300,12 +302,13 @@ export default function SessionStage(props: SessionStageProps) {
     originY: number;
     dragging: boolean;
   } | null>(null);
-  const qpinJustDragged = useRef(false); // suppress the click that ends a drag
 
   const onQpinPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (qpinDrag.current) return; // a second finger must not hijack an in-progress drag
     const stage = stageRef.current?.getBoundingClientRect();
     const box = qpinBoxRef.current?.getBoundingClientRect();
     if (!stage || !box) return;
+    qpinJustDragged.current = false; // a new press starts a new gesture — never inherit suppression
     qpinDrag.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
@@ -314,7 +317,6 @@ export default function SessionStage(props: SessionStageProps) {
       originY: box.top - stage.top,
       dragging: false,
     };
-    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const onQpinPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -323,7 +325,12 @@ export default function SessionStage(props: SessionStageProps) {
     const dx = e.clientX - d.startX;
     const dy = e.clientY - d.startY;
     if (!d.dragging && !exceedsDragThreshold(dx, dy)) return;
-    d.dragging = true;
+    if (!d.dragging) {
+      d.dragging = true;
+      // Capture only once it IS a drag — capturing on pointerdown would
+      // retarget a plain tap's click away from the pin's inner buttons.
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    }
     const stage = stageRef.current?.getBoundingClientRect();
     const box = qpinBoxRef.current?.getBoundingClientRect();
     if (!stage || !box || stage.width === 0 || stage.height === 0) return;
