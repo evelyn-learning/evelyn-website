@@ -304,7 +304,10 @@ export default function SessionStage(props: SessionStageProps) {
   } | null>(null);
 
   const onQpinPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (qpinDrag.current) return; // a second finger must not hijack an in-progress drag
+    // Only a CAPTURED drag blocks a new press (second-finger hijack). A
+    // pre-threshold entry may be stale — pointerup can land off-element
+    // before capture starts — so a new press overwrites it (self-healing).
+    if (qpinDrag.current?.dragging) return;
     const stage = stageRef.current?.getBoundingClientRect();
     const box = qpinBoxRef.current?.getBoundingClientRect();
     if (!stage || !box) return;
@@ -322,6 +325,12 @@ export default function SessionStage(props: SessionStageProps) {
   const onQpinPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     const d = qpinDrag.current;
     if (!d || d.pointerId !== e.pointerId) return;
+    if (!d.dragging && e.buttons === 0) {
+      // Button-free move = the press already ended off-element (no capture
+      // pre-threshold). Drop the stale entry so hovering can't ghost-drag.
+      qpinDrag.current = null;
+      return;
+    }
     const dx = e.clientX - d.startX;
     const dy = e.clientY - d.startY;
     if (!d.dragging && !exceedsDragThreshold(dx, dy)) return;
