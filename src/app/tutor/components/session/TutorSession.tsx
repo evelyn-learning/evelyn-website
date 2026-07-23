@@ -1115,6 +1115,7 @@ export default function TutorSession(props: TutorSessionProps) {
         adaptiveMenu={adaptiveMenuEl}
         endControl={endControlEl}
         questionPin={questionPinEl}
+        questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
         hiccupPin={hiccupPinEl}
         voiceState={voiceState}
         micLevelRef={micLevelRef}

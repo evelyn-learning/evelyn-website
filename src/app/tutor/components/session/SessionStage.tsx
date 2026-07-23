@@ -32,6 +32,7 @@ import {
   holdBackUnbalancedMathTail,
   normalizeCaptionMath,
 } from '@/lib/tutor/whiteboard/caption-fit';
+import { qpinCollapseDeadline } from '@/lib/tutor/qpin-behavior';
 
 export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
 
@@ -61,6 +62,8 @@ export interface SessionStageProps {
    *  top-center over the board after the tutor stops speaking, cleared when
    *  the next turn starts. Composed by TutorSession (owns the gist state). */
   questionPin?: ReactNode;
+  /** Turn id of the current question pin — resets collapse/drag state per turn. */
+  questionPinKey?: string;
   /** Round-28b: transient voice-hiccup captions pin — board bottom, just
    *  above the floating tutor bar (both voice engines failed a sentence). */
   hiccupPin?: ReactNode;
@@ -173,7 +176,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, hiccupPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, questionPinKey, hiccupPin,
     voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage, onBack,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -249,6 +252,39 @@ export default function SessionStage(props: SessionStageProps) {
   const [toolsOpen, setToolsOpen] = useState(false);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
+
+  // ===== Q-pin collapse/drag (2026-07-23 spec) — the expanded pin auto-
+  // collapses to a docked chip after speech-end + 6s (15s hard cap), so it
+  // stops covering top-of-board ink for the whole turn. =====
+  const [qpinMode, setQpinMode] = useState<'expanded' | 'chip'>('expanded');
+  const [qpinShownAt, setQpinShownAt] = useState(0);
+  const [qpinSpeechEndedAt, setQpinSpeechEndedAt] = useState<number | null>(null);
+  const [qpinDragged, setQpinDragged] = useState(false); // deliberate placement → no auto-collapse this turn
+
+  // New turn's pin → back to expanded at the default/custom spot.
+  useEffect(() => {
+    if (!questionPinKey) return;
+    setQpinMode('expanded');
+    setQpinDragged(false);
+    setQpinShownAt(Date.now());
+    setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
+    // voiceState deliberately not a dep: only the pin's identity resets the cycle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionPinKey]);
+
+  // Stamp the moment the tutor stops speaking (starts the +6s countdown).
+  useEffect(() => {
+    if (!questionPinKey || qpinSpeechEndedAt !== null) return;
+    if (voiceState !== 'speaking') setQpinSpeechEndedAt(Date.now());
+  }, [voiceState, questionPinKey, qpinSpeechEndedAt]);
+
+  // Schedule the collapse.
+  useEffect(() => {
+    if (!questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
+    const deadline = qpinCollapseDeadline(qpinShownAt, qpinSpeechEndedAt);
+    const t = window.setTimeout(() => setQpinMode('chip'), Math.max(0, deadline - Date.now()));
+    return () => window.clearTimeout(t);
+  }, [questionPin, questionPinKey, qpinMode, qpinDragged, qpinShownAt, qpinSpeechEndedAt]);
 
   const stageRef = useRef<HTMLDivElement>(null);
   // Close the board-page dropdown on any pointerdown outside its container
@@ -636,6 +672,21 @@ export default function SessionStage(props: SessionStageProps) {
               )}
             </>
           )}
+          {questionPin && qpinMode === 'chip' && (
+            <button
+              type="button"
+              aria-label="Show the tutor's question"
+              title="Show the tutor's question"
+              onClick={() => {
+                setQpinShownAt(Date.now());
+                setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
+                setQpinMode('expanded');
+              }}
+              className="ss-cap relative grid place-items-center w-9 h-9 rounded-xl bg-amber-400 text-white text-xs font-bold hover:bg-amber-500 after:absolute after:-inset-1 after:content-['']"
+            >
+              Q
+            </button>
+          )}
         </div>
       </div>
 
@@ -716,7 +767,7 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Question pin — gist of the tutor's current ask, top-center
               over the board (drops below the page switcher when shown). An
               overlay, so it never collides with board ink. ===== */}
-      {questionPin && (
+      {questionPin && qpinMode === 'expanded' && (
         <div className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)]`}>
           {questionPin}
         </div>
