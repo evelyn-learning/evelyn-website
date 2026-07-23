@@ -256,17 +256,26 @@ export default function SessionStage(props: SessionStageProps) {
   // ===== Q-pin collapse/drag (2026-07-23 spec) — the expanded pin auto-
   // collapses to a docked chip after speech-end + 6s (15s hard cap), so it
   // stops covering top-of-board ink for the whole turn. =====
+  // User call 2026-07-23 (live test): the pin vanishing into the tools
+  // cluster as a "Q" chip felt wrong — auto-collapse is OFF for now and the
+  // student manages the pin by dragging/dismissing it. Flip to re-enable
+  // the whole collapse cycle (timers + chip).
+  const QPIN_AUTO_COLLAPSE = false;
   const [qpinMode, setQpinMode] = useState<'expanded' | 'chip'>('expanded');
   const [qpinShownAt, setQpinShownAt] = useState(0);
   const [qpinSpeechEndedAt, setQpinSpeechEndedAt] = useState<number | null>(null);
   const [qpinDragged, setQpinDragged] = useState(false); // deliberate placement → no auto-collapse this turn
   const qpinJustDragged = useRef(false); // suppress the click that ends a drag
 
-  // New turn's pin → back to expanded at the default/custom spot.
+  // New turn's pin → back to expanded at the DEFAULT top-center spot. A
+  // dragged position is where the student parked THAT question out of the
+  // way — inheriting it would spawn new questions wherever the last one was
+  // shoved (user live-test call 2026-07-23), so it resets per turn.
   useEffect(() => {
     if (!questionPinKey) return;
     setQpinMode('expanded');
     setQpinDragged(false);
+    setQpinCustomPos(null);
     setQpinShownAt(Date.now());
     setQpinSpeechEndedAt(voiceState !== 'speaking' ? Date.now() : null);
     qpinJustDragged.current = false; // a new pin's turn starts a fresh gesture — never inherit suppression
@@ -276,13 +285,13 @@ export default function SessionStage(props: SessionStageProps) {
 
   // Stamp the moment the tutor stops speaking (starts the +6s countdown).
   useEffect(() => {
-    if (!questionPinKey || qpinSpeechEndedAt !== null) return;
+    if (!QPIN_AUTO_COLLAPSE || !questionPinKey || qpinSpeechEndedAt !== null) return;
     if (voiceState !== 'speaking') setQpinSpeechEndedAt(Date.now());
   }, [voiceState, questionPinKey, qpinSpeechEndedAt]);
 
   // Schedule the collapse.
   useEffect(() => {
-    if (!questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
+    if (!QPIN_AUTO_COLLAPSE || !questionPin || !questionPinKey || qpinMode !== 'expanded' || qpinDragged) return;
     const deadline = qpinCollapseDeadline(qpinShownAt, qpinSpeechEndedAt);
     const t = window.setTimeout(() => setQpinMode('chip'), Math.max(0, deadline - Date.now()));
     return () => window.clearTimeout(t);
@@ -290,8 +299,8 @@ export default function SessionStage(props: SessionStageProps) {
 
   // Dragging: pointer events (one path for mouse + touch). A <5px press is a
   // tap and falls through to the pin's own click (transcript). A real drag
-  // is a deliberate placement: it cancels auto-collapse for the turn and the
-  // fractional position is remembered for later pins this session.
+  // is a deliberate placement: it cancels auto-collapse for the turn (when
+  // enabled) and holds until the next turn's pin resets to top-center.
   const [qpinCustomPos, setQpinCustomPos] = useState<QpinFraction | null>(null);
   const qpinBoxRef = useRef<HTMLDivElement>(null);
   const qpinDrag = useRef<{
@@ -765,7 +774,7 @@ export default function SessionStage(props: SessionStageProps) {
               )}
             </>
           )}
-          {questionPin && qpinMode === 'chip' && (
+          {QPIN_AUTO_COLLAPSE && questionPin && qpinMode === 'chip' && (
             <button
               type="button"
               aria-label="Show the tutor's question"
