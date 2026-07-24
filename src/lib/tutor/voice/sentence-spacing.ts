@@ -29,6 +29,27 @@
  * - Decimals are naturally immune: the char after the period is a
  *   digit, not an uppercase letter.
  */
+/**
+ * Abbreviation tails whose trailing period must NOT be treated as a
+ * sentence end. Shared by the SentenceBuffer streaming chunker
+ * (claude-brain.ts) and the fallback splitter (tts-recovery.ts) — round
+ * 28 (2026-07-24, live: "the U.S. It became…" split into two TTS
+ * requests, voicing a hard sentence pause inside "U.S.").
+ *
+ * Arms:
+ * - Word abbreviations (honorifics + titles + citation shorthand).
+ *   Deliberately excludes "St"/"Mt" (ordinals like "1st." would
+ *   false-positive across the digit→letter word boundary) and "No"
+ *   ("No." is a common complete student/tutor sentence).
+ * - `e.g` / `i.e` retained explicitly (predate the generic arm).
+ * - Generic dotted initialism: letter(.letter)+. — covers U.S., U.K.,
+ *   U.N., D.C., B.C.E., U.S.S.R., a.m., p.m. in one shape (min two
+ *   letters, so a sentence genuinely ending in "…option B." never
+ *   matches).
+ */
+export const ABBREV_TAIL_RE =
+  /(?:\b(?:Mr|Ms|Mrs|Mx|Dr|Prof|Sr|Jr|vs|etc|approx|Sen|Rep|Gov|Gen|Col|Lt|Rev|Hon|Fig|Ch|Inc|Ltd|Univ|Dept)|\be\.g|\bi\.e|\b[\p{L}](?:\.[\p{L}])+)\.$/iu;
+
 export function normalizeSentenceSpacing(text: string): string {
   if (!text || text.length < 4) return text;
   // Odd indices after this split are complete $…$ spans — pass through

@@ -21,7 +21,7 @@ import type { Segment } from '../lesson-plan/types';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing } from './sentence-spacing';
+import { normalizeSentenceSpacing, ABBREV_TAIL_RE } from './sentence-spacing';
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 
@@ -425,10 +425,9 @@ export class SentenceBuffer {
   /** Abbreviation tails whose period must NOT end a sentence. Live
    *  2026-07-09: "…, Ms." was emitted as a full sentence and Cartesia
    *  voiced the "Ms. Kiara" honorific with a sentence-final pause.
-   *  Deliberately excludes "St"/"Mt" (ordinals like "1st." would
-   *  false-positive across the digit→letter word boundary). */
-  private static readonly ABBREV_TAIL_RE =
-    /(?:\b(?:Mr|Ms|Mrs|Mx|Dr|Prof|Sr|Jr|vs|etc|approx)|\be\.g|\bi\.e)\.$/i;
+   *  Round 28: extended (dotted initialisms like "U.S.", titles) and
+   *  moved to sentence-spacing.ts so tts-recovery.ts shares one list. */
+  private static readonly ABBREV_TAIL_RE = ABBREV_TAIL_RE;
 
   /** Append delta, return zero or more newly-completed sentences. */
   push(delta: string): string[] {

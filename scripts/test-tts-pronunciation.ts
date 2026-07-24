@@ -86,14 +86,16 @@ assert.strictEqual(
 );
 
 // --- Math-variable letter respelling: Tier 2 ('a', context-anchored) -
+// Round-30 note: variable-'a' now emits capital "A" (Cartesia read "ay"
+// with an article-'a' vowel live) — pins updated from the old "ay" form.
 assert.strictEqual(
   rewriteForTTS('Here a represents the number of apples.'),
-  'Here ay represents the number of apples.',
+  'Here A represents the number of apples.',
   '"a represents" anchors the variable reading of a'
 );
 assert.strictEqual(
   rewriteForTTS('Substitute a, the number of apples, and y, the weight, into the formula.'),
-  'Substitute ay, the number of apples, and why, the weight, into the formula.',
+  'Substitute A, the number of apples, and why, the weight, into the formula.',
   'apposition anchor ("a, the ...") plus tier-1 y in the same sentence'
 );
 assert.strictEqual(
@@ -108,7 +110,7 @@ assert.strictEqual(
 );
 assert.strictEqual(
   rewriteForTTS('Find the values of a and b.'),
-  'Find the values of ay and bee.',
+  'Find the values of A and bee.',
   '"values of a" anchors a; standalone b is tier-1 unconditional'
 );
 
@@ -142,8 +144,8 @@ console.log('OK — tts-pronunciation rewrites validated');
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
-  eq('Now the intercept — what do you think *a* represents?', 'Now the intercept, what do you think ay represents?', 'italic-a-represents');
-  eq('Did you mean what does *a* represent, the y-intercept?', 'Did you mean what does ay represent, the why-intercept?', 'verb-form-represent');
+  eq('Now the intercept — what do you think *a* represents?', 'Now the intercept, what do you think A represents?', 'italic-a-represents');
+  eq('Did you mean what does *a* represent, the y-intercept?', 'Did you mean what does A represent, the why-intercept?', 'verb-form-represent');
   eq('Y-bar is the actual average of your data.', 'why-bar is the actual average of your data.', 'capital-y-bar');
   eq('2*3*4 equals 24', '2*3*4 equals 24', 'multiplication-untouched');
   eq('a cat sat on a mat', 'a cat sat on a mat', 'article-untouched');
@@ -317,7 +319,7 @@ console.log('OK — tts-pronunciation rewrites validated');
      // Round-19: 'a' before cubed/squared with a math continuation is the
      // VARIABLE (was pinned as the bare article pre-19 — the exact
      // mispronunciation reported live 2026-07-17).
-     'Let me show you ay cubed bee cubed on the board.',
+     'Let me show you A cubed bee cubed on the board.',
      'dollar-delimited-a3b3');
   // E4's own show_problem prompt example ("$x^2 - 4$ when $x = 3$") —
   // caret AND bare "=" both need to gate the $ strip.
@@ -346,7 +348,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Round 28 (b7a6872e): variables inside math are letter-spelled, so the
   // 'a' numerator speaks "ay" like every other bare math letter — the old
   // 'a over bee' expectation predates that rule.
-  eq('The formula uses \\frac{a}{b}.', 'The formula uses ay over bee.', 'frac-over');
+  eq('The formula uses \\frac{a}{b}.', 'The formula uses A over bee.', 'frac-over');
   eq('We need \\frac{x+1}{2} here.', 'We need x plus 1 over 2 here.', 'frac-with-plus');
 
   // --- Subscripts: _1 / _{n+1} -> "sub …" -------------------------------
@@ -806,10 +808,10 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   eq('Now, a squared minus b squared is exactly that pattern.',
-     'Now, ay squared minus bee squared is exactly that pattern.',
+     'Now, A squared minus bee squared is exactly that pattern.',
      'a-squared-minus-anchors');
   eq('So a cubed b cubed factors nicely.',
-     'So ay cubed bee cubed factors nicely.',
+     'So A cubed bee cubed factors nicely.',
      'a-cubed-letter-anchors');
   // The article must survive when "squared" is an adjective.
   eq('Draw a squared grid on the paper.',
@@ -830,16 +832,16 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   eq('a squared can be taken common from the expression.',
-     'ay squared can be taken common from the expression.',
+     'A squared can be taken common from the expression.',
      'a-squared-verb-continuation');
   eq('a is a variable in the expression.',
-     'ay is a variable in the expression.',
+     'A is a variable in the expression.',
      'a-is-a-variable (second a stays the article)');
   eq('the a in the expression is a variable.',
-     'the ay in the expression is a variable.',
+     'the A in the expression is a variable.',
      'the-a-is-the-variable (second a stays)');
   eq('only a when divided by b gives b over a.',
-     'only ay when divided by bee gives bee over ay.',
+     'only A when divided by bee gives bee over A.',
      'a-when + sentence-final over-a');
   // Article guards must survive.
   eq('Draw a squared grid on the paper.',
@@ -866,12 +868,12 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   // Every heuristic-net letter, declared:
-  eq('Watch how $a$ behaves here.', 'Watch how ay behaves here.', 'span-a');
+  eq('Watch how $a$ behaves here.', 'Watch how A behaves here.', 'span-a');
   eq('Now $b$ carries the sign.', 'Now bee carries the sign.', 'span-b');
   eq('And $y$ is the output.', 'And why is the output.', 'span-y');
-  eq('Angle $A$ is bigger than angle $B$.', 'Angle ay is bigger than angle bee.', 'span-capitals');
+  eq('Angle $A$ is bigger than angle $B$.', 'Angle A is bigger than angle bee.', 'span-capitals');
   eq('So $a^2 - b^2$ factors as a difference of squares.',
-     'So ay squared minus bee squared factors as a difference of squares.',
+     'So A squared minus bee squared factors as a difference of squares.',
      'span-expression-multi-letter');
   // The lurking derivative leak: rewriteDerivatives used to run BEFORE the
   // $-gate, leaving "dee why over dee ex" inside dollars with no signal.
@@ -885,7 +887,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('Choose between $5 and $8 per seat.', 'Choose between $5 and $8 per seat.', 'currency-between');
   // Un-wrapped prose still rides the heuristic net (unchanged):
   eq('Now, a squared minus b squared is exactly that pattern.',
-     'Now, ay squared minus bee squared is exactly that pattern.',
+     'Now, A squared minus bee squared is exactly that pattern.',
      'unwrapped-net-still-works');
 
   console.log('OK — Round-20 ($-span math-by-default + in-span respell)');
@@ -900,16 +902,16 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   eq('if $\\lim_{x\\to a} f(x) = L$, what should $\\lim_{x\\to a} [f(x) + g(x)]$ equal?',
-     'if the limit as x approaches ay of f of x equals L, what should the limit as x approaches ay of f of x plus g of x equal?',
+     'if the limit as x approaches A of f of x equals L, what should the limit as x approaches A of f of x plus jee of x equal?',
      'lim-sum-law-span');
   eq('what do you think $\\lim_{x\\to a} [c \\cdot f(x)]$ should equal?',
-     'what do you think the limit as x approaches ay of c times f of x should equal?',
+     'what do you think the limit as x approaches A of c times f of x should equal?',
      'lim-constant-multiple-span');
   eq('the quotient becomes $\\dfrac{5 \\cdot 6}{5}$.',
      'the quotient becomes 5 times 6 over 5.',
      'dfrac-span');
   eq('we want $\\lim_{x\\to 2} \\dfrac{f(x)\\cdot g(x)}{g(x) - 1}$.',
-     'we want the limit as x approaches 2 of f of x times g of x over g of x minus 1.',
+     'we want the limit as x approaches 2 of f of x times jee of x over jee of x minus 1.',
      'lim-dfrac-composite-span');
   eq('Quotient works only when $M \\neq 0$.',
      'Quotient works only when M not equal to 0.',
@@ -931,7 +933,7 @@ console.log('OK — tts-pronunciation rewrites validated');
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
   };
   eq('using $a^3 - b^3 = (a-b)(a^2+ab+b^2)$ here.',
-     'using ay cubed minus bee cubed equals (ay minus bee) times (ay squared plus ay bee plus bee squared) here.',
+     'using A cubed minus bee cubed equals (A minus bee) times (A squared plus A bee plus bee squared) here.',
      'ab-product-splits');
   eq('factor as $(x+2)(x-2)$ first.',
      'factor as (x plus 2) times (x minus 2) first.',
@@ -1021,4 +1023,87 @@ console.log('OK — tts-pronunciation rewrites validated');
      'phi-not-split');
 
   console.log('OK — Round-25 (spelled-letter + short-Greek split guards)');
+}
+
+// --- Round 28: mechanism slashes, WWI/WWII, dotted initialisms,
+// unspaced superscript minus, chunker abbreviation guard --------------
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  // Mechanism-token alternatives (live: "slash" voiced in orgo session).
+  eq('Is it SN1/SN2 or E1/E2 here?', 'Is it SN1 or SN2 or E1 or E2 here?', 'sn1-sn2-slash');
+  eq('SN1/SN2/E1/E2 all compete.', 'SN1 or SN2 or E1 or E2 all compete.', 'mechanism-chain');
+  eq('The cis/trans isomers differ.', 'The cis or trans isomers differ.', 'cis-trans-pair');
+  eq('Compare the acid/base behavior.', 'Compare the acid or base behavior.', 'acid-base-pair');
+  // Negative guards: fractions, ratios, dates untouched.
+  eq('Add 9/11 to your history notes.', 'Add 9/11 to your history notes.', 'date-slash-untouched');
+  eq('The P/E ratio matters.', 'The P/E ratio matters.', 'pe-ratio-untouched');
+  // WWI / WWII word forms and roman citation form.
+  eq('WWI started in 1914, WWII in 1939.', 'World War One started in 1914, World War Two in 1939.', 'wwi-wwii');
+  eq('WW1 and WW2 reshaped Europe.', 'World War One and World War Two reshaped Europe.', 'ww1-ww2-digit');
+  eq('World War I ended in 1918.', 'World War one ended in 1918.', 'world-war-roman-i');
+  eq('World War II followed.', 'World War two followed.', 'world-war-roman-ii');
+  eq('The war I fought was different.', 'The war I fought was different.', 'war-pronoun-guard');
+  // Dotted initialisms: internal periods must not read as sentence ends.
+  eq('The U.S. economy grew.', 'The U S economy grew.', 'us-mid-sentence');
+  eq('She moved to Washington, D.C. last year.', 'She moved to Washington, D C last year.', 'dc-mid-sentence');
+  eq('They visited the U.S. Britain came later.', 'They visited the U S. Britain came later.', 'us-sentence-final-keeps-period');
+  eq('Meet me at 9 a.m. tomorrow.', 'Meet me at 9 AM tomorrow.', 'am-expansion');
+  eq('The U.S.S.R. dissolved in 1991.', 'The U S S R dissolved in 1991.', 'ussr');
+  eq('John F. Kennedy won in 1960.', 'John F. Kennedy won in 1960.', 'middle-initial-untouched');
+  eq('So the answer is option B. Try the next one.', 'So the answer is option B. Try the next one.', 'single-letter-sentence-untouched');
+  // Unspaced superscript minus (sibling of the audit residual).
+  eq('Factor x²-4 now.', 'Factor x squared minus 4 now.', 'unspaced-sup-minus');
+  eq('Read pages 3-5 tonight.', 'Read pages 3-5 tonight.', 'plain-range-untouched');
+  // Idempotence (T4 convention) on the new outputs.
+  eq('SN1 or SN2 or E1 or E2 all compete.', 'SN1 or SN2 or E1 or E2 all compete.', 'mechanism-idempotent');
+  eq('The U S economy grew.', 'The U S economy grew.', 'us-idempotent');
+  eq('World War One started in 1914.', 'World War One started in 1914.', 'wwi-idempotent');
+  console.log('OK — Round-28 (mechanism slashes, WWI, dotted initialisms, unspaced sup-minus)');
+}
+
+// --- Round 28: SentenceBuffer must not split dotted abbreviations ----
+{
+  // Dynamic import keeps claude-brain (client-heavy module) out of the
+  // top-level import graph unless this section runs.
+  void (async () => {
+    const { SentenceBuffer } = await import('../src/lib/tutor/voice/claude-brain');
+    const feed = (text: string): string[] => {
+      const sb = new SentenceBuffer();
+      const out = sb.push(text);
+      const tail = sb.flush();
+      if (tail) out.push(tail);
+      return out;
+    };
+    const expectSentences = (input: string, want: string[], name: string) => {
+      const got = feed(input);
+      if (JSON.stringify(got) !== JSON.stringify(want)) {
+        console.error(`FAIL ${name}:\n  got:  ${JSON.stringify(got)}\n  want: ${JSON.stringify(want)}`);
+        process.exit(1);
+      }
+    };
+    expectSentences(
+      'The capital city we are discussing is Washington, D.C. It became the center of power.',
+      ['The capital city we are discussing is Washington, D.C. It became the center of power.'],
+      'chunker-dc-no-split',
+    );
+    expectSentences(
+      'The meeting starts at about nine a.m. Everyone should be there on time.',
+      ['The meeting starts at about nine a.m. Everyone should be there on time.'],
+      'chunker-am-no-split',
+    );
+    expectSentences(
+      'The U.S. entered the war in 1917. That changed everything for the allies.',
+      ['The U.S. entered the war in 1917.', 'That changed everything for the allies.'],
+      'chunker-us-real-boundary-still-splits',
+    );
+    expectSentences(
+      'This first sentence is long enough to split. This second one is too, clearly.',
+      ['This first sentence is long enough to split.', 'This second one is too, clearly.'],
+      'chunker-normal-split-unaffected',
+    );
+    console.log('OK — Round-28 (SentenceBuffer dotted-abbreviation guard)');
+  })();
 }

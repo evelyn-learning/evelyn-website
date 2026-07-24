@@ -125,12 +125,36 @@ const SLASH_PAIRS: [string, string][] = [
   ['plus', 'minus'],
   ['true', 'false'],
   ['yes', 'no'],
+  // Round 28 (live, orgo session-1784908707278 topic): chemistry
+  // direction/mechanism word pairs — same curated-pair semantics.
+  ['acid', 'base'],
+  ['base', 'acid'],
+  ['cis', 'trans'],
+  ['trans', 'cis'],
+  ['syn', 'anti'],
+  ['endo', 'exo'],
+  ['oxidation', 'reduction'],
+  ['sigma', 'pi'],
 ];
 
 const SLASH_PAIR_REPLACEMENTS: Replacement[] = SLASH_PAIRS.map(([a, b]) => ({
   pattern: new RegExp(`\\b${a}/${b}\\b`, 'gi'),
   replacement: b === 'or' ? `${a} ${b}` : `${a} or ${b}`,
 }));
+
+/** Mechanism-token alternatives ("SN1/SN2", "E1/E2", "SP2/SP3") — round
+ *  28, live: Cartesia voiced the raw "/" as "slash". Deliberately NOT a
+ *  generic slash→"or" rule (fractions "3/4", ratios "profit/revenue",
+ *  "P/E", dates "9/11" must survive): both sides must be an ALL-CAPS
+ *  letter run ENDING IN A DIGIT (SN1, E2, SP3…) — no plain-acronym pair
+ *  ("A/C", "I/O") or number pair has a digit-terminated caps token on
+ *  both sides. The lookahead (instead of consuming the right token) lets
+ *  the rule chain across lists: "SN1/SN2/E1/E2" → "SN1 or SN2 or E1 or
+ *  E2". */
+const MECHANISM_SLASH_REPLACEMENTS: Replacement[] = [{
+  pattern: /\b([A-Z]{1,3}\d)\s*\/\s*(?=[A-Z]{1,3}\d\b)/g,
+  replacement: '$1 or ',
+}];
 
 /** Em-dash normalization. Some TTS voices (Cartesia/Sonic in particular)
  *  render an em-dash as an audible hard pause rather than a natural
@@ -1231,6 +1255,7 @@ const ALL_REPLACEMENTS: Replacement[] = [
   ...PUNCTUATION_REPLACEMENTS,
   ...MATH_OPERATOR_REPLACEMENTS,
   ...SLASH_PAIR_REPLACEMENTS,
+  ...MECHANISM_SLASH_REPLACEMENTS,
   ...EMDASH_REPLACEMENTS,
   ...LETTER_RESPELLING_REPLACEMENTS,
 ];
@@ -1315,8 +1340,12 @@ const ROMAN_NUMERAL_WORDS: Record<string, string> = {
   XI: 'eleven', XII: 'twelve', XIII: 'thirteen', XIV: 'fourteen', XV: 'fifteen',
   XVI: 'sixteen', XVII: 'seventeen', XVIII: 'eighteen', XIX: 'nineteen', XX: 'twenty',
 };
-const ROMAN_NUMERAL_KEYWORDS = 'Article|Title|Section|Amendment|Chapter|Act|Part';
-const ROMAN_NUMERAL_KEYWORDS_ALLCAPS = 'ARTICLE|TITLE|SECTION|AMENDMENT|CHAPTER|ACT|PART';
+// Round 28: "World War" joins the citation keywords so "World War I/II"
+// reads "World War one/two" (was untouched — "War" alone stays out; "the
+// war I fought" must never convert, and lowercase forms don't match by
+// the X8 Title-Case rule).
+const ROMAN_NUMERAL_KEYWORDS = 'Article|Title|Section|Amendment|Chapter|Act|Part|World War';
+const ROMAN_NUMERAL_KEYWORDS_ALLCAPS = 'ARTICLE|TITLE|SECTION|AMENDMENT|CHAPTER|ACT|PART|WORLD WAR';
 const ROMAN_NUMERAL_ALL_KEYS_SRC = Object.keys(ROMAN_NUMERAL_WORDS).join('|');
 // X8 REVIEW FIX (I1, important): elided-keyword lists ("Amendment I, II,
 // and III") used to convert only the first numeral, leaving the rest of
@@ -1509,7 +1538,18 @@ function isSingleLetterChainLink(full: string, offset: number, matchLen: number,
   return forwardExtends || backwardExtends;
 }
 
+// Round 28: the UNSPACED sibling of the superscript case ("x²-4"). The
+// spaced-only tradeoff documented above ("3-5" page ranges) doesn't apply
+// here — a unicode-superscript run directly before the hyphen makes the
+// left side unambiguously math, so the hyphen is a minus whatever the
+// spacing. Requires the superscript (+ not *): plain "3-5" stays a range.
+const BARE_MINUS_UNSPACED_SUP_RE = new RegExp(
+  `\\b(${MATH_OPERAND_SRC})([⁰¹²³⁴⁵⁶⁷⁸⁹]+)-(?=(${MATH_OPERAND_SRC})\\b)`,
+  'g',
+);
+
 function rewriteBareMinusForSpeech(t: string): string {
+  t = t.replace(BARE_MINUS_UNSPACED_SUP_RE, '$1$2 minus ');
   return t.replace(BARE_MINUS_RE, (m: string, left: string, sup: string, right: string, offset: number, full: string) => {
     if (sup) return `${left}${sup} minus `; // superscripted operand is unambiguously math — no year/chain shapes carry exponents
     if (isFourDigitYear(left) && isFourDigitYear(right)) return m; // year range — leave hyphen
@@ -1548,6 +1588,41 @@ function rewriteDomainAcronyms(t: string): string {
   t = t.replace(/\bNa[+⁺]/g, 'sodium');
   t = t.replace(/\bNa\b/g, 'sodium');
   t = t.replace(/\bK[+⁺]/g, 'potassium');
+  // Round 28 (history round): "WWI"/"WWII" (and digit forms "WW1"/"WW2")
+  // read letter-by-letter ("double-u double-u one") — the convention is
+  // the war NAME. WWII/WW2 first so the WWI arm can't eat its prefix.
+  t = t.replace(/\bWW\s?(?:II|2)\b/g, 'World War Two');
+  t = t.replace(/\bWW\s?(?:I|1)\b/g, 'World War One');
+  return t;
+}
+
+/**
+ * Dotted initialisms ("U.S.", "D.C.", "B.C.E.", "a.m.") — round 28,
+ * live: Cartesia treats the internal periods as sentence ends, voicing
+ * "the U.S. economy" with a hard pause after "U.". Internal periods
+ * become spaces (Cartesia then reads the bare letters naturally); the
+ * TRAILING period is dropped only when a lowercase word follows (clearly
+ * mid-sentence) and kept otherwise, since a sentence-final "…in the
+ * U.S." legitimately ends the sentence with that same period. Minimum
+ * two dotted letters, so ordinary sentence ends ("…option B.") and
+ * middle initials ("John F. Kennedy") never match. Word-form latin
+ * abbreviations expand outright — they're speech, not initialisms.
+ */
+function rewriteDottedAbbreviations(t: string): string {
+  t = t.replace(/\be\.g\.,?\s*/g, 'for example, ');
+  t = t.replace(/\bi\.e\.,?\s*/g, 'that is, ');
+  t = t.replace(/\betc\.(?=\s+[a-z])/g, 'et cetera');
+  t = t.replace(/\betc\./g, 'et cetera.');
+  t = t.replace(/\bvs\.?(?=\s)/g, 'versus');
+  // a.m./p.m. → "AM"/"PM" (Cartesia reads the caps pair "ay em"/"pee em"
+  // natively; bare "a m" would voice the article-'a' vowel instead).
+  t = t.replace(/\b([ap])\.m\.(?=\s+[a-z])/g, (_m, l: string) => `${l.toUpperCase()}M`);
+  t = t.replace(/\b([ap])\.m\./g, (_m, l: string) => `${l.toUpperCase()}M.`);
+  // Generic dotted-CAPS initialism: mid-sentence form first (trailing
+  // period dropped), then the sentence-boundary form (trailing period
+  // kept — "…in the U.S." may genuinely end the sentence with it).
+  t = t.replace(/\b((?:[A-Z]\.)+[A-Z])\.(?=\s+[a-z])/g, (_m, body: string) => body.replace(/\./g, ' '));
+  t = t.replace(/\b((?:[A-Z]\.)+[A-Z])\.(?!\d)/g, (_m, body: string) => `${body.replace(/\./g, ' ')}.`);
   return t;
 }
 
@@ -1634,6 +1709,10 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // Runs before comma/number normalization so its state-code guard can still
   // see "1890 SD" / ", SD".
   t = rewriteDomainAcronyms(t);
+  // Dotted initialisms ("U.S." → "U S") — round 28. Runs before the
+  // roman-numeral pass (disjoint shapes) and before the math pipeline so
+  // stripped periods can't confuse span parsing.
+  t = rewriteDottedAbbreviations(t);
   // Document-citation roman numerals ("Article I" → "Article one") and
   // legal case-name "v." ("McCulloch v. Maryland" → "... versus ...")
   // (Task X8). Both are text-shape rewrites unrelated to math notation, so

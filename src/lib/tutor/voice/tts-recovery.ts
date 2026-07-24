@@ -13,6 +13,8 @@
  * Pure + React-free — script-tested (test:tts-recovery).
  */
 
+import { ABBREV_TAIL_RE } from './sentence-spacing';
+
 /** Above this, the recovery text gets compressed before speaking. */
 export const RECOVERY_MAX_WORDS = 18;
 
@@ -22,12 +24,25 @@ export function needsShortening(text: string): boolean {
 
 /** Sentence-split that tolerates inline $...$ math (no periods inside
  *  spans in practice; decimals like 3.14 don't end on whitespace+capital
- *  so the boundary regex leaves them alone). */
+ *  so the boundary regex leaves them alone). Round 28: abbreviation
+ *  tails ("U.S.", "Ms.") no longer count as boundaries — segments are
+ *  re-merged via the shared ABBREV_TAIL_RE (this splitter previously had
+ *  no abbreviation guard at all). */
 function splitSentences(text: string): string[] {
-  return text
+  const parts = text
     .split(/(?<=[.!?])\s+/)
     .map((s) => s.trim())
     .filter(Boolean);
+  const out: string[] = [];
+  for (const part of parts) {
+    const prev = out[out.length - 1];
+    if (prev !== undefined && ABBREV_TAIL_RE.test(prev)) {
+      out[out.length - 1] = `${prev} ${part}`;
+    } else {
+      out.push(part);
+    }
+  }
+  return out;
 }
 
 /**
