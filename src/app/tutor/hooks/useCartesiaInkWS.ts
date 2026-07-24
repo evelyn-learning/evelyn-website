@@ -128,6 +128,12 @@ export interface UseCartesiaInkWSOptions {
   onTranscriptionFailed?: (errorType: string | undefined) => void;
   onStateChange?: (state: PerceptionState) => void;
   onError?: (err: Error) => void;
+  /** Diagnostic breadcrumbs for the session debug-event trail. The
+   *  2026-07-24 silent-session investigation (session-1784908707278) found
+   *  every drop path in this hook was invisible in production — browser
+   *  console.warn never reaches the server, so a turn lost here left no
+   *  trace in `debugEvents`. Wire to onDebugEvent. */
+  onDiagnostic?: (type: string, message: string) => void;
 }
 
 export interface UseCartesiaInkWSResult {
@@ -190,6 +196,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     onTranscriptionFailed,
     onStateChange,
     onError,
+    onDiagnostic,
   } = options;
 
   const [state, setStateInternal] = useState<PerceptionState>('disabled');
@@ -201,6 +208,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const onTranscriptionFailedRef = useRef(onTranscriptionFailed);
   const onStateChangeRef = useRef(onStateChange);
   const onErrorRef = useRef(onError);
+  const onDiagnosticRef = useRef(onDiagnostic);
   onSpeechStartRef.current = onSpeechStart;
   onSpeechStopRef.current = onSpeechStop;
   onMicLevelRef.current = onMicLevel;
@@ -208,6 +216,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   onTranscriptionFailedRef.current = onTranscriptionFailed;
   onStateChangeRef.current = onStateChange;
   onErrorRef.current = onError;
+  onDiagnosticRef.current = onDiagnostic;
 
   const wsRef = useRef<WebSocket | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -355,12 +364,31 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   // re-enters before the delete has landed.
   const finalizeTurn = useCallback((turnId: string, rawTranscript: string) => {
     const buf = turnBuffersRef.current.get(turnId);
-    if (!buf || buf.finalized) return; // duplicate turn.end — no double text
+    if (!buf || buf.finalized) {
+      // Duplicate turn.end — no double text. If it carried text, leave a
+      // breadcrumb: a dup here is benign, but a turn.end whose turn.start
+      // never arrived (reconnect mid-turn) lands here too and IS data loss.
+      if (rawTranscript.trim()) {
+        onDiagnosticRef.current?.('ink_final_dropped_no_buffer',
+          `turn ${turnId} ${buf ? 'already finalized' : 'has no buffer'} — dropped: ${JSON.stringify(rawTranscript.trim().slice(0, 80))}`);
+      }
+      return;
+    }
     buf.finalized = true;
     const deltas = reconstructInkFinals(buf.events);
     turnBuffersRef.current.delete(turnId);
-    if (deltas.length === 0) return; // nothing new since the last delivered final
     const text = rawTranscript.trim();
+    if (deltas.length === 0) {
+      // Pre-round-28 this returned unconditionally — but a short utterance
+      // ("4.") whose only text arrives in the turn.end's cumulative
+      // `transcript` field (zero turn.update deltas) is REAL student
+      // speech, and dropping it here was invisible (2026-07-24 silent-
+      // session incident class). Deliver non-empty finals; the dispatch
+      // dedupe layer downstream guards the (unobserved) duplicate case.
+      if (!text) return; // genuinely empty turn — nothing to deliver
+      onDiagnosticRef.current?.('ink_no_delta_final_delivered',
+        `turn ${turnId} had 0 update deltas but a non-empty final — delivering: ${JSON.stringify(text.slice(0, 80))}`);
+    }
     if (!text) return;
     reconnectAttemptsRef.current = 0;
     const now = Date.now();
@@ -417,6 +445,8 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
               clearWatchdog();
               transcriptionWatchdogRef.current = setTimeout(() => {
                 console.warn(`${logPrefix} transcription watchdog fired — no transcript in ${TRANSCRIPTION_WATCHDOG_MS}ms`);
+                onDiagnosticRef.current?.('ink_watchdog_fired',
+                  `no turn.end within ${TRANSCRIPTION_WATCHDOG_MS}ms of eager_end — closing WS for reconnect`);
                 transcriptionWatchdogRef.current = null;
                 const ws = wsRef.current;
                 if (ws && !intentionallyDisconnectedRef.current) {

@@ -135,6 +135,33 @@ const CONTINUATION_LEAD_TOKENS = new Set<string>([
   'and', 'also', 'plus', 'or', 'because', 'but', 'wait', 'oh',
 ]);
 
+/** Brief-answer shapes that must never drop as "<3w" filler — the
+ *  2026-07-24 incident class (session-1784908707278): a student answering
+ *  a counting question with a bare "4." / "3" while the prod state was
+ *  speaking/processing hit the brief-filler branches and vanished with no
+ *  consumer (a filler verdict outside a cancel checkpoint is a silent
+ *  drop). isNoiseTranscript gained its digit exemption in 5ab1179d
+ *  (the "6." incident); this is the same exemption for this classifier.
+ *  Kept narrow — bare numbers ("4", "-3", "3.5", "3/4"), number words
+ *  ("three", "negative four"), single-letter multiple-choice answers —
+ *  and routed to 'escalate' (Haiku discriminates), NOT straight to
+ *  dispatch, so the echo/false-barge-in defences keep their say. */
+const NUMBER_WORDS = new Set<string>([
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
+  'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen',
+  'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty', 'thirty',
+  'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred',
+  'thousand', 'half', 'third', 'quarter', 'negative', 'minus', 'point',
+]);
+// Note: '/' is not in NORMALIZE_PUNCT, so "3/4" survives as one token.
+const NUMERIC_TOKEN_RE = /^-?\d+(?:\.\d+)?(?:\/\d+)?$/;
+
+function isBriefAnswerShape(tokens: string[]): boolean {
+  if (tokens.length === 0) return false;
+  if (tokens.length === 1 && /^[a-e]$/.test(tokens[0])) return true;
+  return tokens.every((t) => NUMERIC_TOKEN_RE.test(t) || NUMBER_WORDS.has(t));
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────
 
 const NORMALIZE_PUNCT = /[.,!?;:"'()\[\]{}—–\-]/g;
@@ -822,6 +849,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       return { verdict: 'barge_in', reason: 'speaking + question shape ≥3w', selfVoiceScore };
     }
     if (wordCount < 3) {
+      if (isBriefAnswerShape(tokens)) {
+        return { verdict: 'escalate', reason: 'speaking + brief numeric answer', selfVoiceScore };
+      }
       return { verdict: 'filler', reason: 'speaking + brief (<3w)', selfVoiceScore };
     }
     return { verdict: 'escalate', reason: 'speaking + ambiguous mid-length speech', selfVoiceScore };
@@ -837,6 +867,9 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       return { verdict: 'continuation', reason: 'thinking + continuation lead, short', selfVoiceScore };
     }
     if (wordCount < 3) {
+      if (isBriefAnswerShape(tokens)) {
+        return { verdict: 'escalate', reason: 'thinking + brief numeric answer', selfVoiceScore };
+      }
       return { verdict: 'filler', reason: 'thinking + brief (<3w)', selfVoiceScore };
     }
     return { verdict: 'escalate', reason: 'thinking + ambiguous (continuation vs barge)', selfVoiceScore };

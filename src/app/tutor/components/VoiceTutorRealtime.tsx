@@ -674,6 +674,13 @@ export function VoiceTutorRealtime({
   // Transient "audio hiccup" notice (TTS retry/skip) — see onTtsIssue below.
   const [ttsNotice, setTtsNotice] = useState<string | null>(null);
   const ttsNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Round 28: student-facing mic-silent notice. MicSilentWarning was only
+  // recorded as a debug event, so a student with a dead/OS-muted mic
+  // (2026-07-24 incident: peak −75dBFS, tutor "not responding") got no
+  // signal that the tutor couldn't hear them. Auto-dismisses; cleared for
+  // good the moment any real transcript proves the mic works.
+  const [micNotice, setMicNotice] = useState<string | null>(null);
+  const micNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -6493,6 +6500,13 @@ export function VoiceTutorRealtime({
     if (error.name && error.name.endsWith('Warning')) {
       console.warn('[VoiceTutorRealtime] Warning:', error);
       onDebugEvent?.(error.name, error.message);
+      // Mic-silent is actionable BY the student — surface a gentle notice
+      // instead of leaving them talking to a tutor that can't hear them.
+      if (error.name === 'MicSilentWarning') {
+        setMicNotice("I can't hear you — your mic looks silent. Check the mic permission or volume, or type below.");
+        if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
+        micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+      }
       return;
     }
     console.error('[VoiceTutorRealtime] Error:', error);
@@ -12623,6 +12637,10 @@ export function VoiceTutorRealtime({
       console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+      // Any real ASR final proves the mic is capturing — clear the
+      // mic-silent notice so it can't linger over a working session.
+      if (micNoticeTimerRef.current) { clearTimeout(micNoticeTimerRef.current); micNoticeTimerRef.current = null; }
+      setMicNotice(null);
       // turn_latency: authoritative transcript. A leftover ledger that already
       // has turnEnd belongs to a turn that never dispatched (noise/filtered)
       // or whose deferred audio emit never fired (killed) — emit it as
@@ -13383,6 +13401,10 @@ export function VoiceTutorRealtime({
     onTranscriptionFailed: perceptionOnTranscriptionFailed,
     onStateChange: perceptionOnStateChange,
     onError: perceptionOnError,
+    // Round 28: persist Ink-internal drop paths (no-buffer finals, no-delta
+    // finals, transcription watchdog) into the session debugEvents trail —
+    // they were console-only and invisible in prod (2026-07-24 incident).
+    onDiagnostic: (type, message) => onDebugEvent?.(type, message),
   });
   const perception = TUTOR_STT_ENGINE_INK2 ? perceptionInk2 : perceptionWS;
   // Task V1: feed the sustained-energy barge-in gate from the OpenAI perception
@@ -14667,6 +14689,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       {errorMessage && (
         <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded truncate max-w-[200px]">
           {errorMessage}
+        </span>
+      )}
+
+      {/* Mic-silent notice (transient, student-actionable) */}
+      {micNotice && !errorMessage && (
+        <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex-shrink min-w-0">
+          {micNotice}
         </span>
       )}
 

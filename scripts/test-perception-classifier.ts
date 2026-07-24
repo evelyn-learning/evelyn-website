@@ -1041,5 +1041,50 @@ console.log('\n=== Offered-option echo exemption (live round 5, 2026-07-23, sess
   check('echo of a NON-question statement → still dropped', nonQ.verdict === 'drop_self_voice', `verdict=${nonQ.verdict}`);
 }
 
+console.log('\n=== Brief numeric answers must not silently drop (Session-1784908707278, 2026-07-24) ===');
+{
+  // Live incident class: tutor asks "how many other carbons?", student
+  // answers "4." then "3." while the prod state is speaking/processing —
+  // the <3w branches classed them filler and nothing downstream consumes
+  // a filler verdict (silent drop). Numeric shapes now escalate to Haiku.
+  const r = classify('4.', 'speaking');
+  check('"4." in speaking → escalate (not filler)', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  const r = classify('3', 'processing');
+  check('"3" in processing → escalate (not filler)', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  const r = classify('Three.', 'speaking');
+  check('"Three." in speaking → escalate', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  const r = classify('negative four', 'processing');
+  check('"negative four" in processing → escalate', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  const r = classify('3/4', 'speaking');
+  check('"3/4" in speaking → escalate', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  // Multiple-choice single letter is an answer shape too.
+  const r = classify('B.', 'processing');
+  check('"B." in processing → escalate', r.verdict === 'escalate', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  // Non-numeric brief speech keeps today's behavior.
+  const r = classify('so like', 'speaking');
+  check('"so like" in speaking → still filler', r.verdict === 'filler', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  const r = classify('um', 'processing');
+  check('"um" in processing → still filler', r.verdict === 'filler', `verdict=${r.verdict} (${r.reason})`);
+}
+{
+  // In listening the numeric answer already dispatched — unchanged.
+  const r = classify('4.', 'listening');
+  check('"4." in listening → new_turn (unchanged)', r.verdict === 'new_turn', `verdict=${r.verdict} (${r.reason})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
