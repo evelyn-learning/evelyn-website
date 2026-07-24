@@ -239,6 +239,18 @@ function Histogram({ data, bins: preBins, showCounts, binWidth: bw, xLabel, yLab
 // ═══════════════════════════════════════════════════════════════════════════════
 // Box Plot
 // ═══════════════════════════════════════════════════════════════════════════════
+/** Anchor an axis/value label so it never crosses the viewBox edge —
+ *  round 28 (live, session portal-d2062bd9): a min value pinned to the
+ *  axis start sat at x=MARGIN.left with textAnchor="middle", hanging its
+ *  left half into the gutter. Width estimate matches sketch-render-core's
+ *  estLabelWidth glyph factor (0.55 × fontSize). */
+function anchorAt(x: number, text: string, fontSize: number): 'start' | 'middle' | 'end' {
+  const half = (text.length * fontSize * 0.55) / 2;
+  if (x - half < 2) return 'start';
+  if (x + half > WIDTH - 2) return 'end';
+  return 'middle';
+}
+
 function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
   if (!boxplot || boxplot.datasets.length === 0) return null;
 
@@ -290,17 +302,23 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
               <circle key={oi} cx={xScale(o)} cy={cy} r={3.5} fill="none" stroke={c} strokeWidth={1.5} />
             ))}
 
-            {/* Dataset label */}
-            <text x={MARGIN.left - 8} y={cy + 4} textAnchor="end" fontSize={11} fill="#374151">{ds.label}</text>
+            {/* Dataset label — caption above the band, inside the plot
+                area. Round 28 (live, portal-d2062bd9): the old right-
+                anchored gutter placement (x=MARGIN.left-8, 47px of room,
+                no truncation) ran any label past ~7 chars off x=0 and the
+                viewBox clipped it ("1, 5, 5, 6, 20" lost its head). */}
+            {ds.label && (
+              <text x={MARGIN.left} y={cy - boxH / 2 - (showValues ? 18 : 6)} textAnchor="start" fontSize={11} fill="#374151">{ds.label}</text>
+            )}
 
-            {/* Five-number summary labels */}
+            {/* Five-number summary labels (edge-clamped, see anchorAt) */}
             {showValues && (
               <>
-                <text x={xScale(ds.min)} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={9} fill="#6b7280">{fmt(ds.min)}</text>
-                <text x={xScale(ds.q1)} y={cy + boxH / 2 + 12} textAnchor="middle" fontSize={9} fill="#6b7280">{fmt(ds.q1)}</text>
-                <text x={xScale(ds.median)} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={9} fill={c} fontWeight={600}>{fmt(ds.median)}</text>
-                <text x={xScale(ds.q3)} y={cy + boxH / 2 + 12} textAnchor="middle" fontSize={9} fill="#6b7280">{fmt(ds.q3)}</text>
-                <text x={xScale(ds.max)} y={cy - boxH / 2 - 4} textAnchor="middle" fontSize={9} fill="#6b7280">{fmt(ds.max)}</text>
+                <text x={xScale(ds.min)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.min), fmt(ds.min), 9)} fontSize={9} fill="#6b7280">{fmt(ds.min)}</text>
+                <text x={xScale(ds.q1)} y={cy + boxH / 2 + 12} textAnchor={anchorAt(xScale(ds.q1), fmt(ds.q1), 9)} fontSize={9} fill="#6b7280">{fmt(ds.q1)}</text>
+                <text x={xScale(ds.median)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.median), fmt(ds.median), 9)} fontSize={9} fill={c} fontWeight={600}>{fmt(ds.median)}</text>
+                <text x={xScale(ds.q3)} y={cy + boxH / 2 + 12} textAnchor={anchorAt(xScale(ds.q3), fmt(ds.q3), 9)} fontSize={9} fill="#6b7280">{fmt(ds.q3)}</text>
+                <text x={xScale(ds.max)} y={cy - boxH / 2 - 4} textAnchor={anchorAt(xScale(ds.max), fmt(ds.max), 9)} fontSize={9} fill="#6b7280">{fmt(ds.max)}</text>
               </>
             )}
           </g>
@@ -312,7 +330,7 @@ function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
       {xRange.ticks.map(t => (
         <g key={`xt-${t}`}>
           <line x1={xScale(t)} y1={MARGIN.top + CHART_H} x2={xScale(t)} y2={MARGIN.top + CHART_H + 5} stroke="#374151" />
-          <text x={xScale(t)} y={MARGIN.top + CHART_H + 18} textAnchor="middle" fontSize={11} fill="#374151">{fmt(t)}</text>
+          <text x={xScale(t)} y={MARGIN.top + CHART_H + 18} textAnchor={anchorAt(xScale(t), fmt(t), 11)} fontSize={11} fill="#374151">{fmt(t)}</text>
         </g>
       ))}
       {xLabel && (
