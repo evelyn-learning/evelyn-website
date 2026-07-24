@@ -48,6 +48,15 @@ export interface AckInput {
   msSinceTurnEnd: number;
   /** Monotonic per-dispatch counter; index % 5 === 0 turns stay silent. */
   turnIndex: number;
+  /** Round 28: the session-opening turn (synthetic [start lesson] /
+   *  [start session] / [Session-resumed…] kickoff) never acks. There is
+   *  no student utterance to acknowledge, and the ack raced the brain's
+   *  own opener scaffolding into "Okay, let's see." + "Alright, let's
+   *  dig in…" stacks (live 2026-07-24, session-1784908707278 t=18.6s).
+   *  The fastOpenerSpoken / brainSentence0Dispatched guards are timing
+   *  races the ack usually WINS on the slow first turn — this is the
+   *  structural exclusion. */
+  openingTurn?: boolean;
 }
 
 export function shouldSpeakAck(input: AckInput): boolean {
@@ -55,6 +64,7 @@ export function shouldSpeakAck(input: AckInput): boolean {
     input.classification !== 'noise' &&
     input.attempt === 0 &&
     !input.skipTurn &&
+    !input.openingTurn &&
     !input.fastOpenerSpoken &&
     !input.brainSentence0Dispatched &&
     input.msSinceTurnEnd >= 450 &&

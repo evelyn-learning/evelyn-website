@@ -31,6 +31,10 @@ check('tooEarly', shouldSpeakAck({ ...happy, msSinceTurnEnd: 449 }) === false);
 check('damping', shouldSpeakAck({ ...happy, turnIndex: 5 }) === false);
 check('damping10', shouldSpeakAck({ ...happy, turnIndex: 10 }) === false);
 check('damping-else', [1, 2, 3, 4, 6, 7, 8, 9, 11].every((i) => shouldSpeakAck({ ...happy, turnIndex: i })));
+// Round 28: the session-opening kickoff never acks (live 2026-07-24:
+// "Okay, let's see." spoke over the opener scaffolding on turn 1).
+check('opening-turn', shouldSpeakAck({ ...happy, openingTurn: true }) === false);
+check('opening-turn-absent-defaults-open', shouldSpeakAck({ ...happy, openingTurn: false }) === true);
 
 // pickAck: deterministic, only pool phrases, never repeats lastAckIndex
 check('pool-size', ACK_PHRASES.length === 5);

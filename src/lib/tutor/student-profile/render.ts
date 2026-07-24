@@ -119,7 +119,13 @@ export function renderStudentProfileBlock(
     }
   }
 
-  lines.push(``, `When this session's topic touches an open gap above, OPEN with a concrete callback to it — don't wait until the student fails. If the gap entry includes a "student previously said:" line, weave that EXACT phrase into your opening so the student feels heard ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple.`);
+  // Round 28 (first-turn verbosity): this block used to MANDATE opening
+  // with a gap callback ("OPEN with a concrete callback… don't wait"),
+  // which — stacked with the warm-resume directive and the last-opener
+  // variety instruction — made returning students' first turns a recap
+  // monologue. History now weaves in AT THE MOMENT the material touches
+  // it; the opener belongs to the present session.
+  lines.push(``, `Do NOT front-load this history into your session opener — the opening belongs to THIS session's content (one short continuity clause at most). When the material at hand touches an open gap above, fold the callback in AT THAT MOMENT. If the gap entry includes a "student previously said:" line, weave that EXACT phrase in when you address it ("last time you said 'X' — let's revisit why that's not quite right"). Quoting the student's own words verbatim is the most effective re-grounding move; paraphrasing the concept ("different denominators tripped you up") is weaker. Pick the single most relevant gap; do not list multiple.`);
   if (activeGaps.length) {
     lines.push(``, `Keep weaving gaps in AS you teach, not just at the open: whenever the material at hand exercises an open gap above, fold in one quick check of that specific weak point (a small question or step the student does themselves) and scaffold based on what they show — never announce that a record says they are weak. If they handle a previously-gapped concept correctly, acknowledge the growth concretely and specifically (contrast with what they previously said, when a quote is available). If they stumble on it again, record it via the gap tools as usual — re-recording across sessions is how the system confirms and tracks the gap.`);
   }

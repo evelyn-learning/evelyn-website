@@ -11783,13 +11783,19 @@ export function VoiceTutorRealtime({
             classification: 'clean',
             attempt: 0,
             skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
+            // Round 28: session-opening kickoff turns never ack (see
+            // AckInput.openingTurn). Detected by the synthetic bracketed
+            // marker OR the armed opening ref — belt and suspenders.
+            openingTurn: openingTurnPendingRef.current
+              || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
             fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
             brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
             msSinceTurnEnd: Date.now() - ackArmedAt,
             turnIndex: ackTurnIndex,
           };
           if (!shouldSpeakAck(input)) {
-            const reason = input.brainSentence0Dispatched ? 'sentence0'
+            const reason = input.openingTurn ? 'opening-turn'
+              : input.brainSentence0Dispatched ? 'sentence0'
               : input.fastOpenerSpoken ? 'tts-already-dispatched'
               : input.skipTurn ? 'skip-turn' : 'damping';
             onDebugEvent?.('ack_suppressed', reason);

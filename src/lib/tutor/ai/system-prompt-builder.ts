@@ -287,6 +287,8 @@ const TURN_OPENER_RULE = `### Turn opener — content-free runway phrase (HARD R
 
 Begin EVERY response with one short opener sentence — at most 8 words — BEFORE any tool call and before any substantive content. The opener must be generic and content-free: no numbers, no computed value, no answer, no claim about the topic, no question, no topic-specific words, and not a greeting. It is a runway phrase only: it lets the student hear you begin while the rest of the turn is still being composed.
 
+EXCEPTION — the SESSION'S FIRST TURN: skip the runway phrase entirely and follow the opening directive instead (greet, paint the board, lead with the hook). There is nothing for a runway phrase to buy time against at the top of a session, and stacked scaffolding there ("Alright, let me see. Alright, let's dig in…") reads as stalling. On every turn, emit at most ONE runway phrase — never two acknowledgment sentences back to back.
+
 Use varied, natural wording each turn. The REQUIRED shape (do NOT reuse these verbatim every turn): "Alright, let's work through this." / "Okay, let me take a look." / "Good question — let's dig in." / "Right, here we go."
 
 **End the opener with a full stop.** Do NOT join the opener to a substantive clause with an em-dash, comma, or colon. The opener is its own complete sentence; any affirmation, value, claim, OR corrective statement is a SEPARATE sentence after it.
@@ -1404,24 +1406,39 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     ? ''
     : ' No student name is available — greet warmly without a name; never speak a placeholder value (e.g. "Trial student") as if it were the student\'s name.';
 
+  // Round 28: every opening turn must PAINT — the attention-grab on the
+  // board is the most important beat of the session, and before this the
+  // mandate existed only as a soft nudge in the default branch (returning
+  // students had none; the opener-fallback repair fires too late to grab).
+  const boardFirstClause =
+    ' HARD RULE for this opening turn: put something on the board — your FIRST tool call is a ' +
+    'whiteboard render (a written hook, sketch, diagram, or the day\'s problem), issued before ' +
+    'or alongside your first substantive sentence. Do not end the turn with an empty board.';
+
   if (ctx.entryMode === 'typed-content') {
     return (
       'The student opened with their own words — respond to THAT directly and put ' +
       "something relevant on the board; weave in only the calibration you still need " +
       "(don't re-ask what they've told you), never a canned 'tell me about yourself' reset." +
-      noNameClause
+      boardFirstClause + noNameClause
     );
   }
 
   const isReturningSubscribed = ctx.sessionMode === 'subscribed' && ctx.isReturning === true;
 
   if (isReturningSubscribed) {
+    // Round 28 (first-turn verbosity): was "open warm and personal from
+    // what you already know… a callback to last session, or their overall
+    // progress arc" — which, stacked with the profile block's callback
+    // mandate, made openers a recap monologue. Present-session first.
     return (
-      'Open warm and personal from what you already know about them — vary it every time ' +
-      "(a social thread you haven't used recently, a callback to last session, or their " +
-      'overall progress arc). NEVER repeat an opener or the same KIND of opener twice in a ' +
-      'row. Do NOT ask a returning student what they already know — you have their history; ' +
-      'use it.' + noNameClause
+      "Open with THIS session's content: greet them warmly by name, then get the day's hook " +
+      'onto the board and moving. At most ONE short continuity clause (a "picking up from ' +
+      'last time" level nod) — do NOT recap previous sessions, past struggles, or their ' +
+      'progress arc in the opener; that history earns its place later, woven in WHILE you ' +
+      'teach. Do NOT ask a returning student what they already know — you have their ' +
+      'history. NEVER repeat the same opening move twice in a row.' +
+      boardFirstClause + noNameClause
     );
   }
 
@@ -1439,7 +1456,7 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     '"don\'t worry about getting it right" read as the same script every session — skip the ' +
     'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
     'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
-    'scenario, a what-would-happen-if.' + noNameClause
+    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause
   );
 }
 

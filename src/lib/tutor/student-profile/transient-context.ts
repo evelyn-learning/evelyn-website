@@ -81,7 +81,7 @@ function renderThreadLine(t: SocialThread): string {
 /** Usage guidance for the brain — generic wording only (no topic-specific
  *  teaching examples, per feedback_generic_prompts). */
 const USAGE_INSTRUCTION =
-  'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student\'s progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes.';
+  'Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. Progress notes can power a warm mid-session aside ("X units in — great pace") but NEVER guilt about pace or time away — and keep them OUT of the session opener, which belongs to this session\'s content. Never recite this list, and never mention that any of this information is stored or remembered in notes.';
 
 /** Appended to USAGE_INSTRUCTION only when a lastOpener record renders —
  *  keeps the no-lastOpener output byte-identical to the pre-part-A block.
@@ -93,11 +93,16 @@ const USAGE_INSTRUCTION =
  *  "different kind" is actionable, (b) an explicit note that authored plan
  *  content may repeat but the WAY IN must not, and (c) warmth declared
  *  non-negotiable so variation isn't traded against it. */
+// Round 28 (first-turn verbosity): the kinds list used to lead with
+// history-flavored openers (last-session callback, progress arc), which
+// pushed returning students' first turns into recap. Kinds are now
+// present-session shapes; continuity is a short clause, not the opener.
 const LAST_OPENER_INSTRUCTION =
-  'Open THIS session with a DIFFERENT KIND of opening than the last one above. Opening kinds: ' +
-  'a last-session callback ("we nailed X, today Y"), a progress-arc note ("X units in"), a ' +
-  'social/interest hook, a cold intriguing puzzle or claim, or a what-if scenario. If the last ' +
-  'opener was one of these, pick ANOTHER this time — do not re-run the same move in new words. ' +
+  'Open THIS session with a DIFFERENT KIND of opening than the last one above, anchored in ' +
+  "THIS session's content. Opening kinds: a cold intriguing puzzle or claim, a what-if " +
+  'scenario, a concrete scenario on the board, or a pointed question — with at most one short ' +
+  'continuity clause, never a recap of previous sessions. If the last opener was one of these ' +
+  'kinds, pick ANOTHER this time — do not re-run the same move in new words. ' +
   "The lesson's authored problem may be the same; your way IN must not be. Keep it warm either " +
   'way — dropping the greeting or jumping in colder is NOT acceptable variation.';
 
