@@ -102,6 +102,13 @@ import { InkNotesOverlay } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
 
+/** Actions that don't paint a teaching render — shared by the scrollTo
+ *  processor and the auto-scroll-to-newest effect so both agree on which
+ *  command "owns" the batch's final scroll position (round 28). */
+const WB_META_ACTIONS = new Set([
+  'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
+]);
+
 const MoleculeRenderer = dynamic(() => import('./MoleculeRenderer'), {
   ssr: false,
   loading: () => <div className="flex items-center justify-center h-[250px] text-gray-400">Loading chemistry editor...</div>,
@@ -607,20 +614,41 @@ export function WhiteboardCanvas({
   // item jumped the partner page's scroll position). Compute the target
   // offset relative to `container` directly and set container.scrollTop /
   // scrollTo so the scroll is fully contained to this pane.
+  // Round 28 (jerky-scroll fix): target math now accumulates offsetTop up
+  // to the container (which is position:relative, terminating the
+  // offsetParent chain) instead of getBoundingClientRect deltas. Rect math
+  // was wrong in two ways: (a) it includes the wb-item-enter transform —
+  // the double-rAF measured ~32ms into the 480ms entrance animation, so
+  // the target came out ~13px low and the item slid under the running
+  // scroll; (b) it bakes the CURRENT animated scrollTop into the delta, so
+  // a second scroll issued mid-flight restarted from a moving baseline.
+  // offsetTop/offsetHeight ignore transforms and never read scroll state.
   const scrollElementIntoContainer = (
     container: HTMLElement,
     el: HTMLElement,
     block: 'start' | 'center' = 'start',
   ) => {
-    const containerRect = container.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
-    const currentOffset = elRect.top - containerRect.top; // el's position within the visible pane, pre-scroll
-    const delta = block === 'center'
-      ? currentOffset - (container.clientHeight - elRect.height) / 2
-      : currentOffset;
+    let top = 0;
+    let node: HTMLElement | null = el;
+    while (node && node !== container) {
+      top += node.offsetTop;
+      node = node.offsetParent as HTMLElement | null;
+    }
+    if (!node) {
+      // offsetParent chain missed the container (unexpected DOM shape) —
+      // fall back to the old rect math rather than not scrolling at all.
+      top = el.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+    }
+    // Honor the item's CSS scroll-margin-top (scroll-mt-6): the native
+    // property only applies to scrollIntoView(), which this helper
+    // deliberately avoids (iframe host-page scroll bug, see above) — so
+    // without this the item's top landed flush at pixel 0 of the pane.
+    const scrollMt = parseFloat(getComputedStyle(el).scrollMarginTop || '0') || 0;
+    const rawTarget = block === 'center'
+      ? top - (container.clientHeight - el.offsetHeight) / 2
+      : top - scrollMt;
     const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
-    const target = Math.max(0, Math.min(container.scrollTop + delta, maxScrollTop));
-    container.scrollTo({ top: target, behavior: 'smooth' });
+    container.scrollTo({ top: Math.max(0, Math.min(rawTarget, maxScrollTop)), behavior: 'smooth' });
   };
 
   // Handle tutor_scroll_whiteboard — navigate to page/item when the tutor
@@ -637,6 +665,17 @@ export function WhiteboardCanvas({
       .filter((x) => x.cmd.action === 'scrollTo' && x.i > lastScrollIndexRef.current);
     if (pending.length === 0) return;
     lastScrollIndexRef.current = pending[pending.length - 1].i;
+    // Round 28 (jerky-scroll fix): when a TEACHING render arrives AFTER a
+    // scrollTo in the same batch, the auto-scroll-to-newest effect below
+    // owns the final position (its order-aware rule already yields to a
+    // trailing nav). Without this mirror-image guard both effects fired
+    // one frame apart — two competing smooth scrolls, visible stutter.
+    // Page SWITCHES still apply (view-follow re-resolves the page anyway);
+    // only the stale in-page scroll is skipped.
+    let lastRenderIdx = -1;
+    for (let i = commands.length - 1; i >= 0; i--) {
+      if (!WB_META_ACTIONS.has(commands[i].action)) { lastRenderIdx = i; break; }
+    }
     // Tutor is explicitly redirecting attention — let the parent know
     // so it can auto-switch the mobile tab to the whiteboard if the
     // student is currently on the chat tab.
@@ -681,8 +720,9 @@ export function WhiteboardCanvas({
     const runInPageScrolls = () => {
       const container = scrollContainerRef.current;
       if (!container) return;
-      for (const { cmd } of pending) {
+      for (const { cmd, i } of pending) {
         if (cmd.action !== 'scrollTo') continue;
+        if (i < lastRenderIdx) continue; // stale — a newer render owns the scroll
         if (cmd.target === 'top') {
           container.scrollTo({ top: 0, behavior: 'smooth' });
         } else if (cmd.target === 'bottom') {
@@ -765,9 +805,7 @@ export function WhiteboardCanvas({
     }
     const added = commands.slice(prevFollowCountRef.current);
     prevFollowCountRef.current = commands.length;
-    const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
-    ]);
+    const META = WB_META_ACTIONS;
     // Explicit nav (goToPage / scrollTo) suppresses view-follow ONLY when it is
     // the batch's FINAL visual intent. Order matters: a turn shaped
     // [scrollTo(earlier figure) … scribble … NEW render] used to leave the view
@@ -862,9 +900,7 @@ export function WhiteboardCanvas({
     // page instead of the freshly-drawn figure (2026-06-24 Console17: ellipse
     // focal-distance graph). A double rAF waits for that switch + remount to
     // commit so the new page's item ids are queryable.
-    const META = new Set([
-      'newPage', 'clear', 'goToPage', 'removeItems', 'reviseItems', 'scribble', 'link', 'scrollTo', 'handwrite',
-    ]);
+    const META = WB_META_ACTIONS;
     // Explicit navigation (goToPage / scrollTo) owns its own scroll ONLY when
     // it is the batch's final visual intent — mirror the view-follow effect's
     // order-aware rule above so both effects follow the same page on a
@@ -1612,7 +1648,7 @@ export function WhiteboardCanvas({
         // bar's height + margin, so the last board item can always be
         // scrolled fully ABOVE the bar and read 100% clearly (2026-07-14
         // live test: bottom ink was permanently stuck under the dock).
-        className={`flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden pb-32' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
+        className={`relative flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden pb-32' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* p-4 padding lives HERE (moved off the scroll container) so this
@@ -1650,7 +1686,7 @@ export function WhiteboardCanvas({
             )}
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {renderableCommands.map((cmd, i) => {
               const overlays = scribbles.filter((s) => scribbleMatchesItem(s, cmd, i + 1));
               // Key by the stable stamped id (fall back to index for legacy
@@ -1662,19 +1698,16 @@ export function WhiteboardCanvas({
               return (
                 <div key={key} className={itemEnterClass(cmd)}>
                   {i > 0 && (
-                    // 2026-07-11 user round: a live note struck the "EQUATION"
-                    // item-separator label — this row sits BETWEEN item rects
-                    // (which InkNotesOverlay's occupied set collects), not
-                    // inside either one, so it was invisible to placement and
-                    // notes could land right on top of the micro-label text.
-                    // data-wb-sep marks it so InkNotesOverlay can add it to
-                    // occupied too (see that file's occupied-collection block).
-                    <div className="flex items-center gap-2 py-1" data-wb-sep="1">
-                      <div className="flex-1 border-t border-dashed border-gray-200" />
-                      <span className="text-[10px] text-gray-400 uppercase tracking-wide flex-shrink-0">
-                        {getCommandTypeLabel(cmd.action)}
-                      </span>
-                      <div className="flex-1 border-t border-dashed border-gray-200" />
+                    // Round 28 design pass: the separator is now a bare
+                    // hairline — the old all-caps type label ("EQUATION")
+                    // was renderer vocabulary, not student value, and with
+                    // the tightened item spacing the faint rule alone reads
+                    // as "new thing" without fragmenting the page.
+                    // data-wb-sep stays: InkNotesOverlay collects these rows
+                    // into its occupied set so a handwritten note can't land
+                    // on the divider (2026-07-11 round).
+                    <div className="py-1" data-wb-sep="1">
+                      <div className="border-t border-gray-100" />
                     </div>
                   )}
                   <div
@@ -2577,8 +2610,14 @@ export const CommandRenderer = memo(CommandRendererInner);
 function CommandRendererInner({ command }: CommandRendererProps) {
   switch (command.action) {
     case 'showEquation':
+      // Round 28 design pass: was min-h-[200px] — the only forced min-
+      // height in the whole dispatcher. A one-line equation is ~60px, so
+      // every equation carried ~70px of dead space above AND below and
+      // consecutive equations sat ~170px apart, reading as unrelated
+      // islands (2026-07-24 user round). Modest symmetric padding keeps
+      // equations breathing without the letterbox.
       return (
-        <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center justify-center py-3">
           <EquationRenderer
             latex={command.latex}
             label={command.label}

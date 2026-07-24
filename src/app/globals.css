@@ -25,6 +25,16 @@
   border-radius: 0.5rem;
 }
 
+/* Round 28 (whiteboard density pass): KaTeX ships `.katex-display
+   { margin: 1em 0 }` (~32px per equation at the board's font size) and
+   nothing overrode it — stacked equations sat far apart and read as
+   unrelated. Scoped to the whiteboard equation container; EquationRenderer
+   reads this margin back via getComputedStyle when pinning box heights,
+   so the fit logic self-adjusts. */
+.equation-content .katex-display {
+  margin: 0.4em 0;
+}
+
 @layer components {
   .container-wide {
     @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
