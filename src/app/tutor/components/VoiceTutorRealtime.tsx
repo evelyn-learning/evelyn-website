@@ -1623,6 +1623,14 @@ export function VoiceTutorRealtime({
   // keep, so a valid render the student asked for doesn't vanish).
   const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
+  // R32 (H1 review round 1, Finding 1): a queueOnMidUtterance push has a
+  // guaranteed drain ONLY when brainBusyRef was true at push time (the
+  // while-loop drain / 90s busy-watchdog own it then). When brainBusyRef is
+  // false at push time — the common case, since the aborted call's finally
+  // clears it well before the async verdict resolves — nothing else is
+  // watching the push. This timer is that guarantee: see the arm site in
+  // handleStudentTranscriptForBrain's mid-utterance guard.
+  const queueMidUtteranceDrainTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Round-16 Issue 1: live mirror of the hasStarted state for closures that
   // capture stale state (the handleRef effect). See the sync effect near the
   // hasStarted declaration.
@@ -7047,6 +7055,12 @@ export function VoiceTutorRealtime({
         clearTimeout(reactionIdleTimerRef.current);
         reactionIdleTimerRef.current = null;
       }
+      // R32 (H1 review round 1, Finding 1): the queueOnMidUtterance
+      // drain-guarantee poller — same idle-send shape, same cleanup need.
+      if (queueMidUtteranceDrainTimerRef.current) {
+        clearTimeout(queueMidUtteranceDrainTimerRef.current);
+        queueMidUtteranceDrainTimerRef.current = null;
+      }
     };
   }, []);
 
@@ -12018,6 +12032,43 @@ export function VoiceTutorRealtime({
       if (opts?.queueOnMidUtterance) {
         queuedTranscriptsRef.current.push(transcript);
         onDebugEvent?.('dispatch_queued_mid_utterance', transcript.slice(0, 60));
+        // R32 (H1 review round 1, Finding 1): this push has a guaranteed
+        // drain only when brainBusyRef is true right now (the while-loop
+        // drain in the busy branch below, or the 90s busy-watchdog, own it
+        // then). The common case for a RESTORE/MERGE/FRESH re-dispatch is
+        // brainBusyRef already false — the aborted call's finally cleared
+        // it well before this async verdict resolved — so nothing else is
+        // watching this push. Arm a bounded poller: if the interrupting
+        // speech never itself resolves to a transcript and the student
+        // says nothing further, this is the only thing that will ever
+        // drain the queue (otherwise: unbounded silence one layer deeper
+        // than the bug this option was meant to fix). One timer covers the
+        // whole queue regardless of how many pushes land while it's armed.
+        if (!brainBusyRef.current && !queueMidUtteranceDrainTimerRef.current) {
+          const checkQueueDrain = () => {
+            queueMidUtteranceDrainTimerRef.current = null;
+            if (queuedTranscriptsRef.current.length === 0) return; // drained normally already
+            if (brainBusyRef.current) return; // busy machinery now owns the queue — stand down
+            if (perceptionMidUtteranceRef.current) {
+              // Still (or newly) mid-utterance — don't talk over them;
+              // recheck shortly. Bounded by the 30s mid-utterance
+              // watchdog, so this can't poll forever.
+              queueMidUtteranceDrainTimerRef.current = setTimeout(checkQueueDrain, 2_000);
+              return;
+            }
+            const stuck = queuedTranscriptsRef.current.splice(0);
+            const joined = stuck.join(' ').trim();
+            if (!joined) return;
+            console.warn(`[brain-orchestrator] STAGE-3 H1 queue-drain timeout: dispatching ${stuck.length} queued transcript(s) that had no other drain path`);
+            onDebugEvent?.('dispatch_queue_drain_timeout', `${stuck.length} queued, ${joined.length} chars`);
+            // bypassPerceptionDedupe: same escape hatch as every other
+            // orchestrator-authored re-dispatch (RESTORE/MERGE/FRESH,
+            // watchdog requeue) — this is a synthetic internal drain, not
+            // a fresh perception event.
+            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true });
+          };
+          queueMidUtteranceDrainTimerRef.current = setTimeout(checkQueueDrain, 4_000);
+        }
         return;
       }
       console.warn(
@@ -12315,6 +12366,27 @@ export function VoiceTutorRealtime({
     }
   }, [callBrainOnce, onDebugEvent, armCoverForDispatch]);
 
+  // Resume-from-cut granularity (P5), factored so both resume sites — the
+  // verdict-driven 'speaking' branch below and the R32 (H3) timeout-resume
+  // poller (perceptionOnSpeechStart / decideStage2TimeoutRestore verdict
+  // 'resume-tts') — stay byte-identical instead of maintaining two copies
+  // that can drift (R32 review round 1, Finding 2). snapshot[0] is the
+  // in-flight (partially-played) sentence; by default it's re-spoken
+  // WHOLE, but with TUTOR_RESUME_FROM_CLAUSE on, it's replaced with just
+  // the tail from the clause the cut landed in (clauseTailFromFraction) so
+  // we don't re-speak content the student already heard. Early-cut → tail
+  // === the whole sentence (no-op).
+  const applyClauseTailSnapshot = useCallback((snapshot: string[], cutFraction: number): string[] => {
+    if (!TUTOR_RESUME_FROM_CLAUSE || snapshot.length === 0) return snapshot;
+    const tail = clauseTailFromFraction(snapshot[0], cutFraction);
+    if (!tail || tail === snapshot[0]) return snapshot;
+    console.warn(
+      `[RESUME-CUT] clause-snap @${cutFraction.toFixed(2)}: "${snapshot[0].slice(0, 40)}…" → "${tail.slice(0, 40)}…"`,
+    );
+    onDebugEvent?.('resume_from_clause', `@${cutFraction.toFixed(2)} tail="${tail.slice(0, 50)}"`);
+    return [tail, ...snapshot.slice(1)];
+  }, [onDebugEvent]);
+
   // Stage 2 — perception verdict dispatcher. Called after a perception
   // cancel checkpoint is set (perceptionInterruptCheckpointRef populated
   // by onSpeechStart). Picks an action based on the verdict:
@@ -12407,22 +12479,7 @@ export function VoiceTutorRealtime({
         // risk because the brain isn't being called again.
         if (checkpoint.unplayedSentencesSnapshot.length > 0) {
           const n = checkpoint.unplayedSentencesSnapshot.length;
-          // Resume-from-cut granularity (P5): snapshot[0] is the in-flight
-          // (partially-played) sentence. By default it's re-spoken WHOLE; with
-          // the flag on, replace it with just the tail from the clause the cut
-          // landed in (clauseTailFromFraction), so we don't re-speak content the
-          // student already heard. Early-cut → tail === the whole sentence.
-          let resumeQueue = checkpoint.unplayedSentencesSnapshot;
-          if (TUTOR_RESUME_FROM_CLAUSE) {
-            const tail = clauseTailFromFraction(resumeQueue[0], checkpoint.cutFraction);
-            if (tail && tail !== resumeQueue[0]) {
-              console.warn(
-                `[RESUME-CUT] clause-snap @${checkpoint.cutFraction.toFixed(2)}: "${resumeQueue[0].slice(0, 40)}…" → "${tail.slice(0, 40)}…"`,
-              );
-              onDebugEvent?.('resume_from_clause', `@${checkpoint.cutFraction.toFixed(2)} tail="${tail.slice(0, 50)}"`);
-              resumeQueue = [tail, ...resumeQueue.slice(1)];
-            }
-          }
+          const resumeQueue = applyClauseTailSnapshot(checkpoint.unplayedSentencesSnapshot, checkpoint.cutFraction);
           console.warn(
             `[PERCEPTION] STAGE-3.1 resume-from-cut (${verdict}, ${elapsedMs}ms): re-queuing ${n} unplayed sentence(s)`,
           );
@@ -12446,9 +12503,14 @@ export function VoiceTutorRealtime({
           );
           onDebugEvent?.('perception_stage3_refire_on_noise', `${verdict} after ${elapsedMs}ms`);
           dropRenderBuffer(); // render↔speech sync: refire redraws from scratch
+          // R32 (H1 review round 1, Finding 3): this refire hits the exact
+          // same mid-utterance bare-drop guard as RESTORE/MERGE/FRESH — same
+          // bug class. queueOnMidUtterance (+ its drain-guarantee timer,
+          // Finding 1) makes queuing here safe instead of silently dropping.
           void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
             ...(checkpoint.originalOpts || {}),
             bypassPerceptionDedupe: true,
+            queueOnMidUtterance: true,
           });
           return;
         }
@@ -12592,7 +12654,7 @@ export function VoiceTutorRealtime({
       queueOnMidUtterance: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
-  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer]);
+  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
   // Publish to the ref so the perception callbacks (defined earlier in
   // render order via useCallback closures) can call it through the ref
   // surface without a hoisting reference issue.
@@ -13364,6 +13426,13 @@ export function VoiceTutorRealtime({
             // resume/restore logic reads checkpoint state, not this text.
             if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
               const cp = perceptionInterruptCheckpointRef.current;
+              // R32 review round 1 (Minor, deferred to ledger): deliberately
+              // asymmetric vs the stale-seq rescues below (2-5), which rescue
+              // even when stale. Here, unlike those, there's no substantive
+              // verdict already computed for THIS transcript to fall back on
+              // — only the constant 'noise' — so a stale mySeq additionally
+              // means we can't even confirm this escalate call belongs to the
+              // checkpoint that's currently open; skip rather than guess.
               if (mySeq > cp.minSeqForDispatch) {
                 onDebugEvent?.('perception_bare_return_rescued', 'haiku_circuit_breaker');
                 applyPerceptionVerdictRef.current?.('noise', t.text);
@@ -13616,13 +13685,11 @@ export function VoiceTutorRealtime({
               // snapshot[0] handling so we don't re-speak already-heard
               // content.
               const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
-              let resumeQueue = armedCheckpoint!.unplayedSentencesSnapshot;
-              if (TUTOR_RESUME_FROM_CLAUSE) {
-                const tail = clauseTailFromFraction(resumeQueue[0], armedCheckpoint!.cutFraction);
-                if (tail && tail !== resumeQueue[0]) {
-                  resumeQueue = [tail, ...resumeQueue.slice(1)];
-                }
-              }
+              // R32 review round 1, Finding 2: shares applyClauseTailSnapshot
+              // with the 'speaking' verdict branch above (including its
+              // [RESUME-CUT] console.warn + 'resume_from_clause' debug
+              // event on truncation) instead of a second inline copy.
+              const resumeQueue = applyClauseTailSnapshot(armedCheckpoint!.unplayedSentencesSnapshot, armedCheckpoint!.cutFraction);
               console.warn(
                 `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
               );
