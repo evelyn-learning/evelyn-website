@@ -1170,7 +1170,8 @@ export function VoiceTutorRealtime({
   // any later resume (Task 5) so we don't double-speak or re-open a turn
   // we already told the student we lost.
   const escalationGaveUpRef = useRef(false);
-  // R32 Task 5: true once the partial-emitted cutoff resume has fired for
+  // R32 Task 5: true once the partial-emitted cutoff resume has been ARMED
+  // (not necessarily dispatched — see pendingCutoffResumeRef below) for
   // the in-flight turn — caps it at one continuation attempt per turn (a
   // stream that dies twice in a row gets the 45s give-up, not an endless
   // resume loop). Reset at the per-TURN relay entry point (see
@@ -1178,6 +1179,18 @@ export function VoiceTutorRealtime({
   // brainTurnAbortedRef reset — a retried attempt within the same turn
   // must not get a second resume shot.
   const cutoffResumeFiredRef = useRef(false);
+  // R32 Task 5 (review round 1, Finding 1): the resume marker text, staged
+  // here instead of dispatched immediately. The finalize site that detects
+  // the cutoff (inside callBrainOnce) runs while brainBusyRef is STILL
+  // true — a same-turn dispatch through handleStudentTranscriptForBrain
+  // would deterministically hit the busy-queue branch, which stores only
+  // the bare transcript STRING (dropping silent/bypassPerceptionDedupe)
+  // and can get concatenated with a genuine queued student utterance by
+  // the drain loop, leaking the internal marker to the brain as visible
+  // text. Staging it here and dispatching only after the whole busy
+  // cycle (incl. its own queue-drain) has closed — see the post-finally
+  // check in handleStudentTranscriptForBrain — avoids both hazards.
+  const pendingCutoffResumeRef = useRef<string | null>(null);
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -11103,12 +11116,34 @@ export function VoiceTutorRealtime({
       // gap; live case: the 35.7s stop=error turn in portal-3d7800b3). Ask the
       // brain to finish its own thought. One attempt per turn; skip if the 45s
       // give-up already reset the turn.
+      //
+      // Review round 1 (Finding 1): do NOT dispatch here. This finalize
+      // code runs from inside callBrainOnce while brainBusyRef is still
+      // true (setBrainBusy(false) doesn't run until handleStudentTranscript-
+      // ForBrain's finally, well after this call returns) — a same-turn
+      // dispatch would deterministically hit the busy-queue branch, which
+      // stores only the bare marker STRING (losing silent/bypassPerception-
+      // Dedupe) and risks the drain loop concatenating it with a genuine
+      // queued student utterance, leaking the internal marker to the brain
+      // as visible text. Stage it in pendingCutoffResumeRef instead; the
+      // actual dispatch happens after the busy cycle (incl. its own
+      // queue-drain) fully closes — see the post-finally check below.
+      //
+      // Review round 1 (Finding 2): the `!transcript.trim().startsWith(...)`
+      // check below is a structural chain-guard — a resume turn's OWN
+      // `transcript` param is the exact continuation marker we dispatched,
+      // so this refuses to arm a SECOND-generation resume even though
+      // cutoffResumeFiredRef (reset per top-level dispatch) would
+      // otherwise allow one. This caps any error→resume chain at length
+      // 1 regardless of how many turns feed into it — see the report's
+      // re-derived loop-safety argument.
       if (
         TUTOR_COVER_V2 &&
         lastStopReason === 'error' &&
         fullText.length > 0 &&
         !escalationGaveUpRef.current &&
-        !cutoffResumeFiredRef.current
+        !cutoffResumeFiredRef.current &&
+        !transcript.trim().startsWith('[Continuation-after-cutoff')
       ) {
         cutoffResumeFiredRef.current = true;
         // fullText (= aggregatedFullText.trim(), just above), not attemptText —
@@ -11117,8 +11152,8 @@ export function VoiceTutorRealtime({
         // across all attempts, already trimmed.
         const lastSpoken = fullText.split(/\n\n+/).pop()?.slice(-160) ?? '';
         const marker = `[Continuation-after-cutoff: your previous reply was cut off mid-stream after: "${lastSpoken}" — briefly finish the thought; do not repeat what you already said]`;
-        onDebugEvent?.('cutoff_resume_dispatched', `${lastSpoken.length} chars tail`);
-        void handleStudentTranscriptForBrain(marker, { silent: true, bypassPerceptionDedupe: true });
+        pendingCutoffResumeRef.current = marker;
+        onDebugEvent?.('cutoff_resume_armed', `${lastSpoken.length} chars tail`);
       }
       {
         const led = turnLatencyRef.current;
@@ -11926,6 +11961,15 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('brain_watchdog_reset', '90s timeout');
       }
     }, 90_000);
+    // R32 Task 5 (review round 1, Finding 1): tracks whether a genuine
+    // (non-synthetic) student utterance was queued-and-drained during
+    // THIS busy cycle. Declared outside the try so it's still readable
+    // after the finally below, where it gates the staged cutoff-resume
+    // dispatch (a real utterance arriving means the student already
+    // spoke — their new turn supersedes finishing the old cut-off
+    // thought, so the resume is skipped rather than risking any
+    // concatenation with it).
+    let studentSpokeDuringBusyWindow = false;
     try {
       // Stage 2 (perception cancellation): remember the args so a
       // post-cancel verdict can RESTORE (re-fire with these exact
@@ -12087,6 +12131,12 @@ export function VoiceTutorRealtime({
         // comparison so trivial Whisper/perception capitalization
         // differences still dedup.
         const all = queuedTranscriptsRef.current.splice(0);
+        // R32 Task 5 (review round 1): every entry here is a genuine
+        // student-originated dispatch — the cutoff-resume marker is
+        // staged in pendingCutoffResumeRef, never pushed onto this queue
+        // (see that ref's declaration comment), so a non-empty splice
+        // means the student actually spoke during this busy cycle.
+        if (all.length > 0) studentSpokeDuringBusyWindow = true;
         // Stage 3 fix #15 (2026-06-15): fuzzy similarity helper for
         // near-duplicate dedup. Perception WS (gpt-realtime-2) and
         // production WS (Whisper) often transcribe the same audio
@@ -12170,6 +12220,40 @@ export function VoiceTutorRealtime({
       // catches tool-only / empty / errored turns that would otherwise
       // leave the UI stuck on "Thinking…".
       signalBrainThinkingRef.current?.(false);
+    }
+    // R32 Task 5 (review round 1, Finding 1): dispatch the staged cutoff
+    // resume (if any) only now — AFTER the finally above has run
+    // setBrainBusy(false), so brainBusyRef.current is already false when
+    // the recursive dispatch below re-enters this function. Dispatching
+    // any earlier (e.g. from the finalize site inside callBrainOnce,
+    // while this very call is still in flight) deterministically hit the
+    // busy-queue branch, which stores only the bare marker STRING —
+    // dropping {silent, bypassPerceptionDedupe} — and let the drain loop
+    // above concatenate it with a genuine queued student utterance,
+    // leaking the internal marker into the brain's input as visible text.
+    //
+    // Skip entirely if a real utterance was queued-and-drained during
+    // this busy cycle (studentSpokeDuringBusyWindow) — the student
+    // already spoke, so finishing the old cut-off thought is moot and
+    // their new turn (already answered above by the drain loop) takes
+    // priority.
+    //
+    // Deliberately NOT passing bypassMidUtteranceGuard (Finding 3): if
+    // the student is mid-utterance at this exact instant, the recursive
+    // call drops through the existing guard inside
+    // handleStudentTranscriptForBrain and that guard emits its own
+    // 'dispatch_dropped_mid_utterance' debug event — so telemetry shows
+    // the drop, not a misleading 'cutoff_resume_dispatched' with no
+    // actual delivery.
+    const pendingResume = pendingCutoffResumeRef.current;
+    if (pendingResume) {
+      pendingCutoffResumeRef.current = null;
+      if (studentSpokeDuringBusyWindow) {
+        onDebugEvent?.('cutoff_resume_skipped', 'student utterance queued during busy window — new turn supersedes');
+      } else {
+        onDebugEvent?.('cutoff_resume_dispatched', `${pendingResume.length} chars`);
+        void handleStudentTranscriptForBrain(pendingResume, { silent: true, bypassPerceptionDedupe: true });
+      }
     }
   }, [callBrainOnce, onDebugEvent]);
 
