@@ -37,7 +37,7 @@ check('opening-turn', shouldSpeakAck({ ...happy, openingTurn: true }) === false)
 check('opening-turn-absent-defaults-open', shouldSpeakAck({ ...happy, openingTurn: false }) === true);
 
 // pickAck: deterministic, only pool phrases, never repeats lastAckIndex
-check('pool-size', ACK_PHRASES.length === 5);
+check('pool-size', ACK_PHRASES.length === 8);
 const p1 = pickAck(1, null);
 check('pick-in-pool', ACK_PHRASES.includes(p1.text) && p1.index === ACK_PHRASES.indexOf(p1.text));
 check('pick-deterministic', pickAck(7, null).text === pickAck(7, null).text);

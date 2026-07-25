@@ -35,6 +35,9 @@ export const ACK_PHRASES = [
   'Let me see.',
   'Mm, one moment.',
   "Let's look at that.",
+  'Hold on, let me look.',
+  'Mm, thinking.',
+  'One moment.',
 ] as const;
 
 export interface AckInput {
