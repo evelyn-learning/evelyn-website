@@ -11802,6 +11802,151 @@ export function VoiceTutorRealtime({
     }
   }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord, drainStudentMarks]);
 
+  // R32 Task 6: extracted from the original ack/escalation-arm site inside
+  // handleStudentTranscriptForBrain (Tasks 3 + 4) so the SAME cover
+  // machinery can arm for queue-drained turns too (called a second time
+  // from the drain loop below) — closes silence-audit §1 hole 1, where a
+  // drained/combined follow-up got zero cover for its own full brain turn.
+  // Exact logic moved verbatim; only the enclosing function boundary
+  // changed. Every ref/const referenced below is either a component-scope
+  // ref (stable identity) or a module-level pure import — see the
+  // useCallback deps for the two non-ref component values it touches.
+  const armCoverForDispatch = useCallback((transcript: string) => {
+    // Phase 2: arm the acknowledgment micro-turn. Only REAL dispatches
+    // reach this point (classify/noise-filter run upstream; retries live
+    // inside callBrainOnce and never re-arm), so classification='clean'
+    // and attempt=0 hold by construction. All other guards re-check at
+    // fire time via live refs.
+    if (TUTOR_ACK_LAYER) {
+      if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
+      const ackTurnIndex = ++ackTurnCounterRef.current;
+      const ackArmedAt = Date.now();
+      const ackTranscript = transcript;
+      // R32: classify up front so liveness checks can answer instantly and
+      // silent verdicts skip arming the timer entirely. Legacy behavior
+      // (TUTOR_COVER_V2 off) hard-codes the old 'cover'/'generic' verdict
+      // so the branches below degrade byte-identically to pre-R32.
+      const verdict: CoverVerdict = TUTOR_COVER_V2
+        ? classifyCover(ackTranscript)
+        : { kind: 'cover', category: 'generic' };
+
+      if (TUTOR_COVER_V2 && verdict.kind === 'silent') {
+        onDebugEvent?.('cover_silent', verdict.reason);
+      } else if (TUTOR_COVER_V2 && verdict.kind === 'instant') {
+        // Liveness check: the student is asking whether we're alive
+        // BECAUSE of our latency — answer instantly, brain turn continues
+        // normally. Same speak-gate the fast opener respects.
+        if (Date.now() >= speakTextBlockedUntilRef.current) {
+          const text = pickLivenessReply(ackTurnIndex);
+          const sid = pushTtsScriptForPerception(text);
+          speakTextRef.current?.(text, sid);
+          ttsDispatchedCountRef.current++;
+          turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+          onDebugEvent?.('cover_liveness', `"${text}" turn=${ackTurnIndex}`);
+        }
+      } else {
+        // COVER_FIRE_MS (1200) > the legacy 450ms fire delay; shouldSpeakAck's
+        // >=450 msSinceTurnEnd window check stays valid either way.
+        const delayMs = TUTOR_COVER_V2 ? COVER_FIRE_MS : 450;
+        ackTimerRef.current = setTimeout(() => {
+          ackTimerRef.current = null;
+          const input: AckInput = {
+            classification: 'clean',
+            attempt: 0,
+            skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
+            // Round 28: session-opening kickoff turns never ack (see
+            // AckInput.openingTurn). Detected by the synthetic bracketed
+            // marker OR the armed opening ref — belt and suspenders.
+            openingTurn: openingTurnPendingRef.current
+              || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
+            fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
+            brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
+            msSinceTurnEnd: Date.now() - ackArmedAt,
+            turnIndex: ackTurnIndex,
+          };
+          if (!shouldSpeakAck(input)) {
+            const reason = input.openingTurn ? 'opening-turn'
+              : input.brainSentence0Dispatched ? 'sentence0'
+              : input.fastOpenerSpoken ? 'tts-already-dispatched'
+              : input.skipTurn ? 'skip-turn' : 'damping';
+            onDebugEvent?.('ack_suppressed', reason);
+            return;
+          }
+          // Same gate the fast opener respects (perception-cancel window).
+          if (Date.now() < speakTextBlockedUntilRef.current) {
+            onDebugEvent?.('ack_suppressed', 'speak-gate');
+            return;
+          }
+          let text: string; let index: number;
+          if (TUTOR_COVER_V2 && verdict.kind === 'cover') {
+            const catKey = verdict.category;
+            ({ text, index } = pickCoverPhrase(catKey, ackTranscript, ackTurnIndex,
+              lastCoverIndexRef.current[catKey] ?? null));
+            lastCoverIndexRef.current[catKey] = index;
+          } else {
+            ({ text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current));
+            lastAckIndexRef.current = index;
+          }
+          // Fast-opener call shape: perception self-voice push + speak.
+          const ackScriptId = pushTtsScriptForPerception(text);
+          speakTextRef.current?.(text, ackScriptId);
+          // Render↔speech sync: count the ack the same way the fast opener
+          // is counted — symmetric dispatch+playback increments keep
+          // anchorM aligned (verified at the opener call site).
+          ttsDispatchedCountRef.current++;
+          // turn_latency: with the ack layer on, the turn's first audio IS
+          // the ack — mark its fetch too so tts→audio stays coherent and
+          // TOTAL reads as perceived-first-sound (the Phase-2 metric).
+          turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+          onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
+        }, delayMs);
+      }
+    }
+    // R32 Task 4: escalating in-flight covers. The head cover above only
+    // fires once at COVER_FIRE_MS; a genuinely sick turn (server retry
+    // ladder, silence audit) needs tier-1 (~9s), tier-2 (~25s, honest
+    // about the cause), and a 45s give-up so the client stops riding the
+    // server's ~93s retry chain in silence.
+    if (TUTOR_ACK_LAYER && TUTOR_COVER_V2) {
+      if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+      escalationGaveUpRef.current = false;
+      const esState = createEscalationState();
+      const dispatchedAt = Date.now();
+      const esTurnIndex = ackTurnCounterRef.current;
+      const isSynthetic = transcript.trim().startsWith('[');
+      if (!isSynthetic) {
+        escalationTimerRef.current = setInterval(() => {
+          // Sentence-0 arrived or the turn is over → stand down.
+          if (turnLatencyRef.current?.has('firstSentence') || inFlightBrainAbortRef.current === null) {
+            if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+            escalationTimerRef.current = null;
+            return;
+          }
+          const act = decideEscalation(esState, Date.now() - dispatchedAt, esTurnIndex);
+          if (act.action === 'wait') return;
+          if (act.action === 'speak') {
+            if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
+            const sid = pushTtsScriptForPerception(act.text);
+            speakTextRef.current?.(act.text, sid);
+            ttsDispatchedCountRef.current++;
+            onDebugEvent?.('cover_escalation', `tier=${act.tier} "${act.text}"`);
+            return;
+          }
+          // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
+          // server retries — silence audit). Abort, speak an honest reset line.
+          if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+          escalationTimerRef.current = null;
+          escalationGaveUpRef.current = true;
+          inFlightBrainAbortRef.current?.abort();
+          const text = "Sorry about that, I lost my thread. Say that once more for me?";
+          const sid = pushTtsScriptForPerception(text);
+          speakTextRef.current?.(text, sid);
+          onDebugEvent?.('cover_giveup', `after=${Date.now() - dispatchedAt}ms`);
+        }, 1000);
+      }
+    }
+  }, [onDebugEvent, pushTtsScriptForPerception]);
+
   // Serialized entry point used by the relay-mode hook. Ensures only one
   // brain call is in flight at a time. Utterances arriving during an
   // in-flight call are queued, then combined and sent as a single
@@ -11956,9 +12101,27 @@ export function VoiceTutorRealtime({
     const watchdog = setTimeout(() => {
       if (brainBusyRef.current) {
         console.warn('[brain-orchestrator] watchdog: brain stuck > 90s — force-resetting busy flag');
+        // R32 Task 6: the queue used to be discarded silently here — any
+        // student utterances that piled up behind the stuck call vanished
+        // with no cover and no retry. Snapshot + clear it as before, but
+        // once the busy flag is actually reset, re-dispatch the surviving
+        // text as a single combined turn (bypassPerceptionDedupe: true —
+        // this is a synthetic internal re-fire, not a fresh perception
+        // event, so the perception-dedupe suppression slot must not apply).
+        const stuck = queuedTranscriptsRef.current.splice(0);
         setBrainBusy(false);
-        queuedTranscriptsRef.current = [];
         onDebugEvent?.('brain_watchdog_reset', '90s timeout');
+        if (stuck.length > 0) {
+          const joined = stuck.join(' ').trim();
+          onDebugEvent?.('brain_watchdog_requeue', String(stuck.length));
+          if (joined) {
+            // Dispatched AFTER setBrainBusy(false) above (which updates
+            // brainBusyRef synchronously) so this re-fire lands as a fresh
+            // dispatch rather than being swallowed by the busy check and
+            // queued right back onto the ref we just cleared.
+            void handleStudentTranscriptForBrain(joined, { bypassPerceptionDedupe: true });
+          }
+        }
       }
     }, 90_000);
     // R32 Task 5 (review round 1, Finding 1): tracks whether a genuine
@@ -11979,139 +12142,10 @@ export function VoiceTutorRealtime({
       // create the ledger here so brain_first/tts→audio still measure.
       turnLatencyRef.current ??= createTurnLatencyLedger();
       turnLatencyRef.current.mark('brainFetch', Date.now());
-      // Phase 2: arm the acknowledgment micro-turn. Only REAL dispatches
-      // reach this point (classify/noise-filter run upstream; retries live
-      // inside callBrainOnce and never re-arm), so classification='clean'
-      // and attempt=0 hold by construction. All other guards re-check at
-      // fire time via live refs.
-      if (TUTOR_ACK_LAYER) {
-        if (ackTimerRef.current) clearTimeout(ackTimerRef.current);
-        const ackTurnIndex = ++ackTurnCounterRef.current;
-        const ackArmedAt = Date.now();
-        const ackTranscript = transcript;
-        // R32: classify up front so liveness checks can answer instantly and
-        // silent verdicts skip arming the timer entirely. Legacy behavior
-        // (TUTOR_COVER_V2 off) hard-codes the old 'cover'/'generic' verdict
-        // so the branches below degrade byte-identically to pre-R32.
-        const verdict: CoverVerdict = TUTOR_COVER_V2
-          ? classifyCover(ackTranscript)
-          : { kind: 'cover', category: 'generic' };
-
-        if (TUTOR_COVER_V2 && verdict.kind === 'silent') {
-          onDebugEvent?.('cover_silent', verdict.reason);
-        } else if (TUTOR_COVER_V2 && verdict.kind === 'instant') {
-          // Liveness check: the student is asking whether we're alive
-          // BECAUSE of our latency — answer instantly, brain turn continues
-          // normally. Same speak-gate the fast opener respects.
-          if (Date.now() >= speakTextBlockedUntilRef.current) {
-            const text = pickLivenessReply(ackTurnIndex);
-            const sid = pushTtsScriptForPerception(text);
-            speakTextRef.current?.(text, sid);
-            ttsDispatchedCountRef.current++;
-            turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
-            onDebugEvent?.('cover_liveness', `"${text}" turn=${ackTurnIndex}`);
-          }
-        } else {
-          // COVER_FIRE_MS (1200) > the legacy 450ms fire delay; shouldSpeakAck's
-          // >=450 msSinceTurnEnd window check stays valid either way.
-          const delayMs = TUTOR_COVER_V2 ? COVER_FIRE_MS : 450;
-          ackTimerRef.current = setTimeout(() => {
-            ackTimerRef.current = null;
-            const input: AckInput = {
-              classification: 'clean',
-              attempt: 0,
-              skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
-              // Round 28: session-opening kickoff turns never ack (see
-              // AckInput.openingTurn). Detected by the synthetic bracketed
-              // marker OR the armed opening ref — belt and suspenders.
-              openingTurn: openingTurnPendingRef.current
-                || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
-              fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
-              brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
-              msSinceTurnEnd: Date.now() - ackArmedAt,
-              turnIndex: ackTurnIndex,
-            };
-            if (!shouldSpeakAck(input)) {
-              const reason = input.openingTurn ? 'opening-turn'
-                : input.brainSentence0Dispatched ? 'sentence0'
-                : input.fastOpenerSpoken ? 'tts-already-dispatched'
-                : input.skipTurn ? 'skip-turn' : 'damping';
-              onDebugEvent?.('ack_suppressed', reason);
-              return;
-            }
-            // Same gate the fast opener respects (perception-cancel window).
-            if (Date.now() < speakTextBlockedUntilRef.current) {
-              onDebugEvent?.('ack_suppressed', 'speak-gate');
-              return;
-            }
-            let text: string; let index: number;
-            if (TUTOR_COVER_V2 && verdict.kind === 'cover') {
-              const catKey = verdict.category;
-              ({ text, index } = pickCoverPhrase(catKey, ackTranscript, ackTurnIndex,
-                lastCoverIndexRef.current[catKey] ?? null));
-              lastCoverIndexRef.current[catKey] = index;
-            } else {
-              ({ text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current));
-              lastAckIndexRef.current = index;
-            }
-            // Fast-opener call shape: perception self-voice push + speak.
-            const ackScriptId = pushTtsScriptForPerception(text);
-            speakTextRef.current?.(text, ackScriptId);
-            // Render↔speech sync: count the ack the same way the fast opener
-            // is counted — symmetric dispatch+playback increments keep
-            // anchorM aligned (verified at the opener call site).
-            ttsDispatchedCountRef.current++;
-            // turn_latency: with the ack layer on, the turn's first audio IS
-            // the ack — mark its fetch too so tts→audio stays coherent and
-            // TOTAL reads as perceived-first-sound (the Phase-2 metric).
-            turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
-            onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
-          }, delayMs);
-        }
-      }
-      // R32 Task 4: escalating in-flight covers. The head cover above only
-      // fires once at COVER_FIRE_MS; a genuinely sick turn (server retry
-      // ladder, silence audit) needs tier-1 (~9s), tier-2 (~25s, honest
-      // about the cause), and a 45s give-up so the client stops riding the
-      // server's ~93s retry chain in silence.
-      if (TUTOR_ACK_LAYER && TUTOR_COVER_V2) {
-        if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
-        escalationGaveUpRef.current = false;
-        const esState = createEscalationState();
-        const dispatchedAt = Date.now();
-        const esTurnIndex = ackTurnCounterRef.current;
-        const isSynthetic = transcript.trim().startsWith('[');
-        if (!isSynthetic) {
-          escalationTimerRef.current = setInterval(() => {
-            // Sentence-0 arrived or the turn is over → stand down.
-            if (turnLatencyRef.current?.has('firstSentence') || inFlightBrainAbortRef.current === null) {
-              if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
-              escalationTimerRef.current = null;
-              return;
-            }
-            const act = decideEscalation(esState, Date.now() - dispatchedAt, esTurnIndex);
-            if (act.action === 'wait') return;
-            if (act.action === 'speak') {
-              if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
-              const sid = pushTtsScriptForPerception(act.text);
-              speakTextRef.current?.(act.text, sid);
-              ttsDispatchedCountRef.current++;
-              onDebugEvent?.('cover_escalation', `tier=${act.tier} "${act.text}"`);
-              return;
-            }
-            // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
-            // server retries — silence audit). Abort, speak an honest reset line.
-            if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
-            escalationTimerRef.current = null;
-            escalationGaveUpRef.current = true;
-            inFlightBrainAbortRef.current?.abort();
-            const text = "Sorry about that, I lost my thread. Say that once more for me?";
-            const sid = pushTtsScriptForPerception(text);
-            speakTextRef.current?.(text, sid);
-            onDebugEvent?.('cover_giveup', `after=${Date.now() - dispatchedAt}ms`);
-          }, 1000);
-        }
-      }
+      // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
+      // to armCoverForDispatch above — same call, now shared with the
+      // queue-drain site below.
+      armCoverForDispatch(transcript);
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -12209,6 +12243,13 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('queue_drain_silent', 'matches_last_chat');
         }
         lastBrainCallContextRef.current = { transcript: combined };
+        // R32 Task 6 (silence-audit §1 hole 1): drained/combined turns
+        // previously got zero cover for their own full brain turn — the
+        // head cover + escalation poller only ever armed for the ORIGINAL
+        // dispatch above, not for follow-ups combined off the queue while
+        // that original call was in flight. Arm the same machinery here so
+        // a drained turn covers itself exactly like a direct dispatch.
+        armCoverForDispatch(combined);
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
     } finally {
@@ -12255,7 +12296,7 @@ export function VoiceTutorRealtime({
         void handleStudentTranscriptForBrain(pendingResume, { silent: true, bypassPerceptionDedupe: true });
       }
     }
-  }, [callBrainOnce, onDebugEvent]);
+  }, [callBrainOnce, onDebugEvent, armCoverForDispatch]);
 
   // Stage 2 — perception verdict dispatcher. Called after a perception
   // cancel checkpoint is set (perceptionInterruptCheckpointRef populated
