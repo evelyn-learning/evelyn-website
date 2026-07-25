@@ -1170,6 +1170,14 @@ export function VoiceTutorRealtime({
   // any later resume (Task 5) so we don't double-speak or re-open a turn
   // we already told the student we lost.
   const escalationGaveUpRef = useRef(false);
+  // R32 Task 5: true once the partial-emitted cutoff resume has fired for
+  // the in-flight turn — caps it at one continuation attempt per turn (a
+  // stream that dies twice in a row gets the 45s give-up, not an endless
+  // resume loop). Reset at the per-TURN relay entry point (see
+  // visualActionsThisTurnRef and friends below), NOT the per-attempt
+  // brainTurnAbortedRef reset — a retried attempt within the same turn
+  // must not get a second resume shot.
+  const cutoffResumeFiredRef = useRef(false);
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -11090,6 +11098,28 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+      // R32: a stream that died AFTER sentences played used to just... stop —
+      // indistinguishable from the tutor finishing (silence audit, worst unmarked
+      // gap; live case: the 35.7s stop=error turn in portal-3d7800b3). Ask the
+      // brain to finish its own thought. One attempt per turn; skip if the 45s
+      // give-up already reset the turn.
+      if (
+        TUTOR_COVER_V2 &&
+        lastStopReason === 'error' &&
+        fullText.length > 0 &&
+        !escalationGaveUpRef.current &&
+        !cutoffResumeFiredRef.current
+      ) {
+        cutoffResumeFiredRef.current = true;
+        // fullText (= aggregatedFullText.trim(), just above), not attemptText —
+        // attemptText is scoped inside the per-attempt retry loop and is out
+        // of scope here; fullText is this turn's accumulated spoken text
+        // across all attempts, already trimmed.
+        const lastSpoken = fullText.split(/\n\n+/).pop()?.slice(-160) ?? '';
+        const marker = `[Continuation-after-cutoff: your previous reply was cut off mid-stream after: "${lastSpoken}" — briefly finish the thought; do not repeat what you already said]`;
+        onDebugEvent?.('cutoff_resume_dispatched', `${lastSpoken.length} chars tail`);
+        void handleStudentTranscriptForBrain(marker, { silent: true, bypassPerceptionDedupe: true });
+      }
       {
         const led = turnLatencyRef.current;
         if (led) {
@@ -11394,7 +11424,23 @@ export function VoiceTutorRealtime({
             onTranscriptUpdate([...transcriptRef.current]);
             onTrackInteraction?.('message', msg, undefined, 'tutor');
           } else {
-            speakTextRef.current?.("I'm having trouble thinking right now — one moment.");
+            const voiceMsg = "I'm having trouble thinking right now — one moment.";
+            speakTextRef.current?.(voiceMsg);
+            // R32 Task 5: also append a chat bubble — mirrors the typed
+            // branch above so the transcript isn't blank for this turn.
+            // Unflagged: this closes an audited unbounded-silence hole
+            // (bug fix), not a new feature gated behind TUTOR_COVER_V2.
+            transcriptRef.current = [
+              ...transcriptRef.current,
+              {
+                id: `tutor-${t0}-brain-unavailable`,
+                timestamp: new Date(),
+                role: 'tutor',
+                text: voiceMsg,
+              } as TranscriptEntry,
+            ];
+            onTranscriptUpdate([...transcriptRef.current]);
+            onTrackInteraction?.('message', voiceMsg, undefined, 'tutor');
           }
           return;
         }
@@ -11859,6 +11905,12 @@ export function VoiceTutorRealtime({
     brainEmittedNewPageThisTurnRef.current = false;
     generateProblemThisTurnRef.current = false;
     inferredAdvanceThisTurnRef.current = '';
+    // R32 Task 5: reset here (not the flag-gated escalation-arm block below,
+    // and not the per-attempt brainTurnAbortedRef site in callBrainOnce) so
+    // the cutoff-resume cap is unconditionally per-turn regardless of
+    // TUTOR_ACK_LAYER/TUTOR_COVER_V2 — this relay entry point is the one
+    // pipe every student-driven turn flows through (see P3 comment above).
+    cutoffResumeFiredRef.current = false;
     // Watchdog: if callBrainOnce hangs (network never resolves, no
     // error thrown), brainBusyRef stays true forever and every
     // subsequent student turn gets queued silently. Observed
