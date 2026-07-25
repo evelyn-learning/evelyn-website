@@ -787,6 +787,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const UNMUTE_GRACE_MS = 1500;
   // Ref to hold startListening so playNextAudio can call it without circular deps
   const startListeningRef = useRef<() => void>(() => {});
+  // R32 T10: typed messages queued while the WS is down (silence audit §7 —
+  // sendTextMessage used to silently DISCARD on a dead socket, only logging
+  // console.error; the input box gates on state-derived isConnected, which
+  // lags the actual socket state, so submissions vanished). Cap 5; flushed
+  // by connect()'s onopen handler on reconnect.
+  const pendingTypedRef = useRef<Array<{ text: string; meta?: { typed?: boolean } }>>([]);
+  // Ref to hold sendTextMessage so connect's onopen (defined earlier in the
+  // file, before sendTextMessage exists) can flush the queue above without a
+  // circular dep — latest-fn-in-a-ref idiom (cf. startListeningRef above).
+  const sendTextMessageRef = useRef<(text: string, meta?: { typed?: boolean }) => void>(() => {});
   // Track whether audio has been appended to the input buffer (to avoid committing empty buffers)
   const hasAudioInBufferRef = useRef(false);
   // ── speakText queue (Phase 5 streaming brain → Realtime) ──────────────────
@@ -2124,6 +2134,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         };  // end trySendSessionUpdate
         trySendSessionUpdateRef.current = trySendSessionUpdate;
         trySendSessionUpdate();
+
+        // R32 T10: flush any typed messages queued while the WS was down.
+        // Runs after session.update so the flushed sendTextMessage calls
+        // land against an initialized session. sendTextMessageRef (not the
+        // direct sendTextMessage closure) because sendTextMessage is
+        // declared later in the file and its identity can change across
+        // renders — the ref always points at the latest one.
+        if (pendingTypedRef.current.length > 0) {
+          const pending = pendingTypedRef.current.splice(0);
+          console.log(`[Realtime] flushing ${pending.length} queued typed message(s)`);
+          for (const p of pending) sendTextMessageRef.current(p.text, p.meta);
+        }
       };
 
       ws.onmessage = handleMessage;
@@ -2374,6 +2396,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
     hasAudioInBufferRef.current = false;
+    // R32 T10: drop any typed messages still queued for a dead socket — a
+    // fresh connect() should not resurrect a prior session's stale input.
+    pendingTypedRef.current = [];
     // V2 self-voice fix wave (2026-07-15): close the perpetually-open
     // window on whatever sentence was playing when this teardown fires —
     // see the reconnect-W4 comment above for why (same force-stop-without-
@@ -2658,7 +2683,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // Send text message (for testing or fallback)
   const sendTextMessage = useCallback((text: string, meta?: { typed?: boolean }) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[Realtime] Not connected');
+      // R32: typed messages used to be silently DISCARDED here (silence audit
+      // §7) — the input box gates on state-derived isConnected, which lags a
+      // dead socket, so submissions vanished with only a console.error. Queue
+      // and flush on reconnect instead (see connect()'s onopen handler).
+      if (pendingTypedRef.current.length < 5) {
+        pendingTypedRef.current.push({ text, meta });
+        console.warn(`[Realtime] WS not open — queued typed message (${pendingTypedRef.current.length})`);
+      } else {
+        console.error('[Realtime] typed-message queue full — dropping');
+      }
       return;
     }
 
@@ -2719,6 +2753,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     updateState('processing');
   }, [updateState]);
+  // Latest-fn-in-a-ref idiom (cf. startListeningRef) — connect's onopen
+  // (defined earlier in the file) flushes pendingTypedRef through this ref
+  // so it always calls the current sendTextMessage, not a stale closure.
+  sendTextMessageRef.current = sendTextMessage;
 
   // Inject a context reminder into the conversation without triggering a response.
   // This is used to prevent context loss in long sessions by periodically
