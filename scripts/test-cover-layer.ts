@@ -2,6 +2,7 @@ import {
   classifyCover, pickCoverPhrase, LIVENESS_REPLIES,
   COVER_FIRE_MS, TURN_GIVE_UP_MS, createEscalationState, decideEscalation,
   createNoiseNagState, recordNoiseDrop,
+  createWarmupState, decideWarmupAction,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -101,6 +102,15 @@ check('nag-cooldown', recordNoiseDrop(ns, 15_000, 2_500).nag === false);     // 
 ns = createNoiseNagState();
 recordNoiseDrop(ns, 0, 2_000);
 check('nag-window-expired', recordNoiseDrop(ns, 40_000, 2_000).nag === false); // >30s apart resets
+
+// --- Warmup watchdog (R32 T9): stalled [start lesson] / [Session-resumed…]
+// kickoff — 20s rekick once, 40s fail once.
+let ws2 = createWarmupState(0);
+check('warmup-early-wait', decideWarmupAction(ws2, 10_000) === 'wait');
+check('warmup-rekick-at-20s', decideWarmupAction(ws2, 21_000) === 'rekick');
+check('warmup-rekick-once', decideWarmupAction(ws2, 25_000) === 'wait');
+check('warmup-fail-at-40s', decideWarmupAction(ws2, 41_000) === 'fail');
+check('warmup-fail-once', decideWarmupAction(ws2, 45_000) === 'wait');
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');

@@ -73,7 +73,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
-import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -1449,6 +1449,20 @@ export function VoiceTutorRealtime({
   // here so pickAgendaItem can fire it inside the tap's gesture stack. Default
   // no-op until that effect assigns the real function.
   const gestureSessionStartRef = useRef<() => void>(() => {});
+
+  // R32 T9: warmup watchdog. A stalled [start lesson] / [Session-resumed…] /
+  // typed-first kickoff used to pin isWarmingUp (and the DISABLED mic) forever
+  // — nothing was watching the clock. Every setIsWarmingUp(true) site below
+  // stamps a fresh warmupStateRef; the 5s interval effect near isWarmingUp's
+  // declaration drives it. warmupKickoffRef only holds a transcript at the two
+  // sites whose original dispatch is a known-safe silent re-send through
+  // handleStudentTranscriptForBrain ([start lesson]/[start session]/
+  // [Session-resumed…]) — the typed-first/agenda gesture site leaves it null
+  // (its dispatch mechanism varies by caller and isn't safely replayable), so
+  // that site gets the 40s fail safety net (spinner clears, mic re-enables)
+  // but no 20s auto-rekick.
+  const warmupStateRef = useRef<WarmupState | null>(null);
+  const warmupKickoffRef = useRef<string | null>(null);
 
   // Drawer row tap: switch the tutor to a specific missed item. Stable identity
   // (reads refs) so re-firing onMockAgendaChange doesn't churn. If the item is
@@ -14193,6 +14207,14 @@ export function VoiceTutorRealtime({
         hasStartedRef.current = true;
         setHasStarted(true);
         setIsWarmingUp(true);
+        // R32 T9: arm the watchdog. No stashed kickoff here — the caller
+        // (sendTextMessage / pickAgendaItem) dispatches the actual first
+        // message through its own, varying mechanism right after this
+        // returns, so there's nothing safe to auto-replay. The 40s fail
+        // path still fires to clear the spinner and re-enable the mic.
+        warmupStateRef.current = createWarmupState(Date.now());
+        warmupKickoffRef.current = null;
+        setWarmupFailed(false);
         realtime.unlockAudio();
       }
     };
@@ -14610,9 +14632,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }
     onSessionStarted?.();
     setIsWarmingUp(true); // the brain is composing the resume turn now
+    // R32 T9: arm the watchdog with the exact kickoff text so a stall can be
+    // silently re-kicked once (20s) before failing visibly (40s).
+    warmupStateRef.current = createWarmupState(Date.now());
+    setWarmupFailed(false);
+    const resumeKickoff =
+      '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]';
+    warmupKickoffRef.current = resumeKickoff;
     realtime.unlockAudio();
     handleStudentTranscriptForBrain(
-      '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]',
+      resumeKickoff,
       { silent: true, bypassMidUtteranceGuard: true },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -14698,6 +14727,14 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         onSessionStarted?.();
         // Immediate visual feedback while the brain composes its first turn.
         setIsWarmingUp(true);
+        // R32 T9: arm the watchdog. Stashed below per-branch only where the
+        // kickoff is a known literal string safely re-sendable through
+        // handleStudentTranscriptForBrain; the non-claude-brain greeting
+        // branch dispatches via realtime.sendTextMessage instead, so it
+        // leaves warmupKickoffRef null (fail-only safety net, no auto-rekick).
+        warmupStateRef.current = createWarmupState(Date.now());
+        warmupKickoffRef.current = null;
+        setWarmupFailed(false);
         console.log(`[STARTUP] start → isWarmingUp=true (connected=${realtime.isConnected}, state=${realtime.state}, claudeBrain=${claudeBrainMode}, plan=${!!lessonPlanRef.current})`);
         // CRITICAL on iOS: the user's Start tap is the gesture iOS uses
         // to "unlock" audio playback. Calling resume() synchronously
@@ -14720,6 +14757,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // for the instant the kickoff fires, so STAGE-3 fix #11 DROPS the
           // kickoff and it is NEVER retried → the lesson never starts → "preparing
           // your tutor" hangs forever (2026-06-23 recursion startup-hang repro).
+          // R32 T9: stash it so the watchdog can silently re-kick once at 20s.
+          warmupKickoffRef.current = '[start lesson]';
           handleStudentTranscriptForBrain('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
         } else {
           // Free-conversation mode: also kick the brain so it greets
@@ -14733,6 +14772,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // bypassMidUtteranceGuard: same as the lesson kickoff above — the
           // synthetic opener must not be dropped by a transient startup-noise
           // mid-utterance flag (else "preparing your tutor" hangs).
+          // R32 T9: stash it so the watchdog can silently re-kick once at 20s.
+          warmupKickoffRef.current = '[start session]';
           handleStudentTranscriptForBrain('[start session]', { silent: true, bypassMidUtteranceGuard: true });
         }
       }
@@ -15070,6 +15111,46 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     if (hasTutorTurn) setIsWarmingUp(false);
   });
 
+  // R32 T9: warmup watchdog. Every setIsWarmingUp(true) site above stamps
+  // warmupStateRef fresh; while isWarmingUp is true this 5s poll drives it —
+  // 20s → re-kick once (only where warmupKickoffRef holds a safely-replayable
+  // literal kickoff), 40s → give up visibly. Depending on isWarmingUp means
+  // the interval is torn down by React's cleanup the instant either of the
+  // two exit effects above flips it false (normal completion) OR our own
+  // 'fail' branch below does (watchdog give-up) — so a fired 'fail' can never
+  // re-fire, and a successful rekick that lets the turn land stops the poll
+  // for good, same as any other warmup exit.
+  const [warmupFailed, setWarmupFailed] = useState(false);
+  useEffect(() => {
+    if (!isWarmingUp) return;
+    const id = setInterval(() => {
+      const ws = warmupStateRef.current;
+      if (!ws) return;
+      const act = decideWarmupAction(ws, Date.now());
+      if (act === 'rekick') {
+        if (warmupKickoffRef.current) {
+          onDebugEvent?.('warmup_rekick', warmupKickoffRef.current.slice(0, 40));
+          void handleStudentTranscriptForBrain(warmupKickoffRef.current, {
+            silent: true,
+            bypassMidUtteranceGuard: true,
+            bypassPerceptionDedupe: true,
+          });
+        }
+      } else if (act === 'fail') {
+        setIsWarmingUp(false);
+        setWarmupFailed(true);
+        onDebugEvent?.('warmup_failed', 'watchdog');
+        // Reuse the transient status pill used for TTS issues (ttsNotice /
+        // ttsNoticeTimerRef, set in onTtsIssue above) — same rendering slot,
+        // same auto-clear pattern.
+        setTtsNotice('Trouble starting — tap the mic to retry.');
+        if (ttsNoticeTimerRef.current) clearTimeout(ttsNoticeTimerRef.current);
+        ttsNoticeTimerRef.current = setTimeout(() => setTtsNotice(null), 8000);
+      }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [isWarmingUp, handleStudentTranscriptForBrain, onDebugEvent]);
+
   const baseStateUI = getStateUI();
   const stateUI = isWarmingUp
     ? {
@@ -15097,7 +15178,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // disabled button swallowed the tap entirely (handleMicClick never ran), which
   // is why the resume was silent.
   const resumeAwaitingFirstTap = !!resumeState && !hasStarted;
-  const isDisabled = (realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp) && !resumeAwaitingFirstTap;
+  // R32 T9: mirrors the resumeAwaitingFirstTap override immediately above —
+  // once the warmup watchdog gives up (40s), force the mic enabled even if
+  // realtime.state is still 'connecting'/'processing' (the resume path's WS
+  // can still be churning at that point), same as the resume override does.
+  const isDisabled = (realtime.state === 'connecting' || realtime.state === 'processing' || isWarmingUp) && !resumeAwaitingFirstTap && !warmupFailed;
 
   // Surface the awaiting-resume state so the host (SessionStage / legacy board)
   // can render the "Continue lesson" overlay. Flips false the moment the student

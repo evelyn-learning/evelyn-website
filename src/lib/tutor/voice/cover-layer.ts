@@ -229,3 +229,23 @@ export function recordNoiseDrop(
   }
   return { nag: false };
 }
+
+/**
+ * Warmup watchdog (silence audit §6 + lifecycle R2): a [start lesson] or
+ * [Session-resumed…] brain turn that stalls without a state change used to pin
+ * "Starting…" forever with the mic DISABLED. 20s → re-kick once; 40s → give
+ * up: clear the spinner, surface an error, re-enable the mic.
+ */
+export interface WarmupState { startedAtMs: number; rekicked: boolean; failed: boolean }
+export function createWarmupState(nowMs: number): WarmupState {
+  return { startedAtMs: nowMs, rekicked: false, failed: false };
+}
+export const WARMUP_REKICK_MS = 20_000;
+export const WARMUP_FAIL_MS = 40_000;
+
+export function decideWarmupAction(state: WarmupState, nowMs: number): 'wait' | 'rekick' | 'fail' {
+  const age = nowMs - state.startedAtMs;
+  if (age >= WARMUP_FAIL_MS && !state.failed) { state.failed = true; return 'fail'; }
+  if (age >= WARMUP_REKICK_MS && !state.rekicked && !state.failed) { state.rekicked = true; return 'rekick'; }
+  return 'wait';
+}
