@@ -70,6 +70,7 @@ import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
+import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
@@ -1017,6 +1018,11 @@ export function VoiceTutorRealtime({
     // until the sentence that names it plays. anchorKeywords drives the match.
     pendingReanchor?: boolean;
     anchorKeywords?: AnchorKeywords;
+    // Pull-early release (2026-07-24 round): set by the sentence-start
+    // content matcher when the sentence NAMING this render starts playing
+    // before its anchorM would release it (Rule 15 violation — tool call
+    // parked after its narration). flushableCount already honors it.
+    capExpired?: boolean;
     // Async doodle placeholder (show_sketch): held until the doodler resolves
     // its primitives (mutated onto the command) or the entry is spliced out
     // (fail/timeout). See project_tutor_sketch_capability.
@@ -2974,6 +2980,18 @@ export function VoiceTutorRealtime({
             if (anchorWord !== undefined) break;
           }
         }
+      }
+    }
+    // Pull-early matcher input (2026-07-24 round): keywords for EVERY entry,
+    // not just front-loaded reanchor holds — the sentence-start handler uses
+    // them to release a render the moment the sentence naming it begins
+    // playing, even when its anchorM sits sentences in the future (tool call
+    // parked after its narration — the "equation paints after it was spoken"
+    // class). Cheap: one extractAnchorKeywords pass per batch.
+    if (!anchorKeywords) {
+      for (const c of processed) {
+        const kw = extractAnchorKeywords(c);
+        if (kw) { anchorKeywords = kw; break; }
       }
     }
     renderBufferRef.current.push({ processed, anchorM, pendingReanchor, anchorKeywords, anchorWord });
@@ -7768,7 +7786,7 @@ export function VoiceTutorRealtime({
         // Fresh attempt — clear the aborted flag; only an AbortError this
         // attempt re-sets it (see the RESTORE-after-noise guard).
         brainTurnAbortedRef.current = false;
-        const res = await fetch('/api/tutor/brain/stream', {
+        const brainFetchInit: RequestInit = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           signal: brainAbort.signal,
@@ -7930,7 +7948,8 @@ export function VoiceTutorRealtime({
                 }
               : undefined,
           }),
-        });
+        };
+        let res = await fetch('/api/tutor/brain/stream', brainFetchInit);
         pacingTelemetryRef.current = [];
         // Whiteboard markup Phase 1: drain the unrealized-marks +
         // deduplicated-shows buffers immediately after the fetch is
@@ -7939,6 +7958,25 @@ export function VoiceTutorRealtime({
         // then cleared. Mirrors the pacingTelemetryRef clear pattern.
         unrealizedMarkRef.current = [];
         deduplicatedShowsRef.current = [];
+        // Deploy-window resilience (2026-07-24 incident): a pm2 restart
+        // mid-session 502s every endpoint for tens of seconds, and the old
+        // path spoke the "trouble thinking" fallback on the FIRST 502.
+        // Nothing has been emitted for this turn yet, so re-fetching is
+        // always safe here. Three retries (1.5s/3s/5s) ride out a typical
+        // server reboot; the honest fallback below still fires if the
+        // backend stays down. Aborts (student barge-in) exit immediately.
+        for (
+          let httpRetry = 1;
+          httpRetry <= 3 && !res.ok && res.status >= 500 && !brainAbort.signal.aborted;
+          httpRetry++
+        ) {
+          const delayMs = httpRetry === 1 ? 1500 : httpRetry === 2 ? 3000 : 5000;
+          console.warn(`[brain-orchestrator] /api/tutor/brain/stream ${res.status} — retrying (${httpRetry}/3) in ${delayMs}ms`);
+          onDebugEvent?.('brain_http_retry', `status=${res.status} attempt=${httpRetry}`);
+          await new Promise((r) => setTimeout(r, delayMs));
+          if (brainAbort.signal.aborted) break;
+          res = await fetch('/api/tutor/brain/stream', brainFetchInit);
+        }
         if (!res.ok || !res.body) {
           const err = res.body ? await res.text() : '(no body)';
           console.error('[brain-orchestrator] /api/tutor/brain/stream failed:', res.status, err);
@@ -8610,6 +8648,33 @@ export function VoiceTutorRealtime({
                     console.warn('[brain-orchestrator] mid-turn self-correction detected — retrying:', updatedSentence.slice(0, 80));
                     onDebugEvent?.('self_correction_retry', updatedSentence.slice(0, 80));
                     continue;
+                  }
+                  // Deterministic arithmetic-claim check (2026-07-24, the
+                  // "$18 - 3$ isn't $15$" incident): the brain denied the
+                  // student's CORRECT subtraction; the LLM judge flagged it
+                  // with kill severity but Pillar 2b downgraded it to
+                  // advisory (LLM kills were retired for false positives).
+                  // This check is pure arithmetic — no LLM, no false-
+                  // positive class — so it may kill. Fires on any attempt
+                  // (a retry that re-asserts false arithmetic is just as
+                  // wrong; a retry ACKNOWLEDGING the error states TRUE
+                  // arithmetic and passes), capped by judgeRetriesUsed.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const arith = checkArithmeticClaims(updatedSentence);
+                    if (arith.verdict !== 'ok') {
+                      const reason =
+                        arith.verdict === 'false_denial'
+                          ? `You denied correct arithmetic: "${arith.claim}" is wrong — in fact ${arith.correct}. ` +
+                            `The student's answer may have been RIGHT. Recompute, and if their answer matches ${arith.correct}, affirm it plainly.`
+                          : `You asserted incorrect arithmetic: "${arith.claim}" is false — in fact ${arith.correct}. ` +
+                            `Recompute and re-emit your response with the corrected value.`;
+                      rejectionsThisAttempt.push({ action: 'false_arithmetic_claim', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] deterministic arithmetic check: ${arith.verdict} in "${updatedSentence.slice(0, 80)}" (${arith.correct}) — kill + retry`);
+                      onDebugEvent?.('arith_claim_kill', `${arith.verdict}: ${arith.claim ?? '?'} → ${arith.correct ?? '?'}`);
+                      continue;
+                    }
                   }
                   // Round-7+ Fix 5: contradiction-inversion within a
                   // single sentence ("not quite right ... actually
@@ -10018,7 +10083,14 @@ export function VoiceTutorRealtime({
                   onDebugEvent?.('render_dropped', `${(ev as { action?: string }).action ?? '?'} — ${(ev as { reason?: string }).reason ?? ''} (server)`);
                 } else if (ev.type === 'done') {
                   lastStopReason = (ev.stopReason as string) ?? 'unknown';
-                  attemptText = ((ev.fullText as string) ?? attemptText).trim();
+                  // `||` not `??`: a give-up done frame (stop=error) can carry
+                  // an EMPTY fullText even though sentences were already
+                  // spoken — clobbering attemptText to '' purged the turn's
+                  // transcript bubble and history entry (2026-07-24 stall
+                  // incident: "said something but it got rejected" + stale
+                  // caption replay). The server now backfills fullText from
+                  // its sentence ledger too; this is the client-side guard.
+                  attemptText = (((ev.fullText as string) || attemptText) ?? '').trim();
                   lastUsage = ev.usage as typeof lastUsage;
                   // Task X10: carry the server's brain-unavailable + retry
                   // signals out to the post-stream empty-turn fallback.
@@ -12355,6 +12427,39 @@ export function VoiceTutorRealtime({
       if (!TUTOR_RENDER_SYNC) return;
       if (event === 'sentence-start') {
         ttsPlaybackStartedCountRef.current++;
+        // Pull-early (2026-07-24 round): the buffer could only ever DELAY a
+        // render past its stream position, never advance it — so a tool
+        // call the brain parked AFTER its narration (Rule 15 violation)
+        // painted only when its late anchor sentence completed, i.e. after
+        // the content had already been spoken. If the sentence starting NOW
+        // names a buffered render, release it and everything before it (a
+        // stream-order prefix, so board order is preserved) via capExpired —
+        // the pure core's existing release valve. Sentence texts play in
+        // dispatch order, so the starting sentence is turnNarration[count-1].
+        const startingSentence =
+          turnNarrationRef.current[ttsPlaybackStartedCountRef.current - 1] ?? '';
+        if (startingSentence && renderBufferRef.current.length > 0) {
+          const buf = renderBufferRef.current;
+          let matchedIdx = -1;
+          for (let i = buf.length - 1; i >= 0; i--) {
+            const e = buf[i];
+            if (e.pendingAsync || e.capExpired) continue;
+            // Entries already releasable on their own anchor need no pull —
+            // and everything before them is an even-earlier anchor.
+            if (!e.pendingReanchor && ttsPlaybackStartedCountRef.current >= e.anchorM + 1) break;
+            if (e.anchorKeywords && sentenceIntroducesAnchor(startingSentence, e.anchorKeywords)) {
+              matchedIdx = i;
+              break;
+            }
+          }
+          if (matchedIdx >= 0) {
+            for (let i = 0; i <= matchedIdx; i++) {
+              if (!buf[i].pendingAsync) buf[i].capExpired = true;
+            }
+            onDebugEvent?.('render_sync_pull_early',
+              `sentence ${ttsPlaybackStartedCountRef.current} names buffered idx=${matchedIdx} (anchorM=${buf[matchedIdx].anchorM}) — releasing ${matchedIdx + 1} entr${matchedIdx === 0 ? 'y' : 'ies'}`);
+          }
+        }
         // Progress happened → reset the stall timer so it can't fire
         // while sentences are steadily playing toward an anchor.
         if (renderBufferRef.current.length > 0) armRenderStall();

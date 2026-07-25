@@ -341,5 +341,60 @@ console.log('\n=== Round-23: display-side sentence-gap normalization ===');
     autoWrapLatex('The next section covers limits.') === 'The next section covers limits.');
 }
 
+console.log('\n=== Bare comma-separated numeric lists are math (transcript drawer regression) ===');
+{
+  // Transcript drawer showed literal "$2, 3, 4, 5, 31$" — the tuple rule
+  // requires a leading ( or [ so a bare list missed every clause.
+  const m = mathBodies('The factors are $2, 3, 4, 5, 31$ here.');
+  check('$2, 3, 4, 5, 31$ renders as math', m.length === 1 && m[0] === '2, 3, 4, 5, 31', joined('The factors are $2, 3, 4, 5, 31$ here.'));
+}
+{
+  const m = mathBodies('Critical points at $0.5, 1.5$ exactly.');
+  check('decimal list $0.5, 1.5$ renders as math', m.length === 1 && m[0] === '0.5, 1.5');
+}
+{
+  const m = mathBodies('Test values $-3, -1, 0, 2$ in order.');
+  check('negative list $-3, -1, 0, 2$ renders as math', m.length === 1 && m[0] === '-3, -1, 0, 2');
+}
+{
+  const m = mathBodies('The variables $x, y, z$ are free.');
+  check('single-letter identifier list $x, y, z$ renders as math', m.length === 1 && m[0] === 'x, y, z');
+}
+{
+  // Prose guard: 1-4 letter word lists with no digit and multi-char words
+  // must stay literal — "so, um, yes" is speech filler, not a math list.
+  const m = mathBodies('I said $so, um, yes$ twice.');
+  check('filler-word list stays literal', m.length === 0, joined('I said $so, um, yes$ twice.'));
+}
+{
+  const m = mathBodies('like $when, they, said$ before.');
+  check('longer prose word list stays literal', m.length === 0);
+}
+{
+  // Currency pairing artifact must stay literal: inner is "5 and " which
+  // has no comma structure at all.
+  const m = mathBodies('It costs $5 and $10 elsewhere.');
+  check('currency pairing artifact stays literal', m.length === 0, joined('It costs $5 and $10 elsewhere.'));
+}
+
+console.log('\n=== Known 3-letter fn names + comma args are math ===');
+{
+  const m = mathBodies('Recall $sin(x)$ oscillates.');
+  check('$sin(x)$ renders as math', m.length === 1 && m[0] === 'sin(x)');
+}
+{
+  const m = mathBodies('A standard normal is $N(0, 1)$ by definition.');
+  check('$N(0, 1)$ renders as math', m.length === 1 && m[0] === 'N(0, 1)');
+}
+{
+  const m = mathBodies('So $log(100)$ and $max(a, b)$ work.');
+  check('$log(100)$ and $max(a, b)$ render as math', m.length === 2 && m[0] === 'log(100)' && m[1] === 'max(a, b)');
+}
+{
+  // Long / unknown fn names still stay literal — "cost(x)" is prose-like.
+  const m = mathBodies('The $cost(x) of it$ is high.');
+  check('unknown 4-letter fn name stays literal', m.length === 0);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

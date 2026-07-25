@@ -1076,9 +1076,27 @@ export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: (
     return () => clearInterval(id);
   }, [getSpoken]);
 
+  // Whether this mounted instance has run the typewriter effect before.
+  // The ticker unmounts behind every "Thinking…" status override and
+  // remounts after it with revealed=0 — retyping whatever `text` holds at
+  // that moment from char 0 with no audio behind it. When the previous
+  // turn errored (or the new turn's entry isn't in the transcript yet),
+  // that text is the PRIOR turn's caption → a silent fake re-stream that
+  // spoils upcoming content (2026-07-24 session). Policy: text present AT
+  // MOUNT is history — show it whole; only text that arrives while
+  // mounted animates.
+  const firstRunRef = useRef(true);
+
   // ── Legacy typewriter (flag off / unsupported engine) ─────────────
   useEffect(() => {
     if (polling) return;
+    if (firstRunRef.current) {
+      firstRunRef.current = false;
+      prevTextRef.current = text;
+      revealedRef.current = text.length;
+      setRevealed(text.length);
+      return;
+    }
     // Reset (retype from 0) ONLY on a genuinely new turn — i.e. the new text
     // shares almost no prefix with the previous one. Same-turn streaming keeps
     // a long common prefix, INCLUDING the case where markdown-stripping removes

@@ -452,6 +452,9 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
   // proportions internally (rows + edges + labels all render at full
   // requested size in viewBox coordinates).
   const MAX_VIEWBOX_H = 800;
+  // Shrink floor: don't let a one-row map collapse into a sliver — 120px of
+  // plot keeps the SVG legible and clickable even for a 2-node map.
+  const MIN_PLOT_H = 120;
   const TOP_ANCHOR_PX_FOR_FIT = (8 / 100) * defaultH;
   let probeResult = explicitLayout ? null : autoLayout(nodes, edges, dimsById, w, defaultH);
   let h = defaultH;
@@ -461,6 +464,16 @@ export default function ConceptMapRenderer({ title, nodes, edges = [], notes }: 
     if (requiredPlotH > defaultH) {
       const cappedPlotH = Math.min(MAX_VIEWBOX_H - pad.top - pad.bottom, requiredPlotH);
       h = cappedPlotH;
+      viewBoxH = pad.top + h + pad.bottom;
+      probeResult = autoLayout(nodes, edges, dimsById, w, h);
+    } else if (requiredPlotH < defaultH) {
+      // Symmetric shrink branch (letterbox fix): rows are top-anchored, so a
+      // small map (e.g. 2 rows ≈ 200px of a 332px plot) left ~130px of dead
+      // whitespace under the content. Shrink the viewBox to what the layout
+      // actually needs, floored at MIN_PLOT_H. Safe with the row math above:
+      // scale only compresses when content exceeds 92% of plotH, and
+      // requiredPlotH is sized so content occupies ≤92% by construction.
+      h = Math.max(MIN_PLOT_H, requiredPlotH);
       viewBoxH = pad.top + h + pad.bottom;
       probeResult = autoLayout(nodes, edges, dimsById, w, h);
     }

@@ -44,6 +44,19 @@ function looksLikeMath(inner: string): boolean {
     inner.length <= 24 &&
     /^[([]\s*-?[\w.]{1,4}\s*(?:,\s*-?[\w.]{1,4}\s*)+[)\]]$/.test(inner)
   ) return true;
+  //   4b. Bare comma-separated list (transcript-drawer regression — showed
+  //      literal "$2, 3, 4, 5, 31$"): the tuple rule above requires a
+  //      leading ( or [, so an unbracketed list missed every clause. Same
+  //      short-operand shape (2+ operands, each ≤4 word chars, optional
+  //      minus), with a prose guard the tuple rule doesn't need: filler
+  //      speech like "so, um, yes" is also a 1–4-letter comma list, so a
+  //      bare list must additionally contain a digit somewhere OR be made
+  //      entirely of single-character operands ("x, y, z").
+  if (
+    inner.length <= 24 &&
+    /^-?[\w.]{1,4}(?:,\s*-?[\w.]{1,4})+$/.test(inner) &&
+    (/\d/.test(inner) || /^\w(?:,\s*\w)+$/.test(inner))
+  ) return true;
   //   5. Compact operand-operator-operand (Round-21 — live transcript
   //      showed literal "$L + M$"): an arithmetic operator between short
   //      operands, no prose word. The prose guard keeps the currency
@@ -57,8 +70,12 @@ function looksLikeMath(inner: string): boolean {
   //      literal "$f(-3)$", "$h(10)$"): a 1–2 letter function name over a
   //      short whitespace-free parenthesized argument. Prose like
   //      "a(n) increase" never arrives wrapped in a $ pair, and longer
-  //      names ("cost(x)") carry a prose word and stay literal.
-  if (/^[A-Za-z]{1,2}\([^\s()]{1,8}\)$/.test(inner)) return true;
+  //      names ("cost(x)") carry a prose word and stay literal — EXCEPT an
+  //      allowlist of known 3-letter math functions (sin/cos/tan/log/ln/
+  //      exp/max/min), which the same drawer regression showed literal as
+  //      "$sin(x)$". The argument may also be a two-part comma+space list
+  //      of short comma-free tokens for the N(0, 1) / P(A, B) shape.
+  if (/^(?:[A-Za-z]{1,2}|sin|cos|tan|log|ln|exp|max|min)\((?:[^\s()]{1,8}|[^\s(),]{1,8},\s?[^\s(),]{1,8})\)$/.test(inner)) return true;
   //   6. Prime/derivative span (Round-23 — live transcript and problem card
   //      showed literal "$f'(x)$", "$h'(1)$"): a single letter with 1–2
   //      primes and an optional short parenthesized argument. The

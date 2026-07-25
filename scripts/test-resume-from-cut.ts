@@ -2,7 +2,7 @@
  * Unit test for the intra-sentence resume-from-cut clause-tail extractor (P5).
  * Usage: npx tsx scripts/test-resume-from-cut.ts
  */
-import { clauseTailFromFraction } from '../src/lib/tutor/voice/resume-from-cut';
+import { clauseTailFromFraction, preciseSentenceFraction } from '../src/lib/tutor/voice/resume-from-cut';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {
@@ -59,6 +59,49 @@ check('NaN fraction → whole sentence (safe)', clauseTailFromFraction(balloon, 
 const hyphen = "the well-known result is that entropy increases";
 check('hyphenated word is not a boundary',
   clauseTailFromFraction(hyphen, 0.3) === hyphen, clauseTailFromFraction(hyphen, 0.3));
+
+// ── preciseSentenceFraction: the played-fraction clock feeding the extractor ──
+// args: (playedIncludingCurrentChunkSec, currentChunkDurSec, inFlightSec, queuedSameSentenceSec)
+const near = (got: number, want: number) => Math.abs(got - want) < 1e-9;
+
+// Whole-buffer TTS path: one chunk = one sentence (playedIncl = chunkDur,
+// queue empty). The old chunk-granular math read 1.0 here regardless of the
+// cut point; the fix must yield the genuine in-flight position.
+check('whole-buffer: cut 3s into a 10s sentence → 0.3',
+  near(preciseSentenceFraction(10, 10, 3, 0), 0.3),
+  String(preciseSentenceFraction(10, 10, 3, 0)));
+check('whole-buffer: cut at the very start → 0',
+  near(preciseSentenceFraction(10, 10, 0, 0), 0),
+  String(preciseSentenceFraction(10, 10, 0, 0)));
+check('whole-buffer: chunk fully played → 1',
+  near(preciseSentenceFraction(10, 10, 10, 0), 1),
+  String(preciseSentenceFraction(10, 10, 10, 0)));
+
+// Streaming path: 3 completed 2s chunks + 1s into a 2s in-flight chunk,
+// 4s of the same sentence still queued → (6+1) / (8+4).
+check('streaming: mid-chunk cut → (6+1)/(8+4)',
+  near(preciseSentenceFraction(8, 2, 1, 4), 7 / 12),
+  String(preciseSentenceFraction(8, 2, 1, 4)));
+
+// Clamps: in-flight clock past the chunk end (onended not yet fired) and a
+// negative clock skew must clamp to [0, chunkDur].
+check('in-flight overshoot clamps to chunk duration',
+  near(preciseSentenceFraction(8, 2, 5, 4), 8 / 12),
+  String(preciseSentenceFraction(8, 2, 5, 4)));
+check('negative in-flight clamps to 0',
+  near(preciseSentenceFraction(8, 2, -1, 4), 6 / 12),
+  String(preciseSentenceFraction(8, 2, -1, 4)));
+
+// No-clock fallback (hook passes inFlight = chunkDur): degrades to the old
+// chunk-granular fraction, never worse.
+check('no-clock fallback equals old chunk-granular math',
+  near(preciseSentenceFraction(8, 2, 2, 4), 8 / 12),
+  String(preciseSentenceFraction(8, 2, 2, 4)));
+
+// Guards.
+check('nothing dequeued yet → 0', preciseSentenceFraction(0, 0, 0, 0) === 0);
+check('NaN inputs → safe 0', preciseSentenceFraction(NaN, NaN, NaN, NaN) === 0);
+check('never exceeds 1', preciseSentenceFraction(10, 0, 0, 0) <= 1);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

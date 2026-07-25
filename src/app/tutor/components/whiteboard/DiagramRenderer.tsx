@@ -1450,9 +1450,13 @@ export function SvgDiagram({ title, description, svg }: SvgDiagramProps) {
       {title && (
         <h4 className="text-center font-medium text-gray-800 mb-2"><InlineMathText text={title} /></h4>
       )}
+      {/* R29 follow-up: dropped minHeight 200 — same forced-min-height
+          letterbox pattern removed from equations (WhiteboardCanvas
+          showEquation). Small SVGs carried up to ~100px of dead space above
+          and below; modest symmetric padding keeps the box breathing while
+          sizing to content. */}
       <div
-        className="flex justify-center items-center bg-white rounded-lg border border-gray-200 p-2 overflow-hidden"
-        style={{ minHeight: 200 }}
+        className="flex justify-center items-center bg-white rounded-lg border border-gray-200 px-2 py-3 overflow-hidden"
         dangerouslySetInnerHTML={{ __html: sanitized }}
       />
       {description && (

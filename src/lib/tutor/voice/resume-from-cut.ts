@@ -59,3 +59,50 @@ export function clauseTailFromFraction(sentence: string, fraction: number): stri
   if (best <= 0) return s; // early cut / no boundary → restart the whole sentence
   return s.slice(best).trimStart();
 }
+
+/**
+ * Precise fraction (0..1) of the current sentence's audio actually HEARD at the
+ * moment of a cut. Pure arithmetic over the playback-clock refs kept by
+ * useOpenAIRealtime's playNextAudio:
+ *
+ *  - `playedIncludingCurrentChunkSec` — accumulated dequeued-chunk seconds of
+ *    the sentence, where the in-flight chunk was counted IN FULL at dequeue
+ *    time (currentSentencePlayedSecRef). Chunk-granular: on the whole-buffer
+ *    TTS path (one chunk = one sentence) this alone always reads 1.0.
+ *  - `currentChunkDurSec` — duration of the chunk playing right now.
+ *  - `inFlightSec` — wall-clock progress into that chunk
+ *    (AudioContext.currentTime - chunkStartCtxTime); clamped here to
+ *    [0, currentChunkDurSec], so callers may pass it raw. Pass
+ *    `currentChunkDurSec` when no live clock is available — the result then
+ *    degrades to the old chunk-granular fraction, never worse.
+ *  - `queuedSameSentenceSec` — queued-but-unplayed chunk seconds of the SAME
+ *    sentence (0 on the whole-buffer path; a lower bound while streaming).
+ *
+ * played = (playedIncl - currentChunkDur)  ← completed chunks only
+ *        + clamp(inFlight, 0, currentChunkDur)
+ * total  = playedIncl + queued             ← all arrived audio of the sentence
+ *
+ * Whole-buffer path: playedIncl = chunkDur = D, queued = 0 → fraction =
+ * inFlight/D, a genuine mid-sentence position. Streaming path: same
+ * denominator as before (arrived-so-far), numerator now stops at the true
+ * playhead instead of the end of the in-flight chunk.
+ */
+export function preciseSentenceFraction(
+  playedIncludingCurrentChunkSec: number,
+  currentChunkDurSec: number,
+  inFlightSec: number,
+  queuedSameSentenceSec: number,
+): number {
+  const playedIncl = Number.isFinite(playedIncludingCurrentChunkSec)
+    ? playedIncludingCurrentChunkSec : 0;
+  if (playedIncl <= 0) return 0; // nothing dequeued yet → nothing heard
+  const chunkDur = Math.max(0, Number.isFinite(currentChunkDurSec) ? currentChunkDurSec : 0);
+  const inFlight = Math.max(0, Math.min(
+    Number.isFinite(inFlightSec) ? inFlightSec : chunkDur,
+    chunkDur,
+  ));
+  const queued = Math.max(0, Number.isFinite(queuedSameSentenceSec) ? queuedSameSentenceSec : 0);
+  const played = Math.max(0, playedIncl - chunkDur) + inFlight;
+  const total = playedIncl + queued;
+  return total > 0 ? Math.min(1, played / total) : 0;
+}

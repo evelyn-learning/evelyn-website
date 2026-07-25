@@ -34,6 +34,16 @@ const NOTE_MAX_W = 240;
 const NOTE_LINE_H = 26;
 const AMBER = '#a16207';
 
+/** Round 29 follow-up: host-width delta (px) below which the placement
+ *  cache SURVIVES. A scrollbar materializing (content growth via the
+ *  noteOverflowPx spacer) narrows the host by ~15px — wiping the cache
+ *  on that "resize" defeated the whole sticky-placement fix and let
+ *  margin notes re-derive from the new content bottom (the drift bug).
+ *  Genuine window/layout resizes exceed this and still wipe. Measured
+ *  against the width at the LAST wipe, so a slow drag that accumulates
+ *  past the tolerance wipes too. */
+const CACHE_WIPE_WIDTH_TOLERANCE = 24;
+
 // Canvas font strings cannot contain `var(...)` — CanvasRenderingContext2D's
 // font parser only accepts concrete family names, so assigning
 // `ctx.font = '22px var(--font-caveat), var(--font-kalam), cursive'`
@@ -291,9 +301,14 @@ export function InkNotesOverlay({
   // "$10$ is even" descended across three renders). Cache each note's
   // placement by key: anchored notes ride their target's rect via a fixed
   // offset; unanchored (margin) notes freeze at their first-placed spot.
-  // Invalidated on host-width change (the proportional-rescale path) and
-  // pruned to live keys each pass; a page flip remounts the overlay, which
-  // resets the cache naturally.
+  // Invalidated on SUBSTANTIAL host-width change (beyond
+  // CACHE_WIPE_WIDTH_TOLERANCE — the proportional-rescale path; a
+  // scrollbar appearing when the overflow spacer grows shifts width by
+  // ~15px and must NOT wipe) and pruned to live keys each pass. Page
+  // flips are handled by that prune: the overlay is a SIBLING of the
+  // keyed page wrapper (it does NOT remount on a flip) — a flip swaps
+  // `sources` to the new page's commands, so the old page's keys fall
+  // out of the cache in the prune-to-live-keys step below.
   const placedCacheRef = useRef(new Map<string, {
     anchor: Rect | null; dx: number; dy: number; w: number; h: number; placement: Placement;
   }>());
@@ -323,7 +338,7 @@ export function InkNotesOverlay({
       if (!host) return;
       const hostBox = host.getBoundingClientRect();
       if (hostBox.width === 0) return;
-      if (placedCacheWidthRef.current !== hostBox.width) {
+      if (Math.abs(placedCacheWidthRef.current - hostBox.width) > CACHE_WIPE_WIDTH_TOLERANCE) {
         placedCacheRef.current.clear();
         placedCacheWidthRef.current = hostBox.width;
       }
@@ -472,6 +487,30 @@ export function InkNotesOverlay({
             const rect = { x: t.rect.x + cached.dx, y: t.rect.y + cached.dy, w: m.w, h: m.h };
             if (!occupied.some((o) => rectsIntersect(rect, o))) {
               placement = { ...cached.placement, rect };
+            } else if (cached.placement.slot === 'margin') {
+              // Anchored note that already degraded to the margin column
+              // (or its downward extension — same 'margin' slot): FREEZE
+              // it, exactly like the unanchored branch below. Falling
+              // through to placeNote here was the round-29 drift hole:
+              // its margin/extension fallback derives y from the CURRENT
+              // content bottom, so every appended item slid the note
+              // further down. Drift is worse than overlap — the same
+              // tradeoff the unanchored freeze already made.
+              placement = cached.placement;
+            } else {
+              // Anchor-adjacent slot (right/above/below/left) now
+              // collides. Only hand back to placeNote when the TARGET
+              // actually moved (layout shift — the ridden rect is stale
+              // in a way dx/dy can't express); if the target is where it
+              // was and new content merely grew into the slot, freeze in
+              // place — re-placing would degrade to the content-bottom
+              // fallback and drift.
+              const a = cached.anchor;
+              const anchorMoved =
+                Math.abs(t.rect.x - a.x) > 1 || Math.abs(t.rect.y - a.y) > 1 ||
+                Math.abs(t.rect.w - a.w) > 1 || Math.abs(t.rect.h - a.h) > 1;
+              if (!anchorMoved) placement = { ...cached.placement, rect };
+              // else: placement stays null → full placeNote below.
             }
           } else if (!t?.rect && !cached.anchor) {
             // Margin/extension note: frozen at first placement for the

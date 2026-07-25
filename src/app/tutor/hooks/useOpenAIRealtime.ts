@@ -18,6 +18,7 @@ import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib
 import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-stream';
 import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS, TUTOR_TTS_WS, SONIC_WS_FIRST_CHUNK_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
+import { preciseSentenceFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { useCartesiaSonicWS } from './useCartesiaSonicWS';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 
@@ -3584,22 +3585,36 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }
   }, [speakText]);
 
-  // Resume-from-cut (P5): fraction (0..1) of the CURRENT sentence's audio that
-  // has played — played seconds / (played + queued-but-unplayed seconds of the
-  // same sentence). Read at a noise cut to decide which clause to resume from
-  // (see resume-from-cut.clauseTailFromFraction). 0 when nothing is playing.
+  // Resume-from-cut (P5): fraction (0..1) of the CURRENT sentence's audio the
+  // student has actually HEARD. Read at a noise cut to decide which clause to
+  // resume from (see resume-from-cut.clauseTailFromFraction). 0 when nothing is
+  // playing. currentSentencePlayedSecRef is chunk-granular (the in-flight chunk
+  // is counted in FULL at dequeue — on the whole-buffer TTS path, one chunk =
+  // one sentence, so it alone always reads 1.0); preciseSentenceFraction
+  // subtracts the in-flight chunk and adds back the real wall-clock position
+  // from the caption clock (chunkStartCtxTimeRef / currentChunkDurSecRef).
   const getCurrentSentenceFraction = useCallback((): number => {
-    const played = currentSentencePlayedSecRef.current;
-    if (played <= 0) return 0;
     const cur = currentSpeakTextRef.current;
-    let remaining = 0;
+    let queued = 0;
     const q = audioQueueRef.current;
     const labels = audioQueueSentenceRef.current;
     for (let i = 0; i < q.length; i++) {
-      if (labels[i] === cur) remaining += q[i].length / 24000;
+      if (labels[i] === cur) queued += q[i].length / 24000;
     }
-    const total = played + remaining;
-    return total > 0 ? Math.min(1, played / total) : 0;
+    let inFlight: number;
+    try {
+      // Same live playback clock as getSpokenProgress (clamped in the helper).
+      inFlight = getAudioContext().currentTime - chunkStartCtxTimeRef.current;
+    } catch {
+      // No clock → count the in-flight chunk in full (old chunk-granular behavior).
+      inFlight = currentChunkDurSecRef.current;
+    }
+    return preciseSentenceFraction(
+      currentSentencePlayedSecRef.current,
+      currentChunkDurSecRef.current,
+      inFlight,
+      queued,
+    );
   }, []);
 
   // Caption word-sync: live progress of the sentence the student is hearing

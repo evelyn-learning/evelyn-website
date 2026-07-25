@@ -817,11 +817,19 @@ export async function POST(req: NextRequest) {
           // empty-stream path requires 0 sentences + 0 tools anyway).
           gaveUp = true;
           stopReason = 'error';
+          // The give-up done frame must carry the sentences that already
+          // reached the client — the student HEARD them. An empty fullText
+          // here made the client clobber its accumulated attemptText,
+          // purge the turn's transcript bubble, and drop the turn from
+          // conversation history (observed 2026-07-24: 30s mid-turn stall
+          // → "the tutor said something but it got rejected" + caption
+          // strip replaying the prior turn). Retries only ever happen with
+          // zero egress, so turnSentences is exactly this attempt's audio.
           send({
             type: 'done',
             stopReason: 'error',
             usage,
-            fullText,
+            fullText: fullText || turnSentences.join('\n\n'),
             toolCalls: [],
             retries: turnRetries,
             brainUnavailable: sentenceCount === 0 && toolNames.length === 0,
