@@ -284,6 +284,21 @@ export function InkNotesOverlay({
 
   // Measure + place after layout. Re-runs when sources change and when
   // the host resizes (ResizeObserver below bumps hostW).
+  // Round 29 (note drift): placement used to be recomputed from scratch on
+  // EVERY new board command — placeNote's margin/extension fallback derives
+  // its y from the page's current content bottom, so a note that fell
+  // through to the margin migrated downward with each appended item (live:
+  // "$10$ is even" descended across three renders). Cache each note's
+  // placement by key: anchored notes ride their target's rect via a fixed
+  // offset; unanchored (margin) notes freeze at their first-placed spot.
+  // Invalidated on host-width change (the proportional-rescale path) and
+  // pruned to live keys each pass; a page flip remounts the overlay, which
+  // resets the cache naturally.
+  const placedCacheRef = useRef(new Map<string, {
+    anchor: Rect | null; dx: number; dy: number; w: number; h: number; placement: Placement;
+  }>());
+  const placedCacheWidthRef = useRef(0);
+
   useLayoutEffect(() => {
     let raf1 = 0;
     let raf2 = 0;
@@ -308,6 +323,10 @@ export function InkNotesOverlay({
       if (!host) return;
       const hostBox = host.getBoundingClientRect();
       if (hostBox.width === 0) return;
+      if (placedCacheWidthRef.current !== hostBox.width) {
+        placedCacheRef.current.clear();
+        placedCacheWidthRef.current = hostBox.width;
+      }
       // Page rect for the slot engine, in host-relative px. Prefer the
       // content wrapper's box (spacer-independent — see the contentRef
       // prop doc); fall back to the host box when no wrapper is passed.
@@ -442,9 +461,42 @@ export function InkNotesOverlay({
           if (linkArrows[i].key !== src.ownerArrowKey) occupied.push(arrowRects[i]);
         }
         occupied.push(...placedRects);
-        const placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+        // Sticky placement (round 29): reuse the cached spot when it is
+        // still valid — see placedCacheRef's doc above.
+        const rectsIntersect = (a: Rect, b: Rect) =>
+          a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+        const cached = placedCacheRef.current.get(src.key);
+        let placement: Placement | null = null;
+        if (cached && cached.w === m.w && cached.h === m.h) {
+          if (t?.rect && cached.anchor) {
+            const rect = { x: t.rect.x + cached.dx, y: t.rect.y + cached.dy, w: m.w, h: m.h };
+            if (!occupied.some((o) => rectsIntersect(rect, o))) {
+              placement = { ...cached.placement, rect };
+            }
+          } else if (!t?.rect && !cached.anchor) {
+            // Margin/extension note: frozen at first placement for the
+            // life of the page — never re-derived from the content bottom.
+            placement = cached.placement;
+          }
+        }
+        if (!placement) {
+          placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+        }
+        placedCacheRef.current.set(src.key, {
+          anchor: t?.rect ?? null,
+          dx: placement.rect.x - (t?.rect?.x ?? 0),
+          dy: placement.rect.y - (t?.rect?.y ?? 0),
+          w: m.w,
+          h: m.h,
+          placement,
+        });
         placedRects.push(placement.rect);
         next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
+      }
+      // Prune cache entries whose source is gone (kill-recovery, revise).
+      const liveKeys = new Set(allSources.map((s) => s.key));
+      for (const k of placedCacheRef.current.keys()) {
+        if (!liveKeys.has(k)) placedCacheRef.current.delete(k);
       }
       setEntries(next);
       setArrows(linkArrows);

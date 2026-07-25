@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react';
-import { stripRedundantChoiceLabel } from './choiceLabel';
+import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
 import { InlineMathText } from './InlineMathText';
 import {
   matchesAnswerStrict,
@@ -79,7 +79,9 @@ export function TryYourselfRenderer({
       <div className="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
         <InlineMathText text={title} />
       </div>
-      <div className="text-base text-gray-900 mb-3"><InlineMathText text={problem} /></div>
+      <div className="text-base text-gray-900 mb-3">
+        <InlineMathText text={stripEmbeddedChoiceBlock(problem, choices.map((c) => ({ letter: c.id, text: c.text })))} />
+      </div>
 
       {responseFormat === 'mcq' && choices.length > 0 ? (
         <div className="space-y-2">

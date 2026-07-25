@@ -93,7 +93,7 @@ import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
 import { CellContent } from './CellContent';
-import { stripRedundantChoiceLabel } from './choiceLabel';
+import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
 import dynamic from 'next/dynamic';
 import type { StudentMarkEvent, CapturedRect } from '@/lib/tutor/whiteboard/student-marks';
 import { useDrawOn, drawOnEnabled } from './useDrawOn';
@@ -2705,7 +2705,9 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               : 'bg-gray-50 border border-gray-200'
           }`}
         >
-          <p className="text-lg">{command.text}</p>
+          {/* InlineMathText (round 29): annotate text was a raw text node,
+              so $-delimited math printed literally ("$10$ is even"). */}
+          <p className="text-lg"><InlineMathText text={command.text} /></p>
         </div>
       );
 
@@ -2770,7 +2772,9 @@ function CommandRendererInner({ command }: CommandRendererProps) {
             <InlineMathText text={problem.title || 'Problem'} />
           </h4>
           <p className="text-gray-800 whitespace-pre-wrap" data-feature="statement">
-            <InlineMathText text={problem.statement || ''} />
+            {/* stripEmbeddedChoiceBlock: statement sometimes embeds the full
+                A)–D) list the choices <ul> below also renders (round 29). */}
+            <InlineMathText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} />
           </p>
           {validGivenValues.length > 0 && (
             <div className="mt-3" data-feature="given">

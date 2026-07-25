@@ -45,6 +45,23 @@ export function stripWbEmphasisText(s: string): string {
     .reduce((out, part, i) => out + part + (mathSpans[i] ?? ''), '');
 }
 
+/** Flatten $...$ math for text surfaces that have NO KaTeX renderer — the
+ *  ink/handwrite overlay (canvas-measured cursive), scribble labels, and
+ *  link labels (round 29, live: a note rendered literally as "$10$ is
+ *  even"). Unwraps the delimiters and downgrades the few LaTeX commands
+ *  the brain actually emits in note-length text; everything KaTeX-bound
+ *  keeps its spans (do NOT wire this into deepStripWbEmphasis). */
+export function stripInlineMathForInk(s: string): string {
+  return s
+    .replace(/\$([^$\n]{1,160})\$/g, '$1')
+    .replace(/\\(?:times|cdot)\b/g, '×')
+    .replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '$1/$2')
+    .replace(/\\text\{([^{}]*)\}/g, '$1')
+    .replace(/[{}]/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 /** Keys whose ENTIRE subtree must never be rewritten. Grouped by reason. */
 const SKIP_KEYS = new Set<string>([
   // math / expressions — asterisks are content

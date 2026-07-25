@@ -8,7 +8,7 @@
 
 import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
-import { deepStripWbEmphasis } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
+import { deepStripWbEmphasis, stripInlineMathForInk } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 
 export interface ToolParameter {
   type: string;
@@ -225,7 +225,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_number_line',
-    description: 'Display a number line with points, intervals, and hops.',
+    description: 'Display a number line with points, intervals, and hops. NOT for statistical plots — a boxplot/dotplot/histogram goes through show_stats, never dots on a number line.',
     parameters: {
       type: 'object',
       properties: {
@@ -243,7 +243,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_geometry',
-    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry. NOT for tabular content: a table structure / grid of cells (two-way table, frequency table, comparison grid) must be rendered with show_table, never sketched here — a geometry call with no real figure primitives is rejected.',
+    description: 'Geometric figures: labeled points, segments, polygons, circles, and angle markers. Polygons need a `polygons` entry (sequence of point ids); circles need a `circles` entry (center id + radius). Omit `angle.label` to let the renderer auto-compute the measure. CRITICAL: never embed coordinate numbers in `point.label` (write "A", not "A(3, 7)") — set `showCoords: true` and the renderer will append the (x, y) tuple from the actual numeric coords. Same for segment lengths: write `label: "chord AB"` and `showLength: true` instead of "AB = √20" — the renderer computes the length so it can never disagree with the geometry. NOT for tabular content: a table structure / grid of cells (two-way table, frequency table, comparison grid) must be rendered with show_table, never sketched here — a geometry call with no real figure primitives is rejected. NOT for statistical plots either: boxplots/histograms/dotplots go through show_stats, never as labeled geometry points.',
     parameters: {
       type: 'object',
       properties: {
@@ -1323,7 +1323,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_stats',
-    description: 'Statistical charts: histogram, boxplot, dotplot, bar, pie, distribution curve, or scatter (with optional regression line). For `type: "histogram"`, give EITHER `bins` (pre-binned: array of [lowerEdge, upperEdge, count] — use this when you have bin frequencies, which is the usual case for a described histogram) OR raw `data: [numbers]`; set `showCounts: true` to label each bar with its count. Do NOT describe a histogram in speech without also drawing it. For `type: "distribution"`, provide `distribution.family`, `distribution.params`, and `distribution.shade` for a shaded probability region; `distribution.probabilityLabel` writes the computed probability inside the shaded region. For `type: "scatter"` (or "scatterplot" / "scatterplot_regression"), provide `points: [{x,y}]`; the LSRL is auto-computed when `showTrendLine` is true (default). Provide `regression`, `rValue`, `rSquared`, or `equationLabel` to override or annotate.',
+    description: 'Statistical charts: histogram, boxplot, dotplot, bar, pie, distribution curve, or scatter (with optional regression line). This is the ONLY tool for statistical plots — NEVER hand-build a boxplot/histogram/dotplot out of show_geometry points or show_number_line marks; those improvised plots clip their labels and lack the box/whisker/outlier chrome (live failure, round 29). For a boxplot pass `type: "boxplot"` with the `boxplot.datasets` five-number summary + `outliers`, `showValues: true`. For `type: "histogram"`, give EITHER `bins` (pre-binned: array of [lowerEdge, upperEdge, count] — use this when you have bin frequencies, which is the usual case for a described histogram) OR raw `data: [numbers]`; set `showCounts: true` to label each bar with its count. Do NOT describe a histogram in speech without also drawing it. For `type: "distribution"`, provide `distribution.family`, `distribution.params`, and `distribution.shade` for a shaded probability region; `distribution.probabilityLabel` writes the computed probability inside the shaded region. For `type: "scatter"` (or "scatterplot" / "scatterplot_regression"), provide `points: [{x,y}]`; the LSRL is auto-computed when `showTrendLine` is true (default). Provide `regression`, `rValue`, `rSquared`, or `equationLabel` to override or annotate.',
     parameters: {
       type: 'object',
       properties: {
@@ -2831,7 +2831,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       target,
       shape,
       color: typeof funcArgs.color === 'string' ? funcArgs.color : undefined,
-      label: typeof funcArgs.label === 'string' ? funcArgs.label : undefined,
+      // stripInlineMathForInk: scribble labels render on the ink overlay
+      // (no KaTeX) — flatten $-spans (round 29).
+      label: typeof funcArgs.label === 'string' ? stripInlineMathForInk(funcArgs.label) : undefined,
       // Board Map page-scoping: disambiguates a feature name repeated across
       // pages. Resolved (fail-open) in the orchestrator's resolveTarget call.
       page: typeof funcArgs.page === 'number' ? funcArgs.page : undefined,
@@ -2844,7 +2846,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     const to = typeof funcArgs.to === 'string' ? funcArgs.to.trim() : '';
     if (!from || !to) return null;
     const cmd: WhiteboardCommand = { action: 'link', from, to };
-    if (typeof funcArgs.label === 'string' && funcArgs.label.trim()) cmd.label = funcArgs.label.trim();
+    if (typeof funcArgs.label === 'string' && funcArgs.label.trim()) cmd.label = stripInlineMathForInk(funcArgs.label);
     if (typeof funcArgs.color === 'string' && funcArgs.color.trim()) cmd.color = funcArgs.color.trim();
     return cmd;
   }
@@ -2859,7 +2861,9 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
     };
   }
   if (funcName === 'tutor_handwrite') {
-    const text = typeof funcArgs.text === 'string' ? funcArgs.text.trim() : '';
+    // stripInlineMathForInk (round 29): ink notes render raw text nodes —
+    // no KaTeX — so "$10$ is even" printed its dollar signs literally.
+    const text = typeof funcArgs.text === 'string' ? stripInlineMathForInk(funcArgs.text) : '';
     if (!text) return null;
     // Post-redesign: handwrite is a pure text note command (formerly fed
     // the now-deleted AnnotationStrip; now on-board via InkNotesOverlay).
