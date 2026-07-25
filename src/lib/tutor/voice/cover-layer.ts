@@ -197,3 +197,35 @@ export function decideEscalation(
   }
   return { action: 'wait' };
 }
+
+/**
+ * Consecutive-noise nag (silence audit §5): real speech repeatedly
+ * misclassified as noise was an UNBOUNDED silent drop with zero feedback.
+ * Two ≥1.5s "noise" drops within 30s → speak one "didn't catch that" line,
+ * then 60s cooldown. True ambient noise (short bursts) never trips it.
+ */
+export interface NoiseNagState { drops: number; windowStartMs: number; lastNagMs: number }
+export function createNoiseNagState(): NoiseNagState {
+  return { drops: 0, windowStartMs: 0, lastNagMs: -Infinity };
+}
+export const NOISE_NAG_MIN_SPOKE_MS = 1_500;
+export const NOISE_NAG_WINDOW_MS = 30_000;
+export const NOISE_NAG_COOLDOWN_MS = 60_000;
+export const NOISE_NAG_LINE = "Sorry, I didn't catch that. Could you say it again?";
+
+export function recordNoiseDrop(
+  state: NoiseNagState, nowMs: number, spokeMs: number,
+): { nag: boolean } {
+  if (spokeMs < NOISE_NAG_MIN_SPOKE_MS) return { nag: false };
+  if (nowMs - state.windowStartMs > NOISE_NAG_WINDOW_MS) {
+    state.drops = 0;
+    state.windowStartMs = nowMs;
+  }
+  state.drops++;
+  if (state.drops >= 2 && nowMs - state.lastNagMs >= NOISE_NAG_COOLDOWN_MS) {
+    state.lastNagMs = nowMs;
+    state.drops = 0;
+    return { nag: true };
+  }
+  return { nag: false };
+}

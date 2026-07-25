@@ -1,6 +1,7 @@
 import {
   classifyCover, pickCoverPhrase, LIVENESS_REPLIES,
   COVER_FIRE_MS, TURN_GIVE_UP_MS, createEscalationState, decideEscalation,
+  createNoiseNagState, recordNoiseDrop,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -90,6 +91,16 @@ const b1 = decideEscalation(es2, 9_500, 4);
 const es3 = createEscalationState();
 const b2 = decideEscalation(es3, 9_500, 4);
 check('esc-deterministic', b1.action === 'speak' && b2.action === 'speak' && b1.text === b2.text);
+
+// --- Consecutive-noise nag (silence audit §5)
+let ns = createNoiseNagState();
+check('nag-short-ignored', recordNoiseDrop(ns, 1_000, 800).nag === false);   // <1.5s speech
+check('nag-first-real', recordNoiseDrop(ns, 2_000, 3_000).nag === false);    // 1st drop
+check('nag-second-fires', recordNoiseDrop(ns, 10_000, 2_500).nag === true);  // 2nd within 30s
+check('nag-cooldown', recordNoiseDrop(ns, 15_000, 2_500).nag === false);     // 60s cooldown
+ns = createNoiseNagState();
+recordNoiseDrop(ns, 0, 2_000);
+check('nag-window-expired', recordNoiseDrop(ns, 40_000, 2_000).nag === false); // >30s apart resets
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');

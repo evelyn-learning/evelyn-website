@@ -73,7 +73,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
-import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -942,6 +942,11 @@ export function VoiceTutorRealtime({
   // suppress window, so a perception re-emission (post-reconnect) fired
   // the same utterance twice → two brain replies. Short exact-text window.
   const perceptionDispatchDeduperRef = useRef<DispatchDeduper>(new DispatchDeduper());
+  // Consecutive-noise nag (R32 T8, silence audit §5): real speech
+  // repeatedly misclassified as noise was an unbounded silent drop —
+  // two >=1.5s "noise" drops within 30s speaks one "didn't catch that"
+  // line (60s cooldown). Persists across the noise-drop branch below.
+  const noiseNagStateRef = useRef(createNoiseNagState());
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -13172,14 +13177,6 @@ export function VoiceTutorRealtime({
           renderBufferPausedRef.current = false;
         }
       }
-      // "Being heard" indicator: a transcript ARRIVED for the student's
-      // utterance, so it wasn't lost — resolve the "got that — one sec…" window
-      // (whether it now dispatches or gets classified as noise). This is what
-      // makes the "didn't catch that" hint fire ONLY on a true transcription
-      // hang (no transcript at all), never on the normal 9–15s perception
-      // latency (which previously tripped the timer almost every turn).
-      resolveAwaitingDispatch();
-
       // Mute gate (2026-06-16). Drop any transcript that arrives while the
       // student is muted. The perception mic stops appending audio on mute
       // (usePerceptionWS.setMuted), but a transcript captured BEFORE the
@@ -13220,6 +13217,25 @@ export function VoiceTutorRealtime({
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
+        // R32 T8 (silence audit §5): consecutive real speech
+        // misclassified as noise was an UNBOUNDED silent drop with zero
+        // feedback. spokeMs is t.latencyMs — the Ink2 transcript's
+        // speech_started→transcription.completed duration (the same
+        // value usePerceptionWS logs as `transcript (Nms)`); a true short
+        // ambient burst never crosses NOISE_NAG_MIN_SPOKE_MS, so this
+        // never fires on real background noise. Gated on prodState
+        // (the production-WS state mirror already captured above) so we
+        // never nag over the tutor's own speech — same TTS-busy signal
+        // the fast-opener path checks (productionStateRef.current ===
+        // 'speaking'), plus the speakText gate so a just-blocked slot
+        // isn't double-spoken into.
+        const spokeMs = t.latencyMs;
+        const { nag } = recordNoiseDrop(noiseNagStateRef.current, Date.now(), spokeMs);
+        if (nag && Date.now() >= speakTextBlockedUntilRef.current && prodState !== 'speaking') {
+          const sid = pushTtsScriptForPerception(NOISE_NAG_LINE);
+          speakTextRef.current?.(NOISE_NAG_LINE, sid);
+          onDebugEvent?.('noise_nag_spoken', `${spokeMs}ms utterance`);
+        }
         // Stage 3 quick-fix (2026-06-16): if a cancel checkpoint is
         // armed (i.e., a STAGE-2/3 cancel fired at speech_started and
         // killed the brain mid-flight), this noise-classified transcript
@@ -13244,6 +13260,18 @@ export function VoiceTutorRealtime({
         }
         return;
       }
+
+      // "Being heard" indicator: a transcript ARRIVED for the student's
+      // utterance, so it wasn't lost — resolve the "got that — one sec…"
+      // window. R32 T8 (silence audit §9): this now runs AFTER the noise
+      // check above has decided the transcript will actually dispatch
+      // (moved from before the mute/noise drop branches), so a transcript
+      // that arrives and is immediately discarded as noise no longer
+      // cancels the 18s "didn't catch that" listening-hint — the hint is
+      // exactly the fallback that should survive a noise-classified drop.
+      // Still fires ONLY on a true transcription hang (no transcript at
+      // all), never on the normal 9–15s perception latency.
+      resolveAwaitingDispatch();
 
       // Stage 2 dev-only verdict pin. When set, skip heuristic + Haiku
       // and dispatch the pinned verdict directly so the developer can
