@@ -73,6 +73,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -120,6 +121,7 @@ import type { InteractionType } from '@/hooks/useDemoTracking';
 import {
   TUTOR_BRAIN_FAST_OPENER,
   TUTOR_ACK_LAYER,
+  TUTOR_COVER_V2,
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
   TUTOR_RENDER_WORD_ANCHOR,
@@ -1154,6 +1156,10 @@ export function VoiceTutorRealtime({
   const ackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ackTurnCounterRef = useRef(0);
   const lastAckIndexRef = useRef<number | null>(null);
+  // R32: per-category last-index rotation state for classifier-driven cover
+  // phrases (TUTOR_COVER_V2). Keyed by CoverCategory; unused when the flag
+  // is off (legacy pickAck path keeps using lastAckIndexRef above).
+  const lastCoverIndexRef = useRef<Partial<Record<string, number>>>({});
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -11867,50 +11873,85 @@ export function VoiceTutorRealtime({
         const ackTurnIndex = ++ackTurnCounterRef.current;
         const ackArmedAt = Date.now();
         const ackTranscript = transcript;
-        ackTimerRef.current = setTimeout(() => {
-          ackTimerRef.current = null;
-          const input: AckInput = {
-            classification: 'clean',
-            attempt: 0,
-            skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
-            // Round 28: session-opening kickoff turns never ack (see
-            // AckInput.openingTurn). Detected by the synthetic bracketed
-            // marker OR the armed opening ref — belt and suspenders.
-            openingTurn: openingTurnPendingRef.current
-              || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
-            fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
-            brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
-            msSinceTurnEnd: Date.now() - ackArmedAt,
-            turnIndex: ackTurnIndex,
-          };
-          if (!shouldSpeakAck(input)) {
-            const reason = input.openingTurn ? 'opening-turn'
-              : input.brainSentence0Dispatched ? 'sentence0'
-              : input.fastOpenerSpoken ? 'tts-already-dispatched'
-              : input.skipTurn ? 'skip-turn' : 'damping';
-            onDebugEvent?.('ack_suppressed', reason);
-            return;
+        // R32: classify up front so liveness checks can answer instantly and
+        // silent verdicts skip arming the timer entirely. Legacy behavior
+        // (TUTOR_COVER_V2 off) hard-codes the old 'cover'/'generic' verdict
+        // so the branches below degrade byte-identically to pre-R32.
+        const verdict: CoverVerdict = TUTOR_COVER_V2
+          ? classifyCover(ackTranscript)
+          : { kind: 'cover', category: 'generic' };
+
+        if (TUTOR_COVER_V2 && verdict.kind === 'silent') {
+          onDebugEvent?.('cover_silent', verdict.reason);
+        } else if (TUTOR_COVER_V2 && verdict.kind === 'instant') {
+          // Liveness check: the student is asking whether we're alive
+          // BECAUSE of our latency — answer instantly, brain turn continues
+          // normally. Same speak-gate the fast opener respects.
+          if (Date.now() >= speakTextBlockedUntilRef.current) {
+            const text = pickLivenessReply(ackTurnIndex);
+            const sid = pushTtsScriptForPerception(text);
+            speakTextRef.current?.(text, sid);
+            ttsDispatchedCountRef.current++;
+            turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+            onDebugEvent?.('cover_liveness', `"${text}" turn=${ackTurnIndex}`);
           }
-          // Same gate the fast opener respects (perception-cancel window).
-          if (Date.now() < speakTextBlockedUntilRef.current) {
-            onDebugEvent?.('ack_suppressed', 'speak-gate');
-            return;
-          }
-          const { text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current);
-          lastAckIndexRef.current = index;
-          // Fast-opener call shape: perception self-voice push + speak.
-          const ackScriptId = pushTtsScriptForPerception(text);
-          speakTextRef.current?.(text, ackScriptId);
-          // Render↔speech sync: count the ack the same way the fast opener
-          // is counted — symmetric dispatch+playback increments keep
-          // anchorM aligned (verified at the opener call site).
-          ttsDispatchedCountRef.current++;
-          // turn_latency: with the ack layer on, the turn's first audio IS
-          // the ack — mark its fetch too so tts→audio stays coherent and
-          // TOTAL reads as perceived-first-sound (the Phase-2 metric).
-          turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
-          onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}`);
-        }, 450);
+        } else {
+          // COVER_FIRE_MS (1200) > the legacy 450ms fire delay; shouldSpeakAck's
+          // >=450 msSinceTurnEnd window check stays valid either way.
+          const delayMs = TUTOR_COVER_V2 ? COVER_FIRE_MS : 450;
+          ackTimerRef.current = setTimeout(() => {
+            ackTimerRef.current = null;
+            const input: AckInput = {
+              classification: 'clean',
+              attempt: 0,
+              skipTurn: /\[Skip-button-clicked/i.test(ackTranscript),
+              // Round 28: session-opening kickoff turns never ack (see
+              // AckInput.openingTurn). Detected by the synthetic bracketed
+              // marker OR the armed opening ref — belt and suspenders.
+              openingTurn: openingTurnPendingRef.current
+                || /^\[(?:start (?:lesson|session)|session-resumed)/i.test(ackTranscript.trim()),
+              fastOpenerSpoken: turnLatencyRef.current?.has('firstTtsFetch') ?? false,
+              brainSentence0Dispatched: turnLatencyRef.current?.has('firstSentence') ?? false,
+              msSinceTurnEnd: Date.now() - ackArmedAt,
+              turnIndex: ackTurnIndex,
+            };
+            if (!shouldSpeakAck(input)) {
+              const reason = input.openingTurn ? 'opening-turn'
+                : input.brainSentence0Dispatched ? 'sentence0'
+                : input.fastOpenerSpoken ? 'tts-already-dispatched'
+                : input.skipTurn ? 'skip-turn' : 'damping';
+              onDebugEvent?.('ack_suppressed', reason);
+              return;
+            }
+            // Same gate the fast opener respects (perception-cancel window).
+            if (Date.now() < speakTextBlockedUntilRef.current) {
+              onDebugEvent?.('ack_suppressed', 'speak-gate');
+              return;
+            }
+            let text: string; let index: number;
+            if (TUTOR_COVER_V2 && verdict.kind === 'cover') {
+              const catKey = verdict.category;
+              ({ text, index } = pickCoverPhrase(catKey, ackTranscript, ackTurnIndex,
+                lastCoverIndexRef.current[catKey] ?? null));
+              lastCoverIndexRef.current[catKey] = index;
+            } else {
+              ({ text, index } = pickAck(ackTurnIndex, lastAckIndexRef.current));
+              lastAckIndexRef.current = index;
+            }
+            // Fast-opener call shape: perception self-voice push + speak.
+            const ackScriptId = pushTtsScriptForPerception(text);
+            speakTextRef.current?.(text, ackScriptId);
+            // Render↔speech sync: count the ack the same way the fast opener
+            // is counted — symmetric dispatch+playback increments keep
+            // anchorM aligned (verified at the opener call site).
+            ttsDispatchedCountRef.current++;
+            // turn_latency: with the ack layer on, the turn's first audio IS
+            // the ack — mark its fetch too so tts→audio stays coherent and
+            // TOTAL reads as perceived-first-sound (the Phase-2 metric).
+            turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
+            onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
+          }, delayMs);
+        }
       }
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were

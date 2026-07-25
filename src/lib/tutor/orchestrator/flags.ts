@@ -171,6 +171,13 @@ export const TUTOR_ACK_LAYER =
   process.env.NEXT_PUBLIC_TUTOR_ACK_LAYER === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ACK_LAYER === 'true';
 
+// R32: contextual cover layer v2 — classifier-driven cover phrases, silent
+// verdicts, instant liveness replies, escalating in-flight covers, 45s
+// give-up, terminal covers. Requires TUTOR_ACK_LAYER on. Default OFF.
+export const TUTOR_COVER_V2 =
+  process.env.NEXT_PUBLIC_TUTOR_COVER_V2 === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_COVER_V2 === 'true';
+
 // Task 1.1 (humanlike-latency plan): stream the cold first sentence's
 // Cartesia audio — start playback at ~0.4s of PCM instead of waiting for
 // full-sentence synthesis. Default OFF; enable per env.
