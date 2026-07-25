@@ -73,7 +73,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
-import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, type CoverVerdict } from '@/lib/tutor/voice/cover-layer';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -1160,6 +1160,16 @@ export function VoiceTutorRealtime({
   // phrases (TUTOR_COVER_V2). Keyed by CoverCategory; unused when the flag
   // is off (legacy pickAck path keeps using lastAckIndexRef above).
   const lastCoverIndexRef = useRef<Partial<Record<string, number>>>({});
+  // R32 Task 4: escalation poller for in-flight covers (9s/25s tiers) + the
+  // 45s give-up. Armed alongside the cover block, cleared at every site that
+  // clears ackTimerRef (sentence-0 arrival, closeGate, perception verdict/
+  // kill) — a sick turn's escalation must not outlive the turn it covers.
+  const escalationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // True once the 45s give-up has fired for the in-flight turn — the abort
+  // catch (callBrainOnce) checks this to skip its own spoken fallback and
+  // any later resume (Task 5) so we don't double-speak or re-open a turn
+  // we already told the student we lost.
+  const escalationGaveUpRef = useRef(false);
   // True only while a brain stream is actively buffering — gates whether
   // handleWhiteboardCommand's visual dispatch buffers (brain stream) vs
   // fires immediately (enricher validation pass, non-brain callers).
@@ -8355,6 +8365,7 @@ export function VoiceTutorRealtime({
           // Phase 2: a closing gate means this turn is being killed or
           // rejected — an ack after that would voice over the retry.
           if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+          if (escalationTimerRef.current) { clearInterval(escalationTimerRef.current); escalationTimerRef.current = null; }
           // Validate-before-speak: if a kill/abort closes the gate while we
           // were rolling, the buffered (un-played) sentences are dropped
           // BEFORE the speaker — the headline win. Log the count so a live
@@ -8911,6 +8922,7 @@ export function VoiceTutorRealtime({
                   // Phase 2: brain sentence-0 arrived — a pending ack is now
                   // redundant (fire-time guard would refuse anyway).
                   if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+                  if (escalationTimerRef.current) { clearInterval(escalationTimerRef.current); escalationTimerRef.current = null; }
                   // KEEP markdown emphasis (*word*, **strong**) in the
                   // chat-bound text so TranscriptView can render it as
                   // italic / bold. Strip ONLY for TTS — the speaking
@@ -11565,7 +11577,15 @@ export function VoiceTutorRealtime({
           turnLatencyRef.current = null;
           turnLatencyAwaitingAudioRef.current = false;
         }
-        speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+        // R32 Task 4: the give-up path already spoke its own honest reset
+        // line and called abort() itself — if that abort somehow lands
+        // here (non-AbortError-shaped) instead of the isAbort branch above,
+        // don't double-speak a second "repeat that?" on top of it.
+        if (escalationGaveUpRef.current) {
+          onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
+        } else {
+          speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
+        }
         // Round-7+ Fix 9 (catch path): clear any residual streaming
         // entries + reset the active flag so the cursor doesn't keep
         // blinking after a thrown error mid-turn.
@@ -11953,6 +11973,49 @@ export function VoiceTutorRealtime({
           }, delayMs);
         }
       }
+      // R32 Task 4: escalating in-flight covers. The head cover above only
+      // fires once at COVER_FIRE_MS; a genuinely sick turn (server retry
+      // ladder, silence audit) needs tier-1 (~9s), tier-2 (~25s, honest
+      // about the cause), and a 45s give-up so the client stops riding the
+      // server's ~93s retry chain in silence.
+      if (TUTOR_ACK_LAYER && TUTOR_COVER_V2) {
+        if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+        escalationGaveUpRef.current = false;
+        const esState = createEscalationState();
+        const dispatchedAt = Date.now();
+        const esTurnIndex = ackTurnCounterRef.current;
+        const isSynthetic = transcript.trim().startsWith('[');
+        if (!isSynthetic) {
+          escalationTimerRef.current = setInterval(() => {
+            // Sentence-0 arrived or the turn is over → stand down.
+            if (turnLatencyRef.current?.has('firstSentence') || inFlightBrainAbortRef.current === null) {
+              if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+              escalationTimerRef.current = null;
+              return;
+            }
+            const act = decideEscalation(esState, Date.now() - dispatchedAt, esTurnIndex);
+            if (act.action === 'wait') return;
+            if (act.action === 'speak') {
+              if (Date.now() < speakTextBlockedUntilRef.current) return; // retry next tick? no — tier already consumed; acceptable
+              const sid = pushTtsScriptForPerception(act.text);
+              speakTextRef.current?.(act.text, sid);
+              ttsDispatchedCountRef.current++;
+              onDebugEvent?.('cover_escalation', `tier=${act.tier} "${act.text}"`);
+              return;
+            }
+            // give-up: stop waiting on a sick turn (would otherwise ride ~93s of
+            // server retries — silence audit). Abort, speak an honest reset line.
+            if (escalationTimerRef.current) clearInterval(escalationTimerRef.current);
+            escalationTimerRef.current = null;
+            escalationGaveUpRef.current = true;
+            inFlightBrainAbortRef.current?.abort();
+            const text = "Sorry about that, I lost my thread. Say that once more for me?";
+            const sid = pushTtsScriptForPerception(text);
+            speakTextRef.current?.(text, sid);
+            onDebugEvent?.('cover_giveup', `after=${Date.now() - dispatchedAt}ms`);
+          }, 1000);
+        }
+      }
       await callBrainOnce(transcript, opts);
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
@@ -12098,6 +12161,7 @@ export function VoiceTutorRealtime({
     // Phase 2: a verdict is resolving a cancelled turn (FRESH/RESTORE/MERGE
     // re-dispatch will re-arm their own ack) — drop any pending ack.
     if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+    if (escalationTimerRef.current) { clearInterval(escalationTimerRef.current); escalationTimerRef.current = null; }
     const elapsedMs = Date.now() - checkpoint.cancelledAt;
     const cleanPerceptionText = (perceptionText || '').trim();
     const stage = checkpoint.cancelledDuringState;
@@ -13250,6 +13314,7 @@ export function VoiceTutorRealtime({
         const stageLabel = cancelStage === 'speaking' ? 'STAGE-3' : 'STAGE-2';
         // Phase 2: the student is interrupting — never ack over them.
         if (ackTimerRef.current) { clearTimeout(ackTimerRef.current); ackTimerRef.current = null; }
+        if (escalationTimerRef.current) { clearInterval(escalationTimerRef.current); escalationTimerRef.current = null; }
         console.warn(
           `[PERCEPTION] ${stageLabel} cancel: aborting in '${cancelStage}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
         );
