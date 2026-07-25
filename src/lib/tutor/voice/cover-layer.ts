@@ -141,3 +141,59 @@ export function pickCoverPhrase(
 export function pickLivenessReply(turnIndex: number): string {
   return LIVENESS_REPLIES[((turnIndex % LIVENESS_REPLIES.length) + LIVENESS_REPLIES.length) % LIVENESS_REPLIES.length];
 }
+
+/**
+ * Escalating in-flight covers. One contextual cover at COVER_FIRE_MS is the
+ * head; if the brain still hasn't produced sentence-0, tier 1 (~9s) keeps the
+ * student, tier 2 (~25s) is HONEST about the cause (baseline p90 first
+ * sentence 9.2s — tier 2 only fires on genuinely sick turns). At
+ * TURN_GIVE_UP_MS the client stops waiting entirely (Task 4 wires the abort):
+ * riding the server's full 3x30s retry ladder (~93s, silence audit) is worse
+ * than an honest reset. Tiers are one-shot per turn.
+ */
+export const COVER_FIRE_MS = 1200;
+export const TURN_GIVE_UP_MS = 45_000;
+
+export const ESCALATION_TIERS = [
+  {
+    atMs: 9_000,
+    pool: [
+      "Still with you. This one's taking me a second.",
+      'Hang on, still working it out.',
+      'One more moment, almost there.',
+    ],
+  },
+  {
+    atMs: 25_000,
+    pool: [
+      "Sorry, my connection's being slow. Hang on.",
+      'Bear with me, something on my end is being slow today.',
+    ],
+  },
+] as const;
+
+export interface EscalationState { fired: boolean[] }
+export function createEscalationState(): EscalationState {
+  return { fired: ESCALATION_TIERS.map(() => false) };
+}
+
+export type EscalationAction =
+  | { action: 'wait' }
+  | { action: 'speak'; tier: number; text: string }
+  | { action: 'give-up' };
+
+export function decideEscalation(
+  state: EscalationState,
+  msSinceDispatch: number,
+  turnIndex: number,
+): EscalationAction {
+  if (msSinceDispatch >= TURN_GIVE_UP_MS) return { action: 'give-up' };
+  for (let i = ESCALATION_TIERS.length - 1; i >= 0; i--) {
+    if (msSinceDispatch >= ESCALATION_TIERS[i].atMs && !state.fired[i]) {
+      state.fired[i] = true;
+      const pool = ESCALATION_TIERS[i].pool;
+      return { action: 'speak', tier: i, text: pool[((turnIndex % pool.length) + pool.length) % pool.length] };
+    }
+  }
+  return { action: 'wait' };
+}

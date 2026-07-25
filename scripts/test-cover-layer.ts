@@ -1,5 +1,6 @@
 import {
   classifyCover, pickCoverPhrase, LIVENESS_REPLIES,
+  COVER_FIRE_MS, TURN_GIVE_UP_MS, createEscalationState, decideEscalation,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -66,6 +67,29 @@ const p3 = pickCoverPhrase('question', 'why?', 2, null);
 check('deterministic', p3.index === p1.index && p3.text === p1.text);
 // Prosody rule: every phrase in every pool ends with '.' '…' or '?'
 check('liveness-pool-nonempty', LIVENESS_REPLIES.length >= 3);
+
+// --- Escalation schedule + hard cap
+check('fire-ms', COVER_FIRE_MS === 1200);
+check('giveup-ms', TURN_GIVE_UP_MS === 45_000);
+let es = createEscalationState();
+let a = decideEscalation(es, 5_000, 1);
+check('esc-early-wait', a.action === 'wait');
+a = decideEscalation(es, 9_500, 1);
+check('esc-tier1', a.action === 'speak' && a.text.length > 0);
+a = decideEscalation(es, 10_000, 1);
+check('esc-tier1-oneshot', a.action === 'wait');   // tier 1 already fired
+a = decideEscalation(es, 26_000, 1);
+check('esc-tier2', a.action === 'speak');
+a = decideEscalation(es, 27_000, 1);
+check('esc-tier2-oneshot', a.action === 'wait');
+a = decideEscalation(es, 46_000, 1);
+check('esc-giveup', a.action === 'give-up');
+// deterministic phrase per tier+turnIndex
+const es2 = createEscalationState();
+const b1 = decideEscalation(es2, 9_500, 4);
+const es3 = createEscalationState();
+const b2 = decideEscalation(es3, 9_500, 4);
+check('esc-deterministic', b1.action === 'speak' && b2.action === 'speak' && b1.text === b2.text);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');
