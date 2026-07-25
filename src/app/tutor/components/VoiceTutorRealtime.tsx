@@ -1703,6 +1703,12 @@ export function VoiceTutorRealtime({
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
   const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean } | null>(null);
+  // R33: whitespace-collapsed statements of every problem card served this
+  // session (showProblem + try-yourself). The show_problem divergence guard
+  // consults it: substituting the authored segment card is WRONG when that
+  // card was already served — the student just solved it and asked for
+  // another one (live 2026-07-25: "Are you giving me the same problem?").
+  const servedProblemStatementsRef = useRef<Set<string>>(new Set());
   // 2026-07-17 (expectedAnswer pin): the most recent generate_problem
   // resolution, delivered via the 'generated-problem' SSE event. When the
   // brain's follow-up show_problem renders the matching canonicalText, the
@@ -4440,6 +4446,7 @@ export function VoiceTutorRealtime({
             console.log('[VoiceTutorRealtime] expectedAnswer pinned to active problem:', (genMatch.expectedAnswer ?? '').slice(0, 60));
             onDebugEvent?.('expected_answer_pinned', (genMatch.expectedAnswer ?? '').slice(0, 60));
           }
+          servedProblemStatementsRef.current.add(norm(p.statement));
           console.log('[VoiceTutorRealtime] Tracked current problem:', p.statement.slice(0, 80));
           // New problem → reset walk-through insistence counter. The tutor
           // needs to re-enter Socratic mode; any walk-through request will
@@ -4474,6 +4481,7 @@ export function VoiceTutorRealtime({
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           walkThroughInsistenceRef.current = 0;
+          servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
           console.log('[VoiceTutorRealtime] Tracked current problem (try-yourself card):', statement.slice(0, 80));
         }
       }
@@ -9697,6 +9705,24 @@ export function VoiceTutorRealtime({
                           // rendering the student's brought problem (or a
                           // fresh-context one); the authored card would be wrong.
                           // Fall through to dispatch show_problem as-is.
+                        } else if (targetsDiverge && servedProblemStatementsRef.current.has(truth.problemText.replace(/\s+/g, ' ').trim())) {
+                          // R33 (live 2026-07-25, AP Stats): substituting the
+                          // authored card is WRONG when that card was already
+                          // served — the student solved it, asked "give me a
+                          // difficult one", the brain authored its own problem
+                          // (skipping generate_problem), and the substitute
+                          // re-served the finished card ("Are you giving me
+                          // the same problem?"). Kill for retry with feedback
+                          // steering to the sanctioned generate_problem path,
+                          // whose canonicalText render bypasses this guard.
+                          console.warn(`[brain-orchestrator] show_problem target divergence for segment "${segId}" (brain="${brainTarget}" authored="${authoredTarget}") — authored card ALREADY SERVED this session; killing for retry instead of re-serving it.`);
+                          onDebugEvent?.('show_problem_divergence_already_served', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
+                          rejectionsThisAttempt.push({
+                            action: 'show_problem',
+                            reason: `Your show_problem asked for "${brainTarget}" while segment "${segId}"'s authored problem asks for "${authoredTarget}" — and that authored problem was ALREADY served to the student this session, so re-rendering it would repeat a problem they finished. If the student asked for another / harder / easier problem: call generate_problem FIRST (speak a hedged bridge sentence, then the tool) and render the returned canonicalText via show_problem — never author your own problem and never re-render a completed card. If you intended a TOPIC SWITCH instead, emit BOTH new_page AND show_problem in the same response.`,
+                          });
+                          await performKill();
+                          continue;
                         } else if (targetsDiverge && TUTOR_VALIDATE_BEFORE_SPEAK) {
                           // v2 divergence-substitute: brain asked for a
                           // different target than authored on the current
@@ -9704,7 +9730,8 @@ export function VoiceTutorRealtime({
                           // the brain's target (never spoken) + SUBSTITUTE the
                           // authored card — no kill, no retry, no chat-board
                           // mismatch. (A genuine topic switch carries new_page,
-                          // handled by the bypass above.)
+                          // handled by the bypass above. An already-served
+                          // authored card kills for retry, handled just above.)
                           dropPendingForSubstitute('show_problem target divergence');
                           console.warn(`[brain-orchestrator] show_problem target divergence for segment "${segId}" (brain="${brainTarget}" authored="${authoredTarget}") — DROP held narration + substitute authored card (no kill).`);
                           onDebugEvent?.('show_problem_target_divergence_substituted', `brain="${brainTarget}" authored="${authoredTarget}" segId="${segId}"`);
