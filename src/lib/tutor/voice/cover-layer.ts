@@ -104,15 +104,26 @@ export function classifyCover(transcript: string): CoverVerdict {
   return { kind: 'cover', category: 'generic' };
 }
 
-/** {a} is replaced with the extracted answer token. */
-const POOLS: Record<CoverCategory, readonly string[]> = {
+/**
+ * {a} is replaced with the extracted answer token.
+ *
+ * R33 collision rule: no phrase may be a standalone acknowledgment token the
+ * brain habitually opens replies with ("Good question.", "Sure.", "Okay.",
+ * "No worries.") — the cover fires while the brain turn is already in flight,
+ * so such a phrase doubles when the brain opens the same way (observed live
+ * 2026-07-25: cover "Good question." + brain "Good question — let's nail
+ * that down."). Pool phrases are thinking-fillers, not acknowledgments;
+ * test-cover-layer's no-opener-collision check enforces this.
+ */
+export const COVER_POOLS: Record<CoverCategory, readonly string[]> = {
   'numeric-echo': ['Hmm, {a}.', '{a}. Okay.', 'Okay, {a}. One moment.'],
-  question: ['Good question.', 'Ah, let me think.', 'Hmm, let me see.'],
-  request: ['Sure.', 'Okay.', 'Alright, one moment.'],
-  stuck: ['No worries.', "That's alright, let me think.", 'Okay, let me help.'],
+  question: ['Hmm, let me think about that.', 'Ah, let me think.', 'Hmm, let me see.'],
+  request: ['On it.', 'Mm, one second.', 'Alright, one moment.'],
+  stuck: ['Hmm, let me think how to help.', "That's alright, let me think.", 'Okay, let me help.'],
   'think-aloud': ['Okay, let me follow that.', 'Alright, let me check your steps.', 'Okay, one moment.'],
   generic: ACK_PHRASES,
 };
+const POOLS = COVER_POOLS;
 
 export const LIVENESS_REPLIES = [
   "Yep, I'm here. Still thinking.",

@@ -3,6 +3,7 @@ import {
   COVER_FIRE_MS, TURN_GIVE_UP_MS, createEscalationState, decideEscalation,
   createNoiseNagState, recordNoiseDrop,
   createWarmupState, decideWarmupAction,
+  COVER_POOLS, ESCALATION_TIERS, NOISE_NAG_LINE,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -111,6 +112,28 @@ check('warmup-rekick-at-20s', decideWarmupAction(ws2, 21_000) === 'rekick');
 check('warmup-rekick-once', decideWarmupAction(ws2, 25_000) === 'wait');
 check('warmup-fail-at-40s', decideWarmupAction(ws2, 41_000) === 'fail');
 check('warmup-fail-once', decideWarmupAction(ws2, 45_000) === 'wait');
+
+// --- Brain-opener collision ban (R33): the cover can't know what the brain
+// will say — a pool phrase that is ALSO a habitual brain opener doubles up
+// (observed live 2026-07-25: cover "Good question." then brain sentence-0
+// "Good question — let's nail that down."). No pool phrase may be a
+// standalone acknowledgment token the brain commonly opens with.
+const BRAIN_OPENER_RE =
+  /^(good question|good call|nice|exactly|sure|okay|alright|no worries|all good|fair enough|fair callout)[.!…]?$/i;
+const allPools: Array<[string, readonly string[]]> = [
+  ...Object.entries(COVER_POOLS),
+  ['liveness', LIVENESS_REPLIES],
+  ...ESCALATION_TIERS.map((t, i) => [`escalation-${i}`, t.pool] as [string, readonly string[]]),
+  ['noise-nag', [NOISE_NAG_LINE]],
+];
+for (const [poolName, pool] of allPools) {
+  for (const phrase of pool) {
+    check(`no-opener-collision:${poolName}:"${phrase}"`, !BRAIN_OPENER_RE.test(phrase.trim()));
+    // Prosody rule (ack-layer.ts doc): complete short sentences ending in
+    // '.', '…' or '?' — never a trailing em-dash (Cartesia clips it).
+    check(`prosody:${poolName}:"${phrase}"`, /[.…?]$/.test(phrase.trim()) && !/[—-]$/.test(phrase.trim()));
+  }
+}
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');
