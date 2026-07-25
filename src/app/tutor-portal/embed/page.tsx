@@ -35,7 +35,17 @@ const TUTOR_PEDAGOGY_OPENER_EMBED = isPedagogyOpenerFlagValue(process.env.NEXT_P
 // events only — keep this list short; every entry lands in Mongo for every
 // real student session. turn_latency: Phase-0 humanlike-latency baseline;
 // ack_/tts_ws_/render_dropped/rule8: later phases of the same plan.
-const EMBED_DEBUG_EVENT_PREFIXES = ['turn_latency', 'ack_', 'tts_ws_', 'render_dropped', 'rule8'];
+// Round 29: the original measurement-only allowlist made portal incidents
+// undiagnosable — a session where the student's reply never transcribed
+// (portal-ed8acbfd, 2026-07-24) persisted just 2 events, with every
+// perception/reliability breadcrumb dropped. The reliability families are
+// one short line per utterance, so real-student volume stays modest.
+const EMBED_DEBUG_EVENT_PREFIXES = [
+  'turn_latency', 'ack_', 'tts_ws_', 'render_dropped', 'rule8',
+  'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
+  'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
+  'try_alone',
+];
 
 /** The contract's milestone enum (derived from SessionResult — the package
  *  exports the type via this field rather than a standalone alias). */

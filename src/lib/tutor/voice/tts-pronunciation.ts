@@ -1588,6 +1588,10 @@ function rewriteDomainAcronyms(t: string): string {
   t = t.replace(/\bNa[+⁺]/g, 'sodium');
   t = t.replace(/\bNa\b/g, 'sodium');
   t = t.replace(/\bK[+⁺]/g, 'potassium');
+  // Round 29 (live SAT session-1784936161888): "coeff" voiced as "co ef".
+  // Speak the full word; plural keeps the s.
+  t = t.replace(/\bcoeffs\b/gi, 'coefficients');
+  t = t.replace(/\bcoeff\b/gi, 'coefficient');
   // Round 28 (history round): "WWI"/"WWII" (and digit forms "WW1"/"WW2")
   // read letter-by-letter ("double-u double-u one") — the convention is
   // the war NAME. WWII/WW2 first so the WWI arm can't eat its prefix.

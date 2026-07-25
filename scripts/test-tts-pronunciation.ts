@@ -1107,3 +1107,15 @@ console.log('OK — tts-pronunciation rewrites validated');
     console.log('OK — Round-28 (SentenceBuffer dotted-abbreviation guard)');
   })();
 }
+
+// --- Round 29: coeff abbreviation ------------------------------------
+{
+  const eq = (input: string, want: string, name: string) => {
+    const got = rewriteForTTS(input);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  eq('The leading coeff tells you the direction.', 'The leading coefficient tells you the direction.', 'coeff-expansion');
+  eq('Compare the coeffs of x here.', 'Compare the coefficients of x here.', 'coeffs-plural');
+  eq('The coefficient stays put.', 'The coefficient stays put.', 'coefficient-idempotent');
+  console.log('OK — Round-29 (coeff)');
+}
