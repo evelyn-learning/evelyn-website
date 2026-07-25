@@ -11961,6 +11961,13 @@ export function VoiceTutorRealtime({
       silent?: boolean;
       bypassPerceptionDedupe?: boolean;
       bypassMidUtteranceGuard?: boolean;
+      // R32 (H1): when the mid-utterance guard below would otherwise DROP
+      // this dispatch, queue it instead — it drains once the student's
+      // current utterance finishes its own turn. Used by RESTORE/MERGE/FRESH
+      // so a perception verdict that lands mid-speech is deferred, not lost
+      // (previously an unbounded-silence hole: the dropped dispatch never
+      // re-fired and nothing else was watching it).
+      queueOnMidUtterance?: boolean;
       // Task X10: true when this dispatch originated from the student TYPING
       // (in-session text box / external typed send), false/undefined for
       // voice, buttons, and synthetic kickoffs. Recorded into
@@ -12003,6 +12010,16 @@ export function VoiceTutorRealtime({
       perceptionMidUtteranceRef.current &&
       !opts?.bypassMidUtteranceGuard
     ) {
+      // R32 (H1): a bare drop here left RESTORE/MERGE/FRESH dispatches that
+      // land mid-utterance with nothing watching them — unbounded silence if
+      // the interrupting speech never resolves to its own transcript. Queue
+      // instead when the caller opts in; the queue drains after the current
+      // utterance's own turn completes.
+      if (opts?.queueOnMidUtterance) {
+        queuedTranscriptsRef.current.push(transcript);
+        onDebugEvent?.('dispatch_queued_mid_utterance', transcript.slice(0, 60));
+        return;
+      }
       console.warn(
         `[brain-orchestrator] STAGE-3 fix #11: dispatch dropped — student is mid-utterance (perceptionMidUtteranceRef=true): ${JSON.stringify(transcript).slice(0, 80)}`,
       );
@@ -12484,9 +12501,14 @@ export function VoiceTutorRealtime({
       dropRenderBuffer(); // render↔speech sync: refire redraws from scratch
       // bypassPerceptionDedupe: our own refire must not be dropped by
       // the production-WS suppression slot armed at cancel time.
+      // R32 (H1): queue instead of drop if this refire lands mid-utterance
+      // — the checkpoint is already consumed by this verdict, so a bare
+      // drop here would lose the RESTORE outright with nothing to recover
+      // it (unbounded silence).
       void handleStudentTranscriptForBrain(checkpoint.originalTranscript, {
         ...(checkpoint.originalOpts || {}),
         bypassPerceptionDedupe: true,
+        queueOnMidUtterance: true,
       });
       return;
     }
@@ -12546,8 +12568,10 @@ export function VoiceTutorRealtime({
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
       dropRenderBuffer(); // render↔speech sync: new merged turn redraws
+      // R32 (H1): queue rather than drop if MERGE lands mid-utterance.
       void handleStudentTranscriptForBrain(freshText, {
         bypassPerceptionDedupe: true,
+        queueOnMidUtterance: true,
         ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
       });
       return;
@@ -12562,8 +12586,10 @@ export function VoiceTutorRealtime({
     );
     onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
     dropRenderBuffer(); // render↔speech sync: fresh turn redraws
+    // R32 (H1): queue rather than drop if FRESH lands mid-utterance.
     void handleStudentTranscriptForBrain(fresh, {
       bypassPerceptionDedupe: true,
+      queueOnMidUtterance: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
   }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer]);
@@ -13142,8 +13168,15 @@ export function VoiceTutorRealtime({
         if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
           const cp = perceptionInterruptCheckpointRef.current;
           if (mySeq <= cp.minSeqForDispatch) {
-            console.warn(`[PERCEPTION] noise-dispatch skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
-            return;
+            // R32 (H5): stale relative to THIS checkpoint, but the
+            // checkpoint is still open — a bare return here left it
+            // dangling if nothing else ever resolved it (unbounded
+            // silence). 'noise' is text-agnostic downstream
+            // (applyPerceptionVerdict reads checkpoint state, not this
+            // transcript), so dispatching it anyway is safe — rescue
+            // instead of dropping.
+            console.warn(`[PERCEPTION] noise-dispatch stale-seq (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}) — rescuing open checkpoint anyway`);
+            onDebugEvent?.('perception_bare_return_rescued', 'noise_stale_seq');
           }
           applyPerceptionVerdictRef.current?.('noise', t.text);
         }
@@ -13168,9 +13201,13 @@ export function VoiceTutorRealtime({
         if (mySeq <= cp.minSeqForDispatch) {
           // Bug 1 fix: this transcript predates the cancel; pinned verdict
           // applied to a stale transcript would still drive the wrong
-          // dispatch. Drop.
-          console.warn(`[CLASSIFIER] PINNED verdict=${pinned} but skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
-          return;
+          // dispatch text-wise.
+          // R32 (H5): but the checkpoint is still open here — dropping
+          // bare left it dangling (dev-only pin path, but the same
+          // unbounded-silence hazard). Dispatch the pinned verdict anyway
+          // so the checkpoint resolves.
+          console.warn(`[CLASSIFIER] PINNED verdict=${pinned} stale-seq (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}) — rescuing open checkpoint anyway`);
+          onDebugEvent?.('perception_bare_return_rescued', 'pinned_stale_seq');
         }
         console.warn(`[CLASSIFIER] PINNED verdict=${pinned} (seq=${mySeq}) — dispatching`);
         onDebugEvent?.('perception_pinned_verdict', pinned);
@@ -13227,8 +13264,10 @@ export function VoiceTutorRealtime({
         if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current && heur.verdict !== 'escalate') {
           const cp = perceptionInterruptCheckpointRef.current;
           if (mySeq <= cp.minSeqForDispatch) {
-            console.warn(`[CLASSIFIER] heuristic=${heur.verdict} skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale)`);
-            return;
+            // R32 (H5): checkpoint still open — rescue instead of
+            // dropping bare (unbounded silence otherwise).
+            console.warn(`[CLASSIFIER] heuristic=${heur.verdict} stale-seq (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}) — rescuing open checkpoint anyway`);
+            onDebugEvent?.('perception_bare_return_rescued', 'heuristic_stale_seq');
           }
           applyPerceptionVerdictRef.current?.(heur.verdict, t.text);
           return;
@@ -13317,6 +13356,19 @@ export function VoiceTutorRealtime({
           const circuitOpenAt = perceptionClassifyCircuitOpenAtRef.current;
           if (circuitOpenAt > 0 && nowMs - circuitOpenAt < 60_000) {
             console.warn('[CLASSIFIER] haiku skipped (circuit open)');
+            // R32 (H4): a checkpoint left open here (STAGE-2/3 cancel armed,
+            // heuristic escalated, then the circuit breaker skipped Haiku)
+            // used to dangle forever — no classifier verdict was ever going
+            // to arrive to resolve it. No verdict is in scope at this site,
+            // so fall back to 'noise' — applyPerceptionVerdict's downstream
+            // resume/restore logic reads checkpoint state, not this text.
+            if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
+              const cp = perceptionInterruptCheckpointRef.current;
+              if (mySeq > cp.minSeqForDispatch) {
+                onDebugEvent?.('perception_bare_return_rescued', 'haiku_circuit_breaker');
+                applyPerceptionVerdictRef.current?.('noise', t.text);
+              }
+            }
             return;
           }
           if (circuitOpenAt > 0) {
@@ -13367,8 +13419,10 @@ export function VoiceTutorRealtime({
               if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
                 const cp = perceptionInterruptCheckpointRef.current;
                 if (mySeq <= cp.minSeqForDispatch) {
-                  console.warn(`[CLASSIFIER] haiku=${verdict} skipped (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, stale verdict from pre-cancel transcript)`);
-                  return;
+                  // R32 (H5): checkpoint still open — rescue instead of
+                  // dropping bare (unbounded silence otherwise).
+                  console.warn(`[CLASSIFIER] haiku=${verdict} stale-seq (mySeq=${mySeq} <= minSeq=${cp.minSeqForDispatch}, verdict from pre-cancel transcript) — rescuing open checkpoint anyway`);
+                  onDebugEvent?.('perception_bare_return_rescued', 'haiku_success_stale_seq');
                 }
                 applyPerceptionVerdictRef.current?.(verdict, t.text);
               } else if (
@@ -13409,7 +13463,13 @@ export function VoiceTutorRealtime({
               // Bug 1 fix: same stale-verdict gate as the success path.
               if (perceptionStage >= 2 && perceptionInterruptCheckpointRef.current) {
                 const cp = perceptionInterruptCheckpointRef.current;
-                if (mySeq <= cp.minSeqForDispatch) return;
+                // R32 (H5): checkpoint still open — rescue instead of
+                // dropping bare even when stale (unbounded silence
+                // otherwise); 'noise' is what this fail-open path already
+                // dispatches for the non-stale case, so it's safe here too.
+                if (mySeq <= cp.minSeqForDispatch) {
+                  onDebugEvent?.('perception_bare_return_rescued', 'haiku_fail_stale_seq');
+                }
                 applyPerceptionVerdictRef.current?.('noise', t.text);
               }
             });
@@ -13521,7 +13581,14 @@ export function VoiceTutorRealtime({
         // interrupting sound never resolves to a transcript, no verdict
         // ever consumes this checkpoint — re-fire the aborted turn after
         // the window instead of stalling until the student re-prompts.
-        if (cancelStage === 'processing') {
+        //
+        // R32 (H3): also arm for 'speaking' cancels. Same unbounded-silence
+        // class — a 'speaking' cancel whose interrupting sound never
+        // transcribes leaves unplayed TTS content stranded on the
+        // checkpoint with nothing to resume it. decideStage2TimeoutRestore
+        // resolves both states now; 'speaking' resolves to 'resume-tts'
+        // rather than 'restore'.
+        {
           const armedCheckpoint = perceptionInterruptCheckpointRef.current;
           if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);
           const checkTimeoutRestore = () => {
@@ -13535,9 +13602,34 @@ export function VoiceTutorRealtime({
               midUtterance: perceptionMidUtteranceRef.current,
               newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
               ageMs: Date.now() - armedCheckpoint!.cancelledAt,
+              hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
             });
             if (verdict === 'defer') {
               stage2TimeoutRestoreTimerRef.current = setTimeout(checkTimeoutRestore, 2_000);
+              return;
+            }
+            if (verdict === 'resume-tts') {
+              // R32 (H3): re-queue the unplayed tail through the same
+              // resume-from-cut path the 'speaking' verdict branch uses
+              // (applyPerceptionVerdict, noise/filler/drop_self_voice ×
+              // 'speaking'), including the clauseTailFromFraction
+              // snapshot[0] handling so we don't re-speak already-heard
+              // content.
+              const n = armedCheckpoint!.unplayedSentencesSnapshot.length;
+              let resumeQueue = armedCheckpoint!.unplayedSentencesSnapshot;
+              if (TUTOR_RESUME_FROM_CLAUSE) {
+                const tail = clauseTailFromFraction(resumeQueue[0], armedCheckpoint!.cutFraction);
+                if (tail && tail !== resumeQueue[0]) {
+                  resumeQueue = [tail, ...resumeQueue.slice(1)];
+                }
+              }
+              console.warn(
+                `[PERCEPTION] STAGE-3 timeout-resume (no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms): re-queuing ${n} unplayed sentence(s)`,
+              );
+              onDebugEvent?.('stage3_timeout_resume', `no verdict after ${Date.now() - armedCheckpoint!.cancelledAt}ms · ${n} sentences`);
+              perceptionInterruptCheckpointRef.current = null;
+              resumeSpeakTextRef.current?.(resumeQueue);
+              flushAllRenderBuffer();
               return;
             }
             if (verdict !== 'restore') return;

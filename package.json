@@ -39,6 +39,7 @@
     "test:dedup-scroll": "npx tsx scripts/test-dedup-scroll.ts",
     "test:view-follow": "npx tsx scripts/test-view-follow.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
+    "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
     "test:elevenlabs-voice-map": "npx tsx scripts/test-elevenlabs-voice-map.ts",
     "test:tts-recovery": "npx tsx scripts/test-tts-recovery.ts",
     "test:silent-regen-clause": "npx tsx scripts/test-silent-regen-clause.ts",

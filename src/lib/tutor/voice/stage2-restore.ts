@@ -29,8 +29,10 @@ export const STAGE2_NO_VERDICT_RESTORE_MS = 7_000;
 const STALE_CUTOFF_MS = 60_000;
 
 export function decideStage2TimeoutRestore(args: {
-  /** The armed checkpoint is still unresolved (same object, not cleared). */
-  checkpointActive: boolean;
+  /** The armed checkpoint is still unresolved (same object, not cleared).
+   *  Optional — omitted/undefined is treated as still-active; only an
+   *  explicit `false` means the checkpoint was already resolved. */
+  checkpointActive?: boolean;
   cancelledDuringState: 'processing' | 'speaking';
   /** Snapshot taken at cancel time (checkpoint.brainWasInFlight). */
   brainWasInFlight: boolean;
@@ -42,13 +44,24 @@ export function decideStage2TimeoutRestore(args: {
   newBrainCallInFlight: boolean;
   ageMs: number;
   timeoutMs?: number;
-}): 'restore' | 'defer' | 'drop' {
+  /** R32 (H3): checkpoint.unplayedSentencesSnapshot had entries at cancel
+   *  time — only 'speaking' cancels use this field. */
+  hasUnplayedSnapshot?: boolean;
+}): 'restore' | 'defer' | 'drop' | 'resume-tts' {
   const timeoutMs = args.timeoutMs ?? STAGE2_NO_VERDICT_RESTORE_MS;
-  if (!args.checkpointActive) return 'drop';
-  // STAGE-3 'speaking' cancels have resume-from-cut / refire-on-noise
-  // machinery of their own — this recovery is scoped to the observed
-  // 'processing' stall.
-  if (args.cancelledDuringState !== 'processing') return 'drop';
+  if (args.checkpointActive === false) return 'drop';
+  if (args.cancelledDuringState !== 'processing') {
+    // R32 (H3): a 'speaking'-state cancel used to be out of scope here — the
+    // unplayed-sentence resume is verdict-driven, so a cancel whose
+    // interrupting sound never transcribes dangled until the next transcript's
+    // 20s stale sweep (unbounded dead air, silence audit). On timeout, resume
+    // the cut TTS tail ourselves. Order matters: stale check precedes this.
+    if (args.ageMs > STALE_CUTOFF_MS) return 'drop';
+    if (!args.hasUnplayedSnapshot) return 'drop';
+    if (args.midUtterance) return 'defer';
+    if (args.ageMs < timeoutMs) return 'defer';
+    return 'resume-tts';
+  }
   if (args.newBrainCallInFlight) return 'drop';
   // Mirrors the RESTORE-after-finished guard: if the turn wasn't genuinely
   // cut off, the answer was already delivered — re-firing duplicates it.
