@@ -837,6 +837,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // playNextAudio can fire it without re-creating on every render.
   const onTtsPlaybackProgressRef = useRef(onTtsPlaybackProgress);
   onTtsPlaybackProgressRef.current = onTtsPlaybackProgress;
+  // Round 29: recorder tap moved to playNextAudio's dequeue (playback
+  // time) — ref-mirrored for the same stable-callback reason as above.
+  const onTutorAudioChunkRef = useRef(onTutorAudioChunk);
+  onTutorAudioChunkRef.current = onTutorAudioChunk;
   const onTtsIssueRef = useRef(onTtsIssue);
   onTtsIssueRef.current = onTtsIssue;
   const onVoiceHiccupCaptionRef = useRef(onVoiceHiccupCaption);
@@ -1182,6 +1186,16 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     const ctx = getAudioContext();
     const chunk = audioQueueRef.current.shift()!;
+    // Round 29 (replay-desync fix): tap the recorder HERE — at playback
+    // start — not at the five synthesis/enqueue sites. Stamping at
+    // synthesis wrote a 30s utterance into a 5s wall-clock window and,
+    // worse, barge-ins/cancels discarded the queue in 8 places with the
+    // full synthesized audio already recorded — audio the student never
+    // heard, permanently shifting the track ahead of wall clock (the
+    // "tutor talking to itself" replay artifact, portal-1c5b4c9f).
+    // Dequeue is the single chokepoint every provider path funnels
+    // through, and unplayed chunks now simply never reach the file.
+    onTutorAudioChunkRef.current?.(chunk);
     // Stage 3.1 v2: dequeue the parallel sentence text and bind it as
     // the currently-heard sentence. If the chunk arrived without
     // sentence context (e.g., a rare pre-mapping race), leave the
@@ -1241,9 +1255,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   const queueAudio = useCallback((base64Audio: string) => {
     const float32 = base64ToFloat32(base64Audio);
 
-    // Tap tutor audio for recording
-    onTutorAudioChunk?.(float32);
-
+    // Recorder tap now lives in playNextAudio (playback time) — round 29.
     audioQueueRef.current.push(float32);
 
     if (!isPlayingRef.current) {
@@ -3024,7 +3036,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             // Word clock source: the job's live-appended words/starts.
             sentenceWordsRef.current.set(trimmed, job);
             const pushChunk = (chunk: Float32Array) => {
-              onTutorAudioChunk?.(chunk);
               audioQueueRef.current.push(chunk);
               audioQueueSentenceRef.current.push(trimmed);
               audioQueueScriptIdRef.current.push(scriptId);
@@ -3109,7 +3120,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
             return;
           }
           cartesiaConsecFailRef.current = 0;
-          onTutorAudioChunk?.(streamed.head);
           audioQueueRef.current.push(streamed.head);
           audioQueueSentenceRef.current.push(trimmed);
           audioQueueScriptIdRef.current.push(scriptId);
@@ -3140,7 +3150,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                 pendingTailRef.current = null;
                 return false;
               }
-              onTutorAudioChunk?.(chunk);
               audioQueueRef.current.push(chunk);
               audioQueueSentenceRef.current.push(trimmed);
               audioQueueScriptIdRef.current.push(scriptId);
@@ -3230,7 +3239,6 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         if (!isPlayingRef.current) playNextAudio();
         return;
       }
-      onTutorAudioChunk?.(float32);
       audioQueueRef.current.push(float32);
       // Stage 3.1 v2: tag this chunk with its sentence text. The
       // openai-mini path pushes a whole sentence as one chunk so the

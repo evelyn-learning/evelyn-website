@@ -311,6 +311,13 @@ export default function ReplayPlayer({
   // compressed→identity timeline rebuild (REQUIRED item #2): it flips false→
   // true exactly once and never reverts, so the identity mapping, once
   // trusted, stays trusted through any later ready↔buffering churn.
+  // Round 29 (replay honesty): final per-track audio coverage in seconds,
+  // set once both track downloads complete. When a track's recording is
+  // shorter than the session timeline (recorder drift/truncation — the
+  // 2026-07-24 audit: 27min of tutor audio against an 80min session), the
+  // replay used to go silent with no indication; now the shortfall is a
+  // visible fact in the status row.
+  const [audioCoverageSec, setAudioCoverageSec] = useState<{ student: number; tutor: number } | null>(null);
   const [audioConfirmed, setAudioConfirmed] = useState(false);
   const audioConfirmedRef = useRef(false);
   const confirmAudio = useCallback(() => {
@@ -732,6 +739,10 @@ export default function ReplayPlayer({
         studentResp.ok ? readTrack(studentResp, 'student') : Promise.resolve(),
         tutorResp.ok ? readTrack(tutorResp, 'tutor') : Promise.resolve(),
       ]);
+      setAudioCoverageSec({
+        student: studentTrackRef.current?.frontierSec ?? 0,
+        tutor: tutorTrackRef.current?.frontierSec ?? 0,
+      });
 
       const decodedAny =
         (studentTrackRef.current?.segments.length ?? 0) > 0 ||
@@ -1321,6 +1332,24 @@ export default function ReplayPlayer({
             stays fully intact in code — see studentMuted/tutorMuted and
             their gain effects above — only the buttons were removed.) */}
         <div className="px-6 py-4 border-t bg-gray-50 space-y-2">
+          {(() => {
+            // Coverage warning: a track that ends well before the timeline
+            // means the tail of this replay is structurally silent (and any
+            // audio before it may be time-shifted — see the round-29
+            // recorder audit). Surface it instead of replaying a mystery.
+            if (!audioCoverageSec) return null;
+            const totalSec = totalDurationMs / 1000;
+            const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+            const short = (['student', 'tutor'] as const).filter(
+              (r) => audioCoverageSec[r] > 0 && audioCoverageSec[r] < totalSec * 0.95,
+            );
+            if (short.length === 0 || totalSec <= 0) return null;
+            return (
+              <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                ⚠ Audio covers only {short.map((r) => `${r}: ${fmt(audioCoverageSec[r])}`).join(', ')} of the {fmt(totalSec)} session — the remainder has no recording and earlier audio may be time-shifted.
+              </div>
+            );
+          })()}
           <ReplayTimeline
             events={timeline}
             totalDurationMs={totalDurationMs}

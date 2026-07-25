@@ -88,7 +88,7 @@ export function useAudioRecorder({
     audio: ArrayBuffer | null,
     chunkIndex: number,
     finalize: boolean,
-  ) => {
+  ): Promise<boolean> => {
     try {
       const qs = new URLSearchParams({
         sessionId: sessionIdRef.current,
@@ -96,7 +96,7 @@ export function useAudioRecorder({
         chunkIndex: String(chunkIndex),
         finalize: finalize ? 'true' : 'false',
       });
-      await fetch(`/api/tutor/session-audio?${qs.toString()}`, {
+      const resp = await fetch(`/api/tutor/session-audio?${qs.toString()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
         body: audio ?? new ArrayBuffer(0),
@@ -104,8 +104,18 @@ export function useAudioRecorder({
         // teardown (unmount-finalize below) — keepalive keeps them alive.
         keepalive: finalize,
       });
+      // Round 29 (replay-desync audit): a non-2xx (413 from a body-size cap,
+      // 500, 502) used to resolve silently — the chunk was gone but the
+      // samples-written counter had advanced, shifting ALL later audio
+      // earlier in the file, permanently and cumulatively.
+      if (!resp.ok) {
+        console.error(`[AudioRecorder] ${role} chunk ${chunkIndex} rejected: HTTP ${resp.status}`);
+        return false;
+      }
+      return true;
     } catch (err) {
       console.error(`[AudioRecorder] Failed to send ${role} chunk ${chunkIndex}:`, err);
+      return false;
     }
   }, []);
 
@@ -120,6 +130,7 @@ export function useAudioRecorder({
       // commits, reconnects) so the file stays wall-clock aligned; the
       // jitter threshold keeps continuous speech contiguous.
       if (studentBufferRef.current.length > 0) {
+        const before = studentSamplesWrittenRef.current;
         const result = buildAlignedChunks(
           studentBufferRef.current, studentSamplesWrittenRef.current, SAMPLE_RATE, STUDENT_MIN_GAP_SAMPLES,
         );
@@ -127,13 +138,20 @@ export function useAudioRecorder({
         studentSamplesWrittenRef.current = result.samplesWritten;
         const bytes = float32ToPCM16Bytes(result.aligned);
         if (bytes) {
-          promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false));
+          // On a rejected POST, roll the counter back so the NEXT flush
+          // silence-fills the hole from wall clock — the lost audio
+          // becomes silence instead of shifting the whole track early.
+          // Safe: flushingRef serializes flushes, one send per track.
+          promises.push(sendChunk('student', bytes, studentChunkIndexRef.current++, false).then((ok) => {
+            if (!ok) studentSamplesWrittenRef.current = before;
+          }));
         }
       }
 
       // Flush tutor buffer — insert silence gaps to time-align with session
       // (fill-any-gap: TTS chunks are bursty, so every gap is real).
       if (tutorBufferRef.current.length > 0) {
+        const before = tutorSamplesWrittenRef.current;
         const result = buildAlignedChunks(
           tutorBufferRef.current, tutorSamplesWrittenRef.current, SAMPLE_RATE, 0,
         );
@@ -141,7 +159,9 @@ export function useAudioRecorder({
         tutorSamplesWrittenRef.current = result.samplesWritten;
         const bytes = float32ToPCM16Bytes(result.aligned);
         if (bytes) {
-          promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false));
+          promises.push(sendChunk('tutor', bytes, tutorChunkIndexRef.current++, false).then((ok) => {
+            if (!ok) tutorSamplesWrittenRef.current = before;
+          }));
         }
       }
 
@@ -210,6 +230,23 @@ export function useAudioRecorder({
 
     return () => clearInterval(interval);
   }, [enabled, flushIntervalMs, flush]);
+
+  // Round 29: pagehide finalize. An abandoned/closed tab used to lose up to
+  // flushIntervalMs of tail audio AND never wrote meta.json (the 2026-07-24
+  // portal session sat status-'active' with no meta, breaking the replay's
+  // sample-rate detection). The finalize signal rides keepalive, so the
+  // meta write survives teardown; the tail flush is best-effort (keepalive
+  // caps bodies at ~64KB, so a big tail can still drop — honestly lossy).
+  // bfcache restores (e.persisted) are NOT a close — skip those.
+  useEffect(() => {
+    if (!enabled) return;
+    const onPageHide = (e: PageTransitionEvent) => {
+      if (e.persisted || finalizedRef.current) return;
+      void finalize().catch(() => {});
+    };
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [enabled, finalize]);
 
   // Flush + finalize on unmount. Flush-only used to leave any session that
   // ended via remount/navigation (rather than the explicit End button) as a

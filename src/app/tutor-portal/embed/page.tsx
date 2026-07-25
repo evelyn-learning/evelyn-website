@@ -801,6 +801,14 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         studentName={studentName || undefined}
         studentId={config.student_id}
         sessionId={sessionId}
+        // Round 29 (replay-desync audit): the embed never passed the
+        // recorder's canonical T0, so portal tracks fell into the
+        // "first audio chunk wins" fallback and drifted from the replay
+        // timeline by the setup latency. Page-mount time ≈ the server's
+        // TutorSession.startedAt for fresh sessions. (Resumed sessions
+        // appending to an existing pcm file remain unsolved — needs the
+        // per-chunk sidecar redesign.)
+        sessionStartedAtMs={sessionStartRef.current.getTime()}
         sessionGoal={sessionGoal}
         mockReview={mockReview}
         refetchMockReview={refetchMockReview}
