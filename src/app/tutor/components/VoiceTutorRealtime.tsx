@@ -844,6 +844,14 @@ export function VoiceTutorRealtime({
   const [perceptionHearing, setPerceptionHearing] = useState(false);
   const [perceptionAwaitingDispatch, setPerceptionAwaitingDispatch] = useState(false);
   const speechWindowStartRef = useRef<number>(0);
+  // Final-review Finding 3: real speech_started→speech_stopped duration of
+  // the most recently closed utterance, stamped in perceptionOnSpeechStop.
+  // Distinct from PerceptionTranscript.latencyMs, which spans
+  // speech_started→transcription.completed and therefore includes the
+  // 1-3s+ transcription latency — using latencyMs as a "how long did they
+  // speak" signal let short coughs slip past a duration floor meant to
+  // gate on real speech time.
+  const lastSpeechDurationMsRef = useRef<number>(0);
   const awaitingDispatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Mute-to-submit (2026-06-24): when the student mutes right after finishing an
   // utterance (phone-like "I'm done"), submit that in-flight utterance and THEN
@@ -7080,6 +7088,17 @@ export function VoiceTutorRealtime({
         clearTimeout(queueMidUtteranceDrainTimerRef.current);
         queueMidUtteranceDrainTimerRef.current = null;
       }
+      // Final-review Finding 4: the ack/escalation timers get the same
+      // unmount treatment as every other armed timer in this effect —
+      // left running past unmount they'd fire into stale closures.
+      if (ackTimerRef.current) {
+        clearTimeout(ackTimerRef.current);
+        ackTimerRef.current = null;
+      }
+      if (escalationTimerRef.current) {
+        clearInterval(escalationTimerRef.current);
+        escalationTimerRef.current = null;
+      }
     };
   }, []);
 
@@ -12049,6 +12068,15 @@ export function VoiceTutorRealtime({
       // instead when the caller opts in; the queue drains after the current
       // utterance's own turn completes.
       if (opts?.queueOnMidUtterance) {
+        // Final-review Finding 2: a synthetic dispatch (kickoff/rekick,
+        // '['-prefixed) has its own retry machinery — kickoffs re-arm via
+        // the warmup watchdog, so queuing one here just risks it draining
+        // later joined with a genuine utterance and leaking the marker
+        // into visible chat as concatenated text. Drop, don't queue.
+        if (transcript.startsWith('[')) {
+          onDebugEvent?.('queue_skip_synthetic', transcript.slice(0, 40));
+          return;
+        }
         queuedTranscriptsRef.current.push(transcript);
         onDebugEvent?.('dispatch_queued_mid_utterance', transcript.slice(0, 60));
         // R32 (H1 review round 1, Finding 1): this push has a guaranteed
@@ -12076,7 +12104,12 @@ export function VoiceTutorRealtime({
               return;
             }
             const stuck = queuedTranscriptsRef.current.splice(0);
-            const joined = stuck.join(' ').trim();
+            // Final-review Finding 2, defense-in-depth: the push sites already
+            // keep '['-prefixed synthetic markers out of this queue — filter
+            // again here so a marker can never be concatenated into text that
+            // reaches the brain (and the visible student chat bubble) as if
+            // the student had said it.
+            const joined = stuck.filter((s) => !s.startsWith('[')).join(' ').trim();
             if (!joined) return;
             console.warn(`[brain-orchestrator] STAGE-3 H1 queue-drain timeout: dispatching ${stuck.length} queued transcript(s) that had no other drain path`);
             onDebugEvent?.('dispatch_queue_drain_timeout', `${stuck.length} queued, ${joined.length} chars`);
@@ -12138,6 +12171,16 @@ export function VoiceTutorRealtime({
       productionWsTranscriptSuppressRef.current = null;
     }
     if (brainBusyRef.current) {
+      // Final-review Finding 2: same synthetic-marker isolation as the
+      // queueOnMidUtterance branch above — a bare-string busy-queue push
+      // drops opts (e.g. silent:true), so a queued '['-prefixed dispatch
+      // that later drains through the join loop reads as visible text.
+      // Kickoffs/rekicks have their own retry machinery; dropping here is
+      // correct, not lossy.
+      if (transcript.startsWith('[')) {
+        onDebugEvent?.('queue_skip_synthetic', transcript.slice(0, 40));
+        return;
+      }
       console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
       queuedTranscriptsRef.current.push(transcript);
       return;
@@ -12199,7 +12242,11 @@ export function VoiceTutorRealtime({
         setBrainBusy(false);
         onDebugEvent?.('brain_watchdog_reset', '90s timeout');
         if (stuck.length > 0) {
-          const joined = stuck.join(' ').trim();
+          // Final-review Finding 2, defense-in-depth: same marker filter as
+          // the H1 drain-guarantee poller above — belt and braces against a
+          // synthetic '['-prefixed dispatch ever reaching the brain joined
+          // with real student text.
+          const joined = stuck.filter((s) => !s.startsWith('[')).join(' ').trim();
           onDebugEvent?.('brain_watchdog_requeue', String(stuck.length));
           if (joined) {
             // Dispatched AFTER setBrainBusy(false) above (which updates
@@ -12251,7 +12298,12 @@ export function VoiceTutorRealtime({
         // JEE trig kickoff). Normalize whitespace + case for the
         // comparison so trivial Whisper/perception capitalization
         // differences still dedup.
-        const all = queuedTranscriptsRef.current.splice(0);
+        // Final-review Finding 2, defense-in-depth: the busy-push and
+        // queueOnMidUtterance push sites already keep '['-prefixed synthetic
+        // markers out of this queue — filter again here so the join below
+        // can never concatenate one into text the brain (and the student
+        // chat bubble) sees as genuine speech.
+        const all = queuedTranscriptsRef.current.splice(0).filter((s) => !s.startsWith('['));
         // R32 Task 5 (review round 1): every entry here is a genuine
         // student-originated dispatch — the cutoff-resume marker is
         // staged in pendingCutoffResumeRef, never pushed onto this queue
@@ -13233,17 +13285,20 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
         // R32 T8 (silence audit §5): consecutive real speech
         // misclassified as noise was an UNBOUNDED silent drop with zero
-        // feedback. spokeMs is t.latencyMs — the Ink2 transcript's
-        // speech_started→transcription.completed duration (the same
-        // value usePerceptionWS logs as `transcript (Nms)`); a true short
-        // ambient burst never crosses NOISE_NAG_MIN_SPOKE_MS, so this
-        // never fires on real background noise. Gated on prodState
+        // feedback. spokeMs is lastSpeechDurationMsRef — the real
+        // speech_started→speech_stopped duration stamped in
+        // perceptionOnSpeechStop, NOT t.latencyMs (which spans
+        // speech_started→transcription.completed and would inflate a
+        // short cough past NOISE_NAG_MIN_SPOKE_MS with 1-3s+ of
+        // transcription latency); a true short ambient burst never
+        // crosses the floor, so this never fires on real background
+        // noise. Gated on prodState
         // (the production-WS state mirror already captured above) so we
         // never nag over the tutor's own speech — same TTS-busy signal
         // the fast-opener path checks (productionStateRef.current ===
         // 'speaking'), plus the speakText gate so a just-blocked slot
         // isn't double-spoken into.
-        const spokeMs = t.latencyMs;
+        const spokeMs = lastSpeechDurationMsRef.current;
         const { nag } = recordNoiseDrop(noiseNagStateRef.current, Date.now(), spokeMs);
         if (nag && Date.now() >= speakTextBlockedUntilRef.current && prodState !== 'speaking') {
           const sid = pushTtsScriptForPerception(NOISE_NAG_LINE);
@@ -13956,6 +14011,11 @@ export function VoiceTutorRealtime({
       // this via resolveAwaitingDispatch.
       setPerceptionHearing(false);
       const spokeMs = Date.now() - (speechWindowStartRef.current || Date.now());
+      // Final-review Finding 3: stamp the real speech_started→speech_stopped
+      // duration for the noise-nag floor (below, keyed off the transcript
+      // that resolves from THIS utterance) — latencyMs on that transcript
+      // event would additionally include transcription latency.
+      lastSpeechDurationMsRef.current = spokeMs;
       if (awaitingDispatchTimerRef.current) clearTimeout(awaitingDispatchTimerRef.current);
       // Only for SUSTAINED speech (≥2s — not a cough/blip). Show "got that…"
       // and arm a LONG fallback: perception latency runs 9–15s, and any arriving
@@ -15129,12 +15189,22 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       const act = decideWarmupAction(ws, Date.now());
       if (act === 'rekick') {
         if (warmupKickoffRef.current) {
-          onDebugEvent?.('warmup_rekick', warmupKickoffRef.current.slice(0, 40));
-          void handleStudentTranscriptForBrain(warmupKickoffRef.current, {
-            silent: true,
-            bypassMidUtteranceGuard: true,
-            bypassPerceptionDedupe: true,
-          });
+          // Final-review Finding 2: a rekick queued behind a hung busy
+          // call is pointless — handleStudentTranscriptForBrain's
+          // busy-push branch would just store it (now dropped as
+          // synthetic, see the '['-prefixed guard there) and the 40s
+          // fail path still fires on schedule regardless. Skip firing it
+          // at all rather than dispatching into a call that can't run it.
+          if (brainBusyRef.current) {
+            onDebugEvent?.('warmup_rekick_skipped_busy', warmupKickoffRef.current.slice(0, 40));
+          } else {
+            onDebugEvent?.('warmup_rekick', warmupKickoffRef.current.slice(0, 40));
+            void handleStudentTranscriptForBrain(warmupKickoffRef.current, {
+              silent: true,
+              bypassMidUtteranceGuard: true,
+              bypassPerceptionDedupe: true,
+            });
+          }
         }
       } else if (act === 'fail') {
         setIsWarmingUp(false);

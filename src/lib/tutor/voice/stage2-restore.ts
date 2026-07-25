@@ -57,6 +57,10 @@ export function decideStage2TimeoutRestore(args: {
     // 20s stale sweep (unbounded dead air, silence audit). On timeout, resume
     // the cut TTS tail ourselves. Order matters: stale check precedes this.
     if (args.ageMs > STALE_CUTOFF_MS) return 'drop';
+    // Mirrors the 'processing' branch's own newBrainCallInFlight check below:
+    // if a new brain turn is already speaking, the stall self-resolved —
+    // replaying the old unplayed sentences now would talk over the new turn.
+    if (args.newBrainCallInFlight) return 'drop';
     if (!args.hasUnplayedSnapshot) return 'drop';
     if (args.midUtterance) return 'defer';
     if (args.ageMs < timeoutMs) return 'defer';
