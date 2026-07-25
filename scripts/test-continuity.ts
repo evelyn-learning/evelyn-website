@@ -8,7 +8,7 @@
  *
  * Usage: npx tsx scripts/test-continuity.ts  (npm run test:continuity)
  */
-import { extractDeclarations, normalizeRenamedFunction } from '../src/lib/tutor/validation/continuity';
+import { extractDeclarations, normalizeRenamedFunction, isTryAloneRequest } from '../src/lib/tutor/validation/continuity';
 import type { DeclaredFunction } from '../src/lib/tutor/validation/continuity';
 
 let passed = 0;
@@ -49,6 +49,29 @@ check('multiple declared bases → no rename (ambiguous)', !multi.changed);
 
 const already = normalizeRenamedFunction("f(x) = x^2", [decl('f')]);
 check('matching name untouched', !already.changed);
+
+// ─── isTryAloneRequest (round 29 — hands-off mode) ───
+{
+  const yes = [
+    'I think it would be better if I work through them on my own instead of you guiding me.',
+    "Don't guide me, I want to try on my own.",
+    'Let me try this one first.',
+    'Can I do it by my own?',
+    'Stop helping for a second, I want to solve it without your hints.',
+    "I'll figure it out myself.",
+  ];
+  const no = [
+    'Can you walk me through it?',
+    'I own a calculator.',
+    'What do I do next?',
+    'My own teacher taught me differently.',
+    'Show me how to do it.',
+  ];
+  for (const s of yes) check(`try-alone YES: "${s.slice(0, 40)}…"`, isTryAloneRequest(s), s);
+  for (const s of no) check(`try-alone NO: "${s.slice(0, 40)}…"`, !isTryAloneRequest(s), s);
+  // Walk-through phrases must not double-fire as try-alone and vice versa.
+  check('walk-through not try-alone', !isTryAloneRequest('Walk me through it step by step.'));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

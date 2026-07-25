@@ -269,6 +269,28 @@ export function isWalkThroughRequest(text: string): boolean {
   return WALK_THROUGH_PATTERNS.some(p => p.test(text));
 }
 
+// ------------------------------------------------------------------
+// Try-alone request detection (round 29 — live AP Stats session: student
+// said she wanted to work through examples "on my own instead of you
+// guiding me", tutor kept explaining every step). The opposite direction
+// of walk-through: the student asking for LESS help. One ask is enough —
+// autonomy never needs insistence.
+// ------------------------------------------------------------------
+
+const TRY_ALONE_PATTERNS = [
+  /\b(?:on|by)\s+my\s+own\b/i,
+  /\b(?:don'?t|do\s*not|stop)\s+(?:guid|help|hint|tell)/i,
+  /\blet\s+me\s+(?:try|work|solve|figure|do)\b/i,
+  /\bi\s+(?:want|wanna|would\s+like)\s+to\s+(?:try|solve|work|figure|do)\s+(?:it|this|that|them|these)?\s*(?:out\s+)?(?:my|alone)/i,
+  /\bwithout\s+(?:your\s+)?(?:help|hints?|guidance)\b/i,
+  /\bi'?ll\s+(?:try|do|work|figure)\s+(?:it|this|that)\s+(?:out\s+)?myself\b/i,
+];
+
+export function isTryAloneRequest(text: string): boolean {
+  if (!text) return false;
+  return TRY_ALONE_PATTERNS.some(p => p.test(text));
+}
+
 // "Give me a problem" signals — resets the walk-through counter for a new problem.
 // Allow any number of adjective/topic words between the article and "problem",
 // e.g. "give me a tough fractions problem" or "give me another easy algebra question".

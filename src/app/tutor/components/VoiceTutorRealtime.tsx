@@ -85,6 +85,7 @@ import {
   computeGreetingGuard,
   isRejection,
   isWalkThroughRequest,
+  isTryAloneRequest,
   isNewProblemRequest,
   looksLikeComputedAnswer,
   extractMathClaims,
@@ -1638,6 +1639,9 @@ export function VoiceTutorRealtime({
   // insists a second time ("no, just walk me through it", "I said show me,
   // don't ask"). Reset on new problem requests.
   const walkThroughInsistenceRef = useRef(0);
+  // Round 29: hands-off mode — student asked to work without guidance.
+  // Set by isTryAloneRequest, cleared when they ask for help again.
+  const tryAloneRequestedRef = useRef(false);
 
   // Adaptive-pacing v1 — session-scoped dedup for `generate_problem`.
   // Bank IDs (when bank entries are shown) and content hashes (for
@@ -2394,6 +2398,16 @@ export function VoiceTutorRealtime({
         if (isWalkThroughRequest(filteredText)) {
           walkThroughInsistenceRef.current += 1;
           console.log('[VoiceTutorRealtime] Walk-through insistence count:', walkThroughInsistenceRef.current);
+          // Asking for help again ends hands-off mode.
+          tryAloneRequestedRef.current = false;
+        }
+        // Round 29: student asked to work WITHOUT guidance — arm hands-off
+        // mode so the bulldozing (SOCRATIC CORRECTION) injection can't
+        // re-order the brain to ask a guiding question right after the
+        // student asked for the opposite.
+        if (isTryAloneRequest(filteredText)) {
+          tryAloneRequestedRef.current = true;
+          onDebugEvent?.('try_alone_requested', filteredText.slice(0, 80));
         }
 
         // Engagement tracker — keep a rolling window of the last 6 reply
@@ -6464,7 +6478,11 @@ export function VoiceTutorRealtime({
     const turnEqs = turnEquationsRef.current;
     const computedAnswers = turnEqs.filter(looksLikeComputedAnswer);
     const insistence = walkThroughInsistenceRef.current;
-    const bulldozing = insistence < 2 && turnEqs.length >= 3 && computedAnswers.length >= 1;
+    // Round 29: when the student asked to try alone, the corrective would
+    // order the brain to "ask ONE simple guiding question" — the exact
+    // opposite of what the student requested. Hands-off mode suppresses it.
+    const bulldozing = !tryAloneRequestedRef.current
+      && insistence < 2 && turnEqs.length >= 3 && computedAnswers.length >= 1;
     if (bulldozing) {
       console.warn(
         '[VoiceTutorRealtime] Socratic bulldozing detected:',

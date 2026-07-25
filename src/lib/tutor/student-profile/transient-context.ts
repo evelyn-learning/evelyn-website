@@ -100,9 +100,11 @@ const USAGE_INSTRUCTION =
 const LAST_OPENER_INSTRUCTION =
   'Open THIS session with a DIFFERENT KIND of opening than the last one above, anchored in ' +
   "THIS session's content. Opening kinds: a cold intriguing puzzle or claim, a what-if " +
-  'scenario, a concrete scenario on the board, or a pointed question — with at most one short ' +
-  'continuity clause, never a recap of previous sessions. If the last opener was one of these ' +
-  'kinds, pick ANOTHER this time — do not re-run the same move in new words. ' +
+  'scenario, a concrete scenario on the board, or a pointed question — each preceded by ONE ' +
+  'short concrete continuity sentence ("last time we did X"). That continuity sentence is NOT ' +
+  'itself an opening kind: it never counts as repeating a previous opener, and it never ' +
+  'expands into a recap. If the last opener was one of these kinds, pick ANOTHER this time — ' +
+  'do not re-run the same move in new words. ' +
   "The lesson's authored problem may be the same; your way IN must not be. Keep it warm either " +
   'way — dropping the greeting or jumping in colder is NOT acceptable variation.';
 
