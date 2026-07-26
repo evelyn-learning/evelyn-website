@@ -249,8 +249,24 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
       const entryId = (e as CustomEvent<{ entryId?: string }>).detail?.entryId;
       if (!entryId) return;
       setTimeout(() => {
-        const target = containerRef.current?.querySelector(`[data-entry-id="${CSS.escape(entryId)}"]`);
-        target?.scrollIntoView({ block: 'start' });
+        const container = containerRef.current;
+        const target = container?.querySelector(`[data-entry-id="${CSS.escape(entryId)}"]`) as HTMLElement | null;
+        // R35 T-B: manual container-scoped scroll — NOT scrollIntoView().
+        // scrollIntoView() walks every ancestor scrolling box to bring the
+        // target into view, and in the embedded Crimsora demo (this whole
+        // app inside an iframe on a marketing page) that walk doesn't stop
+        // at the drawer or even at the iframe boundary — Chrome/Safari
+        // propagate the "scroll me into view" request up into the PARENT
+        // document too, so opening the transcript yanked the ENTIRE
+        // marketing page down (2026-07 demo feedback). Computing the
+        // target's offset against this drawer's own scroll container via
+        // getBoundingClientRect (pure geometry read, no scrolling side
+        // effect) and setting scrollTop directly never touches any
+        // ancestor outside this element — safe inside an iframe or not.
+        if (container && target) {
+          const delta = target.getBoundingClientRect().top - container.getBoundingClientRect().top;
+          container.scrollTop += delta;
+        }
         setFlashEntryId(entryId);
         setTimeout(() => setFlashEntryId(null), 2000);
       }, 180);
