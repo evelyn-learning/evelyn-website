@@ -988,9 +988,17 @@ export function VoiceTutorRealtime({
     tMs: number;
     latencyMs: number;
     itemId?: string;
+    // Review round 1 (Finding 2): the ABSOLUTE speechStartedAt computed at
+    // hold-time (t.latencyMs > 0 ? holdNowMs - t.latencyMs : undefined) —
+    // same formula the Stage-1 self-voice-defense block uses. Stored so the
+    // flush path (which runs up to HOLD_MS later) can hand the classifier
+    // the timestamp it would have seen unheld, instead of re-deriving it
+    // from flush-time Date.now() and shifting the 30s TTS-echo lookback
+    // window later by up to HOLD_MS.
+    speechStartedAt: number | undefined;
     timer: ReturnType<typeof setTimeout>;
   } | null>(null);
-  const perceptionOnTranscriptRef = useRef<((t: PerceptionTranscript, bypassHold?: boolean) => void) | null>(null);
+  const perceptionOnTranscriptRef = useRef<((t: PerceptionTranscript, bypassHold?: boolean, heldSpeechStartedAt?: number) => void) | null>(null);
   // Stage 2 dev-only verdict pin. When set via
   // window.__tutorForceClassifierVerdict('continuation'), the next
   // perception transcript skips heuristic + Haiku and dispatches the
@@ -13269,7 +13277,7 @@ export function VoiceTutorRealtime({
   // (TUTOR_STT_ENGINE_INK2 === false): perceptionWS gets `enabled:
   // perceptionEnabled` exactly as before, perceptionInk2's `enabled` is
   // always false (no-op hook — no mic, no WS) — byte-identical behavior.
-  const perceptionOnTranscript = useCallback((t: PerceptionTranscript, bypassHold = false) => {
+  const perceptionOnTranscript = useCallback((t: PerceptionTranscript, bypassHold = false, heldSpeechStartedAt?: number) => {
       // Tagged log for Stage 0+ transcript-agreement review. Pair with the
       // production hook's `[Realtime] User transcript:` lines at similar
       // timestamps to compute agreement rate. warn-level so the
@@ -13342,12 +13350,25 @@ export function VoiceTutorRealtime({
         // floor. Never hold during 'speaking'/'processing': that's exactly
         // when barge-in timing matters, and a held fragment would delay the
         // cancel signal reaching applyPerceptionVerdict. Same prodState
-        // signal the noise-nag gate below uses.
-        if (endsMidThought(t.text) && prodState !== 'speaking' && prodState !== 'processing') {
+        // signal the noise-nag gate below uses. Review round 1 (Finding 1):
+        // also skip while muted — a muted transcript belongs to the mute
+        // gate below (immediate drop, or submit-on-mute), not a 1.4s hold;
+        // this only guards the FRESH-hold branch — the held-then-muted
+        // flush path (toggleMicMute, below) is untouched and still fires
+        // immediately on mute regardless of this check.
+        if (endsMidThought(t.text) && !isMicMutedRef.current && prodState !== 'speaking' && prodState !== 'processing') {
           const heldText = t.text;
           const heldTMs = t.tMs;
           const heldLatencyMs = t.latencyMs;
           const heldItemId = t.itemId;
+          // Review round 1 (Finding 2): capture the ABSOLUTE speechStartedAt
+          // now, at hold-time — the exact formula Stage 1 below uses. The
+          // flush path (up to INCOMPLETE_HOLD_MS later) hands this back in
+          // instead of letting Stage 1 re-derive it from flush-time
+          // Date.now(), which would shift the 30s TTS-echo lookback window
+          // later by up to HOLD_MS and could clip real self-voice matches
+          // at the boundary.
+          const heldSpeechStartedAt = heldLatencyMs > 0 ? Date.now() - heldLatencyMs : undefined;
           console.warn(`[PERCEPTION] holding dangling-word transcript for ${INCOMPLETE_HOLD_MS}ms: ${JSON.stringify(heldText)}`);
           onDebugEvent?.('transcript_held', heldText.slice(-30));
           heldTranscriptRef.current = {
@@ -13355,12 +13376,14 @@ export function VoiceTutorRealtime({
             tMs: heldTMs,
             latencyMs: heldLatencyMs,
             itemId: heldItemId,
+            speechStartedAt: heldSpeechStartedAt,
             timer: setTimeout(() => {
               heldTranscriptRef.current = null;
               onDebugEvent?.('transcript_hold_flushed', heldText.slice(-30));
               perceptionOnTranscriptRef.current?.(
                 { text: heldText, tMs: heldTMs, latencyMs: heldLatencyMs, itemId: heldItemId },
                 true,
+                heldSpeechStartedAt,
               );
             }, INCOMPLETE_HOLD_MS),
           };
@@ -13506,7 +13529,16 @@ export function VoiceTutorRealtime({
       // sessions before Stage 2 ships any state change.
       if (perceptionStage >= 1) {
         const nowMs = Date.now();
-        const speechStartedAt = t.latencyMs > 0 ? nowMs - t.latencyMs : undefined;
+        // Review round 1 (Finding 2): a flushed hold (heldSpeechStartedAt
+        // set) carries the ABSOLUTE speechStartedAt captured back when the
+        // fragment was originally held, not re-derived from THIS flush-time
+        // nowMs — re-deriving here would shift it later by up to HOLD_MS
+        // and narrow the 30s TTS-echo lookback below at the boundary. A
+        // merged transcript (fresh arrival, heldSpeechStartedAt undefined)
+        // is unaffected — its own t.latencyMs is fresh, so the normal
+        // derivation already anchors on when the resumed speech itself
+        // started, which is what the self-voice-defense window wants.
+        const speechStartedAt = heldSpeechStartedAt ?? (t.latencyMs > 0 ? nowMs - t.latencyMs : undefined);
         // Stage-3 fix #5 (2026-05-28): anchor the buffer read on
         // SPEECH_STARTED, not nowMs. The relevant question for self-voice
         // is "what was the tutor saying when the student STARTED
@@ -15018,6 +15050,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         perceptionOnTranscriptRef.current?.(
           { text: held.text, tMs: held.tMs, latencyMs: held.latencyMs, itemId: held.itemId },
           true,
+          held.speechStartedAt,
         );
       }
       // Mute-to-submit: if an utterance is in flight (still speaking, or stopped
