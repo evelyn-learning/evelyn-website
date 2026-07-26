@@ -19,7 +19,7 @@
  */
 
 export type Rect = { x: number; y: number; w: number; h: number };
-export type NoteSlot = 'right' | 'above' | 'below' | 'left' | 'margin';
+export type NoteSlot = 'right' | 'above' | 'below' | 'left' | 'margin' | 'user';
 export type Placement = { rect: Rect; slot: NoteSlot };
 
 export function rectsOverlap(a: Rect, b: Rect, pad = 0): boolean {
@@ -92,4 +92,21 @@ export function placeNote(input: {
     page.y + page.h,
   );
   return { slot: 'margin', rect: { x, y: bandBottom + CLEAR_PAD, w: note.w, h: note.h } };
+}
+
+/** R2 E3: a user-dragged note's stored offset → concrete rect. Offset is
+ *  target-relative (anchor present) or page-origin-relative (margin note).
+ *  Always clamped fully inside the page so a drag can never strand a note
+ *  off-canvas after a reflow shrinks the page. */
+export function applyUserPos(
+  cache: { anchor: Rect | null },
+  userPos: { dx: number; dy: number },
+  size: { w: number; h: number },
+  page: Rect,
+): Rect {
+  const baseX = cache.anchor ? cache.anchor.x : page.x;
+  const baseY = cache.anchor ? cache.anchor.y : page.y;
+  const x = Math.min(Math.max(baseX + userPos.dx, page.x), page.x + page.w - size.w);
+  const y = Math.min(Math.max(baseY + userPos.dy, page.y), page.y + page.h - size.h);
+  return { x, y, w: size.w, h: size.h };
 }

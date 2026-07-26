@@ -705,6 +705,11 @@ export type WhiteboardCommand =
       /** Optional short label; appears in the page's annotation strip below
        *  the diagram as "{feature} → {label}" — NOT on the diagram. */
       label?: string;
+      /** R2 E3 (2026-07-26): student-dragged placement — offset in unscaled
+       *  content px from the resolved target rect's top-left (or the page
+       *  origin for margin notes). Written client-side by the ink-note drag;
+       *  never emitted by the brain. Additive — absent ⇒ auto placement. */
+      userPos?: { dx: number; dy: number };
     }
   | {
       // SmoothDraw P4: a hand-drawn arrow connecting two EXISTING items
@@ -772,6 +777,11 @@ export type WhiteboardCommand =
       text: string;
       /** CSS color. Defaults to amber ("#a16207"). */
       color?: string;
+      /** R2 E3 (2026-07-26): student-dragged placement — offset in unscaled
+       *  content px from the resolved target rect's top-left (or the page
+       *  origin for margin notes). Written client-side by the ink-note drag;
+       *  never emitted by the brain. Additive — absent ⇒ auto placement. */
+      userPos?: { dx: number; dy: number };
     }
   | { action: 'showEquation'; latex: string; label?: string; highlight?: string[] }
   | { action: 'showGraph'; type: GraphType; data: GraphData }

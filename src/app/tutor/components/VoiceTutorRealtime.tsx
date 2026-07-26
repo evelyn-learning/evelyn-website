@@ -5865,6 +5865,24 @@ export function VoiceTutorRealtime({
         raw, result.itemId, result.canonical,
         located?.itemIndex ?? -1, located?.pageIndex ?? -1,
       );
+      // R2 E3: scribble commands skip the generic id-stamping loop above
+      // (it `continue`s on every META_ACTIONS member, and 'scribble' is
+      // one) — handwrite gets a stable `id` there "for free", scribble
+      // does not. The ink-note drag needs an EXACT, stable way to address
+      // a specific command back in `whiteboardCommands` for a `userPos`
+      // mutation: the overlay's rendered array is page-scoped and can
+      // reorder relative to the raw stream (cross-page scribble
+      // relocation in WhiteboardCanvas's `pages` memo, `dedupeSupersededCommands`,
+      // `removeItems` pruning), so an index recomputed on the VTR side
+      // cannot be trusted to name the same command. A stamped id sidesteps
+      // that reconstruction entirely — stamp once, guarded so a resumed/
+      // replayed scribble that already carries an id (persisted from a
+      // prior save) is never re-stamped.
+      if (!cmdAny.id) {
+        const nextScribbleId = (idCountersRef.current.get('scribble') ?? 0) + 1;
+        idCountersRef.current.set('scribble', nextScribbleId);
+        cmdAny.id = `scribble-${nextScribbleId}`;
+      }
     }
     // Strip any scribbles we pushed rejections for — they get surfaced to
     // the tutor as tool_result errors, NOT rendered on the board.
@@ -5888,6 +5906,11 @@ export function VoiceTutorRealtime({
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdAny = cmd as any;
+      // R2 E3: `userPos` (student drag) is client-stamped and MUST survive
+      // this normalization — it is never brain-emitted, only re-ingested on
+      // resume/replay. This loop only deletes fields it names explicitly
+      // below, so `userPos` is untouched by construction; left unset here
+      // so a resumed command's stamped `userPos` is never overwritten.
       // Legacy spatial fields are ALWAYS stripped (pre-2026-05-13 brains).
       if ('position' in cmdAny) delete cmdAny.position;
       if ('margin' in cmdAny) delete cmdAny.margin;

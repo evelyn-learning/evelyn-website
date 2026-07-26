@@ -22,9 +22,10 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
-import { placeNote, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
+import { placeNote, applyUserPos, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
+import { exceedsDragThreshold } from '@/lib/tutor/qpin-behavior';
 
 type HandwriteCmd = Extract<WhiteboardCommand, { action: 'handwrite' }>;
 type ScribbleCmd = Extract<WhiteboardCommand, { action: 'scribble' }>;
@@ -109,6 +110,14 @@ type NoteEntry = {
   placement: Placement;
   /** Host width at placement time — proportional rescale reference. */
   hostW: number;
+  /** R2 E3: undefined for arrow labels (no command of their own — never
+   *  draggable). Present for handwrite/scribble notes; `id` may still be
+   *  undefined for an edge case where the source command was never
+   *  stamped with one (drag is disabled for that note — see the render
+   *  gate below, same round-7 fail-soft philosophy as the rest of this
+   *  file). */
+  kind?: 'handwrite' | 'scribble';
+  id?: string;
 };
 
 /** SmoothDraw P4: a measured arrow ready to render. `spine` is in
@@ -149,6 +158,21 @@ type NoteSource = {
    *  rect and the label always degrades to the margin column (proven
    *  on all diagonal seeds). Everyone ELSE still dodges every arrow. */
   ownerArrowKey?: string;
+  /** R2 E3: which command array this source addresses (for the drag
+   *  callback) and the command's own stamped `id` (undefined for arrow
+   *  labels, which have no command of their own — those never offer
+   *  drag). Addressing by id, not by position in a filtered array: the
+   *  overlay only ever sees ONE page's commands, already page-relocated
+   *  (cross-page scribble targeting) and dedup-filtered by
+   *  WhiteboardCanvas's `pages` memo — an index recomputed from a
+   *  filter predicate on the raw command stream cannot be trusted to
+   *  name the same command back there. `id` sidesteps that. */
+  kind?: 'handwrite' | 'scribble';
+  id?: string;
+  /** R2 E3: the command's stored drag offset, if the student already
+   *  dragged this note — the placement effect applies it directly via
+   *  applyUserPos, bypassing the slot engine. */
+  userPos?: { dx: number; dy: number };
 };
 
 /** Resolve a note's target rect (host-relative px): prefer the feature's
@@ -216,6 +240,7 @@ export function InkNotesOverlay({
   labeledScribbles,
   links,
   onOverflowChange,
+  onNoteMoved,
 }: {
   // Deviation from the task-3 brief: the brief types this
   // `React.RefObject<HTMLElement | null>`. WhiteboardCanvas's
@@ -245,11 +270,47 @@ export function InkNotesOverlay({
    *  margin notes (see ink-placement's exhausted-scan extension) are
    *  scrollable instead of clipped. */
   onOverflowChange?: (px: number) => void;
+  /** R2 E3: fires when the student finishes dragging a note — the owner
+   *  stamps `userPos` onto the source command (and persistence follows
+   *  the existing whiteboardCommands pipeline for free). Addressed by
+   *  the command's stamped `id`, NOT by array position — see NoteSource's
+   *  doc comment for why an index can't be trusted here. */
+  onNoteMoved?: (ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>([]);
   const [arrows, setArrows] = useState<ArrowEntry[]>([]);
   const [hostW, setHostW] = useState(0);
   const animatedRef = useRef<Set<string>>(new Set());
+
+  // R2 E3: drag machinery — mirrors SessionStage's q-pin drag exactly
+  // (5px tap/drag threshold via exceedsDragThreshold, capture ONLY once
+  // the threshold is exceeded, pointercancel routes through the same end
+  // handler WITHOUT arming any click suppression, a `buttons === 0` move
+  // with no active drag self-heals a stale pre-threshold press). One drag
+  // at a time — notes are few, a single ref is enough. All positions here
+  // are UNSCALED content px (the overlay's own coordinate space before
+  // the `scale` render factor); pointer client-px deltas are divided by
+  // `scale` to land in that space.
+  const dragRef = useRef<{
+    key: string;
+    kind: 'handwrite' | 'scribble';
+    id: string;
+    pointerId: number;
+    startClientX: number;
+    startClientY: number;
+    originX: number; // note rect x, content px, at pointerdown
+    originY: number;
+    anchorX: number; // resolved target rect origin (content px), page origin if targetless
+    anchorY: number;
+    dragging: boolean;
+  } | null>(null);
+  const [dragOverridePos, setDragOverridePos] = useState<{ key: string; x: number; y: number } | null>(null);
+  // Current page rect + each entry's resolved anchor, refreshed every
+  // placement pass — read by the drag handlers (which run outside the
+  // placement effect) to clamp/convert without re-measuring the DOM on
+  // every pointermove.
+  const pageRectRef = useRef<Rect>({ x: 0, y: 0, w: 0, h: 0 });
+  const anchorsRef = useRef<Map<string, Rect | null>>(new Map());
 
   // Source list in command order: handwrites, then labelled scribbles —
   // each with its stamped target (if any). Key on content so React's
@@ -263,13 +324,21 @@ export function InkNotesOverlay({
     notes.forEach((n, i) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const a = n as any;
-      s.push({ key: `hw-${i}-${n.text}`, text: n.text ?? '', color: n.color || AMBER, targetId: a.targetId, targetFeature: a.targetFeature });
+      s.push({
+        key: `hw-${i}-${n.text}`, text: n.text ?? '', color: n.color || AMBER,
+        targetId: a.targetId, targetFeature: a.targetFeature,
+        kind: 'handwrite', id: typeof a.id === 'string' ? a.id : undefined, userPos: a.userPos,
+      });
     });
     labeledScribbles.forEach((sc, i) => {
       if (!sc.label || !sc.label.trim()) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const a = sc as any;
-      s.push({ key: `sl-${i}-${sc.label}`, text: sc.label, color: sc.color || AMBER, targetId: a.targetId, targetFeature: a.targetFeature });
+      s.push({
+        key: `sl-${i}-${sc.label}`, text: sc.label, color: sc.color || AMBER,
+        targetId: a.targetId, targetFeature: a.targetFeature,
+        kind: 'scribble', id: typeof a.id === 'string' ? a.id : undefined, userPos: a.userPos,
+      });
     });
     return s;
   }, [notes, labeledScribbles]);
@@ -354,6 +423,11 @@ export function InkNotesOverlay({
             h: Math.max(contentBox.height, 1),
           }
         : { x: 0, y: 0, w: hostBox.width, h: Math.max(hostBox.height, 1) };
+      // R2 E3: the drag handlers run outside this effect (pointer events
+      // fire between passes) and need the current page rect to clamp a
+      // live drag — mirror it into a ref every pass rather than
+      // re-measuring the DOM on every pointermove.
+      pageRectRef.current = page;
       const toHostRect = (el: Element): Rect => {
         const b = el.getBoundingClientRect();
         return { x: b.left - hostBox.left, y: b.top - hostBox.top, w: b.width, h: b.height };
@@ -476,6 +550,31 @@ export function InkNotesOverlay({
           if (linkArrows[i].key !== src.ownerArrowKey) occupied.push(arrowRects[i]);
         }
         occupied.push(...placedRects);
+        // R2 E3: a source the student already dragged carries `userPos` on
+        // its command — that's the manual escape hatch, and it takes
+        // ABSOLUTE precedence over both the sticky-placement cache and the
+        // slot engine below. It still gets pushed into `placedRects` so
+        // later auto-placed notes dodge it (design decision #1: dragging
+        // doesn't retire the de-overlap guarantee for everyone else).
+        // Anchor tracked in anchorsRef for the drag handlers regardless of
+        // which branch places this source — including this one, so a note
+        // already at a dragged spot can be picked up and dragged again.
+        anchorsRef.current.set(src.key, t?.rect ?? null);
+        if (src.userPos) {
+          const rect = applyUserPos({ anchor: t?.rect ?? null }, src.userPos, { w: m.w, h: m.h }, page);
+          const placement: Placement = { rect, slot: 'user' };
+          placedCacheRef.current.set(src.key, {
+            anchor: t?.rect ?? null,
+            dx: placement.rect.x - (t?.rect?.x ?? 0),
+            dy: placement.rect.y - (t?.rect?.y ?? 0),
+            w: m.w,
+            h: m.h,
+            placement,
+          });
+          placedRects.push(placement.rect);
+          next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
+          continue;
+        }
         // Sticky placement (round 29): reuse the cached spot when it is
         // still valid — see placedCacheRef's doc above.
         const rectsIntersect = (a: Rect, b: Rect) =>
@@ -530,12 +629,17 @@ export function InkNotesOverlay({
           placement,
         });
         placedRects.push(placement.rect);
-        next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width });
+        next.push({ key: src.key, text: src.text, lines: m.lines, color: src.color, placement, hostW: hostBox.width, kind: src.kind, id: src.id });
       }
       // Prune cache entries whose source is gone (kill-recovery, revise).
       const liveKeys = new Set(allSources.map((s) => s.key));
       for (const k of placedCacheRef.current.keys()) {
         if (!liveKeys.has(k)) placedCacheRef.current.delete(k);
+      }
+      // R2 E3: same prune for the drag anchor cache — otherwise it grows
+      // unbounded across page flips over a long session.
+      for (const k of anchorsRef.current.keys()) {
+        if (!liveKeys.has(k)) anchorsRef.current.delete(k);
       }
       setEntries(next);
       setArrows(linkArrows);
@@ -572,6 +676,99 @@ export function InkNotesOverlay({
     ro.observe(host);
     return () => ro.disconnect();
   }, [hostRef]);
+
+  // R2 E3: shared position math for the drag move/end handlers — content-px
+  // position clamped to the live page rect, from a client-px delta divided
+  // by `scale` (the overlay renders at `scale` relative to the content px
+  // the placement effect computed in). Kept as one function so move/end
+  // agree exactly on where the pointer's current position maps to.
+  const dragPosFromClient = (
+    d: NonNullable<typeof dragRef.current>,
+    scale: number,
+    size: { w: number; h: number },
+    clientX: number,
+    clientY: number,
+  ): { x: number; y: number } => {
+    const s = scale > 0 ? scale : 1;
+    const dx = (clientX - d.startClientX) / s;
+    const dy = (clientY - d.startClientY) / s;
+    const page = pageRectRef.current;
+    return {
+      x: Math.min(Math.max(d.originX + dx, page.x), page.x + page.w - size.w),
+      y: Math.min(Math.max(d.originY + dy, page.y), page.y + page.h - size.h),
+    };
+  };
+
+  const onNotePointerDown = (entry: NoteEntry, ev: React.PointerEvent<HTMLDivElement>) => {
+    // No id/kind ⇒ this source's command couldn't be addressed for a
+    // userPos mutation (see NoteEntry's doc comment) — round-7 fail soft:
+    // render the note, just don't offer drag on it.
+    if (!entry.id || !entry.kind || !onNoteMoved) return;
+    // Only a CAPTURED drag blocks a new press (q-pin's second-finger-hijack
+    // guard) — a pre-threshold entry may be stale (pointerup can land
+    // off-element before capture starts), so a new press overwrites it.
+    if (dragRef.current?.dragging) return;
+    const anchor = anchorsRef.current.get(entry.key) ?? null;
+    const page = pageRectRef.current;
+    dragRef.current = {
+      key: entry.key,
+      kind: entry.kind,
+      id: entry.id,
+      pointerId: ev.pointerId,
+      startClientX: ev.clientX,
+      startClientY: ev.clientY,
+      originX: entry.placement.rect.x,
+      originY: entry.placement.rect.y,
+      anchorX: anchor ? anchor.x : page.x,
+      anchorY: anchor ? anchor.y : page.y,
+      dragging: false,
+    };
+  };
+
+  const onNotePointerMove = (entry: NoteEntry, scale: number, ev: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== ev.pointerId || d.key !== entry.key) return;
+    if (!d.dragging && ev.buttons === 0) {
+      // Button-free move = the press already ended off-element (no capture
+      // pre-threshold). Drop the stale entry so hovering can't ghost-drag.
+      dragRef.current = null;
+      return;
+    }
+    const dxClient = ev.clientX - d.startClientX;
+    const dyClient = ev.clientY - d.startClientY;
+    if (!d.dragging && !exceedsDragThreshold(dxClient, dyClient)) return;
+    if (!d.dragging) {
+      d.dragging = true;
+      // Capture only once it IS a drag — capturing on pointerdown would
+      // retarget a plain tap away from the note (and the board's tap-to-
+      // mark system, which the note deliberately falls through to when
+      // NOT dragging — see the render-site comment on pointer-events).
+      (ev.currentTarget as HTMLElement).setPointerCapture(ev.pointerId);
+    }
+    const size = { w: entry.placement.rect.w, h: entry.placement.rect.h };
+    const pos = dragPosFromClient(d, scale, size, ev.clientX, ev.clientY);
+    setDragOverridePos({ key: entry.key, x: pos.x, y: pos.y });
+  };
+
+  const endNoteDrag = (entry: NoteEntry, scale: number, ev: React.PointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== ev.pointerId || d.key !== entry.key) return;
+    if (d.dragging) {
+      const size = { w: entry.placement.rect.w, h: entry.placement.rect.h };
+      // Recompute from this event's own coordinates (not the last
+      // dragOverridePos render) so the stored offset always matches
+      // exactly where the pointer actually released.
+      const pos = dragPosFromClient(d, scale, size, ev.clientX, ev.clientY);
+      const userPos = { dx: pos.x - d.anchorX, dy: pos.y - d.anchorY };
+      onNoteMoved?.({ kind: d.kind, id: d.id, userPos });
+      // pointercancel never produces a trailing click — R23 qpin lesson:
+      // there is no click-suppression state to arm here either way (the
+      // note div has no onClick of its own), so cancel and up are handled
+      // identically.
+    }
+    dragRef.current = null;
+    setDragOverridePos(null);
+  };
 
   // Per-word wipe-on, once per note key (WAAPI on the note div).
   const animateIn = (el: HTMLDivElement | null, key: string) => {
@@ -639,6 +836,22 @@ export function InkNotesOverlay({
       )}
       {entries.map((e) => {
         const scale = e.hostW > 0 && hostW > 0 ? hostW / e.hostW : 1;
+        const override = dragOverridePos?.key === e.key ? dragOverridePos : null;
+        const left = (override ? override.x : e.placement.rect.x) * scale;
+        const top = (override ? override.y : e.placement.rect.y) * scale;
+        // R2 E3: only a note whose source command was addressable (a
+        // stamped `id` — see NoteEntry's doc comment) offers drag. Arrow
+        // labels (no command of their own) and the fail-soft "no id"
+        // edge case keep the ORIGINAL pointer-events-none pass-through —
+        // taps there still fall through to the board's tap-to-mark system
+        // exactly as before. A draggable note trades that fallthrough for
+        // drag: pointer-events-auto makes the note itself the hit target,
+        // so a plain tap on a DRAGGABLE note no longer also registers as
+        // a board tap-to-mark (its drag handlers see the tap and, being
+        // under threshold, simply do nothing). Marking the underlying
+        // feature the note annotates is unaffected — only a tap on the
+        // note's own rendered text is affected.
+        const draggable = !!(e.id && e.kind && onNoteMoved);
         return (
           <div
             key={e.key}
@@ -651,10 +864,15 @@ export function InkNotesOverlay({
             // wrapped/ellipsized display lines.
             data-wb-note="true"
             data-wb-note-text={e.text.length > 80 ? `${e.text.slice(0, 80)}…` : e.text}
+            className={draggable ? 'pointer-events-auto touch-none cursor-grab active:cursor-grabbing' : undefined}
+            onPointerDown={draggable ? (ev) => onNotePointerDown(e, ev) : undefined}
+            onPointerMove={draggable ? (ev) => onNotePointerMove(e, scale, ev) : undefined}
+            onPointerUp={draggable ? (ev) => endNoteDrag(e, scale, ev) : undefined}
+            onPointerCancel={draggable ? (ev) => endNoteDrag(e, scale, ev) : undefined}
             style={{
               position: 'absolute',
-              left: e.placement.rect.x * scale,
-              top: e.placement.rect.y * scale,
+              left,
+              top,
               maxWidth: NOTE_MAX_W,
               fontFamily: 'var(--font-caveat), var(--font-kalam), cursive',
               fontSize: 22,

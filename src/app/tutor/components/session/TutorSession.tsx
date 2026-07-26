@@ -512,6 +512,39 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.pushStudentMark?.(ev);
   }, [realtimeHandleRef]);
 
+  // R2 E3: drag machinery for tutor ink notes bottoms out here — this is
+  // the owner of `whiteboardCommands`/`setWhiteboardCommands` for the
+  // live embed session (VoiceTutorRealtime itself never renders
+  // WhiteboardCanvas or owns this state; it only appends via
+  // onWhiteboardCommand). Addressed by the command's stamped `id`, not
+  // array position — see InkNotesOverlay's NoteSource doc comment for why
+  // an index can't be trusted once page-relocation/dedup/removeItems are
+  // in play.
+  //
+  // Mutates the command object IN PLACE (matches this codebase's existing
+  // convention — see VoiceTutorRealtime's handleWhiteboardCommand, which
+  // freely stamps `id`/`targetId`/`_duplicateOf`/etc. onto the same
+  // command objects rather than copying) rather than replacing it with a
+  // spread copy. That matters here specifically: the embed page
+  // (tutor-portal/embed/page.tsx) keeps its OWN `{cmd, capturedAt}[]`
+  // mirror of these same command OBJECT REFERENCES for the session-save
+  // payload, populated once when `onWhiteboardCommand` first appends a
+  // batch and never re-synced afterward. A copy-on-write update here
+  // would leave that mirror holding a stale pre-drag object — an in-place
+  // mutation is visible from both arrays for free, no extra plumbing.
+  // The returned array is still a NEW reference (spread) so React's
+  // setState/useMemo dependency chain (WhiteboardCanvas's `pages` memo
+  // keys off the `commands` array identity) re-renders normally.
+  const handleInkNoteMoved = useCallback((ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => {
+    setWhiteboardCommands((prev) => {
+      const idx = prev.findIndex((c) => (c as { id?: string }).id === ref.id && c.action === ref.kind);
+      if (idx < 0) return prev;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (prev[idx] as any).userPos = ref.userPos;
+      return [...prev];
+    });
+  }, []);
+
   // Student marks (tap-to-point + Phase 2 pen): flag AND claude-brain only —
   // the Realtime-authored engines have no dispatcher for resolveStudentMark.
   const studentMarksOn = TUTOR_STUDENT_MARKS && voiceEngine === 'claude-brain';
@@ -536,6 +569,7 @@ export default function TutorSession(props: TutorSessionProps) {
         penMode={studentMarksOn && boardPenActive}
         onPenIdle={handlePenIdle}
         inkEpoch={inkEpoch}
+        onInkNoteMoved={handleInkNoteMoved}
         className="h-full"
       />
       {awaitingResume && (
