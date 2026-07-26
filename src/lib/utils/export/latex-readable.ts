@@ -103,11 +103,23 @@ export function latexToReadable(latex: string): string {
     prevFrac = s;
     s = s.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)');
   } while (s !== prevFrac);
-  // Subscripts/superscripts: keep inline
-  s = s.replace(/\^{([^}]+)}/g, '^$1');
-  s = s.replace(/_{([^}]+)}/g, '_$1');
+  // R2 P4: collapse trivial fractions — both operands a single short
+  // alphanumeric token — so (1)/(2) prints as 1/2 and (dy)/(dt) as dy/dt.
+  // Anything with _, ^, operators, or length > 3 keeps its parens.
+  s = s.replace(/\(([A-Za-z0-9]{1,3})\)\/\(([A-Za-z0-9]{1,3})\)/g, '$1/$2');
+  // Subscripts/superscripts: keep inline. R2 P4: a braced exponent/subscript
+  // with more than one token must keep parens — bare stripping turned
+  // e^{kT} into the ambiguous e^kT and x^{n+1} into the WRONG x^n+1.
+  // Single alphanumeric tokens stay bare.
+  s = s.replace(/\^{([^}]+)}/g, (_m, body: string) =>
+    /^[A-Za-z0-9]$/.test(body) ? `^${body}` : `^(${body})`);
+  s = s.replace(/_{([^}]+)}/g, (_m, body: string) =>
+    /^[A-Za-z0-9]$/.test(body) ? `_${body}` : `_(${body})`);
   // Remove \text{...} wrapper
   s = s.replace(/\\text\{([^}]+)\}/g, '$1');
+  // R2 P4: a coefficient butted against a function name gets a space —
+  // "10\ln 2" had become "10ln 2".
+  s = s.replace(/(\d)(sin|cos|tan|sec|csc|cot|ln|log|exp|sinh|cosh|tanh)\b/g, '$1 $2');
   // Remove remaining backslash commands (spacing, formatting, etc.)
   s = s.replace(/\\[a-zA-Z]+/g, '');
   // Clean up extra braces and spaces

@@ -154,6 +154,7 @@ import {
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
+  TUTOR_BOARD_ANCHOR_NET,
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
   BARGEIN_ENERGY_THRESHOLD,
@@ -161,6 +162,8 @@ import {
   BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
 import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
+import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
+import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import {
@@ -2470,6 +2473,10 @@ export function VoiceTutorRealtime({
   // ended with no question and no next-move tool call; spliced into the
   // next callBrainOnce's transcript and cleared, same convention as above.
   const pendingNoAdvanceNoteRef = useRef<string | null>(null);
+  // R2 E2: pending board-anchor corrective — same lifecycle as
+  // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
+  // cadence and anchoring independently).
+  const pendingBoardAnchorNoteRef = useRef<string | null>(null);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -5858,6 +5865,24 @@ export function VoiceTutorRealtime({
         raw, result.itemId, result.canonical,
         located?.itemIndex ?? -1, located?.pageIndex ?? -1,
       );
+      // R2 E3: scribble commands skip the generic id-stamping loop above
+      // (it `continue`s on every META_ACTIONS member, and 'scribble' is
+      // one) — handwrite gets a stable `id` there "for free", scribble
+      // does not. The ink-note drag needs an EXACT, stable way to address
+      // a specific command back in `whiteboardCommands` for a `userPos`
+      // mutation: the overlay's rendered array is page-scoped and can
+      // reorder relative to the raw stream (cross-page scribble
+      // relocation in WhiteboardCanvas's `pages` memo, `dedupeSupersededCommands`,
+      // `removeItems` pruning), so an index recomputed on the VTR side
+      // cannot be trusted to name the same command. A stamped id sidesteps
+      // that reconstruction entirely — stamp once, guarded so a resumed/
+      // replayed scribble that already carries an id (persisted from a
+      // prior save) is never re-stamped.
+      if (!cmdAny.id) {
+        const nextScribbleId = (idCountersRef.current.get('scribble') ?? 0) + 1;
+        idCountersRef.current.set('scribble', nextScribbleId);
+        cmdAny.id = `scribble-${nextScribbleId}`;
+      }
     }
     // Strip any scribbles we pushed rejections for — they get surfaced to
     // the tutor as tool_result errors, NOT rendered on the board.
@@ -5881,6 +5906,11 @@ export function VoiceTutorRealtime({
       if (cmd.action !== 'handwrite') continue;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cmdAny = cmd as any;
+      // R2 E3: `userPos` (student drag) is client-stamped and MUST survive
+      // this normalization — it is never brain-emitted, only re-ingested on
+      // resume/replay. This loop only deletes fields it names explicitly
+      // below, so `userPos` is untouched by construction; left unset here
+      // so a resumed command's stamped `userPos` is never overwritten.
       // Legacy spatial fields are ALWAYS stripped (pre-2026-05-13 brains).
       if ('position' in cmdAny) delete cmdAny.position;
       if ('margin' in cmdAny) delete cmdAny.margin;
@@ -7699,6 +7729,11 @@ export function VoiceTutorRealtime({
       if (pendingNoAdvanceNoteRef.current) {
         runTranscript = `${pendingNoAdvanceNoteRef.current}\n\n${runTranscript}`;
         pendingNoAdvanceNoteRef.current = null;
+      }
+      // R2 E2: board-anchor corrective — same convention, own concern.
+      if (pendingBoardAnchorNoteRef.current) {
+        runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
+        pendingBoardAnchorNoteRef.current = null;
       }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
@@ -11467,6 +11502,18 @@ export function VoiceTutorRealtime({
           `board or hand the turn back to the student instead.`;
         console.warn(`[brain-orchestrator] word cap: ${totalWordCount} words, 0 tools — cadence note planted`);
         onDebugEvent?.('turn_cap_flagged', `${totalWordCount} words · 0 tool calls — cadence note planted for next turn`);
+      }
+      // R2 E2: substantive final question + zero content board writes →
+      // plant a board-anchor note for the next turn. Independent of the
+      // cadence triggers (own ref) — both can fire on the same turn.
+      if (TUTOR_BOARD_ANCHOR_NET) {
+        const finalQuestion = lastQuestionSentence(fullText);
+        const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));
+        if (finalQuestion && !paintedContent && isSubstantiveAsk(finalQuestion)) {
+          pendingBoardAnchorNoteRef.current = buildBoardAnchorNote(finalQuestion);
+          console.warn('[brain-orchestrator] board-anchor net: substantive question, 0 content tools — note planted');
+          onDebugEvent?.('board_anchor_flagged', `question with no board write — note planted for next turn`);
+        }
       }
       // Opener-recency (part A): capture THIS session's opener record once,
       // on the opener turn. openingTurnPendingRef is still armed here — it's

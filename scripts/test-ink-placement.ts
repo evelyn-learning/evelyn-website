@@ -3,7 +3,7 @@
  * Run: npm run test:ink-placement
  * Spec: docs/superpowers/specs/2026-07-10-smoothdraw-draw-on-board-design.md §5
  */
-import { placeNote, rectsOverlap, type Rect } from '../src/lib/tutor/whiteboard/ink-placement';
+import { placeNote, applyUserPos, rectsOverlap, type Rect } from '../src/lib/tutor/whiteboard/ink-placement';
 import { arrowSpine } from '../src/lib/tutor/whiteboard/hand-stroke';
 
 let passed = 0;
@@ -164,6 +164,57 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
     const p = placeNote({ target: hFrom, occupied: [hTo, bbox], page, note: { w: 160, h: 40 } });
     check('other note with arrow bbox occupied still dodges the arrow', !rectsOverlap(p.rect, bbox));
   }
+}
+
+// ── R2 E3: user-dragged placement (applyUserPos) — target-relative
+// offset, page-origin fallback, page-bounds clamp. ──────────────
+{
+  const rect = applyUserPos(
+    { anchor: { x: 100, y: 50, w: 200, h: 40 } },
+    { dx: 30, dy: -10 },
+    { w: 120, h: 26 },
+    { x: 0, y: 0, w: 800, h: 600 },
+  );
+  check(
+    'applyUserPos: target-relative offset',
+    rect.x === 130 && rect.y === 40 && rect.w === 120 && rect.h === 26,
+  );
+}
+{
+  const rect = applyUserPos(
+    { anchor: null },
+    { dx: 500, dy: 300 },
+    { w: 120, h: 26 },
+    { x: 0, y: 0, w: 800, h: 600 },
+  );
+  check(
+    'applyUserPos: page-origin fallback when no anchor',
+    rect.x === 500 && rect.y === 300 && rect.w === 120 && rect.h === 26,
+  );
+}
+{
+  const rect = applyUserPos(
+    { anchor: null },
+    { dx: 900, dy: -50 },
+    { w: 120, h: 26 },
+    { x: 0, y: 0, w: 800, h: 600 },
+  );
+  check('applyUserPos: clamps into page bounds (x)', rect.x === 800 - 120);
+  check('applyUserPos: clamps into page bounds (y)', rect.y === 0);
+}
+{
+  // R2 review-round-2 fix-5: note LARGER than the page on both axes. The
+  // naive `Math.min(Math.max(v, pageMin), pageMin + pageSize - itemSize)`
+  // clamp inverts here (the upper bound sits below pageMin), which used to
+  // push the result negative instead of pinning to the near edge.
+  const rect = applyUserPos(
+    { anchor: null },
+    { dx: 0, dy: 0 },
+    { w: 1000, h: 800 }, // larger than the 800×600 page on both axes
+    { x: 0, y: 0, w: 800, h: 600 },
+  );
+  check('applyUserPos: oversized note pins to the near edge, not negative (x)', rect.x === 0);
+  check('applyUserPos: oversized note pins to the near edge, not negative (y)', rect.y === 0);
 }
 
 // ── rectsOverlap sanity ───────────────────────────────────────

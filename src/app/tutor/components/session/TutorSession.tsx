@@ -326,6 +326,13 @@ export default function TutorSession(props: TutorSessionProps) {
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
+  // P2 (demo feedback R2): one-shot guard for the session-started window
+  // event — onSessionStarted can fire from several VTR paths; the portal
+  // must see exactly one start signal (its countdown anchors on the first).
+  // CRITICAL: resumed mounts must not re-emit (contract: resume does not
+  // re-anchor the parent's demo clock — the original first start already
+  // fired). Initialize as true when resuming so the dispatch never fires.
+  const sessionStartedDispatchedRef = useRef(Boolean(resumeState));
 
   // R34 T1: End/Pause two-tap confirm. First click arms (3s window); a
   // stray/accidental tap no longer terminally ends the session (2026-07-26
@@ -505,6 +512,47 @@ export default function TutorSession(props: TutorSessionProps) {
     realtimeHandleRef.current?.pushStudentMark?.(ev);
   }, [realtimeHandleRef]);
 
+  // R2 E3: drag machinery for tutor ink notes bottoms out here — this is
+  // the owner of `whiteboardCommands`/`setWhiteboardCommands` for the
+  // live embed session (VoiceTutorRealtime itself never renders
+  // WhiteboardCanvas or owns this state; it only appends via
+  // onWhiteboardCommand). Addressed by the command's stamped `id`, not
+  // array position — see InkNotesOverlay's NoteSource doc comment for why
+  // an index can't be trusted once page-relocation/dedup/removeItems are
+  // in play.
+  //
+  // Mutates the command object IN PLACE (matches this codebase's existing
+  // convention — see VoiceTutorRealtime's handleWhiteboardCommand, which
+  // freely stamps `id`/`targetId`/`_duplicateOf`/etc. onto the same
+  // command objects rather than copying) rather than replacing it with a
+  // spread copy. That matters here specifically: the embed page
+  // (tutor-portal/embed/page.tsx) keeps its OWN `{cmd, capturedAt}[]`
+  // mirror of these same command OBJECT REFERENCES for the session-save
+  // payload, populated once when `onWhiteboardCommand` first appends a
+  // batch and never re-synced afterward. A copy-on-write update here
+  // would leave that mirror holding a stale pre-drag object — an in-place
+  // mutation is visible from both arrays for free, no extra plumbing.
+  // The returned array is still a NEW reference (spread) so React's
+  // setState/useMemo dependency chain (WhiteboardCanvas's `pages` memo
+  // keys off the `commands` array identity) re-renders normally.
+  //
+  // Safe under StrictMode's dev double-invoke of setState updaters: the
+  // mutation is idempotent — re-running `(prev[idx] as any).userPos =
+  // ref.userPos` a second time against the same `id` just assigns the
+  // same `userPos` value again (a plain field overwrite, not an
+  // accumulation like a counter increment would be), so invoking this
+  // updater twice on the identical `prev` produces the identical result
+  // either way.
+  const handleInkNoteMoved = useCallback((ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => {
+    setWhiteboardCommands((prev) => {
+      const idx = prev.findIndex((c) => (c as { id?: string }).id === ref.id && c.action === ref.kind);
+      if (idx < 0) return prev;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (prev[idx] as any).userPos = ref.userPos;
+      return [...prev];
+    });
+  }, []);
+
   // Student marks (tap-to-point + Phase 2 pen): flag AND claude-brain only —
   // the Realtime-authored engines have no dispatcher for resolveStudentMark.
   const studentMarksOn = TUTOR_STUDENT_MARKS && voiceEngine === 'claude-brain';
@@ -529,6 +577,7 @@ export default function TutorSession(props: TutorSessionProps) {
         penMode={studentMarksOn && boardPenActive}
         onPenIdle={handlePenIdle}
         inkEpoch={inkEpoch}
+        onInkNoteMoved={handleInkNoteMoved}
         className="h-full"
       />
       {awaitingResume && (
@@ -853,11 +902,22 @@ export default function TutorSession(props: TutorSessionProps) {
           : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
       }`}
     >
-      <LogOut className="w-3.5 h-3.5" />
+      {/* Narrow (<sm): one fixed-width slot that swaps icon ↔ "End?" so the
+          armed state always presents TEXT (2026-07-26 trial: color-only arm
+          read as a broken button) while the pill geometry never changes —
+          the second tap lands on the same hit target (R34 rule). */}
+      <span className="inline-flex min-w-[2.25rem] justify-center sm:hidden">
+        {endArmed ? 'End?' : <LogOut className="w-3.5 h-3.5" />}
+      </span>
+      <LogOut className="hidden sm:inline-block w-3.5 h-3.5" />
       {/* inline-block + min-w so the longer "End session?" label reserves
           the same slot as "End / Pause" — armed/unarmed never resize the
           pill, so the second tap always lands on the same hit target. */}
       <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{endArmed ? 'End session?' : 'End / Pause'}</span>
+      {/* Screen readers hear the arm regardless of viewport. */}
+      <span aria-live="polite" className="sr-only">
+        {endArmed ? 'Tap again to end the session' : ''}
+      </span>
     </button>
   );
 
@@ -912,7 +972,20 @@ export default function TutorSession(props: TutorSessionProps) {
         resumeState={resumeState}
         onResumeAwaitingTapChange={setAwaitingResume}
         onWarmupOverlayChange={setWarmupOverlay}
-        onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
+        onSessionStarted={() => {
+          if (!sessionStartedDispatchedRef.current) {
+            sessionStartedDispatchedRef.current = true;
+            // Same window-event bridge as 'evelyn:session-ending' (above) —
+            // the embed page relays it to the parent as a postMessage. The
+            // timestamp rides in detail so the portal can anchor its
+            // countdown on the exact same instant this component's own
+            // timer uses (same-browser clock — no skew).
+            window.dispatchEvent(
+              new CustomEvent('evelyn:session-started', { detail: { startedAtMs: Date.now() } }),
+            );
+          }
+          setVoiceStartedAtMs((prev) => prev ?? Date.now());
+        }}
         onMicLevel={(l) => { micLevelRef.current = l; }}
         onListeningHint={setListeningHint}
         onVoiceHiccup={handleVoiceHiccup}
@@ -1227,6 +1300,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onAgendaDrawerOpenChange={setAgendaDrawerOpen}
         agendaEngaged={agendaEngaged}
         practiceOverrideActive={practiceOverrideActive}
+        practiceModeActive={practiceOverrideActive || (practiceStats?.active ?? false)}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}
         boardPenActive={boardPenActive}

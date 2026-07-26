@@ -806,6 +806,25 @@ export function overlayScribbles(
         const longestLine = Math.max(...lines.map((l) => l.length), 1);
         const noteW = Math.min(longestLine * fontSize * 0.52, vw * 0.6);
         const noteH = lines.length * lineH + fontSize * 0.3;
+        // R2 E3 (2026-07-26): a note the student dragged live carries
+        // `userPos` on its source WhiteboardCommand — a target-relative
+        // offset in whole-PAGE host px (InkNotesOverlay measures against
+        // the page wrapper, which can hold many stacked items). This bake
+        // runs PER ITEM against that item's own local SVG viewBox
+        // (`vw`/`vh` above), an entirely different coordinate space with
+        // no available mapping back to "where was this item within the
+        // live page, and at what host/viewBox scale" from here — this
+        // pipeline never sees the host page at all. Deliberate v1 scope
+        // (see task-6 brief step 8): `InkNoteInput` (this function's input
+        // type, just above) intentionally does NOT carry `userPos` — the
+        // caller (pdf-tutor-session.ts) narrows each command down to
+        // `{text, color, targetFeature}` before it ever reaches here, so a
+        // dragged note structurally cannot influence this bake and always
+        // lands at the AUTO slot-engine position below, same as an
+        // undragged one, rather than ship a coordinate conversion that's
+        // wrong. The live board is the authoritative view of a dragged
+        // note's position; only the exported PDF snapshot doesn't reflect
+        // the drag.
 
         const placement = placeNote({
           target: targetRectPx,

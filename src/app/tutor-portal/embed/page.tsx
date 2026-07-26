@@ -724,6 +724,30 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     };
   }, []);
 
+  // P2 (demo feedback R2): relay the real session start (mic tap / first
+  // gesture — the same moment the engine's own hard-stop clock anchors) to
+  // the parent, so the portal's demo countdown can anchor there instead of
+  // at iframe mount. Additive protocol message; older portals ignore it.
+  useEffect(() => {
+    const onStarted = (e: Event) => {
+      const startedAtMs = (e as CustomEvent<{ startedAtMs?: number }>).detail?.startedAtMs;
+      window.parent.postMessage(
+        {
+          type: 'evelyn:session_started',
+          data: {
+            session_id: sessionId,
+            ...(typeof startedAtMs === 'number' && Number.isFinite(startedAtMs)
+              ? { started_at_ms: startedAtMs }
+              : {}),
+          },
+        },
+        '*',
+      );
+    };
+    window.addEventListener('evelyn:session-started', onStarted);
+    return () => window.removeEventListener('evelyn:session-started', onStarted);
+  }, [sessionId]);
+
   // Save as abandoned on page unload
   useEffect(() => {
     if (sessionEnded) return;

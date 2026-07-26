@@ -141,6 +141,12 @@ export const TURN_CAP_HARD_SENTENCES = 8;
 // next-turn enforcement point as the sentence cap (post-stream; retry
 // would re-narrate a turn the student already heard).
 export const TURN_CAP_WORDS = 110;
+// Board-anchored-question net (2026-07-26, R2 E2, session portal-19ac025c):
+// a turn ending in a substantive question with ZERO content board writes
+// plants a next-turn [board-anchor note] (same lifecycle as the cadence
+// note — soft, never a kill). The prompt HARD RULE is the primary fix;
+// this catches only the zero-write case by design.
+export const TUTOR_BOARD_ANCHOR_NET = process.env.NEXT_PUBLIC_TUTOR_BOARD_ANCHOR_NET !== 'off';
 // Sustained-energy barge-in gate (2026-07-15, echo fix layer 1 — Task V1).
 // ROOT CAUSE (session portal-81f2b582): the tutor's own TTS echoes into the
 // mic, the perception VAD fires speech_started, and the stage-3 kill aborts

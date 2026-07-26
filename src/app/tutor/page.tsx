@@ -1997,6 +1997,33 @@ function TutorPage() {
 
   // Shared student-input handlers — extracted so BOTH the legacy whiteboard
   // panel and the new SessionStage tools cluster route through identical logic.
+  // R2 E3: drag machinery for tutor ink notes — this standalone /tutor page
+  // owns `whiteboardCommands`/`setWhiteboardCommands` directly (it composes
+  // WhiteboardCanvas + VoiceTutorRealtime itself rather than going through
+  // <TutorSession>, which owns the same state for the embed path — see
+  // that component's identical handleInkNoteMoved for the full rationale).
+  // Addressed by the command's stamped `id`, not array position, and
+  // mutated in place to match this codebase's existing command-mutation
+  // convention (VoiceTutorRealtime already stamps id/targetId/etc. onto
+  // the same objects rather than copying).
+  //
+  // Safe under StrictMode's dev double-invoke of setState updaters: the
+  // mutation is idempotent — re-running `(prev[idx] as any).userPos =
+  // ref.userPos` a second time against the same `id` just assigns the
+  // same `userPos` value again (a plain field overwrite, not an
+  // accumulation like a counter increment would be), so invoking this
+  // updater twice on the identical `prev` produces the identical result
+  // either way.
+  const handleInkNoteMoved = useCallback((ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => {
+    setWhiteboardCommands((prev) => {
+      const idx = prev.findIndex((c) => (c as { id?: string }).id === ref.id && c.action === ref.kind);
+      if (idx < 0) return prev;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (prev[idx] as any).userPos = ref.userPos;
+      return [...prev];
+    });
+  }, []);
+
   const handleTryYourselfAnswer = useCallback((answer: string, expected: string | undefined, isCorrect: boolean | null) => {
     const verdict =
       isCorrect === true ? 'matches the expected answer (string-equal)'
@@ -2688,6 +2715,7 @@ function TutorPage() {
                 onTryYourselfAnswer={handleTryYourselfAnswer}
                 onStudentInput={handleStudentInput}
                 openOnLastPage={!!resumeState}
+                onInkNoteMoved={handleInkNoteMoved}
               />
               {awaitingResume && (
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-white/65 backdrop-blur-[1.5px]">

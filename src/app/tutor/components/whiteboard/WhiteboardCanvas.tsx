@@ -257,6 +257,14 @@ interface WhiteboardCanvasProps {
    *  epoch and fade the moment that turn ends, before the brain saw the
    *  mark. Falls back to `tutorBusy` when absent. */
   tutorTurnActive?: boolean;
+  /** R2 E3: fires when the student finishes dragging a tutor ink note (a
+   *  handwrite or labeled scribble) — threaded straight through to
+   *  InkNotesOverlay's `onNoteMoved`. The owner of `commands`/its setter
+   *  mutates the addressed command's `userPos` field; persistence then
+   *  rides the existing whiteboardCommands save pipeline. Absent means
+   *  notes render but don't offer drag (InkNotesOverlay gates its own
+   *  pointer-events-auto on this being set). */
+  onInkNoteMoved?: (ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => void;
 }
 
 // ── Phase 2: pen mode (freehand ink) ────────────────────────────────
@@ -317,6 +325,7 @@ export function WhiteboardCanvas({
   onPenIdle,
   inkEpoch,
   tutorTurnActive,
+  onInkNoteMoved,
 }: WhiteboardCanvasProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   // Track which direction the page-change happened in so the entrance
@@ -1785,6 +1794,17 @@ export function WhiteboardCanvas({
             labeledScribbles={scribbles}
             links={links}
             onOverflowChange={handleNoteOverflow}
+            onNoteMoved={onInkNoteMoved}
+            // R2 fix-1 (review round 1): once a note is draggable it's
+            // pointer-events-auto, which breaks the pointer-events-none
+            // pass-through that used to deliver a note tap to this
+            // component's own pageWrapperRef tap-to-mark wrapper below
+            // (siblings, not ancestor/descendant — bubbling never reached
+            // it either way). Same gate as that wrapper's own handlers
+            // (`onStudentMark ? handleMarkPointerDown : undefined`) so a
+            // draggable note's plain-tap behavior is byte-identical to
+            // every other tap-to-mark surface on the board.
+            onNoteTap={onStudentMark ? fireStudentTap : undefined}
           />
         )}
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
