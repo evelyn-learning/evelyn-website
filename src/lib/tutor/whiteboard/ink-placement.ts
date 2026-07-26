@@ -94,6 +94,22 @@ export function placeNote(input: {
   return { slot: 'margin', rect: { x, y: bandBottom + CLEAR_PAD, w: note.w, h: note.h } };
 }
 
+/** Clamp `value` (a position along one axis) into [pageMin, pageMin +
+ *  pageSize - itemSize] — but never below pageMin. Order matters: the
+ *  naive `Math.min(Math.max(value, pageMin), pageMin + pageSize -
+ *  itemSize)` inverts when `itemSize > pageSize` (the upper bound then
+ *  sits BELOW pageMin), so the Math.min silently wins with the lower
+ *  bound and the result lands before pageMin — e.g. a note wider than
+ *  the page drags to a negative x. The outer Math.max re-asserts the
+ *  near-edge floor: an oversized item pins to pageMin (allowed to
+ *  overflow the FAR edge, since it can't fit either way) but never
+ *  crosses the near one. Shared by applyUserPos below and
+ *  InkNotesOverlay's live-drag clamp (dragPosFromClient) so both paths
+ *  get the guard from one tested place. */
+export function clampIntoPage(value: number, pageMin: number, pageSize: number, itemSize: number): number {
+  return Math.max(pageMin, Math.min(Math.max(value, pageMin), pageMin + pageSize - itemSize));
+}
+
 /** R2 E3: a user-dragged note's stored offset → concrete rect. Offset is
  *  target-relative (anchor present) or page-origin-relative (margin note).
  *  Always clamped fully inside the page so a drag can never strand a note
@@ -106,7 +122,7 @@ export function applyUserPos(
 ): Rect {
   const baseX = cache.anchor ? cache.anchor.x : page.x;
   const baseY = cache.anchor ? cache.anchor.y : page.y;
-  const x = Math.min(Math.max(baseX + userPos.dx, page.x), page.x + page.w - size.w);
-  const y = Math.min(Math.max(baseY + userPos.dy, page.y), page.y + page.h - size.h);
+  const x = clampIntoPage(baseX + userPos.dx, page.x, page.w, size.w);
+  const y = clampIntoPage(baseY + userPos.dy, page.y, page.h, size.h);
   return { x, y, w: size.w, h: size.h };
 }

@@ -45,6 +45,15 @@ test('meta/control tools are not content', () => {
   assert.equal(isBoardContentTool('mark_segment_complete'), false);
   assert.equal(isBoardContentTool('advance_lesson'), false);
   assert.equal(isBoardContentTool('generate_problem'), false);
+  // R2 review-round-2 fix-3: silent profile/plan/notes tools from
+  // toolDefinitions.ts — none of these paint the board either.
+  assert.equal(isBoardContentTool('confirm_plan_los'), false);
+  assert.equal(isBoardContentTool('propose_plan_swap'), false);
+  assert.equal(isBoardContentTool('record_gap'), false);
+  assert.equal(isBoardContentTool('flag_prerequisite_gap'), false);
+  assert.equal(isBoardContentTool('expand_topic_notes_theory'), false);
+  assert.equal(isBoardContentTool('add_topic_notes_method'), false);
+  assert.equal(isBoardContentTool('add_topic_notes_pointer'), false);
 });
 
 // Note text: conditional-phrased, follows the note convention.

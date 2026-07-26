@@ -22,7 +22,7 @@
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
-import { placeNote, applyUserPos, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
+import { placeNote, applyUserPos, clampIntoPage, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';
 import { exceedsDragThreshold } from '@/lib/tutor/qpin-behavior';
@@ -323,7 +323,19 @@ export function InkNotesOverlay({
     anchorY: number;
     dragging: boolean;
   } | null>(null);
-  const [dragOverridePos, setDragOverridePos] = useState<{ key: string; x: number; y: number } | null>(null);
+  const [dragOverridePos, setDragOverridePosState] = useState<{ key: string; x: number; y: number } | null>(null);
+  // Mirrored into a ref so measureAndPlace (below) can read the CURRENT
+  // override without depending on it — see the release-flash fix at that
+  // effect's end for why. All existing call sites just say
+  // `setDragOverridePos(...)`; this wrapper keeps that spelling while also
+  // updating the ref synchronously (a raw useState setter has no synchronous
+  // read-back — a ref is the standard escape hatch for "effect needs the
+  // latest value without re-running on every change").
+  const dragOverridePosRef = useRef<{ key: string; x: number; y: number } | null>(null);
+  const setDragOverridePos = (v: { key: string; x: number; y: number } | null) => {
+    dragOverridePosRef.current = v;
+    setDragOverridePosState(v);
+  };
   // Current page rect + each entry's resolved anchor, refreshed every
   // placement pass — read by the drag handlers (which run outside the
   // placement effect) to clamp/convert without re-measuring the DOM on
@@ -663,6 +675,33 @@ export function InkNotesOverlay({
       setEntries(next);
       setArrows(linkArrows);
       setHostW(hostBox.width);
+      // R2 review-round-2 fix-2 (release-flash): endNoteDrag no longer
+      // clears dragOverridePos itself — see that function's comment. This
+      // is where it actually gets cleared, and ONLY once this pass has
+      // produced a placement that reflects the drop: the `src.userPos`
+      // branch above (which runs BEFORE the sticky-cache/placeNote
+      // branches, unconditionally, whenever the source carries a userPos)
+      // stamps `slot: 'user'` — that slot value appearing in `next` for the
+      // dragged key IS the signal that this pass picked up the userPos the
+      // drag just committed via onNoteMoved (that commit flows back down
+      // through the owner's whiteboardCommands state → notes/
+      // labeledScribbles props → the `sources` memo → this effect's deps,
+      // which is why it can only happen on a LATER pass, never this same
+      // render). Until then the override keeps rendering the note at
+      // exactly where the pointer released, so there is nothing to repaint
+      // out from under it — no pre-drag-position flash. If the dragged
+      // key fell out of `sources` entirely (note removed mid-drag — e.g. a
+      // `clear`/page-flip race), there is nothing left to reconcile with
+      // either, so the override is dropped defensively rather than left to
+      // dangle.
+      if (dragOverridePosRef.current) {
+        const key = dragOverridePosRef.current.key;
+        const placed = next.find((n) => n.key === key);
+        if (!liveKeys.has(key) || placed?.placement.slot === 'user') {
+          dragOverridePosRef.current = null;
+          setDragOverridePosState(null);
+        }
+      }
       // Report how far the lowest note extends below the page (content)
       // bottom so the host can grow via an in-flow spacer. Computed
       // against the same spacer-independent `page` rect placement used,
@@ -712,9 +751,13 @@ export function InkNotesOverlay({
     const dx = (clientX - d.startClientX) / s;
     const dy = (clientY - d.startClientY) / s;
     const page = pageRectRef.current;
+    // clampIntoPage (shared with applyUserPos — see its doc comment for
+    // why the naive min-then-max clamp inverts when the note is wider/
+    // taller than the page and would otherwise drag it to a negative
+    // coordinate).
     return {
-      x: Math.min(Math.max(d.originX + dx, page.x), page.x + page.w - size.w),
-      y: Math.min(Math.max(d.originY + dy, page.y), page.y + page.h - size.h),
+      x: clampIntoPage(d.originX + dx, page.x, page.w, size.w),
+      y: clampIntoPage(d.originY + dy, page.y, page.h, size.h),
     };
   };
 
@@ -799,7 +842,19 @@ export function InkNotesOverlay({
       onNoteTap?.(ev.clientX, ev.clientY);
     }
     dragRef.current = null;
-    setDragOverridePos(null);
+    // R2 review-round-2 fix-2: dragOverridePos is deliberately NOT cleared
+    // here anymore (used to be `setDragOverridePos(null)`). Clearing it
+    // synchronously unblocked a flash: `next.push({..., placement: ...})`
+    // for this note is still the STALE pre-drag placement at this exact
+    // moment (measureAndPlace's re-run is double-rAF-deferred AND gated on
+    // `sources` changing, which itself waits on the owner's setState from
+    // onNoteMoved above to propagate back down as new props) — so clearing
+    // here paints the note back at its old spot for a couple of frames
+    // before the real placement lands. Leaving the override in place means
+    // the note keeps rendering exactly where the pointer released, with no
+    // visible discontinuity, until measureAndPlace's placement pass proves
+    // (via `slot: 'user'`) that it has picked up the drop — see the clear
+    // site at the end of that effect for the other half of this fix.
   };
 
   // Per-word wipe-on, once per note key (WAAPI on the note div).
@@ -901,6 +956,29 @@ export function InkNotesOverlay({
             onPointerMove={draggable ? (ev) => onNotePointerMove(e, scale, ev) : undefined}
             onPointerUp={draggable ? (ev) => endNoteDrag(e, scale, ev) : undefined}
             onPointerCancel={draggable ? (ev) => endNoteDrag(e, scale, ev) : undefined}
+            // R2 review-round-2 fix-1: if this note unmounts mid-drag (a
+            // page flip, `clear`, kill-recovery — anything that removes the
+            // command while `dragRef.current.dragging` is true), the
+            // browser releases pointer capture as part of tearing the node
+            // down but NO pointerup/pointercancel ever fires on it (there's
+            // no element left to dispatch one to by the time the user
+            // eventually lifts the finger elsewhere) — `dragRef.current`
+            // stays latched with `dragging: true` forever, and
+            // onNotePointerDown's `if (dragRef.current?.dragging) return;`
+            // then rejects every future press on every note. Precedent:
+            // WhiteboardCanvas's pen-capture overlay binds
+            // `onLostPointerCapture={handlePenUp}` for the identical
+            // reason. Routing to the SAME endNoteDrag as pointerup/cancel
+            // is safe: `ev.type` here is 'lostpointercapture', never
+            // 'pointerup', so the `else if (ev.type === 'pointerup')` tap
+            // branch can never fire off a lost-capture release (it is not
+            // a completed tap). And on the ordinary end-of-drag path
+            // (pointerup/cancel ALSO release capture, firing this right
+            // after), it's a no-op: the pointerup/cancel handler already
+            // ran first, already nulled `dragRef.current`, so this second
+            // call's `if (!d || ...) return;` guard bails immediately —
+            // state stays consistent for the next press either way.
+            onLostPointerCapture={draggable ? (ev) => endNoteDrag(e, scale, ev) : undefined}
             style={{
               position: 'absolute',
               left,

@@ -24,6 +24,17 @@ const NON_CONTENT_TOOLS = new Set([
   'mark_segment_complete',
   'advance_lesson',
   'generate_problem',
+  // R2 review-round-2 fix-3: these fire silently (student profile/plan/
+  // notes bookkeeping — see toolDefinitions.ts) and never touch the board,
+  // so a turn that calls only one of these still counts as a zero-board-
+  // write turn for the corrective-note check above.
+  'confirm_plan_los',
+  'propose_plan_swap',
+  'record_gap',
+  'flag_prerequisite_gap',
+  'expand_topic_notes_theory',
+  'add_topic_notes_method',
+  'add_topic_notes_pointer',
 ]);
 
 export function isBoardContentTool(name: string): boolean {

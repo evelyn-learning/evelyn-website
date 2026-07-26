@@ -202,6 +202,20 @@ const target: Rect = { x: 300, y: 200, w: 120, h: 60 };
   check('applyUserPos: clamps into page bounds (x)', rect.x === 800 - 120);
   check('applyUserPos: clamps into page bounds (y)', rect.y === 0);
 }
+{
+  // R2 review-round-2 fix-5: note LARGER than the page on both axes. The
+  // naive `Math.min(Math.max(v, pageMin), pageMin + pageSize - itemSize)`
+  // clamp inverts here (the upper bound sits below pageMin), which used to
+  // push the result negative instead of pinning to the near edge.
+  const rect = applyUserPos(
+    { anchor: null },
+    { dx: 0, dy: 0 },
+    { w: 1000, h: 800 }, // larger than the 800×600 page on both axes
+    { x: 0, y: 0, w: 800, h: 600 },
+  );
+  check('applyUserPos: oversized note pins to the near edge, not negative (x)', rect.x === 0);
+  check('applyUserPos: oversized note pins to the near edge, not negative (y)', rect.y === 0);
+}
 
 // ── rectsOverlap sanity ───────────────────────────────────────
 {

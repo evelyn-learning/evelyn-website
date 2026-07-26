@@ -535,6 +535,14 @@ export default function TutorSession(props: TutorSessionProps) {
   // The returned array is still a NEW reference (spread) so React's
   // setState/useMemo dependency chain (WhiteboardCanvas's `pages` memo
   // keys off the `commands` array identity) re-renders normally.
+  //
+  // Safe under StrictMode's dev double-invoke of setState updaters: the
+  // mutation is idempotent — re-running `(prev[idx] as any).userPos =
+  // ref.userPos` a second time against the same `id` just assigns the
+  // same `userPos` value again (a plain field overwrite, not an
+  // accumulation like a counter increment would be), so invoking this
+  // updater twice on the identical `prev` produces the identical result
+  // either way.
   const handleInkNoteMoved = useCallback((ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => {
     setWhiteboardCommands((prev) => {
       const idx = prev.findIndex((c) => (c as { id?: string }).id === ref.id && c.action === ref.kind);
