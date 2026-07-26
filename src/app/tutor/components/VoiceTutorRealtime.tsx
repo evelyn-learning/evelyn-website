@@ -688,6 +688,19 @@ export function VoiceTutorRealtime({
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  // R34 T1: End/Pause two-tap confirm (mirrors TutorSession's header
+  // control). First click arms (3s window) — a stray/accidental tap no
+  // longer terminally ends the session (2026-07-26 trial: one tap ended a
+  // 38s demo). Second click within the window runs the existing end path.
+  const [endArmed, setEndArmed] = useState(false);
+  const endArmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Never leak the end-confirm arm timer past unmount.
+  useEffect(() => () => {
+    if (endArmTimerRef.current) {
+      clearTimeout(endArmTimerRef.current);
+      endArmTimerRef.current = null;
+    }
+  }, []);
 
   // Persisted student preferences (humor / pacing / etc). Read from
   // localStorage synchronously, then synced from /api/tutor/student-profile
@@ -15688,19 +15701,37 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
         {onEndSession && !hideEndButton && (
           <button
-            onClick={() => { void endSessionNowRef.current(); }}
+            onClick={() => {
+              if (!endArmed) {
+                setEndArmed(true);
+                if (endArmTimerRef.current) clearTimeout(endArmTimerRef.current);
+                // 3s to confirm; disarm quietly if the student hesitates. Guards
+                // the 2026-07-26 trial failure: one stray tap ended a 38s demo.
+                endArmTimerRef.current = setTimeout(() => setEndArmed(false), 3000);
+                return;
+              }
+              if (endArmTimerRef.current) { clearTimeout(endArmTimerRef.current); endArmTimerRef.current = null; }
+              setEndArmed(false);
+              void endSessionNowRef.current();
+            }}
             // Ending is non-destructive now: the session checkpoint (transcript
             // + whiteboard + position) is saved, so the student can resume from
             // the summary screen or a reload. Label reflects the dual role.
-            title="End or pause — your progress is saved, resume anytime"
+            title={endArmed ? 'Tap again to end the session' : 'End or pause — your progress is saved, resume anytime'}
+            aria-label={endArmed ? 'Tap again to end the session' : 'End or pause session'}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-              isIsland
+              endArmed
+                ? 'bg-red-600 text-white hover:bg-red-700 shadow-sm'
+                : isIsland
                 ? 'bg-red-500 text-white hover:bg-red-600 shadow-sm'
                 : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
             }`}
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>End / Pause</span>
+            {/* inline-block + min-w so "End session?" reserves the same slot
+                as "End / Pause" — armed/unarmed never resize the button, so
+                the second tap always lands on the same hit target. */}
+            <span className="inline-block min-w-[6.5rem]">{endArmed ? 'End session?' : 'End / Pause'}</span>
           </button>
         )}
       </div>

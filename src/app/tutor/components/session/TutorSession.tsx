@@ -317,6 +317,20 @@ export default function TutorSession(props: TutorSessionProps) {
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
 
+  // R34 T1: End/Pause two-tap confirm. First click arms (3s window); a
+  // stray/accidental tap no longer terminally ends the session (2026-07-26
+  // trial failure: one tap ended a 38s demo). Second click within the
+  // window runs the existing end path unchanged.
+  const [endArmed, setEndArmed] = useState(false);
+  const endArmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Never leak the arm timer past unmount.
+  useEffect(() => () => {
+    if (endArmTimerRef.current) {
+      clearTimeout(endArmTimerRef.current);
+      endArmTimerRef.current = null;
+    }
+  }, []);
+
   // Close the adjust-lesson menu on outside click / Escape — without this
   // the only way to dismiss it was toggling the ⋯ button again (observed
   // live 2026-07-13).
@@ -802,15 +816,33 @@ export default function TutorSession(props: TutorSessionProps) {
   const endControlEl = (
     <button
       onClick={() => {
+        if (!endArmed) {
+          setEndArmed(true);
+          if (endArmTimerRef.current) clearTimeout(endArmTimerRef.current);
+          // 3s to confirm; disarm quietly if the student hesitates. Guards the
+          // 2026-07-26 trial failure: one stray tap ended a 38s demo terminally.
+          endArmTimerRef.current = setTimeout(() => setEndArmed(false), 3000);
+          return;
+        }
+        if (endArmTimerRef.current) { clearTimeout(endArmTimerRef.current); endArmTimerRef.current = null; }
+        setEndArmed(false);
         const h = realtimeHandleRef.current;
         if (h?.endSession) h.endSession();
         else handleEndSession();
       }}
-      title="End or pause — your progress is saved, resume anytime"
-      className="flex shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+      title={endArmed ? 'Tap again to end the session' : 'End or pause — your progress is saved, resume anytime'}
+      aria-label={endArmed ? 'Tap again to end the session' : 'End or pause session'}
+      className={`flex shrink-0 items-center gap-1.5 px-3 h-9 rounded-full text-xs font-semibold border transition-colors ${
+        endArmed
+          ? 'bg-red-600 text-white border-red-600 hover:bg-red-700'
+          : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+      }`}
     >
       <LogOut className="w-3.5 h-3.5" />
-      <span className="hidden sm:inline">End / Pause</span>
+      {/* inline-block + min-w so the longer "End session?" label reserves
+          the same slot as "End / Pause" — armed/unarmed never resize the
+          pill, so the second tap always lands on the same hit target. */}
+      <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{endArmed ? 'End session?' : 'End / Pause'}</span>
     </button>
   );
 
