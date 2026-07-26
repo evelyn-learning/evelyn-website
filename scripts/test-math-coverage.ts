@@ -367,11 +367,38 @@ function runCurated(): void {
   check('pdf: currency untouched',
     mathifyDollarSpans('It costs $5 and shipping is $10.') === 'It costs $5 and shipping is $10.');
   check('pdf: nested frac resolves inner-first',
-    mathifyDollarSpans('$\\frac{\\frac{1}{2}}{3}$') === '((1)/(2))/(3)',
+    mathifyDollarSpans('$\\frac{\\frac{1}{2}}{3}$') === '(1/2)/(3)',
     `got "${mathifyDollarSpans('$\\frac{\\frac{1}{2}}{3}$')}"`);
   check('pdf: nth root readable',
     mathifyDollarSpans('$\\sqrt[3]{27}$') === '3-root(27)',
     `got "${mathifyDollarSpans('$\\sqrt[3]{27}$')}"`);
+
+  // R2 P4 (2026-07-26, session portal-19ac025c PDF): multi-token exponents
+  // keep parens — brace-stripping made e^{kT} ambiguous and x^{n+1} WRONG.
+  check('pdf: multi-token exponent keeps parens',
+    mathifyDollarSpans('$e^{kT}$') === 'e^(kT)',
+    `got "${mathifyDollarSpans('$e^{kT}$')}"`);
+  check('pdf: x^{n+1} precedence preserved',
+    mathifyDollarSpans('$x^{n+1}$') === 'x^(n+1)',
+    `got "${mathifyDollarSpans('$x^{n+1}$')}"`);
+  check('pdf: single-char exponent stays bare',
+    mathifyDollarSpans('$x^{2}$') === 'x^2',
+    `got "${mathifyDollarSpans('$x^{2}$')}"`);
+  check('pdf: multi-token subscript keeps parens, single stays bare',
+    mathifyDollarSpans('$a_{n+1} + y_{0}$') === 'a_(n+1) + y_0',
+    `got "${mathifyDollarSpans('$a_{n+1} + y_{0}$')}"`);
+  check('pdf: session shape y_0e^{kT} = y_0/2',
+    mathifyDollarSpans('$y_0e^{kT} = y_0/2$') === 'y_0e^(kT) = y_0/2',
+    `got "${mathifyDollarSpans('$y_0e^{kT} = y_0/2$')}"`);
+  check('pdf: trivial fraction collapses',
+    mathifyDollarSpans('$e^{kT} = \\frac{1}{2}$') === 'e^(kT) = 1/2',
+    `got "${mathifyDollarSpans('$e^{kT} = \\frac{1}{2}$')}"`);
+  check('pdf: dy/dt collapses, non-trivial operands keep parens',
+    mathifyDollarSpans('$\\frac{dy}{dt} = \\frac{y_0}{2}$') === 'dy/dt = (y_0)/(2)',
+    `got "${mathifyDollarSpans('$\\frac{dy}{dt} = \\frac{y_0}{2}$')}"`);
+  check('pdf: coefficient-function spacing',
+    mathifyDollarSpans('$T = \\frac{\\ln 2}{0.1} = 10\\ln 2$') === 'T = (ln 2)/(0.1) = 10 ln 2',
+    `got "${mathifyDollarSpans('$T = \\frac{\\ln 2}{0.1} = 10\\ln 2$')}"`);
 
   // ── 22. Board switcher titles ────────────────────────────────────
   check('title: dfrac reduces like frac',
