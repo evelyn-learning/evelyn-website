@@ -329,7 +329,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // P2 (demo feedback R2): one-shot guard for the session-started window
   // event — onSessionStarted can fire from several VTR paths; the portal
   // must see exactly one start signal (its countdown anchors on the first).
-  const sessionStartedDispatchedRef = useRef(false);
+  // CRITICAL: resumed mounts must not re-emit (contract: resume does not
+  // re-anchor the parent's demo clock — the original first start already
+  // fired). Initialize as true when resuming so the dispatch never fires.
+  const sessionStartedDispatchedRef = useRef(Boolean(resumeState));
 
   // R34 T1: End/Pause two-tap confirm. First click arms (3s window); a
   // stray/accidental tap no longer terminally ends the session (2026-07-26
