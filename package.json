@@ -71,6 +71,7 @@
     "test:manifest-coverage": "npx tsx scripts/test-manifest-coverage.ts",
     "test:ack-layer": "npx tsx scripts/test-ack-layer.ts",
     "test:cover-layer": "npx tsx scripts/test-cover-layer.ts",
+    "test:utterance-hold": "npx tsx scripts/test-utterance-hold.ts",
     "test:validate-tool-call": "npx tsx scripts/test-validate-tool-call.ts",
     "test:draw-on": "npx tsx scripts/test-draw-on.ts",
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
