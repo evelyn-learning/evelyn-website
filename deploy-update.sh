@@ -27,6 +27,22 @@ rsync -avz --progress \
     --exclude '*.log' \
     ./ $SERVER:$DEPLOY_PATH/
 
+# Ship the production env (same mechanism as deploy-to-production.sh):
+# .env.local.production is the CANONICAL prod env — it lands as the server's
+# .env.local before the remote build, so NEXT_PUBLIC_ vars bake in from it
+# and new flags never need a separate manual edit on the server (the old
+# manual-edit flow caused real drift: TUTOR_ANSWER_EQUIVALENCE was lost from
+# prod for weeks, 2026-07-17). rsync above still excludes .env.local* — this
+# scp is the single deliberate channel. -O forces legacy scp protocol:
+# OpenSSH 9+ defaults to SFTP and hangs at 0% against this server (same
+# gotcha documented in deploy-to-production.sh).
+echo -e "${YELLOW}Uploading .env.local.production as server .env.local...${NC}"
+if [ ! -f ".env.local.production" ]; then
+    echo "ERROR: .env.local.production not found — aborting so the server env is not left stale." >&2
+    exit 1
+fi
+scp -O .env.local.production $SERVER:$DEPLOY_PATH/.env.local
+
 # Build and restart.
 # set -e INSIDE the remote block is load-bearing: without it a failed
 # `npm run build` (seen 2026-07-14: ENOTEMPTY on a stale .next) still
