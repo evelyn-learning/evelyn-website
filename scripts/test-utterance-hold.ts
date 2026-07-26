@@ -28,6 +28,14 @@ check('dangling-because', endsMidThought('the median stays because') === true);
 check('merge-basic', mergeHeldTranscript('Could you give me a', 'harder problem?') === 'Could you give me a harder problem?');
 check('merge-period', mergeHeldTranscript('Could you give me a.', 'harder problem?') === 'Could you give me a harder problem?');
 check('merge-trim', mergeHeldTranscript(' I want to ', ' try again. ') === 'I want to try again.');
+// Complete utterances that USED to false-positive (review round 1):
+check('question-stranded-prep', endsMidThought('What page is it on?') === false);
+check('question-converge-to', endsMidThought('What does it converge to?') === false);
+check('complete-demonstrative', endsMidThought('Can you explain that') === false);
+check('complete-pronoun', endsMidThought('I already tried this') === false);
+check('complete-over', endsMidThought('The test is over') === false);
+// Un-punctuated dangling articles still hold:
+check('dangling-the-no-punct', endsMidThought('what about the') === true);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all utterance-hold checks passed');
