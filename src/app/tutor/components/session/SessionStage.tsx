@@ -20,7 +20,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ChevronLeft, ChevronRight, ChevronDown, Sparkles, Pencil, PenLine, Eraser, Camera, Maximize2, Minimize2,
-  MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks,
+  MessageSquareText, X, Target, Upload, ArrowDown, Wrench, ListChecks, Loader2,
 } from 'lucide-react';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
@@ -72,6 +72,13 @@ export interface SessionStageProps {
   hiccupPin?: ReactNode;
   // presence
   voiceState: VoiceState;
+  /** R35 T-A (demo-polish): show the full-stage "joining" overlay — board +
+   *  caption strip + voice dock all dimmed/blocked — while true. Mirrored
+   *  from VoiceTutorRealtime's onWarmupOverlayChange via TutorSession; true
+   *  only for the first voice mic-click kickoff of a fresh session, cleared
+   *  the moment the tutor's audio actually starts (or the 40s warmup
+   *  watchdog gives up). Absent/false renders nothing (default no overlay). */
+  warmupOverlay?: boolean;
   /** Live student-mic amplitude (0..1) in a ref, polled here for the "being
    *  heard" meter — a ref so the parent doesn't re-render on every audio frame. */
   micLevelRef?: { current: number };
@@ -182,7 +189,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, questionPinKey, hiccupPin,
-    voiceState, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
+    voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage, onBack,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
@@ -945,6 +952,22 @@ export default function SessionStage(props: SessionStageProps) {
           </div>
         </div>
       </div>
+
+      {/* ===== R35 T-A: warmup "joining" overlay — board + caption + dock,
+              until the tutor's audio actually starts. Backdrop starts BELOW
+              the header (top-14), same convention as the Agenda backdrop
+              right below — the header (z-30) never sits under this overlay's
+              rectangle at all, so Back/End stay tappable throughout, with no
+              z-index race against it. z-[35]: above the board (z-10) and the
+              floating tutor bar (z-30) right above, below the Agenda/
+              transcript drawers (z-40) in case one is somehow still open. ===== */}
+      {warmupOverlay && (
+        <div className="absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px]">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <p className="text-base font-semibold text-slate-700">Your tutor is joining…</p>
+          <p className="text-sm text-slate-500">hang tight — this takes a few seconds</p>
+        </div>
+      )}
 
       {/* ===== Mock-review Agenda panel (mid-session) — a right-side card
               listing EVERY miss. Backdrop starts BELOW the header (top-14) so

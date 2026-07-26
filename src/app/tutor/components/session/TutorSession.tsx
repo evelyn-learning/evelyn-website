@@ -239,6 +239,10 @@ export default function TutorSession(props: TutorSessionProps) {
   // yet — drives the "Continue lesson" overlay over the board (its click is the
   // gesture that unlocks audio + kicks the brain to pick up the lesson).
   const [awaitingResume, setAwaitingResume] = useState(false);
+  // R35 T-A: full-stage "joining" overlay (board + caption + dock) shown only
+  // for the first voice mic-click of a fresh session, until the tutor's audio
+  // actually starts — see VoiceTutorRealtime's onWarmupOverlayChange doc.
+  const [warmupOverlay, setWarmupOverlay] = useState(false);
   // Task Y5: matches VoiceTutorRealtime's new -1 ("slow") default so the
   // pill renders correctly on first paint, before any onPaceBiasChange
   // callback fires (a callback only fires here when the resolved value
@@ -907,6 +911,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onVoiceStateChange={setLiveVoiceState}
         resumeState={resumeState}
         onResumeAwaitingTapChange={setAwaitingResume}
+        onWarmupOverlayChange={setWarmupOverlay}
         onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
         onMicLevel={(l) => { micLevelRef.current = l; }}
         onListeningHint={setListeningHint}
@@ -1197,6 +1202,7 @@ export default function TutorSession(props: TutorSessionProps) {
         questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
         hiccupPin={hiccupPinEl}
         voiceState={voiceState}
+        warmupOverlay={warmupOverlay}
         micLevelRef={micLevelRef}
         listeningHint={listeningHint}
         started={started}

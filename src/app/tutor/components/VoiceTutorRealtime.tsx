@@ -440,6 +440,26 @@ interface VoiceTutorRealtimeProps {
    *  moment the student continues. The host renders a "Continue lesson" overlay
    *  while true (its click calls handleRef.resumeContinue()). */
   onResumeAwaitingTapChange?: (awaiting: boolean) => void;
+  /** R35 T-A (demo-polish): fires when the "joining" overlay should show/hide
+   *  over the WHOLE stage (board + caption + dock), not just the mic button's
+   *  own disabled look. True only for the very first voice-mic-click kickoff
+   *  of a fresh session (NOT typed-first / agenda-pick / resume — those have
+   *  their own affordances already: the student is mid-typing or tapped
+   *  "Continue lesson", so a full-frame block would fight their own action).
+   *  Cleared the moment the tutor's audio ACTUALLY starts playing
+   *  (realtime.state === 'speaking' — the sample-accurate signal set the
+   *  instant playNextAudio() calls source.start(), see useOpenAIRealtime.ts)
+   *  or when the R32 T9 warmup watchdog gives up (40s) and shows the "Trouble
+   *  starting" pill instead — never left true once the mic is usable again.
+   *  Deliberately NOT the same signal as `isWarmingUp`: that flag flips false
+   *  as soon as the first sentence's TEXT is ready to speak (realtime.state
+   *  hits 'processing', or the first tutor transcript entry lands) — which is
+   *  BEFORE the TTS fetch resolves and audio actually plays. That gap (TTS
+   *  synthesis/network latency, not a fixed ~1.5s — it varies with sentence
+   *  length and provider) is exactly the window where the mic button
+   *  re-enables and a student's early speech or a stray tap gets folded into
+   *  the first turn instead of being visibly "still loading". */
+  onWarmupOverlayChange?: (show: boolean) => void;
   /** Live student-mic amplitude (0..1) for the "being heard" meter. ~12×/sec. */
   onMicLevel?: (level: number) => void;
   /** Transient listening hint: 'didnt-catch' when the student clearly spoke but
@@ -644,6 +664,7 @@ export function VoiceTutorRealtime({
   onSessionStarted,
   resumeState,
   onResumeAwaitingTapChange,
+  onWarmupOverlayChange,
   onMicLevel,
   onListeningHint,
   onVoiceHiccup,
@@ -15107,6 +15128,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         onSessionStarted?.();
         // Immediate visual feedback while the brain composes its first turn.
         setIsWarmingUp(true);
+        // R35 T-A: this IS the voice mic-click kickoff (as opposed to
+        // typed-first / agenda-pick / resume, which arm isWarmingUp too but
+        // NOT this overlay — see onWarmupOverlayChange's doc comment). Only
+        // this branch shows the full-stage "joining" overlay; it's cleared
+        // by the effect near isWarmingUp's declaration the moment audio
+        // actually starts (or the watchdog gives up).
+        setShowWarmupOverlay(true);
         // R32 T9: arm the watchdog. Stashed below per-branch only where the
         // kickoff is a known literal string safely re-sendable through
         // handleStudentTranscriptForBrain; the non-claude-brain greeting
@@ -15496,6 +15524,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // OR when the first whiteboard command renders OR when the first
   // tutor sentence appears in the transcript.
   const [isWarmingUp, setIsWarmingUp] = useState(false);
+  // R35 T-A: full-stage "joining" overlay. Set true ONLY at the voice
+  // mic-click kickoff (see the setShowWarmupOverlay(true) call above, inside
+  // handleMicClick's `if (!hasStarted)` branch) — deliberately a SEPARATE
+  // flag from isWarmingUp because isWarmingUp exits early (see the two exit
+  // effects below: on 'processing'/'speaking'/'error' OR on the first tutor
+  // transcript text), which is BEFORE audio actually plays. This flag's own
+  // exit effect (after the watchdog effect below, once warmupFailed is in
+  // scope) waits for the true audio-start signal instead.
+  const [showWarmupOverlay, setShowWarmupOverlay] = useState(false);
   useEffect(() => {
     if (!isWarmingUp) return;
     // Only exit warm-up on STRONG signals that the tutor's response is
@@ -15562,6 +15599,23 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }, 5000);
     return () => clearInterval(id);
   }, [isWarmingUp, handleStudentTranscriptForBrain, onDebugEvent]);
+
+  // R35 T-A: clear the overlay on the REAL audio-start signal
+  // (realtime.state === 'speaking' — stamped synchronously right before
+  // source.start() in useOpenAIRealtime's playNextAudio, i.e. audio is
+  // genuinely about to be heard, not just composed) or on 'error', or the
+  // instant the 40s warmup watchdog gives up (warmupFailed) — matching the
+  // R34 fail path: mic re-enables + "Trouble starting" pill, so the overlay
+  // must not keep the frame blocked underneath it.
+  useEffect(() => {
+    if (!showWarmupOverlay) return;
+    if (realtime.state === 'speaking' || realtime.state === 'error' || warmupFailed) {
+      setShowWarmupOverlay(false);
+    }
+  }, [realtime.state, warmupFailed, showWarmupOverlay]);
+  useEffect(() => {
+    onWarmupOverlayChange?.(showWarmupOverlay);
+  }, [showWarmupOverlay, onWarmupOverlayChange]);
 
   const baseStateUI = getStateUI();
   const stateUI = isWarmingUp
