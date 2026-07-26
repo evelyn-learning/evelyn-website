@@ -162,6 +162,13 @@ export interface SessionStageProps {
    *  alongside this on every click (it cues the brain in-turn); this call
    *  is what makes the mode STICK across turns + resume. */
   onTogglePracticeOverride?: (active: boolean) => void;
+  /** E4 (demo feedback R2, user-decided 2026-07-26): true while practice
+   *  mode is actually active (derivePracticeMode truth via practiceStats,
+   *  OR'd with the override for the pre-stats window). The "Explain a
+   *  concept" chip renders ONLY when true — teaching is the default mode,
+   *  so pre-practice the chip is redundant; mid-practice it reads as
+   *  "back to teaching". */
+  practiceModeActive?: boolean;
   onBack?: () => void;
   // Phase 2 student marks — present only when the feature is enabled
   boardPenActive?: boolean;
@@ -193,7 +200,7 @@ export default function SessionStage(props: SessionStageProps) {
     quickActions, onStudentInput, onControlMessage, onBack,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
-    practiceOverrideActive = false, onTogglePracticeOverride,
+    practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
     boardPenActive, onToggleBoardPen,
   } = props;
 
@@ -712,7 +719,9 @@ export default function SessionStage(props: SessionStageProps) {
               <Chip active={practiceOverrideActive} onClick={() => { onTogglePracticeOverride?.(true); onStudentInput('text', 'Give me some practice problems.'); }}>
                 {practiceOverrideActive ? '✓ ' : ''}Practice problems
               </Chip>
-              <Chip onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
+              {practiceModeActive && (
+                <Chip onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
+              )}
             </div>
             )}
           </div>

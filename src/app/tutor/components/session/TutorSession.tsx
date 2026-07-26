@@ -1258,6 +1258,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onAgendaDrawerOpenChange={setAgendaDrawerOpen}
         agendaEngaged={agendaEngaged}
         practiceOverrideActive={practiceOverrideActive}
+        practiceModeActive={practiceOverrideActive || (practiceStats?.active ?? false)}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
         onBack={handleEndSession}
         boardPenActive={boardPenActive}
