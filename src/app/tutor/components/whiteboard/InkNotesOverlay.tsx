@@ -241,6 +241,7 @@ export function InkNotesOverlay({
   links,
   onOverflowChange,
   onNoteMoved,
+  onNoteTap,
 }: {
   // Deviation from the task-3 brief: the brief types this
   // `React.RefObject<HTMLElement | null>`. WhiteboardCanvas's
@@ -276,6 +277,24 @@ export function InkNotesOverlay({
    *  the command's stamped `id`, NOT by array position — see NoteSource's
    *  doc comment for why an index can't be trusted here. */
   onNoteMoved?: (ref: { kind: 'handwrite' | 'scribble'; id: string; userPos: { dx: number; dy: number } }) => void;
+  /** R2 fix-1 (review round 1): a note's own div is `pointer-events-auto`
+   *  once it's draggable (required — an element can't conditionally
+   *  intercept only long-presses in pure CSS), which means a plain tap on
+   *  it no longer naturally falls through to WhiteboardCanvas's
+   *  `pageWrapperRef` tap-to-mark wrapper (siblings, not ancestor/
+   *  descendant — the fallthrough that made pre-drag tap-to-mark-a-note
+   *  work relied on `pointer-events: none` letting the hit-test skip the
+   *  note entirely). This is the replacement path: fired with the tap's
+   *  raw client coordinates on a sub-threshold release (never on a
+   *  completed drag, never on pointercancel) so the owner can forward to
+   *  the SAME resolution a pass-through tap would have used
+   *  (WhiteboardCanvas wires this to its own `fireStudentTap`, which
+   *  internally already reads `data-wb-note` rects via `collectRects()`
+   *  — so a tap landing on this exact note still resolves as a
+   *  `feature: 'teacher-note'` mark, identical to pre-drag-feature
+   *  behavior). Absent ⇒ a tap on a draggable note is simply inert
+   *  (still no worse than not having a fallback at all). */
+  onNoteTap?: (clientX: number, clientY: number) => void;
 }) {
   const [entries, setEntries] = useState<NoteEntry[]>([]);
   const [arrows, setArrows] = useState<ArrowEntry[]>([]);
@@ -765,6 +784,19 @@ export function InkNotesOverlay({
       // there is no click-suppression state to arm here either way (the
       // note div has no onClick of its own), so cancel and up are handled
       // identically.
+    } else if (ev.type === 'pointerup') {
+      // R2 fix-1: never exceeded the drag threshold — a plain tap. Forward
+      // to onNoteTap (WhiteboardCanvas wires its own fireStudentTap) so a
+      // tap on a draggable note still resolves as a student mark, exactly
+      // like the pre-drag-feature pointer-events-none pass-through did.
+      // `d.dragging` is false here by construction — this branch and the
+      // `if (d.dragging)` one above are mutually exclusive within the same
+      // call, so a completed drag can never ALSO fire a tap on release.
+      // Gated to `pointerup` specifically (not pointercancel): a cancelled
+      // sub-threshold press isn't a completed tap either — matches
+      // WhiteboardCanvas's own handleMarkPointerUp, which isn't wired to
+      // onPointerCancel and so fires no mark on a cancelled press today.
+      onNoteTap?.(ev.clientX, ev.clientY);
     }
     dragRef.current = null;
     setDragOverridePos(null);

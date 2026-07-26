@@ -788,4 +788,4 @@ git commit -m "feat(tutor): draggable ink-note annotations, persisted + replay/P
 - [ ] Merge the branch to main.
 - [ ] Deploy: `./deploy-update.sh` ONLY (never `npm run deploy`). NOTE: main also carries the R35 follow-ups (200e5804 etc.) not yet deployed — deploying ships those too; that is expected.
 - [ ] **Deploy the engine BEFORE the portal** (the portal's P2 countdown waits for `evelyn:session_started`).
-- [ ] Live-test items (need a real embed session on prod): E1 second-tap actually ends the session at embed width; E3 drag on touch; P2 countdown starts on mic tap.
+- [ ] Live-test items (need a real embed session on prod): E1 second-tap actually ends the session at embed width; E3 drag on touch — plain-tap-to-mark on a draggable note still resolves (fix-1, review round 1) and a completed drag persists across resize; E3 finger-scroll starting on a note (touch-none tradeoff — a finger landing on a note's ≤240px rect drags instead of scrolling the board underneath it) — if scroll capture proves hostile on tablet, revisit with `touch-action: pan-y`; P2 countdown starts on mic tap.

@@ -1795,6 +1795,16 @@ export function WhiteboardCanvas({
             links={links}
             onOverflowChange={handleNoteOverflow}
             onNoteMoved={onInkNoteMoved}
+            // R2 fix-1 (review round 1): once a note is draggable it's
+            // pointer-events-auto, which breaks the pointer-events-none
+            // pass-through that used to deliver a note tap to this
+            // component's own pageWrapperRef tap-to-mark wrapper below
+            // (siblings, not ancestor/descendant — bubbling never reached
+            // it either way). Same gate as that wrapper's own handlers
+            // (`onStudentMark ? handleMarkPointerDown : undefined`) so a
+            // draggable note's plain-tap behavior is byte-identical to
+            // every other tap-to-mark surface on the board.
+            onNoteTap={onStudentMark ? fireStudentTap : undefined}
           />
         )}
         {/* Phase 2: ink strokes for THIS page + the in-progress stroke.
