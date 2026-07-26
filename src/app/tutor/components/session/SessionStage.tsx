@@ -264,6 +264,37 @@ export default function SessionStage(props: SessionStageProps) {
   // stay byte-identical; only their visibility (inside the expanded column)
   // changes.
   const [toolsOpen, setToolsOpen] = useState(false);
+  // R35 T-C: close the tools cluster on any pointerdown outside its container
+  // (FAB + expanded column together — ref-containment pattern matches
+  // switcherRef below). Without this, tapping the whiteboard or anywhere
+  // else left the wrench cluster open (2026-07 demo feedback). Also mirrors
+  // TutorSession's pacing ⋯ menu (pacingMenuOpen/pacingMenuRef): Escape, AND
+  // a window 'blur' fallback — in the embedded demo, a click on the PARENT
+  // marketing page (outside this iframe entirely) never fires a pointerdown
+  // on THIS document, but it does steal window focus, so blur is the only
+  // signal reachable here. The plain switcherRef pattern below doesn't need
+  // that (its popover isn't the one this feedback item is about).
+  const toolsClusterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (toolsClusterRef.current && !toolsClusterRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setToolsOpen(false);
+    };
+    const onBlur = () => setToolsOpen(false);
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [toolsOpen]);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
 
@@ -739,7 +770,7 @@ export default function SessionStage(props: SessionStageProps) {
           rest of the column renders below it, so expanding never shifts this
           overlay's position, only grows it downward. */}
       <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
-        <div className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
+        <div ref={toolsClusterRef} className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <div className="relative">
             <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
               <Wrench className="w-[18px] h-[18px]" />
