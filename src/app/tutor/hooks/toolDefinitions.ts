@@ -434,7 +434,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'show_diagram',
-    description: 'Structured diagrams from the catalog. Pick a kind that fits the concept; the solver validates params and the renderer draws. Do not invent kinds — only use the listed enum. Legacy kinds (circular-path, pipe-flow, fluid-flow, continuity) remain supported.',
+    description: 'Structured diagrams from the catalog. Pick a kind that fits the concept; the solver validates params and the renderer draws. Do not invent kinds — only use the listed enum. Legacy kinds (circular-path, pipe-flow, fluid-flow, continuity) remain supported. There is NO boxplot kind here: a boxplot / dotplot / five-number-summary visual goes through show_stats (type: "boxplot"), NEVER a number_line with quartile-labeled dots — an improvised number-line "boxplot" lacks the box/whisker/outlier chrome and misteaches the concept (live failure, 2026-07-25).',
     parameters: {
       type: 'object',
       properties: {

@@ -159,7 +159,8 @@
     "voice:tts": "npx tsx scripts/tutor/voice-harness/tts-generate.ts",
     "voice:corpus": "npx tsx scripts/tutor/voice-harness/fetch-corpus.ts",
     "voice:stt": "npx tsx scripts/tutor/voice-harness/stt-run.ts",
-    "test:voice-harness": "npx tsx scripts/tutor/voice-harness/utterances.test.ts && npx tsx scripts/tutor/voice-harness/wer.test.ts && npx tsx scripts/tutor/voice-harness/audio-util.test.ts"
+    "test:voice-harness": "npx tsx scripts/tutor/voice-harness/utterances.test.ts && npx tsx scripts/tutor/voice-harness/wer.test.ts && npx tsx scripts/tutor/voice-harness/audio-util.test.ts",
+    "test:r33-prompt-rules": "npx tsx scripts/test-r33-prompt-rules.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
