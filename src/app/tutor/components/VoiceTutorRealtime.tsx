@@ -74,6 +74,7 @@ import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check'
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
+import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
@@ -122,6 +123,7 @@ import {
   TUTOR_BRAIN_FAST_OPENER,
   TUTOR_ACK_LAYER,
   TUTOR_COVER_V2,
+  TUTOR_INCOMPLETE_HOLD,
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
   TUTOR_RENDER_WORD_ANCHOR,
@@ -973,6 +975,22 @@ export function VoiceTutorRealtime({
   // reference via ref to avoid hoisting issues). Called from the
   // perception onTranscript callback's heuristic + Haiku paths.
   const applyPerceptionVerdictRef = useRef<((verdict: PerceptionVerdict, perceptionText: string) => void) | null>(null);
+  // R34 T3: incomplete-utterance hold (TUTOR_INCOMPLETE_HOLD). A finalized
+  // transcript ending on a dangling function word ("give me a…") is parked
+  // here for HOLD_MS instead of dispatched, so the student's resumed speech
+  // can merge into it. Same forward-ref-via-ref pattern as
+  // applyPerceptionVerdictRef above: the flush timer re-enters
+  // perceptionOnTranscript (bypassHold=true) via perceptionOnTranscriptRef
+  // so it always calls the latest render's closure, not a stale one
+  // captured at hold-time.
+  const heldTranscriptRef = useRef<{
+    text: string;
+    tMs: number;
+    latencyMs: number;
+    itemId?: string;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
+  const perceptionOnTranscriptRef = useRef<((t: PerceptionTranscript, bypassHold?: boolean) => void) | null>(null);
   // Stage 2 dev-only verdict pin. When set via
   // window.__tutorForceClassifierVerdict('continuation'), the next
   // perception transcript skips heuristic + Haiku and dispatches the
@@ -7125,6 +7143,13 @@ export function VoiceTutorRealtime({
         clearInterval(escalationTimerRef.current);
         escalationTimerRef.current = null;
       }
+      // R34 T3: the incomplete-hold timer gets the same unmount treatment —
+      // left running past unmount it would flush a held fragment into a
+      // stale closure.
+      if (heldTranscriptRef.current) {
+        clearTimeout(heldTranscriptRef.current.timer);
+        heldTranscriptRef.current = null;
+      }
     };
   }, []);
 
@@ -13244,7 +13269,7 @@ export function VoiceTutorRealtime({
   // (TUTOR_STT_ENGINE_INK2 === false): perceptionWS gets `enabled:
   // perceptionEnabled` exactly as before, perceptionInk2's `enabled` is
   // always false (no-op hook — no mic, no WS) — byte-identical behavior.
-  const perceptionOnTranscript = useCallback((t: PerceptionTranscript) => {
+  const perceptionOnTranscript = useCallback((t: PerceptionTranscript, bypassHold = false) => {
       // Tagged log for Stage 0+ transcript-agreement review. Pair with the
       // production hook's `[Realtime] User transcript:` lines at similar
       // timestamps to compute agreement rate. warn-level so the
@@ -13291,6 +13316,55 @@ export function VoiceTutorRealtime({
           // The arm site paused the render buffer pending the verdict —
           // un-pause so buffered renders aren't stuck too.
           renderBufferPausedRef.current = false;
+        }
+      }
+      // R34 T3: incomplete-utterance hold (TUTOR_INCOMPLETE_HOLD). Placed
+      // after the bookkeeping above (mic-notice clear, turn-latency marks,
+      // checkpoint watchdog) and BEFORE the mute/noise branches below, so
+      // that (a) a merged, complete transcript flows through the FULL
+      // existing pipeline (mute check, noise check, nag, classifier, cover
+      // arm, dispatch) and (b) a still-held fragment is invisible to all of
+      // that until it's released. bypassHold=true is the flush re-entry
+      // path (below) — it skips straight past this block into the mute
+      // check so a released/merged transcript is never held twice.
+      if (TUTOR_INCOMPLETE_HOLD && !bypassHold) {
+        // A resumed thought merges into the held fragment first, before any
+        // other processing sees it.
+        if (heldTranscriptRef.current) {
+          const held = heldTranscriptRef.current;
+          clearTimeout(held.timer);
+          heldTranscriptRef.current = null;
+          t.text = mergeHeldTranscript(held.text, t.text);
+          console.warn(`[PERCEPTION] merged resumed speech into held fragment: ${JSON.stringify(t.text).slice(0, 100)}`);
+          onDebugEvent?.('transcript_merged', t.text.slice(0, 60));
+        }
+        // Hold a fresh dangling fragment — only while the student owns the
+        // floor. Never hold during 'speaking'/'processing': that's exactly
+        // when barge-in timing matters, and a held fragment would delay the
+        // cancel signal reaching applyPerceptionVerdict. Same prodState
+        // signal the noise-nag gate below uses.
+        if (endsMidThought(t.text) && prodState !== 'speaking' && prodState !== 'processing') {
+          const heldText = t.text;
+          const heldTMs = t.tMs;
+          const heldLatencyMs = t.latencyMs;
+          const heldItemId = t.itemId;
+          console.warn(`[PERCEPTION] holding dangling-word transcript for ${INCOMPLETE_HOLD_MS}ms: ${JSON.stringify(heldText)}`);
+          onDebugEvent?.('transcript_held', heldText.slice(-30));
+          heldTranscriptRef.current = {
+            text: heldText,
+            tMs: heldTMs,
+            latencyMs: heldLatencyMs,
+            itemId: heldItemId,
+            timer: setTimeout(() => {
+              heldTranscriptRef.current = null;
+              onDebugEvent?.('transcript_hold_flushed', heldText.slice(-30));
+              perceptionOnTranscriptRef.current?.(
+                { text: heldText, tMs: heldTMs, latencyMs: heldLatencyMs, itemId: heldItemId },
+                true,
+              );
+            }, INCOMPLETE_HOLD_MS),
+          };
+          return;
         }
       }
       // Mute gate (2026-06-16). Drop any transcript that arrives while the
@@ -13692,6 +13766,11 @@ export function VoiceTutorRealtime({
         }
       }
   }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain]);
+  // R34 T3: always points at the latest render's perceptionOnTranscript, so
+  // the hold-flush timer and the mic-mute flush (toggleMicMute, below) never
+  // re-enter a stale closure — same forward-ref-via-ref pattern as
+  // applyPerceptionVerdictRef.current assignment elsewhere in this file.
+  perceptionOnTranscriptRef.current = perceptionOnTranscript;
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
@@ -14920,6 +14999,27 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // Gate BOTH inputs. perception owns the mic now (Stage 4); it's muted by the
     // start-gate effect (single owner, watches isMicMuted + hasStarted + muteGrace).
     if (newMuted) {
+      // R34 T3: a dangling-word fragment held for resumption ("give me a…")
+      // must not be silently dropped by the ordinary muted-drop guard in
+      // perceptionOnTranscript — the student muting mid-hold means the
+      // resumed speech that would have merged with it is never coming.
+      // Flush it now, through the same submitPendingUtteranceRef one-shot
+      // the mid-utterance case below uses, so it still reaches the brain
+      // instead of vanishing. isMicMutedRef.current is already true (set
+      // above), so this flush call falls straight into the mute
+      // gate's "submit the in-flight utterance" branch.
+      if (heldTranscriptRef.current) {
+        const held = heldTranscriptRef.current;
+        clearTimeout(held.timer);
+        heldTranscriptRef.current = null;
+        console.log('[VoiceTutorRealtime] mute with held dangling-word fragment — flushing through submit-on-mute');
+        onDebugEvent?.('transcript_hold_flushed', held.text.slice(-30));
+        submitPendingUtteranceRef.current = true;
+        perceptionOnTranscriptRef.current?.(
+          { text: held.text, tMs: held.tMs, latencyMs: held.latencyMs, itemId: held.itemId },
+          true,
+        );
+      }
       // Mute-to-submit: if an utterance is in flight (still speaking, or stopped
       // and transcribing), keep perception LISTENING for a short grace window so
       // the server VAD commits it; arm the one-shot pass so its transcript

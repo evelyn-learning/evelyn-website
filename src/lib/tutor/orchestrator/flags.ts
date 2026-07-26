@@ -178,6 +178,13 @@ export const TUTOR_COVER_V2 =
   process.env.NEXT_PUBLIC_TUTOR_COVER_V2 === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_COVER_V2 === 'true';
 
+// R34: hold a finalized transcript that ends on a dangling function word
+// ("give me a…") for HOLD_MS and merge with resumed speech — Ink2's
+// endpointer sometimes cuts mid-hesitation. Default OFF.
+export const TUTOR_INCOMPLETE_HOLD =
+  process.env.NEXT_PUBLIC_TUTOR_INCOMPLETE_HOLD === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_INCOMPLETE_HOLD === 'true';
+
 // Task 1.1 (humanlike-latency plan): stream the cold first sentence's
 // Cartesia audio — start playback at ~0.4s of PCM instead of waiting for
 // full-sentence synthesis. Default OFF; enable per env.
