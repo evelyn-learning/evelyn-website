@@ -68,6 +68,13 @@ export interface RealtimeHandle {
    *  final transcript commit is skipped. Optional: legacy handle producers
    *  may not implement it; fall back to onEndSession if absent. */
   endSession?: () => void;
+  /** R34 T4: set the per-device "Manual mic" mode — buffered turn
+   *  composition with tap-to-send instead of auto endpointing. The runtime
+   *  persists the choice to localStorage and fires onManualMicChange so the
+   *  ⋯ menu's Auto/Manual segmented row stays in sync. Switching Manual→Auto
+   *  with a non-empty buffer sends it (never drops words). Wired to the ⋯
+   *  menu's Mic row (TUTOR_MANUAL_MIC-gated). */
+  setManualMic: (v: boolean) => void;
 }
 
 /** Pedagogical milestones the runtime reports via `onMilestone`, fired once

@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback, useEffect, useMemo, useRef, type FormEvent, type ReactNode } from 'react';
-import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send } from 'lucide-react';
+import { Mic, MicOff, Volume2, Loader2, AlertCircle, Square, Wifi, WifiOff, LogOut, Pause, Play, Send, Check } from 'lucide-react';
 import { useOpenAIRealtime, OpenAIVoice, RealtimeState, type RealtimeUsage, type WhiteboardCommandResult } from '../hooks/useOpenAIRealtime';
 import { usePerceptionWS, type PerceptionState, type PerceptionTranscript, type PerceptionSpeechEvent } from '../hooks/usePerceptionWS';
 import { useCartesiaInkWS } from '../hooks/useCartesiaInkWS';
@@ -124,6 +124,7 @@ import {
   TUTOR_ACK_LAYER,
   TUTOR_COVER_V2,
   TUTOR_INCOMPLETE_HOLD,
+  TUTOR_MANUAL_MIC,
   TUTOR_SKIP_DETERMINISTIC,
   TUTOR_RENDER_SYNC,
   TUTOR_RENDER_WORD_ANCHOR,
@@ -424,7 +425,7 @@ interface VoiceTutorRealtimeProps {
    *  processing (student stopped, transcribing — "got that, one sec") · hearing
    *  (student speaking now) · listening (mic open, idle) · muted · error · idle.
    *  Fires on every transition. */
-  onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'error') => void;
+  onVoiceStateChange?: (state: 'idle' | 'listening' | 'hearing' | 'processing' | 'thinking' | 'speaking' | 'muted' | 'manual-held' | 'error') => void;
   /** Fires once, the first time the student clicks the mic to start the voice
    *  session (the "Click to start" tap). Lets the session timer begin counting
    *  from the actual start rather than from page mount. */
@@ -472,6 +473,10 @@ interface VoiceTutorRealtimeProps {
    *  Chip). See practiceOverrideRef below + derivePracticeMode for the
    *  full precedence contract. */
   onPracticeOverrideChange?: (active: boolean) => void;
+  /** R34 T4: fires whenever the per-device "Manual mic" mode changes (⋯ menu
+   *  toggle OR the mount-time localStorage restore) so the ⋯ menu's Auto/
+   *  Manual segmented row stays in sync. */
+  onManualMicChange?: (v: boolean) => void;
   /** Mock-review pre-start agenda. Fires (on mount + whenever mockReview
    *  changes) with the tappable question list derived from the review context
    *  plus the muted "+ N more missed…" line (null when none). The parent holds
@@ -647,6 +652,7 @@ export function VoiceTutorRealtime({
   onPracticeStatsChange,
   onSpeakingRateChange,
   onPracticeOverrideChange,
+  onManualMicChange,
   onMockAgendaChange,
   refetchMockReview,
   onStudentInput,
@@ -670,6 +676,43 @@ export function VoiceTutorRealtime({
   // so a transcript can arrive well after the mute click).
   const isMicMutedRef = useRef(false);
   isMicMutedRef.current = isMicMuted;
+  // R34 T4: per-device "Manual mic" mode — opt-in (localStorage), gated by
+  // TUTOR_MANUAL_MIC. Finalized transcripts buffer instead of dispatching;
+  // the student taps a ✓ send affordance to submit the combined turn.
+  // Same ref-mirror convention as isMicMuted above: perceptionOnTranscript
+  // needs the live value synchronously.
+  const [manualMic, setManualMicState] = useState(false);
+  const manualMicRef = useRef(false);
+  manualMicRef.current = manualMic;
+  // Buffered, not-yet-sent transcript parts. A ref (perceptionOnTranscript
+  // needs synchronous push/read) mirrored by a small count in state so the
+  // JSX (send-button visibility, dock hint via onVoiceStateChange) re-renders
+  // when it changes.
+  const manualBufferRef = useRef<string[]>([]);
+  const [manualBufferCount, setManualBufferCount] = useState(0);
+  // One-shot: armed when the student taps ✓ send while mid-utterance
+  // (perceptionHearing true, no finalized transcript yet). Mirrors
+  // submitPendingUtteranceRef's mute-to-submit pattern (see toggleMicMute) —
+  // the in-flight utterance's transcript, once it finalizes, merges into the
+  // buffer and dispatches immediately instead of just being buffered.
+  const manualSendPendingRef = useRef(false);
+  // Mount-safe localStorage read (SSR/hydration-safe: first render always
+  // renders the `false` default on server + client; this effect then syncs
+  // the real per-device choice once mounted — same pattern used by the
+  // per-plan pacing-v2 restore below).
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      if (window.localStorage.getItem('evelyn-manual-mic') === 'on') {
+        manualMicRef.current = true;
+        setManualMicState(true);
+        onManualMicChangeRef.current?.(true);
+      }
+    } catch (err) {
+      console.warn('[VoiceTutorRealtime] manual-mic localStorage read failed:', err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   // Transient whiteboard status — e.g. "rendering problem…" when a tool
   // call gets dropped so the student sees the system is responding without
@@ -998,7 +1041,7 @@ export function VoiceTutorRealtime({
     speechStartedAt: number | undefined;
     timer: ReturnType<typeof setTimeout>;
   } | null>(null);
-  const perceptionOnTranscriptRef = useRef<((t: PerceptionTranscript, bypassHold?: boolean, heldSpeechStartedAt?: number) => void) | null>(null);
+  const perceptionOnTranscriptRef = useRef<((t: PerceptionTranscript, bypassHold?: boolean, heldSpeechStartedAt?: number, bypassManualBuffer?: boolean) => void) | null>(null);
   // Stage 2 dev-only verdict pin. When set via
   // window.__tutorForceClassifierVerdict('continuation'), the next
   // perception transcript skips heuristic + Haiku and dispatches the
@@ -2085,6 +2128,63 @@ export function VoiceTutorRealtime({
   useEffect(() => { onSpeakingRateChangeRef.current = onSpeakingRateChange; }, [onSpeakingRateChange]);
   const onPracticeOverrideChangeRef = useRef(onPracticeOverrideChange);
   useEffect(() => { onPracticeOverrideChangeRef.current = onPracticeOverrideChange; }, [onPracticeOverrideChange]);
+  // R34 T4: manual-mic mode change notifier — ref-mirrored (same pattern as
+  // the pacing callbacks above) so setManualMic below always calls the
+  // latest parent callback without needing it in a dependency array. The
+  // ref's initial value (set here, during render) already covers the
+  // mount-time localStorage-restore effect above, which fires before this
+  // effect re-syncs on prop changes.
+  const onManualMicChangeRef = useRef(onManualMicChange);
+  useEffect(() => { onManualMicChangeRef.current = onManualMicChange; }, [onManualMicChange]);
+  // R34 T4: join the buffer (mergeHeldTranscript reduction — same merge
+  // logic Task 3's incomplete-hold uses) and dispatch it through the SAME
+  // processing continuation the auto path uses (perceptionOnTranscript,
+  // re-entered via its forward-ref exactly like the hold-flush timer does).
+  // bypassHold=true — a joined manual turn is never itself held; heldSpeech-
+  // StartedAt is omitted (undefined) — this text was never "held" in Task
+  // 3's sense, so the self-voice-defense window derives its anchor fresh
+  // from tMs/latencyMs like any ordinary transcript. bypassManualBuffer=true
+  // — this call IS the manual buffer's own exit path; without it the joined
+  // text would just re-buffer itself.
+  const flushManualBuffer = useCallback(() => {
+    if (manualBufferRef.current.length === 0) return;
+    const parts = manualBufferRef.current.splice(0);
+    setManualBufferCount(0);
+    const joined = parts.reduce((acc, part) => (acc ? mergeHeldTranscript(acc, part) : part), '');
+    onDebugEvent?.('manual_sent', joined.slice(0, 60));
+    perceptionOnTranscriptRef.current?.(
+      { text: joined, tMs: Date.now(), latencyMs: 0, itemId: `manual-${Date.now()}` },
+      true,
+      undefined,
+      true,
+    );
+  }, [onDebugEvent]);
+  // R34 T4: set the per-device Manual mic mode (⋯ menu Auto/Manual row via
+  // handleRef.setManualMic). Manual→Auto with a non-empty buffer sends it
+  // FIRST (never drops words — brief Step 4); Auto→Manual is a bare flip
+  // (nothing buffered yet, since buffering only happens while already in
+  // manual mode).
+  const setManualMic = useCallback((v: boolean) => {
+    if (manualMicRef.current === v) return;
+    if (!v) flushManualBuffer();
+    manualMicRef.current = v;
+    setManualMicState(v);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        if (v) window.localStorage.setItem('evelyn-manual-mic', 'on');
+        else window.localStorage.removeItem('evelyn-manual-mic');
+      }
+    } catch (err) {
+      console.warn('[VoiceTutorRealtime] manual-mic localStorage write failed:', err);
+    }
+    onDebugEvent?.('manual_mode_toggled', v ? 'manual' : 'auto');
+    onManualMicChangeRef.current?.(v);
+  }, [flushManualBuffer, onDebugEvent]);
+  // Session end/unmount: clear the buffer (Step 4 teardown hygiene — a
+  // component unmount is not a "send", it's the session going away).
+  useEffect(() => () => {
+    manualBufferRef.current = [];
+  }, []);
   // Phase 4: persist pacing state to localStorage so it carries over
   // when the same lesson plan is re-launched. Keyed on plan.id;
   // session-unmount + paceBias-step both call this. No-op when no
@@ -13277,7 +13377,7 @@ export function VoiceTutorRealtime({
   // (TUTOR_STT_ENGINE_INK2 === false): perceptionWS gets `enabled:
   // perceptionEnabled` exactly as before, perceptionInk2's `enabled` is
   // always false (no-op hook — no mic, no WS) — byte-identical behavior.
-  const perceptionOnTranscript = useCallback((t: PerceptionTranscript, bypassHold = false, heldSpeechStartedAt?: number) => {
+  const perceptionOnTranscript = useCallback((t: PerceptionTranscript, bypassHold = false, heldSpeechStartedAt?: number, bypassManualBuffer = false) => {
       // Tagged log for Stage 0+ transcript-agreement review. Pair with the
       // production hook's `[Realtime] User transcript:` lines at similar
       // timestamps to compute agreement rate. warn-level so the
@@ -13488,6 +13588,37 @@ export function VoiceTutorRealtime({
       // Still fires ONLY on a true transcription hang (no transcript at
       // all), never on the normal 9–15s perception latency.
       resolveAwaitingDispatch();
+
+      // R34 T4: Manual mic mode. Placed AFTER Task 3's hold/merge block
+      // (above) and after the mute + noise gates (above) — a buffered turn
+      // must be a real, unmuted, non-noise transcript, exactly like every
+      // other transcript that reaches this point. No separate prodState
+      // check is needed here (unlike Task 3's hold): the mute gate already
+      // dropped anything captured while muted, and barge-in cancels are
+      // decided upstream of perceptionOnTranscript entirely — every
+      // transcript reaching this line is already a legitimate student-turn
+      // capture. bypassManualBuffer=true is flushManualBuffer's own
+      // re-entry (the joined, already-buffered text must not re-buffer
+      // itself); a natural Task-3 hold-flush or a mute-triggered held-
+      // fragment flush (toggleMicMute's submit-on-mute) both omit it
+      // (default false) and so DO land in the buffer here while manual mode
+      // is on — the natural, correct consequence of running after that
+      // block, not a special case.
+      if (TUTOR_MANUAL_MIC && manualMicRef.current && !bypassManualBuffer) {
+        manualBufferRef.current.push(t.text);
+        setManualBufferCount(manualBufferRef.current.length);
+        onDebugEvent?.('manual_buffered', `${manualBufferRef.current.length} part(s)`);
+        // Mid-utterance send: the student tapped ✓ while still speaking, so
+        // the send button armed this one-shot instead of flushing an empty/
+        // stale buffer. Now that a transcript actually arrived, push it
+        // (above) then flush immediately — mirrors submitPendingUtteranceRef's
+        // mute-to-submit pattern (toggleMicMute) for the send button.
+        if (manualSendPendingRef.current) {
+          manualSendPendingRef.current = false;
+          flushManualBuffer();
+        }
+        return;
+      }
 
       // Stage 2 dev-only verdict pin. When set, skip heuristic + Haiku
       // and dispatch the pinned verdict directly so the developer can
@@ -13797,7 +13928,7 @@ export function VoiceTutorRealtime({
             });
         }
       }
-  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain]);
+  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain, flushManualBuffer]);
   // R34 T3: always points at the latest render's perceptionOnTranscript, so
   // the hold-flush timer and the mic-mute flush (toggleMicMute, below) never
   // re-enter a stale closure — same forward-ref-via-ref pattern as
@@ -14502,6 +14633,7 @@ export function VoiceTutorRealtime({
         setSpeakingRate,
         setPracticeOverride,
         setDifficultyBias,
+        setManualMic,
         resumeContinue: () => resumeContinueRef.current(),
         endSession: () => { void endSessionNowRef.current(); },
         getSpokenCaption: () => {
@@ -14566,7 +14698,7 @@ export function VoiceTutorRealtime({
     return () => {
       if (handleRef) handleRef.current = null;
     };
-  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, setDifficultyBias, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level, resumeState]);
+  }, [handleRef, realtime, stepPaceBias, setSpeakingRate, setPracticeOverride, setDifficultyBias, setManualMic, claudeBrainMode, armStudentMarkIdleSend, onDebugEvent, subject, topic, level, resumeState]);
 
   // realtime-2: inject the lesson plan into the RT-2 session once the
   // session is connected and the plan has loaded. claude-brain mode feeds
@@ -15499,13 +15631,19 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       : (hasStarted && isMicMuted) ? 'muted'
       : perceptionAwaitingDispatch ? 'processing'
       : perceptionHearing ? 'hearing'
+      // R34 T4: Manual mic mode has a buffered, unsent turn — surface it as
+      // the resting state ahead of plain "Listening…" so the student sees
+      // "Held — tap ✓ to send" instead of the misleading default. Below
+      // 'hearing' on purpose: while actively mid-utterance the ordinary
+      // hearing/VU-meter feedback is more useful than the held-turn hint.
+      : (manualMic && manualBufferCount > 0) ? 'manual-held'
       // Once started, the perception mic is the real (always-open) input, so the
       // resting state is "listening" even when the production WS (a TTS sink in
       // Stage 4) reports 'connected' between sentences.
       : hasStarted ? 'listening'
       : 'idle';
     onVoiceStateChange(next);
-  }, [realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, onVoiceStateChange]);
+  }, [realtime.state, isWarmingUp, isBrainResponding, hasStarted, isMicMuted, perceptionHearing, perceptionAwaitingDispatch, manualMic, manualBufferCount, onVoiceStateChange]);
 
   const isIsland = dockVariant === 'island';
 
@@ -15569,6 +15707,39 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           >
             {stateUI.icon}
           </button>
+
+          {/* R34 T4: Manual mic send affordance — a companion button beside
+              the mic rather than rewiring the mic's own state machine (the
+              brief's explicitly-sanctioned simpler path). Visible only in
+              Manual mode with something to send: either the buffer already
+              has parts, or the student is mid-utterance right now (tapping
+              arms the one-shot manualSendPendingRef — see
+              perceptionOnTranscript — so the in-flight utterance dispatches
+              the instant it finalizes instead of just buffering). */}
+          {TUTOR_MANUAL_MIC && manualMic && (manualBufferCount > 0 || perceptionHearing) && (
+            <button
+              type="button"
+              onClick={() => {
+                if (perceptionHearing) {
+                  manualSendPendingRef.current = true;
+                  onDebugEvent?.('manual_send_armed', `${manualBufferRef.current.length} buffered, mid-utterance`);
+                } else {
+                  flushManualBuffer();
+                }
+              }}
+              title="Send"
+              aria-label="Send buffered turn"
+              className={`
+                relative rounded-full text-white flex-shrink-0 bg-blue-600
+                transition-all duration-200 flex items-center justify-center
+                ${isIsland ? 'w-8 h-8 shadow-md' : 'w-9 h-9'}
+                hover:scale-105 active:scale-95
+                ${manualBufferCount > 0 ? 'animate-pulse' : ''}
+              `}
+            >
+              <Check className={isIsland ? 'w-4 h-4' : 'w-5 h-5'} />
+            </button>
+          )}
 
           {/* Caption slot (one-line merged bar) replaces the state text when
               provided; otherwise the legacy state text, hidden on mobile to

@@ -41,6 +41,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
+import { TUTOR_MANUAL_MIC } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
@@ -285,6 +286,11 @@ export default function TutorSession(props: TutorSessionProps) {
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
   const [difficultyBias, setDifficultyBias] = useState(0);
+  // R34 T4: per-device Manual mic mode — mirrored from VoiceTutorRealtime
+  // via onManualMicChange (⋯ menu toggle AND the runtime's mount-time
+  // localStorage restore) so the ⋯ menu's Auto/Manual row renders the
+  // correct active state on first paint.
+  const [manualMic, setManualMic] = useState(false);
   // Practice meter (2026-07-17): live problem-work stats from the runtime.
   // Drives the header meter that REPLACES the segment beats when practice
   // mode is active (or no plan exists) — segment pills answer "where am I
@@ -611,6 +617,11 @@ export default function TutorSession(props: TutorSessionProps) {
     : voiceState === 'hearing' ? { text: 'Hearing you…', cls: 'text-blue-600' }
     : voiceState === 'processing' ? { text: 'Got that — one sec…', cls: 'text-amber-600' }
     : voiceState === 'thinking' ? { text: 'Thinking…', cls: 'text-slate-400' }
+    // R34 T4: Manual mic mode has a buffered, unsent turn — same override
+    // idiom as hearing/processing/thinking above (replaces the caption
+    // rather than riding alongside it as a chip, like muted does) since
+    // it's the actionable state the student needs to see until they tap ✓.
+    : voiceState === 'manual-held' ? { text: 'Held — tap ✓ to send', cls: 'text-blue-600' }
     : null;
   const dockStatus =
     voiceState === 'muted' ? { text: 'Muted — tap the mic to talk', cls: 'text-slate-500' }
@@ -917,6 +928,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onStudentInput={handleStudentInput}
         onControlMessage={handleControlMessage}
         onDifficultyBiasChange={setDifficultyBias}
+        onManualMicChange={setManualMic}
         onPracticeStatsChange={(s) => { setPracticeStats(s); onPracticeStatsChange?.(s); }}
         onInterruptedChange={setIsPerceptionInterrupted}
         onBeforeTypedSubmit={onBeforeTypedSubmit}
@@ -1039,6 +1051,41 @@ export default function TutorSession(props: TutorSessionProps) {
           </button>
           <div className="my-1 border-t border-slate-100" />
           <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+          {/* R34 T4: Manual mic — per-device opt-in, TUTOR_MANUAL_MIC-gated.
+              Auto/Manual segmented pair mirrors the "Pace: slow ×1" pill's
+              active/inactive styling above; keeps the menu open on tap, same
+              idiom as the Harder/Easier/pace rows (a mis-tap must be
+              correctable without reopening). setManualMic (imperative
+              handle) sends any buffered turn when leaving Manual — see
+              VoiceTutorRealtime. */}
+          {TUTOR_MANUAL_MIC && (
+            <>
+              <div className="my-1 border-t border-slate-100" />
+              <div className="px-3 pt-1 pb-1.5 flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Mic</span>
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => realtimeHandleRef.current?.setManualMic(false)}
+                    className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
+                      !manualMic ? 'bg-blue-50 border-blue-300 text-blue-800 font-medium' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    Auto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => realtimeHandleRef.current?.setManualMic(true)}
+                    className={`text-[11px] px-2 py-0.5 rounded-full border transition-all duration-200 ${
+                      manualMic ? 'bg-blue-50 border-blue-300 text-blue-800 font-medium' : 'bg-slate-50 border-slate-200 text-slate-500'
+                    }`}
+                  >
+                    Manual
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
           <div className="my-1 border-t border-slate-100" />
           <p className="px-3 pt-1 pb-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Humor</p>
           {HUMOR_CHOICES.filter((c) => BAND_RANK[humorBand] >= BAND_RANK[c.minBand]).map((c) => {

@@ -34,7 +34,10 @@ import {
 } from '@/lib/tutor/whiteboard/caption-fit';
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 
-export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'error';
+// 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
+// the resting state in place of 'listening' while the student owns the
+// floor and has words parked waiting for a tap-to-send.
+export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'speaking' | 'thinking' | 'muted' | 'manual-held' | 'error';
 
 /** Hide the in-panel Quick-Actions chips for now — the caption + chips + dock
  *  got too crowded (2026-06-24 ear-test, Images 16/17). Flip to true to restore
@@ -165,13 +168,15 @@ const ORB_STYLE: Record<VoiceState, string> = {
   processing: 'from-amber-200 to-amber-400',
   thinking: 'from-amber-300 to-amber-500',
   muted: 'from-slate-300 to-slate-400',
+  'manual-held': 'from-sky-300 to-blue-500',
   idle: 'from-slate-300 to-slate-500',
   error: 'from-rose-300 to-rose-600',
 };
 const STATE_LABEL: Record<VoiceState, string> = {
   speaking: 'Tutor is speaking', listening: 'Listening…', hearing: 'Hearing you…',
   processing: 'Got that — one sec…', thinking: 'Thinking…',
-  muted: 'Muted — tap the mic to talk', idle: 'Ready', error: 'Connection issue',
+  muted: 'Muted — tap the mic to talk', 'manual-held': 'Held — tap ✓ to send',
+  idle: 'Ready', error: 'Connection issue',
 };
 
 export default function SessionStage(props: SessionStageProps) {
@@ -191,7 +196,9 @@ export default function SessionStage(props: SessionStageProps) {
   // active (listening/hearing), so the VU meter is live without re-rendering
   // the whole stage the rest of the time. Smoothed for a natural feel.
   const [micLevel, setMicLevel] = useState(0);
-  const reactsToMic = voiceState === 'listening' || voiceState === 'hearing';
+  // 'manual-held' still reacts — the mic is open, the student just has a
+  // buffered turn waiting on tap-to-send, not a mute.
+  const reactsToMic = voiceState === 'listening' || voiceState === 'hearing' || voiceState === 'manual-held';
   useEffect(() => {
     if (!micLevelRef || !reactsToMic) { setMicLevel(0); return; }
     let smoothed = 0;

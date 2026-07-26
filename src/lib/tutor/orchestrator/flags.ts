@@ -185,6 +185,13 @@ export const TUTOR_INCOMPLETE_HOLD =
   process.env.NEXT_PUBLIC_TUTOR_INCOMPLETE_HOLD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_INCOMPLETE_HOLD === 'true';
 
+// R34: availability gate for the student-facing "Manual mic" toggle —
+// buffered turn composition with tap-to-send instead of auto endpointing.
+// The MODE is opt-in per device (localStorage); this flag just ships the UI.
+export const TUTOR_MANUAL_MIC =
+  process.env.NEXT_PUBLIC_TUTOR_MANUAL_MIC === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_MANUAL_MIC === 'true';
+
 // Task 1.1 (humanlike-latency plan): stream the cold first sentence's
 // Cartesia audio — start playback at ~0.4s of PCM instead of waiting for
 // full-sentence synthesis. Default OFF; enable per env.
