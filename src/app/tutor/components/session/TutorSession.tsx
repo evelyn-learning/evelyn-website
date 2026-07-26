@@ -860,11 +860,22 @@ export default function TutorSession(props: TutorSessionProps) {
           : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
       }`}
     >
-      <LogOut className="w-3.5 h-3.5" />
+      {/* Narrow (<sm): one fixed-width slot that swaps icon ↔ "End?" so the
+          armed state always presents TEXT (2026-07-26 trial: color-only arm
+          read as a broken button) while the pill geometry never changes —
+          the second tap lands on the same hit target (R34 rule). */}
+      <span className="inline-flex min-w-[2.25rem] justify-center sm:hidden">
+        {endArmed ? 'End?' : <LogOut className="w-3.5 h-3.5" />}
+      </span>
+      <LogOut className="hidden sm:inline-block w-3.5 h-3.5" />
       {/* inline-block + min-w so the longer "End session?" label reserves
           the same slot as "End / Pause" — armed/unarmed never resize the
           pill, so the second tap always lands on the same hit target. */}
       <span className="hidden sm:inline-block sm:min-w-[6.5rem]">{endArmed ? 'End session?' : 'End / Pause'}</span>
+      {/* Screen readers hear the arm regardless of viewport. */}
+      <span aria-live="polite" className="sr-only">
+        {endArmed ? 'Tap again to end the session' : ''}
+      </span>
     </button>
   );
 
