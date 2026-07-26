@@ -446,8 +446,20 @@ export default function SessionStage(props: SessionStageProps) {
         setSwitcherOpen(false);
       }
     };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSwitcherOpen(false);
+    };
+    // blur: in the embedded iframe, clicks on the PARENT page never reach this
+    // document — losing window focus is the only outside-interaction signal.
+    const onBlur = () => setSwitcherOpen(false);
     document.addEventListener('pointerdown', onPointerDown);
-    return () => document.removeEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('blur', onBlur);
+    };
   }, [switcherOpen]);
   // Fullscreen capability (effect-set: document is not available in SSR).
   const [canFullscreen, setCanFullscreen] = useState(false);
