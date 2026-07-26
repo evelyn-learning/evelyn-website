@@ -6797,6 +6797,11 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     completedSegmentIdsRef.current = new Set();
     onCompletedSegmentsChange?.([]);
+    // R33: served-problem statements are plan-scoped for the divergence
+    // guard's purposes — a new plan's authored card may legitimately repeat
+    // text served under the old plan (freestyle plans reuse content), and a
+    // stale entry would wrongly kill its first render.
+    servedProblemStatementsRef.current = new Set();
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     if (!lessonPlanId) {
@@ -9705,7 +9710,12 @@ export function VoiceTutorRealtime({
                           // rendering the student's brought problem (or a
                           // fresh-context one); the authored card would be wrong.
                           // Fall through to dispatch show_problem as-is.
-                        } else if (targetsDiverge && servedProblemStatementsRef.current.has(truth.problemText.replace(/\s+/g, ' ').trim())) {
+                        } else if (targetsDiverge && servedProblemStatementsRef.current.has(stripWbEmphasisText(truth.problemText).replace(/\s+/g, ' ').trim())) {
+                          // (Lookup strips wb-emphasis markup first: the
+                          // substitute path renders the authored card through
+                          // stripWbEmphasisText, so the SERVED set holds the
+                          // stripped form — raw problemText would never match
+                          // for authored content carrying *emphasis*.)
                           // R33 (live 2026-07-25, AP Stats): substituting the
                           // authored card is WRONG when that card was already
                           // served — the student solved it, asked "give me a

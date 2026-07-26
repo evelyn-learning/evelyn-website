@@ -123,7 +123,6 @@ export const COVER_POOLS: Record<CoverCategory, readonly string[]> = {
   'think-aloud': ['Okay, let me follow that.', 'Alright, let me check your steps.', 'Okay, one moment.'],
   generic: ACK_PHRASES,
 };
-const POOLS = COVER_POOLS;
 
 export const LIVENESS_REPLIES = [
   "Yep, I'm here. Still thinking.",
@@ -137,14 +136,14 @@ export function pickCoverPhrase(
   turnIndex: number,
   lastIndex: number | null,
 ): { text: string; index: number } {
-  const pool = POOLS[category];
+  const pool = COVER_POOLS[category];
   const n = pool.length;
   let index = ((turnIndex % n) + n) % n;
   if (index === lastIndex) index = (index + 1) % n;
   let text = pool[index];
   if (text.includes('{a}')) {
     const a = extractAnswerToken(transcript) ?? '';
-    text = a ? text.replace(/\{a\}/g, a) : POOLS.generic[index % POOLS.generic.length];
+    text = a ? text.replace(/\{a\}/g, a) : COVER_POOLS.generic[index % COVER_POOLS.generic.length];
   }
   return { text, index };
 }
