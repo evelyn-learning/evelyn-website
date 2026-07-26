@@ -154,6 +154,7 @@ import {
   TURN_CAP_SOFT_SENTENCES,
   TURN_CAP_HARD_SENTENCES,
   TURN_CAP_WORDS,
+  TUTOR_BOARD_ANCHOR_NET,
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
   BARGEIN_ENERGY_THRESHOLD,
@@ -161,6 +162,8 @@ import {
   BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
 import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
+import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
+import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
 import {
@@ -2470,6 +2473,10 @@ export function VoiceTutorRealtime({
   // ended with no question and no next-move tool call; spliced into the
   // next callBrainOnce's transcript and cleared, same convention as above.
   const pendingNoAdvanceNoteRef = useRef<string | null>(null);
+  // R2 E2: pending board-anchor corrective — same lifecycle as
+  // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
+  // cadence and anchoring independently).
+  const pendingBoardAnchorNoteRef = useRef<string | null>(null);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -7700,6 +7707,11 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingNoAdvanceNoteRef.current}\n\n${runTranscript}`;
         pendingNoAdvanceNoteRef.current = null;
       }
+      // R2 E2: board-anchor corrective — same convention, own concern.
+      if (pendingBoardAnchorNoteRef.current) {
+        runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
+        pendingBoardAnchorNoteRef.current = null;
+      }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
       // Word-budget corrective sibling to totalSentenceCount — same
@@ -11467,6 +11479,18 @@ export function VoiceTutorRealtime({
           `board or hand the turn back to the student instead.`;
         console.warn(`[brain-orchestrator] word cap: ${totalWordCount} words, 0 tools — cadence note planted`);
         onDebugEvent?.('turn_cap_flagged', `${totalWordCount} words · 0 tool calls — cadence note planted for next turn`);
+      }
+      // R2 E2: substantive final question + zero content board writes →
+      // plant a board-anchor note for the next turn. Independent of the
+      // cadence triggers (own ref) — both can fire on the same turn.
+      if (TUTOR_BOARD_ANCHOR_NET) {
+        const finalQuestion = lastQuestionSentence(fullText);
+        const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));
+        if (finalQuestion && !paintedContent && isSubstantiveAsk(finalQuestion)) {
+          pendingBoardAnchorNoteRef.current = buildBoardAnchorNote(finalQuestion);
+          console.warn('[brain-orchestrator] board-anchor net: substantive question, 0 content tools — note planted');
+          onDebugEvent?.('board_anchor_flagged', `question with no board write — note planted for next turn`);
+        }
       }
       // Opener-recency (part A): capture THIS session's opener record once,
       // on the opener turn. openingTurnPendingRef is still armed here — it's
