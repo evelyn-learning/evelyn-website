@@ -2166,7 +2166,18 @@ export function VoiceTutorRealtime({
   // manual mode).
   const setManualMic = useCallback((v: boolean) => {
     if (manualMicRef.current === v) return;
-    if (!v) flushManualBuffer();
+    if (!v) {
+      flushManualBuffer();
+      // Review round 1 (Finding 2): a ✓ tap while mid-utterance arms
+      // manualSendPendingRef and leaves it armed until the in-flight
+      // transcript finalizes (see the manual-buffer branch above). If the
+      // student switches to Auto before that happens, the flag would stay
+      // armed — re-enabling Manual later would then silently auto-flush the
+      // NEXT buffered transcript without a tap. Clear it here, on every
+      // Manual→Auto transition, so leaving manual mode always fully retires
+      // any pending manual-mode intent.
+      manualSendPendingRef.current = false;
+    }
     manualMicRef.current = v;
     setManualMicState(v);
     try {
@@ -13592,19 +13603,35 @@ export function VoiceTutorRealtime({
       // R34 T4: Manual mic mode. Placed AFTER Task 3's hold/merge block
       // (above) and after the mute + noise gates (above) — a buffered turn
       // must be a real, unmuted, non-noise transcript, exactly like every
-      // other transcript that reaches this point. No separate prodState
-      // check is needed here (unlike Task 3's hold): the mute gate already
-      // dropped anything captured while muted, and barge-in cancels are
-      // decided upstream of perceptionOnTranscript entirely — every
-      // transcript reaching this line is already a legitimate student-turn
-      // capture. bypassManualBuffer=true is flushManualBuffer's own
-      // re-entry (the joined, already-buffered text must not re-buffer
-      // itself); a natural Task-3 hold-flush or a mute-triggered held-
-      // fragment flush (toggleMicMute's submit-on-mute) both omit it
-      // (default false) and so DO land in the buffer here while manual mode
-      // is on — the natural, correct consequence of running after that
-      // block, not a special case.
-      if (TUTOR_MANUAL_MIC && manualMicRef.current && !bypassManualBuffer) {
+      // other transcript that reaches this point. bypassManualBuffer=true is
+      // flushManualBuffer's own re-entry (the joined, already-buffered text
+      // must not re-buffer itself); a natural Task-3 hold-flush or a
+      // mute-triggered held-fragment flush (toggleMicMute's submit-on-mute)
+      // both omit it (default false) and so DO land in the buffer here
+      // while manual mode is on — the natural, correct consequence of
+      // running after that block, not a special case.
+      //
+      // Review round 1 (Finding 1): this branch ALSO needs the same
+      // prodState !== 'speaking'/'processing' gate Task 3's hold block uses
+      // one block above — the SAME signal, not a new one. Reasoning: the
+      // upstream speech_started cancel (which arms a perception interrupt
+      // checkpoint) is a SEPARATE event from THIS transcript's verdict
+      // (restore/merge/fresh), which is decided further down this same
+      // function (Stage 1 heuristic / Haiku / applyPerceptionVerdictRef).
+      // Without this gate, a barge-in transcript arriving while the tutor
+      // is 'speaking'/'processing' would get pushed into the manual buffer
+      // and the function would return HERE — the open checkpoint never
+      // gets a normal verdict, only recovering via the 7s
+      // decideStage2TimeoutRestore fallback, which re-fires the
+      // PRE-interruption turn while the student's actual interrupting words
+      // sit parked in the buffer, unseen. Invariant: manual mode owns ONLY
+      // the plain-listening path; barge-in verdicts must never be buffered
+      // — they always flow through the existing perception verdict
+      // machinery untouched, exactly as if manual mode were off.
+      if (
+        TUTOR_MANUAL_MIC && manualMicRef.current && !bypassManualBuffer &&
+        prodState !== 'speaking' && prodState !== 'processing'
+      ) {
         manualBufferRef.current.push(t.text);
         setManualBufferCount(manualBufferRef.current.length);
         onDebugEvent?.('manual_buffered', `${manualBufferRef.current.length} part(s)`);
