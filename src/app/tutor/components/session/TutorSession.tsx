@@ -326,6 +326,10 @@ export default function TutorSession(props: TutorSessionProps) {
   const paceBiasFlashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pacingMenuRef = useRef<HTMLDivElement>(null);
   const prevBusyRef = useRef(false);
+  // P2 (demo feedback R2): one-shot guard for the session-started window
+  // event — onSessionStarted can fire from several VTR paths; the portal
+  // must see exactly one start signal (its countdown anchors on the first).
+  const sessionStartedDispatchedRef = useRef(false);
 
   // R34 T1: End/Pause two-tap confirm. First click arms (3s window); a
   // stray/accidental tap no longer terminally ends the session (2026-07-26
@@ -912,7 +916,20 @@ export default function TutorSession(props: TutorSessionProps) {
         resumeState={resumeState}
         onResumeAwaitingTapChange={setAwaitingResume}
         onWarmupOverlayChange={setWarmupOverlay}
-        onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
+        onSessionStarted={() => {
+          if (!sessionStartedDispatchedRef.current) {
+            sessionStartedDispatchedRef.current = true;
+            // Same window-event bridge as 'evelyn:session-ending' (above) —
+            // the embed page relays it to the parent as a postMessage. The
+            // timestamp rides in detail so the portal can anchor its
+            // countdown on the exact same instant this component's own
+            // timer uses (same-browser clock — no skew).
+            window.dispatchEvent(
+              new CustomEvent('evelyn:session-started', { detail: { startedAtMs: Date.now() } }),
+            );
+          }
+          setVoiceStartedAtMs((prev) => prev ?? Date.now());
+        }}
         onMicLevel={(l) => { micLevelRef.current = l; }}
         onListeningHint={setListeningHint}
         onVoiceHiccup={handleVoiceHiccup}
