@@ -277,6 +277,12 @@ export const BARGEIN_GATE_MAX_MS = 5000;
 // stricter than the shipped constant; the floor keeps a silent baseline from
 // collapsing the gate to ~0. margin 2.5 lands at ~.055 on the measured
 // mobile sessions — above echo p99 (.042), below student speech (.104).
+// Draggable tutor ink notes (R2 E3). Turned OFF 2026-07-27 (round-5): the
+// affordance wasn't wanted. Off restores the pre-drag behaviour exactly —
+// notes are pointer-events-none again, so a tap falls through to the
+// tap-to-mark wrapper natively. The drag machinery in InkNotesOverlay is
+// deliberately left in place; set this true to bring it back.
+export const INK_NOTE_DRAG = false;
 export const BARGEIN_ENERGY_FLOOR = 0.03;
 export const BARGEIN_ECHO_MARGIN = 2.5;
 /** How far back from the onset the echo-floor baseline is sampled. Must stay

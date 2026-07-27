@@ -20,7 +20,11 @@ import {
   releaseSharedMicStream,
   setSharedMicEnabled,
 } from '@/lib/tutor/voice/shared-mic';
-import { getPlaybackTarget } from '@/lib/tutor/voice/playback-route';
+import {
+  getPlaybackTarget,
+  silencePlaybackRoute,
+  unsilencePlaybackRoute,
+} from '@/lib/tutor/voice/playback-route';
 import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-stream';
 import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS, TUTOR_TTS_WS, SONIC_WS_FIRST_CHUNK_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
@@ -1271,6 +1275,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       playNextAudio();
     };
     playbackSourceRef.current = source;
+    // Re-open the AEC media route (no-op when it was never silenced, and when
+    // the route is off). Doing it per chunk makes any stray silence
+    // self-healing rather than a permanently mute tutor.
+    unsilencePlaybackRoute(ctx);
     source.start();
   }, [updateState, isHttpTtsProvider, emitPlaybackStamp]);
 
@@ -2617,7 +2625,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   // Interrupt playback
   const interrupt = useCallback(() => {
-    // Stop playback
+    // Stop playback. Stopping the BufferSource is not enough on the AEC
+    // media route: samples already handed to the MediaStream keep playing and
+    // bled over the next sentence (round-5 live test — "voice shakes until it
+    // speaks again"). Zero the route's gain so nothing further enters it.
+    silencePlaybackRoute(getAudioContext());
     if (playbackSourceRef.current) {
       try {
         playbackSourceRef.current.stop();
@@ -2671,7 +2683,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       mediaStreamRef.current = null;
     }
 
-    // Stop playback
+    // Stop playback (see interrupt() for why the route is silenced too).
+    silencePlaybackRoute(getAudioContext());
     if (playbackSourceRef.current) {
       try { playbackSourceRef.current.stop(); } catch {}
       playbackSourceRef.current = null;
@@ -3517,6 +3530,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // is moot — they always have an in-flight response and stopped is
     // already true. Purely additive.
     if (!stopped && playbackSourceRef.current) {
+      silencePlaybackRoute(getAudioContext());
       try { playbackSourceRef.current.stop(); } catch { /* may already be stopped */ }
       audioQueueRef.current = [];
       isPlayingRef.current = false;

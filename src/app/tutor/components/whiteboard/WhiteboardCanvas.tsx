@@ -101,6 +101,7 @@ import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/
 import { InkNotesOverlay } from './InkNotesOverlay';
 import { inkNotesEnabled, linksEnabled } from '../../hooks/toolDefinitions';
 import { shouldFollowNewRender, trailingNavSuppressesFollow } from '@/lib/tutor/whiteboard/view-follow';
+import { INK_NOTE_DRAG } from '@/lib/tutor/orchestrator/flags';
 
 /** Actions that don't paint a teaching render — shared by the scrollTo
  *  processor and the auto-scroll-to-newest effect so both agree on which
@@ -1794,7 +1795,15 @@ export function WhiteboardCanvas({
             labeledScribbles={scribbles}
             links={links}
             onOverflowChange={handleNoteOverflow}
-            onNoteMoved={onInkNoteMoved}
+            // Round-5 (2026-07-27): tutor annotations are NO LONGER draggable —
+            // product call, the affordance wasn't wanted. Withholding
+            // `onNoteMoved` is the whole switch: InkNotesOverlay derives
+            // `draggable` from it, so the note goes back to pointer-events-none
+            // and taps fall through to the tap-to-mark wrapper natively (which
+            // is also why `onNoteTap` below stops mattering — it exists only to
+            // replace that fallthrough while dragging was on). Re-enable by
+            // flipping this flag; the drag machinery is left intact.
+            onNoteMoved={INK_NOTE_DRAG ? onInkNoteMoved : undefined}
             // R2 fix-1 (review round 1): once a note is draggable it's
             // pointer-events-auto, which breaks the pointer-events-none
             // pass-through that used to deliver a note tap to this

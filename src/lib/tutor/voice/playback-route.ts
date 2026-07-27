@@ -35,6 +35,11 @@ export const AEC_PLAYBACK_ROUTE =
 interface RouteState {
   node: MediaStreamAudioDestinationNode;
   el: HTMLAudioElement;
+  /** Sources connect HERE, not to `node`. Zeroing this gain silences the media
+   *  path within one render quantum, which is the only way a barge-in can cut
+   *  audio that has already been handed to a MediaStream — the stream and the
+   *  element have no flush API. See `silencePlaybackRoute`. */
+  gain: GainNode;
 }
 
 const routes = new WeakMap<AudioContext, RouteState>();
@@ -55,10 +60,12 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
   if (typeof document === 'undefined') return ctx.destination;
 
   const existing = routes.get(ctx);
-  if (existing) return existing.node;
+  if (existing) return existing.gain;
 
   try {
     const node = ctx.createMediaStreamDestination();
+    const gain = ctx.createGain();
+    gain.connect(node);
     const el = document.createElement('audio');
     el.autoplay = true;
     // Never surface controls or take layout space; this element exists purely
@@ -84,9 +91,9 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
       });
     }
 
-    routes.set(ctx, { node, el });
+    routes.set(ctx, { node, el, gain });
     console.warn('[playback-route] TTS routed via MediaStreamDestination (AEC reference path)');
-    return node;
+    return gain;
   } catch (err) {
     console.warn('[playback-route] route setup failed — using ctx.destination', err);
     failed.add(ctx);
@@ -95,17 +102,70 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
 }
 
 /**
- * Demote a context to direct output and re-point already-connected sources.
- * Sources connected to the dead node keep playing into nothing, so we also
- * bridge the node's output to the real destination — cheaper and less
- * disruptive than tearing down in-flight playback.
+ * Demote a context to direct output.
+ *
+ * BUG THIS FIXES (round-5 live test, 2026-07-27): the first version bridged
+ * `node → ctx.destination` and left the <audio> element attached and
+ * `autoplay`-armed. So when play() was rejected (no gesture yet — the enrolled
+ * session's opening turn) and the element later became eligible and started on
+ * its own, the SAME audio reached the speaker twice: once through the bridge,
+ * once through the element, offset by the element's own buffering. Two nearly
+ * coincident copies is textbook comb filtering, which is exactly what got
+ * reported — the tutor's voice "shaking / reverberating". It also explains the
+ * echo returning on that opening turn: while the bridge carried playback, audio
+ * was going direct to `ctx.destination` again, i.e. off the AEC reference path.
+ *
+ * So the element is now TORN DOWN before the bridge is made. Exactly one path
+ * to the speaker is live at any moment, always.
  */
 function markFailed(ctx: AudioContext): void {
   if (failed.has(ctx)) return;
   failed.add(ctx);
   const route = routes.get(ctx);
   if (!route) return;
-  try { route.node.connect(ctx.destination); } catch {}
+  // Kill the media-element path FIRST — order matters, an autoplay-armed
+  // element left attached is precisely the double-playback bug above.
+  try { route.el.pause(); } catch {}
+  try { route.el.srcObject = null; } catch {}
+  try { route.el.remove(); } catch {}
+  // Now re-point in-flight sources at the real destination. They are connected
+  // to `gain`, so bridging gain (not node) keeps already-playing audio audible
+  // rather than cutting the tutor off mid-sentence.
+  try { route.node.disconnect(); } catch {}
+  try { route.gain.connect(ctx.destination); } catch {}
+}
+
+/**
+ * Instantly silence whatever is already in the media path. Barge-in stops the
+ * BufferSources, but samples already handed to the MediaStream keep playing —
+ * there is no flush API on either the stream or the element — so the tail of a
+ * killed sentence bled over the start of the next one. Zeroing the gain stops
+ * new samples entering the stream within one render quantum.
+ *
+ * A 10ms ramp rather than a hard set: an instantaneous gain step is a
+ * discontinuity in the waveform, which clicks.
+ */
+export function silencePlaybackRoute(ctx: AudioContext): void {
+  const route = routes.get(ctx);
+  if (!route) return;
+  try {
+    const now = ctx.currentTime;
+    route.gain.gain.cancelScheduledValues(now);
+    route.gain.gain.setValueAtTime(route.gain.gain.value, now);
+    route.gain.gain.linearRampToValueAtTime(0, now + 0.01);
+  } catch {}
+}
+
+/** Re-open the media path for the next sentence (mirror of the above). */
+export function unsilencePlaybackRoute(ctx: AudioContext): void {
+  const route = routes.get(ctx);
+  if (!route) return;
+  try {
+    const now = ctx.currentTime;
+    route.gain.gain.cancelScheduledValues(now);
+    route.gain.gain.setValueAtTime(route.gain.gain.value, now);
+    route.gain.gain.linearRampToValueAtTime(1, now + 0.01);
+  } catch {}
 }
 
 /** Tear down the element/node for a context (session end). Safe to call twice. */
@@ -115,6 +175,7 @@ export function releasePlaybackRoute(ctx: AudioContext): void {
   try { route.el.pause(); } catch {}
   try { route.el.srcObject = null; } catch {}
   try { route.el.remove(); } catch {}
+  try { route.gain.disconnect(); } catch {}
   try { route.node.disconnect(); } catch {}
   routes.delete(ctx);
 }
