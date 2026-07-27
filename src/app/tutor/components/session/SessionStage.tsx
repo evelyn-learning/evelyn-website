@@ -203,6 +203,10 @@ const STATE_LABEL: Record<VoiceState, string> = {
   idle: 'Ready', error: 'Connection issue',
 };
 
+/** How long the tapped full-title banner stays up. Long enough to read a
+ *  two-line lesson name without becoming something you have to dismiss. */
+const TITLE_REVEAL_MS = 4000;
+
 export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
@@ -213,6 +217,34 @@ export default function SessionStage(props: SessionStageProps) {
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
     boardPenActive, onToggleBoardPen, onOrbStart,
   } = props;
+
+  // Round-5: transient full-title reveal (see the header markup below).
+  const [titleRevealed, setTitleRevealed] = useState(false);
+  const titleRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTitle = useCallback(() => {
+    if (titleRevealTimerRef.current) {
+      clearTimeout(titleRevealTimerRef.current);
+      titleRevealTimerRef.current = null;
+    }
+    setTitleRevealed(false);
+  }, []);
+  const revealTitle = useCallback(() => {
+    // Re-tapping RESTARTS the window rather than stacking timers — otherwise an
+    // earlier timeout would dismiss the banner mid-read.
+    if (titleRevealTimerRef.current) clearTimeout(titleRevealTimerRef.current);
+    setTitleRevealed(true);
+    titleRevealTimerRef.current = setTimeout(() => {
+      titleRevealTimerRef.current = null;
+      setTitleRevealed(false);
+    }, TITLE_REVEAL_MS);
+  }, []);
+  // Never leave a timer running past unmount (it would setState on a dead tree).
+  useEffect(() => () => {
+    if (titleRevealTimerRef.current) clearTimeout(titleRevealTimerRef.current);
+  }, []);
+  // Native tooltip for pointer devices, where hovering is the natural gesture.
+  // Only meaningful when the title is a plain string; ReactNode titles skip it.
+  const titleTooltip = typeof lessonTitle === 'string' ? lessonTitle : undefined;
 
   const showSwitcher = !!boardPages && boardPages.count > 1;
 
@@ -806,10 +838,22 @@ export default function SessionStage(props: SessionStageProps) {
           <div className="flex items-center gap-2 sm:gap-4 px-2.5 sm:px-4 h-12">
             <button onClick={onBack} className="shrink-0 grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"><ChevronLeft className="w-5 h-5" /></button>
             {headerBrand && <div className="shrink-0 flex items-center">{headerBrand}</div>}
-            <div className="min-w-0">
+            {/* Round-5: the header row carries seven controls, so on a phone the
+                title truncates to something useless ("U1…"). Tapping it drops a
+                transient banner BELOW the row (see below) with the full title —
+                a banner rather than an in-row expansion because it floats over
+                the board and therefore costs no vertical space, and because it
+                can afford the two lines a long lesson name actually needs. */}
+            <button
+              type="button"
+              onClick={revealTitle}
+              className="min-w-0 text-left cursor-pointer"
+              title={titleTooltip}
+              aria-label={titleTooltip ? `Lesson: ${titleTooltip}. Tap to show the full name.` : 'Show the full lesson name'}
+            >
               <h1 className="text-sm font-semibold text-slate-900 truncate leading-tight">{lessonTitle}</h1>
               {subtitle && <p className="text-[11px] text-slate-500 truncate leading-tight">{subtitle}</p>}
-            </div>
+            </button>
             {/* beats (desktop) */}
             {/* Practice meter (2026-07-17): the beats slot no longer requires a
                 plan — plan-less sessions (free practice / upload) render the
@@ -853,6 +897,21 @@ export default function SessionStage(props: SessionStageProps) {
             </div>
           </div>
         </div>
+        {/* Transient full-title banner. Absolutely positioned so it overlays the
+            board instead of pushing it down — the whole point is that revealing
+            the name costs no whiteboard height. Auto-dismisses after
+            TITLE_REVEAL_MS; tapping it again dismisses early. */}
+        {titleRevealed && (
+          <div
+            className="absolute left-2 right-2 top-full z-40 mt-1 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md"
+            role="status"
+            onClick={hideTitle}
+            data-testid="lesson-title-reveal"
+          >
+            <p className="text-sm font-semibold leading-snug text-slate-900">{lessonTitle}</p>
+            {subtitle && <p className="mt-0.5 text-xs leading-snug text-slate-500">{subtitle}</p>}
+          </div>
+        )}
       </div>
 
       {/* ===== Student tools cluster (top-right) ===== */}
