@@ -15,6 +15,12 @@ import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDef
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
+import {
+  acquireSharedMicStream,
+  releaseSharedMicStream,
+  setSharedMicEnabled,
+} from '@/lib/tutor/voice/shared-mic';
+import { getPlaybackTarget } from '@/lib/tutor/voice/playback-route';
 import { openPcmChunkStream, type PcmChunkStream } from '@/lib/tutor/voice/pcm-stream';
 import { TUTOR_TTS_STREAM_HEAD, TTS_STREAM_HEAD_SAMPLES, TTS_STREAM_FOLLOW_SAMPLES, TTS_STREAM_TAIL_TIMEOUT_MS, TUTOR_TTS_WS, SONIC_WS_FIRST_CHUNK_TIMEOUT_MS } from '@/lib/tutor/orchestrator/flags';
 import { wordIndexAt } from '@/lib/tutor/voice/sonic-ws';
@@ -446,6 +452,9 @@ function pickManifestDisplayLabel(f: FeatureManifestEntry): string {
   }
   return f.name;
 }
+
+/** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
+const MIC_CONSUMER = 'production-ws';
 
 // Audio context for playback
 let audioContext: AudioContext | null = null;
@@ -1254,7 +1263,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     const source = ctx.createBufferSource();
     source.buffer = buffer;
-    source.connect(ctx.destination);
+    // Round-5 echo fix: route to the media path so the browser's echo
+    // canceller has a reference copy of what the speaker is playing. Falls
+    // back to ctx.destination itself if that route is off or unavailable.
+    source.connect(getPlaybackTarget(ctx));
     source.onended = () => {
       playNextAudio();
     };
@@ -2370,7 +2382,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       audioProcessorRef.current = null;
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      // Release, don't stop: the Ink2 STT hook may still hold the same shared
+      // capture. Tracks stop when the last holder releases (shared-mic.ts).
+      releaseSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = null;
     }
 
@@ -2430,7 +2444,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
     // If mic is already active, re-enable tracks (may have been muted) and update state
     if (audioProcessorRef.current && mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => { track.enabled = true; });
+      setSharedMicEnabled(true);
       shouldListenRef.current = true;
       updateState('listening');
       return;
@@ -2439,16 +2453,19 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     shouldListenRef.current = true;
 
     try {
-      // Get microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 24000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+      // Get microphone access. Round-5 echo fix: this is now the SHARED
+      // capture, not a second independent getUserMedia running alongside the
+      // Ink2 STT hook's. Two concurrent captures were costing us mobile
+      // Safari's echo cancellation — see shared-mic.ts for the measurements.
+      const stream = await acquireSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = stream;
+      // The shared stream may come back with tracks already DISABLED — a
+      // previous muteInput() disabled them and the Ink2 hook kept the stream
+      // alive, so this "fresh" open inherits the muted track rather than the
+      // enabled-by-default one a private getUserMedia would have returned.
+      // Callers only reach startListening when they intend to listen (every
+      // auto-start path checks userMutedRef first), so assert that here.
+      setSharedMicEnabled(true);
 
       // Create audio processor
       const ctx = getAudioContext();
@@ -2548,7 +2565,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       audioProcessorRef.current = null;
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      // Release, don't stop: the Ink2 STT hook may still hold the same shared
+      // capture. Tracks stop when the last holder releases (shared-mic.ts).
+      releaseSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = null;
     }
 
@@ -2578,10 +2597,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // response.done) honour it even if the mic hasn't been opened yet.
     userMutedRef.current = true;
 
-    // Disable mic tracks without destroying them so unmute can re-enable instantly
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => { track.enabled = false; });
-    }
+    // Disable mic tracks without destroying them so unmute can re-enable
+    // instantly. Deliberately applies to the SHARED capture: "student muted"
+    // must silence the Ink2 STT path and the recorder too, not just this WS.
+    setSharedMicEnabled(false);
 
     // If the student was speaking (audio in buffer), commit it so the AI processes it;
     // otherwise clear the buffer to discard any background noise
@@ -2646,7 +2665,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       audioProcessorRef.current = null;
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      // Release, don't stop: the Ink2 STT hook may still hold the same shared
+      // capture. Tracks stop when the last holder releases (shared-mic.ts).
+      releaseSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = null;
     }
 

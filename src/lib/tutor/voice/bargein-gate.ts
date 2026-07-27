@@ -105,6 +105,70 @@ export function shouldFireBargeInKill(input: BargeInGateInput): boolean {
 }
 
 /**
+ * Per-device adaptive energy threshold (round-5 echo fix, 2026-07-27).
+ *
+ * ROOT CAUSE this closes: `BARGEIN_ENERGY_THRESHOLD` (0.15) is a single
+ * absolute number on a scale that is ~10x hotter on desktop than on a phone.
+ * Measuring the recorded student/tutor PCM of two real mobile prod sessions
+ * in this exact scaled domain (see flags.ts for the full table) shows mobile
+ * self-echo at p99 .039-.042 and genuine mobile student speech at p50 .104 /
+ * max .139 — BOTH under 0.15. A fixed gate therefore cannot separate them on
+ * mobile at any setting: at 0.15 it blocks every real barge-in, and anywhere
+ * low enough to pass speech it also passes echo.
+ *
+ * The separation that DOES hold on every device is RELATIVE: genuine speech
+ * sits several times above the echo floor the same mic is already carrying.
+ * So sample that floor from the frames just BEFORE the onset — during TTS the
+ * mic carries echo + ambient and nothing else — and scale it.
+ *
+ *   threshold = clamp(margin * median(baseline frames), floor, ceiling)
+ *
+ * `ceiling` is the legacy fixed constant, so this is NEVER stricter than what
+ * shipped. `floor` stops a digitally-silent baseline (muted mic, capture gap)
+ * from collapsing the gate to ~0 and letting any whisper of echo through.
+ * Median, not mean, so one loud frame that straddles the onset can't inflate
+ * the baseline and silently disable the gate.
+ *
+ * With no frames in the window there is no evidence to adapt on, so it
+ * returns `ceiling` — today's behaviour, chosen deliberately over guessing.
+ *
+ * Pure: identical output for identical input.
+ */
+export interface AdaptiveThresholdInput {
+  /** Recent mic-energy frames. Filtered to [fromMs, toMs] internally. */
+  frames: BargeInFrame[];
+  /** Start of the baseline window (ms, Date.now() domain). */
+  fromMs: number;
+  /** End of the baseline window — normally the speech onset. */
+  toMs: number;
+  /** Absolute minimum the threshold may adapt down to. */
+  floor: number;
+  /** Absolute maximum — the legacy fixed constant. */
+  ceiling: number;
+  /** How many times the echo floor a frame must reach to count as speech. */
+  margin: number;
+}
+
+export function resolveBargeInEnergyThreshold(input: AdaptiveThresholdInput): number {
+  const inWindow = input.frames
+    .filter((f) => f.tMs >= input.fromMs && f.tMs <= input.toMs)
+    .map((f) => f.energy)
+    .sort((a, b) => a - b);
+  // No evidence → don't guess; keep the shipped constant.
+  if (inWindow.length === 0) return input.ceiling;
+
+  const mid = Math.floor(inWindow.length / 2);
+  const baseline = inWindow.length % 2 === 0
+    ? (inWindow[mid - 1] + inWindow[mid]) / 2
+    : inWindow[mid];
+
+  const scaled = baseline * input.margin;
+  if (scaled < input.floor) return input.floor;
+  if (scaled > input.ceiling) return input.ceiling;
+  return scaled;
+}
+
+/**
  * Timer-variant of the sustain gate for the Ink2 STT path (Task X3).
  *
  * ROOT CAUSE (session portal-da5b97a6): the energy-window gate above defends

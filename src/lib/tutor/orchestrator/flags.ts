@@ -262,6 +262,26 @@ export const OPENER_BARGEIN_SUSTAIN_MS = 350;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;
+// Adaptive barge-in energy gate (2026-07-27, round-5 echo fix). The fixed
+// 0.15 above is a DESKTOP-calibrated constant and is unusable on a phone:
+// measuring the recorded student/tutor PCM of two real mobile prod sessions
+// (portal-c867381f, portal-fb520c16) in this same scaled 0..1 domain gives
+//   echo   p50 .012-.022, p99 .039-.042
+//   speech p50 .104,      max .139
+// — i.e. BOTH self-echo and genuine student speech sit far below 0.15, so
+// the fixed gate can only ever be all-block or all-pass on mobile (desktop
+// session-1785023522127 measures echo p50 .247 / speech p50 .308, ~10x
+// hotter). So the live threshold is derived per-device from the observed
+// echo floor just before the onset: threshold = clamp(margin * baseline,
+// FLOOR, BARGEIN_ENERGY_THRESHOLD). The ceiling keeps this from EVER being
+// stricter than the shipped constant; the floor keeps a silent baseline from
+// collapsing the gate to ~0. margin 2.5 lands at ~.055 on the measured
+// mobile sessions — above echo p99 (.042), below student speech (.104).
+export const BARGEIN_ENERGY_FLOOR = 0.03;
+export const BARGEIN_ECHO_MARGIN = 2.5;
+/** How far back from the onset the echo-floor baseline is sampled. Must stay
+ *  under usePerceptionWS/useCartesiaInkWS's 1500ms energy window. */
+export const BARGEIN_BASELINE_LOOKBACK_MS = 600;
 // Validate-before-speak (Pillar 2 of the robustness track,
 // project_tutor_validate_before_speak). Rolling micro-hold: after the
 // first clean tool opens the gate, subsequent sentences stay BUFFERED
