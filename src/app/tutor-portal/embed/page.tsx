@@ -657,8 +657,11 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName]);
 
   // End session — save to DB + notify parent window
-  const handleEndSession = useCallback((reason?: 'time_limit') => {
-    saveSession('completed');
+  const handleEndSession = useCallback((reason?: 'time_limit', endIntent?: 'finish' | 'discard') => {
+    // A deliberate discard (round-4 item 5) is an abandonment, not a
+    // completion — keep the engine's own record consistent with the
+    // portal's abort.
+    saveSession(endIntent === 'discard' ? 'abandoned' : 'completed');
     setSessionEnded(true);
     const duration = Math.round((Date.now() - sessionStartRef.current.getTime()) / 1000);
     // Post message to parent window for partner integration
@@ -673,6 +676,10 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         // wall-clock cap ended the session (not the student's End button), so
         // the portal can distinguish a timed-out demo from a normal finish.
         ...(reason === 'time_limit' ? { ended_reason: 'time_limit' as const } : {}),
+        // Round-4 item 5 (additive): the Adaptive-menu Finish/Discard choice.
+        // The portal branches on it (finish → finalize, discard → abort);
+        // absent on a plain End/Pause, so older portals see no change.
+        ...(endIntent ? { end_intent: endIntent } : {}),
         // Real engine milestone (value-boxed). 'none' if the student bailed
         // before completing a concept — the portal consumes this directly.
         milestone: milestoneRef.current,
@@ -860,6 +867,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         topicDisplayName={topicDisplayName}
         headerBrand={headerBrand}
         onEndSession={handleEndSession}
+        embedded
         onMilestone={handleMilestone}
         onTranscriptUpdate={setTranscript}
         onWhiteboardCommand={(cmds, meta) => {

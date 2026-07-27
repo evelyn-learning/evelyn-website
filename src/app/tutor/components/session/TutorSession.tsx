@@ -152,7 +152,14 @@ export interface TutorSessionProps {
 
   // Required lifecycle. `reason` is 'time_limit' only when the demo hard-stop
   // timer fired (so the embed can tag session_ended); the End button omits it.
-  onEndSession: (reason?: 'time_limit') => void;
+  // `endIntent` (round-4 item 5, embed-only) is the Adaptive-menu "Finish
+  // lesson"/"Discard session" choice — the embed forwards it on
+  // session_ended as the additive `end_intent` field for the portal.
+  onEndSession: (reason?: 'time_limit', endIntent?: 'finish' | 'discard') => void;
+  /** Round-4 item 5: true when hosted by the portal embed. Gates the
+   *  Adaptive-menu Finish/Discard entries — those intents only mean
+   *  something to a portal listening on session_ended. */
+  embedded?: boolean;
 
   /** Share the parent's RealtimeHandle ref instead of an internal one. The
    *  standalone /tutor page needs this: its auto-start injection, end-session
@@ -198,7 +205,7 @@ export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
     sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
-    topicDisplayName, headerBrand, loadDesmos = true, onEndSession, onMilestone, onTranscriptUpdate,
+    topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
@@ -218,9 +225,14 @@ export default function TutorSession(props: TutorSessionProps) {
   // without touching each call site's own teardown logic. Mirrors the
   // 'evelyn:open-transcript' window-event bridge already used to reach
   // SessionStage from up here.
+  // Round-4 item 5: the Adaptive-menu Finish/Discard entries stash their
+  // intent here BEFORE running VTR's endSession() teardown — that handle
+  // calls onEndSession with no args, so the intent rides a ref through the
+  // teardown and is forwarded at this single choke point.
+  const endIntentRef = useRef<'finish' | 'discard' | undefined>(undefined);
   const handleEndSession = useCallback((reason?: 'time_limit') => {
     window.dispatchEvent(new Event('evelyn:session-ending'));
-    onEndSession(reason);
+    onEndSession(reason, endIntentRef.current);
   }, [onEndSession]);
 
   // --- Session-view state (owned here) ---
@@ -1133,6 +1145,41 @@ export default function TutorSession(props: TutorSessionProps) {
           </button>
           <div className="my-1 border-t border-slate-100" />
           <button onClick={() => { realtimeHandleRef.current?.stopSpeaking(); realtimeHandleRef.current?.sendTextMessage("I'm done — let's wrap up."); setPacingMenuOpen(false); }} className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700">Wrap up</button>
+          {/* Round-4 item 5 (embed-only): the portal's bottom-strip
+              Finish/Discard buttons moved here. Each stashes its intent in
+              endIntentRef, then runs VTR's FULL endSession() teardown (TTS
+              hard-stop + recording finalize + final profile commit) — same
+              fallback shape as the End button above; handleEndSession
+              forwards the intent to the embed's session_ended postMessage. */}
+          {embedded && !isTrial && (
+            <>
+              <div className="my-1 border-t border-slate-100" />
+              <button
+                onClick={() => {
+                  setPacingMenuOpen(false);
+                  endIntentRef.current = 'finish';
+                  const h = realtimeHandleRef.current;
+                  if (h?.endSession) h.endSession();
+                  else handleEndSession();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
+              >
+                Finish lesson
+              </button>
+              <button
+                onClick={() => {
+                  setPacingMenuOpen(false);
+                  endIntentRef.current = 'discard';
+                  const h = realtimeHandleRef.current;
+                  if (h?.endSession) h.endSession();
+                  else handleEndSession();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-red-50 text-red-600"
+              >
+                Discard session
+              </button>
+            </>
+          )}
           {/* R34 T4: Manual mic — per-device opt-in, TUTOR_MANUAL_MIC-gated.
               Auto/Manual segmented pair mirrors the "Pace: slow ×1" pill's
               active/inactive styling above; keeps the menu open on tap, same
