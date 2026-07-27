@@ -43,6 +43,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { preStartDockCaption } from './prestart-affordances';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -676,10 +677,13 @@ export default function TutorSession(props: TutorSessionProps) {
     // it's the actionable state the student needs to see until they tap ✓.
     : voiceState === 'manual-held' ? { text: 'Held — tap ✓ to send', cls: 'text-blue-600' }
     : null;
-  const dockStatus =
-    voiceState === 'muted' ? { text: 'Muted — tap the mic to talk', cls: 'text-slate-500' }
-    : started ? { text: 'Listening…', cls: 'text-slate-400' }
-    : { text: 'Tap the mic to start', cls: 'text-slate-500' };
+  // 2026-07-26 pre-start redesign: pre-start now reads "or start here — talk
+  // or type", because the ORB is the primary start control and this line's
+  // job is to tell a student who can't or won't speak that typing works too.
+  const dockStatus = {
+    text: preStartDockCaption({ started, muted: voiceState === 'muted' }),
+    cls: voiceState === 'muted' ? 'text-slate-500' : started ? 'text-slate-400' : 'text-slate-500',
+  };
   const dockCaptionEl = statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
@@ -1285,6 +1289,10 @@ export default function TutorSession(props: TutorSessionProps) {
         board={boardEl}
         boardPages={boardNav ?? undefined}
         voiceInput={voiceInputEl}
+        // Center-orb start (2026-07-26). Synchronous call into the handle —
+        // handleMicClick's unlockAudio() must run inside this click's gesture
+        // stack or iOS never resumes the AudioContext.
+        onOrbStart={() => realtimeHandleRef.current?.startSession?.()}
         transcript={transcriptEl}
         transcriptCount={transcript.length}
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}

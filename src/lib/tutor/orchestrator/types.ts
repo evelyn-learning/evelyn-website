@@ -75,6 +75,18 @@ export interface RealtimeHandle {
    *  with a non-empty buffer sends it (never drops words). Wired to the ⋯
    *  menu's Mic row (TUTOR_MANUAL_MIC-gated). */
   setManualMic: (v: boolean) => void;
+  /** Start the session from a control OUTSIDE the dock — currently the
+   *  SessionStage center orb (2026-07-26 pre-start redesign). Runs the exact
+   *  same path as the dock mic's own tap (handleMicClick), so the session
+   *  clock stamp, onSessionStarted, the warm-up overlay, the [start lesson]
+   *  brain kickoff, and the mute-before-start honoring are all identical —
+   *  there is deliberately no second implementation to drift.
+   *
+   *  MUST be invoked synchronously inside the click handler: unlockAudio()
+   *  only resumes the iOS AudioContext from within the gesture's call stack.
+   *  Optional — legacy handle producers may not implement it; callers should
+   *  fall back to leaving the orb decorative rather than throwing. */
+  startSession?: () => void;
 }
 
 /** Pedagogical milestones the runtime reports via `onMilestone`, fired once

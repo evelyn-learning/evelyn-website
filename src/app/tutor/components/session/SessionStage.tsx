@@ -33,6 +33,7 @@ import {
   normalizeCaptionMath,
 } from '@/lib/tutor/whiteboard/caption-fit';
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
+import { orbIsStartButton } from './prestart-affordances';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
 // the resting state in place of 'listening' while the student owns the
@@ -173,6 +174,11 @@ export interface SessionStageProps {
   // Phase 2 student marks — present only when the feature is enabled
   boardPenActive?: boolean;
   onToggleBoardPen?: () => void;
+  /** Start the session from the center orb (2026-07-26 pre-start redesign).
+   *  Wired to RealtimeHandle.startSession, which runs the dock mic's own
+   *  handler. Absent → the orb stays decorative. Called synchronously from
+   *  the orb's onClick so the iOS audio unlock keeps its gesture stack. */
+  onOrbStart?: () => void;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -201,7 +207,7 @@ export default function SessionStage(props: SessionStageProps) {
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
-    boardPenActive, onToggleBoardPen,
+    boardPenActive, onToggleBoardPen, onOrbStart,
   } = props;
 
   const showSwitcher = !!boardPages && boardPages.count > 1;
@@ -304,6 +310,11 @@ export default function SessionStage(props: SessionStageProps) {
   }, [toolsOpen]);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
+  // 2026-07-26 pre-start redesign: is the center orb the live start button
+  // right now? Drives the orb, its "Tap to start" label, the VU meter, and
+  // the ghost treatment on the starter chips — one source of truth so they
+  // can never disagree about which phase the screen is in.
+  const orbStarts = orbIsStartButton({ started, canStart: !!onOrbStart, agendaEngaged });
 
   // ===== Q-pin collapse/drag (2026-07-23 spec) — the expanded pin auto-
   // collapses to a docked chip after speech-end + 6s (15s hard cap), so it
@@ -591,18 +602,60 @@ export default function SessionStage(props: SessionStageProps) {
                 <Target className="w-4 h-4" /> {objective}
               </span>
             )}
-            <div className="relative mb-6 grid place-items-center">
-              {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
-              <div
-                className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
-                // While the student speaks, the orb swells with their voice — a
-                // direct "I'm hearing you" signal.
-                style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
-              >
-                <Sparkles className="w-12 h-12 drop-shadow" />
+            {/* Pre-start the orb IS the start control (2026-07-26 trial
+                feedback: the instruction sat in the center of the stage while
+                the only action sat at the bottom edge of the frame). Once
+                started it reverts to the presence indicator it has always
+                been — orbIsStartButton also refuses while an agenda pick is
+                in flight, so the brain never gets a duplicate kickoff. */}
+            {orbStarts ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onOrbStart}
+                  data-testid="tutor-orb-start"
+                  aria-label="Start the lesson"
+                  className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
+                >
+                  {/* Ring pulse invites the tap. */}
+                  <span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                  <span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                  <div className="ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br from-blue-400 to-blue-600">
+                    <Sparkles className="w-12 h-12 drop-shadow" />
+                  </div>
+                </button>
+                {/* The instruction now sits ON the action instead of pointing
+                    at the far edge of the frame. aria-hidden + tabIndex -1:
+                    the orb button above is the accessible control, and this
+                    is its visible label — exposing both would present the
+                    same action twice to a screen reader. */}
+                <button
+                  type="button"
+                  onClick={onOrbStart}
+                  tabIndex={-1}
+                  aria-hidden
+                  className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
+                >
+                  Tap to start
+                </button>
+              </>
+            ) : (
+              <div className="relative mb-6 grid place-items-center">
+                {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
+                <div
+                  className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
+                  // While the student speaks, the orb swells with their voice — a
+                  // direct "I'm hearing you" signal.
+                  style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
+                >
+                  <Sparkles className="w-12 h-12 drop-shadow" />
+                </div>
               </div>
-            </div>
-            <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>
+            )}
+            {/* The VU meter has nothing to show before the mic opens — and a
+                dead meter under a "Tap to start" orb reads as a broken
+                control. */}
+            {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
             {listeningHint === 'didnt-catch' ? (
               <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
             ) : (
@@ -632,11 +685,18 @@ export default function SessionStage(props: SessionStageProps) {
                     Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
                   </p>
                 )}
-                <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
-                  Tap the mic below to start
-                </p>
+                {/* The old "Tap the mic below to start" heading and its ↓
+                    arrow are gone: the instruction lives on the orb button
+                    above now, and repeating it here would point at a control
+                    that is no longer the primary one. When no orb start path
+                    is wired the heading still has a job, so it stays. */}
+                {!orbStarts && (
+                  <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
+                    Tap the mic below to start
+                  </p>
+                )}
                 <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
-                  Just talk — I&apos;ll listen and teach on the board <ArrowDown className="w-4 h-4" />
+                  Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
                 </p>
               </>
             )}
@@ -696,8 +756,15 @@ export default function SessionStage(props: SessionStageProps) {
                 the same), plus generic starters. Shown in every session so the
                 student always has something to act on. */
             <div className="mt-7 flex flex-wrap items-center justify-center gap-2 pointer-events-auto">
-              <label className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-300 text-slate-700 px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-50 cursor-pointer">
-                <Upload className="w-4 h-4 text-slate-500" /> Upload a problem
+              {/* Ghost styling pre-start (2026-07-26): these are secondary
+                  ways in and were competing with the start action for the
+                  student's first look. Same behavior, quieter presence. */}
+              <label className={`inline-flex items-center gap-2 rounded-full border cursor-pointer transition-colors ${
+                orbStarts
+                  ? 'bg-transparent border-slate-200 text-slate-400 px-3.5 py-1.5 text-xs hover:bg-slate-50 hover:text-slate-600'
+                  : 'bg-white border-slate-300 text-slate-700 px-4 py-2 text-sm font-medium shadow-sm hover:bg-slate-50'
+              }`}>
+                <Upload className={orbStarts ? 'w-3.5 h-3.5 text-slate-400' : 'w-4 h-4 text-slate-500'} /> Upload a problem
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} />
               </label>
               {/* Task Y1: the canned text still fires every click (it cues
@@ -716,11 +783,11 @@ export default function SessionStage(props: SessionStageProps) {
                   "[practice-mode] practice_session block attached", turns
                   2+ have it) — the tutor ran the regular concept-review
                   lesson over the student's explicit practice request. */}
-              <Chip active={practiceOverrideActive} onClick={() => { onTogglePracticeOverride?.(true); onStudentInput('text', 'Give me some practice problems.'); }}>
+              <Chip ghost={orbStarts} active={practiceOverrideActive} onClick={() => { onTogglePracticeOverride?.(true); onStudentInput('text', 'Give me some practice problems.'); }}>
                 {practiceOverrideActive ? '✓ ' : ''}Practice problems
               </Chip>
               {practiceModeActive && (
-                <Chip onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
+                <Chip ghost={orbStarts} onClick={() => { onTogglePracticeOverride?.(false); onStudentInput('text', 'Explain a concept to me.'); }}>Explain a concept</Chip>
               )}
             </div>
             )}
@@ -1280,12 +1347,18 @@ export function MicMeter({ level, speaking, large = false }: { level: number; sp
   );
 }
 
-function Chip({ children, onClick, active }: { children: ReactNode; onClick: () => void; active?: boolean }) {
+/** `ghost` (2026-07-26): pre-start these chips are SECONDARY ways in and were
+ *  competing with the start action for the student's first look, so they drop
+ *  to a quieter outline treatment. Behavior is identical either way, and an
+ *  `active` chip keeps its full weight — a ✓ state must stay legible. */
+function Chip({ children, onClick, active, ghost }: { children: ReactNode; onClick: () => void; active?: boolean; ghost?: boolean }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-full border px-3.5 py-2 text-sm font-medium shadow-sm ${
-        active ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+      className={`rounded-full border transition-colors ${
+        active ? 'bg-blue-50 border-blue-200 text-blue-700 px-3.5 py-2 text-sm font-medium shadow-sm'
+        : ghost ? 'bg-transparent border-slate-200 text-slate-400 px-3.5 py-1.5 text-xs hover:bg-slate-50 hover:text-slate-600'
+        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 px-3.5 py-2 text-sm font-medium shadow-sm'
       }`}
     >
       {children}

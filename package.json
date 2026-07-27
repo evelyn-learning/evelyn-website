@@ -38,6 +38,7 @@
     "test:energy-bars-scope": "npx tsx scripts/test-energy-bars-scope.ts",
     "test:dedup-scroll": "npx tsx scripts/test-dedup-scroll.ts",
     "test:view-follow": "npx tsx scripts/test-view-follow.ts",
+    "test:prestart": "npx tsx scripts/test-prestart-affordances.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
     "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
     "test:elevenlabs-voice-map": "npx tsx scripts/test-elevenlabs-voice-map.ts",

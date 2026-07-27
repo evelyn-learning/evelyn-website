@@ -234,6 +234,7 @@ import { validatePedigree } from '@/lib/tutor/diagrams/pedigree-validator';
 import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
+import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -1563,6 +1564,12 @@ export function VoiceTutorRealtime({
   // here so pickAgendaItem can fire it inside the tap's gesture stack. Default
   // no-op until that effect assigns the real function.
   const gestureSessionStartRef = useRef<() => void>(() => {});
+
+  // Mirror of handleMicClick for the handle's startSession (the SessionStage
+  // center orb, 2026-07-26). The handleRef effect below runs before
+  // handleMicClick is declared, so it reads through this ref — same idiom as
+  // gestureSessionStartRef immediately above.
+  const micClickRef = useRef<(() => void) | null>(null);
 
   // R32 T9: warmup watchdog. A stalled [start lesson] / [Session-resumed…] /
   // typed-first kickoff used to pin isWarmingUp (and the DISABLED mic) forever
@@ -14668,6 +14675,12 @@ export function VoiceTutorRealtime({
     gestureSessionStartRef.current = runGestureSessionStart;
     if (handleRef) {
       handleRef.current = {
+        startSession: () => {
+          // Straight through to the dock mic's own handler — no duplicated
+          // start logic. Synchronous by design (iOS audio unlock needs the
+          // caller's gesture stack).
+          micClickRef.current?.();
+        },
         sendTextMessage: (text: string) => {
           // Timer + demo-cap parity for typed-first students (2026-07-10
           // audit): the session clock was keyed to the first MIC tap only,
@@ -15243,6 +15256,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       }
     }
   }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue]);
+
+  // Keep the handle's startSession pointed at the CURRENT handleMicClick
+  // closure — it reads hasStarted / isMicMuted / realtime.state, so a stale
+  // capture would send a duplicate kickoff or ignore a pre-start mute.
+  useEffect(() => {
+    micClickRef.current = handleMicClick;
+  }, [handleMicClick]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {
@@ -16112,7 +16132,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
       {/* Controls on the right */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {!isPaused && (
+        {/* 2026-07-26 pre-start redesign: hidden until the session starts.
+            Pre-start there is nothing to mute, and a second mic glyph beside
+            the start mic read as a competing start control (trial feedback:
+            "dual microphone icons / choice paralysis"). Mute-BEFORE-start is
+            still honored end-to-end for anyone already muted — handleMicClick's
+            `if (!isMicMuted)` guard is untouched. */}
+        {showsDockMuteButton({ hasStarted, isPaused }) && (
           <button
             onClick={toggleMicMute}
             className={`p-2 rounded-lg text-sm ${isMicMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
