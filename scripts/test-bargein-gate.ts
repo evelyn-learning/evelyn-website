@@ -19,9 +19,14 @@ import {
   shouldFireDeferredBargeInKill,
   shouldDrainAfterOrphanedFetch,
   shouldFireSpeakingWatchdog,
+  resolveBargeInEnergyThreshold,
   type BargeInFrame,
 } from '../src/lib/tutor/voice/bargein-gate';
-import { BARGEIN_SUSTAIN_MS } from '../src/lib/tutor/orchestrator/flags';
+import {
+  BARGEIN_SUSTAIN_MS,
+  BARGEIN_ENERGY_FLOOR,
+  BARGEIN_ECHO_MARGIN,
+} from '../src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
 let failed = 0;
@@ -31,6 +36,8 @@ function test(name: string, fn: () => void) {
 }
 
 const THRESHOLD = 0.15;   // "voice present" on the scaled 0..1 mic level
+const MIN_THRESHOLD = BARGEIN_ENERGY_FLOOR;
+const ECHO_MARGIN = BARGEIN_ECHO_MARGIN;
 const SUSTAIN = BARGEIN_SUSTAIN_MS; // Read from flags.ts
 const FRAME_MS = 80;      // ~ the perception ScriptProcessor cadence
 
@@ -306,6 +313,104 @@ function main() {
       state: 'speaking', isPlaying: false, silentForMs: 8000, thresholdMs: 8000,
     });
     assert.equal(fire, true, 'silentForMs === thresholdMs fires');
+  });
+
+  console.log('\nAdaptive energy threshold — resolveBargeInEnergyThreshold\n');
+
+  // Levels below are MEASURED, not invented: they come from the recorded
+  // student/tutor PCM of real prod sessions, converted to the same scaled
+  // 0..1 `onMicLevel` domain the gate consumes (rms * 6, capped at 1).
+  //   mobile demo   portal-c867381f : echo p50 .022 p99 .039 | speech p90 .053 max .139
+  //   mobile round3 portal-fb520c16 : echo p50 .012 p99 .042 | speech p50 .104 max .108
+  //   desktop       session-1785023522127 : echo p50 .247   | speech p50 .308
+  // The mobile numbers are the whole reason this function exists: BOTH echo
+  // and real speech sit far below the fixed 0.15 constant, so the fixed gate
+  // could only ever be all-block or all-pass on a phone.
+
+  test('quiet mobile device → threshold drops below the fixed 0.15 constant', () => {
+    const baseline = frames(0, 600, 0.022); // measured mobile echo floor
+    const t = resolveBargeInEnergyThreshold({
+      frames: baseline, fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.ok(t < THRESHOLD, `expected adaptive threshold below ${THRESHOLD}, got ${t}`);
+    assert.ok(t > 0.039, `must sit above the measured mobile echo p99 (0.039), got ${t}`);
+    assert.ok(t < 0.104, `must sit below measured mobile student speech (0.104), got ${t}`);
+  });
+
+  test('loud desktop device → threshold clamps at the legacy ceiling', () => {
+    const baseline = frames(0, 600, 0.247); // measured desktop echo floor
+    const t = resolveBargeInEnergyThreshold({
+      frames: baseline, fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.equal(t, THRESHOLD, 'never stricter than the pre-existing fixed constant');
+  });
+
+  test('near-silent baseline → threshold clamps at the floor, not zero', () => {
+    const baseline = frames(0, 600, 0.0001);
+    const t = resolveBargeInEnergyThreshold({
+      frames: baseline, fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.equal(t, MIN_THRESHOLD, 'a silent baseline must not collapse the gate to ~0');
+  });
+
+  test('no baseline frames → conservative ceiling (today’s behaviour)', () => {
+    const t = resolveBargeInEnergyThreshold({
+      frames: [], fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.equal(t, THRESHOLD, 'with no evidence, fall back to the fixed constant');
+  });
+
+  test('baseline ignores frames outside [fromMs, toMs]', () => {
+    const mixed = [...frames(-2000, -1000, 0.9), ...frames(0, 600, 0.022)];
+    const t = resolveBargeInEnergyThreshold({
+      frames: mixed, fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.ok(t < THRESHOLD, 'stale loud frames outside the window must not raise the baseline');
+  });
+
+  test('median-based: a single loud outlier does not move the baseline', () => {
+    const withSpike = [...frames(0, 600, 0.022), { tMs: 300, energy: 1.0 }];
+    const t = resolveBargeInEnergyThreshold({
+      frames: withSpike, fromMs: 0, toMs: 600,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    assert.ok(t < 0.104, `one spike must not push the gate above student speech, got ${t}`);
+  });
+
+  console.log('\nEnd-to-end: measured mobile session replays\n');
+
+  test('mobile echo at measured levels → NO kill (this is the reported bug)', () => {
+    // Echo sustains for a full tutor sentence, so the TIME-only ink2 gate
+    // fires — this is exactly what cut the tutor off 10x in 34s. With the
+    // adaptive energy gate it must not.
+    const echo = frames(0, 1200, 0.039); // measured mobile echo p99
+    const threshold = resolveBargeInEnergyThreshold({
+      frames: frames(-600, 0, 0.022), fromMs: -600, toMs: 0,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    const fire = shouldFireBargeInKill({
+      state: 'speaking', speechStartMs: 0, nowMs: SUSTAIN,
+      frames: echo, energyThreshold: threshold, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, false, 'sustained self-echo on a phone must never kill the tutor');
+  });
+
+  test('mobile real barge-in at measured levels → kill still fires', () => {
+    const speech = frames(0, 1200, 0.104); // measured mobile student speech p50
+    const threshold = resolveBargeInEnergyThreshold({
+      frames: frames(-600, 0, 0.022), fromMs: -600, toMs: 0,
+      floor: MIN_THRESHOLD, ceiling: THRESHOLD, margin: ECHO_MARGIN,
+    });
+    const fire = shouldFireBargeInKill({
+      state: 'speaking', speechStartMs: 0, nowMs: SUSTAIN,
+      frames: speech, energyThreshold: threshold, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, true, 'a genuine mobile barge-in must still interrupt the tutor');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

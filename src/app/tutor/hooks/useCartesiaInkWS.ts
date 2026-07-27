@@ -66,6 +66,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } from './usePerceptionWS';
+import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
+import { acquireSharedMicStream, releaseSharedMicStream } from '@/lib/tutor/voice/shared-mic';
+
+/** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
+const MIC_CONSUMER = 'ink2-stt';
 
 // Re-exported so call sites (and this file) can use one name for either
 // hook's state/event/transcript shapes without a second type family.
@@ -141,9 +146,18 @@ export interface UseCartesiaInkWSResult {
   connect: () => Promise<void>;
   disconnect: () => void;
   setMuted: (muted: boolean) => void;
+  /** Snapshot of recent mic-energy frames for the sustained-energy barge-in
+   *  gate. Shape-identical to usePerceptionWS.getEnergyWindow so the wiring
+   *  in VoiceTutorRealtime can read either hook through one ref. */
+  getEnergyWindow: () => BargeInFrame[];
 }
 
 const INK_SAMPLE_RATE = 24000;
+// How much mic-energy history the barge-in gate keeps. Mirrors
+// usePerceptionWS's ENERGY_WINDOW_MS — comfortably exceeds BARGEIN_SUSTAIN_MS
+// plus BARGEIN_BASELINE_LOOKBACK_MS so both the sustained run AND the
+// pre-onset echo-floor baseline are always visible in one snapshot.
+const ENERGY_WINDOW_MS = 1500;
 const CARTESIA_VERSION = '2026-03-01';
 // Stale-connection watchdog (ported from usePerceptionWS.ts's
 // TRANSCRIPTION_WATCHDOG_MS): armed when a turn "probably ends"
@@ -222,6 +236,15 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const mutedRef = useRef<boolean>(false);
+  // Rolling mic-energy window (round-5 echo fix, 2026-07-27). Until now this
+  // hook exposed NO energy signal, so VoiceTutorRealtime hard-nulled the
+  // barge-in energy gate on the Ink2 path (`getPerceptionEnergyWindowRef =
+  // ... ? null : ...`) and fell back to a TIME-only sustain — which a
+  // continuous TTS sentence echoing off a phone speaker trivially outlasts,
+  // cutting the tutor off on its own voice (sessions portal-fb520c16,
+  // portal-c867381f). The level pushed here is the SAME scaled value already
+  // computed for onMicLevel, so this adds one array push per frame.
+  const energyWindowRef = useRef<BargeInFrame[]>([]);
   const inkT0Ref = useRef<number>(0);
   const speechStartedAtRef = useRef<number>(0);
   const intentionallyDisconnectedRef = useRef<boolean>(false);
@@ -250,15 +273,34 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     }
   }, []);
 
+  // Append one mic-energy frame and prune to ENERGY_WINDOW_MS. Stable (no
+  // deps) so startMic's long-lived onaudioprocess closure can call it.
+  const pushEnergyFrame = useCallback((energy: number) => {
+    const now = Date.now();
+    const w = energyWindowRef.current;
+    w.push({ tMs: now, energy });
+    const cutoff = now - ENERGY_WINDOW_MS;
+    while (w.length > 0 && w[0].tMs < cutoff) w.shift();
+  }, []);
+
+  const getEnergyWindow = useCallback((): BargeInFrame[] => {
+    return energyWindowRef.current.slice();
+  }, []);
+
   const teardownMic = useCallback(() => {
     if (processorRef.current) {
       try { processorRef.current.disconnect(); } catch {}
       processorRef.current = null;
     }
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      // Release, don't stop: the production WS may still be holding the same
+      // shared capture. Tracks stop when the last holder lets go.
+      releaseSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = null;
     }
+    // Drop stale history so a later re-start can't read pre-teardown frames
+    // as a live barge-in (mirrors usePerceptionWS.teardownMic).
+    energyWindowRef.current = [];
   }, []);
 
   const teardownWS = useCallback(() => {
@@ -288,14 +330,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
   const startMic = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: INK_SAMPLE_RATE,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+      // Round-5 echo fix: ONE capture for the whole tutor. This used to be an
+      // independent getUserMedia running alongside the production WS's own —
+      // two live captures on one device, which is where mobile Safari's echo
+      // cancellation was getting lost. See shared-mic.ts for the measurements.
+      const stream = await acquireSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = stream;
 
       const ctx = getInkAudioContext();
@@ -316,12 +355,21 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       processor.onaudioprocess = (e) => {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
-        if (mutedRef.current) { try { onMicLevelRef.current?.(0); } catch {} return; }
+        if (mutedRef.current) {
+          // Push a zero frame too: a muted mic carries no energy, and leaving
+          // the window frozen would let the gate read pre-mute frames as a
+          // still-live run.
+          pushEnergyFrame(0);
+          try { onMicLevelRef.current?.(0); } catch {}
+          return;
+        }
         const inputData = e.inputBuffer.getChannelData(0);
         let sumSq = 0;
         for (let i = 0; i < inputData.length; i++) sumSq += inputData[i] * inputData[i];
         const rms = Math.sqrt(sumSq / inputData.length);
-        try { onMicLevelRef.current?.(Math.min(1, rms * 6)); } catch {}
+        const level = Math.min(1, rms * 6);
+        pushEnergyFrame(level);
+        try { onMicLevelRef.current?.(level); } catch {}
         // Raw Float32 binary frame — no base64, no PCM16 downconvert.
         // inputData is a view into a reusable buffer owned by the audio
         // pipeline; copy it before handing to ws.send() so the browser
@@ -344,7 +392,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       onErrorRef.current?.(e);
       setState('error');
     }
-  }, [logPrefix, setState]);
+  }, [logPrefix, setState, pushEnergyFrame]);
 
   // Delivers the turn.end's OWN cumulative `transcript` field verbatim
   // (it's already the full, correctly-spaced final text for the turn —
@@ -659,5 +707,5 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     console.warn(`${logPrefix} mic ${muted ? 'muted' : 'unmuted'}`);
   }, [logPrefix]);
 
-  return { state, connect, disconnect, setMuted };
+  return { state, connect, disconnect, setMuted, getEnergyWindow };
 }

@@ -157,10 +157,17 @@ import {
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
   BARGEIN_ENERGY_THRESHOLD,
+  BARGEIN_ENERGY_FLOOR,
+  BARGEIN_ECHO_MARGIN,
+  BARGEIN_BASELINE_LOOKBACK_MS,
   BARGEIN_GATE_POLL_MS,
   BARGEIN_GATE_MAX_MS,
 } from '@/lib/tutor/orchestrator/flags';
-import { shouldFireBargeInKill, shouldFireDeferredBargeInKill } from '@/lib/tutor/voice/bargein-gate';
+import {
+  shouldFireBargeInKill,
+  shouldFireDeferredBargeInKill,
+  resolveBargeInEnergyThreshold,
+} from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
@@ -14341,7 +14348,24 @@ export function VoiceTutorRealtime({
         }
         const gateStartedAt = Date.now();
         const speechStartMs = gateStartedAt; // onset in the Date.now() domain
-        onDebugEvent?.('perception_bargein_gate_armed', `sustain=${BARGEIN_SUSTAIN_MS}ms`);
+        // Round-5 echo fix: derive the "voice present" threshold from THIS
+        // device's echo floor instead of the fixed desktop-calibrated 0.15.
+        // The baseline is sampled from the frames just BEFORE the onset —
+        // the tutor is speaking, so the mic is carrying echo + ambient and
+        // nothing else, which is exactly the level a real barge-in has to
+        // clear. Resolved ONCE at arm time (not per poll) so the threshold
+        // can't drift upward as the student's own speech enters the window
+        // and raises the median — that would be self-defeating.
+        const energyThreshold = resolveBargeInEnergyThreshold({
+          frames: getWindow(),
+          fromMs: speechStartMs - BARGEIN_BASELINE_LOOKBACK_MS,
+          toMs: speechStartMs,
+          floor: BARGEIN_ENERGY_FLOOR,
+          ceiling: BARGEIN_ENERGY_THRESHOLD,
+          margin: BARGEIN_ECHO_MARGIN,
+        });
+        onDebugEvent?.('perception_bargein_gate_armed',
+          `sustain=${BARGEIN_SUSTAIN_MS}ms threshold=${energyThreshold.toFixed(3)} (fixed=${BARGEIN_ENERGY_THRESHOLD})`);
         bargeInGateTimerRef.current = setInterval(() => {
           const now = Date.now();
           // Abandon the gate if the tutor has stopped talking (nothing left to
@@ -14358,7 +14382,7 @@ export function VoiceTutorRealtime({
             speechStartMs,
             nowMs: now,
             frames: getWindow(),
-            energyThreshold: BARGEIN_ENERGY_THRESHOLD,
+            energyThreshold,
             sustainMs: BARGEIN_SUSTAIN_MS,
           });
           if (fire) {
@@ -14473,10 +14497,15 @@ export function VoiceTutorRealtime({
     onDiagnostic: (type, message) => onDebugEvent?.(type, message),
   });
   const perception = TUTOR_STT_ENGINE_INK2 ? perceptionInk2 : perceptionWS;
-  // Task V1: feed the sustained-energy barge-in gate from the OpenAI perception
-  // hook's energy window. Ink2 has no window → null → gate falls back to today's
-  // instant kill (no regression on that path).
-  getPerceptionEnergyWindowRef.current = TUTOR_STT_ENGINE_INK2 ? null : perceptionWS.getEnergyWindow;
+  // Task V1: feed the sustained-energy barge-in gate from whichever perception
+  // hook owns the mic. Round-5 (2026-07-27): Ink2 now exposes the SAME window
+  // shape, so the gate is live on the production STT path too. Before this it
+  // was hard-nulled for Ink2 — which made BARGEIN_ENERGY_THRESHOLD dead code in
+  // prod and left every barge-in TIME-only, so the tutor's own echo (which
+  // sustains for the whole sentence) killed it mid-speech.
+  getPerceptionEnergyWindowRef.current = TUTOR_STT_ENGINE_INK2
+    ? perceptionInk2.getEnergyWindow
+    : perceptionWS.getEnergyWindow;
   // Reference for lint cleanliness; explicit read so a future stage that
   // surfaces a status pill / closes barge-in gaps has something to consume.
   void perception.state;
