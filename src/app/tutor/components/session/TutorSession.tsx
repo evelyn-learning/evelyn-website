@@ -44,6 +44,7 @@ import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 import { preStartDockCaption } from './prestart-affordances';
+import { HeaderClock } from './HeaderClock';
 
 type VTRProps = ComponentProps<typeof VoiceTutorRealtime>;
 type BoardNav = Parameters<NonNullable<ComponentProps<typeof WhiteboardCanvas>['onNavChange']>>[0];
@@ -1180,6 +1181,29 @@ export default function TutorSession(props: TutorSessionProps) {
               </button>
             </>
           )}
+          {/* Round-5: the TRIAL/demo counterpart. The demo funnel used to spend
+              a whole portal row above the iframe on this one button; moving it
+              here is what let that row go away on mobile. Only "finish" makes
+              sense for a trial — there is no cross-session continuity to
+              discard, and the host already treats session_ended as the wall
+              trigger, so this needs no new host→engine contract. */}
+          {embedded && isTrial && (
+            <>
+              <div className="my-1 border-t border-slate-100" />
+              <button
+                onClick={() => {
+                  setPacingMenuOpen(false);
+                  endIntentRef.current = 'finish';
+                  const h = realtimeHandleRef.current;
+                  if (h?.endSession) h.endSession();
+                  else handleEndSession();
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl hover:bg-slate-50 text-slate-700"
+              >
+                I&rsquo;ve finished this concept
+              </button>
+            </>
+          )}
           {/* R34 T4: Manual mic — per-device opt-in, TUTOR_MANUAL_MIC-gated.
               Auto/Manual segmented pair mirrors the "Pace: slow ×1" pill's
               active/inactive styling above; keeps the menu open on tap, same
@@ -1320,6 +1344,13 @@ export default function TutorSession(props: TutorSessionProps) {
         objective={objective}
         beats={beatsEl}
         controls={controlsEl}
+        headerClock={
+          <HeaderClock
+            startedAtMs={voiceStartedAtMs}
+            maxMinutes={sessionMaxMinutes}
+            countDown={!!maxDurationExplicit}
+          />
+        }
         adaptiveMenu={adaptiveMenuEl}
         endControl={endControlEl}
         questionPin={questionPinEl}

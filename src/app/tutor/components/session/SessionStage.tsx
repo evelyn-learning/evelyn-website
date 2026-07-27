@@ -57,6 +57,10 @@ export interface SessionStageProps {
   beats?: ReactNode;             // <LessonPlanProgress/> (restyled host)
   controls?: ReactNode;          // <SessionControls/> (timer / end / upload)
   adaptiveMenu?: ReactNode;      // the pacing ⋯ menu element
+  /** Round-5: compact clock chip for the header row. Rendered sm:hidden so it
+   *  complements (never duplicates) the `controls` slot's desktop timer. It is
+   *  what let the portal drop its whole countdown ROW on mobile. */
+  headerClock?: ReactNode;
   /** R1 (2026-07-14): End/Pause moved OUT of the dock into the header's
    *  right cluster — session-level control, conventional spot, and far from
    *  the textbox where accidental taps happen. Composed by TutorSession
@@ -201,7 +205,7 @@ const STATE_LABEL: Record<VoiceState, string> = {
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, endControl, questionPin, questionPinKey, hiccupPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage, onBack,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -841,6 +845,9 @@ export default function SessionStage(props: SessionStageProps) {
                 )}
               </button>
               <div className="hidden sm:block">{controls}</div>
+              {/* Round-5: mobile-only clock. Desktop keeps the richer
+                  `controls` timer above; showing both would double it. */}
+              {headerClock && <span className="sm:hidden">{headerClock}</span>}
               {adaptiveMenu}
               {endControl}
             </div>
