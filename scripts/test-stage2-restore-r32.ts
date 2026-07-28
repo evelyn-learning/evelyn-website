@@ -44,6 +44,18 @@ check('speaking-newBrainCallInFlight-drops', decideStage2TimeoutRestore({ ...bas
 check('processing-restore-still-works', decideStage2TimeoutRestore({
   ...base, cancelledDuringState: 'processing', brainWasInFlight: true, brainTurnAborted: true,
 }) === 'restore');
+// Round-6d (portal-37c0e0bf): a 'processing' cancel in the inter-sentence
+// gap kills TTS the brain already emitted — brain-done + queued snapshot
+// must resume, not drop (the demo intro was cut to one sentence).
+check('processing-brain-done-with-snapshot-resumes', decideStage2TimeoutRestore({
+  ...base, cancelledDuringState: 'processing', brainWasInFlight: false, brainTurnAborted: false,
+}) === 'resume-tts');
+check('processing-brain-done-no-snapshot-drops', decideStage2TimeoutRestore({
+  ...base, cancelledDuringState: 'processing', brainWasInFlight: false, brainTurnAborted: false, hasUnplayedSnapshot: false,
+}) === 'drop');
+check('processing-brain-done-with-snapshot-mid-utterance-defers', decideStage2TimeoutRestore({
+  ...base, cancelledDuringState: 'processing', brainWasInFlight: false, brainTurnAborted: false, midUtterance: true,
+}) === 'defer');
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all stage2-restore r32 checks passed');

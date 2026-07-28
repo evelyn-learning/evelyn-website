@@ -84,7 +84,20 @@ export function decideStage2TimeoutRestore(args: {
   if (args.newBrainCallInFlight) return 'drop';
   // Mirrors the RESTORE-after-finished guard: if the turn wasn't genuinely
   // cut off, the answer was already delivered — re-firing duplicates it.
-  if (!args.brainWasInFlight || !args.brainTurnAborted) return 'drop';
+  if (!args.brainWasInFlight || !args.brainTurnAborted) {
+    // Round-6d (portal-37c0e0bf): …unless the cancel killed QUEUED TTS. A
+    // 'processing' cancel in the inter-sentence gap clears sentences the
+    // brain already emitted but the student never heard — "brain done" is
+    // not "delivered". Resume the snapshot (replay-only, no re-fire, no
+    // duplication risk); pure-drop only when nothing was queued.
+    if (args.hasUnplayedSnapshot) {
+      if (args.ageMs > STALE_CUTOFF_MS) return 'drop';
+      if (args.midUtterance) return 'defer';
+      if (args.ageMs < timeoutMs) return 'defer';
+      return 'resume-tts';
+    }
+    return 'drop';
+  }
   if (args.ageMs > STALE_CUTOFF_MS) return 'drop';
   if (args.midUtterance) return 'defer';
   if (args.ageMs < timeoutMs) return 'defer';

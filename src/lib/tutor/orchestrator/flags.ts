@@ -259,6 +259,18 @@ export const TUTOR_RENDER_WORD_ANCHOR =
 // class this guard exists for was TRANSCRIPT-driven retro-cancels, which
 // remain fully suppressed during the opener regardless of this value.
 export const OPENER_BARGEIN_SUSTAIN_MS = 350;
+
+// Round-6d (live 2026-07-28, portal-37c0e0bf): after a verdict CONFIRMS a
+// cancel was the tutor's own echo (drop_self_voice), suppress further
+// perception cancels for this window. The failure it breaks: app-switching
+// resets the mobile audio session, AEC de-converges, and every resumed
+// sentence's echo re-kills the resume — an audible kill→replay loop
+// (overlapping tails + repeated phrases). Within ~2.5s of a CONFIRMED
+// self-echo kill, the next onset while the tutor speaks is overwhelmingly
+// the same echo; a genuine student interrupt in that window still reaches
+// the brain via its transcript (the kill is what's suppressed, not the
+// dispatch).
+export const SELF_ECHO_CANCEL_IMMUNITY_MS = 2500;
 export const BARGEIN_ENERGY_THRESHOLD = 0.15;
 export const BARGEIN_GATE_POLL_MS = 50;
 export const BARGEIN_GATE_MAX_MS = 5000;

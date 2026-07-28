@@ -156,6 +156,7 @@ import {
   TUTOR_BOARD_ANCHOR_NET,
   BARGEIN_SUSTAIN_MS,
   OPENER_BARGEIN_SUSTAIN_MS,
+  SELF_ECHO_CANCEL_IMMUNITY_MS,
   BARGEIN_ENERGY_THRESHOLD,
   BARGEIN_ENERGY_FLOOR,
   BARGEIN_ECHO_MARGIN,
@@ -12792,6 +12793,13 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('noise_nag_armed', `threshold hit (${NOISE_INTERRUPTION_REACTION.threshold} noise cancels in window)`);
         armReactionIdleSendRef.current();
       }
+      // Round-6d: a CONFIRMED self-echo kill arms cancel immunity — the
+      // resumed/restored audio's own echo must not re-kill it (the audible
+      // kill→replay loop of portal-37c0e0bf: overlapping tails heard as
+      // "reverberation" + the cut clause replayed, "exactly right" twice).
+      if (verdict === 'drop_self_voice') {
+        selfEchoCancelImmunityUntilRef.current = Date.now() + SELF_ECHO_CANCEL_IMMUNITY_MS;
+      }
       // drop_self_voice takes the SAME recovery paths as noise/filler in
       // every stage (round-6c fix, portal-28ee6557). It used to early-return
       // "drop, no refire" for Stage 2 — but a stage-2 cancel ABORTS the
@@ -12888,10 +12896,30 @@ export function VoiceTutorRealtime({
       //       so the turn completed normally (brainTurnAbortedRef stayed false).
       // Only re-fire when the turn was genuinely cut off (actually aborted).
       if (!checkpoint.brainWasInFlight || !brainTurnAbortedRef.current) {
+        // Round-6d (portal-37c0e0bf): "brain done" does NOT mean "delivered".
+        // A 'processing' cancel can land in the inter-sentence gap — every
+        // sentence already emitted to the speakText queue, brain finished —
+        // and the cancel's clearSpeechQueue killed the UNPLAYED tail. This
+        // branch used to pure-drop, which cut the demo intro to its first
+        // sentence and left the student in silence (~2.5 min until they
+        // re-engaged). If the cancel was a false alarm and sentences were
+        // queued, resume them — same replay-only semantics as stage-3.1
+        // (no brain re-fire, so no duplication risk).
+        if (checkpoint.unplayedSentencesSnapshot.length > 0) {
+          const n = checkpoint.unplayedSentencesSnapshot.length;
+          const resumeQueue = applyClauseTailSnapshot(checkpoint.unplayedSentencesSnapshot, checkpoint.cutFraction);
+          console.warn(
+            `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): brain done but ${n} unplayed sentence(s) were killed — resuming them`,
+          );
+          onDebugEvent?.('perception_stage2_brain_done_resume', `${verdict} after ${elapsedMs}ms · ${n} sentences`);
+          resumeSpeakTextRef.current?.(resumeQueue);
+          flushAllRenderBuffer();
+          return;
+        }
         console.warn(
           `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): RESTORE-after-finished DROP (brain response already delivered — inFlight=${checkpoint.brainWasInFlight}, aborted=${brainTurnAbortedRef.current}; not re-firing to avoid duplicate)`,
         );
-        onDebugEvent?.('perception_stage2_restore_dropped_brain_done', `${verdict} after ${elapsedMs}ms`);
+        onDebugEvent?.('perception_stage2_restore_dropped_brain_done', `${verdict} after ${elapsedMs}ms · snapshot=0`);
         // Render↔speech sync: original turn already delivered, no refire →
         // release its buffered renders rather than dropping them.
         flushAllRenderBuffer();
@@ -13274,6 +13302,12 @@ export function VoiceTutorRealtime({
     );
   }, []);
 
+  // Round-6d: cancel immunity after a CONFIRMED self-echo kill — see
+  // SELF_ECHO_CANCEL_IMMUNITY_MS in flags.ts. Stamped by
+  // applyPerceptionVerdict when a verdict resolves drop_self_voice; read by
+  // the onSpeechStart cancel paths and the retro-cancel effect.
+  const selfEchoCancelImmunityUntilRef = useRef<number>(0);
+
   // Round-6: forward playback-route + shared-mic lifecycle (plain modules
   // with no onDebugEvent access) into the session's persisted debug events —
   // the round-6 live test was blind on whether the AEC route's play()
@@ -13456,55 +13490,121 @@ export function VoiceTutorRealtime({
       onDebugEvent?.('perception_cancel_storm_suppressed', `→${toState}`);
       return;
     }
+    // Round-6d: a verdict just CONFIRMED the previous kill was the tutor's
+    // own echo — the resumed audio's echo re-triggering this path is the
+    // kill→replay loop (portal-37c0e0bf). Suppress inside the window.
+    if (Date.now() < selfEchoCancelImmunityUntilRef.current) {
+      console.warn('[PERCEPTION] retro-cancel suppressed — self-echo immunity window');
+      onDebugEvent?.('perception_cancel_suppressed_self_echo', `→${toState} (retro)`);
+      return;
+    }
     const ctx = lastBrainCallContextRef.current;
     const cancelStage: 'processing' | 'speaking' = canRetroStage3 ? 'speaking' : 'processing';
     const stageLabel = canRetroStage3 ? 'STAGE-3' : 'STAGE-2';
-    console.warn(
-      `[PERCEPTION] ${stageLabel} retro-cancel: prod transitioned mid-utterance → '${toState}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
-    );
-    onDebugEvent?.(
-      canRetroStage3 ? 'perception_stage3_retro_cancel' : 'perception_stage2_retro_cancel',
-      `→${toState}`,
-    );
-    perceptionInterruptCheckpointRef.current = {
-      originalTranscript: ctx.transcript,
-      originalOpts: ctx.opts,
-      cancelledAt: Date.now(),
-      minSeqForDispatch: perceptionTranscriptSeqRef.current,
-      cancelledDuringState: cancelStage,
-      // Stage 3 fix #14: capture whether the brain was actually in
-      // flight at cancel time. Read inFlightBrainAbortRef BEFORE the
-      // abort() call below — once aborted, the ref state is
-      // ambiguous. If the brain had already finished and we're just
-      // mid-TTS, this is false and RESTORE will not re-fire.
-      brainWasInFlight: inFlightBrainAbortRef.current !== null,
-      // Stage 3.1 (2026-06-16): snapshot the pending speakText queue
-      // BEFORE clearSpeechQueue empties it, so a false-positive
-      // cancel verdict can resume the unplayed sentences instead of
-      // re-firing the brain.
-      unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
-      // Resume-from-cut (P5): how far into the in-flight sentence the cut landed,
-      // captured BEFORE clearSpeechQueue empties the audio queue.
-      cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
+    const executeRetroCancel = () => {
+      // Deferred-execution re-checks (round-6d): by gate-fire time another
+      // cancel path may have opened a checkpoint, or the turn context may
+      // have rotated — bail rather than double-cancel.
+      if (perceptionInterruptCheckpointRef.current) return;
+      console.warn(
+        `[PERCEPTION] ${stageLabel} retro-cancel: prod transitioned mid-utterance → '${toState}' (originalTranscript=${JSON.stringify(ctx.transcript).slice(0, 80)})`,
+      );
+      onDebugEvent?.(
+        canRetroStage3 ? 'perception_stage3_retro_cancel' : 'perception_stage2_retro_cancel',
+        `→${toState}`,
+      );
+      perceptionInterruptCheckpointRef.current = {
+        originalTranscript: ctx.transcript,
+        originalOpts: ctx.opts,
+        cancelledAt: Date.now(),
+        minSeqForDispatch: perceptionTranscriptSeqRef.current,
+        cancelledDuringState: cancelStage,
+        // Stage 3 fix #14: capture whether the brain was actually in
+        // flight at cancel time. Read inFlightBrainAbortRef BEFORE the
+        // abort() call below — once aborted, the ref state is
+        // ambiguous. If the brain had already finished and we're just
+        // mid-TTS, this is false and RESTORE will not re-fire.
+        brainWasInFlight: inFlightBrainAbortRef.current !== null,
+        // Stage 3.1 (2026-06-16): snapshot the pending speakText queue
+        // BEFORE clearSpeechQueue empties it, so a false-positive
+        // cancel verdict can resume the unplayed sentences instead of
+        // re-firing the brain.
+        unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
+        // Resume-from-cut (P5): how far into the in-flight sentence the cut landed,
+        // captured BEFORE clearSpeechQueue empties the audio queue.
+        cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
+      };
+      // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
+      // sentence drained from the in-flight orchestrator's SSE buffer
+      // between this point and AbortError propagation drops silently.
+      speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
+      cancelStormRef.current.recordCancel(Date.now());
+      speechKilledAtRef.current = Date.now();
+      // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
+      // drain so the cancel doesn't flush buffered renders — the verdict
+      // decides drop (abort/re-fire) vs flush-all (resume/deliver).
+      renderBufferPausedRef.current = true;
+      try { inFlightBrainAbortRef.current?.abort(); } catch {}
+      try { void clearSpeechQueueRef.current?.(); } catch {}
+      productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+      // Q9 (2026-06-16): visible signal to the student that we heard
+      // them — yellow flash on the mic indicator + briefly disabled
+      // buttons / typed input for ~300ms. Independent of the verdict
+      // resolution downstream.
+      realtime.markInterrupted();
     };
-    // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
-    // sentence drained from the in-flight orchestrator's SSE buffer
-    // between this point and AbortError propagation drops silently.
-    speakTextBlockedUntilRef.current = Date.now() + SPEAK_TEXT_GATE_MS;
-    cancelStormRef.current.recordCancel(Date.now());
-    speechKilledAtRef.current = Date.now();
-    // Render↔speech sync: PAUSE the render buffer before clearSpeechQueue's
-    // drain so the cancel doesn't flush buffered renders — the verdict
-    // decides drop (abort/re-fire) vs flush-all (resume/deliver).
-    renderBufferPausedRef.current = true;
-    try { inFlightBrainAbortRef.current?.abort(); } catch {}
-    try { void clearSpeechQueueRef.current?.(); } catch {}
-    productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
-    // Q9 (2026-06-16): visible signal to the student that we heard
-    // them — yellow flash on the mic indicator + briefly disabled
-    // buttons / typed input for ~300ms. Independent of the verdict
-    // resolution downstream.
-    realtime.markInterrupted();
+    // Round-6d (portal-37c0e0bf): the stage-3 retro-cancel was the LAST
+    // instant kill path — every other stage-3 kill goes through the
+    // sustained-energy gate, and with post-app-switch AEC de-convergence
+    // this was the path echo used to kill (and re-kill) live TTS. When an
+    // energy window exists, defer the retro kill behind the same gate: a
+    // genuine student already mid-utterance is sustained and loud (passes in
+    // ~BARGEIN_SUSTAIN_MS); echo hugs the pre-onset floor and never fires.
+    // speech_stopped and fresh onsets clear bargeInGateTimerRef exactly as
+    // for the direct-path gate. No window (non-ink2, no perception energy) →
+    // instant kill as before.
+    const getRetroWindow = getPerceptionEnergyWindowRef.current;
+    if (canRetroStage3 && getRetroWindow) {
+      if (bargeInGateTimerRef.current) return; // a kill decision is already being evaluated
+      const gateStartedAt = Date.now();
+      const energyThreshold = resolveBargeInEnergyThreshold({
+        frames: getRetroWindow(),
+        fromMs: gateStartedAt - BARGEIN_BASELINE_LOOKBACK_MS,
+        toMs: gateStartedAt,
+        floor: BARGEIN_ENERGY_FLOOR,
+        ceiling: BARGEIN_ENERGY_THRESHOLD,
+        margin: BARGEIN_ECHO_MARGIN,
+      });
+      onDebugEvent?.('perception_bargein_gate_armed', `sustain=${BARGEIN_SUSTAIN_MS}ms threshold=${energyThreshold.toFixed(3)} (retro)`);
+      bargeInGateTimerRef.current = setInterval(() => {
+        const now = Date.now();
+        if (productionStateRef.current !== 'speaking' || now - gateStartedAt > BARGEIN_GATE_MAX_MS) {
+          if (bargeInGateTimerRef.current) {
+            clearInterval(bargeInGateTimerRef.current);
+            bargeInGateTimerRef.current = null;
+          }
+          return;
+        }
+        const fire = shouldFireBargeInKill({
+          state: 'speaking',
+          speechStartMs: gateStartedAt,
+          nowMs: now,
+          frames: getRetroWindow(),
+          energyThreshold,
+          sustainMs: BARGEIN_SUSTAIN_MS,
+        });
+        if (fire) {
+          if (bargeInGateTimerRef.current) {
+            clearInterval(bargeInGateTimerRef.current);
+            bargeInGateTimerRef.current = null;
+          }
+          onDebugEvent?.('perception_bargein_gate_passed', `latencyMs=${now - gateStartedAt} (retro)`);
+          executeRetroCancel();
+        }
+      }, BARGEIN_GATE_POLL_MS);
+      return;
+    }
+    executeRetroCancel();
   }, [realtime, perceptionStage, onDebugEvent]);
 
   // ── STT engine gating (Cartesia migration Phase 2, Task 5) ─────────────
@@ -14151,6 +14251,15 @@ export function VoiceTutorRealtime({
       // semantics unchanged, and a gate that never passes records NO cancel.
       const runPerceptionKill = (cancelStage: 'processing' | 'speaking') => {
         if (perceptionInterruptCheckpointRef.current) return;
+        // Round-6d: a verdict just CONFIRMED the previous kill was self-echo
+        // — don't let the resumed audio's echo re-kill (portal-37c0e0bf's
+        // kill→replay loop). Checked at fire time so a gate armed before
+        // the verdict landed is covered too.
+        if (Date.now() < selfEchoCancelImmunityUntilRef.current) {
+          console.warn(`[PERCEPTION] cancel suppressed — self-echo immunity window (stage=${cancelStage})`);
+          onDebugEvent?.('perception_cancel_suppressed_self_echo', `prod=${prodState} stage=${cancelStage}`);
+          return;
+        }
         const ctx = lastBrainCallContextRef.current;
         // For Stage 3 'speaking' cancels, the brain may already have
         // finished emitting (just TTS playing out the queue) — ctx is
