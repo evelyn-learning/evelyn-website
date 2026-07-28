@@ -12792,22 +12792,19 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('noise_nag_armed', `threshold hit (${NOISE_INTERRUPTION_REACTION.threshold} noise cancels in window)`);
         armReactionIdleSendRef.current();
       }
-      if (verdict === 'drop_self_voice') {
-        // Self-voice: the cancelled audio was the tutor's own voice
-        // loop, not a real student utterance — the cancel was a false
-        // positive. For Stage 3.1, fall through to the 'speaking'
-        // branch below so resume-from-cut can replay the queued
-        // content. For Stage 2 (processing — brain was thinking, no
-        // TTS yet), there's no queue to resume — keep the historical
-        // drop behavior.
-        if (stage !== 'speaking') {
-          console.warn(`[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): drop, no refire (nothing to resume in 'processing' state)`);
-          onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_drop`, `${verdict} after ${elapsedMs}ms`);
-          dropRenderBuffer(); // render↔speech sync: aborted turn, never shown
-          return;
-        }
-        // Stage 3.1: fall through to the resume-from-cut path below.
-      }
+      // drop_self_voice takes the SAME recovery paths as noise/filler in
+      // every stage (round-6c fix, portal-28ee6557). It used to early-return
+      // "drop, no refire" for Stage 2 — but a stage-2 cancel ABORTS the
+      // in-flight brain call, and when the trigger was the tutor's own echo
+      // the aborted turn was entirely legitimate. Observed live: the opener
+      // echo retro-cancelled during 'processing', verdict drop_self_voice
+      // dropped it, and the tutor sat silent for ~91s (until the student
+      // spoke again) with the rest of the opening turn never delivered. The
+      // shared stage-2 path below already has the correct semantics: RESTORE
+      // (re-fire the original) only when the brain was genuinely cut off
+      // (brainWasInFlight && aborted), silent-drop when the turn had already
+      // completed — the duplicate-response guard that motivated the old
+      // early-return.
       if (stage === 'speaking') {
         // Stage 3.1 (2026-06-16): RESUME-FROM-CUT — the proper Q5 B2
         // fix. The verdict says the cancel was a false positive (noise,

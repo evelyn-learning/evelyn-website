@@ -17,6 +17,22 @@ const base = {
 // dangle forever (silence audit H3). Timed out + unplayed sentences → resume.
 check('speaking-timeout-resumes', decideStage2TimeoutRestore(base) === 'resume-tts');
 check('speaking-no-snapshot-drops', decideStage2TimeoutRestore({ ...base, hasUnplayedSnapshot: false }) === 'drop');
+// Round-6c (portal-28ee6557): same shape but the brain was genuinely cut
+// mid-stream (in flight + aborted) → the turn was never delivered; restore.
+check('speaking-no-snapshot-aborted-brain-restores', decideStage2TimeoutRestore({
+  ...base, hasUnplayedSnapshot: false, brainWasInFlight: true, brainTurnAborted: true,
+}) === 'restore');
+// …but not while the student is talking (defer), and not before the window.
+check('speaking-no-snapshot-aborted-mid-utterance-defers', decideStage2TimeoutRestore({
+  ...base, hasUnplayedSnapshot: false, brainWasInFlight: true, brainTurnAborted: true, midUtterance: true,
+}) === 'defer');
+check('speaking-no-snapshot-aborted-young-defers', decideStage2TimeoutRestore({
+  ...base, hasUnplayedSnapshot: false, brainWasInFlight: true, brainTurnAborted: true, ageMs: 3_000,
+}) === 'defer');
+// Completed turn (in flight but stream finished before the abort) stays drop.
+check('speaking-no-snapshot-finished-brain-drops', decideStage2TimeoutRestore({
+  ...base, hasUnplayedSnapshot: false, brainWasInFlight: true, brainTurnAborted: false,
+}) === 'drop');
 check('speaking-mid-utterance-defers', decideStage2TimeoutRestore({ ...base, midUtterance: true }) === 'defer');
 check('speaking-young-defers', decideStage2TimeoutRestore({ ...base, ageMs: 3_000 }) === 'defer');
 check('speaking-stale-drops', decideStage2TimeoutRestore({ ...base, ageMs: 61_000 }) === 'drop');

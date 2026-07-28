@@ -60,10 +60,15 @@ check('student mid-utterance → defer',
 check('age below the window → defer',
   decideStage2TimeoutRestore({ ...base, ageMs: 1_000 }), 'defer');
 
-// STAGE-3 ('speaking') cancels have their own resume-from-cut machinery;
-// this recovery is scoped to the observed 'processing' stall only.
-check("stage-3 'speaking' cancel → drop (out of scope)",
-  decideStage2TimeoutRestore({ ...base, cancelledDuringState: 'speaking' }), 'drop');
+// Round-6c (portal-28ee6557): a 'speaking' cancel with NO unplayed snapshot
+// but a genuinely aborted in-flight brain (this base) now RESTORES — the
+// cancel cut a response whose emitted sentences were already dispatched to
+// TTS (queue empty) while the rest was still streaming; dropping swallowed
+// the whole turn (27s dead air observed). Pre-R32 this shape was "out of
+// scope"; R32 added resume-tts for snapshot-bearing cancels; this closes
+// the empty-snapshot corner.
+check("stage-3 'speaking' cancel, aborted brain, no snapshot → restore",
+  decideStage2TimeoutRestore({ ...base, cancelledDuringState: 'speaking' }), 'restore');
 
 // Mirrors the RESTORE-after-finished guard: if the brain wasn't genuinely
 // cut off, the answer was already delivered — re-firing would duplicate it.

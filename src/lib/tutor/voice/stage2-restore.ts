@@ -61,7 +61,22 @@ export function decideStage2TimeoutRestore(args: {
     // if a new brain turn is already speaking, the stall self-resolved —
     // replaying the old unplayed sentences now would talk over the new turn.
     if (args.newBrainCallInFlight) return 'drop';
-    if (!args.hasUnplayedSnapshot) return 'drop';
+    if (!args.hasUnplayedSnapshot) {
+      // Round-6c (live 2026-07-28, portal-28ee6557): empty snapshot used to
+      // hard-drop, which swallowed the whole turn when the cancel hit with
+      // every emitted sentence already dispatched to TTS (queue empty) while
+      // the brain was still STREAMING — the abort cut the rest of the
+      // response and nothing ever re-delivered it (observed: 27s dead air,
+      // checkpoint only cleared by the next transcript's stale sweep). The
+      // verdict-driven path has had exactly this fallback since Stage 3.1
+      // ("refire-on-noise": empty snapshot + brain in flight → re-fire);
+      // mirror it here, with the same genuinely-cut-off guard so a
+      // completed turn is never duplicated.
+      if (!args.brainWasInFlight || !args.brainTurnAborted) return 'drop';
+      if (args.midUtterance) return 'defer';
+      if (args.ageMs < timeoutMs) return 'defer';
+      return 'restore';
+    }
     if (args.midUtterance) return 'defer';
     if (args.ageMs < timeoutMs) return 'defer';
     return 'resume-tts';
