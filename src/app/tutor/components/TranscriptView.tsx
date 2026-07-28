@@ -238,6 +238,34 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     if (nearBottom) el.scrollTop = el.scrollHeight;
   }, [transcript, picker]);
 
+  // Round-6 (round-5 handoff #5): open the drawer AT the latest message on
+  // phones. On mobile the CLOSED drawer is display:none (see SessionStage —
+  // a merely-translated drawer leaked scroll height below the dock), so
+  // while it's closed this container's geometry is zero: the near-bottom
+  // auto-scroll above runs against clientHeight 0 and the stored scrollTop
+  // goes stale. Re-opening restored the last-seen bubble instead of the
+  // newest. Watch for the hidden→visible transition (height 0 → >0) and
+  // snap to the bottom then. Deliberately ONLY that transition: an open
+  // drawer resizing (keyboard, rotation) must not yank a student who
+  // scrolled up to read. Desktop's closed drawer keeps geometry (translated
+  // off-screen, not hidden), so this never fires there — the existing
+  // behavior stays. A q-pin deep link (below) scrolls to its entry ~180ms
+  // later and simply wins over this snap.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    let prevHeight = el.clientHeight;
+    const ro = new ResizeObserver(() => {
+      const h = el.clientHeight;
+      if (prevHeight === 0 && h > 0) {
+        el.scrollTop = el.scrollHeight;
+      }
+      prevHeight = h;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   // Q-pin deep link (2026-07-15): the pin's click carries the tutor entry id
   // on the 'evelyn:open-transcript' event; scroll that entry into view once
   // the drawer has opened (the drawer is display:none while closed on
