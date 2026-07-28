@@ -22,6 +22,7 @@ import {
 } from '@/lib/tutor/voice/shared-mic';
 import {
   getPlaybackTarget,
+  primePlaybackRoute,
   silencePlaybackRoute,
   unsilencePlaybackRoute,
 } from '@/lib/tutor/voice/playback-route';
@@ -1120,6 +1121,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       if (ctx.state === 'suspended') {
         void ctx.resume();
       }
+      // Round-6 opener-echo fix: build the AEC reference route (media-element
+      // playback path) NOW, inside the same session-start gesture — not
+      // lazily at the first opener TTS chunk. Measured on portal-b3838f70:
+      // the canceller only became effective ~10s after the route appeared,
+      // which with lazy creation meant the entire opening turn leaked the
+      // tutor's own voice into the mic (~-21dB at ~220ms — the raw
+      // speaker→mic path). Priming here starts that clock before the mic
+      // hears any tutor audio, and keeps el.play() inside the gesture chain
+      // (a lazy first call after transient activation expires risks
+      // play()-rejection → permanent fallback off the reference path).
+      primePlaybackRoute(ctx);
     } catch (err) {
       console.warn('[Realtime] unlockAudio failed:', err);
     }

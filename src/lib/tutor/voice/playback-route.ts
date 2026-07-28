@@ -102,6 +102,30 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
 }
 
 /**
+ * Establish the AEC reference path AHEAD of the first TTS chunk (round-6
+ * opener-echo fix, 2026-07-28, portal-b3838f70).
+ *
+ * ROOT CAUSE this closes: the route used to be created lazily by the first
+ * `getPlaybackTarget()` call — i.e. at the first opener TTS chunk, seconds
+ * AFTER the mic capture opened. Measured on the incident session's PCM
+ * (xcorr, same method as round-5): the opener windows carried tutor-
+ * correlated mic signal at a constant ~220-250ms lag / ~-21dB (raw
+ * speaker→mic path), and the mic only went clean ~10s after the first
+ * chunk — the canceller needs the media-element reference path to exist
+ * (and converge) BEFORE the audio it must cancel. Creating the route at
+ * session-start gesture time gives it that head start, and calling
+ * `el.play()` synchronously inside the gesture chain also removes the
+ * play()-rejected → permanent `markFailed` demotion risk that a lazy,
+ * activation-expired first call carries.
+ *
+ * Idempotent (same WeakMap as `getPlaybackTarget`); a no-op when the route
+ * flag is off or the context already failed.
+ */
+export function primePlaybackRoute(ctx: AudioContext): void {
+  getPlaybackTarget(ctx);
+}
+
+/**
  * Demote a context to direct output.
  *
  * BUG THIS FIXES (round-5 live test, 2026-07-27): the first version bridged

@@ -644,6 +644,66 @@ function scoreSpeakingEchoOverlap(
   return best;
 }
 
+/** Was the tutor AUDIBLY SPEAKING at `onsetMs` — i.e. does the onset land
+ *  inside some script's actual playback span (spokenStartedAt..spokenEndedAt,
+ *  ± the ε VAD-onset slop)? The 1.5s TRAIL window deliberately does NOT
+ *  count: speech beginning right after the tutor stops is the documented
+ *  genuine-answer zone ("Dadu definitely", 2026-07-15 finding 1), while
+ *  speech beginning DURING playback is the high-prior-echo overtalk zone
+ *  this predicate exists to identify. A never-stamped script
+ *  (spokenEndedAt null = still playing) counts through `now`. */
+function onsetDuringScriptPlayback(
+  recentTtsScripts: RecentTtsScript[],
+  onsetMs: number,
+  now: number,
+): boolean {
+  return recentTtsScripts.some((s) => {
+    // 0 = never actually played (skipped/drained — see RecentTtsScript doc);
+    // an unplayed script can't have been audible at any onset, and its null
+    // spokenEndedAt would otherwise read as "still playing" and match
+    // everything.
+    if (!s.spokenStartedAt) return false;
+    const end = (s.spokenEndedAt ?? now) + ECHO_ANCHOR_EPSILON_MS;
+    return onsetMs >= s.spokenStartedAt - ECHO_ANCHOR_EPSILON_MS && onsetMs <= end;
+  });
+}
+
+/** `scoreSpeakingEchoOverlap` without the per-script window filter: best
+ *  lenient content-word overlap against EVERY script in the buffer (the
+ *  caller's buffer is already bounded to a 30s onset-anchored lookback).
+ *  Only ever consulted by tier 1.6, which has already established the
+ *  utterance's onset fell during tutor playback — inside that overtalk
+ *  zone the echoed word may belong to a splinter of a killed-and-resumed
+ *  turn whose own playback window is long past by transcript-arrival time,
+ *  which is exactly why the window filter must not apply. */
+function scoreLookbackEchoOverlap(
+  transcript: string,
+  recentTtsScripts: RecentTtsScript[],
+): number {
+  const tContent = contentTokens(tokenize(transcript));
+  if (tContent.length === 0) return 0;
+  const tPhonContent = tContent.map(phoneticCode);
+  let best = 0;
+  for (const s of recentTtsScripts) {
+    // Echo can only carry words that were actually AUDIBLE — skip scripts
+    // that never reached playback (spokenStartedAt 0, see RecentTtsScript).
+    if (!s.spokenStartedAt) continue;
+    const sContent = contentTokens(tokenize(s.text));
+    if (sContent.length === 0) continue;
+    const sContentSet = new Set(sContent);
+    const sPhonContentSet = new Set(sContent.map(phoneticCode));
+    let matches = 0;
+    for (let i = 0; i < tContent.length; i++) {
+      const verbatim = sContentSet.has(tContent[i]);
+      const phonetic = sPhonContentSet.has(tPhonContent[i]);
+      if (verbatim || phonetic) matches += 1;
+    }
+    const score = matches / tContent.length;
+    if (score > best) best = score;
+  }
+  return best;
+}
+
 /** Lower bar than SELF_VOICE_THRESHOLD, deliberately: scoped narrowly (≤4
  *  words, 'speaking'/trail-window only — see `scoreSpeakingEchoOverlap`
  *  doc comment) so the extra leniency can't reach a real answer given
@@ -812,6 +872,44 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       return {
         verdict: 'drop_self_voice',
         reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
+        selfVoiceScore,
+      };
+    }
+  }
+
+  // 1.6. Onset-during-playback echo arriving after the state flipped
+  // (round-6 opener-echo fix, 2026-07-28, portal-b3838f70). The 1.5 gate
+  // above keys on CURRENT state, but STT latency routinely delivers a
+  // transcript 4-8s after its speech onset — by which time a barge-in kill
+  // (fired by the very same echo) has already flipped production to
+  // 'listening', and the branch below would dispatch it unconditionally.
+  // Worse, a kill + resume splits the tutor's turn into several short
+  // playback windows, so the sentence that CONTAINS the echoed word can be
+  // outside its own window+trail by transcript time while a resumed
+  // sentence (without the word) is the only in-window script — tier 1
+  // correctly scores ~0 and misses. Observed live: opener "…Praveen — last
+  // time…" echoed, killed, resumed; "Praveen," landed in 'listening',
+  // classified new_turn, and the tutor answered its own echo.
+  //
+  // Gate: the utterance's VAD ONSET fell while tutor audio was actually
+  // playing (some script's spokenStartedAt..spokenEndedAt, ± the ε onset
+  // slop — the TRAIL window deliberately does NOT count, that's the "Dadu
+  // definitely" genuine-answer zone). Within that overtalk-onset zone,
+  // apply the same lenient ≤4-word overlap as 1.5 but against EVERY script
+  // in the (already 30s-bounded) buffer, window-free — echo can only carry
+  // words the tutor actually said, whichever splinter of the killed turn
+  // they came from. Unknown onset → gate off (fail toward dispatching).
+  if (
+    rawWordCount(text) <= 4 &&
+    state !== 'speaking' &&
+    input.speechStartedAt !== undefined &&
+    onsetDuringScriptPlayback(input.recentTtsScripts, input.speechStartedAt, input.now)
+  ) {
+    const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
+    if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
+      return {
+        verdict: 'drop_self_voice',
+        reason: `onset-during-playback echo overlap ${lookbackOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
         selfVoiceScore,
       };
     }

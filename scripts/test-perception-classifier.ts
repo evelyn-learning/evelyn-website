@@ -1086,5 +1086,89 @@ console.log('\n=== Brief numeric answers must not silently drop (Session-1784908
   check('"4." in listening → new_turn (unchanged)', r.verdict === 'new_turn', `verdict=${r.verdict} (${r.reason})`);
 }
 
+console.log('\n=== Onset-during-playback echo reaching \'listening\' (portal-b3838f70, 2026-07-28 opener) ===');
+{
+  // Live incident: the opener echoed into the mic before AEC converged.
+  // Barge-in kill #1 cut sentence 1 ("...Praveen — last time...") at
+  // 01:20:00.9; resume replayed sentences 2-3; kill #2 cut those at
+  // 01:20:02.99 → state 'listening'. The echo's transcript "Praveen,"
+  // then landed at 01:20:04.85 with its VAD onset (02.6) DURING the
+  // resumed playback — but sentence 1 (the only script containing
+  // "Praveen") was already outside its playback+trail window, and the
+  // in-window resumed sentences don't contain the word. Tier-1 scored 0,
+  // the 'listening' branch dispatched new_turn, and the tutor answered
+  // its own echo ("Right, I'm here.").
+  const openerScripts: RecentTtsScript[] = [
+    // sentence 1 — killed by echo barge-in; onset below is PAST its
+    // 1.5s trail window (winEnd = 1_003_900 + TTS_PADDING_TRAIL_MS)
+    { text: 'Great to have you back, Praveen — last time we were deep in AP Macro scarcity.', spokenStartedAt: 1_000_000, spokenEndedAt: 1_003_900 },
+    // resumed sentence — playing at the echo's onset, no "Praveen" in it
+    { text: 'Want to pick up from there, or dive into something new?', spokenStartedAt: 1_004_600, spokenEndedAt: 1_005_950 },
+  ];
+  const r = classifyHeuristic({
+    transcript: 'Praveen,',
+    productionState: 'listening',
+    recentTtsScripts: openerScripts,
+    now: 1_008_000,
+    speechStartedAt: 1_005_700, // during the resumed sentence's playback
+  });
+  check('"Praveen," onset during playback, arriving in listening → drop_self_voice',
+    r.verdict === 'drop_self_voice', `verdict=${r.verdict} (${r.reason})`);
+
+  // Guard: same word but onset clearly AFTER all playback ended (student
+  // genuinely said the tutor's word once the tutor went quiet) → the
+  // during-playback gate must NOT apply; tier-1's conservative pass owns
+  // that shape (echo-anchor exemption keeps genuine answers alive).
+  const afterPlayback = classifyHeuristic({
+    transcript: 'Praveen,',
+    productionState: 'listening',
+    recentTtsScripts: openerScripts,
+    now: 1_008_000,
+    speechStartedAt: 1_006_400, // > 1_005_950 + ECHO_ANCHOR_EPSILON_MS
+  });
+  check('same word, onset after playback ended → NOT the during-playback drop',
+    !(afterPlayback.verdict === 'drop_self_voice' && /onset-during-playback/.test(afterPlayback.reason)),
+    `verdict=${afterPlayback.verdict} (${afterPlayback.reason})`);
+
+  // Guard: "Dadu definitely" regression class (2026-07-15 review finding 1)
+  // — a genuine short answer ~0.5s AFTER the question finished must still
+  // dispatch. Onset is not during any playback window → gate off.
+  const daduScripts: RecentTtsScript[] = [
+    { text: 'So was the capital Dadu or Karakorum?', spokenStartedAt: 990_000, spokenEndedAt: 998_800 },
+  ];
+  const dadu = classifyHeuristic({
+    transcript: 'Dadu definitely',
+    productionState: 'listening',
+    recentTtsScripts: daduScripts,
+    now: 1_000_000,
+    speechStartedAt: 999_300,
+  });
+  check('"Dadu definitely" 0.5s after question → still new_turn',
+    dadu.verdict === 'new_turn', `verdict=${dadu.verdict} (${dadu.reason})`);
+
+  // Guard: short utterance with onset during playback but NO overlap with
+  // any recent script is a genuine (if rude) barge attempt → not dropped.
+  const noOverlap = classifyHeuristic({
+    transcript: 'What about interest rates',
+    productionState: 'listening',
+    recentTtsScripts: openerScripts,
+    now: 1_008_000,
+    speechStartedAt: 1_005_700,
+  });
+  check('non-overlapping short speech during playback → not dropped',
+    noOverlap.verdict !== 'drop_self_voice', `verdict=${noOverlap.verdict} (${noOverlap.reason})`);
+
+  // Guard: ≥5 raw words never enters the lenient gate even with overlap.
+  const long = classifyHeuristic({
+    transcript: 'last time we were deep in AP Macro scarcity',
+    productionState: 'listening',
+    recentTtsScripts: openerScripts,
+    now: 1_008_000,
+    speechStartedAt: 1_005_700,
+  });
+  check('long overlapping utterance during playback → not the during-playback drop',
+    !/onset-during-playback/.test(long.reason), `verdict=${long.verdict} (${long.reason})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
