@@ -353,10 +353,10 @@ console.log('OK — tts-pronunciation rewrites validated');
 
   // --- Subscripts: _1 / _{n+1} -> "sub …" -------------------------------
   eq('The sequence a_1, a_2, a_3 follows.',
-     'The sequence a sub 1, a sub 2, a sub 3 follows.',
+     'The sequence a 1, a 2, a 3 follows.',
      'bare-subscript-digits');
   eq('The formula is a_n equals a_1 plus n minus 1 times d.',
-     'The formula is a sub n equals a sub 1 plus n minus 1 times d.',
+     'The formula is a sub n equals a 1 plus n minus 1 times d.',
      'bare-subscript-letter');
 
   // --- Common LaTeX commands: \sqrt, \times, \cdot, \div, \pm --------

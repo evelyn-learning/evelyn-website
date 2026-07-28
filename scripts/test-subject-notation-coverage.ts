@@ -218,7 +218,7 @@ function runCurated(): void {
   tts('Firms produce where $MR = MC$ exactly.', 'Firms produce where MR equals MC exactly.', 'mr-mc');
   tts('The multiplier is $\\frac{1}{1 - MPC}$ overall.', 'The multiplier is 1 over 1 minus MPC overall.', 'multiplier');
   tts('Unemployment fell to 3.5% overall.', 'Unemployment fell to 3.5% overall.', 'percent-native-econ');
-  tts('The curve $D_1$ shifts to $D_2$ rightward.', 'The curve D sub 1 shifts to D sub 2 rightward.', 'demand-curves');
+  tts('The curve $D_1$ shifts to $D_2$ rightward.', 'The curve D 1 shifts to D 2 rightward.', 'demand-curves');
 
   // ── STATISTICS ───────────────────────────────────────────────────
   // Starred critical values.
@@ -233,7 +233,7 @@ function runCurated(): void {
   tts('Estimate p̂ from the data.', 'Estimate p hat from the data.', 'p-hat-unicode');
   // Standard error and hypotheses read acceptably as-is.
   tts('The SE is $\\frac{\\sigma}{\\sqrt{n}}$ small.', 'The SE is sigma over the square root of n small.', 'standard-error');
-  tts('Test $H_0: \\mu = 100$ now.', 'Test H sub 0 : mu equals 100 now.', 'null-hypothesis');
+  tts('Test $H_0: \\mu = 100$ now.', 'Test H 0 : mu equals 100 now.', 'null-hypothesis');
 
   // ── Display: new spans classify + parse ──────────────────────────
   disp('Bb \\times Bb', 'cross-display');

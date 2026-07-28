@@ -2573,7 +2573,22 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       };
 
       source.connect(processor);
-      processor.connect(ctx.destination);
+      // Round-6f (portal-8fded37f: "reverb on app switch" with the playback
+      // route measured HEALTHY through every switch — el playing, track
+      // live, ctx running): a ScriptProcessor must reach the destination to
+      // keep firing, but wiring it DIRECTLY connects the MIC to the SPEAKER
+      // through whatever the processor's output buffer holds. Spec says
+      // that buffer starts silent; WebKit after an audio-session
+      // interruption is exactly where "should be silent" has historically
+      // broken down, and mic→speaker passthrough is the one remaining
+      // mechanism that matches the symptom (the room + the tutor's own
+      // speaker output re-amplified ≈ reverberation). Interpose a
+      // zero-gain node — the processor still runs, and NOTHING it outputs
+      // can ever be audible, on any engine, in any state.
+      const silentSink = ctx.createGain();
+      silentSink.gain.value = 0;
+      processor.connect(silentSink);
+      silentSink.connect(ctx.destination);
       audioProcessorRef.current = processor;
 
       updateState('listening');

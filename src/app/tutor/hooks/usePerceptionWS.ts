@@ -395,7 +395,13 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       };
 
       source.connect(processor);
-      processor.connect(ctx.destination);
+      // Round-6f: zero-gain sink — a ScriptProcessor wired straight to the
+      // destination is a latent mic→speaker path (WebKit interruption bug
+      // class; see useOpenAIRealtime's identical fix for the full story).
+      const silentSink = ctx.createGain();
+      silentSink.gain.value = 0;
+      processor.connect(silentSink);
+      silentSink.connect(ctx.destination);
       processorRef.current = processor;
       setState('listening');
       console.warn(`${logPrefix} microphone started (independent stream)`);

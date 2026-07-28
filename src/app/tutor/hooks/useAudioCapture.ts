@@ -140,7 +140,13 @@ export function useAudioCapture(options: AudioCaptureOptions = {}): AudioCapture
       };
 
       source.connect(scriptProcessor);
-      scriptProcessor.connect(audioContext.destination);
+      // Round-6f: zero-gain sink — a ScriptProcessor wired straight to the
+      // destination is a latent mic→speaker path (WebKit interruption bug
+      // class; see useOpenAIRealtime's identical fix for the full story).
+      const silentSink = audioContext.createGain();
+      silentSink.gain.value = 0;
+      scriptProcessor.connect(silentSink);
+      silentSink.connect(audioContext.destination);
 
       // Store reference for cleanup (reusing workletNodeRef for script processor)
       workletNodeRef.current = scriptProcessor as unknown as AudioWorkletNode;

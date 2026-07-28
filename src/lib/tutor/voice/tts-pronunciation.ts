@@ -467,17 +467,35 @@ function verbalizeExponentsForSpeech(t: string): string {
   return t;
 }
 
-/** _{n+1} / _1 / _i -> "sub …". Same braced-first ordering as exponents.
- *  The braced rule LOOPS so nested subscripts (F_{F_{\Delta x}}, physics
- *  stress sweep) resolve inside-out — a single pass left the outer "_{"
- *  stranded as residue once the inner braces were consumed. */
+/** _{n+1} / _1 / _i -> "sub …" (mostly). Same braced-first ordering as
+ *  exponents. The braced rule LOOPS so nested subscripts (F_{F_{\Delta x}},
+ *  physics stress sweep) resolve inside-out — a single pass left the outer
+ *  "_{" stranded as residue once the inner braces were consumed.
+ *
+ *  Round-6f (user call, 2026-07-28): a POSITIVE NUMERIC subscript drops the
+ *  "sub" — teachers say "r one, r two", not "r sub one" ("(x minus r sub 1)
+ *  times (x minus r sub 2)" read as stilted in the live session). Kept for
+ *  every other shape: letters ("x sub a" — "x a" is mush), braced
+ *  expressions, and NEGATIVE numbers ("x sub negative 1" — a bare "x -1"
+ *  would be heard as subtraction). Braced single digits (_{1}) get the same
+ *  natural form via the branch inside the braced loop. */
 function verbalizeSubscriptsForSpeech(t: string): string {
+  // Log bases FIRST (round-6f): the plain-digit subscript rule below would
+  // turn \log_2 into the mush "log 2" — a logarithm's subscript is its
+  // BASE and is spoken that way ("log base 2"). Matches with or without
+  // the backslash (earlier stages may already have stripped it).
+  // \s* between "log" and "_": the LaTeX-function pass upstream has already
+  // rewritten \log to "log " (space added) by the time this runs.
+  t = t.replace(/\\?log\s*_\{(\d+)\}/g, ' log base $1 ');
+  t = t.replace(/\\?log\s*_(\d+)/g, ' log base $1 ');
   let prev: string;
   do {
     prev = t;
-    t = t.replace(/_\{([^{}]+)\}/g, (_m, sub: string) => ` sub ${wordifyMathOperators(sub)} `);
+    t = t.replace(/_\{([^{}]+)\}/g, (_m, sub: string) =>
+      /^\d+$/.test(sub.trim()) ? ` ${sub.trim()} ` : ` sub ${wordifyMathOperators(sub)} `);
   } while (t !== prev);
-  t = t.replace(/_(-?\d+)/g, (_m, sub: string) => ` sub ${sub} `);
+  t = t.replace(/_(\d+)/g, (_m, sub: string) => ` ${sub} `);
+  t = t.replace(/_(-\d+)/g, (_m, sub: string) => ` sub ${sub} `);
   t = t.replace(/_([a-zA-Z])\b/g, (_m, sub: string) => ` sub ${sub} `);
   return t;
 }

@@ -20,6 +20,7 @@ import 'mafs/core.css';
 import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@/lib/knowledge/types';
 import { parseFunctionString, parseFunctionOfYString } from '@/lib/tutor/whiteboard/math-expr';
 import { InlineMathText } from './InlineMathText';
+import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 
 interface GraphRendererProps {
   type: GraphType;
@@ -120,9 +121,10 @@ export function GraphRenderer({
       )}
 
       <div className="relative">
-        {/* Y-axis label */}
+        {/* Y-axis label (prettyMathLabel: calculator-notation scripts like
+            ^2 / _1 become real super/subscripts — round-6f, IMG legend) */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 -rotate-90 text-sm text-gray-600 origin-center whitespace-nowrap">
-          {yLabel}
+          {prettyMathLabel(yLabel ?? '')}
         </div>
 
         <div className="ml-8">
@@ -227,7 +229,7 @@ export function GraphRenderer({
                   attach="n"
                   size={14}
                 >
-                  {point.label!}
+                  {prettyMathLabel(point.label!)}
                 </Text>
               ))}
 
@@ -244,7 +246,7 @@ export function GraphRenderer({
 
         {/* X-axis label */}
         <div className="text-center text-sm text-gray-600 mt-1">
-          {xLabel}
+          {prettyMathLabel(xLabel ?? '')}
         </div>
       </div>
 
@@ -257,7 +259,7 @@ export function GraphRenderer({
                 className="w-4 h-1 rounded"
                 style={{ backgroundColor: fn.color }}
               />
-              <span>{fn.label || fn.fn || fn.latex || ''}</span>
+              <span><InlineMathText text={prettyMathLabel(fn.label || fn.fn || fn.latex || '')} /></span>
             </div>
           ))}
           {parsedFunctionsOfY.map((fn, index) => (
@@ -266,7 +268,7 @@ export function GraphRenderer({
                 className="w-4 h-1 rounded"
                 style={{ backgroundColor: fn.color }}
               />
-              <span>{fn.label || fn.fn || fn.latex || ''}</span>
+              <span><InlineMathText text={prettyMathLabel(fn.label || fn.fn || fn.latex || '')} /></span>
             </div>
           ))}
         </div>

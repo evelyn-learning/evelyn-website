@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState, useCallback, useImperativeHandle, useMemo, forwardRef } from 'react';
 import type { GraphData, GraphFunction, GraphFunctionOfY } from '@/lib/knowledge/types';
 import { InlineMathText } from './InlineMathText';
+import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 
 // Color palette matching our existing design
 const COLORS = [
@@ -422,13 +423,13 @@ const DesmosGraphRendererInner = forwardRef<DesmosGraphRef, DesmosGraphRendererP
             {(data.functions || []).filter(f => f.label).map((fn, i) => (
               <div key={`fn-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[i % COLORS.length] }} />
-                <span><InlineMathText text={fn.label!} /></span>
+                <span><InlineMathText text={prettyMathLabel(fn.label!)} /></span>
               </div>
             ))}
             {(data.functionsOfY || []).filter(f => f.label).map((fn, i) => (
               <div key={`fny-${i}`} className="flex items-center gap-2 text-sm">
                 <div className="w-4 h-1 rounded" style={{ backgroundColor: fn.color || COLORS[((data.functions?.length || 0) + i) % COLORS.length] }} />
-                <span><InlineMathText text={fn.label!} /></span>
+                <span><InlineMathText text={prettyMathLabel(fn.label!)} /></span>
               </div>
             ))}
           </div>

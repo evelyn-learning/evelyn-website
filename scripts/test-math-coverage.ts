@@ -285,7 +285,7 @@ function runCurated(): void {
 
   // ── 7. Logs & exponentials ───────────────────────────────────────
   tts('Recall $\\ln(e^x) = x$ always.', 'Recall natural log (e to the x) equals x always.', 'ln-exp');
-  tts('Compute $\\log_2 8$ quickly.', 'Compute log sub 2 8 quickly.', 'log-base');
+  tts('Compute $\\log_2 8$ quickly.', 'Compute log base 2 8 quickly.', 'log-base');
 
   // ── 8. Trig ──────────────────────────────────────────────────────
   tts('So $\\sin^2(x) + \\cos^2(x) = 1$ always.', 'So sine squared (x) plus cosine squared (x) equals 1 always.', 'pythagorean-identity');

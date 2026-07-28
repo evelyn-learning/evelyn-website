@@ -261,7 +261,7 @@ function runCurated(): void {
   tts('So $|\\vec{v}| = 5$ overall.', 'So the magnitude of vector v equals 5 overall.', 'vector-magnitude');
   tts('Resolve $F_x = F\\cos\\theta$ first.', 'Resolve F sub x equals F cosine theta first.', 'component-x');
   tts('Then $F_y = F\\sin\\theta$ next.', 'Then F sub why equals F sine theta next.', 'component-y');
-  tts('Start from $v_0 = 4$ upward.', 'Start from v sub 0 equals 4 upward.', 'v-naught');
+  tts('Start from $v_0 = 4$ upward.', 'Start from v 0 equals 4 upward.', 'v-naught');
 
   // ── 8. Greek: glyphs AND commands ────────────────────────────────
   tts('Angular speed ω rises here.', 'Angular speed omega rises here.', 'omega-glyph');
@@ -273,7 +273,7 @@ function runCurated(): void {
   tts('So α = 2ω after the spin.', 'So alpha equals 2 omega after the spin.', 'alpha-eq-glyph');
   tts('Compute Δx over Δt directly.', 'Compute Delta x over Delta t directly.', 'Delta-glyph');
   tts('Frequency uses $\\omega = 2\\pi f$ directly.', 'Frequency uses omega equals 2 pie f directly.', 'omega-2pif');
-  tts('Permittivity $\\varepsilon_0$ appears here.', 'Permittivity epsilon sub 0 appears here.', 'varepsilon-strips-var');
+  tts('Permittivity $\\varepsilon_0$ appears here.', 'Permittivity epsilon 0 appears here.', 'varepsilon-strips-var');
   tts('Permeability μ₀ is small.', 'Permeability mu 0 is small.', 'mu-naught-glyph');
   tts('Friction obeys $F = \\mu N$ here.', 'Friction obeys F equals mu N here.', 'mu-friction');
 
@@ -290,8 +290,8 @@ function runCurated(): void {
   // ── 9. Canonical equations ───────────────────────────────────────
   tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em A compactly.', 'f-equals-ma');
   tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals em c squared famously.', 'e-mc2');
-  tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v sub 0 plus A t for velocity.', 'kinematics-at');
-  tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v sub 0 t plus 1 over 2 A t squared follows.', 'kinematics-x');
+  tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v 0 plus A t for velocity.', 'kinematics-at');
+  tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v 0 t plus 1 over 2 A t squared follows.', 'kinematics-x');
   tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 em v squared always.', 'kinetic-energy');
   tts('Work is $W = F d \\cos\\theta$ along the path.', 'Work is W equals F dee cosine theta along the path.', 'work-eq');
   tts('Waves follow $v = f\\lambda$ neatly.', 'Waves follow v equals f lambda neatly.', 'wave-eq');

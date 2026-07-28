@@ -102,6 +102,7 @@
     "test:cancel-storm": "npx tsx scripts/test-cancel-storm.ts",
     "test:bargein-gate": "npx tsx scripts/test-bargein-gate.ts",
     "test:shared-mic": "npx tsx scripts/test-shared-mic-mute.ts",
+    "test:math-label": "npx tsx scripts/test-math-label.ts",
     "test:practice-session-block": "npx tsx scripts/test-practice-session-block.ts",
     "test:pace-preference-block": "npx tsx scripts/test-pace-preference-block.ts",
     "test:active-problem-block": "npx tsx scripts/test-active-problem-block.ts",
