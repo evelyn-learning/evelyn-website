@@ -84,6 +84,15 @@ export interface HeuristicInput {
   /** Rolling buffer of TTS scripts spoken in the last ~8s. Caller is
    *  responsible for trimming the window. */
   recentTtsScripts: RecentTtsScript[];
+  /** Round-6 live-test fix (portal-cca76850): was the tutor AUDIBLY SPEAKING
+   *  (production state 'speaking') at this utterance's VAD onset? Derived by
+   *  the component from recorded state transitions — an evidence source
+   *  independent of script playback stamps, which a barge-in kill + resume
+   *  splinters (the killed sentence's window is closed by transcript-arrival
+   *  time, so `onsetDuringScriptPlayback` finds nothing and the echo
+   *  dispatches). Optional: callers without state history omit it and the
+   *  script-window check governs alone. */
+  onsetDuringTutorSpeech?: boolean;
   /** Date.now() at classification time. */
   now: number;
   /** When the perception WS first detected speech for this transcript —
@@ -903,7 +912,8 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
     rawWordCount(text) <= 4 &&
     state !== 'speaking' &&
     input.speechStartedAt !== undefined &&
-    onsetDuringScriptPlayback(input.recentTtsScripts, input.speechStartedAt, input.now)
+    (input.onsetDuringTutorSpeech === true ||
+      onsetDuringScriptPlayback(input.recentTtsScripts, input.speechStartedAt, input.now))
   ) {
     const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
     if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {

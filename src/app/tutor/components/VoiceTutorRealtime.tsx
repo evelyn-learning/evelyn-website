@@ -13246,6 +13246,58 @@ export function VoiceTutorRealtime({
   const productionStateRef = useRef<RealtimeState>(realtime.state);
   productionStateRef.current = realtime.state;
 
+  // Round-6 live-test fix (portal-cca76850): recorded 'speaking' windows —
+  // [start, end] wall-clock spans during which the tutor was audibly
+  // speaking. The classifier's onset-during-playback echo gate needs "was
+  // the tutor talking when this utterance STARTED?", and script playback
+  // stamps can't answer it reliably: a barge-in kill + resume splinters the
+  // turn so the killed sentence's window is closed by the time its echo's
+  // transcript arrives (observed live: "Last we tackled" dispatched as
+  // new_turn 6.7s after the kill). State transitions are stamp-mess-proof.
+  // Effect timing lags the real transition by a render flush (~ms), well
+  // inside the ε the lookup applies.
+  const speakingWindowsRef = useRef<Array<{ start: number; end: number | null }>>([]);
+  useEffect(() => {
+    const now = Date.now();
+    const wins = speakingWindowsRef.current;
+    const last = wins[wins.length - 1];
+    if (realtime.state === 'speaking') {
+      if (!last || last.end !== null) wins.push({ start: now, end: null });
+    } else if (last && last.end === null) {
+      last.end = now;
+    }
+    // Prune windows older than the classifier's 30s lookback (plus slack).
+    while (wins.length && (wins[0].end ?? now) < now - 60_000) wins.shift();
+  }, [realtime.state]);
+  const wasTutorSpeakingAt = useCallback((tMs: number): boolean => {
+    const EPS = 300; // VAD-onset slop + effect-flush lag
+    const now = Date.now();
+    return speakingWindowsRef.current.some(
+      (w) => tMs >= w.start - EPS && tMs <= (w.end ?? now) + EPS,
+    );
+  }, []);
+
+  // Round-6: forward playback-route + shared-mic lifecycle (plain modules
+  // with no onDebugEvent access) into the session's persisted debug events —
+  // the round-6 live test was blind on whether the AEC route's play()
+  // succeeded on the user's device, because those modules only console.warn.
+  useEffect(() => {
+    const onRoute = (e: Event) => {
+      const d = (e as CustomEvent<{ kind?: string; detail?: string }>).detail;
+      onDebugEvent?.('playback_route', `${d?.kind}: ${d?.detail ?? ''}`);
+    };
+    const onMic = (e: Event) => {
+      const d = (e as CustomEvent<{ kind?: string; detail?: string }>).detail;
+      onDebugEvent?.('shared_mic', `${d?.kind}: ${d?.detail ?? ''}`);
+    };
+    window.addEventListener('evelyn:playback-route', onRoute);
+    window.addEventListener('evelyn:shared-mic', onMic);
+    return () => {
+      window.removeEventListener('evelyn:playback-route', onRoute);
+      window.removeEventListener('evelyn:shared-mic', onMic);
+    };
+  }, [onDebugEvent]);
+
   // Student marks (Phase 1) idle-send: fires ~4s after the last mark, ONLY
   // when the tutor is not speaking (productionStateRef, the existing
   // production-WS state mirror above) and no brain call is in flight
@@ -13798,6 +13850,11 @@ export function VoiceTutorRealtime({
           recentTtsScripts,
           now: nowMs,
           speechStartedAt,
+          // Round-6: state-window evidence for the onset-during-playback
+          // echo gate — survives the script-stamp splintering a kill+resume
+          // causes (see speakingWindowsRef).
+          onsetDuringTutorSpeech:
+            speechStartedAt !== undefined && wasTutorSpeakingAt(speechStartedAt),
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -14036,7 +14093,7 @@ export function VoiceTutorRealtime({
             });
         }
       }
-  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain, flushManualBuffer]);
+  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain, flushManualBuffer, wasTutorSpeakingAt]);
   // R34 T3: always points at the latest render's perceptionOnTranscript, so
   // the hold-flush timer and the mic-mute flush (toggleMicMute, below) never
   // re-enter a stale closure — same forward-ref-via-ref pattern as
@@ -14263,6 +14320,63 @@ export function VoiceTutorRealtime({
       // no gate and could still abort the kickoff before any audio played.
       if ((canStage2 || canStage3) && !openingTurnFullyDelivered()) {
         if (canStage3 && firstTurnSawSpeakingRef.current) {
+          // Round-6 live-test fix (portal-cca76850/b3838f70): the blind
+          // TIME-only opener timer is worthless against pre-AEC-convergence
+          // echo — measured PCM shows mobile echo cancellation only becomes
+          // effective after ~15-30s of PLAYED audio, so during the opener
+          // the mic carries the tutor's voice CONTINUOUSLY and every timer
+          // window "sustains" (prod events: kills passing at exactly
+          // 350-351ms, six times across two sessions, cutting the opener
+          // off on its own echo every time). Ink2 has exposed an energy
+          // window since round-5: when it (or the OpenAI perception window)
+          // is available, gate the opener kill on ENERGY like the
+          // mid-lesson path — the adaptive threshold is derived from the
+          // pre-onset echo floor, which is exactly what the mic is carrying
+          // during unconverged opener playback, so echo stays below it
+          // while genuine student speech (~10x hotter, measured) passes.
+          // The TIME-only timer remains the no-window fallback.
+          const getOpenerWindow = getPerceptionEnergyWindowRef.current;
+          if (getOpenerWindow) {
+            const gateStartedAt = Date.now();
+            const speechStartMs = gateStartedAt;
+            const energyThreshold = resolveBargeInEnergyThreshold({
+              frames: getOpenerWindow(),
+              fromMs: speechStartMs - BARGEIN_BASELINE_LOOKBACK_MS,
+              toMs: speechStartMs,
+              floor: BARGEIN_ENERGY_FLOOR,
+              ceiling: BARGEIN_ENERGY_THRESHOLD,
+              margin: BARGEIN_ECHO_MARGIN,
+            });
+            onDebugEvent?.('perception_bargein_gate_armed',
+              `sustain=${OPENER_BARGEIN_SUSTAIN_MS}ms threshold=${energyThreshold.toFixed(3)} (opening turn)`);
+            bargeInGateTimerRef.current = setInterval(() => {
+              const now = Date.now();
+              if (productionStateRef.current !== 'speaking' || now - gateStartedAt > BARGEIN_GATE_MAX_MS) {
+                if (bargeInGateTimerRef.current) {
+                  clearInterval(bargeInGateTimerRef.current);
+                  bargeInGateTimerRef.current = null;
+                }
+                return;
+              }
+              const fire = shouldFireBargeInKill({
+                state: 'speaking',
+                speechStartMs,
+                nowMs: now,
+                frames: getOpenerWindow(),
+                energyThreshold,
+                sustainMs: OPENER_BARGEIN_SUSTAIN_MS,
+              });
+              if (fire) {
+                if (bargeInGateTimerRef.current) {
+                  clearInterval(bargeInGateTimerRef.current);
+                  bargeInGateTimerRef.current = null;
+                }
+                onDebugEvent?.('perception_bargein_gate_passed', `latencyMs=${now - gateStartedAt} (opening turn)`);
+                runPerceptionKill('speaking');
+              }
+            }, BARGEIN_GATE_POLL_MS);
+            return;
+          }
           const armedAt = Date.now();
           onDebugEvent?.('perception_bargein_deferred_armed', `sustain=${OPENER_BARGEIN_SUSTAIN_MS}ms (opening turn)`);
           bargeInDeferredKillRef.current = setTimeout(() => {

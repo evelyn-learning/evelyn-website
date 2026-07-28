@@ -104,13 +104,17 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
       // constraint is a request, not a guarantee, and this was the single
       // unverified assumption behind the mobile echo. Shows in the browser→
       // server log bridge alongside the other voice lifecycle lines.
-      console.warn(
-        `[shared-mic] opened for ${[...holders].join('+')} — ` +
+      const summary =
         `echoCancellation=${(settings as MediaTrackSettings).echoCancellation} ` +
         `noiseSuppression=${(settings as MediaTrackSettings).noiseSuppression} ` +
         `autoGainControl=${(settings as MediaTrackSettings).autoGainControl} ` +
-        `sampleRate=${(settings as MediaTrackSettings).sampleRate}`,
-      );
+        `sampleRate=${(settings as MediaTrackSettings).sampleRate}`;
+      console.warn(`[shared-mic] opened for ${[...holders].join('+')} — ${summary}`);
+      // Round-6: also surface to the persisted debug events (console lines
+      // never leave the device). VoiceTutorRealtime forwards this.
+      try {
+        window.dispatchEvent(new CustomEvent('evelyn:shared-mic', { detail: { kind: 'opened', detail: summary } }));
+      } catch {}
       return stream;
     })
     .catch((err) => {

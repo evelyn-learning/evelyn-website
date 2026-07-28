@@ -1170,5 +1170,67 @@ console.log('\n=== Onset-during-playback echo reaching \'listening\' (portal-b38
     !/onset-during-playback/.test(long.reason), `verdict=${long.verdict} (${long.reason})`);
 }
 
+console.log('\n=== Onset-during-speech via STATE windows (portal-cca76850, round-6 live test) ===');
+{
+  // Field failure of the script-window gate: "Last we tackled" (garbled
+  // echo of the opener "…last time we tackled…") arrived 6.7s after the
+  // barge-in kill. By then the kill/resume splintering had CLOSED every
+  // script playback window containing the onset — onsetDuringScriptPlayback
+  // found nothing and the transcript dispatched as new_turn. The component
+  // now ALSO passes `onsetDuringTutorSpeech`, derived from recorded
+  // production-state 'speaking' windows, which survives any script-stamp
+  // mess.
+  const staleScripts: RecentTtsScript[] = [
+    // opener sentence: killed long before the onset; its window+trail are past
+    { text: 'Great to have you back, Praveen — last time we tackled AP Macro scarcity.', spokenStartedAt: 1_000_000, spokenEndedAt: 1_002_000 },
+  ];
+  const r = classifyHeuristic({
+    transcript: 'Last we tackled',
+    productionState: 'listening',
+    recentTtsScripts: staleScripts,
+    now: 1_012_000,
+    speechStartedAt: 1_005_300, // outside every script window…
+    onsetDuringTutorSpeech: true, // …but the tutor WAS audibly speaking then
+  });
+  check('"Last we tackled", stale script windows, state-window onset → drop_self_voice',
+    r.verdict === 'drop_self_voice', `verdict=${r.verdict} (${r.reason})`);
+
+  // Without the flag the script-window gate still governs (unchanged shape).
+  const noFlag = classifyHeuristic({
+    transcript: 'Last we tackled',
+    productionState: 'listening',
+    recentTtsScripts: staleScripts,
+    now: 1_012_000,
+    speechStartedAt: 1_005_300,
+  });
+  check('same input without the state-window flag → not the during-playback drop (script gate off)',
+    !/onset-during-playback/.test(noFlag.reason), `verdict=${noFlag.verdict} (${noFlag.reason})`);
+
+  // Guard: state-window flag TRUE but no word overlap → still dispatches.
+  const noOverlap = classifyHeuristic({
+    transcript: 'What about demand',
+    productionState: 'listening',
+    recentTtsScripts: staleScripts,
+    now: 1_012_000,
+    speechStartedAt: 1_005_300,
+    onsetDuringTutorSpeech: true,
+  });
+  check('state-window onset, zero overlap → not dropped',
+    noOverlap.verdict !== 'drop_self_voice', `verdict=${noOverlap.verdict} (${noOverlap.reason})`);
+
+  // Guard: flag false + onset after speech ended ("Dadu definitely" class)
+  // remains a real answer.
+  const dadu = classifyHeuristic({
+    transcript: 'Scarcity definitely',
+    productionState: 'listening',
+    recentTtsScripts: staleScripts,
+    now: 1_012_000,
+    speechStartedAt: 1_005_300,
+    onsetDuringTutorSpeech: false,
+  });
+  check('post-speech short answer (flag false) → still new_turn',
+    dadu.verdict === 'new_turn', `verdict=${dadu.verdict} (${dadu.reason})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

@@ -46,6 +46,18 @@ const routes = new WeakMap<AudioContext, RouteState>();
 /** Contexts whose media-element route failed — never retried, avoids thrash. */
 const failed = new WeakSet<AudioContext>();
 
+/** Round-6: surface route lifecycle to the session's persisted debug events.
+ *  This module has no access to onDebugEvent, and console lines never leave
+ *  the device — round-6's live test was blind on whether play() succeeded on
+ *  the user's phone. VoiceTutorRealtime listens for this window event and
+ *  forwards it. */
+function emitRouteEvent(kind: string, detail: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.dispatchEvent(new CustomEvent('evelyn:playback-route', { detail: { kind, detail } }));
+  } catch {}
+}
+
 /**
  * The node TTS sources should connect to.
  *
@@ -85,17 +97,22 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
     // would be left with a silent tutor, so fall back immediately.
     const played = el.play();
     if (played && typeof played.catch === 'function') {
-      played.catch((err: unknown) => {
-        console.warn('[playback-route] media-element play() rejected — falling back to ctx.destination', err);
-        markFailed(ctx);
-      });
+      played
+        .then(() => emitRouteEvent('play_ok', `ctx=${ctx.state}`))
+        .catch((err: unknown) => {
+          console.warn('[playback-route] media-element play() rejected — falling back to ctx.destination', err);
+          emitRouteEvent('play_rejected', String(err).slice(0, 120));
+          markFailed(ctx);
+        });
     }
 
     routes.set(ctx, { node, el, gain });
     console.warn('[playback-route] TTS routed via MediaStreamDestination (AEC reference path)');
+    emitRouteEvent('routed', `ctx=${ctx.state}`);
     return gain;
   } catch (err) {
     console.warn('[playback-route] route setup failed — using ctx.destination', err);
+    emitRouteEvent('setup_failed', String(err).slice(0, 120));
     failed.add(ctx);
     return ctx.destination;
   }
