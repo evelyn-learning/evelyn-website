@@ -238,53 +238,29 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
     if (nearBottom) el.scrollTop = el.scrollHeight;
   }, [transcript, picker]);
 
-  // Round-6 (round-5 handoff #5): open the drawer AT the latest message on
-  // phones. On mobile the CLOSED drawer is display:none (see SessionStage —
-  // a merely-translated drawer leaked scroll height below the dock), so
-  // while it's closed this container has no box and the browser parks its
-  // scroll offset. Watch for the hidden→visible transition (height 0 → >0)
-  // and snap to the bottom then. Deliberately ONLY that transition: an open
-  // drawer resizing (keyboard, rotation) must not yank a student who
-  // scrolled up to read. Desktop's closed drawer keeps geometry (translated
-  // off-screen, not hidden), so this never fires there — the existing
-  // behavior stays.
-  //
-  // Round-6b (live test portal-47223160: the first version didn't stick):
-  // the snap must be DELAYED, not applied in the ResizeObserver callback.
-  // Blink/WebKit RESTORE a scroller's stored offset when its box is
-  // recreated after display:none, and that restoration lands after the RO
-  // callback — an immediate scrollTop write is silently overwritten and the
-  // drawer still opened at the last-seen bubble. The q-pin deep link
-  // (below) only ever worked because it scrolls ~180ms after open, past the
-  // restoration. Same trick here (two rAFs + margin), and when a q-pin
-  // entry scroll is pending we skip the snap entirely so the deep link
-  // wins.
+  // Round-6e (third attempt at "open at the latest message"): the drawer's
+  // OWNER announces every open ('evelyn:transcript-drawer-opened', see
+  // SessionStage) and we snap on that signal. The two prior attempts
+  // detected the hidden→visible transition with a ResizeObserver (immediate
+  // snap, then a 220ms-delayed snap) — both worked in a minimal Chromium
+  // repro and failed on real phones, i.e. they depended on engine-specific
+  // RO delivery for display:none subtrees (WebKit does not reliably deliver
+  // the 0-size observation while hidden, so the transition never registers
+  // after the first open). An explicit signal has no such dependency. The
+  // 200ms delay covers the drawer's own layout settling (the q-pin deep
+  // link's 180ms wait is the same idea); a pending entryId deep link (set
+  // below) owns the position instead.
   const pendingEntryScrollAtRef = useRef(0);
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    let prevHeight = el.clientHeight;
-    let snapTimer: ReturnType<typeof setTimeout> | null = null;
-    const ro = new ResizeObserver(() => {
-      const h = el.clientHeight;
-      if (prevHeight === 0 && h > 0) {
-        if (snapTimer) clearTimeout(snapTimer);
-        snapTimer = setTimeout(() => {
-          snapTimer = null;
-          // A q-pin open dispatched 'evelyn:open-transcript' with an
-          // entryId just before/after this visibility flip — its own
-          // 180ms-delayed scroll owns the position.
-          if (Date.now() - pendingEntryScrollAtRef.current < 1500) return;
-          el.scrollTop = el.scrollHeight;
-        }, 220);
-      }
-      prevHeight = h;
-    });
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-      if (snapTimer) clearTimeout(snapTimer);
+    const onOpened = () => {
+      setTimeout(() => {
+        if (Date.now() - pendingEntryScrollAtRef.current < 1500) return;
+        const el = containerRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+      }, 200);
     };
+    window.addEventListener('evelyn:transcript-drawer-opened', onOpened);
+    return () => window.removeEventListener('evelyn:transcript-drawer-opened', onOpened);
   }, []);
 
   // Q-pin deep link (2026-07-15): the pin's click carries the tutor entry id

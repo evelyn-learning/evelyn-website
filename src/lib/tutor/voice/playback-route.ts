@@ -40,6 +40,8 @@ interface RouteState {
    *  audio that has already been handed to a MediaStream — the stream and the
    *  element have no flush API. See `silencePlaybackRoute`. */
   gain: GainNode;
+  /** Round-6e: foreground health check — removed on markFailed/release. */
+  onVisibility?: () => void;
 }
 
 const routes = new WeakMap<AudioContext, RouteState>();
@@ -106,7 +108,31 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
         });
     }
 
-    routes.set(ctx, { node, el, gain });
+    const state: RouteState = { node, el, gain };
+    // Round-6e (portal-386d96cb: "reverb when I switch apps", with NO
+    // barge-in kills in the window — so not the kill→replay loop; the route
+    // itself is the suspect). App-switching interrupts the audio session:
+    // the element can come back paused, and WebKit may tear the
+    // MediaStreamDestination's track. On return to foreground, snapshot the
+    // route's health into the persisted debug events (this was completely
+    // unobserved on-device until now) and re-play a merely-paused element —
+    // safe, idempotent, and the only self-repair available without a
+    // gesture.
+    state.onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      const track = node.stream.getAudioTracks()[0];
+      const snapshot = `el.paused=${el.paused} el.ended=${el.ended} track=${track?.readyState ?? 'none'} muted=${track?.muted ?? 'n/a'} ctx=${ctx.state}`;
+      emitRouteEvent('foreground_check', snapshot);
+      if (el.paused) {
+        const p = el.play();
+        if (p && typeof p.catch === 'function') {
+          p.then(() => emitRouteEvent('foreground_replay_ok', snapshot))
+            .catch((err: unknown) => emitRouteEvent('foreground_replay_rejected', String(err).slice(0, 100)));
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', state.onVisibility);
+    routes.set(ctx, state);
     console.warn('[playback-route] TTS routed via MediaStreamDestination (AEC reference path)');
     emitRouteEvent('routed', `ctx=${ctx.state}`);
     return gain;
@@ -164,6 +190,9 @@ function markFailed(ctx: AudioContext): void {
   failed.add(ctx);
   const route = routes.get(ctx);
   if (!route) return;
+  if (route.onVisibility) {
+    try { document.removeEventListener('visibilitychange', route.onVisibility); } catch {}
+  }
   // Kill the media-element path FIRST — order matters, an autoplay-armed
   // element left attached is precisely the double-playback bug above.
   try { route.el.pause(); } catch {}
@@ -213,6 +242,9 @@ export function unsilencePlaybackRoute(ctx: AudioContext): void {
 export function releasePlaybackRoute(ctx: AudioContext): void {
   const route = routes.get(ctx);
   if (!route) return;
+  if (route.onVisibility) {
+    try { document.removeEventListener('visibilitychange', route.onVisibility); } catch {}
+  }
   try { route.el.pause(); } catch {}
   try { route.el.srcObject = null; } catch {}
   try { route.el.remove(); } catch {}

@@ -2971,8 +2971,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           {/* All worked-example prose runs through InlineMathText so any
               inline $…$ math renders via KaTeX, matching the equation cards
               around it (2026-07-10 audit: unicode-vs-KaTeX mixing). */}
+          {/* overflow-x-auto (round-6e, IMG_7871): a long unbreakable KaTeX
+              run leaked past the card's right edge on phones — scroll it
+              inside the box instead. */}
           {command.example.problem && (
-            <div className="p-3 bg-blue-50 rounded-lg">
+            <div className="p-3 bg-blue-50 rounded-lg overflow-x-auto">
               <p><InlineMathText text={command.example.problem.statement || ''} /></p>
             </div>
           )}
@@ -2981,7 +2984,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-medium shrink-0">
                 {step.step}
               </div>
-              <div className="flex-1">
+              <div className="min-w-0 flex-1 overflow-x-auto">
                 <p className="text-gray-700"><InlineMathText text={step.tutorSays || ''} /></p>
                 {step.checkQuestion && (
                   <p className="text-sm text-blue-600 mt-1 italic">

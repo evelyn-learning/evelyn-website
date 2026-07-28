@@ -45,6 +45,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',
+  // Round-6e: the round-6b AEC/route diagnostics never persisted for portal
+  // sessions — this whitelist silently ate them, so the app-switch reverb
+  // investigation ran blind. stage3_ covers the timeout-resume recovery.
+  'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

@@ -44,6 +44,10 @@ const AMBER = '#a16207';
  *  against the width at the LAST wipe, so a slow drag that accumulates
  *  past the tolerance wipes too. */
 const CACHE_WIPE_WIDTH_TOLERANCE = 24;
+/** Round-6e: below this host width there is no true margin column — a note
+ *  that can't find a clean slot is skipped instead of overlapping content
+ *  (see the skip branch in the placement loop). ~Phone portrait width. */
+const NARROW_HOST_NOTE_SKIP_W = 560;
 
 // Canvas font strings cannot contain `var(...)` — CanvasRenderingContext2D's
 // font parser only accepts concrete family names, so assigning
@@ -650,6 +654,23 @@ export function InkNotesOverlay({
         }
         if (!placement) {
           placement = placeNote({ target: t?.rect ?? null, occupied, page, note: { w: m.w, h: m.h } });
+        }
+        // Round-6e (user call, IMG_7866): on phone-width hosts, a note that
+        // could not find a clean slot is SKIPPED rather than overlapped or
+        // degraded to the margin column — on a narrow page the "margin"
+        // x-band IS the content column, so both the margin fallback and the
+        // freeze-over-drift compromises above (which deliberately accept
+        // overlap) end up sitting on top of components (IMG_7866). Product
+        // call: annotations are good-to-have; the Q-pin is the must-show
+        // surface. Skipped notes are NOT cached, so they re-try on every
+        // pass and appear the moment layout makes room. Desktop (wide page,
+        // real margin) keeps the never-fails behavior. 'user'-dragged notes
+        // always render — the student put them there.
+        if (page.w < NARROW_HOST_NOTE_SKIP_W && placement.slot !== 'user') {
+          const collidesNow = occupied.some((o) => rectsIntersect(placement.rect, o));
+          if (placement.slot === 'margin' || collidesNow) {
+            continue;
+          }
         }
         placedCacheRef.current.set(src.key, {
           anchor: t?.rect ?? null,

@@ -117,6 +117,9 @@ export function TryYourselfRenderer({
         </div>
       ) : (
         <div className="flex gap-2">
+          {/* min-w-0: a flex <input> refuses to shrink below its intrinsic
+              ~170px without it, which pushed the Submit button clean out of
+              the card on phones (round-6e, IMG_7868). */}
           <input
             type={responseFormat === 'numeric' ? 'number' : 'text'}
             value={text}
@@ -126,7 +129,7 @@ export function TryYourselfRenderer({
             onKeyDown={(e) => {
               if (e.key === 'Enter') submit(text);
             }}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 focus:border-amber-400 disabled:bg-gray-100"
+            className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-amber-400 focus:border-amber-400 disabled:bg-gray-100"
           />
           <button
             disabled={!!submitted || !text.trim()}

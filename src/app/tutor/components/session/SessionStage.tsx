@@ -275,6 +275,17 @@ export default function SessionStage(props: SessionStageProps) {
   // session start was disorienting (it dimmed the whole stage). The nudge
   // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // Round-6e: announce every drawer OPEN so TranscriptView can snap to the
+  // latest message. Two rounds of transition-detection (ResizeObserver on
+  // the hidden→visible flip, immediate then 220ms-delayed) worked in a
+  // minimal Chromium repro yet failed on real devices — engine-specific RO
+  // delivery on display:none subtrees is exactly the kind of thing to stop
+  // depending on. The opener KNOWS it opened; say so. (Covers the header
+  // icon, the caption tap, and the q-pin bridge alike — the q-pin's own
+  // entryId deep-link wins inside TranscriptView via its pending marker.)
+  useEffect(() => {
+    if (drawerOpen) window.dispatchEvent(new Event('evelyn:transcript-drawer-opened'));
+  }, [drawerOpen]);
   // Mid-session Agenda drawer (mock-review): a right-side panel listing every
   // miss. Closed by default; the header Agenda button toggles it. Controlled by
   // TutorSession when agendaDrawerOpen is provided (agenda round 5 auto-open),
@@ -402,6 +413,48 @@ export default function SessionStage(props: SessionStageProps) {
   // enabled) and holds until the next turn's pin resets to top-center.
   const [qpinCustomPos, setQpinCustomPos] = useState<QpinFraction | null>(null);
   const qpinBoxRef = useRef<HTMLDivElement>(null);
+  // Round-6e (user call, IMG_7865/7867): whitespace-seeking placement. The
+  // fixed top-center spot sat ON TOP of board content nearly every turn on
+  // phones. Measure the board's rendered items ([data-wb-item-index] /
+  // [data-wb-note] boxes) and, when there's a free vertical band below the
+  // lowest visible content (the common case — a fresh turn renders into the
+  // top of the viewport), drop the pin there instead. No band → keep the
+  // fixed overlay spot (content taller than the viewport means there is no
+  // whitespace to find — the pin overlaying is then unavoidable and the
+  // student can drag it). Known limitation, accepted: rects are the CONTENT
+  // BOXES, so whitespace *inside* a tall sparse component is invisible to
+  // this measurement — the fallback is simply today's behavior.
+  const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
+  useEffect(() => {
+    if (!questionPin || qpinMode !== 'expanded' || qpinCustomPos) {
+      setQpinAutoTop(null);
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      const box = qpinBoxRef.current;
+      const stageEl = box?.offsetParent as HTMLElement | null;
+      if (!box || !stageEl) return;
+      const stage = stageEl.getBoundingClientRect();
+      const HEADER_CLEARANCE = 56;  // stage header row
+      const DOCK_CLEARANCE = 96;    // floating tutor bar + margin
+      let lowestBottom = stage.top + HEADER_CLEARANCE;
+      stageEl.querySelectorAll<HTMLElement>('[data-wb-item-index], [data-wb-note]').forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.height === 0 || r.top >= stage.bottom) return;
+        const visibleBottom = Math.min(r.bottom, stage.bottom);
+        if (visibleBottom > lowestBottom) lowestBottom = visibleBottom;
+      });
+      const pinH = box.getBoundingClientRect().height;
+      const freeBandTop = lowestBottom + 8;
+      if (stage.bottom - DOCK_CLEARANCE - freeBandTop >= pinH) {
+        setQpinAutoTop(freeBandTop - stage.top);
+      } else {
+        setQpinAutoTop(null);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionPinKey, qpinMode, questionPin, qpinCustomPos]);
   const qpinDrag = useRef<{
     pointerId: number;
     startX: number;
@@ -1085,10 +1138,18 @@ export default function SessionStage(props: SessionStageProps) {
           }}
           style={
             qpinCustomPos
-              ? { left: `${qpinCustomPos.x * 100}%`, top: `${qpinCustomPos.y * 100}%`, transform: 'none' }
-              : undefined
+              // right:auto — the mobile full-width class sets BOTH left and
+              // right; a dragged pin must not stay stretched to right-2.
+              ? { left: `${qpinCustomPos.x * 100}%`, right: 'auto', top: `${qpinCustomPos.y * 100}%`, transform: 'none' }
+              : qpinAutoTop !== null
+                ? { top: `${qpinAutoTop}px` }
+                : undefined
           }
-          className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} left-1/2 -translate-x-1/2 z-20 max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
+          // Round-6e (user call, IMG_7867): full-width bar on phones —
+          // end-to-end covers less board VERTICALLY (the text wraps into
+          // fewer lines) and reads as a banner rather than a floating card.
+          // Desktop keeps the centered card.
+          className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
         >
           {questionPin}
         </div>
@@ -1119,11 +1180,13 @@ export default function SessionStage(props: SessionStageProps) {
           {/* ONE-LINE slim bar (R1 2026-07-14): [mic][caption][input][send]
               [mute] — the caption rides inside the dock as VTR's captionSlot
               (composed in TutorSession; it doubles as the mic-state line when
-              there's no caption). End/Pause lives in the header. NO blur —
-              blur is what made board text behind the bar unreadable; plain
-              65% white keeps it legible. Board ink can always be scrolled
+              there's no caption). End/Pause lives in the header.
+              OPAQUE (round-6e, user call 2026-07-28, IMG_7869 — supersedes
+              the 2026-07-14 "translucent at all times" call): on phones the
+              board text behind the 65% bar merged with the dock caption and
+              read as garbage. Solid white; board ink can always be scrolled
               fully above the bar (WhiteboardCanvas scroll headroom). */}
-          <div className="rounded-[24px] bg-white/65 border border-slate-200/80 shadow-lg overflow-hidden">
+          <div className="rounded-[24px] bg-white border border-slate-200/80 shadow-lg overflow-hidden">
           <div className="px-2 sm:px-3 py-0.5">
             {voiceInput}
             {/* Quick-Actions chips (Skip / I'm stuck / quick answers) — HIDDEN

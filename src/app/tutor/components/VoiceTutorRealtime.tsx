@@ -818,7 +818,16 @@ export function VoiceTutorRealtime({
   const ttsScriptIdCounterRef = useRef(0);
   const pushTtsScriptForPerception = useCallback((text: string): number | undefined => {
     const id = ttsScriptIdCounterRef.current++;
-    const entry = pushTtsScript(ttsScriptBufferRef.current, text, id, Date.now());
+    // Round-6e (portal-386d96cb): store the POST-pronunciation form — what
+    // the speaker actually emits and therefore what an echo's STT transcript
+    // contains. The raw script has "x_a"; the TTS says "X sub A"; the echo
+    // transcript "XD sub A." shares zero tokens with the raw form, so every
+    // overlap score missed it and Haiku dispatched it as a barge-in. The
+    // buffer doc always said "ideally the post-TTS-pronunciation form" —
+    // now it is.
+    let spoken = text;
+    try { spoken = rewriteForTTS(text); } catch {}
+    const entry = pushTtsScript(ttsScriptBufferRef.current, spoken, id, Date.now());
     return entry ? id : undefined;
   }, []);
   // V2: apply a real-playback lifecycle stamp (start/end/skip) from the audio

@@ -725,6 +725,11 @@ function scoreLookbackEchoOverlap(
  *  isn't fragile. */
 export const SPEAKING_ECHO_OVERLAP_THRESHOLD = 0.5;
 
+/** Round-6e: stricter bar for the 5-10-word onset-during-speech echo gate
+ *  (tier 1.7) — longer utterances carry more evidence, so demand near-total
+ *  overlap before calling them echo. See the tier 1.7 comment. */
+export const MIDLENGTH_ECHO_OVERLAP_THRESHOLD = 0.8;
+
 /**
  * Offered-option echo exemption (live round 5, 2026-07-23,
  * session-1784778855564): the tutor asked "…or should we move to free body
@@ -922,6 +927,40 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
         reason: `onset-during-playback echo overlap ${lookbackOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
         selfVoiceScore,
       };
+    }
+  }
+
+  // 1.7. Mid-length echo splices (round-6e, portal-386d96cb). Garbled echo
+  // routinely exceeds the ≤4-word cap ("x equals to before you check",
+  // "3. So give us that.") — those fell through to 'escalate' and Haiku,
+  // which has no echo awareness, dispatched them as barge_in. For 5-10 raw
+  // words whose ONSET fell during tutor speech, apply a STRICTER lookback
+  // bar: an echo splice is composed almost entirely of the tutor's own
+  // (post-pronunciation) words, so ≥0.8 of its content tokens matching the
+  // 30s lookback is echo; a genuine interjection brings its own words. The
+  // ≤10-word cap protects the one genuine shape that can also hit 0.8 — a
+  // student READING THE BOARD BACK — which in practice runs long (observed
+  // genuine recitation: 20+ words). Runs in every state (the splice can
+  // arrive during 'speaking' or after a state flip alike); requires ≥3
+  // content tokens so stopword-heavy fragments don't reach the bar by
+  // matching one word.
+  {
+    const rawWords = rawWordCount(text);
+    if (
+      rawWords >= 5 && rawWords <= 10 &&
+      input.speechStartedAt !== undefined &&
+      (input.onsetDuringTutorSpeech === true ||
+        onsetDuringScriptPlayback(input.recentTtsScripts, input.speechStartedAt, input.now))
+    ) {
+      const tContentLen = contentTokens(tokenize(text)).length;
+      const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
+      if (tContentLen >= 3 && lookbackOverlap >= MIDLENGTH_ECHO_OVERLAP_THRESHOLD) {
+        return {
+          verdict: 'drop_self_voice',
+          reason: `mid-length echo splice overlap ${lookbackOverlap.toFixed(2)} ≥ ${MIDLENGTH_ECHO_OVERLAP_THRESHOLD} (${rawWords}w)`,
+          selfVoiceScore,
+        };
+      }
     }
   }
 

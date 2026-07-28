@@ -1232,5 +1232,83 @@ console.log('\n=== Onset-during-speech via STATE windows (portal-cca76850, round
     dadu.verdict === 'new_turn', `verdict=${dadu.verdict} (${dadu.reason})`);
 }
 
+console.log('\n=== Mid-length echo splices past the ≤4-word cap (portal-386d96cb, round-6e) ===');
+{
+  // Field failures: "x equals to before you check" (6 raw words) and
+  // "3. So give us that." (5) — both onset-during-speaking echo splices of
+  // the tutor's own sentence, both past tier 1.6's ≤4-word cap, both
+  // 'escalate'd to Haiku which dispatched them as barge_in. Words 5-10 with
+  // onset during tutor speech now take a STRICTER overlap bar (0.8): an
+  // echo splice is composed almost entirely of the tutor's own words.
+  const scripts: RecentTtsScript[] = [
+    { text: 'So x equals 2 — before you check the two-sided limit, give us that left-hand value. 3, right.', spokenStartedAt: 1_000_000, spokenEndedAt: 1_006_000 },
+  ];
+  const splice6 = classifyHeuristic({
+    transcript: 'x equals to before you check',
+    productionState: 'speaking',
+    recentTtsScripts: scripts,
+    now: 1_009_000,
+    speechStartedAt: 1_004_000,
+    onsetDuringTutorSpeech: true,
+  });
+  check('"x equals to before you check" onset-during-speech → drop_self_voice',
+    splice6.verdict === 'drop_self_voice', `verdict=${splice6.verdict} (${splice6.reason})`);
+
+  const splice5 = classifyHeuristic({
+    transcript: '3. So give us that.',
+    productionState: 'speaking',
+    recentTtsScripts: scripts,
+    now: 1_009_000,
+    speechStartedAt: 1_004_500,
+    onsetDuringTutorSpeech: true,
+  });
+  check('"3. So give us that." onset-during-speech → drop_self_voice',
+    splice5.verdict === 'drop_self_voice', `verdict=${splice5.verdict} (${splice5.reason})`);
+
+  // Guard: genuine mid-length interjection with low overlap → untouched
+  // (escalates as today).
+  const genuine = classifyHeuristic({
+    transcript: 'wait can we do the homework problem',
+    productionState: 'speaking',
+    recentTtsScripts: scripts,
+    now: 1_009_000,
+    speechStartedAt: 1_004_000,
+    onsetDuringTutorSpeech: true,
+  });
+  check('genuine low-overlap mid-length interjection → not dropped',
+    genuine.verdict !== 'drop_self_voice', `verdict=${genuine.verdict} (${genuine.reason})`);
+
+  // Guard: a student READING THE BOARD BACK is long (>10 raw words) even
+  // when every content word is the tutor's — the cap keeps it alive.
+  const recitation = classifyHeuristic({
+    transcript: 'when we say that limit x tends to 3 minus is equal to 7 and limit x tends to 3 plus',
+    productionState: 'speaking',
+    recentTtsScripts: [
+      { text: 'The limit as x tends to 3 minus is equal to 7, and as x tends to 3 plus it is equal to 7.', spokenStartedAt: 1_000_000, spokenEndedAt: 1_006_000 },
+    ],
+    now: 1_009_000,
+    speechStartedAt: 1_004_000,
+    onsetDuringTutorSpeech: true,
+  });
+  // (Tier 1's universal window-scoped check may still catch an overtalk
+  // recitation — that's the long-standing documented policy. The guard here
+  // is only that the NEW window-free mid-length gate never reaches past 10
+  // words, where the lookback leniency would be doing the damage.)
+  check('long recitation (>10 words) → never the mid-length echo drop',
+    !/mid-length echo/.test(recitation.reason), `verdict=${recitation.verdict} (${recitation.reason})`);
+
+  // Guard: same splice but onset NOT during tutor speech → untouched.
+  const postSpeech = classifyHeuristic({
+    transcript: 'x equals to before you check',
+    productionState: 'listening',
+    recentTtsScripts: scripts,
+    now: 1_012_000,
+    speechStartedAt: 1_009_500,
+    onsetDuringTutorSpeech: false,
+  });
+  check('same splice, onset after speech → not the mid-length echo drop',
+    !/mid-length echo/.test(postSpeech.reason), `verdict=${postSpeech.verdict} (${postSpeech.reason})`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);
