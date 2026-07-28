@@ -15138,7 +15138,11 @@ export function VoiceTutorRealtime({
             resume: deriveResumeSignal(!!resumeState, checkpointStale),
           };
           const beh = resolveOpeningBehavior(assembleOpeningInput(sig));
-          openerFields.sessionMode = beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
+          // Round-7 demo persistence: a RESUMED trial's journey is resume-live/-stale
+          // (those outrank demo-trial), but it is still a demo — without this the
+          // <demo_stop> wrap directive vanishes on resume and the hard stop lands
+          // with no pedagogical wind-down.
+          openerFields.sessionMode = isTrial || beh.journey.startsWith('demo-') ? 'demo' : 'subscribed';
           // NOTE: openingPhase is deliberately NOT set here anymore (flag-ON
           // follow-up #1): the static system prompt is a byte-stable cached
           // prefix reused every turn, so an opener clause baked into it
