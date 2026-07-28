@@ -2450,9 +2450,17 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
 
   // Start listening (microphone capture)
   const startListening = useCallback(async () => {
+    // Round-6 fix (portal-d7b24797: 43-min session with tutor.pcm16 but NO
+    // student.pcm16): this used to hard-return when the production WS wasn't
+    // OPEN — vestigial from when the processor streamed mic audio to the WS.
+    // Since Stage 4 the WS is a pure TTS sink and the mic path's only
+    // consumer is the session recorder (+ the perception energy window), so
+    // a closed WS is no reason to skip opening the mic. Nothing ever retried
+    // startListening, so one unlucky tap during a WS reconnect silently cost
+    // the entire session's student track and pinned prod state at
+    // 'connected' (every dispatch in that session logged prod=connected).
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[Realtime] Not connected');
-      return;
+      console.warn('[Realtime] startListening with production WS not open — proceeding (mic path is WS-independent since Stage 4)');
     }
 
     // Explicitly calling startListening is intent to un-mute. Clear the
@@ -2519,8 +2527,11 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       const silenceProbe = { samples: 0, sumSq: 0, peak: 0, fired: false };
 
       processor.onaudioprocess = (e) => {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
+        // No WS guard here (round-6, portal-d7b24797): frames are never sent
+        // to the production WS (Stage 4 — it's a TTS sink); this callback
+        // only feeds the silence probe + the session recorder, and gating it
+        // on WS state made the student track silently stop whenever the WS
+        // dropped mid-session (and never exist if it was closed at tap time).
         const inputData = e.inputBuffer.getChannelData(0);
         const resampledData =
           captureRate === 24000
