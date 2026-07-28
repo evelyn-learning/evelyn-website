@@ -67,7 +67,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } from './usePerceptionWS';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
-import { acquireSharedMicStream, releaseSharedMicStream } from '@/lib/tutor/voice/shared-mic';
+import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
 
 /** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
 const MIC_CONSUMER = 'ink2-stt';
@@ -698,12 +698,21 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   }, [logPrefix, state]);
 
   const setMuted = useCallback((muted: boolean) => {
-    // Local mute only — Cartesia's Ink 2 API has no documented equivalent
+    // Local mute — Cartesia's Ink 2 API has no documented equivalent
     // of OpenAI Realtime's `input_audio_buffer.clear` server-side command,
-    // so there's nothing to send over the WS here; muting just stops the
+    // so there's nothing to send over the WS here; muting stops the
     // processor from forwarding mic frames (see the `mutedRef` check at
     // the audio-worklet callback above).
     mutedRef.current = muted;
+    // Round-6 fix (mute-grace regression): ALSO register this hook's
+    // hardware mute intent on the shared capture. Before per-consumer
+    // intents, the production WS's muteInput() hardware-disabled the shared
+    // track and this software flag was the only thing setMuted(false) could
+    // clear — perception stayed deaf through the mute-grace window. Now the
+    // track stays live until BOTH consumers' intents are muted, and this
+    // call is what finally turns it hardware-off once the start-gate effect
+    // applies the post-grace mute.
+    setSharedMicConsumerMuted(MIC_CONSUMER, muted);
     console.warn(`${logPrefix} mic ${muted ? 'muted' : 'unmuted'}`);
   }, [logPrefix]);
 

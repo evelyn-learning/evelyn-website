@@ -17,15 +17,28 @@
  * (they need different sample rates and different framing), which is fine —
  * what mattered was the duplicate CAPTURE.
  *
- * Track-enable semantics are deliberately shared, not per-consumer: the only
- * caller that toggles `track.enabled` is the student's mute button, and "muted"
- * must mean muted for the STT path and the recorder alike. Per-consumer
- * software gates (Ink2's `mutedRef`, the production WS's own send guards) are
+ * Track-enable semantics are PER-CONSUMER MUTE INTENT (round-6 fix,
+ * 2026-07-28). The first shared-mic version exposed a single
+ * `setSharedMicEnabled(bool)`: the production WS's `muteInput()` hardware-
+ * disabled the track for EVERY consumer, and Ink2's software
+ * `setMuted(false)` could not undo it — which silently killed the
+ * mute-grace path ("mute with in-flight utterance — perception listens
+ * briefly to capture it, then mutes" in VoiceTutorRealtime): perception
+ * went deaf the instant the student muted, so the utterance tail it was
+ * supposed to commit never existed. Now each consumer registers its own
+ * intent and the track stays live while ANY consumer still wants to hear
+ * (`resolveSharedMicEnabled`). "Student muted" still silences everything,
+ * because the student mute drives BOTH consumers' intents (production WS
+ * via `muteInput()`, Ink2 via the start-gate effect's `setMuted`) — they
+ * just no longer clobber each other in between. Per-consumer software
+ * gates (Ink2's `mutedRef`, the production WS's own send guards) are
  * unaffected and still apply on top.
  *
  * Teardown is refcounted so one consumer stopping (the production WS commits a
  * turn and calls `stopListening()` mid-session) cannot pull the mic out from
- * under the other. Tracks stop only when the last handle is released.
+ * under the other. Tracks stop only when the last handle is released — and a
+ * released consumer's mute intent is forgotten with it, so a departed
+ * consumer can't pin the track off (or on) from the grave.
  */
 
 const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
@@ -39,6 +52,26 @@ const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
 let sharedStream: MediaStream | null = null;
 let pending: Promise<MediaStream> | null = null;
 const holders = new Set<string>();
+/** Explicit per-consumer mute intent. Absent = the consumer has expressed
+ *  none (it neither holds the track open nor pins it off). */
+const muteIntents = new Map<string, boolean>();
+
+/**
+ * Pure resolution rule, exported for the script test: the track is enabled
+ * while ANY consumer with an expressed intent wants to hear; with no
+ * expressed intents at all it defaults to enabled (a fresh capture before
+ * anyone has spoken up — the pre-fix default).
+ */
+export function resolveSharedMicEnabled(intents: boolean[]): boolean {
+  if (intents.length === 0) return true;
+  return intents.some((muted) => !muted);
+}
+
+function applySharedMicEnabled(): void {
+  if (!sharedStream) return;
+  const enabled = resolveSharedMicEnabled([...muteIntents.values()]);
+  sharedStream.getTracks().forEach((t) => { t.enabled = enabled; });
+}
 
 /**
  * Acquire the shared mic stream for `consumer`. Repeat acquisitions by the same
@@ -63,6 +96,9 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
     .then((stream) => {
       sharedStream = stream;
       pending = null;
+      // Honour intents registered before the capture existed (the start-gate
+      // mutes Ink2 at mount, well before any getUserMedia).
+      applySharedMicEnabled();
       const settings = stream.getAudioTracks()[0]?.getSettings?.() ?? {};
       // Surfaces whether the browser actually HONORED echoCancellation — the
       // constraint is a request, not a guarantee, and this was the single
@@ -91,6 +127,8 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
  */
 export function releaseSharedMicStream(consumer: string): void {
   holders.delete(consumer);
+  muteIntents.delete(consumer);
+  applySharedMicEnabled();
   if (holders.size > 0) return;
   if (sharedStream) {
     sharedStream.getTracks().forEach((t) => {
@@ -101,12 +139,14 @@ export function releaseSharedMicStream(consumer: string): void {
 }
 
 /**
- * Student mute button. Applies to every consumer by design (see file header).
- * No-op when the mic isn't open, so an early mute before Start can't throw.
+ * Register `consumer`'s mute intent and re-resolve the track state (see file
+ * header — the track goes hardware-off only once every expressed intent is
+ * "muted"). Safe before the mic exists: the intent is remembered and applied
+ * when the capture opens.
  */
-export function setSharedMicEnabled(enabled: boolean): void {
-  if (!sharedStream) return;
-  sharedStream.getTracks().forEach((t) => { t.enabled = enabled; });
+export function setSharedMicConsumerMuted(consumer: string, muted: boolean): void {
+  muteIntents.set(consumer, muted);
+  applySharedMicEnabled();
 }
 
 /** Diagnostic only — reports whether the browser honored the AEC request. */

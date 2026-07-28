@@ -18,7 +18,7 @@ import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib
 import {
   acquireSharedMicStream,
   releaseSharedMicStream,
-  setSharedMicEnabled,
+  setSharedMicConsumerMuted,
 } from '@/lib/tutor/voice/shared-mic';
 import {
   getPlaybackTarget,
@@ -2462,9 +2462,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // phantom audio captured in the first ~1.5s.
     unmuteAtRef.current = Date.now();
 
-    // If mic is already active, re-enable tracks (may have been muted) and update state
+    // If mic is already active, withdraw our mute intent (may have been
+    // muted) and update state
     if (audioProcessorRef.current && mediaStreamRef.current) {
-      setSharedMicEnabled(true);
+      setSharedMicConsumerMuted(MIC_CONSUMER, false);
       shouldListenRef.current = true;
       updateState('listening');
       return;
@@ -2479,13 +2480,13 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       // Safari's echo cancellation — see shared-mic.ts for the measurements.
       const stream = await acquireSharedMicStream(MIC_CONSUMER);
       mediaStreamRef.current = stream;
-      // The shared stream may come back with tracks already DISABLED — a
-      // previous muteInput() disabled them and the Ink2 hook kept the stream
+      // The shared stream may come back hardware-muted — a previous
+      // muteInput() intent survives while the Ink2 hook keeps the stream
       // alive, so this "fresh" open inherits the muted track rather than the
       // enabled-by-default one a private getUserMedia would have returned.
       // Callers only reach startListening when they intend to listen (every
-      // auto-start path checks userMutedRef first), so assert that here.
-      setSharedMicEnabled(true);
+      // auto-start path checks userMutedRef first), so withdraw our intent.
+      setSharedMicConsumerMuted(MIC_CONSUMER, false);
 
       // Create audio processor
       const ctx = getAudioContext();
@@ -2617,10 +2618,15 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // response.done) honour it even if the mic hasn't been opened yet.
     userMutedRef.current = true;
 
-    // Disable mic tracks without destroying them so unmute can re-enable
-    // instantly. Deliberately applies to the SHARED capture: "student muted"
-    // must silence the Ink2 STT path and the recorder too, not just this WS.
-    setSharedMicEnabled(false);
+    // Register OUR mute intent without destroying the tracks so unmute can
+    // re-enable instantly. Round-6 fix (mute-grace regression): this used to
+    // hardware-disable the shared capture outright, which deafened Ink2 the
+    // instant the student muted — the mute-grace window ("perception listens
+    // briefly to capture the in-flight utterance, then mutes") never heard a
+    // thing. The track now goes hardware-off only once Ink2's own intent
+    // (driven by the start-gate effect after grace expires) is muted too, so
+    // "student muted" still ends fully silent — just not prematurely.
+    setSharedMicConsumerMuted(MIC_CONSUMER, true);
 
     // If the student was speaking (audio in buffer), commit it so the AI processes it;
     // otherwise clear the buffer to discard any background noise
