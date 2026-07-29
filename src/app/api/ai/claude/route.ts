@@ -13,16 +13,17 @@ const CONFIG = {
   RATE_LIMIT_REQUESTS: 20,
   RATE_LIMIT_WINDOW_MS: 60 * 1000, // 1 minute
 
-  // Allowed models (whitelist to prevent using expensive models)
+  // Allowed models (whitelist to prevent using expensive models).
+  // 2026-07-29 audit: claude-3-5-sonnet-20241022 was RETIRED (404s),
+  // claude-3-haiku retires 2026-04-19, claude-sonnet-4 retires 2026-06-15.
   ALLOWED_MODELS: [
+    'claude-sonnet-5',
     'claude-sonnet-4-6',
-    'claude-sonnet-4-20250514',
-    'claude-3-5-sonnet-20241022',
-    'claude-3-haiku-20240307',
+    'claude-haiku-4-5',
   ],
 
   // Default model if not specified or not allowed
-  DEFAULT_MODEL: 'claude-sonnet-4-6',
+  DEFAULT_MODEL: 'claude-sonnet-5',
 };
 
 // ============================================================================

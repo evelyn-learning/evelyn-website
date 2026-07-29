@@ -776,9 +776,16 @@ function SessionRow({
 
 // Cost calculation for Claude models (per 1M tokens)
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  // Current models
+  'claude-sonnet-5': { input: 3, output: 15 },
+  'claude-haiku-4-5': { input: 1, output: 5 },
+  'claude-haiku-4-5-20251001': { input: 1, output: 5 },
+  'claude-opus-5': { input: 5, output: 25 },
   'claude-sonnet-4-6': { input: 3, output: 15 },
+  // Historical rows — price sessions recorded on old models; keep.
+  // (2026-07-29 audit: dropped 'claude-sonnet-4-5-20250514', an ID that
+  // never existed — Sonnet 4.5's date is 20250929 — so it matched nothing.)
   'claude-sonnet-4-20250514': { input: 3, output: 15 },
-  'claude-sonnet-4-5-20250514': { input: 3, output: 15 },
   'claude-sonnet-4-5-20250929': { input: 3, output: 15 },
   'claude-haiku-3-5-20241022': { input: 0.80, output: 4 },
   'claude-3-haiku-20240307': { input: 0.25, output: 1.25 },

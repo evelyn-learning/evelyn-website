@@ -109,7 +109,7 @@ Output a JSON array of problem objects. Only output valid JSON, no markdown.`;
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-5',
         max_tokens: 16000,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userPrompt }],

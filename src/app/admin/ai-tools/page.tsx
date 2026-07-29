@@ -613,8 +613,8 @@ export default function AIToolsAdminPage() {
                   >
                     <option value="gpt-4o-mini">GPT-4o Mini</option>
                     <option value="gpt-4o">GPT-4o</option>
-                    <option value="claude-3-haiku">Claude 3 Haiku</option>
-                    <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                    <option value="claude-haiku-4-5">Claude Haiku 4.5</option>
+                    <option value="claude-sonnet-5">Claude Sonnet 5</option>
                   </select>
                 </div>
               </div>

@@ -27,7 +27,7 @@ import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
-const MODEL = process.env.POINTER_GEN_MODEL || 'claude-opus-4-7';
+const MODEL = process.env.POINTER_GEN_MODEL || 'claude-opus-5';
 
 if (!process.env.ANTHROPIC_API_KEY) {
   console.error('✗ ANTHROPIC_API_KEY not set');

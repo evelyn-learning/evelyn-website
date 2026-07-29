@@ -6,7 +6,7 @@ import { checkDailyLimit } from '@/lib/utils/rate-limit';
 // CONFIGURATION
 // ============================================================================
 const CONFIG = {
-  MODEL: 'claude-3-haiku-20240307',
+  MODEL: 'claude-haiku-4-5-20251001',
   MAX_TOKENS: 500,
   RATE_LIMIT_REQUESTS: 10,
   RATE_LIMIT_WINDOW_MS: 60 * 1000,

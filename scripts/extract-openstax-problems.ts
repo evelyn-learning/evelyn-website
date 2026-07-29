@@ -411,7 +411,7 @@ async function convertProblemsWithClaude(
     console.log(`\n   Processing batch ${i + 1}/${problemChunks.length}...`);
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       max_tokens: 16000,
       system: EXTRACTION_SYSTEM_PROMPT,
       messages: [
