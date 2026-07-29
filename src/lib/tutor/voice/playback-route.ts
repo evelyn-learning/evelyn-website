@@ -48,7 +48,7 @@ interface RouteState {
    *  while backgrounded — the reverb-item-2 instrumentation. Cleared once
    *  consumed so a hidden→hidden transition (no visible in between) can't
    *  reuse a stale snapshot. */
-  hiddenSnapshot?: { atMs: number; ct: number } | null;
+  hiddenSnapshot?: { atMs: number; ct: number; ctxT: number; ctxState: string } | null;
 }
 
 const routes = new WeakMap<AudioContext, RouteState>();
@@ -130,7 +130,7 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
       // moment we go hidden, with no event emitted (this fires on every tab
       // switch — noise, not signal, until paired with the return).
       if (document.visibilityState === 'hidden') {
-        state.hiddenSnapshot = { atMs: Date.now(), ct: el.currentTime };
+        state.hiddenSnapshot = { atMs: Date.now(), ct: el.currentTime, ctxT: ctx.currentTime, ctxState: ctx.state };
         return;
       }
       if (document.visibilityState !== 'visible') return;
@@ -154,7 +154,18 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
         const wallS = (Date.now() - hidden.atMs) / 1000;
         const elS = el.currentTime - hidden.ct;
         const drift = wallS - elS;
-        snapshot += ` ct=${el.currentTime.toFixed(3)} hiddenWall=${wallS.toFixed(3)}s elAdv=${elS.toFixed(3)}s drift=${drift.toFixed(3)}s`;
+        // Round-7d: ctxAdv is the DISCRIMINATOR the reverb hunt needs. The
+        // element clock advances at wall rate whether or not the graph
+        // renders (drift≈0 in BOTH of 2026-07-28's live sessions), but the
+        // sessions behaved differently: portal-3d1dd943 played content
+        // through the background (reverb on 1/14 switches), portal-55c31b0e
+        // froze content and resumed from the pause point (reverb on EVERY
+        // switch). Only the AudioContext clock tells those modes apart:
+        // ctxAdv≈wall ⇒ graph rendered through background; ctxAdv≈0 ⇒ iOS
+        // interrupted the context and the resume replays the in-flight
+        // render tail — the current prime suspect for the double-audio.
+        const ctxAdvS = ctx.currentTime - hidden.ctxT;
+        snapshot += ` ct=${el.currentTime.toFixed(3)} hiddenWall=${wallS.toFixed(3)}s elAdv=${elS.toFixed(3)}s drift=${drift.toFixed(3)}s ctxAdv=${ctxAdvS.toFixed(3)}s hiddenCtx=${hidden.ctxState}`;
         state.hiddenSnapshot = null;
       }
       emitRouteEvent('foreground_check', snapshot);
@@ -174,6 +185,13 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
       // a mid-session srcObject swap on iOS.
     };
     document.addEventListener('visibilitychange', state.onVisibility);
+    // Round-7d: WebKit surfaces audio-session interruptions as a
+    // (non-standard) 'interrupted' context state, and nothing in the app
+    // listened for it — both 2026-07-28 reverb sessions looked identical in
+    // every visibility-time probe. This timestamps interrupt/resume
+    // transitions independently of visibility, right where a resume-replay
+    // overlap would sit.
+    ctx.addEventListener('statechange', () => emitRouteEvent('ctx_statechange', ctx.state));
     routes.set(ctx, state);
     console.warn('[playback-route] TTS routed via MediaStreamDestination (AEC reference path)');
     emitRouteEvent('routed', `ctx=${ctx.state}`);
