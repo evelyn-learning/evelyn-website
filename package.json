@@ -111,6 +111,7 @@
     "test:ws-recovery": "npx tsx scripts/test-ws-recovery.ts",
     "test:round7-locale-interests": "npx tsx scripts/test-round7-locale-interests.ts",
     "test:equation-split": "npx tsx scripts/test-equation-split.ts",
+    "test:idle-nudge": "npx tsx scripts/test-idle-nudge.ts",
     "test:perception-classifier": "npx tsx scripts/test-perception-classifier.ts",
     "test:sentence-buffer": "npx tsx scripts/test-sentence-buffer.ts",
     "test:sentence-spacing": "npx tsx scripts/test-sentence-spacing.ts",

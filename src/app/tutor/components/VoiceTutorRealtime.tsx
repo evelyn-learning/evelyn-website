@@ -113,6 +113,15 @@ import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnch
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
+import {
+  createIdleNudgeState,
+  decideIdleNudge,
+  idleNudgeArmDelayMs,
+  recordIdleNudgeFired,
+  recordStudentEngagement,
+  IDLE_NUDGE_RECHECK_MS,
+  IDLE_NUDGE_DIRECTIVE,
+} from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
@@ -139,6 +148,7 @@ import {
   TUTOR_WOLFRAM_MATH_CHECK,
   TUTOR_STUDENT_PROBLEM_GROUNDING,
   TUTOR_NOISE_NAG,
+  TUTOR_IDLE_NUDGE,
   TUTOR_CONTENT_VARIETY,
   TUTOR_STT_ENGINE_INK2,
   TOPIC_NOTES_WARMUP_SEGMENTS,
@@ -1184,6 +1194,12 @@ export function VoiceTutorRealtime({
   const pendingReactionDirectiveRef = useRef<string | null>(null);
   const reactionIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armReactionIdleSendRef = useRef<() => void>(() => {});
+  // Round-7g idle re-engagement nudge (portal-b2fe010e's 7.7min dead air):
+  // armed via ref from the delivery effect + speech-start handler, both
+  // declared before armIdleNudge itself. Session-scoped — VTR remounts.
+  const idleNudgeStateRef = useRef(createIdleNudgeState());
+  const idleNudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const armIdleNudgeRef = useRef<() => void>(() => {});
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -7400,6 +7416,10 @@ export function VoiceTutorRealtime({
         clearInterval(escalationTimerRef.current);
         escalationTimerRef.current = null;
       }
+      if (idleNudgeTimerRef.current) {
+        clearTimeout(idleNudgeTimerRef.current);
+        idleNudgeTimerRef.current = null;
+      }
       // R34 T3: the incomplete-hold timer gets the same unmount treatment —
       // left running past unmount it would flush a held fragment into a
       // stale closure.
@@ -12383,6 +12403,17 @@ export function VoiceTutorRealtime({
   ) => {
     // Task X10: stamp this turn's input modality for the honest fallback.
     currentTurnTypedRef.current = opts?.typed === true;
+    // Round-7g: a real (non-synthetic) student turn ends the silence
+    // stretch; the pending timer clears here and the tutor reply's
+    // delivery re-arms it. Synthetic bracketed dispatches (incl. the
+    // nudge itself) must not reset their own clock.
+    if (!/^\s*\[/.test(transcript)) {
+      recordStudentEngagement(idleNudgeStateRef.current);
+      if (idleNudgeTimerRef.current) {
+        clearTimeout(idleNudgeTimerRef.current);
+        idleNudgeTimerRef.current = null;
+      }
+    }
     console.log('[brain-orchestrator] turn start, transcript:', JSON.stringify(transcript).slice(0, 120), `· humor=${humorCeilingRef.current ?? 'default'}`);
     // "Mute me" / "stop listening" voice command — mute the mic instead of
     // sending it to the brain (which would otherwise try to "answer" it). Only
@@ -13478,6 +13509,42 @@ export function VoiceTutorRealtime({
   }, [handleStudentTranscriptForBrain, onDebugEvent]);
   armReactionIdleSendRef.current = armReactionIdleSend;
 
+  // Round-7g idle re-engagement nudge. Armed on every DELIVERED tutor turn
+  // (the wasSpeakingRef effect) and restarted on student speech onset; when
+  // it fires quiet it dispatches a silent bracketed directive so the tutor
+  // gently re-engages (b2fe010e: a no-next-move confirmation turn left
+  // 7.7min of mutual silence that nothing owned). The nudge's own spoken
+  // reply re-arms the timer at the longer repeat gap via the same delivery
+  // effect; caps and busy/hidden backoff live in idle-nudge.ts.
+  const armIdleNudge = useCallback(() => {
+    if (!TUTOR_IDLE_NUDGE) return;
+    if (idleNudgeTimerRef.current) clearTimeout(idleNudgeTimerRef.current);
+    const fireOrRecheck = () => {
+      idleNudgeTimerRef.current = null;
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        awaitingDispatchTimerRef.current != null ||
+        studentTypingRef.current;
+      const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
+      const decision = decideIdleNudge({ busy, hidden, state: idleNudgeStateRef.current });
+      if (decision === 'stand-down') return;
+      if (decision === 'recheck') {
+        idleNudgeTimerRef.current = setTimeout(fireOrRecheck, IDLE_NUDGE_RECHECK_MS);
+        return;
+      }
+      recordIdleNudgeFired(idleNudgeStateRef.current);
+      onDebugEvent?.(
+        'idle_nudge_sent',
+        `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}`,
+      );
+      void handleStudentTranscriptForBrain(IDLE_NUDGE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
+    };
+    idleNudgeTimerRef.current = setTimeout(fireOrRecheck, idleNudgeArmDelayMs(idleNudgeStateRef.current));
+  }, [handleStudentTranscriptForBrain, onDebugEvent]);
+  armIdleNudgeRef.current = armIdleNudge;
+
   // Stage 3 fix #4 (2026-05-28): retroactive cancel for the state-race.
   // When the user starts speaking BEFORE the tutor TTS begins,
   // perception's speech_started fires during 'listening' — the cancel
@@ -13547,6 +13614,10 @@ export function VoiceTutorRealtime({
     if (wasSpeakingRef.current && !speaking
         && Date.now() - speechKilledAtRef.current > 3000) {
       cancelStormRef.current.recordDelivery();
+      // Round-7g: a tutor turn was genuinely delivered (not a barge-in
+      // kill) — the student's silence clock starts now. Inter-sentence
+      // speaking→processing flaps just restart the timer, harmless.
+      armIdleNudgeRef.current();
     }
     wasSpeakingRef.current = speaking;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -14307,6 +14378,12 @@ export function VoiceTutorRealtime({
       micEverHeardRef.current = true;
       pendingMicNoticeRef.current = null;
       if (micNoticeGateTimerRef.current) { clearTimeout(micNoticeGateTimerRef.current); micNoticeGateTimerRef.current = null; }
+      // Round-7g: any student sound ends the silence stretch and restarts
+      // the idle-nudge clock (re-arm rather than clear: if this onset is
+      // later dropped as noise, no tutor reply will re-arm it — the
+      // restarted timer keeps the dead-air net alive either way).
+      recordStudentEngagement(idleNudgeStateRef.current);
+      armIdleNudgeRef.current();
       // "Being heard" indicator: student is speaking now. Clear any pending
       // "Got that / didn't catch" state from a previous utterance.
       speechWindowStartRef.current = Date.now();

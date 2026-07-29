@@ -281,27 +281,45 @@ function main() {
   });
 
   // ── DEMO_TEACHERS roster ────────────────────────────────────────────────
-  test('DEMO_TEACHERS: exactly 4 entries', () => {
-    assert.equal(DEMO_TEACHERS.length, 4);
+  // Round-7f pin refresh: the roster grew 4 → 18 with the geo-accent
+  // persona ship (2026-07-19, [[geo-accent-tutor-personas]]) — 4 openai
+  // originals + 14 cartesia native-accent teachers. The old "exactly 4 /
+  // all openai" pins had been failing ever since.
+  test('DEMO_TEACHERS: 18 entries (4 openai + 14 cartesia)', () => {
+    assert.equal(DEMO_TEACHERS.length, 18);
+    const byProvider = { openai: 0, cartesia: 0 } as Record<string, number>;
+    for (const t of DEMO_TEACHERS) byProvider[t.voice?.provider ?? 'none'] = (byProvider[t.voice?.provider ?? 'none'] ?? 0) + 1;
+    assert.equal(byProvider.openai, 4, `openai count (got ${JSON.stringify(byProvider)})`);
+    assert.equal(byProvider.cartesia, 14, `cartesia count (got ${JSON.stringify(byProvider)})`);
   });
 
   test('DEMO_TEACHERS: unique ids, unique names, unique voices', () => {
+    const n = DEMO_TEACHERS.length;
     const ids = DEMO_TEACHERS.map((t) => t.id);
     const names = DEMO_TEACHERS.map((t) => t.name);
     const voices = DEMO_TEACHERS.map((t) => t.voice?.voiceId);
-    assert.equal(new Set(ids).size, 4, `ids unique: ${ids.join(', ')}`);
-    assert.equal(new Set(names).size, 4, `names unique: ${names.join(', ')}`);
-    assert.equal(new Set(voices).size, 4, `voices unique: ${voices.join(', ')}`);
+    assert.equal(new Set(ids).size, n, `ids unique: ${ids.join(', ')}`);
+    assert.equal(new Set(names).size, n, `names unique: ${names.join(', ')}`);
+    assert.equal(new Set(voices).size, n, `voices unique: ${voices.join(', ')}`);
   });
 
-  test('DEMO_TEACHERS: every voice is a valid OpenAI Realtime voice id (provider openai)', () => {
+  test('DEMO_TEACHERS: every voice id is valid for its provider', () => {
     for (const t of DEMO_TEACHERS) {
       assert.ok(t.voice, `${t.id} has a voice`);
-      assert.equal(t.voice!.provider, 'openai', `${t.id} uses the openai provider`);
-      assert.ok(
-        VALID_OPENAI_VOICES.includes(t.voice!.voiceId),
-        `${t.id} voice "${t.voice!.voiceId}" ∈ [${VALID_OPENAI_VOICES.join(', ')}]`,
-      );
+      if (t.voice!.provider === 'openai') {
+        assert.ok(
+          VALID_OPENAI_VOICES.includes(t.voice!.voiceId),
+          `${t.id} voice "${t.voice!.voiceId}" ∈ [${VALID_OPENAI_VOICES.join(', ')}]`,
+        );
+      } else {
+        // Cartesia voice ids are clone UUIDs; pin the shape so a pasted
+        // name or empty string fails loudly.
+        assert.match(
+          t.voice!.voiceId,
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+          `${t.id} cartesia voice "${t.voice!.voiceId}" is a UUID`,
+        );
+      }
     }
   });
 

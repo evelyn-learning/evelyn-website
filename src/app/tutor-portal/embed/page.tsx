@@ -49,6 +49,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // sessions — this whitelist silently ate them, so the app-switch reverb
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
+  // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
+  'idle_nudge',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

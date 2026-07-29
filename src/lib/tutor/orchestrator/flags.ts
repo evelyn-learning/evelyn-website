@@ -82,6 +82,15 @@ export const TUTOR_RESUME_FROM_CLAUSE =
 // src/lib/tutor/voice/tutor-reactions.ts (test:tutor-reactions).
 export const TUTOR_NOISE_NAG =
   process.env.NEXT_PUBLIC_TUTOR_NOISE_NAG !== 'off';
+// Idle re-engagement nudge (round-7g, 2026-07-29, session portal-b2fe010e:
+// tutor ended a confirmation turn with no next move → 7.7min of mutual
+// silence). After a DELIVERED tutor turn + ~75s of student silence, dispatch
+// a silent bracketed directive so the tutor gently re-engages (repeat gap
+// 120s; max 2/stretch, 6/session; backs off while busy or hidden). Default
+// ON; NEXT_PUBLIC_TUTOR_IDLE_NUDGE=off is the kill switch. Pure decisions in
+// src/lib/tutor/voice/idle-nudge.ts (test:idle-nudge).
+export const TUTOR_IDLE_NUDGE =
+  process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE !== 'off';
 // Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
 // When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
 // opener/self-report context fields (sessionMode/openingPhase/entryMode/
