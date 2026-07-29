@@ -15970,6 +15970,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     const exitStates = ['processing', 'speaking', 'error'];
     if (exitStates.includes(realtime.state)) setIsWarmingUp(false);
   }, [realtime.state, isWarmingUp]);
+  // Round-7 item 3: nothing ever cleared errorMessage, so a transient
+  // 'WebSocket connection error' banner outlived a successful reconnect
+  // (portal-b2fe010e — banner stuck while TTS kept talking). Proven audio
+  // flow means voice is healthy again; drop the stale banner.
+  useEffect(() => {
+    if (realtime.state === 'listening' || realtime.state === 'speaking') {
+      setErrorMessage(null);
+    }
+  }, [realtime.state]);
   // Also exit warm-up when the first tutor turn lands.
   useEffect(() => {
     if (!isWarmingUp) return;

@@ -23,6 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { shouldForceReconnectOnWatchdog } from '@/lib/tutor/voice/perception-watchdog';
+import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 
 export type PerceptionState =
@@ -224,6 +225,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
   const transcriptionWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef<number>(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const everConnectedRef = useRef<boolean>(false);
   const cachedClientSecretRef = useRef<string | null>(null);
 
   // Mirror VAD params in refs so the connect closure (constructed once)
@@ -515,6 +517,10 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       console.warn(`${logPrefix} reconnect ladder exhausted — degrading`);
       reconnectAttemptsRef.current = 0;
       setState('degraded');
+      // Round-7 item 3: surface the error only when recovery genuinely
+      // failed — ws.onerror no longer notifies mid-ladder (see
+      // useCartesiaInkWS for the portal-b2fe010e background).
+      onErrorRef.current?.(new Error('Perception WS reconnect exhausted'));
       return false;
     }
     const attemptIndex = reconnectAttemptsRef.current;
@@ -569,6 +575,7 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
 
     ws.onopen = () => {
       console.warn(`${logPrefix} WS opened`);
+      everConnectedRef.current = true;
       sendSessionUpdate(ws);
       // Start mic only after WS is open so audio chunks land in a live
       // socket (avoids onaudioprocess racing the handshake).
@@ -588,8 +595,10 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       // Realtime session hitting its ~30-min max duration (close 1006/1005),
       // which auto-recovers — so warn, not error. console.error here tripped
       // the Next.js dev error overlay on a benign, recovered drop (Console5).
+      // Round-7 item 3: no onError here — it surfaced a scary
+      // perception_error while the ladder recovered underneath;
+      // scheduleReconnect's exhaustion branch surfaces genuine failures.
       console.warn(`${logPrefix} WS error (transient — onclose handles reconnect):`, e);
-      onErrorRef.current?.(new Error('Perception WS error'));
     };
 
     ws.onclose = (e) => {
@@ -642,6 +651,31 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
       teardownWS();
     };
   }, [clearWatchdog, teardownMic, teardownWS]);
+
+  // Round-7 item 3: foreground re-arm — mirrors useCartesiaInkWS. A
+  // backgrounded tab can burn the whole ladder (throttled timers, no
+  // network) with the socket already gone; nothing re-enters connect()
+  // after that. Fresh ladder + silent reconnect on visible.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (intentionallyDisconnectedRef.current) return;
+      reconnectAttemptsRef.current = 0;
+      if (shouldReconnectOnForeground({
+        visible: true,
+        intentionallyDisconnected: intentionallyDisconnectedRef.current,
+        everConnected: everConnectedRef.current,
+        wsReadyState: wsRef.current ? wsRef.current.readyState : null,
+        reconnectTimerPending: reconnectTimerRef.current !== null,
+      })) {
+        console.warn(`${logPrefix} foreground with dead socket — reconnecting`);
+        scheduleReconnectRef.current?.();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [logPrefix]);
 
   // Dev-only triggers. Mirrors the production WS's
   // __tutorForceRealtimeClose pattern (commit 8bc8aab) so reconnect

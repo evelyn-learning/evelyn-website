@@ -298,6 +298,53 @@ export function unsilencePlaybackRoute(ctx: AudioContext): void {
   } catch {}
 }
 
+/** Contexts whose first-playback clock measurement already ran. */
+const firstPlaybackMeasured = new WeakSet<AudioContext>();
+
+/**
+ * Round-7 item 4 instrumentation (Android first-turn fast speech).
+ *
+ * Evidence so far: the recorded tutor track (tap at dequeue) plays the
+ * first turn at a NORMAL rate (portal-f7b92ca7: turn 1 ≈18.5 chars/s vs
+ * 14-17 for later turns), so the speed-up the user hears happens BETWEEN
+ * the render graph and the speaker — i.e. in this module's
+ * MediaStreamDestination → <audio> sink, which is minted fresh exactly at
+ * session start and at resume (the only two moments the symptom occurs;
+ * turn 2+ is always clean). Prime suspect: Chrome's live-stream catch-up —
+ * the element opens behind the stream's live edge (or is stalled by
+ * Android's audio-session switch when the mic opens) and time-stretches
+ * the backlog to catch up, which is heard as fast speech.
+ *
+ * This measures exactly that: across the first 10s of the FIRST dequeued
+ * chunk per context, how fast does the element clock advance relative to
+ * wall clock? ratio > ~1.05 at any probe = catch-up confirmed; ratio ≈ 1
+ * with the symptom still heard = next suspect (device output path).
+ * Persisted via the existing playback_route debug-event channel.
+ */
+export function measureFirstPlayback(ctx: AudioContext): void {
+  if (firstPlaybackMeasured.has(ctx)) return;
+  firstPlaybackMeasured.add(ctx);
+  const route = routes.get(ctx);
+  if (!route) return; // direct-to-destination path — no element to measure
+  const el = route.el;
+  const t0 = Date.now();
+  const el0 = el.currentTime;
+  const ctx0 = ctx.currentTime;
+  for (const atMs of [2000, 5000, 10000]) {
+    setTimeout(() => {
+      const wallS = (Date.now() - t0) / 1000;
+      const elS = el.currentTime - el0;
+      const ctxS = ctx.currentTime - ctx0;
+      const ratio = wallS > 0 ? elS / wallS : 0;
+      emitRouteEvent(
+        'first_turn_clock',
+        `t=${atMs / 1000}s elAdv=${elS.toFixed(3)} wallAdv=${wallS.toFixed(3)} ratio=${ratio.toFixed(3)} ` +
+          `ctxAdv=${ctxS.toFixed(3)} paused=${el.paused} sr=${ctx.sampleRate}`,
+      );
+    }, atMs);
+  }
+}
+
 /** Tear down the element/node for a context (session end). Safe to call twice. */
 export function releasePlaybackRoute(ctx: AudioContext): void {
   const route = routes.get(ctx);

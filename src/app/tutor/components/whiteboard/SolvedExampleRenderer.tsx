@@ -61,7 +61,9 @@ export default function SolvedExampleRenderer({ spec }: { spec: SolvedExampleSpe
       {/* Problem */}
       <div className="bg-white border border-blue-200 rounded px-3 py-2 mb-3">
         <div className="text-xs font-semibold text-blue-700 mb-1">Problem</div>
-        <div className="text-sm text-gray-900">
+        {/* overflow-x-auto (round-7 item 7): oversized inline-math atoms
+            scroll instead of clipping under the pane's overflow-x-hidden. */}
+        <div className="text-sm text-gray-900 overflow-x-auto">
           <InlineMathText text={spec.problem} />
         </div>
       </div>
@@ -74,7 +76,7 @@ export default function SolvedExampleRenderer({ spec }: { spec: SolvedExampleSpe
             <li key={i} className="flex gap-2 text-sm">
               <span className="font-mono text-blue-600 font-semibold flex-shrink-0">{i + 1}.</span>
               <div className="flex-1">
-                <div className="text-gray-900">
+                <div className="text-gray-900 overflow-x-auto">
                   <InlineMathText text={s.expression} />
                 </div>
                 {s.reason && (

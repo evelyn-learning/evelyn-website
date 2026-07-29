@@ -3,7 +3,6 @@
 import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { CellContent } from './CellContent';
-import { useFitScale } from './useFitScale';
 import type {
   UnitCircleFigure,
   TransformationFigure,
@@ -605,14 +604,12 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
   // W1 fix: an unconstrained wide table inside `items-center` used to
   // flex-center and get double-edge-clipped by the board's
   // `overflow-x-hidden` ancestor, with no way to reach the rest (live
-  // session screenshot IMG_7807). Measure the table against the new
-  // `w-full` wrapper below and scale it down to fit; if even floor 0.6 is
-  // still too wide, the wrapper's `overflow-x-auto` keeps it reachable via
-  // scroll instead of silently clipped.
-  const { containerRef, contentRef, overflowing } = useFitScale<HTMLDivElement, HTMLTableElement>(
-    { floor: 0.6 },
-    [figure],
-  );
+  // session screenshot IMG_7807). The `w-full` wrapper below with
+  // `overflow-x-auto` keeps a wide table reachable via scroll. Round-7
+  // item 7 removed the useFitScale shrink that used to sit in front of
+  // the scroll (floor 0.6 halved the text on phones while every other
+  // card stayed full-size): tables are the semantically-scrollable case —
+  // full-size text, scroll when wide.
   // data-feature values come from the SHARED naming helper that
   // buildComparisonTableManifest also calls — manifest names and DOM
   // attrs cannot drift by construction. Attribute name is `data-feature`
@@ -622,12 +619,8 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <div
-        ref={containerRef}
-        className="w-full max-w-full overflow-x-auto"
-        data-fit-scale={overflowing ? 'floor' : undefined}
-      >
-        <table ref={contentRef} data-feature={N.table} className="border-collapse text-sm mx-auto">
+      <div className="w-full max-w-full overflow-x-auto">
+        <table data-feature={N.table} className="border-collapse text-sm mx-auto">
           <thead>
             <tr data-feature={N.headerRow}>
               <th className="px-3 py-2 border border-gray-400 bg-gray-100"></th>
@@ -683,12 +676,10 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
   // constraint, blowing the whole grid out past its own `w-full` box
   // (classic grid/flex "1fr overflow" bug). `overflow-wrap: anywhere` on
   // the item/header cells below is the PRIMARY defense (lets the token
-  // break instead of demanding oversized min-content); useFitScale is the
-  // fallback for whatever blowout still gets through.
-  const { containerRef, contentRef, overflowing } = useFitScale<HTMLDivElement, HTMLDivElement>(
-    { floor: 0.6 },
-    [figure],
-  );
+  // break instead of demanding oversized min-content); the wrapper's
+  // `overflow-x-auto` catches whatever blowout still gets through
+  // (round-7 item 7 removed the useFitScale shrink — organizers keep
+  // full-size text and scroll like tables, no font scaling).
   // Rendered as CSS-grid divs (not <table>) so the LEFT and RIGHT
   // columns are actual DOM elements that can carry data-feature
   // markers for tutor_scribble. The previous <table> form had no
@@ -700,13 +691,12 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
-      <div ref={containerRef} className="w-full max-w-[640px] overflow-x-auto" data-fit-scale={overflowing ? 'floor' : undefined}>
+      <div className="w-full max-w-[640px] overflow-x-auto">
         {/* CSS subgrid: both columns span the SAME parent row tracks, so paired
             rows size to the taller cell and ALIGN across columns — fixes the
             drift when one side's item wraps to more lines (2026-06-23 ear-test).
             The leftColumn/rightColumn elements are kept (scribble targets). */}
         <div
-          ref={contentRef}
           data-feature={N.chart}
           className="grid grid-cols-2 max-w-[640px] w-full border-2 border-gray-700"
           style={{ gridTemplateRows: `repeat(${rows + 1}, auto)` }}

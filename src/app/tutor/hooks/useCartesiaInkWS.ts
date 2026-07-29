@@ -68,6 +68,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { PerceptionState, PerceptionTranscript, PerceptionSpeechEvent } from './usePerceptionWS';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 import { acquireSharedMicStream, releaseSharedMicStream, setSharedMicConsumerMuted } from '@/lib/tutor/voice/shared-mic';
+import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 
 /** Identity for this hook's handle on the shared mic (see shared-mic.ts). */
 const MIC_CONSUMER = 'ink2-stt';
@@ -250,6 +251,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
   const intentionallyDisconnectedRef = useRef<boolean>(false);
   const reconnectAttemptsRef = useRef<number>(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const everConnectedRef = useRef<boolean>(false);
   const cachedTokenRef = useRef<string | null>(null);
   const turnBuffersRef = useRef<Map<string, TurnBuffer>>(new Map());
   const transcriptionWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -567,6 +569,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       console.warn(`${logPrefix} reconnect ladder exhausted — degrading`);
       reconnectAttemptsRef.current = 0;
       setState('degraded');
+      // Round-7 item 3: THIS is where the error becomes user-relevant —
+      // recovery genuinely failed. Transient errors mid-ladder no longer
+      // surface from ws.onerror (they bannered a session whose reconnect
+      // succeeded within ~1s, portal-b2fe010e).
+      onErrorRef.current?.(new Error('Ink2 WS reconnect exhausted'));
       return false;
     }
     const attemptIndex = reconnectAttemptsRef.current;
@@ -620,6 +627,7 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
 
     ws.onopen = () => {
       console.warn(`${logPrefix} WS opened`);
+      everConnectedRef.current = true;
       // No session.update needed — Ink 2's turn thresholds are connect-URL
       // query params; the 'connected' message (handleMessage) starts the mic.
     };
@@ -629,9 +637,11 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
     ws.onerror = (e) => {
       // Mirrors usePerceptionWS: WebSocket `error` events carry no
       // actionable detail and are always followed by onclose, which owns
-      // reconnect/'degraded' handling.
+      // reconnect/'degraded' handling. Round-7 item 3: no onError here —
+      // it surfaced 'Ink2 WS error' to the session while the ladder
+      // recovered underneath (portal-b2fe010e); scheduleReconnect's
+      // exhaustion branch surfaces genuine failures.
       console.warn(`${logPrefix} WS error (transient — onclose handles reconnect):`, e);
-      onErrorRef.current?.(new Error('Ink2 WS error'));
     };
 
     ws.onclose = (e) => {
@@ -681,6 +691,33 @@ export function useCartesiaInkWS(options: UseCartesiaInkWSOptions): UseCartesiaI
       teardownWS();
     };
   }, [clearWatchdog, teardownMic, teardownWS]);
+
+  // Round-7 item 3: foreground re-arm. A backgrounded tab throttles the
+  // ladder's timers and drops the network, so all 3 attempts can burn out
+  // with the socket already gone — no onclose ever comes and the hook
+  // stays 'degraded' until reload. On visible: fresh ladder, and if the
+  // socket is genuinely dead (not open/connecting, no backoff pending),
+  // reconnect silently through the existing ladder.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (intentionallyDisconnectedRef.current) return;
+      reconnectAttemptsRef.current = 0;
+      if (shouldReconnectOnForeground({
+        visible: true,
+        intentionallyDisconnected: intentionallyDisconnectedRef.current,
+        everConnected: everConnectedRef.current,
+        wsReadyState: wsRef.current ? wsRef.current.readyState : null,
+        reconnectTimerPending: reconnectTimerRef.current !== null,
+      })) {
+        console.warn(`${logPrefix} foreground with dead socket — reconnecting`);
+        scheduleReconnectRef.current?.();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [logPrefix]);
 
   // Dev-only forced-close trigger, mirrors usePerceptionWS's
   // __tutorForcePerceptionClose so reconnect scenarios can be reproduced

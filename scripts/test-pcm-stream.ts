@@ -55,6 +55,48 @@ async function main() {
     check('bytes-equal', equal && idx === N);
   }
 
+  // Round-7: tiny reads splitting samples right at the window boundary.
+  // Documents the carry invariant a review flagged as a suspected bug: the
+  // re-slice `last.slice(last.length - carryBytes)` looks like it could drop
+  // bytes when the last part is shorter than the carry, but window flushes
+  // drain to <4 carry bytes and (bytes_before < target, target ≡ 0 mod 4)
+  // forces carry < len(lastPart) — the clamping path is reachable only at
+  // the terminal flush, where the carry is discarded by design. This case
+  // pins byte-exact reassembly under boundary-splitting tiny reads.
+  {
+    const HEAD2 = 8;   // 32 bytes
+    const CHUNK2 = 4;  // 16-byte follow windows
+    const N2 = 20;
+    const src2 = Array.from({ length: N2 }, (_, i) => ((i * 31) % 97) / 97);
+    const bytes2 = f32Bytes(src2);
+    // Tail (48 bytes) delivered as 14 + 4 + 1 + rest: after the third read
+    // bytes=19 ≥ 16 → flush with carry=3 while the last part is 1 byte.
+    const tail0 = HEAD2 * 4;
+    const sSplit = await openPcmChunkStream(
+      streamOf([
+        bytes2.slice(0, tail0),
+        bytes2.slice(tail0, tail0 + 14),
+        bytes2.slice(tail0 + 14, tail0 + 18),
+        bytes2.slice(tail0 + 18, tail0 + 19),
+        bytes2.slice(tail0 + 19),
+      ]),
+      HEAD2,
+      CHUNK2,
+    );
+    check('split-carry-nonnull', sSplit !== null);
+    if (sSplit) {
+      const emitted: Float32Array[] = [];
+      await sSplit.pump((c) => { emitted.push(c); });
+      let equal = true;
+      let idx = 0;
+      for (const c of [sSplit.head, ...emitted]) for (let i = 0; i < c.length; i++, idx++) {
+        if (c[i] !== Math.fround(src2[idx])) { equal = false; break; }
+      }
+      check('split-carry-total', emitted.reduce((n, c) => n + c.length, 0) === N2 - HEAD2);
+      check('split-carry-equal', equal && idx === N2);
+    }
+  }
+
   // Empty stream → null
   check('empty-null', (await openPcmChunkStream(streamOf([]), HEAD, CHUNK)) === null);
 

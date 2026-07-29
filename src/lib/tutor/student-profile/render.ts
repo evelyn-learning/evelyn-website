@@ -47,6 +47,15 @@ export function renderStudentProfileBlock(
     prefBits.push(`interests=${prefs.interests.join('/')}`);
   }
   if (prefBits.length) lines.push(`preferences: ${prefBits.join(', ')}`);
+  // Round-7 item 6: the bare `interests=` token invited degree-depth
+  // domain talk (metronome markings and chord theory for a student who
+  // merely LIKES music — session portal-b2fe010e). Guidance rides only
+  // when interests render, preserving the pre-D1 byte-identity contract.
+  if (opts?.includeInterests && prefs.interests?.length) {
+    lines.push(
+      `interests above are HOBBIES the student enjoys, not subjects they know: use them for light, familiar analogies only, and never assume technical knowledge of the interest's own domain. If an analogy needs a domain term, explain it in plain words the moment you use it, or pick a simpler image instead.`,
+    );
+  }
 
   // Top mastery — most-recently-touched first.
   const masteryArr: MasteryEntry[] = Object.values(profile.mastery)

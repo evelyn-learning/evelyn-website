@@ -15,6 +15,7 @@ import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, toOpenAITools, type ToolDef
 import { classifyTranscript } from '@/lib/tutor/voice/transcript-filters';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { shouldDrainAfterOrphanedFetch, shouldFireSpeakingWatchdog } from '@/lib/tutor/voice/bargein-gate';
+import { shouldSurfaceWsError, shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import {
   acquireSharedMicStream,
   releaseSharedMicStream,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/tutor/voice/shared-mic';
 import {
   getPlaybackTarget,
+  measureFirstPlayback,
   primePlaybackRoute,
   silencePlaybackRoute,
   unsilencePlaybackRoute,
@@ -772,6 +774,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // touching any useCallback dep array (minimal frozen-file churn).
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const everConnectedRef = useRef(false);
   const connectRef = useRef<() => Promise<void>>(async () => {});
   const scheduleReconnectRef = useRef<(() => boolean) | null>(null);
   const reconnectEnabledRef = useRef(reconnectEnabled);
@@ -1292,6 +1295,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // self-healing rather than a permanently mute tutor.
     unsilencePlaybackRoute(ctx);
     source.start();
+    // Round-7 item 4: on the FIRST chunk per context, measure whether the
+    // media-element sink plays faster than wall clock over the next 10s
+    // (Android first-turn fast speech; self-guards to once per ctx).
+    measureFirstPlayback(ctx);
   }, [updateState, isHttpTtsProvider, emitPlaybackStamp]);
 
   // Queue audio for playback
@@ -2096,6 +2103,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       ws.onopen = () => {
         sb('WS onopen');
         console.log('[Realtime] WebSocket connected');
+        everConnectedRef.current = true;
 
         // Fire session.update when instructions are ready. If they haven't
         // arrived yet, defer — the instructions-useEffect below will call us
@@ -2183,6 +2191,18 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       ws.onmessage = handleMessage;
 
       ws.onerror = (event) => {
+        // Round-7 item 3: a WS 'error' is always followed by onclose,
+        // which owns the reconnect ladder when the flag is on. Surfacing
+        // here bannered 'WebSocket connection error' mid-recovery and
+        // nothing cleared it after the ladder succeeded (portal-b2fe010e:
+        // banner stuck while the reconnect completed within ~1s).
+        if (!shouldSurfaceWsError({
+          intentionallyDisconnected: intentionallyDisconnectedRef.current,
+          reconnectEnabled: reconnectEnabledRef.current,
+        })) {
+          console.warn('[Realtime] WebSocket error (transient — onclose owns reconnect):', event);
+          return;
+        }
         console.error('[Realtime] WebSocket error:', event);
         const err = new Error('WebSocket connection error');
         setError(err);
@@ -2328,6 +2348,33 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     return true;
   }, [updateState, onTranscriptionStatus, emitPlaybackStamp]);
   scheduleReconnectRef.current = scheduleReconnect;
+
+  // Round-7 item 3: foreground re-arm. A backgrounded tab throttles the
+  // ladder's timers and drops the network, so all 3 attempts can burn out
+  // with the socket already gone — no onclose ever comes and voice stays
+  // dead until reload. On visible: fresh ladder, and if the socket is
+  // genuinely dead (never before session start, not while a backoff timer
+  // is pending), reconnect silently through the existing ladder.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!reconnectEnabledRef.current || intentionallyDisconnectedRef.current) return;
+      reconnectAttemptsRef.current = 0;
+      if (shouldReconnectOnForeground({
+        visible: true,
+        intentionallyDisconnected: intentionallyDisconnectedRef.current,
+        everConnected: everConnectedRef.current,
+        wsReadyState: wsRef.current ? wsRef.current.readyState : null,
+        reconnectTimerPending: reconnectTimerRef.current !== null,
+      })) {
+        console.warn('[Realtime] foreground with dead socket — reconnecting');
+        scheduleReconnectRef.current?.();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   // Fire the ephemeral-token fetch early so it can overlap with
   // buildInstructions (saves ~500–1500 ms on typical startup). Safe to call

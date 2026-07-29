@@ -79,7 +79,10 @@ export function TryYourselfRenderer({
       <div className="text-xs font-semibold uppercase tracking-wider text-amber-700 mb-2">
         <InlineMathText text={title} />
       </div>
-      <div className="text-base text-gray-900 mb-3">
+      {/* overflow-x-auto (round-7 item 7): inline-math runs are unbreakable
+          atoms — an oversized one scrolls instead of being clipped by the
+          pane's overflow-x-hidden ancestor. */}
+      <div className="text-base text-gray-900 mb-3 overflow-x-auto">
         <InlineMathText text={stripEmbeddedChoiceBlock(problem, choices.map((c) => ({ letter: c.id, text: c.text })))} />
       </div>
 

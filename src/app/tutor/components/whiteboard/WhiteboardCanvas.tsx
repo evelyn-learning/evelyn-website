@@ -2735,8 +2735,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           }`}
         >
           {/* InlineMathText (round 29): annotate text was a raw text node,
-              so $-delimited math printed literally ("$10$ is even"). */}
-          <p className="text-lg"><InlineMathText text={command.text} /></p>
+              so $-delimited math printed literally ("$10$ is even").
+              overflow-x-auto (round-7 item 7): inline-math runs are
+              unbreakable atoms — an oversized one gets a scrollbar here
+              instead of being clipped by the pane's overflow-x-hidden. */}
+          <p className="text-lg overflow-x-auto"><InlineMathText text={command.text} /></p>
         </div>
       );
 
@@ -2800,7 +2803,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
             <InlineMathText text={problem.title || 'Problem'} />
           </h4>
-          <p className="text-gray-800 whitespace-pre-wrap" data-feature="statement">
+          <p className="text-gray-800 whitespace-pre-wrap overflow-x-auto" data-feature="statement">
             {/* stripEmbeddedChoiceBlock: statement sometimes embeds the full
                 A)–D) list the choices <ul> below also renders (round 29). */}
             <InlineMathText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} />
@@ -2997,7 +3000,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           {command.example.keyTakeaways && (
             <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
               <p className="font-medium text-yellow-800">Key Takeaways:</p>
-              <ul className="mt-1 list-disc ml-4 text-gray-700">
+              <ul className="mt-1 list-disc ml-4 text-gray-700 overflow-x-auto">
                 {command.example.keyTakeaways.map((takeaway, i) => (
                   <li key={i}><InlineMathText text={takeaway} /></li>
                 ))}
