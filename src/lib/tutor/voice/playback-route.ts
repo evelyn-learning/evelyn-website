@@ -51,19 +51,6 @@ interface RouteState {
   hiddenSnapshot?: { atMs: number; ct: number } | null;
 }
 
-/** Round-7c: iOS device sniff, local to this module — no platform detection
- *  exists anywhere else in the audio code. Needed because the buffer-rebase
- *  experiment below is iOS-only: Android's element actually pauses when
- *  backgrounded (handled by the existing replay branch), while iOS keeps the
- *  element "playing" with a stale buffered tail that the rebase targets. */
-function isIOSDevice(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    (navigator.userAgent.includes('Mac') && navigator.maxTouchPoints > 1)
-  );
-}
-
 const routes = new WeakMap<AudioContext, RouteState>();
 /** Contexts whose media-element route failed — never retried, avoids thrash. */
 const failed = new WeakSet<AudioContext>();
@@ -148,13 +135,20 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
       }
       if (document.visibilityState !== 'visible') return;
       const track = node.stream.getAudioTracks()[0];
-      let snapshot = `el.paused=${el.paused} el.ended=${el.ended} track=${track?.readyState ?? 'none'} muted=${track?.muted ?? 'n/a'} ctx=${ctx.state}`;
+      // Round-7c live-test result: `audioEls` counts every <audio> in the DOM.
+      // Routes are never torn down (releasePlaybackRoute has no callers), so
+      // each End→Resume that mints a new AudioContext leaves the previous
+      // element behind — with the buffer-rebase hypothesis DISPROVEN
+      // (drift≈0.000 across 14 measured switches, portal-3d1dd943), a stale
+      // sibling element replaying the same feed is the leading remaining
+      // suspect for the app-switch reverb.
+      let snapshot = `el.paused=${el.paused} el.ended=${el.ended} track=${track?.readyState ?? 'none'} muted=${track?.muted ?? 'n/a'} ctx=${ctx.state} audioEls=${document.querySelectorAll('audio').length}`;
       // Round-7c: how far did the element's playback position advance versus
-      // real wall-clock time while backgrounded? A rebased pipeline (iOS
-      // restarting/re-buffering the media session on return) shows elAdv ≈ 0
-      // or a discontinuous jump instead of tracking wallS — this is the
-      // measurement round-7 item 2 needs to prove or disprove the reverb
-      // hypothesis before we act on it.
+      // real wall-clock time while backgrounded? Measured live 2026-07-28
+      // (portal-3d1dd943): elAdv tracked hiddenWall to the millisecond on
+      // every switch — iOS keeps the element playing in true real time in
+      // the background; there is no stale buffered tail. Kept because it is
+      // cheap and it is the evidence that retires bad hypotheses.
       const hidden = state.hiddenSnapshot;
       if (hidden) {
         const wallS = (Date.now() - hidden.atMs) / 1000;
@@ -170,30 +164,14 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
           p.then(() => emitRouteEvent('foreground_replay_ok', snapshot))
             .catch((err: unknown) => emitRouteEvent('foreground_replay_rejected', String(err).slice(0, 100)));
         }
-      } else if (isIOSDevice()) {
-        // Round-7c iOS rebase experiment (reverb item 2 hypothesis): iOS never
-        // pauses the element on return from background, but the live
-        // MediaStream's timeline has moved on while the element kept playing
-        // from its own internal buffer — the stale buffered tail overlapping
-        // freshly-arriving samples is a plausible source of the reported
-        // "reverb" on app-switch return. Android's element genuinely pauses
-        // and is already handled by the branch above, so this is iOS-only.
-        // Re-attaching the stream drops the element's buffered tail and
-        // forces it to pick up the live stream fresh. This deliberately
-        // trades a ~100-300ms audio glitch (the re-attach + replay) for
-        // killing the stale-tail double-play; the drift instrumentation
-        // above is what tells us whether this trade was warranted.
-        emitRouteEvent('ios_rebase_reattach', snapshot);
-        try {
-          el.srcObject = node.stream;
-          const p = el.play();
-          if (p && typeof p.catch === 'function') {
-            p.catch((err: unknown) => emitRouteEvent('ios_rebase_play_rejected', String(err).slice(0, 100)));
-          }
-        } catch (err) {
-          emitRouteEvent('ios_rebase_play_rejected', String(err).slice(0, 100));
-        }
       }
+      // Round-7c REVERTED the iOS srcObject re-attach experiment that lived
+      // here. Live test portal-3d1dd943 (2026-07-28): drift≈0.000 on every
+      // switch (no stale buffer to drop), and the re-attach itself
+      // intermittently rendered the element inaudible with play() still
+      // resolving — silent tutor turns at 413s and 595.7s each directly
+      // followed a re-attach, needing End+Resume to recover. Do not re-add
+      // a mid-session srcObject swap on iOS.
     };
     document.addEventListener('visibilitychange', state.onVisibility);
     routes.set(ctx, state);
