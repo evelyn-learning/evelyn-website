@@ -18,6 +18,7 @@
 
 import { useState } from 'react';
 import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
+import { HScrollFade } from './HScrollFade';
 import { InlineMathText } from './InlineMathText';
 import {
   matchesAnswerStrict,
@@ -82,9 +83,9 @@ export function TryYourselfRenderer({
       {/* overflow-x-auto (round-7 item 7): inline-math runs are unbreakable
           atoms — an oversized one scrolls instead of being clipped by the
           pane's overflow-x-hidden ancestor. */}
-      <div className="text-base text-gray-900 mb-3 overflow-x-auto">
+      <HScrollFade className="text-base text-gray-900 mb-3 overflow-x-auto">
         <InlineMathText text={stripEmbeddedChoiceBlock(problem, choices.map((c) => ({ letter: c.id, text: c.text })))} />
-      </div>
+      </HScrollFade>
 
       {responseFormat === 'mcq' && choices.length > 0 ? (
         <div className="space-y-2">

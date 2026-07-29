@@ -85,5 +85,46 @@ check('unary-minus', splitLatexToLines('-x + y', 40) === null);
 // 11. No top-level split points at all → null (caller falls back to scroll).
 check('atomic-null', splitLatexToLines('\\frac{aaaaaaaaaaaaaaaaaaaa}{bbbbbbbbbbbbbbbbb}', 8) === null);
 
+// ─── layout: 'left' (round-8, IMG_7893/7894 clipping) ───────────────────
+// Column-aligned rows lay out as (widest LHS) + (widest RHS): on a narrow
+// pane every continuation line starts where line 1's relation sits, which
+// can be past the right edge. The left-flush layout starts every row at a
+// common left margin (continuations get a \quad indent), so total width is
+// max(single row) — the true wrap.
+
+// 12. Chained equalities, left-flush: same greedy packing as columns
+//     ("a = b" fits budget 4 together), rows lead from the left margin,
+//     continuation joiners keep relation spacing via a leading {}.
+{
+  const out = splitLatexToLines('a = b = c', 4, 'left');
+  check('left-chain', out === '\\begin{aligned}&a = b \\\\ &\\quad {}= c\\end{aligned}', out);
+}
+
+// 13. First row keeps its own relation when it fits one ("a = b" then "= c").
+{
+  const out = splitLatexToLines('a = b = ddddddddddddd', 10, 'left');
+  check('left-greedy', out === '\\begin{aligned}&a = b \\\\ &\\quad {}= ddddddddddddd\\end{aligned}', out);
+}
+
+// 14. Over-budget RHS sub-splits at +/- — same left margin, op joiners.
+{
+  const out = splitLatexToLines('f(x) = x^5 + 4x^4 - 3x^3 + 2x^2 - x + 7', 14, 'left');
+  check('left-rhs-subsplit', String(out).startsWith('\\begin{aligned}&f(x)'), out);
+  check('left-op-rows', /\\\\ &\\quad {}[+-]/.test(String(out)), out);
+  check('left-no-column-align', !/[^&\\]&[=<>]/.test(String(out)), out);
+}
+
+// 15. Default layout unchanged — explicit 'columns' equals the omitted form.
+{
+  check('columns-default', splitLatexToLines('a = b = c', 4, 'columns') === splitLatexToLines('a = b = c', 4));
+}
+
+// 16. No-relations input under 'left' still packs (gathered stays fine —
+//     its width is already max(row)).
+{
+  const out = splitLatexToLines('x^5 + 4x^4 - 3x^3 + 2x^2', 10, 'left');
+  check('left-gathered', String(out).startsWith('\\begin{gathered}'), out);
+}
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:equation-split PASS');

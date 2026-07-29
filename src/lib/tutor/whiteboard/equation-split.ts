@@ -137,7 +137,21 @@ function lineText(line: Segment[]): string {
     .trim();
 }
 
-export function splitLatexToLines(latex: string, budget: number): string | null {
+/**
+ * Layouts:
+ *  - 'columns' (default): rows align on the first top-level relation —
+ *    the classic "a &= b" look. Rendered width is (widest LHS)+(widest
+ *    RHS), so on a narrow pane continuation rows can start past the
+ *    right edge (IMG_7893/7894: clipped continuations).
+ *  - 'left': every row starts at a common left margin; continuation rows
+ *    get a \quad indent and lead with their joiner ({}-prefixed so the
+ *    relation/operator keeps binary spacing). Rendered width is
+ *    max(single row) — the renderer's fallback when the columns layout
+ *    still overflows.
+ */
+export type SplitLayout = 'columns' | 'left';
+
+export function splitLatexToLines(latex: string, budget: number, layout: SplitLayout = 'columns'): string | null {
   const s = latex.trim();
   const b = Math.max(4, Math.floor(budget));
   if (s.length <= b) return null;
@@ -179,6 +193,18 @@ export function splitLatexToLines(latex: string, budget: number): string | null 
   });
 
   if (out.length < 2) return null;
+
+  if (usingRelations && layout === 'left') {
+    const rows = out.map((line, i) => {
+      if (i === 0) return `&${line.text}`;
+      // Reattach the row's leading relation/operator, which cutAtPoints
+      // stored as the first segment's joiner and lineText re-emits at the
+      // head of the row text. `{}` restores binary/relation spacing at
+      // the start of a line; `\quad` is the continuation indent.
+      return `&\\quad {}${line.text}`;
+    });
+    return `\\begin{aligned}${rows.join(' \\\\ ')}\\end{aligned}`;
+  }
 
   if (usingRelations) {
     const rows = out.map((line, i) => {

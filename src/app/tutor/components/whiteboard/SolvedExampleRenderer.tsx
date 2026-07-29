@@ -15,6 +15,7 @@
 
 import React from 'react';
 import { InlineMathText } from './InlineMathText';
+import { HScrollFade } from './HScrollFade';
 
 export interface SolvedExampleStep {
   /** The math / action for this step. Supports inline LaTeX `$...$`. */
@@ -63,9 +64,9 @@ export default function SolvedExampleRenderer({ spec }: { spec: SolvedExampleSpe
         <div className="text-xs font-semibold text-blue-700 mb-1">Problem</div>
         {/* overflow-x-auto (round-7 item 7): oversized inline-math atoms
             scroll instead of clipping under the pane's overflow-x-hidden. */}
-        <div className="text-sm text-gray-900 overflow-x-auto">
+        <HScrollFade className="text-sm text-gray-900 overflow-x-auto">
           <InlineMathText text={spec.problem} />
-        </div>
+        </HScrollFade>
       </div>
 
       {/* Steps */}
@@ -76,9 +77,9 @@ export default function SolvedExampleRenderer({ spec }: { spec: SolvedExampleSpe
             <li key={i} className="flex gap-2 text-sm">
               <span className="font-mono text-blue-600 font-semibold flex-shrink-0">{i + 1}.</span>
               <div className="flex-1">
-                <div className="text-gray-900 overflow-x-auto">
+                <HScrollFade className="text-gray-900 overflow-x-auto">
                   <InlineMathText text={s.expression} />
-                </div>
+                </HScrollFade>
                 {s.reason && (
                   <div className="text-xs text-gray-600 italic mt-0.5">— {s.reason}</div>
                 )}

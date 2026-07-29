@@ -13,6 +13,7 @@ import 'katex/dist/katex.min.css';
 import { InlineMathText } from './InlineMathText';
 import { splitLatexToLines } from '@/lib/tutor/whiteboard/equation-split';
 import { preprocessKatexBody } from '@/lib/tutor/whiteboard/inline-math';
+import { attachHScrollFade, type HScrollFadeHandle } from '@/lib/tutor/whiteboard/hscroll-fade';
 
 interface EquationRendererProps {
   latex: string;
@@ -112,10 +113,18 @@ export function EquationRenderer({
     // equation-split.ts), the way a person wraps work on a real board.
     // Horizontal scroll (already on this container) remains only for math
     // with no safe split point. Fonts never shrink.
-    let mode: 'natural' | 'reflow' = 'natural';
+    // Round-8 third stage: the columns-aligned split lays out as
+    // (widest LHS)+(widest RHS), so on a narrow pane continuation rows
+    // start where line 1's relation sits — past the right edge
+    // (IMG_7893/7894: clipped continuations). When the columns split
+    // still overflows, re-render LEFT-FLUSH (rows share a left margin,
+    // \quad-indented continuations) whose width is max(single row).
+    // Only what survives all three stages scrolls — with an edge fade.
+    let mode: 'natural' | 'reflow' | 'leftflush' = 'natural';
     let naturalWidth = 0; // scrollWidth of the natural (one-line) render
     let containerAtSplit = 0; // container width the current split was packed for
     let observer: ResizeObserver | null = null;
+    let fade: HScrollFadeHandle | null = null;
 
     const mathNode = (): HTMLElement | null => {
       const el = containerRef.current;
@@ -148,36 +157,64 @@ export function EquationRenderer({
       const containerWidth = el.clientWidth;
       if (containerWidth <= 0) return;
 
+      // Split at the current width: columns layout first (the classic
+      // aligned-at-relation look), then left-flush when columns still
+      // overflows (its width is leftPart+rightPart, which loses on
+      // narrow panes — round-8, IMG_7893/7894). Sets mode + fitScale.
+      const applySplit = (containerWidth: number) => {
+        // Chars-per-pixel from the natural render calibrates the line
+        // budget; 10% slack absorbs per-line width variance.
+        const budget = Math.floor(processedLatex.length * (containerWidth / naturalWidth) * 0.9);
+        const cols = splitLatexToLines(processedLatex, budget);
+        if (!cols) {
+          el.dataset.fitScale = 'scroll';
+          fade?.update();
+          return;
+        }
+        renderTex(cols);
+        mode = 'reflow';
+        containerAtSplit = containerWidth;
+        observe();
+        let rm = mathNode();
+        if (rm && rm.scrollWidth > containerWidth) {
+          const left = splitLatexToLines(processedLatex, budget, 'left');
+          if (left && left !== cols) {
+            renderTex(left);
+            mode = 'leftflush';
+            observe();
+            rm = mathNode();
+          }
+        }
+        el.dataset.fitScale =
+          rm && rm.scrollWidth > containerWidth
+            ? 'reflow-scroll'
+            : mode === 'leftflush'
+              ? 'reflow-left'
+              : 'reflow';
+        fade?.update();
+      };
+
       if (mode === 'natural') {
         const m = mathNode();
         if (!m) return;
         naturalWidth = m.scrollWidth;
         delete el.dataset.fitScale;
-        if (naturalWidth <= containerWidth) return;
+        if (naturalWidth <= containerWidth) {
+          fade?.update();
+          return;
+        }
         // Inline math flows inside prose — aligned blocks are display-
         // only, so an overflowing inline equation just scrolls.
         if (!displayMode) {
           el.dataset.fitScale = 'scroll';
+          fade?.update();
           return;
         }
-        // Chars-per-pixel from THIS render calibrates the line budget;
-        // 10% slack absorbs per-line width variance.
-        const budget = Math.floor(processedLatex.length * (containerWidth / naturalWidth) * 0.9);
-        const split = splitLatexToLines(processedLatex, budget);
-        if (!split) {
-          el.dataset.fitScale = 'scroll';
-          return;
-        }
-        renderTex(split);
-        mode = 'reflow';
-        containerAtSplit = containerWidth;
-        observe();
-        const rm = mathNode();
-        el.dataset.fitScale = rm && rm.scrollWidth > containerWidth ? 'reflow-scroll' : 'reflow';
+        applySplit(containerWidth);
         return;
       }
 
-      // reflow mode
+      // reflow / leftflush mode
       if (containerWidth >= naturalWidth) {
         // Panel widened enough for the one-line form again.
         renderTex(processedLatex);
@@ -188,21 +225,26 @@ export function EquationRenderer({
         return;
       }
       if (containerWidth < containerAtSplit * 0.9) {
-        // Materially narrower than the width this split was packed for.
-        const budget = Math.floor(processedLatex.length * (containerWidth / naturalWidth) * 0.9);
-        const resplit = splitLatexToLines(processedLatex, budget);
-        if (resplit) {
-          renderTex(resplit);
-          containerAtSplit = containerWidth;
-          observe();
-        }
+        // Materially narrower than the width this split was packed for —
+        // re-pack from scratch (columns first, left-flush fallback).
+        applySplit(containerWidth);
+        return;
       }
       const rm = mathNode();
-      el.dataset.fitScale = rm && rm.scrollWidth > containerWidth ? 'reflow-scroll' : 'reflow';
+      el.dataset.fitScale =
+        rm && rm.scrollWidth > containerWidth
+          ? 'reflow-scroll'
+          : mode === 'leftflush'
+            ? 'reflow-left'
+            : 'reflow';
+      fade?.update();
     };
 
     const raf = requestAnimationFrame(fit);
     observe();
+    // Edge-fade affordance for whatever still scrolls after all fit
+    // stages (unsplittable math, inline atoms) — see hscroll-fade.ts.
+    if (containerRef.current) fade = attachHScrollFade(containerRef.current);
     // Belt-and-suspenders re-fit once web fonts finish loading, in case a
     // given browser/font doesn't produce a detectable box-size change on
     // swap (e.g. a fallback font with near-identical metrics to KaTeX's).
@@ -216,6 +258,8 @@ export function EquationRenderer({
       cancelled = true;
       cancelAnimationFrame(raf);
       observer?.disconnect();
+      fade?.detach();
+      fade = null;
     };
   }, [latex, highlight, displayMode]);
 

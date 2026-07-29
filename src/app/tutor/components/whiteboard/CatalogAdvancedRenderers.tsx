@@ -3,6 +3,7 @@
 import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import { CellContent } from './CellContent';
+import { HScrollFade } from './HScrollFade';
 import type {
   UnitCircleFigure,
   TransformationFigure,
@@ -619,7 +620,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
-      <div className="w-full max-w-full overflow-x-auto">
+      <HScrollFade hint hintClassName="w-full" className="w-full max-w-full overflow-x-auto">
         <table data-feature={N.table} className="border-collapse text-sm mx-auto">
           <thead>
             <tr data-feature={N.headerRow}>
@@ -654,7 +655,7 @@ export function CatalogComparisonTableRenderer({ figure }: { figure: ComparisonT
             ))}
           </tbody>
         </table>
-      </div>
+      </HScrollFade>
     </div>
   );
 }
@@ -691,7 +692,7 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
   return (
     <div className="w-full flex flex-col items-center">
       {figure.title && <div className="text-base font-semibold text-gray-800 mb-2">{figure.title}</div>}
-      <div className="w-full max-w-[640px] overflow-x-auto">
+      <HScrollFade hint hintClassName="w-full" className="w-full max-w-[640px] mx-auto overflow-x-auto">
         {/* CSS subgrid: both columns span the SAME parent row tracks, so paired
             rows size to the taller cell and ALIGN across columns — fixes the
             drift when one side's item wraps to more lines (2026-06-23 ear-test).
@@ -739,7 +740,7 @@ function TChart({ figure }: { figure: OrganizerFigure }) {
             ))}
           </div>
         </div>
-      </div>
+      </HScrollFade>
     </div>
   );
 }

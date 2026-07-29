@@ -14,6 +14,7 @@
  */
 
 import React, { useState } from 'react';
+import { HScrollFade } from './HScrollFade';
 import type { RunResult } from '@/lib/tutor/validation/code-sandbox';
 
 export interface CodeRunRendererProps {
@@ -75,9 +76,9 @@ export default function CodeRunRenderer({
           </span>
         ) : null}
       </div>
-      <pre className="bg-slate-900 text-slate-100 text-xs rounded p-3 overflow-x-auto whitespace-pre">
+      <HScrollFade as="pre" className="bg-slate-900 text-slate-100 text-xs rounded p-3 overflow-x-auto whitespace-pre">
         <code>{code}</code>
-      </pre>
+      </HScrollFade>
 
       {error && <div className="text-xs text-rose-700 mt-2 font-mono">{error}</div>}
       {compileError && <div className="text-xs text-rose-700 mt-2 font-mono whitespace-pre-wrap">{compileError}</div>}
@@ -117,9 +118,9 @@ export default function CodeRunRenderer({
             {showStdout ? 'Hide' : 'Show'} stdout ({result.stdout.length} line{result.stdout.length === 1 ? '' : 's'})
           </button>
           {showStdout && (
-            <pre className="bg-slate-100 text-slate-800 text-xs rounded p-2 mt-1 overflow-x-auto whitespace-pre">
+            <HScrollFade as="pre" className="bg-slate-100 text-slate-800 text-xs rounded p-2 mt-1 overflow-x-auto whitespace-pre">
               {result.stdout.join('\n')}
-            </pre>
+            </HScrollFade>
           )}
         </div>
       )}

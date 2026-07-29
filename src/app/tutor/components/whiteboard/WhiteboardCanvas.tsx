@@ -16,6 +16,7 @@ import { createPortal } from 'react-dom';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
+import { HScrollFade } from './HScrollFade';
 import { SketchRenderer } from './SketchRenderer';
 import { SketchFallbackCard } from './SketchFallbackCard';
 import { RenderFallbackCard } from './RenderFallbackCard';
@@ -2739,7 +2740,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               overflow-x-auto (round-7 item 7): inline-math runs are
               unbreakable atoms — an oversized one gets a scrollbar here
               instead of being clipped by the pane's overflow-x-hidden. */}
-          <p className="text-lg overflow-x-auto"><InlineMathText text={command.text} /></p>
+          <HScrollFade as="p" className="text-lg overflow-x-auto"><InlineMathText text={command.text} /></HScrollFade>
         </div>
       );
 
@@ -2803,11 +2804,11 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           <h4 className="font-semibold text-blue-900 mb-2" data-feature="title">
             <InlineMathText text={problem.title || 'Problem'} />
           </h4>
-          <p className="text-gray-800 whitespace-pre-wrap overflow-x-auto" data-feature="statement">
+          <HScrollFade as="p" className="text-gray-800 whitespace-pre-wrap overflow-x-auto" data-feature="statement">
             {/* stripEmbeddedChoiceBlock: statement sometimes embeds the full
                 A)–D) list the choices <ul> below also renders (round 29). */}
             <InlineMathText text={stripEmbeddedChoiceBlock(problem.statement || '', answerChoices)} />
-          </p>
+          </HScrollFade>
           {validGivenValues.length > 0 && (
             <div className="mt-3" data-feature="given">
               <p className="text-sm font-medium text-gray-600">Given:</p>
@@ -2889,7 +2890,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
 
     case 'showTable':
       return (
-        <div className="overflow-x-auto" data-feature="table" style={{ position: 'relative' }}>
+        <HScrollFade hint className="overflow-x-auto" data-feature="table" style={{ position: 'relative' }}>
           <table className="min-w-full border-collapse border border-gray-300">
             <thead>
               <tr className="bg-gray-100" data-feature="header-row">
@@ -2924,7 +2925,7 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               ))}
             </tbody>
           </table>
-        </div>
+        </HScrollFade>
       );
 
     case 'showSvgDiagram':
@@ -2942,12 +2943,12 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           {command.label && (
             <div className="text-sm font-medium text-gray-600 mb-2">{command.label}</div>
           )}
-          <pre className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-sm leading-relaxed font-mono">
+          <HScrollFade as="pre" className="bg-gray-900 text-gray-100 rounded-lg p-4 overflow-x-auto text-sm leading-relaxed font-mono">
             {command.language && (
               <div className="text-xs text-gray-500 mb-2 uppercase tracking-wide">{command.language}</div>
             )}
             <code>{command.code}</code>
-          </pre>
+          </HScrollFade>
         </div>
       );
 
@@ -2978,33 +2979,33 @@ function CommandRendererInner({ command }: CommandRendererProps) {
               run leaked past the card's right edge on phones — scroll it
               inside the box instead. */}
           {command.example.problem && (
-            <div className="p-3 bg-blue-50 rounded-lg overflow-x-auto">
+            <HScrollFade className="p-3 bg-blue-50 rounded-lg overflow-x-auto">
               <p><InlineMathText text={command.example.problem.statement || ''} /></p>
-            </div>
+            </HScrollFade>
           )}
           {command.example.walkthrough && command.example.walkthrough.map((step, index) => (
             <div key={index} className="flex gap-3 items-start">
               <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-sm font-medium shrink-0">
                 {step.step}
               </div>
-              <div className="min-w-0 flex-1 overflow-x-auto">
+              <HScrollFade className="min-w-0 flex-1 overflow-x-auto">
                 <p className="text-gray-700"><InlineMathText text={step.tutorSays || ''} /></p>
                 {step.checkQuestion && (
                   <p className="text-sm text-blue-600 mt-1 italic">
                     💭 <InlineMathText text={step.checkQuestion} />
                   </p>
                 )}
-              </div>
+              </HScrollFade>
             </div>
           ))}
           {command.example.keyTakeaways && (
             <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
               <p className="font-medium text-yellow-800">Key Takeaways:</p>
-              <ul className="mt-1 list-disc ml-4 text-gray-700 overflow-x-auto">
+              <HScrollFade as="ul" className="mt-1 list-disc ml-4 text-gray-700 overflow-x-auto">
                 {command.example.keyTakeaways.map((takeaway, i) => (
                   <li key={i}><InlineMathText text={takeaway} /></li>
                 ))}
-              </ul>
+              </HScrollFade>
             </div>
           )}
         </div>

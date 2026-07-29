@@ -209,3 +209,43 @@
   color: #6366f1;
   animation: typing-caret 1s steps(1) infinite;
 }
+
+/* ── Horizontal-scroll affordance (round-8, IMG_7893/7894) ──────────────
+   iOS hides scrollbars until touch, so overflowing whiteboard cards
+   hard-clip with no cue (a clipped "-4x+1" reads as "-4x"). hscroll-fade.ts
+   stamps data-hscroll-fade on scrollable boxes; the mask fades the clipped
+   edge so content visibly continues. .hscroll-hint adds a nudging chevron
+   for grid cards (tables) until the user scrolls. */
+[data-hscroll-fade='right'] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+[data-hscroll-fade='left'] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+[data-hscroll-fade='both'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.hscroll-hint {
+  position: relative;
+}
+.hscroll-hint:has([data-hscroll-fade='right'])::after,
+.hscroll-hint:has([data-hscroll-fade='both'])::after {
+  content: '›';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  color: rgb(100 116 139 / 0.75);
+  pointer-events: none;
+  animation: hscroll-nudge 1.2s ease-in-out 2;
+}
+@keyframes hscroll-nudge {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(3px); }
+}
