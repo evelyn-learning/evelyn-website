@@ -611,6 +611,11 @@ interface VoiceTutorRealtimeProps {
   hideEndButton?: boolean;
 }
 
+// Round-7c: how long to hold a "quiet but finite" MicSilentWarning after the
+// opening turn's audio has finished before showing the banner, provided the
+// student still hasn't been heard at all. See pendingMicNoticeRef.
+const MIC_NOTICE_GRACE_MS = 20_000;
+
 // Map our voice IDs to OpenAI voices
 const VOICE_MAP: Record<string, OpenAIVoice> = {
   'female-1': 'shimmer',  // Warm, friendly
@@ -762,6 +767,20 @@ export function VoiceTutorRealtime({
   // good the moment any real transcript proves the mic works.
   const [micNotice, setMicNotice] = useState<string | null>(null);
   const micNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Round-7c: mic-silent false positive on Android session start. Every
+  // Android session showed the banner ~11s in while the opener was still
+  // playing — the student simply hadn't spoken yet, and Android's
+  // noiseSuppression gates real signal below the -60dBFS probe threshold
+  // for anyone who hasn't. A `peak=-Infinity` message (see MIC_TRULY_DEAD
+  // below) is a genuinely dead capture (permission/device failure) and is
+  // still shown immediately; anything else is "quiet but finite" and is
+  // gated behind: opening-turn audio done + a 20s grace + the student
+  // never having been heard at all (no ASR speech-start/final ever
+  // arrived). pendingMicNoticeRef holds the held banner text;
+  // micEverHeardRef is a one-way latch set by any real ASR activity.
+  const pendingMicNoticeRef = useRef<string | null>(null);
+  const micEverHeardRef = useRef<boolean>(false);
+  const micNoticeGateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [instructions, setInstructions] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -776,6 +795,16 @@ export function VoiceTutorRealtime({
     if (endArmTimerRef.current) {
       clearTimeout(endArmTimerRef.current);
       endArmTimerRef.current = null;
+    }
+  }, []);
+
+  // Round-7c: never leak the mic-notice grace timer past unmount (a session
+  // that ends inside the 20s window would otherwise fire setMicNotice on an
+  // unmounted component).
+  useEffect(() => () => {
+    if (micNoticeGateTimerRef.current) {
+      clearTimeout(micNoticeGateTimerRef.current);
+      micNoticeGateTimerRef.current = null;
     }
   }, []);
 
@@ -989,6 +1018,13 @@ export function VoiceTutorRealtime({
   const firstTurnAudioDoneRef = useRef<boolean>(false);
   const firstTurnSawSpeakingRef = useRef<boolean>(false);
   const tutorFirstTurnDoneAtRef = useRef<number>(0);
+  // Round-7c: wall-clock time firstTurnAudioDoneRef latched true. Read by
+  // handleError (declared earlier in this component, so it closes over this
+  // ref rather than calling openingTurnFullyDelivered — that function is
+  // declared later in the file and isn't in scope at handleError's
+  // definition point) to tell a late/re-fired MicSilentWarning whether the
+  // 20s mic-notice grace period has already elapsed.
+  const openingAudioDoneAtRef = useRef<number>(0);
   // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
   // flag. If perception WS misses a speech_stopped event (network blip,
   // server bug), the flag would stay stuck → all subsequent brain
@@ -6842,10 +6878,38 @@ export function VoiceTutorRealtime({
       onDebugEvent?.(error.name, error.message);
       // Mic-silent is actionable BY the student — surface a gentle notice
       // instead of leaving them talking to a tutor that can't hear them.
+      // Round-7c: not every MicSilentWarning deserves an immediate banner.
+      // `peak=-Infinity` means the probe saw literally zero samples — a
+      // real permission/device failure, shown right away as before.
+      // Anything else is "quiet but finite", which is exactly what
+      // Android's noiseSuppression produces for a student who simply
+      // hasn't spoken yet — and the 1s post-open probe almost always
+      // lands during the opener's own audio. Gate those instead of
+      // alarming a student who was never given a chance to speak.
       if (error.name === 'MicSilentWarning') {
-        setMicNotice("I can't hear you — your mic looks silent. Check the mic permission or volume, or type below.");
-        if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
-        micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+        const bannerText = "I can't hear you — your mic looks silent. Check the mic permission or volume, or type below.";
+        const trulyDead = /peak=-Infinity/.test(error.message);
+        if (trulyDead) {
+          setMicNotice(bannerText);
+          if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
+          micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+        } else if (!micEverHeardRef.current) {
+          pendingMicNoticeRef.current = bannerText;
+          // Re-fires (startListening runs again after any stop/pause) go
+          // through this same gate. Usually the grace timer armed at
+          // opening-audio-done (below) is what eventually shows this, but
+          // if this fires AFTER that timer already ran out (a late
+          // re-probe), the timer won't come back around — check directly.
+          if (
+            openingAudioDoneAtRef.current > 0 &&
+            Date.now() - openingAudioDoneAtRef.current >= MIC_NOTICE_GRACE_MS
+          ) {
+            setMicNotice(bannerText);
+            pendingMicNoticeRef.current = null;
+            if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
+            micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+          }
+        }
       }
       return;
     }
@@ -13447,6 +13511,27 @@ export function VoiceTutorRealtime({
       firstTurnAudioDoneRef.current = true;
       console.log('[PERCEPTION] opening-turn audio delivered — cancels now honoured');
       onDebugEvent?.('perception_opening_audio_done', realtime.state);
+      // Round-7c: opening audio is done — arm the mic-notice grace timer.
+      // If a "quiet but finite" MicSilentWarning is (or becomes) pending
+      // and the student still hasn't been heard from at all after this
+      // much longer, THAT's the false-positive-free moment to tell them —
+      // not the ~11s-in probe that fires while the opener is still
+      // talking.
+      openingAudioDoneAtRef.current = Date.now();
+      if (micNoticeGateTimerRef.current) clearTimeout(micNoticeGateTimerRef.current);
+      micNoticeGateTimerRef.current = setTimeout(() => {
+        micNoticeGateTimerRef.current = null;
+        if (micEverHeardRef.current) {
+          pendingMicNoticeRef.current = null;
+          return;
+        }
+        if (pendingMicNoticeRef.current) {
+          setMicNotice(pendingMicNoticeRef.current);
+          pendingMicNoticeRef.current = null;
+          if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
+          micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+        }
+      }, MIC_NOTICE_GRACE_MS);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [realtime.state]);
@@ -13644,6 +13729,12 @@ export function VoiceTutorRealtime({
       // mic-silent notice so it can't linger over a working session.
       if (micNoticeTimerRef.current) { clearTimeout(micNoticeTimerRef.current); micNoticeTimerRef.current = null; }
       setMicNotice(null);
+      // Round-7c: a final transcript is definitive proof the mic works —
+      // permanently drop any gated/pending mic-silent notice so it can
+      // never surface later in this session.
+      micEverHeardRef.current = true;
+      pendingMicNoticeRef.current = null;
+      if (micNoticeGateTimerRef.current) { clearTimeout(micNoticeGateTimerRef.current); micNoticeGateTimerRef.current = null; }
       // turn_latency: authoritative transcript. A leftover ledger that already
       // has turnEnd belongs to a turn that never dispatched (noise/filtered)
       // or whose deferred audio emit never fired (killed) — emit it as
@@ -14208,6 +14299,14 @@ export function VoiceTutorRealtime({
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
+      // Round-7c: the mic picking up speech at all — even before any
+      // transcript resolves — is proof it isn't silent. Permanently drop
+      // any gated/pending mic-silent notice; a stuck-open mic ("dead"
+      // between two real turns) shouldn't get a stale banner once the
+      // student has actually been heard.
+      micEverHeardRef.current = true;
+      pendingMicNoticeRef.current = null;
+      if (micNoticeGateTimerRef.current) { clearTimeout(micNoticeGateTimerRef.current); micNoticeGateTimerRef.current = null; }
       // "Being heard" indicator: student is speaking now. Clear any pending
       // "Got that / didn't catch" state from a previous utterance.
       speechWindowStartRef.current = Date.now();
