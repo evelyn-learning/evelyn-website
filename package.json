@@ -67,6 +67,7 @@
     "test:pcm-stream": "npx tsx scripts/test-pcm-stream.ts",
     "test:sonic-ws": "npx tsx scripts/test-sonic-ws.ts",
     "test:verdict-guard": "npx tsx scripts/test-verdict-guard.ts",
+    "test:judge-prompt": "npx tsx scripts/test-judge-question-context.ts",
     "test:rule8-repair": "npx tsx scripts/test-rule8-repair.ts",
     "test:nonanswer-praise": "npx tsx scripts/test-nonanswer-praise.ts",
     "test:manifest-coverage": "npx tsx scripts/test-manifest-coverage.ts",

@@ -849,11 +849,20 @@ function formatStudentStateBlock(
  * short answers kept drawing reflexive praise-openers ("Right. 6 m/s²."
  * right after the student said "5") even with the system-prompt HARD RULE —
  * several consecutive legitimately-praised turns build in-context momentum
- * that outweighs a rule ~1400 lines back in the cached prefix. When the
- * student's utterance reads as a SHORT ANSWER (a bare number, an option
- * letter, ≤2 words, or ≤4 words containing a number), pin a compact verdict
- * guard DIRECTLY above <student_said>, where salience is highest. '' for
- * conversational turns — the block must never dilute normal dialogue.
+ * that outweighs a rule ~1400 lines back in the cached prefix. The fix is
+ * salience: pin a compact verdict guard DIRECTLY above <student_said>.
+ *
+ * 2026-07-29 (demo portal-efe6b838-5bbb-49d4-9824-6245a656ddf8): the
+ * original short-answer shape heuristic (bare number / option letter /
+ * ≤2 words / ≤4 words with a digit) missed "Is it X?" — a CORRECT
+ * question-form answer that drew a false "Not quite." while the identical
+ * bare "X." one turn later got the guard and correct praise. Hedged /
+ * question-form answers ("is it x", "maybe 5", "x, right?") are an open
+ * class no shape list covers, so the guard is now ALWAYS-ON for spoken
+ * turns with conditional wording — the model applies the verdict check
+ * only when the utterance proposes an answer, and responds normally
+ * otherwise. The block sits in per-turn userContent (never in the cached
+ * prefix), so always-on costs ~90 uncached input tokens/turn.
  * Exported for scripts/test-verdict-guard.ts.
  */
 /** Continuation-offer tail: the tutor's prior turn ended by OFFERING the
@@ -888,16 +897,13 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
       + 'and keep the transition to a few words ("Here we go.").\n'
       + '</continuation_guard>\n\n';
   }
-  const words = t.split(/\s+/);
-  const hasNumber = /\d/.test(t);
-  const bareOption = /^[a-eA-E][.)!?]?$/.test(t);
-  const isShortAnswer = bareOption || (words.length <= 2) || (words.length <= 4 && hasNumber);
-  if (!isShortAnswer) return '';
   return '<verdict_guard>\n'
-    + 'The utterance below reads as a short ANSWER. Before your first word, silently check it against the question you actually asked. '
-    + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent. '
+    + 'If the utterance below contains or proposes an answer to a question you asked — including hedged or question-form answers ("Is it x?", "maybe 5?", "x, right?") — '
+    + 'silently work out the correct answer yourself and check theirs against it BEFORE your first word. '
+    + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent in any notation or phrasing. '
+    + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
-    + 'If it does not parse as an answer to your question: NO verdict word — say what you heard and re-ask. '
+    + 'If the utterance is not an answer (a request, a question about the material, conversation): NO verdict word — just respond normally. '
     + 'Never praise first and correct after.\n'
     + '</verdict_guard>\n\n';
 }
@@ -1370,7 +1376,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   // node probe in scripts/ (see task-W3-report.md).
   const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
   const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
-  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] short-answer guard attached');
+  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1564,7 +1570,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   // (see buildBrainMessages doc comment on cache-behavior consistency).
   const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
   const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
-  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] short-answer guard attached');
+  if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +

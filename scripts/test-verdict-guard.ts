@@ -1,7 +1,18 @@
 /**
  * Tests for formatVerdictGuardBlock (claude-brain.ts) — the per-turn
- * short-answer verdict guard from the Phase-3 live rounds (2026-07-23):
- * "5" → "Right. 6 m/s²." class of false-praise openers.
+ * verdict guard.
+ *
+ * History: introduced in the Phase-3 live rounds (2026-07-22) gated on a
+ * short-answer shape heuristic ("5" → "Right. 6 m/s²." class of
+ * false-praise openers). Live demo session 2026-07-29
+ * (portal-efe6b838-5bbb-49d4-9824-6245a656ddf8) showed the heuristic's
+ * fatal gap: "Is it X?" (3 words, no digit) carried a CORRECT answer,
+ * got no guard, and drew a false "Not quite." — while the identical
+ * bare "X." a turn later got the guard and correct praise. Hedged /
+ * question-form answers are an open class no regex list covers, so the
+ * guard is now ALWAYS-ON with conditional wording: it attaches on every
+ * non-bracketed spoken turn and tells the brain to verify ONLY IF the
+ * utterance proposes an answer, and to respond normally otherwise.
  *
  * Run: npx tsx scripts/test-verdict-guard.ts
  */
@@ -15,7 +26,7 @@ function check(name: string, cond: boolean) {
 
 const fires = (t: string) => formatVerdictGuardBlock(t).includes('<verdict_guard>');
 
-// Short answers → guard attaches.
+// Short answers → guard attaches (unchanged from the heuristic era).
 check('bare number', fires('5.'));
 check('decimal', fires('13.2'));
 check('number + unit', fires('15 newtons'));
@@ -25,19 +36,32 @@ check('two words', fires('common denominator'));
 check('yes/no', fires('No.'));
 check('short with number', fires('it is 6 right'));
 
-// Conversational turns → no guard (must not dilute normal dialogue).
-check('full sentence', !fires('Okay so the circle would be the one without denominators, so B.'));
-check('question', !fires('But why does the minus sign make it a hyperbola exactly?'));
-check('five words no number', !fires('I am not really sure'));
+// Hedged / question-form answers → guard attaches (the 2026-07-29 gap).
+check('question-form answer (the live miss)', fires('Is it X?'));
+check('hedged maybe', fires('Maybe the denominator?'));
+check('tag question', fires('x squared, right?'));
+check('could-it-be', fires('Could it be the chain rule?'));
+check('I-think hedge', fires('I think it would be the second one'));
+
+// Conversational turns → guard STILL attaches (always-on), wording is
+// conditional so it must not force a verdict on non-answers.
+check('full sentence', fires('Okay so the circle would be the one without denominators, so B.'));
+check('student question about material', fires('But why does the minus sign make it a hyperbola exactly?'));
+check('five words no number', fires('I am not really sure'));
+
+// Non-spoken injections → nothing.
 check('bracketed injection', !fires('[The student pointed at the equation ("Concept…")]'));
 check('validator feedback', !fires('[validator feedback — not from the student] Your last turn…'));
 check('empty', !fires(''));
 
-// Block content sanity — the three verdict branches are present.
-const block = formatVerdictGuardBlock('5.');
+// Block content sanity — conditional framing + the three verdict branches.
+const block = formatVerdictGuardBlock('Is it X?');
+check('conditional framing (IF it proposes an answer)', /if .*answer/i.test(block));
+check('names hedged/question-form answers', /hedged|question-form/i.test(block));
+check('hedged-correct is still correct', /hedged.*correct|uncertainty/i.test(block));
 check('praise branch', block.includes('ONLY if it is correct'));
 check('wrong branch', block.includes('do NOT state the correct value'));
-check('non-answer branch', block.includes('NO verdict word'));
+check('non-answer branch → respond normally, no verdict word', block.includes('NO verdict word') && /respond normally/i.test(block));
 check('closes tag', block.trimEnd().endsWith('</verdict_guard>'));
 
 // ─── Continuation guard (live round 6, 2026-07-23, session-1784782504324):

@@ -11109,10 +11109,21 @@ export function VoiceTutorRealtime({
               console.warn(`[judge] stale snapshot but studentAnswer present — running with empty board for Path B coverage.`);
               onDebugEvent?.('judge_stale_snapshot_path_b_only', `tools=${showToolsEmitted}`);
             }
+            // questionContext = the tutor's PREVIOUS turn — the question
+            // studentAnswer responds to. Without it the judge can't
+            // re-derive correctness for affirmation/denial cross-checks
+            // (2026-07-29 portal-efe6b838…: false "Not quite" on a correct
+            // "Is it X?" passed the judge because the question lived in a
+            // turn the judge never saw). runHistory hasn't been appended
+            // with the current turn yet, so its last assistant entry is
+            // the prior turn. Tail-sliced: the question is at the end.
+            const questionContext = studentAnswer
+              ? [...runHistory].reverse().find((m) => m.role === 'assistant')?.content?.slice(-1200)
+              : undefined;
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };
