@@ -131,21 +131,6 @@ export function getPlaybackTarget(ctx: AudioContext): AudioNode {
       // switch — noise, not signal, until paired with the return).
       if (document.visibilityState === 'hidden') {
         state.hiddenSnapshot = { atMs: Date.now(), ct: el.currentTime, ctxT: ctx.currentTime, ctxState: ctx.state };
-        // Round-7e reverb fix (portal-ecc60b8e): every app switch on iOS
-        // fires ctx_statechange:interrupted with ctxAdv=0 — and every one of
-        // them reverbed. The doubled audio sits at the OS audio-session
-        // handoff: samples already rendered into the media pipeline replay
-        // across the transition while the element keeps "playing" through
-        // the background (elAdv==wall on every measured switch). Android's
-        // element PAUSES on background and has never reverbed — so converge:
-        // pause explicitly on hidden. The existing foreground branch below
-        // (Android's daily path) replays it on return, and since iOS freezes
-        // the graph during the interruption anyway, playback still resumes
-        // from the exact pause point.
-        if (!el.paused) {
-          el.pause();
-          emitRouteEvent('hidden_pause', `ct=${el.currentTime.toFixed(3)} ctx=${ctx.state}`);
-        }
         return;
       }
       if (document.visibilityState !== 'visible') return;
