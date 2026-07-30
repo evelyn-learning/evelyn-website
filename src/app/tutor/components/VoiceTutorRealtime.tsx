@@ -8171,17 +8171,22 @@ export function VoiceTutorRealtime({
           }
         }
 
-        // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions
-        // only. Flag off ⇒ sessionModeRef stays null ⇒ the field stays
-        // undefined and JSON.stringify omits it (request byte-identical).
-        // Subscribed sessions never carry it either — their pacing is owned
-        // by the plan + pacing v2. mode 'milestone' when the embed's
-        // is_trial signal is present (win boxed to the first completed
-        // concept); else 'time' with the session's minute budget and whole
-        // minutes elapsed since the student actually started (mic tap /
-        // resume-continue; falls back to mount time before that).
+        // Task E1 (pedagogy): budget-aware satisfying stop — DEMO sessions,
+        // plus ANY session whose embed token carries an EXPLICIT
+        // max_duration_minutes (fair-use minute ledger: the portal boxes a
+        // subscribed student's last hour of monthly budget; live-tested
+        // 2026-07-30, the tutor kept teaching straight through "Overtime"
+        // because this gate was demo-only). Flag off ⇒ sessionModeRef stays
+        // null ⇒ the field stays undefined and JSON.stringify omits it
+        // (request byte-identical). Untimed subscribed sessions still never
+        // carry it — their pacing is owned by the plan + pacing v2. mode
+        // 'milestone' when the embed's is_trial signal is present (win boxed
+        // to the first completed concept); else 'time' with the session's
+        // minute budget and whole minutes elapsed since the student actually
+        // started (mic tap / resume-continue; falls back to mount time
+        // before that).
         let demoStop: ReturnType<typeof selectDemoStopPayload> | undefined;
-        if (TUTOR_PEDAGOGY_OPENER && sessionModeRef.current === 'demo') {
+        if (TUTOR_PEDAGOGY_OPENER && (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit))) {
           // Milestone vs time-budget is a pure decision (is_trial × explicit
           // time box); the wrap threshold rides along in time mode. A trial
           // WITH an explicit max_duration_minutes (the homepage timed demo)
@@ -15557,12 +15562,15 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   }, [hasStarted, resumeState, onSessionStarted, realtime, handleStudentTranscriptForBrain]);
   resumeContinueRef.current = resumeContinue;
 
-  // Demo hard-stop cap (demo time-box): a wall-clock timer that ends the
-  // session when a TRIAL carrying an EXPLICIT max_duration_minutes reaches its
-  // budget. Intentionally NOT gated on TUTOR_PEDAGOGY_OPENER — this is a
-  // product/safety cap, not a pedagogy experiment. Exempt for diagnostics
-  // (Rule 1 disables demo-stop; guard here too — they never carry is_trial +
-  // timebox, but be defensive). Anchored to voiceSessionStartedAtMsRef, which
+  // Hard-stop cap (time-box): a wall-clock timer that ends the session when
+  // ANY session carrying an EXPLICIT max_duration_minutes reaches its budget —
+  // trials (the homepage timed demo) AND subscribed sessions the portal boxed
+  // via the fair-use minute ledger (live-tested 2026-07-30: a 2-minute box ran
+  // 5+ minutes into "Overtime" while this was trial-only). Intentionally NOT
+  // gated on TUTOR_PEDAGOGY_OPENER — this is a product/safety cap, not a
+  // pedagogy experiment. Exempt for diagnostics (Rule 1 disables demo-stop;
+  // guard here too — they never carry a timebox, but be defensive). Anchored
+  // to voiceSessionStartedAtMsRef, which
   // is stamped once at first real start and SURVIVES rotation (only
   // sessionStartMsRef resets on rotation), so the cap counts teaching time and
   // rotation does not extend it. Polls because the anchor is a ref (no
@@ -15571,7 +15579,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // student's End button uses — so the normal evelyn:session_ended postMessage
   // fires, tagged reason='time_limit'. hardStopFiredRef guarantees one fire.
   useEffect(() => {
-    if (!(isTrial && maxDurationExplicit)) return;
+    if (!maxDurationExplicit) return;
     if (targetKind === 'diagnostic') return;
     if (!onEndSession) return;
     const capMs = sessionMaxMinutes * 60000;
