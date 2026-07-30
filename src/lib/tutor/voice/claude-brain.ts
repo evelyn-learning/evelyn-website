@@ -21,7 +21,7 @@ import type { Segment } from '../lesson-plan/types';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, ABBREV_TAIL_RE } from './sentence-spacing';
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 
@@ -470,7 +470,9 @@ export class SentenceBuffer {
         minLen = m[1].length + 1;
       }
       if (!m) break;
-      const sentence = m[1].trim();
+      // Stage-direction leak defense (live 2026-07-30): "(waiting for
+      // the student's answer)" must never reach TTS or the transcript.
+      const sentence = stripStageDirections(m[1].trim());
       if (sentence) out.push(sentence);
       this.buf = this.buf.slice(m[0].length);
     }
@@ -479,7 +481,7 @@ export class SentenceBuffer {
 
   /** Flush whatever is left. Called at block boundaries and stream end. */
   flush(): string | null {
-    const trimmed = this.buf.trim();
+    const trimmed = stripStageDirections(this.buf.trim());
     this.buf = '';
     return trimmed || null;
   }
@@ -1493,8 +1495,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
 
   return {
     // C1: transcript storage must match what the SentenceBuffer voiced —
-    // repair terminator-glued sentences here too.
-    text: normalizeSentenceSpacing(accumulatedText.trim()),
+    // repair terminator-glued sentences and strip stage directions here too.
+    text: stripStageDirections(normalizeSentenceSpacing(accumulatedText.trim())),
     toolCalls: accumulatedToolCalls,
     stopReason: lastStopReason,
     usage: totalUsage,
@@ -1857,8 +1859,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     type: 'done',
     stopReason: lastStopReason,
     usage: totalUsage,
-    // C1: keep transcript text consistent with the repaired sentences.
-    fullText: normalizeSentenceSpacing(accumulatedText.trim()),
+    // C1: keep transcript text consistent with the repaired sentences
+    // (spacing repair + stage-direction strip, same as the voiced path).
+    fullText: stripStageDirections(normalizeSentenceSpacing(accumulatedText.trim())),
     toolCalls: accumulatedToolCalls,
   };
 }

@@ -63,3 +63,30 @@ export function normalizeSentenceSpacing(text: string): string {
     )
     .join('');
 }
+
+/**
+ * Stage-direction leak defense (live 2026-07-30, portal-589b451a): the
+ * brain wrote "…what does that give you?(waiting for the student's
+ * answer)" and the parenthetical was spoken aloud by TTS and stored in
+ * the transcript. The model occasionally scripts the pause it expects —
+ * screenplay-style — instead of just ending its turn.
+ *
+ * Deliberately narrow: only parentheticals whose content STARTS with a
+ * stage-direction verb/noun (waiting/pauses/beat/silence/listening/
+ * "no response"/"student responds") are stripped. Math parentheticals
+ * ("3(x-2)"), ordinary asides ("(about an hour a day)"), and content
+ * where a stage verb appears mid-parenthetical ("(his rivals were
+ * waiting)") pass through untouched. The system prompt also bans the
+ * pattern — this is the runtime backstop.
+ */
+const STAGE_DIRECTION_RE =
+  /\(\s*(?:a\s+|the\s+)?(?:waiting|waits?|awaiting|awaits?|paus(?:e|es|ing)|beat\b|silence|silent(?:ly)?|listen(?:s|ing)?|no\s+(?:response|answer)|student\s+(?:answers?|responds?|replies|thinks?|works?))\b[^()]*\)/gi;
+
+export function stripStageDirections(text: string): string {
+  if (!text || !text.includes('(')) return text;
+  const stripped = text.replace(STAGE_DIRECTION_RE, '');
+  if (stripped === text) return text;
+  // Tidy what the removal leaves behind: doubled spaces mid-sentence,
+  // an orphaned space before punctuation, leading/trailing whitespace.
+  return stripped.replace(/[ \t]{2,}/g, ' ').replace(/ +([.,!?;:])/g, '$1').trim();
+}
