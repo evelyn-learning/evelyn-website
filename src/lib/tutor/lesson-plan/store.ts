@@ -1681,6 +1681,10 @@ import { SEED_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS } from './seeds/alg1-u8-
 import { SEED_ALG1_U9_RADICAL_EQUATIONS } from './seeds/alg1-u9-radical-equations';
 import { SEED_ALG1_U9_RATIONAL_EXPRESSIONS } from './seeds/alg1-u9-rational-expressions';
 import { SEED_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-radicals';
+
+// ── HS core: Biology (2026-07 wave 1) ──
+import { SEED_BIO_U3_PHOTOSYNTHESIS } from './seeds/bio-u3-photosynthesis';
+import { SEED_BIO_U5_PUNNETT_SQUARES_MONOHYBRID } from './seeds/bio-u5-punnett-squares-monohybrid';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3292,6 +3296,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_ALG1_U9_RADICAL_EQUATIONS,
   SEED_ALG1_U9_RATIONAL_EXPRESSIONS,
   SEED_ALG1_U9_SIMPLIFYING_RADICALS,
+  // HS core: Biology (2026-07 wave 1)
+  SEED_BIO_U3_PHOTOSYNTHESIS,
+  SEED_BIO_U5_PUNNETT_SQUARES_MONOHYBRID,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
