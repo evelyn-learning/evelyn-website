@@ -252,7 +252,7 @@ async function callModel(model: string, system: string, user: string, maxTokens:
     .trim();
 }
 
-interface GenPayload {
+export interface GenPayload {
   problemText: string;
   finalAnswer: string;
   teachingAnswer?: string;
@@ -281,6 +281,50 @@ function parseGenPayload(raw: string): GenPayload | null {
   }
 }
 
+export interface GenAndVerifyResult {
+  gen: GenPayload;
+  hash: string;
+}
+
+/**
+ * One generate+verify attempt: author a fresh problem from `userPrompt` via
+ * BRAINGEN_MODEL, then INDEPENDENTLY solve it with BRAINGEN_VERIFY_MODEL (the
+ * verifier only ever sees the problem text, never the claimed answer) and
+ * only return when the two agree (numeric tolerance or short-exact —
+ * `answersAgree`). Returns null on parse failure, a hash collision against
+ * `excludeHashes`, or verifier disagreement; the caller decides whether to
+ * retry. Exported so BOTH the tutor-session Layer-2 pipeline
+ * (`brainGenWithVerify` below) and Practice's generate-on-exhaustion path
+ * (`practice-gen.ts`) share the exact same generator+verifier — no forked
+ * pipeline.
+ */
+export async function generateAndVerifyOnce(
+  userPrompt: string,
+  excludeHashes: string[] = []
+): Promise<GenAndVerifyResult | null> {
+  const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
+  if (!gen) return null;
+  // Cross-session dedup: never serve a problem already shown.
+  const hash = simpleHash(gen.problemText);
+  if (excludeHashes.includes(hash)) return null;
+  // Independent solve — the verifier only sees the problem text.
+  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
+  if (!answersAgree(gen.finalAnswer, solved)) return null;
+  return { gen, hash };
+}
+
+/** `generateAndVerifyOnce` with 1 retry on failure (temperature yields a
+ *  different problem the second time). Same retry shape the tutor-session
+ *  pipeline has always used. */
+export async function generateAndVerifyWithRetry(
+  userPrompt: string,
+  excludeHashes: string[] = []
+): Promise<GenAndVerifyResult | null> {
+  const first = await generateAndVerifyOnce(userPrompt, excludeHashes);
+  if (first) return first;
+  return generateAndVerifyOnce(userPrompt, excludeHashes); // 1 retry
+}
+
 /**
  * Layer 2 — brain-gen + independent verify (content-variety Phase 2).
  * Generates a fresh problem testing the anchor's skill, then INDEPENDENTLY
@@ -301,35 +345,24 @@ async function brainGenWithVerify(
     `\nLearning objectives of this lesson:\n${los}\n` +
     `\nRequested difficulty relative to the anchor: ${input.difficulty}. Write the fresh problem now.`;
 
-  const attempt = async (): Promise<GeneratedProblem | null> => {
-    const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
-    if (!gen) return null;
-    // Cross-session/session dedup: never serve a problem already shown.
-    const hash = simpleHash(gen.problemText);
-    if ((input.excludeHashes ?? []).includes(hash)) return null;
-    // Independent solve — the verifier only sees the problem text.
-    const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
-    if (!answersAgree(gen.finalAnswer, solved)) return null;
-    // Write-back cache: store the verified problem so future requests for
-    // this topic+difficulty hit the bank fast-path. Fire-and-forget.
-    void persistBrainGenProblem(input.topic, absDifficulty, gen, hash, input.planId, input.plan.los?.[0]?.id);
-    return {
-      canonicalText: gen.problemText,
-      // The teaching solution is what the tutor references; fall back to the
-      // bare final answer. Validation downstream compares the student's
-      // response to this, so keep the bare answer recoverable inside it.
-      expectedAnswer: gen.teachingAnswer ? `${gen.teachingAnswer} (answer: ${gen.finalAnswer})` : gen.finalAnswer,
-      hints: gen.hints,
-      responseFormat: gen.responseFormat,
-      choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
-      provenance: 'brain-gen',
-      trackingId: hash,
-    };
+  const result = await generateAndVerifyWithRetry(userPrompt, input.excludeHashes ?? []);
+  if (!result) return null;
+  const { gen, hash } = result;
+  // Write-back cache: store the verified problem so future requests for
+  // this topic+difficulty hit the bank fast-path. Fire-and-forget.
+  void persistBrainGenProblem(input.topic, absDifficulty, gen, hash, input.planId, input.plan.los?.[0]?.id);
+  return {
+    canonicalText: gen.problemText,
+    // The teaching solution is what the tutor references; fall back to the
+    // bare final answer. Validation downstream compares the student's
+    // response to this, so keep the bare answer recoverable inside it.
+    expectedAnswer: gen.teachingAnswer ? `${gen.teachingAnswer} (answer: ${gen.finalAnswer})` : gen.finalAnswer,
+    hints: gen.hints,
+    responseFormat: gen.responseFormat,
+    choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
+    provenance: 'brain-gen',
+    trackingId: hash,
   };
-
-  const first = await attempt();
-  if (first) return first;
-  return await attempt(); // 1 retry — temperature yields a different problem
 }
 
 /** Cheap content-token extraction: lowercase words ≥4 chars, no

@@ -21,6 +21,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
+import { generatePracticeItems, type PracticeGenSources } from './practice-gen';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -120,6 +121,10 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
 export async function retrievePractice(
   req: RetrievePracticeRequest,
   sources: PracticeSources,
+  /** Injectable generate-on-exhaustion dependencies — tests supply a stub;
+   *  production omits it (defaults to the real Anthropic+Mongo sources
+   *  inside generatePracticeItems). */
+  genSources?: PracticeGenSources,
 ): Promise<RetrievePracticeResponse> {
   const difficulty = req.difficulty;
   const planItems: PracticeItem[] = [];
@@ -160,18 +165,44 @@ export async function retrievePractice(
   const available = excludeSet ? ordered.filter((it) => !excludeSet.has(it.id)) : ordered;
 
   // Shortfall vs. what was asked for, computed BEFORE slicing — how many more
-  // items the retrieval pool alone couldn't supply. Currently unconsumed here
-  // (retrieval-only); the Task 3 generation-fallback hook reads this same gap
-  // (`req.count - available.length`, floored at 0) to top up the response
-  // engine-side before it ever reaches the portal. A thin pool degrades to
+  // items the retrieval pool alone couldn't supply. A thin pool degrades to
   // fewer items, never an error.
   const shortfall = Math.max(0, req.count - available.length);
-  if (shortfall > 0) {
-    // No-op for now — retrieval degrades to fewer items, never an error.
-    // Task 3 (practice-gen.ts) hooks in exactly here: sample an anchor from
-    // `available`/the LO, generate+verify up to 2 replacements, and append
-    // them to the sliced result before it's returned.
+
+  // Design B (generate-on-exhaustion), Task 3: top up the shortfall with
+  // verified runtime-generated items. LO-scope only — generated ids and the
+  // per-(student,LO) cap are keyed on a single LO, which a topic scope
+  // doesn't have. Any failure (kill-switch, over-cap, generation error)
+  // degrades to the retrieval-only result — never an error.
+  let generated: PracticeItem[] = [];
+  if (shortfall > 0 && 'loId' in req.scope) {
+    try {
+      generated = await generatePracticeItems(
+        {
+          studentId: req.studentId,
+          loId: req.scope.loId,
+          topic: req.courseId,
+          cedCode: ordered.find((it) => it.cedCode)?.cedCode,
+          difficulty,
+          shortfall,
+          // Anchor pool: same-LO items already assembled above (pre-exclusion —
+          // an anchor is a template, never itself served, so a student-seen
+          // item is still a fine anchor).
+          anchorItems: ordered,
+        },
+        genSources,
+      );
+    } catch (err) {
+      // Belt-and-suspenders: generatePracticeItems already swallows its own
+      // failures and returns [], but a thrown error here must still never
+      // surface past retrievePractice.
+      console.warn('[practice] generate-on-exhaustion failed, degrading to retrieval-only:', err);
+      generated = [];
+    }
   }
 
-  return { items: available.slice(0, req.count) };
+  const availableIds = new Set(available.map((it) => it.id));
+  const combined = [...available, ...generated.filter((it) => !availableIds.has(it.id))];
+
+  return { items: combined.slice(0, req.count) };
 }
