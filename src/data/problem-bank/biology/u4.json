@@ -1,0 +1,461 @@
+[
+  {
+    "id": "bio-cell-cycle-mitosis-001",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During which stage of the cell cycle is a cell's DNA copied, so that each chromosome ends up as two identical sister chromatids joined at a centromere?",
+    "choices": [
+      "Prophase of mitosis",
+      "G1 phase of interphase",
+      "S phase of interphase",
+      "Cytokinesis"
+    ],
+    "answer": "C",
+    "hints": [
+      "Interphase has three parts — G1, S, and G2 — and one of those letters is named for what happens there.",
+      "By the time a cell enters prophase its chromosomes are already doubled, so the copying must have happened earlier."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-mitosis-002",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dividing cell has all of its duplicated chromosomes lined up single file across the middle of the cell. Spindle fibers from both poles are attached at the centromeres, but no sister chromatids have separated yet. Which phase of mitosis is this cell in?",
+    "choices": [
+      "Metaphase",
+      "Anaphase",
+      "Prophase",
+      "Telophase"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether each chromosome is still doubled and still held together at the centromere.",
+      "Lining up across the middle happens before anything is pulled apart."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-mitosis-003",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A human body cell with a diploid number of 2n = 46 completes mitosis and cytokinesis. How many chromosomes does each daughter cell contain, and how do the daughter cells compare genetically to the original cell?",
+    "choices": [
+      "23 chromosomes; genetically identical to the original cell",
+      "23 chromosomes; genetically different from the original cell",
+      "46 chromosomes; genetically different from the original cell because crossing over occurred",
+      "46 chromosomes; genetically identical to the original cell"
+    ],
+    "answer": "D",
+    "hints": [
+      "Mitosis is the division that maintains chromosome number: S phase doubles the DNA, and one division splits that doubled set between two cells.",
+      "Crossing over and homolog pairing are not part of mitosis, so ask what could possibly make these daughter cells differ."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-mitosis-004",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cell in G2 of interphase contains 12 chromosomes, and each of those chromosomes is made of two sister chromatids. How many separate chromosomes are present in each daughter cell once mitosis and cytokinesis are complete?",
+    "choices": [
+      "6 chromosomes",
+      "12 chromosomes",
+      "24 chromosomes",
+      "48 chromosomes"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two sister chromatids joined at a single centromere still count as one chromosome, not two.",
+      "When the chromatids separate in anaphase each one becomes a full chromosome, but they travel to two different cells."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-mitosis-005",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sequence correctly traces what happens to one chromosome from the beginning of interphase through the end of mitosis?",
+    "choices": [
+      "The chromosome is copied into two sister chromatids, the doubled chromosome condenses and attaches to spindle fibers, and then the two chromatids are pulled apart into two different cells.",
+      "The chromosome condenses, is copied into two sister chromatids during prophase, and then the two chromatids are pulled apart into two different cells.",
+      "The chromosome pairs with its homolog, the pair is copied, and then the two homologs are separated into two different cells.",
+      "The chromosome condenses and is pulled to one pole, and then it is copied inside each daughter cell after division is finished."
+    ],
+    "answer": "A",
+    "hints": [
+      "Put DNA replication before condensation — a chromosome is already doubled the first time it becomes visible under a microscope.",
+      "Mitosis never pairs a chromosome with its homolog; that pairing belongs to a different kind of division."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-mitosis-006",
+    "loId": "bio.cell-cycle-mitosis",
+    "cedCode": "BIO-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher treats a population of cells with a drug that blocks spindle fibers from forming but leaves every other part of the cell working normally. The cells finish interphase and enter mitosis. What is the most likely immediate outcome?",
+    "choices": [
+      "The cells finish mitosis normally, but each daughter cell receives only half the usual number of chromosomes.",
+      "The cells never replicate their DNA and remain stuck in G1 with single-chromatid chromosomes.",
+      "The chromosomes condense but cannot be aligned or pulled apart, so the cell stalls with all of its duplicated chromosomes still inside one cell.",
+      "The chromatids separate normally, but the two new nuclei fuse back together because the drug blocks nuclear envelope formation."
+    ],
+    "answer": "C",
+    "hints": [
+      "List the specific jobs the spindle does: it positions the chromosomes at the middle and then pulls sister chromatids toward opposite poles.",
+      "Condensation is carried out by proteins bound to the chromosome itself and does not depend on the spindle, so the chromosomes can still coil up."
+    ]
+  },
+
+  {
+    "id": "bio-cell-cycle-regulation-cancer-001",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "At the G1 checkpoint a cell evaluates its size, its nutrient supply, and whether its DNA is damaged. What happens at that checkpoint when those conditions are not met?",
+    "choices": [
+      "The cell divides more quickly so that healthy cells can replace it.",
+      "The cell cycle is halted so the problem can be repaired, or the cell is destroyed if repair fails.",
+      "The cell skips S phase and moves directly into mitosis.",
+      "The cell copies its damaged DNA and repairs the damage in the daughter cells instead."
+    ],
+    "answer": "B",
+    "hints": [
+      "A checkpoint is a stop-or-go decision point, not a speed control.",
+      "Think about what would happen to both daughter cells if damaged DNA were allowed to be copied."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-regulation-cancer-002",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The p53 protein halts the cell cycle when DNA damage is detected and can trigger the destruction of a cell that is too damaged to repair. A cell acquires a mutation that leaves its p53 protein completely nonfunctional. What is the most likely consequence?",
+    "choices": [
+      "The cell stops dividing permanently, because it can no longer pass its checkpoints.",
+      "The cell repairs DNA damage faster than normal, because a slow repair step has been removed.",
+      "The cell can no longer enter S phase, so its DNA is never copied.",
+      "Cells carrying damaged DNA are allowed to divide, so the damage is passed on to the daughter cells."
+    ],
+    "answer": "D",
+    "hints": [
+      "p53 acts as a brake on the cycle, so ask what happens to a car when a brake stops working.",
+      "Losing a stop signal is not the same thing as gaining a go signal — the cycle still runs, it just stops being checked."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-regulation-cancer-003",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly contrasts proto-oncogenes with tumor suppressor genes in a normal, healthy cell?",
+    "choices": [
+      "Proto-oncogenes code for proteins that promote cell division, while tumor suppressor genes code for proteins that slow or stop cell division.",
+      "Proto-oncogenes and tumor suppressor genes both push the cell cycle forward, so a mutation in either one shuts division down.",
+      "Tumor suppressor genes speed the cell cycle up, while proto-oncogenes shut the cell cycle down.",
+      "Proto-oncogenes exist only in cancer cells, while tumor suppressor genes exist only in healthy cells."
+    ],
+    "answer": "A",
+    "hints": [
+      "The word 'suppressor' tells you which direction that gene pushes the cell cycle.",
+      "Proto-oncogenes are ordinary genes present in every healthy cell; only the mutated version gets the name oncogene."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-regulation-cancer-004",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cancer is usually described as a multistep disease. Suppose a single cell acquires one mutation that leaves a growth-signal receptor permanently switched on. Why does this one change usually fail to produce a tumor on its own?",
+    "choices": [
+      "A single mutation is always repaired before the cell divides, so it can never be inherited by daughter cells.",
+      "One mutation cannot change a protein enough to have any effect on cell division.",
+      "Intact checkpoint and repair proteins can still detect the abnormal cell and stop or destroy it, so several separate control genes usually have to fail before growth becomes uncontrolled.",
+      "Mutations lead to cancer only when they occur in gametes and are inherited by offspring."
+    ],
+    "answer": "C",
+    "hints": [
+      "The cell cycle is guarded by more than one control system, and each one is a separate line of defense.",
+      "Ask what else would have to break before an overactive go signal is actually obeyed."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-regulation-cancer-005",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Normal cells grown in a culture dish divide until they form a single layer covering the dish surface, and then they stop. Cancer cells grown in an identical dish keep dividing after the surface is covered and pile up in thick layers. Which conclusion is best supported by this comparison?",
+    "choices": [
+      "Cancer cells complete every stage of the cell cycle faster than normal cells do in every tissue.",
+      "Cancer cells have lost the ability to replicate their DNA accurately, which is why they pile up.",
+      "Normal cells run out of nutrients in the dish, while cancer cells manufacture their own nutrients.",
+      "Cancer cells fail to respond to the crowding and cell-contact signals that normally stop the cell cycle."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare what the two cell types do at exactly the same moment — the instant the dish surface is full.",
+      "A cell that ignores a stop signal is not the same as a cell that runs its cycle at a higher speed."
+    ]
+  },
+  {
+    "id": "bio-cell-cycle-regulation-cancer-006",
+    "loId": "bio.cell-cycle-regulation-cancer",
+    "cedCode": "BIO-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tumor sample carries two changes. First, one copy of a gene coding for a cyclin protein is overexpressed, producing far too much cyclin. Second, both copies of a gene coding for a DNA-damage checkpoint protein have been deleted, so none of that protein is made. Which description of these two changes is most accurate?",
+    "choices": [
+      "Both are tumor suppressor mutations, because in the end both remove control over the cycle.",
+      "The overexpressed cyclin behaves like an oncogene by pushing the cycle forward, while the deleted checkpoint gene is a tumor suppressor whose brake has been removed.",
+      "The overexpressed cyclin is a tumor suppressor mutation, and the deleted checkpoint gene is an oncogene.",
+      "Neither change affects the cell unless it is also exposed to a chemical carcinogen from outside."
+    ],
+    "answer": "B",
+    "hints": [
+      "Sort each change by its direction: does it add an extra go signal, or does it remove a stop signal?",
+      "Notice the copy numbers — the gain-of-function change needed only one copy, while the loss-of-function change required both copies to be gone."
+    ]
+  },
+
+  {
+    "id": "bio-meiosis-001",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An organism has a diploid number of 2n = 16. One of its cells completes meiosis to produce gametes. How many chromosomes does each gamete contain, and how many gametes are produced from that one starting cell?",
+    "choices": [
+      "8 chromosomes in each of 4 gametes",
+      "16 chromosomes in each of 4 gametes",
+      "8 chromosomes in each of 2 gametes",
+      "32 chromosomes in each of 2 gametes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Meiosis is two divisions in a row, so start with one cell and count how many cells exist after both divisions.",
+      "Gametes are haploid (n), which is half of the diploid (2n) number."
+    ]
+  },
+  {
+    "id": "bio-meiosis-002",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During which stage do homologous chromosomes pair up along their lengths and exchange matching segments in a process called crossing over?",
+    "choices": [
+      "Prophase of mitosis",
+      "Anaphase II of meiosis",
+      "Prophase I of meiosis",
+      "Metaphase II of meiosis"
+    ],
+    "answer": "C",
+    "hints": [
+      "Crossing over requires two homologs to be lined up physically side by side, which happens in only one prophase.",
+      "By the time the second meiotic division starts, the homologs have already been separated into different cells."
+    ]
+  },
+  {
+    "id": "bio-meiosis-003",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is pulled to opposite poles during anaphase I of meiosis, and what is pulled to opposite poles during anaphase II?",
+    "choices": [
+      "Sister chromatids separate in anaphase I; homologous chromosomes separate in anaphase II.",
+      "Homologous chromosomes separate in anaphase I; sister chromatids separate in anaphase II.",
+      "Sister chromatids separate in anaphase I and again in anaphase II.",
+      "Homologous chromosomes separate in anaphase I and again in anaphase II."
+    ],
+    "answer": "B",
+    "hints": [
+      "The reduction from 2n to n happens in the first division, which tells you which partners must be pulled apart first.",
+      "At the end of meiosis I each chromosome is still made of two chromatids joined at the centromere."
+    ]
+  },
+  {
+    "id": "bio-meiosis-004",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cell from an organism with a diploid number of 2n = 10 completes meiosis I, and the two resulting cells immediately enter meiosis II. How many chromosomes are in each of those cells at the start of meiosis II, and is each chromosome still made of two sister chromatids?",
+    "choices": [
+      "10 chromosomes, each still made of two sister chromatids",
+      "5 chromosomes, each now a single chromatid",
+      "10 chromosomes, each now a single chromatid",
+      "5 chromosomes, each still made of two sister chromatids"
+    ],
+    "answer": "D",
+    "hints": [
+      "Meiosis I halves the chromosome number by separating homologs, not by separating sister chromatids.",
+      "There is no round of DNA replication between meiosis I and meiosis II."
+    ]
+  },
+  {
+    "id": "bio-meiosis-005",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An organism has a diploid number of 2n = 8. In metaphase I each homologous pair orients independently of the others. Ignoring crossing over and mutation, how many genetically different gametes can independent assortment alone produce?",
+    "choices": [
+      "8 different gametes",
+      "4 different gametes",
+      "16 different gametes",
+      "256 different gametes"
+    ],
+    "answer": "C",
+    "hints": [
+      "Independent assortment gives 2 raised to the number of homologous pairs, not 2 raised to the number of chromosomes.",
+      "With 2n = 8 there are 8 chromosomes, which form 4 homologous pairs."
+    ]
+  },
+  {
+    "id": "bio-meiosis-006",
+    "loId": "bio.meiosis",
+    "cedCode": "BIO-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a cell from an organism with a diploid number of 2n = 6, one homologous pair fails to separate during anaphase I, so both members of that pair travel into the same daughter cell. Meiosis II then proceeds normally in both cells. What is the chromosome content of the four resulting gametes?",
+    "choices": [
+      "Two gametes with 4 chromosomes each and two gametes with 2 chromosomes each",
+      "All four gametes have 3 chromosomes, but two of them carry a duplicated chromosome",
+      "One gamete with 4 chromosomes, one with 2 chromosomes, and two with 3 chromosomes",
+      "Two gametes with 6 chromosomes each and two gametes with 0 chromosomes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace the two cells produced by meiosis I first: one gained an extra chromosome and the other is missing that chromosome entirely.",
+      "Meiosis II splits each of those two cells into two cells with the same chromosome content, so whatever error is present gets copied into both."
+    ]
+  },
+
+  {
+    "id": "bio-mitosis-meiosis-variation-001",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which outcome is produced by meiosis but NOT by mitosis?",
+    "choices": [
+      "Daughter cells that each contain a complete nucleus",
+      "Daughter cells that are genetically identical to the parent cell",
+      "Chromosomes that condense and attach to spindle fibers",
+      "Daughter cells with half the chromosome number of the parent cell"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both processes use spindle fibers and condensed chromosomes, so look past the machinery and compare the end products.",
+      "Compare the chromosome number of the parent cell with the chromosome number of the daughter cells in each process."
+    ]
+  },
+  {
+    "id": "bio-mitosis-meiosis-variation-002",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes that mitosis produces four genetically different cells. Which correction of that statement is accurate?",
+    "choices": [
+      "Mitosis produces four cells, but all four are genetically identical.",
+      "Mitosis produces two cells, and they are genetically identical to each other and to the parent cell.",
+      "Mitosis produces two cells that differ from each other because crossing over occurs during prophase.",
+      "Mitosis produces four identical cells, but only in tissues that make gametes."
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the divisions: mitosis is a single division, while meiosis is two divisions in a row.",
+      "Ask which process includes crossing over and homolog pairing — those are the events that make daughter cells differ."
+    ]
+  },
+  {
+    "id": "bio-mitosis-meiosis-variation-003",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which set of three processes are the main sources of genetic variation among offspring produced by sexual reproduction?",
+    "choices": [
+      "DNA replication during S phase, cytokinesis, and mitosis of body cells",
+      "Crossing over, mitosis of body cells, and the fusion of two identical gametes",
+      "Crossing over in prophase I, independent assortment in metaphase I, and random fertilization",
+      "Independent assortment during metaphase of mitosis, crossing over during anaphase II, and random fertilization"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two of the three happen inside meiosis I, and the third happens at the moment two gametes join.",
+      "Mitosis copies a genome exactly, so it cannot be a source of variation among offspring."
+    ]
+  },
+  {
+    "id": "bio-mitosis-meiosis-variation-004",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two siblings have the same two biological parents, yet they are genetically different from each other. Setting aside new mutations, which explanation best accounts for this difference?",
+    "choices": [
+      "Each parent produces gametes that differ from one another because of crossing over and independent assortment, and which two gametes happen to join at fertilization is random.",
+      "Mitosis in each parent's body produced genetically different cells, and some of those different cells became the gametes.",
+      "The chromosome number changes slightly from one gamete to the next, so each sibling starts with a different total.",
+      "Sister chromatids separate differently during each sibling's very first cell division after fertilization."
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace the differences back to the gametes, and then back to the division that produced those gametes.",
+      "Gametes made by the same individual are not all alike, and only one of the many gametes actually takes part in a given fertilization."
+    ]
+  },
+  {
+    "id": "bio-mitosis-meiosis-variation-005",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An organism has a diploid number of 2n = 12. Consider one of its cells dividing in two separate scenarios: in the first it undergoes mitosis, and in the second it undergoes meiosis. Which pair of results is correct?",
+    "choices": [
+      "Mitosis: 4 cells with 6 chromosomes each. Meiosis: 2 cells with 12 chromosomes each.",
+      "Mitosis: 2 cells with 12 chromosomes each. Meiosis: 4 cells with 6 chromosomes each.",
+      "Mitosis: 2 cells with 6 chromosomes each. Meiosis: 4 cells with 12 chromosomes each.",
+      "Mitosis: 2 cells with 12 chromosomes each. Meiosis: 2 cells with 6 chromosomes each."
+    ],
+    "answer": "B",
+    "hints": [
+      "Mitosis is one division that keeps the chromosome number the same; meiosis is two divisions that cut the number in half.",
+      "Half of 12 is 6, and two divisions starting from one cell produce four cells."
+    ]
+  },
+  {
+    "id": "bio-mitosis-meiosis-variation-006",
+    "loId": "bio.mitosis-meiosis-variation",
+    "cedCode": "BIO-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Some organisms reproduce asexually, making offspring by mitosis alone, while others reproduce sexually through meiosis and fertilization. A new disease sweeps through a large asexual population and a large sexual population of similar size. Which prediction is best supported by the difference between the two processes?",
+    "choices": [
+      "The asexual population will fare better, because mitosis produces new individuals more quickly than meiosis does.",
+      "The asexual population will fare better, because its offspring inherit the results of crossing over from the parent.",
+      "The two populations are equally likely to survive, because the number of chromosomes in each offspring is the same either way.",
+      "The asexual population is more vulnerable, because mitosis produces offspring that are genetically identical to the parent, so a trait that makes one individual susceptible is shared by nearly all of them."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask how much genetic difference exists among the offspring produced by each process.",
+      "If one individual lacks resistance to the disease, think about what that predicts for every one of its genetically identical copies."
+    ]
+  }
+]

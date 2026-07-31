@@ -1,0 +1,461 @@
+[
+  {
+    "id": "bio-cell-theory-types-001",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is part of the cell theory?",
+    "choices": [
+      "Cells arise spontaneously from nonliving organic material whenever conditions are favorable.",
+      "Only multicellular organisms are built from cells; bacteria are made of simpler non-cellular material.",
+      "All living organisms are made of one or more cells, and every cell comes from a pre-existing cell.",
+      "Every cell contains a nucleus, which stores that cell's genetic information."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cell theory has three parts: cells are the basic unit of life, all organisms are made of cells, and cells come only from other cells.",
+      "Rule out any choice that revives spontaneous generation, or that claims a structure (like the nucleus) that some cells lack."
+    ]
+  },
+  {
+    "id": "bio-cell-theory-types-002",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A single-celled organism is examined and found to have no nucleus and no membrane-bound organelles. Its DNA is one circular chromosome sitting in a region of the cytoplasm called the nucleoid. Which conclusion is best supported?",
+    "choices": [
+      "The organism is prokaryotic, and it still has ribosomes, cytoplasm, and a plasma membrane.",
+      "The organism is prokaryotic, so it has no ribosomes and cannot build proteins.",
+      "The organism is eukaryotic, because only eukaryotes contain DNA.",
+      "The organism is not alive, because a cell without a nucleus cannot carry out life functions."
+    ],
+    "answer": "A",
+    "hints": [
+      "\"Prokaryotic\" means \"before the nucleus\" — no nucleus and no membrane-bound organelles.",
+      "Sort features into two piles: shared by ALL cells (plasma membrane, cytoplasm, ribosomes, DNA) versus eukaryote-only (nucleus, membrane-bound organelles)."
+    ]
+  },
+  {
+    "id": "bio-cell-theory-types-003",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly compares a typical plant cell with a typical animal cell?",
+    "choices": [
+      "Only animal cells have mitochondria, because plant cells use chloroplasts to make ATP instead.",
+      "Only plant cells have mitochondria, because plants store far more energy than animals do.",
+      "Neither plant nor animal cells have ribosomes, since ribosomes occur only in prokaryotes.",
+      "Both have mitochondria, but only the plant cell has chloroplasts and a cellulose cell wall."
+    ],
+    "answer": "D",
+    "hints": [
+      "Chloroplasts capture light energy and store it in sugar; mitochondria release that stored energy as ATP. A plant needs both.",
+      "Ask which structures are eukaryote-wide and which are plant-only — the cell wall and chloroplast are the plant-only pair."
+    ]
+  },
+  {
+    "id": "bio-cell-theory-types-004",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bacterium and a human liver cell are each analyzed. Both are found to contain DNA, ribosomes, cytoplasm, and a plasma membrane. Which conclusion is best supported by this shared list?",
+    "choices": [
+      "Bacteria must be eukaryotic, since they contain DNA just as the liver cell does.",
+      "All cells share a core set of features, so these four structures cannot be used to distinguish a prokaryote from a eukaryote.",
+      "The liver cell must be prokaryotic, since prokaryotes are defined by having ribosomes.",
+      "Ribosomes are membrane-bound organelles, so bacteria must contain membrane-bound organelles."
+    ],
+    "answer": "B",
+    "hints": [
+      "A feature that appears in both groups has no power to tell them apart — look for what is on the list versus what is missing from it.",
+      "The distinguishing features (nucleus, membrane-bound organelles) are exactly the ones NOT mentioned here."
+    ]
+  },
+  {
+    "id": "bio-cell-theory-types-005",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two roughly spherical cells are compared. Cell X is 10 micrometers across and cell Y is 40 micrometers across. Both must absorb nutrients across their outer surfaces and distribute them throughout their interiors. Which statement best explains why cell X supplies its interior more easily?",
+    "choices": [
+      "Cell X has a greater total surface area than cell Y, so more material can cross per second.",
+      "Cell X has a larger volume compared with its surface area, giving it more room to stockpile nutrients.",
+      "Cell X and cell Y have identical surface-area-to-volume ratios, so the real difference is how fast each divides.",
+      "Cell X has a larger surface-area-to-volume ratio, so each unit of its cytoplasm is served by more membrane."
+    ],
+    "answer": "D",
+    "hints": [
+      "Surface area grows with the square of the diameter, but volume grows with the cube — so volume outruns surface area as a cell enlarges.",
+      "Compare the ratio, not the raw totals: the bigger cell has more surface area overall, yet less surface area per unit of interior to feed."
+    ]
+  },
+  {
+    "id": "bio-cell-theory-types-006",
+    "loId": "bio.cell-theory-types",
+    "cedCode": "BIO-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Mitochondria contain their own small circular DNA and their own ribosomes, which resemble bacterial ribosomes more closely than they resemble the ribosomes floating in the surrounding cytoplasm. Mitochondria are also bounded by two membranes and divide by splitting in two, on their own schedule rather than with the cell. Which claim do these observations best support?",
+    "choices": [
+      "Mitochondria descend from free-living prokaryotic cells that were engulfed by, and then lived inside, an ancestral host cell.",
+      "Mitochondria are themselves prokaryotic cells, so any cell containing one is by definition a prokaryote.",
+      "The nucleus must have evolved from a mitochondrion, since both compartments contain DNA.",
+      "Mitochondria build their membranes from scratch out of raw elements and are therefore unrelated to any other cell."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what kind of cell already has circular DNA, bacteria-like ribosomes, and reproduces by splitting in two.",
+      "The double membrane is the clue to how it got inside: an outer membrane from the host wrapping around the swallowed cell's own membrane."
+    ]
+  },
+
+  {
+    "id": "bio-organelles-001",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which structure is the site where amino acids are joined together into a polypeptide chain?",
+    "choices": [
+      "Golgi apparatus",
+      "Ribosome",
+      "Lysosome",
+      "Smooth endoplasmic reticulum"
+    ],
+    "answer": "B",
+    "hints": [
+      "Match each organelle to one verb: build proteins, modify and ship, digest, or make lipids.",
+      "The Golgi handles proteins only after they exist — it modifies and packages them rather than assembling the chain."
+    ]
+  },
+  {
+    "id": "bio-organelles-002",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pancreatic gland cell secretes very large amounts of digestive enzyme, which is protein, out of the cell. Which organelle would you expect to be unusually abundant in this cell, and why?",
+    "choices": [
+      "Smooth endoplasmic reticulum, because it assembles the enzymes' amino acid chains.",
+      "Lysosomes, because they package proteins for export out of the cell.",
+      "Central vacuole, because it stores the enzymes until the body needs them.",
+      "Rough endoplasmic reticulum, because ribosomes bound to it make proteins headed for export."
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Rough\" ER is rough because ribosomes stud its surface; proteins made there are destined for membranes, organelles, or export.",
+      "Smooth ER handles lipids and detoxification, and lysosomes digest material inside the cell rather than exporting it."
+    ]
+  },
+  {
+    "id": "bio-organelles-003",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A protein is destined to be secreted from the cell. Which sequence correctly traces its route through the secretory pathway?",
+    "choices": [
+      "Golgi apparatus → rough ER → transport vesicle → plasma membrane",
+      "Free ribosome in the cytosol → lysosome → smooth ER → plasma membrane",
+      "Ribosome bound to the rough ER → rough ER → transport vesicle → Golgi apparatus → secretory vesicle → plasma membrane",
+      "Nucleus → mitochondrion → Golgi apparatus → plasma membrane"
+    ],
+    "answer": "C",
+    "hints": [
+      "Order the pathway by job: build it, modify and sort it, then ship it out.",
+      "Vesicles are the shuttle between compartments, so a correct route needs a vesicle step between the ER and the Golgi."
+    ]
+  },
+  {
+    "id": "bio-organelles-004",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A drug shuts down the Golgi apparatus of a cell, but the nucleus, the ribosomes, and the rough ER continue to work normally. What is the most likely immediate effect on the cell?",
+    "choices": [
+      "Proteins are still made and still enter the ER, but they are no longer modified, sorted, or packaged for delivery to their destinations.",
+      "The cell can no longer make any protein at all, because the Golgi is where amino acids are linked together.",
+      "The cell can no longer make ATP, because the Golgi supplies the mitochondria with fuel.",
+      "Nothing measurable changes, because the rough ER carries out every Golgi function in addition to its own."
+    ],
+    "answer": "A",
+    "hints": [
+      "Knock out one station on an assembly line and everything upstream of it keeps running — only the downstream steps fail.",
+      "Name the Golgi's actual jobs before predicting the effect: it modifies, sorts, and packages proteins that already exist."
+    ]
+  },
+  {
+    "id": "bio-organelles-005",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a certain inherited disorder, a single hydrolytic digestive enzyme is missing, and as a result undigested macromolecules pile up inside membrane-bound sacs in the patient's cells until the cells swell and malfunction. Which organelle is most directly affected?",
+    "choices": [
+      "Smooth ER, which is the compartment that digests worn-out organelles.",
+      "Lysosome, a membrane-bound sac of hydrolytic enzymes that breaks down macromolecules and worn-out organelles.",
+      "Ribosome, which recycles used proteins back into free amino acids.",
+      "Golgi apparatus, which is the cell's main site of intracellular digestion."
+    ],
+    "answer": "B",
+    "hints": [
+      "The two clues are \"hydrolytic digestive enzyme\" and \"membrane-bound sac\" — which organelle is both at once?",
+      "Ribosomes build proteins rather than break them down, and the Golgi ships material rather than digesting it."
+    ]
+  },
+  {
+    "id": "bio-organelles-006",
+    "loId": "bio.organelles",
+    "cedCode": "BIO-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two cells are compared under an electron microscope. Cell 1 is packed with smooth endoplasmic reticulum and has very few ribosomes attached to any membrane. Cell 2 has extensive rough endoplasmic reticulum and an unusually large Golgi apparatus. Which pairing of function to cell is best supported?",
+    "choices": [
+      "Cell 1 secretes large amounts of a protein hormone; cell 2 detoxifies drugs in the liver.",
+      "Cell 1 stores the organism's genetic information; cell 2 generates most of the organism's ATP.",
+      "Cell 1 synthesizes lipids and detoxifies drugs; cell 2 manufactures and exports large amounts of protein.",
+      "Both cells must be protein secretors, since all endoplasmic reticulum is studded with ribosomes."
+    ],
+    "answer": "C",
+    "hints": [
+      "Bound ribosomes are the tell: their absence means the cell is not mass-producing protein for export.",
+      "A large Golgi means heavy traffic in modifying and shipping, which pairs with the rough ER, not the smooth ER."
+    ]
+  },
+
+  {
+    "id": "bio-cell-membrane-structure-001",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "How are phospholipid molecules arranged in a cell membrane?",
+    "choices": [
+      "In two layers, with the water-attracting phosphate heads facing the watery fluid on each side and the water-repelling fatty acid tails pointing inward toward each other.",
+      "In two layers, with the water-repelling fatty acid tails facing the watery fluid on each side and the phosphate heads tucked inward toward each other.",
+      "In a single layer, with heads and tails lying side by side and alternating along the surface.",
+      "In a rigid crystal in which every phospholipid is locked permanently in position."
+    ],
+    "answer": "A",
+    "hints": [
+      "Water sits on both sides of the membrane — inside the cytoplasm and outside the cell.",
+      "Each part of the molecule ends up where it is most comfortable: the water-loving heads meet the water, and the water-fearing tails hide from it."
+    ]
+  },
+  {
+    "id": "bio-cell-membrane-structure-002",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Biologists describe the cell membrane using the fluid mosaic model. What do the two words \"fluid\" and \"mosaic\" each refer to?",
+    "choices": [
+      "\"Fluid\" means the membrane is a liquid with no solid parts, and \"mosaic\" means it is a rigid tiled sheet held permanently in place by proteins.",
+      "\"Fluid\" refers to the cytoplasm inside the cell, and \"mosaic\" refers to the assortment of organelles suspended in it.",
+      "\"Fluid\" means phospholipids and many proteins drift sideways within the layer, and \"mosaic\" means many different molecules are embedded in it.",
+      "\"Fluid\" means the membrane is made entirely of liquid lipid, and \"mosaic\" means it contains no proteins at all."
+    ],
+    "answer": "C",
+    "hints": [
+      "Take the two words one at a time: one describes motion, the other describes composition.",
+      "A mosaic is a picture made of many different pieces — here, phospholipids, proteins, cholesterol, and carbohydrate chains."
+    ]
+  },
+  {
+    "id": "bio-cell-membrane-structure-003",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Cholesterol molecules are wedged between the phospholipids of an animal cell membrane. What is their main role there?",
+    "choices": [
+      "They pump Na+ out of the cell using energy from ATP.",
+      "They buffer membrane fluidity — restraining phospholipid movement when it is warm, and keeping the phospholipids from packing tightly when it is cold.",
+      "They form the water-filled channels through which glucose enters the cell.",
+      "They serve as the cell's identity markers that the immune system reads."
+    ],
+    "answer": "B",
+    "hints": [
+      "Cholesterol acts like a thermostat rather than a transporter — think about what it prevents at each temperature extreme.",
+      "Pumping and channeling are jobs for proteins; identity markers are usually carbohydrate chains."
+    ]
+  },
+  {
+    "id": "bio-cell-membrane-structure-004",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which substance passes most easily straight through the phospholipid bilayer, with no transport protein required?",
+    "choices": [
+      "Na+, a small charged ion",
+      "Glucose, a large polar sugar",
+      "A folded globular protein",
+      "O2, a small nonpolar molecule"
+    ],
+    "answer": "D",
+    "hints": [
+      "The interior of the bilayer is a greasy nonpolar zone made of fatty acid tails.",
+      "Two things block a molecule: being charged or strongly polar, and being large. Score each choice on both."
+    ]
+  },
+  {
+    "id": "bio-cell-membrane-structure-005",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A membrane protein spans the bilayer all the way from the outside surface to the inside surface and forms a water-lined passage through which K+ ions travel. Which description of this protein fits best?",
+    "choices": [
+      "It is an integral transmembrane channel protein: the stretch that contacts the fatty acid tails is nonpolar, while the lining of its passage is polar so ions can pass.",
+      "It is a peripheral protein, resting loosely against the outer surface and never entering the bilayer.",
+      "It is a cholesterol molecule serving as a temperature buffer for the membrane.",
+      "It is a carbohydrate chain whose only function is cell-to-cell recognition."
+    ],
+    "answer": "A",
+    "hints": [
+      "A protein buried in the bilayer has to present nonpolar amino acids where it touches the greasy tails.",
+      "But an ion cannot travel through a greasy tunnel — so the inner lining of the pore must be the opposite, polar."
+    ]
+  },
+  {
+    "id": "bio-cell-membrane-structure-006",
+    "loId": "bio.cell-membrane-structure",
+    "cedCode": "BIO-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Membrane proteins on a mouse cell are tagged with a green marker and membrane proteins on a human cell are tagged with a red marker. The two cells are then fused into a single cell. Held at 37 degrees C, the green and red markers are evenly intermixed across the whole surface within about an hour. When the identical fusion is held near 0 degrees C, the green and red markers stay separated in their original halves. Which conclusion is best supported?",
+    "choices": [
+      "Membrane proteins are permanently anchored in place, and the markers simply leaked off the proteins at 37 degrees C.",
+      "Membranes consist only of protein, since proteins were the only components observed to move.",
+      "Lowering the temperature increased membrane fluidity, which is why the markers stopped spreading.",
+      "Membrane proteins drift laterally through a fluid bilayer, and that drifting slows sharply as the temperature drops."
+    ],
+    "answer": "D",
+    "hints": [
+      "Treat the two temperatures as an experiment and its control: the same cells behave differently, so temperature is the variable being tested.",
+      "Mixing means movement. Ask whether cooling sped that movement up or slowed it down, then match the wording exactly."
+    ]
+  },
+
+  {
+    "id": "bio-transport-across-membranes-001",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which process moves a dissolved substance DOWN its concentration gradient, from where it is more concentrated to where it is less concentrated, without the cell spending any ATP?",
+    "choices": [
+      "Active transport through a pump protein",
+      "Simple diffusion",
+      "Exocytosis",
+      "Endocytosis"
+    ],
+    "answer": "B",
+    "hints": [
+      "Moving down a gradient is the direction things go on their own — nothing has to be pushed.",
+      "Exocytosis and endocytosis move material in bulk inside vesicles, and both cost the cell energy."
+    ]
+  },
+  {
+    "id": "bio-transport-across-membranes-002",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An animal cell whose cytoplasm is 2% dissolved solute is placed into a solution that is 8% dissolved solute. Which way does water move overall, and what happens to the cell?",
+    "choices": [
+      "Water moves into the cell and it swells, because water always travels toward the side with less solute.",
+      "There is no net movement of water, because water molecules cannot cross a cell membrane.",
+      "Water moves out of the cell and it shrivels, because water moves toward the side with the higher solute concentration, which is the 8% solution outside.",
+      "Water moves out of the cell and it swells, because losing solute raises the pressure inside."
+    ],
+    "answer": "C",
+    "hints": [
+      "In osmosis, water moves toward the more concentrated solute — equivalently, from where water is more abundant to where it is scarcer.",
+      "Compare the two numbers first (2% inside versus 8% outside), decide which side is hypertonic, then predict the cell's shape."
+    ]
+  },
+  {
+    "id": "bio-transport-across-membranes-003",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nerve cell holds its internal K+ concentration far above the K+ concentration of the fluid surrounding it, using a membrane protein that consumes ATP each time it moves K+ inward. This transport is best classified as:",
+    "choices": [
+      "Active transport, because the cell is moving K+ against its concentration gradient and paying with ATP.",
+      "Osmosis, because a concentration difference exists across the membrane.",
+      "Facilitated diffusion, because a membrane protein is doing the work.",
+      "Simple diffusion, because K+ is a small ion."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask two questions in order: which direction relative to the gradient, and is ATP being spent?",
+      "Proteins are used in both facilitated diffusion and active transport, so the protein alone does not settle it — the ATP does."
+    ]
+  },
+  {
+    "id": "bio-transport-across-membranes-004",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A plant cell whose cytoplasm is 5% dissolved solute is placed in a beaker of distilled water containing 0% solute. What is the most likely outcome?",
+    "choices": [
+      "The cell bursts, because water rushes in and a plant cell has no wall to resist the pressure.",
+      "The cell shrivels and plasmolyzes, because water leaves the cytoplasm for the surrounding water.",
+      "Nothing happens, because a plant cell wall is impermeable to water.",
+      "Water enters the cell and it becomes turgid, with the rigid cell wall resisting further swelling and preventing the cell from bursting."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare 5% inside with 0% outside to decide which direction water moves, then ask what structure a plant cell has that an animal cell does not.",
+      "The plant cell wall is porous to water but mechanically rigid — it lets water in yet pushes back once the cell is full."
+    ]
+  },
+  {
+    "id": "bio-transport-across-membranes-005",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Glucose enters a red blood cell through a specific carrier protein in the membrane. The glucose concentration is 5 mM in the blood plasma outside the cell and 1 mM in the cytoplasm inside, and the cell spends no ATP on this entry. Which term best describes this transport?",
+    "choices": [
+      "Active transport, because a carrier protein is required to move the glucose.",
+      "Osmosis, because the glucose is dissolved in water and water is present on both sides.",
+      "Facilitated diffusion, because glucose moves down its gradient from 5 mM to 1 mM through a protein, so no ATP is needed.",
+      "Exocytosis, because a vesicle carries the glucose across the membrane."
+    ],
+    "answer": "C",
+    "hints": [
+      "Osmosis names the movement of water, not of the solute — check which substance is actually crossing.",
+      "Glucose is large and polar, so it needs a protein, but the 5 mM to 1 mM direction means the gradient is doing the pushing."
+    ]
+  },
+  {
+    "id": "bio-transport-across-membranes-006",
+    "loId": "bio.transport-across-membranes",
+    "cedCode": "BIO-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An animal cell with an internal solute concentration of 0.9% is placed in a 0.9% salt solution, and at first it neither swells nor shrinks. A drug is then added that halts all ATP production inside the cell. Over the next hour the cell slowly swells and finally bursts. Which explanation is best supported?",
+    "choices": [
+      "Osmosis requires ATP, so cutting off ATP drove water out of the cell until it collapsed and ruptured.",
+      "Osmosis itself needs no ATP, but the ATP-powered pumps that normally export Na+ stopped working, so solute accumulated inside and drew water in by osmosis.",
+      "The 0.9% outside solution was hypertonic to the cell from the very beginning, so water entered and burst the cell.",
+      "Water crosses the membrane by active transport, and that transport accelerated once ATP was no longer available to slow it."
+    ],
+    "answer": "B",
+    "hints": [
+      "The cell was stable before the drug, so the drug must have changed something the cell was actively maintaining.",
+      "Separate the two processes: osmosis is passive and never stops, while the pumps that set up the solute balance are the part that runs on ATP."
+    ]
+  }
+]

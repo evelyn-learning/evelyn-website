@@ -1,0 +1,461 @@
+[
+  {
+    "id": "bio-characteristics-of-life-001",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A biologist lists four levels of biological organization found in a deer: tissue, organism, cell, organ. Which ordering runs from the smallest level to the largest?",
+    "choices": [
+      "organism → organ → tissue → cell",
+      "cell → tissue → organ → organism",
+      "tissue → cell → organ → organism",
+      "cell → organ → tissue → organism"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with the smallest unit that is still considered alive on its own.",
+      "Many cells of one kind form a tissue; several tissues working together form an organ."
+    ]
+  },
+  {
+    "id": "bio-characteristics-of-life-002",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A person walks into a cold room. Within a minute the blood vessels near the skin narrow and the person begins to shiver. Measurements show the person's internal body temperature stays near 37°C the whole time. Which characteristic of life is best illustrated?",
+    "choices": [
+      "Metabolism, because shivering burns stored energy",
+      "Growth and development, because the body is changing",
+      "Reproduction, because new muscle cells are made",
+      "Homeostasis, because internal conditions are held steady despite the change outside"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what the shivering and the narrowed vessels accomplish, not just what they cost.",
+      "The key evidence is the number that did NOT change: internal temperature stayed near 37°C."
+    ]
+  },
+  {
+    "id": "bio-characteristics-of-life-003",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A salt crystal sitting in a saturated solution steadily gets larger, and a fire spreads across a field, consumes oxygen, and gives off heat. Neither the crystal nor the fire is considered alive. Which reason best explains why?",
+    "choices": [
+      "Neither one is made of cells or uses its own hereditary information to maintain and reproduce itself",
+      "Neither one increases in size over time",
+      "Neither one uses energy from its surroundings",
+      "Neither one changes in response to conditions around it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Test each reason against the description: does the crystal grow? does the fire use oxygen?",
+      "Eliminate any reason that the passage itself shows to be false, then look for the trait both cases truly lack."
+    ]
+  },
+  {
+    "id": "bio-characteristics-of-life-004",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Consider three descriptions of the same sunflower field, given in order: (1) all the sunflowers growing in the field; (2) all the sunflowers together with the bees, soil bacteria, and mice living there; (3) all of those living things together with the soil, water, and sunlight. Which list names these three levels of organization in the correct order?",
+    "choices": [
+      "community, population, ecosystem",
+      "population, ecosystem, community",
+      "population, community, ecosystem",
+      "organism, population, community"
+    ],
+    "answer": "C",
+    "hints": [
+      "Decide first whether each description includes one species or many, and whether it includes nonliving parts.",
+      "A group of one species in one place is a population; add the other species and you have a community."
+    ]
+  },
+  {
+    "id": "bio-characteristics-of-life-005",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The lining of a mammal's small intestine is covered with millions of tiny finger-like projections called villi. A 1 cm length of intestine folded into villi has an inner surface of about 30 square centimeters, while a smooth tube of the same 1 cm length would have an inner surface of only about 1.5 square centimeters. Which statement best explains the biological significance of this difference?",
+    "choices": [
+      "The villi increase the volume of the intestine, so more food can be stored at one time.",
+      "The villi increase the absorbing surface about 20 times, so nutrients cross into the blood much faster.",
+      "The villi shorten the distance food must travel, so digestion finishes sooner.",
+      "The villi let the intestinal cells divide about 20 times faster than smooth-lining cells."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the two numbers first: 30 versus 1.5 is a specific factor — what quantity does it describe?",
+      "Absorption happens across a surface, so ask which choice connects extra surface to a function."
+    ]
+  },
+  {
+    "id": "bio-characteristics-of-life-006",
+    "loId": "bio.characteristics-of-life",
+    "cedCode": "BIO-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A probe on another planet finds small spherical objects that (i) take in one set of gases and release a different set of gases, (ii) increase in number by splitting into two, and (iii) contain a long chain molecule that is copied in full just before each split. The objects never move on their own. A scientist argues that these objects meet the criteria for life. Which piece of the evidence most strongly supports that claim?",
+    "choices": [
+      "They are spherical, and most living cells are roughly spherical.",
+      "They never move on their own, and many living things such as oak trees also stay in place.",
+      "They take in gases and release different gases, which by itself is enough to show they are alive.",
+      "They copy a long chain molecule and then divide, so hereditary information is passed to offspring."
+    ],
+    "answer": "D",
+    "hints": [
+      "A fire also takes in one gas and releases another, so ask which observation a fire could NOT match.",
+      "Look for the trait that links reproduction to inherited information."
+    ]
+  },
+
+  {
+    "id": "bio-scientific-method-bio-001",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student grows bean plants under four different daily light amounts — 2 hours, 6 hours, 10 hours, and 14 hours — and measures the height of each plant after 3 weeks. Soil, water, pot size, and seed variety are kept the same for every plant. What is the independent variable in this experiment?",
+    "choices": [
+      "The height of the plants after 3 weeks",
+      "The variety of bean seed used",
+      "The number of hours of light given each day",
+      "The 3-week length of the experiment"
+    ],
+    "answer": "C",
+    "hints": [
+      "The independent variable is the one the experimenter deliberately sets to different values.",
+      "Whatever gets measured at the end is the dependent variable, not the independent one."
+    ]
+  },
+  {
+    "id": "bio-scientific-method-bio-002",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher tests whether a fertilizer increases tomato yield. Group 1 receives 5 mL of fertilizer per liter of water, Group 2 receives 10 mL per liter, Group 3 receives 20 mL per liter, and Group 4 receives water with no fertilizer added. All four groups get identical soil, pot size, watering schedule, and sunlight. Which group is the control group, and why?",
+    "choices": [
+      "Group 4, because it is treated identically except that it lacks the factor being tested",
+      "Group 1, because it receives the smallest amount of fertilizer",
+      "Group 3, because its large dose gives the clearest effect to compare against",
+      "There is no control group, because every group receives water"
+    ],
+    "answer": "A",
+    "hints": [
+      "A control group shows what happens when the tested factor is absent altogether.",
+      "The smallest dose is still a dose — that makes it another treatment group, not a baseline."
+    ]
+  },
+  {
+    "id": "bio-scientific-method-bio-003",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Across 30 towns, researchers record that the towns selling more ice cream each week also report more cases of sunburn that week. Which conclusion is best supported by this observation alone?",
+    "choices": [
+      "Eating ice cream causes sunburn.",
+      "Getting sunburned causes people to buy more ice cream.",
+      "The relationship is strong enough to prove that one of the two causes the other.",
+      "The two measurements are correlated, and a third factor such as hot, sunny weather may raise both."
+    ],
+    "answer": "D",
+    "hints": [
+      "This study only observed towns; nothing was assigned or controlled by the researchers.",
+      "Ask whether some outside condition could push both numbers up at the same time."
+    ]
+  },
+  {
+    "id": "bio-scientific-method-bio-004",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To test whether a new fish food speeds growth, a student places 20 goldfish in Tank A with the new food and 20 goldfish in Tank B with the old food. Tank A sits on a sunny windowsill and stays at 26°C; Tank B sits in a cool corner and stays at 20°C. After 6 weeks the Tank A fish average 30% more mass than the Tank B fish. Why can the student NOT conclude that the new food caused the faster growth?",
+    "choices": [
+      "Twenty fish per tank is too small a number to allow any conclusion at all.",
+      "Water temperature differed between the tanks, so temperature rather than food could explain the difference.",
+      "The student measured mass instead of length, and growth must be measured as length.",
+      "The experiment has no independent variable, because both tanks received food."
+    ],
+    "answer": "B",
+    "hints": [
+      "List everything that differs between Tank A and Tank B, not just the thing being tested.",
+      "If two factors change together, the result cannot be assigned to either one."
+    ]
+  },
+  {
+    "id": "bio-scientific-method-bio-005",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this hypothesis: 'If pill bugs prefer moist environments, then when given a choice they will spend more time on the damp side of a two-sided chamber than on the dry side.' In a single trial with one pill bug, the animal spends 8 of 10 minutes on the damp side. What is the strongest next step before accepting the hypothesis?",
+    "choices": [
+      "Repeat the trial with many more pill bugs and more trials to see whether the pattern holds.",
+      "Rewrite the hypothesis so that it matches the result already obtained.",
+      "Conclude that the hypothesis is proven, because the prediction came true.",
+      "Remove the dry side of the chamber and run the test again."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask how likely one animal could produce this split by chance alone.",
+      "Evidence gains weight through replication, and a hypothesis is supported rather than proven."
+    ]
+  },
+  {
+    "id": "bio-scientific-method-bio-006",
+    "loId": "bio.scientific-method-bio",
+    "cedCode": "BIO-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An investigator tests an antibacterial hand gel. Volunteers press a fingertip onto a nutrient plate before and after treatment, and bacterial colonies are counted 24 hours later. Group 1 rubs with the gel containing the active ingredient: mean 120 colonies before, 18 after. Group 2 rubs with the identical gel base with the active ingredient left out: mean 115 colonies before, 61 after. Group 3 receives no treatment at all: mean 118 colonies before, 116 after. Which conclusion is best supported?",
+    "choices": [
+      "The active ingredient has no real effect, because Group 2 also showed fewer colonies afterward.",
+      "Rubbing with any gel removes bacteria just as effectively as the active ingredient does.",
+      "Rubbing with the gel base alone reduces colonies, and the active ingredient reduces them substantially further.",
+      "The Group 3 result shows that colonies simply die off on their own within 24 hours."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare each group's before-and-after change, then compare those changes to each other.",
+      "Group 3 barely changed (118 to 116), so it sets the baseline for what happens with no treatment."
+    ]
+  },
+
+  {
+    "id": "bio-water-and-macromolecules-001",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which pairing of a macromolecule with the subunit it is built from is correct?",
+    "choices": [
+      "Protein — nucleotide",
+      "Nucleic acid — amino acid",
+      "Carbohydrate — fatty acid",
+      "Protein — amino acid"
+    ],
+    "answer": "D",
+    "hints": [
+      "Match each subunit to its own family first: nucleotides, amino acids, monosaccharides, fatty acids.",
+      "Three of these pairings swap subunits between two different families."
+    ]
+  },
+  {
+    "id": "bio-water-and-macromolecules-002",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Water molecules are attracted to one another through hydrogen bonds, and water molecules are also attracted to the glass wall of a narrow tube. When a thin glass tube is placed in water, the water climbs upward inside the tube. Which statement names the two attractions correctly?",
+    "choices": [
+      "Water sticking to water is adhesion; water sticking to the glass is cohesion.",
+      "Water sticking to water is cohesion; water sticking to the glass is adhesion.",
+      "Both attractions are called cohesion, because water is involved in each one.",
+      "Both attractions are called adhesion, because both help hold the column up."
+    ],
+    "answer": "B",
+    "hints": [
+      "One prefix means 'together with itself' and the other means 'stuck to something else'.",
+      "Co- as in cooperate: same substance sticking to same substance."
+    ]
+  },
+  {
+    "id": "bio-water-and-macromolecules-003",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solution X has a pH of 4 and Solution Y has a pH of 6. Which statement about these two solutions is correct?",
+    "choices": [
+      "Solution X is basic and holds 2 times as many hydrogen ions as Solution Y.",
+      "Solution Y is the more acidic of the two, because 6 is the larger number.",
+      "Solution X is more acidic and holds 100 times the hydrogen ion concentration of Solution Y.",
+      "Solution X holds exactly 2 times the hydrogen ion concentration of Solution Y."
+    ],
+    "answer": "C",
+    "hints": [
+      "On the pH scale, lower numbers mean more hydrogen ions, not fewer.",
+      "Each whole step on the scale is a factor of 10, so two steps is 10 x 10."
+    ]
+  },
+  {
+    "id": "bio-water-and-macromolecules-004",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two glucose molecules are joined together to form the disaccharide maltose, and one molecule of H2O is released in the process. Later, an enzyme in the small intestine splits maltose back into two glucose molecules by adding one molecule of H2O. Which choice names these two reactions in the order they occur?",
+    "choices": [
+      "Dehydration synthesis first, then hydrolysis",
+      "Hydrolysis first, then dehydration synthesis",
+      "Both are hydrolysis, because the number of molecules changes in each",
+      "Both are dehydration synthesis, because water takes part in each"
+    ],
+    "answer": "A",
+    "hints": [
+      "Track the water: is it produced by the reaction, or consumed by it?",
+      "Hydro- plus -lysis means 'split using water', so that name belongs to the reaction that adds H2O."
+    ]
+  },
+  {
+    "id": "bio-water-and-macromolecules-005",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student sets two beakers in the same sunlight for one hour. Beaker 1 holds 200 g of water and warms from 20°C to 24°C. Beaker 2 holds 200 g of cooking oil and warms from 20°C to 35°C. Both beakers absorbed the same amount of light energy. Which explanation of the difference, and of its importance to living things, is best?",
+    "choices": [
+      "Water has a low specific heat, so it warms slowly and protects cells from temperature swings.",
+      "Water is less dense than oil, so it absorbed less of the light energy that reached it.",
+      "Water forms fewer hydrogen bonds than oil does, so its temperature changes less.",
+      "Water has a high specific heat because energy goes into disrupting hydrogen bonds, so cells and lakes resist rapid temperature change."
+    ],
+    "answer": "D",
+    "hints": [
+      "Same mass and same energy in, but water's temperature rose only 4°C while the oil's rose 15°C.",
+      "Decide whether resisting a temperature change means high or low specific heat, then check that the reason given matches."
+    ]
+  },
+  {
+    "id": "bio-water-and-macromolecules-006",
+    "loId": "bio.water-and-macromolecules",
+    "cedCode": "BIO-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Four unknown samples are analyzed. Sample 1 contains carbon, hydrogen, and oxygen in a ratio close to 1:2:1 and dissolves readily in water. Sample 2 is built mostly of long hydrocarbon chains, contains very little oxygen, and does not dissolve in water. Sample 3 contains nitrogen and sulfur in addition to carbon, hydrogen, and oxygen, and permanently loses its function when heated to 80°C. Sample 4 contains phosphorus and nitrogen and stores information in the sequence of its subunits. Which identification of all four samples is correct?",
+    "choices": [
+      "1 lipid, 2 carbohydrate, 3 nucleic acid, 4 protein",
+      "1 carbohydrate, 2 lipid, 3 protein, 4 nucleic acid",
+      "1 carbohydrate, 2 protein, 3 lipid, 4 nucleic acid",
+      "1 nucleic acid, 2 lipid, 3 carbohydrate, 4 protein"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the distinctive element as the fingerprint: sulfur points one way, phosphorus another.",
+      "The 1:2:1 ratio of C, H, and O is the classic signature of one family, and 'does not dissolve in water' is the signature of another."
+    ]
+  },
+
+  {
+    "id": "bio-enzymes-001",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An enzyme speeds up a chemical reaction inside a cell. How does it accomplish this?",
+    "choices": [
+      "It lowers the activation energy the reaction needs to get started.",
+      "It raises the activation energy so that the reaction releases more energy overall.",
+      "It supplies energy to the reactants by being consumed in the reaction.",
+      "It changes the reaction so that the products end up holding more energy than before."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the energy barrier a reaction must clear before it can proceed.",
+      "A catalyst changes how easily a reaction starts, not the energy of the products."
+    ]
+  },
+  {
+    "id": "bio-enzymes-002",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A test tube holds 10 mL of hydrogen peroxide (H2O2) plus a small piece of liver, which supplies the enzyme catalase. Bubbles of O2 form rapidly and then stop. The same piece of liver is lifted out, rinsed, and dropped into a fresh tube of H2O2, where it bubbles rapidly again. What does the second result show?",
+    "choices": [
+      "The liver manufactured a fresh supply of catalase between the two tubes.",
+      "The catalase used up in the first tube was replaced by catalase from the H2O2.",
+      "Catalase is not consumed by the reaction, so one enzyme molecule can catalyze many reactions in turn.",
+      "The first tube stopped bubbling because its catalase had all been used up."
+    ],
+    "answer": "C",
+    "hints": [
+      "The same piece of liver worked twice — what does that rule out about the enzyme?",
+      "Ask what actually ran out in the first tube: the enzyme, or the H2O2 it was acting on?"
+    ]
+  },
+  {
+    "id": "bio-enzymes-003",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A human enzyme is tested at five temperatures with the same amount of substrate each time. The reaction rate, in units of product formed per minute, is: 10°C → 2 units; 25°C → 9 units; 37°C → 20 units; 45°C → 11 units; 60°C → 0 units. Which statement best explains the rate measured at 60°C?",
+    "choices": [
+      "At 60°C the substrate was completely used up before the rate could be measured.",
+      "At 60°C the enzyme has denatured — its shape has changed, so the substrate no longer fits the active site.",
+      "At 60°C the molecules move too slowly to collide with the active site.",
+      "At 60°C the enzyme has reached its optimum and therefore no longer needs substrate."
+    ],
+    "answer": "B",
+    "hints": [
+      "The rate peaked at 37°C and then fell — so higher temperature is not simply better.",
+      "An enzyme's function depends on the three-dimensional shape of its active site."
+    ]
+  },
+  {
+    "id": "bio-enzymes-004",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "With the amount of enzyme held constant, reaction rate is measured as substrate is added. Substrate 1 unit → rate 5; 2 units → rate 10; 4 units → rate 20; 8 units → rate 28; 16 units → rate 30; 32 units → rate 30. Why does the rate stop increasing once substrate goes above 16 units?",
+    "choices": [
+      "The extra substrate denatures the enzyme molecules.",
+      "At high concentration the substrate starts acting as an inhibitor of its own reaction.",
+      "The enzyme is gradually consumed as more and more substrate is added.",
+      "Every enzyme active site is already occupied, so the enzyme is saturated and extra substrate cannot speed things up."
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice the rate flattens rather than falling — nothing is being damaged.",
+      "The enzyme amount is fixed, so ask what limits how many reactions can run at once."
+    ]
+  },
+  {
+    "id": "bio-enzymes-005",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Pepsin is a protein-digesting enzyme released into the stomach; trypsin is a protein-digesting enzyme released into the small intestine. In a laboratory test, pepsin's rate peaks at pH 2 and falls to nearly zero at pH 8, while trypsin's rate peaks at pH 8 and is nearly zero at pH 2. Both reach the same peak rate. What does this result best show?",
+    "choices": [
+      "Trypsin is the stronger enzyme, because it works at the higher pH.",
+      "Both enzymes would work best if the entire digestive tract were held at pH 5.",
+      "Each enzyme has an optimal pH matching the environment where it normally works; away from that pH the active site's shape is disrupted.",
+      "pH has no real effect on enzymes, since the two enzymes reach the same peak rate."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare each enzyme's optimal pH with the part of the body where it is actually released.",
+      "A pH halfway between two optima would leave both enzymes far from their own peaks."
+    ]
+  },
+  {
+    "id": "bio-enzymes-006",
+    "loId": "bio.enzymes",
+    "cedCode": "BIO-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An enzyme's reaction rate is measured across a wide range of substrate amounts, first alone and then with a molecule called Compound Z added. Without Compound Z, the rate rises with substrate and levels off at a maximum of 40 units. With Compound Z present, the rate rises more slowly at every low substrate amount, but when a very large amount of substrate is supplied the rate still reaches 40 units. What does this best indicate about Compound Z?",
+    "choices": [
+      "Compound Z is a competitive inhibitor: it binds in the active site, and enough substrate can outcompete it.",
+      "Compound Z is a noncompetitive inhibitor: it binds elsewhere on the enzyme and permanently lowers the maximum rate.",
+      "Compound Z denatures the enzyme, since the rate is reduced at low substrate amounts.",
+      "Compound Z is a second substrate, since the maximum rate is unchanged."
+    ],
+    "answer": "A",
+    "hints": [
+      "The decisive clue is that the maximum rate of 40 units is eventually reached even with Compound Z present.",
+      "If an inhibitor can be overwhelmed by piling on substrate, the two must be contesting the same site."
+    ]
+  }
+]

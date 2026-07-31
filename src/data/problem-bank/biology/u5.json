@@ -1,0 +1,576 @@
+[
+  {
+    "id": "bio-mendel-laws-001",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants the allele for purple flowers (P) is dominant to the allele for white flowers (p). A plant with genotype Pp produces gametes. According to Mendel's law of segregation, what does each gamete carry for this gene?",
+    "choices": [
+      "Both alleles, P and p, because both are present in the parent plant",
+      "Two copies of the dominant allele, P and P, because dominant alleles are copied first",
+      "Exactly one allele — either P or p — with each allele ending up in half of the gametes",
+      "One allele for flower colour together with one allele for plant height"
+    ],
+    "answer": "C",
+    "hints": [
+      "Segregation is about what happens to the TWO alleles of a SINGLE gene when gametes form.",
+      "The two alleles separate, so a gamete is left with one of them; dominance plays no part in which one it gets."
+    ]
+  },
+  {
+    "id": "bio-mendel-laws-002",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, seed shape and seed colour are controlled by genes on different chromosomes. Round seed (R) is dominant to wrinkled seed (r), and yellow seed (Y) is dominant to green seed (y). A plant of genotype RrYy produces gametes. Which list gives all the gamete types it can make, in roughly equal numbers?",
+    "choices": [
+      "RY, Ry, rY, ry",
+      "RY and ry only, because R travelled with Y and r travelled with y in the parents",
+      "Rr and Yy",
+      "RY, RY, rY, rY"
+    ],
+    "answer": "A",
+    "hints": [
+      "Independent assortment means the choice made for the seed-shape gene does not influence the choice made for the seed-colour gene.",
+      "Pick one allele from Rr (2 ways), then one from Yy (2 ways): 2 x 2 combinations."
+    ]
+  },
+  {
+    "id": "bio-mendel-laws-003",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In one beetle population the allele for a dark shell (D) is dominant to the allele for a pale shell (d), yet only about 9% of the beetles in that population have dark shells. Which statement best explains this observation?",
+    "choices": [
+      "The dark allele must really be the recessive one, since dark beetles are rare.",
+      "A dominant allele switches to being recessive whenever it becomes rare in a population.",
+      "A trait produced by a dominant allele must appear in at least half of any population.",
+      "Dominance describes which allele is expressed in a heterozygote; it says nothing about how common the allele is in a population."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what dominance actually predicts: it predicts the phenotype of a Dd individual, not a frequency.",
+      "If the d allele is simply much more common than D, then dd individuals will be common even though D is dominant."
+    ]
+  },
+  {
+    "id": "bio-mendel-laws-004",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants purple flowers (P) are dominant to white flowers (p). A purple-flowered plant of unknown genotype is crossed with a white-flowered plant. Among the 80 offspring, 41 have purple flowers and 39 have white flowers. What is the most likely genotype of the purple-flowered parent, and which of Mendel's laws does the roughly 1:1 result illustrate?",
+    "choices": [
+      "PP; the law of independent assortment",
+      "Pp; the law of segregation",
+      "Pp; the law of independent assortment",
+      "PP; the law of segregation"
+    ],
+    "answer": "B",
+    "hints": [
+      "The white parent must be pp, so every offspring receives a p from that side; the offspring phenotype therefore reveals the allele donated by the purple parent.",
+      "Only one gene is being followed here, so the relevant law is the one about two alleles of a single gene separating into gametes."
+    ]
+  },
+  {
+    "id": "bio-mendel-laws-005",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pea plant has the genotype TtRrYy, and the three genes assort independently. How many genetically different types of gametes can this plant produce?",
+    "choices": [
+      "3, one for each gene",
+      "6, because there are 2 alleles across 3 genes",
+      "64",
+      "8"
+    ],
+    "answer": "D",
+    "hints": [
+      "Each heterozygous gene contributes one of 2 possible alleles to a gamete, independently of the others.",
+      "Multiply the choices: 2 x 2 x 2. Be careful not to count offspring genotypes — the question asks about gametes."
+    ]
+  },
+  {
+    "id": "bio-mendel-laws-006",
+    "loId": "bio.mendel-laws",
+    "cedCode": "BIO-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two genes in a certain plant sit close together on the same chromosome. A plant that is heterozygous for both (AaBb, having inherited A and B together on one chromosome and a and b together on the other) is crossed with an aabb plant. Instead of the expected 1:1:1:1 ratio, the offspring are mostly AaBb or aabb, with only a small number of Aabb or aaBb. Which statement best explains this result?",
+    "choices": [
+      "The two genes are linked, so they do not assort independently; the few rare offspring classes arise from crossing over between the genes.",
+      "The law of segregation fails for these genes, so some gametes carry both alleles of a gene.",
+      "Allele A is incompletely dominant to a, which creates extra phenotype classes.",
+      "Independent assortment predicts a 3:1 ratio, and these offspring show 3:1."
+    ],
+    "answer": "A",
+    "hints": [
+      "Independent assortment holds for genes on different chromosomes, or far apart on the same chromosome; ask what changes when two genes are physically close together.",
+      "The parental allele combinations dominate the offspring. What event during meiosis could still break those combinations apart in a small fraction of gametes?"
+    ]
+  },
+
+  {
+    "id": "bio-punnett-squares-monohybrid-001",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In guinea pigs, black coat (B) is dominant to white coat (b). A homozygous black guinea pig (BB) is crossed with a white guinea pig (bb). What phenotypes are expected among the offspring?",
+    "choices": [
+      "1/2 black and 1/2 white",
+      "All black",
+      "All white",
+      "3/4 black and 1/4 white"
+    ],
+    "answer": "B",
+    "hints": [
+      "One parent can only donate B and the other can only donate b, so write out the single possible offspring genotype first.",
+      "Every offspring is Bb. In a heterozygote the dominant allele determines the phenotype."
+    ]
+  },
+  {
+    "id": "bio-punnett-squares-monohybrid-002",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, tall stem (T) is dominant to short stem (t). Two heterozygous tall plants (Tt) are crossed. What PHENOTYPE ratio is expected among their offspring?",
+    "choices": [
+      "1 tall : 2 medium : 1 short",
+      "1 tall : 1 short",
+      "1 TT : 2 Tt : 1 tt",
+      "3 tall : 1 short"
+    ],
+    "answer": "D",
+    "hints": [
+      "Fill the four boxes of the Punnett square: TT, Tt, Tt, tt.",
+      "The question asks about appearance, not genotype — group every box that contains at least one T together."
+    ]
+  },
+  {
+    "id": "bio-punnett-squares-monohybrid-003",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In rabbits, short fur (F) is dominant to long fur (f). A heterozygous short-furred rabbit is crossed with a long-furred rabbit. What GENOTYPE ratio is expected among their offspring?",
+    "choices": [
+      "1 Ff : 1 ff",
+      "3 Ff : 1 ff",
+      "1 FF : 2 Ff : 1 ff",
+      "1 short-furred : 1 long-furred"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write each parent's genotype first: the heterozygote is Ff and the long-furred rabbit must be ff.",
+      "The ff parent can only donate f, so no offspring can be FF. The question asks for genotypes, not phenotypes."
+    ]
+  },
+  {
+    "id": "bio-punnett-squares-monohybrid-004",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a cat colony, straight whiskers (S) are dominant to curled whiskers (s). Two straight-whiskered cats, both heterozygous, produce a litter. What is the probability that any one kitten is HETEROZYGOUS?",
+    "choices": [
+      "1/4",
+      "3/4",
+      "1/2",
+      "1/3"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Ss x Ss square gives four equally likely boxes: SS, Ss, Ss, ss.",
+      "Count only the boxes that hold one S and one s, out of all four boxes — not out of the straight-whiskered ones only."
+    ]
+  },
+  {
+    "id": "bio-punnett-squares-monohybrid-005",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In tomatoes, purple stem (A) is dominant to green stem (a). A grower crosses a purple-stemmed plant of unknown genotype with a green-stemmed plant and obtains 62 purple-stemmed offspring and 58 green-stemmed offspring. What is the genotype of the purple-stemmed parent?",
+    "choices": [
+      "AA",
+      "Aa",
+      "aa",
+      "It cannot be determined; either AA or Aa fits these results"
+    ],
+    "answer": "B",
+    "hints": [
+      "This is a testcross: the green-stemmed parent must be aa and can only donate a.",
+      "If the purple parent were AA, every offspring would receive an A and be purple. About half the offspring are green, so what must the purple parent be donating half the time?"
+    ]
+  },
+  {
+    "id": "bio-punnett-squares-monohybrid-006",
+    "loId": "bio.punnett-squares-monohybrid",
+    "cedCode": "BIO-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a crop plant, susceptibility to a fungus (R) is dominant to resistance to the fungus (r). Two heterozygous plants (Rr) are crossed and their seeds are collected. What is the probability that the first three seeds planted all grow into resistant plants?",
+    "choices": [
+      "3/4",
+      "1/12",
+      "1/4",
+      "1/64"
+    ],
+    "answer": "D",
+    "hints": [
+      "First find the probability that a single seed is resistant: resistant plants must be rr.",
+      "The three seeds are independent events, so multiply the single-seed probability by itself three times rather than adding."
+    ]
+  },
+
+  {
+    "id": "bio-dihybrid-crosses-001",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, round seed (R) is dominant to wrinkled seed (r) and yellow seed (Y) is dominant to green seed (y); the two genes assort independently. Two plants of genotype RrYy are crossed. What phenotype ratio is expected among the offspring, listed as round yellow : round green : wrinkled yellow : wrinkled green?",
+    "choices": [
+      "9 : 3 : 3 : 1",
+      "3 : 1",
+      "1 : 2 : 1",
+      "1 : 1 : 1 : 1"
+    ],
+    "answer": "A",
+    "hints": [
+      "Treat the two genes one at a time: Rr x Rr gives 3/4 round and 1/4 wrinkled, and Yy x Yy gives 3/4 yellow and 1/4 green.",
+      "Multiply the two gene results for each combination: 3/4 x 3/4, 3/4 x 1/4, 1/4 x 3/4, 1/4 x 1/4."
+    ]
+  },
+  {
+    "id": "bio-dihybrid-crosses-002",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, round seed (R) is dominant to wrinkled seed (r) and yellow seed (Y) is dominant to green seed (y), and the two genes assort independently. A plant of genotype RrYy is crossed with a plant of genotype rryy. What phenotype ratio is expected among the offspring?",
+    "choices": [
+      "9 round yellow : 3 round green : 3 wrinkled yellow : 1 wrinkled green",
+      "3 round : 1 wrinkled, with all offspring yellow",
+      "1 round yellow : 1 round green : 1 wrinkled yellow : 1 wrinkled green",
+      "All offspring are round and yellow"
+    ],
+    "answer": "C",
+    "hints": [
+      "The rryy parent can make only one kind of gamete, ry, so the offspring phenotypes come straight from the four gamete types of the RrYy parent.",
+      "9:3:3:1 comes from a cross of two double heterozygotes. This cross is a testcross, so expect a different pattern."
+    ]
+  },
+  {
+    "id": "bio-dihybrid-crosses-003",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a garden plant, tall (T) is dominant to short (t) and green pod (G) is dominant to yellow pod (g); the two genes assort independently. A TtGg plant is crossed with another TtGg plant. What is the probability that an offspring is short with a yellow pod?",
+    "choices": [
+      "1/8",
+      "1/16",
+      "1/4",
+      "3/16"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the probability for each gene separately: what fraction of Tt x Tt offspring is short, and what fraction of Gg x Gg offspring has yellow pods?",
+      "Because the genes assort independently, multiply the two fractions instead of adding them."
+    ]
+  },
+  {
+    "id": "bio-dihybrid-crosses-004",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a garden plant, tall (T) is dominant to short (t) and green pod (G) is dominant to yellow pod (g); the two genes assort independently. A TtGg plant is crossed with another TtGg plant. What fraction of the offspring is expected to be tall with yellow pods?",
+    "choices": [
+      "9/16",
+      "1/16",
+      "1/4",
+      "3/16"
+    ],
+    "answer": "D",
+    "hints": [
+      "Tall covers both TT and Tt, so work out the fraction of Tt x Tt offspring that is tall.",
+      "Yellow pods require gg. Multiply the tall fraction by the yellow fraction."
+    ]
+  },
+  {
+    "id": "bio-dihybrid-crosses-005",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two rabbit genes assort independently: black coat (B) is dominant to brown coat (b), and short fur (S) is dominant to long fur (s). A rabbit of genotype BbSs is crossed with a rabbit of genotype Bbss. What is the probability that an offspring is brown with long fur?",
+    "choices": [
+      "1/8",
+      "1/16",
+      "1/4",
+      "3/16"
+    ],
+    "answer": "A",
+    "hints": [
+      "Split the cross by gene: Bb x Bb for coat colour, and Ss x ss for fur length.",
+      "Brown requires bb and long fur requires ss. Ss x ss is not the same as Ss x Ss — work out its fraction of ss offspring carefully, then multiply."
+    ]
+  },
+  {
+    "id": "bio-dihybrid-crosses-006",
+    "loId": "bio.dihybrid-crosses",
+    "cedCode": "BIO-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a flowering plant, flower colour and leaf shape assort independently. Red flowers (R) are dominant to white flowers (r), and broad leaves (L) are dominant to narrow leaves (l). A plant with red flowers and broad leaves is crossed with a white-flowered, narrow-leaved plant. The offspring are 51 red broad, 49 red narrow, 50 white broad and 48 white narrow. What is the genotype of the red, broad-leaved parent?",
+    "choices": [
+      "RRLL",
+      "RRLl",
+      "RrLl",
+      "RrLL"
+    ],
+    "answer": "C",
+    "hints": [
+      "The white, narrow parent must be rrll, so it donates only r and l — every offspring phenotype reports the allele it received from the other parent.",
+      "About half the offspring are white, so the red parent donates r half the time; about half are narrow, so it donates l half the time."
+    ]
+  },
+
+  {
+    "id": "bio-non-mendelian-inheritance-001",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In four o'clock plants, flower colour shows incomplete dominance: a plant with two red alleles (C^R C^R) has red flowers, a plant with two white alleles (C^W C^W) has white flowers, and a plant with one of each (C^R C^W) has pink flowers. A red-flowered plant is crossed with a white-flowered plant. What flower colour is expected in all of the offspring?",
+    "choices": [
+      "Red",
+      "White",
+      "Half of the offspring red and half white",
+      "Pink"
+    ],
+    "answer": "D",
+    "hints": [
+      "Each parent is homozygous, so write the one genotype every offspring must have.",
+      "Every offspring is C^R C^W. Look up what the problem says that heterozygous genotype looks like."
+    ]
+  },
+  {
+    "id": "bio-non-mendelian-inheritance-002",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Human ABO blood type is controlled by three alleles of one gene: I^A and I^B are codominant with each other, and both are dominant to i. A person has the genotype I^A I^B. What blood type does that person have, and why?",
+    "choices": [
+      "Type A, because the A allele is written first",
+      "Type AB, because both the A marker and the B marker appear on the red blood cells",
+      "Type O, because the two different alleles cancel each other out",
+      "A blend that is halfway between type A and type B"
+    ],
+    "answer": "B",
+    "hints": [
+      "Codominance means neither allele masks the other, so ask what BOTH alleles produce.",
+      "Codominance is not blending: the two products appear side by side and are both fully detectable."
+    ]
+  },
+  {
+    "id": "bio-non-mendelian-inheritance-003",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In snapdragons, flower colour is incompletely dominant: C^R C^R plants are red, C^W C^W plants are white, and C^R C^W plants are pink. Two pink snapdragons are crossed. What phenotype ratio is expected among their offspring?",
+    "choices": [
+      "3 red : 1 white",
+      "All offspring pink",
+      "1 red : 2 pink : 1 white",
+      "9 red : 3 pink : 3 white : 1 red"
+    ],
+    "answer": "C",
+    "hints": [
+      "Cross C^R C^W with C^R C^W and list the four boxes of the Punnett square.",
+      "Under incomplete dominance every genotype has its own appearance, so the phenotype ratio matches the genotype ratio rather than collapsing to 3:1."
+    ]
+  },
+  {
+    "id": "bio-non-mendelian-inheritance-004",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Human ABO blood type is controlled by three alleles: I^A and I^B are codominant with each other, and both are dominant to i. A woman with blood type A whose genotype is I^A i has children with a man with blood type B whose genotype is I^B i. Which blood types are possible among their children?",
+    "choices": [
+      "A, B, AB and O",
+      "A and B only",
+      "AB only",
+      "AB and O only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each parent can donate two different alleles: the mother donates I^A or i, and the father donates I^B or i.",
+      "Fill in all four combinations, then translate each genotype into a blood type — remember what i i produces."
+    ]
+  },
+  {
+    "id": "bio-non-mendelian-inheritance-005",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In shorthorn cattle, coat colour is codominant: C^R C^R cattle are red, C^W C^W cattle are white, and C^R C^W cattle are roan, meaning the coat contains a mixture of separate red hairs and white hairs. A roan bull is crossed with a white cow. What offspring are expected?",
+    "choices": [
+      "All roan, because roan is the blended colour of red and white",
+      "3 roan : 1 white",
+      "1/2 roan and 1/2 white",
+      "1/4 red, 1/2 roan and 1/4 white"
+    ],
+    "answer": "C",
+    "hints": [
+      "Write the genotypes: the roan bull is C^R C^W and the white cow is C^W C^W.",
+      "The cow can donate only C^W, so each offspring's colour depends entirely on which allele the bull donates."
+    ]
+  },
+  {
+    "id": "bio-non-mendelian-inheritance-006",
+    "loId": "bio.non-mendelian-inheritance",
+    "cedCode": "BIO-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In rabbits, coat colour is controlled by four alleles of a single gene with the dominance series C (full colour) > c^ch (chinchilla) > c^h (Himalayan) > c (albino); each allele is dominant to every allele listed after it, and albino rabbits must be c c. A full-colour rabbit of genotype C c^h is crossed with a chinchilla rabbit of genotype c^ch c. What fraction of the offspring is expected to be albino?",
+    "choices": [
+      "1/4",
+      "None of the offspring can be albino",
+      "1/2",
+      "1/16"
+    ],
+    "answer": "B",
+    "hints": [
+      "List what each parent can donate: the full-colour parent gives C or c^h, and the chinchilla parent gives c^ch or c.",
+      "An albino rabbit needs the c allele from BOTH parents. Check whether both parents actually carry c."
+    ]
+  },
+
+  {
+    "id": "bio-pedigrees-human-genetics-001",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In humans, red-green colour blindness is caused by a recessive allele carried on the X chromosome (X^C gives normal colour vision, X^c causes colour blindness). The Y chromosome carries no allele for this gene. Which genotype describes a colour-blind male?",
+    "choices": [
+      "X^c X^c",
+      "X^C X^c",
+      "X^c Y",
+      "X^C Y"
+    ],
+    "answer": "C",
+    "hints": [
+      "A human male has one X chromosome and one Y chromosome, so his genotype must contain a Y.",
+      "The Y carries no copy of this gene, so a single X^c on his one X chromosome is enough to make him colour blind."
+    ]
+  },
+  {
+    "id": "bio-pedigrees-human-genetics-002",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Red-green colour blindness is caused by a recessive allele on the X chromosome (X^C normal vision, X^c colour blind); the Y chromosome carries no allele for this gene. A carrier mother with genotype X^C X^c has children with a father who has normal colour vision, X^C Y. What fraction of their SONS is expected to be colour blind?",
+    "choices": [
+      "1/2",
+      "1/4",
+      "None of them",
+      "All of them"
+    ],
+    "answer": "A",
+    "hints": [
+      "A son always receives the Y from his father, so his colour vision depends entirely on which X his mother donates.",
+      "The mother donates X^C half the time and X^c half the time. Note the question asks about sons only, not about all children."
+    ]
+  },
+  {
+    "id": "bio-pedigrees-human-genetics-003",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Red-green colour blindness is caused by a recessive allele on the X chromosome, and the Y chromosome carries no copy of that gene. Colour blindness is much more common in males than in females. Which statement best explains why?",
+    "choices": [
+      "Sons inherit the colour-blindness allele from their fathers, because a father passes his X chromosome to every son.",
+      "The allele behaves as a dominant allele in males and a recessive allele in females.",
+      "Males and females should be affected at equal rates, so the difference is only a matter of chance.",
+      "A male has just one X chromosome, so a single recessive allele is expressed, while a female needs the recessive allele on both of her X chromosomes."
+    ],
+    "answer": "D",
+    "hints": [
+      "Count how many copies of an X-linked gene a male has compared with a female.",
+      "Also check the inheritance path in each option: a father passes his Y, not his X, to his sons."
+    ]
+  },
+  {
+    "id": "bio-pedigrees-human-genetics-004",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A family is studied for a single-gene trait. In generation I an unaffected male and an unaffected female have three children: an affected daughter, an unaffected son and an unaffected daughter. No one else in the family is affected. Which mode of inheritance is best supported, and what are the generation I parents' genotypes under that mode?",
+    "choices": [
+      "Autosomal dominant; both generation I parents are Aa",
+      "Autosomal recessive; both generation I parents are heterozygous carriers, Aa",
+      "X-linked recessive; the mother is X^A X^a and the father is X^A Y",
+      "X-linked dominant; the father is X^A Y"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two unaffected parents producing an affected child tells you at once whether the trait is dominant or recessive.",
+      "Now test whether it can be X-linked recessive: an affected daughter would need a recessive allele on both X chromosomes, including the one from her father — but her father is unaffected."
+    ]
+  },
+  {
+    "id": "bio-pedigrees-human-genetics-005",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A family is studied for a single-gene trait. In generation I an unaffected man and an unaffected woman have four children: two affected sons, one unaffected son and one unaffected daughter. In generation II that unaffected daughter has children with an unaffected man, and one of her two sons is affected. No female in either generation is affected. Which mode of inheritance does this pattern support most strongly?",
+    "choices": [
+      "X-linked recessive",
+      "Autosomal dominant",
+      "X-linked dominant",
+      "Y-linked"
+    ],
+    "answer": "A",
+    "hints": [
+      "Affected children born to unaffected parents rules out the dominant patterns straight away.",
+      "Only males are affected, and the trait travels through unaffected women to their sons — which chromosome do sons get only from their mothers?"
+    ]
+  },
+  {
+    "id": "bio-pedigrees-human-genetics-006",
+    "loId": "bio.pedigrees-human-genetics",
+    "cedCode": "BIO-5.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Haemophilia is caused by a recessive allele on the X chromosome (X^H normal clotting, X^h haemophilia); the Y chromosome carries no copy of the gene. A woman's father had haemophilia and her mother carried no haemophilia allele, and the woman herself has normal clotting. She has children with a man who has normal clotting. What is the probability that their first child is a son with haemophilia?",
+    "choices": [
+      "1/2",
+      "None; it is impossible",
+      "1/8",
+      "1/4"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work out the woman's genotype first: her father was X^h Y, and a father passes his X chromosome to every daughter.",
+      "Cross X^H X^h with X^H Y and list all four equally likely children — the answer must cover both being a son AND having haemophilia, not just the fraction of sons affected."
+    ]
+  }
+]

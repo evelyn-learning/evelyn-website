@@ -1,0 +1,456 @@
+[
+  {
+    "id": "bio-evidence-for-evolution-001",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The forelimb of a human, the flipper of a whale, and the wing of a bat all contain the same set of bones — one upper arm bone, two lower arm bones, and a set of wrist and finger bones — arranged in the same order, even though each limb does a completely different job. Structures that match in this way are best described as:",
+    "choices": [
+      "analogous structures, because the three limbs perform different jobs",
+      "vestigial structures, because the bones no longer have any function",
+      "homologous structures, inherited from a shared ancestor",
+      "acquired structures, built by each animal during its lifetime"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what the shared bone pattern points to: a shared job, or a shared ancestor?",
+      "Homologous means same underlying structure from common ancestry; analogous means same job from separate origins."
+    ]
+  },
+  {
+    "id": "bio-evidence-for-evolution-002",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bird's wing is supported by an internal skeleton of bone and covered in feathers. An insect's wing is a thin extension of the exoskeleton with no bones inside it at all. Both are used for powered flight. What does this comparison show?",
+    "choices": [
+      "The wings are analogous — similar function evolved separately in the two lineages, not inherited from a common winged ancestor.",
+      "The wings are homologous, because both structures are used for flight.",
+      "The wings are homologous, because any two animals that fly must share a recent common ancestor.",
+      "The insect wing is a vestigial version of the bird wing, since the bird design is more advanced."
+    ],
+    "answer": "A",
+    "hints": [
+      "Same function is not the test. Look at whether the internal construction matches.",
+      "Bone versus exoskeleton means two different solutions to the same problem — that is convergent evolution."
+    ]
+  },
+  {
+    "id": "bio-evidence-for-evolution-003",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student compares the same gene across four species and records the percentage of the DNA sequence each species shares with humans: chimpanzee 98%, mouse 85%, chicken 65%, fruit fly 40%. Which conclusion is best supported by these values?",
+    "choices": [
+      "Humans evolved directly from chimpanzees, since a 98% match is nearly complete.",
+      "The fruit fly is not related to humans at all, because 40% is a low match.",
+      "The mouse is turning into a chimpanzee, because 85% is on the way to 98%.",
+      "Humans share their most recent common ancestor with the chimpanzee and their oldest common ancestor with the fruit fly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Higher sequence similarity means less time has passed since the two lineages split.",
+      "A shared ancestor is not the same as one living species descending from another living species."
+    ]
+  },
+  {
+    "id": "bio-evidence-for-evolution-004",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Modern whales have a pair of small hip bones buried in muscle. These bones are not attached to the backbone and support no limbs. Fossil whales from about 40 million years ago have the same hip bones, but attached to small, complete hind legs with feet. Which statement uses this evidence correctly?",
+    "choices": [
+      "The hip bones show that whales are trying to regrow legs so they can return to land.",
+      "The hip bones are vestigial — reduced remnants of the functional hind limbs of the whales' four-legged ancestors.",
+      "The hip bones prove that whales and fish share a recent common ancestor.",
+      "The hip bones appeared recently because modern whales needed extra support for swimming."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the fossil version with the modern version: the structure got smaller and lost its job.",
+      "Evolution has no goal or plan, so rule out any choice that says a population is 'trying to' produce a trait."
+    ]
+  },
+  {
+    "id": "bio-evidence-for-evolution-005",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Hawaiian Islands rose from undersea volcanoes and were never connected to any continent. They are home to more than 50 species of honeycreeper birds found nowhere else on Earth. Every one of those 50 species is more similar in DNA to a single finch-like species from the Asian mainland than to any other bird. Which explanation best fits this pattern?",
+    "choices": [
+      "Each honeycreeper species arrived separately from a different mainland bird species.",
+      "The honeycreepers walked to the islands across a land bridge before the volcanoes erupted.",
+      "The island climate forces any bird that lands there to become a honeycreeper.",
+      "A small founding population of the mainland species reached the islands, and its descendants diversified into many species in the new habitats."
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the DNA result: all 50 species trace back to the same mainland bird, not to 50 different ones.",
+      "Islands that were never connected to a continent must be colonized by a few arrivals whose descendants then spread into open niches."
+    ]
+  },
+  {
+    "id": "bio-evidence-for-evolution-006",
+    "loId": "bio.evidence-for-evolution",
+    "cedCode": "BIO-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two desert plants, one native to North America and one native to Africa, both have thick water-storing stems, spines instead of leaves, and a waxy outer coating. Their DNA sequences, however, are no more similar to each other than either one is to an ordinary leafy plant from its own continent. A student claims the two desert plants must be closely related. Which response is strongest?",
+    "choices": [
+      "The claim is not supported: the shared traits are analogous, produced by convergent evolution under similar desert conditions, and the DNA data show no close relationship.",
+      "The claim is supported: three shared structures outweigh a single DNA comparison.",
+      "The claim is supported, because sharing a habitat is what defines a group of related species.",
+      "The claim cannot be judged, because structural evidence and DNA evidence can never be compared."
+    ],
+    "answer": "A",
+    "hints": [
+      "Decide which line of evidence tracks ancestry and which line can be produced independently by a shared environment.",
+      "Similar selective pressures can build similar-looking structures in lineages that are not related — the DNA is the ancestry test here."
+    ]
+  },
+
+  {
+    "id": "bio-natural-selection-001",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a beetle population, some individuals are green and some are brown. The beetles live on brown soil, and hunting birds spot and eat green beetles far more easily than brown ones. Brown beetles therefore survive longer and leave more offspring. Over many generations, what happens to this population?",
+    "choices": [
+      "Each green beetle gradually turns brown so that the birds cannot see it.",
+      "The proportion of brown beetles in the population increases.",
+      "The birds stop hunting once the green beetles become hard to find.",
+      "Every beetle in the population becomes brown within a single generation."
+    ],
+    "answer": "B",
+    "hints": [
+      "Individuals do not change color during their lives — ask what changes about the makeup of the whole population.",
+      "Natural selection works by changing how common a trait is across generations, not by remodeling any one organism."
+    ]
+  },
+  {
+    "id": "bio-natural-selection-002",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital treats a bacterial infection with an antibiotic. Almost all of the bacteria die, but the infection returns several weeks later and the same antibiotic no longer works on it. Which explanation is correct?",
+    "choices": [
+      "The antibiotic caused the bacteria to mutate on purpose so they could survive it.",
+      "The bacteria developed resistance because they needed it in order to stay alive.",
+      "Each surviving bacterium became stronger after being exposed to a small dose of the drug.",
+      "A few bacteria already carried resistance mutations before treatment began; the antibiotic killed the rest, and the resistant few reproduced to rebuild the population."
+    ],
+    "answer": "D",
+    "hints": [
+      "Mutations happen at random, before the environment ever changes — the drug cannot order one up.",
+      "Ask what the antibiotic actually does: does it create resistance, or does it select from variation that was already present?"
+    ]
+  },
+  {
+    "id": "bio-natural-selection-003",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a bird population, large males win nearly every fight over territory, but they die young and father few chicks. Medium-sized males avoid fights, live longer, and father many chicks that survive to breed. In evolutionary terms, which males have the higher fitness?",
+    "choices": [
+      "The medium-sized males, because evolutionary fitness is measured by the number of offspring that survive and reproduce.",
+      "The large males, because fitness means physical strength and dominance.",
+      "Neither, because fitness describes whole species and never individuals.",
+      "The large males, because winning fights proves they are better adapted."
+    ],
+    "answer": "A",
+    "hints": [
+      "In biology, 'fitness' is not about muscle — check what the word is actually counting.",
+      "Follow the offspring: whichever males leave more surviving, breeding descendants pass on more alleles."
+    ]
+  },
+  {
+    "id": "bio-natural-selection-004",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In one songbird population, birds with small beaks efficiently eat small soft seeds and birds with large beaks crack big hard seeds, but birds with medium beaks handle neither food well and often starve. Over generations, small beaks and large beaks both become more common while medium beaks become rare. This pattern is an example of:",
+    "choices": [
+      "stabilizing selection",
+      "directional selection",
+      "disruptive selection",
+      "artificial selection"
+    ],
+    "answer": "C",
+    "hints": [
+      "Sort out which part of the range of beak sizes is being removed: one end, both ends, or the middle.",
+      "When both extremes are favored and the average is selected against, the population is being pulled apart."
+    ]
+  },
+  {
+    "id": "bio-natural-selection-005",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A population of moss plants grows in soil that has recently become contaminated with copper. Within about twenty generations, most plants in that population tolerate copper well. Which statement best explains where the tolerance came from?",
+    "choices": [
+      "The copper in the soil instructed the plants' cells to build a copper-tolerance gene.",
+      "Random mutation and reproduction had already produced variation in copper tolerance, and the contaminated soil selected the tolerant plants.",
+      "The plants became tolerant because greater tolerance is the goal every population moves toward.",
+      "The parent plants toughened up during their own lifetimes and passed that acquired toughness to their seeds."
+    ],
+    "answer": "B",
+    "hints": [
+      "Natural selection needs raw material: variation that exists in the population before the pressure arrives.",
+      "Rule out any choice in which the environment writes a new gene, or in which a trait gained during life is inherited."
+    ]
+  },
+  {
+    "id": "bio-natural-selection-006",
+    "loId": "bio.natural-selection",
+    "cedCode": "BIO-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Over 30 years, the average horn length in a hunted population of wild rams fell from 70 cm to 45 cm. During that time, hunters were legally allowed to shoot only rams whose horns were longer than 60 cm. A student says, 'The rams learned to grow shorter horns so the hunters would leave them alone.' Which correction is best?",
+    "choices": [
+      "The student is right about the mechanism, but the change would take place in one generation rather than thirty years.",
+      "The student is right, because animals adjust their bodies in response to threats they can see.",
+      "Rams cannot choose or learn their horn length; long-horned rams were shot before they could breed, so alleles for shorter horns made up a larger share of each new generation.",
+      "Horn length is not heritable, so hunting could not have produced this change."
+    ],
+    "answer": "C",
+    "hints": [
+      "Identify who is doing the selecting and which individuals are removed from the breeding population.",
+      "A population-level change in an inherited trait comes from differences in who reproduces, not from any individual's decision."
+    ]
+  },
+
+  {
+    "id": "bio-population-genetics-001",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A population contains 100 pea plants. Each plant carries two copies of the seed-shape gene. Counting every copy in the population gives 120 copies of the round allele R and 80 copies of the wrinkled allele r. What is the frequency of the r allele in this population?",
+    "choices": ["0.8", "0.6", "0.2", "0.4"],
+    "answer": "D",
+    "hints": [
+      "An allele frequency is one allele's copies divided by ALL copies of that gene in the population.",
+      "100 plants carrying two copies each means 200 total copies, not 100."
+    ]
+  },
+  {
+    "id": "bio-population-genetics-002",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a large population at Hardy-Weinberg equilibrium, 16% of the individuals show a recessive trait, meaning their genotype is aa. What is the frequency of the recessive allele a?",
+    "choices": [
+      "0.16, since 16% of the population shows the trait",
+      "0.84",
+      "0.4",
+      "0.6"
+    ],
+    "answer": "C",
+    "hints": [
+      "The percentage showing the recessive trait is the genotype frequency q², not the allele frequency q.",
+      "Set q² = 0.16 and take the square root."
+    ]
+  },
+  {
+    "id": "bio-population-genetics-003",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A population is at Hardy-Weinberg equilibrium for one gene. The dominant allele A has frequency p = 0.6 and the recessive allele a has frequency q = 0.4. What percentage of the population is expected to be heterozygous (Aa)?",
+    "choices": [
+      "24%, from 0.6 × 0.4",
+      "48%",
+      "36%",
+      "16%"
+    ],
+    "answer": "B",
+    "hints": [
+      "The heterozygote term is 2pq, not pq — an Aa individual can be made two ways, A from the mother or A from the father.",
+      "Compute 2 × 0.6 × 0.4, then convert the decimal to a percentage."
+    ]
+  },
+  {
+    "id": "bio-population-genetics-004",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A population of 500 beetles is at Hardy-Weinberg equilibrium for a coat-color gene. Exactly 80 of the beetles are light-colored, which is the recessive phenotype (bb). The other 420 beetles are dark. How many of the 500 beetles are expected to be heterozygous (Bb)?",
+    "choices": [
+      "240",
+      "120, from 0.6 × 0.4 × 500",
+      "180, the number expected to be BB",
+      "420, since every dark beetle must carry one b allele"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start with q² = 80/500 = 0.16, so q = 0.4 and p = 0.6.",
+      "The heterozygote frequency is 2pq = 2(0.6)(0.4) = 0.48; multiply that by the 500 beetles."
+    ]
+  },
+  {
+    "id": "bio-population-genetics-005",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a population at Hardy-Weinberg equilibrium, 36% of individuals are homozygous dominant (AA) and 16% are homozygous recessive (aa). A student concludes that the frequency of allele A is 0.36. What is the correct frequency of allele A, and what mistake did the student make?",
+    "choices": [
+      "0.36; there is no mistake, since the frequency of the AA genotype is the same as the frequency of the A allele.",
+      "0.64; the student should have subtracted 0.36 from 1.",
+      "0.6; the student used the genotype frequency p² as if it were the allele frequency p, and should have taken the square root of 0.36.",
+      "0.18; the student should have divided 0.36 by 2 because each individual carries two alleles."
+    ],
+    "answer": "C",
+    "hints": [
+      "Line up the two kinds of quantity: p and q are allele frequencies, while p², 2pq and q² are genotype frequencies.",
+      "Check your answer with the other value given: q² = 0.16 gives q = 0.4, and p + q must equal 1."
+    ]
+  },
+  {
+    "id": "bio-population-genetics-006",
+    "loId": "bio.population-genetics",
+    "cedCode": "BIO-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A lizard population held steady allele frequencies of p = 0.7 and q = 0.3 for twenty generations. Then a new highway cut the habitat in two, and only 12 lizards survived on one side of it. The next generation on that side showed p = 0.95 and q = 0.05. Which statement best describes what happened to that group?",
+    "choices": [
+      "Natural selection favored the p allele, because a frequency of 0.95 can only mean it is the fittest allele.",
+      "Genetic drift acted on a very small population — with only a handful of breeders, chance alone can shift allele frequencies sharply.",
+      "The group is still in Hardy-Weinberg equilibrium, because p + q still adds to 1.",
+      "Gene flow raised p, because the highway allowed new lizards to enter the population."
+    ],
+    "answer": "B",
+    "hints": [
+      "Note the population size: 12 survivors is a bottleneck, and small samples are noisy.",
+      "p + q = 1 is true for every population, so it can never be the test for equilibrium."
+    ]
+  },
+
+  {
+    "id": "bio-speciation-001",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two groups of frogs live in the same pond. Frogs from the two groups will mate with each other, but the eggs from those crosses never hatch, while eggs laid within each group hatch normally. Using the biological species concept, what are these two groups?",
+    "choices": [
+      "Two separate species, because they cannot produce fertile offspring together.",
+      "One species, because they live in the same pond and will mate with each other.",
+      "One species, because they resemble each other closely enough to attempt mating.",
+      "Two subspecies that are certain to merge into a single species over time."
+    ],
+    "answer": "A",
+    "hints": [
+      "The biological species concept asks about successful reproduction, not appearance or address.",
+      "Attempting to mate is not the test — the test is whether viable, fertile offspring result."
+    ]
+  },
+  {
+    "id": "bio-speciation-002",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A single population of ground squirrels is split apart when a river carves a deep canyon straight through its range. Over thousands of years the two sides accumulate different traits, and squirrels from opposite rims can no longer interbreed. This is an example of:",
+    "choices": [
+      "sympatric speciation, because both groups remain in the same canyon system",
+      "allopatric speciation, because a geographic barrier separated the two populations",
+      "convergent evolution, because both groups changed over the same period",
+      "artificial selection, because the canyon chose which squirrels survived"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask first whether a physical barrier separated the groups before they diverged.",
+      "'Allo-' means other place and 'sym-' means same place — a canyon puts the two groups in different places."
+    ]
+  },
+  {
+    "id": "bio-speciation-003",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two closely related cricket species live side by side in the same field. One species sings and mates only at dusk; the other sings and mates only after midnight. As a result, the two almost never mate with each other. What kind of reproductive barrier is this?",
+    "choices": [
+      "A postzygotic barrier, because it takes effect after the eggs are laid.",
+      "A postzygotic barrier known as hybrid sterility.",
+      "A prezygotic barrier called temporal isolation, because it stops mating from happening in the first place.",
+      "Not a reproductive barrier at all, since the crickets share the same field."
+    ],
+    "answer": "C",
+    "hints": [
+      "Locate the barrier relative to the zygote: does it act before fertilization or after?",
+      "A difference in mating time prevents the sperm and egg from ever meeting."
+    ]
+  },
+  {
+    "id": "bio-speciation-004",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A horse and a donkey can mate and produce a healthy, strong mule. Mules, however, are almost always sterile and cannot produce offspring of their own. Which barrier is at work here, and what does it accomplish?",
+    "choices": [
+      "A prezygotic barrier, because it prevents horses and donkeys from mating.",
+      "No reproductive barrier at all, since a living mule is produced.",
+      "A prezygotic barrier called mechanical isolation.",
+      "A postzygotic barrier called hybrid sterility — the hybrid forms and lives, but cannot pass genes on, so the two gene pools stay separate."
+    ],
+    "answer": "D",
+    "hints": [
+      "A zygote clearly formed here, so the barrier must be acting after fertilization.",
+      "Even a healthy hybrid keeps two gene pools apart if it cannot reproduce."
+    ]
+  },
+  {
+    "id": "bio-speciation-005",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fossils of one shellfish lineage show almost no change in shell shape for about 5 million years. Then, within roughly 50,000 years following a sudden drop in sea level, many new shell forms appear. After that burst, the lineage again shows little change for millions of years. Which pattern of evolution does this describe?",
+    "choices": [
+      "Punctuated equilibrium — long stretches of little change broken by short bursts of rapid change.",
+      "Gradualism — steady, even change accumulating at a constant rate.",
+      "Convergent evolution — unrelated lineages coming to resemble one another.",
+      "Coevolution — two species changing in response to each other."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the two time spans given: 5 million years of stability against 50,000 years of change.",
+      "Ask whether the rate of change in this record is constant or uneven."
+    ]
+  },
+  {
+    "id": "bio-speciation-006",
+    "loId": "bio.speciation",
+    "cedCode": "BIO-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In one lake, some fish of a single ancestral population feed at the surface and others feed on the bottom. Nothing physically separates them, but surface feeders court only surface feeders and bottom feeders court only bottom feeders, and genetic testing shows the two groups no longer exchange genes. A student says this cannot be speciation, because no mountain range or river divides them. Which response is best?",
+    "choices": [
+      "The student is correct: speciation requires a physical barrier in every case.",
+      "The student is correct, because two groups sharing one lake are by definition one species.",
+      "The student is incorrect, but only because the surface and the bottom of a lake count as a geographic barrier.",
+      "The student is incorrect: this is sympatric speciation, in which mating preferences rather than geography stop gene flow between groups living in the same place."
+    ],
+    "answer": "D",
+    "hints": [
+      "What actually has to stop for two populations to diverge — movement, or gene flow?",
+      "Behavioral isolation can block gene flow just as effectively as a canyon can."
+    ]
+  }
+]
