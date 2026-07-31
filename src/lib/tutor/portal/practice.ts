@@ -152,5 +152,26 @@ export async function retrievePractice(
     seen.add(it.id);
     ordered.push(it);
   }
-  return { items: ordered.slice(0, req.count) };
+
+  // Design B (generate-on-exhaustion): drop ids the portal says this student
+  // has already been served, BEFORE slicing to count, so a fresh item fills
+  // the freed slot instead of a repeat crowding it out.
+  const excludeSet = req.excludeIds?.length ? new Set(req.excludeIds) : null;
+  const available = excludeSet ? ordered.filter((it) => !excludeSet.has(it.id)) : ordered;
+
+  // Shortfall vs. what was asked for, computed BEFORE slicing — how many more
+  // items the retrieval pool alone couldn't supply. Currently unconsumed here
+  // (retrieval-only); the Task 3 generation-fallback hook reads this same gap
+  // (`req.count - available.length`, floored at 0) to top up the response
+  // engine-side before it ever reaches the portal. A thin pool degrades to
+  // fewer items, never an error.
+  const shortfall = Math.max(0, req.count - available.length);
+  if (shortfall > 0) {
+    // No-op for now — retrieval degrades to fewer items, never an error.
+    // Task 3 (practice-gen.ts) hooks in exactly here: sample an anchor from
+    // `available`/the LO, generate+verify up to 2 replacements, and append
+    // them to the sliced result before it's returned.
+  }
+
+  return { items: available.slice(0, req.count) };
 }

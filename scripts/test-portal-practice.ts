@@ -144,6 +144,64 @@ await test('no sources → empty result', async () => {
   assert.deepStrictEqual(r.items, []);
 });
 
+// Design B (generate-on-exhaustion), Task 2: excludeIds — portal-supplied ids
+// this student has already been served are dropped BEFORE slicing to count,
+// so a fresh item fills the slot rather than being crowded out by a repeat.
+const bankItem2: BankLite = { ...bankItem, id: 'openstax.stats.0099' };
+
+await test('excludeIds — an excluded bank item is dropped from the result', async () => {
+  const r = await retrievePractice(
+    loReq({ excludeIds: ['openstax.stats.0042'] }),
+    new FakeSources([planWithLo], [bankItem]),
+  );
+  const ids = r.items.map((i) => i.id);
+  assert.ok(!ids.includes('openstax.stats.0042'), 'excluded bank item must not appear');
+  assert.deepStrictEqual(ids, ['ty-1', 'ty-2'], 'remaining plan try-yourselves still served');
+});
+
+await test('excludeIds — an excluded plan try-yourself is dropped from the result', async () => {
+  const planWithId: PlanLite = {
+    id: 'evelyn.test.plan.v1',
+    los: [{ id: LO, standard: 'AP-STATS-1.10' }],
+    segments: planWithLo.segments,
+  };
+  const r = await retrievePractice(
+    loReq({ excludeIds: ['evelyn.test.plan.v1::ty-1'] }),
+    new FakeSources([planWithId], []),
+  );
+  const ids = r.items.map((i) => i.id);
+  assert.ok(!ids.includes('evelyn.test.plan.v1::ty-1'));
+  assert.deepStrictEqual(ids, ['evelyn.test.plan.v1::ty-2']);
+});
+
+await test('excludeIds — shortfall: pool minus exclusions is thinner than count, fewer items returned (no error)', async () => {
+  // Pool = 2 bank items; exclude one; ask for 5 → only 1 comes back (the
+  // generation fallback that fills this gap lands in Task 3).
+  const r = await retrievePractice(
+    loReq({ count: 5, excludeIds: ['openstax.stats.0042'] }),
+    new FakeSources([], [bankItem, bankItem2]),
+  );
+  assert.deepStrictEqual(r.items.map((i) => i.id), ['openstax.stats.0099']);
+  assert.ok(r.items.length < 5, 'result is short of the requested count — no crash, no error');
+});
+
+await test('excludeIds absent — behaves exactly as before (regression)', async () => {
+  const withUndefined = await retrievePractice(loReq(), new FakeSources([planWithLo], [bankItem]));
+  const withoutField: RetrievePracticeRequest = { ...loReq() };
+  delete (withoutField as { excludeIds?: string[] }).excludeIds;
+  const withoutFieldResult = await retrievePractice(withoutField, new FakeSources([planWithLo], [bankItem]));
+  assert.deepStrictEqual(withUndefined.items, withoutFieldResult.items);
+});
+
+await test('excludeIds empty array — behaves exactly as before (regression)', async () => {
+  const withEmpty = await retrievePractice(
+    loReq({ excludeIds: [] }),
+    new FakeSources([planWithLo], [bankItem]),
+  );
+  const baseline = await retrievePractice(loReq(), new FakeSources([planWithLo], [bankItem]));
+  assert.deepStrictEqual(withEmpty.items, baseline.items);
+});
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 if (failed > 0) process.exit(1);
 })();
