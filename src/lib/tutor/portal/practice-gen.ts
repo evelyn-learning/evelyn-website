@@ -226,6 +226,21 @@ export function normalizeNumericAnswer(raw: string): string | null {
   const trimmed = (raw ?? '').trim();
   if (!trimmed) return null;
   if (PLAIN_NUMBER_RE.test(trimmed)) return trimmed;
+
+  // Percent — special-cased BEFORE the generic path (round-2 review CRITICAL
+  // fix). The engine's `extractAnswerNumber` divides a percent by 100
+  // ("50%" -> 0.5), which is correct for the TUTOR's `answersAgree` (both
+  // sides of that comparison go through the same scaling, so it's internally
+  // consistent). The PORTAL grader is a DIFFERENT consumer with a DIFFERENT
+  // convention: `parseNum` in PracticeView.tsx strips a trailing '%' WITHOUT
+  // rescaling. A banked expectedAnswer of "0.5" would grade a student's
+  // correct "50" as permanently wrong. So the bank-safe form keeps the bare
+  // numeral ("50%" -> "50") — never divided. A trailing-percent numeral is
+  // inherently unambiguous (exactly one value), so no separate ambiguity
+  // check is needed for this branch.
+  const percentMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
+  if (percentMatch) return percentMatch[1];
+
   // Collapse thousands-separator commas ("300,000" -> "300000") before
   // counting distinct numeric runs, so one big number isn't mistaken for two
   // ambiguous ones.
@@ -240,16 +255,29 @@ export function normalizeNumericAnswer(raw: string): string | null {
 }
 
 /**
- * Answer-shape gate (round-1 review fix) — runs BEFORE a generated payload is
- * either served or persisted:
+ * Answer-shape gate (round-1 review fix, tightened round-2) — runs BEFORE a
+ * generated payload is either served or persisted:
  *
  *   - numeric: `finalAnswer` must reduce to a plain-number string via
- *     `normalizeNumericAnswer`, then an independent blind solve must agree.
+ *     `normalizeNumericAnswer` (shape check only — the ambiguity gate).
+ *     Verification is run against the ORIGINAL claimed answer, NOT the
+ *     normalized one: `extractAnswerNumber` (inside `verify`/`answersAgree`,
+ *     untouched by this gate) applies its own scaling rules — e.g. percent
+ *     divides by 100 — and an independent blind solve naturally produces
+ *     answers in THAT scaling convention, not the portal's. Conflating the
+ *     two would make verification spuriously disagree on the exact
+ *     percent-answer items this gate exists to fix (round-2 review). Only
+ *     the STORED/SERVED value uses the bank-safe normalized form.
  *   - mcq: the claimed answer is resolved to a bare letter against the
- *     ACTUAL choices (`resolveMcqLetter`) and re-verified CHOICES-AWARE
- *     (`verify` appends the choices and asks for a letter-only reply — never
- *     a blind solve that can't see them). The stored/served answer is always
- *     that bare letter.
+ *     ACTUAL choices (`resolveMcqLetter`) — bounds-checked HERE against
+ *     `choices.length` (round-2 review: `resolveMcqLetter`'s direct-letter
+ *     branch accepts any A-E shape without checking it indexes into THESE
+ *     choices, so a 4-choice mcq could otherwise bank a claimed "E"; the
+ *     bounds-check lives at this call site rather than inside the shared
+ *     `resolveMcqLetter` so tutor-session `mcqAnswersAgree` semantics stay
+ *     untouched) — then re-verified CHOICES-AWARE (`verify` appends the
+ *     choices and asks for a letter-only reply — never a blind solve that
+ *     can't see them). The stored/served answer is always that bare letter.
  *
  * Returns the payload with `finalAnswer` normalized to the bank-safe form, or
  * null when the payload fails the gate — the caller must drop the generation
@@ -265,40 +293,50 @@ export async function gateGeneratedAnswer(
     const choices = rawChoices.map((text, i) => ({ letter: String.fromCharCode(65 + i), text }));
     const claimedLetter = resolveMcqLetter(gen.finalAnswer, choices);
     if (!claimedLetter) return null; // claimed answer resolves to no real choice — reject
+    const letterIndex = claimedLetter.charCodeAt(0) - 'A'.charCodeAt(0);
+    if (letterIndex < 0 || letterIndex >= choices.length) return null; // out-of-bounds letter — reject
     const { agree } = await verify(gen.problemText, claimedLetter, choices);
     if (!agree) return null;
     return { ...gen, finalAnswer: claimedLetter };
   }
   const normalized = normalizeNumericAnswer(gen.finalAnswer);
   if (!normalized) return null; // ambiguous/non-numeric shape — reject rather than guess
-  const { agree } = await verify(gen.problemText, normalized);
+  const { agree } = await verify(gen.problemText, gen.finalAnswer);
   if (!agree) return null;
   return { ...gen, finalAnswer: normalized };
 }
 
 /** Generate one candidate (shared generator) then run it through the
- *  answer-shape gate. Null on any failure at either step. */
-async function generateVerified(
+ *  answer-shape gate. `hash` is returned even on gate/verify failure (null
+ *  only when generation itself didn't produce a candidate at all) so a
+ *  retry can exclude it. */
+async function attemptGenerateVerified(
   userPrompt: string,
   excludeHashes: string[],
-): Promise<{ gen: GenPayload; hash: string } | null> {
+): Promise<{ result: { gen: GenPayload; hash: string } | null; hash: string | null }> {
   const candidate = await generateCandidate(userPrompt, excludeHashes);
-  if (!candidate) return null;
+  if (!candidate) return { result: null, hash: null };
   const gated = await gateGeneratedAnswer(candidate.gen);
-  if (!gated) return null;
-  return { gen: gated, hash: candidate.hash };
+  if (!gated) return { result: null, hash: candidate.hash };
+  return { result: { gen: gated, hash: candidate.hash }, hash: candidate.hash };
 }
 
-/** `generateVerified` with 1 retry on failure (temperature yields a
+/** `attemptGenerateVerified` with 1 retry on failure (temperature yields a
  *  different problem the second time) — the same retry shape the
- *  tutor-session pipeline uses. */
+ *  tutor-session pipeline uses. Round-2 review fix: the first attempt's hash
+ *  (even a gate/verify FAILURE has one — it's the hash of the rejected
+ *  problem text) is added to the retry's excludeHashes, so a failed retry
+ *  can't just regenerate byte-identical content and burn the retry for
+ *  nothing. */
 async function generateVerifiedWithRetry(
   userPrompt: string,
   excludeHashes: string[],
 ): Promise<{ gen: GenPayload; hash: string } | null> {
-  const first = await generateVerified(userPrompt, excludeHashes);
-  if (first) return first;
-  return generateVerified(userPrompt, excludeHashes); // 1 retry
+  const first = await attemptGenerateVerified(userPrompt, excludeHashes);
+  if (first.result) return first.result;
+  const retryExcludeHashes = first.hash ? [...excludeHashes, first.hash] : excludeHashes;
+  const second = await attemptGenerateVerified(userPrompt, retryExcludeHashes);
+  return second.result;
 }
 
 /** Real dependencies: Anthropic generate + this module's answer-shape gate +

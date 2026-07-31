@@ -411,10 +411,20 @@ await test('normalizeNumericAnswer: unambiguous unit suffix is normalized ("48 s
   assert.equal(normalizeNumericAnswer('48 square inches'), '48');
 });
 
-await test('normalizeNumericAnswer: currency/percent/comma-thousands normalize to plain numbers', () => {
+await test('normalizeNumericAnswer: currency/comma-thousands normalize to plain numbers', () => {
   assert.equal(normalizeNumericAnswer('$4.50'), '4.5');
-  assert.equal(normalizeNumericAnswer('50%'), '0.5');
   assert.equal(normalizeNumericAnswer('300,000 J'), '300000');
+});
+
+// Round-2 review CRITICAL fix: the portal grader's parseNum (PracticeView.tsx)
+// strips a trailing '%' WITHOUT rescaling, unlike extractAnswerNumber (which
+// divides by 100 for the tutor's answersAgree). A banked "0.5" would grade a
+// student's correct "50" as permanently wrong — the bank-safe form keeps the
+// bare numeral.
+await test('normalizeNumericAnswer: percent keeps the bare numeral, does NOT divide by 100 ("50%" -> "50")', () => {
+  assert.equal(normalizeNumericAnswer('50%'), '50');
+  assert.equal(normalizeNumericAnswer('12.5%'), '12.5');
+  assert.equal(normalizeNumericAnswer('-3%'), '-3');
 });
 
 await test('normalizeNumericAnswer: ambiguous multi-number strings are rejected, not guessed', () => {
@@ -440,6 +450,18 @@ await test('gate: ambiguous numeric answer is rejected even if a blind verify wo
 await test('gate: numeric answer failing independent verify is rejected', async () => {
   const out = await gateGeneratedAnswer(numericGen('Solve for x', '42'), disagreeVerify());
   assert.equal(out, null);
+});
+
+await test('gate: percent "50%" is stored as the bare numeral "50", but VERIFIED against the ORIGINAL "50%"', async () => {
+  let receivedClaim: string | undefined;
+  const verify: VerifyFn = async (_problemText, claimed) => {
+    receivedClaim = claimed;
+    return { agree: true, solved: '50%' };
+  };
+  const out = await gateGeneratedAnswer(numericGen('What percent?', '50%'), verify);
+  assert.ok(out, 'expected the gate to accept the percent answer');
+  assert.equal(out!.finalAnswer, '50', 'stored/served answer is the bare numeral, not "0.5"');
+  assert.equal(receivedClaim, '50%', 'verify must see the ORIGINAL claim so extractAnswerNumber scales both sides consistently — verifying with the bank-safe "50" instead would spuriously disagree against a solve of "50%" (50 vs 0.5)');
 });
 
 await test('gate: mcq bare-letter claim is verified CHOICES-AWARE (verify receives the choices)', async () => {
@@ -471,6 +493,33 @@ await test('gate: mcq with no choices at all is rejected (malformed payload)', a
   const gen: GenPayload = { problemText: 'Which is correct?', finalAnswer: 'B', responseFormat: 'mcq', choices: [] };
   const out = await gateGeneratedAnswer(gen, agreeVerify());
   assert.equal(out, null);
+});
+
+// Round-2 review IMPORTANT fix: resolveMcqLetter's direct-letter branch
+// accepts any A-E shape without checking it indexes into THIS problem's
+// choices — a 4-choice mcq (A-D) with a claimed "E" would otherwise bank an
+// out-of-bounds letter the portal could never match to a real choice.
+await test('gate: mcq claim "E" with only 4 choices (A-D) is rejected as out-of-bounds', async () => {
+  const gen: GenPayload = {
+    problemText: 'Which is correct?',
+    finalAnswer: 'E',
+    responseFormat: 'mcq',
+    choices: ['first', 'second', 'third', 'fourth'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.equal(out, null, 'a letter beyond the actual choice count must be rejected, not banked');
+});
+
+await test('gate: mcq claim "D" IS accepted with exactly 4 choices (A-D) — bounds check is inclusive, not off-by-one', async () => {
+  const gen: GenPayload = {
+    problemText: 'Which is correct?',
+    finalAnswer: 'D',
+    responseFormat: 'mcq',
+    choices: ['first', 'second', 'third', 'fourth'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.ok(out, 'the LAST valid choice letter must still be accepted');
+  assert.equal(out!.finalAnswer, 'D');
 });
 
 await test('gate: mcq resolved letter failing choices-aware verify is rejected', async () => {
