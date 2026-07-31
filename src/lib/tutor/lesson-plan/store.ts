@@ -1725,6 +1725,44 @@ import { SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-s
 // ── HS core: Chemistry (2026-07 wave 1) ──
 import { SEED_CHEM_U3_PERIODIC_TRENDS } from './seeds/chem-u3-periodic-trends';
 import { SEED_CHEM_U6_MASS_MASS_STOICHIOMETRY } from './seeds/chem-u6-mass-mass-stoichiometry';
+import { SEED_CHEM_U10_ACIDS_BASES_DEFINITIONS } from './seeds/chem-u10-acids-bases-definitions';
+import { SEED_CHEM_U10_NEUTRALIZATION_TITRATION } from './seeds/chem-u10-neutralization-titration';
+import { SEED_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO } from './seeds/chem-u10-nuclear-chemistry-intro';
+import { SEED_CHEM_U10_PH_SCALE } from './seeds/chem-u10-ph-scale';
+import { SEED_CHEM_U1_CLASSIFYING_MATTER } from './seeds/chem-u1-classifying-matter';
+import { SEED_CHEM_U1_DENSITY_DIMENSIONAL_ANALYSIS } from './seeds/chem-u1-density-dimensional-analysis';
+import { SEED_CHEM_U1_MEASUREMENT_SIG_FIGS } from './seeds/chem-u1-measurement-sig-figs';
+import { SEED_CHEM_U1_PHYSICAL_CHEMICAL_CHANGES } from './seeds/chem-u1-physical-chemical-changes';
+import { SEED_CHEM_U2_ATOMIC_THEORY } from './seeds/chem-u2-atomic-theory';
+import { SEED_CHEM_U2_AVERAGE_ATOMIC_MASS } from './seeds/chem-u2-average-atomic-mass';
+import { SEED_CHEM_U2_ELECTRON_CONFIGURATIONS } from './seeds/chem-u2-electron-configurations';
+import { SEED_CHEM_U2_SUBATOMIC_PARTICLES_ISOTOPES } from './seeds/chem-u2-subatomic-particles-isotopes';
+import { SEED_CHEM_U3_ION_FORMATION } from './seeds/chem-u3-ion-formation';
+import { SEED_CHEM_U3_PERIODIC_TABLE_ORGANIZATION } from './seeds/chem-u3-periodic-table-organization';
+import { SEED_CHEM_U4_COVALENT_BONDING_LEWIS } from './seeds/chem-u4-covalent-bonding-lewis';
+import { SEED_CHEM_U4_IONIC_BONDING } from './seeds/chem-u4-ionic-bonding';
+import { SEED_CHEM_U4_MOLECULAR_SHAPE_VSEPR } from './seeds/chem-u4-molecular-shape-vsepr';
+import { SEED_CHEM_U4_NAMING_COMPOUNDS_FORMULAS } from './seeds/chem-u4-naming-compounds-formulas';
+import { SEED_CHEM_U4_POLARITY_INTERMOLECULAR_FORCES } from './seeds/chem-u4-polarity-intermolecular-forces';
+import { SEED_CHEM_U5_BALANCING_EQUATIONS } from './seeds/chem-u5-balancing-equations';
+import { SEED_CHEM_U5_PREDICTING_PRODUCTS_ACTIVITY } from './seeds/chem-u5-predicting-products-activity';
+import { SEED_CHEM_U5_REACTION_TYPES } from './seeds/chem-u5-reaction-types';
+import { SEED_CHEM_U5_REDOX_INTRO } from './seeds/chem-u5-redox-intro';
+import { SEED_CHEM_U6_LIMITING_REACTANT_YIELD } from './seeds/chem-u6-limiting-reactant-yield';
+import { SEED_CHEM_U6_MOLE_CONVERSIONS } from './seeds/chem-u6-mole-conversions';
+import { SEED_CHEM_U6_PERCENT_COMPOSITION_EMPIRICAL } from './seeds/chem-u6-percent-composition-empirical';
+import { SEED_CHEM_U6_THE_MOLE_MOLAR_MASS } from './seeds/chem-u6-the-mole-molar-mass';
+import { SEED_CHEM_U7_GAS_LAWS } from './seeds/chem-u7-gas-laws';
+import { SEED_CHEM_U7_IDEAL_GAS_LAW } from './seeds/chem-u7-ideal-gas-law';
+import { SEED_CHEM_U7_KINETIC_MOLECULAR_THEORY } from './seeds/chem-u7-kinetic-molecular-theory';
+import { SEED_CHEM_U7_PHASE_CHANGES_HEATING_CURVES } from './seeds/chem-u7-phase-changes-heating-curves';
+import { SEED_CHEM_U8_DILUTIONS_COLLIGATIVE } from './seeds/chem-u8-dilutions-colligative';
+import { SEED_CHEM_U8_MOLARITY } from './seeds/chem-u8-molarity';
+import { SEED_CHEM_U8_SOLUTIONS_SOLUBILITY } from './seeds/chem-u8-solutions-solubility';
+import { SEED_CHEM_U9_ENDOTHERMIC_EXOTHERMIC } from './seeds/chem-u9-endothermic-exothermic';
+import { SEED_CHEM_U9_EQUILIBRIUM_LE_CHATELIER } from './seeds/chem-u9-equilibrium-le-chatelier';
+import { SEED_CHEM_U9_REACTION_RATES_COLLISION } from './seeds/chem-u9-reaction-rates-collision';
+import { SEED_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY } from './seeds/chem-u9-specific-heat-calorimetry';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3380,6 +3418,44 @@ export const SEED_PLANS: LessonPlan[] = [
   // HS core: Chemistry (2026-07 wave 1)
   SEED_CHEM_U3_PERIODIC_TRENDS,
   SEED_CHEM_U6_MASS_MASS_STOICHIOMETRY,
+  SEED_CHEM_U10_ACIDS_BASES_DEFINITIONS,
+  SEED_CHEM_U10_NEUTRALIZATION_TITRATION,
+  SEED_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO,
+  SEED_CHEM_U10_PH_SCALE,
+  SEED_CHEM_U1_CLASSIFYING_MATTER,
+  SEED_CHEM_U1_DENSITY_DIMENSIONAL_ANALYSIS,
+  SEED_CHEM_U1_MEASUREMENT_SIG_FIGS,
+  SEED_CHEM_U1_PHYSICAL_CHEMICAL_CHANGES,
+  SEED_CHEM_U2_ATOMIC_THEORY,
+  SEED_CHEM_U2_AVERAGE_ATOMIC_MASS,
+  SEED_CHEM_U2_ELECTRON_CONFIGURATIONS,
+  SEED_CHEM_U2_SUBATOMIC_PARTICLES_ISOTOPES,
+  SEED_CHEM_U3_ION_FORMATION,
+  SEED_CHEM_U3_PERIODIC_TABLE_ORGANIZATION,
+  SEED_CHEM_U4_COVALENT_BONDING_LEWIS,
+  SEED_CHEM_U4_IONIC_BONDING,
+  SEED_CHEM_U4_MOLECULAR_SHAPE_VSEPR,
+  SEED_CHEM_U4_NAMING_COMPOUNDS_FORMULAS,
+  SEED_CHEM_U4_POLARITY_INTERMOLECULAR_FORCES,
+  SEED_CHEM_U5_BALANCING_EQUATIONS,
+  SEED_CHEM_U5_PREDICTING_PRODUCTS_ACTIVITY,
+  SEED_CHEM_U5_REACTION_TYPES,
+  SEED_CHEM_U5_REDOX_INTRO,
+  SEED_CHEM_U6_LIMITING_REACTANT_YIELD,
+  SEED_CHEM_U6_MOLE_CONVERSIONS,
+  SEED_CHEM_U6_PERCENT_COMPOSITION_EMPIRICAL,
+  SEED_CHEM_U6_THE_MOLE_MOLAR_MASS,
+  SEED_CHEM_U7_GAS_LAWS,
+  SEED_CHEM_U7_IDEAL_GAS_LAW,
+  SEED_CHEM_U7_KINETIC_MOLECULAR_THEORY,
+  SEED_CHEM_U7_PHASE_CHANGES_HEATING_CURVES,
+  SEED_CHEM_U8_DILUTIONS_COLLIGATIVE,
+  SEED_CHEM_U8_MOLARITY,
+  SEED_CHEM_U8_SOLUTIONS_SOLUBILITY,
+  SEED_CHEM_U9_ENDOTHERMIC_EXOTHERMIC,
+  SEED_CHEM_U9_EQUILIBRIUM_LE_CHATELIER,
+  SEED_CHEM_U9_REACTION_RATES_COLLISION,
+  SEED_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
