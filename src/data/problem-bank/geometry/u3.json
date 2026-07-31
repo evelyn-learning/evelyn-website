@@ -1,0 +1,293 @@
+[
+  {
+    "id": "geom-parallel-lines-transversals-001",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Lines m and n are parallel and are cut by transversal t. Two of the eight angles formed both lie between m and n and are on the SAME side of t. What must be true of these two angles?",
+    "choices": [
+      "They are congruent.",
+      "They are complementary.",
+      "They are supplementary.",
+      "There is not enough information to tell."
+    ],
+    "answer": "C",
+    "hints": [
+      "Both angles are interior and on the same side of the transversal — that describes one specific named pair.",
+      "Same-side interior angles are supplementary when the lines are parallel: they add to 180°, they are not equal."
+    ]
+  },
+  {
+    "id": "geom-parallel-lines-transversals-002",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines r and s are parallel and are cut by transversal t. An interior angle at the crossing with r measures 73°. What is the measure of the interior angle at the crossing with s that lies on the same side of t?",
+    "choices": ["73°", "17°", "180°", "107°"],
+    "answer": "D",
+    "hints": [
+      "Both angles are interior and on the same side of t, so classify the pair before computing.",
+      "Same-side interior angles are supplementary with r ∥ s, so subtract: 180 - 73."
+    ]
+  },
+  {
+    "id": "geom-parallel-lines-transversals-003",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines a and b are parallel and are cut by a transversal. A pair of alternate exterior angles measures (5x - 4)° and (3x + 16)°. What is the value of x?",
+    "choices": ["46", "21", "10", "5"],
+    "answer": "C",
+    "hints": [
+      "Alternate exterior angles are congruent when the lines are parallel — set the two expressions equal, do not add them.",
+      "5x - 4 = 3x + 16 gives 2x = 20. The question asks for x, not for the angle measure."
+    ]
+  },
+  {
+    "id": "geom-parallel-lines-transversals-004",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines j and k are parallel and are cut by transversal t. Two interior angles on the same side of t measure (3x + 14)° and (5x - 26)°. What is the measure of the LARGER of these two angles?",
+    "choices": ["94°", "86°", "74°", "24°"],
+    "answer": "A",
+    "hints": [
+      "Same-side interior angles are supplementary with j ∥ k, so the two expressions ADD to 180.",
+      "(3x + 14) + (5x - 26) = 180 gives 8x = 192, so x = 24. Now evaluate both expressions and pick the larger measure."
+    ]
+  },
+  {
+    "id": "geom-parallel-lines-transversals-005",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines p and q are parallel and are cut by transversal t. An angle at the crossing with p measures (2x + 30)°. At the crossing with q, the angle corresponding to it forms a linear pair with an angle measuring 96°. What is the value of x?",
+    "choices": ["33", "27", "84", "57"],
+    "answer": "B",
+    "hints": [
+      "Work the crossing with q first: a linear pair is supplementary, so that corresponding angle measures 180 - 96.",
+      "Corresponding angles are congruent with p ∥ q, so 2x + 30 = 84."
+    ]
+  },
+  {
+    "id": "geom-parallel-lines-transversals-006",
+    "loId": "geom.parallel-lines-transversals",
+    "cedCode": "GEOM-3.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Lines m and n are parallel and are cut by transversal t, with m the upper line and n the lower line. The interior angle at the crossing with m on the right side of t measures (5x - 8)°. At the crossing with n, the interior angle on the right side of t forms a linear pair with an angle measuring (3x + 12)°. Find the value of x and type your answer as a number.",
+    "answer": "10",
+    "hints": [
+      "Handle the crossing with n first: a linear pair is supplementary, so that interior angle measures 180 - (3x + 12), which simplifies to 168 - 3x.",
+      "The two interior angles on the right side of t form a same-side interior pair, so they ADD to 180: (5x - 8) + (168 - 3x) = 180."
+    ]
+  },
+
+  {
+    "id": "geom-proving-lines-parallel-001",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two lines are cut by a transversal, and a pair of alternate interior angles is congruent. Which reason lets you conclude that the two lines are parallel?",
+    "choices": [
+      "Alternate Interior Angles Theorem",
+      "Converse of the Alternate Interior Angles Theorem",
+      "Vertical Angles Theorem",
+      "Converse of the Same-Side Interior Angles Theorem"
+    ],
+    "answer": "B",
+    "hints": [
+      "You are reasoning FROM an angle fact TO parallel, which is the converse direction.",
+      "The forward theorem starts by assuming the lines are parallel, so it cannot be used to prove them parallel."
+    ]
+  },
+  {
+    "id": "geom-proving-lines-parallel-002",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines e and f are cut by transversal t, with e the upper line and f the lower line. The angle below e and to the right of t measures 118°, and the angle above f and to the right of t measures 62°. Which conclusion is correct?",
+    "choices": [
+      "e ∥ f, by the Converse of the Alternate Interior Angles Theorem",
+      "e and f are not parallel, because the two angles are not congruent",
+      "e ∥ f, by the Converse of the Same-Side Interior Angles Theorem",
+      "No conclusion is possible without a third angle measure"
+    ],
+    "answer": "C",
+    "hints": [
+      "The strip between e and f is the interior region: below e and above f are both interior positions, and both angles are on the right of t.",
+      "A same-side interior pair certifies parallel when the measures are supplementary — check whether 118 + 62 = 180."
+    ]
+  },
+  {
+    "id": "geom-proving-lines-parallel-003",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a plane, line g and line h are each perpendicular to line t. Which conclusion follows, and for what reason?",
+    "choices": [
+      "g ⊥ h, by the definition of perpendicular lines",
+      "Nothing follows, because perpendicularity says nothing about parallelism",
+      "g ∥ t, by the Perpendicular Transversal Converse",
+      "g ∥ h, by the Perpendicular Transversal Converse"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both right angles sit at crossings with t, so t is playing the role of the transversal and g and h are the two lines being tested.",
+      "Two coplanar lines that are each ⊥ to the same line are parallel to each other — this is why square-cut studs off one plate come out parallel."
+    ]
+  },
+  {
+    "id": "geom-proving-lines-parallel-004",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines c and d are cut by transversal t. The interior angle at the crossing with c on the LEFT side of t measures (7x - 30)°, and the interior angle at the crossing with d on the RIGHT side of t measures (4x + 12)°. What value of x forces c ∥ d?",
+    "choices": ["14", "18", "42", "68"],
+    "answer": "A",
+    "hints": [
+      "Both angles are interior and they sit on opposite sides of t, so the pair is alternate interior — that converse wants the measures EQUAL.",
+      "7x - 30 = 4x + 12 gives 3x = 42. If you added the expressions to 180 you were using the wrong converse."
+    ]
+  },
+  {
+    "id": "geom-proving-lines-parallel-005",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lines m and n are cut by transversal t, with m the upper line and n the lower line. The angle above m and to the left of t measures 74°, and the angle above n and to the right of t measures 106°. Are m and n parallel, and why?",
+    "choices": [
+      "Yes — by the Converse of the Corresponding Angles Postulate applied directly to the two given angles",
+      "No — the two given angles are not congruent, so no converse applies",
+      "Yes — vertical angles move the 74° measure to the interior on the right of t, and 74 + 106 = 180, so the Converse of the Same-Side Interior Angles Theorem applies",
+      "Yes — by the Converse of the Alternate Exterior Angles Theorem applied directly to the two given angles"
+    ],
+    "answer": "C",
+    "hints": [
+      "Place each angle first: above m is exterior, while above n is between the lines and therefore interior. Mixed positions are not yet a named pair.",
+      "At the crossing with m, the vertical angle of the 74° angle sits below m on the right of t and also measures 74° — now both angles are interior and on the same side of t."
+    ]
+  },
+  {
+    "id": "geom-proving-lines-parallel-006",
+    "loId": "geom.proving-lines-parallel",
+    "cedCode": "GEOM-3.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Lines p and q are cut by transversal t, with p the upper line and q the lower line. At the crossing with p, the angle above p and to the right of t measures (4x + 9)°. At the crossing with q, the angle above q and to the right of t forms a linear pair with an angle measuring (2x + 3)°. Find the value of x that makes p ∥ q, and type your answer as a number.",
+    "answer": "28",
+    "hints": [
+      "Get the angle at q first: a linear pair is supplementary, so that angle measures 180 - (2x + 3), which simplifies to 177 - 2x.",
+      "Above the line and on the right of t is the same position at each crossing, so the pair is corresponding and its converse wants the measures equal: 4x + 9 = 177 - 2x."
+    ]
+  },
+
+  {
+    "id": "geom-slopes-parallel-perpendicular-001",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A line has slope 3/8. What is the slope of every line perpendicular to it?",
+    "choices": ["-8/3", "8/3", "-3/8", "3/8"],
+    "answer": "A",
+    "hints": [
+      "Perpendicular slopes are negative reciprocals — two moves, not one: flip the fraction AND change the sign.",
+      "Check your answer by multiplying it with 3/8; the product must be -1."
+    ]
+  },
+  {
+    "id": "geom-slopes-parallel-perpendicular-002",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Are the lines 4x - y = 9 and y = -4x + 2 parallel, perpendicular, or neither?",
+    "choices": ["Parallel", "Perpendicular", "They are the same line", "Neither"],
+    "answer": "D",
+    "hints": [
+      "Solve the first equation for y before comparing anything: 4x - y = 9 becomes y = 4x - 9.",
+      "The slopes are 4 and -4. Opposite signs alone is not enough — the fraction must also be flipped, and (4)(-4) = -16, not -1."
+    ]
+  },
+  {
+    "id": "geom-slopes-parallel-perpendicular-003",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which equation describes the line that is parallel to y = (2/5)x - 3 and passes through the point (10, 2)?",
+    "choices": [
+      "y = -(5/2)x + 27",
+      "y = (2/5)x + 2",
+      "y = (2/5)x - 2",
+      "y = (2/5)x - 3"
+    ],
+    "answer": "C",
+    "hints": [
+      "Parallel copies the slope unchanged: m = 2/5. The given point then decides the y-intercept.",
+      "Substitute (10, 2) into y = (2/5)x + b: 2 = 4 + b. The y-coordinate 2 is not itself the intercept."
+    ]
+  },
+  {
+    "id": "geom-slopes-parallel-perpendicular-004",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which equation describes a line that is parallel to 3x - 6y = 18?",
+    "choices": [
+      "y = 3x - 18",
+      "y = (1/2)x + 4",
+      "y = -2x + 5",
+      "y = (1/2)x - 3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Solve 3x - 6y = 18 for y first — in Ax + By = C the slope is not A.",
+      "The given line is y = (1/2)x - 3. One choice has the correct slope but is that same line rewritten, and a line is not parallel to itself: parallel lines need equal slopes and DIFFERENT y-intercepts."
+    ]
+  },
+  {
+    "id": "geom-slopes-parallel-perpendicular-005",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Line k passes through the points (-2, 7) and (4, -5). Which equation describes the line that is perpendicular to k and passes through the point (6, 1)?",
+    "choices": [
+      "y = (1/2)x + 1",
+      "y = -2x + 13",
+      "y = -(1/2)x + 4",
+      "y = (1/2)x - 2"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the slope of k from the two points: m = (-5 - 7)/(4 - (-2)).",
+      "Line k has slope -2, so the perpendicular slope is 1/2. Substitute (6, 1) into y = (1/2)x + b and solve for b."
+    ]
+  },
+  {
+    "id": "geom-slopes-parallel-perpendicular-006",
+    "loId": "geom.slopes-parallel-perpendicular",
+    "cedCode": "GEOM-3.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Line j has equation 5x + 2y = 14. Line k is perpendicular to line j and passes through the point (-5, 3). Type the y-intercept of line k as a number.",
+    "answer": "5",
+    "hints": [
+      "Solve 5x + 2y = 14 for y before reading any slope: in Ax + By = C the slope is not A.",
+      "Line j has slope -5/2, so line k has slope 2/5. Substitute (-5, 3) into y = (2/5)x + b and solve for b."
+    ]
+  }
+]

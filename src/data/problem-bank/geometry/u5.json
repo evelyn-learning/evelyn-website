@@ -1,0 +1,446 @@
+[
+  {
+    "id": "geom-triangle-angle-relationships-001",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, m∠A = 43° and m∠B = 61°. What is m∠C?",
+    "choices": ["104°", "119°", "76°", "256°"],
+    "answer": "C",
+    "hints": [
+      "The three interior angles of any triangle total 180°.",
+      "Add the two known angles, then subtract that total from 180."
+    ]
+  },
+  {
+    "id": "geom-triangle-angle-relationships-002",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △KLM, m∠K = 38° and m∠L = 72°. Side KM is extended beyond M to a point N, forming exterior angle ∠LMN. What is m∠LMN?",
+    "choices": ["70°", "110°", "142°", "250°"],
+    "answer": "B",
+    "hints": [
+      "An exterior angle equals the sum of the two REMOTE interior angles — the two that do not touch it.",
+      "The remote angles here are ∠K and ∠L, at the other two vertices; the interior angle at M is adjacent, so it is not part of the sum."
+    ]
+  },
+  {
+    "id": "geom-triangle-angle-relationships-003",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △DEF, m∠D = x°, m∠E = (2x)°, and m∠F = (3x)°. What is m∠F?",
+    "choices": ["30°", "60°", "90°", "180°"],
+    "answer": "C",
+    "hints": [
+      "Set the three expressions equal to the triangle total: x + 2x + 3x = 180.",
+      "6x = 180 gives x = 30 — but the question asks for ∠F, so finish with 3x."
+    ]
+  },
+  {
+    "id": "geom-triangle-angle-relationships-004",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, m∠A = (2x + 5)°, m∠B = (3x - 20)°, and m∠C = (x + 15)°. What is m∠B?",
+    "choices": ["30°", "70°", "65°", "45°"],
+    "answer": "B",
+    "hints": [
+      "Add the three expressions and set the total equal to 180, then solve for x.",
+      "The constants cancel, so 6x = 180 and x = 30 — now substitute into 3x - 20, not into ∠A or ∠C."
+    ]
+  },
+  {
+    "id": "geom-triangle-angle-relationships-005",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △PQR, side QR is extended beyond R to a point S. The exterior angle ∠PRS measures (3x + 5)°, and the two remote interior angles measure 52° and (x + 13)°. What is m∠PRS?",
+    "choices": ["30°", "43°", "85°", "95°"],
+    "answer": "D",
+    "hints": [
+      "Set the exterior angle equal to the sum of the two remote interior angles: 3x + 5 = 52 + (x + 13).",
+      "Solving gives x = 30 — but x is not an angle. Substitute back into 3x + 5."
+    ]
+  },
+  {
+    "id": "geom-triangle-angle-relationships-006",
+    "loId": "geom.triangle-angle-relationships",
+    "cedCode": "GEOM-5.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "In △ABC, m∠A = 26°. Point D lies on side AC between A and C, and segment BD is drawn, with m∠ABD = 15°. Find m∠BDC in degrees. Type your answer as a number.",
+    "answer": "41",
+    "hints": [
+      "Look at the smaller triangle △ABD: because D lies on AC, ∠BDC is the exterior angle of △ABD at vertex D.",
+      "That exterior angle equals the sum of the two remote interior angles of △ABD, which are ∠A and ∠ABD."
+    ]
+  },
+
+  {
+    "id": "geom-triangle-congruence-criteria-001",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In triangles ABC and DEF: ∠A ≅ ∠D, AB ≅ DE, and ∠B ≅ ∠E. Side AB connects the vertices of the two given angles. Which criterion proves △ABC ≅ △DEF?",
+    "choices": ["SAS", "AAS", "SSS", "ASA"],
+    "answer": "D",
+    "hints": [
+      "Two angles and one side are given — the only question is whether the side sits between the two angles.",
+      "AB joins A and B, the vertices of the two given angles, so the side is included."
+    ]
+  },
+  {
+    "id": "geom-triangle-congruence-criteria-002",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In triangles GHJ and KLM: ∠G ≅ ∠K, ∠H ≅ ∠L, and HJ ≅ LM. Side HJ connects vertices H and J, and J is not the vertex of either given angle. Which criterion proves △GHJ ≅ △KLM?",
+    "choices": ["AAS", "ASA", "SAS", "SSA"],
+    "answer": "A",
+    "hints": [
+      "Check whether the given side connects the two given angle vertices or hangs off to the side.",
+      "HJ touches only one of the two given angles, so the side is NOT included between them."
+    ]
+  },
+  {
+    "id": "geom-triangle-congruence-criteria-003",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In quadrilateral WXYZ, diagonal WY is drawn, splitting it into △WXY and △YZW. Given: WX ≅ YZ and XY ≅ ZW. Which criterion proves △WXY ≅ △YZW?",
+    "choices": ["SAS", "ASA", "SSS", "There is not enough information, because no angles are given"],
+    "answer": "C",
+    "hints": [
+      "Two pairs of sides are given. Look for a hidden third pair before deciding there is not enough information.",
+      "The diagonal WY belongs to both triangles, and WY ≅ WY by the Reflexive Property — that is the third pair of sides."
+    ]
+  },
+  {
+    "id": "geom-triangle-congruence-criteria-004",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In triangles ABC and DEF: AB ≅ DE, BC ≅ EF, and ∠A ≅ ∠D. Which criterion proves the triangles congruent?",
+    "choices": [
+      "SAS, because two sides and an angle are given",
+      "SSS, because the third pair of sides must match automatically",
+      "AAS, because the given angle is not between the given sides",
+      "None of these — ∠A is not included between AB and BC, so the pattern is SSA, which can close into two different triangles"
+    ],
+    "answer": "D",
+    "hints": [
+      "For SAS the angle must sit BETWEEN the two given sides. The angle between AB and BC is ∠B, not ∠A.",
+      "Two sides and a non-included angle is the swinging-door pattern: the third side can land in two different places."
+    ]
+  },
+  {
+    "id": "geom-triangle-congruence-criteria-005",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In triangles ABC and DEF you already know that ∠A ≅ ∠D and ∠B ≅ ∠E. Which single additional fact would prove △ABC ≅ △DEF?",
+    "choices": [
+      "∠C ≅ ∠F",
+      "AB ≅ DE, the side joining the two given angle vertices",
+      "Both triangles are isosceles",
+      "Both triangles contain a 90° angle"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two angle pairs alone can never fix the SIZE of a triangle — something with length is missing.",
+      "Adding a third angle pair only gives AAA (similarity); adding the side between the two given angles gives ASA."
+    ]
+  },
+  {
+    "id": "geom-triangle-congruence-criteria-006",
+    "loId": "geom.triangle-congruence-criteria",
+    "cedCode": "GEOM-5.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "△ABC ≅ △DEF. Given m∠A = 47°, m∠E = 68°, and m∠C = (3x + 5)°, find x. Type your answer as a number.",
+    "answer": "20",
+    "hints": [
+      "The letter order pairs B with E, so m∠B = 68°.",
+      "Use the angle sum in △ABC: m∠C = 180 - 47 - 68 = 65, then solve 3x + 5 = 65."
+    ]
+  },
+
+  {
+    "id": "geom-cpctc-proofs-001",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A two-column proof has already established △ABC ≅ △DEF by SAS. On the very next line the proof states AB ≅ DE. Which reason justifies that line?",
+    "choices": ["Reflexive Property", "CPCTC", "Definition of midpoint", "SAS"],
+    "answer": "B",
+    "hints": [
+      "The congruence of the triangles is already on the page; this line collects one of the remaining matching parts.",
+      "CPCTC stands for Corresponding Parts of Congruent Triangles are Congruent."
+    ]
+  },
+  {
+    "id": "geom-cpctc-proofs-002",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a proof, one line states that ray BD bisects ∠ABC, and the next line states ∠ABD ≅ ∠DBC. Which reason belongs on that next line?",
+    "choices": ["Definition of angle bisector", "Definition of midpoint", "CPCTC", "Reflexive Property"],
+    "answer": "A",
+    "hints": [
+      "Ask what the word 'bisects' guarantees on its own, before any triangles are compared.",
+      "A midpoint cuts a SEGMENT in two; a bisecting ray cuts an ANGLE in two."
+    ]
+  },
+  {
+    "id": "geom-cpctc-proofs-003",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A proof establishes △RST ≅ △XYZ. Which statement follows by CPCTC?",
+    "choices": ["∠S ≅ ∠Z", "ST ≅ XY", "RT ≅ XZ", "∠R ≅ ∠Y"],
+    "answer": "C",
+    "hints": [
+      "Read the correspondence straight off the letter order: R↔X, S↔Y, T↔Z.",
+      "Translate each letter one at a time: R becomes X and T becomes Z, so RT pairs with XZ."
+    ]
+  },
+  {
+    "id": "geom-cpctc-proofs-004",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Segments JM and KL intersect at point P, with K and L on opposite sides of P. Given: ∠J ≅ ∠M and P is the midpoint of JM. A proof concludes JK ≅ ML by CPCTC. Which criterion justifies the line △JPK ≅ △MPL that comes immediately before it?",
+    "choices": ["SAS", "SSS", "AAS", "ASA"],
+    "answer": "D",
+    "hints": [
+      "List the three parts: the given angle pair, the pair the midpoint donates, and the free pair created where the segments cross.",
+      "You have ∠J ≅ ∠M, JP ≅ MP (definition of midpoint), and ∠JPK ≅ ∠MPL (vertical angles) — and JP sits between those two angles."
+    ]
+  },
+  {
+    "id": "geom-cpctc-proofs-005",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this proof about triangles PQR and STU: (1) ∠P ≅ ∠S — Given. (2) PQ ≅ ST — CPCTC. (3) ∠Q ≅ ∠T — Given. (4) △PQR ≅ △STU — ASA. What is wrong with it?",
+    "choices": [
+      "Line 2 uses CPCTC before the triangles have been proved congruent, which is circular reasoning",
+      "Line 4 should name AAS rather than ASA",
+      "Line 3 cannot be a given, because a given angle pair was already used on line 1",
+      "Nothing is wrong — every line carries a reason"
+    ],
+    "answer": "A",
+    "hints": [
+      "CPCTC is a payout collected FROM a congruence statement, so check where the congruence statement actually appears.",
+      "Strip the illegal line and only two angle pairs remain — the AAA pattern, which fixes shape but not size."
+    ]
+  },
+  {
+    "id": "geom-cpctc-proofs-006",
+    "loId": "geom.cpctc-proofs",
+    "cedCode": "GEOM-5.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A proof establishes △ABC ≅ △DEF by AAS, so BC ≅ EF by CPCTC. If BC = 5x - 8 and EF = 2x + 13, find the length of EF. Type your answer as a number.",
+    "answer": "27",
+    "hints": [
+      "CPCTC makes the two lengths equal, so solve 5x - 8 = 2x + 13.",
+      "x = 7 — but x is not a length. Substitute back into 2x + 13 (or into 5x - 8; they must agree)."
+    ]
+  },
+
+  {
+    "id": "geom-isosceles-equilateral-001",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, AB ≅ AC and m∠B = 47°. What is m∠C?",
+    "choices": ["43°", "47°", "86°", "66.5°"],
+    "answer": "B",
+    "hints": [
+      "The congruent legs AB and AC meet at A, so ∠B and ∠C are the base angles.",
+      "The Isosceles Triangle Theorem says the angles opposite the congruent sides are congruent."
+    ]
+  },
+  {
+    "id": "geom-isosceles-equilateral-002",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △RST, RS ≅ RT and m∠S = 38°. What is m∠R?",
+    "choices": ["38°", "71°", "104°", "142°"],
+    "answer": "C",
+    "hints": [
+      "The legs RS and RT meet at R, so ∠R is the vertex angle and ∠S and ∠T are the base angles.",
+      "Both base angles measure 38°, so subtract BOTH of them from 180 — do not halve anything here."
+    ]
+  },
+  {
+    "id": "geom-isosceles-equilateral-003",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △DEF, DE ≅ EF, and the angle formed between those two congruent sides measures 96°. What is m∠D?",
+    "choices": ["42°", "48°", "84°", "96°"],
+    "answer": "A",
+    "hints": [
+      "The two congruent sides both contain E, so they meet at E and ∠E is the 96° vertex angle.",
+      "The two base angles ∠D and ∠F share what is left of 180°: (180 - 96)/2."
+    ]
+  },
+  {
+    "id": "geom-isosceles-equilateral-004",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △XYZ, m∠X = 71° and m∠Y = 71°. Which conclusion must be true?",
+    "choices": [
+      "XY ≅ XZ",
+      "YZ ≅ XZ",
+      "XY ≅ YZ",
+      "△XYZ is equilateral"
+    ],
+    "answer": "B",
+    "hints": [
+      "The converse of the Isosceles Triangle Theorem: congruent angles force the sides OPPOSITE them to be congruent.",
+      "∠X is opposite side YZ and ∠Y is opposite side XZ — match by opposite position, never by shared letters."
+    ]
+  },
+  {
+    "id": "geom-isosceles-equilateral-005",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In isosceles △PQR, PQ ≅ PR, m∠Q = (3x + 4)°, and m∠R = (5x - 18)°. What is m∠P?",
+    "choices": ["11°", "37°", "74°", "106°"],
+    "answer": "D",
+    "hints": [
+      "The legs meet at P, so ∠Q and ∠R are the congruent base angles: set 3x + 4 = 5x - 18.",
+      "x = 11 makes each base angle 37°; the question asks for the vertex angle, so subtract both base angles from 180."
+    ]
+  },
+  {
+    "id": "geom-isosceles-equilateral-006",
+    "loId": "geom.isosceles-equilateral",
+    "cedCode": "GEOM-5.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "In △ABC, AB ≅ AC. Side BC is extended beyond C to a point D, and the exterior angle ∠ACD measures 124°. Find m∠A in degrees. Type your answer as a number.",
+    "answer": "68",
+    "hints": [
+      "∠ACD and the interior angle ∠ACB form a linear pair, so m∠ACB = 180 - 124 = 56°.",
+      "AB ≅ AC makes ∠B ≅ ∠ACB, so both base angles are 56°; now use the 180° angle sum to get ∠A."
+    ]
+  },
+
+  {
+    "id": "geom-midsegments-bisectors-inequalities-001",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, M is the midpoint of side AB and N is the midpoint of side AC. If BC = 22, what is MN?",
+    "choices": ["11", "44", "22", "5.5"],
+    "answer": "A",
+    "hints": [
+      "MN joins the midpoints of two sides, so it is a midsegment and BC is the third side.",
+      "A midsegment is half the length of the third side."
+    ]
+  },
+  {
+    "id": "geom-midsegments-bisectors-inequalities-002",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which set of three lengths can be the side lengths of a triangle?",
+    "choices": ["2, 8, 10", "4, 7, 10", "3, 5, 9", "6, 6, 13"],
+    "answer": "B",
+    "hints": [
+      "Add the two SHORTEST lengths in each set and compare that total to the longest length.",
+      "The sum must be strictly GREATER than the longest side — a sum exactly equal to it collapses the triangle onto a line."
+    ]
+  },
+  {
+    "id": "geom-midsegments-bisectors-inequalities-003",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, AB = 13, BC = 9, and CA = 15. Which angle of the triangle has the SMALLEST measure?",
+    "choices": ["∠B", "∠C", "∠A", "It cannot be determined without the angle measures"],
+    "answer": "C",
+    "hints": [
+      "Find the shortest side first, then ask which angle sits ACROSS from it.",
+      "The shortest side is BC = 9; the vertex not named in BC is A, so ∠A is the angle opposite it."
+    ]
+  },
+  {
+    "id": "geom-midsegments-bisectors-inequalities-004",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △DEF, P is the midpoint of side DE and Q is the midpoint of side DF, so PQ is a midsegment. If PQ = 3x - 1 and EF = 4x + 6, what is EF?",
+    "choices": ["4", "11", "44", "22"],
+    "answer": "D",
+    "hints": [
+      "The third side is double the midsegment: 2(3x - 1) = 4x + 6.",
+      "Solving gives x = 4 — now substitute into EF = 4x + 6, not into PQ, and check that EF came out larger than PQ."
+    ]
+  },
+  {
+    "id": "geom-midsegments-bisectors-inequalities-005",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Point W lies in the interior of ∠XYZ, on the bisector of that angle. Which statement must be true?",
+    "choices": [
+      "W is the same distance from point X as it is from point Z",
+      "W is the same perpendicular distance from ray YX as it is from ray YZ",
+      "W is the midpoint of segment XZ",
+      "W is the same distance from all three of X, Y, and Z"
+    ],
+    "answer": "B",
+    "hints": [
+      "Sort the two equidistance rules: one is about distance to POINTS, the other about distance to SIDES.",
+      "A perpendicular bisector gives equal distance to the two endpoints; an angle bisector gives equal perpendicular distance to the two sides of the angle."
+    ]
+  },
+  {
+    "id": "geom-midsegments-bisectors-inequalities-006",
+    "loId": "geom.midsegments-bisectors-inequalities",
+    "cedCode": "GEOM-5.5",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "In △ABC, the three medians meet at the centroid G. Median CF runs from vertex C to F, the midpoint of side AB, so G lies on CF. If CG = 4x and GF = x + 6, find the length of CF. Type your answer as a number.",
+    "answer": "36",
+    "hints": [
+      "The centroid splits each median in a 2 : 1 ratio, with the longer piece next to the vertex: CG = 2(GF).",
+      "Solve 4x = 2(x + 6) to get x = 6, then add the two pieces CG and GF — CF is the whole median, not just one piece."
+    ]
+  }
+]

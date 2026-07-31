@@ -1,0 +1,337 @@
+[
+  {
+    "id": "geom-area-polygons-001",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A triangle has a base of 14 cm, and the perpendicular height drawn to that base is 6 cm. What is its area?",
+    "choices": ["84 cm²", "42 cm²", "20 cm²", "21 cm²"],
+    "answer": "B",
+    "hints": [
+      "Use A = (1/2)·b·h — a triangle is exactly half of the parallelogram built from two copies of it.",
+      "First multiply 14 · 6 = 84, then take half of that; the 1/2 is not optional."
+    ]
+  },
+  {
+    "id": "geom-area-polygons-002",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A trapezoid has two parallel sides measuring 9 cm and 15 cm, and the perpendicular distance between those parallel sides is 8 cm. What is its area?",
+    "choices": ["192 cm²", "24 cm²", "120 cm²", "96 cm²"],
+    "answer": "D",
+    "hints": [
+      "A = (1/2)(b1 + b2)·h — the two parallel sides get ADDED, not subtracted.",
+      "9 + 15 = 24, so the area is (1/2)(24)(8). Read it as 'the average of the parallel sides times the height'."
+    ]
+  },
+  {
+    "id": "geom-area-polygons-003",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A parallelogram has a horizontal bottom side of 12 in and slanted sides of 7 in. The perpendicular distance between the two horizontal sides is 5 in. What is the area of the parallelogram?",
+    "choices": ["60 in²", "84 in²", "30 in²", "35 in²"],
+    "answer": "A",
+    "hints": [
+      "A = b·h, where h is the perpendicular distance between the parallel sides — never the slanted side.",
+      "The base is 12 and the perpendicular height is 5; the 7 in slanted side is a hypotenuse and is longer than the true height, so it is not used."
+    ]
+  },
+  {
+    "id": "geom-area-polygons-004",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A regular pentagon has a side length of 12 m and an apothem (the perpendicular segment from the center to the midpoint of a side) of 8 m. What is its area?",
+    "choices": ["48 m²", "480 m²", "240 m²", "96 m²"],
+    "answer": "C",
+    "hints": [
+      "Use A = (1/2)·a·P; start by finding the perimeter of a regular pentagon with side 12.",
+      "P = 5 · 12 = 60 m, so A = (1/2)(8)(60). Do not stop at a single wedge triangle, and keep the 1/2."
+    ]
+  },
+  {
+    "id": "geom-area-polygons-005",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A trapezoid has parallel sides of length x and x + 6, and the perpendicular distance between those parallel sides is 10. Its area is 130 square units. What is the value of x?",
+    "choices": ["7", "10", "13", "16"],
+    "answer": "B",
+    "hints": [
+      "Substitute into A = (1/2)(b1 + b2)·h: 130 = (1/2)(x + x + 6)(10).",
+      "The right side simplifies to 5(2x + 6) = 10x + 30, so solve 10x + 30 = 130."
+    ]
+  },
+  {
+    "id": "geom-area-polygons-006",
+    "loId": "geom.area-polygons",
+    "cedCode": "GEOM-10.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A garden is shaped like a trapezoid whose two parallel sides measure 18 m and 12 m, with a perpendicular distance of 10 m between them. Inside the garden, a triangular flower bed with a base of 9 m and a perpendicular height of 6 m is cut out and covered in gravel. How many square meters of the garden are still planted with grass? Type your answer as a number.",
+    "answer": "123",
+    "hints": [
+      "Find the whole trapezoid's area first, then find the triangle's area, then subtract.",
+      "Trapezoid: (1/2)(18 + 12)(10) = 150 m². Triangle: (1/2)(9)(6) = 27 m². Both formulas carry a 1/2."
+    ]
+  },
+
+  {
+    "id": "geom-circumference-arc-length-sector-001",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a radius of 7 cm. What is its circumference, in terms of π?",
+    "choices": ["7π cm", "14π cm", "49π cm", "28π cm"],
+    "answer": "B",
+    "hints": [
+      "Circumference is C = 2πr, a length; area is A = πr², a region.",
+      "Substitute r = 7 into 2πr — squaring the 7 would give the area instead."
+    ]
+  },
+  {
+    "id": "geom-circumference-arc-length-sector-002",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circular tabletop has a diameter of 16 in. What is its area, in terms of π?",
+    "choices": ["256π in²", "32π in²", "64π in²", "128π in²"],
+    "answer": "C",
+    "hints": [
+      "The formula A = πr² needs the RADIUS — halve the diameter before substituting.",
+      "r = 16/2 = 8, so A = π(8²). Using 16 in place of 8 would make the answer four times too large."
+    ]
+  },
+  {
+    "id": "geom-circumference-arc-length-sector-003",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A circle has center O and radius 18 cm. A central angle of 40° cuts off arc AB. What is the LENGTH of arc AB, in terms of π?",
+    "choices": ["4π cm", "40 cm", "2π cm", "8π cm"],
+    "answer": "A",
+    "hints": [
+      "Arc length = (θ/360) × 2πr — the degree measure only tells you what fraction of the circle you have.",
+      "40/360 = 1/9 and the full circumference is 2π(18) = 36π, so take one ninth of 36π."
+    ]
+  },
+  {
+    "id": "geom-circumference-arc-length-sector-004",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sprinkler at the center of a circular field of radius 12 ft sweeps through a central angle of 120°. What is the area of the sector it waters, in terms of π?",
+    "choices": ["96π ft²", "144π ft²", "8π ft²", "48π ft²"],
+    "answer": "D",
+    "hints": [
+      "Sector area = (θ/360) × πr² — a sector is a fraction of the circle's AREA, so the answer carries square units.",
+      "120/360 = 1/3 and the whole circle is π(12²) = 144π ft², so take one third of 144π."
+    ]
+  },
+  {
+    "id": "geom-circumference-arc-length-sector-005",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a circle of radius 24 in, an arc has a length of 10π in. What is the measure of the central angle that cuts off this arc?",
+    "choices": ["150°", "37.5°", "75°", "30°"],
+    "answer": "C",
+    "hints": [
+      "Run the fraction idea backward: the arc's share of the whole circumference equals the angle's share of 360°.",
+      "The full circumference is 2π(24) = 48π, so the fraction is 10π/48π = 5/24; now multiply 360 by 5/24."
+    ]
+  },
+  {
+    "id": "geom-circumference-arc-length-sector-006",
+    "loId": "geom.circumference-arc-length-sector",
+    "cedCode": "GEOM-10.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A sector of a circle has a central angle of 120° and an area of 48π square centimeters. What is the radius of the circle, in centimeters? Type your answer as a number.",
+    "answer": "12",
+    "hints": [
+      "Start from sector area = (θ/360) × πr² and substitute what you know: 48π = (120/360)πr².",
+      "120/360 = 1/3, so (1/3)πr² = 48π gives r² = 144 — then take the square root to get r, not r²."
+    ]
+  },
+
+  {
+    "id": "geom-prisms-cylinders-001",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism is 5 cm long, 4 cm wide, and 9 cm tall. What is its volume?",
+    "choices": ["180 cm³", "202 cm³", "36 cm³", "90 cm³"],
+    "answer": "A",
+    "hints": [
+      "V = Bh, and for a rectangular prism the base area is B = length × width.",
+      "B = 5 · 4 = 20 cm², so V = 20 · 9. Volume answers carry cubic units."
+    ]
+  },
+  {
+    "id": "geom-prisms-cylinders-002",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cylinder has a base radius of 5 cm and a height of 8 cm. What is its volume, in terms of π?",
+    "choices": ["80π cm³", "200π cm³", "400π cm³", "40π cm³"],
+    "answer": "B",
+    "hints": [
+      "V = Bh, and for a cylinder the base is a circle, so B = πr².",
+      "B = π(5²) = 25π cm², so V = 25π · 8."
+    ]
+  },
+  {
+    "id": "geom-prisms-cylinders-003",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right triangular prism has bases that are right triangles with legs 6 cm and 8 cm and hypotenuse 10 cm. The distance between the two triangular bases is 12 cm. What is the volume of the prism?",
+    "choices": ["576 cm³", "360 cm³", "480 cm³", "288 cm³"],
+    "answer": "D",
+    "hints": [
+      "V = Bh, where B is the area of one TRIANGULAR base, not a rectangular face.",
+      "The two legs are the perpendicular pair, so B = (1/2)(6)(8) = 24 cm²; then multiply by the 12 cm depth. The hypotenuse is never a base or a height."
+    ]
+  },
+  {
+    "id": "geom-prisms-cylinders-004",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A closed cylindrical can measures 10 cm across the top and 7 cm tall. What is its total surface area, in terms of π?",
+    "choices": ["70π cm²", "240π cm²", "120π cm²", "95π cm²"],
+    "answer": "C",
+    "hints": [
+      "\"10 cm across\" is the diameter, so halve it first; then use SA = 2πr² + 2πrh.",
+      "With r = 5, the two circular bases give 2π(5²) = 50π and the unrolled lateral rectangle gives 2π(5)(7) = 70π. A closed can has TWO bases."
+    ]
+  },
+  {
+    "id": "geom-prisms-cylinders-005",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An oblique prism has square bases with side length 6 in. The perpendicular distance between the two bases is 10 in, and each slanted lateral edge measures 12 in. What is the volume of the prism?",
+    "choices": ["432 in³", "360 in³", "216 in³", "300 in³"],
+    "answer": "B",
+    "hints": [
+      "By Cavalieri's principle, a leaning solid has the same volume as the upright one with the same base and the same perpendicular height, so V = Bh still applies.",
+      "B = 6² = 36 in², and h is the PERPENDICULAR 10 in — the 12 in slanted edge is a hypotenuse and never enters V = Bh."
+    ]
+  },
+  {
+    "id": "geom-prisms-cylinders-006",
+    "loId": "geom.prisms-cylinders",
+    "cedCode": "GEOM-10.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Two rectangular-prism shipping boxes each hold exactly 720 cm³. The first box has a rectangular base measuring 12 cm by 5 cm. The second box has a rectangular base measuring 8 cm by 6 cm. How many centimeters taller is the second box than the first box? Type your answer as a number.",
+    "answer": "3",
+    "hints": [
+      "Use V = Bh for each box separately: find each base area, then divide the volume by it to get that box's height.",
+      "First box: B = 60, so h = 720/60. Second box: B = 48, so h = 720/48. Subtract the smaller height from the larger."
+    ]
+  },
+
+  {
+    "id": "geom-pyramids-cones-spheres-001",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A right square pyramid has a base with side length 6 units, and its apex sits 5 units directly above the center of the base. What is its volume?",
+    "choices": ["180 cubic units", "60 cubic units", "30 cubic units", "90 cubic units"],
+    "answer": "B",
+    "hints": [
+      "A pyramid is one third of the prism with the same base and height: V = (1/3)Bh.",
+      "The base is a square, so B = 6² = 36; then V = (1/3)(36)(5). The factor is 1/3, not 1/2."
+    ]
+  },
+  {
+    "id": "geom-pyramids-cones-spheres-002",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A solid ball is a sphere with a radius of 6 cm. What is its volume, in terms of π?",
+    "choices": ["864π cm³", "144π cm³", "216π cm³", "288π cm³"],
+    "answer": "D",
+    "hints": [
+      "Sphere volume is V = (4/3)πr³ — the radius is CUBED and the 4/3 is not optional.",
+      "r³ = 6³ = 216, and (4/3)(216) = 288."
+    ]
+  },
+  {
+    "id": "geom-pyramids-cones-spheres-003",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right cone has a base diameter of 12 cm and a perpendicular height of 5 cm. What is its volume, in terms of π?",
+    "choices": ["60π cm³", "240π cm³", "180π cm³", "20π cm³"],
+    "answer": "A",
+    "hints": [
+      "Halve the diameter before it touches the formula V = (1/3)πr²h.",
+      "r = 6, so B = π(6²) = 36π; then V = (1/3)(36π)(5). Using 12 for r would quadruple the answer."
+    ]
+  },
+  {
+    "id": "geom-pyramids-cones-spheres-004",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A right cone has a base radius of 5 in, and the distance from its apex down along the outside surface to the rim is 13 in. What is the volume of the cone, in terms of π?",
+    "choices": ["300π in³", "100π in³", "(325/3)π in³", "325π in³"],
+    "answer": "B",
+    "hints": [
+      "The 13 in measured along the outside is the SLANT height ℓ, not the perpendicular height h — the formula needs h.",
+      "The radius, height, and slant height form a right triangle: 5² + h² = 13², so h = 12 (the 5-12-13 triple). Then V = (1/3)π(5²)(12)."
+    ]
+  },
+  {
+    "id": "geom-pyramids-cones-spheres-005",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dome is shaped like a hemisphere (exactly half of a sphere) with a radius of 9 ft. What is the volume of air it encloses, in terms of π?",
+    "choices": ["972π ft³", "243π ft³", "486π ft³", "1458π ft³"],
+    "answer": "C",
+    "hints": [
+      "Find the volume of the whole sphere with V = (4/3)πr³, then take half of it.",
+      "r³ = 9³ = 729, so the full sphere is (4/3)(729)π = 972π ft³; a hemisphere is half of that, which is the same as (2/3)πr³."
+    ]
+  },
+  {
+    "id": "geom-pyramids-cones-spheres-006",
+    "loId": "geom.pyramids-cones-spheres",
+    "cedCode": "GEOM-10.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A right square pyramid has a volume of 400 cm³ and a perpendicular height of 12 cm. What is the side length of its square base, in centimeters? Type your answer as a number.",
+    "answer": "10",
+    "hints": [
+      "Work backward from V = (1/3)Bh: substitute 400 = (1/3)B(12) and solve for the base AREA B first.",
+      "(1/3)(12) = 4, so 4B = 400 and B = 100 cm². The base is a square, so its side is √100 — do not stop at B."
+    ]
+  }
+]

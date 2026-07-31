@@ -1,0 +1,344 @@
+[
+  {
+    "id": "geom-polygon-angle-sums-001",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the sum of the interior angles of a convex hexagon (6 sides)?",
+    "choices": ["540°", "720°", "1080°", "360°"],
+    "answer": "B",
+    "hints": [
+      "Use the interior angle sum formula (n - 2) × 180° with n = 6.",
+      "(6 - 2) × 180° = 4 × 180° — do not drop the subtraction of 2."
+    ]
+  },
+  {
+    "id": "geom-polygon-angle-sums-002",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A regular pentagon has 5 congruent sides and 5 congruent angles. What is the measure of ONE interior angle?",
+    "choices": ["108°", "72°", "120°", "540°"],
+    "answer": "A",
+    "hints": [
+      "First find the total: (5 - 2) × 180°. Then use the fact that the pentagon is regular.",
+      "Divide the interior sum of 540° by the 5 equal angles."
+    ]
+  },
+  {
+    "id": "geom-polygon-angle-sums-003",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A regular polygon has 15 sides. Taking one exterior angle at each vertex, what is the measure of ONE exterior angle?",
+    "choices": ["156°", "12°", "36°", "24°"],
+    "answer": "D",
+    "hints": [
+      "The exterior angles of any convex polygon add up to 360°, no matter how many sides it has.",
+      "The polygon is regular, so all 15 exterior angles are equal: 360° / 15."
+    ]
+  },
+  {
+    "id": "geom-polygon-angle-sums-004",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Five of the six interior angles of a convex hexagon measure 110°, 130°, 96°, 142°, and 118°. Find the measure of the sixth interior angle. Type your answer as a number of degrees.",
+    "answer": "124",
+    "hints": [
+      "The hexagon is not described as regular, so find the SUM first: (6 - 2) × 180° = 720°.",
+      "Add the five known angles (110 + 130 + 96 + 142 + 118 = 596) and subtract that total from 720."
+    ]
+  },
+  {
+    "id": "geom-polygon-angle-sums-005",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The interior angles of a convex polygon add up to 1440°. How many sides does the polygon have?",
+    "choices": ["8", "10", "12", "16"],
+    "answer": "B",
+    "hints": [
+      "Set the formula equal to the given sum: (n - 2) × 180° = 1440°.",
+      "Divide both sides by 180 to get n - 2 = 8, then add 2 — the answer is not simply 1440 / 180."
+    ]
+  },
+  {
+    "id": "geom-polygon-angle-sums-006",
+    "loId": "geom.polygon-angle-sums",
+    "cedCode": "GEOM-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a regular polygon, each interior angle measures exactly 5 times its own exterior angle. How many sides does the polygon have?",
+    "choices": ["6", "10", "12", "15"],
+    "answer": "C",
+    "hints": [
+      "At any vertex the interior angle and its exterior angle form a straight line, so they add to 180°.",
+      "If the exterior angle is e, then 5e + e = 180°, so e = 30°. Now use the fact that the exterior angles of a regular n-gon are each 360° / n."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-001",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is true of EVERY parallelogram?",
+    "choices": [
+      "All four sides are congruent",
+      "Opposite sides are congruent",
+      "The two diagonals are congruent",
+      "The two diagonals are perpendicular"
+    ],
+    "answer": "B",
+    "hints": [
+      "Three of these describe special parallelograms — a rhombus, a rectangle, or a square — not every parallelogram.",
+      "A diagonal splits any parallelogram into two congruent triangles, which forces the opposite sides to match."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-002",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "MNPQ is a parallelogram with its vertices named in order, so MN ∥ QP and NP ∥ MQ. If ∠N = 133°, what is m∠P?",
+    "choices": ["133°", "47°", "67°", "227°"],
+    "answer": "A",
+    "hints": [
+      "∠N and ∠P sit across the parallelogram from each other — are they opposite angles or consecutive angles?",
+      "Opposite angles of a parallelogram are congruent; it is the CONSECUTIVE angles that are supplementary."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-003",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Parallelogram RSTU has its vertices named in order. RS = 14 and ST = 9. What is the perimeter of RSTU?",
+    "choices": ["23", "28", "36", "46"],
+    "answer": "D",
+    "hints": [
+      "Opposite sides of a parallelogram are congruent, so TU = RS and UR = ST.",
+      "Perimeter = 2(14) + 2(9)."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-004",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In parallelogram ABCD (vertices in order), side AB = 14 and side BC = 10. The perpendicular distance between the parallel sides AB and DC is 8. What is the area of ABCD?",
+    "choices": ["56", "80", "112", "140"],
+    "answer": "C",
+    "hints": [
+      "Area of a parallelogram = base × height, where the height is the PERPENDICULAR distance between the two parallel bases.",
+      "The slanted side of length 10 is not the height; pair the base 14 with the perpendicular distance 8."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-005",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In parallelogram JKLM the diagonals JL and KM intersect at point P. If KP = 4x - 3 and PM = 2x + 9, find the length of the whole diagonal KM. Type your answer as a number.",
+    "answer": "42",
+    "hints": [
+      "The diagonals of a parallelogram bisect each other, so P is the midpoint of KM: KP = PM.",
+      "Solve 4x - 3 = 2x + 9 to get x = 6, so KP = 21. Remember KM is made of TWO of those halves."
+    ]
+  },
+  {
+    "id": "geom-parallelograms-006",
+    "loId": "geom.parallelograms",
+    "cedCode": "GEOM-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In parallelogram ABCD (vertices in order, so ∠A and ∠B are consecutive angles sharing side AB), the measure of ∠A is 40° less than three times the measure of ∠B. What is m∠A?",
+    "choices": ["20°", "55°", "125°", "140°"],
+    "answer": "C",
+    "hints": [
+      "Consecutive angles of a parallelogram are supplementary, so ∠A + ∠B = 180°.",
+      "Let ∠B = b. Then ∠A = 3b - 40, so (3b - 40) + b = 180 gives b = 55; now compute ∠A, not ∠B."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-001",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which quadrilateral is defined as a parallelogram with four right angles?",
+    "choices": ["Rhombus", "Kite", "Rectangle", "Trapezoid"],
+    "answer": "C",
+    "hints": [
+      "One of these is a parallelogram with four congruent SIDES instead of four right angles.",
+      "Two of the choices are not parallelograms at all."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-002",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In rectangle ABCD (vertices in order) the diagonals AC and BD intersect at point E. If AC = 24, what is BE?",
+    "choices": ["6", "12", "24", "48"],
+    "answer": "B",
+    "hints": [
+      "A rectangle's diagonals are congruent, so BD = AC = 24.",
+      "A rectangle is also a parallelogram, so its diagonals bisect each other: BE is half of BD."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-003",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "WXYZ is a rhombus with its vertices named in order. If m∠W = 104°, what is m∠X?",
+    "choices": ["76°", "104°", "52°", "38°"],
+    "answer": "A",
+    "hints": [
+      "A rhombus is a parallelogram first, so it keeps every parallelogram angle property.",
+      "∠W and ∠X are consecutive angles sharing side WX, so they are supplementary."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-004",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A rhombus has diagonals of length 30 and 16 that bisect each other at right angles. Find the length of one side of the rhombus. Type your answer as a number.",
+    "answer": "17",
+    "hints": [
+      "The two diagonals cut the rhombus into four congruent right triangles whose legs are HALF of each diagonal.",
+      "The legs are 15 and 8, and the side of the rhombus is the hypotenuse: 15² + 8² = 289."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-005",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In rhombus JKLM (vertices in order), JK = 5x - 8 and KL = 2x + 7. What is the perimeter of JKLM?",
+    "choices": ["17", "34", "51", "68"],
+    "answer": "D",
+    "hints": [
+      "All four sides of a rhombus are congruent, so 5x - 8 = 2x + 7.",
+      "Solving gives x = 5, so each side is 17. The question asks for the perimeter, not one side."
+    ]
+  },
+  {
+    "id": "geom-special-parallelograms-006",
+    "loId": "geom.special-parallelograms",
+    "cedCode": "GEOM-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In rhombus ABCD the diagonals AC and BD intersect at point E. The perimeter of the rhombus is 60 and AE = 9. What is the length of diagonal BD?",
+    "choices": ["12", "24", "30", "48"],
+    "answer": "B",
+    "hints": [
+      "A perimeter of 60 with four congruent sides makes each side 15, and that side is the hypotenuse of right triangle AEB.",
+      "Legs: AE = 9 and BE = √(15² - 9²) = 12. BE is only HALF of BD."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-001",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The midsegment of a trapezoid connects the midpoints of which two sides?",
+    "choices": [
+      "The two bases",
+      "The two legs",
+      "One base and one leg",
+      "The two diagonals"
+    ],
+    "answer": "B",
+    "hints": [
+      "The bases are the parallel sides; the legs are the two non-parallel sides.",
+      "The midsegment runs parallel to the bases, so it cannot start or end on a base."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-002",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Trapezoid ABCD has its vertices named in order with AB ∥ DC, so AD and BC are the legs. If ∠A = 74°, what is m∠D?",
+    "choices": ["16°", "74°", "286°", "106°"],
+    "answer": "D",
+    "hints": [
+      "∠A and ∠D are the two angles at the ends of leg AD, which acts as a transversal between the parallel bases.",
+      "Same-side angles along a leg are supplementary: 180° - 74°."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-003",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kite PQRS has its vertices named in order, with PQ = PS and RQ = RS. If ∠Q = 88°, what is m∠S?",
+    "choices": ["88°", "44°", "92°", "176°"],
+    "answer": "A",
+    "hints": [
+      "The congruent side pairs meet at P and at R, so ∠P and ∠R are the vertex angles and ∠Q, ∠S are the non-vertex pair.",
+      "In a kite the congruent pair of opposite angles is the NON-vertex pair."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-004",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Kite ABCD has diagonals AC = 18 and BD = 11. Find the area of the kite. Type your answer as a number.",
+    "answer": "99",
+    "hints": [
+      "The diagonals of a kite are perpendicular, which gives the area formula (d1 × d2)/2.",
+      "Multiply 18 × 11 = 198, then take half."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-005",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In trapezoid ABCD, AB ∥ DC with AB = 9 and DC = 21. Point M is the midpoint of leg AD and point N is the midpoint of leg BC. What is the length of MN?",
+    "choices": ["15", "6", "12", "30"],
+    "answer": "A",
+    "hints": [
+      "MN joins the midpoints of the two legs, so it is the midsegment.",
+      "The midsegment is the AVERAGE of the bases: (9 + 21)/2. Its length must land between 9 and 21."
+    ]
+  },
+  {
+    "id": "geom-trapezoids-kites-006",
+    "loId": "geom.trapezoids-kites",
+    "cedCode": "GEOM-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Isosceles trapezoid ABCD has its vertices named in order with AB ∥ DC and congruent legs AD and BC. The angles at the two ends of leg AD are ∠A = (4x + 6)° and ∠D = (6x - 16)°. What is m∠A?",
+    "choices": ["19°", "50°", "82°", "98°"],
+    "answer": "C",
+    "hints": [
+      "∠A and ∠D sit on the same leg between the parallel bases, so they are supplementary — not congruent.",
+      "Solve (4x + 6) + (6x - 16) = 180 to get x = 19, then substitute into 4x + 6 (not into 6x - 16)."
+    ]
+  }
+]
