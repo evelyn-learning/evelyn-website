@@ -1,0 +1,359 @@
+[
+  {
+    "id": "geom-dilations-scale-factor-001",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A dilation centered at the origin has scale factor 3. What is the image of the point A(2, -5)?",
+    "choices": ["(5, -2)", "(6, -5)", "(6, -15)", "(2/3, -5/3)"],
+    "answer": "C",
+    "hints": [
+      "With the origin as center, the rule is (x, y) → (kx, ky).",
+      "Multiply BOTH coordinates by 3; adding 3 would be a translation, not a dilation."
+    ]
+  },
+  {
+    "id": "geom-dilations-scale-factor-002",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dilation maps a segment 20 cm long onto an image segment 8 cm long. What is the scale factor of the dilation?",
+    "choices": ["2.5", "12", "0.8", "0.4"],
+    "answer": "D",
+    "hints": [
+      "The scale factor is a ratio, not a difference.",
+      "k = image length / preimage length = 8/20, and a reduction must give 0 < k < 1."
+    ]
+  },
+  {
+    "id": "geom-dilations-scale-factor-003",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "△ABC has ∠A = 35° and a perimeter of 18 cm. The triangle is dilated about a point P with scale factor 2. What is the angle measure at the image of A, and what is the perimeter of the image triangle?",
+    "choices": ["70° and 36 cm", "35° and 36 cm", "35° and 72 cm", "35° and 20 cm"],
+    "answer": "B",
+    "hints": [
+      "Ask which of the two quantities is a distance — only distances are multiplied by k.",
+      "Angle measures are preserved by a dilation; perimeter is a sum of lengths, so it scales by k = 2 (not by k²)."
+    ]
+  },
+  {
+    "id": "geom-dilations-scale-factor-004",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A dilation has center C(-3, 4) and scale factor 3. It maps point A(1, 4) to A'. Since A and C both lie on the horizontal line y = 4, A' lies on that line too. Type the x-coordinate of A' as a number.",
+    "answer": "9",
+    "hints": [
+      "First find how far A sits from the center along the line: 1 - (-3).",
+      "That distance is 4; multiply it by 3 to get 12, then measure 12 units from the center's x-coordinate of -3 in the same direction."
+    ]
+  },
+  {
+    "id": "geom-dilations-scale-factor-005",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dilation with a positive scale factor k maps a triangle of area 12 cm² onto an image triangle of area 108 cm². What is k?",
+    "choices": ["3", "9", "6", "1/3"],
+    "answer": "A",
+    "hints": [
+      "Area does not scale by k — it scales by k².",
+      "108/12 = 9, and that 9 equals k², so k is the positive square root of 9."
+    ]
+  },
+  {
+    "id": "geom-dilations-scale-factor-006",
+    "loId": "geom.dilations-scale-factor",
+    "cedCode": "GEOM-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A dilation with center C(2, 3) maps A(6, 3) to A'(14, 3). The same dilation maps B(2, 7) to B'. What are the coordinates of B'?",
+    "choices": ["(2, 21)", "(6, 21)", "(2, 11)", "(2, 15)"],
+    "answer": "D",
+    "hints": [
+      "Recover k first: A sits 4 units right of C, and A' sits 12 units right of C.",
+      "k = 3. B sits 4 units directly above C, so B' sits 3 × 4 = 12 units above C, at the same x-coordinate as C."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-001",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Pentagon ABCDE ~ pentagon PQRST. Which side of PQRST corresponds to side CD?",
+    "choices": ["PQ", "QR", "RS", "ST"],
+    "answer": "C",
+    "hints": [
+      "The letter order in the similarity statement carries the matching: A↔P, B↔Q, C↔R, and so on.",
+      "C matches R and D matches S, so CD matches RS."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-002",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Quadrilateral JKLM ~ quadrilateral WXYZ, with J↔W, K↔X, L↔Y, and M↔Z. JK = 15, KL = 9, and WX = 5. What is XY?",
+    "choices": ["27", "3", "1", "15"],
+    "answer": "B",
+    "hints": [
+      "Pair sides by the given correspondence: JK with WX, and KL with XY.",
+      "The scale factor from JKLM to WXYZ is 5/15 = 1/3, so XY = 9 × (1/3)."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-003",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two similar hexagons have a pair of corresponding sides measuring 6 cm and 15 cm. The smaller hexagon has a perimeter of 42 cm. What is the perimeter of the larger hexagon?",
+    "choices": ["105 cm", "262.5 cm", "51 cm", "16.8 cm"],
+    "answer": "A",
+    "hints": [
+      "Find the scale factor from the smaller hexagon to the larger one: 15/6.",
+      "k = 2.5, and perimeter is a sum of lengths, so it scales by plain k: 42 × 2.5."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-004",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A scale drawing of a rectangular garden is similar to the actual garden. On the drawing the rectangle measures 7 cm by 4 cm. The actual garden measures 42 m along the side matching the 7 cm side. How many metres does the actual garden measure along the side matching the 4 cm side?",
+    "answer": "24",
+    "hints": [
+      "Find the scale factor from the drawing to the garden using the pair you know both of: 42/7.",
+      "Every length is multiplied by 6, so the matching side is 4 × 6."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-005",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two similar octagons have areas of 9 cm² and 16 cm². What is the ratio of a pair of corresponding side lengths, smaller to larger?",
+    "choices": ["9/16", "16/9", "81/256", "3/4"],
+    "answer": "D",
+    "hints": [
+      "The area ratio equals k², not k, so run the relationship backwards.",
+      "k² = 9/16, so k is the square root: √9/√16."
+    ]
+  },
+  {
+    "id": "geom-similar-polygons-006",
+    "loId": "geom.similar-polygons",
+    "cedCode": "GEOM-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Trapezoid ABCD ~ trapezoid EFGH with a scale factor of 3/2 going from ABCD to EFGH. Trapezoid ABCD has a perimeter of 40 cm and an area of 60 cm². Which pair of values is correct for EFGH?",
+    "choices": [
+      "perimeter 60 cm, area 90 cm²",
+      "perimeter 90 cm, area 135 cm²",
+      "perimeter 60 cm, area 135 cm²",
+      "perimeter 60 cm, area 202.5 cm²"
+    ],
+    "answer": "C",
+    "hints": [
+      "The two measurements do not scale the same way: one uses k, the other uses k².",
+      "Perimeter: 40 × (3/2) = 60. Area: 60 × (3/2)² = 60 × (9/4)."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-001",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC and △RST, ∠A ≅ ∠R and ∠B ≅ ∠S. Which criterion proves that the two triangles are similar?",
+    "choices": [
+      "SSS similarity",
+      "AA",
+      "SAS similarity",
+      "No criterion — angle information alone can never prove similarity"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count what you were given: two pairs of congruent angles and no side lengths.",
+      "Two pairs of congruent angles force the third pair by the 180° angle sum, which is exactly the AA criterion."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-002",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "△ABC has side lengths 6, 9, and 12. Which set of side lengths belongs to a triangle similar to △ABC?",
+    "choices": ["8, 11, 14", "12, 18, 20", "4, 6, 8", "3, 6, 9"],
+    "answer": "C",
+    "hints": [
+      "Pair the sides shortest with shortest and longest with longest, then divide.",
+      "Similarity needs ONE constant multiplier for all three pairs: 4/6, 6/9 and 8/12 all equal 2/3."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-003",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △DEF and △XYZ, DE/XY = EF/YZ = 3/1 and ∠D ≅ ∠X. In △DEF the angle ∠D is formed by sides DE and DF, and in △XYZ the angle ∠X is formed by sides XY and XZ. Can the triangles be proven similar from this information?",
+    "choices": [
+      "Yes, by SAS similarity",
+      "Yes, by SSS similarity",
+      "Yes, by AA",
+      "No — the congruent angle is not the included angle for the two proportional side pairs"
+    ],
+    "answer": "D",
+    "hints": [
+      "SAS similarity requires the congruent angle to sit BETWEEN the two sides whose ratios you know.",
+      "The known ratios involve DE, EF and XY, YZ, so the included angles are ∠E and ∠Y — not ∠D and ∠X. This is the side-side-angle pattern, which proves nothing."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-004",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A person 6 ft tall stands on level ground and casts a shadow 8 ft long. At the same moment a nearby flagpole casts a shadow 40 ft long. The sun's rays strike both at the same angle, and both stand perpendicular to the ground, so the two height-and-shadow triangles are similar. How many feet tall is the flagpole?",
+    "answer": "30",
+    "hints": [
+      "Write a proportion pairing height with height and shadow with shadow: 6/8 = h/40.",
+      "The scale factor from the person's triangle to the flagpole's is 40/8 = 5, so the height is 6 × 5."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-005",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, point D lies on side AB and point E lies on side AC, and ∠ADE ≅ ∠ABC. AD = 4, AB = 10, and AC = 15. What is AE?",
+    "choices": ["6", "9", "37.5", "1.5"],
+    "answer": "A",
+    "hints": [
+      "△ADE and △ABC share ∠A, and ∠ADE ≅ ∠ABC is a second pair, so △ADE ~ △ABC by AA.",
+      "Corresponding sides give AD/AB = AE/AC, so 4/10 = AE/15. Note that AE is the piece from A, not the leftover piece EC."
+    ]
+  },
+  {
+    "id": "geom-triangle-similarity-criteria-006",
+    "loId": "geom.triangle-similarity-criteria",
+    "cedCode": "GEOM-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, ∠B = 90°, AB = 9, and BC = 12. In △PQR, ∠Q = 90°, PQ = 12, and QR = 16. A student says: \"Both triangles have a right angle, so they are similar by AA.\" Which statement best evaluates the student's work?",
+    "choices": [
+      "The conclusion is correct and AA is the right reason, because both triangles contain a 90° angle.",
+      "The conclusion is correct, but the reason is wrong: 9/12 = 12/16 = 3/4 and the right angles are the included angles, so SAS similarity applies.",
+      "The conclusion is wrong — the triangles are not similar, because one grew by 3 and the other by 4.",
+      "The conclusion is wrong — a right angle can never serve as the included angle for SAS similarity."
+    ],
+    "answer": "B",
+    "hints": [
+      "One pair of congruent angles is not AA — judge the conclusion and the justification separately.",
+      "Check the leg ratios: 9/12 and 12/16 both equal 3/4, and ∠B and ∠Q sit between those legs."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-001",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In △XYZ, point M lies on side XY and point N lies on side XZ, with MN ∥ YZ. Which proportion is guaranteed by the side-splitter theorem?",
+    "choices": ["XM/MY = XN/XZ", "XM/MY = XN/NZ", "MN/YZ = XM/MY", "XM/XY = NZ/XZ"],
+    "answer": "B",
+    "hints": [
+      "Keep one style on both sides of the equals sign: piece to piece, or piece to whole — never mixed.",
+      "The pieces touching vertex X are XM and XN, and the far pieces are MY and NZ."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-002",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, point D lies on side AB and point E lies on side AC, with DE ∥ BC. AD = 10, DB = 15, and AE = 8. What is EC?",
+    "choices": ["12", "20", "5.5", "4.8"],
+    "answer": "A",
+    "hints": [
+      "Set up piece to piece with the vertex-A pieces on top: AD/DB = AE/EC.",
+      "10/15 = 8/EC, so 10 · EC = 120."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-003",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three parallel lines cross two transversals. On the first transversal they mark points A, B, and C in that order, with AB = 6 and BC = 9. On the second transversal they mark points X, Y, and Z in that order, with XY = 8. What is YZ?",
+    "choices": ["5.5", "11", "12", "6"],
+    "answer": "C",
+    "hints": [
+      "Three parallel lines cut proportional pieces on any transversal: AB/BC = XY/YZ.",
+      "6/9 = 8/YZ, so 6 · YZ = 72."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-004",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In △ABC, point D lies on side AB and point E lies on side AC, with DE ∥ BC. AD = 6, DB = 9, and BC = 20. Find the length of DE and type your answer as a number.",
+    "answer": "8",
+    "hints": [
+      "DE is a side of the small triangle, so it compares to the WHOLE side BC — use the piece-to-whole ratio, not AD/DB.",
+      "AB = 6 + 9 = 15, so the similarity ratio is AD/AB = 6/15 = 2/5, and DE = (2/5)(20)."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-005",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In △PQR, point S lies on side PQ and point T lies on side PR. PS = x, SQ = 6, PT = 10, and TR = 15. For which value of x is ST ∥ QR?",
+    "choices": ["9", "4", "4.5", "1"],
+    "answer": "B",
+    "hints": [
+      "Use the converse of the side-splitter theorem: ST ∥ QR exactly when PS/SQ = PT/TR.",
+      "PT/TR = 10/15 = 2/3, so x/6 = 2/3."
+    ]
+  },
+  {
+    "id": "geom-proportionality-theorems-006",
+    "loId": "geom.proportionality-theorems",
+    "cedCode": "GEOM-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In △ABC, AB = 14, AC = 21, and BC = 30. Segment AD bisects ∠A, with D on side BC. What are BD and DC?",
+    "choices": [
+      "BD = 18, DC = 12",
+      "BD = 15, DC = 15",
+      "BD = 12, DC = 18",
+      "BD = 10, DC = 20"
+    ],
+    "answer": "C",
+    "hints": [
+      "The angle-bisector theorem gives BD/DC = AB/AC, pairing each piece with the side that touches the same vertex.",
+      "BD/DC = 14/21 = 2/3, and BD + DC = 30, so split 30 into parts of 2 and 3 out of 5."
+    ]
+  }
+]

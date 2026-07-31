@@ -1,0 +1,434 @@
+[
+  {
+    "id": "geom-circle-basics-arcs-001",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which term describes a LINE that intersects a circle at exactly two points?",
+    "choices": [
+      "secant",
+      "chord",
+      "tangent",
+      "diameter"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sort the words by two questions: is it a line or a segment, and how many points does it share with the circle?",
+      "A chord and a diameter are segments with endpoints ON the circle, and a tangent touches at only one point."
+    ]
+  },
+  {
+    "id": "geom-circle-basics-arcs-002",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In circle O, chord AB lies 6 units from the center and chord CD lies 9 units from the center, each distance measured along the perpendicular from O to that chord. Which statement must be true?",
+    "choices": [
+      "CD is longer than AB.",
+      "AB is longer than CD.",
+      "AB ≅ CD.",
+      "AB is exactly (2/3) as long as CD."
+    ],
+    "answer": "B",
+    "hints": [
+      "In one circle, the closer a chord sits to the center, the longer it is — the diameter, at distance 0, is the longest chord of all.",
+      "AB is only 6 from the center while CD is 9, so AB is the nearer chord. The relationship is not proportional, so no ratio can be claimed."
+    ]
+  },
+  {
+    "id": "geom-circle-basics-arcs-003",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Circle P has radius 17. Chord CD is drawn, and N is the point on CD with PN ⊥ CD and PN = 8. Find the length of CD.",
+    "choices": [
+      "15",
+      "25",
+      "9",
+      "30"
+    ],
+    "answer": "D",
+    "hints": [
+      "Draw radius PC to build a right triangle: hypotenuse 17, one leg 8, and the other leg is HALF of CD.",
+      "8² + (half of CD)² = 17² gives the half-chord 15 — now double it, because the perpendicular from the center bisects the chord."
+    ]
+  },
+  {
+    "id": "geom-circle-basics-arcs-004",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Points A, B, C, and D lie on circle O in that order, splitting the circle into four arcs. Arc AB measures (2x)°, arc BC measures (3x + 5)°, arc CD measures 85°, and arc DA measures (x + 30)°. Find the measure of arc BC.",
+    "choices": [
+      "40°",
+      "80°",
+      "125°",
+      "70°"
+    ],
+    "answer": "C",
+    "hints": [
+      "The four arcs go all the way around, so their measures add to 360°.",
+      "2x + (3x + 5) + 85 + (x + 30) = 360 gives 6x + 120 = 360, so x = 40. Do not stop at x — substitute it into 3x + 5."
+    ]
+  },
+  {
+    "id": "geom-circle-basics-arcs-005",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In circle O, segment AC is a diameter. Points B and D lie on circle O on opposite sides of AC. Arc AB measures 62° and arc CD measures 88°. Find the measure of arc BC in degrees. Type your answer as a number.",
+    "answer": "118",
+    "hints": [
+      "A diameter cuts the circle into two semicircles, so the arc from A to C passing through B measures 180°.",
+      "Arc AB + arc BC = 180°, so arc BC = 180 - 62. The 88° arc sits on the other side of the diameter and is not needed."
+    ]
+  },
+  {
+    "id": "geom-circle-basics-arcs-006",
+    "loId": "geom.circle-basics-arcs",
+    "cedCode": "GEOM-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In circle O, a diameter is drawn perpendicular to chord RS, meeting RS at point M and meeting the circle at point T on the minor arc RS. If RS = 16 and MT = 4, what is the radius of circle O?",
+    "choices": [
+      "8",
+      "12",
+      "20",
+      "10"
+    ],
+    "answer": "D",
+    "hints": [
+      "The diameter is perpendicular to RS, so M is the midpoint of RS: RM = 8. Draw radius OR to get a right triangle with legs OM and RM.",
+      "Call the radius r. Since O, M, and T lie on the same diameter with MT = 4, OM = r - 4. Solve r² = 8² + (r - 4)²."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-001",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In circle O, point O is the center and ∠AOB is a central angle measuring 76°. What is the measure of minor arc AB?",
+    "choices": [
+      "38°",
+      "76°",
+      "152°",
+      "284°"
+    ],
+    "answer": "B",
+    "hints": [
+      "The vertex sits at the CENTER, so this is a central angle.",
+      "A central angle and the minor arc it cuts off have the same measure — no halving or doubling."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-002",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Points R, S, and T lie on circle Q. Inscribed angle ∠RST intercepts arc RT, which measures 96°. Find m∠RST.",
+    "choices": [
+      "96°",
+      "192°",
+      "48°",
+      "132°"
+    ],
+    "answer": "C",
+    "hints": [
+      "The vertex S lies ON the circle, so ∠RST is an inscribed angle.",
+      "An inscribed angle is HALF its intercepted arc: (1/2)(96°)."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-003",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In circle O, segment JL is a diameter and K is a point on the circle different from J and L. If m∠KJL = 34°, find m∠JLK.",
+    "choices": [
+      "56°",
+      "34°",
+      "90°",
+      "146°"
+    ],
+    "answer": "A",
+    "hints": [
+      "∠JKL is inscribed in a semicircle because its sides end at the two ends of a diameter — that forces a right angle at K.",
+      "In △JKL the angles add to 180°: 90° + 34° + m∠JLK = 180°."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-004",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Quadrilateral ABCD has all four vertices on circle O, with the vertices in order A, B, C, D around the circle. If m∠A = (2x + 10)° and m∠C = (3x + 20)°, find m∠C.",
+    "choices": [
+      "30°",
+      "70°",
+      "90°",
+      "110°"
+    ],
+    "answer": "D",
+    "hints": [
+      "A and C are OPPOSITE vertices of a quadrilateral inscribed in a circle, so those two angles are supplementary.",
+      "(2x + 10) + (3x + 20) = 180 gives 5x = 150 and x = 30. Substitute back into 3x + 20, not into 2x + 10."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-005",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Points A, B, and C lie on circle O. Arc AB (the arc not containing C) measures 124°, and arc BC (the arc not containing A) measures 96°. Find m∠BAC in degrees. Type your answer as a number.",
+    "answer": "48",
+    "hints": [
+      "∠BAC has its vertex A on the circle, so it is inscribed. Its intercepted arc is the arc BC that does not contain A.",
+      "The intercepted arc is 96°, so m∠BAC = (1/2)(96°). The 124° arc is not the one this angle opens onto."
+    ]
+  },
+  {
+    "id": "geom-central-inscribed-angles-006",
+    "loId": "geom.central-inscribed-angles",
+    "cedCode": "GEOM-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In circle O, points P and Q lie on the circle and radii OP and OQ are drawn, with m∠POQ = 140°. Point R lies on the major arc PQ. Find m∠OPQ + m∠PRQ.",
+    "choices": [
+      "90°",
+      "110°",
+      "140°",
+      "70°"
+    ],
+    "answer": "A",
+    "hints": [
+      "OP and OQ are both radii, so they are congruent and △POQ is isosceles with base angles ∠OPQ and ∠OQP.",
+      "Base angles: (180° - 140°)/2 = 20°. Separately, ∠PRQ is inscribed and intercepts the 140° minor arc PQ, so it measures 70°. Add the two."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-001",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Line t is tangent to circle O at point A, and radius OA is drawn. What is the measure of the angle formed by radius OA and line t at point A?",
+    "choices": [
+      "45°",
+      "60°",
+      "90°",
+      "180°"
+    ],
+    "answer": "C",
+    "hints": [
+      "A tangent touches the circle at exactly one point, and the radius drawn to that point meets it in a special way.",
+      "The radius drawn to the point of tangency is perpendicular to the tangent line."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-002",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Points M, N, P, and Q lie on circle O in that order. Chords MP and NQ intersect at point E inside the circle. Arc MN measures 58° and arc PQ measures 102°. Find m∠MEN.",
+    "choices": [
+      "160°",
+      "22°",
+      "29°",
+      "80°"
+    ],
+    "answer": "D",
+    "hints": [
+      "The vertex E is INSIDE the circle, where two chords cross — that calls for half the SUM of two arcs.",
+      "∠MEN opens onto arc MN, and its vertical angle ∠PEQ opens onto arc PQ, so m∠MEN = (1/2)(58° + 102°)."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-003",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Circle O has radius 9. Point P lies outside the circle with OP = 41, and segment PT is tangent to circle O at point T. Find the length PT.",
+    "choices": [
+      "32",
+      "40",
+      "50",
+      "20"
+    ],
+    "answer": "B",
+    "hints": [
+      "Draw radius OT. Because a radius meets a tangent at a right angle, △OTP has its right angle at T.",
+      "OP = 41 is the hypotenuse and OT = 9 is a leg, so PT² = 41² - 9² = 1681 - 81."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-004",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "From a point P outside circle O, two tangent segments are drawn, touching the circle at A and at B. If m∠APB = 52°, what is the measure of minor arc AB?",
+    "choices": [
+      "128°",
+      "232°",
+      "26°",
+      "104°"
+    ],
+    "answer": "A",
+    "hints": [
+      "P is OUTSIDE the circle, so m∠P = (1/2)(far arc - near arc), where the two arcs together make 360°.",
+      "Let the minor arc be m. Then the major arc is 360 - m, and 52 = (1/2)((360 - m) - m) = 180 - m."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-005",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "From a point P outside circle O, segment PA is tangent to the circle at A and segment PB is tangent to the circle at B. If PA = 3y - 4 and PB = y + 10, find the length PA. Type your answer as a number.",
+    "answer": "17",
+    "hints": [
+      "Two tangent segments drawn to a circle from the same external point are congruent, so PA = PB.",
+      "Solve 3y - 4 = y + 10 to get y = 7, then substitute into 3y - 4 — the question asks for a length, not for y."
+    ]
+  },
+  {
+    "id": "geom-tangents-secants-angles-006",
+    "loId": "geom.tangents-secants-angles",
+    "cedCode": "GEOM-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "From a point P outside circle O, a tangent touches the circle at T and a secant passes through the circle at C (the nearer point) and then D (the farther point). Arc TC (from T to C, not containing D) measures x°, arc CD (not containing T) measures 100°, and arc TD (from T to D, not containing C) measures (3x + 20)°. Find m∠P.",
+    "choices": [
+      "100°",
+      "130°",
+      "70°",
+      "30°"
+    ],
+    "answer": "C",
+    "hints": [
+      "First recover x: the three arcs go all the way around the circle, so x + 100 + (3x + 20) = 360.",
+      "x = 60, so the near arc TC is 60° and the far arc TD is 200°. An external vertex takes half the DIFFERENCE: (1/2)(200° - 60°)."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-001",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the center of the circle with equation (x + 4)² + (y - 9)² = 25?",
+    "choices": [
+      "(4, -9)",
+      "(-4, 9)",
+      "(-4, -9)",
+      "(4, 9)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Standard form is (x - h)² + (y - k)² = r², so the form SUBTRACTS the center coordinates.",
+      "(x + 4)² is really (x - (-4))², so h = -4; (y - 9)² gives k = 9 directly."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-002",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which equation represents the circle with center (-2, 6) and radius 11?",
+    "choices": [
+      "(x - 2)² + (y + 6)² = 121",
+      "(x + 2)² + (y - 6)² = 11",
+      "(x + 2)² + (y - 6)² = 121",
+      "(x - 2)² + (y + 6)² = 11"
+    ],
+    "answer": "C",
+    "hints": [
+      "Substitute h = -2 and k = 6 into (x - h)² + (y - k)² = r², keeping the subtraction signs of the form.",
+      "x - (-2) becomes x + 2, y - 6 stays y - 6, and the right side is r² = 11² = 121, not 11."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-003",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Circle C has equation (x - 5)² + (y + 1)² = 100. Which statement about the point (11, 7) is true?",
+    "choices": [
+      "The point lies inside the circle.",
+      "The point lies outside the circle.",
+      "The point is the center of the circle.",
+      "The point lies on the circle."
+    ],
+    "answer": "D",
+    "hints": [
+      "Substitute the point into the LEFT side of the equation and compare the result to r² = 100.",
+      "(11 - 5)² + (7 + 1)² = 36 + 64. Less than 100 means inside, equal means on the circle, greater means outside."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-004",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circle has a diameter with endpoints M(-3, 2) and N(5, 8). Which equation represents this circle?",
+    "choices": [
+      "(x - 1)² + (y - 5)² = 25",
+      "(x + 1)² + (y + 5)² = 25",
+      "(x - 1)² + (y - 5)² = 100",
+      "(x + 3)² + (y - 2)² = 100"
+    ],
+    "answer": "A",
+    "hints": [
+      "The center is the midpoint of the diameter: ((-3 + 5)/2, (2 + 8)/2).",
+      "MN = √(8² + 6²) = 10 is the DIAMETER, so r = 5 and r² = 25 — do not square the whole 10."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-005",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A circle in the coordinate plane has the equation x² + y² + 10x - 4y - 20 = 0. Find its radius. Type your answer as a number.",
+    "answer": "7",
+    "hints": [
+      "Group by variable and move the constant across: (x² + 10x) + (y² - 4y) = 20.",
+      "Add (10/2)² = 25 and (-4/2)² = 4 to BOTH sides: (x + 5)² + (y - 2)² = 20 + 25 + 4 = 49. The radius is √49."
+    ]
+  },
+  {
+    "id": "geom-circle-equations-006",
+    "loId": "geom.circle-equations",
+    "cedCode": "GEOM-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "What is the radius of the circle with equation 2x² + 2y² - 12x + 20y - 4 = 0?",
+    "choices": [
+      "3",
+      "6",
+      "√2",
+      "12"
+    ],
+    "answer": "B",
+    "hints": [
+      "The x² and y² terms carry a coefficient of 2 — divide EVERY term by 2 before completing the square, or the center and radius both come out wrong.",
+      "After dividing: x² + y² - 6x + 10y - 2 = 0, so (x² - 6x) + (y² + 10y) = 2. Add 9 and 25 to both sides to get 36 on the right, then take the square root."
+    ]
+  }
+]

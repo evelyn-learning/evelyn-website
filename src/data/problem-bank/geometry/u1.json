@@ -1,0 +1,357 @@
+[
+  {
+    "id": "geom-points-lines-planes-001",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Points A, B, C, and D all lie in plane M, and no three of them lie on the same straight line. Which term correctly describes points A, B, C, and D?",
+    "choices": ["Collinear", "Skew", "Coplanar", "Non-coplanar"],
+    "answer": "C",
+    "hints": [
+      "Collinear means lying on one LINE; coplanar means lying on one PLANE.",
+      "All four points sit in plane M, but no three share a line, so only the plane condition holds."
+    ]
+  },
+  {
+    "id": "geom-points-lines-planes-002",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that ray ST and ray TS are the same ray written two different ways. Which statement is correct?",
+    "choices": [
+      "They are different rays: ray ST starts at S and passes through T, while ray TS starts at T and passes through S.",
+      "They are the same ray, because segment ST and segment TS are the same segment.",
+      "They are the same ray, because a ray extends forever in both directions.",
+      "They are different rays because ray ST is longer than ray TS."
+    ],
+    "answer": "A",
+    "hints": [
+      "The FIRST letter of a ray's name is its endpoint — the place it starts.",
+      "Letter order does not matter for segments or lines, but it is the whole story for rays."
+    ]
+  },
+  {
+    "id": "geom-points-lines-planes-003",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular box has top face PQRS sitting directly above bottom face TUVW, with P above T, Q above U, R above V, and S above W. Which pair of lines is skew?",
+    "choices": [
+      "line PQ and line SR",
+      "line PQ and line RV",
+      "line PQ and line TU",
+      "line PT and line QU"
+    ],
+    "answer": "B",
+    "hints": [
+      "Skew lines never meet AND do not lie together in any single plane; parallel lines never meet but ARE coplanar.",
+      "Line PQ lies in the top face, and P, Q, R already determine that top face — but V sits below it, so no one plane holds both lines."
+    ]
+  },
+  {
+    "id": "geom-points-lines-planes-004",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A, B, C, and D are four distinct points. Exactly three of them — A, B, and C — lie on the same straight line. A line is drawn through every possible pair of these four points. How many different lines are drawn?",
+    "choices": ["6", "3", "5", "4"],
+    "answer": "D",
+    "hints": [
+      "Two distinct points determine exactly one line, so start by counting pairs: there are 6 pairs of four points.",
+      "The pairs AB, BC, and AC all determine the SAME line, so those three collapse into one; add the lines through D."
+    ]
+  },
+  {
+    "id": "geom-points-lines-planes-005",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is ALWAYS true?",
+    "choices": [
+      "Two lines that never intersect must be parallel.",
+      "Any three points determine exactly one plane.",
+      "If two points of a line lie in a plane, then the entire line lies in that plane.",
+      "Two distinct planes that intersect meet in exactly one point."
+    ],
+    "answer": "C",
+    "hints": [
+      "Try to break each statement with one counterexample — a box or a room is a handy source of them.",
+      "Watch for a missing condition: 'never intersect' forgets coplanar, and 'three points' forgets non-collinear."
+    ]
+  },
+  {
+    "id": "geom-points-lines-planes-006",
+    "loId": "geom.points-lines-planes",
+    "cedCode": "GEOM-1.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Six distinct points lie in a plane. Exactly three of them — A, B, and C — lie on one straight line, and no other set of three of the six points is collinear. A line is drawn through every possible pair of the six points. How many different lines are drawn? Type your answer as a number.",
+    "answer": "13",
+    "hints": [
+      "Count every pair first: 5 + 4 + 3 + 2 + 1 = 15 pairs of points.",
+      "The pairs AB, BC, and AC give the same single line, so 3 of those 15 collapse into 1: compute 15 - 3 + 1."
+    ]
+  },
+
+  {
+    "id": "geom-segments-distance-midpoint-001",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "M is the midpoint of segment AB, and AM = 7. What is AB?",
+    "choices": ["14", "3.5", "7", "49"],
+    "answer": "A",
+    "hints": [
+      "A midpoint cuts a segment into two congruent halves, so AM = MB.",
+      "The whole segment is twice one half: AB = 2 · AM."
+    ]
+  },
+  {
+    "id": "geom-segments-distance-midpoint-002",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find the midpoint of the segment with endpoints R(-4, 9) and S(6, -1).",
+    "choices": ["(5, -5)", "(2, 8)", "(1, 4)", "(4, 1)"],
+    "answer": "C",
+    "hints": [
+      "The midpoint formula AVERAGES: M = ((x₁ + x₂)/2, (y₁ + y₂)/2). There is no subtraction in it.",
+      "x of M = (-4 + 6)/2 and y of M = (9 + (-1))/2. Check that your answer lands between the endpoints on both axes."
+    ]
+  },
+  {
+    "id": "geom-segments-distance-midpoint-003",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Find the exact distance between J(2, -3) and K(-4, 3).",
+    "choices": ["12", "6√2", "√12", "6"],
+    "answer": "B",
+    "hints": [
+      "Horizontal gap: -4 - 2 = -6. Vertical gap: 3 - (-3) = 6. Squaring makes the signs disappear.",
+      "d = √((-6)² + 6²) = √72 — now pull the perfect square 36 out of √72."
+    ]
+  },
+  {
+    "id": "geom-segments-distance-midpoint-004",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Point Q lies on segment PR, between P and R. PQ = 2x + 3, QR = 4x - 5, and PR = 34. What is the length PQ?",
+    "choices": ["6", "19", "12", "15"],
+    "answer": "D",
+    "hints": [
+      "Q is between P and R, so the Segment Addition Postulate gives PQ + QR = PR: (2x + 3) + (4x - 5) = 34.",
+      "Combine to 6x - 2 = 34, so x = 6 — but the question asks for PQ = 2x + 3, not for x and not for QR."
+    ]
+  },
+  {
+    "id": "geom-segments-distance-midpoint-005",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "M(3, -1) is the midpoint of segment CD, and endpoint C is at (-2, 5). What are the coordinates of D?",
+    "choices": ["(0.5, 2)", "(8, -7)", "(5, -6)", "(-7, 8)"],
+    "answer": "B",
+    "hints": [
+      "Averaging M with C would land you a quarter of the way along, not at the far endpoint.",
+      "Reflect C across M: x = 2·3 - (-2) and y = 2·(-1) - 5. Verify by averaging C and your D back to M."
+    ]
+  },
+  {
+    "id": "geom-segments-distance-midpoint-006",
+    "loId": "geom.segments-distance-midpoint",
+    "cedCode": "GEOM-1.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Point B is the midpoint of segment AC. AB = 5x - 2 and BC = 3x + 6. Find the length AC. Type your answer as a number.",
+    "answer": "36",
+    "hints": [
+      "A midpoint makes the two halves equal, so set 5x - 2 = 3x + 6 and solve for x.",
+      "x = 4 gives AB = 18, but AC is the WHOLE segment: AC = 2 · AB."
+    ]
+  },
+
+  {
+    "id": "geom-angles-and-measure-001",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An angle measures 113°. How is this angle classified?",
+    "choices": ["Acute", "Right", "Obtuse", "Straight"],
+    "answer": "C",
+    "hints": [
+      "Compare the measure to 90° and to 180°.",
+      "Angles strictly between 90° and 180° are obtuse."
+    ]
+  },
+  {
+    "id": "geom-angles-and-measure-002",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ray YX and ray YZ share endpoint Y and form the only angle at Y. Which of the following is NOT a correct name for that angle?",
+    "choices": ["∠ZYX", "∠XZY", "∠XYZ", "∠Y"],
+    "answer": "B",
+    "hints": [
+      "In a three-letter angle name, the vertex must be the MIDDLE letter.",
+      "The vertex here is Y, so any three-letter name with Y on an end names a different angle."
+    ]
+  },
+  {
+    "id": "geom-angles-and-measure-003",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ray OB lies in the interior of ∠AOC. m∠AOB = 28° and m∠AOC = 91°. Find m∠BOC.",
+    "choices": ["63°", "119°", "62°", "45.5°"],
+    "answer": "A",
+    "hints": [
+      "An interior ray splits the angle: m∠AOB + m∠BOC = m∠AOC.",
+      "The whole is 91°, so subtract the known part: 91 - 28. The ray is not stated to be a bisector, so do not halve anything."
+    ]
+  },
+  {
+    "id": "geom-angles-and-measure-004",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ray WY bisects ∠XWZ. m∠XWZ = (6x + 4)° and m∠XWY = (2x + 11)°. Find m∠XWZ.",
+    "choices": ["9°", "29°", "116°", "58°"],
+    "answer": "D",
+    "hints": [
+      "∠XWY is one HALF of ∠XWZ, so the whole equals twice the half: 6x + 4 = 2(2x + 11).",
+      "Distribute to 6x + 4 = 4x + 22, giving x = 9. Substitute into the expression for the WHOLE angle, not the half."
+    ]
+  },
+  {
+    "id": "geom-angles-and-measure-005",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "∠PQR is a straight angle. Ray QS lies in its interior, and m∠PQS is 34° more than m∠SQR. Find m∠PQS.",
+    "choices": ["73°", "107°", "146°", "90°"],
+    "answer": "B",
+    "hints": [
+      "A straight angle measures 180°, and the interior ray splits it: m∠PQS + m∠SQR = 180.",
+      "Let m∠SQR = a, so m∠PQS = a + 34 and a + (a + 34) = 180. Solve for a, then answer the angle that was asked for."
+    ]
+  },
+  {
+    "id": "geom-angles-and-measure-006",
+    "loId": "geom.angles-and-measure",
+    "cedCode": "GEOM-1.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Ray BD lies in the interior of ∠ABC. m∠ABD = (5x - 4)°, m∠DBC = (2x + 11)°, and m∠ABC = 91°. Find m∠ABD in degrees. Type your answer as a number.",
+    "answer": "56",
+    "hints": [
+      "Angle Addition Postulate: (5x - 4) + (2x + 11) = 91.",
+      "Combine to 7x + 7 = 91, so x = 12 — then substitute back into 5x - 4, because the question asks for the angle, not x."
+    ]
+  },
+
+  {
+    "id": "geom-angle-pair-relationships-001",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An angle measures 34°. What is the measure of its complement?",
+    "choices": ["146°", "66°", "56°", "326°"],
+    "answer": "C",
+    "hints": [
+      "Complementary angles sum to 90°; supplementary angles sum to 180°.",
+      "C comes before S in the alphabet just as 90 comes before 180 — subtract from 90."
+    ]
+  },
+  {
+    "id": "geom-angle-pair-relationships-002",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines RS and TU intersect at point V, and m∠RVT = 118°. Find m∠SVT.",
+    "choices": ["62°", "118°", "28°", "242°"],
+    "answer": "A",
+    "hints": [
+      "R, V, and S lie on one line, so rays VR and VS are opposite rays and ∠RVT and ∠SVT form a linear pair.",
+      "A linear pair is supplementary: m∠SVT = 180° - 118°."
+    ]
+  },
+  {
+    "id": "geom-angle-pair-relationships-003",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "∠1 and ∠2 share vertex P and share ray PB, and their interiors do not overlap. Their non-shared sides, ray PA and ray PC, are opposite rays. Which statement describes ∠1 and ∠2?",
+    "choices": [
+      "They are vertical angles, so they are congruent.",
+      "They are complementary, because they share a side.",
+      "They are adjacent, so they must be congruent.",
+      "They form a linear pair, so they are supplementary."
+    ],
+    "answer": "D",
+    "hints": [
+      "Opposite rays form a straight line, and the two angles are adjacent — that combination has a name.",
+      "Vertical angles are NON-adjacent; these two share a side, so they are the other named pair, and it always sums to 180°."
+    ]
+  },
+  {
+    "id": "geom-angle-pair-relationships-004",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two lines intersect. ∠1 and ∠2 are vertical angles, with m∠1 = (7x - 12)° and m∠2 = (4x + 21)°. Find m∠1.",
+    "choices": ["11°", "65°", "115°", "77°"],
+    "answer": "B",
+    "hints": [
+      "Vertical angles are CONGRUENT, so set the expressions equal — the 180° equation belongs to linear pairs.",
+      "7x - 12 = 4x + 21 gives x = 11; substitute into 7x - 12 and check that both expressions give the same measure."
+    ]
+  },
+  {
+    "id": "geom-angle-pair-relationships-005",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The supplement of an angle is four times the angle's complement. What is the measure of the angle?",
+    "choices": ["30°", "45°", "60°", "120°"],
+    "answer": "C",
+    "hints": [
+      "Call the angle x. Its supplement is 180 - x and its complement is 90 - x.",
+      "Write 180 - x = 4(90 - x), distribute to 180 - x = 360 - 4x, then solve for x."
+    ]
+  },
+  {
+    "id": "geom-angle-pair-relationships-006",
+    "loId": "geom.angle-pair-relationships",
+    "cedCode": "GEOM-1.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Two lines intersect at point P. ∠1 and ∠2 form a linear pair, with m∠1 = (3x + 8)° and m∠2 = (7x + 2)°. ∠3 is the angle vertical to ∠1. Find m∠3 in degrees. Type your answer as a number.",
+    "answer": "59",
+    "hints": [
+      "Linear pair means supplementary: (3x + 8) + (7x + 2) = 180.",
+      "10x + 10 = 180 gives x = 17, so m∠1 = 59°. Vertical angles are congruent, so m∠3 equals m∠1."
+    ]
+  }
+]

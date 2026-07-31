@@ -61,6 +61,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Radicals & Rational Expressions',
     '10': 'Data & Sequences',
   },
+  geometry: {
+    '1': 'Foundations of Geometry',
+    '2': 'Reasoning & Proof',
+    '3': 'Parallel & Perpendicular Lines',
+    '4': 'Transformations & Congruence',
+    '5': 'Triangles',
+    '6': 'Similarity',
+    '7': 'Right Triangles & Trigonometry',
+    '8': 'Quadrilaterals & Polygons',
+    '9': 'Circles',
+    '10': 'Area, Surface Area & Volume',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.

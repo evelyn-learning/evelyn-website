@@ -44,6 +44,7 @@ const COURSE_NAMES: Record<string, string> = {
   'digital-sat': 'Digital SAT',
   act: 'ACT',
   'algebra-1': 'Algebra 1',
+  'geometry': 'Geometry',
 };
 // topic/topicId are derived from the --course dir name at upsert (the course
 // dir matches the engine topic, e.g. ap-statistics, ap-calculus-bc).

@@ -1,0 +1,328 @@
+[
+  {
+    "id": "geom-inductive-deductive-reasoning-001",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student draws six different triangles, measures the three angles of each, and finds that every sum is 180°. She then states, \"The angles of every triangle add to 180°.\" Which description fits her reasoning and her statement?",
+    "choices": [
+      "Deductive reasoning; the statement is a proved theorem",
+      "Inductive reasoning; the statement is a conjecture",
+      "Deductive reasoning; the statement is a conjecture",
+      "Inductive reasoning; the statement is a proved theorem"
+    ],
+    "answer": "B",
+    "hints": [
+      "Reasoning that moves from a handful of observed cases to a general claim has its own name.",
+      "A general claim supported only by examples is a conjecture, no matter how many cases back it."
+    ]
+  },
+  {
+    "id": "geom-inductive-deductive-reasoning-002",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which single case disproves the conjecture \"If two lines do not intersect, then the two lines are parallel\"?",
+    "choices": [
+      "Two lines that cross at a 90° angle",
+      "Two lines drawn in the same plane, always 4 cm apart, that never meet",
+      "Two skew lines in space: one running along the front edge of the top face of a box, the other running along the right edge of the bottom face",
+      "Two lines that meet at exactly one point"
+    ],
+    "answer": "C",
+    "hints": [
+      "A counterexample must make the hypothesis TRUE (the lines never meet) and the conclusion FALSE (they are not parallel).",
+      "Parallel lines must lie in the same plane; two lines in space can miss each other without ever being parallel."
+    ]
+  },
+  {
+    "id": "geom-inductive-deductive-reasoning-003",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A theorem states: if a ray bisects an angle, then it divides that angle into two congruent angles. You are told that ray BD bisects ∠ABC. What does the Law of Detachment let you conclude?",
+    "choices": [
+      "∠ABD ≅ ∠DBC",
+      "Nothing, because the fact you were handed is the conclusion of the theorem, not its hypothesis",
+      "Ray BD is perpendicular to ray BA",
+      "∠ABC is a right angle"
+    ],
+    "answer": "A",
+    "hints": [
+      "Detachment fires when you are handed the hypothesis p of a true statement \"if p, then q\".",
+      "Being told that ray BD bisects ∠ABC is exactly p, so the theorem's conclusion q follows."
+    ]
+  },
+  {
+    "id": "geom-inductive-deductive-reasoning-004",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two true statements are given: \"If a figure is a rhombus, then it is a parallelogram\" and \"If a figure is a parallelogram, then its opposite sides are parallel.\" Which conclusion follows from the Law of Syllogism?",
+    "choices": [
+      "If a figure has opposite sides parallel, then it is a rhombus.",
+      "If a figure is a parallelogram, then it is a rhombus.",
+      "If a figure is not a rhombus, then its opposite sides are not parallel.",
+      "If a figure is a rhombus, then its opposite sides are parallel."
+    ],
+    "answer": "D",
+    "hints": [
+      "Syllogism chains p → q with q → r to produce p → r.",
+      "Here p is \"is a rhombus\", q is \"is a parallelogram\", and r is \"has opposite sides parallel\" — the arrow keeps pointing the same way."
+    ]
+  },
+  {
+    "id": "geom-inductive-deductive-reasoning-005",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The interior angle sums of polygons follow a pattern: 180° for a triangle, 360° for a quadrilateral, 540° for a pentagon, and 720° for a hexagon. Using inductive reasoning, what is the interior angle sum, in degrees, of a nine-sided polygon? Type your answer as a number.",
+    "hints": [
+      "Look at the jump from one polygon to the next — the same amount is added each time a side is added.",
+      "The sum grows 180° per extra side: 900 for seven sides, 1080 for eight, and one more step for nine."
+    ],
+    "answer": "1260"
+  },
+  {
+    "id": "geom-inductive-deductive-reasoning-006",
+    "loId": "geom.inductive-deductive-reasoning",
+    "cedCode": "GEOM-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A true theorem states: if two angles are vertical angles, then they are congruent. Which argument applies this theorem VALIDLY?",
+    "choices": [
+      "∠3 ≅ ∠4, so ∠3 and ∠4 are vertical angles.",
+      "∠3 and ∠4 are not vertical angles, so ∠3 and ∠4 are not congruent.",
+      "∠3 and ∠4 are vertical angles, so ∠3 ≅ ∠4.",
+      "∠3 ≅ ∠4, so ∠3 and ∠4 are not vertical angles."
+    ],
+    "answer": "C",
+    "hints": [
+      "Detachment runs forward only: a valid argument must START from the theorem's hypothesis.",
+      "Starting from congruence and reaching back to \"vertical\" is the converse; starting from \"not vertical\" is the inverse. Neither is guaranteed by the theorem."
+    ]
+  },
+
+  {
+    "id": "geom-conditional-statements-001",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For the conditional \"If two angles are complementary, then their measures add to 90°,\" which part is the hypothesis?",
+    "choices": [
+      "Two angles are complementary",
+      "Their measures add to 90°",
+      "Two angles are supplementary",
+      "The two angles are congruent"
+    ],
+    "answer": "A",
+    "hints": [
+      "The hypothesis states when the rule fires, and it sits right after the word \"if\".",
+      "Whatever follows the word \"then\" is the conclusion, not the hypothesis."
+    ]
+  },
+  {
+    "id": "geom-conditional-statements-002",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the CONVERSE of \"If a quadrilateral is a rectangle, then it has four right angles\"?",
+    "choices": [
+      "If a quadrilateral is not a rectangle, then it does not have four right angles.",
+      "If a quadrilateral does not have four right angles, then it is not a rectangle.",
+      "If a quadrilateral is a rectangle, then it does not have four right angles.",
+      "If a quadrilateral has four right angles, then it is a rectangle."
+    ],
+    "answer": "D",
+    "hints": [
+      "The converse SWAPS the hypothesis and the conclusion — nothing gets negated.",
+      "Negating both parts gives the inverse; swapping and negating gives the contrapositive. Neither of those is the converse."
+    ]
+  },
+  {
+    "id": "geom-conditional-statements-003",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Start from the conditional \"If a polygon is a triangle, then it has three sides.\" The statement \"If a polygon is not a triangle, then it does not have three sides\" is which relative of the original?",
+    "choices": [
+      "The converse",
+      "The inverse",
+      "The contrapositive",
+      "The biconditional"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check which move was made: were the two parts swapped, negated, or both?",
+      "Both parts were negated and left in their original order — swap gives the converse, negate gives the inverse."
+    ]
+  },
+  {
+    "id": "geom-conditional-statements-004",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For which of these true conditionals is the CONVERSE also true?",
+    "choices": [
+      "If a quadrilateral is a square, then it is a parallelogram.",
+      "If two angles form a linear pair, then they are supplementary.",
+      "If an angle measures 90°, then it is a right angle.",
+      "If a triangle is equilateral, then it has at least two congruent sides."
+    ],
+    "answer": "C",
+    "hints": [
+      "A converse is true when the statement works in both directions — which is exactly what a definition does.",
+      "Hunt a counterexample for each converse: a parallelogram that is not a square, supplementary angles that are not adjacent, an isosceles triangle that is not equilateral."
+    ]
+  },
+  {
+    "id": "geom-conditional-statements-005",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The statement \"If two angles are supplementary, then both angles are obtuse\" is false. To build a counterexample you draw a first angle measuring 118°. What must the second angle measure, in degrees, so that the pair satisfies the hypothesis? Type your answer as a number.",
+    "hints": [
+      "A counterexample has to SATISFY the hypothesis, so the two measures must add to 180°.",
+      "Solve 118 + x = 180; the acute angle you get is what breaks the conclusion."
+    ],
+    "answer": "62"
+  },
+  {
+    "id": "geom-conditional-statements-006",
+    "loId": "geom.conditional-statements",
+    "cedCode": "GEOM-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The statement \"If a figure is a square, then it is a rhombus\" is TRUE. Based only on that fact, which related statement MUST also be true?",
+    "choices": [
+      "If a figure is not a rhombus, then it is not a square.",
+      "If a figure is a rhombus, then it is a square.",
+      "If a figure is not a square, then it is not a rhombus.",
+      "If a figure is a rhombus, then it is not a square."
+    ],
+    "answer": "A",
+    "hints": [
+      "Only one of the three relatives always shares the truth value of the original conditional.",
+      "A statement and its contrapositive (swap AND negate) always agree; the converse and the inverse both fail here, since a rhombus with 60° and 120° angles is not a square."
+    ]
+  },
+
+  {
+    "id": "geom-two-column-proofs-001",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A two-column proof begins with row 1: 5x = 40, Reason: Given. Row 2 reads x = 8. Which reason justifies row 2?",
+    "choices": [
+      "Subtraction Property of Equality",
+      "Substitution Property",
+      "Division Property of Equality",
+      "Reflexive Property of Equality"
+    ],
+    "answer": "C",
+    "hints": [
+      "Name the operation that was actually performed on both sides of the equation.",
+      "Both sides were divided by 5."
+    ]
+  },
+  {
+    "id": "geom-two-column-proofs-002",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a proof about two triangles that share the side AB, a student writes the row \"AB ≅ AB.\" Which reason justifies that row?",
+    "choices": [
+      "Given",
+      "Reflexive Property of Congruence",
+      "Symmetric Property of Congruence",
+      "Transitive Property of Congruence"
+    ],
+    "answer": "B",
+    "hints": [
+      "The row claims that a segment is congruent to itself.",
+      "Symmetric only flips one statement around, and Transitive links two statements through a shared middle quantity — neither move happened here."
+    ]
+  },
+  {
+    "id": "geom-two-column-proofs-003",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point B lies between A and C on a line. A proof contains the row \"AB + BC = AC.\" Which reason justifies that row?",
+    "choices": [
+      "Addition Property of Equality",
+      "Definition of midpoint",
+      "Substitution Property",
+      "Segment Addition Postulate"
+    ],
+    "answer": "D",
+    "hints": [
+      "Nothing was done to both sides of an earlier equation — this row is a fact about a point lying between two others.",
+      "Definition of midpoint would also require AB = BC, which was never stated."
+    ]
+  },
+  {
+    "id": "geom-two-column-proofs-004",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A two-column proof reads: row 1, (x/3) + 2 = 7, Reason: Given; row 2, (x/3) = 5; row 3, x = 15. Which pair of reasons justifies rows 2 and 3, in that order?",
+    "choices": [
+      "Subtraction Property of Equality; Multiplication Property of Equality",
+      "Addition Property of Equality; Division Property of Equality",
+      "Subtraction Property of Equality; Division Property of Equality",
+      "Substitution Property; Multiplication Property of Equality"
+    ],
+    "answer": "A",
+    "hints": [
+      "Name what was DONE at each step: row 2 removed a 2 from both sides, and row 3 undid a division by 3.",
+      "Undoing a division by 3 means multiplying both sides by 3, so row 3 is the Multiplication Property of Equality."
+    ]
+  },
+  {
+    "id": "geom-two-column-proofs-005",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Ray BD lies in the interior of ∠ABC, so m∠ABD + m∠DBC = m∠ABC by the Angle Addition Postulate. If m∠ABD = 3x + 5, m∠DBC = 2x - 10, and m∠ABC = 70°, find x. Type your answer as a number.",
+    "hints": [
+      "Substitute the three expressions into m∠ABD + m∠DBC = m∠ABC.",
+      "Combine like terms to get 5x - 5 = 70, then use the Addition and Division Properties of Equality."
+    ],
+    "answer": "15"
+  },
+  {
+    "id": "geom-two-column-proofs-006",
+    "loId": "geom.two-column-proofs",
+    "cedCode": "GEOM-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Given: ∠1 and ∠2 are supplementary, and ∠2 and ∠3 are supplementary. Prove: m∠1 = m∠3. The statements are, in order — row 1: ∠1 and ∠2 are supplementary and ∠2 and ∠3 are supplementary; row 2: m∠1 + m∠2 = 180° and m∠2 + m∠3 = 180°; row 3: m∠1 + m∠2 = m∠2 + m∠3; row 4: m∠1 = m∠3. Row 1's reason is Given. Which list gives the reasons for rows 2, 3, and 4, in that order?",
+    "choices": [
+      "Angle Addition Postulate; Substitution Property; Transitive Property of Equality",
+      "Definition of supplementary angles; Reflexive Property of Equality; Division Property of Equality",
+      "Definition of complementary angles; Subtraction Property of Equality; Substitution Property",
+      "Definition of supplementary angles; Substitution Property; Subtraction Property of Equality"
+    ],
+    "answer": "D",
+    "hints": [
+      "Row 2 unpacks what \"supplementary\" means, row 3 uses the fact that both sums equal the same number, and row 4 removes m∠2 from both sides.",
+      "Taking the same quantity away from both sides of an equation is the Subtraction Property of Equality."
+    ]
+  }
+]

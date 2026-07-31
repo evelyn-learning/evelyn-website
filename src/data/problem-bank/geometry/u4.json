@@ -1,0 +1,477 @@
+[
+  {
+    "id": "geom-translations-001",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Point A(4, -1) is translated by the rule (x, y) → (x - 3, y + 5). What are the coordinates of A'?",
+    "choices": ["(1, 4)", "(7, 4)", "(1, -6)", "(7, -6)"],
+    "answer": "A",
+    "hints": [
+      "Substitute x = 4 and y = -1 into the rule, one coordinate at a time.",
+      "x: 4 - 3 = 1. y: -1 + 5 = 4."
+    ]
+  },
+  {
+    "id": "geom-translations-002",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point M(-6, 2) is translated 5 units left and 3 units down. What are the coordinates of M'?",
+    "choices": ["(-1, 5)", "(-11, 5)", "(-11, -1)", "(-1, -1)"],
+    "answer": "C",
+    "hints": [
+      "Turn the words into a rule first: left and down are the negative directions.",
+      "The rule is (x, y) → (x - 5, y - 3). Now substitute x = -6 and y = 2."
+    ]
+  },
+  {
+    "id": "geom-translations-003",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A translation maps K(-2, 6) onto K'(3, -1). Which rule describes this translation?",
+    "choices": [
+      "(x, y) → (x - 5, y + 7)",
+      "(x, y) → (x + 5, y + 7)",
+      "(x, y) → (x - 5, y - 7)",
+      "(x, y) → (x + 5, y - 7)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find each shift by subtracting image minus preimage, not the other way around.",
+      "a = 3 - (-2) = 5 and b = -1 - 6 = -7."
+    ]
+  },
+  {
+    "id": "geom-translations-004",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Segment AB has endpoints A(-3, 4) and B(9, 9). The segment is translated 6 units left and 11 units down to form segment A'B'. Type the length of A'B' as a number.",
+    "answer": "13",
+    "hints": [
+      "A translation is a rigid motion, so A'B' has the same length as AB — no need to translate anything.",
+      "AB = √(12² + 5²) = √169."
+    ]
+  },
+  {
+    "id": "geom-translations-005",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Under a translation, the image of any point (x, y) is (x + 7, y - 4). The image of point W is W'(-2, 6). What are the coordinates of W itself?",
+    "choices": ["(5, 2)", "(-9, 10)", "(-9, 2)", "(5, 10)"],
+    "answer": "B",
+    "hints": [
+      "You are running the translation backwards, so undo each shift: subtract 7 and add 4.",
+      "x + 7 = -2 gives x = -9; y - 4 = 6 gives y = 10."
+    ]
+  },
+  {
+    "id": "geom-translations-006",
+    "loId": "geom.translations",
+    "cedCode": "GEOM-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A translation maps A(-7, 2) onto A'(-1, -3). A second translation then maps A' onto A''(4, 5). Which single translation rule maps A directly onto A''?",
+    "choices": [
+      "(x, y) → (x - 11, y - 3)",
+      "(x, y) → (x + 6, y + 8)",
+      "(x, y) → (x + 11, y - 13)",
+      "(x, y) → (x + 11, y + 3)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find each translation separately with image minus preimage, then add the two vectors component by component.",
+      "First vector: (6, -5). Second vector: (5, 8). Sum: (11, 3). Check it on A: -7 + 11 = 4 and 2 + 3 = 5."
+    ]
+  },
+  {
+    "id": "geom-reflections-001",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the image of the point (-6, 3) after a reflection across the x-axis?",
+    "choices": ["(6, 3)", "(-6, -3)", "(6, -3)", "(3, -6)"],
+    "answer": "B",
+    "hints": [
+      "The x-axis is the mirror, so ask which coordinate measures distance from the x-axis.",
+      "Reflecting across the x-axis is (x, y) → (x, -y): only the y-coordinate changes sign."
+    ]
+  },
+  {
+    "id": "geom-reflections-002",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the image of the point (4, 7) after a reflection across the line y = -x?",
+    "choices": ["(-7, -4)", "(7, 4)", "(-4, -7)", "(7, -4)"],
+    "answer": "A",
+    "hints": [
+      "Reflecting across either slanted mirror swaps the coordinates; the question is what happens to the signs.",
+      "Across y = -x the rule is (x, y) → (-y, -x): swap, then negate both."
+    ]
+  },
+  {
+    "id": "geom-reflections-003",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point T(-1, 5) is reflected across the vertical line x = 3. What are the coordinates of T'?",
+    "choices": ["(-7, 5)", "(1, 5)", "(7, 5)", "(-1, 7)"],
+    "answer": "C",
+    "hints": [
+      "The mirror is vertical, so only the x-coordinate moves. Count how far T sits from the line x = 3.",
+      "T is 4 units left of the line, so T' is 4 units right of it: x = 3 + 4."
+    ]
+  },
+  {
+    "id": "geom-reflections-004",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A reflection across a line m maps P(3, -2) onto P'(3, 10). Segment PP' crosses line m at one point. Type the y-coordinate of that crossing point as a number.",
+    "answer": "4",
+    "hints": [
+      "The line of reflection is the perpendicular bisector of PP', so it cuts the segment at its midpoint.",
+      "Midpoint of the y-values: (-2 + 10)/2."
+    ]
+  },
+  {
+    "id": "geom-reflections-005",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A single reflection maps G(-4, 1) onto G'(-4, 9) and maps H(2, 3) onto H'(2, 7). Across which line was the figure reflected?",
+    "choices": ["y = 4", "x = 5", "the x-axis", "y = 5"],
+    "answer": "D",
+    "hints": [
+      "Each point kept its x-coordinate and moved vertically, so the mirror is a horizontal line y = k.",
+      "The mirror is the perpendicular bisector, so k is the midpoint of each pair: (1 + 9)/2 = 5, and (3 + 7)/2 = 5 agrees."
+    ]
+  },
+  {
+    "id": "geom-reflections-006",
+    "loId": "geom.reflections",
+    "cedCode": "GEOM-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(1, 2), B(5, 2), and C(1, 4), and reading A → B → C travels counterclockwise. The triangle is reflected across the line y = x to form △A'B'C'. Which statement is completely correct?",
+    "choices": [
+      "A'(2, 1), B'(2, 5), C'(4, 1), and A' → B' → C' reads counterclockwise",
+      "A'(2, 1), B'(2, 5), C'(4, 1), and A' → B' → C' reads clockwise",
+      "A'(-2, -1), B'(-2, -5), C'(-4, -1), and A' → B' → C' reads clockwise",
+      "A'(1, -2), B'(5, -2), C'(1, -4), and A' → B' → C' reads clockwise"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two things to settle: the coordinate rule for the mirror y = x, and what a reflection does to the reading order of the labels.",
+      "Across y = x the rule is (x, y) → (y, x) with no sign changes, and a reflection always reverses orientation."
+    ]
+  },
+  {
+    "id": "geom-rotations-001",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the image of the point P(3, -8) after a rotation of 180° about the origin?",
+    "choices": ["(-3, 8)", "(3, 8)", "(-8, 3)", "(-3, -8)"],
+    "answer": "A",
+    "hints": [
+      "A half-turn about the origin is (x, y) → (-x, -y).",
+      "Negate both coordinates; no swapping happens for a 180° turn."
+    ]
+  },
+  {
+    "id": "geom-rotations-002",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the image of the point V(-2, 5) after a rotation of 90° clockwise about the origin?",
+    "choices": ["(-5, -2)", "(5, 2)", "(-5, 2)", "(2, -5)"],
+    "answer": "B",
+    "hints": [
+      "Clockwise and counterclockwise quarter-turns both swap the coordinates but negate different ones — pick the clockwise twin.",
+      "90° clockwise about the origin is (x, y) → (y, -x): swap to get (5, -2), then negate the second entry."
+    ]
+  },
+  {
+    "id": "geom-rotations-003",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rotation of 300° counterclockwise about the origin produces the same image as which rotation about the origin?",
+    "choices": ["60° counterclockwise", "300° clockwise", "60° clockwise", "30° clockwise"],
+    "answer": "C",
+    "hints": [
+      "A full turn is 360°, so a counterclockwise turn of t° lands where a clockwise turn of (360 - t)° lands.",
+      "360° - 300° = 60°, and the direction flips to clockwise."
+    ]
+  },
+  {
+    "id": "geom-rotations-004",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Point C(7, 4) is rotated 90° counterclockwise about the center (2, 1). What are the coordinates of the image C'?",
+    "choices": ["(-4, 7)", "(-3, 5)", "(5, -4)", "(-1, 6)"],
+    "answer": "D",
+    "hints": [
+      "The center is not the origin, so shift first: subtract the center from the point, rotate, then add the center back.",
+      "Shift: (7 - 2, 4 - 1) = (5, 3). Rotate with (x, y) → (-y, x): (-3, 5). Add the center back: (-3 + 2, 5 + 1)."
+    ]
+  },
+  {
+    "id": "geom-rotations-005",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Point Q(-3, 6) is rotated 180° about the center (1, -2). Type the y-coordinate of the image Q' as a number.",
+    "answer": "-10",
+    "hints": [
+      "For a half-turn the center is the midpoint of the point and its image, so the image of (x, y) is (2a - x, 2b - y) about center (a, b).",
+      "y-coordinate: 2(-2) - 6."
+    ]
+  },
+  {
+    "id": "geom-rotations-006",
+    "loId": "geom.rotations",
+    "cedCode": "GEOM-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(-1, 2), B(3, 2), and C(-1, 5). The triangle is rotated 90° clockwise about vertex A. Which pair gives the images of B and C?",
+    "choices": [
+      "B'(2, -3) and C'(5, 1)",
+      "B'(-1, -2) and C'(2, 2)",
+      "B'(0, -4) and C'(3, 0)",
+      "B'(-1, 6) and C'(-4, 2)"
+    ],
+    "answer": "B",
+    "hints": [
+      "The center of rotation never moves, so A' must still be A(-1, 2) — the origin rules do not apply directly here.",
+      "Subtract A: B → (4, 0) and C → (0, 3). Apply the clockwise rule (x, y) → (y, -x): (0, -4) and (3, 0). Now add A back."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-001",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A regular octagon is rotated about its center. What is the smallest rotation greater than 0° that maps the octagon exactly onto itself?",
+    "choices": ["8°", "90°", "45°", "360°"],
+    "answer": "C",
+    "hints": [
+      "For a regular n-gon the smallest angle of rotational symmetry is 360°/n.",
+      "An octagon has 8 sides, so compute 360°/8."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-002",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Lines m and n are parallel and 7 cm apart. A figure is reflected across m and then across n. The composition is equivalent to which single rigid motion?",
+    "choices": [
+      "A translation of 7 cm perpendicular to the lines",
+      "A rotation of 14° about a point on m",
+      "A reflection across the line halfway between m and n",
+      "A translation of 14 cm perpendicular to the lines, in the direction from m toward n"
+    ],
+    "answer": "D",
+    "hints": [
+      "Parallel mirrors give a translation; the only question is how far.",
+      "The distance is 2d, twice the gap between the mirrors, not d."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-003",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which figure has exactly 2 lines of symmetry?",
+    "choices": [
+      "A rectangle that is not a square",
+      "A square",
+      "A parallelogram with no right angles and no two congruent adjacent sides",
+      "An equilateral triangle"
+    ],
+    "answer": "A",
+    "hints": [
+      "A line of symmetry must map the whole figure onto itself, not merely cut it into two congruent pieces.",
+      "A non-square rectangle folds onto itself across the two lines through opposite side midpoints — but not across a diagonal."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-004",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle PQR has vertices P(2, 1), Q(5, 1), and R(2, 3). The triangle is reflected across the x-axis, and that image is then translated 3 units left and 1 unit up. What are the coordinates of the final image of P, Q, and R, in that order?",
+    "choices": [
+      "(-1, -2), (2, -2), (-1, -4)",
+      "(-5, 2), (-8, 2), (-5, 4)",
+      "(-1, 0), (2, 0), (-1, -2)",
+      "(-1, 2), (2, 2), (-1, 4)"
+    ],
+    "answer": "C",
+    "hints": [
+      "Do the reflection completely first, then feed those image points into the translation — order matters.",
+      "Across the x-axis: (2, -1), (5, -1), (2, -3). Now apply (x, y) → (x - 3, y + 1)."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-005",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Point A(-5, 2) is reflected across the y-axis, and that image is then rotated 90° counterclockwise about the origin. Type the y-coordinate of the final image as a number.",
+    "answer": "5",
+    "hints": [
+      "Reflect first: across the y-axis the rule is (x, y) → (-x, y).",
+      "That gives (5, 2); now apply (x, y) → (-y, x) and read the second coordinate."
+    ]
+  },
+  {
+    "id": "geom-compositions-symmetry-006",
+    "loId": "geom.compositions-symmetry",
+    "cedCode": "GEOM-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Lines p and q intersect at point W forming a 25° angle, and the turn from p toward q is counterclockwise. A figure is reflected across p, then across q, and that image is then rotated 40° clockwise about W. The entire composition is equivalent to a single rotation about W. Which one?",
+    "choices": [
+      "A rotation of 65° counterclockwise about W",
+      "A rotation of 10° counterclockwise about W",
+      "A rotation of 15° clockwise about W",
+      "A rotation of 90° counterclockwise about W"
+    ],
+    "answer": "B",
+    "hints": [
+      "Collapse the two reflections first: intersecting mirrors meeting at θ give a rotation of 2θ about the intersection point, turning from the first mirror toward the second.",
+      "The reflections give 50° counterclockwise; combining that with 40° clockwise leaves 50° - 40°."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-001",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In terms of transformations, what does it mean for two figures to be congruent?",
+    "choices": [
+      "They have the same shape, though one may be larger than the other.",
+      "A sequence of rigid motions maps one figure exactly onto the other.",
+      "They face the same direction, so their vertices read in the same rotational order.",
+      "A dilation with some scale factor maps one figure onto the other."
+    ],
+    "answer": "B",
+    "hints": [
+      "The definition names specific kinds of moves: translations, reflections, and rotations.",
+      "Anything that changes a distance — such as a dilation — cannot be part of a congruence argument."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-002",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sequence of rigid motions gives △ABC ≅ △MNP. Which statement must be true?",
+    "choices": ["AB ≅ NP", "∠A ≅ ∠N", "BC ≅ MN", "AB ≅ MN"],
+    "answer": "D",
+    "hints": [
+      "The letter order in a congruence statement is the mapping: A goes to M, B goes to N, C goes to P.",
+      "The side named by the first two letters of each triangle must correspond: AB with MN."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-003",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Reading A → B → C around △ABC travels clockwise. A sequence of rigid motions maps △ABC onto △XYZ, and reading X → Y → Z travels counterclockwise. What must be true?",
+    "choices": [
+      "The sequence contains no reflections, since a rotation by itself reverses the reading order.",
+      "The sequence must include a dilation, because the reading order changed.",
+      "The sequence must include a reflection — an odd number of them.",
+      "The two triangles cannot be congruent, because congruent figures must read in the same direction."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask which of the three rigid motions is the only one that reverses orientation.",
+      "Translations and rotations preserve the reading order; only reflections flip it, so an odd number of reflections is required."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-004",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(-6, 2), B(-2, 2), and C(-6, 5). Triangle DEF has vertices D(2, -6), E(2, -2), and F(5, -6). Which single rigid motion maps A→D, B→E, and C→F?",
+    "choices": [
+      "Rotation of 90° clockwise about the origin",
+      "Reflection across the line y = -x",
+      "Reflection across the line y = x",
+      "Rotation of 180° about the origin"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare each preimage point with its partner: what happened to the two coordinates of A(-6, 2) to make D(2, -6)?",
+      "The coordinates swapped with no sign changes, which is the rule (x, y) → (y, x). Test it on B and C too."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-005",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A sequence of rigid motions maps △ABC onto △DEF so that A→D, B→E, and C→F. In △ABC, AB = 3x - 4, and in △DEF, DE = x + 12. Type the value of x as a number.",
+    "answer": "8",
+    "hints": [
+      "Rigid motions preserve distance, so the corresponding sides AB and DE have equal length.",
+      "Solve 3x - 4 = x + 12."
+    ]
+  },
+  {
+    "id": "geom-congruence-rigid-motions-006",
+    "loId": "geom.congruence-rigid-motions",
+    "cedCode": "GEOM-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Triangle ABC has vertices A(2, 1), B(6, 1), and C(2, 4). Triangle DEF has vertices D(-3, -2), E(-7, -2), and F(-3, -5). Which sequence of rigid motions maps A→D, B→E, and C→F?",
+    "choices": [
+      "A reflection across the x-axis followed by a translation 5 units left and 1 unit down",
+      "A translation 1 unit left and 1 unit down followed by a reflection across the y-axis",
+      "A rotation of 90° counterclockwise about the origin followed by a translation 4 units left",
+      "A rotation of 180° about the origin followed by a translation 1 unit left and 1 unit down"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check orientation first: both A → B → C and D → E → F read counterclockwise, so no reflection can appear in the sequence.",
+      "A half-turn about the origin sends A(2, 1) to (-2, -1), which is 1 right and 1 up from D(-3, -2); verify the same shift works for B and C."
+    ]
+  }
+]
