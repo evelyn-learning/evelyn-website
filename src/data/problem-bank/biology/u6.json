@@ -1,0 +1,461 @@
+[
+  {
+    "id": "bio-dna-structure-replication-001",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "One strand of a DNA molecule reads 5'-ATGCCTAG-3'. Which sequence is its complementary strand, written from the 3' end to the 5' end so that it lines up base-for-base with the strand above?",
+    "choices": [
+      "3'-ATGCCTAG-5'",
+      "3'-CGTAAGCT-5'",
+      "3'-TACGGATC-5'",
+      "3'-UACGGAUC-5'"
+    ],
+    "answer": "C",
+    "hints": [
+      "In DNA, A pairs only with T and C pairs only with G.",
+      "Take the given strand one base at a time and write the partner underneath: A→T, T→A, G→C, C→G. Uracil belongs to RNA, not DNA."
+    ]
+  },
+  {
+    "id": "bio-dna-structure-replication-002",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sample of double-stranded DNA is analyzed and found to be 22% adenine. What percentage of the bases in that sample is guanine?",
+    "choices": [
+      "28%",
+      "22%",
+      "56%",
+      "78%"
+    ],
+    "answer": "A",
+    "hints": [
+      "Because A always pairs with T, the percentage of thymine equals the percentage of adenine.",
+      "Subtract the A and T percentages from 100% to get the combined G plus C share, then split that share evenly between G and C."
+    ]
+  },
+  {
+    "id": "bio-dna-structure-replication-003",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "DNA replication is described as semiconservative. After one round of replication, what does each of the two resulting DNA molecules contain?",
+    "choices": [
+      "Two newly synthesized strands, while the two original strands re-pair with each other to form a separate molecule.",
+      "Strands in which original and newly made segments alternate along the length of each strand.",
+      "Two newly synthesized strands, because the original strands are broken down and their bases recycled.",
+      "One original strand paired with one newly synthesized strand."
+    ],
+    "answer": "D",
+    "hints": [
+      "The word 'semi' means half — ask what half of each new molecule is made of.",
+      "Each original strand is unzipped and then used as a template that stays in the product."
+    ]
+  },
+  {
+    "id": "bio-dna-structure-replication-004",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "DNA polymerase can add nucleotides only to the 3' end of a growing strand, so every new strand is built in the 5' to 3' direction. At a replication fork, one new strand is built as one continuous piece while the other is built as a series of short pieces that are later joined. Which statement explains why?",
+    "choices": [
+      "The two template strands have different base compositions, so one of them is copied faster than the other.",
+      "The two template strands run in opposite directions, so only one of them can be read in a direction that lets synthesis follow the fork continuously.",
+      "DNA polymerase runs out of free nucleotides partway along one strand and has to restart repeatedly.",
+      "Helicase unwinds only one of the two strands, so the second strand must be copied in short pieces after the fork passes."
+    ],
+    "answer": "B",
+    "hints": [
+      "The two strands of a DNA double helix are antiparallel: one runs 5' to 3' while its partner runs 3' to 5'.",
+      "The fork opens in one direction only. Picture building 5' to 3' on each template and ask which one points the same way the fork is moving."
+    ]
+  },
+  {
+    "id": "bio-dna-structure-replication-005",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A G-C base pair is held together by three hydrogen bonds, while an A-T base pair is held together by only two. Four double-stranded DNA segments are each 12 base pairs long; one strand of each is given below. Which segment requires the most energy to separate into single strands?",
+    "choices": [
+      "5'-GGCCTAGCCTGG-3'",
+      "5'-ATGCATTACGTA-3'",
+      "5'-TTAAGCTTAAGC-3'",
+      "5'-CAGTCAGTCAGT-3'"
+    ],
+    "answer": "A",
+    "hints": [
+      "All four segments are the same length, so what matters is how many of the 12 pairs are G-C pairs.",
+      "Count the G's and C's in each strand; the segment with the most of them has the most hydrogen bonds holding it shut."
+    ]
+  },
+  {
+    "id": "bio-dna-structure-replication-006",
+    "loId": "bio.dna-structure-replication",
+    "cedCode": "BIO-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Bacteria are grown for many generations in a medium in which every nitrogen atom is the heavy isotope 15N, so all of their DNA is heavy. The cells are then transferred to a medium containing only ordinary 14N and allowed to replicate their DNA exactly twice. The DNA is extracted and separated by density. Which result is expected?",
+    "choices": [
+      "Half of the DNA is fully heavy (15N in both strands) and half is fully light (14N in both strands), with nothing of intermediate density.",
+      "All of the DNA is of intermediate density, halfway between fully heavy and fully light.",
+      "Half of the DNA is of intermediate density and half is fully light; none of it is fully heavy.",
+      "One quarter is fully heavy, one half is of intermediate density, and one quarter is fully light."
+    ],
+    "answer": "C",
+    "hints": [
+      "Start with one heavy molecule and track the strands. Replication is semiconservative, so each original heavy strand survives inside one product molecule.",
+      "After the first round you have 2 molecules, each one heavy strand plus one light strand. Replicate each of those once more to get 4 molecules, then count how many still contain a heavy strand."
+    ]
+  },
+
+  {
+    "id": "bio-transcription-translation-001",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The template strand of a gene reads 3'-TACGGCTTA-5'. RNA polymerase transcribes this strand. What is the sequence of the mRNA produced?",
+    "choices": [
+      "5'-UACGGCUUA-3'",
+      "5'-AUGCCGAAU-3'",
+      "5'-AUGCCGAAT-3'",
+      "5'-TACGGCTTA-3'"
+    ],
+    "answer": "B",
+    "hints": [
+      "The mRNA is built by base pairing against the template, not by copying it letter for letter.",
+      "Pair each template base with its RNA partner: A→U, T→A, C→G, G→C. RNA never contains T."
+    ]
+  },
+  {
+    "id": "bio-transcription-translation-002",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The coding strand (also called the sense strand) of a gene reads 5'-ATGGCATTC-3'. The other strand of the double helix is the template that RNA polymerase actually reads. What is the sequence of the mRNA produced?",
+    "choices": [
+      "5'-UACCGUAAG-3'",
+      "5'-AUGGCATTC-3'",
+      "5'-TACCGTAAG-3'",
+      "5'-AUGGCAUUC-3'"
+    ],
+    "answer": "D",
+    "hints": [
+      "Pairing the coding strand once gives the template; pairing the template again brings you back to the coding sequence.",
+      "So the mRNA matches the coding strand exactly, except that every T becomes a U."
+    ]
+  },
+  {
+    "id": "bio-transcription-translation-003",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An mRNA has a coding region of 300 nucleotides, beginning with the start codon and ending with a stop codon. How many amino acids are in the polypeptide that is built from it?",
+    "choices": [
+      "99",
+      "100",
+      "300",
+      "900"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each codon is three nucleotides long, so divide to find how many codons the region contains.",
+      "The stop codon does not bring in an amino acid — it ends translation. Subtract it from the codon count."
+    ]
+  },
+  {
+    "id": "bio-transcription-translation-004",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An mRNA reads 5'-AUGCACUUUGGAUAA-3' and is translated starting at its first base. Use these codon assignments: AUG codes for methionine, CAC codes for histidine, UUU codes for phenylalanine, GGA codes for glycine, and UAA is a stop codon. What polypeptide is produced?",
+    "choices": [
+      "Methionine - histidine - phenylalanine - glycine - stop, a chain of five amino acids",
+      "Histidine - phenylalanine - glycine",
+      "Methionine - histidine - phenylalanine - glycine",
+      "Methionine - glycine - phenylalanine - histidine"
+    ],
+    "answer": "C",
+    "hints": [
+      "Break the sequence into groups of three, reading 5' to 3' from the very first base: AUG, CAC, and so on.",
+      "The start codon AUG puts methionine into the chain, but a stop codon adds nothing — it only ends translation."
+    ]
+  },
+  {
+    "id": "bio-transcription-translation-005",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a eukaryotic cell, a protein-coding gene is expressed. Which description of the order and location of events is correct?",
+    "choices": [
+      "Transcription happens in the cytoplasm, the mRNA moves into the nucleus, and ribosomes inside the nucleus translate it.",
+      "Translation happens first in the nucleus, the finished protein moves to the cytoplasm, and transcription then occurs at the ribosome.",
+      "Transcription happens in the nucleus, the introns are kept and the exons are cut out, and the remaining RNA is translated in the cytoplasm.",
+      "Transcription happens in the nucleus, introns are removed and the exons are spliced together, and the finished mRNA leaves for the cytoplasm, where ribosomes translate it."
+    ],
+    "answer": "D",
+    "hints": [
+      "DNA stays in the nucleus, so whatever carries the message out must be RNA.",
+      "Remember which pieces are thrown away during splicing: introns are the intervening, non-coding pieces; exons are expressed."
+    ]
+  },
+  {
+    "id": "bio-transcription-translation-006",
+    "loId": "bio.transcription-translation",
+    "cedCode": "BIO-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The template strand of a short gene reads 3'-TACCCGAGGATT-5'. It is transcribed into mRNA, and translation begins at the first base of that mRNA. Each tRNA carries an anticodon that base-pairs with the mRNA codon it reads, and UAA is a stop codon that no tRNA reads. What are the anticodons of the tRNAs that arrive at the ribosome, in order?",
+    "choices": [
+      "UAC, CCG, AGG, AUU",
+      "UAC, CCG, AGG",
+      "AUG, GGC, UCC",
+      "TAC, CCG, AGG"
+    ],
+    "answer": "B",
+    "hints": [
+      "First transcribe: pair each template base to build the mRNA 5' to 3', then split the mRNA into codons.",
+      "An anticodon is the complement of its codon, so pairing twice returns you to the template triplets — with U wherever the DNA had T. Also check whether the last codon is a stop."
+    ]
+  },
+
+  {
+    "id": "bio-mutations-001",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a gene, a single base pair is replaced by a different base pair. As a result, one mRNA codon changes from GAG, which codes for glutamic acid, to GUG, which codes for valine. Every other codon in the mRNA is unchanged. What kind of mutation is this, and what is its effect on the protein?",
+    "choices": [
+      "A substitution, which changes one amino acid in the protein.",
+      "A deletion, which shifts the reading frame of every codon that follows it.",
+      "An insertion, which adds one extra amino acid to the protein.",
+      "A chromosomal duplication, which produces a second copy of the entire gene."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the lengths: GAG and GUG both have three bases, so nothing was added or removed.",
+      "Because the codon count never changes, the downstream codons keep their original reading frame."
+    ]
+  },
+  {
+    "id": "bio-mutations-002",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mutation changes one mRNA codon from UUA to UUG. Both UUA and UUG code for leucine. No other codon in the mRNA is affected. What is the effect on the protein that is made?",
+    "choices": [
+      "The protein is one amino acid shorter than normal.",
+      "Every amino acid after the changed codon is different from normal.",
+      "The protein's amino acid sequence is exactly the same as normal.",
+      "The protein contains valine where it should contain leucine."
+    ],
+    "answer": "C",
+    "hints": [
+      "Several different codons can specify the same amino acid — the genetic code is redundant.",
+      "Ask what the ribosome actually inserts at that position before and after the change."
+    ]
+  },
+  {
+    "id": "bio-mutations-003",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An mRNA normally reads 5'-AUGCAUCGAGUA-3' and is translated starting at its first base. A mutation deletes the fourth base of this mRNA, the C. Translation still begins at the first base of the shortened molecule. What are the codons of the mutated mRNA?",
+    "choices": [
+      "AUG, CAU, CGA, GUA — the codons are unchanged.",
+      "AUG, AUC, GAG, with UA left over — every codon after the first is different.",
+      "AUG, CAU, GAG, GUA — only the third codon changes.",
+      "AUG, CAU, CGA — the mRNA is simply one codon shorter."
+    ],
+    "answer": "B",
+    "hints": [
+      "Write the sequence out with the fourth base crossed off, then re-group what remains into threes from the start.",
+      "Deleting a single base slides every downstream base one position forward, which is what a frameshift means."
+    ]
+  },
+  {
+    "id": "bio-mutations-004",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four different single-base substitutions each occur near the middle of the same long protein-coding gene. Which one is most likely to have the largest effect on the protein that is produced?",
+    "choices": [
+      "A change from the codon CUU to the codon CUC, both of which code for leucine.",
+      "A change from the codon AAA, which codes for lysine, to the codon AGA, which codes for arginine; both amino acids carry a positive charge.",
+      "A change in the third base of a codon very near the end of the coding sequence, replacing the final amino acid with a different one.",
+      "A change from the codon UGG, which codes for tryptophan, to the codon UGA, which is a stop codon."
+    ],
+    "answer": "D",
+    "hints": [
+      "A substitution is not automatically mild — the size of the effect depends on what the new codon says.",
+      "Ask what happens to the rest of the polypeptide if the ribosome is told to stop in the middle of the gene."
+    ]
+  },
+  {
+    "id": "bio-mutations-005",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An adult is exposed to a chemical that causes a mutation in the DNA of one skin cell. The mutation is not repaired. Which statement about this mutation is correct?",
+    "choices": [
+      "It will be passed to all of the person's future offspring, because it is now part of the person's DNA.",
+      "It will be passed to the daughter cells produced when that skin cell divides, but not to the person's offspring.",
+      "It cannot be passed to any other cell at all, because only egg and sperm cells copy their DNA.",
+      "It will appear in the person's offspring only if the same mutation occurs in many skin cells at once."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which cells give rise to the next generation: only gametes contribute DNA to offspring.",
+      "Skin cells still divide by mitosis, so their DNA — including any mutation — is copied into their descendants within the body."
+    ]
+  },
+  {
+    "id": "bio-mutations-006",
+    "loId": "bio.mutations",
+    "cedCode": "BIO-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The template strand of a short gene normally reads 3'-TACGAGCCTATT-5'. A mutation changes the sixth base of this template strand, counting from the 3' end as written, from G to A. The gene is transcribed and translated starting at the first base of the mRNA. Use these codon assignments: AUG codes for methionine, CUC codes for leucine, CUU codes for leucine, CAC codes for histidine, GGA codes for glycine, and UAA is a stop codon. What polypeptide does the mutated gene produce?",
+    "choices": [
+      "Methionine - leucine - glycine; the mutation is silent and the protein is unchanged.",
+      "Methionine - leucine; the mutation creates an early stop codon, so the protein is shortened.",
+      "Methionine - histidine - glycine; one amino acid is replaced by a different one.",
+      "The reading frame shifts, so every amino acid after methionine differs from the normal protein."
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite the template with the sixth base changed, then transcribe the whole thing by pairing: A→U, T→A, C→G, G→C.",
+      "Split the mutated mRNA into codons from the 5' end, translate it, and compare with the polypeptide the original template would have made."
+    ]
+  },
+
+  {
+    "id": "bio-biotechnology-001",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A forensic scientist recovers a very small amount of DNA from a crime scene and runs the polymerase chain reaction (PCR) on it. What does PCR do?",
+    "choices": [
+      "It separates DNA fragments by size so that their lengths can be measured.",
+      "It reads the order of the amino acids in a protein.",
+      "It cuts DNA into pieces at specific recognition sequences.",
+      "It makes a very large number of copies of a chosen segment of DNA from a small starting sample."
+    ],
+    "answer": "D",
+    "hints": [
+      "The word 'chain reaction' points to something repeating and multiplying with each cycle.",
+      "PCR is the step you run when you have too little DNA to work with, before any analysis begins."
+    ]
+  },
+  {
+    "id": "bio-biotechnology-002",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In gel electrophoresis, DNA samples are loaded into wells at one end of a gel slab and a voltage is applied across the gel. Which statement correctly describes how the DNA fragments move?",
+    "choices": [
+      "DNA is positively charged, so fragments move toward the negative electrode, and the largest fragments travel farthest.",
+      "DNA is negatively charged, so fragments move toward the positive electrode, and the smallest fragments travel farthest.",
+      "DNA is negatively charged, so fragments move toward the positive electrode, and the largest fragments travel farthest.",
+      "DNA carries no net charge, so fragments spread only by diffusion and all of them travel the same distance."
+    ],
+    "answer": "B",
+    "hints": [
+      "The phosphate groups along the DNA backbone each carry a negative charge, and opposite charges attract.",
+      "The gel is a dense mesh. Picture pushing a large tangled molecule and a small one through the same mesh in the same amount of time."
+    ]
+  },
+  {
+    "id": "bio-biotechnology-003",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A PCR reaction begins with a single copy of a target DNA region. Each cycle of the reaction doubles the number of copies of that region. Approximately how many copies of the target are present after 10 cycles?",
+    "choices": [
+      "20 copies",
+      "100 copies",
+      "1,024 copies",
+      "10,000 copies"
+    ],
+    "answer": "C",
+    "hints": [
+      "Doubling is repeated multiplication, not repeated addition — 1 becomes 2, then 4, then 8.",
+      "After n cycles the count is 2 raised to the power n. Work out 2 to the 10th."
+    ]
+  },
+  {
+    "id": "bio-biotechnology-004",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circular plasmid 6,000 base pairs long is cut with a restriction enzyme, and the products are run on a gel next to a set of size standards. Three bands appear. Comparing them with the standards shows fragments of 3,000, 2,000 and 1,000 base pairs. How many times did the enzyme cut this circular plasmid, and which fragment travelled farthest from the well?",
+    "choices": [
+      "Three cuts; the 1,000 base-pair fragment travelled farthest.",
+      "Two cuts; the 1,000 base-pair fragment travelled farthest.",
+      "Three cuts; the 3,000 base-pair fragment travelled farthest.",
+      "Four cuts; the 3,000 base-pair fragment travelled farthest."
+    ],
+    "answer": "A",
+    "hints": [
+      "Draw a circle and start slicing it. A circular molecule needs a second cut before you have any separate piece at all, so count how many cuts a loop needs to give three pieces.",
+      "Smaller fragments slip through the gel mesh more easily and end up farther from the well."
+    ]
+  },
+  {
+    "id": "bio-biotechnology-005",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The human gene for insulin is inserted into a bacterial plasmid, and the plasmid is taken up by bacteria. The bacteria then produce insulin protein with the same amino acid sequence as human insulin. What does this result demonstrate?",
+    "choices": [
+      "Bacteria and humans use different genetic codes, so the human gene had to be rewritten before the bacteria could read it.",
+      "The plasmid translates the gene into protein by itself, without using the bacterium's ribosomes.",
+      "The genetic code is essentially universal, so bacterial ribosomes read human codons and build the same amino acid sequence.",
+      "The bacteria convert the human DNA into bacterial DNA and then make a bacterial protein that happens to act like insulin."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what has to be true about codon meanings for this experiment to work at all.",
+      "The bacterium supplies the machinery — RNA polymerase, ribosomes and tRNAs — while the inserted gene supplies the instructions."
+    ]
+  },
+  {
+    "id": "bio-biotechnology-006",
+    "loId": "bio.biotechnology",
+    "cedCode": "BIO-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A 500 base-pair region of a gene is amplified by PCR and then cut with a restriction enzyme. The normal allele contains one recognition site for that enzyme inside the amplified region, located 200 base pairs from one end, so cutting the normal allele yields two fragments. A mutation in the other allele destroys that recognition site, so that allele is not cut at all. A person carries one normal allele and one mutant allele. Both alleles are amplified and cut together, and the products are run in a single lane of a gel. What is seen?",
+    "choices": [
+      "One band, at 500 base pairs.",
+      "Two bands, at 300 and 200 base pairs.",
+      "Two bands, at 500 and 200 base pairs.",
+      "Three bands, at 500, 300 and 200 base pairs, with the 200 base-pair band farthest from the well."
+    ],
+    "answer": "D",
+    "hints": [
+      "Handle the two alleles separately first: list the fragment sizes each one produces on its own, remembering that the two pieces of a cut 500 base-pair region must add up to 500.",
+      "The lane shows every fragment present, so combine both lists, and remember that smaller fragments migrate farther."
+    ]
+  }
+]

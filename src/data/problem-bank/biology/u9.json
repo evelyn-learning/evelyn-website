@@ -1,0 +1,461 @@
+[
+  {
+    "id": "bio-ecosystems-biomes-001",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A biologist surveys one forest and records every white-tailed deer, every oak tree, every wolf, and every mushroom species living there, and how those living things interact. She records nothing about the soil, the rainfall, or the temperature. Which level of ecological organization is she studying?",
+    "choices": [
+      "Population",
+      "Ecosystem",
+      "Community",
+      "Biome"
+    ],
+    "answer": "C",
+    "hints": [
+      "Count how many different species are in her survey — one species, or many?",
+      "The dividing line between a community and an ecosystem is whether nonliving factors such as soil, water, and temperature are included."
+    ]
+  },
+  {
+    "id": "bio-ecosystems-biomes-002",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gray squirrel lives in an oak woodland. It eats acorns and tree buds, is active during daylight, nests in tree cavities, and is hunted by hawks. Which statement correctly separates the squirrel's habitat from its niche?",
+    "choices": [
+      "The habitat is the oak woodland; the niche is its whole role there — eating acorns and buds, being active by day, nesting in cavities, and serving as prey for hawks.",
+      "The habitat is eating acorns and nesting in cavities; the niche is the oak woodland where it lives.",
+      "The habitat and the niche are both simply the oak woodland, since a species lives in only one place.",
+      "The habitat is the oak woodland; the niche is the largest number of squirrels that woodland can support."
+    ],
+    "answer": "A",
+    "hints": [
+      "Habitat answers \"where does it live?\" while niche answers \"what does it do for a living?\"",
+      "A niche includes feeding, timing of activity, shelter, and the species it interacts with — an address versus a job description."
+    ]
+  },
+  {
+    "id": "bio-ecosystems-biomes-003",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region receives about 30 cm of rain per year. Summer daytime temperatures reach about 40°C and night temperatures drop to about 10°C. The dominant plants have thick water-storing stems, waxy coatings, and spines instead of broad leaves. Which biome is this?",
+    "choices": [
+      "Temperate grassland",
+      "Tundra",
+      "Savanna",
+      "Desert"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the two numbers that define every biome: total yearly precipitation and temperature range.",
+      "Low precipitation alone is not enough — tundra is also dry. Let the 40°C daytime high and the water-storing spiny plants decide it."
+    ]
+  },
+  {
+    "id": "bio-ecosystems-biomes-004",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which list places the levels of ecological organization in order from the smallest to the largest?",
+    "choices": [
+      "organism → population → community → biome → ecosystem → biosphere",
+      "organism → population → community → ecosystem → biome → biosphere",
+      "organism → community → population → ecosystem → biome → biosphere",
+      "population → organism → community → ecosystem → biome → biosphere"
+    ],
+    "answer": "B",
+    "hints": [
+      "A population is one species; a community is many species together — so which of those two is larger?",
+      "An ecosystem is a community plus its nonliving surroundings; a biome is a whole class of similar ecosystems worldwide, so the biome is larger."
+    ]
+  },
+  {
+    "id": "bio-ecosystems-biomes-005",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Site 1 is in central North America and Site 2 is in central Asia. Both average about 55 cm of rain per year, both have summers near 30°C and winters near -10°C, and both are dominated by deep-rooted grasses with almost no trees and support large grazing mammals. The two sites share no species at all. Ecologists still place both sites in the same biome. What best explains why?",
+    "choices": [
+      "Because biomes are defined by which exact species live there, and large grazing mammals live at both sites.",
+      "Because the two sites lie at the same longitude, and longitude determines the biome.",
+      "Because a biome is defined by its climate and by the growth form of its dominant vegetation, not by the particular species present.",
+      "Because two sites can belong to the same biome only when they are parts of one continuous ecosystem."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what the two sites actually have in common — it is not their species list.",
+      "If a definition depended on shared species, two sites with zero species in common could never match; the shared features here are rainfall, temperature, and grass-dominated vegetation."
+    ]
+  },
+  {
+    "id": "bio-ecosystems-biomes-006",
+    "loId": "bio.ecosystems-biomes",
+    "cedCode": "BIO-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A sealed glass sphere holds pond water, green algae, tiny shrimp, bacteria, a layer of sand, and dissolved gases, and it sits on a sunny windowsill. A student claims the sphere contains a community but not an ecosystem. What is the best evaluation of that claim?",
+    "choices": [
+      "Incorrect — the sphere is an ecosystem, because its living things interact with abiotic factors including the water, sand, dissolved gases, and light.",
+      "Correct — an ecosystem must be outdoors and much larger than a single sealed container.",
+      "Correct — the sphere holds several populations interacting with each other, which is exactly a community and nothing more.",
+      "Incorrect — the sphere is actually a biome, because the air inside it has its own temperature and humidity."
+    ],
+    "answer": "A",
+    "hints": [
+      "List what is inside the sphere and sort each item into living or nonliving.",
+      "The moment nonliving components are part of the interacting system, the correct label moves up one level from community."
+    ]
+  },
+
+  {
+    "id": "bio-energy-flow-food-webs-001",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A food chain is written as grass → grasshopper → frog → snake → hawk. What do the arrows in a food chain show?",
+    "choices": [
+      "The direction a predator travels when it hunts for its prey.",
+      "The direction energy and matter move, from the organism that is eaten toward the organism that eats it.",
+      "The direction energy moves, from the organism that eats toward the organism that is eaten.",
+      "The order in which these species first appeared on Earth."
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the chain out loud as \"is eaten by\" at each arrow and see whether it makes sense.",
+      "Grass does not eat a grasshopper, so the arrow cannot point from eater to eaten."
+    ]
+  },
+  {
+    "id": "bio-energy-flow-food-webs-002",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Consider the food chain algae → mayfly larva → bluegill → largemouth bass → osprey. Which organism is the secondary consumer?",
+    "choices": [
+      "Algae",
+      "Mayfly larva",
+      "Largemouth bass",
+      "Bluegill"
+    ],
+    "answer": "D",
+    "hints": [
+      "Label the first link as the producer — producers are not counted as consumers at all.",
+      "The organism that eats the producer is the primary consumer, so start your consumer count at the mayfly larva, not at the algae."
+    ]
+  },
+  {
+    "id": "bio-energy-flow-food-webs-003",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the food chain clover → rabbit → fox, the clover growing in one meadow plot captures and stores 1,000 kcal of energy. About 10 percent of the energy at each level is passed on to the next level. About how much energy is available to the foxes?",
+    "choices": [
+      "10 kcal",
+      "100 kcal",
+      "1 kcal",
+      "10,000 kcal"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the arrows: how many energy transfers separate the clover from the fox?",
+      "There are two transfers, so take 10 percent of 1,000 kcal, then take 10 percent of that result."
+    ]
+  },
+  {
+    "id": "bio-energy-flow-food-webs-004",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the ocean food chain phytoplankton → copepod → herring → tuna, biologists measure 5 kcal of energy stored in the tuna. If about 10 percent of the energy at each level is passed on to the next level, about how much energy was stored in the phytoplankton?",
+    "choices": [
+      "0.005 kcal",
+      "50 kcal",
+      "5,000 kcal",
+      "500 kcal"
+    ],
+    "answer": "C",
+    "hints": [
+      "This chain runs backwards from the usual direction — you are given the top and asked for the base.",
+      "Going up a level divides energy by 10, so going down a level multiplies by 10. There are three arrows, so multiply 5 kcal by 10 three times."
+    ]
+  },
+  {
+    "id": "bio-energy-flow-food-webs-005",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A meadow food web contains these chains: grass → grasshopper → shrew → owl; grass → rabbit → owl; and wildflowers → grasshopper → shrew → owl. A disease removes every rabbit from the meadow. Which short-term outcome is most likely?",
+    "choices": [
+      "The owls will die out almost immediately, because rabbits were their only source of food.",
+      "The owl population will probably drop somewhat but can persist, because owls also eat shrews, which feed on grasshoppers.",
+      "The grasshopper population will fall sharply, because grasshoppers fed on rabbits.",
+      "The grass population will fall sharply, because the rabbits had been producing the grass."
+    ],
+    "answer": "B",
+    "hints": [
+      "Trace every arrow that ends at the owl and see how many separate food sources the owl actually has.",
+      "Check the direction of each arrow before claiming one species fed the other — grass → rabbit means the rabbit eats the grass, not the reverse."
+    ]
+  },
+  {
+    "id": "bio-energy-flow-food-webs-006",
+    "loId": "bio.energy-flow-food-webs",
+    "cedCode": "BIO-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student draws an energy pyramid for a forest with three bars: producers on the bottom, primary consumers above them, and secondary consumers on top. The student writes: \"Energy is lost as heat at every step, which is why the pyramid narrows. Once the energy and matter reach the top predator, the ecosystem is finished with them.\" Which correction to this explanation matters most?",
+    "choices": [
+      "No correction is needed; both sentences are fully accurate as written.",
+      "Energy is not lost as heat between levels; the pyramid narrows only because top predators have larger bodies.",
+      "The pyramid should be drawn upside down, because top predators always hold more energy than producers do.",
+      "Decomposers are missing: they break down wastes and dead bodies from every level and return nutrients to the soil for producers to reuse, even though the energy itself still leaves the system as heat."
+    ],
+    "answer": "D",
+    "hints": [
+      "The first sentence about heat loss is correct — so focus your attention on the second sentence.",
+      "Energy flows one way through an ecosystem, but matter cycles. Ask which group of organisms makes that cycling of matter happen."
+    ]
+  },
+
+  {
+    "id": "bio-biogeochemical-cycles-001",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Nitrogen gas (N2) makes up about 78 percent of the atmosphere, yet plants cannot use nitrogen in that form. How does most atmospheric nitrogen become usable by plants?",
+    "choices": [
+      "Nitrogen-fixing bacteria in soil and in the root nodules of legumes convert N2 into ammonia (NH3), which other bacteria convert into nitrate (NO3-) that roots absorb.",
+      "Plants absorb N2 straight through the pores of their leaves, in the same way they absorb CO2.",
+      "Plants build their own nitrogen out of water and sunlight during photosynthesis.",
+      "Lightning converts nitrate (NO3-) already in the soil back into N2 gas, which the roots then take up."
+    ],
+    "answer": "A",
+    "hints": [
+      "The triple bond in N2 is extremely hard to break — ask which organisms are able to break it.",
+      "Roots, not leaves, take up nitrogen, and they take it up as a dissolved compound such as NO3-, never as N2 gas."
+    ]
+  },
+  {
+    "id": "bio-biogeochemical-cycles-002",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In waterlogged soil with very little oxygen, certain bacteria convert nitrate (NO3-) in the soil into N2 gas, which then escapes into the atmosphere. What is this process called?",
+    "choices": [
+      "Nitrogen fixation",
+      "Nitrification",
+      "Denitrification",
+      "Ammonification"
+    ],
+    "answer": "C",
+    "hints": [
+      "Track the direction: is nitrogen entering the soil from the air, or leaving the soil for the air?",
+      "Fixation pulls N2 out of the air and into the soil. The process described here runs the opposite way, and its name says so."
+    ]
+  },
+  {
+    "id": "bio-biogeochemical-cycles-003",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Carbon atoms from atmospheric CO2 enter the living portion of an ecosystem at one main step. Which statement describes that step correctly?",
+    "choices": [
+      "Animals take carbon in by inhaling CO2 from the air, and that carbon becomes part of their body tissue.",
+      "Producers take in CO2 and use photosynthesis to build sugars, and consumers then obtain that carbon by eating producers or by eating other consumers.",
+      "Decomposers pull CO2 out of the air and pass it upward to the plants.",
+      "Carbon enters when animals exhale CO2, which their own cells then rebuild into tissue."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which organisms can turn an inorganic gas into an organic molecule.",
+      "Animals do inhale air, but the CO2 in their lungs is exhaled as waste — it is never built into their tissue."
+    ]
+  },
+  {
+    "id": "bio-biogeochemical-cycles-004",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a forest, H2O moves from the soil into tree roots, up through the trunk, and out through tiny pores in the leaves as water vapor. What is this process called, and where does that water go next?",
+    "choices": [
+      "Condensation; the vapor sinks back down into the soil around the roots.",
+      "Precipitation; the vapor falls immediately as rain onto the same tree.",
+      "Runoff; the vapor flows downhill along the surface and into rivers.",
+      "Transpiration; the vapor joins the atmosphere, where it can condense into clouds and later return as precipitation."
+    ],
+    "answer": "D",
+    "hints": [
+      "The water is leaving a plant and entering the air as a gas — name that specific step of the water cycle.",
+      "Condensation is gas turning to liquid and runoff is liquid moving over the ground, so neither can describe water leaving leaves as vapor."
+    ]
+  },
+  {
+    "id": "bio-biogeochemical-cycles-005",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For hundreds of millions of years, carbon from dead organisms was buried, compressed, and stored as coal, oil, and natural gas, where it stayed out of the atmosphere. Which statement best explains why burning these fuels raises the amount of CO2 in the air?",
+    "choices": [
+      "Combustion releases carbon that had been locked in a long-term reservoir, and it releases that carbon far faster than photosynthesis and burial can remove it again.",
+      "Combustion creates brand-new carbon atoms that did not exist anywhere before the fuel was burned.",
+      "Combustion destroys the carbon inside the fuel, and the ocean releases CO2 to replace what was destroyed.",
+      "Burning fuel has no real effect on the carbon cycle, because the carbon in fossil fuels was never part of any living thing."
+    ],
+    "answer": "A",
+    "hints": [
+      "Atoms are not created or destroyed in the carbon cycle — that fact alone eliminates two of the choices.",
+      "Compare the rate of release with the rate of removal: burial took millions of years, while burning takes moments."
+    ]
+  },
+  {
+    "id": "bio-biogeochemical-cycles-006",
+    "loId": "bio.biogeochemical-cycles",
+    "cedCode": "BIO-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A farmer spreads nitrate (NO3-) fertilizer on a field beside a lake, and heavy rain washes much of it into the water. Over the following weeks, algae grow explosively across the lake surface, then die off in enormous numbers, and soon many fish suffocate. Which sequence best explains the fish deaths?",
+    "choices": [
+      "The nitrate directly poisons the gills of the fish, and the algae bloom is an unrelated coincidence.",
+      "The extra nitrate is converted into N2 gas inside the fish, so the fish can no longer take in oxygen.",
+      "The extra nitrate lets algae multiply rapidly; when the algae die, decomposing bacteria multiply and consume the dissolved oxygen in the water, leaving too little oxygen for the fish.",
+      "The thick algae bloom blocks sunlight, so the fish cannot see well enough to find food and starve within a few weeks."
+    ],
+    "answer": "C",
+    "hints": [
+      "The fish suffocate, so identify what happened to the dissolved oxygen in the lake.",
+      "Ask what organisms show up in huge numbers when a huge mass of algae dies, and what those organisms need in order to do their job."
+    ]
+  },
+
+  {
+    "id": "bio-population-community-ecology-001",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a density-dependent limiting factor on a population?",
+    "choices": [
+      "A severe drought that dries up the streams across an entire region",
+      "A wildfire that sweeps through a forest",
+      "An unusually early hard frost that kills exposed plants",
+      "A contagious disease that spreads faster when individuals are crowded closely together"
+    ],
+    "answer": "D",
+    "hints": [
+      "Test each factor by asking whether its impact changes when the population gets more crowded.",
+      "A drought, a fire, or a frost hits a sparse population just as hard as a dense one, so their strength does not depend on density."
+    ]
+  },
+  {
+    "id": "bio-population-community-ecology-002",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ecologists released a small herd of deer onto an island and counted the animals every year. The herd grew slowly at first, then rose very steeply for several years, then slowed, then levelled off and stayed near 500 animals for the next decade. Which description fits this pattern?",
+    "choices": [
+      "Exponential growth, and the herd should keep doubling on the island indefinitely.",
+      "Logistic growth, with a carrying capacity of about 500 deer.",
+      "Logistic growth, with a carrying capacity of about 250 deer, which is half the number the island reached.",
+      "A boom-and-bust cycle, because the population rose steeply and then crashed to zero."
+    ],
+    "answer": "B",
+    "hints": [
+      "The shape described is slow, then steep, then flat — an S. Name the growth model that produces an S.",
+      "Carrying capacity is the level the population settles at and holds, not half of that level."
+    ]
+  },
+  {
+    "id": "bio-population-community-ecology-003",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Cattle egrets follow grazing cattle across a pasture. As the cattle walk, they stir up insects hiding in the grass, and the egrets eat the insects they flush out. Careful study shows the cattle are neither helped nor harmed by the birds. Which relationship is this?",
+    "choices": [
+      "Mutualism",
+      "Parasitism",
+      "Commensalism",
+      "Predation, with the egrets preying on the cattle"
+    ],
+    "answer": "C",
+    "hints": [
+      "Score each partner separately as helped, harmed, or unaffected.",
+      "Mutualism requires BOTH partners to benefit; here only one of the two gains anything."
+    ]
+  },
+  {
+    "id": "bio-population-community-ecology-004",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A forest fire burns the trees off a hillside, but the soil, buried seeds, and underground root systems survive. Within a year grasses and wildflowers sprout, and shrubs and young trees follow over the next several years. A student labels this primary succession. Why is that label wrong?",
+    "choices": [
+      "Primary succession starts on bare rock or a newly exposed surface with no soil at all; because soil, seeds, and roots survived here, this is secondary succession.",
+      "The label is wrong because succession happens only after a volcanic eruption, never after a fire.",
+      "The label is wrong because no succession is happening at all — the same plants have simply grown back.",
+      "The label is wrong because primary succession must end in grassland, and this hillside is returning to forest."
+    ],
+    "answer": "A",
+    "hints": [
+      "The single detail that decides between primary and secondary succession is stated in the first sentence.",
+      "Ask whether soil already existed when regrowth began — if it did, pioneer species did not have to build soil from scratch."
+    ]
+  },
+  {
+    "id": "bio-population-community-ecology-005",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two warbler species hunt insects in the same spruce trees in the same forest. Careful observation shows that one species feeds almost entirely among the topmost branches, while the other feeds on the lower trunk and the inner limbs. Which statement best explains how both species manage to coexist?",
+    "choices": [
+      "The two species occupy identical niches, and identical niches are what allows them to share the trees peacefully.",
+      "One warbler species preys on the other, and that predation keeps both populations balanced.",
+      "They coexist because they share one habitat, and sharing a habitat always removes competition between species.",
+      "By feeding in different parts of the tree they divide up the insect resource, so their niches differ enough that neither species drives the other out."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two species with exactly the same niche cannot coexist for long — one always outcompetes the other.",
+      "Notice that they share a habitat, the spruce trees, but not a feeding zone. That difference is what separates their niches."
+    ]
+  },
+  {
+    "id": "bio-population-community-ecology-006",
+    "loId": "bio.population-community-ecology",
+    "cedCode": "BIO-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A bacterial culture is started in a sealed flask holding a fixed amount of nutrient broth. For the first several hours the number of cells doubles every 20 minutes. A student predicts that after two days the sealed flask will hold more bacterial cells than there are stars in the galaxy. What is the strongest objection to that prediction?",
+    "choices": [
+      "Bacteria never reproduce by doubling, so the early growth pattern must have been measured incorrectly.",
+      "Exponential growth cannot continue indefinitely: as the fixed nutrient supply runs out and wastes accumulate, density-dependent factors slow reproduction, and the population levels off or crashes.",
+      "The prediction is sound, because exponential growth by definition continues at the same rate forever.",
+      "The population will keep doubling but at a slower and slower pace, because the flask itself becomes heavier as cells accumulate."
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the two words \"sealed\" and \"fixed\" — they tell you what the flask cannot supply forever.",
+      "Identify the limiting factors that grow stronger as the culture gets denser, and name what kind of curve takes over once they do."
+    ]
+  }
+]

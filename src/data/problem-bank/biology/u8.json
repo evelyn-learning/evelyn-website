@@ -1,0 +1,346 @@
+[
+  {
+    "id": "bio-taxonomy-classification-001",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A lion is placed in the genus Panthera, and its species epithet is leo. Which choice writes this organism's scientific name correctly?",
+    "choices": [
+      "Leo panthera",
+      "Panthera Leo",
+      "Panthera leo",
+      "panthera leo"
+    ],
+    "answer": "C",
+    "hints": [
+      "A binomial name has two parts in a fixed order: the genus name comes first, then the species epithet.",
+      "The genus name is capitalized and the species epithet is always lowercase, even when it comes from a proper noun."
+    ]
+  },
+  {
+    "id": "bio-taxonomy-classification-002",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice lists the levels of classification in order from the broadest, most inclusive group to the narrowest, most specific group?",
+    "choices": [
+      "Domain, Kingdom, Class, Phylum, Order, Family, Genus, Species",
+      "Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species",
+      "Species, Genus, Family, Order, Class, Phylum, Kingdom, Domain",
+      "Domain, Kingdom, Phylum, Order, Class, Family, Genus, Species"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each level sits fully inside the one above it, so a group that contains millions of species belongs near the start of the list.",
+      "Check the two ranks between Phylum and Order carefully, and confirm the list runs broad to narrow rather than narrow to broad."
+    ]
+  },
+  {
+    "id": "bio-taxonomy-classification-003",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Species A and species B are placed in the same class but in different orders. Species C and species D are placed in the same family but in different genera. Which statement about these two pairs is best supported?",
+    "choices": [
+      "Species A and species B are more closely related, because a class contains far more organisms than a family does.",
+      "Both pairs are equally closely related, because each pair shares one level of classification.",
+      "Neither pair can be compared until the kingdom of each species is known.",
+      "Species C and species D are more closely related, because family is a narrower level than class, so their shared ancestor is more recent."
+    ],
+    "answer": "D",
+    "hints": [
+      "The narrower the shared level, the fewer organisms are inside it and the more recently the two lineages split.",
+      "A bigger group is not a closer relationship: every pair of organisms in the same family is also in the same class, but not the reverse."
+    ]
+  },
+  {
+    "id": "bio-taxonomy-classification-004",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four mammals are classified as follows. Brown bear: order Carnivora, family Ursidae, genus Ursus, species arctos. Polar bear: order Carnivora, family Ursidae, genus Ursus, species maritimus. Gray wolf: order Carnivora, family Canidae, genus Canis, species lupus. Red fox: order Carnivora, family Canidae, genus Vulpes, species vulpes. Which two of these species are the most closely related?",
+    "choices": [
+      "The brown bear and the polar bear",
+      "The gray wolf and the red fox",
+      "The brown bear and the gray wolf",
+      "The polar bear and the red fox"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the narrowest level of classification that each pair has in common, then compare those levels across pairs.",
+      "One pair shares the same genus; the closest any other pair comes is sharing only a family or only an order."
+    ]
+  },
+  {
+    "id": "bio-taxonomy-classification-005",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dolphin and a shark both have streamlined bodies, dorsal fins, and paddle-like limbs used for swimming. However, the dolphin has hair, produces milk, and breathes air with lungs, while the shark has gills, a skeleton made of cartilage, and scales. A student argues that the two should be placed in the same class because they look so similar. Which statement best evaluates the student's argument?",
+    "choices": [
+      "The student is correct, because classification groups organisms by outward body shape and habitat.",
+      "The student is incorrect, because dolphins and sharks are placed in different kingdoms and so cannot share any level of classification.",
+      "The student is incorrect, because the shared streamlined shape arose separately in each lineage as an adaptation for swimming, while inherited traits such as hair, milk, and lungs place the dolphin with mammals and gills and a cartilage skeleton place the shark with fishes.",
+      "The student is incorrect, because dolphins descended from sharks and descendants are always placed in a new class."
+    ],
+    "answer": "C",
+    "hints": [
+      "Classification is meant to reflect shared ancestry, so ask which traits were inherited from a common ancestor and which arose independently in similar environments.",
+      "Unrelated swimmers often converge on the same body shape; look instead at deep traits such as how the animal breathes, what its skeleton is made of, and how it feeds its young."
+    ]
+  },
+  {
+    "id": "bio-taxonomy-classification-006",
+    "loId": "bio.taxonomy-classification",
+    "cedCode": "BIO-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A burrowing rodent has long been named Nannospalax ehrenbergi. New DNA sequence comparisons show that it shares a more recent common ancestor with members of the genus Spalax than with the other species currently in the genus Nannospalax. Taxonomists therefore move the species into the genus Spalax. Which statement best describes the outcome of this change?",
+    "choices": [
+      "The species is renamed Spalax Ehrenbergi, because an epithet that is transferred to a new genus is capitalized to mark the change.",
+      "The species is renamed Spalax ehrenbergi; the genus name changes while the epithet stays lowercase, and the new name reflects a revised hypothesis about the species' ancestry.",
+      "The species keeps the name Nannospalax ehrenbergi, because once a binomial name is assigned it can never be changed by later evidence.",
+      "The species is renamed ehrenbergi Spalax, because the more specific of the two words is written first once a species is reassigned."
+    ],
+    "answer": "B",
+    "hints": [
+      "The rules for writing a binomial name do not change when a species is reassigned: genus first and capitalized, epithet second and lowercase.",
+      "Classification is a hypothesis about evolutionary relationships, so new evidence about ancestry can and should change where a species is placed."
+    ]
+  },
+
+  {
+    "id": "bio-phylogenetics-cladograms-001",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On a phylogenetic tree, two lines meet at a point and then continue as a single line back toward the base of the tree. What does that branch point represent?",
+    "choices": [
+      "An individual organism that is alive today",
+      "The moment one species became more advanced than the other",
+      "The point at which two separate species began to look more alike",
+      "A common ancestor population from which the two lineages diverged"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the tree from the base outward: a single line splitting into two means one ancestral group gave rise to two separate lineages.",
+      "The tips of a tree are the species being compared; the interior points are ancestors, not living organisms."
+    ]
+  },
+  {
+    "id": "bio-phylogenetics-cladograms-002",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram of four animals is built this way: the lineage leading to the turtle branches off first from all the others. The remaining lineage then splits into the lizard and a branch that later splits into the crocodile and the pigeon. According to this tree, which animal is the crocodile's closest relative?",
+    "choices": [
+      "The pigeon, because the crocodile and pigeon lineages split from each other most recently",
+      "The lizard, because crocodiles and lizards are both scaly reptiles",
+      "The turtle, because turtles and crocodiles both spend much of their time in water",
+      "All three are equally related to the crocodile, because they all appear on the same tree"
+    ],
+    "answer": "A",
+    "hints": [
+      "Closest relative means the species that shares the most recent branch point with it, not the one it resembles most.",
+      "Trace back from the crocodile toward the base of the tree and note which species you reach at the very first branch point."
+    ]
+  },
+  {
+    "id": "bio-phylogenetics-cladograms-003",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Four species are compared for three inherited traits. Species P has none of the three traits. Species Q has a backbone only. Species R has a backbone and lungs. Species S has a backbone, lungs, and hair. Which branching pattern is best supported by these data?",
+    "choices": [
+      "Species P branches off first, then species S branches off, and species Q and R are the last two to split from each other.",
+      "Species S branches off first, then species R branches off, and species P and Q are the last two to split from each other.",
+      "Species P branches off first, then species Q branches off, and species R and S are the last two to split from each other.",
+      "All four species branch away from a single point at the same time, because each species is different from the others."
+    ],
+    "answer": "C",
+    "hints": [
+      "A trait shared by fewer species arose more recently, so it marks a branch point closer to the tips of the tree.",
+      "The traits here are nested: the species with none of them branches off earliest, and the two species sharing the most traits split from each other last."
+    ]
+  },
+  {
+    "id": "bio-phylogenetics-cladograms-004",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tree of five plant groups is drawn with the moss lineage branching off first, then the fern lineage, then the pine lineage, and finally a split between the grass lineage and the oak lineage, with the oak drawn at the far right end of the row of tips. A student says this shows that the oak is the most advanced species and that the moss is the least evolved. Which statement best evaluates that claim?",
+    "choices": [
+      "The student is correct, because groups drawn farther to the right appear later in the history of life and are therefore more advanced.",
+      "The student is mistaken. Branch position shows the order in which lineages split, not progress; all five lineages have been evolving for the same amount of time since their shared ancestor, and the tips could be rotated at any branch point without changing the relationships shown.",
+      "The student is mistaken, because mosses actually arose after oaks did, so the tree should be redrawn in the opposite order.",
+      "The student is correct, because the oak has more traits than the moss and a greater number of traits means a species is more advanced."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what would change if you swapped the two branches at a single branch point: if the relationships stay the same, left-to-right position carries no meaning about rank.",
+      "Every tip on a tree is a species living now, so each lineage has had exactly the same amount of time to accumulate change since the shared ancestor at the base."
+    ]
+  },
+  {
+    "id": "bio-phylogenetics-cladograms-005",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a tree of three living primates, the gorilla lineage branches off first, and the remaining lineage later splits into the chimpanzee and the human. A student concludes from this tree that humans evolved from chimpanzees. Which statement is the best correction?",
+    "choices": [
+      "The student's reading is correct, because the chimpanzee is drawn to the left of the human and so came first.",
+      "The student is wrong only about which species is the ancestor; the tree shows humans evolved from gorillas.",
+      "The student is wrong about the direction; the tree shows that chimpanzees evolved from humans.",
+      "The tree shows that humans and chimpanzees both descended from a shared ancestor species that no longer exists; neither living species is the ancestor of the other."
+    ],
+    "answer": "D",
+    "hints": [
+      "Both species sit at tips of the tree, and tips are the endpoints of separate lineages living today.",
+      "The ancestor of the two is the branch point that joins them, which represents an earlier population that is not one of the species at the tips."
+    ]
+  },
+  {
+    "id": "bio-phylogenetics-cladograms-006",
+    "loId": "bio.phylogenetics-cladograms",
+    "cedCode": "BIO-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tree of five species is drawn with the tips in the order M, N, O, P, Q from left to right. The lineage leading to species M branches off first from all the others. The remaining lineage then splits into two groups: one group later splits into N and O, and the other group later splits into P and Q. Researchers then count amino acid differences in one shared protein, comparing each species with M: N differs at 22 positions, O at 21, P at 14, and Q at 15. A student argues that because P and Q differ from M the least, they must be M's closest relatives, so the tree must be wrong. Which statement best evaluates the student's argument?",
+    "choices": [
+      "The argument fails. On this tree, N, O, P, and Q all connect back to M through the same single branch point, so all four are equally related to M; unequal numbers of amino acid differences reflect different rates of change along different lineages, not different degrees of relatedness.",
+      "The argument succeeds. Fewer amino acid differences always means a more recent common ancestor, so P and Q should be redrawn as the first branches next to M.",
+      "The argument fails, but only because N is drawn immediately next to M, which by itself proves N is M's closest relative.",
+      "The argument cannot be evaluated without first determining which of the five species is the most advanced."
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace each of the four species back toward the base and count the branch points you pass before reaching the one shared with M.",
+      "Two species that split from a lineage at the same point are equally related to everything outside that lineage, even if one of them has changed faster since the split."
+    ]
+  },
+
+  {
+    "id": "bio-domains-kingdoms-diversity-001",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice names the three domains into which all cellular life is classified?",
+    "choices": [
+      "Bacteria, Plantae, and Animalia",
+      "Bacteria, Archaea, and Eukarya",
+      "Bacteria, Archaea, and Viruses",
+      "Prokarya, Eukarya, and Protista"
+    ],
+    "answer": "B",
+    "hints": [
+      "Domain is the broadest level of classification, so a correct list must include every plant, animal, fungus, and single-celled organism.",
+      "Two of the three domains contain organisms whose cells have no nucleus; the third contains every organism whose cells do have a nucleus."
+    ]
+  },
+  {
+    "id": "bio-domains-kingdoms-diversity-002",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mushroom is multicellular and does not move from place to place. Its cells have a nucleus and a cell wall made of chitin, it has no chloroplasts, and it obtains food by releasing digestive chemicals onto dead leaves in the soil and absorbing the nutrients that are released. In which kingdom does it belong, and why?",
+    "choices": [
+      "Plantae, because it is multicellular, stays in one place, and grows out of the soil",
+      "Plantae, because its cells are surrounded by cell walls",
+      "Protista, because it is a eukaryote that does not fit neatly into the animal kingdom",
+      "Fungi, because it is a multicellular eukaryote that has no chloroplasts and obtains food by absorbing nutrients digested outside its body"
+    ],
+    "answer": "D",
+    "hints": [
+      "Being rooted in soil and having a cell wall are not enough to make an organism a plant; ask instead how it obtains its food.",
+      "Plants make their own food using chloroplasts, animals ingest food and digest it inside the body, and one kingdom digests food outside the body and then absorbs it."
+    ]
+  },
+  {
+    "id": "bio-domains-kingdoms-diversity-003",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Bacteria and archaea are both single-celled organisms whose cells lack a nucleus. However, comparisons of ribosomal RNA sequences and of the enzymes used to copy and read DNA show that archaea share far more of these features with eukaryotes than with bacteria. Which conclusion is best supported by this evidence?",
+    "choices": [
+      "Archaea and Eukarya share a more recent common ancestor with each other than either shares with Bacteria.",
+      "Archaea and Bacteria are each other's closest relatives, because both are made of cells that lack a nucleus.",
+      "Archaea evolved directly from the bacteria that are alive today, which is why the two look so much alike.",
+      "Archaea should be placed inside the domain Bacteria, because all organisms without a nucleus belong in one domain."
+    ],
+    "answer": "A",
+    "hints": [
+      "Lacking a nucleus is an ancestral condition shared with the earliest cells, so it does not by itself show that two groups are close relatives.",
+      "Weigh the molecular evidence, since sequences of RNA and of the proteins that handle DNA track shared ancestry more reliably than a single structural feature does."
+    ]
+  },
+  {
+    "id": "bio-domains-kingdoms-diversity-004",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A virus consists of genetic material enclosed in a protein coat. It has no cytoplasm, no ribosomes, and no metabolism of its own, and it can make copies of itself only by entering a host cell and using that cell's machinery. Which statement best describes how biologists classify viruses?",
+    "choices": [
+      "Viruses make up a seventh kingdom, placed between the bacteria and the protists.",
+      "Viruses belong to the bacteria, because both are far smaller than a plant or animal cell.",
+      "Viruses are not placed in any kingdom or domain, because they are not cells and cannot carry out metabolism or reproduce without a host cell.",
+      "Viruses belong to the domain Archaea, because like archaea they have no nucleus."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the virus against the standard requirements for being alive: made of cells, carries out metabolism, and reproduces on its own.",
+      "The domains and kingdoms are categories for cellular life, so an entity that is not a cell has no place inside that system."
+    ]
+  },
+  {
+    "id": "bio-domains-kingdoms-diversity-005",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Antibiotics work by disrupting structures and processes found in bacterial cells, such as building the peptidoglycan cell wall or running the bacterial ribosome. A patient with influenza, a viral infection, is told that antibiotics will not help. Which statement best explains why?",
+    "choices": [
+      "Antibiotics do kill viruses, but far more slowly than they kill bacteria, so they are prescribed only for long-lasting infections.",
+      "A virus is not a cell: it has no cell wall and no ribosomes of its own, so the structures antibiotics attack are simply not present, and the virus is copied by the host cell's own machinery.",
+      "Antibiotics fail because viruses are eukaryotes, and the nucleus shields their genetic material from the drug.",
+      "Antibiotics fail because influenza viruses belong to the domain Archaea, and antibiotics affect only members of the domain Bacteria."
+    ],
+    "answer": "B",
+    "hints": [
+      "Start from what the drug actually targets, then ask whether a virus even possesses those parts.",
+      "Because a virus is reproduced by the host cell's own machinery, a drug that harmed that machinery would also harm the patient's cells."
+    ]
+  },
+  {
+    "id": "bio-domains-kingdoms-diversity-006",
+    "loId": "bio.domains-kingdoms-diversity",
+    "cedCode": "BIO-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Four organisms are described. Organism 1 is single-celled with no nucleus, lives in a boiling acidic hot spring, and has ribosomal RNA more similar to that of yeast than to that of common gut bacteria. Organism 2 is multicellular, has cells with a nucleus and cellulose cell walls, and makes its own food using chloroplasts. Organism 3 is single-celled, has a nucleus, swims using a whip-like flagellum, and engulfs smaller cells for food. Organism 4 is single-celled, has no nucleus, and has a cell wall containing peptidoglycan. Which statement is best supported by these descriptions?",
+    "choices": [
+      "Organisms 1 and 4 belong to the same domain, because neither one has a nucleus.",
+      "Organisms 2 and 3 belong to the same kingdom, because both have cells with a nucleus.",
+      "Organism 1 belongs to the domain Eukarya, because its ribosomal RNA resembles that of yeast.",
+      "Organisms 2 and 3 are both in the domain Eukarya but in different kingdoms, while organisms 1 and 4 fall into two different domains of organisms without a nucleus, Archaea and Bacteria."
+    ],
+    "answer": "D",
+    "hints": [
+      "Sort the four by whether their cells have a nucleus first, then split each group using the more specific evidence given.",
+      "Peptidoglycan in the cell wall points to Bacteria, while extreme heat and acid plus eukaryote-like ribosomal RNA point to Archaea; among the eukaryotes, one makes its own food and the other engulfs its food, which places them in different kingdoms."
+    ]
+  }
+]

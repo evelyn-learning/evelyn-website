@@ -1,7 +1,10 @@
 /**
- * Lint every HS-core plan (selected by known course infix: alg1 today).
- * Deliberately excludes legacy evelyn.hs.science.* and evelyn.hs.bio.sex-linked.*
- * seeds which use out-of-scope ID structures.
+ * Lint every HS-core plan (selected by known course infix: alg1, geom, bio today).
+ * Selection is by PLAN id, so legacy seeds drop out automatically:
+ * evelyn.hs.science.* never matches a course infix, and the QA seed
+ * test-hs-bio-sex-linked-pedigree.ts is id'd evelyn.test.hs.bio.* (the
+ * evelyn.hs.bio.sex-linked.cross inside it is an LO id, and LO ids are only
+ * read on already-selected plans). No exemption list is needed.
  * Mirrors lint-testprep-plans.ts. Run: npm run lint:hs-plans
  */
 import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
@@ -12,6 +15,7 @@ import { HS_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_hs-sha
 const COURSES: Record<string, { subject: string; topic: string; loPrefix: string; std: string }> = {
   alg1: { subject: 'math', topic: 'algebra-1', loPrefix: 'alg1', std: 'ALG1' },
   geom: { subject: 'math', topic: 'geometry', loPrefix: 'geom', std: 'GEOM' },
+  bio: { subject: 'science', topic: 'biology', loPrefix: 'bio', std: 'BIO' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.hs\\.(${Object.keys(COURSES).join('|')})\\.`);

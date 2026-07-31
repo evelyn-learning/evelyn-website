@@ -1,0 +1,346 @@
+[
+  {
+    "id": "bio-atp-and-energy-001",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cell uses a molecule of ATP to power the movement of a motor protein. What happens to the ATP molecule as that energy is released?",
+    "choices": [
+      "It gains a fourth phosphate group and becomes ADP.",
+      "The bond holding its third phosphate group is broken, leaving ADP and a free phosphate.",
+      "It is broken all the way down into carbon dioxide and water.",
+      "Its adenine base is removed and sent back to the nucleus for storage."
+    ],
+    "answer": "B",
+    "hints": [
+      "The 'tri' in adenosine triphosphate tells you how many phosphate groups ATP starts with.",
+      "Energy is released when a phosphate is removed, not added — count what is left behind afterward."
+    ]
+  },
+  {
+    "id": "bio-atp-and-energy-002",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that organisms keep their long-term energy reserves in the form of ATP. Why is this claim incorrect?",
+    "choices": [
+      "ATP is a short-term energy currency that is spent within seconds of being made; long-term reserves are held in molecules such as fats and starch.",
+      "ATP contains no usable chemical energy at all, so it could never serve as a store.",
+      "ATP can only be built inside chloroplasts, so animals have none of it to store.",
+      "ATP is a protein, and proteins are never involved in energy storage."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask how long a typical ATP molecule survives in a cell before it is used.",
+      "Compare ATP with the molecules an organism actually accumulates over days or weeks — fats in animals, starch in plants."
+    ]
+  },
+  {
+    "id": "bio-atp-and-energy-003",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A muscle cell holds only a very small amount of ATP at any given moment, yet the muscle can keep contracting for many minutes. Which statement best explains this?",
+    "choices": [
+      "Each ATP molecule can be used thousands of times without ever being changed.",
+      "The muscle cell converts ADP directly into new glucose to keep contracting.",
+      "The muscle cell absorbs finished ATP from the bloodstream whenever it runs low.",
+      "ADP and free phosphate are continually rebuilt into ATP by cellular respiration, so the same small pool turns over again and again."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think of the ATP-ADP cycle as a rechargeable battery rather than a fuel tank.",
+      "If the pool is small but the supply lasts, the molecules must be getting regenerated rather than stockpiled."
+    ]
+  },
+  {
+    "id": "bio-atp-and-energy-004",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A membrane pump moves calcium ions from a region where they are scarce into a region where they are already concentrated. Which statement best explains how ATP makes this possible?",
+    "choices": [
+      "ATP lowers the calcium concentration on the far side so the ions can drift downhill on their own.",
+      "Hydrolysis of ATP releases energy that changes the pump's shape, and the cell couples that energy-releasing reaction to the energy-requiring transport.",
+      "ATP forms an open channel that the calcium ions travel through without any energy cost.",
+      "ATP supplies the carbon that the pump converts into new calcium ions."
+    ],
+    "answer": "B",
+    "hints": [
+      "Moving a substance against its concentration gradient is an energy-requiring process, so something energy-releasing has to be paired with it.",
+      "ATP is not a tunnel and not a raw material here — track what its released energy does to the pump protein."
+    ]
+  },
+  {
+    "id": "bio-atp-and-energy-005",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Kidney cells that constantly pump solutes across membranes contain roughly 25 times as many mitochondria per unit of cell volume as skin cells do. Which conclusion is best supported by this comparison?",
+    "choices": [
+      "Skin cells do not carry out cellular respiration at all.",
+      "Kidney cells make their ATP by photosynthesis, while skin cells do not.",
+      "Mitochondria hold finished ATP for weeks, so kidney cells simply carry a larger stored reserve.",
+      "Kidney cells use ATP at a much higher rate, and the extra mitochondria supply that higher demand."
+    ],
+    "answer": "D",
+    "hints": [
+      "Mitochondria are sites of ATP production, so their number tracks how fast a cell must make ATP.",
+      "Pumping solutes across a membrane is active transport — ask which cell type is doing more energy-requiring work."
+    ]
+  },
+  {
+    "id": "bio-atp-and-energy-006",
+    "loId": "bio.atp-and-energy",
+    "cedCode": "BIO-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Measurements show that an adult human body contains only about 250 grams of ATP at any one moment, yet over a single day the body cycles an amount of ATP roughly equal to its own body mass. Which statement best accounts for both measurements at once?",
+    "choices": [
+      "Each ATP molecule is hydrolyzed to ADP and rebuilt many thousands of times per day, so a tiny standing pool can support an enormous daily turnover.",
+      "The body builds tens of kilograms of brand-new ATP from scratch each day and excretes whatever is left over.",
+      "ATP is stockpiled in fat tissue, so the 250 gram measurement underestimates the true amount by a factor of hundreds.",
+      "Resting cells do not use ATP at all, so the large daily amount applies only to time spent exercising."
+    ],
+    "answer": "A",
+    "hints": [
+      "The two numbers only conflict if each ATP molecule is used once — so test whether the same molecules can be reused.",
+      "Divide the daily amount by the standing amount: that ratio is how many times an average molecule must be recharged."
+    ]
+  },
+
+  {
+    "id": "bio-photosynthesis-001",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which equation correctly summarizes photosynthesis?",
+    "choices": [
+      "C6H12O6 + 6O2 → 6CO2 + 6H2O + energy",
+      "6CO2 + 6H2O + light energy → C6H12O6 + 6O2",
+      "6CO2 + 6O2 + light energy → C6H12O6 + 6H2O",
+      "C6H12O6 + 6H2O → 6CO2 + 6O2 + light energy"
+    ],
+    "answer": "B",
+    "hints": [
+      "Photosynthesis builds sugar, so glucose belongs on the product side and light energy belongs on the reactant side.",
+      "Check the raw materials a plant takes in: carbon dioxide and water — not oxygen."
+    ]
+  },
+  {
+    "id": "bio-photosynthesis-002",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Researchers watered a plant with water containing a heavy isotope of oxygen while supplying it with ordinary carbon dioxide. The oxygen gas the plant released carried the heavy isotope. What does this result show?",
+    "choices": [
+      "The oxygen gas released comes from the carbon dioxide the plant takes in.",
+      "The plant converts CO2 directly into O2 during the Calvin cycle.",
+      "Water is a product of the light reactions rather than a reactant.",
+      "The oxygen gas released comes from water molecules split during the light reactions."
+    ],
+    "answer": "D",
+    "hints": [
+      "The label was placed only in the water, so follow the labeled atoms from where they entered to where they came out.",
+      "If the released O2 is labeled and the CO2 was not, the oxygen atoms cannot have come from the CO2."
+    ]
+  },
+  {
+    "id": "bio-photosynthesis-003",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Calvin cycle takes place in the stroma of the chloroplast, where it attaches carbon dioxide to an existing molecule to build sugar. Which pair of molecules must the light reactions deliver for the Calvin cycle to run?",
+    "choices": [
+      "ATP and NADPH",
+      "ATP and oxygen gas",
+      "NADH and FADH2",
+      "Sunlight and chlorophyll, delivered directly into the stroma"
+    ],
+    "answer": "A",
+    "hints": [
+      "Building sugar takes both an energy source and a supply of high-energy electrons.",
+      "NADH and FADH2 are the electron carriers of cellular respiration; photosynthesis uses a different carrier."
+    ]
+  },
+  {
+    "id": "bio-photosynthesis-004",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says that because the Calvin cycle is sometimes called the 'dark reaction,' it must run only at night. Which correction is best supported by how the cycle actually works?",
+    "choices": [
+      "The claim is correct: light destroys the enzymes of the Calvin cycle, so it can only operate after dark.",
+      "The Calvin cycle captures sunlight and makes its own ATP, so the time of day makes no difference to it.",
+      "The Calvin cycle does not use light directly, but it runs on ATP and NADPH supplied by the light reactions, so it operates mainly while light is available.",
+      "The Calvin cycle produces the ATP and NADPH that the light reactions then consume after dark."
+    ],
+    "answer": "C",
+    "hints": [
+      "'Light-independent' means the cycle needs no photons of its own — it does not mean the cycle needs darkness.",
+      "Trace where the Calvin cycle's ATP and NADPH come from, then ask when that supply exists."
+    ]
+  },
+  {
+    "id": "bio-photosynthesis-005",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A healthy plant sits in a sealed chamber under bright light. Researchers flush out all of the carbon dioxide and replace it with nitrogen gas, leaving the light on and the plant well watered. What is the most likely result in the chloroplasts over the next few minutes?",
+    "choices": [
+      "The light reactions shut down instantly, because they require carbon dioxide as a reactant.",
+      "The light reactions keep running for a while, but sugar production stops because the Calvin cycle has no carbon to fix.",
+      "Sugar production continues at its normal rate, with oxygen serving as the carbon source instead.",
+      "The plant begins using water as its carbon source and sugar output roughly doubles."
+    ],
+    "answer": "B",
+    "hints": [
+      "Sort the two stages by their inputs: which stage needs CO2, and which needs light and water?",
+      "Removing an input stops the stage that consumes it first; the other stage stalls only once its own supplies back up."
+    ]
+  },
+  {
+    "id": "bio-photosynthesis-006",
+    "loId": "bio.photosynthesis",
+    "cedCode": "BIO-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two chloroplast preparations are placed in bright light with plenty of CO2 and water. In sample 1 the pigment chlorophyll has been chemically destroyed. In sample 2 the chlorophyll is intact, but rubisco — the enzyme that attaches CO2 to a five-carbon molecule in the stroma — has been blocked. Which prediction about sugar production is best supported?",
+    "choices": [
+      "Sample 1 still makes sugar because the Calvin cycle needs no light, while sample 2 makes none.",
+      "Both samples make normal amounts of sugar, because each blocked step has a backup pathway.",
+      "Sample 1 makes sugar but no oxygen, while sample 2 makes oxygen but no ATP.",
+      "Neither sample makes sugar: sample 1 cannot absorb light to produce ATP and NADPH, and sample 2 has ATP and NADPH but cannot fix carbon."
+    ],
+    "answer": "D",
+    "hints": [
+      "Handle the two samples separately, then combine the verdicts — each blocked step sits in a different stage.",
+      "The Calvin cycle being 'light-independent' does not free it from needing the ATP and NADPH the light reactions make."
+    ]
+  },
+
+  {
+    "id": "bio-cellular-respiration-001",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Glycolysis is the first stage of cellular respiration, in which one glucose molecule is split into two three-carbon molecules. Where in a eukaryotic cell does glycolysis take place?",
+    "choices": [
+      "In the inner membrane of the mitochondrion",
+      "In the matrix of the mitochondrion",
+      "In the cytoplasm, outside any organelle",
+      "In the stroma of the chloroplast"
+    ],
+    "answer": "C",
+    "hints": [
+      "Glycolysis also occurs in bacteria, which have no mitochondria at all — that narrows the location sharply.",
+      "The mitochondrial stages take over only after glucose has already been split."
+    ]
+  },
+  {
+    "id": "bio-cellular-respiration-002",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "One glucose molecule is broken down completely by aerobic respiration in a typical human cell. Which statement about the ATP yield is correct?",
+    "choices": [
+      "Glycolysis alone gives a small net yield of about 2 ATP, and the mitochondrial stages that follow supply the large majority, for roughly 30 to 32 ATP in all.",
+      "Glycolysis supplies about 32 ATP and the mitochondrial stages add only about 2 more.",
+      "All of the ATP, about 32 molecules, is produced during the citric acid cycle itself.",
+      "Aerobic respiration yields about 2 ATP per glucose, the same as fermentation does."
+    ],
+    "answer": "A",
+    "hints": [
+      "Glycolysis both spends and makes ATP — the number that matters is the net gain.",
+      "Most of the ATP comes from the electron transport chain, which sits in the mitochondria, not from glycolysis."
+    ]
+  },
+  {
+    "id": "bio-cellular-respiration-003",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When oxygen is unavailable, many cells switch from aerobic respiration to fermentation. What is the main role of fermentation for such a cell?",
+    "choices": [
+      "It produces more ATP per glucose molecule than aerobic respiration does.",
+      "It runs the electron transport chain without oxygen, yielding large amounts of ATP.",
+      "It regenerates the NAD+ that glycolysis requires, allowing glycolysis and its small ATP yield to continue.",
+      "It converts lactic acid back into glucose so the cell never runs out of fuel."
+    ],
+    "answer": "C",
+    "hints": [
+      "Fermentation itself makes no ATP — ask what it hands back to the stage that does.",
+      "Glycolysis stalls once every NAD+ has been loaded with electrons; something has to unload them."
+    ]
+  },
+  {
+    "id": "bio-cellular-respiration-004",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A leafy houseplant is kept in complete darkness for twelve hours. Which statement about its cells during that period is correct?",
+    "choices": [
+      "The plant carries out neither photosynthesis nor cellular respiration; it is completely dormant until light returns.",
+      "The plant carries out cellular respiration, breaking down stored sugars in its mitochondria and consuming O2, even though photosynthesis has stopped.",
+      "The plant keeps photosynthesizing on stored light energy, so it releases O2 all night long.",
+      "Plant cells have no mitochondria and rely on their chloroplasts to make ATP at all hours."
+    ],
+    "answer": "B",
+    "hints": [
+      "Plant cells need ATP around the clock, and photosynthesis makes sugar, not ATP for general cellular work.",
+      "Ask which organelle supplies that ATP when no light is available."
+    ]
+  },
+  {
+    "id": "bio-cellular-respiration-005",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cyanide blocks the final protein of the mitochondrial electron transport chain, so electrons can no longer be handed off to oxygen. Which immediate consequence inside the mitochondria best explains why this is rapidly fatal?",
+    "choices": [
+      "Electrons back up along the chain, the proton gradient across the inner membrane collapses, and mitochondrial ATP production nearly stops.",
+      "Glucose can no longer cross the cell membrane, so the cell is left with no fuel to burn.",
+      "The cell begins producing far too much ATP and overheats.",
+      "Carbon dioxide can no longer be exhaled, so sugars build up in the lungs."
+    ],
+    "answer": "A",
+    "hints": [
+      "Oxygen's job is to accept electrons at the end of the chain; picture what happens upstream when the exit is plugged.",
+      "The chain's purpose is to pump protons and build a gradient — follow what happens to that gradient, and then to ATP synthase."
+    ]
+  },
+  {
+    "id": "bio-cellular-respiration-006",
+    "loId": "bio.cellular-respiration",
+    "cedCode": "BIO-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Yeast are grown in a sealed flask of sugar solution. While oxygen remains, the yeast consume sugar slowly and their population grows quickly. Once the oxygen is used up, the yeast consume sugar several times faster per hour, population growth slows, and ethanol and CO2 build up. Which explanation best fits both observations?",
+    "choices": [
+      "Without oxygen the yeast switch to photosynthesis, using sugar as their light source.",
+      "Fermentation yields more ATP per glucose than aerobic respiration, so the yeast thrive once the flask is sealed off from air.",
+      "The ethanol the yeast release is broken back down for extra ATP, which is why oxygen turns out to be unnecessary.",
+      "Fermentation yields only about 2 ATP per glucose instead of roughly 30, so the yeast must burn far more sugar to obtain the same amount of ATP."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare ATP per glucose for the two pathways, then ask how much sugar is needed to reach the same ATP total.",
+      "A faster rate of sugar use paired with slower growth points to a less efficient pathway, not a more powerful one."
+    ]
+  }
+]
