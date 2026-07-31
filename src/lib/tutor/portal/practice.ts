@@ -21,6 +21,7 @@ import type {
   RetrievePracticeResponse,
   PracticeItem,
 } from '@evelyn/portal-contract/v1';
+import { generatePracticeItems, type PracticeGenSources } from './practice-gen';
 
 type Difficulty = 1 | 2 | 3 | 4;
 
@@ -44,6 +45,10 @@ export interface PlanLite {
    *  so grading resolves the right plan (segment ids are NOT globally unique
    *  across plans — `try-1` alone appears in 100+ plans). */
   id?: string;
+  /** Topic id (topic-taxonomy vocabulary). Used to derive the topic tag for
+   *  Design B's generate-on-exhaustion path engine-side — NEVER the portal's
+   *  `courseId` (a Mongo ObjectId hex on the real wire, not a topic id). */
+  topic?: string;
   los: Array<{ id: string; standard?: string }>;
   segments: Array<{
     kind: string;
@@ -120,14 +125,23 @@ function planToItems(plan: PlanLite, loId: string): PracticeItem[] {
 export async function retrievePractice(
   req: RetrievePracticeRequest,
   sources: PracticeSources,
+  /** Injectable generate-on-exhaustion dependencies — tests supply a stub;
+   *  production omits it (defaults to the real Anthropic+Mongo sources
+   *  inside generatePracticeItems). */
+  genSources?: PracticeGenSources,
 ): Promise<RetrievePracticeResponse> {
   const difficulty = req.difficulty;
   const planItems: PracticeItem[] = [];
   const bankItems: PracticeItem[] = [];
+  // Hoisted out of the loId branch below so the shortfall/generation section
+  // can derive the topic tag from the SAME already-fetched plans (no extra
+  // lookup) — empty for a topicId-scoped request.
+  let loScopePlans: PlanLite[] = [];
 
   if ('loId' in req.scope) {
     const loId = req.scope.loId;
     const plans = await sources.plansForLoId(loId);
+    loScopePlans = plans;
     for (const p of plans) planItems.push(...planToItems(p, loId));
     const bank = await sources.bankForLoId(loId, difficulty);
     for (const b of bank) bankItems.push(bankToItem(b));
@@ -152,5 +166,73 @@ export async function retrievePractice(
     seen.add(it.id);
     ordered.push(it);
   }
-  return { items: ordered.slice(0, req.count) };
+
+  // Design B (generate-on-exhaustion): drop ids the portal says this student
+  // has already been served, BEFORE slicing to count, so a fresh item fills
+  // the freed slot instead of a repeat crowding it out.
+  const excludeSet = req.excludeIds?.length ? new Set(req.excludeIds) : null;
+  const available = excludeSet ? ordered.filter((it) => !excludeSet.has(it.id)) : ordered;
+
+  // Shortfall vs. what was asked for, computed BEFORE slicing — how many more
+  // items the retrieval pool alone couldn't supply. A thin pool degrades to
+  // fewer items, never an error.
+  const shortfall = Math.max(0, req.count - available.length);
+
+  // Design B (generate-on-exhaustion), Task 3: top up the shortfall with
+  // verified runtime-generated items. LO-scope only — generated ids and the
+  // per-(student,LO) cap are keyed on a single LO, which a topic scope
+  // doesn't have. Any failure (kill-switch, over-cap, generation error)
+  // degrades to the retrieval-only result — never an error.
+  let generated: PracticeItem[] = [];
+  if (shortfall > 0 && 'loId' in req.scope) {
+    // Topic tag derived ENGINE-SIDE from the LO's owning plan — never the
+    // portal's `courseId`, which is a Mongo ObjectId hex on the real wire,
+    // not a topic-taxonomy id (round-1 review fix). `loScopePlans` here is
+    // already `SEED_PLANS.filter(p => p.los.some(l => l.id === loId))` (via
+    // `sources.plansForLoId`), so `.find(p => p.topic)` IS the owning-plan
+    // lookup. `topicId` mirrors `topic` so `bankForTopic`'s
+    // `{topic}/{topicId}` OR match finds these rows the same way it finds
+    // hand-authored ones. No owning plan (or an owning plan with no topic)
+    // → skip generation entirely rather than write an orphan bank row with a
+    // bogus tag.
+    const derivedTopic = loScopePlans.find((p) => p.topic)?.topic;
+    if (derivedTopic) {
+      try {
+        generated = await generatePracticeItems(
+          {
+            studentId: req.studentId,
+            loId: req.scope.loId,
+            topic: derivedTopic,
+            topicId: derivedTopic,
+            cedCode: ordered.find((it) => it.cedCode)?.cedCode,
+            difficulty,
+            shortfall,
+            // Anchor pool: same-LO items already assembled above
+            // (pre-exclusion — an anchor is a template, never itself served,
+            // so a student-seen item is still a fine anchor).
+            anchorItems: ordered,
+          },
+          genSources,
+        );
+      } catch (err) {
+        // Belt-and-suspenders: generatePracticeItems already swallows its own
+        // failures and returns [], but a thrown error here must still never
+        // surface past retrievePractice.
+        console.warn('[practice] generate-on-exhaustion failed, degrading to retrieval-only:', err);
+        generated = [];
+      }
+    }
+  }
+
+  // Dedup generated items against BOTH the retrieval pool AND the caller's
+  // excludeIds — a regeneration that lands on the exact same content
+  // (same hash -> same practice-gen.<loId>.<hash> id) as something already
+  // banked-and-served to this student must not re-appear in this response.
+  const availableIds = new Set(available.map((it) => it.id));
+  const generatedDeduped = generated.filter(
+    (it) => !availableIds.has(it.id) && !(excludeSet?.has(it.id) ?? false),
+  );
+  const combined = [...available, ...generatedDeduped];
+
+  return { items: combined.slice(0, req.count) };
 }

@@ -35,7 +35,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // for verification. Same model in fresh context is the design's decorrelation
 // (the verifier never sees the generator's claimed answer). Overridable.
 const BRAINGEN_MODEL = process.env.BRAINGEN_MODEL || 'claude-sonnet-5';
-const BRAINGEN_VERIFY_MODEL = process.env.BRAINGEN_VERIFY_MODEL || 'claude-sonnet-5';
+export const BRAINGEN_VERIFY_MODEL = process.env.BRAINGEN_VERIFY_MODEL || 'claude-sonnet-5';
 
 /** 4-point anchored-relative difficulty scale (v1 design Q6). */
 export type Difficulty = 'slightly_easier' | 'same' | 'slightly_harder' | 'much_harder';
@@ -252,7 +252,7 @@ async function callModel(model: string, system: string, user: string, maxTokens:
     .trim();
 }
 
-interface GenPayload {
+export interface GenPayload {
   problemText: string;
   finalAnswer: string;
   teachingAnswer?: string;
@@ -281,6 +281,70 @@ function parseGenPayload(raw: string): GenPayload | null {
   }
 }
 
+export interface GenAndVerifyResult {
+  gen: GenPayload;
+  hash: string;
+}
+
+/**
+ * Generate ONE candidate problem from `userPrompt` — NO verification. Parses
+ * the model's JSON payload and applies the `excludeHashes` cross-session
+ * dedup check. Returns null on parse failure or a hash collision. Exported so
+ * a caller needing BESPOKE verification (Practice's answer-shape-aware gate
+ * in `practice-gen.ts` — plain-number numeric answers, choices-aware mcq
+ * verification) can layer its own check on top of the exact same generator
+ * call, without forking the generation prompt/model. `generateAndVerifyOnce`
+ * below is just this plus the tutor-session's blind-solve verification.
+ */
+export async function generateCandidate(
+  userPrompt: string,
+  excludeHashes: string[] = []
+): Promise<GenAndVerifyResult | null> {
+  const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
+  if (!gen) return null;
+  // Cross-session dedup: never serve a problem already shown.
+  const hash = simpleHash(gen.problemText);
+  if (excludeHashes.includes(hash)) return null;
+  return { gen, hash };
+}
+
+/**
+ * One generate+verify attempt: author a fresh problem from `userPrompt` via
+ * BRAINGEN_MODEL, then INDEPENDENTLY solve it with BRAINGEN_VERIFY_MODEL (the
+ * verifier only ever sees the problem text, never the claimed answer) and
+ * only return when the two agree (numeric tolerance or short-exact —
+ * `answersAgree`). Returns null on parse failure, a hash collision against
+ * `excludeHashes`, or verifier disagreement; the caller decides whether to
+ * retry. Exported so the tutor-session Layer-2 pipeline (`brainGenWithVerify`
+ * below) and Practice's generate-on-exhaustion path share the same generator —
+ * no forked pipeline (Practice adds its OWN stricter verify on top of
+ * `generateCandidate` instead of calling this one; see practice-gen.ts).
+ */
+export async function generateAndVerifyOnce(
+  userPrompt: string,
+  excludeHashes: string[] = []
+): Promise<GenAndVerifyResult | null> {
+  const candidate = await generateCandidate(userPrompt, excludeHashes);
+  if (!candidate) return null;
+  const { gen, hash } = candidate;
+  // Independent solve — the verifier only sees the problem text.
+  const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
+  if (!answersAgree(gen.finalAnswer, solved)) return null;
+  return { gen, hash };
+}
+
+/** `generateAndVerifyOnce` with 1 retry on failure (temperature yields a
+ *  different problem the second time). Same retry shape the tutor-session
+ *  pipeline has always used. */
+export async function generateAndVerifyWithRetry(
+  userPrompt: string,
+  excludeHashes: string[] = []
+): Promise<GenAndVerifyResult | null> {
+  const first = await generateAndVerifyOnce(userPrompt, excludeHashes);
+  if (first) return first;
+  return generateAndVerifyOnce(userPrompt, excludeHashes); // 1 retry
+}
+
 /**
  * Layer 2 — brain-gen + independent verify (content-variety Phase 2).
  * Generates a fresh problem testing the anchor's skill, then INDEPENDENTLY
@@ -301,35 +365,24 @@ async function brainGenWithVerify(
     `\nLearning objectives of this lesson:\n${los}\n` +
     `\nRequested difficulty relative to the anchor: ${input.difficulty}. Write the fresh problem now.`;
 
-  const attempt = async (): Promise<GeneratedProblem | null> => {
-    const gen = parseGenPayload(await callModel(BRAINGEN_MODEL, BRAINGEN_SYSTEM, userPrompt, 800));
-    if (!gen) return null;
-    // Cross-session/session dedup: never serve a problem already shown.
-    const hash = simpleHash(gen.problemText);
-    if ((input.excludeHashes ?? []).includes(hash)) return null;
-    // Independent solve — the verifier only sees the problem text.
-    const solved = await callModel(BRAINGEN_VERIFY_MODEL, BRAINGEN_VERIFY_SYSTEM, gen.problemText, 400);
-    if (!answersAgree(gen.finalAnswer, solved)) return null;
-    // Write-back cache: store the verified problem so future requests for
-    // this topic+difficulty hit the bank fast-path. Fire-and-forget.
-    void persistBrainGenProblem(input.topic, absDifficulty, gen, hash, input.planId, input.plan.los?.[0]?.id);
-    return {
-      canonicalText: gen.problemText,
-      // The teaching solution is what the tutor references; fall back to the
-      // bare final answer. Validation downstream compares the student's
-      // response to this, so keep the bare answer recoverable inside it.
-      expectedAnswer: gen.teachingAnswer ? `${gen.teachingAnswer} (answer: ${gen.finalAnswer})` : gen.finalAnswer,
-      hints: gen.hints,
-      responseFormat: gen.responseFormat,
-      choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
-      provenance: 'brain-gen',
-      trackingId: hash,
-    };
+  const result = await generateAndVerifyWithRetry(userPrompt, input.excludeHashes ?? []);
+  if (!result) return null;
+  const { gen, hash } = result;
+  // Write-back cache: store the verified problem so future requests for
+  // this topic+difficulty hit the bank fast-path. Fire-and-forget.
+  void persistBrainGenProblem(input.topic, absDifficulty, gen, hash, input.planId, input.plan.los?.[0]?.id);
+  return {
+    canonicalText: gen.problemText,
+    // The teaching solution is what the tutor references; fall back to the
+    // bare final answer. Validation downstream compares the student's
+    // response to this, so keep the bare answer recoverable inside it.
+    expectedAnswer: gen.teachingAnswer ? `${gen.teachingAnswer} (answer: ${gen.finalAnswer})` : gen.finalAnswer,
+    hints: gen.hints,
+    responseFormat: gen.responseFormat,
+    choices: gen.choices?.map((c, i) => ({ id: String.fromCharCode(65 + i), text: c })),
+    provenance: 'brain-gen',
+    trackingId: hash,
   };
-
-  const first = await attempt();
-  if (first) return first;
-  return await attempt(); // 1 retry — temperature yields a different problem
 }
 
 /** Cheap content-token extraction: lowercase words ≥4 chars, no
@@ -465,47 +518,51 @@ export function answersAgree(genAnswer: string, solveAnswer: string): boolean {
   return !!na && na === nb;
 }
 
+/** Normalize for MCQ text comparison — strips LaTeX-ish noise + punctuation. */
+function normMcqText(s: string): string {
+  return (s ?? '').toLowerCase().replace(/\$|\\[a-z]+|[{}()]/g, ' ').replace(/[^a-z0-9]/g, '');
+}
+
+/** Resolve an answer string to a bare choice LETTER — direct letter shapes
+ *  ("D", "(D)", "Option D."), else an EXACT normalized match against a
+ *  choice's text. Returns null when unresolvable. Text → letter is
+ *  deliberately exact-only (no fuzzy/containment matching): MCQ choices
+ *  about one concept share most of their words (a negation distractor
+ *  differs from the correct choice by one token), so paraphrase matching
+ *  would mis-resolve. Shared by `mcqAnswersAgree` (tutor-session) and
+ *  Practice's answer-shape gate (`practice-gen.ts`) so both resolve a claimed
+ *  MCQ answer to a bank-storable bare letter the exact same way. */
+export function resolveMcqLetter(
+  answer: string,
+  choices: Array<{ letter: string; text: string }>
+): string | null {
+  const t = (answer ?? '').trim();
+  const direct = t.match(/^\(?([A-Ea-e])\)?[.):]?$/);
+  if (direct) return direct[1].toUpperCase();
+  const prefixed = t.match(/^(?:option|choice|answer(?:\s+is)?)[:\s]+\(?([A-Ea-e])\)?[.):]?\s*$/i);
+  if (prefixed) return prefixed[1].toUpperCase();
+  const n = normMcqText(t);
+  if (!n) return null;
+  for (const c of choices) {
+    if (normMcqText(c.text) === n) return c.letter.toUpperCase();
+  }
+  return null;
+}
+
 /** Round-17b (2026-07-17): MCQ-aware agreement. Live false-mismatch class
  *  (session portal-ef215ea0): the brain claims a LETTER ("D") while the
  *  blind solver answered with the choice's TEXT. Resolve BOTH sides to a
- *  letter — direct letter shapes ("D", "(D)", "Option D."), else a
- *  conservative match against the choice texts (normalized equality, or
- *  containment when the shorter side is long enough to be unambiguous) —
- *  and compare letters. Unresolvable sides never agree. */
+ *  letter (`resolveMcqLetter`) and compare. Unresolvable sides never agree. */
 export function mcqAnswersAgree(
   claimed: string,
   solved: string,
   choices: Array<{ letter: string; text: string }>
 ): boolean {
-  const norm = (s: string) => (s ?? '').toLowerCase().replace(/\$|\\[a-z]+|[{}()]/g, ' ').replace(/[^a-z0-9]/g, '');
-  const nClaimed = norm(claimed);
-  const nSolved = norm(solved);
+  const nClaimed = normMcqText(claimed);
+  const nSolved = normMcqText(solved);
   if (nClaimed && nClaimed === nSolved) return true;
-  const letterOf = (s: string): string | null => {
-    const t = (s ?? '').trim();
-    const direct = t.match(/^\(?([A-Ea-e])\)?[.):]?$/);
-    if (direct) return direct[1].toUpperCase();
-    const prefixed = t.match(/^(?:option|choice|answer(?:\s+is)?)[:\s]+\(?([A-Ea-e])\)?[.):]?\s*$/i);
-    return prefixed ? prefixed[1].toUpperCase() : null;
-  };
-  const resolve = (s: string): string | null => {
-    const l = letterOf(s);
-    if (l) return l;
-    // Text → letter only on EXACT normalized equality. Fuzzy/containment
-    // matching is deliberately absent: MCQ choices about one concept share
-    // most of their words (a negation distractor differs from the correct
-    // choice by one token), so paraphrase matching would mis-resolve. The
-    // solver sees the choices and is instructed to answer with a letter —
-    // that is the reliable path; this branch only covers verbatim quotes.
-    const n = norm(s);
-    if (!n) return null;
-    for (const c of choices) {
-      if (norm(c.text) === n) return c.letter.toUpperCase();
-    }
-    return null;
-  };
-  const a = resolve(claimed);
-  const b = resolve(solved);
+  const a = resolveMcqLetter(claimed, choices);
+  const b = resolveMcqLetter(solved, choices);
   return !!a && a === b;
 }
 

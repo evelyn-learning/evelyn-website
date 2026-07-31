@@ -160,6 +160,7 @@
     "test:passages": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/passages/store.test.ts",
     "test:portal-grading-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/grade-free-response.test.ts",
     "test:adapters-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/adapters.test.ts",
+    "test:practice-gen": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/practice-gen.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
     "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
@@ -178,7 +179,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "@deepgram/sdk": "^4.11.3",
-    "@evelyn/portal-contract": "github:evelyn-learning/portal-contract#v1.6.0",
+    "@evelyn/portal-contract": "github:evelyn-learning/portal-contract#v1.7.0",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "^16.1.6",
     "@rdkit/rdkit": "^2025.3.4-1.0.0",

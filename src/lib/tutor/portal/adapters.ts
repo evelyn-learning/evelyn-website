@@ -20,6 +20,9 @@ type Difficulty = 1 | 2 | 3 | 4;
 function toPlanLite(plan: LessonPlan): PlanLite {
   return {
     id: plan.id,
+    // Design B (generate-on-exhaustion) topic derivation — never the
+    // portal's courseId (a Mongo ObjectId hex on the real wire).
+    topic: plan.topic,
     los: plan.los.map((l) => ({ id: l.id, standard: l.standard })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     segments: plan.segments.map((s: any) => ({
@@ -74,12 +77,20 @@ export function mongoPracticeSources(): PracticeSources {
       return SEED_PLANS.filter((p) => p.topic === topicId).map(toPlanLite);
     },
     async bankForLoId(loId, difficulty?: Difficulty) {
-      const filter: Record<string, unknown> = { loId };
+      // Exclude tutor-session brain-gen.* rows — those are live-session
+      // scratch generations (unscoped, not answer-key-vetted for standalone
+      // practice) and must never surface here. practice-gen.* rows (the
+      // generate-on-exhaustion write-back target) are ordinary bank rows and
+      // pass through untouched.
+      const filter: Record<string, unknown> = { loId, id: { $not: /^brain-gen\./ } };
       if (difficulty) filter.difficulty = difficulty;
       return safeBankQuery(filter);
     },
     async bankForTopic(topicId, difficulty?: Difficulty) {
-      const filter: Record<string, unknown> = { $or: [{ topic: topicId }, { topicId }] };
+      const filter: Record<string, unknown> = {
+        $or: [{ topic: topicId }, { topicId }],
+        id: { $not: /^brain-gen\./ },
+      };
       if (difficulty) filter.difficulty = difficulty;
       return safeBankQuery(filter);
     },
