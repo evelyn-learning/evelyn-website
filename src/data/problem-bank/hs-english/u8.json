@@ -1,0 +1,419 @@
+[
+  {
+    "id": "engl-figurative-language-001",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which figure of speech appears in this line: \"Her silence sat between us like a stone in a shoe\"?",
+    "choices": ["Personification", "Hyperbole", "Simile", "Onomatopoeia"],
+    "answer": "C",
+    "hints": ["Look for a signal word — like, as, than, or resembles."]
+  },
+  {
+    "id": "engl-figurative-language-002",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence contains a metaphor rather than a simile?",
+    "choices": [
+      "The freeway ran like a river at rush hour.",
+      "The freeway was as loud as a river in flood.",
+      "The freeway sounded like the river behind our old house.",
+      "The freeway was a river of taillights, slow and red."
+    ],
+    "answer": "D",
+    "hints": [
+      "A metaphor states the equation outright, with no signal word.",
+      "Three of these carry a like or an as. Find the one that claims the freeway simply IS something else."
+    ]
+  },
+  {
+    "id": "engl-figurative-language-003",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses hyperbole?",
+    "choices": [
+      "The alarm clock nagged at me until I finally gave in.",
+      "I have been standing at this bus stop since the last ice age.",
+      "The bus was as crowded as a jar of nails.",
+      "The bus pulled up eleven minutes behind schedule."
+    ],
+    "answer": "B",
+    "hints": [
+      "Hyperbole is deliberate exaggeration so obvious that nobody is meant to believe it.",
+      "Sort the others first: one is personification, one is a simile, one is plain literal description."
+    ]
+  },
+  {
+    "id": "engl-figurative-language-004",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this original line: \"His promises were sidewalk chalk.\" What does the metaphor most likely convey about the promises?",
+    "choices": [
+      "They were meant for children rather than for adults",
+      "They were written down instead of spoken aloud",
+      "They were colorful and appealing but hard to read clearly",
+      "They were easy to make and the first bad weather erased them"
+    ],
+    "answer": "D",
+    "hints": [
+      "Name both sides first: the promises are the tenor, sidewalk chalk is the vehicle.",
+      "Ask what happens to chalk on a sidewalk after one rainstorm. That failure is the quality being transferred."
+    ]
+  },
+  {
+    "id": "engl-figurative-language-005",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence does NOT contain a simile, even though it contains the word \"like\"?",
+    "choices": [
+      "She laughs like her father, short and one note at a time.",
+      "He waited by the door like a dog that had heard a car.",
+      "The hallway smelled like a swimming pool in December.",
+      "Her handwriting slanted like rain across a window."
+    ],
+    "answer": "A",
+    "hints": [
+      "A simile compares two UNLIKE things so that a quality can cross the gap between them.",
+      "One of these compares a person to another person — same category, so nothing is carried across and there is nothing to interpret."
+    ]
+  },
+  {
+    "id": "engl-figurative-language-006",
+    "loId": "engl.figurative-language",
+    "cedCode": "ENGL-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read these original lines: \"Grief moved into the spare room that winter. / It rearranged the furniture, kept its own hours, / and by April it had stopped asking / whether it could stay.\" Which statement best describes the figurative language and what it accomplishes?",
+    "choices": [
+      "A single simile in the first line, dropped afterward in favor of literal description",
+      "Personification in line two only, with no comparison operating anywhere else",
+      "An extended metaphor: grief is treated as a live-in occupant across all four lines, so the passage shows it hardening into a permanent household presence rather than a passing feeling",
+      "Hyperbole, since no reader would believe that grief could rent a room"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the comparison is dropped after one line or fed with new details drawn from the same source.",
+      "Rearranging furniture, keeping its own hours, and no longer asking permission all belong to one image — a tenant who has settled in."
+    ]
+  },
+
+  {
+    "id": "engl-imagery-and-symbolism-001",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sense does the imagery in this line mainly appeal to: \"The bannister stayed cold and faintly sticky under my hand the whole way down\"?",
+    "choices": ["Sight", "Hearing", "Touch", "Smell"],
+    "answer": "C",
+    "hints": ["Ask which sense would register cold and sticky."]
+  },
+  {
+    "id": "engl-imagery-and-symbolism-002",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this original excerpt: \"The waiting room hummed with fluorescent light, the vinyl chair stuck to the backs of my knees, and somewhere down the hall a cart rattled and stopped.\" Which mood does the imagery build?",
+    "choices": [
+      "Tense, uncomfortable waiting",
+      "Warm domestic comfort",
+      "Wild outdoor freedom",
+      "Playful, comic energy"
+    ],
+    "answer": "A",
+    "hints": [
+      "Label the senses first: the hum, the stick of vinyl against skin, the cart that rattles and then stops.",
+      "Then ask what those particular sensations make the reader's body feel."
+    ]
+  },
+  {
+    "id": "engl-imagery-and-symbolism-003",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this original excerpt: \"Nadia taped her mother's shop key above her desk the week the store closed. She taped it up again after the move, and again in the dorm. On her first morning of work she checked her pocket for it out of habit, though it had hung on a wall for years. She also owned a lamp, a gray hoodie, and a mug from a gas station.\" Which detail does the text treat as symbolic?",
+    "choices": ["The lamp", "The gray hoodie", "The shop key", "The gas-station mug"],
+    "answer": "C",
+    "hints": [
+      "Run the context test on each item: repetition, placement, and weight.",
+      "Three items are listed once and dropped. One keeps returning at the moments that matter."
+    ]
+  },
+  {
+    "id": "engl-imagery-and-symbolism-004",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this original excerpt: \"For eleven years the porch swing hung from two chains, and every August her uncle repainted it the same green. The summer he did not come, the chains stayed up and the seat came down, and the family sat on the steps instead.\" What does the swing most defensibly symbolize?",
+    "choices": [
+      "Wealth, since a freshly painted swing signals a comfortable household",
+      "Her uncle's steady yearly presence, so its absence now marks the gap he left",
+      "Escape, because swings traditionally stand for freedom in literature",
+      "Nothing — a swing is ordinary porch furniture with no symbolic weight"
+    ],
+    "answer": "B",
+    "hints": [
+      "This is a text-built symbol, so set aside what swings mean elsewhere and ask what THIS passage taught it to mean.",
+      "The swing is bound to a repeated yearly action by one person. Then that person stops coming, and the seat comes down."
+    ]
+  },
+  {
+    "id": "engl-imagery-and-symbolism-005",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this original excerpt: \"Priya laced her boots, checked the forecast, and slid the red envelope into her coat pocket. On the trail she stopped four times to take it out, read it, and put it back. At the summit she left it under a stone.\" A student writes: \"The forecast symbolizes uncertainty about the future.\" What is the strongest objection?",
+    "choices": [
+      "A passage can hold only one symbol, and the envelope already fills that slot",
+      "Weather details are never symbolic in literature",
+      "A symbol only counts when the narrator states its meaning outright",
+      "The forecast is mentioned once in passing, while the passage repeats and lingers on the envelope"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare how the passage treats each detail — count the mentions and notice where they land.",
+      "A mentioned object is not automatically a symbol; the text has to give it repetition, placement, or weight."
+    ]
+  },
+  {
+    "id": "engl-imagery-and-symbolism-006",
+    "loId": "engl.imagery-and-symbolism",
+    "cedCode": "ENGL-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In an original story, a dove settles on the neighbor's roof three times, and each time the narrator's father reaches for the shutter latch and closes it. By the end the family eats with every window shut in August heat. A reader claims the dove stands for peace. Which response is most defensible?",
+    "choices": [
+      "Correct — a dove always carries its conventional meaning of peace",
+      "The conventional meaning is only a starting hypothesis, and this text twists it: each arrival triggers a shutting-out, so the dove reads closer to an unwelcome intrusion",
+      "Incorrect — a living creature cannot be a symbol, because symbols must be objects",
+      "Incorrect — the dove appears too often to be a symbol, since symbols appear only once"
+    ],
+    "answer": "B",
+    "hints": [
+      "A conventional symbol arrives with borrowed meaning, but the text can confirm it, twist it, or refuse it.",
+      "Track what happens every single time the dove shows up, then judge whether peace fits that pattern."
+    ]
+  },
+
+  {
+    "id": "engl-sound-devices-001",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sound device is at work in this line: \"The bus brakes bit and the bags bounced\"?",
+    "choices": ["Assonance", "Alliteration", "Slant rhyme", "Onomatopoeia"],
+    "answer": "B",
+    "hints": ["Say the line aloud and listen to how the stressed words begin."]
+  },
+  {
+    "id": "engl-sound-devices-002",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which word is onomatopoeia in this line: \"The screen door clattered behind him and the porch light flickered twice\"?",
+    "choices": ["clattered", "flickered", "porch", "behind"],
+    "answer": "A",
+    "hints": [
+      "Onomatopoeia is a word whose sound performs the noise it names.",
+      "One of these you can actually hear when you say it aloud; the others only describe."
+    ]
+  },
+  {
+    "id": "engl-sound-devices-003",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the line \"The low road home rolled slow below the smoke,\" which device does the repeated long-o sound create?",
+    "choices": [
+      "Alliteration, because the repeated sound opens each word",
+      "Internal rhyme, because two words rhyme fully inside one line",
+      "Assonance, because the repeated sound is a vowel inside the words",
+      "Onomatopoeia, because the words imitate the noise they name"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask one question first: is the repeated sound a vowel or a consonant?",
+      "Low, road, home, rolled, slow, and smoke begin with different consonants — what they share sits in the middle."
+    ]
+  },
+  {
+    "id": "engl-sound-devices-004",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read these original lines: \"She stacked the letters in the drawer, / unopened, in the dark, / and told the empty house that she would / get around to the work.\" How do the line endings \"dark\" and \"work\" rhyme?",
+    "choices": [
+      "Full end rhyme, since the two endings match completely",
+      "Slant rhyme, since the closing consonant matches but the vowels do not",
+      "Internal rhyme, since both words fall inside a single line",
+      "They do not rhyme at all, since the words are spelled differently"
+    ],
+    "answer": "B",
+    "hints": [
+      "Say both words aloud and compare the vowel first, then the final consonant.",
+      "A rhyme that shares the closing consonant while deliberately missing the vowel has its own name."
+    ]
+  },
+  {
+    "id": "engl-sound-devices-005",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read these original lines: \"Count it. Count it again. Count it a third time. / The number will not move.\" What effect does the repetition create?",
+    "choices": [
+      "It quickens the lines so the counting feels effortless",
+      "It creates alliteration between \"count\" and \"number\"",
+      "It is onomatopoeia, because the words imitate the sound of counting",
+      "It slows and hardens the lines so the rechecking feels compulsive and futile"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the first line aloud at a natural pace and notice how long three identical commands take.",
+      "Match that slowing to what the speaker is doing, and to the flat refusal of the second line."
+    ]
+  },
+  {
+    "id": "engl-sound-devices-006",
+    "loId": "engl.sound-devices",
+    "cedCode": "ENGL-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the line \"The gymnast gave a genuine grin and gathered her gear,\" which words actually alliterate by SOUND?",
+    "choices": [
+      "All six g-words, since they share the same opening letter",
+      "gave, grin, gathered, and gear — the hard-g words only",
+      "gymnast and genuine only, since they carry the strongest stress",
+      "None of them, because alliteration requires identical spellings"
+    ],
+    "answer": "B",
+    "hints": [
+      "Say each g-word aloud and listen to the first sound, not the first letter.",
+      "Two of these words are pronounced with a j sound, so they cannot join the hard-g group no matter how the line looks on the page."
+    ]
+  },
+
+  {
+    "id": "engl-poetic-form-and-structure-001",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read these original lines: \"The dog barked once. / We waited. / Then the porch boards / took his weight again.\" Which line break is ENJAMBED?",
+    "choices": [
+      "The break after \"The dog barked once.\"",
+      "The break after \"We waited.\"",
+      "The break after \"Then the porch boards\"",
+      "None of them — every line here ends a complete thought"
+    ],
+    "answer": "C",
+    "hints": ["An enjambed line hands an unfinished sentence over to the next line."]
+  },
+  {
+    "id": "engl-poetic-form-and-structure-002",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A poem runs three lines of five, seven, and five syllables and pivots on an image rather than on an argument. Which form is it?",
+    "choices": ["A sonnet", "A couplet", "Free verse", "A haiku"],
+    "answer": "D",
+    "hints": [
+      "Count the lines first — only one of these forms is defined by exactly three.",
+      "The five-seven-five syllable pattern names the form on its own."
+    ]
+  },
+  {
+    "id": "engl-poetic-form-and-structure-003",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A poet writes eight lines in a row, each one closing its own thought with a period at the edge of the line. What effect does that structure most likely create?",
+    "choices": [
+      "A measured, deliberate pace, so the poem moves in separate steps",
+      "A breathless rush that pushes the reader forward without pause",
+      "A guarantee that the poem is a sonnet",
+      "A rhyme scheme, since end-stopped lines have to rhyme"
+    ],
+    "answer": "A",
+    "hints": [
+      "End-stopped means the thought closes exactly where the line closes.",
+      "Ask what a full stop at every line edge does to a reader's speed."
+    ]
+  },
+  {
+    "id": "engl-poetic-form-and-structure-004",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says a free verse poem has no structure worth analyzing, because the poet just pressed enter wherever it felt right. What is the strongest correction?",
+    "choices": [
+      "Free verse always follows a hidden meter that a careful reader must uncover",
+      "Free verse gives up inherited meter and rhyme, but the poet still chooses every line ending and stanza length, and those choices carry the pacing and emphasis",
+      "The student is right — only fixed forms have structure that can be analyzed",
+      "Free verse should be rewritten as prose before any structural analysis begins"
+    ],
+    "answer": "B",
+    "hints": [
+      "Free verse drops inherited rules; it does not drop choices.",
+      "Ask why THAT word was given the edge of the line, and the structural analysis is already underway."
+    ]
+  },
+  {
+    "id": "engl-poetic-form-and-structure-005",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A poem's first stanza runs eleven lines of a crowded team bus after a win. A blank line follows. The final stanza is one line: \"The bus goes back half empty in June.\" What is the stanza break doing?",
+    "choices": [
+      "Marking the point where a different speaker takes over the poem",
+      "Separating the sections so the poem is easier to print on a page",
+      "Creating a silence the reader has to cross, so the drop from a full bus to a half-empty one lands as loss",
+      "Signalling that the rhyme scheme has ended"
+    ],
+    "answer": "C",
+    "hints": [
+      "A stanza break is a paragraph break made of white space — ask what happens in the gap, not only on either side of it.",
+      "A crowd sits on one side of the blank line and a near-empty bus sits on the other. What does the reader feel while crossing?"
+    ]
+  },
+  {
+    "id": "engl-poetic-form-and-structure-006",
+    "loId": "engl.poetic-form-and-structure",
+    "cedCode": "ENGL-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read these original lines: \"My sister said she was not afraid / of the water, only of how far / the shore had gotten / while we talked.\" Which statement best explains what the line breaks accomplish?",
+    "choices": [
+      "They mark the ends of four separate sentences, so the poem moves in deliberate steps",
+      "They are arbitrary, since the poem carries no rhyme scheme",
+      "The enjambments strand \"afraid\" and \"far\" at the line edges and hold the real fear back until the final line, so the structure enacts the drift it describes",
+      "They build a slant rhyme between \"afraid\" and \"far\" to bind the opening lines"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the sentence first by reading straight through the breaks, then reread and ask what each break did to it.",
+      "Notice which words are left hanging at the line endings before the sentence gets around to resolving them."
+    ]
+  }
+]

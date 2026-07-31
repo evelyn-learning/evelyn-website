@@ -1,0 +1,461 @@
+[
+  {
+    "id": "engl-claims-and-evidence-001",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Mr. Odeyemi asks his class to pick one sentence to build an argument essay on. Which one is an arguable claim?",
+    "choices": [
+      "The Brookvale High courtyard has eleven picnic tables.",
+      "Eating outside is more pleasant than eating in a cafeteria.",
+      "Brookvale High should open the courtyard for lunch seating, because the cafeteria runs out of seats during second lunch.",
+      "Outdoor space matters at every school."
+    ],
+    "answer": "C",
+    "hints": [
+      "An arguable claim is one a reasonable person could dispute and evidence could settle. Rule out the checkable fact and the matter of personal taste.",
+      "One remaining option is too vague to test; the other names a specific action someone could oppose and gives evidence a target."
+    ]
+  },
+  {
+    "id": "engl-claims-and-evidence-002",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"The Brookvale yearbook staff should move its senior photo deadline from October to December, because October falls in the busiest stretch of the fall sports season.\" Which evidence best supports THIS claim?",
+    "choices": [
+      "A club survey found that three of every four seniors who missed the October deadline named a game or a practice that same week as the reason.",
+      "Yearbook sales at Brookvale have risen for three straight years.",
+      "Most nearby schools distribute their yearbooks in May.",
+      "The yearbook staff meets twice a week in room 214."
+    ],
+    "answer": "A",
+    "hints": [
+      "The claim is not that the yearbook is popular or well run. It is that OCTOBER CONFLICTS WITH FALL SPORTS.",
+      "Three choices are about yearbooks in general. Only one connects missed deadlines to sports conflicts."
+    ]
+  },
+  {
+    "id": "engl-claims-and-evidence-003",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A proposal reads: \"The student store should stock refillable water bottles. A school survey counted more than four hundred uses of the hallway fountains on an average day.\" What reasoning is missing between the evidence and the claim?",
+    "choices": [
+      "A sentence stating that this survey result proves the store needs refillable bottles",
+      "An explanation that heavy fountain use signals steady demand for a refillable bottle the store does not currently sell",
+      "A note that many schools in the area have hallway fountains",
+      "A sentence explaining that tap water is cheaper than bottled water"
+    ],
+    "answer": "B",
+    "hints": [
+      "Reasoning tells a skeptical reader WHY the number makes the proposal a good idea. Ask what such a reader still cannot see.",
+      "One choice merely repeats the claim beside the evidence, and two drift to nearby points. The gap is between heavy fountain use and the store stocking bottles."
+    ]
+  },
+  {
+    "id": "engl-claims-and-evidence-004",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sela argues: \"Ridgemont should replace its paper hall passes with a digital system. A district survey found that 94 percent of Ridgemont teachers already carry a school-issued tablet.\" The evidence is true and on topic, yet the argument still fails. Why?",
+    "choices": [
+      "The evidence comes from a survey instead of a controlled study, so it cannot support any claim.",
+      "The evidence describes teachers rather than students, so it is entirely off topic.",
+      "The evidence is about technology, and the claim is about school policy, so the two can never connect.",
+      "The evidence shows only that the switch would be workable, not that the paper system needs replacing."
+    ],
+    "answer": "D",
+    "hints": [
+      "Say the claim aloud, then the evidence aloud. Does the tablet number answer \"could we?\" or \"should we?\"",
+      "This is the claim-shift trap: the evidence supports a nearby claim about feasibility, not the claim that a change is needed."
+    ]
+  },
+  {
+    "id": "engl-claims-and-evidence-005",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A community board hears this evidence: \"Since the signal light went in at the Larkin Street crosswalk, the share of drivers who stop for waiting pedestrians there has risen from about one in three to nearly nine in ten.\" Which claim does this evidence most directly support?",
+    "choices": [
+      "Larkin Street is the most dangerous street in town.",
+      "A signal light changes driver behavior at the crosswalk where it is installed.",
+      "The town should install signal lights at all forty of its crosswalks.",
+      "Pedestrians feel safer crossing Larkin Street than they did last year."
+    ],
+    "answer": "B",
+    "hints": [
+      "Match the evidence to the claim it makes more likely, not to the claim you would like to argue next.",
+      "The measurement covers drivers at one crosswalk. It says nothing about other crosswalks, about danger rankings, or about how pedestrians feel."
+    ]
+  },
+  {
+    "id": "engl-claims-and-evidence-006",
+    "loId": "engl.claims-and-evidence",
+    "cedCode": "ENGL-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Tomas writes: \"Fern Ridge High should add a second late bus. A student council count found that 130 students stay past 4:30 at least twice a week. This count proves the school needs another late bus. Students deserve a ride home.\" Which statement best diagnoses the paragraph?",
+    "choices": [
+      "The paragraph offers evidence but no reasoning: the third sentence only restates the claim, and the fourth swaps in an emotional appeal instead of a link.",
+      "The paragraph is complete, since sentence one is the claim, sentence two the evidence, and sentence three the reasoning.",
+      "The paragraph fails because its claim is a checkable fact rather than an arguable position.",
+      "The paragraph fails because the count of students has nothing to do with buses."
+    ],
+    "answer": "A",
+    "hints": [
+      "Try to point at three separate things: the claim, the evidence, and a sentence explaining why the evidence makes the claim more likely.",
+      "Ask what the third sentence adds that the first did not already assert, and whether the fourth explains anything at all."
+    ]
+  },
+
+  {
+    "id": "engl-rhetorical-appeals-001",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which appeal DOMINATES this line from a club recruitment flyer? \"Members of the Kestrel robotics team logged an average of forty build hours last season, and eight of our eleven seniors placed in the regional design showcase.\"",
+    "choices": [
+      "Pathos, because the numbers are meant to impress readers and make them feel excited",
+      "Logos, because the line asks readers to reason from measurable results to the value of joining",
+      "Ethos, because naming the seniors establishes that the writer is trustworthy",
+      "Pathos, because the word showcase creates a vivid image of the competition"
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the TARGET test: is this line asking you to trust the speaker, to feel something, or to follow a chain of reasoning?",
+      "Hours logged and placements are countable results a reader could in principle check."
+    ]
+  },
+  {
+    "id": "engl-rhetorical-appeals-002",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A proposal opens: \"Our town should keep the Maple Street pool open through September.\" Which revision most clearly adds PATHOS?",
+    "choices": [
+      "Attendance records show 1,400 visits in the first two weeks of September last year.",
+      "As the pool's head lifeguard for four summers, I have unlocked that gate every morning.",
+      "Water temperatures at the pool stay above seventy degrees for most of September.",
+      "Closing day is the last afternoon many kids on our block will see each other before the school year swallows them whole."
+    ],
+    "answer": "D",
+    "hints": [
+      "Pathos targets feeling. Look for the revision built out of images and loaded word choice rather than data or credentials.",
+      "Two choices add measurements and one tells you who the writer is. Only one is designed to make you feel a loss."
+    ]
+  },
+  {
+    "id": "engl-rhetorical-appeals-003",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cafeteria vendor's pitch to a school board says: \"Our kitchen manager spent nine years running the meal program for a 900-student district before joining us.\" Which appeal is this, and what is its target?",
+    "choices": [
+      "Ethos, because it asks the board to trust the source by pointing to relevant experience",
+      "Logos, because the sentence contains numbers and therefore reasons from data",
+      "Pathos, because it makes the board admire someone's years of hard work",
+      "Logos, because nine years of service is measurable evidence that the food tastes good"
+    ],
+    "answer": "A",
+    "hints": [
+      "A number inside a sentence does not automatically make it logos. Ask what the nine years are evidence OF.",
+      "Nothing here measures the meals themselves. The years measure the manager, which is a claim about the source."
+    ]
+  },
+  {
+    "id": "engl-rhetorical-appeals-004",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which analysis best describes this excerpt from a student blog? \"My cousin switched to the Halden paper planner and her grades jumped within six weeks. The research on planners is clear.\"",
+    "choices": [
+      "Logos, because the writer reports a measurable result and then cites research",
+      "Pathos alone, because the excerpt makes no appeal to authority at all",
+      "Pathos followed by unsupported ethos: one vivid story stands where evidence belongs, and then unnamed research borrows authority",
+      "Ethos alone, because the writer's personal knowledge of her cousin is the entire appeal"
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the TARGET test sentence by sentence. What does one relative's before-and-after story actually do to a reader?",
+      "The second sentence claims that evidence exists without producing any source you could check."
+    ]
+  },
+  {
+    "id": "engl-rhetorical-appeals-005",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tutoring company's flyer contains these four lines. Which one uses ETHOS MANIPULATIVELY rather than legitimately?",
+    "choices": [
+      "Our founder taught chemistry for twelve years at a public high school.",
+      "Every tutor finishes forty hours of training before a first session.",
+      "Our program was named best in the county by a local parents' association.",
+      "A well-known television actor smiles from our home page and says ours is the only program she would ever recommend."
+    ],
+    "answer": "D",
+    "hints": [
+      "Honest ethos offers relevant expertise a reader could verify. Manipulative ethos borrows authority that does not apply.",
+      "Ask which endorser has any reason to know whether the tutoring actually works."
+    ]
+  },
+  {
+    "id": "engl-rhetorical-appeals-006",
+    "loId": "engl.rhetorical-appeals",
+    "cedCode": "ENGL-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A speaker at a town meeting says: \"I have kept the ledger for the Ashfield food pantry for six years. Last month we turned away eleven families in a single week. Imagine standing behind that counter and telling a mother with two children in the car that the shelves are empty.\" Which analysis is correct?",
+    "choices": [
+      "All three sentences are pathos, because the whole subject is an emotional one.",
+      "Ethos, then logos, then pathos: the speaker establishes standing, supplies a countable figure, then asks the audience to feel the refusal.",
+      "Logos throughout, because the paragraph contains two numbers and numbers signal reasoning.",
+      "Ethos, then pathos, then logos, because the closing sentence carries the argument's real reasoning."
+    ],
+    "answer": "B",
+    "hints": [
+      "Classify by what each sentence is trying to do to the listener, not by the topic they share.",
+      "An emotional subject does not make every sentence pathos, and a sentence with a number is not automatically logos."
+    ]
+  },
+
+  {
+    "id": "engl-logical-fallacies-001",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Devon proposes: \"The debate team should cap tournament travel at two overnight trips a semester so members can keep up with schoolwork.\" Kira replies: \"So Devon thinks we should just stop competing.\" Which fallacy is Kira's reply?",
+    "choices": [
+      "False cause",
+      "Bandwagon",
+      "Straw man",
+      "Hasty generalization"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare what Devon actually proposed with the version Kira answers.",
+      "Kira knocks down a cheaper, more extreme position than the one on the table."
+    ]
+  },
+  {
+    "id": "engl-logical-fallacies-002",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A yearbook adviser tells the staff: \"We can either raise the book price by ten dollars or stop printing a yearbook at all.\" Which fallacy is this?",
+    "choices": [
+      "Slippery slope",
+      "Ad hominem",
+      "Hasty generalization",
+      "False dilemma"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count how many options the adviser presents, then ask whether those are really the only two.",
+      "Shorter books, more ad sales, and a fundraiser are all exits the sentence quietly hides."
+    ]
+  },
+  {
+    "id": "engl-logical-fallacies-003",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"The first two people I asked in the lunch line said the new bell schedule is confusing, so the whole school is confused by it.\" Which fallacy is this?",
+    "choices": [
+      "Hasty generalization",
+      "Bandwagon",
+      "False cause",
+      "Straw man"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask how many cases the conclusion rests on and whether those cases represent the school.",
+      "Two people in one line are being stretched into a rule about everyone."
+    ]
+  },
+  {
+    "id": "engl-logical-fallacies-004",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A parent tells the library committee: \"If students can reserve study rooms online, they will stop asking librarians for help, and within a few years nobody at this school will know how to use the catalog at all.\" Which fallacy is this, and why?",
+    "choices": [
+      "False cause, because the speaker treats one event as the cause of another that merely followed it",
+      "Slippery slope, because the speaker chains a small change to a distant disaster without showing what makes each step follow",
+      "Bandwagon, because the speaker assumes most students would prefer online reservations",
+      "Hasty generalization, because the speaker draws a sweeping rule from too few cases"
+    ],
+    "answer": "B",
+    "hints": [
+      "Nothing here has happened yet, so no event followed another. The prediction runs forward in steps.",
+      "Ask what evidence is offered that each step actually causes the next one."
+    ]
+  },
+  {
+    "id": "engl-logical-fallacies-005",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Is there a fallacy here? \"Ms. Alvarado, who has run the school greenhouse for eleven years, reports that the new drip system cut water use by about a third, and the district facilities office measured the same drop at two other campuses.\"",
+    "choices": [
+      "Yes, appeal to authority, because the argument rests on what one person reports",
+      "Yes, bandwagon, because two sources agreeing is treated as proof",
+      "No fallacy, because relevant expertise plus independent measurement is offered as evidence rather than as the final word",
+      "Yes, hasty generalization, because three campuses can never support any conclusion"
+    ],
+    "answer": "C",
+    "hints": [
+      "Appeals to authority go wrong when the expert is outside her field, the claim is genuinely disputed, or the authority is offered as proof that ends discussion. Check each condition.",
+      "Counting heads is bandwagon; weighing people who have a reason to know, plus a separate measurement, is ordinary evidence."
+    ]
+  },
+  {
+    "id": "engl-logical-fallacies-006",
+    "loId": "engl.logical-fallacies",
+    "cedCode": "ENGL-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Marcus argues that the student store should stop selling energy drinks, citing the school nurse's log of three fainting episodes before first period. Priyanka answers: \"Marcus has been angling for a student council seat all year, so this is just a campaign stunt.\" Which analysis is best?",
+    "choices": [
+      "Ad hominem: Priyanka addresses Marcus's motive and never touches the nurse's log, which stands or falls on its own",
+      "Straw man: Priyanka exaggerates the proposal into a ban on every drink the store sells",
+      "No fallacy, because a speaker's motive always settles whether the claim is true",
+      "False cause: Priyanka assumes the council campaign caused the fainting episodes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Grant Priyanka's point entirely. Does it make the nurse's log any less accurate?",
+      "A motive may be worth disclosing, but it explains why an argument was made, never whether it holds."
+    ]
+  },
+
+  {
+    "id": "engl-counterargument-and-rebuttal-001",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is arguing that Fern Ridge High should open the gym to clubs on Saturday mornings. Which statement of the opposing view is the FAIREST, the steel-man version a thoughtful opponent would recognize?",
+    "choices": [
+      "Opponents simply do not want students to have anywhere to go on the weekend.",
+      "Opponents think student clubs are a waste of school property.",
+      "Opponents have not bothered to notice how empty the building sits every Saturday.",
+      "Opponents note that Saturday access requires a custodian on overtime, a cost the activities budget does not currently cover."
+    ],
+    "answer": "D",
+    "hints": [
+      "A steel-man states the objection the way a smart opponent would state it. Would anyone volunteer to be described in these words?",
+      "Three choices make opponents sound careless or hostile. One gives them a real reason about cost."
+    ]
+  },
+  {
+    "id": "engl-counterargument-and-rebuttal-002",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An essay argues for a longer passing period and has already stated the counterargument: \"Admittedly, adding four minutes between classes takes those minutes out of instruction.\" Which choice is the strongest REBUTTAL?",
+    "choices": [
+      "That is a fair point, and four minutes matters in a class like chemistry.",
+      "Yet a hall count at the two campuses that lengthened passing time showed late arrivals falling by half, so classes give up four minutes and get back more.",
+      "The passing period should be longer, and the schedule committee ought to say so plainly.",
+      "Anyone who worries about four minutes has clearly never carried a cello across this building."
+    ],
+    "answer": "B",
+    "hints": [
+      "A rebuttal must ADD something: counter-evidence, a hidden assumption, or a heavier consideration.",
+      "One choice concedes and never turns back, one restates the claim louder, and one attacks the objectors."
+    ]
+  },
+  {
+    "id": "engl-counterargument-and-rebuttal-003",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this pair of sentences: \"Critics reasonably argue that a school garden needs weekly care all summer, when the campus is nearly empty. However, the horticulture club's logbook shows its members already staff the greenhouse every week in July and August.\" Which rebuttal move does the writer use?",
+    "choices": [
+      "Conceding the objection and outweighing it",
+      "Straw-manning the objection into a weaker form",
+      "Counter-evidence, showing that the factual claim underneath the objection does not hold",
+      "Exposing a hidden assumption behind the objection"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the writer grants the objection as true or shows it to be false.",
+      "The logbook contradicts the idea that summer care would go undone."
+    ]
+  },
+  {
+    "id": "engl-counterargument-and-rebuttal-004",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: the town should keep the Larkin Street lot public and fund a skate park. Counterargument already stated: \"It is true that selling the lot would bring the town a one-time payment of well over a million dollars.\" Which rebuttal works by EXPOSING A HIDDEN ASSUMPTION?",
+    "choices": [
+      "Yet the assessor's latest estimate puts the lot's value far below the figure supporters of a sale keep repeating.",
+      "Yet that objection assumes a lot is worth only what it sells for, while this one has given two hundred teenagers somewhere to go every weekend for six years.",
+      "It is true, and the town does need the money for other projects.",
+      "Still, selling public land is simply wrong, and it always has been."
+    ],
+    "answer": "B",
+    "hints": [
+      "Three moves are available: counter-evidence, concede and outweigh, and expose a hidden premise. Sort each choice.",
+      "One choice disputes the number itself, which is counter-evidence. Look for the choice that rejects an unstated premise about what land is for."
+    ]
+  },
+  {
+    "id": "engl-counterargument-and-rebuttal-005",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft reads: \"Some people say the theater program costs the school too much. But the theater program is genuinely valuable, and the school should keep funding it.\" What is wrong with the paragraph?",
+    "choices": [
+      "The writer concedes the objection and never turns back toward the claim.",
+      "The counterargument attacks the people who raised the objection instead of their reason.",
+      "The rebuttal adds nothing new, restating the claim in place of counter-evidence, an exposed assumption, or an outweighing reason.",
+      "The counterargument is stated too strongly for any rebuttal to answer it."
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the second sentence and ask what information it gives a reader who did not already agree.",
+      "The word \"But\" promises a turn, but nothing new arrives after it."
+    ]
+  },
+  {
+    "id": "engl-counterargument-and-rebuttal-006",
+    "loId": "engl.counterargument-and-rebuttal",
+    "cedCode": "ENGL-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph from an essay arguing that the spring art show should move to the gym: \"Admittedly, moving the show would leave the hallway display cases empty for a month, and those cases are the only place freshman work is ever seen. The gym has far better lighting, and visitors would have an easier time finding it.\" Which diagnosis is best?",
+    "choices": [
+      "The writer concedes a real objection and never answers it, since the following sentences praise the gym without addressing the freshman work left unseen.",
+      "The writer uses counter-evidence to show that the display cases would not actually sit empty.",
+      "The writer exposes a hidden assumption behind the objection about the display cases.",
+      "The writer straw-mans the objection by exaggerating what opponents claim about the hallway."
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the concession signal, then look for a turn word and check what the sentences after it actually respond to.",
+      "New reasons for the gym are not the same as an answer to the objection that was just granted."
+    ]
+  }
+]

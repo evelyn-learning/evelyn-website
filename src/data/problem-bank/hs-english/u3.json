@@ -1,0 +1,458 @@
+[
+  {
+    "id": "engl-commas-001",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "We loaded the van with tents sleeping bags and a folding table.",
+      "We loaded the van with tents, sleeping bags, and a folding table.",
+      "We loaded, the van with tents, sleeping bags and a folding table.",
+      "We loaded the van, with tents sleeping bags, and a folding table."
+    ],
+    "answer": "B",
+    "hints": [
+      "Three or more items in a row form a series, and a series needs commas between the items.",
+      "Put a comma after each item except the last, keep the comma before \"and\", and never drop a comma between a verb and its object."
+    ]
+  },
+  {
+    "id": "engl-commas-002",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "After the last bell rang the hallway emptied in under a minute.",
+      "After the last bell rang, the hallway, emptied in under a minute.",
+      "After the last bell rang, the hallway emptied in under a minute.",
+      "After, the last bell rang the hallway emptied in under a minute."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find where the setup ends and the main subject begins.",
+      "An introductory element closes with a comma, and nothing may sit between the subject \"the hallway\" and its verb \"emptied\"."
+    ]
+  },
+  {
+    "id": "engl-commas-003",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The freezer stopped working overnight, and the ice cream turned to soup.",
+      "The freezer stopped working overnight and the ice cream turned to soup.",
+      "The freezer stopped working overnight, the ice cream turned to soup.",
+      "The freezer stopped working, and turned the ice cream to soup."
+    ],
+    "answer": "A",
+    "hints": [
+      "Read the words on each side of \"and\" alone. Could each half stand as its own complete sentence?",
+      "Two independent clauses joined by a conjunction take a comma BEFORE the conjunction; a comma with no conjunction leaves two sentences taped together."
+    ]
+  },
+  {
+    "id": "engl-commas-004",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "Our neighbor, a retired ferry captain sharpens every knife on the block.",
+      "Our neighbor a retired ferry captain, sharpens every knife on the block.",
+      "Our neighbor, a retired ferry captain, sharpens every knife, on the block.",
+      "Our neighbor, a retired ferry captain, sharpens every knife on the block."
+    ],
+    "answer": "D",
+    "hints": [
+      "Lift out \"a retired ferry captain\" and reread. Does the sentence still work and still mean the same person?",
+      "Nonessential information takes a PAIR of commas, one before and one after; a single comma builds half a fence, and no comma job exists between a verb and its object."
+    ]
+  },
+  {
+    "id": "engl-commas-005",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "A cold, steady rain fell on the three old wooden crates by the door.",
+      "A cold steady rain fell on the three, old, wooden crates by the door.",
+      "A cold, steady rain fell on the three, old wooden crates by the door.",
+      "A cold steady rain fell on the three old wooden crates, by the door."
+    ],
+    "answer": "A",
+    "hints": [
+      "Test each pair of adjectives twice: put \"and\" between them, then reverse their order.",
+      "\"Cold and steady\" and \"steady, cold\" both work, so those two are coordinate and take a comma. \"Three old wooden\" fails both tests, so it takes none."
+    ]
+  },
+  {
+    "id": "engl-commas-006",
+    "loId": "engl.commas",
+    "cedCode": "ENGL-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "After the power flickered twice the projector, which had never been serviced, shut down, and refused to restart.",
+      "After the power flickered twice, the projector, which had never been serviced, shut down and refused to restart.",
+      "After the power flickered twice, the projector which had never been serviced, shut down and refused to restart.",
+      "After the power flickered twice, the projector, which had never been serviced shut down, and refused to restart."
+    ],
+    "answer": "B",
+    "hints": [
+      "Three decisions are stacked here: the introductory element, the interrupting clause, and whatever sits before \"and\".",
+      "The opener needs a closing comma, the deletable clause needs a comma on BOTH sides, and \"refused to restart\" has no subject of its own, so it is a compound verb and takes no comma before \"and\"."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-001",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses the semicolon correctly?",
+    "choices": [
+      "Because the elevator was out of service; we carried every box up four flights.",
+      "The elevator was out of service; and we carried every box up four flights.",
+      "The elevator was out of service; we carried every box up four flights.",
+      "The elevator was out of service; carrying every box up four flights."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cover each side of the semicolon in turn and read it aloud on its own.",
+      "A semicolon needs a complete sentence on BOTH sides, and it is never followed directly by and, but, or so."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-002",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses the colon correctly?",
+    "choices": [
+      "The packing list included: a rain jacket, sturdy boots, and a water bottle.",
+      "The packing list included three things: a rain jacket, sturdy boots, and a water bottle.",
+      "The three things on the packing list were: a rain jacket, sturdy boots, and a water bottle.",
+      "The packing list included items such as: a rain jacket, sturdy boots, and a water bottle."
+    ],
+    "answer": "B",
+    "hints": [
+      "Cover the list in each choice and read only the words in front of the colon.",
+      "A colon demands a complete independent clause on its left. Endings like \"included\", \"were\", and \"such as\" leave the clause unfinished."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-003",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The recipe doubled easily, therefore, we made enough for the whole hall.",
+      "The recipe doubled easily therefore; we made enough for the whole hall.",
+      "The recipe doubled easily: therefore we made enough for the whole hall.",
+      "The recipe doubled easily; therefore, we made enough for the whole hall."
+    ],
+    "answer": "D",
+    "hints": [
+      "\"Therefore\" is a transition word, not a conjunction like and or but, so it cannot hold two complete sentences together by itself.",
+      "When a transition word opens the second complete sentence, the semicolon goes BEFORE it and a comma goes AFTER it."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-004",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "Three cousins signed the card: Marisol, who lives two towns over; Dev, who moved last spring; and Ana, who could not attend.",
+      "Three cousins signed the card: Marisol, who lives two towns over, Dev, who moved last spring, and Ana, who could not attend.",
+      "Three cousins signed the card; Marisol, who lives two towns over; Dev, who moved last spring; and Ana, who could not attend.",
+      "Three cousins signed the card: Marisol, who lives two towns over; Dev, who moved last spring, and Ana, who could not attend."
+    ],
+    "answer": "A",
+    "hints": [
+      "Each item in this list already contains a comma of its own, which makes ordinary commas useless as dividers.",
+      "Upgrade the dividers between items to semicolons and keep the colon after the complete clause that introduces them. Every divider in the list must be the same mark."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-005",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "One detail gave the forgery away; the signature spelled two different ways.",
+      "One detail gave the forgery away, the signature was spelled two different ways.",
+      "One detail gave the forgery away: the signature was spelled two different ways.",
+      "One detail gave the forgery away; because the signature was spelled two different ways."
+    ],
+    "answer": "C",
+    "hints": [
+      "The first half promises a detail without naming it, and the second half delivers exactly that detail.",
+      "A colon points forward from a complete clause to the explanation it promised. A semicolon still needs a full sentence after it, and a comma alone cannot join two sentences."
+    ]
+  },
+  {
+    "id": "engl-semicolons-and-colons-006",
+    "loId": "engl.semicolons-and-colons",
+    "cedCode": "ENGL-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "We rewired the whole booth on Saturday; however, hoping the sound check would go faster on Sunday.",
+      "We rewired the whole booth on Saturday, hoping the sound check would go faster on Sunday; it did not.",
+      "We rewired the whole booth on Saturday; hoping the sound check would go faster on Sunday, it did not.",
+      "We rewired the whole booth on Saturday: hoping the sound check would go faster on Sunday; it did not."
+    ],
+    "answer": "B",
+    "hints": [
+      "Isolate \"hoping the sound check would go faster on Sunday\" and ask whether it has a subject and a main verb.",
+      "It is a fragment, so it attaches to the clause before it with a comma. The only place a semicolon earns its keep here is in front of \"it did not\", which is a complete sentence."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-001",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"The old radio lost ___ antenna years ago.\"",
+    "choices": [
+      "it's",
+      "its",
+      "its'",
+      "it is"
+    ],
+    "answer": "B",
+    "hints": [
+      "Expand the apostrophe form: does \"the old radio lost it is antenna\" read correctly?",
+      "The antenna belongs to the radio, so this slot needs the possessive pronoun, and possessive pronouns never take an apostrophe."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-002",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three swimmers share a row of lockers. Which choice correctly completes the sentence? \"The three ___ lockers were repainted over the break.\"",
+    "choices": [
+      "swimmers",
+      "swimmer's",
+      "swimmers'",
+      "swimmers's"
+    ],
+    "answer": "C",
+    "hints": [
+      "Flip the phrase with \"of\": the lockers OF the swimmers. Ownership is real here, and the owner is plural.",
+      "Pluralize first, then punctuate. A regular plural already ends in -s, so it takes an apostrophe alone with nothing after it."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-003",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The bakery sells four kinds of muffin's before noon.",
+      "The bakery sell's four kinds of muffins before noon.",
+      "The bakery sells four kind's of muffin's before noon.",
+      "The bakery sells four kinds of muffins before noon."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask of every apostrophe you see: what does this word own, or what letters are missing?",
+      "Nothing belongs to the muffins and no letters have been dropped, so these are plain plurals and take no apostrophe at all."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-004",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The childrens' choir rehearses in the room whose windows face the courtyard.",
+      "The children's choir rehearses in the room whose windows face the courtyard.",
+      "The children's choir rehearses in the room who's windows face the courtyard.",
+      "The childrens's choir rehearses in the room who's windows face the courtyard."
+    ],
+    "answer": "B",
+    "hints": [
+      "\"Children\" is already the plural, and it does not end in -s. Also expand \"who's\" and see whether \"who is windows\" survives.",
+      "Plurals that do not end in -s take a normal apostrophe plus s, and the possessive form before \"windows\" is \"whose\"."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-005",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly fills the two blanks, in order? \"The seniors left ___ props backstage because ___ repainting the set tomorrow.\"",
+    "choices": [
+      "they're ... their",
+      "their ... their",
+      "their ... they're",
+      "there ... their"
+    ],
+    "answer": "C",
+    "hints": [
+      "Try expanding \"they are\" into each blank one at a time.",
+      "Blank one shows props belonging to the seniors, so it takes the possessive. Blank two means \"they are repainting the set tomorrow,\" so it takes the contraction."
+    ]
+  },
+  {
+    "id": "engl-apostrophes-and-possessives-006",
+    "loId": "engl.apostrophes-and-possessives",
+    "cedCode": "ENGL-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The class's banner hung over two rows of trophies, and it's obvious that nobody had dusted them since June.",
+      "The class' banner hung over two rows of trophie's, and its obvious that nobody had dusted them since June.",
+      "The classes banner hung over two rows of trophies, and its obvious that nobody had dusted them since June.",
+      "The class's banner hung over two rows of trophy's, and its' obvious that nobody had dusted them since June."
+    ],
+    "answer": "A",
+    "hints": [
+      "Three separate decisions hide in this sentence: the possessive of a singular word that already ends in -s, a plain plural, and a contraction.",
+      "One class owns the banner, so it takes apostrophe plus s; the trophies own nothing, so they take no mark; and \"it is obvious\" expands correctly, so that slot needs the contraction."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-001",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The back gate — rusted shut since winter, finally opened on the third try.",
+      "The back gate, rusted shut since winter — finally opened on the third try.",
+      "The back gate — rusted shut since winter — finally opened on the third try.",
+      "The back gate — rusted shut since winter finally opened on the third try."
+    ],
+    "answer": "C",
+    "hints": [
+      "Delete \"rusted shut since winter\" and reread. The sentence still works, so the phrase needs a fence on both sides.",
+      "Whatever mark opens the aside must close it. A dash opens and a dash closes; a dash paired with a comma is a mixed fence."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-002",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which line is punctuated correctly?",
+    "choices": [
+      "Mateo said, \"The keys are under the mat.\"",
+      "Mateo said \"The keys are under the mat\".",
+      "Mateo said, \"the keys are under the mat\".",
+      "Mateo said. \"The keys are under the mat.\""
+    ],
+    "answer": "A",
+    "hints": [
+      "Check three things: the mark joining the speech tag to the quotation, the capital letter, and where the closing period sits.",
+      "A comma joins a speech tag to quoted words, the first word of a quoted sentence is capitalized, and in American usage the period goes INSIDE the closing quotation mark."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-003",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The recycling bins (which the custodians empty on Tuesdays, sit behind the cafeteria.",
+      "The recycling bins (which the custodians empty on Tuesdays) sit behind the cafeteria.",
+      "The recycling bins (which the custodians empty on Tuesdays.) sit behind the cafeteria",
+      "The recycling bins, which the custodians empty on Tuesdays) sit behind the cafeteria."
+    ],
+    "answer": "B",
+    "hints": [
+      "An opening parenthesis can only be closed by its partner, never by a comma.",
+      "Remove the parenthetical entirely and the sentence outside it must still read correctly and still end with its own period."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-004",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses a single dash correctly?",
+    "choices": [
+      "We searched — the attic for two hours and came away with a cracked ornament.",
+      "We searched the attic for two hours and came away with — a cracked ornament.",
+      "We searched the attic — for two hours and came away with a cracked ornament.",
+      "We searched the attic for two hours and came away with a single item — a cracked ornament."
+    ],
+    "answer": "D",
+    "hints": [
+      "Cover everything from the dash onward in each choice. Can the words before the dash stand alone as a complete sentence?",
+      "A single emphatic dash breaks AFTER a complete clause and then delivers the punch. Dropping it between a verb and its object, or between a preposition and its object, cuts the sentence in the wrong place."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-005",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A character is repeating what someone else told her. Which sentence is punctuated correctly?",
+    "choices": [
+      "'Coach kept shouting \"reset the line,\" so we reset it,' Devon told me.",
+      "\"Coach kept shouting 'reset the line,' so we reset it,\" Devon told me.",
+      "\"Coach kept shouting 'reset the line', so we reset it\", Devon told me.",
+      "\"Coach kept shouting 'reset the line,' so we reset it\", Devon told me."
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide which marks hold the outer speech and which hold the quotation buried inside it.",
+      "The outer quotation takes double marks and the inner one takes single marks, and every comma or period that ends quoted words sits INSIDE the quotation mark that closes them."
+    ]
+  },
+  {
+    "id": "engl-dashes-parentheses-quotation-006",
+    "loId": "engl.dashes-parentheses-quotation",
+    "cedCode": "ENGL-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "The sign taped to the register (hand-lettered and already peeling) warned customers, \"Cash only today.\"",
+      "The sign taped to the register (hand-lettered and already peeling, warned customers, \"Cash only today\".",
+      "The sign taped to the register — hand-lettered and already peeling) warned customers, \"Cash only today.\"",
+      "The sign taped to the register, hand-lettered and already peeling — warned customers, \"cash only today\"."
+    ],
+    "answer": "A",
+    "hints": [
+      "Two problems are stacked here: the fence around the aside, and the punctuation of the quoted words at the end.",
+      "The fence must open and close with the SAME mark, the first word of the quoted sentence is capitalized, and the final period belongs inside the closing quotation mark."
+    ]
+  }
+]

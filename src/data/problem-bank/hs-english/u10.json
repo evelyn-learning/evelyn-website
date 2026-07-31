@@ -1,0 +1,458 @@
+[
+  {
+    "id": "engl-research-questions-and-sources-001",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is assigned a four-page paper and writes this at the top of the page: \"The old streetcar line in our city.\" Which statement best describes what the student has written?",
+    "choices": [
+      "A focused research question, because it names one specific subject.",
+      "A researchable question, because records about the streetcar line certainly exist somewhere.",
+      "A topic, not a research question, because it does not ask anything that evidence could answer.",
+      "A thesis statement, because it takes a position the paper will go on to defend."
+    ],
+    "answer": "C",
+    "hints": [
+      "A research question is one sentence that asks something and can be settled by evidence. Does this line ask anything?",
+      "It names an area to wander around in. A question has a finish line, such as why the line closed and what replaced it."
+    ]
+  },
+  {
+    "id": "engl-research-questions-and-sources-002",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student proposes this research question for a six-page paper: \"Did the county close the riverside campground in 2011?\" What is the problem, and which repair fixes it?",
+    "choices": [
+      "It is far too broad, so it should be narrowed to a single year of campground attendance records.",
+      "It is answerable in one word, so the yes/no opener should be swapped for one that demands explanation: \"Why did the county close the riverside campground, and how did use of the nearby trails change afterward?\"",
+      "It is not researchable, so it should be replaced with \"Should the county have closed the riverside campground?\"",
+      "There is no problem, because the question already names a specific place and a specific year."
+    ],
+    "answer": "B",
+    "hints": [
+      "Try answering the question out loud. How many words does it take?",
+      "Openers like Did, Is, and Was end a project in one search. Why, How, and What effect reopen it."
+    ]
+  },
+  {
+    "id": "engl-research-questions-and-sources-003",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For a paper on a flood that damaged a farming valley in 1957, a student finds a bound volume of handwritten water-level readings taken every morning by the gauge keeper during that spring. What kind of source is the volume for this paper?",
+    "choices": [
+      "A secondary source, because raw numbers have to be interpreted before they mean anything.",
+      "A popular source, because it was written by a worker rather than for researchers.",
+      "A secondary source, because a library later catalogued and bound the pages.",
+      "A primary source, because it is raw record made by an observer during the event itself."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask who made it and when, not who stores or organizes it now.",
+      "Readings written down on the spot by the person watching the gauge are the raw material of the event."
+    ]
+  },
+  {
+    "id": "engl-research-questions-and-sources-004",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has a five-page paper to write about a mill town's public swimming lake, which was drained in 1996. Which of these is the best-scoped, researchable question for that assignment?",
+    "choices": [
+      "What reasons did the water board give for draining the swimming lake in 1996, and how did summer recreation in the town change over the next five years?",
+      "How has swimming shaped community life across the country?",
+      "In what month of 1996 was the swimming lake drained?",
+      "Was draining the swimming lake a mistake for the town?"
+    ],
+    "answer": "A",
+    "hints": [
+      "Run all three tests on each option: is it one question, is it the size of a five-page paper, and could evidence settle it?",
+      "One option is book-sized, one is a single fact, and one asks for a verdict that no record can supply."
+    ]
+  },
+  {
+    "id": "engl-research-questions-and-sources-005",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about how a 1970s highway expansion was covered in the press while it was happening. She finds a long news article from 1974 that describes the construction and interviews three residents. For HER question, what kind of source is that article?",
+    "choices": [
+      "A primary source, because her question is about the coverage itself, and the article is that coverage.",
+      "A secondary source, because a reporter wrote it about events he did not cause.",
+      "A scholarly source, because it gathers interviews and quotes evidence from named people.",
+      "A popular source, and therefore not usable as evidence in a research paper."
+    ],
+    "answer": "A",
+    "hints": [
+      "A source's type depends on the question you are asking of it, not on the document alone.",
+      "If the question is about how the expansion was reported, then the report is the very thing being studied."
+    ]
+  },
+  {
+    "id": "engl-research-questions-and-sources-006",
+    "loId": "engl.research-questions-and-sources",
+    "cedCode": "ENGL-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's research question is: \"What arguments did opponents make when the town first debated a curfew for the public square, and how did the ordinance change between its first and final drafts?\" Which source should she rely on FIRST?",
+    "choices": [
+      "A recent general-audience article summarizing curfew debates in several nearby towns.",
+      "The public-comment records and the successive drafts of the ordinance held in the town clerk's files.",
+      "A peer-reviewed study measuring whether curfews reduce late-night injuries.",
+      "A regional history book with a chapter on how the town has used its public spaces."
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the question twice and name exactly what would settle it. It asks what people said and what the text changed to.",
+      "Effect studies, summaries, and histories can all help later, but none of them contain the drafts or the comments themselves."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-001",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For a paper on whether a county's well water has grown saltier over the past twenty years, which source is MOST credible?",
+    "choices": [
+      "A homepage banner from a company that installs water-softening equipment.",
+      "A comment thread where six residents describe how their tap water tastes lately.",
+      "An undated printout with no author, titled \"Water Facts,\" found in a waiting room.",
+      "A county water district report from last year, written by two named hydrologists, with twenty years of sampling data attached."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask WHO wrote it and WHY it exists before anything else.",
+      "Only one option names people with relevant expertise and shows the measurements behind its claim."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-002",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student lands on a confident page from a group she has never heard of, the Council for Practical Energy Study. What is the best lateral-reading move?",
+    "choices": [
+      "Leave the site and search for what independent sources report about the group and who funds it.",
+      "Read the rest of the page closely to see whether the argument holds together.",
+      "Open the group's own About page to learn what its mission is.",
+      "Check whether the site is professionally designed and uses an official-sounding address."
+    ],
+    "answer": "A",
+    "hints": [
+      "Lateral means sideways, away from the page, not further down it.",
+      "The About page and the design were both produced by the source itself, so neither is independent evidence about it."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-003",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "One student writing about current treatment guidance for concussions in youth sports cites a coaching handbook published nineteen years ago. A classmate writing about the wording of a state charter granted in 1912 cites a legal commentary published in 1960. Who has a currency problem?",
+    "choices": [
+      "Both students, because any source older than about ten years is unusable.",
+      "Neither student, because the age of a source never affects its credibility.",
+      "Only the first student, because medical guidance is revised quickly while the wording of an old charter does not change.",
+      "Only the second student, because 1960 is much further in the past than nineteen years ago."
+    ],
+    "answer": "C",
+    "hints": [
+      "Match the age of a source to the pace of the field it belongs to.",
+      "Ask which of these two questions is likely to have had its answer revised since the source was written."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-004",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a paper on whether a new turf surface reduces knee injuries, a student cites a glossy report from an association of turf manufacturers. The report is dated this year, is written by a named materials engineer, and cites testing the association ran itself. What is the credibility problem?",
+    "choices": [
+      "The report is too recent for anyone to have checked it, so it cannot be used yet.",
+      "The source has a commercial stake in the finding, and the only testing behind it is its own.",
+      "An engineer is the wrong kind of author for a question about injuries, so the report is unusable.",
+      "Any source with a point of view has to be discarded from a research paper."
+    ],
+    "answer": "B",
+    "hints": [
+      "WHO and WHEN both look fine here, so the problem is hiding in one of the other two questions.",
+      "An association exists to advance its members' products, and a claim resting on one interested party's own testing has no independent corroboration."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-005",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that a new bike-lane design cut crashes by half, and says she has three sources. All three repeat the same figure, and each of the three credits the same unpublished memo written by the design firm that sold the plan to the city. Which is the best assessment?",
+    "choices": [
+      "Three sources landing on the same number is strong corroboration, so the claim is well supported.",
+      "The claim is solid because the design firm had the firsthand access needed to measure crashes.",
+      "The real problem is that all three sources are too recent for the trend to be trusted yet.",
+      "This is one claim repeated three times rather than three independent sources, and the original memo has a commercial stake in the result."
+    ],
+    "answer": "D",
+    "hints": [
+      "Corroboration requires sources that did NOT get the claim from each other.",
+      "Trace each source back to where its number came from, then ask who wrote that original and what they had to gain."
+    ]
+  },
+  {
+    "id": "engl-evaluating-sources-006",
+    "loId": "engl.evaluating-sources",
+    "cedCode": "ENGL-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For a paper on whether a wetland restoration improved bird nesting, a student has two sources. Source One is a monitoring report from the conservation trust that paid for the restoration: named biologists, described methods, five years of nest counts. Source Two is an unsigned community newsletter item praising the project, with no data. What is the best plan?",
+    "choices": [
+      "Discard both sources, because the trust is biased and the newsletter item is anonymous.",
+      "Build on Source Two, because it has no funding attached to it and therefore no reason to exaggerate.",
+      "Use Source One for the nest counts while noting the trust's stake in a good result, and look for an independent count to corroborate it.",
+      "Use Source One without any qualification, because named biologists and described methods settle the question."
+    ],
+    "answer": "C",
+    "hints": [
+      "Bias is something to weigh and corroborate, not an automatic disqualification.",
+      "The strongest move keeps the measured data, names the interest behind it, and then goes looking for an independent check."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-001",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You need to give your reader the background of an entire twelve-page county transit study before your own argument begins, and none of the study's wording is memorable. Which move fits?",
+    "choices": [
+      "Quote several long passages so the reader can see the study's exact language.",
+      "Summarize it, because you need the main points of something large in far fewer words.",
+      "Paraphrase the whole study line by line, at about its original length.",
+      "Use it without credit, because background information is always common knowledge."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask how much source material you are covering and how long your own version should end up.",
+      "A summary is much shorter than what it covers; a paraphrase stays about the length of the one passage it restates."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-002",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A county parks bulletin states: \"After the shoreline path was repaved in April, staff counted 31 percent more walkers on weekday evenings through the summer. Most of the increase came from residents of the two neighborhoods nearest the north entrance.\" Which is the best SUMMARY of this passage?",
+    "choices": [
+      "After the shoreline path was repaved in April, staff counted 31 percent more walkers on weekday evenings all through the summer, and most of that increase came from residents living in the two neighborhoods closest to the north entrance.",
+      "People clearly prefer smooth paths, so the county should repave every trail it owns.",
+      "Repaving the shoreline path brought a sharp rise in weekday evening walkers, mostly from the two nearest neighborhoods.",
+      "The county did some work on a path in April, and afterward things were somewhat different."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check length first: a summary is much shorter than the passage it covers.",
+      "Rule out the one nearly as long as the original, the one that adds a recommendation the bulletin never makes, and the one so vague that the finding disappears."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-003",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are arguing that a school board promised more than it delivered. At a recorded public meeting a board member said, \"Not one student will lose a bus seat. Not one.\" You want readers to feel exactly how absolute that promise was before you show the route cuts. Which move fits?",
+    "choices": [
+      "Quote it, because the exact wording and its repetition are the evidence your argument depends on.",
+      "Paraphrase it, because paraphrasing is always the safer move in research writing.",
+      "Summarize the whole meeting instead, so readers get the full context around the promise.",
+      "Use the line without credit, since it was spoken out loud in public rather than published."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what the reader needs to notice: the general idea of the promise, or the specific words the speaker chose?",
+      "When rewording would destroy the point, that is exactly the situation quoting is built for."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-004",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a state wildlife bulletin: \"Rangers removed 640 pounds of invasive weed from the upper pond last summer, the heaviest haul recorded since removals began in 2004.\" Which version is PATCHWRITING rather than an acceptable paraphrase?",
+    "choices": [
+      "No summer since removals started in 2004 has produced a bigger haul than last year's, when rangers cleared 640 pounds of invasive weed out of the upper pond.",
+      "The upper pond gave up 640 pounds of invasive weed to rangers last summer, a record across the whole history of the removal effort.",
+      "Last summer's clearing of the upper pond, at 640 pounds of invasive weed, set a record for a program that has been pulling weed from that water since 2004.",
+      "Rangers pulled 640 pounds of invasive plant from the upper pond last summer, the largest haul logged since removals started in 2004."
+    ],
+    "answer": "D",
+    "hints": [
+      "Do not read for whether an option sounds different. Line each one up against the original piece by piece and watch the word order.",
+      "One option walks through the original in exactly the same order with synonyms dropped in: removed becomes pulled, weed becomes plant, heaviest becomes largest, recorded becomes logged, began becomes started."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-005",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student must PARAPHRASE this line from a county archive letter: \"The depot will remain open through the harvest, after which the line will be lifted and the ties sold.\" Which response is a correct paraphrase rather than a different move or an error?",
+    "choices": [
+      "The depot closed eventually.",
+      "The station would stay in service until the harvest was finished; once it was, the track itself would be torn out and the wooden ties sold off.",
+      "\"The depot will remain open through the harvest, after which the line will be lifted and the ties sold.\"",
+      "The depot will stay open through the harvest, after which the line will be removed and the ties sold."
+    ],
+    "answer": "B",
+    "hints": [
+      "A paraphrase runs about the same length as the original and rebuilds both the wording and the sentence shape.",
+      "One option shrinks the passage into a summary that loses the content, one is simply the quotation, and one keeps the source's skeleton with two synonyms dropped in."
+    ]
+  },
+  {
+    "id": "engl-quoting-paraphrasing-summarizing-006",
+    "loId": "engl.quoting-paraphrasing-summarizing",
+    "cedCode": "ENGL-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a town water board memo: \"Because the reservoir was drawn down early in June, the district asked residents to water lawns on alternating days for the rest of the summer.\" Which option is the BEST paraphrase for a research paper?",
+    "choices": [
+      "The district asked residents to water lawns on alternating days for the rest of the summer because the reservoir was drawn down early in June.",
+      "The town made people stop watering their lawns because it had run out of water.",
+      "An early June drop in the reservoir led the district to put residents on an every-other-day lawn watering schedule for the remainder of the season.",
+      "Water restrictions are an effective way for a town to manage a shortage."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each option for three things: is the structure genuinely rebuilt, is it accurate, and is it still a restatement rather than a claim of its own?",
+      "One option only reverses the two clauses without rewriting anything, one overstates the restriction into a ban, and one leaves the passage behind to make a general argument."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-001",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a research paper about community gardens. Which sentence does NOT need a citation?",
+    "choices": [
+      "A regional gardening survey found that shared-garden plots produced more vegetables per square foot than backyard plots.",
+      "One county study estimated that joining a shared garden cuts a household's produce spending by about a fifth.",
+      "Some researchers argue that gardening in groups makes people more consistent about weeding.",
+      "Vegetables need water and sunlight in order to grow."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the two-part test on each one: is it widely known by your readers AND repeated uncontested across many sources?",
+      "Three of these are specific findings that somebody measured or argued. Only one is a fact every reader already holds."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-002",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph contains this sentence standing alone, with the words copied exactly from a district report: \"Attendance rose in every grade after the late-start change.\" What is wrong, and what is the fix?",
+    "choices": [
+      "Nothing is wrong, because the sentence is short enough to stand on its own.",
+      "The quotation marks should be removed so the sentence blends smoothly into the paragraph.",
+      "The sentence should be cut, because evidence belongs only in the conclusion.",
+      "It is a dropped quote with no speaker: frame it with a signal phrase, such as \"A district report found that attendance rose in every grade after the late-start change,\" and then explain what that proves for the claim."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether a reader could tell who is speaking and why the sentence is sitting there.",
+      "Frame, quote, explain: name the source before it speaks, keep only the words you need, and let your own sentence have the last word."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-003",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is using this line from a county archive newsletter: \"The ferry carried more passengers in its final year than in any season since the bridge opened.\" Which version integrates it best?",
+    "choices": [
+      "A county archive newsletter notes that the ferry \"carried more passengers in its final year than in any season since the bridge opened,\" which suggests the service was shut down for reasons other than falling demand.",
+      "\"The ferry carried more passengers in its final year than in any season since the bridge opened.\" This shows that the ferry mattered.",
+      "The ferry carried more passengers in its final year than in any season since the bridge opened.",
+      "Some people say the ferry carried more passengers in its final year than in any season since the bridge opened, and that is worth thinking about."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check each version for all three moves: is the source framed before it speaks, is the quotation trimmed and marked, and does the writer explain what it proves?",
+      "One drops the quotation in with no introduction, one strips the quotation marks off borrowed words, and one hides the source behind a vague phrase."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-004",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four students describe how they used a state wildlife bulletin in a paper. Which one has committed plagiarism?",
+    "choices": [
+      "Nadia quoted one sentence exactly, put it inside quotation marks, and named the bulletin in her signal phrase.",
+      "Owen copied a sentence from the bulletin, replaced about five words with synonyms, kept the same order and structure, and listed the bulletin in his works cited.",
+      "Priya read a section, closed the bulletin, wrote the finding in her own sentence shape, and named the bulletin in the sentence itself.",
+      "Theo condensed four paragraphs into two sentences of his own and credited the bulletin where the summary appears."
+    ],
+    "answer": "B",
+    "hints": [
+      "A source name somewhere on the page does not repair every problem. Ask what each student did to the WORDS.",
+      "Keeping a source's sentence structure and dropping synonyms into it is patchwriting, and patchwriting is plagiarism even when the source is listed."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-005",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a paper about school lunch programs, which sentence may a writer leave uncited?",
+    "choices": [
+      "About one in six students in the district qualifies for a reduced-price lunch.",
+      "A regional food-service review concluded that longer lunch periods reduce plate waste.",
+      "Lunch is a meal eaten in the middle of the day.",
+      "Researchers disagree about whether a longer lunch line changes what students end up choosing."
+    ],
+    "answer": "C",
+    "hints": [
+      "Common knowledge must pass both parts of the test: widely known by your readers AND uncontested across many sources.",
+      "A specific proportion, a review's conclusion, and a description of an ongoing disagreement all came from somewhere. One option came from nowhere in particular."
+    ]
+  },
+  {
+    "id": "engl-citing-and-integrating-sources-006",
+    "loId": "engl.citing-and-integrating-sources",
+    "cedCode": "ENGL-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"Our district should keep the summer reading program. A county library report found that students who joined the program read more books over the summer than students who did not (County Library Report). Reading is important.\" Every borrowed idea is credited. What is the strongest remaining criticism?",
+    "choices": [
+      "The evidence is never explained: the writer never says what the reading gap proves about keeping the program, and the closing sentence is filler rather than interpretation.",
+      "The report should not have been cited at all, because a library reporting on its own program can never be used as evidence.",
+      "The finding had to be quoted word for word instead of restated, because any number requires quotation marks.",
+      "Naming the report inside the paragraph is an error, because a source belongs only in the works cited list."
+    ],
+    "answer": "A",
+    "hints": [
+      "Citing correctly fixes the credit problem. Now ask whether the paragraph does anything with the evidence after it arrives.",
+      "Frame, quote, explain: the explain step is the one writers skip, and your own sentence should get the last word."
+    ]
+  }
+]

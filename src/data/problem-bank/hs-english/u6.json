@@ -1,0 +1,458 @@
+[
+  {
+    "id": "engl-plot-and-conflict-001",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The trail Beatriz had climbed all morning disappeared under a sheet of loose rock, and the wind came hard enough to push her sideways. She braced against a boulder and counted the daylight she had left.\" What type of conflict does this excerpt present?",
+    "choices": [
+      "Internal - person vs self",
+      "External - person vs society",
+      "External - person vs nature",
+      "External - person vs person"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what is actually blocking her: a rival, a rule, or the mountain itself.",
+      "Loose rock, wind, and fading daylight are all the same opponent."
+    ]
+  },
+  {
+    "id": "engl-plot-and-conflict-002",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A story begins: \"Every weekday for six years, Hollis opened the laundromat at five, refilled the soap dispensers, and read the newspaper someone always left folded on the folding table. Nothing about the mornings had ever changed.\" Which plot stage does this opening belong to?",
+    "choices": [
+      "Exposition - it establishes character, setting, and routine before any trouble",
+      "Rising action - the unchanging routine is the first complication",
+      "Climax - the outcome of the conflict is decided here",
+      "Resolution - the story has settled into a new normal"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask whether a problem has appeared yet.",
+      "A stretch of story with no trouble in it is still setting the stage."
+    ]
+  },
+  {
+    "id": "engl-plot-and-conflict-003",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this detail from the second page of a story: \"The footbridge still had its weight limit posted in faded paint, and Ozzie's brother mentioned that nobody had inspected the cables since their grandfather worked the ferry.\" What is this detail most likely doing?",
+    "choices": [
+      "Providing a flashback that explains the grandfather's career",
+      "Resolving the story's central conflict before it begins",
+      "Describing the setting with no bearing on tension",
+      "Foreshadowing - planting a detail that will make a later failure feel inevitable"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask why the narrator bothers to mention an uninspected cable this early.",
+      "A planted detail whose job is dread is foreshadowing, not decoration."
+    ]
+  },
+  {
+    "id": "engl-plot-and-conflict-004",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A story follows Wren, who has spent two years saving to buy back her family's stalled food truck. Midway through, a grease fire fills the kitchen with smoke and the whole block loses power for an hour, though the truck itself is undamaged. Later, at the auction, Wren watches the bidding climb past her limit and stays silent rather than borrow from her sister. She goes home without the truck and calls her sister anyway, just to talk. Which moment is the climax?",
+    "choices": [
+      "The grease fire and the blackout, the most dramatic scene in the story",
+      "Wren staying silent as the bidding climbs past her limit",
+      "Wren going home without the truck",
+      "Wren calling her sister just to talk"
+    ],
+    "answer": "B",
+    "hints": [
+      "Do not pick by volume. Ask which moment makes the ending impossible to reverse.",
+      "Before the silence she could still own the truck; after it, she cannot."
+    ]
+  },
+  {
+    "id": "engl-plot-and-conflict-005",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Halfway through the argument, Petra stopped hearing her roommate and was eleven again, standing in a hallway while two adults decided which house she would live in. When the kitchen came back, she had already agreed to move out.\" What is the primary function of the middle sentence?",
+    "choices": [
+      "It foreshadows an event that has not happened yet",
+      "It is a cliffhanger that cuts away at maximum uncertainty",
+      "It is a flashback that supplies the earlier experience explaining her decision",
+      "It is exposition establishing the setting for the whole story"
+    ],
+    "answer": "C",
+    "hints": [
+      "The sentence moves backward in time, not forward.",
+      "Ask what the interruption explains about the choice she makes one sentence later."
+    ]
+  },
+  {
+    "id": "engl-plot-and-conflict-006",
+    "loId": "engl.plot-and-conflict",
+    "cedCode": "ENGL-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this summary: \"Dmitri's landlord raised the rent twice in one year, so Dmitri organized the other tenants to file a complaint. The night before the hearing, the landlord offered him a private discount if he withdrew his own name. Dmitri signed nothing, spoke at the hearing for all of them, and lost his lease three weeks later.\" Which statement best analyzes the conflict?",
+    "choices": [
+      "The only conflict is person vs person: Dmitri against one landlord",
+      "An external person vs society conflict carries an internal person vs self conflict, and the ending resolves the internal one",
+      "The conflict is person vs nature, since rising costs are beyond anyone's control",
+      "There is no real conflict, because Dmitri loses the apartment and nothing changes"
+    ],
+    "answer": "B",
+    "hints": [
+      "Name the outside struggle first, then ask what the private offer forced him to decide inside.",
+      "He loses the lease but settles the question of who he is. Which struggle does the ending actually resolve?"
+    ]
+  },
+  {
+    "id": "engl-characterization-001",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Corliss was a stubborn woman. She reread the contract twice at the counter, asked for the manager, and waited forty minutes without once sitting down. The clerks began avoiding her aisle.\" Which sentence is DIRECT characterization?",
+    "choices": [
+      "The second sentence, because it lists everything she did",
+      "The first sentence, because the narrator states the trait outright",
+      "The third sentence, because it shows how others react to her",
+      "None of them, because direct characterization requires dialogue"
+    ],
+    "answer": "B",
+    "hints": [
+      "Direct characterization tells you the trait in so many words; indirect shows evidence and lets you infer.",
+      "Two sentences show actions or reactions. One simply names what she is."
+    ]
+  },
+  {
+    "id": "engl-characterization-002",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Bram signed up for the early shift so his mother would not have to, then told her the schedule had been assigned that way. He kept the printed sheet folded in his back pocket, where she would never see the request line.\" What does this indirect characterization reveal about Bram?",
+    "choices": [
+      "He resents having to work mornings and blames his mother",
+      "He is disorganized and keeps losing important paperwork",
+      "He is eager for his mother's gratitude and expects thanks",
+      "He sacrifices for his mother quietly and hides the sacrifice"
+    ],
+    "answer": "D",
+    "hints": [
+      "He does the favor, then conceals that it was a favor. Ask why.",
+      "Compare what he does with what he lets her believe."
+    ]
+  },
+  {
+    "id": "engl-characterization-003",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"When Odile stepped into the workroom, the two apprentices stopped arguing and each found something to measure. Nobody looked up again until she had passed the last bench.\" Which kind of evidence characterizes Odile here, and what does it suggest?",
+    "choices": [
+      "Effect on others - she carries enough authority that people rearrange themselves around her",
+      "Speech - her word choice reveals impatience with the apprentices",
+      "Looks - her appearance is described in a way that intimidates the room",
+      "Thoughts - the narration reports her private opinion of the apprentices"
+    ],
+    "answer": "A",
+    "hints": [
+      "Odile does not speak, think, or act in this excerpt. Something else carries the evidence.",
+      "Watch what the room does the moment she enters."
+    ]
+  },
+  {
+    "id": "engl-characterization-004",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"'Honestly, I hope Junie takes the prize,' Sanjay said, and slid his own portfolio to the top of the stack the moment the judge turned away.\" Which interpretation is best supported?",
+    "choices": [
+      "Sanjay is generous, because he says plainly that he wants Junie to win",
+      "The narrator directly characterizes Sanjay as dishonest",
+      "His action undercuts his words, revealing a competitiveness he will not admit",
+      "The portfolio detail is stage business, not characterization"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two kinds of evidence appear here: what he says and what he does. Do they agree?",
+      "When speech and action conflict, trust the action, and treat the gap itself as the point."
+    ]
+  },
+  {
+    "id": "engl-characterization-005",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Marguerite snapped at the delivery driver on the one morning the shipment came two hours late. For eleven years before that she had signed for every crate in the same steady handwriting and poured coffee for whoever carried it in.\" Which trait claim does the excerpt best support?",
+    "choices": [
+      "Marguerite is a hostile person, and the outburst proves it",
+      "Marguerite is careless about her responsibilities at the shop",
+      "The excerpt offers no character evidence, only a schedule",
+      "Marguerite is habitually gracious, and the snap is a passing emotion rather than a trait"
+    ],
+    "answer": "D",
+    "hints": [
+      "A trait is a stable pattern; an emotion is a single moment.",
+      "Weigh eleven years of behavior against one late morning."
+    ]
+  },
+  {
+    "id": "engl-characterization-006",
+    "loId": "engl.characterization",
+    "cedCode": "ENGL-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"'I have made my peace with all of it, truly,' Osric told the reporter. Osric was a forgiving man, the kind who let old grudges go. That same week he crossed the street twice to avoid passing the storefront, and he rewrote the same short letter four times without ever sending it.\" Which analysis is strongest?",
+    "choices": [
+      "The narrator's direct statement is complicated by his later actions, so the excerpt shows a man performing a peace he has not reached",
+      "Osric is forgiving, since both he and the narrator say so and two sources agree",
+      "The excerpt is entirely indirect characterization, because Osric speaks for himself",
+      "Crossing the street is a travel detail and carries no evidence about his character"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sort the evidence three ways: what he claims, what the narrator states, and what he does.",
+      "When the categories disagree, actions carry the most weight, and the gap between them is the characterization."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-001",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"I counted the fence posts on the walk home, the way I always do when I am putting off a conversation. My brother was already sitting on the porch, and I could not tell from his face whether he had heard yet.\" What point of view is this?",
+    "choices": [
+      "First person",
+      "Second person",
+      "Third-person limited",
+      "Third-person omniscient"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at the pronouns in the narration itself, not inside any quotation.",
+      "The teller is a character walking home in the scene."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-002",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Yusra decided the humming from the vents was nothing worth reporting. Down the corridor, the night guard set his thermos on the desk and walked toward the stairwell without looking back.\" What point of view is this?",
+    "choices": [
+      "First person",
+      "Third-person omniscient",
+      "Third-person limited",
+      "Second person"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the access test: count the minds the narration actually enters.",
+      "We are told what Yusra decided; the guard is only shown doing things anyone could watch."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-003",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Fen believed the letter had never been mailed at all. Six hundred miles away, the woman who had mailed it was already regretting the second paragraph, and neither of them would learn the truth for another decade.\" What point of view is this?",
+    "choices": [
+      "Third-person limited",
+      "Third-person omniscient",
+      "First person",
+      "Second person"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the heads: how many people's beliefs does the narration report?",
+      "The last clause reports something no character in the excerpt knows."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-004",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Vashti dropped the folder on the table and leaned back in the chair. 'I read every page,' she said. 'I am not signing it.' Across from her, Mr. Adeyemi straightened the folder without answering.\" What point of view is this, and why?",
+    "choices": [
+      "First person, because the word I appears twice",
+      "Second person, because a character is being addressed directly",
+      "Third-person omniscient, because two characters appear in the scene",
+      "Third person, because the narration itself uses she and a name - the I belongs to a speaker inside quotation marks"
+    ],
+    "answer": "D",
+    "hints": [
+      "Cover the quoted lines and read only what is left of the narration.",
+      "Every story in every point of view contains characters who say I out loud."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-005",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"I told the hiring panel that the gap on my resume was a family matter. The woman on the left wrote something down and underlined it twice. I spent the whole drive home deciding what the underline had meant.\" What can this narration NOT show the reader?",
+    "choices": [
+      "The narrator's own reasoning during the drive home",
+      "What the woman on the panel wrote and why she underlined it",
+      "The explanation the narrator gave the panel out loud",
+      "The fact that there is a gap on the narrator's resume"
+    ],
+    "answer": "B",
+    "hints": [
+      "First-person narration reaches exactly one mind. Ask which information sits outside it.",
+      "The last sentence admits the narrator is guessing. That admission marks the wall."
+    ]
+  },
+  {
+    "id": "engl-narrative-point-of-view-006",
+    "loId": "engl.narrative-point-of-view",
+    "cedCode": "ENGL-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Naturally I was the calmest person in that room for the entire meeting, and anyone there would confirm it. I remember every word that was said, though I did step out twice to take calls, and I still cannot say who raised the budget question or why the table went quiet the moment I sat back down.\" What is the clearest evidence that this narrator is unreliable?",
+    "choices": [
+      "The narrator uses first-person pronouns, which always signal unreliability",
+      "The narration undercuts its own claims, asserting total recall alongside admitted absences and unexplained silences",
+      "The excerpt describes an ordinary meeting rather than a dramatic event",
+      "The narration is written in past tense rather than present tense"
+    ],
+    "answer": "B",
+    "hints": [
+      "Unreliability shows up as a gap between what the narrator claims and what the same sentences admit.",
+      "Line up remembering every word against stepping out twice, and add the room going quiet."
+    ]
+  },
+  {
+    "id": "engl-theme-001",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A short story reads: \"Neve promised her cousin she would keep the borrowed camera safe, then sold it to cover a fee she was too embarrassed to mention. A year later she replaced it with a better model, and her cousin thanked her and never knew.\" Which statement is a THEME of this story rather than a topic, a summary, or a moral?",
+    "choices": [
+      "Honesty and family",
+      "A girl sells a borrowed camera and later replaces it with a better one",
+      "Always tell your family the truth about money",
+      "A debt repaid in secret can settle the object and leave the trust behind it unexamined"
+    ],
+    "answer": "D",
+    "hints": [
+      "A theme is a full sentence that claims something about how life works.",
+      "Two choices name a subject or retell the events, and one issues an order."
+    ]
+  },
+  {
+    "id": "engl-theme-002",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The bakery had been losing money for two years before Aurelio told anyone. He went on hiring the same three students every summer at the same wage, and he closed the shop the week after the last of them graduated.\" Which theme is BEST supported?",
+    "choices": [
+      "Small businesses and hard times",
+      "People will carry a private loss a long way to protect the people who depend on them",
+      "Never hide financial trouble from the people around you",
+      "A bakery owner keeps hiring students each summer and eventually closes the shop"
+    ],
+    "answer": "B",
+    "hints": [
+      "Three of these are a subject, a command, and a plot summary.",
+      "Ask what the timing of the closing tells you about who he was waiting for."
+    ]
+  },
+  {
+    "id": "engl-theme-003",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A story develops the theme that people guard most fiercely the things they are least able to explain. Read the excerpt: \"The blue tin sat on a shelf all through the move, on the counter all through the renovation, and on the windowsill the night Hester finally left. She never once opened it in front of anyone.\" Which feature of the excerpt most directly DEVELOPS that theme?",
+    "choices": [
+      "The renovation, which suggests the family had money to spend",
+      "The color of the tin, which is a common and unremarkable color",
+      "The repetition of the tin across three separate moments, always kept and never explained",
+      "The detail that Hester leaves at night rather than in the morning"
+    ],
+    "answer": "C",
+    "hints": [
+      "The theme is about guarding something unexplainable. Look for the detail that shows both guarding and silence.",
+      "An object that returns in three different scenes is the author underlining."
+    ]
+  },
+  {
+    "id": "engl-theme-004",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Ilse apologized to her sister eleven years after the wedding, in a parking lot, in about four sentences. Her sister said it was fine and meant it, and they talked easily for an hour, and neither of them ever raised it again.\" A student says the theme is: always apologize, no matter how late. What is the strongest correction?",
+    "choices": [
+      "That statement issues a command the story never issues; a supported theme observes that a late apology can restore ease between people without recovering what the silence already cost",
+      "The student is right, because the sisters do talk easily once the apology is made",
+      "The theme is apologies, which the student should have stated in one word",
+      "The excerpt has no theme, because it covers only one short conversation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Themes observe how life works; they do not hand out instructions.",
+      "Look hard at the final clause. What does the ending quietly refuse to give them back?"
+    ]
+  },
+  {
+    "id": "engl-theme-005",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the story: \"For nine years Tobias refused to learn his mother's first language, and he told himself it was only because she had never insisted. When his daughter was born he began studying it at night, badly, and told no one. At the naming ceremony he mispronounced half of the blessing, and his mother finished it beside him.\" Which theme is best traced through the character change and the ending?",
+    "choices": [
+      "Learning a second language comes more easily to children than to adults",
+      "Family traditions and language",
+      "Always learn the language your parents grew up speaking",
+      "What we refuse from a parent we may reclaim for a child, and the reclaiming is allowed to be imperfect"
+    ],
+    "answer": "D",
+    "hints": [
+      "Name who Tobias is on the first line and who he is on the last, then ask what caused the change.",
+      "The ending rewards a clumsy attempt rather than fluency. What does that reward argue?"
+    ]
+  },
+  {
+    "id": "engl-theme-006",
+    "loId": "engl.theme",
+    "cedCode": "ENGL-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the story: \"Marisela won the district essay prize with a piece about the grandmother she had not visited in four years. She spent the prize money on bus fare, arrived on a Tuesday, and read the essay aloud at the kitchen table. Her grandmother listened all the way through, then asked her to read again the parts that were not true.\" Which theme is BEST supported by the whole passage, including the final line?",
+    "choices": [
+      "Hard work is always rewarded in the end",
+      "Writing about a person can be a way of avoiding that person, and the person is usually the one who notices",
+      "Winning a contest can bring a divided family back together",
+      "Grandparents are the keepers of a family's history"
+    ],
+    "answer": "B",
+    "hints": [
+      "Three of these are pleasant general beliefs that would fit hundreds of stories. Test each one against the last line.",
+      "The grandmother does not congratulate her. Ask what her question exposes about how the essay was written."
+    ]
+  }
+]
