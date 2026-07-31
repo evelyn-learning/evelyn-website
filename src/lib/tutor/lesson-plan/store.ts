@@ -1643,6 +1643,44 @@ import { SEED_ACT_U4_VARIABLES_CONTROLS } from './seeds/act-u4-variables-control
 // ── HS core: Algebra 1 (2026-07 wave 1) ──
 import { SEED_ALG1_U2_MULTI_STEP_EQUATIONS } from './seeds/alg1-u2-multi-step-equations';
 import { SEED_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT } from './seeds/alg1-u8-quadratic-formula-discriminant';
+import { SEED_ALG1_U1_ORDER_OF_OPERATIONS } from './seeds/alg1-u1-order-of-operations';
+import { SEED_ALG1_U1_REAL_NUMBERS_OPERATIONS } from './seeds/alg1-u1-real-numbers-operations';
+import { SEED_ALG1_U1_SIMPLIFYING_EXPRESSIONS } from './seeds/alg1-u1-simplifying-expressions';
+import { SEED_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA } from './seeds/alg1-u1-translating-words-to-algebra';
+import { SEED_ALG1_U10_ONE_VARIABLE_STATISTICS } from './seeds/alg1-u10-one-variable-statistics';
+import { SEED_ALG1_U10_SCATTERPLOTS_TREND_LINES } from './seeds/alg1-u10-scatterplots-trend-lines';
+import { SEED_ALG1_U10_SEQUENCES } from './seeds/alg1-u10-sequences';
+import { SEED_ALG1_U2_LITERAL_EQUATIONS } from './seeds/alg1-u2-literal-equations';
+import { SEED_ALG1_U2_ONE_TWO_STEP_EQUATIONS } from './seeds/alg1-u2-one-two-step-equations';
+import { SEED_ALG1_U2_PROPORTIONS_PERCENTS } from './seeds/alg1-u2-proportions-percents';
+import { SEED_ALG1_U3_ABSOLUTE_VALUE } from './seeds/alg1-u3-absolute-value';
+import { SEED_ALG1_U3_COMPOUND_INEQUALITIES } from './seeds/alg1-u3-compound-inequalities';
+import { SEED_ALG1_U3_ONE_VARIABLE_INEQUALITIES } from './seeds/alg1-u3-one-variable-inequalities';
+import { SEED_ALG1_U4_PARALLEL_PERPENDICULAR } from './seeds/alg1-u4-parallel-perpendicular';
+import { SEED_ALG1_U4_POINT_SLOPE_STANDARD_FORM } from './seeds/alg1-u4-point-slope-standard-form';
+import { SEED_ALG1_U4_RELATIONS_FUNCTIONS } from './seeds/alg1-u4-relations-functions';
+import { SEED_ALG1_U4_SLOPE_INTERCEPT_FORM } from './seeds/alg1-u4-slope-intercept-form';
+import { SEED_ALG1_U4_SLOPE_RATE_OF_CHANGE } from './seeds/alg1-u4-slope-rate-of-change';
+import { SEED_ALG1_U5_SYSTEMS_APPLICATIONS } from './seeds/alg1-u5-systems-applications';
+import { SEED_ALG1_U5_SYSTEMS_BY_GRAPHING } from './seeds/alg1-u5-systems-by-graphing';
+import { SEED_ALG1_U5_SYSTEMS_ELIMINATION } from './seeds/alg1-u5-systems-elimination';
+import { SEED_ALG1_U5_SYSTEMS_SUBSTITUTION } from './seeds/alg1-u5-systems-substitution';
+import { SEED_ALG1_U6_EXPONENT_RULES } from './seeds/alg1-u6-exponent-rules';
+import { SEED_ALG1_U6_EXPONENTIAL_FUNCTIONS } from './seeds/alg1-u6-exponential-functions';
+import { SEED_ALG1_U6_EXPONENTIAL_GROWTH_DECAY } from './seeds/alg1-u6-exponential-growth-decay';
+import { SEED_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION } from './seeds/alg1-u6-negative-exponents-scientific-notation';
+import { SEED_ALG1_U7_FACTORING_GCF_GROUPING } from './seeds/alg1-u7-factoring-gcf-grouping';
+import { SEED_ALG1_U7_FACTORING_SPECIAL_FORMS } from './seeds/alg1-u7-factoring-special-forms';
+import { SEED_ALG1_U7_FACTORING_TRINOMIALS } from './seeds/alg1-u7-factoring-trinomials';
+import { SEED_ALG1_U7_POLYNOMIAL_OPERATIONS } from './seeds/alg1-u7-polynomial-operations';
+import { SEED_ALG1_U7_SPECIAL_PRODUCTS } from './seeds/alg1-u7-special-products';
+import { SEED_ALG1_U8_COMPLETING_THE_SQUARE } from './seeds/alg1-u8-completing-the-square';
+import { SEED_ALG1_U8_QUADRATIC_GRAPHS_VERTEX } from './seeds/alg1-u8-quadratic-graphs-vertex';
+import { SEED_ALG1_U8_QUADRATIC_MODELS } from './seeds/alg1-u8-quadratic-models';
+import { SEED_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS } from './seeds/alg1-u8-solving-by-factoring-square-roots';
+import { SEED_ALG1_U9_RADICAL_EQUATIONS } from './seeds/alg1-u9-radical-equations';
+import { SEED_ALG1_U9_RATIONAL_EXPRESSIONS } from './seeds/alg1-u9-rational-expressions';
+import { SEED_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-radicals';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3216,6 +3254,44 @@ export const SEED_PLANS: LessonPlan[] = [
   // HS core: Algebra 1 (2026-07 wave 1)
   SEED_ALG1_U2_MULTI_STEP_EQUATIONS,
   SEED_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT,
+  SEED_ALG1_U1_ORDER_OF_OPERATIONS,
+  SEED_ALG1_U1_REAL_NUMBERS_OPERATIONS,
+  SEED_ALG1_U1_SIMPLIFYING_EXPRESSIONS,
+  SEED_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA,
+  SEED_ALG1_U10_ONE_VARIABLE_STATISTICS,
+  SEED_ALG1_U10_SCATTERPLOTS_TREND_LINES,
+  SEED_ALG1_U10_SEQUENCES,
+  SEED_ALG1_U2_LITERAL_EQUATIONS,
+  SEED_ALG1_U2_ONE_TWO_STEP_EQUATIONS,
+  SEED_ALG1_U2_PROPORTIONS_PERCENTS,
+  SEED_ALG1_U3_ABSOLUTE_VALUE,
+  SEED_ALG1_U3_COMPOUND_INEQUALITIES,
+  SEED_ALG1_U3_ONE_VARIABLE_INEQUALITIES,
+  SEED_ALG1_U4_PARALLEL_PERPENDICULAR,
+  SEED_ALG1_U4_POINT_SLOPE_STANDARD_FORM,
+  SEED_ALG1_U4_RELATIONS_FUNCTIONS,
+  SEED_ALG1_U4_SLOPE_INTERCEPT_FORM,
+  SEED_ALG1_U4_SLOPE_RATE_OF_CHANGE,
+  SEED_ALG1_U5_SYSTEMS_APPLICATIONS,
+  SEED_ALG1_U5_SYSTEMS_BY_GRAPHING,
+  SEED_ALG1_U5_SYSTEMS_ELIMINATION,
+  SEED_ALG1_U5_SYSTEMS_SUBSTITUTION,
+  SEED_ALG1_U6_EXPONENT_RULES,
+  SEED_ALG1_U6_EXPONENTIAL_FUNCTIONS,
+  SEED_ALG1_U6_EXPONENTIAL_GROWTH_DECAY,
+  SEED_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION,
+  SEED_ALG1_U7_FACTORING_GCF_GROUPING,
+  SEED_ALG1_U7_FACTORING_SPECIAL_FORMS,
+  SEED_ALG1_U7_FACTORING_TRINOMIALS,
+  SEED_ALG1_U7_POLYNOMIAL_OPERATIONS,
+  SEED_ALG1_U7_SPECIAL_PRODUCTS,
+  SEED_ALG1_U8_COMPLETING_THE_SQUARE,
+  SEED_ALG1_U8_QUADRATIC_GRAPHS_VERTEX,
+  SEED_ALG1_U8_QUADRATIC_MODELS,
+  SEED_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS,
+  SEED_ALG1_U9_RADICAL_EQUATIONS,
+  SEED_ALG1_U9_RATIONAL_EXPRESSIONS,
+  SEED_ALG1_U9_SIMPLIFYING_RADICALS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
