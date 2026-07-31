@@ -1,6 +1,7 @@
 /**
- * Lint every HS-core plan (selected by id prefix evelyn.hs. — NOT topic:
- * legacy g9 / g910 seeds share topics like 'algebra-1' and are exempt).
+ * Lint every HS-core plan (selected by known course infix: alg1 today).
+ * Deliberately excludes legacy evelyn.hs.science.* and evelyn.hs.bio.sex-linked.*
+ * seeds which use out-of-scope ID structures.
  * Mirrors lint-testprep-plans.ts. Run: npm run lint:hs-plans
  */
 import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
@@ -12,25 +13,31 @@ const COURSES: Record<string, { subject: string; topic: string; loPrefix: string
   alg1: { subject: 'math', topic: 'algebra-1', loPrefix: 'alg1', std: 'ALG1' },
 };
 
+const COURSE_SEL = new RegExp(`^evelyn\\.hs\\.(${Object.keys(COURSES).join('|')})\\.`);
 const ID_PATTERN = /^evelyn\.hs\.([a-z0-9]+)\.[a-z0-9-]+\.v\d+$/;
 const FRQ_MARKERS = /frq|dbq|leq|saq/i;
 
 const errors: string[] = [];
 const err = (id: string, msg: string) => errors.push(`${id}: ${msg}`);
 
-const plans = SEED_PLANS.filter((p) => p.id.startsWith('evelyn.hs.'));
+const plans = SEED_PLANS.filter((p) => COURSE_SEL.test(p.id));
 if (plans.length === 0) {
-  console.error('lint-hs-plans: no plans with id prefix evelyn.hs. found');
+  console.error(`lint-hs-plans: no plans matching evelyn.hs.(${Object.keys(COURSES).join('|')}) found`);
   process.exit(1);
 }
 
 for (const p of plans) {
   const md = (p.metadata ?? {}) as Record<string, unknown>;
   const m = ID_PATTERN.exec(p.id);
-  const course = m ? COURSES[m[1]] : undefined;
-  if (!m) err(p.id, 'id must match evelyn.hs.<course>.<slug>.v<N>');
-  else if (!course) { err(p.id, `unknown course infix '${m[1]}'`); continue; }
-  if (!course) continue;
+  if (!m) {
+    err(p.id, 'id must match evelyn.hs.<course>.<slug>.v<N>');
+    continue;
+  }
+  const course = COURSES[m[1]];
+  if (!course) {
+    err(p.id, `unknown course infix '${m[1]}'`);
+    continue;
+  }
   if (p.curriculum !== 'HS') err(p.id, `curriculum must be 'HS'`);
   if (p.grade !== '9-10') err(p.id, `grade must be '9-10'`);
   if (p.subject !== course.subject) err(p.id, `subject must be '${course.subject}'`);
