@@ -1161,7 +1161,7 @@
       "2.09 J/(g·°C)"
     ],
     "answer": "A",
-    "solutionText": "The water absorbs q = 100.0 × 4.18 × 4.0 = 1672 J, and in an insulated calorimeter the metal must have released that same 1672 J. The metal's temperature change is 100.0 − 24.0 = 76.0 °C, so c = 1672 ÷ (50.0 × 76.0) = 0.440 J/(g·°C). The 0.418 trap reuses the water's 4.0 °C change for the metal, and 8.36 uses the water's ΔT in the metal's denominator.",
+    "solutionText": "The water absorbs q = 100.0 × 4.18 × 4.0 = 1672 J, and in an insulated calorimeter the metal must have released that same 1672 J. The metal cools from 100.0 °C to the final 24.0 °C, a change of 76.0 °C, so c = 1672 ÷ (50.0 × 76.0) = 0.440 J/(g·°C). The 0.418 trap measures the metal's drop down to the water's STARTING temperature of 20.0 °C instead of the final temperature, giving 1672 ÷ (50.0 × 80.0). The 8.36 trap reuses the water's own 4.0 °C change as the metal's ΔT: 1672 ÷ (50.0 × 4.0).",
     "hints": [
       "Heat lost by the metal equals heat gained by the water, so compute the water's q first.",
       "The metal cools from 100.0 °C down to the FINAL temperature — its ΔT is not the same as the water's."
