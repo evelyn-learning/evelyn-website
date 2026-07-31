@@ -200,7 +200,11 @@ if (failed > 0 || !wrapOk || !profanityPreserved || !spellcheckWorks) {
 //    responded, and the session ended on that silence. Bare digits are
 //    answers, never fillers.
 {
-  const clean: string[] = ['6.', '3', '12', '42', '3.5', '0'];
+  // R36b (2026-07-30, session portal-18ac9fb5): "-3." dropped twice — the
+  // pure-digit exception had no sign, so a NEGATIVE answer (as common as a
+  // positive one in algebra) fell back into the ≤2-char noise drop and the
+  // student had to say "It'll be -3" to be heard.
+  const clean: string[] = ['6.', '3', '12', '42', '3.5', '0', '-3.', '-3', '+2', '-3.5'];
   for (const t of clean) {
     const got = classifyTranscript(t);
     if (got !== 'clean') { console.error(`FAIL numeric answer "${t}": got ${got}, want clean`); process.exit(1); }

@@ -410,10 +410,14 @@ export function isNoiseTranscript(text: string, opts?: NoiseFilterOpts): boolean
   // normalization strips the dot); it is an ANSWER, never a filler. Same
   // bug class as the 2026-07-10 "No." incident this comment block already
   // documents.
+  // R36b (2026-07-30, session portal-18ac9fb5): SIGNED numbers too — the
+  // student answered "-3." twice and both dropped here ("-3" is 2 chars
+  // and the digit exception had no sign). A negative answer is as common
+  // as a positive one in algebra.
   if (
     words.length === 1
     && normalized.length <= 2
-    && !/^\d+$/.test(normalized)
+    && !/^[-+]?\d+$/.test(normalized)
     && !MATH_VAR_LETTERS.has(normalized)
     && !SHORT_ANSWER_WORDS.has(normalized)
   ) return true;

@@ -486,4 +486,18 @@ function runCurated(): void {
   // Fill-in-the-blank underscore runs spoke "underscore underscore …".
   tts('The slope is _______ and the intercept is _____.',
     'The slope is blank and the intercept is blank.', 'fill-in-blank-underscores');
+
+  // ── 26. R36b (2026-07-30, session portal-18ac9fb5): glued coefficients
+  // and mixed-case variable products. "$C = 3.50m + 250$" spoke "3.50
+  // meters" (glued digit+letter claimed by the unit pass) and "$Ax + By =
+  // C$" read "Ax"/"By" as the words "axe"/"by". ──
+  tts('The cost is $C = 3.50m + 250$ for the month.',
+    'The cost is see equals 3.50 M plus 250 for the month.', 'span-glued-coefficient-m');
+  tts('so $y = 2m$ here.', 'so why equals 2 M here.', 'span-glued-coefficient-2m');
+  tts('Standard form is $Ax + By = C$ here.',
+    'Standard form is A x plus bee why equals C here.', 'span-mixed-case-products');
+  // Separated units must still convert — only GLUED singles are algebra.
+  tts('The rod is 5 m long and the wire is 3.50 m.',
+    'The rod is 5 meters long and the wire is 3.50 meters.', 'unit-spaced-m-still-meters');
+  tts('It weighs 5kg and holds 500ml.', 'It weighs 5 kilograms and holds 500ml.', 'unit-glued-multiletter-kept');
 }

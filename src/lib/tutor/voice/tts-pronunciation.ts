@@ -616,12 +616,29 @@ function respellMathLetters(s: string): string {
     DIGIT_RUN_EXCLUDE.has(run) || SPAN_PRODUCT_EXCLUDE.has(run)
       ? m
       : `${num} ${run.split('').join(' ')}`);
+  // R36b (live, session portal-18ac9fb5): glued digit + SINGLE letter, but
+  // ONLY for letters that carry a respell below (a/b/y/d/m/g) — "$3.50m$"
+  // read as a unit until it splits so the M respell can apply. Letters
+  // that read correctly glued ("2x", "4i" — hand-verified pins) stay
+  // glued; splitting them changes nothing audibly and churns the pins.
+  s = s.replace(/\b(\d+)([abydmg])\b/g, '$1 $2');
   // Round-22 (live: "$…(a^2+ab+b^2)$" spoke "ab" as in "cab"): a 2-3
   // letter lowercase token inside a DECLARED span is a variable PRODUCT
   // ("ab", "xy") unless it's a known word/function — split into letters
   // so each respells below ("ay bee", "x why").
   s = s.replace(/\b([a-z]{2,3})\b/g, (m: string) =>
     SPAN_PRODUCT_EXCLUDE.has(m) ? m : m.split('').join(' '));
+  // R36b (live, session portal-18ac9fb5): standard-form products "Ax"/"By"
+  // reached Cartesia raw and read as the WORDS "axe"/"by". A capital +
+  // lowercase 2-letter token inside a declared span is a variable product
+  // ("Ax + By = C") unless it's a known word/function (lowercase form in
+  // the exclude set: "In", "As"…), a unit symbol (Hz, Pa), or an element
+  // symbol (Na, Fe — a chem span converts them before this runs, but a
+  // misdetected one must not shred them).
+  s = s.replace(/\b([A-Z][a-z])\b/g, (m: string) =>
+    SPAN_PRODUCT_EXCLUDE.has(m.toLowerCase()) || m === 'Hz' || m === 'Pa' || ELEMENT_SYMBOLS.has(m)
+      ? m
+      : m.split('').join(' '));
   return s
     // Round-30 (live: "$a = 2.5$" → "ay equals" heard with an article-'a'
     // vowel): the letter-a token is capital "A" — equation context makes
@@ -861,12 +878,20 @@ const SINGLE_UNIT_RULES: UnitRule[] = [
   { src: 'L', plural: 'liters', singular: 'liter', spanOnly: true },
   { src: 'M', plural: 'molar', singular: 'molar', spanOnly: true },
 ];
+// R36b (live, session portal-18ac9fb5): a digit GLUED to a bare single
+// letter is a coefficient·variable product, not a measurement — "$C =
+// 3.50m + 250$" spoke "3.50 meters" and "$y = 2m$" "2 meters". Units are
+// written with a separator ("3.50 m", "5\,m"); algebra glues ("3.50m",
+// "2x"). Single-LETTER rules therefore require a non-empty separator;
+// multi-char units (kg, cm, μC…) keep the optional one — glued "5kg" is
+// still a dose/measurement, never a product.
+const UNIT_SEP_REQUIRED_SRC = String.raw`(?:\s|\\[,;:!]|\\ |~)+`;
 const SINGLE_UNIT_COMPILED = SINGLE_UNIT_RULES.map((u) => ({
   ...u,
   // Trailing guard excludes digits too: a unit letter directly followed by
   // a digit is notation, not a unit — "$10C3$" is nCr shorthand ("10
   // choose 3"), which the span-only coulomb rule must never claim.
-  re: new RegExp(`(${UNIT_NUM_SRC})(?:${UNIT_SEP_SRC})(?:${u.src})(?![A-Za-z0-9])`, 'g'),
+  re: new RegExp(`(${UNIT_NUM_SRC})(?:${/^[A-Za-z]$/.test(u.src) ? UNIT_SEP_REQUIRED_SRC : UNIT_SEP_SRC})(?:${u.src})(?![A-Za-z0-9])`, 'g'),
   // \text{kg}/\mathrm{K} with an optional preceding number. A \text-wrapped
   // unit inside a span is an EXPLICIT unit annotation, so it converts even
   // number-less ((x)_0 \, \text{kg} → "… sub 0 kilograms") — leaving it raw
