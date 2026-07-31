@@ -1684,6 +1684,44 @@ import { SEED_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-r
 // ── HS core: Geometry (2026-07 wave 1) ──
 import { SEED_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA } from './seeds/geom-u5-triangle-congruence-criteria';
 import { SEED_GEOM_U7_TRIG_RATIOS } from './seeds/geom-u7-trig-ratios';
+import { SEED_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS } from './seeds/geom-u1-angle-pair-relationships';
+import { SEED_GEOM_U1_ANGLES_AND_MEASURE } from './seeds/geom-u1-angles-and-measure';
+import { SEED_GEOM_U1_POINTS_LINES_PLANES } from './seeds/geom-u1-points-lines-planes';
+import { SEED_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT } from './seeds/geom-u1-segments-distance-midpoint';
+import { SEED_GEOM_U10_AREA_POLYGONS } from './seeds/geom-u10-area-polygons';
+import { SEED_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR } from './seeds/geom-u10-circumference-arc-length-sector';
+import { SEED_GEOM_U10_PRISMS_CYLINDERS } from './seeds/geom-u10-prisms-cylinders';
+import { SEED_GEOM_U10_PYRAMIDS_CONES_SPHERES } from './seeds/geom-u10-pyramids-cones-spheres';
+import { SEED_GEOM_U2_CONDITIONAL_STATEMENTS } from './seeds/geom-u2-conditional-statements';
+import { SEED_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING } from './seeds/geom-u2-inductive-deductive-reasoning';
+import { SEED_GEOM_U2_TWO_COLUMN_PROOFS } from './seeds/geom-u2-two-column-proofs';
+import { SEED_GEOM_U3_PARALLEL_LINES_TRANSVERSALS } from './seeds/geom-u3-parallel-lines-transversals';
+import { SEED_GEOM_U3_PROVING_LINES_PARALLEL } from './seeds/geom-u3-proving-lines-parallel';
+import { SEED_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR } from './seeds/geom-u3-slopes-parallel-perpendicular';
+import { SEED_GEOM_U4_COMPOSITIONS_SYMMETRY } from './seeds/geom-u4-compositions-symmetry';
+import { SEED_GEOM_U4_CONGRUENCE_RIGID_MOTIONS } from './seeds/geom-u4-congruence-rigid-motions';
+import { SEED_GEOM_U4_REFLECTIONS } from './seeds/geom-u4-reflections';
+import { SEED_GEOM_U4_ROTATIONS } from './seeds/geom-u4-rotations';
+import { SEED_GEOM_U4_TRANSLATIONS } from './seeds/geom-u4-translations';
+import { SEED_GEOM_U5_CPCTC_PROOFS } from './seeds/geom-u5-cpctc-proofs';
+import { SEED_GEOM_U5_ISOSCELES_EQUILATERAL } from './seeds/geom-u5-isosceles-equilateral';
+import { SEED_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES } from './seeds/geom-u5-midsegments-bisectors-inequalities';
+import { SEED_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS } from './seeds/geom-u5-triangle-angle-relationships';
+import { SEED_GEOM_U6_DILATIONS_SCALE_FACTOR } from './seeds/geom-u6-dilations-scale-factor';
+import { SEED_GEOM_U6_PROPORTIONALITY_THEOREMS } from './seeds/geom-u6-proportionality-theorems';
+import { SEED_GEOM_U6_SIMILAR_POLYGONS } from './seeds/geom-u6-similar-polygons';
+import { SEED_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA } from './seeds/geom-u6-triangle-similarity-criteria';
+import { SEED_GEOM_U7_PYTHAGOREAN_THEOREM } from './seeds/geom-u7-pythagorean-theorem';
+import { SEED_GEOM_U7_SOLVING_RIGHT_TRIANGLES } from './seeds/geom-u7-solving-right-triangles';
+import { SEED_GEOM_U7_SPECIAL_RIGHT_TRIANGLES } from './seeds/geom-u7-special-right-triangles';
+import { SEED_GEOM_U8_PARALLELOGRAMS } from './seeds/geom-u8-parallelograms';
+import { SEED_GEOM_U8_POLYGON_ANGLE_SUMS } from './seeds/geom-u8-polygon-angle-sums';
+import { SEED_GEOM_U8_SPECIAL_PARALLELOGRAMS } from './seeds/geom-u8-special-parallelograms';
+import { SEED_GEOM_U8_TRAPEZOIDS_KITES } from './seeds/geom-u8-trapezoids-kites';
+import { SEED_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-inscribed-angles';
+import { SEED_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
+import { SEED_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
+import { SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3298,6 +3336,44 @@ export const SEED_PLANS: LessonPlan[] = [
   // HS core: Geometry (2026-07 wave 1)
   SEED_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA,
   SEED_GEOM_U7_TRIG_RATIOS,
+  SEED_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS,
+  SEED_GEOM_U1_ANGLES_AND_MEASURE,
+  SEED_GEOM_U1_POINTS_LINES_PLANES,
+  SEED_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT,
+  SEED_GEOM_U10_AREA_POLYGONS,
+  SEED_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR,
+  SEED_GEOM_U10_PRISMS_CYLINDERS,
+  SEED_GEOM_U10_PYRAMIDS_CONES_SPHERES,
+  SEED_GEOM_U2_CONDITIONAL_STATEMENTS,
+  SEED_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING,
+  SEED_GEOM_U2_TWO_COLUMN_PROOFS,
+  SEED_GEOM_U3_PARALLEL_LINES_TRANSVERSALS,
+  SEED_GEOM_U3_PROVING_LINES_PARALLEL,
+  SEED_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR,
+  SEED_GEOM_U4_COMPOSITIONS_SYMMETRY,
+  SEED_GEOM_U4_CONGRUENCE_RIGID_MOTIONS,
+  SEED_GEOM_U4_REFLECTIONS,
+  SEED_GEOM_U4_ROTATIONS,
+  SEED_GEOM_U4_TRANSLATIONS,
+  SEED_GEOM_U5_CPCTC_PROOFS,
+  SEED_GEOM_U5_ISOSCELES_EQUILATERAL,
+  SEED_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES,
+  SEED_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS,
+  SEED_GEOM_U6_DILATIONS_SCALE_FACTOR,
+  SEED_GEOM_U6_PROPORTIONALITY_THEOREMS,
+  SEED_GEOM_U6_SIMILAR_POLYGONS,
+  SEED_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA,
+  SEED_GEOM_U7_PYTHAGOREAN_THEOREM,
+  SEED_GEOM_U7_SOLVING_RIGHT_TRIANGLES,
+  SEED_GEOM_U7_SPECIAL_RIGHT_TRIANGLES,
+  SEED_GEOM_U8_PARALLELOGRAMS,
+  SEED_GEOM_U8_POLYGON_ANGLE_SUMS,
+  SEED_GEOM_U8_SPECIAL_PARALLELOGRAMS,
+  SEED_GEOM_U8_TRAPEZOIDS_KITES,
+  SEED_GEOM_U9_CENTRAL_INSCRIBED_ANGLES,
+  SEED_GEOM_U9_CIRCLE_BASICS_ARCS,
+  SEED_GEOM_U9_CIRCLE_EQUATIONS,
+  SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
