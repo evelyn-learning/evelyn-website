@@ -12,6 +12,7 @@ import { HS_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_hs-sha
 const COURSES: Record<string, { subject: string; topic: string; loPrefix: string; std: string }> = {
   alg1: { subject: 'math', topic: 'algebra-1', loPrefix: 'alg1', std: 'ALG1' },
   geom: { subject: 'math', topic: 'geometry', loPrefix: 'geom', std: 'GEOM' },
+  whist: { subject: 'social-studies', topic: 'world-history', loPrefix: 'whist', std: 'WHIST' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.hs\\.(${Object.keys(COURSES).join('|')})\\.`);

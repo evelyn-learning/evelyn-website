@@ -73,6 +73,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Circles',
     '10': 'Area, Surface Area & Volume',
   },
+  'world-history': {
+    '1': 'Origins of Civilization',
+    '2': 'Classical Empires & Belief Systems',
+    '3': 'The Islamic World & East Asia',
+    '4': 'Byzantium & Medieval Europe',
+    '5': 'Africa & the Americas',
+    '6': 'Renaissance, Reformation & Exploration',
+    '7': 'Enlightenment & Revolutions',
+    '8': 'Industry, Nationalism & Empire',
+    '9': 'The World Wars',
+    '10': 'The Cold War & Globalization',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.
