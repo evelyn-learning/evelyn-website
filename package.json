@@ -14,6 +14,7 @@
     "seed:problem-bank": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-problem-bank.ts",
     "seed:mock-form": "npx tsx scripts/seed-mock-form.ts",
     "lint:testprep-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-testprep-plans.ts",
+    "lint:hs-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-hs-plans.ts",
     "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
     "test:gaps": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-cross-session-promotion.ts",
     "test:portal-contract": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-contract.ts",
