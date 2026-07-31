@@ -1,0 +1,326 @@
+[
+  {
+    "id": "chem-solutions-solubility-001",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A sealed lake sample is warmed from 5 °C to 30 °C. What happens to the solubility of dissolved oxygen gas, O₂, in that water?",
+    "choices": [
+      "It increases, because raising the temperature always lets a solvent hold more solute",
+      "It decreases, because the dissolved gas particles gain energy and escape the liquid",
+      "It stays the same, because temperature changes the solubility of solids only",
+      "It increases up to 25 °C and then decreases above that temperature"
+    ],
+    "answer": "B",
+    "hints": [
+      "Solids and gases respond to temperature in opposite directions.",
+      "Think of a warm soda going flat: heating a solution drives dissolved gas OUT of it."
+    ]
+  },
+  {
+    "id": "chem-solutions-solubility-002",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Iodine, I₂, is a nonpolar molecule. It is offered two solvents: water, which is polar, and hexane, which is nonpolar. Which solvent dissolves the iodine, and why?",
+    "choices": [
+      "Water — water is the universal solvent and dissolves essentially every substance",
+      "Water — I₂ molecules are small enough to slip into the spaces between water molecules",
+      "Hexane — nonpolar I₂ and nonpolar hexane attract each other about as strongly as hexane molecules attract each other, so like dissolves like",
+      "Neither — nonpolar substances cannot dissolve in any liquid solvent"
+    ],
+    "answer": "C",
+    "hints": [
+      "Dissolving is a competition of attractions, not a question of particle size.",
+      "Polar water molecules grip each other strongly and find nothing to grip on a nonpolar molecule, so they exclude it."
+    ]
+  },
+  {
+    "id": "chem-solutions-solubility-003",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Potassium chloride, KCl, has a solubility of 34 g per 100 g of water at 20 °C and 40 g per 100 g of water at 40 °C. A student stirs 45 g of KCl into 100 g of water held at 40 °C and waits until no more will dissolve. How is the resulting mixture best described?",
+    "choices": [
+      "Unsaturated — 45 g of solid is a small amount next to 100 g of water",
+      "Saturated, with about 5 g of KCl left sitting undissolved on the bottom",
+      "Supersaturated — 45 g is more than the 40 g the water can hold at 40 °C",
+      "Saturated, with all 45 g dissolved and nothing left over"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the solubility value for the ACTUAL temperature of the mixture, not the other one.",
+      "The water can hold 40 g; 45 g was added. Solid left over in balance with a solution at its limit means saturated — supersaturated requires MORE than the maximum to be DISSOLVED."
+    ]
+  },
+  {
+    "id": "chem-solutions-solubility-004",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Sodium nitrate, NaNO₃, has a solubility of 148 g per 100 g of water at 80 °C and 88 g per 100 g of water at 20 °C. A saturated NaNO₃ solution is prepared using 50 g of water at 80 °C and is then cooled to 20 °C. How many grams of NaNO₃ crystallize out? Type your answer as a number.",
+    "answer": "30",
+    "hints": [
+      "Both solubility values are per 100 g of water, but only 50 g of water is used — scale each value first.",
+      "50 g of water holds 74 g dissolved at 80 °C and only 44 g at 20 °C. Subtract."
+    ]
+  },
+  {
+    "id": "chem-solutions-solubility-005",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sodium acetate has a solubility of 125 g per 100 g of water at 80 °C and 46 g per 100 g of water at 20 °C. A chemist dissolves 120 g of sodium acetate in 100 g of water at 80 °C, then lets the sealed flask cool slowly and undisturbed to 20 °C. No solid appears. What is the state of the solution at 20 °C, and what happens if one small crystal is dropped in?",
+    "choices": [
+      "Unsaturated — the added crystal simply dissolves along with everything else",
+      "Saturated — the added crystal has no effect, because the solution is already sitting exactly at its limit",
+      "Supersaturated — the added crystal dissolves too, and the solution then holds even more solute",
+      "Supersaturated — the added crystal triggers about 74 g of solid to crash out, leaving a saturated solution"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the 120 g dissolved with the 46 g maximum at 20 °C. Holding MORE than the maximum has its own name.",
+      "A supersaturated solution is unstable; a seed crystal makes the excess above the true maximum come out at once. 120 − 46 = 74."
+    ]
+  },
+  {
+    "id": "chem-solutions-solubility-006",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ammonium chloride, NH₄Cl, has a solubility of 37 g per 100 g of water at 20 °C and 55 g per 100 g of water at 60 °C. A student adds 90 g of NH₄Cl to 200 g of water at 20 °C and stirs vigorously for half an hour; solid still remains. Which single change will get all 90 g into solution without adding more water?",
+    "choices": [
+      "Keep stirring and grind the leftover crystals into a fine powder — the extra surface area lets the rest dissolve",
+      "Pour off half of the water, since a smaller amount of solvent dissolves solute more efficiently",
+      "Warm the mixture to 60 °C, where 200 g of water can hold 110 g of NH₄Cl",
+      "Seal the flask and raise the gas pressure above the liquid to force more solid into solution"
+    ],
+    "answer": "C",
+    "hints": [
+      "First scale the solubility values to 200 g of water and check which temperature gives a maximum above 90 g.",
+      "Stirring and grinding change how FAST a solid dissolves, never how MUCH; pressure moves gas solubility only, not solids."
+    ]
+  },
+  {
+    "id": "chem-molarity-001",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bottle is labeled 1.5 M KBr. What does the molarity value 1.5 M mean?",
+    "choices": [
+      "1.5 grams of KBr per liter of solution",
+      "1.5 moles of KBr per liter of solution",
+      "1.5 moles of KBr per liter of water added to the flask",
+      "1.5 liters of solution per mole of KBr"
+    ],
+    "answer": "B",
+    "hints": [
+      "The unit M is read \"molar\" and is shorthand for one specific ratio.",
+      "Numerator: moles of solute. Denominator: liters of finished solution — not liters of solvent poured in."
+    ]
+  },
+  {
+    "id": "chem-molarity-002",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student dissolves 0.75 mol of KBr in water and fills the flask to a total volume of 250 mL. What is the molarity of the solution?",
+    "choices": [
+      "0.0030 M",
+      "0.19 M",
+      "3.0 M",
+      "188 M"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert 250 mL to liters before you divide anything.",
+      "0.75 mol ÷ 0.250 L — and since the volume is under a liter, the molarity must come out LARGER than 0.75."
+    ]
+  },
+  {
+    "id": "chem-molarity-003",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How many grams of NaOH are needed to prepare 2.0 L of 0.50 M NaOH solution? Molar masses: Na = 23.0, O = 16.0, H = 1.0 g/mol.",
+    "choices": [
+      "20 g",
+      "80 g",
+      "0.025 g",
+      "40 g"
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the formula backward: moles = molarity × liters.",
+      "0.50 mol/L × 2.0 L = 1.0 mol of NaOH; the molar mass of NaOH is 23.0 + 16.0 + 1.0 = 40.0 g/mol."
+    ]
+  },
+  {
+    "id": "chem-molarity-004",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A chemist dissolves 22.2 g of CaCl₂ in water and fills the flask to a total volume of 400 mL. What is the molarity of the solution in mol/L? Molar masses: Ca = 40.0, Cl = 35.5 g/mol. Type your answer as a number.",
+    "answer": "0.5",
+    "hints": [
+      "Build the molar mass of CaCl₂ first: 40.0 + 2 × 35.5. Then convert grams to moles.",
+      "22.2 g ÷ 111.0 g/mol = 0.200 mol; now convert 400 mL to 0.400 L and divide."
+    ]
+  },
+  {
+    "id": "chem-molarity-005",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 1.0 L bottle holds 2.5 M sucrose solution. You pour exactly 200 mL of it into a beaker. What is the concentration of the liquid in the beaker, and how many moles of sucrose does the beaker hold?",
+    "choices": [
+      "0.50 M, containing 0.50 mol of sucrose",
+      "2.5 M, containing 0.50 mol of sucrose",
+      "2.5 M, containing 2.5 mol of sucrose",
+      "0.50 M, containing 2.5 mol of sucrose"
+    ],
+    "answer": "B",
+    "hints": [
+      "Pouring some out removes solute and volume together, so ask whether their RATIO changed.",
+      "Concentration is intensive and stays 2.5 M; the amount is not — moles = 2.5 mol/L × 0.200 L."
+    ]
+  },
+  {
+    "id": "chem-molarity-006",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student weighs out 4.0 g of NaOH, pours it into a graduated cylinder that already holds exactly 100 mL of water, stirs until it all dissolves, and labels the cylinder \"1.0 M NaOH\". Molar masses: Na = 23.0, O = 16.0, H = 1.0 g/mol. Evaluate the label.",
+    "choices": [
+      "The label is correct: 4.0 g of NaOH is 0.10 mol, and 0.10 mol in 100 mL is exactly 1.0 M",
+      "The label is 1000 times too small — the volume was measured in milliliters, so the true value is 1000 M",
+      "The label is slightly too high — the dissolved NaOH takes up space, pushing the total solution volume past 100 mL, so the real concentration is a little below 1.0 M",
+      "The label is too low — the dissolved NaOH adds mass to the cylinder, which raises the concentration above 1.0 M"
+    ],
+    "answer": "C",
+    "hints": [
+      "The mole count is fine: 4.0 g ÷ 40.0 g/mol = 0.10 mol. Scrutinize the denominator instead.",
+      "Molarity uses the total volume of SOLUTION, not the volume of water started with — which is why solutions are brought up to a mark in a volumetric flask."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-001",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Dissolving salt in water lowers the freezing point of the water below 0 °C. What does the same dissolved salt do to the boiling point of the water?",
+    "choices": [
+      "It lowers it below 100 °C, because dissolved particles weaken the liquid",
+      "It leaves it unchanged, because dissolved solute affects freezing only",
+      "It raises it above 100 °C, because dissolved particles make it harder for water molecules to escape into the gas phase",
+      "It raises it above 100 °C, but only for ionic solutes — molecular solutes have no effect on boiling"
+    ],
+    "answer": "C",
+    "hints": [
+      "Colligative effects push both state changes away from pure water's normal temperatures.",
+      "Freezing point goes DOWN, boiling point goes UP — dissolved particles get in the way of both escaping and crystallizing."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-002",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You take 25 mL of 4.0 M HCl and add water until the total volume of the solution is 100 mL. Use M₁V₁ = M₂V₂ to find the molarity of the diluted solution.",
+    "choices": [
+      "1.0 M",
+      "16 M",
+      "0.010 M",
+      "4.0 M"
+    ],
+    "answer": "A",
+    "hints": [
+      "Fill the four slots: M₁ = 4.0, V₁ = 25 mL, V₂ = 100 mL, M₂ = unknown.",
+      "(4.0)(25) = 100, and M₂ = 100 ÷ 100. The volume grew by a factor of 4, so the concentration must drop by a factor of 4."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-003",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three solutions are made by dissolving 1 mole of solute in the same mass of water each time: glucose, which stays as whole molecules; KBr, which separates into K⁺ and Br⁻; and Al(NO₃)₃, which separates into Al³⁺ and three NO₃⁻ ions. Which solution has the HIGHEST boiling point?",
+    "choices": [
+      "The glucose solution — glucose molecules are much larger than the ions, so they block escape best",
+      "The KBr solution — ionic compounds built from a metal always shift boiling points the most",
+      "All three boil at the same temperature, because the same number of moles was dissolved in each",
+      "The Al(NO₃)₃ solution — each formula unit releases 4 dissolved particles, more than the other two"
+    ],
+    "answer": "D",
+    "hints": [
+      "A colligative property counts dissolved PARTICLES, not molecule size and not chemical identity.",
+      "Count what each formula unit becomes in water: glucose → 1, KBr → 2, Al(NO₃)₃ → 1 + 3 = 4."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-004",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A lab keeps a 6.0 M stock solution of NaOH. How many milliliters of that stock are needed to prepare 600 mL of 0.50 M NaOH? Use M₁V₁ = M₂V₂. Type your answer as a number.",
+    "answer": "50",
+    "hints": [
+      "Both volumes are in mL, so no unit conversion is needed — the units only have to match across the equal sign.",
+      "(6.0)(V₁) = (0.50)(600) = 300, so V₁ = 300 ÷ 6.0."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-005",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student needs 250 mL of 0.60 M KOH made from a 3.0 M KOH stock. They correctly calculate that 50 mL of stock is required, measure it out, and then pour 250 mL of water into it. What is the actual concentration of the solution they made?",
+    "choices": [
+      "0.60 M — adding water to the correctly measured 50 mL of stock always produces the target concentration",
+      "0.50 M — the finished solution measures 300 mL rather than 250 mL, so it is weaker than ordered",
+      "0.30 M — pouring in 250 mL of water doubles the intended final volume",
+      "3.0 M — the concentration of a stock solution does not change when water is added to it"
+    ],
+    "answer": "B",
+    "hints": [
+      "V₂ is the FINAL TOTAL volume of solution, not the volume of water poured in. What total volume did the student actually create?",
+      "Run the formula forward on what they really made: (3.0)(50) = M₂(300)."
+    ]
+  },
+  {
+    "id": "chem-dilutions-colligative-006",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Starting from a 6.0 M NaCl stock, a technician transfers 20 mL of stock into a flask and dilutes it to a total volume of 120 mL. She then transfers 30 mL of THAT solution into a second flask and dilutes it to a total volume of 60 mL. What is the molarity of the solution in the second flask?",
+    "choices": [
+      "2.0 M",
+      "1.0 M",
+      "0.50 M",
+      "0.25 M"
+    ],
+    "answer": "C",
+    "hints": [
+      "Do the two dilutions one at a time, and use the result of the first as M₁ for the second.",
+      "First flask: (6.0)(20) = M₂(120), so M₂ = 1.0 M. Second flask: (1.0)(30) = M₂(60)."
+    ]
+  }
+]

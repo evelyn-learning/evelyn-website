@@ -1,0 +1,434 @@
+[
+  {
+    "id": "chem-acids-bases-definitions-001",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the Bronsted-Lowry definition, an acid is best described as which of the following?",
+    "choices": [
+      "A substance that must contain OH⁻ somewhere in its formula",
+      "A proton acceptor — it takes an H⁺ from another species",
+      "A proton donor — it gives an H⁺ to another species",
+      "Any substance that dissolves in water to form a solution"
+    ],
+    "answer": "C",
+    "hints": [
+      "Bronsted-Lowry sorts species by which direction the H⁺ travels: one partner hands it over, the other catches it.",
+      "The acid is the giver. The acceptor is the base, and containing OH⁻ is the older Arrhenius test for a base, not the Bronsted-Lowry one."
+    ]
+  },
+  {
+    "id": "chem-acids-bases-definitions-002",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the conjugate base of the hydrogen sulfite ion, HSO₃⁻?",
+    "choices": [
+      "H₂SO₃ — add one H⁺ to the ion",
+      "SO₃²⁻ — remove one H⁺ from the ion",
+      "SO₃ — remove the hydrogen and the charge together",
+      "HSO₄⁻ — add an oxygen to balance the charge"
+    ],
+    "answer": "B",
+    "hints": [
+      "A conjugate BASE is what is left over after a species donates a proton.",
+      "Removing one H⁺ takes away one hydrogen and makes the charge one unit more negative: −1 becomes −2."
+    ]
+  },
+  {
+    "id": "chem-acids-bases-definitions-003",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Of the following six acids, how many are STRONG acids (essentially 100% ionized in water): HCl, CH₃COOH, HNO₃, HF, H₂SO₄, and H₂CO₃? Type your answer as a number.",
+    "answer": "3",
+    "hints": [
+      "The strong acids are a short memorized list; anything not on that list is weak, no matter how familiar the acid looks.",
+      "HCl, HNO₃, and H₂SO₄ are on the strong list. Vinegar (CH₃COOH), hydrofluoric acid (HF), and carbonic acid (H₂CO₃) are all weak."
+    ]
+  },
+  {
+    "id": "chem-acids-bases-definitions-004",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Identify the two conjugate acid-base pairs in the reaction NH₄⁺ + H₂O ⇌ NH₃ + H₃O⁺.",
+    "choices": [
+      "NH₄⁺/NH₃ and H₂O/H₃O⁺",
+      "NH₄⁺/H₃O⁺ and NH₃/H₂O",
+      "NH₄⁺/H₂O and NH₃/H₃O⁺",
+      "NH₃/H₃O⁺ only — water is just a spectator here"
+    ],
+    "answer": "A",
+    "hints": [
+      "A conjugate pair is one species and what IT turns into across the arrow — never two species from the same side of the equation.",
+      "NH₄⁺ lost an H⁺ to become NH₃, and H₂O gained that H⁺ to become H₃O⁺. Each pair differs by exactly one H and one unit of charge."
+    ]
+  },
+  {
+    "id": "chem-acids-bases-definitions-005",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A solution of sodium carbonate, Na₂CO₃, turns litmus blue, yet the formula contains no OH⁻ at all. Which statement explains the basic solution using the Bronsted-Lowry definition?",
+    "choices": [
+      "Na₂CO₃ is not truly basic; the solution only appears basic because of the sodium",
+      "The Na⁺ ions donate protons to the surrounding water molecules",
+      "Carbonate contains oxygen, and any compound containing oxygen acts as a base",
+      "CO₃²⁻ accepts an H⁺ from water, forming HCO₃⁻ and leaving OH⁻ behind"
+    ],
+    "answer": "D",
+    "hints": [
+      "Bronsted-Lowry asks only one question: does the species ACCEPT a proton? Containing hydroxide is not required.",
+      "Write it out: CO₃²⁻ + H₂O ⇌ HCO₃⁻ + OH⁻. The carbonate never held hydroxide — it made hydroxide by stripping a proton off water."
+    ]
+  },
+  {
+    "id": "chem-acids-bases-definitions-006",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solution 1 is 0.50 M HF, a weak acid that is about 3% ionized at this concentration. Solution 2 is 0.010 M HCl, a strong acid that is essentially 100% ionized. Which statement is correct?",
+    "choices": [
+      "HF is the stronger acid, because its solution ends up with more free H⁺",
+      "HCl is the stronger acid, but solution 1 holds more free H⁺ — about 0.015 M against 0.010 M",
+      "HCl must hold more free H⁺, because a strong acid always produces more H⁺ than a weak acid",
+      "Both solutions hold the same free H⁺, because strength and concentration always cancel out"
+    ],
+    "answer": "B",
+    "hints": [
+      "Strength is the FRACTION that ionizes; concentration is how much you dissolved. Multiply them to get the free H⁺ actually in the water.",
+      "0.50 M × 0.03 ≈ 0.015 M of H⁺ from the HF, against 0.010 M × 1.00 = 0.010 M from the HCl. The weaker acid wins here only because it is 50 times more concentrated."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-001",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bottle of household ammonia cleaner has [H⁺] = 1 × 10⁻¹² M. What is its pH?",
+    "choices": [
+      "−12",
+      "12",
+      "2",
+      "1.2"
+    ],
+    "answer": "B",
+    "hints": [
+      "For a concentration written as [H⁺] = 1 × 10⁻ⁿ M, the pH is simply n.",
+      "The exponent here is −12, so drop the minus sign: pH = 12. A pH above 7 fits a basic cleaner."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-002",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fresh rainwater is measured at pH 6. Which description of that sample is correct? (Pure water is [H⁺] = 1 × 10⁻⁷ M at pH 7.)",
+    "choices": [
+      "[H⁺] = 1 × 10⁶ M, and the sample is slightly acidic",
+      "[H⁺] = 1 × 10⁻⁸ M, and the sample is slightly basic",
+      "[H⁺] = 1 × 10⁻⁶ M, and the sample is slightly acidic",
+      "[H⁺] = 6 M, and the sample is strongly acidic"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the powers-of-ten rule backwards: a pH of n means [H⁺] = 1 × 10⁻ⁿ M, with a NEGATIVE exponent.",
+      "pH 6 gives 1 × 10⁻⁶ M, which is 10 times MORE H⁺ than pure water's 1 × 10⁻⁷ M — so just below neutral."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-003",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Tomato juice has pH 4 and black coffee has pH 5. How do their hydrogen-ion concentrations compare?",
+    "choices": [
+      "The tomato juice has 10 times more H⁺ than the coffee",
+      "The tomato juice has 1.25 times more H⁺ than the coffee",
+      "The coffee has 10 times more H⁺ than the tomato juice",
+      "The tomato juice has 100 times more H⁺ than the coffee"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the two pH values to count the steps, then make every step a factor of 10.",
+      "5 − 4 = 1 step, so the ratio is 10¹ = 10. The LOWER pH is always the one with more H⁺."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-004",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A water sample is found to have [OH⁻] = 1 × 10⁻⁹ M. In any aqueous solution [H⁺] × [OH⁻] = 1 × 10⁻¹⁴. What is the pH of this sample? Type your answer as a number.",
+    "answer": "5",
+    "hints": [
+      "First find [H⁺]: divide 1 × 10⁻¹⁴ by the given [OH⁻]. Subtract the exponents.",
+      "−14 − (−9) = −5, so [H⁺] = 1 × 10⁻⁵ M. Now apply the powers-of-ten rule to get the pH."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-005",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solution A is measured at pH 9 and solution B at pH 11. Which statement is correct?",
+    "choices": [
+      "B is more acidic than A, because 11 is the larger number",
+      "A holds 100 times less H⁺ than B",
+      "B holds 2 times less H⁺ than A",
+      "B is more basic than A, and it holds 100 times less H⁺"
+    ],
+    "answer": "D",
+    "hints": [
+      "The scale runs backwards: a HIGHER pH means LESS H⁺, which means more basic.",
+      "11 − 9 = 2 units, and each unit is a factor of 10, so the gap is 10² = 100 — and it is B that has less H⁺."
+    ]
+  },
+  {
+    "id": "chem-ph-scale-006",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student has an acid solution measured at pH 5 and predicts: \"If I add enough water to double the volume, the pH will double to 10.\" Which response correctly diagnoses the prediction?",
+    "choices": [
+      "The prediction is fine — doubling the volume doubles the pH value",
+      "The pH will fall to 2.5 instead, because doubling the volume halves the pH number",
+      "Doubling the volume roughly halves [H⁺], which raises the pH by well under one unit; adding water can never push an acid past neutral to pH 10",
+      "The pH stays exactly 5, because adding water changes nothing about the solution at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "pH values are exponents in disguise, so doubling or halving a pH NUMBER has no chemical meaning. Only differences matter, and one unit equals a factor of 10.",
+      "Cutting [H⁺] in half is much less than cutting it by a factor of 10, so the pH climbs by a fraction of one unit — and diluting an acid can only creep toward 7, never past it."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-001",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A neutralization reaction between a strong acid and a strong base always produces which pair of products?",
+    "choices": [
+      "Two different salts",
+      "A gas and a solid precipitate",
+      "A salt and water",
+      "An acid and a base, each at a lower concentration"
+    ],
+    "answer": "C",
+    "hints": [
+      "Neutralization is a double-replacement reaction: the metal ion from the base pairs with the negative ion from the acid.",
+      "The leftover H⁺ and OH⁻ combine into H₂O, and the two spectator ions make the salt."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-002",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which equation shows what actually changes chemically when HCl neutralizes NaOH in water?",
+    "choices": [
+      "H⁺ + OH⁻ → H₂O",
+      "Na⁺ + Cl⁻ → NaCl",
+      "HCl + NaOH → H₂ + NaClO",
+      "H₂O → H⁺ + OH⁻"
+    ],
+    "answer": "A",
+    "hints": [
+      "Strip out the spectator ions — the ones that start dissolved and end dissolved, unchanged.",
+      "Na⁺ and Cl⁻ just float there the whole time. Only the H⁺ and the OH⁻ actually combine into something new."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-003",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Complete the neutralization reaction: HNO₃ + KOH → ? + H₂O. (Potassium forms K⁺; the nitrate ion is NO₃⁻.)",
+    "choices": [
+      "KH",
+      "K₂NO₃",
+      "KNO₂",
+      "KNO₃"
+    ],
+    "answer": "D",
+    "hints": [
+      "The salt is built from the metal ion of the base and the negative ion of the acid.",
+      "K⁺ and NO₃⁻ carry equal and opposite charges, so they combine one-to-one — no subscript is needed on the potassium."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-004",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A 30.0 mL sample of KOH is exactly neutralized by 15.0 mL of 0.40 M HNO₃. The reaction HNO₃ + KOH → KNO₃ + H₂O is 1:1. What is the molarity of the KOH? Type your answer as a number, without units.",
+    "answer": "0.2",
+    "hints": [
+      "Use M(acid) × V(acid) = M(base) × V(base). Volumes may stay in mL on both sides because those units cancel.",
+      "0.40 × 15.0 = 6.0, so M(base) = 6.0 ÷ 30.0."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-005",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A flask holds 20.0 mL of 0.30 M NaOH with phenolphthalein added. It is titrated with 0.20 M HCl from a buret that reads 2.0 mL before any acid is delivered. The reaction is 1:1. What will the buret read when the endpoint is reached?",
+    "choices": [
+      "30.0 mL",
+      "32.0 mL",
+      "20.0 mL",
+      "13.3 mL"
+    ],
+    "answer": "B",
+    "hints": [
+      "First find the VOLUME DELIVERED from M(acid) × V(acid) = M(base) × V(base), then remember the buret did not start at zero.",
+      "V(acid) = 0.30 × 20.0 ÷ 0.20 = 30.0 mL delivered. The final reading is the starting reading plus that volume."
+    ]
+  },
+  {
+    "id": "chem-neutralization-titration-006",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "How many milliliters of 0.20 M HCl are required to exactly neutralize 25.0 mL of 0.10 M Ca(OH)₂? The balanced equation is Ca(OH)₂ + 2 HCl → CaCl₂ + 2 H₂O.",
+    "choices": [
+      "25.0 mL — each Ca(OH)₂ supplies two OH⁻, so twice as many moles of HCl are needed",
+      "12.5 mL — straight from M(acid) × V(acid) = M(base) × V(base)",
+      "50.0 mL — double the volume of the base sample in the flask",
+      "6.25 mL — halve the shortcut answer again because the acid is twice as concentrated"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the balanced equation before reaching for the 1:1 shortcut. Calcium hydroxide releases two hydroxide ions per formula unit.",
+      "moles Ca(OH)₂ = 0.10 × 0.0250 L = 0.0025 mol, which supplies 0.0050 mol of OH⁻. Then V = 0.0050 mol ÷ 0.20 M."
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-001",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An alpha particle emitted during radioactive decay is identical to which of the following?",
+    "choices": [
+      "A high-speed electron ejected from the nucleus",
+      "High-energy light carrying no mass and no charge",
+      "A single free proton",
+      "A helium-4 nucleus — 2 protons and 2 neutrons"
+    ],
+    "answer": "D",
+    "hints": [
+      "An alpha particle is the heaviest of the three emissions, which is why a sheet of paper stops it.",
+      "It is written ⁴He: mass number 4, atomic number 2. The electron describes beta, and the massless light describes gamma."
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-002",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phosphorus-32 (atomic number 15) undergoes beta decay. Which nucleus is produced? Silicon has atomic number 14, phosphorus 15, and sulfur 16.",
+    "choices": [
+      "³¹P — the mass number drops by 1 because a particle left the nucleus",
+      "²⁸Si — the mass number drops by 4 and the atomic number by 2",
+      "³²S — the mass number stays 32 and the atomic number rises to 16",
+      "³²Si — the atomic number drops to 14"
+    ],
+    "answer": "C",
+    "hints": [
+      "In beta decay a neutron inside the nucleus becomes a proton and an electron is ejected.",
+      "Protons plus neutrons is still the same total, so the mass number is unchanged; the proton count goes up by one, from 15 to 16."
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-003",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A laboratory receives a 96 g sample of a radioactive isotope whose half-life is 12 days. How many grams of the isotope remain after 36 days? Type your answer as a number.",
+    "answer": "12",
+    "hints": [
+      "Count the half-lives first: 36 days ÷ 12 days per half-life.",
+      "Now halve what is LEFT that many times: 96 → 48 → 24 → ?"
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-004",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Radium-226 (atomic number 88) undergoes alpha decay. Which nucleus is produced? Radon has atomic number 86, francium 87, actinium 89, and thorium 90.",
+    "choices": [
+      "²²⁶Rn — only the atomic number changes",
+      "²²²Rn — the mass number falls by 4 and the atomic number by 2",
+      "²²²Th — the mass number falls by 4 and the atomic number rises by 2",
+      "²²⁴Fr — the mass number falls by 2 and the atomic number by 1"
+    ],
+    "answer": "B",
+    "hints": [
+      "Balance twice: mass numbers must sum to the same total on both sides, and so must atomic numbers.",
+      "The alpha particle carries away mass 4 and charge 2, so 226 − 4 = 222 and 88 − 2 = 86. Which element has 86 protons?"
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-005",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cobalt-60 has a half-life of 5 years. A stored sample is tested and found to hold only 1/8 of its original amount of cobalt-60. How long has the sample been decaying?",
+    "choices": [
+      "About 1.7 years — 5 years divided by 3",
+      "8 years — one year for each eighth remaining",
+      "40 years — 5 years multiplied by 8",
+      "15 years — three half-lives, since 1/2 → 1/4 → 1/8"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work backwards: how many times must you halve 1 to reach 1/8?",
+      "Each halving takes one half-life, and three halvings at 5 years apiece is the total elapsed time."
+    ]
+  },
+  {
+    "id": "chem-nuclear-chemistry-intro-006",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Thorium-232 (atomic number 90) first undergoes alpha decay, and the nucleus produced then undergoes beta decay. What is the final nucleus? Radium has atomic number 88, actinium 89, thorium 90, and protactinium 91.",
+    "choices": [
+      "²²⁸Ra — the beta step changes nothing at all",
+      "²²⁴Ra — the two decays together remove 8 from the mass number",
+      "²²⁸Ac — mass 232 − 4 = 228, while the atomic number goes 90 → 88 → 89",
+      "²³²Pa — the mass number is unchanged and the atomic number rises by 1"
+    ],
+    "answer": "C",
+    "hints": [
+      "Handle the two steps in order, rebalancing mass number and atomic number after each one.",
+      "Alpha: 232 → 228 and 90 → 88 (radium-228). Beta: mass stays 228 while the atomic number climbs 88 → 89."
+    ]
+  }
+]

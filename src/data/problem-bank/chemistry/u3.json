@@ -1,0 +1,326 @@
+[
+  {
+    "id": "chem-periodic-table-organization-001",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An element is located in Period 4 of the periodic table. What does that period number tell you about one of its neutral atoms?",
+    "choices": [
+      "It has 4 valence electrons",
+      "It has four occupied electron shells",
+      "It belongs to the fourth chemical family, so it behaves like every other Period 4 element",
+      "It forms an ion with a 4+ charge"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rows and columns carry different information — one counts shells, the other counts outer electrons.",
+      "The period number is the row number, and the row number equals the number of occupied shells."
+    ]
+  },
+  {
+    "id": "chem-periodic-table-organization-002",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Tellurium sits in Period 5, Group 16 of the periodic table. How many valence electrons does a neutral tellurium atom have? Type your answer as a number.",
+    "answer": "6",
+    "hints": [
+      "For the main-group columns on the right (Groups 13-18), the valence count is the group number minus 10.",
+      "16 − 10 gives the count."
+    ]
+  },
+  {
+    "id": "chem-periodic-table-organization-003",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An unknown element is a colorless, odorless gas that refuses to react with sodium, with fluorine, or with water, even when strongly heated. Which family does it belong to?",
+    "choices": [
+      "Halogens (Group 17) — several halogens are gases at room temperature",
+      "Alkali metals (Group 1) — they stay inert until they touch water",
+      "Nitrogen family (Group 15) — nitrogen gas is also hard to react",
+      "Noble gases (Group 18) — a full outer shell leaves nothing to gain, lose, or share"
+    ],
+    "answer": "D",
+    "hints": [
+      "Reactivity comes from an incomplete outer shell. What does total unreactivity imply about that shell?",
+      "One column of the table is defined by already having a full valence shell."
+    ]
+  },
+  {
+    "id": "chem-periodic-table-organization-004",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Consider three elements: beryllium (Period 2, Group 2), boron (Period 2, Group 13), and strontium (Period 5, Group 2). Which two of them are chemical relatives — that is, which two should show the most similar chemical behavior?",
+    "choices": [
+      "Be and B — they sit side by side in Period 2, so they are in the same family",
+      "B and Sr — a metalloid and a metal split the difference between the two extremes",
+      "Be and Sr — same column, so both have 2 valence electrons and both form 2+ ions",
+      "All three, because all three sit in the left half of the table"
+    ],
+    "answer": "C",
+    "hints": [
+      "A chemical family is a column, never a row.",
+      "Which two of the three share a group number, and therefore a valence-electron count?"
+    ]
+  },
+  {
+    "id": "chem-periodic-table-organization-005",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Germanium sits directly below silicon in Group 14 (Period 4) and lies right on the staircase that divides the table. Which statement best describes germanium?",
+    "choices": [
+      "It is a metalloid with 4 valence electrons, so it conducts electricity partway — better than a nonmetal, worse than a metal",
+      "It is a nonmetal with 14 valence electrons, because its group number is 14",
+      "It is a transition metal, because it sits in the middle stretch of the table",
+      "It is an alkaline earth metal, because it is a solid that conducts some electricity"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two separate reads: the staircase tells you metal, nonmetal, or metalloid; the group number tells you the valence count.",
+      "Group 14 → 14 − 10 valence electrons, and sitting ON the staircase means in-between conduction."
+    ]
+  },
+  {
+    "id": "chem-periodic-table-organization-006",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student applies the \"subtract 10\" shortcut to iron, which sits in Group 8, gets 8 − 10 = −2 valence electrons, and concludes that the shortcut must be broken. What is the real problem here?",
+    "choices": [
+      "The shortcut works in every column; the student simply subtracted in the wrong order and iron has 2 valence electrons",
+      "Iron is a transition metal (Groups 3-12), where electrons fill inner d orbitals, so no group-number shortcut gives its valence count — which is exactly why iron has more than one possible ion charge",
+      "Group 8 is a noble-gas column, so iron already has a full shell of 8 valence electrons",
+      "The shortcut covers Groups 1-12, so iron has 8 valence electrons and forms only Fe⁸⁺"
+    ],
+    "answer": "B",
+    "hints": [
+      "The subtract-10 rule was stated only for the main-group columns on the right, Groups 13 through 18. Where does Group 8 fall?",
+      "Transition metals fill inner d orbitals rather than the outer shell, which is why their charges need Roman numerals instead of a column rule."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-001",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Moving from left to right across a single period of the periodic table, what happens to atomic radius?",
+    "choices": [
+      "It increases, because each step to the right adds another electron",
+      "It decreases, because each step adds a proton that pulls the same outer shell in tighter",
+      "It stays constant, because every element in the period has the same number of shells",
+      "It increases at first and then decreases once the nonmetals begin"
+    ],
+    "answer": "B",
+    "hints": [
+      "Across a period, no new shell opens — the electrons pile into the shell that is already outermost.",
+      "With shielding nearly unchanged, extra protons mean a stronger inward pull."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-002",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Oxygen sits in Period 2, Group 16; sulfur sits in Period 3, Group 16. Which atom has the higher electronegativity, and why?",
+    "choices": [
+      "Sulfur — it has more electrons available to attract the shared pair",
+      "Sulfur — it is farther down the column, and lower elements are always more reactive",
+      "Oxygen — its valence electrons sit in a shell closer to the nucleus with less shielding, so it pulls shared electrons harder",
+      "They are equal, because electronegativity is fixed for every member of a group"
+    ],
+    "answer": "C",
+    "hints": [
+      "Electronegativity is the grip an atom keeps on electrons it is sharing. What weakens that grip going down a column?",
+      "Down a group: farther out plus more shielding equals a weaker pull."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-003",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rubidium (Period 5, 37 protons) sits directly below potassium (Period 4, 19 protons) in Group 1. Compared with a potassium atom, a rubidium atom is:",
+    "choices": [
+      "Smaller, because rubidium has 18 more protons pulling its electrons inward",
+      "The same size, because both elements have exactly 1 valence electron",
+      "Smaller, because rubidium's extra electrons pack together more tightly",
+      "Larger, because its valence electron occupies an additional shell, farther out and behind more shielding"
+    ],
+    "answer": "D",
+    "hints": [
+      "Down a group, each step opens a brand-new shell — that is a different story from moving across a period.",
+      "New shell plus more shielding beats the extra proton pull, so the radius grows."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-004",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Element Q has successive ionization energies, in kJ/mol, of IE₁ = 496, IE₂ = 4562, IE₃ = 6910, IE₄ = 9543. The enormous jump marks the point where electron removal breaks into the stable noble-gas core. Assuming Q is a main-group element, what is its group number? Type your answer as a number.",
+    "answer": "1",
+    "hints": [
+      "Electrons removed BEFORE the giant jump are the loosely held valence electrons; count them first.",
+      "IE₂ is about nine times IE₁, so only one electron came off before the wall — and for Groups 1 and 2 the group number equals the valence count."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-005",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rank lithium (Period 2, Group 1), fluorine (Period 2, Group 17), and cesium (Period 6, Group 1) from LOWEST to HIGHEST first ionization energy.",
+    "choices": [
+      "Cs < Li < F",
+      "Li < Cs < F",
+      "F < Li < Cs",
+      "Cs < F < Li"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ionization energy rises going right across a period and falls going down a group, so it peaks in the top-right corner.",
+      "Cesium is the farthest toward the bottom left (cheapest electron to remove); fluorine is nearly top-right (most expensive)."
+    ]
+  },
+  {
+    "id": "chem-periodic-trends-006",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: \"Sulfur (Period 3, 16 protons) must be bigger than oxygen (Period 2, 8 protons) because sulfur has 8 more electrons — and by the same reasoning sulfur must also be bigger than magnesium (Period 3, 12 protons).\" Evaluate both comparisons.",
+    "choices": [
+      "Both conclusions are correct, and electron count is the right explanation for each of them",
+      "Sulfur is indeed larger than oxygen, but because it has an extra occupied shell rather than because of raw electron count — and sulfur is actually SMALLER than magnesium, since both share Period 3 and sulfur's 4 extra protons pull that shared shell in tighter",
+      "Both conclusions are wrong: sulfur is smaller than oxygen and smaller than magnesium",
+      "Sulfur is larger than magnesium but smaller than oxygen, because atomic radius increases from left to right across a period"
+    ],
+    "answer": "B",
+    "hints": [
+      "Handle the two comparisons separately: oxygen and sulfur share a group, while magnesium and sulfur share a period.",
+      "Electron count only predicts size when a new SHELL is added. Within one period, proton count decides."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-001",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An atom becomes a cation (a positively charged ion) when it does what?",
+    "choices": [
+      "Gains one or more electrons",
+      "Loses one or more electrons",
+      "Gains one or more protons",
+      "Loses one or more protons"
+    ],
+    "answer": "B",
+    "hints": [
+      "Protons never move in chemistry — they are the element's identity.",
+      "Electrons are negative, so removing some leaves the positives in the majority."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-002",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Potassium sits in Group 1 and bromine sits in Group 17. Which pair of monatomic ions do these two elements form?",
+    "choices": [
+      "K⁻ and Br⁺, because the metal collects electrons and the nonmetal releases them",
+      "K⁺ and Br⁷⁺, because bromine sheds all 7 of its valence electrons",
+      "K⁺ and Br⁻ — potassium loses its single valence electron and bromine gains one to complete its octet",
+      "K²⁺ and Br²⁻, because monatomic ions always carry a charge of 2"
+    ],
+    "answer": "C",
+    "hints": [
+      "Metals on the left have low ionization energy and lose electrons; nonmetals on the right have high electronegativity and gain them.",
+      "Group 1 → 1 valence electron to give away; Group 17 → 7 valence electrons, one short of eight."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-003",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Oxygen is in Group 16 and forms a monatomic ion. What is the correct symbol AND name for that ion?",
+    "choices": [
+      "O²⁻, the oxide ion",
+      "O²⁺, the oxygen ion",
+      "O⁶⁻, the oxide ion",
+      "O²⁻, the oxygen ion"
+    ],
+    "answer": "A",
+    "hints": [
+      "Group 16 means 6 valence electrons, and a nonmetal gains (8 − 6) of them.",
+      "Monatomic anions swap their ending to -ide; only cations keep the plain element name."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-004",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A monatomic ion of an unknown main-group element carries a 3− charge and contains 18 electrons. How many protons does that ion have? Type your answer as a number.",
+    "answer": "15",
+    "hints": [
+      "A 3− charge means the ion holds 3 more electrons than it has protons.",
+      "Protons = 18 − 3."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-005",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "O²⁻ (8 protons), Na⁺ (11 protons), and Al³⁺ (13 protons) each contain exactly 10 electrons. Which of the three is the LARGEST, and why?",
+    "choices": [
+      "Al³⁺ — the biggest charge means it takes up the most space",
+      "O²⁻ — only 8 protons are holding those 10 electrons, so the grip is weakest and the electron cloud spreads widest",
+      "Na⁺ — sodium is a metal, and metal particles are always the largest",
+      "All three are identical in size, because all three contain 10 electrons"
+    ],
+    "answer": "B",
+    "hints": [
+      "Same electron count does not mean same size — compare how many protons are pulling on that shared crowd of 10.",
+      "Fewest protons = weakest pull = biggest ion."
+    ]
+  },
+  {
+    "id": "chem-ion-formation-006",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Both iron(II) chloride and iron(III) chloride are real compounds. A student objects: \"Iron would have to be in Group 2 and Group 3 at the same time for that to work, which is impossible, so one of those compounds must be fake.\" What is the correct analysis?",
+    "choices": [
+      "Iron is a transition metal, and transition metals have more than one stable charge — Fe²⁺ and Fe³⁺ are both real, the Roman numeral names which one is present, and the group-to-charge shortcut simply does not apply to Groups 3-12",
+      "Only iron(III) chloride is real; the II in the other name is a typo for the number of chloride ions",
+      "Iron sits in Group 8, so its only possible ion is Fe⁸⁺ and both names are wrong",
+      "The Roman numeral counts the iron atoms in the formula, not the charge, so neither name says anything about iron's ion"
+    ],
+    "answer": "A",
+    "hints": [
+      "The group → charge map was stated for main-group elements only. Which block does iron belong to?",
+      "Roman numerals appear in a name precisely because the element's charge cannot be read off its column."
+    ]
+  }
+]
