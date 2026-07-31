@@ -11,6 +11,7 @@ import { HS_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_hs-sha
 // course infix → expected identity; extend as Geometry/Bio/Chem land.
 const COURSES: Record<string, { subject: string; topic: string; loPrefix: string; std: string }> = {
   alg1: { subject: 'math', topic: 'algebra-1', loPrefix: 'alg1', std: 'ALG1' },
+  geom: { subject: 'math', topic: 'geometry', loPrefix: 'geom', std: 'GEOM' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.hs\\.(${Object.keys(COURSES).join('|')})\\.`);
