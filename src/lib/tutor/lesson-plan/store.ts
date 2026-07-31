@@ -1722,6 +1722,9 @@ import { SEED_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-i
 import { SEED_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
 import { SEED_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
 import { SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
+// ── HS core: HS English (2026-07 wave 1b) ──
+import { SEED_ENGL_U1_SUBJECT_VERB_AGREEMENT } from './seeds/engl-u1-subject-verb-agreement';
+import { SEED_ENGL_U6_CHARACTERIZATION } from './seeds/engl-u6-characterization';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3374,6 +3377,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GEOM_U9_CIRCLE_BASICS_ARCS,
   SEED_GEOM_U9_CIRCLE_EQUATIONS,
   SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES,
+  // HS English (wave 1b)
+  SEED_ENGL_U1_SUBJECT_VERB_AGREEMENT,
+  SEED_ENGL_U6_CHARACTERIZATION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
