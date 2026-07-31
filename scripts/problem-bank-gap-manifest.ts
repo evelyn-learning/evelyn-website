@@ -29,6 +29,7 @@ export const COURSE_PREFIX: Record<string, string> = {
   'ap-us-history': 'apush', 'ap-us-government': 'apgov',
   'algebra-1': 'alg1',
   geometry: 'geom',
+  'world-history': 'whist',
 };
 
 const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-/;
