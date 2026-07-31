@@ -97,6 +97,25 @@ await test('resolveAssessmentItem excludes mock-scoped rows', async () => {
   assert.deepEqual(capturedFilters[0]?.bankScope, { $ne: 'mock' });
 });
 
+// Practice-gen scoping fix: tutor-session brain-gen.* rows are answer-key-
+// dirty scratch work from live tutoring sessions and must never surface in
+// Practice retrieval (today's leak). practice-gen.* rows (the NEW generate-
+// on-exhaustion write-back target, verified + banked permanently) must NOT
+// be excluded by this filter — they are ordinary bank rows by construction.
+await test('bankForLoId excludes brain-gen.* rows via the id filter', async () => {
+  capturedFilters.length = 0;
+  const sources = mongoPracticeSources();
+  await sources.bankForLoId('apstats.normal-distribution', 2);
+  assert.deepEqual(capturedFilters[0]?.id, { $not: /^brain-gen\./ });
+});
+
+await test('bankForTopic excludes brain-gen.* rows via the id filter', async () => {
+  capturedFilters.length = 0;
+  const sources = mongoPracticeSources();
+  await sources.bankForTopic('digital-sat', 2);
+  assert.deepEqual(capturedFilters[0]?.id, { $not: /^brain-gen\./ });
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
 

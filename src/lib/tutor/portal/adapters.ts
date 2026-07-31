@@ -74,12 +74,20 @@ export function mongoPracticeSources(): PracticeSources {
       return SEED_PLANS.filter((p) => p.topic === topicId).map(toPlanLite);
     },
     async bankForLoId(loId, difficulty?: Difficulty) {
-      const filter: Record<string, unknown> = { loId };
+      // Exclude tutor-session brain-gen.* rows — those are live-session
+      // scratch generations (unscoped, not answer-key-vetted for standalone
+      // practice) and must never surface here. practice-gen.* rows (the
+      // generate-on-exhaustion write-back target) are ordinary bank rows and
+      // pass through untouched.
+      const filter: Record<string, unknown> = { loId, id: { $not: /^brain-gen\./ } };
       if (difficulty) filter.difficulty = difficulty;
       return safeBankQuery(filter);
     },
     async bankForTopic(topicId, difficulty?: Difficulty) {
-      const filter: Record<string, unknown> = { $or: [{ topic: topicId }, { topicId }] };
+      const filter: Record<string, unknown> = {
+        $or: [{ topic: topicId }, { topicId }],
+        id: { $not: /^brain-gen\./ },
+      };
       if (difficulty) filter.difficulty = difficulty;
       return safeBankQuery(filter);
     },
