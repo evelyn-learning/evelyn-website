@@ -1722,6 +1722,9 @@ import { SEED_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-i
 import { SEED_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
 import { SEED_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
 import { SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
+// ── HS core: World History (2026-07 wave 1b) ──
+import { SEED_WHIST_U2_ROME_REPUBLIC_EMPIRE } from './seeds/whist-u2-rome-republic-empire';
+import { SEED_WHIST_U8_INDUSTRIAL_REVOLUTION } from './seeds/whist-u8-industrial-revolution';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3374,6 +3377,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GEOM_U9_CIRCLE_BASICS_ARCS,
   SEED_GEOM_U9_CIRCLE_EQUATIONS,
   SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES,
+  // HS core: World History (2026-07 wave 1b)
+  SEED_WHIST_U2_ROME_REPUBLIC_EMPIRE,
+  SEED_WHIST_U8_INDUSTRIAL_REVOLUTION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
