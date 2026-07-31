@@ -1685,6 +1685,44 @@ import { SEED_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-r
 // ── HS core: Biology (2026-07 wave 1) ──
 import { SEED_BIO_U3_PHOTOSYNTHESIS } from './seeds/bio-u3-photosynthesis';
 import { SEED_BIO_U5_PUNNETT_SQUARES_MONOHYBRID } from './seeds/bio-u5-punnett-squares-monohybrid';
+import { SEED_BIO_U1_CHARACTERISTICS_OF_LIFE } from './seeds/bio-u1-characteristics-of-life';
+import { SEED_BIO_U1_ENZYMES } from './seeds/bio-u1-enzymes';
+import { SEED_BIO_U1_SCIENTIFIC_METHOD_BIO } from './seeds/bio-u1-scientific-method-bio';
+import { SEED_BIO_U1_WATER_AND_MACROMOLECULES } from './seeds/bio-u1-water-and-macromolecules';
+import { SEED_BIO_U10_CIRCULATORY_RESPIRATORY } from './seeds/bio-u10-circulatory-respiratory';
+import { SEED_BIO_U10_DIGESTIVE_EXCRETORY } from './seeds/bio-u10-digestive-excretory';
+import { SEED_BIO_U10_HOMEOSTASIS_FEEDBACK } from './seeds/bio-u10-homeostasis-feedback';
+import { SEED_BIO_U10_IMMUNE_SYSTEM } from './seeds/bio-u10-immune-system';
+import { SEED_BIO_U10_NERVOUS_ENDOCRINE } from './seeds/bio-u10-nervous-endocrine';
+import { SEED_BIO_U2_CELL_MEMBRANE_STRUCTURE } from './seeds/bio-u2-cell-membrane-structure';
+import { SEED_BIO_U2_CELL_THEORY_TYPES } from './seeds/bio-u2-cell-theory-types';
+import { SEED_BIO_U2_ORGANELLES } from './seeds/bio-u2-organelles';
+import { SEED_BIO_U2_TRANSPORT_ACROSS_MEMBRANES } from './seeds/bio-u2-transport-across-membranes';
+import { SEED_BIO_U3_ATP_AND_ENERGY } from './seeds/bio-u3-atp-and-energy';
+import { SEED_BIO_U3_CELLULAR_RESPIRATION } from './seeds/bio-u3-cellular-respiration';
+import { SEED_BIO_U4_CELL_CYCLE_MITOSIS } from './seeds/bio-u4-cell-cycle-mitosis';
+import { SEED_BIO_U4_CELL_CYCLE_REGULATION_CANCER } from './seeds/bio-u4-cell-cycle-regulation-cancer';
+import { SEED_BIO_U4_MEIOSIS } from './seeds/bio-u4-meiosis';
+import { SEED_BIO_U4_MITOSIS_MEIOSIS_VARIATION } from './seeds/bio-u4-mitosis-meiosis-variation';
+import { SEED_BIO_U5_DIHYBRID_CROSSES } from './seeds/bio-u5-dihybrid-crosses';
+import { SEED_BIO_U5_MENDEL_LAWS } from './seeds/bio-u5-mendel-laws';
+import { SEED_BIO_U5_NON_MENDELIAN_INHERITANCE } from './seeds/bio-u5-non-mendelian-inheritance';
+import { SEED_BIO_U5_PEDIGREES_HUMAN_GENETICS } from './seeds/bio-u5-pedigrees-human-genetics';
+import { SEED_BIO_U6_BIOTECHNOLOGY } from './seeds/bio-u6-biotechnology';
+import { SEED_BIO_U6_DNA_STRUCTURE_REPLICATION } from './seeds/bio-u6-dna-structure-replication';
+import { SEED_BIO_U6_MUTATIONS } from './seeds/bio-u6-mutations';
+import { SEED_BIO_U6_TRANSCRIPTION_TRANSLATION } from './seeds/bio-u6-transcription-translation';
+import { SEED_BIO_U7_EVIDENCE_FOR_EVOLUTION } from './seeds/bio-u7-evidence-for-evolution';
+import { SEED_BIO_U7_NATURAL_SELECTION } from './seeds/bio-u7-natural-selection';
+import { SEED_BIO_U7_POPULATION_GENETICS } from './seeds/bio-u7-population-genetics';
+import { SEED_BIO_U7_SPECIATION } from './seeds/bio-u7-speciation';
+import { SEED_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY } from './seeds/bio-u8-domains-kingdoms-diversity';
+import { SEED_BIO_U8_PHYLOGENETICS_CLADOGRAMS } from './seeds/bio-u8-phylogenetics-cladograms';
+import { SEED_BIO_U8_TAXONOMY_CLASSIFICATION } from './seeds/bio-u8-taxonomy-classification';
+import { SEED_BIO_U9_BIOGEOCHEMICAL_CYCLES } from './seeds/bio-u9-biogeochemical-cycles';
+import { SEED_BIO_U9_ECOSYSTEMS_BIOMES } from './seeds/bio-u9-ecosystems-biomes';
+import { SEED_BIO_U9_ENERGY_FLOW_FOOD_WEBS } from './seeds/bio-u9-energy-flow-food-webs';
+import { SEED_BIO_U9_POPULATION_COMMUNITY_ECOLOGY } from './seeds/bio-u9-population-community-ecology';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3299,6 +3337,44 @@ export const SEED_PLANS: LessonPlan[] = [
   // HS core: Biology (2026-07 wave 1)
   SEED_BIO_U3_PHOTOSYNTHESIS,
   SEED_BIO_U5_PUNNETT_SQUARES_MONOHYBRID,
+  SEED_BIO_U1_CHARACTERISTICS_OF_LIFE,
+  SEED_BIO_U1_ENZYMES,
+  SEED_BIO_U1_SCIENTIFIC_METHOD_BIO,
+  SEED_BIO_U1_WATER_AND_MACROMOLECULES,
+  SEED_BIO_U10_CIRCULATORY_RESPIRATORY,
+  SEED_BIO_U10_DIGESTIVE_EXCRETORY,
+  SEED_BIO_U10_HOMEOSTASIS_FEEDBACK,
+  SEED_BIO_U10_IMMUNE_SYSTEM,
+  SEED_BIO_U10_NERVOUS_ENDOCRINE,
+  SEED_BIO_U2_CELL_MEMBRANE_STRUCTURE,
+  SEED_BIO_U2_CELL_THEORY_TYPES,
+  SEED_BIO_U2_ORGANELLES,
+  SEED_BIO_U2_TRANSPORT_ACROSS_MEMBRANES,
+  SEED_BIO_U3_ATP_AND_ENERGY,
+  SEED_BIO_U3_CELLULAR_RESPIRATION,
+  SEED_BIO_U4_CELL_CYCLE_MITOSIS,
+  SEED_BIO_U4_CELL_CYCLE_REGULATION_CANCER,
+  SEED_BIO_U4_MEIOSIS,
+  SEED_BIO_U4_MITOSIS_MEIOSIS_VARIATION,
+  SEED_BIO_U5_DIHYBRID_CROSSES,
+  SEED_BIO_U5_MENDEL_LAWS,
+  SEED_BIO_U5_NON_MENDELIAN_INHERITANCE,
+  SEED_BIO_U5_PEDIGREES_HUMAN_GENETICS,
+  SEED_BIO_U6_BIOTECHNOLOGY,
+  SEED_BIO_U6_DNA_STRUCTURE_REPLICATION,
+  SEED_BIO_U6_MUTATIONS,
+  SEED_BIO_U6_TRANSCRIPTION_TRANSLATION,
+  SEED_BIO_U7_EVIDENCE_FOR_EVOLUTION,
+  SEED_BIO_U7_NATURAL_SELECTION,
+  SEED_BIO_U7_POPULATION_GENETICS,
+  SEED_BIO_U7_SPECIATION,
+  SEED_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY,
+  SEED_BIO_U8_PHYLOGENETICS_CLADOGRAMS,
+  SEED_BIO_U8_TAXONOMY_CLASSIFICATION,
+  SEED_BIO_U9_BIOGEOCHEMICAL_CYCLES,
+  SEED_BIO_U9_ECOSYSTEMS_BIOMES,
+  SEED_BIO_U9_ENERGY_FLOW_FOOD_WEBS,
+  SEED_BIO_U9_POPULATION_COMMUNITY_ECOLOGY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
