@@ -501,6 +501,48 @@ import { BASELINE_AP_PSYCH_SCHIZO_PERSONALITY } from './seeds/ap-psych-u5-schizo
 import { BASELINE_AP_PSYCH_STRESS_HEALTH } from './seeds/ap-psych-u5-stress-health';
 import { BASELINE_AP_PSYCH_THERAPY } from './seeds/ap-psych-u5-therapy';
 
+// ── HS core: Chemistry (2026-07 wave 1) ──
+import { BASELINE_CHEM_U1_CLASSIFYING_MATTER } from './seeds/chem-u1-classifying-matter';
+import { BASELINE_CHEM_U1_DENSITY_DIMENSIONAL_ANALYSIS } from './seeds/chem-u1-density-dimensional-analysis';
+import { BASELINE_CHEM_U1_MEASUREMENT_SIG_FIGS } from './seeds/chem-u1-measurement-sig-figs';
+import { BASELINE_CHEM_U1_PHYSICAL_CHEMICAL_CHANGES } from './seeds/chem-u1-physical-chemical-changes';
+import { BASELINE_CHEM_U2_ATOMIC_THEORY } from './seeds/chem-u2-atomic-theory';
+import { BASELINE_CHEM_U2_AVERAGE_ATOMIC_MASS } from './seeds/chem-u2-average-atomic-mass';
+import { BASELINE_CHEM_U2_ELECTRON_CONFIGURATIONS } from './seeds/chem-u2-electron-configurations';
+import { BASELINE_CHEM_U2_SUBATOMIC_PARTICLES_ISOTOPES } from './seeds/chem-u2-subatomic-particles-isotopes';
+import { BASELINE_CHEM_U3_ION_FORMATION } from './seeds/chem-u3-ion-formation';
+import { BASELINE_CHEM_U3_PERIODIC_TABLE_ORGANIZATION } from './seeds/chem-u3-periodic-table-organization';
+import { BASELINE_CHEM_U3_PERIODIC_TRENDS } from './seeds/chem-u3-periodic-trends';
+import { BASELINE_CHEM_U4_COVALENT_BONDING_LEWIS } from './seeds/chem-u4-covalent-bonding-lewis';
+import { BASELINE_CHEM_U4_IONIC_BONDING } from './seeds/chem-u4-ionic-bonding';
+import { BASELINE_CHEM_U4_MOLECULAR_SHAPE_VSEPR } from './seeds/chem-u4-molecular-shape-vsepr';
+import { BASELINE_CHEM_U4_NAMING_COMPOUNDS_FORMULAS } from './seeds/chem-u4-naming-compounds-formulas';
+import { BASELINE_CHEM_U4_POLARITY_INTERMOLECULAR_FORCES } from './seeds/chem-u4-polarity-intermolecular-forces';
+import { BASELINE_CHEM_U5_BALANCING_EQUATIONS } from './seeds/chem-u5-balancing-equations';
+import { BASELINE_CHEM_U5_PREDICTING_PRODUCTS_ACTIVITY } from './seeds/chem-u5-predicting-products-activity';
+import { BASELINE_CHEM_U5_REACTION_TYPES } from './seeds/chem-u5-reaction-types';
+import { BASELINE_CHEM_U5_REDOX_INTRO } from './seeds/chem-u5-redox-intro';
+import { BASELINE_CHEM_U6_LIMITING_REACTANT_YIELD } from './seeds/chem-u6-limiting-reactant-yield';
+import { BASELINE_CHEM_U6_MASS_MASS_STOICHIOMETRY } from './seeds/chem-u6-mass-mass-stoichiometry';
+import { BASELINE_CHEM_U6_MOLE_CONVERSIONS } from './seeds/chem-u6-mole-conversions';
+import { BASELINE_CHEM_U6_PERCENT_COMPOSITION_EMPIRICAL } from './seeds/chem-u6-percent-composition-empirical';
+import { BASELINE_CHEM_U6_THE_MOLE_MOLAR_MASS } from './seeds/chem-u6-the-mole-molar-mass';
+import { BASELINE_CHEM_U7_GAS_LAWS } from './seeds/chem-u7-gas-laws';
+import { BASELINE_CHEM_U7_IDEAL_GAS_LAW } from './seeds/chem-u7-ideal-gas-law';
+import { BASELINE_CHEM_U7_KINETIC_MOLECULAR_THEORY } from './seeds/chem-u7-kinetic-molecular-theory';
+import { BASELINE_CHEM_U7_PHASE_CHANGES_HEATING_CURVES } from './seeds/chem-u7-phase-changes-heating-curves';
+import { BASELINE_CHEM_U8_DILUTIONS_COLLIGATIVE } from './seeds/chem-u8-dilutions-colligative';
+import { BASELINE_CHEM_U8_MOLARITY } from './seeds/chem-u8-molarity';
+import { BASELINE_CHEM_U8_SOLUTIONS_SOLUBILITY } from './seeds/chem-u8-solutions-solubility';
+import { BASELINE_CHEM_U9_ENDOTHERMIC_EXOTHERMIC } from './seeds/chem-u9-endothermic-exothermic';
+import { BASELINE_CHEM_U9_EQUILIBRIUM_LE_CHATELIER } from './seeds/chem-u9-equilibrium-le-chatelier';
+import { BASELINE_CHEM_U9_REACTION_RATES_COLLISION } from './seeds/chem-u9-reaction-rates-collision';
+import { BASELINE_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY } from './seeds/chem-u9-specific-heat-calorimetry';
+import { BASELINE_CHEM_U10_ACIDS_BASES_DEFINITIONS } from './seeds/chem-u10-acids-bases-definitions';
+import { BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION } from './seeds/chem-u10-neutralization-titration';
+import { BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO } from './seeds/chem-u10-nuclear-chemistry-intro';
+import { BASELINE_CHEM_U10_PH_SCALE } from './seeds/chem-u10-ph-scale';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -864,6 +906,47 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_PSYCH_SCHIZO_PERSONALITY,
   BASELINE_AP_PSYCH_STRESS_HEALTH,
   BASELINE_AP_PSYCH_THERAPY,
+  // HS core: Chemistry (2026-07 wave 1)
+  BASELINE_CHEM_U1_CLASSIFYING_MATTER,
+  BASELINE_CHEM_U1_DENSITY_DIMENSIONAL_ANALYSIS,
+  BASELINE_CHEM_U1_MEASUREMENT_SIG_FIGS,
+  BASELINE_CHEM_U1_PHYSICAL_CHEMICAL_CHANGES,
+  BASELINE_CHEM_U2_ATOMIC_THEORY,
+  BASELINE_CHEM_U2_AVERAGE_ATOMIC_MASS,
+  BASELINE_CHEM_U2_ELECTRON_CONFIGURATIONS,
+  BASELINE_CHEM_U2_SUBATOMIC_PARTICLES_ISOTOPES,
+  BASELINE_CHEM_U3_ION_FORMATION,
+  BASELINE_CHEM_U3_PERIODIC_TABLE_ORGANIZATION,
+  BASELINE_CHEM_U3_PERIODIC_TRENDS,
+  BASELINE_CHEM_U4_COVALENT_BONDING_LEWIS,
+  BASELINE_CHEM_U4_IONIC_BONDING,
+  BASELINE_CHEM_U4_MOLECULAR_SHAPE_VSEPR,
+  BASELINE_CHEM_U4_NAMING_COMPOUNDS_FORMULAS,
+  BASELINE_CHEM_U4_POLARITY_INTERMOLECULAR_FORCES,
+  BASELINE_CHEM_U5_BALANCING_EQUATIONS,
+  BASELINE_CHEM_U5_PREDICTING_PRODUCTS_ACTIVITY,
+  BASELINE_CHEM_U5_REACTION_TYPES,
+  BASELINE_CHEM_U5_REDOX_INTRO,
+  BASELINE_CHEM_U6_LIMITING_REACTANT_YIELD,
+  BASELINE_CHEM_U6_MASS_MASS_STOICHIOMETRY,
+  BASELINE_CHEM_U6_MOLE_CONVERSIONS,
+  BASELINE_CHEM_U6_PERCENT_COMPOSITION_EMPIRICAL,
+  BASELINE_CHEM_U6_THE_MOLE_MOLAR_MASS,
+  BASELINE_CHEM_U7_GAS_LAWS,
+  BASELINE_CHEM_U7_IDEAL_GAS_LAW,
+  BASELINE_CHEM_U7_KINETIC_MOLECULAR_THEORY,
+  BASELINE_CHEM_U7_PHASE_CHANGES_HEATING_CURVES,
+  BASELINE_CHEM_U8_DILUTIONS_COLLIGATIVE,
+  BASELINE_CHEM_U8_MOLARITY,
+  BASELINE_CHEM_U8_SOLUTIONS_SOLUBILITY,
+  BASELINE_CHEM_U9_ENDOTHERMIC_EXOTHERMIC,
+  BASELINE_CHEM_U9_EQUILIBRIUM_LE_CHATELIER,
+  BASELINE_CHEM_U9_REACTION_RATES_COLLISION,
+  BASELINE_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY,
+  BASELINE_CHEM_U10_ACIDS_BASES_DEFINITIONS,
+  BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION,
+  BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO,
+  BASELINE_CHEM_U10_PH_SCALE,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
