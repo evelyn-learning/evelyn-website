@@ -1640,6 +1640,9 @@ import { SEED_ACT_U4_SCIENCE_PACING_STRATEGY } from './seeds/act-u4-science-paci
 import { SEED_ACT_U4_SCIENTIFIC_MATH_UNITS } from './seeds/act-u4-scientific-math-units';
 import { SEED_ACT_U4_TRENDS_EXTRAPOLATION } from './seeds/act-u4-trends-extrapolation';
 import { SEED_ACT_U4_VARIABLES_CONTROLS } from './seeds/act-u4-variables-controls';
+// ── HS core: Algebra 1 (2026-07 wave 1) ──
+import { SEED_ALG1_U2_MULTI_STEP_EQUATIONS } from './seeds/alg1-u2-multi-step-equations';
+import { SEED_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT } from './seeds/alg1-u8-quadratic-formula-discriminant';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3210,6 +3213,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_ACT_U4_SCIENTIFIC_MATH_UNITS,
   SEED_ACT_U4_TRENDS_EXTRAPOLATION,
   SEED_ACT_U4_VARIABLES_CONTROLS,
+  // HS core: Algebra 1 (2026-07 wave 1)
+  SEED_ALG1_U2_MULTI_STEP_EQUATIONS,
+  SEED_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
