@@ -45,6 +45,13 @@ check('agreement-content-2', cat("Yeah, that'll be 28.") === 'numeric-echo');
 check('numeric-1', cat('29.') === 'numeric-echo');
 check('numeric-2', cat('minus 22.') === 'numeric-echo');
 check('numeric-3', cat('200.') === 'numeric-echo');
+// R36 (live 2026-07-30): "-3/6" was echoed as "ok 6" — the extractor only
+// captured the last digit run. A signed fraction is ONE answer expression.
+check('numeric-neg-fraction', cat('-3/6.') === 'numeric-echo');
+check('numeric-literal-neg', cat("it's -2.") === 'numeric-echo');
+// Two separate numbers ("m is 4 and b is -2") can't be echoed as one token —
+// echoing just the tail ("ok 2") misquotes the student. Falls to generic.
+check('multi-number-no-echo', cat('m is 4 and b is -2.') === 'generic');
 check('question-1', cat('Um, you know, tell me what resistant means.') === 'question');
 check('question-2', cat('How does this formula get derived?') === 'question');
 check('question-3', cat('what is jizya?') === 'question');
@@ -63,6 +70,13 @@ check('generic-fallback', cat('The mitochondria part again please maybe.') !== '
 // --- pickCoverPhrase: deterministic, never repeats lastIndex, echoes the number
 const e1 = pickCoverPhrase('numeric-echo', "Yeah, that's 16.", 3, null);
 check('echo-contains-number', e1.text.includes('16'));
+// R36: the echo must speak the WHOLE answer expression, sign and all.
+const eFrac = pickCoverPhrase('numeric-echo', '-3/6.', 3, null);
+check('echo-neg-fraction-whole', eFrac.text.includes('minus 3 over 6'));
+const eNeg = pickCoverPhrase('numeric-echo', "it's -2.", 3, null);
+check('echo-literal-neg-sign', eNeg.text.includes('minus 2'));
+const eDec = pickCoverPhrase('numeric-echo', 'maybe 3.5.', 3, null);
+check('echo-decimal-kept', eDec.text.includes('3.5'));
 const p1 = pickCoverPhrase('question', 'why?', 2, null);
 const p2 = pickCoverPhrase('question', 'why?', 2, p1.index);
 check('no-repeat', p2.index !== p1.index);

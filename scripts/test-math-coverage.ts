@@ -423,9 +423,9 @@ function runCurated(): void {
   // through untouched and Cartesia normalized it to "meter". Spans
   // respell unconditionally; prose respells only behind variable
   // anchors. "5 m" (number + unit) must still convert to meters.
-  tts('so $m = 7$ here.', 'so em equals 7 here.', 'span-variable-m');
-  tts('Right, m equals 7 there.', 'Right, em equals 7 there.', 'prose-m-equals');
-  tts('so m should be 7 there.', 'so em should be 7 there.', 'prose-m-should');
+  tts('so $m = 7$ here.', 'so M equals 7 here.', 'span-variable-m');
+  tts('Right, m equals 7 there.', 'Right, M equals 7 there.', 'prose-m-equals');
+  tts('so m should be 7 there.', 'so M should be 7 there.', 'prose-m-should');
   tts('The rod is 5 m long.', 'The rod is 5 meters long.', 'unit-m-still-meters');
   tts("I'm being careful there.", "I'm being careful there.", 'im-contraction-m-guard');
   // Article-'a' before an operator word with a math-shaped continuation
@@ -464,4 +464,26 @@ function runCurated(): void {
   tts('That is the 4th problem, due at 10am on the 2nd.', 'That is the 4th problem, due at 10am on the 2nd.', 'digit-run-ordinal-meridiem-guard');
   tts('It moves at 70mph and holds 500ml.', 'It moves at 70mph and holds 500ml.', 'digit-run-unit-guard');
   tts('A 4acre lot with 12oz cups.', 'A 4acre lot with 12oz cups.', 'digit-run-word-guard');
+
+  // ── 25. R36 (2026-07-30, SAT session portal-fdee5b34): currency $
+  // pairing with a later $-span, markdown emphasis defeating the
+  // artifact gate, letter-m spelling, and fill-in-the-blank runs. ──
+  // "$40 … *one-time* … $m$" paired the price's $ with the span's
+  // opener; the hyphenated words + emphasis asterisks inside matched
+  // MATH_OPERAND_OP_RE, so the whole prose stretch verbalized as math
+  // ("o n e minus time f e e"). The price $ must stay literal AND the
+  // trailing $m$ must still unwrap as its own span.
+  tts("Right — the $40 is a *one-time* fee, so it's the y-intercept: the cost when $m$ equals zero months.",
+    "Right, the $40 is a one-time fee, so it's the why-intercept: the cost when M equals zero months.",
+    'currency-span-pairing-artifact');
+  tts('It costs $5 and shipping is $10 for the set.',
+    'It costs $5 and shipping is $10 for the set.', 'currency-double-price-guard');
+  // Letter m: 'em' is voiced /əm/ ("um") by Cartesia — live-heard as
+  // "um ex" for $mx$ and "um and bee" for prose "m and b". Bare capital
+  // M reads as the letter name (same round-30 rationale as capital A).
+  tts('so $y = mx + b$ here.', 'so why equals M x plus bee here.', 'span-mx-product');
+  tts('what do m and b represent?', 'what do M and bee represent?', 'prose-m-and-b');
+  // Fill-in-the-blank underscore runs spoke "underscore underscore …".
+  tts('The slope is _______ and the intercept is _____.',
+    'The slope is blank and the intercept is blank.', 'fill-in-blank-underscores');
 }

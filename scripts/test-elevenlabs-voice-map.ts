@@ -42,6 +42,8 @@ check('Ms. Cathy (American female) → Sonya',
   resolveElevenLabsVoice('e8e5fffb-252c-436d-b842-8879b84445b6'), SONYA);
 check('Ms. Michelle (American female) → Sonya',
   resolveElevenLabsVoice('d7bf7d75-64b7-4c1e-86c0-79d647366587'), SONYA);
+check('Coach Riley (Sophie, 2026-07-30 swap; female) → Sonya',
+  resolveElevenLabsVoice('bf0a246a-8642-498a-9950-80c35e9276b5'), SONYA);
 
 // Engine /tutor registry voices — rule-based nearest match.
 check('Katie (en-us female) → Sonya',

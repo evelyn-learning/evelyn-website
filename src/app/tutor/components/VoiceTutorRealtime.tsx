@@ -7083,6 +7083,46 @@ export function VoiceTutorRealtime({
           });
         } catch { /* a bad command shouldn't abort the whole seed */ }
       });
+      // R36 (live 2026-07-30, SAT session portal-fdee5b34): rehydrate the
+      // ACTIVE problem from the restored board. currentProblemRef was only
+      // ever set on live tool dispatch, so after a resume the brain's
+      // <active_problem> block (and the judge's `focus`) was empty — the
+      // tutor had no record of the pending card's numbers ("2m + 3"),
+      // re-invented the problem, and graded the student's correct answer
+      // wrong (the exact failure the live-round-5 note on the
+      // showTryYourself tracker documents, reproduced by every resume that
+      // lands mid-problem). Walk backwards: the LAST problem card shown is
+      // the one the student was answering when the session ended.
+      for (let i = resumeState.whiteboardCommands.length - 1; i >= 0; i--) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const cmd = resumeState.whiteboardCommands[i] as any;
+        if (cmd?.action === 'showTryYourself') {
+          const statement = String(cmd.problem ?? '').trim();
+          if (!statement) continue;
+          const declared = typeof cmd.expectedAnswer === 'string' ? cmd.expectedAnswer.trim() : '';
+          currentProblemRef.current = {
+            statement,
+            kind: 'generic',
+            source: 'card',
+            hasChoices: Array.isArray(cmd.choices) && cmd.choices.length > 0,
+            ...(declared ? { expectedAnswer: declared } : {}),
+          };
+          servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
+          console.log('[VoiceTutorRealtime] resume: rehydrated active problem (try-yourself card):', statement.slice(0, 80));
+          break;
+        }
+        if (cmd?.action === 'showProblem' && cmd.problem?.statement) {
+          const statement = String(cmd.problem.statement);
+          currentProblemRef.current = {
+            statement,
+            kind: /\\int|Integral_|\bintegral\b/i.test(statement) ? 'integral' : 'generic',
+            hasChoices: Array.isArray(cmd.problem.answerChoices) && cmd.problem.answerChoices.length > 0,
+          };
+          servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
+          console.log('[VoiceTutorRealtime] resume: rehydrated active problem:', statement.slice(0, 80));
+          break;
+        }
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeState]);

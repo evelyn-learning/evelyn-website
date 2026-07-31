@@ -47,6 +47,7 @@ const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
   '3e39e9a5-585c-4f5f-bac6-5e4905c51095': EARL,    // Mr. Cole — American male
   'e8e5fffb-252c-436d-b842-8879b84445b6': SONYA,   // Ms. Cathy — American female
   'd7bf7d75-64b7-4c1e-86c0-79d647366587': SONYA,   // Ms. Michelle — American female
+  'bf0a246a-8642-498a-9950-80c35e9276b5': SONYA,   // Coach Riley (Sophie, 2026-07-30 swap) — female
   // ── Engine /tutor demo registry (cartesia-voice-registry.ts) ──
   'f786b574-daa5-4673-aa0c-cbe3e8534c02': SONYA,   // Katie — en-us female
   'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4': SONYA,   // Skylar — en-us female

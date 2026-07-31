@@ -63,10 +63,26 @@ function words(t: string): string[] {
   return t.toLowerCase().replace(/[^a-z0-9\s'-]/g, ' ').split(/\s+/).filter(Boolean);
 }
 
-/** Last number-ish token run, for the echo cover ("minus 22", "16", "3.5"). */
+/** One number-ish answer EXPRESSION: optional sign (literal "-" glued to the
+ *  digits, or a spoken "minus"/"negative"), digits with optional decimal,
+ *  optional fraction tail ("/6", itself optionally signed). R36 (live
+ *  2026-07-30): the old extractor grabbed only the last digit RUN, so
+ *  "-3/6" echoed as "ok 6" and "m is 4 and b is -2" as "ok 2". */
+const ANSWER_EXPR_RE = /(?:-|\b(?:minus|negative)\s+)?\d+(?:\.\d+)?(?:\s*\/\s*-?\d+(?:\.\d+)?)?/gi;
+
+/** The transcript's single answer expression, in SPOKEN form ("minus 3 over
+ *  6"). Null when there is no number — or MORE than one ("m is 4 and b is
+ *  -2"): a lone echoed tail misquotes the student, so multi-number turns
+ *  fall back to the generic (non-echo) cover instead. */
 export function extractAnswerToken(t: string): string | null {
-  const m = t.match(/(?:(?:minus|negative)\s+)?\d+(?:\.\d+)?(?!.*\d)/i);
-  return m ? m[0].trim() : null;
+  const all = t.match(ANSWER_EXPR_RE);
+  if (!all || all.length !== 1) return null;
+  return all[0]
+    .replace(/\s*\/\s*/, ' over ')
+    .replace(/-\s*/g, 'minus ')
+    .replace(/\bnegative\b/gi, 'minus')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function classifyCover(transcript: string): CoverVerdict {

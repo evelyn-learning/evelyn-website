@@ -171,7 +171,9 @@ const EMDASH_REPLACEMENTS: Replacement[] = [
  *  italics leak through to TTS, where they block variable-anchor
  *  matching ("*a* represents") and can be voiced as "asterisk".
  *  Content must start with a letter so multiplication ("2*3*4")
- *  is never touched. */
+ *  is never touched. R36: applied EARLY in rewriteForTTS (not via
+ *  ALL_REPLACEMENTS) — emphasis asterisks must be gone before the
+ *  $-span walk's currency-artifact gate runs its operator-shape test. */
 const MD_EMPHASIS_REPLACEMENTS: Replacement[] = [
   { pattern: /\*{1,2}([A-Za-z][^*]{0,60}?)\*{1,2}/g, replacement: '$1' },
 ];
@@ -635,7 +637,11 @@ function respellMathLetters(s: string): string {
     // converted ("5 m" → "5 meters", "m/s" → compound) before this
     // respell runs, so a surviving standalone lowercase m in a declared
     // span is the variable. Capital M stays (molar / labels).
-    .replace(/\bm\b/g, 'em')
+    // R36 (live, SAT session portal-fdee5b34): the round-28 token was
+    // 'em', which Cartesia voices /əm/ — "$mx$" was heard as "um ex".
+    // Bare capital M reads as the letter name (same round-30 rationale
+    // as capital A / the bare capitals N and F).
+    .replace(/\bm\b/g, 'M')
     // Round-30: standalone lowercase g in a declared span is the gravity
     // variable / the g of m·g (digit-led "5 g" already converted to grams
     // by the unit pass; the chem path handles "(g)" state symbols before
@@ -1126,35 +1132,78 @@ function chemArrowContext(full: string, offset: number, len: number): boolean {
   return isStrongChemToken(prevTok) || isStrongChemToken(nextTok);
 }
 
+/** R36 (live, SAT session portal-fdee5b34): is this paired-span content a
+ *  currency PAIRING ARTIFACT ("$40 … the cost when $" — a price's $ paired
+ *  with a later span opener)? Hyphenated compound words ("one-time",
+ *  "y-intercept") are masked before the operand-op-operand test: their
+ *  hyphen matches the math-operator shape but a hyphen glued to a 2+
+ *  letter word-run is English, not algebra ("x-y" keeps both sides single
+ *  so genuine variable arithmetic still reads as math). */
+function isCurrencyPairingArtifact(inner: string): boolean {
+  if (!CURRENCY_ARTIFACT_RE.test(inner) || !PROSE_WORD_RE.test(inner)) return false;
+  if (MATH_SIGNAL_RE.test(inner)) return false;
+  const masked = inner.replace(/\b[A-Za-z]+-[A-Za-z]{2,}\b|\b[A-Za-z]{2,}-[A-Za-z]+\b/g, ' ');
+  return !MATH_OPERAND_OP_RE.test(masked);
+}
+
+/** One declared span's content → spoken words (the round-21 cleanup +
+ *  chem/genetics/unit prep, unchanged from the pre-R36 inline body). */
+function speakMathSpan(inner: string): string {
+  // Round-21: post-verbalization span cleanup — square brackets are
+  // grouping (silent), and any RESIDUAL braces or unknown \commands
+  // must never reach the speaker (the raw-"\lim sub x\to ay" class).
+  // Chemistry round: chem-looking spans take the chemistry rewrite
+  // (which claims arrows/charges/subscripts/brackets before the math
+  // passes can misread them) in place of the plain unit pass.
+  const prepped = looksLikeChemistrySpan(inner)
+    ? rewriteChemistrySpanForSpeech(inner)
+    : rewriteUnitsForSpeech(rewriteGeneticsInSpan(inner), true);
+  return respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped)))))
+    .replace(/\\[a-zA-Z]+\s*/g, ' ')
+    .replace(/[[\]{}]/g, ' ')
+    // Round-22: adjacent paren groups are an implied product —
+    // "(x+2)(x-2)" spoke as "x plus 2 x minus 2" with no operator.
+    .replace(/\)\s*\(/g, ') times (')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+\)/g, ')')
+    .replace(/\(\s+/g, '(')
+    .trim();
+}
+
+/** $-span walk. R36 restructured this from a single global pair-regex into
+ *  a scanner for two reasons:
+ *   1. A currency artifact must only consume its OWN "$" — the old regex
+ *      consumed the trailing "$" too, so in "the $40 … the cost when $m$
+ *      equals" the real span $m$ could never pair (its opener was eaten by
+ *      the artifact match) and reached Cartesia raw. The scanner resumes
+ *      right after the price's "$", letting the next "$" open its own span.
+ *   2. The prose unit pass (previously a separate pre-split in
+ *      rewriteForTTS) is applied here to exactly the non-span stretches, so
+ *      text inside a currency artifact gets unit conversion too — while
+ *      span OUTPUT still never re-enters the prose unit pass (the "1 over
+ *      2 m v squared" ambiguity documented at the old call site). */
 function stripDollarMathForSpeech(t: string): string {
-  return t.replace(/\$([^$\n]{1,160})\$/g, (whole: string, inner: string) => {
-    if (
-      CURRENCY_ARTIFACT_RE.test(inner) &&
-      PROSE_WORD_RE.test(inner) &&
-      !MATH_SIGNAL_RE.test(inner) &&
-      !MATH_OPERAND_OP_RE.test(inner)
-    ) return whole;
-    // Round-21: post-verbalization span cleanup — square brackets are
-    // grouping (silent), and any RESIDUAL braces or unknown \commands
-    // must never reach the speaker (the raw-"\lim sub x\to ay" class).
-    // Chemistry round: chem-looking spans take the chemistry rewrite
-    // (which claims arrows/charges/subscripts/brackets before the math
-    // passes can misread them) in place of the plain unit pass.
-    const prepped = looksLikeChemistrySpan(inner)
-      ? rewriteChemistrySpanForSpeech(inner)
-      : rewriteUnitsForSpeech(rewriteGeneticsInSpan(inner), true);
-    const spoken = respellMathLetters(wordifyMathOperators(verbalizeMathForSpeech(rewritePrimesForSpeech(rewriteDerivatives(prepped)))))
-      .replace(/\\[a-zA-Z]+\s*/g, ' ')
-      .replace(/[[\]{}]/g, ' ')
-      // Round-22: adjacent paren groups are an implied product —
-      // "(x+2)(x-2)" spoke as "x plus 2 x minus 2" with no operator.
-      .replace(/\)\s*\(/g, ') times (')
-      .replace(/\s+/g, ' ')
-      .replace(/\s+\)/g, ')')
-      .replace(/\(\s+/g, '(')
-      .trim();
-    return ` ${spoken} `;
-  });
+  let out = '';
+  let i = 0;
+  for (;;) {
+    const open = t.indexOf('$', i);
+    if (open === -1) {
+      out += rewriteUnitsForSpeech(t.slice(i), false);
+      break;
+    }
+    const close = t.indexOf('$', open + 1);
+    const inner = close === -1 ? null : t.slice(open + 1, close);
+    if (inner === null || inner.length > 160 || inner.includes('\n') || isCurrencyPairingArtifact(inner)) {
+      // Unpaired or price "$": keep it literal (Cartesia's native currency
+      // reading), and let the NEXT "$" try to open its own span.
+      out += rewriteUnitsForSpeech(t.slice(i, open + 1), false);
+      i = open + 1;
+      continue;
+    }
+    out += rewriteUnitsForSpeech(t.slice(i, open), false) + ` ${speakMathSpan(inner)} `;
+    i = close + 1;
+  }
+  return out;
 }
 
 /** Math-variable letter respelling.
@@ -1236,8 +1285,16 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   // converted by the earlier unit pass, so an anchored m here is the
   // variable. Lookbehind guards contractions ("I'm") and dotted
   // abbreviations ("a.m."); lowercase only, same tier as 'a'.
-  { pattern: /(?<!['’.])\bm\b(?=\s*(?:=|equals?\b|should\b|must\b|will\s+be\b|is\s+equal\b))/g, replacement: 'em' },
-  { pattern: /(?<=\b(?:substitute|solve for|value of|values of|find)\s)m\b(?!['’])/g, replacement: 'em' },
+  // R36: emitted token is capital 'M', not 'em' — Cartesia voices 'em'
+  // /əm/ ("um"), live-heard in SAT session portal-fdee5b34; bare
+  // capitals read as letter names (round-30 capital-A rationale).
+  { pattern: /(?<!['’.])\bm\b(?=\s*(?:=|equals?\b|should\b|must\b|will\s+be\b|is\s+equal\b))/g, replacement: 'M' },
+  { pattern: /(?<=\b(?:substitute|solve for|value of|values of|find)\s)m\b(?!['’])/g, replacement: 'M' },
+  // R36 (live: "what do m and b represent?" heard as "um and bee"): the
+  // slope/intercept pair "m and b" is variable-only by construction —
+  // mirror of the "b and c" list rule above. The b may already be "bee"
+  // (the unconditional \bb\b rule sits earlier in this array).
+  { pattern: /(?<!['’.])\bm\b(?=\s+and\s+b(?:ee)?\b)/g, replacement: 'M' },
   // Round-29 (live 2026-07-23): prose "F equals m times a" — the m sits
   // AFTER equals, so the rule above misses it and Cartesia reads the bare
   // token as "meter". Two anchors, both variable-only by construction:
@@ -1250,22 +1307,21 @@ const LETTER_RESPELLING_REPLACEMENTS: Replacement[] = [
   //    article-guarded 'a' rules can't touch a sentence-final bare a, so
   //    the phrase rule handles it whole (must precede the single-m rule,
   //    which would otherwise consume the m first).
-  { pattern: /(?<=\bequals\s+)m\s+a\b(?=[\s.,;!?]|$)/g, replacement: 'em A' },
-  { pattern: /(?<=\bequals\s+)m\b(?!['’.])/g, replacement: 'em' },
-  { pattern: /(?<!\d)(?<!\d\s)\bm\b(?=\s+times\b)/g, replacement: 'em' },
+  { pattern: /(?<=\bequals\s+)m\s+a\b(?=[\s.,;!?]|$)/g, replacement: 'M A' },
+  { pattern: /(?<=\bequals\s+)m\b(?!['’.])/g, replacement: 'M' },
+  { pattern: /(?<!\d)(?<!\d\s)\bm\b(?=\s+times\b)/g, replacement: 'M' },
   // Round-30 (live: prose "normal force isn't mg" → Cartesia "milligrams"):
   // standalone prose mg behind variable anchors, or ahead of a trig word,
   // is the m·g product. Digit-guarded — "5 mg" converted to milligrams by
   // the unit pass long before this; un-anchored unit phrases ("measured
   // in mg") deliberately keep the milligram reading.
-  { pattern: /(?<!\d)(?<!\d\s)(?<=\b(?:is|isn't|isn’t|equals|just|not|than|force)\s)mg\b(?!['’])/g, replacement: 'em jee' },
-  { pattern: /(?<!\d)(?<!\d\s)\bmg\b(?=\s+(?:sine|cosine|sin\b|cos\b|times|over)\b)/g, replacement: 'em jee' },
+  { pattern: /(?<!\d)(?<!\d\s)(?<=\b(?:is|isn't|isn’t|equals|just|not|than|force)\s)mg\b(?!['’])/g, replacement: 'M jee' },
+  { pattern: /(?<!\d)(?<!\d\s)\bmg\b(?=\s+(?:sine|cosine|sin\b|cos\b|times|over)\b)/g, replacement: 'M jee' },
   { pattern: new RegExp(`\\bY\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'why' },
   { pattern: new RegExp(`\\bB\\b(?=[-\\s]\\s*(?:${MATH_ANCHOR_SRC})|\\s*(?:${MATH_ANCHOR_SRC}))`, 'g'), replacement: 'bee' },
 ];
 
 const ALL_REPLACEMENTS: Replacement[] = [
-  ...MD_EMPHASIS_REPLACEMENTS,
   ...TRIG_REPLACEMENTS,
   ...MATH_FUNC_REPLACEMENTS,
   ...GREEK_REPLACEMENTS,
@@ -1284,7 +1340,7 @@ const VAR_SPOKEN: Record<string, string> = {
   // Round-30: a → capital 'A', not 'ay' (Cartesia read "ay" with an
   // article-'a' vowel live; see respell comment above).
   a: 'A', b: 'bee', c: 'see', e: 'ee', f: 'ef', g: 'jee',
-  k: 'kay', m: 'em', n: 'en', p: 'pee', q: 'cue', r: 'ar',
+  k: 'kay', m: 'M', n: 'en', p: 'pee', q: 'cue', r: 'ar',
   s: 'ess', t: 'tee', u: 'you', v: 'vee', x: 'ex', y: 'why', z: 'zee',
 };
 const spokenVar = (ch: string): string => VAR_SPOKEN[ch.toLowerCase()] ?? ch;
@@ -1716,6 +1772,20 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // Caps-emphasis → lowercase (see CAPS_EMPHASIS_WORDS). Runs early so
   // later rules see normal-case words.
   t = t.replace(CAPS_EMPHASIS_WORDS, (m) => m.toLowerCase());
+  // Markdown emphasis — MUST run before $-span processing (R36, live SAT
+  // session portal-fdee5b34): this strip used to sit in ALL_REPLACEMENTS,
+  // which runs AFTER the span pass, so "*one-time*" asterisks were still
+  // present when the currency-artifact gate tested MATH_OPERAND_OP_RE
+  // ("time* fee" matches operand-op-operand) and a "$40 … $m$" pairing
+  // artifact verbalized a whole prose stretch as math.
+  for (const { pattern, replacement } of MD_EMPHASIS_REPLACEMENTS) {
+    t = t.replace(pattern, replacement as string);
+  }
+  // Fill-in-the-blank underscore runs (R36: "_______" reached Cartesia
+  // raw and spoke "underscore underscore …"). Runs before the math
+  // pipeline — a run of 2+ can never be a LaTeX subscript, which is
+  // always a single "_".
+  t = t.replace(/_{2,}/g, ' blank ');
   // LaTeX literal escapes \$ \% \& (subject-notation round, live-heard in
   // econ: "\$21" spoke "backslash 21"). These leaked their backslash to
   // Cartesia, and \$ additionally CORRUPTED $-span parsing (its stray "$"
@@ -1755,20 +1825,14 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // Runs after rewriteDerivatives (which already consumed d²y/dx²-style
   // patterns) and before the bare "=" → "equals" rule so anything left
   // over (e.g. "$x = 3$" → "x = 3") still gets voiced by it.
-  // Physics units in prose ("5 kg", "9.8 m/s²"). MUST run BEFORE span
-  // processing: a span's respelled output ("1 over 2 m v squared" from
-  // $\frac{1}{2}mv^2$) is indistinguishable from prose "2 m", so the pass
-  // may only ever see the pre-span text. $-span INTERIORS are skipped
-  // entirely (same pair regex as stripDollarMathForSpeech): they run their
-  // own span-mode pass, and letting the prose pass eat "\, \Omega" inside
-  // "$2 \, \Omega$" destroyed the span's only math signal — the gate then
-  // mistook "2 ohms" for a currency artifact and spoke the dollar signs.
-  t = t
-    .split(/(\$[^$\n]{1,160}\$)/)
-    .map((chunk) => (chunk.startsWith('$') && chunk.endsWith('$') && chunk.length > 1
-      ? chunk
-      : rewriteUnitsForSpeech(chunk, false)))
-    .join('');
+  // Physics units in prose ("5 kg", "9.8 m/s²") are applied INSIDE the
+  // span walk (R36): stripDollarMathForSpeech runs the prose unit pass on
+  // exactly the non-span stretches, so span interiors keep their own
+  // span-mode pass and span OUTPUT never re-enters the prose pass (the
+  // "1 over 2 m v squared" ambiguity), while a currency artifact's prose
+  // still gets unit conversion. Before R36 this was a separate pre-split
+  // here, which had to duplicate the pair regex and disagreed with the
+  // walk on currency artifacts.
   t = stripDollarMathForSpeech(t);
   t = verbalizeMathForSpeech(t);
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →

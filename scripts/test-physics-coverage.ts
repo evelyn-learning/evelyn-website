@@ -254,8 +254,8 @@ function runCurated(): void {
   // Round-28: bare in-span "m" now respells to "em" (Cartesia read a
   // standalone m as "meter" in a live calc session) — these pins updated
   // deliberately to the spoken letterform, same as the ay/bee precedent.
-  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals em vector A governs motion.', 'second-law-vectors');
-  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals em vector A works too.', 'braceless-vec');
+  tts('The force $\\vec{F} = m\\vec{a}$ governs motion.', 'The force vector F equals M vector A governs motion.', 'second-law-vectors');
+  tts('So $\\vec F = m \\vec a$ works too.', 'So vector F equals M vector A works too.', 'braceless-vec');
   tts('Split it into $3\\hat{i} + 4\\hat{j}$ parts.', 'Split it into 3 i hat plus 4 j hat parts.', 'unit-vectors');
   tts('The direction î points east.', 'The direction i hat points east.', 'i-hat-glyph');
   tts('So $|\\vec{v}| = 5$ overall.', 'So the magnitude of vector v equals 5 overall.', 'vector-magnitude');
@@ -280,19 +280,19 @@ function runCurated(): void {
   // Round-29 (live 2026-07-23, session-1784778855564): PROSE "F equals m
   // times a" left the bare m for Cartesia, which read it as "meter". The
   // in-span rules never see prose; anchor m after "equals" / before "times".
-  tts('The formula is F equals m times a — so you need to rearrange.', 'The formula is F equals em times A, so you need to rearrange.', 'prose-equals-m-times-a');
-  tts('Net force is m times a.', 'Net force is em times A.', 'prose-m-before-times');
-  tts('Force equals m a.', 'Force equals em A.', 'prose-equals-m-bare');
+  tts('The formula is F equals m times a — so you need to rearrange.', 'The formula is F equals M times A, so you need to rearrange.', 'prose-equals-m-times-a');
+  tts('Net force is m times a.', 'Net force is M times A.', 'prose-m-before-times');
+  tts('Force equals m a.', 'Force equals M A.', 'prose-equals-m-bare');
   // Units guards: digit-anchored m stays a unit; m/s untouched by the new anchors.
   tts('The hallway is 5 m long.', 'The hallway is 5 meters long.', 'prose-unit-m-guard');
   tts('It moves at 3 m/s here.', 'It moves at 3 meters per second here.', 'prose-unit-ms-guard');
 
   // ── 9. Canonical equations ───────────────────────────────────────
-  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals em A compactly.', 'f-equals-ma');
-  tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals em c squared famously.', 'e-mc2');
+  tts('Newton wrote $F = ma$ compactly.', 'Newton wrote F equals M A compactly.', 'f-equals-ma');
+  tts('Einstein wrote $E = mc^2$ famously.', 'Einstein wrote E equals M c squared famously.', 'e-mc2');
   tts('Use $v = v_0 + at$ for velocity.', 'Use v equals v 0 plus A t for velocity.', 'kinematics-at');
   tts('Then $x = v_0 t + \\frac{1}{2}at^2$ follows.', 'Then x equals v 0 t plus 1 over 2 A t squared follows.', 'kinematics-x');
-  tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 em v squared always.', 'kinetic-energy');
+  tts('Kinetic energy is $KE = \\frac{1}{2}mv^2$ always.', 'Kinetic energy is KE equals 1 over 2 M v squared always.', 'kinetic-energy');
   tts('Work is $W = F d \\cos\\theta$ along the path.', 'Work is W equals F dee cosine theta along the path.', 'work-eq');
   tts('Waves follow $v = f\\lambda$ neatly.', 'Waves follow v equals f lambda neatly.', 'wave-eq');
   tts('Period is $T = \\frac{2\\pi}{\\omega}$ here.', 'Period is T equals 2 pie over omega here.', 'period-eq');
@@ -333,12 +333,12 @@ function runCurated(): void {
   // (b) "$N = mg$" / "$mg\sin\theta$" kept "mg" glued (span splitter
   // excluded it as a unit) → Cartesia said "milligrams". In-span mg with
   // no digit is the m·g product; digit-led doses converted earlier.
-  tts('On a flat surface, $N = mg$.', 'On a flat surface, N equals em jee.', 'R30 N=mg speaks em-jee');
-  tts('$mg\\sin\\theta$ pulls it down the slope.', 'em jee sine theta pulls it down the slope.', 'R30 mg sin theta product');
-  tts('Net force is just $mg\\cos\\theta$ there.', 'Net force is just em jee cosine theta there.', 'R30 mg cos theta product');
+  tts('On a flat surface, $N = mg$.', 'On a flat surface, N equals M jee.', 'R30 N=mg speaks em-jee');
+  tts('$mg\\sin\\theta$ pulls it down the slope.', 'M jee sine theta pulls it down the slope.', 'R30 mg sin theta product');
+  tts('Net force is just $mg\\cos\\theta$ there.', 'Net force is just M jee cosine theta there.', 'R30 mg cos theta product');
   // (b-prose) "the case where normal force isn't mg" — anchored prose mg.
-  tts("That's the case where normal force isn't mg.", "That's the case where normal force isn't em jee.", 'R30 prose anchored mg');
-  tts('The parallel component is mg sine theta.', 'The parallel component is em jee sine theta.', 'R30 prose mg before sine');
+  tts("That's the case where normal force isn't mg.", "That's the case where normal force isn't M jee.", 'R30 prose anchored mg');
+  tts('The parallel component is mg sine theta.', 'The parallel component is M jee sine theta.', 'R30 prose mg before sine');
   // (b-guards) digit-led doses stay milligrams; kg untouched; article-a
   // and unit-phrase mg untouched.
   tts('Take 5 mg of caffeine daily.', 'Take 5 milligrams of caffeine daily.', 'R30 guard digit mg stays unit');
