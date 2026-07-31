@@ -1,0 +1,356 @@
+[
+  {
+    "id": "alg1-exponent-rules-001",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: x⁴ · x⁷",
+    "choices": ["x²⁸", "x¹¹", "x³", "2x¹¹"],
+    "answer": "B",
+    "hints": [
+      "Same base, and the powers are being MULTIPLIED — which rule is that?",
+      "Expand and count factors: four x factors followed by seven more."
+    ]
+  },
+  {
+    "id": "alg1-exponent-rules-002",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (2m⁵)⁴",
+    "choices": ["8m²⁰", "16m⁹", "16m²⁰", "2m²⁰"],
+    "answer": "C",
+    "hints": [
+      "The exponent outside the parentheses lands on EVERY factor inside — the coefficient 2 included.",
+      "Raise 2 to the fourth power, and use the power rule on m⁵ by multiplying the exponents."
+    ]
+  },
+  {
+    "id": "alg1-exponent-rules-003",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 20a⁷b³ / (4a²b³)",
+    "choices": ["5a⁵", "5a⁵b", "16a⁵", "5a⁹b⁶"],
+    "answer": "A",
+    "hints": [
+      "Divide the coefficients, then handle each base separately with the quotient rule.",
+      "For b the exponents are equal, and b⁰ = 1 — so b disappears entirely."
+    ]
+  },
+  {
+    "id": "alg1-exponent-rules-004",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (3x²y)³ · 2xy⁴",
+    "choices": ["18x⁷y⁷", "6x⁷y⁷", "54x⁶y⁷", "54x⁷y⁷"],
+    "answer": "D",
+    "hints": [
+      "Clear the parentheses first: the exponent 3 hits the 3, the x², and the y.",
+      "(3x²y)³ = 27x⁶y³. Now multiply by 2xy⁴ — multiply the coefficients and ADD the exponents on each base."
+    ]
+  },
+  {
+    "id": "alg1-exponent-rules-005",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (4p³q⁵)² / (8p⁴q³)",
+    "choices": ["0.5p²q⁷", "2pq⁴", "2p¹⁰q¹³", "2p²q⁷"],
+    "answer": "D",
+    "hints": [
+      "Square everything inside the parentheses first, coefficient included, before you divide.",
+      "(4p³q⁵)² = 16p⁶q¹⁰. Then divide by 8p⁴q³: divide the coefficients and SUBTRACT the exponents."
+    ]
+  },
+  {
+    "id": "alg1-exponent-rules-006",
+    "loId": "alg1.exponent-rules",
+    "cedCode": "ALG1-6.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "The expression (y³)⁶ · y⁵ / (y⁴ · y²) simplifies to yⁿ. Type the value of n as a number.",
+    "choices": [],
+    "answer": "17",
+    "hints": [
+      "Work outward: a power raised to a power multiplies the exponents, and the two factors in the denominator combine first.",
+      "The numerator is y¹⁸ · y⁵ and the denominator is y⁶. Add for the multiplication, subtract for the division."
+    ]
+  },
+
+  {
+    "id": "alg1-negative-exponents-scientific-notation-001",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 5⁻²",
+    "choices": ["1/25", "-25", "1/10", "-10"],
+    "answer": "A",
+    "hints": [
+      "A negative exponent means a reciprocal, not a negative value.",
+      "5⁻² = 1/5², and 5² = 25."
+    ]
+  },
+  {
+    "id": "alg1-negative-exponents-scientific-notation-002",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 2⁰ + 2⁻¹ + 2⁻²",
+    "choices": ["3/4", "-5", "7/4", "5/4"],
+    "answer": "C",
+    "hints": [
+      "Anything nonzero to the zero power is 1, and each negative exponent gives a fraction.",
+      "The three terms are 1, 1/2, and 1/4. Add them using a common denominator of 4."
+    ]
+  },
+  {
+    "id": "alg1-negative-exponents-scientific-notation-003",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Write 0.00047 in scientific notation.",
+    "choices": ["4.7 × 10⁻³", "4.7 × 10⁴", "47 × 10⁻⁵", "4.7 × 10⁻⁴"],
+    "answer": "D",
+    "hints": [
+      "The front number must be at least 1 and less than 10, so the decimal point goes right after the 4.",
+      "Count how many places the point moves. A number smaller than 1 takes a NEGATIVE exponent."
+    ]
+  },
+  {
+    "id": "alg1-negative-exponents-scientific-notation-004",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The number 0.00000082 written in scientific notation is 8.2 × 10ⁿ. Type the value of n as a number.",
+    "choices": [],
+    "answer": "-7",
+    "hints": [
+      "The number is far below 1, so n has to be negative.",
+      "Count the places the decimal point moves to the right to turn 0.00000082 into 8.2."
+    ]
+  },
+  {
+    "id": "alg1-negative-exponents-scientific-notation-005",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Divide and write the result in scientific notation: (2.4 × 10⁶) / (8 × 10⁻²)",
+    "choices": ["3 × 10⁴", "3 × 10⁷", "0.3 × 10⁴", "3 × 10⁸"],
+    "answer": "B",
+    "hints": [
+      "Split it up: divide the front numbers, then subtract the exponents on the powers of 10.",
+      "2.4 / 8 = 0.3 and 6 − (−2) = 8, giving 0.3 × 10⁸ — but 0.3 is less than 1, so renormalize."
+    ]
+  },
+  {
+    "id": "alg1-negative-exponents-scientific-notation-006",
+    "loId": "alg1.negative-exponents-scientific-notation",
+    "cedCode": "ALG1-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Simplify using positive exponents only: 6a⁻³b⁵ / (2a²b⁻¹)",
+    "choices": ["3b⁶/a⁵", "3a⁵b⁶", "3b⁴/a⁵", "3a⁵/b⁶"],
+    "answer": "A",
+    "hints": [
+      "Divide the coefficients first, then apply the quotient rule to a and to b separately.",
+      "For b, subtracting a negative adds: 5 − (−1) = 6. A factor left with a negative exponent moves across the fraction bar."
+    ]
+  },
+
+  {
+    "id": "alg1-exponential-functions-001",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the y-intercept of the graph of y = 6·2ˣ?",
+    "choices": ["6", "2", "12", "1"],
+    "answer": "A",
+    "hints": [
+      "The y-intercept is the value of y when x = 0.",
+      "Any nonzero base raised to the 0 power equals 1."
+    ]
+  },
+  {
+    "id": "alg1-exponential-functions-002",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these functions represents exponential decay?",
+    "choices": ["y = 0.5·4ˣ", "y = 3·(1.2)ˣ", "y = 3·(0.75)ˣ", "y = 3 − 0.75x"],
+    "answer": "C",
+    "hints": [
+      "Decay is decided by the BASE b in y = a·bˣ, not by the coefficient a.",
+      "Look for a base strictly between 0 and 1 — and make sure the variable is actually in the exponent."
+    ]
+  },
+  {
+    "id": "alg1-exponential-functions-003",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A table pairs the x values 0, 1, 2, 3 with the y values 8, 4, 2, 1 in that order. Which statement describes this data?",
+    "choices": [
+      "Linear, with a constant difference of -4",
+      "Exponential, with a constant ratio of 1/2",
+      "Exponential, with a constant ratio of 2",
+      "Linear, with a constant difference of -2"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract consecutive y values first: are the differences all the same?",
+      "The differences are −4, −2, −1, so it is not linear. Now divide each y value by the one before it."
+    ]
+  },
+  {
+    "id": "alg1-exponential-functions-004",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the function y = 3·4ˣ, what is the value of y when x = -1?",
+    "choices": ["-12", "1/12", "-3/4", "3/4"],
+    "answer": "D",
+    "hints": [
+      "Evaluate the power first, then multiply by 3. A negative exponent does not make the answer negative.",
+      "4⁻¹ = 1/4, so the result is 3 times one fourth."
+    ]
+  },
+  {
+    "id": "alg1-exponential-functions-005",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An exponential function y = a·bˣ with b > 0 passes through the point (0, 7), and y = 63 when x = 2. Type the value of b as a number.",
+    "choices": [],
+    "answer": "3",
+    "hints": [
+      "The point at x = 0 hands you a directly, because b⁰ = 1.",
+      "With a = 7, the second point gives 7·b² = 63, so b² = 9 — and b must be positive."
+    ]
+  },
+  {
+    "id": "alg1-exponential-functions-006",
+    "loId": "alg1.exponential-functions",
+    "cedCode": "ALG1-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two functions are given: f(x) = 2·3ˣ and g(x) = 18·(1/3)ˣ. At which x value do the two functions have the same value?",
+    "choices": ["x = 0", "x = 1", "x = 2", "x = 3"],
+    "answer": "B",
+    "hints": [
+      "You can simply test each choice — evaluate both functions and compare.",
+      "One function triples each step while the other divides by 3 each step, so f goes 2, 6, 18, 54 and g goes 18, 6, 2, 2/3."
+    ]
+  },
+
+  {
+    "id": "alg1-exponential-growth-decay-001",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A population of 500 birds increases by 10% each year. Which function models the population P after t years?",
+    "choices": ["P(t) = 500(1.1)ᵗ", "P(t) = 500(0.1)ᵗ", "P(t) = 500(0.9)ᵗ", "P(t) = 500 + 1.1t"],
+    "answer": "A",
+    "hints": [
+      "The starting amount is the coefficient, and the base is 1 + r for growth.",
+      "10% written as a decimal is 0.10, so the base is 1 + 0.10 — not 0.10 itself."
+    ]
+  },
+  {
+    "id": "alg1-exponential-growth-decay-002",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car's value is modeled by V(t) = 24000(0.85)ᵗ, where V is in dollars and t is the number of years since it was bought. Which statement correctly interprets this model?",
+    "choices": [
+      "The car cost 24,000 dollars and loses 85% of its value each year.",
+      "The car cost 24,000 dollars and loses 15% of its value each year.",
+      "The car cost 24,000 dollars and gains 15% of its value each year.",
+      "The car cost 24,000 dollars and loses 15 dollars each year."
+    ],
+    "answer": "B",
+    "hints": [
+      "A base between 0 and 1 means decay, so first decide whether the value is rising or falling.",
+      "For decay the base is 1 − r, so 0.85 = 1 − r. Solve for r and convert it to a percent."
+    ]
+  },
+  {
+    "id": "alg1-exponential-growth-decay-003",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bacteria colony starts with 200 cells and doubles every hour. How many cells are there after 5 hours?",
+    "choices": ["2,000", "3,200", "6,400", "12,800"],
+    "answer": "C",
+    "hints": [
+      "Doubling every hour means multiplying by 2 each hour, so the model is 200·2ᵗ.",
+      "Compute 2⁵ first, then multiply by 200 — do not multiply 200 by 2 and then by 5."
+    ]
+  },
+  {
+    "id": "alg1-exponential-growth-decay-004",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A savings account starts with 4,000 dollars and earns 10% interest per year, compounded once a year. Type the balance in dollars after 2 years as a number.",
+    "choices": [],
+    "answer": "4840",
+    "hints": [
+      "Growth of 10% per year means a base of 1 + 0.10, so the model is A(t) = 4000(1.1)ᵗ.",
+      "Compute 1.1² = 1.21 first, then multiply by 4000."
+    ]
+  },
+  {
+    "id": "alg1-exponential-growth-decay-005",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quantity starts at 1,000 and decreases by 20% each year. What is its value after 3 years?",
+    "choices": ["400", "640", "8", "512"],
+    "answer": "D",
+    "hints": [
+      "Losing 20% each year means keeping 80% each year, so the base is 0.8.",
+      "Evaluate 1000(0.8)³. Year by year that is 1000 → 800 → 640 → ?"
+    ]
+  },
+  {
+    "id": "alg1-exponential-growth-decay-006",
+    "loId": "alg1.exponential-growth-decay",
+    "cedCode": "ALG1-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The value of a collectible is modeled by V(t) = 800(1.05)ᵗ dollars, where t is the number of years after it was bought. By how much does the value increase during the first year, and by how much during the second year?",
+    "choices": [
+      "40 dollars in the first year and 40 dollars in the second year",
+      "40 dollars in the first year and 42 dollars in the second year",
+      "40 dollars in the first year and 84 dollars in the second year",
+      "42 dollars in the first year and 40 dollars in the second year"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find V(0), V(1), and V(2), then subtract consecutive values to get each year's increase.",
+      "V(0) = 800 and V(1) = 840. For the second year, 5% is taken of 840, not of 800."
+    ]
+  }
+]

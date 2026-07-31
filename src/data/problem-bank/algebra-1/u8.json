@@ -1,0 +1,542 @@
+[
+  {
+    "id": "alg1-quadratic-graphs-vertex-001",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the vertex of the parabola y = (x - 6)² + 2?",
+    "choices": [
+      "(6, 2)",
+      "(-6, 2)",
+      "(6, -2)",
+      "(-6, -2)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Match the equation to vertex form y = a(x - h)² + k.",
+      "The form already subtracts h, so h is the x-value that makes the inside of the parentheses zero."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-graphs-vertex-002",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the vertex of the parabola y = -3(x + 4)² + 9?",
+    "choices": [
+      "(-4, 9)",
+      "(4, 9)",
+      "(-4, -9)",
+      "(-3, 9)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Vertex form subtracts h, so rewrite (x + 4) as (x - (-4)).",
+      "k is added, so it is read off exactly as written - only the inside of the parentheses flips sign."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-graphs-vertex-003",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly describes the graph of y = -2(x - 7)² + 3?",
+    "choices": [
+      "It opens down, and its greatest y-value is 3",
+      "It opens up, and its smallest y-value is 3",
+      "It opens down, and its greatest y-value is 7",
+      "It opens up, and its smallest y-value is -2"
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign of a decides the direction: a > 0 opens up, a < 0 opens down.",
+      "The extreme y-value is the k of the vertex (h, k), not the h."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-graphs-vertex-004",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the axis of symmetry of y = 3x² + 24x - 5?",
+    "choices": [
+      "x = -4",
+      "x = 4",
+      "x = -8",
+      "x = -5"
+    ],
+    "answer": "A",
+    "hints": [
+      "For standard form y = ax² + bx + c the axis of symmetry is x = -b/(2a).",
+      "Here a = 3 and b = 24, so the denominator is 2 · 3, not 3."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-graphs-vertex-005",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The vertex of y = x² - 10x + 21 is the point (h, k). What is the value of k? Type your answer as a number.",
+    "answer": "-4",
+    "hints": [
+      "First find h with x = -b/(2a), using a = 1 and b = -10.",
+      "Substitute that x back into the equation - the constant 21 is the y-intercept, not the vertex y-value."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-graphs-vertex-006",
+    "loId": "alg1.quadratic-graphs-vertex",
+    "cedCode": "ALG1-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A parabola has its vertex at (-2, 5) and passes through the point (0, 13). Which equation describes it?",
+    "choices": [
+      "y = 2(x + 2)² + 5",
+      "y = 2(x - 2)² + 5",
+      "y = -2(x + 2)² + 5",
+      "y = (x + 2)² + 5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start from y = a(x - h)² + k with the vertex you were given, leaving a unknown.",
+      "Substitute x = 0 and y = 13 into that equation and solve for a."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-001",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: (x - 1)(x + 7) = 0",
+    "choices": [
+      "x = -7 or x = 1",
+      "x = -1 or x = 7",
+      "x = 1 or x = 7",
+      "x = -7 or x = -1"
+    ],
+    "answer": "A",
+    "hints": [
+      "The zero product property says at least one factor must equal 0.",
+      "Set x - 1 = 0 and x + 7 = 0 separately, and watch the sign flip in each."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-002",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x² - 49 = 0",
+    "choices": [
+      "x = -7 or x = 7",
+      "x = 7 only",
+      "x = -49 or x = 49",
+      "x = -7 only"
+    ],
+    "answer": "A",
+    "hints": [
+      "There is no plain x term, so isolate the square and take a square root.",
+      "Square-rooting both sides brings a ± with it, because two different numbers square to 49."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-003",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x² + 4x - 21 = 0",
+    "choices": [
+      "x = -7 or x = 3",
+      "x = -3 or x = 7",
+      "x = -7 or x = -3",
+      "x = -1 or x = 21"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find two numbers that multiply to -21 and add to +4.",
+      "That pair is +7 and -3, so the factored form is (x + 7)(x - 3) = 0."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-004",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3(x - 5)² = 48",
+    "choices": [
+      "x = 1 or x = 9",
+      "x = 9 only",
+      "x = -11 or x = 21",
+      "x = -4 or x = 4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Do not expand. Divide both sides by 3 first so the squared part stands alone.",
+      "Once (x - 5)² equals a number, take the square root of both sides with a ±, then add 5."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-005",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve 5x² = 20x and type the LARGER of the two solutions as a number.",
+    "answer": "4",
+    "hints": [
+      "Do not divide both sides by x - move every term to one side instead.",
+      "Factor out the common factor 5x from 5x² - 20x = 0 and use the zero product property."
+    ]
+  },
+  {
+    "id": "alg1-solving-by-factoring-square-roots-006",
+    "loId": "alg1.solving-by-factoring-square-roots",
+    "cedCode": "ALG1-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 2x² - 5x - 12 = 0",
+    "choices": [
+      "x = -3/2 or x = 4",
+      "x = -4 or x = 3/2",
+      "x = -3 or x = 4",
+      "x = 3/2 or x = 4"
+    ],
+    "answer": "A",
+    "hints": [
+      "The leading coefficient is not 1, so look for factors of the form (2x + p)(x + q).",
+      "It factors as (2x + 3)(x - 4) = 0 - now set each factor equal to zero."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-001",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What number must be added to x² + 12x to turn it into a perfect-square trinomial?",
+    "choices": [
+      "36",
+      "144",
+      "6",
+      "24"
+    ],
+    "answer": "A",
+    "hints": [
+      "The completion number for x² + bx is (b/2)².",
+      "Halve the middle coefficient FIRST, then square that result."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-002",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The equation x² + 10x = 24 is being solved by completing the square. Which equation is the correct next step?",
+    "choices": [
+      "(x + 5)² = 49",
+      "(x + 5)² = 24",
+      "(x + 5)² = 25",
+      "(x + 10)² = 124"
+    ],
+    "answer": "A",
+    "hints": [
+      "Half of 10 is 5, so the completion number is 5².",
+      "Whatever you add on the left must also be added on the right, or the equation stops being balanced."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-003",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve by completing the square: x² + 4x - 12 = 0",
+    "choices": [
+      "x = -6 or x = 2",
+      "x = -2 or x = 6",
+      "x = 2 only",
+      "x = -8 or x = 4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Move the constant across first, so the equation reads x² + 4x = 12.",
+      "Add (4/2)² = 4 to BOTH sides, factor the left as (x + 2)², then square-root with a ±."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-004",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is y = x² - 8x + 3 rewritten in vertex form?",
+    "choices": [
+      "y = (x - 4)² - 13",
+      "y = (x - 4)² + 3",
+      "y = (x - 4)² + 19",
+      "y = (x - 8)² - 61"
+    ],
+    "answer": "A",
+    "hints": [
+      "Half of -8 is -4, so the perfect square will be (x - 4)².",
+      "This is an expression with only one side, so add the completion number 16 and subtract it back in the same line."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-005",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve x² - 12x + 11 = 0 by completing the square, then type the SMALLER solution as a number.",
+    "answer": "1",
+    "hints": [
+      "Move the 11 across: x² - 12x = -11, then add (-12/2)² to both sides.",
+      "You should reach (x - 6)² = 25, so x - 6 = ±5."
+    ]
+  },
+  {
+    "id": "alg1-completing-the-square-006",
+    "loId": "alg1.completing-the-square",
+    "cedCode": "ALG1-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve by completing the square: 2x² + 12x - 10 = 0",
+    "choices": [
+      "x = -3 ± √14",
+      "x = -3 ± √5",
+      "x = -6 ± √14",
+      "x = 3 ± √14"
+    ],
+    "answer": "A",
+    "hints": [
+      "The leading coefficient is not 1 - divide every term by 2 before you start.",
+      "From x² + 6x = 5, add (6/2)² = 9 to both sides to get (x + 3)² = 14."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-001",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To solve 3x² - 7x + 2 = 0 with the quadratic formula, which values of a, b, and c should you use?",
+    "choices": [
+      "a = 3, b = -7, c = 2",
+      "a = 3, b = 7, c = 2",
+      "a = 3, b = -7, c = -2",
+      "a = -3, b = 7, c = -2"
+    ],
+    "answer": "A",
+    "hints": [
+      "The equation is already in standard form ax² + bx + c = 0.",
+      "The sign in front of each term rides along into a, b, and c."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-002",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the discriminant of x² + 6x + 5 = 0, and how many real solutions does the equation have?",
+    "choices": [
+      "16, so two real solutions",
+      "16, so one real solution",
+      "56, so two real solutions",
+      "-16, so no real solutions"
+    ],
+    "answer": "A",
+    "hints": [
+      "The discriminant is b² - 4ac, the part under the radical.",
+      "A positive discriminant means two real solutions, zero means exactly one, negative means none."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-003",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these equations has NO real solutions?",
+    "choices": [
+      "x² + 2x + 5 = 0",
+      "x² - 2x - 5 = 0",
+      "x² - 6x + 9 = 0",
+      "x² - 16 = 0"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute b² - 4ac for each equation - you never have to actually solve one.",
+      "No real solutions means the discriminant comes out negative."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-004",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve with the quadratic formula: 2x² + 7x + 3 = 0",
+    "choices": [
+      "x = -3 or x = -1/2",
+      "x = -6 or x = -1",
+      "x = 3 or x = 1/2",
+      "x = -3 or x = 1/2"
+    ],
+    "answer": "A",
+    "hints": [
+      "a = 2, b = 7, c = 3 - start by computing the discriminant b² - 4ac.",
+      "The discriminant is 25, so x = (-7 ± 5)/(2 · 2). The denominator is 2a, not a."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-005",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Compute the discriminant of 3x² - 4x - 5 = 0. Type your answer as a number.",
+    "answer": "76",
+    "hints": [
+      "Use b² - 4ac with a = 3, b = -4, and c = -5.",
+      "Note that (-4)² is positive, and subtracting a negative product adds to the total."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-formula-discriminant-006",
+    "loId": "alg1.quadratic-formula-discriminant",
+    "cedCode": "ALG1-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The equation x² + kx + 16 = 0 has exactly one real solution, and k is positive. What is the value of k?",
+    "choices": [
+      "k = 8",
+      "k = 4",
+      "k = 16",
+      "k = 64"
+    ],
+    "answer": "A",
+    "hints": [
+      "Exactly one real solution means the discriminant equals zero.",
+      "Set k² - 4(1)(16) = 0 and solve for k, then keep the positive value."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-001",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A model rocket is launched, and its height in feet t seconds after launch is h(t) = -16t² + 80t + 96. How high above the ground was the rocket at the instant it was launched?",
+    "choices": [
+      "96 feet",
+      "80 feet",
+      "0 feet",
+      "160 feet"
+    ],
+    "answer": "A",
+    "hints": [
+      "The launch instant is t = 0.",
+      "Substituting t = 0 leaves only the constant term."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-002",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A ball is thrown upward, and its height in feet t seconds later is h(t) = -16t² + 64t + 20. How many seconds after it is thrown does the ball reach its greatest height?",
+    "choices": [
+      "2 seconds",
+      "4 seconds",
+      "20 seconds",
+      "64 seconds"
+    ],
+    "answer": "A",
+    "hints": [
+      "The greatest height happens at the vertex, and the question asks WHEN, so you want the vertex input.",
+      "Use t = -b/(2a) with a = -16 and b = 64 - the denominator is 2a, not a."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-003",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular pen is fenced against a straight barn wall using 24 feet of fence for the three open sides. If x is the width in feet of each side meeting the wall, the area is A(x) = x(24 - 2x) square feet. Which width x gives the greatest area?",
+    "choices": [
+      "6 feet",
+      "12 feet",
+      "3 feet",
+      "72 feet"
+    ],
+    "answer": "A",
+    "hints": [
+      "Expand to A(x) = -2x² + 24x so you can read off a and b.",
+      "The question asks for the WIDTH, so you want x = -b/(2a), not the area you would get by substituting it back."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-004",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A stone is thrown upward from a ledge, and its height in feet t seconds later is h(t) = -16t² + 16t + 96. How many seconds after it is thrown does the stone hit the ground?",
+    "choices": [
+      "3 seconds",
+      "0.5 seconds",
+      "-2 seconds",
+      "96 seconds"
+    ],
+    "answer": "A",
+    "hints": [
+      "Hitting the ground means the height is 0, so solve h(t) = 0.",
+      "Divide every term by -16 first to get t² - t - 6 = 0, then discard any root the situation forbids."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-005",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A theater models its daily profit in dollars as P(x) = -2x² + 40x - 150, where x is the ticket price in dollars. Which ticket price, in dollars, produces the greatest daily profit? Type your answer as a number.",
+    "answer": "10",
+    "hints": [
+      "The leading coefficient is negative, so the vertex of this parabola is the maximum profit.",
+      "The question asks for the PRICE, which is the vertex input x = -b/(2a)."
+    ]
+  },
+  {
+    "id": "alg1-quadratic-models-006",
+    "loId": "alg1.quadratic-models",
+    "cedCode": "ALG1-8.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A ball is launched from a 6-foot-high platform at an upward speed of 44 feet per second, so its height in feet t seconds after launch is h(t) = -16t² + 44t + 6. At what time is the ball 36 feet high on its way UP?",
+    "choices": [
+      "1.25 seconds",
+      "1.5 seconds",
+      "0.75 seconds",
+      "2.75 seconds"
+    ],
+    "answer": "A",
+    "hints": [
+      "Set h(t) equal to 36 and rearrange so one side is 0.",
+      "8t² - 22t + 15 = 0 has two positive roots - the ball passes 36 feet once going up and once coming down, so take the smaller time."
+    ]
+  }
+]

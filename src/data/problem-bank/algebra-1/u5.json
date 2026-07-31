@@ -1,0 +1,342 @@
+[
+  {
+    "id": "alg1-systems-by-graphing-001",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system by graphing: y = x + 1 and y = -x + 5. Which ordered pair is the point where the two lines cross?",
+    "choices": ["(3, 2)", "(2, 3)", "(0, 1)", "(-2, -1)"],
+    "answer": "B",
+    "hints": [
+      "Both equations are already solved for y, so the lines cross where x + 1 = -x + 5.",
+      "Solve that for x, substitute back to get y, and report the pair in (x, y) order."
+    ]
+  },
+  {
+    "id": "alg1-systems-by-graphing-002",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the system y = 4x - 7 and 8x - 2y = 14 have?",
+    "choices": ["Exactly one solution", "No solution", "Infinitely many solutions", "Exactly two solutions"],
+    "answer": "C",
+    "hints": [
+      "Solve the second equation for y before comparing anything.",
+      "Divide EVERY term by -2, then compare both the slope and the y-intercept of the two lines."
+    ]
+  },
+  {
+    "id": "alg1-systems-by-graphing-003",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which ordered pair is a solution of BOTH equations 2x + y = 7 and x - y = 2?",
+    "choices": ["(2, 3)", "(5, 3)", "(1, 3)", "(3, 1)"],
+    "answer": "D",
+    "hints": [
+      "A solution must make both equations true, so test a pair in each one — passing only one equation is not enough.",
+      "Or solve it: adding the two equations gives 3x = 9."
+    ]
+  },
+  {
+    "id": "alg1-systems-by-graphing-004",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the system y = -2x + 5 and 6x + 3y = 21 have?",
+    "choices": ["Exactly one solution", "No solution", "Infinitely many solutions", "Exactly two solutions"],
+    "answer": "B",
+    "hints": [
+      "Put 6x + 3y = 21 into y = mx + b form first — divide every term by 3 after moving the 6x.",
+      "The two lines have the same slope. Now compare their y-intercepts to decide whether they are parallel or the same line."
+    ]
+  },
+  {
+    "id": "alg1-systems-by-graphing-005",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The lines y = 5x - 8 and y = 2x + 4 cross at exactly one point. Type the y-coordinate of that point as a number.",
+    "answer": "12",
+    "hints": [
+      "At the crossing point the two expressions for y are equal: 5x - 8 = 2x + 4.",
+      "Solve for x first, then substitute that x into either equation to get y."
+    ]
+  },
+  {
+    "id": "alg1-systems-by-graphing-006",
+    "loId": "alg1.systems-by-graphing",
+    "cedCode": "ALG1-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve the system by graphing: 3x - 2y = 12 and x + 4y = -10. Which ordered pair is the point of intersection?",
+    "choices": ["(-3, 2)", "(2, 3)", "(2, -3)", "(4, 0)"],
+    "answer": "C",
+    "hints": [
+      "Solve one equation for a variable first — x + 4y = -10 gives x = -10 - 4y.",
+      "Find one coordinate, back-substitute for the other, then check the pair in BOTH original equations."
+    ]
+  },
+
+  {
+    "id": "alg1-systems-substitution-001",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve by substitution: y = 2x and x + y = 9. Which ordered pair is the solution?",
+    "choices": ["(6, 3)", "(3, 6)", "(9, 18)", "(3, 3)"],
+    "answer": "B",
+    "hints": [
+      "The first equation already gives y, so replace y in x + y = 9 with 2x.",
+      "Solve 3x = 9, then use y = 2x to get the second coordinate."
+    ]
+  },
+  {
+    "id": "alg1-systems-substitution-002",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve by substitution: y = x - 3 and 2x + y = 12. Which ordered pair is the solution?",
+    "choices": ["(2, 5)", "(3, 0)", "(5, 8)", "(5, 2)"],
+    "answer": "D",
+    "hints": [
+      "Substitute the expression x - 3 in place of y in the OTHER equation.",
+      "Combine like terms: 2x + x - 3 = 12, so 3x = 15."
+    ]
+  },
+  {
+    "id": "alg1-systems-substitution-003",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve by substitution: x = y + 4 and 3x + 2y = 22. Which ordered pair is the solution?",
+    "choices": ["(6, 2)", "(2, 6)", "(6, -2)", "(4, 0)"],
+    "answer": "A",
+    "hints": [
+      "The first equation is already solved for x, so replace x in 3x + 2y = 22 with (y + 4).",
+      "Distribute carefully: 3(y + 4) = 3y + 12, so the equation becomes 5y + 12 = 22."
+    ]
+  },
+  {
+    "id": "alg1-systems-substitution-004",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve the system 4x - y = 11 and y = x + 1 by substitution. Type the value of x as a number.",
+    "answer": "4",
+    "hints": [
+      "Replace y in the first equation with the expression x + 1 — keep it inside parentheses.",
+      "4x - (x + 1) simplifies to 3x - 1, so solve 3x - 1 = 11."
+    ]
+  },
+  {
+    "id": "alg1-systems-substitution-005",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve by substitution: 4x - 3y = 18 and x + y = 1. Which ordered pair is the solution?",
+    "choices": ["(7, -6)", "(3, -2)", "(-2, 3)", "(3, 2)"],
+    "answer": "B",
+    "hints": [
+      "Isolate the variable with coefficient 1: x + y = 1 gives y = 1 - x. Substitute it in parentheses.",
+      "Distribute the -3 across BOTH terms: -3(1 - x) = -3 + 3x, so the equation becomes 7x - 3 = 18."
+    ]
+  },
+  {
+    "id": "alg1-systems-substitution-006",
+    "loId": "alg1.systems-substitution",
+    "cedCode": "ALG1-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve by substitution: x = 3y - 2 and 2x - 6y = 5. What is the solution of this system?",
+    "choices": ["Exactly one solution: (1, 1)", "No solution", "Infinitely many solutions", "Exactly one solution: (-2, 0)"],
+    "answer": "B",
+    "hints": [
+      "Substitute the expression 3y - 2 for x in the second equation and simplify completely.",
+      "2(3y - 2) - 6y leaves -4, with no y left at all. Decide what a false statement means about the two lines."
+    ]
+  },
+
+  {
+    "id": "alg1-systems-elimination-001",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve by elimination: x + y = 10 and x - y = 4. Which ordered pair is the solution?",
+    "choices": ["(3, 7)", "(7, 3)", "(7, -3)", "(6, 4)"],
+    "answer": "B",
+    "hints": [
+      "The y-terms are +y and -y — already opposites, so add the two equations.",
+      "2x = 14 gives x = 7; back-substitute into x + y = 10 to finish."
+    ]
+  },
+  {
+    "id": "alg1-systems-elimination-002",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve by elimination: 4x + 3y = 17 and 4x - y = 5. Which ordered pair is the solution?",
+    "choices": ["(3, 2)", "(2, -3)", "(2, 3)", "(5, -1)"],
+    "answer": "C",
+    "hints": [
+      "Both equations start with 4x, so subtract one from the other — and subtract EVERY term.",
+      "(4x + 3y) - (4x - y) = 4y, and 17 - 5 = 12."
+    ]
+  },
+  {
+    "id": "alg1-systems-elimination-003",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve by elimination: 2x + 5y = 1 and 3x - 5y = 14. Which ordered pair is the solution?",
+    "choices": ["(-1, 3)", "(3, 1)", "(3, -1)", "(2, 1)"],
+    "answer": "C",
+    "hints": [
+      "The y-terms are +5y and -5y, so adding the two equations removes y with no scaling needed.",
+      "5x = 15 gives x = 3; substitute that into 2x + 5y = 1."
+    ]
+  },
+  {
+    "id": "alg1-systems-elimination-004",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve by elimination: 3x + 4y = 10 and x - 2y = 10. Which ordered pair is the solution?",
+    "choices": ["(-2, 6)", "(6, -2)", "(2, 1)", "(6, 2)"],
+    "answer": "B",
+    "hints": [
+      "Nothing cancels yet. Multiply x - 2y = 10 by 2 (both sides) so the y-terms become +4y and -4y.",
+      "Adding gives 5x = 30; back-substitute into an ORIGINAL equation to get y."
+    ]
+  },
+  {
+    "id": "alg1-systems-elimination-005",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve by elimination: 5x + 2y = 16 and 3x + 4y = 18. Type the value of x as a number.",
+    "answer": "2",
+    "hints": [
+      "Scale to a common y-coefficient of 4: multiply 5x + 2y = 16 by 2 (both sides).",
+      "That gives 10x + 4y = 32; subtract 3x + 4y = 18 term by term to get 7x = 14."
+    ]
+  },
+  {
+    "id": "alg1-systems-elimination-006",
+    "loId": "alg1.systems-elimination",
+    "cedCode": "ALG1-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve by elimination: 4x + 3y = -1 and 3x - 5y = 21. Which ordered pair is the solution?",
+    "choices": ["(-3, 2)", "(2, 3)", "(-2, 3)", "(2, -3)"],
+    "answer": "D",
+    "hints": [
+      "Neither variable cancels yet, and no single scaling fixes it. To eliminate y, aim for the common coefficient 15: multiply the first equation by 5 and the second by 3.",
+      "20x + 15y = -5 and 9x - 15y = 63 add to 29x = 58; then back-substitute into an original equation."
+    ]
+  },
+
+  {
+    "id": "alg1-systems-applications-001",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A concert sold 250 tickets in all. Floor tickets cost 40 dollars each, balcony tickets cost 25 dollars each, and the total collected was 7,750 dollars. Let x = the number of floor tickets and y = the number of balcony tickets. Which system models this situation?",
+    "choices": [
+      "x + y = 7750 and 40x + 25y = 250",
+      "x + y = 250 and 40x + 25y = 7750",
+      "x + y = 250 and 25x + 40y = 7750",
+      "x + y = 250 and 65x = 7750"
+    ],
+    "answer": "B",
+    "hints": [
+      "One equation counts tickets; the other counts dollars. Which given number is a count and which is money?",
+      "Each price must multiply the count it belongs to: 40 dollars goes with the floor count x."
+    ]
+  },
+  {
+    "id": "alg1-systems-applications-002",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which point is in the solution region of the system y ≤ -x + 7 and y > 2x - 4?",
+    "choices": ["(3, 2)", "(1, 2)", "(5, 3)", "(0, -5)"],
+    "answer": "B",
+    "hints": [
+      "Substitute each point into BOTH inequalities — one true statement is not enough.",
+      "Watch the strict inequality y > 2x - 4: a point that makes the two sides equal does NOT count."
+    ]
+  },
+  {
+    "id": "alg1-systems-applications-003",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two numbers have a sum of 41. The larger number is 5 more than twice the smaller number. What are the two numbers?",
+    "choices": ["13 and 28", "18 and 23", "12 and 29", "9 and 32"],
+    "answer": "C",
+    "hints": [
+      "Define the variables first: let s = the smaller number and L = the larger number, then write one equation for the sum and one for the comparison.",
+      "The two equations are s + L = 41 and L = 2s + 5 — substitute the second into the first."
+    ]
+  },
+  {
+    "id": "alg1-systems-applications-004",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cash drawer holds 34 coins that are only nickels (worth 5 cents each) and quarters (worth 25 cents each). Together the coins are worth 490 cents. How many quarters are in the drawer?",
+    "choices": ["18 quarters", "14 quarters", "16 quarters", "20 quarters"],
+    "answer": "C",
+    "hints": [
+      "Let n = the number of nickels and q = the number of quarters: one equation counts coins, the other counts cents.",
+      "From n + q = 34 you get n = 34 - q; substitute that into 5n + 25q = 490."
+    ]
+  },
+  {
+    "id": "alg1-systems-applications-005",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A plane flies 1,800 km with a steady tailwind in 3 hours, and the same 1,800 km back against that same wind in 4 hours. Find the speed of the wind in km/h. Type your answer as a number.",
+    "answer": "75",
+    "hints": [
+      "Turn each trip into a speed first: 1800/3 with the wind and 1800/4 against it.",
+      "With p = the plane's speed in still air and w = the wind speed, p + w = 600 and p - w = 450 — subtract to eliminate p."
+    ]
+  },
+  {
+    "id": "alg1-systems-applications-006",
+    "loId": "alg1.systems-applications",
+    "cedCode": "ALG1-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A chemist mixes a 15% saline solution with a 40% saline solution to make 50 mL of a 30% saline solution. How many mL of the 40% solution are needed?",
+    "choices": ["20 mL", "30 mL", "25 mL", "35 mL"],
+    "answer": "B",
+    "hints": [
+      "Let x = mL of the 15% solution and y = mL of the 40% solution: one equation totals the volume, the other totals the saline.",
+      "Percents become decimals inside an equation: x + y = 50 and 0.15x + 0.40y = 0.30(50)."
+    ]
+  }
+]

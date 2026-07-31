@@ -1,0 +1,542 @@
+[
+  {
+    "id": "alg1-polynomial-operations-001",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify and write in standard form: (4x² + 3x - 7) + (2x² - 8x + 5)",
+    "choices": [
+      "6x² - 5x - 2",
+      "6x² + 11x - 2",
+      "6x⁴ - 5x - 2",
+      "6x² - 5x - 12"
+    ],
+    "answer": "A",
+    "hints": [
+      "Combine like terms only — x² terms with x² terms, x terms with x terms, constants with constants.",
+      "The x terms are 3x and -8x. What is 3 - 8?"
+    ]
+  },
+  {
+    "id": "alg1-polynomial-operations-002",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify and write in standard form: (9x² - 4x + 6) - (3x² + 5x - 2)",
+    "choices": [
+      "6x² - 9x + 8",
+      "6x² - 9x + 4",
+      "6x² + x + 4",
+      "12x² - 9x + 8"
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite the subtraction as adding the opposite: the minus flips the sign of ALL THREE terms in the second group.",
+      "After flipping you have 9x² - 4x + 6 - 3x² - 5x + 2. Note the last term became +2."
+    ]
+  },
+  {
+    "id": "alg1-polynomial-operations-003",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Multiply: -3x²(4x³ - 2x + 7)",
+    "choices": [
+      "-12x⁵ + 6x³ - 21x²",
+      "-12x⁶ + 6x² - 21x²",
+      "-12x⁵ - 6x³ + 21x²",
+      "-12x⁵ + 6x³ + 7"
+    ],
+    "answer": "A",
+    "hints": [
+      "The monomial out front hits every term inside — all three of them, including the constant.",
+      "Multiply the coefficients and ADD the exponents: -3x² times 4x³ gives -12x⁵."
+    ]
+  },
+  {
+    "id": "alg1-polynomial-operations-004",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Multiply: (2x - 7)(3x + 4)",
+    "choices": [
+      "6x² - 13x - 28",
+      "6x² + 13x - 28",
+      "6x² - 13x + 28",
+      "6x² - 28"
+    ],
+    "answer": "A",
+    "hints": [
+      "Four products, not two: First, Outer, Inner, Last.",
+      "Outer is 2x times 4 = 8x and Inner is -7 times 3x = -21x. Combine those two middle terms."
+    ]
+  },
+  {
+    "id": "alg1-polynomial-operations-005",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Multiply (4x + 3)(2x - 5), write the product in standard form, and type just the coefficient of the x term as a number.",
+    "hints": [
+      "Only the Outer and Inner products carry a plain x.",
+      "Outer is 4x times -5 and Inner is 3 times 2x. Add those two coefficients."
+    ],
+    "answer": "-14"
+  },
+  {
+    "id": "alg1-polynomial-operations-006",
+    "loId": "alg1.polynomial-operations",
+    "cedCode": "ALG1-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Multiply and write in standard form: (x + 3)(2x² - 5x + 4)",
+    "choices": [
+      "2x³ + x² - 11x + 12",
+      "2x³ - 5x² - 11x + 12",
+      "2x³ + x² - 11x - 12",
+      "2x³ + x² + 11x + 12"
+    ],
+    "answer": "A",
+    "hints": [
+      "Six products in all: the x hits each of the three terms, then the 3 hits each of the three terms.",
+      "The x² terms are -5x² (from x times -5x) and +6x² (from 3 times 2x²). Combine them before you answer."
+    ]
+  },
+  {
+    "id": "alg1-special-products-001",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Expand: (x + 7)²",
+    "choices": [
+      "x² + 14x + 49",
+      "x² + 49",
+      "x² + 7x + 49",
+      "x² - 14x + 49"
+    ],
+    "answer": "A",
+    "hints": [
+      "Squaring means (x + 7)(x + 7) — there is a middle term.",
+      "Use (a + b)² = a² + 2ab + b² with a = x and b = 7. The middle term is DOUBLE the product."
+    ]
+  },
+  {
+    "id": "alg1-special-products-002",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Expand: (3x - 8)²",
+    "choices": [
+      "9x² - 48x + 64",
+      "9x² + 64",
+      "9x² - 48x - 64",
+      "3x² - 48x + 64"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use (a - b)² = a² - 2ab + b² with a = 3x and b = 8 — and square the coefficient too.",
+      "The last term is (-8)(-8), so it comes out positive."
+    ]
+  },
+  {
+    "id": "alg1-special-products-003",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Multiply: (6x + 5)(6x - 5)",
+    "choices": [
+      "36x² - 25",
+      "36x² + 25",
+      "36x² - 60x - 25",
+      "6x² - 25"
+    ],
+    "answer": "A",
+    "hints": [
+      "Same two terms with opposite signs — that is the difference-of-squares shape.",
+      "FOIL if you want proof: the +30x and -30x middle terms cancel."
+    ]
+  },
+  {
+    "id": "alg1-special-products-004",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Expand: (2x² + 5)²",
+    "choices": [
+      "4x⁴ + 20x² + 25",
+      "4x⁴ + 25",
+      "4x⁴ + 10x² + 25",
+      "2x⁴ + 20x² + 25"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use (a + b)² = a² + 2ab + b², this time with a = 2x² and b = 5.",
+      "Squaring 2x² means squaring the 2 as well and doubling the exponent: (2x²)² = 4x⁴."
+    ]
+  },
+  {
+    "id": "alg1-special-products-005",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Use the difference-of-squares pattern to compute 62 × 58 without long multiplication. Type your answer as a number.",
+    "hints": [
+      "Both numbers sit the same distance from a round number — find it.",
+      "They are each 2 away from 60, so this is (60 + 2)(60 - 2) = 60² - 2²."
+    ],
+    "answer": "3596"
+  },
+  {
+    "id": "alg1-special-products-006",
+    "loId": "alg1.special-products",
+    "cedCode": "ALG1-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Simplify completely: (2x + 9)² - (2x - 9)²",
+    "choices": [
+      "72x",
+      "0",
+      "36x",
+      "8x² + 162"
+    ],
+    "answer": "A",
+    "hints": [
+      "Expand each square separately first — they are NOT the same expression.",
+      "You get (4x² + 36x + 81) - (4x² - 36x + 81). The x² terms and the constants cancel; the middle terms do not."
+    ]
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-001",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Factor 10x² + 25x completely by pulling out the GREATEST common factor, so that nothing inside the parentheses can still be factored out.",
+    "choices": [
+      "5x(2x + 5)",
+      "5(2x² + 5x)",
+      "x(10x + 25)",
+      "5x(2x² + 5)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The GCF has a number part and a variable part: the largest integer dividing both coefficients, and the lowest power of x in both terms.",
+      "Pull out 5x, then divide each original term by 5x."
+    ]
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-002",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor 14x³ - 35x² + 7x completely by pulling out the GREATEST common factor, so that nothing inside the parentheses can still be factored out.",
+    "choices": [
+      "7x(2x² - 5x + 1)",
+      "7x(2x² - 5x)",
+      "7(2x³ - 5x² + x)",
+      "7x(2x² - 5x + 7)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Largest integer dividing 14, 35, and 7? Lowest power of x in all three terms?",
+      "The GCF is 7x. Watch the last term: 7x ÷ 7x = 1, and that 1 must be written."
+    ]
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-003",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor by grouping: x³ + 4x² + 3x + 12",
+    "choices": [
+      "(x + 4)(x² + 3)",
+      "(x + 4)(x² - 3)",
+      "(x + 3)(x² + 4)",
+      "(x - 4)(x² + 3)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Split into two pairs: (x³ + 4x²) + (3x + 12), then factor the GCF out of each pair.",
+      "The first pair gives x²(x + 4) and the second gives 3(x + 4). The matching parentheses are the shared factor."
+    ]
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-004",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Factor -18x³ + 24x² - 6x completely, pulling out a NEGATIVE greatest common factor so the leading coefficient inside the parentheses is positive.",
+    "choices": [
+      "-6x(3x² - 4x + 1)",
+      "-6x(3x² + 4x - 1)",
+      "-6x(3x² - 4x - 1)",
+      "6x(3x² - 4x + 1)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The size of the GCF is 6x; the problem asks you to take it out as -6x.",
+      "Dividing by a negative flips the sign of EVERY term inside, including the last one: -6x ÷ (-6x) = 1."
+    ]
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-005",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The greatest common factor of 20x⁴ - 45x³ + 15x² can be written as Ax^B, where A is a positive whole number and B is the exponent on x. Type the value of A + B as a single number.",
+    "hints": [
+      "Number part: the largest integer that divides 20, 45, and 15.",
+      "Variable part: the LOWEST power of x that appears in every term."
+    ],
+    "answer": "7"
+  },
+  {
+    "id": "alg1-factoring-gcf-grouping-006",
+    "loId": "alg1.factoring-gcf-grouping",
+    "cedCode": "ALG1-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Factor by grouping: 2x³ - 10x² - 3x + 15",
+    "choices": [
+      "(x - 5)(2x² - 3)",
+      "(x - 5)(2x² + 3)",
+      "(x + 5)(2x² - 3)",
+      "(x - 5)(2x² - 5)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Pair them up: (2x³ - 10x²) + (-3x + 15). Factor 2x² out of the first pair.",
+      "The second pair starts negative, so pull out -3, flipping both signs: -3(x - 5). Now both parentheses read (x - 5)."
+    ]
+  },
+  {
+    "id": "alg1-factoring-trinomials-001",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x² + 9x + 20",
+    "choices": [
+      "(x + 4)(x + 5)",
+      "(x + 2)(x + 10)",
+      "(x - 4)(x - 5)",
+      "(x + 1)(x + 20)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find two numbers that multiply to 20 and add to 9.",
+      "Both the constant and the middle coefficient are positive, so both numbers are positive."
+    ]
+  },
+  {
+    "id": "alg1-factoring-trinomials-002",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x² - 11x + 24",
+    "choices": [
+      "(x - 3)(x - 8)",
+      "(x + 3)(x + 8)",
+      "(x - 4)(x - 6)",
+      "(x - 2)(x - 12)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The constant is positive, so the two numbers share a sign — and that sign matches the middle coefficient.",
+      "Both are negative. Which negative pair multiplies to 24 and adds to -11?"
+    ]
+  },
+  {
+    "id": "alg1-factoring-trinomials-003",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x² - 3x - 40",
+    "choices": [
+      "(x - 8)(x + 5)",
+      "(x + 8)(x - 5)",
+      "(x - 10)(x + 4)",
+      "(x - 8)(x - 5)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The constant is negative, so the two numbers have opposite signs.",
+      "The one that is bigger in size takes the sign of the middle term, which is negative. Product 40, difference 3."
+    ]
+  },
+  {
+    "id": "alg1-factoring-trinomials-004",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Factor: 2x² + 11x + 12",
+    "choices": [
+      "(2x + 3)(x + 4)",
+      "(2x + 4)(x + 3)",
+      "(2x + 6)(x + 2)",
+      "(2x + 12)(x + 1)"
+    ],
+    "answer": "A",
+    "hints": [
+      "The leading coefficient is not 1, so use the ac-method: a·c = 2 × 12 = 24.",
+      "Two numbers with product 24 and sum 11 are 3 and 8. Split the middle term: 2x² + 3x + 8x + 12, then group."
+    ]
+  },
+  {
+    "id": "alg1-factoring-trinomials-005",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Factor 6x² - 19x + 10 completely. One factor is (2x - 5) and the other is (3x + k). Type the value of k as a number.",
+    "hints": [
+      "There is no common factor, so use the ac-method: a·c = 6 × 10 = 60.",
+      "Two numbers with product 60 and sum -19 are -15 and -4. Split: 6x² - 15x - 4x + 10, then group."
+    ],
+    "answer": "-2"
+  },
+  {
+    "id": "alg1-factoring-trinomials-006",
+    "loId": "alg1.factoring-trinomials",
+    "cedCode": "ALG1-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Factor completely: 3x³ - 3x² - 90x",
+    "choices": [
+      "3x(x - 6)(x + 5)",
+      "3x(x + 6)(x - 5)",
+      "(x - 6)(x + 5)",
+      "3x(x - 10)(x + 3)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Take the greatest common factor out first — all three terms share it, and it stays in the final answer.",
+      "After pulling out 3x you are left with x² - x - 30. Two numbers with product -30 and sum -1."
+    ]
+  },
+  {
+    "id": "alg1-factoring-special-forms-001",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x² - 49",
+    "choices": [
+      "(x + 7)(x - 7)",
+      "(x - 7)²",
+      "(x + 7)²",
+      "prime — it does not factor over the real numbers"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two terms with a minus between them, and both terms are perfect squares.",
+      "Use a² - b² = (a + b)(a - b) with a = x and b = 7."
+    ]
+  },
+  {
+    "id": "alg1-factoring-special-forms-002",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor: 25x² - 64",
+    "choices": [
+      "(5x + 8)(5x - 8)",
+      "(x + 8)(x - 8)",
+      "(5x - 8)²",
+      "(5x + 8)²"
+    ],
+    "answer": "A",
+    "hints": [
+      "Square-root the WHOLE first term, coefficient included: what squares to 25x²?",
+      "With a = 5x and b = 8, apply a² - b² = (a + b)(a - b)."
+    ]
+  },
+  {
+    "id": "alg1-factoring-special-forms-003",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor: x² + 16x + 64",
+    "choices": [
+      "(x + 8)²",
+      "(x - 8)²",
+      "(x + 8)(x - 8)",
+      "(x + 4)(x + 16)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Three terms, and the first and last are perfect squares — test the perfect-square-trinomial pattern.",
+      "With a = x and b = 8, check that the middle term equals 2ab = 2 × x × 8. The middle sign tells you which binomial."
+    ]
+  },
+  {
+    "id": "alg1-factoring-special-forms-004",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Factor 3x² - 75 completely over the real numbers, so that no factor can be broken down any further.",
+    "choices": [
+      "3(x + 5)(x - 5)",
+      "3(x² - 25)",
+      "(3x + 5)(3x - 5)",
+      "3(x - 5)²"
+    ],
+    "answer": "A",
+    "hints": [
+      "Neither 3 nor 75 is a perfect square — pull out the common factor first and look again.",
+      "After factoring out 3 you have 3(x² - 25), and x² - 25 is still a difference of squares."
+    ]
+  },
+  {
+    "id": "alg1-factoring-special-forms-005",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The trinomial 16x² - kx + 81 is a perfect-square trinomial that factors as (4x - 9)². Find the value of k and type your answer as a number.",
+    "hints": [
+      "In a² - 2ab + b², the middle term is exactly 2 × a × b.",
+      "Here a = 4x and b = 9, and the stem already writes the middle term with a minus sign in front of k."
+    ],
+    "answer": "72"
+  },
+  {
+    "id": "alg1-factoring-special-forms-006",
+    "loId": "alg1.factoring-special-forms",
+    "cedCode": "ALG1-7.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Factor 2x⁴ - 32 completely over the real numbers, so that no factor can be broken down any further.",
+    "choices": [
+      "2(x² + 4)(x + 2)(x - 2)",
+      "2(x² + 4)(x² - 4)",
+      "2(x² - 4)²",
+      "2(x + 2)²(x - 2)²"
+    ],
+    "answer": "A",
+    "hints": [
+      "Pull out the common factor of 2 first, which leaves a difference of squares in x⁴ and 16.",
+      "That gives 2(x² + 4)(x² - 4) — but one of those two factors is itself a difference of squares. The other one is a sum of squares and is prime."
+    ]
+  }
+]

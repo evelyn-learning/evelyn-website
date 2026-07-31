@@ -1,0 +1,311 @@
+[
+  {
+    "id": "alg1-one-variable-statistics-001",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Seven students recorded how many minutes they walked to school: 12, 5, 9, 3, 8, 15, 7. What is the median of this data set?",
+    "choices": ["3", "8", "9", "12"],
+    "answer": "B",
+    "hints": [
+      "The median is the middle value in ORDER, not the middle value as the list happens to be written. Sort the numbers from least to greatest first.",
+      "Sorted, the list is 3, 5, 7, 8, 9, 12, 15. With n = 7 values, the median is the 4th one."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-statistics-002",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Five students reported the number of books they read last month: 3, 8, 10, 12, 22. Which statement about this data set is correct?",
+    "choices": [
+      "The mean is 11 and the median is 10, so the mean is greater than the median.",
+      "The mean is 10 and the median is 11, so the median is greater than the mean.",
+      "The mean and the median are both 11.",
+      "The mean is 11 and the median is 12, so the median is greater than the mean."
+    ],
+    "answer": "A",
+    "hints": [
+      "Mean = sum ÷ count. Median = the middle value of the sorted list.",
+      "The five values add to 55, and the list is already sorted with 5 values, so the median is the 3rd one."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-statistics-003",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The weights, in kilograms, of eight backpacks are 5, 7, 8, 10, 13, 14, 18, 21. What are the range and the interquartile range (IQR)?",
+    "choices": [
+      "range = 21, IQR = 8.5",
+      "range = 16, IQR = 6",
+      "range = 16, IQR = 8.5",
+      "range = 16, IQR = 11.5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Range = max − min. For the IQR you need Q1 and Q3, so split the sorted list in half first.",
+      "There are 8 values, so the lower half is 5, 7, 8, 10 and the upper half is 13, 14, 18, 21. Q1 is the median of the lower half, Q3 is the median of the upper half, and IQR = Q3 − Q1."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-statistics-004",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The ages, in years, of seven members of a hiking club are 20, 22, 24, 26, 28, 30, 32. A new member who is 6 years old joins the club. Which statement correctly describes what happens to the mean age and the median age?",
+    "choices": [
+      "The mean drops from 26 to 23.5 and the median drops from 26 to 25.",
+      "The mean stays at 26 and the median drops from 26 to 25.",
+      "The mean drops from 26 to 23.5 and the median stays at 26.",
+      "The mean drops from 26 to 25 and the median drops from 26 to 23.5."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute the mean and median before, then re-sort with the new value and compute both again.",
+      "Before: the seven ages sum to 182, and the median is the 4th value. After: there are 8 values, so the count is now EVEN and the median is the average of the 4th and 5th values."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-statistics-005",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Ten students recorded the number of minutes they read last night, sorted: 12, 15, 15, 18, 20, 23, 25, 28, 31, 35. Find the interquartile range (IQR) and type your answer as a number.",
+    "hints": [
+      "There are 10 values, an even count, so split the sorted list into a lower half of 5 values and an upper half of 5 values.",
+      "Q1 is the median of 12, 15, 15, 18, 20 and Q3 is the median of 23, 25, 28, 31, 35. Then IQR = Q3 − Q1."
+    ],
+    "answer": "13"
+  },
+  {
+    "id": "alg1-one-variable-statistics-006",
+    "loId": "alg1.one-variable-statistics",
+    "cedCode": "ALG1-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A craft stand sold six items at these prices, in dollars: 4, 5, 6, 7, 8, 90. Which choice reports a correct pair of statistics AND gives the better summary of a typical price for this data set?",
+    "choices": [
+      "Mean = 20 dollars and range = 86 dollars, because the mean uses every value.",
+      "Median = 6.5 dollars and IQR = 3 dollars, because the 90-dollar item pulls the mean far above every other price.",
+      "Mean = 20 dollars and median = 6.5 dollars are about equal, so either one is a fine summary.",
+      "Median = 6 dollars and IQR = 86 dollars, because the middle 50% spans almost the whole data set."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compute all four numbers first: mean, median, range, and IQR. The six values sum to 120.",
+      "With 6 values the median is the average of the 3rd and 4th, and the halves are 4, 5, 6 and 7, 8, 90. Then ask which measure the single 90 distorts."
+    ]
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-001",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scatterplot plots x = the number of hours a student practiced free throws in a week against y = that student's free-throw percentage. The dots form a wide, loosely scattered cloud that still drifts upward from the lower left toward the upper right. How is the association best described?",
+    "choices": [
+      "Strong positive association",
+      "Strong negative association",
+      "No association",
+      "Weak positive association"
+    ],
+    "answer": "D",
+    "hints": [
+      "Direction comes from the tilt: as x increases, does y tend to go up or down?",
+      "Strength comes from the spread: a narrow band that you could almost trace is strong, while a wide fuzzy cloud is weak."
+    ]
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-002",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A class times how long a slice of pizza has been sitting out, x (in minutes), and measures its temperature, y (in degrees Fahrenheit). The trend line is y = −2.5x + 190. Which statement best interprets the slope in context?",
+    "choices": [
+      "For each 1-degree drop in temperature, the pizza has been sitting out about 2.5 more minutes.",
+      "For each additional minute the pizza sits out, the predicted temperature drops by about 2.5 degrees.",
+      "The predicted temperature of the pizza when it is first set out is 2.5 degrees.",
+      "Every slice of pizza in the study cools by exactly 2.5 degrees each minute."
+    ],
+    "answer": "B",
+    "hints": [
+      "Name the variables first: x is minutes and y is degrees. Slope is the predicted change in y for a one-unit increase in x.",
+      "One choice swaps x and y, one describes the intercept instead of the slope, and one turns a prediction about the trend into a promise about every single slice."
+    ]
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-003",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dealer plots x = the age of a used car in years against y = its resale value in thousands of dollars, using cars from 1 to 10 years old. The trend line is y = −1.8x + 24. What does the 24 mean in this context?",
+    "choices": [
+      "The resale value of the car falls by 24 thousand dollars each year.",
+      "The car is predicted to be worth nothing after 24 years.",
+      "The predicted resale value of a brand-new car (age 0 years) is 24 thousand dollars.",
+      "There were 24 cars in the data set."
+    ],
+    "answer": "C",
+    "hints": [
+      "In y = mx + b, the number b is the value of y when x = 0. Translate x = 0 back into the situation.",
+      "The yearly drop is given by the slope, not the intercept."
+    ]
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-004",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A trend line drawn through a scatterplot of x = weekly study hours against y = test score passes through the points (2, 58) and (8, 82). What is the equation of this trend line?",
+    "choices": [
+      "y = 4x + 50",
+      "y = 4x + 58",
+      "y = 0.25x + 57.5",
+      "y = −4x + 66"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the slope from the two points: m = (change in y)/(change in x).",
+      "Once you have m = 4, substitute the point (2, 58) into y = mx + b and solve for b — do not just copy 58 in as the intercept."
+    ]
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-005",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A shop plots x = the number of ads it runs in a week (the data covers 5 to 40 ads per week) against y = the number of units sold that week. A trend line through the cloud passes through the points (10, 130) and (30, 210). Using this trend line, how many units does it predict for a week with 25 ads? Type your answer as a number.",
+    "hints": [
+      "Slope first: m = (210 − 130)/(30 − 10).",
+      "With m = 4, use (10, 130) to find b: 130 = 4(10) + b. Then evaluate the line at x = 25."
+    ],
+    "answer": "190"
+  },
+  {
+    "id": "alg1-scatterplots-trend-lines-006",
+    "loId": "alg1.scatterplots-trend-lines",
+    "cedCode": "ALG1-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Researchers record x = the number of weeks a young tree has been fertilized and y = its height in centimeters, collecting data for weeks 1 through 8 only. They fit the trend line y = 3.2x + 5. A student plugs in x = 40, gets 133 cm, and concludes that fertilizing for 40 weeks makes a tree reach 133 cm. Which criticism of that conclusion is most accurate?",
+    "choices": [
+      "The arithmetic is wrong; the trend line actually predicts 128 cm at week 40.",
+      "The prediction is fine, but the slope should be read as a percent increase rather than centimeters per week.",
+      "Week 40 lies far outside the weeks 1 through 8 the line was built from, so the prediction is unreliable extrapolation, and a trend line by itself cannot establish that fertilizing caused the height.",
+      "The trend line is invalid because a trend line for growth data must pass through the origin."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the arithmetic first, then check whether x = 40 sits inside the range of x-values the data actually covers.",
+      "Two separate problems are on the table here: how far outside the data the prediction reaches, and what an association can and cannot prove."
+    ]
+  },
+  {
+    "id": "alg1-sequences-001",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Consider the sequence 7, 11, 15, 19, ... which continues in the same pattern. Which statement describes this sequence?",
+    "choices": [
+      "Arithmetic with common difference d = 4",
+      "Geometric with common ratio r = 4",
+      "Arithmetic with common difference d = −4",
+      "Neither arithmetic nor geometric"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the consecutive differences and the consecutive ratios. A constant difference means arithmetic; a constant ratio means geometric.",
+      "11 − 7, 15 − 11, and 19 − 15 all give the same number, and d = a₂ − a₁ (later term minus earlier term)."
+    ]
+  },
+  {
+    "id": "alg1-sequences-002",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which explicit formula generates the arithmetic sequence 9, 14, 19, 24, ... ?",
+    "choices": [
+      "aₙ = 9 + 5n",
+      "aₙ = 5n + 4",
+      "aₙ = 9 · 5ⁿ⁻¹",
+      "aₙ = 4n + 5"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start from aₙ = a₁ + (n − 1)d with a₁ = 9 and d = 5, then simplify.",
+      "Test each formula at n = 1 and again at n = 2 — the winner must give 9 and then 14."
+    ]
+  },
+  {
+    "id": "alg1-sequences-003",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The geometric sequence 3, 12, 48, 192, ... continues in the same pattern. What is the 6th term?",
+    "choices": ["768", "12288", "3072", "1024"],
+    "answer": "C",
+    "hints": [
+      "Find the common ratio r by dividing a term by the one before it, then use aₙ = a₁ · rⁿ⁻¹.",
+      "The exponent is n − 1, not n: a₆ uses r to the 5th power, not the 6th. You can also just keep multiplying and count the terms."
+    ]
+  },
+  {
+    "id": "alg1-sequences-004",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An arithmetic sequence begins 45, 38, 31, 24, ... and continues in the same pattern. What is a₁₀, the 10th term?",
+    "choices": ["−18", "−25", "108", "−11"],
+    "answer": "A",
+    "hints": [
+      "The terms are shrinking, so the common difference is negative: d = a₂ − a₁ = 38 − 45.",
+      "Use aₙ = a₁ + (n − 1)d. Reaching the 10th term takes 9 steps from a₁, not 10."
+    ]
+  },
+  {
+    "id": "alg1-sequences-005",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A sequence is defined recursively by a₁ = 160 and aₙ = 0.5 · aₙ₋₁. Find a₅ and type your answer as a number.",
+    "hints": [
+      "Each term is half of the term before it, so this is geometric with r = 0.5 and explicit form aₙ = 160 · (0.5)ⁿ⁻¹.",
+      "Getting to a₅ takes 4 halvings, not 5. You can list them: 160, 80, 40, ..."
+    ],
+    "answer": "10"
+  },
+  {
+    "id": "alg1-sequences-006",
+    "loId": "alg1.sequences",
+    "cedCode": "ALG1-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The arithmetic sequence 5, 9, 13, 17, ... continues in the same pattern. One of its terms equals 101. Which term is it?",
+    "choices": [
+      "the 24th term",
+      "the 25th term",
+      "the 26th term",
+      "the 96th term"
+    ],
+    "answer": "B",
+    "hints": [
+      "Write the explicit formula aₙ = a₁ + (n − 1)d with a₁ = 5 and d = 4, then set it equal to 101 and solve for n.",
+      "Solving 5 + (n − 1)(4) = 101 gives n − 1 = 24 — but the question asks for n, not n − 1."
+    ]
+  }
+]

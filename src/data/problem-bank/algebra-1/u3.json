@@ -1,0 +1,326 @@
+[
+  {
+    "id": "alg1-one-variable-inequalities-001",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3x + 7 < 22",
+    "choices": [
+      "x < 15",
+      "x < 5",
+      "x > 5",
+      "x <= 5"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract 7 from both sides first — subtracting never flips the symbol.",
+      "You are left with 3x < 15. Dividing by a positive number keeps the symbol pointing the same way."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-inequalities-002",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -6x + 4 >= 28",
+    "choices": [
+      "x >= -4",
+      "x <= 4",
+      "x <= -4",
+      "x >= 4"
+    ],
+    "answer": "C",
+    "hints": [
+      "Subtract 4 from both sides to get -6x >= 24 — that step does not flip anything.",
+      "Now divide both sides by -6. Dividing by a NEGATIVE reverses the inequality symbol."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-inequalities-003",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which number-line graph shows the solution set of 5x - 3 >= 12?",
+    "choices": [
+      "Closed circle at 3, shaded right",
+      "Open circle at 3, shaded right",
+      "Closed circle at 3, shaded left",
+      "Closed circle at 15, shaded right"
+    ],
+    "answer": "A",
+    "hints": [
+      "Solve it first: add 3 to both sides, then divide by 5 (positive, so no flip).",
+      "The symbol >= is inclusive, so the boundary value itself is a solution; shade the direction the final symbol points."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-inequalities-004",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 8 - 2x > 5x - 13",
+    "choices": [
+      "x > 3",
+      "x < -3",
+      "x > -3",
+      "x < 3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Collect the x terms on one side and the plain numbers on the other — adding or subtracting never flips the symbol.",
+      "One clean route: add 2x and add 13 to both sides to reach 21 > 7x, then divide by 7 and rewrite with x on the left."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-inequalities-005",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A club has 240 dollars to spend on trophies. Each trophy costs 18 dollars, and the order also carries a one-time engraving fee of 30 dollars. What is the greatest number of trophies the club can order without spending more than 240 dollars?",
+    "choices": [
+      "11",
+      "12",
+      "13",
+      "15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Let t be the number of trophies and write the total cost as an inequality: 18t + 30 is at most 240.",
+      "Subtract the 30-dollar fee first, then divide by 18 — and remember the club can only buy a whole number of trophies."
+    ]
+  },
+  {
+    "id": "alg1-one-variable-inequalities-006",
+    "loId": "alg1.one-variable-inequalities",
+    "cedCode": "ALG1-3.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Solve -3(x - 4) >= 5x + 20 for x, then type as a number the largest integer that is in the solution set.",
+    "answer": "-1",
+    "hints": [
+      "Distribute the -3 first: -3x + 12 >= 5x + 20.",
+      "Collect the x terms to get -8 >= 8x, then divide by 8 (positive, so no flip) and read off the largest integer allowed."
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-001",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -4 < x + 3 < 6",
+    "choices": [
+      "-7 < x < 3",
+      "-1 < x < 9",
+      "-7 < x < 9",
+      "-1 < x < 3"
+    ],
+    "answer": "A",
+    "hints": [
+      "This is an AND written in three-part form, so whatever you do must hit all three parts.",
+      "Subtract 3 from the left part, the middle, and the right part."
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-002",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -6 <= 2x + 4 < 10",
+    "choices": [
+      "-5 < x <= 3",
+      "-10 <= x < 6",
+      "-5 <= x < 3",
+      "-1 <= x < 3"
+    ],
+    "answer": "C",
+    "hints": [
+      "Subtract 4 from all three parts.",
+      "That leaves -10 <= 2x < 6. Divide all three parts by 2 — positive, so every symbol stays exactly as it is."
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-003",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve: 2x + 1 <= -5 OR x - 4 > 1",
+    "choices": [
+      "-3 <= x <= 5",
+      "x <= -3 or x > 5",
+      "x < -3 or x >= 5",
+      "No solution — the two pieces never overlap"
+    ],
+    "answer": "B",
+    "hints": [
+      "Solve each piece on its own before you think about the joining word.",
+      "OR keeps BOTH rays — do not hunt for an overlap, and let each endpoint keep the symbol it came out with."
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-004",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 1 < 7 - 2x <= 11",
+    "choices": [
+      "-2 <= x < 3",
+      "-2 < x <= 3",
+      "3 < x <= -2",
+      "-3 <= x < 2"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract 7 from all three parts to get -6 < -2x <= 4.",
+      "Dividing all three parts by -2 reverses BOTH symbols; then rewrite the statement smallest to largest, letting each endpoint carry its own symbol along."
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-005",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve: 5x + 2 >= 27 AND 3x - 4 < 11",
+    "choices": [
+      "x = 5",
+      "All real numbers",
+      "No solution — the two pieces never overlap",
+      "x >= 5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Solve each piece separately: one gives x >= 5 and the other gives x < 5.",
+      "AND keeps only the values in BOTH sets. Is there any number that is at least 5 and at the same time strictly less than 5?"
+    ]
+  },
+  {
+    "id": "alg1-compound-inequalities-006",
+    "loId": "alg1.compound-inequalities",
+    "cedCode": "ALG1-3.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Solve -11 < 4x + 5 <= 21, then type as a number how many INTEGER values of x are in the solution set.",
+    "answer": "8",
+    "hints": [
+      "Subtract 5 from all three parts, then divide all three parts by 4.",
+      "You should reach -4 < x <= 4. Count the integers carefully: -4 is excluded because the symbol is strict, but 4 is included."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-001",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve: |x - 4| = 7",
+    "choices": [
+      "x = 11 or x = -3",
+      "x = 11 or x = 3",
+      "x = 3 or x = -11",
+      "x = 11 only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read the bars as distance: which numbers sit exactly 7 units away from 4?",
+      "Split into two cases: x - 4 = 7 and x - 4 = -7."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-002",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve: 2|x + 5| - 3 = 11",
+    "choices": [
+      "x = 9 or x = -19",
+      "x = 2 or x = -12",
+      "x = 2 or x = 12",
+      "x = 2 only"
+    ],
+    "answer": "B",
+    "hints": [
+      "Get the absolute value completely alone before splitting: add 3, then divide by 2.",
+      "That leaves |x + 5| = 7, so split into x + 5 = 7 and x + 5 = -7."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-003",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: |x + 2| <= 6",
+    "choices": [
+      "-8 <= x <= 4",
+      "x <= -8 or x >= 4",
+      "-4 <= x <= 8",
+      "-6 <= x <= 6"
+    ],
+    "answer": "A",
+    "hints": [
+      "A less-than absolute value means 'within', which is an AND band: -6 <= x + 2 <= 6.",
+      "Subtract 2 from all three parts."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-004",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: |2x - 1| > 9",
+    "choices": [
+      "-4 < x < 5",
+      "x > 5 or x > -4",
+      "x < -4 or x > 5",
+      "x < -5 or x > 4"
+    ],
+    "answer": "C",
+    "hints": [
+      "Greater than means FARTHER away than 9 units, so the solution is two rays, not a band.",
+      "Branch 1: 2x - 1 > 9. Branch 2: 2x - 1 < -9 — the symbol flips on the negative branch."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-005",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following describes the solution set of |4x + 3| >= -2?",
+    "choices": [
+      "All real numbers",
+      "No solution",
+      "x >= -2",
+      "Only x = -3/4"
+    ],
+    "answer": "A",
+    "hints": [
+      "Before splitting into cases, ask what the smallest value the left side could ever take is.",
+      "An absolute value is a distance, so it is never negative — compare that fact to the -2 on the right."
+    ]
+  },
+  {
+    "id": "alg1-absolute-value-006",
+    "loId": "alg1.absolute-value",
+    "cedCode": "ALG1-3.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Solve 3|x - 5| - 4 <= 14, then type as a number how many INTEGER values of x satisfy it.",
+    "answer": "13",
+    "hints": [
+      "Isolate the absolute value first: add 4 to both sides, then divide by 3.",
+      "|x - 5| <= 6 becomes the band -6 <= x - 5 <= 6; add 5 to all three parts, then count the integers, including both endpoints."
+    ]
+  }
+]

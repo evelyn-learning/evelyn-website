@@ -1,0 +1,326 @@
+[
+  {
+    "id": "alg1-simplifying-radicals-001",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify √72 completely, so that no perfect-square factor is left under the radical.",
+    "choices": [
+      "6√2",
+      "2√18",
+      "36√2",
+      "6√12"
+    ],
+    "answer": "A",
+    "hints": [
+      "Hunt for the LARGEST perfect square that divides 72 — try 36 before you try 4.",
+      "72 = 36 · 2, so √72 = √36 · √2. What is √36?"
+    ]
+  },
+  {
+    "id": "alg1-simplifying-radicals-002",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: √20 + √45",
+    "choices": [
+      "5√5",
+      "√65",
+      "5√10",
+      "6√5"
+    ],
+    "answer": "A",
+    "hints": [
+      "The two radicands look unlike, so simplify each radical on its own before deciding whether they can be combined.",
+      "√20 = 2√5 and √45 = 3√5. Like radicals add by adding the coefficients only."
+    ]
+  },
+  {
+    "id": "alg1-simplifying-radicals-003",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Use the product rule to evaluate √12 · √27. Type your answer as a number.",
+    "hints": [
+      "The product rule runs rightward too: √a · √b = √(ab). Merge the two radicands under a single root.",
+      "12 · 27 = 324, and 324 is a perfect square."
+    ],
+    "answer": "18"
+  },
+  {
+    "id": "alg1-simplifying-radicals-004",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Write 6/√3 in simplest radical form, with no radical left in the denominator.",
+    "choices": [
+      "2√3",
+      "6√3",
+      "2",
+      "2/√3"
+    ],
+    "answer": "A",
+    "hints": [
+      "A radical downstairs means the expression is not simplified yet. Multiply the top AND the bottom by √3 — that is multiplying by 1.",
+      "√3 · √3 = 3, so you get 6√3/3. Now reduce the whole numbers 6 and 3."
+    ]
+  },
+  {
+    "id": "alg1-simplifying-radicals-005",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: √50 - √8 + √32",
+    "choices": [
+      "7√2",
+      "11√2",
+      "3√2",
+      "√74"
+    ],
+    "answer": "A",
+    "hints": [
+      "Extract the largest perfect square from each radicand first — all three hide the same radical.",
+      "They become 5√2, 2√2, and 4√2. Combine the coefficients in order: 5 - 2 + 4."
+    ]
+  },
+  {
+    "id": "alg1-simplifying-radicals-006",
+    "loId": "alg1.simplifying-radicals",
+    "cedCode": "ALG1-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Write 10/√20 in simplest radical form.",
+    "choices": [
+      "√5",
+      "5√5",
+      "√5/2",
+      "2√5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Simplify the radical in the denominator before you rationalize: what is √20 in simplest form?",
+      "10/√20 = 10/(2√5) = 5/√5. Now multiply the top and bottom by √5 and reduce."
+    ]
+  },
+  {
+    "id": "alg1-radical-equations-001",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the equation √(x - 1) = -6 have?",
+    "choices": [
+      "None, because a principal square root is never negative",
+      "One, x = 37",
+      "One, x = 35",
+      "Two, x = 37 and x = -35"
+    ],
+    "answer": "A",
+    "hints": [
+      "Before squaring anything, ask what kinds of values the √ symbol is allowed to output.",
+      "Squaring would give x - 1 = 36 and x = 37, but checking x = 37 in the original gives √36 = 6, not -6 — that candidate is extraneous."
+    ]
+  },
+  {
+    "id": "alg1-radical-equations-002",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x: √(2x + 5) = 7. Type your answer as a number.",
+    "hints": [
+      "The radical already stands alone, so square BOTH sides — including the 7.",
+      "Squaring gives 2x + 5 = 49. Subtract 5 first, then divide by 2, and check your answer in the original equation."
+    ],
+    "answer": "22"
+  },
+  {
+    "id": "alg1-radical-equations-003",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Squaring both sides of √(x + 20) = x gives x + 20 = x², whose solutions are x = 5 and x = -4. Which of those actually solve the ORIGINAL equation?",
+    "choices": [
+      "x = 5 only",
+      "x = -4 only",
+      "Both x = 5 and x = -4",
+      "Neither value"
+    ],
+    "answer": "A",
+    "hints": [
+      "Substitute each candidate into the original equation √(x + 20) = x, not into the squared version.",
+      "For x = -4 the left side is √16 = 4, and a principal square root is never negative, so it cannot equal -4."
+    ]
+  },
+  {
+    "id": "alg1-radical-equations-004",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A right triangle has a hypotenuse of 12 inches and one leg of 6 inches. What is the exact length of the other leg, in inches, in simplest radical form?",
+    "choices": [
+      "6√3",
+      "6√5",
+      "6",
+      "18"
+    ],
+    "answer": "A",
+    "hints": [
+      "The 12 is the hypotenuse (the longest side), so it is c in a² + b² = c². The missing side is a LEG, so you subtract.",
+      "6² + b² = 12² gives b² = 144 - 36 = 108. Take the positive root and pull out the largest perfect square."
+    ]
+  },
+  {
+    "id": "alg1-radical-equations-005",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: √(x + 7) = x - 5",
+    "choices": [
+      "x = 9 only",
+      "x = 2 only",
+      "Both x = 2 and x = 9",
+      "No solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Square both sides, remembering that the right side is a binomial: (x - 5)² = x² - 10x + 25.",
+      "You get x² - 11x + 18 = 0, which factors as (x - 2)(x - 9) = 0. Test BOTH candidates in the original equation."
+    ]
+  },
+  {
+    "id": "alg1-radical-equations-006",
+    "loId": "alg1.radical-equations",
+    "cedCode": "ALG1-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x - √(x + 1) = 5",
+    "choices": [
+      "x = 8 only",
+      "x = 3 only",
+      "Both x = 3 and x = 8",
+      "No solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Get the radical alone on one side first — squaring only removes the root when the radical stands by itself.",
+      "From √(x + 1) = x - 5 you get x + 1 = x² - 10x + 25, so x² - 11x + 24 = 0 and the candidates are x = 3 and x = 8. Check each one in the original."
+    ]
+  },
+  {
+    "id": "alg1-rational-expressions-001",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (x² - 25)/(x + 5)",
+    "choices": [
+      "x - 5",
+      "x + 5",
+      "x",
+      "x² - 5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor the numerator first — x² - 25 is a difference of squares.",
+      "(x - 5)(x + 5)/(x + 5): cancel the shared FACTOR (x + 5)."
+    ]
+  },
+  {
+    "id": "alg1-rational-expressions-002",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What are the excluded values of (x - 3)/(x² - x - 6)?",
+    "choices": [
+      "x = 3 and x = -2",
+      "x = -2 only",
+      "x = -3 and x = 2",
+      "x = 3 only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor the denominator and set each factor equal to zero — excluded values are wherever the bottom would be zero.",
+      "x² - x - 6 = (x - 3)(x + 2). The (x - 3) cancels with the numerator, but a cancelled factor still excludes its value."
+    ]
+  },
+  {
+    "id": "alg1-rational-expressions-003",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (3x + 12)/(x² - 16)",
+    "choices": [
+      "3/(x - 4)",
+      "3/(x + 4)",
+      "(x + 4)/(x - 4)",
+      "3/(x² - 4)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor the GCF out of the numerator, and factor the denominator as a difference of squares.",
+      "3(x + 4)/[(x - 4)(x + 4)]: cancel the shared factor (x + 4) and see what is left on top."
+    ]
+  },
+  {
+    "id": "alg1-rational-expressions-004",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: (x² + 5x + 6)/(x² - 4) · (x - 2)/(x + 3)",
+    "choices": [
+      "1",
+      "x + 3",
+      "(x + 3)/(x - 2)",
+      "(x + 2)/(x - 2)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factor every numerator and denominator completely before you multiply anything out.",
+      "x² + 5x + 6 = (x + 2)(x + 3) and x² - 4 = (x - 2)(x + 2). Now cancel factors across the two fractions and see how much survives."
+    ]
+  },
+  {
+    "id": "alg1-rational-expressions-005",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x and type your answer as a number: 3/(x - 2) + 1 = 7/(x - 2)",
+    "hints": [
+      "The LCD is (x - 2). Multiply EVERY term by it — including the 1 — so the denominators disappear.",
+      "You get 3 + (x - 2) = 7. Solve, then confirm your answer is not the excluded value x = 2."
+    ],
+    "answer": "6"
+  },
+  {
+    "id": "alg1-rational-expressions-006",
+    "loId": "alg1.rational-expressions",
+    "cedCode": "ALG1-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve: x²/(x - 3) = 9/(x - 3)",
+    "choices": [
+      "x = -3 only",
+      "x = 3 only",
+      "Both x = 3 and x = -3",
+      "No solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "List the excluded value FIRST by setting the denominator equal to zero, then multiply both sides by (x - 3).",
+      "Clearing the denominator leaves x² = 9, so the candidates are x = 3 and x = -3. One of them is the excluded value and must be rejected as extraneous."
+    ]
+  }
+]

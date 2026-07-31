@@ -1,0 +1,354 @@
+[
+  {
+    "id": "alg1-one-two-step-equations-001",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 4x + 7 = 31",
+    "choices": ["x = 9.5", "x = 24", "x = 6", "x = 0.75"],
+    "answer": "C",
+    "hints": [
+      "Undo the +7 before you touch the 4 — addition and subtraction come off first.",
+      "4x = 24, so divide both sides by 4."
+    ]
+  },
+  {
+    "id": "alg1-one-two-step-equations-002",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 12 - 5x = 37",
+    "choices": ["x = 25", "x = 5", "x = -9.8", "x = -5"],
+    "answer": "D",
+    "hints": [
+      "Subtract 12 from both sides first — the coefficient of x is -5, not 5.",
+      "-5x = 25, and the sign travels with the coefficient when you divide."
+    ]
+  },
+  {
+    "id": "alg1-one-two-step-equations-003",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x/6 + 4 = 9",
+    "choices": ["x = 50", "x = 30", "x = 78", "x = 5"],
+    "answer": "B",
+    "hints": [
+      "Undo in reverse order: subtract 4 before you deal with the division by 6.",
+      "x/6 = 5, so multiply both sides by 6. (If you clear the fraction first instead, every term must be multiplied by 6.)"
+    ]
+  },
+  {
+    "id": "alg1-one-two-step-equations-004",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: (2/3)x - 5 = 7",
+    "choices": ["x = 18", "x = 8", "x = 36", "x = 3"],
+    "answer": "A",
+    "hints": [
+      "Add 5 to both sides first to isolate the term holding x.",
+      "(2/3)x = 12 — undo a multiplication by 2/3 by multiplying both sides by the reciprocal 3/2."
+    ]
+  },
+  {
+    "id": "alg1-one-two-step-equations-005",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x: 5 - x/3 = 11. Type your answer as a number.",
+    "answer": "-18",
+    "hints": [
+      "Subtract 5 from both sides to isolate the x term.",
+      "-x/3 = 6 — now multiply both sides by -3."
+    ]
+  },
+  {
+    "id": "alg1-one-two-step-equations-006",
+    "loId": "alg1.one-two-step-equations",
+    "cedCode": "ALG1-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 8 - (3x)/4 = 20",
+    "choices": ["x = -48", "x = 16", "x = -24", "x = -16"],
+    "answer": "D",
+    "hints": [
+      "Subtract 8 from both sides first; the term left behind is -(3x)/4.",
+      "-(3x)/4 = 12, so multiply both sides by -4 to get 3x = -48, then divide by 3."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-001",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 7x - 2 = 4x + 13",
+    "choices": ["x = 15", "x = 5", "x = 11/3", "x = -5"],
+    "answer": "B",
+    "hints": [
+      "Move the smaller variable term: subtract 4x from both sides.",
+      "3x - 2 = 13 — add 2 to both sides, then divide by 3."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-002",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 4(x - 3) = 2x + 6",
+    "choices": ["x = 4.5", "x = 18", "x = 9", "x = -9"],
+    "answer": "C",
+    "hints": [
+      "Distribute the 4 to BOTH terms inside the parentheses before collecting anything.",
+      "4x - 12 = 2x + 6 — subtract 2x, add 12, then divide by 2."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-003",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How many solutions does the equation 5(2x - 3) = 10x + 7 have?",
+    "choices": [
+      "Exactly one solution",
+      "Infinitely many solutions",
+      "Exactly two solutions",
+      "No solution"
+    ],
+    "answer": "D",
+    "hints": [
+      "Distribute the 5 first and compare the two sides term by term.",
+      "The variable terms cancel — decide whether the statement left behind is true or false."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-004",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3x - 2(x - 5) = 4x + 1",
+    "choices": ["x = 3", "x = -11/3", "x = 9", "x = -3"],
+    "answer": "A",
+    "hints": [
+      "Distributing -2 across (x - 5) gives -2x + 10, not -2x - 10.",
+      "The left side simplifies to x + 10, so x + 10 = 4x + 1."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-005",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x: x/2 + 3 = x/5 + 6. Type your answer as a number.",
+    "answer": "10",
+    "hints": [
+      "Clear the fractions first: multiply EVERY term by the LCD, 10.",
+      "5x + 30 = 2x + 60 — collect the x terms on one side."
+    ]
+  },
+  {
+    "id": "alg1-multi-step-equations-006",
+    "loId": "alg1.multi-step-equations",
+    "cedCode": "ALG1-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: (2x - 1)/3 = (x + 4)/2",
+    "choices": ["x = 5", "x = 10", "x = 14", "x = -14"],
+    "answer": "C",
+    "hints": [
+      "Multiply both sides by 6 (or cross-multiply) to clear both denominators.",
+      "2(2x - 1) = 3(x + 4) gives 4x - 2 = 3x + 12."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-001",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The area of a rectangle is A = lw, where l is the length and w is the width. Solve this formula for l.",
+    "choices": ["l = Aw", "l = w/A", "l = A/w", "l = A - w"],
+    "answer": "C",
+    "hints": [
+      "The target l is being multiplied by w, so undo a multiplication.",
+      "Divide both sides by w — you may divide by a letter as long as it is nonzero."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-002",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve the equation y = mx + b for x.",
+    "choices": ["x = (y - b)/m", "x = y/m - b", "x = (y + b)/m", "x = m(y - b)"],
+    "answer": "A",
+    "hints": [
+      "Undo in reverse order: the + b happened last, so subtract it from both sides first.",
+      "After y - b = mx, divide the ENTIRE left side by m, not just one term."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-003",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The area of a trapezoid is A = (1/2)h(a + b), where a and b are the two parallel sides and h is the height. Solve this formula for h.",
+    "choices": [
+      "h = A/(2(a + b))",
+      "h = 2A/(a + b)",
+      "h = (a + b)/(2A)",
+      "h = 2A - a - b"
+    ],
+    "answer": "B",
+    "hints": [
+      "Undo the multiplication by 1/2 by multiplying both sides by 2 — not by dividing by 2.",
+      "2A = h(a + b), so divide both sides by the whole factor (a + b)."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-004",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve the equation ax + b = cx + d for x, where a is not equal to c.",
+    "choices": [
+      "x = (d + b)/(a - c)",
+      "x = (b - d)/(a - c)",
+      "x = (a - c)/(d - b)",
+      "x = (d - b)/(a - c)"
+    ],
+    "answer": "D",
+    "hints": [
+      "Collect both x terms on one side and both constants on the other, exactly as you would with numbers.",
+      "ax - cx = d - b, and the left side factors as x(a - c)."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-005",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Rearranging the formula A = P + Prt for t gives t = (A - P)/(Pr). Use it to find t when A = 1300, P = 1000, and r = 0.06. Type your answer as a number.",
+    "answer": "5",
+    "hints": [
+      "Work out the numerator A - P and the denominator Pr separately before dividing.",
+      "The numerator is 300 and the denominator is (1000)(0.06)."
+    ]
+  },
+  {
+    "id": "alg1-literal-equations-006",
+    "loId": "alg1.literal-equations",
+    "cedCode": "ALG1-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve the equation 3x + xy = 12 for x.",
+    "choices": ["x = 4 + y", "x = 12/(3y)", "x = 12/(3 + y)", "x = (12 - y)/3"],
+    "answer": "C",
+    "hints": [
+      "The target x appears in TWO terms, so make it appear once before you divide.",
+      "Factor x out of the left side: x(3 + y) = 12, then divide by the whole factor."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-001",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A recipe uses 3 cups of flour for every 2 cups of milk. At the same ratio, how many cups of flour are needed for 8 cups of milk?",
+    "choices": ["12 cups", "9 cups", "16/3 cups", "24 cups"],
+    "answer": "A",
+    "hints": [
+      "Set up a proportion with matching units in matching slots: flour over milk equals flour over milk.",
+      "3/2 = f/8 — cross-multiply to get 2f = 24."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-002",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "18 is what percent of 45?",
+    "choices": ["250 percent", "60 percent", "40 percent", "27 percent"],
+    "answer": "C",
+    "hints": [
+      "Use part/whole = percent/100 — the whole goes in the denominator.",
+      "Compute 18/45, then multiply by 100."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-003",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: (x - 3)/4 = 7/2",
+    "choices": ["x = 31", "x = 17", "x = 14", "x = 15.5"],
+    "answer": "B",
+    "hints": [
+      "Cross-multiply: 2(x - 3) = 4 times 7.",
+      "2(x - 3) = 28 gives x - 3 = 14 — the question asks for x, so do not stop there."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-004",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a 20 percent discount, a pair of shoes costs 68 dollars. What was the original price?",
+    "choices": ["81.60 dollars", "54.40 dollars", "88 dollars", "85 dollars"],
+    "answer": "D",
+    "hints": [
+      "The 20 percent was taken of the unknown ORIGINAL price, so let p be the original and put p in the equation.",
+      "A 20 percent discount means the shopper pays 80 percent: 0.8p = 68."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-005",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A town's population grew from 2500 to 2900. What is the percent increase? Type your answer as a number only, with no percent sign.",
+    "answer": "16",
+    "hints": [
+      "Percent change = (new - old)/old times 100 — the denominator is the ORIGINAL value.",
+      "The change is 400, so compute 400/2500 times 100."
+    ]
+  },
+  {
+    "id": "alg1-proportions-percents-006",
+    "loId": "alg1.proportions-percents",
+    "cedCode": "ALG1-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The price of a jacket is increased by 25 percent. Some weeks later, that new price is decreased by 20 percent. Compared with the original price, the final price is:",
+    "choices": [
+      "5 percent higher than the original price",
+      "exactly the same as the original price",
+      "5 percent lower than the original price",
+      "45 percent higher than the original price"
+    ],
+    "answer": "B",
+    "hints": [
+      "Percent changes multiply rather than add: an increase of 25 percent multiplies by 1.25, a decrease of 20 percent multiplies by 0.80.",
+      "Try it on a starting price of 100 dollars and carry the result through both steps."
+    ]
+  }
+]
