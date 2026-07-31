@@ -20,6 +20,9 @@ type Difficulty = 1 | 2 | 3 | 4;
 function toPlanLite(plan: LessonPlan): PlanLite {
   return {
     id: plan.id,
+    // Design B (generate-on-exhaustion) topic derivation — never the
+    // portal's courseId (a Mongo ObjectId hex on the real wire).
+    topic: plan.topic,
     los: plan.los.map((l) => ({ id: l.id, standard: l.standard })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     segments: plan.segments.map((s: any) => ({

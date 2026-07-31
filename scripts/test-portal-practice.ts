@@ -12,6 +12,8 @@ import {
   type PlanLite,
   type BankLite,
 } from '@/lib/tutor/portal/practice';
+import { MAX_GENERATIONS_PER_REQUEST, type PracticeGenSources } from '@/lib/tutor/portal/practice-gen';
+import type { GenPayload } from '@/lib/tutor/voice/problem-generator';
 import type { RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;
@@ -200,6 +202,152 @@ await test('excludeIds empty array — behaves exactly as before (regression)', 
   );
   const baseline = await retrievePractice(loReq(), new FakeSources([planWithLo], [bankItem]));
   assert.deepStrictEqual(withEmpty.items, baseline.items);
+});
+
+// Design B (generate-on-exhaustion), Task 3 round-1 review fix #3 —
+// integration tests for the practice.ts <-> practice-gen.ts wiring, injecting
+// a fake PracticeGenSources through retrievePractice's third parameter.
+// PRACTICE_GEN is off-by-default (env unset), so every test here turns it on
+// and cleans up after itself.
+class FakeGenSources implements PracticeGenSources {
+  public reserveCalls: Array<{ studentId: string; loId: string; n: number }> = [];
+  public persisted: Array<{ id: string; topic: string; topicId?: string; loId: string }> = [];
+  public generateCalls = 0;
+  constructor(
+    private allowed: number,
+    private results: Array<{ gen: GenPayload; hash: string } | null>,
+  ) {}
+  async reserve(studentId: string, loId: string, n: number) {
+    this.reserveCalls.push({ studentId, loId, n });
+    return Math.min(this.allowed, n);
+  }
+  async generateAndVerify() {
+    const result = this.results[this.generateCalls] ?? null;
+    this.generateCalls++;
+    return result;
+  }
+  async persist(row: { id: string; topic: string; topicId?: string; loId: string }) {
+    this.persisted.push(row);
+  }
+}
+
+function numericGen(text: string, answer: string): GenPayload {
+  return { problemText: text, finalAnswer: answer, responseFormat: 'numeric' };
+}
+
+const planWithTopic: PlanLite = {
+  id: 'evelyn.test.plan.gen.v1',
+  topic: 'ap-statistics',
+  los: [{ id: LO, standard: 'AP-STATS-1.10' }],
+  segments: [],
+};
+const planNoTopic: PlanLite = {
+  id: 'evelyn.test.plan.notopic.v1',
+  los: [{ id: LO, standard: 'AP-STATS-1.10' }],
+  segments: [],
+};
+
+await test('generate-on-exhaustion: LO-scope-only gating — topic scope never calls genSources', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(2, [{ gen: numericGen('Fresh', '9'), hash: 'h1' }]);
+  const req: RetrievePracticeRequest = { studentId: 's', courseId: '64f0abc123abc123abc12345', scope: { topicId: 'ap-statistics' }, count: 10 };
+  await retrievePractice(req, new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.equal(gen.generateCalls, 0, 'topic-scoped shortfalls must never trigger generation');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: shortfall (capped at 2) is what gets requested from the cap check', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(2, [
+    { gen: numericGen('Fresh 1', '9'), hash: 'h1' },
+    { gen: numericGen('Fresh 2', '11'), hash: 'h2' },
+  ]);
+  // Pool = 1 bank item; asking for 8 -> shortfall = 7, capped to 2 internally.
+  await retrievePractice(loReq({ count: 8 }), new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.equal(gen.reserveCalls.length, 1);
+  assert.equal(gen.reserveCalls[0].n, MAX_GENERATIONS_PER_REQUEST, 'reserve is asked for min(shortfall, 2), not the raw shortfall (7)');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: generated items are appended to the retrieval result', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(1, [{ gen: numericGen('Fresh problem', '9'), hash: 'freshhash' }]);
+  const r = await retrievePractice(loReq({ count: 5 }), new FakeSources([planWithTopic], [bankItem]), gen);
+  const ids = r.items.map((i) => i.id);
+  assert.ok(ids.includes(`practice-gen.${LO}.freshhash`), 'the generated item is appended to the response');
+  assert.ok(ids.includes(bankItem.id), 'retrieval-pool items are still present');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: a generated item colliding with an already-available id is deduped away', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  // The generation stub "regenerates" a hash that collides with an id
+  // already present in the retrieval pool.
+  const collidingId = `practice-gen.${LO}.dupA`;
+  const gen = new FakeGenSources(1, [{ gen: numericGen('Regenerated dup', '9'), hash: 'dupA' }]);
+  const bankWithCollision: BankLite = { ...bankItem, id: collidingId };
+  const r = await retrievePractice(loReq({ count: 5 }), new FakeSources([planWithTopic], [bankWithCollision]), gen);
+  const occurrences = r.items.filter((i) => i.id === collidingId).length;
+  assert.equal(occurrences, 1, 'the id must appear exactly once, not duplicated');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: a generated item colliding with an excludeIds entry is not re-served', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const collidingId = `practice-gen.${LO}.dupB`;
+  const gen = new FakeGenSources(1, [{ gen: numericGen('Regenerated dup', '9'), hash: 'dupB' }]);
+  // Pool = 1 bank item (not the colliding one) so there IS a shortfall to
+  // trigger generation; the student has already been served collidingId.
+  const r = await retrievePractice(
+    loReq({ count: 5, excludeIds: [collidingId] }),
+    new FakeSources([planWithTopic], [bankItem]),
+    gen,
+  );
+  assert.ok(!r.items.some((i) => i.id === collidingId), 'a regenerated item matching an excluded id must not be re-served');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: topic is derived engine-side from the LO\'s owning plan, never courseId', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(1, [{ gen: numericGen('Fresh problem', '9'), hash: 'topichash' }]);
+  // courseId here is what the real portal sends on the wire (a Mongo
+  // ObjectId hex) — it must NOT leak into the persisted topic/topicId.
+  const req: RetrievePracticeRequest = {
+    studentId: 's',
+    courseId: '64f0abc123abc123abc12345',
+    scope: { loId: LO },
+    count: 5,
+  };
+  await retrievePractice(req, new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.equal(gen.persisted.length, 1);
+  assert.equal(gen.persisted[0].topic, 'ap-statistics', 'topic comes from the owning plan, not courseId');
+  assert.equal(gen.persisted[0].topicId, 'ap-statistics', 'topicId mirrors topic so bankForTopic matches');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: no owning plan for the LO -> generation skipped (no orphan rows)', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(2, [{ gen: numericGen('Fresh problem', '9'), hash: 'orphan' }]);
+  const r = await retrievePractice(loReq({ count: 5 }), new FakeSources([], [bankItem]), gen);
+  assert.equal(gen.generateCalls, 0, 'no owning plan (no topic to tag) must skip generation entirely');
+  assert.ok(!r.items.some((i) => i.id.startsWith('practice-gen.')));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: an owning plan with no topic field also skips generation (no orphan rows)', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const gen = new FakeGenSources(2, [{ gen: numericGen('Fresh problem', '9'), hash: 'orphan2' }]);
+  await retrievePractice(loReq({ count: 5 }), new FakeSources([planNoTopic], [bankItem]), gen);
+  assert.equal(gen.generateCalls, 0, 'an owning plan lacking a topic must not produce an orphan-tagged row');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('generate-on-exhaustion: kill-switch off (env unset) -> genSources never touched even with a shortfall', async () => {
+  delete process.env.PRACTICE_GEN;
+  const gen = new FakeGenSources(2, [{ gen: numericGen('Fresh problem', '9'), hash: 'killed' }]);
+  await retrievePractice(loReq({ count: 5 }), new FakeSources([planWithTopic], [bankItem]), gen);
+  assert.equal(gen.reserveCalls.length, 0);
+  assert.equal(gen.generateCalls, 0);
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

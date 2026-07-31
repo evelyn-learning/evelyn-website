@@ -16,11 +16,14 @@ import { strict as assert } from 'node:assert';
 import {
   generatePracticeItems,
   practiceGenSources,
+  gateGeneratedAnswer,
+  normalizeNumericAnswer,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
   type PracticeGenSources,
   type GeneratePracticeItemsOptions,
+  type VerifyFn,
 } from './practice-gen';
 import type { GenPayload } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
@@ -72,19 +75,23 @@ function makeStubSources(opts: {
   allowed?: number;
 } = {}): PracticeGenSources & {
   prompts: string[];
+  excludeHashesSeen: string[][];
   persisted: unknown[];
   reserveCalls: Array<{ studentId: string; loId: string; n: number }>;
 } {
   const prompts: string[] = [];
+  const excludeHashesSeen: string[][] = [];
   const persisted: unknown[] = [];
   const reserveCalls: Array<{ studentId: string; loId: string; n: number }> = [];
   let callIndex = 0;
   return {
     prompts,
+    excludeHashesSeen,
     persisted,
     reserveCalls,
-    async generateAndVerify(userPrompt: string) {
+    async generateAndVerify(userPrompt: string, excludeHashes: string[]) {
       prompts.push(userPrompt);
+      excludeHashesSeen.push(excludeHashes);
       const i = callIndex++;
       const spec = opts.perCall ? opts.perCall[i] : opts.gen;
       if (spec === 'reject') throw new Error('simulated generation failure');
@@ -244,11 +251,12 @@ let capturedPersist: CapturedUpdate | null = null;
   return Promise.resolve({});
 };
 
-await test('generated item shape: id prefix, letter mcq answer, internal-original license, no plan scoping', async () => {
+await test('generated item shape: id prefix, letter mcq answer, internal-original license, no plan scoping, topicId set', async () => {
   capturedPersist = null;
   await practiceGenSources().persist({
     id: `practice-gen.${LO}.abc123`,
     topic: TOPIC,
+    topicId: TOPIC,
     loId: LO,
     cedCode: 'AP-STATS-1.10',
     difficulty: 3,
@@ -263,6 +271,7 @@ await test('generated item shape: id prefix, letter mcq answer, internal-origina
   assert.equal(row.license, 'internal-original');
   assert.equal(row.loId, LO);
   assert.equal(row.topic, TOPIC);
+  assert.equal(row.topicId, TOPIC, 'topicId set so bankForTopic\'s {topic}/{topicId} OR match finds this row');
   assert.equal(row.cedCode, 'AP-STATS-1.10');
   assert.equal(row.difficulty, 3);
   assert.ok(!('subtopic' in row), 'practice-gen rows carry no plan scoping (no subtopic)');
@@ -337,6 +346,136 @@ await test('parallel: one generation returning null (unverified) still returns t
   const items = await generatePracticeItems(baseOpts({ shortfall: 2 }), sources);
   assert.equal(items.length, 1);
   delete process.env.PRACTICE_GEN;
+});
+
+// ── Excludes forwarded to generation (finding #4) ───────────────
+await test('anchor-pool text hashes are forwarded as excludeHashes to every parallel generation', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
+  await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor, bankAnchorHard] }), sources);
+  assert.equal(sources.excludeHashesSeen.length, 2, 'both parallel calls received an excludeHashes list');
+  for (const seen of sources.excludeHashesSeen) {
+    assert.equal(seen.length, 2, 'seeded with both anchor items\' text hashes');
+  }
+  delete process.env.PRACTICE_GEN;
+});
+
+// ── In-batch duplicate-id dedup (finding #4) ────────────────────
+await test('two parallel generations landing on the identical hash/id collapse to one item, not a duplicate', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  // Both parallel slots resolve to the SAME gen+hash (as if two concurrent
+  // generations happened to land on identical content) — the stub ignores
+  // callIndex and always returns hash "dup".
+  const sources: PracticeGenSources & { calls: number } = {
+    calls: 0,
+    async generateAndVerify() {
+      this.calls++;
+      return { gen: numericGen('Same problem both times', '5'), hash: 'dup' };
+    },
+    async reserve() {
+      return 2;
+    },
+    async persist() {
+      /* no-op */
+    },
+  };
+  const items = await generatePracticeItems(baseOpts({ shortfall: 2 }), sources);
+  assert.equal(sources.calls, 2, 'both generations were attempted');
+  assert.equal(items.length, 1, 'the duplicate id is dropped, not returned twice');
+  assert.equal(items[0].id, `practice-gen.${LO}.dup`);
+  delete process.env.PRACTICE_GEN;
+});
+
+// ── Answer-shape gate (round-1 review CRITICAL fix) ─────────────
+// Real-bank audit: 422/422 numeric answers are plain numbers, 2469/2469 mcq
+// answers are bare A-E; the portal grader does `Number(answer)` — an
+// unnormalized unit-suffixed answer ("48 square inches") silently grades
+// NaN, permanently wrong for every student who sees the item. These tests
+// exercise `gateGeneratedAnswer` directly with an injected `VerifyFn` stub —
+// no Anthropic — the "non-pass-through" coverage the review asked for.
+console.log('\nanswer-shape gate:\n');
+
+function agreeVerify(solved = 'irrelevant — agree unconditionally'): VerifyFn {
+  return async () => ({ agree: true, solved });
+}
+function disagreeVerify(): VerifyFn {
+  return async () => ({ agree: false, solved: 'wrong' });
+}
+
+await test('normalizeNumericAnswer: already-plain numbers pass through unchanged', () => {
+  assert.equal(normalizeNumericAnswer('48'), '48');
+  assert.equal(normalizeNumericAnswer('-7.5'), '-7.5');
+});
+
+await test('normalizeNumericAnswer: unambiguous unit suffix is normalized ("48 square inches" -> "48")', () => {
+  assert.equal(normalizeNumericAnswer('48 square inches'), '48');
+});
+
+await test('normalizeNumericAnswer: currency/percent/comma-thousands normalize to plain numbers', () => {
+  assert.equal(normalizeNumericAnswer('$4.50'), '4.5');
+  assert.equal(normalizeNumericAnswer('50%'), '0.5');
+  assert.equal(normalizeNumericAnswer('300,000 J'), '300000');
+});
+
+await test('normalizeNumericAnswer: ambiguous multi-number strings are rejected, not guessed', () => {
+  assert.equal(normalizeNumericAnswer('between 3 and 5'), null);
+  assert.equal(normalizeNumericAnswer('3 apples and 5 oranges'), null);
+});
+
+await test('normalizeNumericAnswer: no number at all is rejected', () => {
+  assert.equal(normalizeNumericAnswer('competitive inhibition'), null);
+});
+
+await test('gate: numeric "48 square inches" is normalized to "48" and passes when verify agrees', async () => {
+  const out = await gateGeneratedAnswer(numericGen('Area problem', '48 square inches'), agreeVerify());
+  assert.ok(out, 'expected the gate to accept a normalizable answer');
+  assert.equal(out!.finalAnswer, '48', 'stored/served answer is the bare number, not the unit-suffixed text');
+});
+
+await test('gate: ambiguous numeric answer is rejected even if a blind verify would agree', async () => {
+  const out = await gateGeneratedAnswer(numericGen('Range problem', 'between 3 and 5'), agreeVerify());
+  assert.equal(out, null, 'ambiguous shape is rejected before verification is even meaningful');
+});
+
+await test('gate: numeric answer failing independent verify is rejected', async () => {
+  const out = await gateGeneratedAnswer(numericGen('Solve for x', '42'), disagreeVerify());
+  assert.equal(out, null);
+});
+
+await test('gate: mcq bare-letter claim is verified CHOICES-AWARE (verify receives the choices)', async () => {
+  let receivedChoices: Array<{ letter: string; text: string }> | undefined;
+  const verify: VerifyFn = async (_problemText, _claimed, choices) => {
+    receivedChoices = choices;
+    return { agree: true, solved: 'B' };
+  };
+  const out = await gateGeneratedAnswer(mcqGen(), verify);
+  assert.ok(out);
+  assert.equal(out!.finalAnswer, 'B');
+  assert.deepEqual(receivedChoices, [{ letter: 'A', text: 'wrong' }, { letter: 'B', text: 'right' }], 'verify must see the actual choices, not a blind solve');
+});
+
+await test('gate: mcq claim given as CHOICE TEXT instead of a letter resolves via the choices', async () => {
+  const gen: GenPayload = { problemText: 'Which is correct?', finalAnswer: 'right', responseFormat: 'mcq', choices: ['wrong', 'right'] };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.ok(out, 'expected the gate to resolve choice-text to a letter');
+  assert.equal(out!.finalAnswer, 'B', 'stored/served answer is the bare letter, resolved via the choices');
+});
+
+await test('gate: mcq claim that matches no choice text and no letter shape is rejected', async () => {
+  const gen: GenPayload = { problemText: 'Which is correct?', finalAnswer: 'neither of these', responseFormat: 'mcq', choices: ['wrong', 'right'] };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.equal(out, null, 'unresolvable claim must be rejected, not guessed');
+});
+
+await test('gate: mcq with no choices at all is rejected (malformed payload)', async () => {
+  const gen: GenPayload = { problemText: 'Which is correct?', finalAnswer: 'B', responseFormat: 'mcq', choices: [] };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.equal(out, null);
+});
+
+await test('gate: mcq resolved letter failing choices-aware verify is rejected', async () => {
+  const out = await gateGeneratedAnswer(mcqGen(), disagreeVerify());
+  assert.equal(out, null);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
