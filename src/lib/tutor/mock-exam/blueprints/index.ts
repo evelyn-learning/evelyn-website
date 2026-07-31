@@ -3,12 +3,14 @@ import { FIXTURE_BLUEPRINT } from './fixture';
 import { DIGITAL_SAT_BLUEPRINT } from './digital-sat';
 import { ACT_BLUEPRINT } from './act';
 import { AP_BLUEPRINTS } from './ap';
+import { HS_BLUEPRINTS } from './hs';
 
 const REGISTRY: Record<string, ExamBlueprint> = {
   [FIXTURE_BLUEPRINT.examKey]: FIXTURE_BLUEPRINT,
   [DIGITAL_SAT_BLUEPRINT.examKey]: DIGITAL_SAT_BLUEPRINT,
   [ACT_BLUEPRINT.examKey]: ACT_BLUEPRINT,
   ...Object.fromEntries(AP_BLUEPRINTS.map((bp) => [bp.examKey, bp])),
+  ...Object.fromEntries(HS_BLUEPRINTS.map((bp) => [bp.examKey, bp])),
 };
 
 export function getBlueprint(examKey: string): ExamBlueprint {
