@@ -49,6 +49,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '3': 'Reading',
     '4': 'Science',
   },
+  'algebra-1': {
+    '1': 'Foundations & Expressions',
+    '2': 'Linear Equations',
+    '3': 'Linear Inequalities',
+    '4': 'Linear Functions & Graphs',
+    '5': 'Systems of Equations & Inequalities',
+    '6': 'Exponents & Exponential Functions',
+    '7': 'Polynomials & Factoring',
+    '8': 'Quadratic Functions & Equations',
+    '9': 'Radicals & Rational Expressions',
+    '10': 'Data & Sequences',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.
