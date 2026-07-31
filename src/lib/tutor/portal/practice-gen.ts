@@ -213,42 +213,51 @@ const PLAIN_NUMBER_RE = /^-?\d+(?:\.\d+)?$/;
 /**
  * Normalize a numeric answer to the bank's plain-number-string convention.
  * Already-plain strings pass through unchanged. A unit suffix or currency/
- * percent/comma-thousands wrapper is stripped ONLY when the string carries
- * exactly one unambiguous numeric value ("48 square inches" -> "48", "$4.50"
- * -> "4.5", "300,000 J" -> "300000", "50%" -> "0.5") — a simple a/b fraction
- * counts as one unambiguous value too. Anything with zero or MORE THAN ONE
- * numeric run (e.g. "between 3 and 5") is rejected rather than guessed: the
- * real-bank audit that motivated this gate found a live case where an
- * unnormalized unit-suffixed answer reached `Number(answer)` = NaN in the
- * portal grader, permanently failing every student who saw the item.
+ * comma-thousands wrapper is stripped ONLY when the string carries exactly
+ * one unambiguous numeric value ("48 square inches" -> "48", "$4.50" ->
+ * "4.5", "300,000 J" -> "300000") — a simple a/b fraction counts as one
+ * unambiguous value too. Percent is its OWN case: the PORTAL grader's
+ * `parseNum` (PracticeView.tsx) strips a trailing '%' WITHOUT rescaling, so
+ * ANY unambiguous percent-bearing string keeps the bare numeral regardless of
+ * surrounding prose ("50%" -> "50", "approximately 50%" -> "50", "a 40%
+ * discount" -> "40", ".5%" -> "0.5") — never the /100-divided form
+ * `extractAnswerNumber` would otherwise produce for the TUTOR's
+ * `answersAgree` (round-3 review: the round-2 fix only caught the EXACT
+ * "<number>%" form; prose-wrapped percents were still falling through to the
+ * generic path and getting divided). Anything with zero or MORE THAN ONE
+ * numeric run (e.g. "between 3 and 5", or a multi-run percent string like
+ * "between 30% and 50%") is rejected rather than guessed: the real-bank
+ * audit that motivated this gate found a live case where an unnormalized
+ * unit-suffixed answer reached `Number(answer)` = NaN in the portal grader,
+ * permanently failing every student who saw the item.
  */
 export function normalizeNumericAnswer(raw: string): string | null {
   const trimmed = (raw ?? '').trim();
   if (!trimmed) return null;
   if (PLAIN_NUMBER_RE.test(trimmed)) return trimmed;
 
-  // Percent — special-cased BEFORE the generic path (round-2 review CRITICAL
-  // fix). The engine's `extractAnswerNumber` divides a percent by 100
-  // ("50%" -> 0.5), which is correct for the TUTOR's `answersAgree` (both
-  // sides of that comparison go through the same scaling, so it's internally
-  // consistent). The PORTAL grader is a DIFFERENT consumer with a DIFFERENT
-  // convention: `parseNum` in PracticeView.tsx strips a trailing '%' WITHOUT
-  // rescaling. A banked expectedAnswer of "0.5" would grade a student's
-  // correct "50" as permanently wrong. So the bank-safe form keeps the bare
-  // numeral ("50%" -> "50") — never divided. A trailing-percent numeral is
-  // inherently unambiguous (exactly one value), so no separate ambiguity
-  // check is needed for this branch.
-  const percentMatch = trimmed.match(/^(-?\d+(?:\.\d+)?)\s*%$/);
-  if (percentMatch) return percentMatch[1];
+  // Collapse thousands-separator commas ("300,000" -> "300000") and fix a
+  // leading-dot decimal (".5%" -> "0.5%") BEFORE counting numeric runs, so
+  // neither trips the run-count ambiguity check below (a bare ".5" has no
+  // digit before the dot, so the run regex wouldn't otherwise see it as a
+  // number at all).
+  const collapsed = trimmed
+    .replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1')
+    .replace(/(^|[^\d.])\.(\d)/g, '$10.$2');
 
-  // Collapse thousands-separator commas ("300,000" -> "300000") before
-  // counting distinct numeric runs, so one big number isn't mistaken for two
-  // ambiguous ones.
-  const collapsed = trimmed.replace(/(\d),(?=\d{3}(?:\D|$))/g, '$1');
   const isSimpleFraction = /^-?\d+(?:\.\d+)?\s*\/\s*-?\d+(?:\.\d+)?$/.test(collapsed);
   const runs = collapsed.match(/-?\d+(?:\.\d+)?/g) ?? [];
   if (runs.length === 0) return null; // no number at all
-  if (runs.length > 1 && !isSimpleFraction) return null; // ambiguous — reject rather than guess
+  if (runs.length > 1 && !isSimpleFraction) return null; // ambiguous — reject rather than guess, even if percent-flavored
+
+  // Percent — a single unambiguous run alongside a '%' ANYWHERE in the
+  // string (not just an exact "<number>%" match) keeps the bare numeral. Must
+  // run AFTER the ambiguity check above, and BEFORE the generic
+  // `extractAnswerNumber` call below (which would otherwise divide by 100).
+  if (runs.length === 1 && /%/.test(collapsed)) {
+    return runs[0];
+  }
+
   const n = extractAnswerNumber(collapsed);
   if (n === null || !Number.isFinite(n)) return null;
   return String(n);
@@ -359,6 +368,19 @@ function pickAnchor(items: PracticeItem[], difficulty?: Difficulty): PracticeIte
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// Round-3 review mitigation for the parked bare-decimal residual (a percent
+// question answered as "0.5" instead of "50%" would slip past
+// `normalizeNumericAnswer`'s percent handling — it looks like an ordinary
+// plain number — and bank a value the portal's unscaled `parseNum` would
+// grade wrong). No detection heuristic is added (that residual stays
+// parked); instead the GENERATOR is steered away from producing it: if the
+// answer is a percentage, state it as the percent numeral and phrase the
+// problem to explicitly ask for a percent answer.
+const PERCENT_ANSWER_CLAUSE =
+  'If the correct answer to your problem is a percentage, phrase the problem so it explicitly ' +
+  'asks for the answer "as a percent" (or "what percent...") and state finalAnswer as the percent ' +
+  'numeral with a % sign (e.g. "50%"), never the decimal form ("0.5").';
+
 function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null): string {
   const difficultyLabel = opts.difficulty
     ? `difficulty bucket ${opts.difficulty} of 4 (1 = easier than typical, 4 = extension-grade)`
@@ -368,7 +390,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
       `ANCHOR problem (do NOT reuse its numbers or context):\n${anchor.problemText}\n` +
       (anchor.expectedAnswer ? `ANCHOR answer (for difficulty calibration): ${anchor.expectedAnswer}\n` : '') +
       `\nLearning objective: ${opts.loId} (topic: ${opts.topic}).\n` +
-      `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. Write the problem now.`
+      `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} Write the problem now.`
     );
   }
   // Fresh-LO edge case: zero existing practice to anchor off of. Practice
@@ -378,7 +400,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
     `There is no existing practice problem yet for this learning objective (brand-new LO).\n` +
     `Learning objective id: ${opts.loId} (topic: ${opts.topic}).\n` +
     `Infer the likely skill this LO id names and write ONE self-contained practice problem testing ` +
-    `it at ${difficultyLabel}. Write the problem now.`
+    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} Write the problem now.`
   );
 }
 

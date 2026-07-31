@@ -427,6 +427,23 @@ await test('normalizeNumericAnswer: percent keeps the bare numeral, does NOT div
   assert.equal(normalizeNumericAnswer('-3%'), '-3');
 });
 
+// Round-3 review fix: the round-2 percent case only matched an EXACT
+// "<number>%" string — prose-wrapped percents ("approximately 50%", "a 40%
+// discount") were still falling through to extractAnswerNumber's /100
+// scaling and banking "0.5"/"0.4".
+await test('normalizeNumericAnswer: prose-wrapped percents still keep the bare numeral, not the /100 form', () => {
+  assert.equal(normalizeNumericAnswer('approximately 50%'), '50');
+  assert.equal(normalizeNumericAnswer('a 40% discount'), '40');
+});
+
+await test('normalizeNumericAnswer: a leading-dot percent gets the leading zero, still unscaled (".5%" -> "0.5")', () => {
+  assert.equal(normalizeNumericAnswer('.5%'), '0.5');
+});
+
+await test('normalizeNumericAnswer: a multi-run percent string is still rejected as ambiguous', () => {
+  assert.equal(normalizeNumericAnswer('between 30% and 50%'), null);
+});
+
 await test('normalizeNumericAnswer: ambiguous multi-number strings are rejected, not guessed', () => {
   assert.equal(normalizeNumericAnswer('between 3 and 5'), null);
   assert.equal(normalizeNumericAnswer('3 apples and 5 oranges'), null);
