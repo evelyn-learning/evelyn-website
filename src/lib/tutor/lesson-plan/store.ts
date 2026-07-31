@@ -1722,6 +1722,9 @@ import { SEED_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-i
 import { SEED_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
 import { SEED_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
 import { SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
+// ── HS core: Chemistry (2026-07 wave 1) ──
+import { SEED_CHEM_U3_PERIODIC_TRENDS } from './seeds/chem-u3-periodic-trends';
+import { SEED_CHEM_U6_MASS_MASS_STOICHIOMETRY } from './seeds/chem-u6-mass-mass-stoichiometry';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3374,6 +3377,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_GEOM_U9_CIRCLE_BASICS_ARCS,
   SEED_GEOM_U9_CIRCLE_EQUATIONS,
   SEED_GEOM_U9_TANGENTS_SECANTS_ANGLES,
+  // HS core: Chemistry (2026-07 wave 1)
+  SEED_CHEM_U3_PERIODIC_TRENDS,
+  SEED_CHEM_U6_MASS_MASS_STOICHIOMETRY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
