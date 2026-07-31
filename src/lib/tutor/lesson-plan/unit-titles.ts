@@ -61,6 +61,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Radicals & Rational Expressions',
     '10': 'Data & Sequences',
   },
+  biology: {
+    '1': 'Science of Life & Biochemistry',
+    '2': 'Cells',
+    '3': 'Cell Energy',
+    '4': 'Cell Growth & Division',
+    '5': 'Mendelian Genetics',
+    '6': 'DNA & Biotechnology',
+    '7': 'Evolution',
+    '8': 'Classification & Diversity',
+    '9': 'Ecology',
+    '10': 'Human Body Systems',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.
