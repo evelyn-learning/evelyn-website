@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "Simplify and write in standard form: (4x² + 3x - 7) + (2x² - 8x + 5)",
     "choices": [
-      "6x² - 5x - 2",
       "6x² + 11x - 2",
       "6x⁴ - 5x - 2",
+      "6x² - 5x - 2",
       "6x² - 5x - 12"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Combine like terms only — x² terms with x² terms, x terms with x terms, constants with constants.",
       "The x terms are 3x and -8x. What is 3 - 8?"
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "Simplify and write in standard form: (9x² - 4x + 6) - (3x² + 5x - 2)",
     "choices": [
-      "6x² - 9x + 8",
-      "6x² - 9x + 4",
       "6x² + x + 4",
-      "12x² - 9x + 8"
+      "12x² - 9x + 8",
+      "6x² - 9x + 4",
+      "6x² - 9x + 8"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Rewrite the subtraction as adding the opposite: the minus flips the sign of ALL THREE terms in the second group.",
       "After flipping you have 9x² - 4x + 6 - 3x² - 5x + 2. Note the last term became +2."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "Multiply: -3x²(4x³ - 2x + 7)",
     "choices": [
-      "-12x⁵ + 6x³ - 21x²",
       "-12x⁶ + 6x² - 21x²",
+      "-12x⁵ + 6x³ - 21x²",
       "-12x⁵ - 6x³ + 21x²",
       "-12x⁵ + 6x³ + 7"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The monomial out front hits every term inside — all three of them, including the constant.",
       "Multiply the coefficients and ADD the exponents: -3x² times 4x³ gives -12x⁵."
@@ -64,12 +64,12 @@
     "responseFormat": "mcq",
     "problemText": "Multiply: (2x - 7)(3x + 4)",
     "choices": [
-      "6x² - 13x - 28",
-      "6x² + 13x - 28",
       "6x² - 13x + 28",
-      "6x² - 28"
+      "6x² + 13x - 28",
+      "6x² - 28",
+      "6x² - 13x - 28"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Four products, not two: First, Outer, Inner, Last.",
       "Outer is 2x times 4 = 8x and Inner is -7 times 3x = -21x. Combine those two middle terms."
@@ -96,12 +96,12 @@
     "responseFormat": "mcq",
     "problemText": "Multiply and write in standard form: (x + 3)(2x² - 5x + 4)",
     "choices": [
-      "2x³ + x² - 11x + 12",
-      "2x³ - 5x² - 11x + 12",
       "2x³ + x² - 11x - 12",
-      "2x³ + x² + 11x + 12"
+      "2x³ + x² - 11x + 12",
+      "2x³ + x² + 11x + 12",
+      "2x³ - 5x² - 11x + 12"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Six products in all: the x hits each of the three terms, then the 3 hits each of the three terms.",
       "The x² terms are -5x² (from x times -5x) and +6x² (from 3 times 2x²). Combine them before you answer."
@@ -116,9 +116,9 @@
     "problemText": "Expand: (x + 7)²",
     "choices": [
       "x² + 14x + 49",
-      "x² + 49",
       "x² + 7x + 49",
-      "x² - 14x + 49"
+      "x² - 14x + 49",
+      "x² + 49"
     ],
     "answer": "A",
     "hints": [
@@ -134,12 +134,12 @@
     "responseFormat": "mcq",
     "problemText": "Expand: (3x - 8)²",
     "choices": [
-      "9x² - 48x + 64",
-      "9x² + 64",
       "9x² - 48x - 64",
+      "9x² + 64",
+      "9x² - 48x + 64",
       "3x² - 48x + 64"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Use (a - b)² = a² - 2ab + b² with a = 3x and b = 8 — and square the coefficient too.",
       "The last term is (-8)(-8), so it comes out positive."
@@ -155,8 +155,8 @@
     "choices": [
       "36x² - 25",
       "36x² + 25",
-      "36x² - 60x - 25",
-      "6x² - 25"
+      "6x² - 25",
+      "36x² - 60x - 25"
     ],
     "answer": "A",
     "hints": [
@@ -172,12 +172,12 @@
     "responseFormat": "mcq",
     "problemText": "Expand: (2x² + 5)²",
     "choices": [
+      "4x⁴ + 10x² + 25",
       "4x⁴ + 20x² + 25",
       "4x⁴ + 25",
-      "4x⁴ + 10x² + 25",
       "2x⁴ + 20x² + 25"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Use (a + b)² = a² + 2ab + b², this time with a = 2x² and b = 5.",
       "Squaring 2x² means squaring the 2 as well and doubling the exponent: (2x²)² = 4x⁴."
@@ -204,12 +204,12 @@
     "responseFormat": "mcq",
     "problemText": "Simplify completely: (2x + 9)² - (2x - 9)²",
     "choices": [
-      "72x",
       "0",
-      "36x",
-      "8x² + 162"
+      "8x² + 162",
+      "72x",
+      "36x"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Expand each square separately first — they are NOT the same expression.",
       "You get (4x² + 36x + 81) - (4x² - 36x + 81). The x² terms and the constants cancel; the middle terms do not."
@@ -223,12 +223,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor 10x² + 25x completely by pulling out the GREATEST common factor, so that nothing inside the parentheses can still be factored out.",
     "choices": [
-      "5x(2x + 5)",
-      "5(2x² + 5x)",
       "x(10x + 25)",
-      "5x(2x² + 5)"
+      "5(2x² + 5x)",
+      "5x(2x² + 5)",
+      "5x(2x + 5)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The GCF has a number part and a variable part: the largest integer dividing both coefficients, and the lowest power of x in both terms.",
       "Pull out 5x, then divide each original term by 5x."
@@ -243,8 +243,8 @@
     "problemText": "Factor 14x³ - 35x² + 7x completely by pulling out the GREATEST common factor, so that nothing inside the parentheses can still be factored out.",
     "choices": [
       "7x(2x² - 5x + 1)",
-      "7x(2x² - 5x)",
       "7(2x³ - 5x² + x)",
+      "7x(2x² - 5x)",
       "7x(2x² - 5x + 7)"
     ],
     "answer": "A",
@@ -261,12 +261,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor by grouping: x³ + 4x² + 3x + 12",
     "choices": [
-      "(x + 4)(x² + 3)",
-      "(x + 4)(x² - 3)",
       "(x + 3)(x² + 4)",
-      "(x - 4)(x² + 3)"
+      "(x + 4)(x² + 3)",
+      "(x - 4)(x² + 3)",
+      "(x + 4)(x² - 3)"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Split into two pairs: (x³ + 4x²) + (3x + 12), then factor the GCF out of each pair.",
       "The first pair gives x²(x + 4) and the second gives 3(x + 4). The matching parentheses are the shared factor."
@@ -280,12 +280,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor -18x³ + 24x² - 6x completely, pulling out a NEGATIVE greatest common factor so the leading coefficient inside the parentheses is positive.",
     "choices": [
-      "-6x(3x² - 4x + 1)",
       "-6x(3x² + 4x - 1)",
       "-6x(3x² - 4x - 1)",
+      "-6x(3x² - 4x + 1)",
       "6x(3x² - 4x + 1)"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The size of the GCF is 6x; the problem asks you to take it out as -6x.",
       "Dividing by a negative flips the sign of EVERY term inside, including the last one: -6x ÷ (-6x) = 1."
@@ -312,12 +312,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor by grouping: 2x³ - 10x² - 3x + 15",
     "choices": [
-      "(x - 5)(2x² - 3)",
       "(x - 5)(2x² + 3)",
+      "(x - 5)(2x² - 3)",
       "(x + 5)(2x² - 3)",
       "(x - 5)(2x² - 5)"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Pair them up: (2x³ - 10x²) + (-3x + 15). Factor 2x² out of the first pair.",
       "The second pair starts negative, so pull out -3, flipping both signs: -3(x - 5). Now both parentheses read (x - 5)."
@@ -332,9 +332,9 @@
     "problemText": "Factor: x² + 9x + 20",
     "choices": [
       "(x + 4)(x + 5)",
-      "(x + 2)(x + 10)",
       "(x - 4)(x - 5)",
-      "(x + 1)(x + 20)"
+      "(x + 1)(x + 20)",
+      "(x + 2)(x + 10)"
     ],
     "answer": "A",
     "hints": [
@@ -350,12 +350,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor: x² - 11x + 24",
     "choices": [
-      "(x - 3)(x - 8)",
-      "(x + 3)(x + 8)",
       "(x - 4)(x - 6)",
+      "(x + 3)(x + 8)",
+      "(x - 3)(x - 8)",
       "(x - 2)(x - 12)"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The constant is positive, so the two numbers share a sign — and that sign matches the middle coefficient.",
       "Both are negative. Which negative pair multiplies to 24 and adds to -11?"
@@ -371,8 +371,8 @@
     "choices": [
       "(x - 8)(x + 5)",
       "(x + 8)(x - 5)",
-      "(x - 10)(x + 4)",
-      "(x - 8)(x - 5)"
+      "(x - 8)(x - 5)",
+      "(x - 10)(x + 4)"
     ],
     "answer": "A",
     "hints": [
@@ -388,12 +388,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor: 2x² + 11x + 12",
     "choices": [
+      "(2x + 6)(x + 2)",
       "(2x + 3)(x + 4)",
       "(2x + 4)(x + 3)",
-      "(2x + 6)(x + 2)",
       "(2x + 12)(x + 1)"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The leading coefficient is not 1, so use the ac-method: a·c = 2 × 12 = 24.",
       "Two numbers with product 24 and sum 11 are 3 and 8. Split the middle term: 2x² + 3x + 8x + 12, then group."
@@ -420,12 +420,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor completely: 3x³ - 3x² - 90x",
     "choices": [
-      "3x(x - 6)(x + 5)",
       "3x(x + 6)(x - 5)",
-      "(x - 6)(x + 5)",
-      "3x(x - 10)(x + 3)"
+      "3x(x - 10)(x + 3)",
+      "3x(x - 6)(x + 5)",
+      "(x - 6)(x + 5)"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Take the greatest common factor out first — all three terms share it, and it stays in the final answer.",
       "After pulling out 3x you are left with x² - x - 30. Two numbers with product -30 and sum -1."
@@ -439,12 +439,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor: x² - 49",
     "choices": [
-      "(x + 7)(x - 7)",
-      "(x - 7)²",
+      "prime — it does not factor over the real numbers",
       "(x + 7)²",
-      "prime — it does not factor over the real numbers"
+      "(x + 7)(x - 7)",
+      "(x - 7)²"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Two terms with a minus between them, and both terms are perfect squares.",
       "Use a² - b² = (a + b)(a - b) with a = x and b = 7."
@@ -458,12 +458,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor: 25x² - 64",
     "choices": [
-      "(5x + 8)(5x - 8)",
       "(x + 8)(x - 8)",
+      "(5x + 8)²",
       "(5x - 8)²",
-      "(5x + 8)²"
+      "(5x + 8)(5x - 8)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Square-root the WHOLE first term, coefficient included: what squares to 25x²?",
       "With a = 5x and b = 8, apply a² - b² = (a + b)(a - b)."
@@ -497,9 +497,9 @@
     "problemText": "Factor 3x² - 75 completely over the real numbers, so that no factor can be broken down any further.",
     "choices": [
       "3(x + 5)(x - 5)",
-      "3(x² - 25)",
+      "3(x - 5)²",
       "(3x + 5)(3x - 5)",
-      "3(x - 5)²"
+      "3(x² - 25)"
     ],
     "answer": "A",
     "hints": [
@@ -528,12 +528,12 @@
     "responseFormat": "mcq",
     "problemText": "Factor 2x⁴ - 32 completely over the real numbers, so that no factor can be broken down any further.",
     "choices": [
-      "2(x² + 4)(x + 2)(x - 2)",
       "2(x² + 4)(x² - 4)",
-      "2(x² - 4)²",
-      "2(x + 2)²(x - 2)²"
+      "2(x² + 4)(x + 2)(x - 2)",
+      "2(x + 2)²(x - 2)²",
+      "2(x² - 4)²"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Pull out the common factor of 2 first, which leaves a difference of squares in x⁴ and 16.",
       "That gives 2(x² + 4)(x² - 4) — but one of those two factors is itself a difference of squares. The other one is a sum of squares and is prime."

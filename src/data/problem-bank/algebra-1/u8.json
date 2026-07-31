@@ -7,12 +7,12 @@
     "responseFormat": "mcq",
     "problemText": "What is the vertex of the parabola y = (x - 6)² + 2?",
     "choices": [
-      "(6, 2)",
       "(-6, 2)",
-      "(6, -2)",
-      "(-6, -2)"
+      "(-6, -2)",
+      "(6, 2)",
+      "(6, -2)"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Match the equation to vertex form y = a(x - h)² + k.",
       "The form already subtracts h, so h is the x-value that makes the inside of the parentheses zero."
@@ -26,12 +26,12 @@
     "responseFormat": "mcq",
     "problemText": "What is the vertex of the parabola y = -3(x + 4)² + 9?",
     "choices": [
-      "(-4, 9)",
-      "(4, 9)",
+      "(-3, 9)",
       "(-4, -9)",
-      "(-3, 9)"
+      "(4, 9)",
+      "(-4, 9)"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Vertex form subtracts h, so rewrite (x + 4) as (x - (-4)).",
       "k is added, so it is read off exactly as written - only the inside of the parentheses flips sign."
@@ -45,12 +45,12 @@
     "responseFormat": "mcq",
     "problemText": "Which statement correctly describes the graph of y = -2(x - 7)² + 3?",
     "choices": [
+      "It opens down, and its greatest y-value is 7",
       "It opens down, and its greatest y-value is 3",
       "It opens up, and its smallest y-value is 3",
-      "It opens down, and its greatest y-value is 7",
       "It opens up, and its smallest y-value is -2"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "The sign of a decides the direction: a > 0 opens up, a < 0 opens down.",
       "The extreme y-value is the k of the vertex (h, k), not the h."
@@ -66,8 +66,8 @@
     "choices": [
       "x = -4",
       "x = 4",
-      "x = -8",
-      "x = -5"
+      "x = -5",
+      "x = -8"
     ],
     "answer": "A",
     "hints": [
@@ -97,9 +97,9 @@
     "problemText": "A parabola has its vertex at (-2, 5) and passes through the point (0, 13). Which equation describes it?",
     "choices": [
       "y = 2(x + 2)² + 5",
-      "y = 2(x - 2)² + 5",
       "y = -2(x + 2)² + 5",
-      "y = (x + 2)² + 5"
+      "y = (x + 2)² + 5",
+      "y = 2(x - 2)² + 5"
     ],
     "answer": "A",
     "hints": [
@@ -115,12 +115,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve for x: (x - 1)(x + 7) = 0",
     "choices": [
-      "x = -7 or x = 1",
+      "x = -7 or x = -1",
       "x = -1 or x = 7",
       "x = 1 or x = 7",
-      "x = -7 or x = -1"
+      "x = -7 or x = 1"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The zero product property says at least one factor must equal 0.",
       "Set x - 1 = 0 and x + 7 = 0 separately, and watch the sign flip in each."
@@ -134,12 +134,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve for x: x² - 49 = 0",
     "choices": [
+      "x = -49 or x = 49",
       "x = -7 or x = 7",
       "x = 7 only",
-      "x = -49 or x = 49",
       "x = -7 only"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "There is no plain x term, so isolate the square and take a square root.",
       "Square-rooting both sides brings a ± with it, because two different numbers square to 49."
@@ -153,12 +153,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve for x: x² + 4x - 21 = 0",
     "choices": [
-      "x = -7 or x = 3",
-      "x = -3 or x = 7",
+      "x = -1 or x = 21",
       "x = -7 or x = -3",
-      "x = -1 or x = 21"
+      "x = -3 or x = 7",
+      "x = -7 or x = 3"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Find two numbers that multiply to -21 and add to +4.",
       "That pair is +7 and -3, so the factored form is (x + 7)(x - 3) = 0."
@@ -172,12 +172,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve for x: 3(x - 5)² = 48",
     "choices": [
-      "x = 1 or x = 9",
-      "x = 9 only",
       "x = -11 or x = 21",
+      "x = 9 only",
+      "x = 1 or x = 9",
       "x = -4 or x = 4"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Do not expand. Divide both sides by 3 first so the squared part stands alone.",
       "Once (x - 5)² equals a number, take the square root of both sides with a ±, then add 5."
@@ -204,12 +204,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve for x: 2x² - 5x - 12 = 0",
     "choices": [
-      "x = -3/2 or x = 4",
-      "x = -4 or x = 3/2",
       "x = -3 or x = 4",
-      "x = 3/2 or x = 4"
+      "x = 3/2 or x = 4",
+      "x = -3/2 or x = 4",
+      "x = -4 or x = 3/2"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The leading coefficient is not 1, so look for factors of the form (2x + p)(x + q).",
       "It factors as (2x + 3)(x - 4) = 0 - now set each factor equal to zero."
@@ -223,12 +223,12 @@
     "responseFormat": "mcq",
     "problemText": "What number must be added to x² + 12x to turn it into a perfect-square trinomial?",
     "choices": [
-      "36",
       "144",
       "6",
-      "24"
+      "24",
+      "36"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The completion number for x² + bx is (b/2)².",
       "Halve the middle coefficient FIRST, then square that result."
@@ -261,12 +261,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve by completing the square: x² + 4x - 12 = 0",
     "choices": [
-      "x = -6 or x = 2",
       "x = -2 or x = 6",
+      "x = -8 or x = 4",
       "x = 2 only",
-      "x = -8 or x = 4"
+      "x = -6 or x = 2"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Move the constant across first, so the equation reads x² + 4x = 12.",
       "Add (4/2)² = 4 to BOTH sides, factor the left as (x + 2)², then square-root with a ±."
@@ -280,12 +280,12 @@
     "responseFormat": "mcq",
     "problemText": "Which of these is y = x² - 8x + 3 rewritten in vertex form?",
     "choices": [
+      "y = (x - 8)² - 61",
       "y = (x - 4)² - 13",
       "y = (x - 4)² + 3",
-      "y = (x - 4)² + 19",
-      "y = (x - 8)² - 61"
+      "y = (x - 4)² + 19"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Half of -8 is -4, so the perfect square will be (x - 4)².",
       "This is an expression with only one side, so add the completion number 16 and subtract it back in the same line."
@@ -312,12 +312,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve by completing the square: 2x² + 12x - 10 = 0",
     "choices": [
-      "x = -3 ± √14",
+      "x = 3 ± √14",
       "x = -3 ± √5",
-      "x = -6 ± √14",
-      "x = 3 ± √14"
+      "x = -3 ± √14",
+      "x = -6 ± √14"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The leading coefficient is not 1 - divide every term by 2 before you start.",
       "From x² + 6x = 5, add (6/2)² = 9 to both sides to get (x + 3)² = 14."
@@ -331,12 +331,12 @@
     "responseFormat": "mcq",
     "problemText": "To solve 3x² - 7x + 2 = 0 with the quadratic formula, which values of a, b, and c should you use?",
     "choices": [
-      "a = 3, b = -7, c = 2",
       "a = 3, b = 7, c = 2",
       "a = 3, b = -7, c = -2",
+      "a = 3, b = -7, c = 2",
       "a = -3, b = 7, c = -2"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The equation is already in standard form ax² + bx + c = 0.",
       "The sign in front of each term rides along into a, b, and c."
@@ -350,12 +350,12 @@
     "responseFormat": "mcq",
     "problemText": "What is the discriminant of x² + 6x + 5 = 0, and how many real solutions does the equation have?",
     "choices": [
-      "16, so two real solutions",
-      "16, so one real solution",
       "56, so two real solutions",
-      "-16, so no real solutions"
+      "-16, so no real solutions",
+      "16, so one real solution",
+      "16, so two real solutions"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "The discriminant is b² - 4ac, the part under the radical.",
       "A positive discriminant means two real solutions, zero means exactly one, negative means none."
@@ -369,12 +369,12 @@
     "responseFormat": "mcq",
     "problemText": "Which of these equations has NO real solutions?",
     "choices": [
-      "x² + 2x + 5 = 0",
       "x² - 2x - 5 = 0",
+      "x² + 2x + 5 = 0",
       "x² - 6x + 9 = 0",
       "x² - 16 = 0"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Compute b² - 4ac for each equation - you never have to actually solve one.",
       "No real solutions means the discriminant comes out negative."
@@ -388,12 +388,12 @@
     "responseFormat": "mcq",
     "problemText": "Solve with the quadratic formula: 2x² + 7x + 3 = 0",
     "choices": [
-      "x = -3 or x = -1/2",
-      "x = -6 or x = -1",
       "x = 3 or x = 1/2",
-      "x = -3 or x = 1/2"
+      "x = -6 or x = -1",
+      "x = -3 or x = 1/2",
+      "x = -3 or x = -1/2"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "a = 2, b = 7, c = 3 - start by computing the discriminant b² - 4ac.",
       "The discriminant is 25, so x = (-7 ± 5)/(2 · 2). The denominator is 2a, not a."
@@ -420,12 +420,12 @@
     "responseFormat": "mcq",
     "problemText": "The equation x² + kx + 16 = 0 has exactly one real solution, and k is positive. What is the value of k?",
     "choices": [
-      "k = 8",
-      "k = 4",
       "k = 16",
-      "k = 64"
+      "k = 8",
+      "k = 64",
+      "k = 4"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
       "Exactly one real solution means the discriminant equals zero.",
       "Set k² - 4(1)(16) = 0 and solve for k, then keep the positive value."
@@ -439,12 +439,12 @@
     "responseFormat": "mcq",
     "problemText": "A model rocket is launched, and its height in feet t seconds after launch is h(t) = -16t² + 80t + 96. How high above the ground was the rocket at the instant it was launched?",
     "choices": [
-      "96 feet",
-      "80 feet",
       "0 feet",
+      "80 feet",
+      "96 feet",
       "160 feet"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "The launch instant is t = 0.",
       "Substituting t = 0 leaves only the constant term."
@@ -459,9 +459,9 @@
     "problemText": "A ball is thrown upward, and its height in feet t seconds later is h(t) = -16t² + 64t + 20. How many seconds after it is thrown does the ball reach its greatest height?",
     "choices": [
       "2 seconds",
-      "4 seconds",
       "20 seconds",
-      "64 seconds"
+      "64 seconds",
+      "4 seconds"
     ],
     "answer": "A",
     "hints": [
@@ -477,12 +477,12 @@
     "responseFormat": "mcq",
     "problemText": "A rectangular pen is fenced against a straight barn wall using 24 feet of fence for the three open sides. If x is the width in feet of each side meeting the wall, the area is A(x) = x(24 - 2x) square feet. Which width x gives the greatest area?",
     "choices": [
-      "6 feet",
-      "12 feet",
       "3 feet",
-      "72 feet"
+      "72 feet",
+      "6 feet",
+      "12 feet"
     ],
-    "answer": "A",
+    "answer": "C",
     "hints": [
       "Expand to A(x) = -2x² + 24x so you can read off a and b.",
       "The question asks for the WIDTH, so you want x = -b/(2a), not the area you would get by substituting it back."
@@ -496,12 +496,12 @@
     "responseFormat": "mcq",
     "problemText": "A stone is thrown upward from a ledge, and its height in feet t seconds later is h(t) = -16t² + 16t + 96. How many seconds after it is thrown does the stone hit the ground?",
     "choices": [
-      "3 seconds",
+      "96 seconds",
       "0.5 seconds",
       "-2 seconds",
-      "96 seconds"
+      "3 seconds"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Hitting the ground means the height is 0, so solve h(t) = 0.",
       "Divide every term by -16 first to get t² - t - 6 = 0, then discard any root the situation forbids."
@@ -528,12 +528,12 @@
     "responseFormat": "mcq",
     "problemText": "A ball is launched from a 6-foot-high platform at an upward speed of 44 feet per second, so its height in feet t seconds after launch is h(t) = -16t² + 44t + 6. At what time is the ball 36 feet high on its way UP?",
     "choices": [
-      "1.25 seconds",
-      "1.5 seconds",
+      "2.75 seconds",
       "0.75 seconds",
-      "2.75 seconds"
+      "1.5 seconds",
+      "1.25 seconds"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
       "Set h(t) equal to 36 and rearrange so one side is 0.",
       "8t² - 22t + 15 = 0 has two positive roots - the ball passes 36 feet once going up and once coming down, so take the smaller time."
