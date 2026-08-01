@@ -48,6 +48,7 @@ interface PointerProposal {
 const HS_COURSE_NAMES: Record<string, string> = {
   chem: 'Chemistry',
   alg1: 'Algebra 1',
+  geom: 'Geometry',
 };
 
 function isHS(plan: LessonPlan): boolean {

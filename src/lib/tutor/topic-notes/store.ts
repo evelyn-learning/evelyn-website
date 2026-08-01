@@ -584,6 +584,46 @@ import { BASELINE_ALG1_U9_RATIONAL_EXPRESSIONS } from './seeds/alg1-u9-rational-
 import { BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS } from './seeds/alg1-u10-one-variable-statistics';
 import { BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES } from './seeds/alg1-u10-scatterplots-trend-lines';
 import { BASELINE_ALG1_U10_SEQUENCES } from './seeds/alg1-u10-sequences';
+import { BASELINE_GEOM_U1_POINTS_LINES_PLANES } from './seeds/geom-u1-points-lines-planes';
+import { BASELINE_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT } from './seeds/geom-u1-segments-distance-midpoint';
+import { BASELINE_GEOM_U1_ANGLES_AND_MEASURE } from './seeds/geom-u1-angles-and-measure';
+import { BASELINE_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS } from './seeds/geom-u1-angle-pair-relationships';
+import { BASELINE_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING } from './seeds/geom-u2-inductive-deductive-reasoning';
+import { BASELINE_GEOM_U2_CONDITIONAL_STATEMENTS } from './seeds/geom-u2-conditional-statements';
+import { BASELINE_GEOM_U2_TWO_COLUMN_PROOFS } from './seeds/geom-u2-two-column-proofs';
+import { BASELINE_GEOM_U3_PARALLEL_LINES_TRANSVERSALS } from './seeds/geom-u3-parallel-lines-transversals';
+import { BASELINE_GEOM_U3_PROVING_LINES_PARALLEL } from './seeds/geom-u3-proving-lines-parallel';
+import { BASELINE_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR } from './seeds/geom-u3-slopes-parallel-perpendicular';
+import { BASELINE_GEOM_U4_TRANSLATIONS } from './seeds/geom-u4-translations';
+import { BASELINE_GEOM_U4_REFLECTIONS } from './seeds/geom-u4-reflections';
+import { BASELINE_GEOM_U4_ROTATIONS } from './seeds/geom-u4-rotations';
+import { BASELINE_GEOM_U4_COMPOSITIONS_SYMMETRY } from './seeds/geom-u4-compositions-symmetry';
+import { BASELINE_GEOM_U4_CONGRUENCE_RIGID_MOTIONS } from './seeds/geom-u4-congruence-rigid-motions';
+import { BASELINE_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS } from './seeds/geom-u5-triangle-angle-relationships';
+import { BASELINE_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA } from './seeds/geom-u5-triangle-congruence-criteria';
+import { BASELINE_GEOM_U5_CPCTC_PROOFS } from './seeds/geom-u5-cpctc-proofs';
+import { BASELINE_GEOM_U5_ISOSCELES_EQUILATERAL } from './seeds/geom-u5-isosceles-equilateral';
+import { BASELINE_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES } from './seeds/geom-u5-midsegments-bisectors-inequalities';
+import { BASELINE_GEOM_U6_DILATIONS_SCALE_FACTOR } from './seeds/geom-u6-dilations-scale-factor';
+import { BASELINE_GEOM_U6_SIMILAR_POLYGONS } from './seeds/geom-u6-similar-polygons';
+import { BASELINE_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA } from './seeds/geom-u6-triangle-similarity-criteria';
+import { BASELINE_GEOM_U6_PROPORTIONALITY_THEOREMS } from './seeds/geom-u6-proportionality-theorems';
+import { BASELINE_GEOM_U7_PYTHAGOREAN_THEOREM } from './seeds/geom-u7-pythagorean-theorem';
+import { BASELINE_GEOM_U7_SPECIAL_RIGHT_TRIANGLES } from './seeds/geom-u7-special-right-triangles';
+import { BASELINE_GEOM_U7_TRIG_RATIOS } from './seeds/geom-u7-trig-ratios';
+import { BASELINE_GEOM_U7_SOLVING_RIGHT_TRIANGLES } from './seeds/geom-u7-solving-right-triangles';
+import { BASELINE_GEOM_U8_POLYGON_ANGLE_SUMS } from './seeds/geom-u8-polygon-angle-sums';
+import { BASELINE_GEOM_U8_PARALLELOGRAMS } from './seeds/geom-u8-parallelograms';
+import { BASELINE_GEOM_U8_SPECIAL_PARALLELOGRAMS } from './seeds/geom-u8-special-parallelograms';
+import { BASELINE_GEOM_U8_TRAPEZOIDS_KITES } from './seeds/geom-u8-trapezoids-kites';
+import { BASELINE_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
+import { BASELINE_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-inscribed-angles';
+import { BASELINE_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
+import { BASELINE_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
+import { BASELINE_GEOM_U10_AREA_POLYGONS } from './seeds/geom-u10-area-polygons';
+import { BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR } from './seeds/geom-u10-circumference-arc-length-sector';
+import { BASELINE_GEOM_U10_PRISMS_CYLINDERS } from './seeds/geom-u10-prisms-cylinders';
+import { BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES } from './seeds/geom-u10-pyramids-cones-spheres';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1030,6 +1070,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS,
   BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES,
   BASELINE_ALG1_U10_SEQUENCES,
+  BASELINE_GEOM_U1_POINTS_LINES_PLANES,
+  BASELINE_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT,
+  BASELINE_GEOM_U1_ANGLES_AND_MEASURE,
+  BASELINE_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS,
+  BASELINE_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING,
+  BASELINE_GEOM_U2_CONDITIONAL_STATEMENTS,
+  BASELINE_GEOM_U2_TWO_COLUMN_PROOFS,
+  BASELINE_GEOM_U3_PARALLEL_LINES_TRANSVERSALS,
+  BASELINE_GEOM_U3_PROVING_LINES_PARALLEL,
+  BASELINE_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR,
+  BASELINE_GEOM_U4_TRANSLATIONS,
+  BASELINE_GEOM_U4_REFLECTIONS,
+  BASELINE_GEOM_U4_ROTATIONS,
+  BASELINE_GEOM_U4_COMPOSITIONS_SYMMETRY,
+  BASELINE_GEOM_U4_CONGRUENCE_RIGID_MOTIONS,
+  BASELINE_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS,
+  BASELINE_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA,
+  BASELINE_GEOM_U5_CPCTC_PROOFS,
+  BASELINE_GEOM_U5_ISOSCELES_EQUILATERAL,
+  BASELINE_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES,
+  BASELINE_GEOM_U6_DILATIONS_SCALE_FACTOR,
+  BASELINE_GEOM_U6_SIMILAR_POLYGONS,
+  BASELINE_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA,
+  BASELINE_GEOM_U6_PROPORTIONALITY_THEOREMS,
+  BASELINE_GEOM_U7_PYTHAGOREAN_THEOREM,
+  BASELINE_GEOM_U7_SPECIAL_RIGHT_TRIANGLES,
+  BASELINE_GEOM_U7_TRIG_RATIOS,
+  BASELINE_GEOM_U7_SOLVING_RIGHT_TRIANGLES,
+  BASELINE_GEOM_U8_POLYGON_ANGLE_SUMS,
+  BASELINE_GEOM_U8_PARALLELOGRAMS,
+  BASELINE_GEOM_U8_SPECIAL_PARALLELOGRAMS,
+  BASELINE_GEOM_U8_TRAPEZOIDS_KITES,
+  BASELINE_GEOM_U9_CIRCLE_BASICS_ARCS,
+  BASELINE_GEOM_U9_CENTRAL_INSCRIBED_ANGLES,
+  BASELINE_GEOM_U9_TANGENTS_SECANTS_ANGLES,
+  BASELINE_GEOM_U9_CIRCLE_EQUATIONS,
+  BASELINE_GEOM_U10_AREA_POLYGONS,
+  BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR,
+  BASELINE_GEOM_U10_PRISMS_CYLINDERS,
+  BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));

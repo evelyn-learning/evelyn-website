@@ -35,6 +35,7 @@ import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 const HS_COURSE_NAMES: Record<string, string> = {
   chem: 'Chemistry',
   alg1: 'Algebra 1',
+  geom: 'Geometry',
 };
 
 interface BaselineDraft {
