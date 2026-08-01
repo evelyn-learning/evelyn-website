@@ -120,6 +120,10 @@ function baseOpts(over: Partial<GeneratePracticeItemsOptions> = {}): GeneratePra
   };
 }
 
+test('strip: a single choice is never stripped (vacuous sequence guard)', () => {
+  assert.deepEqual(stripChoiceLetterPrefixes(['(A) allele']), ['(A) allele']);
+});
+
 (async () => {
 console.log('\npractice-gen — generate-on-exhaustion:\n');
 
@@ -641,3 +645,4 @@ await test('gate: a prefix-only choice ("A) ") strips to empty and REJECTS the w
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
 })();
+

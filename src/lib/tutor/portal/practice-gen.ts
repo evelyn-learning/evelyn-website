@@ -286,6 +286,10 @@ const CHOICE_LETTER_PREFIX_RE = /^\s*(?:\(([A-Za-z])\)|([A-Za-z])\s*[.):]|([A-Za
  * identity to detect whether a strip happened.
  */
 export function stripChoiceLetterPrefixes(choices: string[]): string[] {
+  // A lone choice satisfies "sequential from A" vacuously, so the safeguard
+  // below can't tell a label scheme from content that merely opens with
+  // "(A) ..." — never strip unless there are at least two choices to compare.
+  if (choices.length < 2) return choices;
   const stripped: string[] = [];
   for (let i = 0; i < choices.length; i++) {
     const expectedLetter = String.fromCharCode(65 + i);
