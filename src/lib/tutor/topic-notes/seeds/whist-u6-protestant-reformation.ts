@@ -1,0 +1,81 @@
+/**
+ * World History — Unit 6 CED 6.2: The Protestant Reformation.
+ *
+ * Auto-extracted from the corresponding lesson plan
+ * (evelyn.hs.whist.protestant-reformation.v1). Hand-edit freely after extraction; bump
+ * baselineVersion when you make material changes.
+ *
+ * Pointer-gen pass (scripts/gen-topic-notes-pointers.ts) enriches the
+ * pointers section via Opus when run on this baseline.
+ */
+
+import type { TopicNotesBaseline } from '../types';
+
+export const BASELINE_WHIST_U6_PROTESTANT_REFORMATION: TopicNotesBaseline = {
+  baselineId: 'evelyn.hs.whist.protestant-reformation.v1',
+  course: 'World History',
+  cedUnit: 6,
+  cedTopic: '6.2',
+  cedTitle: 'The Protestant Reformation',
+  planId: 'evelyn.hs.whist.protestant-reformation.v1',
+  baselineVersion: 1,
+  lastUpdatedAt: '2026-08-01',
+  sources: [{ type: 'plan', planId: 'evelyn.hs.whist.protestant-reformation.v1' }],
+  theory: [
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The grievances were old', content: `THE GRIEVANCES WERE OLD — critics had complained for generations about SIMONY (buying and selling church offices), clergy who held several posts at once and lived in none of them, priests with little training, and Renaissance popes such as Julius II and Leo X who behaved like Italian princes — funding wars, palaces, and artists. Reform-minded Catholics said much of this out loud too; wanting reform did not by itself make you a Protestant.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The indulgence flashpoint', content: `THE INDULGENCE FLASHPOINT — an indulgence remitted temporal punishment for sins already confessed. The abuse was selling them: in 1517 the friar Johann Tetzel marketed indulgences across German lands to help fund the rebuilding of St. Peter's Basilica in Rome and to repay a bishop's debt for acquiring his office. Luther's objection was that this sold hope for cash and told ordinary Germans their money bought what only God gives.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'Earlier critics show timing matters', content: `EARLIER CRITICS SHOW TIMING MATTERS — John Wycliffe in England (1380s) and Jan Hus in Bohemia had already attacked church wealth and pushed Bibles in the people's own language. Hus was executed in 1415 and his movement was contained to Bohemia. Their ideas were not weaker than Luther's; their moment lacked the printing press and lacked princes with a reason to protect them.` },
+    { loId: 'whist.protestant-reformation', content: `1517 AND WHY IT CAUGHT — Luther, a monk and professor at Wittenberg, circulated Ninety-Five Theses in October 1517 as points for academic debate. Printing presses (Gutenberg's movable type, c. 1450 — callback to 6.1) carried them across the German lands in weeks, in cheap pamphlets and in German, not just Latin. At the Diet of Worms in 1521 Luther refused to recant; Emperor Charles V outlawed him — and Prince Frederick the Wise of Saxony hid him anyway.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'Politics protected the preacher', content: `POLITICS PROTECTED THE PREACHER — German princes had their own motives: a break with Rome meant seizing monastic lands and revenues, and resisting an emperor who wanted them obedient. Charles V, ruler of Spain and the Holy Roman Empire at once, was fighting France and facing Ottoman pressure — Suleiman reached Vienna in 1529 — and never had the free hand to crush the movement early. The Peace of Augsburg (1555) conceded that each German prince would choose Lutheranism or Catholicism for his own territory.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The core protestant claims', content: `THE CORE PROTESTANT CLAIMS — salvation by FAITH ALONE (sola fide): God's grace is received by trust, not earned by works or purchased; SCRIPTURE ALONE (sola scriptura): the Bible, not church tradition or papal authority, is the final word; and a priesthood of all believers, so ordinary people should read scripture themselves. Hence VERNACULAR Bibles — Luther's German New Testament (1522), later Tyndale's English. Catholic teaching answered that faith and works belong together and that tradition interprets scripture alongside it.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The split multiplies, it does not stay binary', content: `THE SPLIT MULTIPLIES, IT DOES NOT STAY BINARY — once scripture alone was the test, reformers read it differently. John Calvin built a disciplined reformed city in Geneva from 1541, teaching PREDESTINATION (God has already chosen the saved). In England, Henry VIII's break was political and dynastic first: denied an annulment, he had Parliament make the monarch head of the Church of England (1534) and dissolved the monasteries — the same king had written AGAINST Luther in 1521. Anabaptists, Presbyterians, and others followed.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The catholic counter-reformation did both things', content: `THE CATHOLIC COUNTER-REFORMATION DID BOTH THINGS — the Council of Trent (1545-1563) attacked the abuses (ending the sale of indulgences, requiring seminaries to train priests, ordering bishops to live in their dioceses) while firmly REAFFIRMING contested doctrine: faith and works, seven sacraments, tradition alongside scripture, papal authority. The Jesuits (Society of Jesus, founded by Ignatius of Loyola, approved 1540) became teachers and missionaries — Francis Xavier in India and Japan, Matteo Ricci in China — carrying Catholicism along the trade and empire routes of 6.3.` },
+    { loId: 'whist.protestant-reformation', kind: 'framework', title: 'The consequences ran for a century', content: `THE CONSEQUENCES RAN FOR A CENTURY — religion fused with politics and produced war: the French Wars of Religion (including the St. Bartholomew's Day Massacre, 1572, ended by the Edict of Nantes, 1598) and the Thirty Years' War (1618-1648), which devastated the German lands before the Peace of Westphalia in 1648 settled the map. Longer-run: vernacular Bible-reading pushed literacy and schooling upward, printing became normal politics, and Europe permanently lost the idea of one church for everyone.` },
+    { loId: 'whist.protestant-reformation', kind: 'definition', title: 'indulgence', content: `a remission of temporal punishment for sins already confessed; the practice that drew fire was selling them for money.` },
+    { loId: 'whist.protestant-reformation', kind: 'definition', title: 'sola fide / sola scriptura', content: `"faith alone / scripture alone" — the two core Protestant claims: grace is received by trust, and the Bible is the final authority.` },
+    { loId: 'whist.protestant-reformation', kind: 'definition', title: 'Counter-Reformation', content: `the Catholic Church's response, reforming abuses at the Council of Trent while reaffirming disputed doctrine, and expanding through new orders such as the Jesuits.` },
+  ],
+  methods: [
+    {
+      title: 'Worked why 1517',
+      steps: [
+        `Rule out the easy answer first: "Luther's ideas were better" explains nothing. Both men attacked church wealth, indulgence-selling, and the gap between clergy and scripture; both wanted the Bible in the local language. Hold the IDEAS constant and look at what changed around them.`,
+        `Technology: Hus wrote before movable-type printing was in use in Europe. Luther wrote after. His Ninety-Five Theses were printed and reprinted across the German lands within weeks, and his later pamphlets sold in the hundreds of thousands — cheap, short, and in German. Church authorities could silence a preacher; they could not recall a press run.`,
+        `Political cover: Hus was summoned, condemned, and burned in 1415 with no prince strong enough or motivated enough to shield him. Luther was outlawed at Worms in 1521 — and Frederick the Wise of Saxony immediately hid him at the Wartburg. Dozens of German princes then had reasons of their own to break: monastic lands, church revenues, and independence from the emperor.`,
+        `The enforcer was busy: Charles V ruled Spain and the Holy Roman Empire at once, and spent the crucial decades at war with France and under Ottoman pressure — Suleiman besieged Vienna in 1529. Crushing a religious movement inside Germany would have taken sustained force he could never spare, and by 1555 the Peace of Augsburg conceded the point.`,
+        `Close the comparison: the variable that changed was not the argument but its carriers — printing to spread it faster than it could be suppressed, princes with a material interest in protecting it, and an emperor too stretched to stop either.`,
+      ],
+      example: { problem: `Jan Hus made criticisms much like Luther's and was executed in 1415; his movement stayed inside Bohemia. Luther made his in 1517 and Europe split permanently. Build the comparison step by step: what was different about 1517?`, solution: `Not better ideas — better conditions: printing spread Luther faster than censorship could work, German princes had political and financial motives to protect him, and Charles V was too committed elsewhere to crush the movement while it was small.` },
+      relatedLoIds: ['whist.protestant-reformation'],
+    },
+    {
+      title: 'Worked theses source',
+      steps: [
+        `Identify the speaker and setting: Martin Luther, a monk and university professor at Wittenberg, writing in 1517 as debating points for other scholars — not, at this stage, a declaration of a new church.`,
+        `Read the first statement for THEOLOGY: pardon depends on genuine repentance, and God grants it directly. That is the seed of salvation by faith alone, and it makes the purchased certificate spiritually beside the point.`,
+        `Read the second statement for MONEY AND RESENTMENT: it names where German coins were going — a building project in Rome — and points at papal wealth. This is a grievance about a wealthy, distant institution taxing poorer regions, which is exactly why German princes and townspeople found it useful.`,
+        `Notice what the pair does together: it fuses a doctrinal argument to an economic and regional complaint. A purely theological dispute stays in the universities; a purely economic one stays local. Fused, it reaches scholars, princes, and townspeople at the same time.`,
+        `Weigh the limits of two sentences: this is Luther arguing, not a neutral report. Church defenders replied that indulgences were being misrepresented by sellers such as Tetzel rather than being wrong in principle, and the Council of Trent later ended the sale while keeping the doctrine. Use the paraphrase as evidence of what critics claimed, not as proof the claims were fully accurate.`,
+      ],
+      example: { problem: `Two of Luther's Ninety-Five Theses, paraphrased in plain modern English: "Any Christian who is truly sorry for sin already has full pardon from God, with or without a letter of indulgence." And: "Why does the pope, whose wealth today exceeds that of the richest men, build the basilica of St. Peter with the money of poor believers rather than with his own?" What does this short pair of statements tell us about the Reformation's causes?`, solution: `The pair shows the Reformation's two engines locked together: a theological claim that God pardons the truly repentant directly, and a regional-economic grievance that German money was funding Roman building — which is why the argument recruited princes and townspeople, not just theologians.` },
+      relatedLoIds: ['whist.protestant-reformation'],
+    },
+  ],
+  pointers: [
+    { content: `Two corrections. First, intent: in 1517 Luther circulated the Ninety-Five Theses as points for academic debate about indulgences; the break came step by step through excommunication and his outlawing at Worms in 1521. Founding a separate church was an outcome, not a starting plan. Second, the Catholic response was not simply refusal: the Council of Trent (1545-1563) ended the sale of indulgences, required seminaries to train priests, and made bishops reside in their dioceses — real reform of the practices critics attacked — while firmly reaffirming the doctrines Protestants rejected. Both sides argued in good faith from genuinely different readings of scripture and authority; describe each position as its holders stated it.`, kind: 'common-error' },
+    { content: `Grievances were old — simony, absentee and untrained clergy, worldly Renaissance popes, and indulgence sales (Tetzel, 1517, funding St. Peter's) — and Wycliffe and Hus had voiced them a century earlier.`, kind: 'tip' },
+    { content: `Why 1517 caught: printing spread the Ninety-Five Theses in weeks, German princes gained lands and independence by protecting Luther, and Charles V was too stretched by France and Ottoman pressure to crush the movement early.`, kind: 'tip' },
+    { content: `Core Protestant claims: salvation by faith alone, scripture alone, and Bibles in the vernacular — against Catholic teaching that faith and works, scripture and tradition, belong together.`, kind: 'tip' },
+    { content: `The split multiplied: Calvin's Geneva and predestination; Henry VIII's break in England for political and dynastic reasons, not doctrinal ones.`, kind: 'tip' },
+    { content: `The Counter-Reformation did both: the Council of Trent (1545-1563) reformed abuses while reaffirming doctrine, and the Jesuits taught and carried Catholicism worldwide — feeding straight into 6.3.`, kind: 'tip' },
+    { content: `Consequences: a century of religious war ending at the Peace of Westphalia (1648), a literacy push from vernacular Bible-reading, and the permanent end of one church for all of western Europe.`, kind: 'tip' },
+    { content: `Don't say indulgences were "forgiveness of sins sold by the church." An indulgence remitted *temporal punishment* for sins **already confessed**. The abuse Luther attacked was selling them (Tetzel, 1517), not the existence of the doctrine — Trent ended the sale but kept the teaching.`, kind: 'vocab-note' },
+    { content: `Never explain 1517 with "Luther's ideas were better than Wycliffe's or Hus's." Hold the ideas constant: what changed was the printing press, princes with land and revenue to gain, and a Charles V tied down by France and the Ottomans (Vienna, 1529).`, kind: 'common-error' },
+    { content: `Don't read the outcome backward into Luther's intention. In October 1517 the Ninety-Five Theses were points for academic debate by a monk and professor. The separate church came step by step — excommunication, then the Diet of Worms (1521) — not from a plan to found Protestantism.`, kind: 'gotcha' },
+    { content: `England is the exception: Henry VIII's 1534 break was dynastic and political (a refused annulment), not doctrinal — the same king wrote *against* Luther in 1521. Don't lump him in with Luther and Calvin as a theological reformer.`, kind: 'edge-case' },
+    { content: `"Wanting reform" ≠ "becoming Protestant." Reform-minded Catholics attacked simony, absentee clergy, and worldly popes too. The dividing line is authority and salvation — sola scriptura and sola fide — not whether you thought the church had abuses.`, kind: 'vocab-note' },
+    { content: `The Counter-Reformation did **two** things at once. Trent (1545–1563) reformed practices (no more selling indulgences, seminaries, resident bishops) *and* reaffirmed contested doctrine (faith **and** works, seven sacraments, tradition alongside scripture, papal authority). Never describe it as pure refusal.`, kind: 'common-error' },
+    { content: `The split doesn't stay Catholic vs. Lutheran. Once scripture alone was the test, readings multiplied: Calvin's Geneva and predestination (1541), Anabaptists, Presbyterians, the Church of England. Sola scriptura itself generated the fragmentation.`, kind: 'tip' },
+    { content: `Keep the settlements straight: Peace of Augsburg (1555) let each **German prince** choose Lutheranism or Catholicism; Edict of Nantes (1598) ended the **French** wars of religion; Peace of Westphalia (1648) closed the **Thirty Years' War**. Different wars, different maps.`, kind: 'gotcha' },
+  ],
+};

@@ -38,6 +38,7 @@ const HS_COURSE_NAMES: Record<string, string> = {
   geom: 'Geometry',
   bio: 'Biology',
   engl: 'HS English',
+  whist: 'World History',
 };
 
 interface BaselineDraft {

@@ -704,6 +704,46 @@ import { BASELINE_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES } from './seeds/engl-u
 import { BASELINE_ENGL_U10_EVALUATING_SOURCES } from './seeds/engl-u10-evaluating-sources';
 import { BASELINE_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/engl-u10-quoting-paraphrasing-summarizing';
 import { BASELINE_ENGL_U10_CITING_AND_INTEGRATING_SOURCES } from './seeds/engl-u10-citing-and-integrating-sources';
+import { BASELINE_WHIST_U1_NEOLITHIC_REVOLUTION } from './seeds/whist-u1-neolithic-revolution';
+import { BASELINE_WHIST_U1_FEATURES_OF_CIVILIZATION } from './seeds/whist-u1-features-of-civilization';
+import { BASELINE_WHIST_U1_MESOPOTAMIA_EGYPT } from './seeds/whist-u1-mesopotamia-egypt';
+import { BASELINE_WHIST_U1_EARLY_INDIA_CHINA } from './seeds/whist-u1-early-india-china';
+import { BASELINE_WHIST_U2_CLASSICAL_GREECE } from './seeds/whist-u2-classical-greece';
+import { BASELINE_WHIST_U2_ROME_REPUBLIC_EMPIRE } from './seeds/whist-u2-rome-republic-empire';
+import { BASELINE_WHIST_U2_CLASSICAL_INDIA_CHINA } from './seeds/whist-u2-classical-india-china';
+import { BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS } from './seeds/whist-u2-world-belief-systems';
+import { BASELINE_WHIST_U3_RISE_OF_ISLAM } from './seeds/whist-u3-rise-of-islam';
+import { BASELINE_WHIST_U3_ISLAMIC_GOLDEN_AGE } from './seeds/whist-u3-islamic-golden-age';
+import { BASELINE_WHIST_U3_TANG_SONG_CHINA } from './seeds/whist-u3-tang-song-china';
+import { BASELINE_WHIST_U3_MONGOL_EMPIRE } from './seeds/whist-u3-mongol-empire';
+import { BASELINE_WHIST_U4_BYZANTINE_EMPIRE } from './seeds/whist-u4-byzantine-empire';
+import { BASELINE_WHIST_U4_FEUDAL_EUROPE } from './seeds/whist-u4-feudal-europe';
+import { BASELINE_WHIST_U4_CHURCH_AND_CRUSADES } from './seeds/whist-u4-church-and-crusades';
+import { BASELINE_WHIST_U4_LATE_MIDDLE_AGES } from './seeds/whist-u4-late-middle-ages';
+import { BASELINE_WHIST_U5_WEST_AFRICAN_EMPIRES } from './seeds/whist-u5-west-african-empires';
+import { BASELINE_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN } from './seeds/whist-u5-east-africa-indian-ocean';
+import { BASELINE_WHIST_U5_MAYA_AZTEC } from './seeds/whist-u5-maya-aztec';
+import { BASELINE_WHIST_U5_INCA_NORTH_AMERICA } from './seeds/whist-u5-inca-north-america';
+import { BASELINE_WHIST_U6_RENAISSANCE } from './seeds/whist-u6-renaissance';
+import { BASELINE_WHIST_U6_PROTESTANT_REFORMATION } from './seeds/whist-u6-protestant-reformation';
+import { BASELINE_WHIST_U6_AGE_OF_EXPLORATION } from './seeds/whist-u6-age-of-exploration';
+import { BASELINE_WHIST_U6_COLUMBIAN_EXCHANGE } from './seeds/whist-u6-columbian-exchange';
+import { BASELINE_WHIST_U7_SCIENTIFIC_REVOLUTION } from './seeds/whist-u7-scientific-revolution';
+import { BASELINE_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM } from './seeds/whist-u7-absolutism-constitutionalism';
+import { BASELINE_WHIST_U7_ENLIGHTENMENT } from './seeds/whist-u7-enlightenment';
+import { BASELINE_WHIST_U7_ATLANTIC_REVOLUTIONS } from './seeds/whist-u7-atlantic-revolutions';
+import { BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION } from './seeds/whist-u8-industrial-revolution';
+import { BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM } from './seeds/whist-u8-industrial-society-reform';
+import { BASELINE_WHIST_U8_NATIONALISM_UNIFICATION } from './seeds/whist-u8-nationalism-unification';
+import { BASELINE_WHIST_U8_NEW_IMPERIALISM } from './seeds/whist-u8-new-imperialism';
+import { BASELINE_WHIST_U9_WORLD_WAR_I } from './seeds/whist-u9-world-war-i';
+import { BASELINE_WHIST_U9_INTERWAR_YEARS } from './seeds/whist-u9-interwar-years';
+import { BASELINE_WHIST_U9_WORLD_WAR_II } from './seeds/whist-u9-world-war-ii';
+import { BASELINE_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS } from './seeds/whist-u9-holocaust-human-rights';
+import { BASELINE_WHIST_U10_COLD_WAR } from './seeds/whist-u10-cold-war';
+import { BASELINE_WHIST_U10_DECOLONIZATION } from './seeds/whist-u10-decolonization';
+import { BASELINE_WHIST_U10_END_OF_COLD_WAR } from './seeds/whist-u10-end-of-cold-war';
+import { BASELINE_WHIST_U10_GLOBALIZATION } from './seeds/whist-u10-globalization';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1270,6 +1310,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_ENGL_U10_EVALUATING_SOURCES,
   BASELINE_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING,
   BASELINE_ENGL_U10_CITING_AND_INTEGRATING_SOURCES,
+  BASELINE_WHIST_U1_NEOLITHIC_REVOLUTION,
+  BASELINE_WHIST_U1_FEATURES_OF_CIVILIZATION,
+  BASELINE_WHIST_U1_MESOPOTAMIA_EGYPT,
+  BASELINE_WHIST_U1_EARLY_INDIA_CHINA,
+  BASELINE_WHIST_U2_CLASSICAL_GREECE,
+  BASELINE_WHIST_U2_ROME_REPUBLIC_EMPIRE,
+  BASELINE_WHIST_U2_CLASSICAL_INDIA_CHINA,
+  BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS,
+  BASELINE_WHIST_U3_RISE_OF_ISLAM,
+  BASELINE_WHIST_U3_ISLAMIC_GOLDEN_AGE,
+  BASELINE_WHIST_U3_TANG_SONG_CHINA,
+  BASELINE_WHIST_U3_MONGOL_EMPIRE,
+  BASELINE_WHIST_U4_BYZANTINE_EMPIRE,
+  BASELINE_WHIST_U4_FEUDAL_EUROPE,
+  BASELINE_WHIST_U4_CHURCH_AND_CRUSADES,
+  BASELINE_WHIST_U4_LATE_MIDDLE_AGES,
+  BASELINE_WHIST_U5_WEST_AFRICAN_EMPIRES,
+  BASELINE_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN,
+  BASELINE_WHIST_U5_MAYA_AZTEC,
+  BASELINE_WHIST_U5_INCA_NORTH_AMERICA,
+  BASELINE_WHIST_U6_RENAISSANCE,
+  BASELINE_WHIST_U6_PROTESTANT_REFORMATION,
+  BASELINE_WHIST_U6_AGE_OF_EXPLORATION,
+  BASELINE_WHIST_U6_COLUMBIAN_EXCHANGE,
+  BASELINE_WHIST_U7_SCIENTIFIC_REVOLUTION,
+  BASELINE_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM,
+  BASELINE_WHIST_U7_ENLIGHTENMENT,
+  BASELINE_WHIST_U7_ATLANTIC_REVOLUTIONS,
+  BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION,
+  BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM,
+  BASELINE_WHIST_U8_NATIONALISM_UNIFICATION,
+  BASELINE_WHIST_U8_NEW_IMPERIALISM,
+  BASELINE_WHIST_U9_WORLD_WAR_I,
+  BASELINE_WHIST_U9_INTERWAR_YEARS,
+  BASELINE_WHIST_U9_WORLD_WAR_II,
+  BASELINE_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS,
+  BASELINE_WHIST_U10_COLD_WAR,
+  BASELINE_WHIST_U10_DECOLONIZATION,
+  BASELINE_WHIST_U10_END_OF_COLD_WAR,
+  BASELINE_WHIST_U10_GLOBALIZATION,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
