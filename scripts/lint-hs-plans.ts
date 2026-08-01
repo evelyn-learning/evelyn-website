@@ -17,6 +17,7 @@ const COURSES: Record<string, { subject: string; topic: string; loPrefix: string
   geom: { subject: 'math', topic: 'geometry', loPrefix: 'geom', std: 'GEOM' },
   bio: { subject: 'science', topic: 'biology', loPrefix: 'bio', std: 'BIO' },
   chem: { subject: 'science', topic: 'chemistry', loPrefix: 'chem', std: 'CHEM' },
+  engl: { subject: 'ela', topic: 'hs-english', loPrefix: 'engl', std: 'ENGL' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.hs\\.(${Object.keys(COURSES).join('|')})\\.`);

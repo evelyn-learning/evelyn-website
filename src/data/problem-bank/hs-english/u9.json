@@ -1,0 +1,435 @@
+[
+  {
+    "id": "engl-thesis-statements-001",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a three-page argument paper about the school's morning announcements. Which of these is the strongest thesis?",
+    "choices": [
+      "The morning announcements are read over the intercom at 7:50 every day.",
+      "In this paper I will discuss the morning announcements and how they could be improved.",
+      "The morning announcements should be posted as a one-minute video shown in first period instead of read over the intercom, because half the building cannot hear the intercom over the hallway noise.",
+      "Communication has shaped schools and communities everywhere for generations."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the fact test on each choice: which ones could nobody reasonably disagree with?",
+      "One choice is a plain fact, one announces the paper instead of making a claim, and one is far too broad for three pages. The remaining choice pairs an arguable claim with a reason."
+    ]
+  },
+  {
+    "id": "engl-thesis-statements-002",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student submits this thesis: \"Our school should require study hall, the track needs resurfacing, and the vending machines should stay on after lunch.\" What is the main problem with it?",
+    "choices": [
+      "It is a fact rather than a claim, so no reasonable person could disagree with it.",
+      "It bundles three unrelated points together, so it has no single controlling claim for the paper to prove.",
+      "It is too short to serve as a thesis for a paper of any length.",
+      "It announces what the essay will do instead of stating a position."
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the subjects the sentence commits the writer to proving.",
+      "Study hall, the track, and the vending machines are three different papers. A thesis needs one controlling claim; extra points belong in the body only when they serve that claim."
+    ]
+  },
+  {
+    "id": "engl-thesis-statements-003",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this weak thesis for a four-page paper: \"The peer tutoring program was a good thing for our school.\" Which revision is strongest?",
+    "choices": [
+      "Forty-one students signed up for peer tutoring last fall.",
+      "This paper will describe the peer tutoring program and explain why the experience mattered.",
+      "Helping other people has always been an important part of human life everywhere.",
+      "The peer tutoring program should be expanded to math classes, because students who met with a tutor twice a week began turning in homework they had skipped all semester."
+    ],
+    "answer": "D",
+    "hints": [
+      "The original fails because \"a good thing\" is vague. The strongest revision names a specific effect that evidence could actually show.",
+      "Eliminate the choice that is only a fact, the choice that announces the paper, and the choice too broad to prove in four pages."
+    ]
+  },
+  {
+    "id": "engl-thesis-statements-004",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is the strongest thesis for a four-page paper about the school's late-work policy?",
+    "choices": [
+      "The late-work policy should allow a two-day grace period on long projects, because the current same-day cutoff punishes students for bus delays rather than for weak work.",
+      "The late-work policy at our school should be changed.",
+      "Late work is a problem that teachers and students have argued about for decades in schools everywhere.",
+      "Under the current policy, work turned in one day late loses half of its credit."
+    ],
+    "answer": "A",
+    "hints": [
+      "Two of these take a side. Ask which one also supplies the reason the body paragraphs will prove.",
+      "\"Should be changed\" is arguable but names no change and no reason, so the paper has nothing specific to defend. The strongest thesis says what change, and why."
+    ]
+  },
+  {
+    "id": "engl-thesis-statements-005",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has two days and three pages to write about early-morning club meetings. Which thesis has a scope she can actually prove in that space?",
+    "choices": [
+      "School start times across the country should be pushed back, because teenage sleep cycles do not match the schedules that set the modern school day.",
+      "Morning club meetings begin at 7:00 in the morning on Tuesdays and Thursdays.",
+      "Our school should move club meetings from 7:00 in the morning to the activity period after fourth block, because the early meetings depend on a carpool that only about a dozen families can manage.",
+      "In these pages I will weigh the advantages and disadvantages of morning club meetings."
+    ],
+    "answer": "C",
+    "hints": [
+      "Scope means the subject, the setting, and the effect a claim commits you to proving. Check each choice against three pages.",
+      "One choice is arguable but would require national evidence, one is a fact, and one announces the paper. Only one narrows to a single school, a single change, and an effect a student could document."
+    ]
+  },
+  {
+    "id": "engl-thesis-statements-006",
+    "loId": "engl.thesis-statements",
+    "cedCode": "ENGL-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two of these thesis statements take the same arguable side about the school's hall pass. Which one is the stronger thesis?",
+    "choices": [
+      "The school should replace the paper hall pass with a digital sign-out, because a digital sign-out is a better system than a paper one.",
+      "The school should replace the paper hall pass with a digital sign-out, because the front office currently rebuilds attendance from unreadable handwriting after every fire drill.",
+      "The paper hall pass has been used at this school for more than twenty years.",
+      "In this essay I will argue in favor of a digital sign-out system."
+    ],
+    "answer": "B",
+    "hints": [
+      "Both of the first two choices are arguable. Compare only the part after \"because.\"",
+      "One reason simply says the proposed system is better, which repeats the claim in new words and gives the body nothing to prove. The other names a specific consequence evidence could confirm."
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-001",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence should be deleted to keep this paragraph unified? \"(1) The weather station on the roof has become the science club's most reliable recruiting tool. (2) Sixth-period students check its readings before every outdoor lab. (3) Twelve freshmen joined the club in the two weeks after the station went online. (4) The custodian who installed the mounting bracket also builds cabinets in his garage.\"",
+    "choices": [
+      "Sentence 1: The weather station on the roof has become the science club's most reliable recruiting tool.",
+      "Sentence 2: Sixth-period students check its readings before every outdoor lab.",
+      "Sentence 3: Twelve freshmen joined the club in the two weeks after the station went online.",
+      "Sentence 4: The custodian who installed the mounting bracket also builds cabinets in his garage."
+    ],
+    "answer": "D",
+    "hints": [
+      "Underline the topic sentence first, then ask of every other sentence: does this help prove that the station recruits members?",
+      "One sentence is about a person's weekend hobby rather than about the club or the station. Being true is not the same as being on the job."
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-002",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph contains this support: \"The sign-up sheet for the practice rooms fills before homeroom ends. Three bands now rehearse in the band closet because the rooms are booked. The chorus teacher has started assigning half-hour slots to keep the peace.\" Which topic sentence best fits this support?",
+    "choices": [
+      "Demand for the school's two practice rooms has outgrown the space.",
+      "Music is one of the most valuable subjects a school can offer its students.",
+      "The chorus teacher assigns half-hour slots in the practice rooms.",
+      "The band closet is much smaller than most students expect it to be."
+    ],
+    "answer": "A",
+    "hints": [
+      "A topic sentence must promise exactly what the support delivers, no broader and no narrower.",
+      "One choice is a general opinion the support never proves, and two cover only a single detail from the paragraph."
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-003",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph opens with this topic sentence: \"Moving the vending machines out of the gym lobby cut the litter problem in half.\" Which sentence best DEVELOPS that point?",
+    "choices": [
+      "There is much less litter in the lobby now than there used to be.",
+      "The custodial log recorded nine bags of lobby trash in November and four in February, and the bleacher seams no longer collect wrappers.",
+      "The vending machines were installed in the lobby six years ago.",
+      "Many students believe the cafeteria should also start selling cold drinks."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the added-knowledge question of each choice: what does the reader learn that the topic sentence did not already say?",
+      "One choice restates the claim, one gives background without proving anything, and one drifts to a different issue. Only one supplies specific evidence."
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-004",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence breaks unity in this paragraph? \"(1) The new shelving in the art supply room has cut setup time at the start of every class. (2) Brushes and palettes now hang in labeled slots instead of piling up in one bin. (3) The ceramics elective has a longer waitlist this year than any other art course. (4) Students reach their materials and begin work within the first three minutes of the period.\"",
+    "choices": [
+      "Sentence 1: The new shelving in the art supply room has cut setup time at the start of every class.",
+      "Sentence 2: Brushes and palettes now hang in labeled slots instead of piling up in one bin.",
+      "Sentence 3: The ceramics elective has a longer waitlist this year than any other art course.",
+      "Sentence 4: Students reach their materials and begin work within the first three minutes of the period."
+    ],
+    "answer": "C",
+    "hints": [
+      "The promise is narrower than \"art\" in general. Say the promise out loud before you test the sentences.",
+      "One sentence is about art classes but says nothing about setup time or the shelving. Sharing a subject area is not the same as serving the topic sentence."
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-005",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence adds nothing and should be cut? \"(1) The library's new checkout kiosk has shortened the line at the front desk. (2) The kiosk has made the whole checkout process faster and better for everyone. (3) On Monday mornings the desk used to hold a line of fifteen students; now it rarely holds more than four. (4) The aide who once scanned every book shelves returns during that same half hour.\"",
+    "choices": [
+      "Sentence 1: The library's new checkout kiosk has shortened the line at the front desk.",
+      "Sentence 2: The kiosk has made the whole checkout process faster and better for everyone.",
+      "Sentence 3: On Monday mornings the desk used to hold a line of fifteen students; now it rarely holds more than four.",
+      "Sentence 4: The aide who once scanned every book shelves returns during that same half hour."
+    ],
+    "answer": "B",
+    "hints": [
+      "This paragraph has no off-topic sentence. Look instead for the sentence that repeats the claim in new words.",
+      "Ask of each sentence: what does the reader know now that they did not know one sentence ago? One sentence answers \"nothing.\""
+    ]
+  },
+  {
+    "id": "engl-paragraph-unity-and-support-006",
+    "loId": "engl.paragraph-unity-and-support",
+    "cedCode": "ENGL-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph contains this support: \"The stage crew rebuilt the lighting rig over two weekends in September. Rehearsals now run without the twenty-minute blackout resets that stalled last spring. The crew has also trained four freshmen to run the board alone.\" Which topic sentence fits this support best?",
+    "choices": [
+      "The stage crew has been busy this fall.",
+      "School theater programs depend on students who are willing to work behind the scenes.",
+      "The stage crew rebuilt the lighting rig over two weekends in September.",
+      "The September rig rebuild has both smoothed out rehearsals and left the crew with trained replacements."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two choices are true of this paragraph. Test each one against ALL three pieces of support, not just the first.",
+      "\"Busy this fall\" is true but promises nothing a reader could check, and one choice simply repeats the first detail. The best topic sentence names the claim that all three sentences prove."
+    ]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-001",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Choose the transition that best connects these sentences: \"The garden club planted two hundred bulbs in October. ___, the first tulips appeared in March.\"",
+    "choices": ["Months later", "In contrast", "For example", "Nevertheless"],
+    "answer": "A",
+    "hints": ["Name the relationship first: the second sentence follows the first in time."]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-002",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"The rain gauge behind the greenhouse overflowed twice in April, and the raised beds stayed soaked for a week. ___, the lettuce seedlings rotted before the class could transplant them.\"",
+    "choices": ["For instance,", "As a result,", "In contrast,", "Meanwhile,"],
+    "answer": "B",
+    "hints": [
+      "Say the connection in plain words: did the soaked beds simply happen at the same time as the rotted seedlings, or did they produce them?",
+      "The standing water is the reason the seedlings rotted, so you need a cause-and-effect word rather than an example, a contrast, or a time marker."
+    ]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-003",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"Several clubs have found ways to meet without a room of their own. ___, the chess team plays on the cafeteria stage during second lunch.\"",
+    "choices": ["However,", "Therefore,", "For instance,", "Earlier,"],
+    "answer": "C",
+    "hints": [
+      "The second sentence narrows from a general statement to one concrete case.",
+      "That is the example family. Nothing turns against the first sentence, nothing is caused by it, and no clock is being tracked."
+    ]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-004",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In which pair of sentences does the transition name the WRONG relationship?",
+    "choices": [
+      "The debate team recorded its practice rounds all fall. In addition, the coach began timing every rebuttal.",
+      "The chorus room lost its air conditioning in September. As a result, morning rehearsals moved to the auditorium.",
+      "Some electives fill on the first day of registration. For example, the forensics course closed within an hour last spring.",
+      "The garden club ordered seed trays in February so that seedlings would be ready for the May sale. Moreover, the trays were delivered to the wrong campus and sat unopened until June."
+    ],
+    "answer": "D",
+    "hints": [
+      "Name the relationship in each pair yourself before you judge the connector: addition, contrast, cause and effect, or example.",
+      "One pair sets up an expectation and then reports the opposite outcome. That is contrast, but the connector used means addition, which tells the reader the reverse of the truth."
+    ]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-005",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft reads: \"The freshman mentors started meeting their groups on Friday mornings. It has changed things.\" Which revision of the second sentence improves cohesion WITHOUT adding a transition word?",
+    "choices": [
+      "Moreover, it has changed things quite a bit.",
+      "Therefore, this has been a real change this year.",
+      "Those Friday meetings have given new students a place to ask the questions they will not ask in class.",
+      "This has changed a lot, and it is something they seem to like."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cohesion comes from repeating the key noun and keeping every pronoun pointing at exactly one noun.",
+      "Two choices just bolt a connector onto the same vague sentence, and one piles up \"this\" and \"it\" with no noun behind them."
+    ]
+  },
+  {
+    "id": "engl-transitions-and-cohesion-006",
+    "loId": "engl.transitions-and-cohesion",
+    "cedCode": "ENGL-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"The theater department moved auditions from November to September this year. ___, the fall cast had four extra weeks of rehearsal before opening night.\"",
+    "choices": ["Later,", "As a result,", "In contrast,", "For example,"],
+    "answer": "B",
+    "hints": [
+      "Two choices could describe events in this order. Decide whether the second event merely came after the first or was produced by it.",
+      "The extra rehearsal weeks exist because auditions moved earlier, so the honest signal is cause and effect. A time word would report the order and hide the reason."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-001",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An essay will argue that the school should build a covered walkway between the main building and the portable classrooms. Which opening sentence best draws the reader in?",
+    "choices": [
+      "Since the beginning of time, people have looked for shelter from bad weather.",
+      "The dictionary defines a walkway as a passage for people to walk along.",
+      "In this essay I will argue that a covered walkway should be built between the buildings.",
+      "When it rains, thirty-one students cross ninety feet of open blacktop four times a day and start algebra with soaked notebooks."
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these could sit on top of an essay about almost anything, or simply announce what the writer plans to do.",
+      "Rule out the cosmic opener, the dictionary opener, and the announcement. What remains is a concrete scene tied to this exact argument."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-002",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Here is the full opening paragraph of an essay about the school's athletic participation fee: \"Sports are very important and have been part of schools for a long time. Teams can be found at almost every high school. This paper is going to talk about the athletic fee.\" What is the paragraph's biggest problem?",
+    "choices": [
+      "It never makes a claim; it names a topic instead of stating something a reader could disagree with, and nothing before that is concrete enough to hook anyone.",
+      "It places the thesis in the last sentence, when a thesis belongs in the first sentence of an introduction.",
+      "It gives so much specific evidence up front that the body paragraphs will have nothing left to prove.",
+      "It is written in the third person, and an essay about a fee students pay should be written in the first person."
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the three jobs of an introduction in order: hook, context bridge, thesis.",
+      "\"This paper is going to talk about the athletic fee\" names a subject, not a position. Ask whether any sentence here takes a side."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-003",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An essay has argued that students should be allowed to eat lunch at the courtyard tables. Its hook described the noise level in the cafeteria, and its body paragraphs covered supervision, weather, and seating. Which sentence is the strongest way to begin the conclusion?",
+    "choices": [
+      "In conclusion, as stated above, students should be allowed to eat lunch at the courtyard tables.",
+      "Since the dawn of time, people have gathered together to share their meals.",
+      "Another good reason is that the courtyard tables were donated four years ago and are almost never used.",
+      "The noise that drives students to eat in the stairwells is not a discipline problem; it is a seating problem, and the courtyard already has the seats."
+    ],
+    "answer": "D",
+    "hints": [
+      "A conclusion synthesizes the argument and then answers \"so what.\" Which choice does work the introduction has not already done?",
+      "Eliminate the verbatim restatement, the tired cliche, and the brand-new argument about donated tables."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-004",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An opening has a hook and a thesis but nothing between them: \"The wood shop's dust collector shuts off every twenty minutes, and students finish their cuts in a gray haze. ___ The school should replace the collector before the spring build season, because a shop that cannot clear its own air cannot run the projects the course is built around.\" Which sentence best bridges the hook to the thesis?",
+    "choices": [
+      "Wood shop is one of the most popular electives in the building.",
+      "Dust is a problem in workplaces all over the world.",
+      "The collector was sized for a single lathe almost thirty years ago and has not been upgraded since the shop added six saws.",
+      "In this essay I will explain why the dust collector matters so much."
+    ],
+    "answer": "C",
+    "hints": [
+      "A context bridge supplies just enough situation to turn the hook into a path toward the claim.",
+      "One choice is true about the elective but explains nothing about the failing collector, one is too general to help, and one announces the essay. Only one tells the reader why the machine keeps shutting off."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-005",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence should be cut from this conclusion to an essay arguing that students should help rebuild the creek trail? \"(1) One weekend of volunteer labor is a small price for a trail the whole town uses. (2) A grant from the county parks office would also cover new trail signage, which nobody has proposed yet. (3) The families who walk the loop on Sunday mornings will be the first to notice the difference. (4) The council votes on the work permit in March.\"",
+    "choices": [
+      "Sentence 1: One weekend of volunteer labor is a small price for a trail the whole town uses.",
+      "Sentence 2: A grant from the county parks office would also cover new trail signage, which nobody has proposed yet.",
+      "Sentence 3: The families who walk the loop on Sunday mornings will be the first to notice the difference.",
+      "Sentence 4: The council votes on the work permit in March."
+    ],
+    "answer": "B",
+    "hints": [
+      "A conclusion synthesizes, states the stakes, and can name an action. What it must never do is open something new.",
+      "One sentence introduces a fresh proposal with no room left to support it, which reopens the argument at the moment it should close."
+    ]
+  },
+  {
+    "id": "engl-introductions-and-conclusions-006",
+    "loId": "engl.introductions-and-conclusions",
+    "cedCode": "ENGL-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An essay has argued that the daily announcements should be cut from six minutes to two. Its hook described a first-period class losing the end of a lab demonstration to the intercom, and its body paragraphs covered lost instruction time, repetition, and posting notices online instead. Which sentence is the strongest final line?",
+    "choices": [
+      "In short, the announcements run too long, they interrupt first period, and they could be posted online instead.",
+      "Announcements have always been part of school life and probably always will be.",
+      "The class that lost the end of its lab demonstration will never get those minutes back, and there are one hundred and eighty of those mornings in a year.",
+      "Another argument for shortening them is that the broadcast club has offered to produce a written bulletin."
+    ],
+    "answer": "C",
+    "hints": [
+      "Two choices are defensible closers. Compare what each one leaves the reader with.",
+      "One competently lists the reasons the reader just finished reading, which is summary. The other returns to the opening image and names what the argument adds up to over a whole year."
+    ]
+  }
+]

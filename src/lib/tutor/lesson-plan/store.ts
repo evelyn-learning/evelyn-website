@@ -1806,6 +1806,48 @@ import { SEED_CHEM_U9_ENDOTHERMIC_EXOTHERMIC } from './seeds/chem-u9-endothermic
 import { SEED_CHEM_U9_EQUILIBRIUM_LE_CHATELIER } from './seeds/chem-u9-equilibrium-le-chatelier';
 import { SEED_CHEM_U9_REACTION_RATES_COLLISION } from './seeds/chem-u9-reaction-rates-collision';
 import { SEED_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY } from './seeds/chem-u9-specific-heat-calorimetry';
+
+// ── HS core: HS English (2026-07 wave 1b) ──
+import { SEED_ENGL_U1_PARTS_OF_SPEECH } from './seeds/engl-u1-parts-of-speech';
+import { SEED_ENGL_U1_PRONOUN_AGREEMENT_CLARITY } from './seeds/engl-u1-pronoun-agreement-clarity';
+import { SEED_ENGL_U1_SUBJECT_VERB_AGREEMENT } from './seeds/engl-u1-subject-verb-agreement';
+import { SEED_ENGL_U1_VERB_TENSE_AND_FORM } from './seeds/engl-u1-verb-tense-and-form';
+import { SEED_ENGL_U10_CITING_AND_INTEGRATING_SOURCES } from './seeds/engl-u10-citing-and-integrating-sources';
+import { SEED_ENGL_U10_EVALUATING_SOURCES } from './seeds/engl-u10-evaluating-sources';
+import { SEED_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/engl-u10-quoting-paraphrasing-summarizing';
+import { SEED_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES } from './seeds/engl-u10-research-questions-and-sources';
+import { SEED_ENGL_U2_CLAUSES_AND_PHRASES } from './seeds/engl-u2-clauses-and-phrases';
+import { SEED_ENGL_U2_FRAGMENTS_AND_RUN_ONS } from './seeds/engl-u2-fragments-and-run-ons';
+import { SEED_ENGL_U2_MODIFIERS_AND_PARALLELISM } from './seeds/engl-u2-modifiers-and-parallelism';
+import { SEED_ENGL_U2_SENTENCE_TYPES_COMBINING } from './seeds/engl-u2-sentence-types-combining';
+import { SEED_ENGL_U3_APOSTROPHES_AND_POSSESSIVES } from './seeds/engl-u3-apostrophes-and-possessives';
+import { SEED_ENGL_U3_COMMAS } from './seeds/engl-u3-commas';
+import { SEED_ENGL_U3_DASHES_PARENTHESES_QUOTATION } from './seeds/engl-u3-dashes-parentheses-quotation';
+import { SEED_ENGL_U3_SEMICOLONS_AND_COLONS } from './seeds/engl-u3-semicolons-and-colons';
+import { SEED_ENGL_U4_COMMONLY_CONFUSED_WORDS } from './seeds/engl-u4-commonly-confused-words';
+import { SEED_ENGL_U4_CONNOTATION_AND_DENOTATION } from './seeds/engl-u4-connotation-and-denotation';
+import { SEED_ENGL_U4_PRECISION_AND_CONCISION } from './seeds/engl-u4-precision-and-concision';
+import { SEED_ENGL_U4_TONE_AND_REGISTER } from './seeds/engl-u4-tone-and-register';
+import { SEED_ENGL_U5_CLAIMS_AND_EVIDENCE } from './seeds/engl-u5-claims-and-evidence';
+import { SEED_ENGL_U5_COUNTERARGUMENT_AND_REBUTTAL } from './seeds/engl-u5-counterargument-and-rebuttal';
+import { SEED_ENGL_U5_LOGICAL_FALLACIES } from './seeds/engl-u5-logical-fallacies';
+import { SEED_ENGL_U5_RHETORICAL_APPEALS } from './seeds/engl-u5-rhetorical-appeals';
+import { SEED_ENGL_U6_CHARACTERIZATION } from './seeds/engl-u6-characterization';
+import { SEED_ENGL_U6_NARRATIVE_POINT_OF_VIEW } from './seeds/engl-u6-narrative-point-of-view';
+import { SEED_ENGL_U6_PLOT_AND_CONFLICT } from './seeds/engl-u6-plot-and-conflict';
+import { SEED_ENGL_U6_THEME } from './seeds/engl-u6-theme';
+import { SEED_ENGL_U7_AUTHORS_PURPOSE_AND_PERSPECTIVE } from './seeds/engl-u7-authors-purpose-and-perspective';
+import { SEED_ENGL_U7_CENTRAL_IDEA_AND_DETAILS } from './seeds/engl-u7-central-idea-and-details';
+import { SEED_ENGL_U7_INFERENCE_AND_EVIDENCE } from './seeds/engl-u7-inference-and-evidence';
+import { SEED_ENGL_U7_TEXT_STRUCTURE } from './seeds/engl-u7-text-structure';
+import { SEED_ENGL_U8_FIGURATIVE_LANGUAGE } from './seeds/engl-u8-figurative-language';
+import { SEED_ENGL_U8_IMAGERY_AND_SYMBOLISM } from './seeds/engl-u8-imagery-and-symbolism';
+import { SEED_ENGL_U8_POETIC_FORM_AND_STRUCTURE } from './seeds/engl-u8-poetic-form-and-structure';
+import { SEED_ENGL_U8_SOUND_DEVICES } from './seeds/engl-u8-sound-devices';
+import { SEED_ENGL_U9_INTRODUCTIONS_AND_CONCLUSIONS } from './seeds/engl-u9-introductions-and-conclusions';
+import { SEED_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT } from './seeds/engl-u9-paragraph-unity-and-support';
+import { SEED_ENGL_U9_THESIS_STATEMENTS } from './seeds/engl-u9-thesis-statements';
+import { SEED_ENGL_U9_TRANSITIONS_AND_COHESION } from './seeds/engl-u9-transitions-and-cohesion';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3540,6 +3582,47 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_CHEM_U9_EQUILIBRIUM_LE_CHATELIER,
   SEED_CHEM_U9_REACTION_RATES_COLLISION,
   SEED_CHEM_U9_SPECIFIC_HEAT_CALORIMETRY,
+  // HS English (wave 1b)
+  SEED_ENGL_U1_PARTS_OF_SPEECH,
+  SEED_ENGL_U1_PRONOUN_AGREEMENT_CLARITY,
+  SEED_ENGL_U1_SUBJECT_VERB_AGREEMENT,
+  SEED_ENGL_U1_VERB_TENSE_AND_FORM,
+  SEED_ENGL_U10_CITING_AND_INTEGRATING_SOURCES,
+  SEED_ENGL_U10_EVALUATING_SOURCES,
+  SEED_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING,
+  SEED_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES,
+  SEED_ENGL_U2_CLAUSES_AND_PHRASES,
+  SEED_ENGL_U2_FRAGMENTS_AND_RUN_ONS,
+  SEED_ENGL_U2_MODIFIERS_AND_PARALLELISM,
+  SEED_ENGL_U2_SENTENCE_TYPES_COMBINING,
+  SEED_ENGL_U3_APOSTROPHES_AND_POSSESSIVES,
+  SEED_ENGL_U3_COMMAS,
+  SEED_ENGL_U3_DASHES_PARENTHESES_QUOTATION,
+  SEED_ENGL_U3_SEMICOLONS_AND_COLONS,
+  SEED_ENGL_U4_COMMONLY_CONFUSED_WORDS,
+  SEED_ENGL_U4_CONNOTATION_AND_DENOTATION,
+  SEED_ENGL_U4_PRECISION_AND_CONCISION,
+  SEED_ENGL_U4_TONE_AND_REGISTER,
+  SEED_ENGL_U5_CLAIMS_AND_EVIDENCE,
+  SEED_ENGL_U5_COUNTERARGUMENT_AND_REBUTTAL,
+  SEED_ENGL_U5_LOGICAL_FALLACIES,
+  SEED_ENGL_U5_RHETORICAL_APPEALS,
+  SEED_ENGL_U6_CHARACTERIZATION,
+  SEED_ENGL_U6_NARRATIVE_POINT_OF_VIEW,
+  SEED_ENGL_U6_PLOT_AND_CONFLICT,
+  SEED_ENGL_U6_THEME,
+  SEED_ENGL_U7_AUTHORS_PURPOSE_AND_PERSPECTIVE,
+  SEED_ENGL_U7_CENTRAL_IDEA_AND_DETAILS,
+  SEED_ENGL_U7_INFERENCE_AND_EVIDENCE,
+  SEED_ENGL_U7_TEXT_STRUCTURE,
+  SEED_ENGL_U8_FIGURATIVE_LANGUAGE,
+  SEED_ENGL_U8_IMAGERY_AND_SYMBOLISM,
+  SEED_ENGL_U8_POETIC_FORM_AND_STRUCTURE,
+  SEED_ENGL_U8_SOUND_DEVICES,
+  SEED_ENGL_U9_INTRODUCTIONS_AND_CONCLUSIONS,
+  SEED_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT,
+  SEED_ENGL_U9_THESIS_STATEMENTS,
+  SEED_ENGL_U9_TRANSITIONS_AND_COHESION,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

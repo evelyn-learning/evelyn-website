@@ -1,0 +1,454 @@
+[
+  {
+    "id": "engl-central-idea-and-details-001",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Ferndale animal shelter replaced its kennel photos with short videos of each dog playing in the yard. Adoption applications tripled within two months, and staff say families now arrive already knowing which dog they want to meet.\" Which statement best states the central idea?",
+    "choices": [
+      "Adoption applications at the shelter tripled within two months.",
+      "Animal shelters play an important role in their communities.",
+      "Switching from kennel photos to yard videos changed how families chose a dog and drove adoptions up.",
+      "Dogs behave better outdoors than they do inside a kennel."
+    ],
+    "answer": "C",
+    "hints": [
+      "A central idea is topic plus a claim, and it has to cover both sentences, not just the number in sentence two."
+    ]
+  },
+  {
+    "id": "engl-central-idea-and-details-002",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Norwood district moved its high school start time from 7:20 to 8:35 three years ago. District records show unexcused first-period absences fell by a third, and the change also required the bus company to add a second afternoon run.\" If the central idea is that the later start time improved first-period attendance, which detail from the excerpt best SUPPORTS that idea?",
+    "choices": [
+      "Unexcused first-period absences fell by a third.",
+      "The district made the change three years ago.",
+      "The bus company added a second afternoon run.",
+      "The former start time was 7:20."
+    ],
+    "answer": "A",
+    "hints": [
+      "A supporting detail has to support, explain, or prove THIS claim, which is about attendance.",
+      "Three choices are true facts about the schedule change that say nothing about who showed up."
+    ]
+  },
+  {
+    "id": "engl-central-idea-and-details-003",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Most people assume a rain garden is mainly decorative. In fact, a county drainage study found that the shallow planted basins soaked up more than half the street runoff around them during heavy storms, water that would otherwise have gone straight into the storm drains.\" Which statement best states the central idea?",
+    "choices": [
+      "A county study measured street runoff during heavy storms.",
+      "Rain gardens are a popular decorative choice for yards and parks.",
+      "Storm drains are often overwhelmed when a heavy storm hits a city.",
+      "Rain gardens absorb a large share of street runoff, which makes them drainage tools rather than decoration."
+    ],
+    "answer": "D",
+    "hints": [
+      "Sentence one is a common belief. Find the turn word and read what follows it.",
+      "One choice repeats the belief the excerpt exists to correct, and one names only the method."
+    ]
+  },
+  {
+    "id": "engl-central-idea-and-details-004",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"When the Alder Point ferry added a bike deck, riders who used to drive to the terminal began pedaling instead. Parking lot use dropped by a quarter over the summer, while the ferry line reported no change at all in total passengers.\" Which statement best states the central idea?",
+    "choices": [
+      "The Alder Point ferry carries a large number of passengers each summer.",
+      "Adding a bike deck changed how existing riders reached the ferry rather than bringing in new riders.",
+      "Parking lot use at the ferry terminal dropped by a quarter.",
+      "Biking to a ferry terminal costs less than driving and parking there."
+    ],
+    "answer": "B",
+    "hints": [
+      "The last clause is doing real work: total passengers did not change. Any candidate idea has to account for that.",
+      "One choice is a single number promoted to the point, and one would fit almost any article about ferries."
+    ]
+  },
+  {
+    "id": "engl-central-idea-and-details-005",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"A regional health survey reported that 62 percent of teenagers slept less on nights when they used a screen in bed. The same survey found the gap nearly vanished among teens who charged their phones in another room. The researchers concluded that where a device spends the night matters more than how many hours a teenager spends on it.\" Which statement is the central idea rather than a supporting detail?",
+    "choices": [
+      "Sixty-two percent of teenagers reported sleeping less on nights they used a screen in bed.",
+      "Teenagers spend far too much time on screens before bed.",
+      "Where a phone is kept overnight affects a teenager's sleep more than total screen time does.",
+      "A regional health survey looked at the sleep habits of teenagers."
+    ],
+    "answer": "C",
+    "hints": [
+      "The most quotable number is usually evidence. Ask what that 62 percent was put there to prove.",
+      "Sentence two rules out one explanation, and sentence three states the claim outright."
+    ]
+  },
+  {
+    "id": "engl-central-idea-and-details-006",
+    "loId": "engl.central-idea-and-details",
+    "cedCode": "ENGL-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Bellamy town archive spent two years scanning its brittle nineteenth-century ledgers. Requests to view the originals have fallen to almost none, and archivists say the fragile volumes now leave the vault perhaps twice a year. The scanning was funded, they note, as a preservation measure rather than an access measure.\" Which statement best states the central idea?",
+    "choices": [
+      "Scanning the ledgers protected them by ending the constant handling of the originals.",
+      "Scanning the ledgers opened local history to far more researchers than could reach it before.",
+      "The archive spent two years scanning its nineteenth-century ledgers.",
+      "Old paper records deteriorate when people handle them too often."
+    ],
+    "answer": "A",
+    "hints": [
+      "One choice tells the story you expect from a digitization project. Check whether the excerpt actually reports more readers.",
+      "Sentence three names what the project was FOR, and sentence two gives the evidence that it worked that way."
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-001",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Carrow County road department repaved 214 of its 1,900 lane-miles during the last fiscal year, at an average cost of about 91,000 dollars per mile. The department's annual summary lists a completion date for every project.\" What is the primary purpose of this excerpt?",
+    "choices": [
+      "To entertain readers with stories from a road crew's season",
+      "To persuade readers that the county should repave more of its roads",
+      "To inform readers by reporting figures from a department summary",
+      "To explain the process by which a road crew lays new asphalt"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the cue features: is there a call to action, a set of steps, a scene with characters, or sourced numbers in a flat tone?"
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-002",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Larkspur hiking pack carries 38 liters and weighs only 1.1 kilograms, lighter than every pack in its class. Other makers still bolt on frames nobody needs. Stop hauling dead weight and order yours before the season starts.\" What is the primary purpose of this excerpt?",
+    "choices": [
+      "To inform readers of the pack's measured specifications",
+      "To persuade readers to buy the pack",
+      "To explain how a pack frame distributes weight across the hips",
+      "To entertain readers with a vivid description of hiking gear"
+    ],
+    "answer": "B",
+    "hints": [
+      "Real numbers appear here, and that is exactly what makes the trap work. Facts are a tool any purpose can pick up.",
+      "Apply the whole-text test: sentence one praises, sentence two dismisses rivals, sentence three tells you to order."
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-003",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The school board crammed the calendar vote into the last ten minutes of its meeting, and teachers learned about the shortened planning week from an email that went out after midnight.\" Which perspective do the word choices reveal?",
+    "choices": [
+      "The writer has no stance and is simply reporting the order of events",
+      "The writer views the board as decisive and admirably efficient",
+      "The writer believes the teachers themselves asked for the shortened planning week",
+      "The writer views the board as rushing the decision and cutting teachers out of it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Swap each loaded word for a neutral one: crammed into becomes held during, and learned from an email after midnight becomes were notified. What feeling disappears?",
+      "The same vote could be described as taken at the end of the meeting. The words chosen judge the speed and the notice."
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-004",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Fog harvesting works in three stages. Mesh panels catch droplets carried by the wind; the droplets merge and run down the mesh into a gutter; the gutter feeds a covered tank below. Each stage depends on the one before it, which is why a single torn panel can empty the whole system.\" What is the primary purpose of this excerpt?",
+    "choices": [
+      "To explain how a process works",
+      "To inform readers of new research findings about coastal fog",
+      "To persuade readers that their region should install fog harvesters",
+      "To entertain readers with an unusual image of water pulled from air"
+    ],
+    "answer": "A",
+    "hints": [
+      "Inform and explain both sound factual. Ask whether the text reports FINDINGS or makes a mechanism understandable.",
+      "There are no sources, dates, or measurements here, only stages and the reason they depend on one another."
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-005",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Halverson tourism office's new visitor guide gives nine pages to the lake's beaches, boat rentals, and summer festival. Its section on water quality is a single line noting that the lake is tested regularly. The swimming advisories the county posted on eleven days last summer are not mentioned anywhere in the guide.\" Which feature of the guide most clearly reveals its perspective?",
+    "choices": [
+      "The nine pages devoted to beaches, boat rentals, and the festival",
+      "The single line stating that the lake is tested regularly",
+      "The complete absence of the eleven swimming advisories",
+      "The calm, factual tone the guide maintains throughout"
+    ],
+    "answer": "C",
+    "hints": [
+      "Perspective shows in three places: loaded word choice, emphasis, and omission.",
+      "Ask what a fair treatment of lake safety WOULD have included, then check what the excerpt says is missing."
+    ]
+  },
+  {
+    "id": "engl-authors-purpose-and-perspective-006",
+    "loId": "engl.authors-purpose-and-perspective",
+    "cedCode": "ENGL-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"It began with a raccoon in the ductwork, a story the maintenance crew still tells with hand gestures. But the animal got in through a vent screen that had been flagged three inspections earlier, and the same report lists forty-one other unrepaired items. Students deserve a building that is inspected and then actually fixed.\" What is the primary purpose of this excerpt?",
+    "choices": [
+      "To entertain readers with a humorous story about a school building",
+      "To explain how animals find their way into ventilation systems",
+      "To inform readers of what the district's inspection report contains",
+      "To persuade readers that the district must act on its inspection findings"
+    ],
+    "answer": "D",
+    "hints": [
+      "Several purpose families show up here. Ask which one the WHOLE excerpt is serving, not which one opens it.",
+      "The funny anecdote and the report figures both feed the last sentence. Check what the author wants you walking away believing."
+    ]
+  },
+  {
+    "id": "engl-text-structure-001",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Crews drained Tessler Pond in March. In April they dredged forty years of silt off the bottom, and by the first week of June the pond had refilled and the fishing pier reopened.\" Which structure organizes this passage?",
+    "choices": [
+      "Compare and contrast",
+      "Chronological sequence",
+      "Problem and solution",
+      "Description"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether each idea comes after the one before it in time. Track March, April, and the first week of June."
+    ]
+  },
+  {
+    "id": "engl-text-structure-002",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"After the Marrow Street lights were swapped for warmer, dimmer bulbs, moth counts in the corner traps fell by two-thirds within a month. With fewer moths overhead, fewer bats came to hunt the intersection, and neighborhood bat sightings dropped along with them.\" What is the dominant structure of this excerpt?",
+    "choices": [
+      "Description",
+      "Problem and solution",
+      "Cause and effect",
+      "Compare and contrast"
+    ],
+    "answer": "C",
+    "hints": [
+      "Try the rewrite test: can you restate the excerpt as X happened, so Y happened, without misrepresenting it?",
+      "Nothing is named as broken and no fix is proposed, which rules out one tempting choice."
+    ]
+  },
+  {
+    "id": "engl-text-structure-003",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Rowan Street water tower stands 43 meters tall and holds about two days of neighborhood water. Its exterior was repainted in 2014 in the town's green and white. A spiral stair inside the leg leads to a hatch at the rim of the tank.\" What is the dominant structure of this excerpt?",
+    "choices": [
+      "Chronological sequence",
+      "Cause and effect",
+      "Problem and solution",
+      "Description"
+    ],
+    "answer": "D",
+    "hints": [
+      "There is a date in here, but a date is a hint, not a verdict.",
+      "Ask whether the facts are a chain, each following the last, or siblings that each add another detail about one subject."
+    ]
+  },
+  {
+    "id": "engl-text-structure-004",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"Both the clay court and the hard court at Denmark Park drain after a storm, but they get there differently. The clay surface pulls water down into its base, because the crushed brick above the gravel stays porous. The hard court instead sheds water sideways along a built-in slope toward the fence line.\" What is the dominant structure of this excerpt?",
+    "choices": [
+      "Cause and effect",
+      "Chronological sequence",
+      "Compare and contrast",
+      "Problem and solution"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find where the signal word sits. Does because govern the whole excerpt or one detail inside sentence two?",
+      "Sentence one names two subjects, and sentences two and three treat them in matching terms."
+    ]
+  },
+  {
+    "id": "engl-text-structure-005",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The campus clinic stocks two rescue inhalers. The first works within minutes but wears off in about four hours; the second takes half an hour to act and lasts through a full school day. Nurses keep both because a student's schedule decides which one is useful.\" Why would a writer choose this structure for a guide aimed at students and their families?",
+    "choices": [
+      "Because the reader has a choice to weigh, and matching categories set side by side make the difference easy to judge",
+      "Because the reader needs the steps of using an inhaler told in the order they happen",
+      "Because the guide must name a difficulty at the clinic and then propose a fix for it",
+      "Because comparison is the clearest structure for any nonfiction guide"
+    ],
+    "answer": "A",
+    "hints": [
+      "Name the structure first, then ask what job that shape performs for the person reading it.",
+      "Two options describe jobs a different structure would do, and one claims a structure is always best."
+    ]
+  },
+  {
+    "id": "engl-text-structure-006",
+    "loId": "engl.text-structure",
+    "cedCode": "ENGL-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"For six winters the Alden ferry dock iced over so badly that crews closed it after every hard freeze. In 2023 the port installed a bubbler line that keeps water circulating under the pier, and because moving water freezes more slowly, the dock has stayed open through both winters since.\" What is the dominant structure of this excerpt?",
+    "choices": [
+      "Problem and solution",
+      "Chronological sequence",
+      "Cause and effect",
+      "Compare and contrast"
+    ],
+    "answer": "A",
+    "hints": [
+      "This excerpt carries dates AND a because. Signal words are evidence, never a verdict.",
+      "Label what each part DOES: one names something broken, one reports an action taken on it, one reports the outcome. Strip the dates and that shape survives."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-001",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Kestrel Street bakery now tapes up a handwritten sign most afternoons reading 'sourdough sold out.' The owner has started holding two loaves back for customers who call ahead in the morning.\" Which inference does the excerpt SUPPORT?",
+    "choices": [
+      "The bakery has stopped baking every bread except sourdough",
+      "Demand for the bakery's sourdough regularly runs past what it bakes",
+      "The bakery is preparing to close its doors in the afternoons",
+      "Customers like sourdough better than every other item the bakery sells"
+    ],
+    "answer": "B",
+    "hints": [
+      "Take the smallest step past the page. Ask why the owner would hold loaves back at all."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-002",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Brightwater community garden opened a tool-lending shed in April. Plot holders logged 340 borrowed-tool checkouts by August, and the coordinator reports that four plots left unplanted for two seasons were claimed within a month of the shed opening. Membership dues were unchanged this year.\" A reader infers that the lack of tools had been keeping some people from gardening. Which line best supports that inference?",
+    "choices": [
+      "\"The Brightwater community garden opened a tool-lending shed in April.\"",
+      "\"Plot holders logged 340 borrowed-tool checkouts by August\"",
+      "\"four plots left unplanted for two seasons were claimed within a month of the shed opening\"",
+      "\"Membership dues were unchanged this year.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "The inference is about people who were NOT gardening before. Find the line about them.",
+      "One line reports the action itself, one counts usage by people already gardening, and one only rules out cost as a factor."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-003",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Ostrander clinic began sending appointment reminders by text last spring. Front-desk staff report that missed appointments have fallen by about a fifth, and that fewer patients now call to ask what time they are scheduled.\" All four statements below sound reasonable. Which one OVERREACHES what the excerpt supports?",
+    "choices": [
+      "Missed appointments at the clinic have declined since the texts began",
+      "The clinic started sending text reminders last spring",
+      "Staff are fielding fewer scheduling calls than they were before",
+      "No patient at the clinic misses an appointment anymore"
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these stay inside what the staff actually reported.",
+      "Hunt for the absolute wording. A fifth fewer is not the same as none."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-004",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"A note taped inside the Harrow Lane laundromat says the two rear machines are out of service until the end of the month. The owner added that the repair company cannot get a replacement drum before then, and that quarters for the remaining machines are available at the counter as usual.\" Which inference does the excerpt SUPPORT?",
+    "choices": [
+      "The laundromat has been losing customers to a competitor nearby",
+      "The rear machines will stay unusable until the missing part arrives",
+      "The owner intends to remove the rear machines for good",
+      "The laundromat has raised its prices to pay for the repair"
+    ],
+    "answer": "B",
+    "hints": [
+      "Plausible is not the same as supported. Ask which claim the words on the page actually make you say.",
+      "The note supplies its own reason for the delay. Read it before importing an explanation of your own."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-005",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Pennock Township road crew now salts the Vine Street hill ahead of every forecast freeze rather than after ice forms. The township's insurer lowered the crew's premium this year, and the crew has not been called out for a middle-of-the-night ice complaint since November.\" Which statement is an INFERENCE rather than a restatement of the excerpt?",
+    "choices": [
+      "The crew salts the Vine Street hill before a freeze instead of after ice forms",
+      "The township's insurer lowered the crew's premium this year",
+      "Salting ahead of a freeze has made icy conditions on Vine Street less likely to need an emergency call-out",
+      "The crew has had no middle-of-the-night ice complaint since November"
+    ],
+    "answer": "C",
+    "hints": [
+      "An inference is not stated outright; a restatement just puts a sentence in new words.",
+      "Three choices can be answered by pointing at a sentence. Only one has to be BUILT from two of them."
+    ]
+  },
+  {
+    "id": "engl-inference-and-evidence-006",
+    "loId": "engl.inference-and-evidence",
+    "cedCode": "ENGL-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt: \"The Cordell Middle School library moved its graphic novels from a back corner to a rolling cart just inside the entrance. Circulation of those titles rose sharply, though total library checkouts for the term came out nearly identical to last year's. The librarian has ordered a second cart.\" Which inference does the excerpt BEST support?",
+    "choices": [
+      "Placement near the entrance pulled readers toward titles they had been walking past, without changing how much students borrowed overall",
+      "Students at the school read more this term than they did during the same term last year",
+      "The school's students prefer graphic novels to every other kind of book in the library",
+      "The library moved the graphic novels because its budget for other books had been cut"
+    ],
+    "answer": "A",
+    "hints": [
+      "The clause about total checkouts is doing work. Any claim you make has to survive it.",
+      "One choice is contradicted by that clause, one turns a rise into an absolute preference, and one supplies a reason the excerpt never gives."
+    ]
+  }
+]

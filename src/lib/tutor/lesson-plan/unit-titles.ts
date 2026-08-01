@@ -97,6 +97,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Thermochemistry, Kinetics & Equilibrium',
     '10': 'Acids, Bases & Nuclear Chemistry',
   },
+  'hs-english': {
+    '1': 'Grammar & Usage',
+    '2': 'Sentence Structure',
+    '3': 'Punctuation',
+    '4': 'Word Choice & Tone',
+    '5': 'Rhetoric & Argument',
+    '6': 'Reading Literature',
+    '7': 'Reading Nonfiction',
+    '8': 'Poetry & Figurative Language',
+    '9': 'Writing Craft',
+    '10': 'Research & Citation',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.

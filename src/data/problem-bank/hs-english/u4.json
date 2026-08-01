@@ -1,0 +1,423 @@
+[
+  {
+    "id": "engl-precision-and-concision-001",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A stage-crew notice reads: \"In order to prepare for the assembly, the stage crew made a decision to test each and every microphone.\" Which revision is most precise and concise?",
+    "choices": [
+      "In order to prepare for the assembly, the stage crew decided to test each and every microphone.",
+      "The crew tested stuff before the assembly.",
+      "To prepare for the assembly, the stage crew tested every microphone.",
+      "To prepare for the assembly, the stage crew replaced every microphone."
+    ],
+    "answer": "C",
+    "hints": [
+      "Two padding patterns sit in the original: an opener that shrinks to one word, and a pair of words repeating one idea.",
+      "The winner cuts padding only. Any version that drops what the crew did to the microphones, or changes testing into something else, has stopped revising and started rewriting."
+    ]
+  },
+  {
+    "id": "engl-precision-and-concision-002",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A yearbook meeting summary reads: \"The yearbook staff gave an explanation of the new photo deadline at Monday's meeting.\" Which revision is most precise and concise?",
+    "choices": [
+      "The yearbook staff made an explanation about the new photo deadline at Monday's meeting.",
+      "The yearbook staff explained the new photo deadline at Monday's meeting.",
+      "The yearbook staff explained things at Monday's meeting.",
+      "The yearbook staff explained the new photo deadline."
+    ],
+    "answer": "B",
+    "hints": [
+      "A strong verb is hiding inside the noun phrase \"gave an explanation of.\" Collapse it into one word.",
+      "One option is shortest but deletes when the staff explained it, and another replaces the deadline with the vague word \"things.\" Shortest wins only when no required detail disappears."
+    ]
+  },
+  {
+    "id": "engl-precision-and-concision-003",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A club flyer reads: \"The fundraiser was very successful and really quite popular with basically everyone who came.\" Which revision is most precise and concise?",
+    "choices": [
+      "The fundraiser was very successful and popular with everyone who came.",
+      "The fundraiser was good.",
+      "The fundraiser sold out and was popular with everyone who came.",
+      "The fundraiser was successful and popular with everyone who came."
+    ],
+    "answer": "D",
+    "hints": [
+      "Three booster words in the original add no meaning at all. Find them, then check which revision removes all three.",
+      "One choice trades the precise claim for the vague word \"good,\" and one invents a fact the original never states. Concision deletes filler, never content, and never adds any."
+    ]
+  },
+  {
+    "id": "engl-precision-and-concision-004",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A team newsletter reads: \"The junior varsity squad, which had not won a road game since September, won Friday's match by a single point.\" Which revision is most precise and concise?",
+    "choices": [
+      "The junior varsity squad won.",
+      "The squad, which had not won a road game since September, finally won something on Friday.",
+      "The junior varsity squad, which had not won a road game since September, won Friday's match by one point.",
+      "The junior varsity squad won Friday's match by one point."
+    ],
+    "answer": "C",
+    "hints": [
+      "List the facts a reader of this newsletter needs: which squad, the losing streak that makes the win worth reporting, the day, and the margin.",
+      "Two options get shorter by deleting the streak, and one trades \"won by one point\" for \"won something.\" Only one option cuts words without cutting facts."
+    ]
+  },
+  {
+    "id": "engl-precision-and-concision-005",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A science-fair abstract reads: \"Due to the fact that we ran the trials outdoors, there were a lot of factors that had an effect on our results during the second week.\" Which revision is most precise and concise?",
+    "choices": [
+      "Because we ran the trials outdoors, wind and rain skewed our results during the second week.",
+      "Because we ran the trials outdoors, many uncontrolled conditions affected our results during the second week.",
+      "Outdoor trials affected our results.",
+      "Due to the fact that we ran the trials outdoors, many factors had an effect on our results during the second week."
+    ],
+    "answer": "B",
+    "hints": [
+      "Three problems stack up here: an empty opener, a verb buried in \"had an effect on,\" and the vague phrase \"a lot of factors.\"",
+      "One choice keeps the opener, one deletes the week the problem occurred, and one names specific causes the original never reports. Precision means saying exactly what you mean, not adding what you never measured."
+    ]
+  },
+  {
+    "id": "engl-precision-and-concision-006",
+    "loId": "engl.precision-and-concision",
+    "cedCode": "ENGL-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A grant report reads: \"At this point in time, the after-school program, which serves forty students on Tuesdays and Thursdays, has the ability to accept new members only when a current member withdraws.\" Which revision is most precise and concise?",
+    "choices": [
+      "The after-school program, which serves forty students on Tuesdays and Thursdays, can accept new members only when a current member withdraws.",
+      "The after-school program can accept new members.",
+      "At this point in time, the after-school program, which serves forty students on Tuesdays and Thursdays, is able to accept new members only when a current member withdraws.",
+      "The after-school program, which serves forty students twice a week, can accept new members whenever someone asks."
+    ],
+    "answer": "A",
+    "hints": [
+      "Two padding patterns are cuttable: a time-filler opener and a verb buried inside \"has the ability to.\" Everything else in the sentence is a fact.",
+      "The word \"only\" is doing the heaviest work in the sentence. Any revision that loses it tells the reader the opposite of what the report says."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-001",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A writer wants readers to disapprove of a neighbor who asks constant questions about everyone on the block. Which word gives this sentence a negative connotation? \"Mr. Halvorsen is the most ___ person on our street.\"",
+    "choices": ["curious", "inquisitive", "interested", "nosy"],
+    "answer": "D",
+    "hints": [
+      "All four words denote someone who wants to know about other people, so denotation cannot decide this.",
+      "Three of the options report the trait without judging it. One accuses him of prying into what is not his business."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-002",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coach is writing a recommendation and wants readers to admire a player who kept practicing free throws after every loss. Which word best completes the sentence for that intended effect? \"Through a season of close losses, Renata stayed ___ about her free-throw routine.\"",
+    "choices": ["devoted", "obsessive", "fixated", "compulsive"],
+    "answer": "A",
+    "hints": [
+      "Every option denotes someone who will not let go of a routine. Decide the intended effect first: the reader should admire her.",
+      "Three of the four imply she has lost control of the habit. Only one credits her with commitment to something worth doing."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-003",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A school newspaper must report an event without steering readers toward a verdict. Which word keeps this sentence neutral? \"The principal ___ the new phone policy at Thursday's assembly.\"",
+    "choices": ["imposed", "unveiled", "announced", "dictated"],
+    "answer": "C",
+    "hints": [
+      "All four words denote the same act: the policy was made public by the principal. Ask which one adds no judgment about that act.",
+      "Two options imply the policy was forced on people, and one sells it the way a company reveals a product. Neutral reporting states the act and stops."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-004",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read these two sentences. (1) The nurse recommended an aggressive treatment plan, and the infection cleared within a week. (2) Our group project stalled because one member was aggressive in every meeting. What do the two uses of \"aggressive\" best show?",
+    "choices": [
+      "\"Aggressive\" carries a fixed negative charge, so sentence 1 uses the word incorrectly.",
+      "The denotation of \"aggressive\" changes between the sentences while its connotation stays the same.",
+      "\"Aggressive\" keeps roughly the same denotation in both sentences, but the surrounding context makes it approving in one and critical in the other.",
+      "Sentence 2 relies on the word's denotation while sentence 1 relies only on its connotation."
+    ],
+    "answer": "C",
+    "hints": [
+      "Test the literal meaning first: does \"forceful, not holding back\" actually change from one sentence to the other?",
+      "If the dictionary meaning holds steady in both and the reader's reaction flips, then the thing that moved is the charge, and the only difference between the sentences is what surrounds the word."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-005",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two reporters describe the same meeting. Reporter One writes: \"Forty residents filled the hearing room to question the parking plan.\" Reporter Two writes: \"A mob of forty agitators swarmed the hearing room to attack the parking plan.\" Which choice best explains how Reporter Two steers readers?",
+    "choices": [
+      "Reporter Two reports different facts, since \"agitators\" and \"residents\" cannot describe the same people.",
+      "Reporter Two reports the same facts but selects charged near-synonyms, so \"mob,\" \"agitators,\" \"swarmed,\" and \"attack\" push readers to judge the group as unruly.",
+      "Reporter Two is more precise, because \"swarmed\" and \"attack\" describe the group's actions in greater detail.",
+      "Reporter Two is neutral, because every word chosen has a dictionary definition that fits what happened."
+    ],
+    "answer": "B",
+    "hints": [
+      "Line the two versions up word for word. How many actual facts differ: the number of people, the place, the topic, the purpose?",
+      "If the facts match and only the wording differs, the second version is arguing while pretending to report."
+    ]
+  },
+  {
+    "id": "engl-connotation-and-denotation-006",
+    "loId": "engl.connotation-and-denotation",
+    "cedCode": "ENGL-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes in a thank-you note to a school librarian: \"You were pushy about my source list, and you were obsessed with the due dates on my interlibrary loans.\" A reader tells the student the note sounds like a complaint. Which revision keeps the same facts and delivers the intended praise?",
+    "choices": [
+      "You were insistent about my source list, and you were obsessed with the due dates on my interlibrary loans.",
+      "You were relaxed about my source list, and you were casual about the due dates on my interlibrary loans.",
+      "You were persistent about my source list, and you were attentive to the due dates on my interlibrary loans.",
+      "You were aggressive about my source list, and you were fixated on the due dates on my interlibrary loans."
+    ],
+    "answer": "C",
+    "hints": [
+      "Both charged words are right in denotation and wrong in charge, so the revision has to climb the ladder twice, not once.",
+      "One option repairs only half the sentence, one makes the charge worse, and one sounds pleasant only because it now says the librarian did not care. That last one changed the facts, not the charge."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-001",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read this excerpt from a message sent to a field crew: \"Get the folding chairs off the field now. The tarp team has nine minutes before the rain reaches us, and nothing on that grass can be wet when it does.\" Which word best names the tone?",
+    "choices": ["nostalgic", "urgent", "playful", "detached"],
+    "answer": "B",
+    "hints": [
+      "Look at the two things carrying the attitude: the commands and the countdown of minutes.",
+      "The writer is pushing for immediate action, not remembering the past, joking, or standing back from the scene."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-002",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are emailing a teacher you do not know well to ask whether you may retake a quiz you missed while you were home sick. Which version best matches a formal register?",
+    "choices": [
+      "hey can i retake the quiz i missed? was out sick lol",
+      "Let me retake the quiz. I was sick.",
+      "I am writing to ask whether I may retake the quiz I missed on Tuesday, when I was home sick.",
+      "It would be an extraordinary kindness were you to permit me to undertake the aforementioned quiz a second time."
+    ],
+    "answer": "C",
+    "hints": [
+      "Two questions decide the register: who is reading this, and what does the message need to accomplish? Rule out anything slangy first.",
+      "Of the versions that avoid slang, one is a bare command to an authority and one is padded with ceremony. Formal register is clean and respectful, not inflated."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-003",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "This paragraph appears in a formal letter to the school board. Which sentence breaks its register? (1) The debate team competed in six tournaments this year and advanced to the state semifinal. (2) Travel costs were covered entirely by member fundraising. (3) Not gonna lie, the hotel situation was a total mess. (4) The team requests a modest travel allowance for next season.",
+    "choices": [
+      "Sentence 1 — \"The debate team competed in six tournaments this year and advanced to the state semifinal.\"",
+      "Sentence 2 — \"Travel costs were covered entirely by member fundraising.\"",
+      "Sentence 3 — \"Not gonna lie, the hotel situation was a total mess.\"",
+      "Sentence 4 — \"The team requests a modest travel allowance for next season.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Read each sentence as if it were spoken aloud to a friend. One of them already sounds that way on the page.",
+      "Look for a conversational opener, a slang phrase, and an informal intensifier. All three land inside the same sentence."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-004",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this excerpt from a student column: \"The new hallway policy arrived in a memo of eleven bullet points, four of which explain how to walk. Administrators assure us the rules will be enforced with warmth.\" Which choice best names the tone and its evidence?",
+    "choices": [
+      "Grateful — the writer thanks administrators for explaining the new rules so thoroughly.",
+      "Wry and skeptical — counting the bullet points, singling out the four that explain how to walk, and pairing enforcement with \"warmth\" all needle the policy.",
+      "Neutral and factual — the excerpt only reports how long the memo is and what administrators said.",
+      "Furious — the writer condemns the administrators for restricting student movement."
+    ],
+    "answer": "B",
+    "hints": [
+      "A neutral report would not keep count of the bullet points, and it would not single out the four it does.",
+      "Weigh the intensity as well as the direction: the writer is needling rather than raging, so pick the label that fits a joke instead of an outburst."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-005",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A club president drafts this note to a local business owner: \"Dear Ms. Okafor, our robotics team would be grateful for a donation of scrap aluminum for our competition chassis. We can pick up any weekday after three. anyway just hit me up whenever!!\" Which revision best fixes the problem?",
+    "choices": [
+      "Replace the closing with: \"Please let me know a time that would be convenient. Thank you for considering our request.\"",
+      "Replace the closing with: \"Anyway, just let me know whenever, thanks!!\"",
+      "Rewrite the whole note as: \"It would constitute an inestimable honor were your establishment to bestow upon us a quantity of surplus aluminum.\"",
+      "Leave the note as written, since any reader will understand what \"hit me up\" means."
+    ],
+    "answer": "A",
+    "hints": [
+      "The first three sentences already sit at the right formality level, so ask what the last line does to the promise they made.",
+      "Two of the proposed fixes trade one problem for another: one keeps the casual sign-off, and one dresses the entire note in costume. Clarity was never the issue here."
+    ]
+  },
+  {
+    "id": "engl-tone-and-register-006",
+    "loId": "engl.tone-and-register",
+    "cedCode": "ENGL-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two writers describe the same renovated gym. Sentence 1: \"The renovated gym seats nine hundred, and the new floor was laid in maple.\" Sentence 2: \"The renovated gym seats nine hundred, which works out to about the price of a used car per seat.\" Both sentences are factually accurate. Which choice best explains the difference between them?",
+    "choices": [
+      "Sentence 2 is inaccurate, because the cost of a building cannot be divided by its number of seats.",
+      "Sentence 1 has a tone and sentence 2 does not, since sentence 2 offers only a calculation.",
+      "The sentences differ in register rather than tone, because sentence 2 is less formal than sentence 1.",
+      "Both report the same capacity, but sentence 2's selected detail reframes the project as a cost per seat, creating a critical tone that sentence 1 does not."
+    ],
+    "answer": "D",
+    "hints": [
+      "Neither sentence uses an obviously loaded word, so the attitude has to be coming from something other than word choice.",
+      "Ask what each writer chose to mention alongside the seating number, and what that choice invites the reader to think about the renovation."
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-001",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Choose the word that correctly completes the sentence: \"This year's calendar has ___ assemblies than last year's.\"",
+    "choices": ["less", "lesser", "fewer", "few"],
+    "answer": "C",
+    "hints": [
+      "Try putting a number in front of the noun: twelve assemblies, three assemblies. Does it work?",
+      "Things you can count one by one take \"fewer\"; amounts measured as a mass take \"less.\""
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-002",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Choose the word that correctly completes the sentence: \"Nobody expected the late start to have such a lasting ___ on the rest of the season.\"",
+    "choices": ["affect", "effect", "affected", "effected"],
+    "answer": "B",
+    "hints": [
+      "The blank follows \"a lasting,\" so the slot needs a noun, not a verb.",
+      "Affect is the Action word; effect is the End result. If \"the ___\" or \"a ___\" fits in front of the blank, you need the noun."
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-003",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Choose the word that correctly completes the sentence: \"Tighten the bracket on the handlebars before the ride, or you will ___ the bell somewhere on the trail.\"",
+    "choices": ["lose", "loose", "loosen", "losing"],
+    "answer": "A",
+    "hints": [
+      "Say the plain meaning first: the sentence needs a verb meaning \"to misplace.\"",
+      "Lose has one o and is the verb; loose has two o's and is the adjective meaning not tight."
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-004",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses every confusable word correctly?",
+    "choices": [
+      "Everyone on the crew excepted the earlier call time accept the lighting designer, who had a later class, and than the schedule was posted.",
+      "Everyone on the crew accepted the earlier call time except the lighting designer, who had a later class, and than the schedule was posted.",
+      "Everyone on the crew accepted the earlier call time accept the lighting designer, who had a later class, and then the schedule was posted.",
+      "Everyone on the crew accepted the earlier call time except the lighting designer, who had a later class, and then the schedule was posted."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check the three slots one at a time: the verb meaning \"agreed to,\" the word that leaves someone out, and the word joining what happened next.",
+      "Substitute plain words: \"received\" points to accept, and EXcept EXcludes. The final slot reports sequence, not comparison, so it takes \"then\" — thAn only compAres."
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-005",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses every confusable word correctly?",
+    "choices": [
+      "The closing scene makes an illusion to an old family recipe, and its effect is to make the kitchen feel crowded with people who are not there.",
+      "The closing scene makes an allusion to an old family recipe, and its effect is to make the kitchen feel crowded with people who are not there.",
+      "The closing scene makes an allusion to an old family recipe, and its affect is to make the kitchen feel crowded with people who are not there.",
+      "The closing scene makes an illusion to an old family recipe, and its affect is to make the kitchen feel crowded with people who are not there."
+    ],
+    "answer": "B",
+    "hints": [
+      "An indirect reference to something outside the text has one name; a false appearance has another. Decide which the first slot needs.",
+      "The second slot follows \"its,\" which marks a noun, and the noun twin of that pair begins with an e."
+    ]
+  },
+  {
+    "id": "engl-commonly-confused-words-006",
+    "loId": "engl.commonly-confused-words",
+    "cedCode": "ENGL-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Choose the option that correctly fills both blanks: \"The detour added twenty minutes to the route, but the new path is (1) ___ than two miles long, which should (2) ___ how early the walkers need to leave.\"",
+    "choices": [
+      "(1) fewer, (2) affect",
+      "(1) less, (2) affect",
+      "(1) fewer, (2) effect",
+      "(1) less, (2) effect"
+    ],
+    "answer": "B",
+    "hints": [
+      "Blank 2 follows the helping verb \"should,\" so settle its part of speech before anything else: a helping verb takes a main verb.",
+      "For blank 1, ask whether \"two miles\" is being counted one by one or measured as a single distance. A distance is a mass even when the noun looks plural, so the plural ending is a trap."
+    ]
+  }
+]

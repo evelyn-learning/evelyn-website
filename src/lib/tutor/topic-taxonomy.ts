@@ -274,6 +274,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'research-papers', label: 'Research Papers' },
       { id: 'rhetoric-argument', label: 'Rhetoric & Argument' },
       { id: 'vocabulary-sat', label: 'Vocabulary (SAT-level)' },
+      { id: 'hs-english', label: 'HS English' },
     ],
     '11-12': [
       { id: 'american-literature', label: 'American Literature' },
