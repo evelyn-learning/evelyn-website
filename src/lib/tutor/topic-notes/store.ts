@@ -624,6 +624,46 @@ import { BASELINE_GEOM_U10_AREA_POLYGONS } from './seeds/geom-u10-area-polygons'
 import { BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR } from './seeds/geom-u10-circumference-arc-length-sector';
 import { BASELINE_GEOM_U10_PRISMS_CYLINDERS } from './seeds/geom-u10-prisms-cylinders';
 import { BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES } from './seeds/geom-u10-pyramids-cones-spheres';
+import { BASELINE_BIO_U1_CHARACTERISTICS_OF_LIFE } from './seeds/bio-u1-characteristics-of-life';
+import { BASELINE_BIO_U1_SCIENTIFIC_METHOD_BIO } from './seeds/bio-u1-scientific-method-bio';
+import { BASELINE_BIO_U1_WATER_AND_MACROMOLECULES } from './seeds/bio-u1-water-and-macromolecules';
+import { BASELINE_BIO_U1_ENZYMES } from './seeds/bio-u1-enzymes';
+import { BASELINE_BIO_U2_CELL_THEORY_TYPES } from './seeds/bio-u2-cell-theory-types';
+import { BASELINE_BIO_U2_ORGANELLES } from './seeds/bio-u2-organelles';
+import { BASELINE_BIO_U2_CELL_MEMBRANE_STRUCTURE } from './seeds/bio-u2-cell-membrane-structure';
+import { BASELINE_BIO_U2_TRANSPORT_ACROSS_MEMBRANES } from './seeds/bio-u2-transport-across-membranes';
+import { BASELINE_BIO_U3_ATP_AND_ENERGY } from './seeds/bio-u3-atp-and-energy';
+import { BASELINE_BIO_U3_PHOTOSYNTHESIS } from './seeds/bio-u3-photosynthesis';
+import { BASELINE_BIO_U3_CELLULAR_RESPIRATION } from './seeds/bio-u3-cellular-respiration';
+import { BASELINE_BIO_U4_CELL_CYCLE_MITOSIS } from './seeds/bio-u4-cell-cycle-mitosis';
+import { BASELINE_BIO_U4_CELL_CYCLE_REGULATION_CANCER } from './seeds/bio-u4-cell-cycle-regulation-cancer';
+import { BASELINE_BIO_U4_MEIOSIS } from './seeds/bio-u4-meiosis';
+import { BASELINE_BIO_U4_MITOSIS_MEIOSIS_VARIATION } from './seeds/bio-u4-mitosis-meiosis-variation';
+import { BASELINE_BIO_U5_MENDEL_LAWS } from './seeds/bio-u5-mendel-laws';
+import { BASELINE_BIO_U5_PUNNETT_SQUARES_MONOHYBRID } from './seeds/bio-u5-punnett-squares-monohybrid';
+import { BASELINE_BIO_U5_DIHYBRID_CROSSES } from './seeds/bio-u5-dihybrid-crosses';
+import { BASELINE_BIO_U5_NON_MENDELIAN_INHERITANCE } from './seeds/bio-u5-non-mendelian-inheritance';
+import { BASELINE_BIO_U5_PEDIGREES_HUMAN_GENETICS } from './seeds/bio-u5-pedigrees-human-genetics';
+import { BASELINE_BIO_U6_DNA_STRUCTURE_REPLICATION } from './seeds/bio-u6-dna-structure-replication';
+import { BASELINE_BIO_U6_TRANSCRIPTION_TRANSLATION } from './seeds/bio-u6-transcription-translation';
+import { BASELINE_BIO_U6_MUTATIONS } from './seeds/bio-u6-mutations';
+import { BASELINE_BIO_U6_BIOTECHNOLOGY } from './seeds/bio-u6-biotechnology';
+import { BASELINE_BIO_U7_EVIDENCE_FOR_EVOLUTION } from './seeds/bio-u7-evidence-for-evolution';
+import { BASELINE_BIO_U7_NATURAL_SELECTION } from './seeds/bio-u7-natural-selection';
+import { BASELINE_BIO_U7_POPULATION_GENETICS } from './seeds/bio-u7-population-genetics';
+import { BASELINE_BIO_U7_SPECIATION } from './seeds/bio-u7-speciation';
+import { BASELINE_BIO_U8_TAXONOMY_CLASSIFICATION } from './seeds/bio-u8-taxonomy-classification';
+import { BASELINE_BIO_U8_PHYLOGENETICS_CLADOGRAMS } from './seeds/bio-u8-phylogenetics-cladograms';
+import { BASELINE_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY } from './seeds/bio-u8-domains-kingdoms-diversity';
+import { BASELINE_BIO_U9_ECOSYSTEMS_BIOMES } from './seeds/bio-u9-ecosystems-biomes';
+import { BASELINE_BIO_U9_ENERGY_FLOW_FOOD_WEBS } from './seeds/bio-u9-energy-flow-food-webs';
+import { BASELINE_BIO_U9_BIOGEOCHEMICAL_CYCLES } from './seeds/bio-u9-biogeochemical-cycles';
+import { BASELINE_BIO_U9_POPULATION_COMMUNITY_ECOLOGY } from './seeds/bio-u9-population-community-ecology';
+import { BASELINE_BIO_U10_HOMEOSTASIS_FEEDBACK } from './seeds/bio-u10-homeostasis-feedback';
+import { BASELINE_BIO_U10_CIRCULATORY_RESPIRATORY } from './seeds/bio-u10-circulatory-respiratory';
+import { BASELINE_BIO_U10_DIGESTIVE_EXCRETORY } from './seeds/bio-u10-digestive-excretory';
+import { BASELINE_BIO_U10_NERVOUS_ENDOCRINE } from './seeds/bio-u10-nervous-endocrine';
+import { BASELINE_BIO_U10_IMMUNE_SYSTEM } from './seeds/bio-u10-immune-system';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1110,6 +1150,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR,
   BASELINE_GEOM_U10_PRISMS_CYLINDERS,
   BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES,
+  BASELINE_BIO_U1_CHARACTERISTICS_OF_LIFE,
+  BASELINE_BIO_U1_SCIENTIFIC_METHOD_BIO,
+  BASELINE_BIO_U1_WATER_AND_MACROMOLECULES,
+  BASELINE_BIO_U1_ENZYMES,
+  BASELINE_BIO_U2_CELL_THEORY_TYPES,
+  BASELINE_BIO_U2_ORGANELLES,
+  BASELINE_BIO_U2_CELL_MEMBRANE_STRUCTURE,
+  BASELINE_BIO_U2_TRANSPORT_ACROSS_MEMBRANES,
+  BASELINE_BIO_U3_ATP_AND_ENERGY,
+  BASELINE_BIO_U3_PHOTOSYNTHESIS,
+  BASELINE_BIO_U3_CELLULAR_RESPIRATION,
+  BASELINE_BIO_U4_CELL_CYCLE_MITOSIS,
+  BASELINE_BIO_U4_CELL_CYCLE_REGULATION_CANCER,
+  BASELINE_BIO_U4_MEIOSIS,
+  BASELINE_BIO_U4_MITOSIS_MEIOSIS_VARIATION,
+  BASELINE_BIO_U5_MENDEL_LAWS,
+  BASELINE_BIO_U5_PUNNETT_SQUARES_MONOHYBRID,
+  BASELINE_BIO_U5_DIHYBRID_CROSSES,
+  BASELINE_BIO_U5_NON_MENDELIAN_INHERITANCE,
+  BASELINE_BIO_U5_PEDIGREES_HUMAN_GENETICS,
+  BASELINE_BIO_U6_DNA_STRUCTURE_REPLICATION,
+  BASELINE_BIO_U6_TRANSCRIPTION_TRANSLATION,
+  BASELINE_BIO_U6_MUTATIONS,
+  BASELINE_BIO_U6_BIOTECHNOLOGY,
+  BASELINE_BIO_U7_EVIDENCE_FOR_EVOLUTION,
+  BASELINE_BIO_U7_NATURAL_SELECTION,
+  BASELINE_BIO_U7_POPULATION_GENETICS,
+  BASELINE_BIO_U7_SPECIATION,
+  BASELINE_BIO_U8_TAXONOMY_CLASSIFICATION,
+  BASELINE_BIO_U8_PHYLOGENETICS_CLADOGRAMS,
+  BASELINE_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY,
+  BASELINE_BIO_U9_ECOSYSTEMS_BIOMES,
+  BASELINE_BIO_U9_ENERGY_FLOW_FOOD_WEBS,
+  BASELINE_BIO_U9_BIOGEOCHEMICAL_CYCLES,
+  BASELINE_BIO_U9_POPULATION_COMMUNITY_ECOLOGY,
+  BASELINE_BIO_U10_HOMEOSTASIS_FEEDBACK,
+  BASELINE_BIO_U10_CIRCULATORY_RESPIRATORY,
+  BASELINE_BIO_U10_DIGESTIVE_EXCRETORY,
+  BASELINE_BIO_U10_NERVOUS_ENDOCRINE,
+  BASELINE_BIO_U10_IMMUNE_SYSTEM,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
