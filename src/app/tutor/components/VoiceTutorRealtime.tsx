@@ -71,6 +71,7 @@ import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
+import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
@@ -9141,6 +9142,38 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic arithmetic check: ${arith.verdict} in "${updatedSentence.slice(0, 80)}" (${arith.correct}) — kill + retry`);
                       onDebugEvent?.('arith_claim_kill', `${arith.verdict}: ${arith.claim ?? '?'} → ${arith.correct ?? '?'}`);
+                      continue;
+                    }
+                  }
+                  // Deterministic simplification-verdict check (2026-07-31,
+                  // session portal-734b537e…): the brain asked "what does
+                  // $3x - 12 + 2$ combine into?", the student answered
+                  // "3x - 10" (correct), and the brain opened "Not quite —
+                  // check that middle step again." The judge caught it but
+                  // is advisory-only (Pillar 2b), and the arithmetic-claim
+                  // check above needs an explicit numeric identity claim —
+                  // a bare "Not quite" carries none. This check re-derives
+                  // the asked linear simplification from the PRIOR tutor
+                  // turn and the student's utterance — pure algebra, no
+                  // LLM, no false-positive class — so it may kill.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const priorTutorTurn =
+                      [...runHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
+                    const simp = checkSimplificationVerdict({
+                      priorTutorTurn,
+                      studentUtterance: transcript,
+                      sentence: updatedSentence,
+                    });
+                    if (simp.verdict === 'false_denial') {
+                      const reason =
+                        `You denied a CORRECT simplification: you asked the student to simplify "${simp.asked}", ` +
+                        `and their answer IS the correct simplified form — ${simp.correct}. ` +
+                        `Re-emit your response: affirm their answer plainly, then move the lesson forward.`;
+                      rejectionsThisAttempt.push({ action: 'false_simplification_denial', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] deterministic simplification check: false denial of "${simp.correct}" in "${updatedSentence.slice(0, 80)}" — kill + retry`);
+                      onDebugEvent?.('simplification_verdict_kill', `asked=${simp.asked?.slice(0, 40) ?? '?'} correct=${simp.correct ?? '?'}`);
                       continue;
                     }
                   }
