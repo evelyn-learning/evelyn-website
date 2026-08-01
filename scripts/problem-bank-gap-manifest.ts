@@ -32,6 +32,7 @@ export const COURSE_PREFIX: Record<string, string> = {
   biology: 'bio',
   chemistry: 'chem',
   'hs-english': 'engl',
+  'world-history': 'whist',
 };
 
 const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-/;

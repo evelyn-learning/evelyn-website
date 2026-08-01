@@ -1848,6 +1848,48 @@ import { SEED_ENGL_U9_INTRODUCTIONS_AND_CONCLUSIONS } from './seeds/engl-u9-intr
 import { SEED_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT } from './seeds/engl-u9-paragraph-unity-and-support';
 import { SEED_ENGL_U9_THESIS_STATEMENTS } from './seeds/engl-u9-thesis-statements';
 import { SEED_ENGL_U9_TRANSITIONS_AND_COHESION } from './seeds/engl-u9-transitions-and-cohesion';
+
+// ── HS core: World History (2026-07 wave 1b) ──
+import { SEED_WHIST_U2_ROME_REPUBLIC_EMPIRE } from './seeds/whist-u2-rome-republic-empire';
+import { SEED_WHIST_U8_INDUSTRIAL_REVOLUTION } from './seeds/whist-u8-industrial-revolution';
+import { SEED_WHIST_U1_EARLY_INDIA_CHINA } from './seeds/whist-u1-early-india-china';
+import { SEED_WHIST_U1_FEATURES_OF_CIVILIZATION } from './seeds/whist-u1-features-of-civilization';
+import { SEED_WHIST_U1_MESOPOTAMIA_EGYPT } from './seeds/whist-u1-mesopotamia-egypt';
+import { SEED_WHIST_U1_NEOLITHIC_REVOLUTION } from './seeds/whist-u1-neolithic-revolution';
+import { SEED_WHIST_U10_COLD_WAR } from './seeds/whist-u10-cold-war';
+import { SEED_WHIST_U10_DECOLONIZATION } from './seeds/whist-u10-decolonization';
+import { SEED_WHIST_U10_END_OF_COLD_WAR } from './seeds/whist-u10-end-of-cold-war';
+import { SEED_WHIST_U10_GLOBALIZATION } from './seeds/whist-u10-globalization';
+import { SEED_WHIST_U2_CLASSICAL_GREECE } from './seeds/whist-u2-classical-greece';
+import { SEED_WHIST_U2_CLASSICAL_INDIA_CHINA } from './seeds/whist-u2-classical-india-china';
+import { SEED_WHIST_U2_WORLD_BELIEF_SYSTEMS } from './seeds/whist-u2-world-belief-systems';
+import { SEED_WHIST_U3_ISLAMIC_GOLDEN_AGE } from './seeds/whist-u3-islamic-golden-age';
+import { SEED_WHIST_U3_MONGOL_EMPIRE } from './seeds/whist-u3-mongol-empire';
+import { SEED_WHIST_U3_RISE_OF_ISLAM } from './seeds/whist-u3-rise-of-islam';
+import { SEED_WHIST_U3_TANG_SONG_CHINA } from './seeds/whist-u3-tang-song-china';
+import { SEED_WHIST_U4_BYZANTINE_EMPIRE } from './seeds/whist-u4-byzantine-empire';
+import { SEED_WHIST_U4_CHURCH_AND_CRUSADES } from './seeds/whist-u4-church-and-crusades';
+import { SEED_WHIST_U4_FEUDAL_EUROPE } from './seeds/whist-u4-feudal-europe';
+import { SEED_WHIST_U4_LATE_MIDDLE_AGES } from './seeds/whist-u4-late-middle-ages';
+import { SEED_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN } from './seeds/whist-u5-east-africa-indian-ocean';
+import { SEED_WHIST_U5_INCA_NORTH_AMERICA } from './seeds/whist-u5-inca-north-america';
+import { SEED_WHIST_U5_MAYA_AZTEC } from './seeds/whist-u5-maya-aztec';
+import { SEED_WHIST_U5_WEST_AFRICAN_EMPIRES } from './seeds/whist-u5-west-african-empires';
+import { SEED_WHIST_U6_AGE_OF_EXPLORATION } from './seeds/whist-u6-age-of-exploration';
+import { SEED_WHIST_U6_COLUMBIAN_EXCHANGE } from './seeds/whist-u6-columbian-exchange';
+import { SEED_WHIST_U6_PROTESTANT_REFORMATION } from './seeds/whist-u6-protestant-reformation';
+import { SEED_WHIST_U6_RENAISSANCE } from './seeds/whist-u6-renaissance';
+import { SEED_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM } from './seeds/whist-u7-absolutism-constitutionalism';
+import { SEED_WHIST_U7_ATLANTIC_REVOLUTIONS } from './seeds/whist-u7-atlantic-revolutions';
+import { SEED_WHIST_U7_ENLIGHTENMENT } from './seeds/whist-u7-enlightenment';
+import { SEED_WHIST_U7_SCIENTIFIC_REVOLUTION } from './seeds/whist-u7-scientific-revolution';
+import { SEED_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM } from './seeds/whist-u8-industrial-society-reform';
+import { SEED_WHIST_U8_NATIONALISM_UNIFICATION } from './seeds/whist-u8-nationalism-unification';
+import { SEED_WHIST_U8_NEW_IMPERIALISM } from './seeds/whist-u8-new-imperialism';
+import { SEED_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS } from './seeds/whist-u9-holocaust-human-rights';
+import { SEED_WHIST_U9_INTERWAR_YEARS } from './seeds/whist-u9-interwar-years';
+import { SEED_WHIST_U9_WORLD_WAR_I } from './seeds/whist-u9-world-war-i';
+import { SEED_WHIST_U9_WORLD_WAR_II } from './seeds/whist-u9-world-war-ii';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3623,6 +3665,47 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT,
   SEED_ENGL_U9_THESIS_STATEMENTS,
   SEED_ENGL_U9_TRANSITIONS_AND_COHESION,
+  // HS core: World History (2026-07 wave 1b)
+  SEED_WHIST_U2_ROME_REPUBLIC_EMPIRE,
+  SEED_WHIST_U8_INDUSTRIAL_REVOLUTION,
+  SEED_WHIST_U1_EARLY_INDIA_CHINA,
+  SEED_WHIST_U1_FEATURES_OF_CIVILIZATION,
+  SEED_WHIST_U1_MESOPOTAMIA_EGYPT,
+  SEED_WHIST_U1_NEOLITHIC_REVOLUTION,
+  SEED_WHIST_U10_COLD_WAR,
+  SEED_WHIST_U10_DECOLONIZATION,
+  SEED_WHIST_U10_END_OF_COLD_WAR,
+  SEED_WHIST_U10_GLOBALIZATION,
+  SEED_WHIST_U2_CLASSICAL_GREECE,
+  SEED_WHIST_U2_CLASSICAL_INDIA_CHINA,
+  SEED_WHIST_U2_WORLD_BELIEF_SYSTEMS,
+  SEED_WHIST_U3_ISLAMIC_GOLDEN_AGE,
+  SEED_WHIST_U3_MONGOL_EMPIRE,
+  SEED_WHIST_U3_RISE_OF_ISLAM,
+  SEED_WHIST_U3_TANG_SONG_CHINA,
+  SEED_WHIST_U4_BYZANTINE_EMPIRE,
+  SEED_WHIST_U4_CHURCH_AND_CRUSADES,
+  SEED_WHIST_U4_FEUDAL_EUROPE,
+  SEED_WHIST_U4_LATE_MIDDLE_AGES,
+  SEED_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN,
+  SEED_WHIST_U5_INCA_NORTH_AMERICA,
+  SEED_WHIST_U5_MAYA_AZTEC,
+  SEED_WHIST_U5_WEST_AFRICAN_EMPIRES,
+  SEED_WHIST_U6_AGE_OF_EXPLORATION,
+  SEED_WHIST_U6_COLUMBIAN_EXCHANGE,
+  SEED_WHIST_U6_PROTESTANT_REFORMATION,
+  SEED_WHIST_U6_RENAISSANCE,
+  SEED_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM,
+  SEED_WHIST_U7_ATLANTIC_REVOLUTIONS,
+  SEED_WHIST_U7_ENLIGHTENMENT,
+  SEED_WHIST_U7_SCIENTIFIC_REVOLUTION,
+  SEED_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM,
+  SEED_WHIST_U8_NATIONALISM_UNIFICATION,
+  SEED_WHIST_U8_NEW_IMPERIALISM,
+  SEED_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS,
+  SEED_WHIST_U9_INTERWAR_YEARS,
+  SEED_WHIST_U9_WORLD_WAR_I,
+  SEED_WHIST_U9_WORLD_WAR_II,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
