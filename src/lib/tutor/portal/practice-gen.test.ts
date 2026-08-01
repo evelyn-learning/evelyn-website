@@ -19,6 +19,7 @@ import {
   gateGeneratedAnswer,
   normalizeNumericAnswer,
   stripChoiceLetterPrefixes,
+  pickAnchorsForSlots,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
@@ -67,6 +68,12 @@ const bankAnchor: PracticeItem = {
   cedCode: 'AP-STATS-1.10',
 };
 const bankAnchorHard: PracticeItem = { ...bankAnchor, id: 'openstax.stats.0099', difficulty: 4 };
+// Same difficulty as `bankAnchor` but DIFFERENT `problemText` — `bankAnchor`/
+// `bankAnchorHard` intentionally share problemText (they only need to differ
+// by difficulty for the difficulty-preference tests), which makes them
+// useless for asserting "the two slots anchored on different candidates" by
+// substring-matching the prompt. This pair exists for that assertion.
+const bankAnchorAlt: PracticeItem = { ...bankAnchor, id: 'openstax.stats.0055', problemText: 'Alternate anchor problem' };
 
 /** Stub sources: records calls, generateAndVerify resolves the given payload
  *  (or null) for every call unless overridden per-call via `perCall`. */
@@ -332,6 +339,59 @@ await test('anchor: fresh LO with zero existing items generates from the LO id +
   assert.ok(/no existing practice|brand-new LO/i.test(sources.prompts[0]), 'prompt signals the no-anchor edge case');
   assert.equal(items.length, 1, 'generation still succeeds with no anchor');
   assert.equal(items[0].difficulty, 2, 'falls back to the default difficulty bucket');
+  delete process.env.PRACTICE_GEN;
+});
+
+// ── Per-slot anchor variety (production defect 2026-08-01: two parallel
+// generations from the SAME anchor + prompt came back as the same template
+// with swapped numbers, e.g. LO geom.angles-and-measure) ───────────────
+console.log('\nper-slot anchor + prompt variety:\n');
+
+await test('pickAnchorsForSlots: pool of 0 (fresh LO) returns null for every slot', () => {
+  assert.deepEqual(pickAnchorsForSlots([], 2), [null, null]);
+});
+
+await test('pickAnchorsForSlots: pool of exactly 1 falls back to that same anchor for every slot (no crash)', () => {
+  assert.deepEqual(pickAnchorsForSlots([bankAnchor], 2), [bankAnchor, bankAnchor]);
+});
+
+await test('pickAnchorsForSlots: pool of >=2 assigns DISTINCT anchors per slot, deterministically under an injected rng', () => {
+  const a = pickAnchorsForSlots([bankAnchor, bankAnchorHard], 2, undefined, () => 0.9);
+  const b = pickAnchorsForSlots([bankAnchor, bankAnchorHard], 2, undefined, () => 0.9);
+  assert.deepEqual(a, b, 'same injected rng sequence -> same anchor assignment (seedable/deterministic)');
+  assert.notEqual(a[0], a[1], 'the two slots got distinct anchors, not the same one twice');
+});
+
+await test('vary: with >=2 anchor candidates in the pool, the two parallel slots receive DIFFERENT anchors', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
+  await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor, bankAnchorAlt] }), sources);
+  assert.equal(sources.prompts.length, 2);
+  const slot0UsesBank = sources.prompts[0].includes(bankAnchor.problemText);
+  const slot0UsesAlt = sources.prompts[0].includes(bankAnchorAlt.problemText);
+  const slot1UsesBank = sources.prompts[1].includes(bankAnchor.problemText);
+  const slot1UsesAlt = sources.prompts[1].includes(bankAnchorAlt.problemText);
+  assert.ok(slot0UsesBank !== slot0UsesAlt, 'slot 0 anchors on exactly one candidate');
+  assert.ok(slot1UsesBank !== slot1UsesAlt, 'slot 1 anchors on exactly one candidate');
+  assert.notEqual(slot0UsesBank, slot1UsesBank, 'the two slots must NOT anchor on the same candidate — this is the production defect (identical anchor -> near-identical siblings)');
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('vary: with exactly 1 anchor candidate, both slots still generate successfully (fallback anchor, no crash)', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
+  const items = await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor] }), sources);
+  assert.equal(items.length, 2, 'a single anchor candidate must not reduce the two parallel generations to fewer/zero');
+  assert.ok(sources.prompts[0].includes(bankAnchor.problemText));
+  assert.ok(sources.prompts[1].includes(bankAnchor.problemText));
+  delete process.env.PRACTICE_GEN;
+});
+
+await test('vary: per-slot directive text differs between slots, even anchored on the SAME candidate', async () => {
+  process.env.PRACTICE_GEN = 'on';
+  const sources = makeStubSources({ gen: numericGen(), allowed: 2 });
+  await generatePracticeItems(baseOpts({ shortfall: 2, anchorItems: [bankAnchor] }), sources);
+  assert.notEqual(sources.prompts[0], sources.prompts[1], 'identical anchor must not produce byte-identical prompts across slots — the per-slot directive must differ');
   delete process.env.PRACTICE_GEN;
 });
 
