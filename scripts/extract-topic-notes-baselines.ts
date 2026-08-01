@@ -136,7 +136,7 @@ function extract(plan: LessonPlan): BaselineDraft {
         // When present, lift it into `title` (sentence-cased) so the
         // renderer gets a headline; content stays the full original
         // bullet (title is redundant-but-helpful, not a replacement).
-        const m = idea.match(/^([A-Z][A-Z0-9 ,'/\-]{2,70}) — ([\s\S]+)$/);
+        const m = idea.match(/^([A-Z][A-Z0-9 ,'/\-→]{2,70}) — ([\s\S]+)$/);
         if (m) {
           theory.push({
             loId: defaultLoId,
