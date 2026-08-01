@@ -50,6 +50,7 @@ const HS_COURSE_NAMES: Record<string, string> = {
   alg1: 'Algebra 1',
   geom: 'Geometry',
   bio: 'Biology',
+  engl: 'HS English',
 };
 
 function isHS(plan: LessonPlan): boolean {
