@@ -104,11 +104,18 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
       // constraint is a request, not a guarantee, and this was the single
       // unverified assumption behind the mobile echo. Shows in the browser→
       // server log bridge alongside the other voice lifecycle lines.
+      // Device label identifies the capture route (e.g. "AirPods Pro",
+      // "Headset (…Hands-Free AG Audio)") — a Bluetooth/handsfree label here
+      // explains "voice got slow/crackly when the mic opened" reports: AEC
+      // capture can flip a BT device from A2DP into the degraded HFP profile
+      // (suspected in session portal-734b537e…, 2026-07-31).
+      const label = stream.getAudioTracks()[0]?.label ?? '';
       const summary =
         `echoCancellation=${(settings as MediaTrackSettings).echoCancellation} ` +
         `noiseSuppression=${(settings as MediaTrackSettings).noiseSuppression} ` +
         `autoGainControl=${(settings as MediaTrackSettings).autoGainControl} ` +
-        `sampleRate=${(settings as MediaTrackSettings).sampleRate}`;
+        `sampleRate=${(settings as MediaTrackSettings).sampleRate}` +
+        (label ? ` device="${label.slice(0, 60)}"` : '');
       console.warn(`[shared-mic] opened for ${[...holders].join('+')} — ${summary}`);
       // Round-6: also surface to the persisted debug events (console lines
       // never leave the device). VoiceTutorRealtime forwards this.
