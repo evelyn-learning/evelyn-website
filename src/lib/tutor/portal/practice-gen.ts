@@ -263,6 +263,41 @@ export function normalizeNumericAnswer(raw: string): string | null {
   return String(n);
 }
 
+/** Matches a leading MCQ choice-letter prefix a generator baked into its own
+ *  choice text: "A) ", "A. ", "A: ", "(A) ", "A - " (flexible whitespace,
+ *  matched case-insensitively by the caller). Captures the letter in
+ *  whichever alternative matched. */
+const CHOICE_LETTER_PREFIX_RE = /^\s*(?:\(([A-Za-z])\)|([A-Za-z])\s*[.):]|([A-Za-z])\s*-)\s*/;
+
+/**
+ * Real-bank defect (1-of-3 real generations observed): a generated mcq item
+ * came back with choice texts that bake in their own letter prefix —
+ * `["A) 2","B) 10/3","C) 5","D) 19/3"]`. The portal renders its OWN A/B/C/D
+ * labels next to each choice, so a student would see a doubled label,
+ * "B. B) 10/3". When EVERY choice starts with a letter-prefix matching its
+ * position (A, B, C, ... sequential from the first choice) the prefix is
+ * stripped from each choice's text. Strip only under that all-or-nothing +
+ * sequential condition — a PARTIAL match (only some choices prefixed, or the
+ * prefixes present but out of A/B/C/... order) is left completely untouched,
+ * since that's more likely a legitimate choice that happens to start with a
+ * letter-like token (e.g. a chemistry option literally named "A)") than a
+ * baked-in label scheme. Returns the original array unchanged (same values)
+ * when the condition doesn't hold — callers should not rely on reference
+ * identity to detect whether a strip happened.
+ */
+export function stripChoiceLetterPrefixes(choices: string[]): string[] {
+  const stripped: string[] = [];
+  for (let i = 0; i < choices.length; i++) {
+    const expectedLetter = String.fromCharCode(65 + i);
+    const m = CHOICE_LETTER_PREFIX_RE.exec(choices[i]);
+    if (!m) return choices; // not every choice prefixed — leave all untouched
+    const letter = (m[1] ?? m[2] ?? m[3] ?? '').toUpperCase();
+    if (letter !== expectedLetter) return choices; // out-of-sequence letter — leave all untouched
+    stripped.push(choices[i].slice(m[0].length));
+  }
+  return stripped;
+}
+
 /**
  * Answer-shape gate (round-1 review fix, tightened round-2) — runs BEFORE a
  * generated payload is either served or persisted:
@@ -299,14 +334,22 @@ export async function gateGeneratedAnswer(
   if (gen.responseFormat === 'mcq') {
     const rawChoices = gen.choices ?? [];
     if (rawChoices.length === 0) return null; // malformed mcq — nothing to grade against
-    const choices = rawChoices.map((text, i) => ({ letter: String.fromCharCode(65 + i), text }));
+    // Strip a generator-baked-in "A) "/"A. "/"(A) "/"A - " label from every
+    // choice's text when ALL choices carry one and the letters are
+    // sequential from A (see `stripChoiceLetterPrefixes` doc comment) — the
+    // portal renders its own A/B/C/D labels, so leaving these in produces a
+    // doubled label ("B. B) 10/3"). A no-op (original array back) when the
+    // all-or-nothing + sequential condition doesn't hold.
+    const choiceTexts = stripChoiceLetterPrefixes(rawChoices);
+    if (choiceTexts.some((text) => text.trim().length === 0)) return null; // stripping left a blank choice — reject the whole generation rather than serve mangled text
+    const choices = choiceTexts.map((text, i) => ({ letter: String.fromCharCode(65 + i), text }));
     const claimedLetter = resolveMcqLetter(gen.finalAnswer, choices);
     if (!claimedLetter) return null; // claimed answer resolves to no real choice — reject
     const letterIndex = claimedLetter.charCodeAt(0) - 'A'.charCodeAt(0);
     if (letterIndex < 0 || letterIndex >= choices.length) return null; // out-of-bounds letter — reject
     const { agree } = await verify(gen.problemText, claimedLetter, choices);
     if (!agree) return null;
-    return { ...gen, finalAnswer: claimedLetter };
+    return { ...gen, finalAnswer: claimedLetter, choices: choiceTexts };
   }
   const normalized = normalizeNumericAnswer(gen.finalAnswer);
   if (!normalized) return null; // ambiguous/non-numeric shape — reject rather than guess

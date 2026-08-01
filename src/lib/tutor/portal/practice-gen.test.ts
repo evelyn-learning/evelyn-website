@@ -18,6 +18,7 @@ import {
   practiceGenSources,
   gateGeneratedAnswer,
   normalizeNumericAnswer,
+  stripChoiceLetterPrefixes,
   MAX_GENERATIONS_PER_REQUEST,
   PER_STUDENT_LO_DAILY_CAP,
   GLOBAL_DAILY_CAP,
@@ -542,6 +543,99 @@ await test('gate: mcq claim "D" IS accepted with exactly 4 choices (A-D) — bou
 await test('gate: mcq resolved letter failing choices-aware verify is rejected', async () => {
   const out = await gateGeneratedAnswer(mcqGen(), disagreeVerify());
   assert.equal(out, null);
+});
+
+// ── Baked-in choice-letter prefix strip (production defect: real generation
+// returned choices ["A) 2","B) 10/3","C) 5","D) 19/3"] — the portal renders
+// its own A/B/C/D labels next to each choice, so students saw a doubled
+// label, "B. B) 10/3". 1-of-3 real generations observed with the defect. ──
+console.log('\nbaked-in choice-letter prefix strip:\n');
+
+await test('stripChoiceLetterPrefixes: all choices prefixed "X) " and sequential from A are stripped', () => {
+  const out = stripChoiceLetterPrefixes(['A) 2', 'B) 10/3', 'C) 5', 'D) 19/3']);
+  assert.deepEqual(out, ['2', '10/3', '5', '19/3']);
+});
+
+await test('stripChoiceLetterPrefixes: recognizes ". : ( ) -" prefix styles, mixed across choices', () => {
+  const out = stripChoiceLetterPrefixes(['A. 2', 'B: 10/3', '(C) 5', 'D - 19/3']);
+  assert.deepEqual(out, ['2', '10/3', '5', '19/3']);
+});
+
+await test('stripChoiceLetterPrefixes: is case-insensitive', () => {
+  const out = stripChoiceLetterPrefixes(['a) 2', 'b) 10/3', 'c) 5', 'd) 19/3']);
+  assert.deepEqual(out, ['2', '10/3', '5', '19/3']);
+});
+
+await test('stripChoiceLetterPrefixes: partial match (only 2 of 4 prefixed) leaves ALL choices untouched', () => {
+  const original = ['A) 2', 'B) 10/3', '5', '19/3'];
+  const out = stripChoiceLetterPrefixes(original);
+  assert.deepEqual(out, original, 'a partial match must not strip anything, even the choices that DO match');
+});
+
+await test('stripChoiceLetterPrefixes: non-sequential letters (A, B, D, C order) leave everything untouched', () => {
+  const original = ['A) 2', 'B) 10/3', 'D) 5', 'C) 19/3'];
+  const out = stripChoiceLetterPrefixes(original);
+  assert.deepEqual(out, original);
+});
+
+await test('stripChoiceLetterPrefixes: repeated letters (A, A, B, C) leave everything untouched', () => {
+  const original = ['A) 2', 'A) 10/3', 'B) 5', 'C) 19/3'];
+  const out = stripChoiceLetterPrefixes(original);
+  assert.deepEqual(out, original);
+});
+
+await test('stripChoiceLetterPrefixes: a choice with no letter-prefix shape at all leaves everything untouched', () => {
+  const original = ['wrong', 'right'];
+  const out = stripChoiceLetterPrefixes(original);
+  assert.deepEqual(out, original);
+});
+
+await test('gate: all-prefixed mcq choices are stripped, answer letter preserved and still valid', async () => {
+  const gen: GenPayload = {
+    problemText: 'Solve for x.',
+    finalAnswer: 'D',
+    responseFormat: 'mcq',
+    choices: ['A) 2', 'B) 10/3', 'C) 5', 'D) 19/3'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.ok(out, 'expected the gate to accept the stripped mcq');
+  assert.equal(out!.finalAnswer, 'D', 'answer letter is unaffected by text stripping');
+  assert.deepEqual(out!.choices, ['2', '10/3', '5', '19/3'], 'stored/served choices have the baked-in prefixes removed');
+});
+
+await test('gate: partially-prefixed mcq choices are served UNCHANGED (no strip)', async () => {
+  const gen: GenPayload = {
+    problemText: 'Solve for x.',
+    finalAnswer: 'A',
+    responseFormat: 'mcq',
+    choices: ['A) 2', 'B) 10/3', '5', '19/3'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.ok(out, 'a partial-prefix match is not itself a rejection reason');
+  assert.deepEqual(out!.choices, ['A) 2', 'B) 10/3', '5', '19/3'], 'left untouched — never strip on a partial match');
+});
+
+await test('gate: non-sequential letter-prefixed mcq choices are served UNCHANGED (no strip)', async () => {
+  const gen: GenPayload = {
+    problemText: 'Solve for x.',
+    finalAnswer: 'A',
+    responseFormat: 'mcq',
+    choices: ['A) 2', 'B) 10/3', 'D) 5', 'C) 19/3'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.ok(out);
+  assert.deepEqual(out!.choices, ['A) 2', 'B) 10/3', 'D) 5', 'C) 19/3']);
+});
+
+await test('gate: a prefix-only choice ("A) ") strips to empty and REJECTS the whole generation', async () => {
+  const gen: GenPayload = {
+    problemText: 'Solve for x.',
+    finalAnswer: 'B',
+    responseFormat: 'mcq',
+    choices: ['A) ', 'B) 10/3', 'C) 5', 'D) 19/3'],
+  };
+  const out = await gateGeneratedAnswer(gen, agreeVerify());
+  assert.equal(out, null, 'a choice that strips to empty must reject the whole generation, never serve mangled/blank text');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
