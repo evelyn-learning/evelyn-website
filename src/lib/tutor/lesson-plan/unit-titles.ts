@@ -85,6 +85,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Ecology',
     '10': 'Human Body Systems',
   },
+  chemistry: {
+    '1': 'Matter & Measurement',
+    '2': 'Atomic Structure',
+    '3': 'The Periodic Table',
+    '4': 'Bonding',
+    '5': 'Reactions & Equations',
+    '6': 'The Mole & Stoichiometry',
+    '7': 'States of Matter & Gases',
+    '8': 'Solutions',
+    '9': 'Thermochemistry, Kinetics & Equilibrium',
+    '10': 'Acids, Bases & Nuclear Chemistry',
+  },
   // Add additional courses as they ship per project_ap_plans_initiative.md:
   //   'ap-statistics': { '1': 'Exploring One-Variable Data', ... }
   //   etc.

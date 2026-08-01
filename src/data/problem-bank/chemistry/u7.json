@@ -1,0 +1,434 @@
+[
+  {
+    "id": "chem-kinetic-molecular-theory-001",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Temperature is a measure of which quantity for the particles in a sample of matter?",
+    "choices": [
+      "The average kinetic energy per particle",
+      "The total energy of all the particles added together",
+      "The average speed of the particles, no matter what they weigh",
+      "The total number of particles that are moving"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two samples at the same temperature share the same per-particle value — so the quantity has to be an average, not a total.",
+      "Kinetic energy depends on both mass and speed, so 'speed alone' cannot be what a thermometer reads."
+    ]
+  },
+  {
+    "id": "chem-kinetic-molecular-theory-002",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A copper sheet is chilled in a freezer and its measured length shrinks slightly. In kinetic-molecular terms, what is happening to its atoms?",
+    "choices": [
+      "Each copper atom shrinks to a smaller size",
+      "The atoms vibrate less energetically and settle closer together, while each atom stays exactly the same size",
+      "Some copper atoms leave the sheet as it cools, so less material remains",
+      "The atoms stop vibrating completely and lock into a denser element"
+    ],
+    "answer": "B",
+    "hints": [
+      "Cooling removes kinetic energy. In a solid, that energy shows up as vibration — so vibration is what changes.",
+      "Nothing was added or removed and no atom changed size, so what changed must be the SPACING between atoms."
+    ]
+  },
+  {
+    "id": "chem-kinetic-molecular-theory-003",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is a postulate of the kinetic-molecular theory of an ideal gas?",
+    "choices": [
+      "Gas particles lose kinetic energy every time they collide with one another",
+      "Every particle in a gas sample moves at exactly the same speed",
+      "Gas particles attract one another strongly in the space between collisions",
+      "The volume of the gas particles themselves is negligible compared with the space between them"
+    ],
+    "answer": "D",
+    "hints": [
+      "Collisions in the ideal model are elastic, and an ideal gas is defined by having no attractions between particles — so rule those two options out.",
+      "A gas is mostly empty space; that is the postulate that lets a gas be compressed so easily."
+    ]
+  },
+  {
+    "id": "chem-kinetic-molecular-theory-004",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A flask holds a mixture of methane (CH₄, molar mass 16.0 g/mol) and sulfur dioxide (SO₂, molar mass 64.0 g/mol) at a single uniform temperature of 127 °C. Which comparison of the two gases is correct?",
+    "choices": [
+      "The CH₄ molecules have the higher average kinetic energy because they move faster",
+      "Both gases have the same average kinetic energy, and the CH₄ molecules move faster on average",
+      "Both gases have the same average speed, and the SO₂ molecules therefore carry more kinetic energy",
+      "The SO₂ molecules have four times the average kinetic energy because they are four times as heavy"
+    ],
+    "answer": "B",
+    "hints": [
+      "Everything sitting at one temperature shares the same average kinetic energy per particle — that is what temperature means.",
+      "Kinetic energy is one-half times mass times speed squared. If the energies match but the masses differ by a factor of 4, which gas has to be moving faster?"
+    ]
+  },
+  {
+    "id": "chem-kinetic-molecular-theory-005",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 2.0 g droplet of water at 80 °C sits on the rim of a 500 g pan of water at 30 °C. Which statement is correct?",
+    "choices": [
+      "The pan's molecules have the higher average kinetic energy because there are so many more of them",
+      "Both samples have the same average kinetic energy because both are liquid water",
+      "The droplet's molecules have the higher average kinetic energy, but the pan holds more total energy",
+      "The droplet holds more total energy because its particles move faster"
+    ],
+    "answer": "C",
+    "hints": [
+      "Temperature is an average per particle; total thermal energy also depends on how many particles there are.",
+      "Higher temperature always means the faster particles. More mass at a lower temperature can still add up to more total energy."
+    ]
+  },
+  {
+    "id": "chem-kinetic-molecular-theory-006",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Average kinetic energy is proportional to ABSOLUTE temperature, converted with K = °C + 273. A sample of argon gas starts at -23 °C and is heated until its particles have exactly three times the average kinetic energy they started with. What is the final temperature in kelvins?",
+    "answer": "750",
+    "hints": [
+      "Convert to the absolute scale before you multiply anything: -23 + 273 gives the starting temperature in kelvins.",
+      "The starting point is 250 K, and tripling the average kinetic energy triples the ABSOLUTE temperature."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-001",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A substance is heated at a steady rate and its temperature holds perfectly constant for several minutes while it melts. Which formula gives the heat absorbed during that constant-temperature stretch?",
+    "choices": [
+      "q = mcΔT, because mass and heat are still related during melting",
+      "q = mΔH, because the phase changes while the temperature stays constant",
+      "q = cΔT, because the mass cancels out during a phase change",
+      "q = mc, because ΔT equals zero and simply drops out of the formula"
+    ],
+    "answer": "B",
+    "hints": [
+      "If the temperature does not change, then ΔT = 0 and anything multiplied by ΔT gives zero — yet real energy is being absorbed.",
+      "Phase-change energy is quoted per gram (334 J/g, 2260 J/g), so the formula must be mass times a per-gram value."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-002",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which pair of phase changes RELEASES energy to the surroundings (exothermic, ΔH negative)?",
+    "choices": [
+      "Melting and boiling",
+      "Melting and condensing",
+      "Boiling and sublimation",
+      "Freezing and condensing"
+    ],
+    "answer": "D",
+    "hints": [
+      "Pulling particles apart costs energy; letting them fall back together returns it.",
+      "Melting, boiling, and sublimation all separate particles, so all three absorb energy. The reverse processes release it."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-003",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ethanol has a heat of fusion ΔHfus = 109 J/g and a heat of vaporization ΔHvap = 841 J/g. A 20.0 g sample of solid ethanol is heated at a steady rate until it has all turned to vapor. Which of the two flat stretches of its heating curve lasts longer, and why?",
+    "choices": [
+      "The boiling plateau, because 841 J/g is far more energy per gram than 109 J/g",
+      "The melting plateau, because melting always comes first on a heating curve",
+      "The melting plateau, because a solid holds its particles more tightly than a liquid does",
+      "They last equally long, because the temperature is constant during both"
+    ],
+    "answer": "A",
+    "hints": [
+      "Heat arrives at a steady rate, so the plateau that needs more total joules takes more time.",
+      "Melting only loosens particles enough to slide; vaporizing must separate them completely, which is why ΔHvap is the bigger number."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-004",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How much heat is involved when 150.0 g of liquid water at 0 °C freezes completely into ice at 0 °C, and does the water absorb or release it? Use ΔHfus = 334 J/g and ΔHvap = 2260 J/g for water.",
+    "choices": [
+      "50,100 J absorbed by the water",
+      "0 J, because the temperature never changes",
+      "50,100 J released by the water",
+      "339,000 J released by the water"
+    ],
+    "answer": "C",
+    "hints": [
+      "Freezing is the reverse of melting, so it uses ΔHfus — the same magnitude, opposite direction.",
+      "150.0 × 334 gives the magnitude; now decide the direction. Particles falling together give energy back to the surroundings."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-005",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How much heat is required to turn 20.0 g of ice at 0 °C into liquid water at 50.0 °C? Use ΔHfus = 334 J/g, c(ice) = 2.06 J/g·°C, and c(liquid water) = 4.18 J/g·°C.",
+    "choices": [
+      "4180 J",
+      "6680 J",
+      "8740 J",
+      "10,860 J"
+    ],
+    "answer": "D",
+    "hints": [
+      "The trip has two stages: melt the ice at 0 °C (a plateau), then warm the liquid from 0 °C to 50.0 °C.",
+      "Stage 1: 20.0 × 334. Stage 2: 20.0 × 4.18 × 50.0 — use the LIQUID specific heat there, not the ice value. Then add."
+    ]
+  },
+  {
+    "id": "chem-phase-changes-heating-curves-006",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "How much heat, in joules, is needed to take 30.0 g of ice at -20.0 °C all the way to liquid water at 20.0 °C? Use c(ice) = 2.06 J/g·°C, ΔHfus = 334 J/g, and c(liquid water) = 4.18 J/g·°C. Give your answer as a number of joules.",
+    "answer": "13764",
+    "hints": [
+      "The trip crosses 0 °C, so it is three separate stages added together: warm the ice, melt the ice, warm the liquid.",
+      "Stage 1: 30.0 × 2.06 × 20.0. Stage 2: 30.0 × 334. Stage 3: 30.0 × 4.18 × 20.0. Sum all three."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-001",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which gas law relates the pressure and the volume of a fixed sample of gas when the temperature is held constant?",
+    "choices": [
+      "Charles's law, V₁/T₁ = V₂/T₂",
+      "Gay-Lussac's law, P₁/T₁ = P₂/T₂",
+      "Boyle's law, P₁V₁ = P₂V₂",
+      "Avogadro's law, V₁/n₁ = V₂/n₂"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the law whose equation contains only P and V, with no temperature and no moles in it.",
+      "Pressure and volume fight each other, so their relationship is a product held constant, not a pair of equal fractions."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-002",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sealed sample of gas occupies 12.0 L at a pressure of 4.0 atm. At constant temperature it is allowed to expand to 16.0 L. What is the new pressure?",
+    "choices": [
+      "3.0 atm",
+      "5.3 atm",
+      "0.33 atm",
+      "48 atm"
+    ],
+    "answer": "A",
+    "hints": [
+      "Constant temperature and a sealed sample means Boyle's law: P₁V₁ = P₂V₂.",
+      "P₁V₁ = (4.0)(12.0) = 48. Divide by the new volume, 16.0 L. The gas got more room, so the pressure must go DOWN."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-003",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather balloon holds 5.0 L of gas at 250 K. It is warmed to 350 K while the surrounding pressure stays constant. What is the new volume?",
+    "choices": [
+      "3.6 L",
+      "7.0 L",
+      "5.0 L",
+      "12.0 L"
+    ],
+    "answer": "B",
+    "hints": [
+      "A flexible balloon at constant pressure means Charles's law: V₁/T₁ = V₂/T₂.",
+      "V₂ = 5.0 × (350/250). Heating at constant pressure must make the volume LARGER."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-004",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rigid sealed steel can of gas reads 3.5 atm at 77 °C. It is carried outside and cools to -23 °C. What is the new pressure inside? Use K = °C + 273.",
+    "choices": [
+      "4.9 atm",
+      "-1.0 atm",
+      "3.5 atm — the can is rigid, so the pressure cannot change",
+      "2.5 atm"
+    ],
+    "answer": "D",
+    "hints": [
+      "Rigid and sealed pins the volume, so this is Gay-Lussac's law: P₁/T₁ = P₂/T₂.",
+      "Convert first: 77 + 273 = 350 K and -23 + 273 = 250 K. Then P₂ = 3.5 × (250/350). Cooling must LOWER the pressure, and a negative pressure is impossible."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-005",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student compresses gas in a sealed syringe at constant temperature from 10.0 L down to 2.0 L, starting at 1.5 atm. The student writes P₁/V₁ = P₂/V₂ and reports 0.30 atm. Which response is correct?",
+    "choices": [
+      "Nothing is wrong; 0.30 atm is right because the particles were squeezed into a calmer space",
+      "Pressure and volume are inverse, so P₁V₁ = P₂V₂ gives 7.5 atm",
+      "Pressure and volume are inverse, so P₁V₁ = P₂V₂ gives 3.0 atm",
+      "The student should have used Charles's law, which also gives 0.30 atm"
+    ],
+    "answer": "B",
+    "hints": [
+      "Only quantities that rise together go into equal fractions. Squeezing a gas raises its pressure, so P and V move in opposite directions.",
+      "Use P₁V₁ = P₂V₂: (1.5)(10.0) = 15, then divide by 2.0 L. If your answer moved the wrong direction, the setup was inverted."
+    ]
+  },
+  {
+    "id": "chem-gas-laws-006",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A flexible container holds 9.0 L of gas at 177 °C. It is cooled at constant pressure until its volume is exactly 5.0 L. What is the final temperature in kelvins? Use K = °C + 273.",
+    "answer": "250",
+    "hints": [
+      "Constant pressure means Charles's law: V₁/T₁ = V₂/T₂. Convert the starting temperature to kelvins before setting up the ratio.",
+      "T₁ = 177 + 273 = 450 K, so T₂ = 450 × (5.0/9.0)."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-001",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which gas law is the only one that contains n, the number of moles of gas?",
+    "choices": [
+      "Boyle's law, P₁V₁ = P₂V₂",
+      "The combined gas law, P₁V₁/T₁ = P₂V₂/T₂",
+      "The ideal gas law, PV = nRT",
+      "Charles's law, V₁/T₁ = V₂/T₂"
+    ],
+    "answer": "C",
+    "hints": [
+      "The other three all follow ONE sealed sample from a before state to an after state, so the amount of gas never changes and never appears.",
+      "Look for the equation with no subscripts — the one that describes a single state."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-002",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At STP (0 °C and 1 atm) one mole of any ideal gas occupies 22.4 L. What volume does 3.00 mol of nitrogen gas (N₂, molar mass 28.0 g/mol) occupy at STP?",
+    "choices": [
+      "67.2 L",
+      "22.4 L",
+      "7.47 L",
+      "84.0 L"
+    ],
+    "answer": "A",
+    "hints": [
+      "Molar volume is liters PER MOLE, so multiply it by the number of moles.",
+      "3.00 × 22.4 = ? The molar mass is not needed here — volume depends on the number of particles, not their weight."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-003",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What volume does 2.00 mol of an ideal gas occupy at 1.00 atm and 300 K? Use PV = nRT with R = 0.0821 L·atm/(mol·K).",
+    "choices": [
+      "24.63 L",
+      "49.26 L",
+      "12.32 L",
+      "98.52 L"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rearrange to isolate the unknown: V = nRT/P.",
+      "Top: 2.00 × 0.0821 × 300 = 49.26. Bottom: 1.00. Now divide."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-004",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sealed sample of gas occupies 4.0 L at 2.0 atm and 400 K. Its conditions are changed to 1.0 atm and 200 K. What is its new volume?",
+    "choices": [
+      "8.0 L",
+      "2.0 L",
+      "4.0 L — halving the pressure doubles the volume, and halving the absolute temperature halves it right back",
+      "16.0 L"
+    ],
+    "answer": "C",
+    "hints": [
+      "One sealed sample with two sets of conditions means the combined gas law: P₁V₁/T₁ = P₂V₂/T₂.",
+      "V₂ = P₁V₁T₂ / (P₂T₁) = (2.0 × 4.0 × 200) / (1.0 × 400). Work out the two competing effects separately and see whether they cancel."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-005",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wants the moles of gas in a 250 mL flask at 380 mmHg and 27 °C, and plugs 380, 250, and 27 straight into n = PV/RT with R = 0.0821 L·atm/(mol·K). Which set of values should have been used instead? (760 mmHg = 1.00 atm; 1000 mL = 1 L; K = °C + 273)",
+    "choices": [
+      "380 atm, 0.250 L, and 300 K",
+      "0.500 atm, 250 L, and 300 K",
+      "0.500 atm, 0.250 L, and 27 K",
+      "0.500 atm, 0.250 L, and 300 K"
+    ],
+    "answer": "D",
+    "hints": [
+      "R = 0.0821 L·atm/(mol·K) carries its units with it, so it locks pressure to atm, volume to liters, and temperature to kelvin.",
+      "Convert all three: 380 ÷ 760 for the pressure, 250 ÷ 1000 for the volume, and 27 + 273 for the temperature."
+    ]
+  },
+  {
+    "id": "chem-ideal-gas-law-006",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "At STP (0 °C and 1 atm) one mole of any ideal gas occupies 22.4 L. A sealed flask holds 5.60 L of carbon dioxide gas (CO₂) at STP. What is the mass of the CO₂ in grams? Molar masses: C = 12.0 g/mol, O = 16.0 g/mol.",
+    "answer": "11",
+    "hints": [
+      "Go volume → moles → mass. Divide the volume by the molar volume 22.4 L/mol to get the moles first.",
+      "5.60 ÷ 22.4 = 0.250 mol, and the molar mass of CO₂ is 12.0 + 2(16.0) = 44.0 g/mol. Multiply."
+    ]
+  }
+]

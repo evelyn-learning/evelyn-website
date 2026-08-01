@@ -1,0 +1,430 @@
+[
+  {
+    "id": "chem-balancing-equations-001",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Water can be split by electricity: 2 H₂O → 2 H₂ + O₂. While balancing an equation, which number is a chemist allowed to change?",
+    "choices": [
+      "The subscript 2 inside H₂O, because it counts the hydrogen atoms",
+      "The coefficient 2 written in front of H₂O",
+      "Either number, as long as the atom totals end up equal",
+      "Neither one — a balanced equation is fixed and cannot be adjusted"
+    ],
+    "answer": "B",
+    "hints": [
+      "One number sits in FRONT of a formula and one sits INSIDE it. Only one of them can change without turning the substance into a different chemical."
+    ]
+  },
+  {
+    "id": "chem-balancing-equations-002",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aluminum foil reacts with chlorine gas to form aluminum chloride: Al + Cl₂ → AlCl₃. Which version is balanced with the smallest whole-number coefficients?",
+    "choices": [
+      "Al + 3 Cl → AlCl₃",
+      "4 Al + 6 Cl₂ → 4 AlCl₃",
+      "2 Al + 3 Cl₂ → 2 AlCl₃",
+      "3 Al + 2 Cl₂ → 3 AlCl₃"
+    ],
+    "answer": "C",
+    "hints": [
+      "Tally Al and Cl on both sides of each option before judging it.",
+      "Two of the options tally correctly — pick the one whose coefficients share no common factor, and reject any option that split Cl₂ into single Cl atoms."
+    ]
+  },
+  {
+    "id": "chem-balancing-equations-003",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student heats 8.4 g of baking soda in an OPEN dish: 2 NaHCO₃(s) → Na₂CO₃(s) + H₂O(g) + CO₂(g). After heating, the solid left in the dish weighs 5.3 g. What best explains the drop from 8.4 g to 5.3 g?",
+    "choices": [
+      "Gaseous products (water vapor and CO₂) escaped from the open dish, carrying away 3.1 g — mass is still conserved",
+      "Heat destroyed 3.1 g of matter, so mass was not conserved in this reaction",
+      "The balance must be miscalibrated, because the mass has to read 8.4 g after any reaction",
+      "The solid absorbed heat energy, and energy has no mass, so the reading fell"
+    ],
+    "answer": "A",
+    "hints": [
+      "Conservation of mass counts EVERY product, including the ones you cannot see.",
+      "Two of the three products are gases and the dish is open — where did they go?"
+    ]
+  },
+  {
+    "id": "chem-balancing-equations-004",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Hexane, C₆H₁₄, is a solvent that burns completely in oxygen: C₆H₁₄ + O₂ → CO₂ + H₂O. Balance this combustion using the smallest whole-number coefficients. What is the coefficient of O₂?",
+    "answer": "19",
+    "hints": [
+      "Balance carbon first, then hydrogen, and save oxygen for last because it appears in both products.",
+      "With one C₆H₁₄ you get 6 CO₂ and 7 H₂O, which is 12 + 7 = 19 oxygen atoms, so O₂ takes 19/2 — then multiply every coefficient by 2 to clear the fraction."
+    ]
+  },
+  {
+    "id": "chem-balancing-equations-005",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Slaked lime neutralizes phosphoric acid: Ca(OH)₂ + H₃PO₄ → Ca₃(PO₄)₂ + H₂O. Which version is balanced with the smallest whole-number coefficients?",
+    "choices": [
+      "Ca(OH)₂ + H₃PO₄ → Ca₃(PO₄)₂ + H₂O",
+      "3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 3 H₂O",
+      "6 Ca(OH)₂ + 4 H₃PO₄ → 2 Ca₃(PO₄)₂ + 12 H₂O",
+      "3 Ca(OH)₂ + 2 H₃PO₄ → Ca₃(PO₄)₂ + 6 H₂O"
+    ],
+    "answer": "D",
+    "hints": [
+      "PO₄ survives the reaction intact, so count it as a single block instead of atom by atom; do the same for calcium, then finish with hydrogen.",
+      "Ca₃(PO₄)₂ pins 3 Ca and 2 PO₄ on the left. That puts 6 H from the hydroxides and 6 H from the acid on the left — 12 H total, so how many H₂O must the right side have?"
+    ]
+  },
+  {
+    "id": "chem-balancing-equations-006",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ethanol, C₂H₅OH, burns in a fuel blend: C₂H₅OH + O₂ → CO₂ + H₂O. Which line is balanced with the smallest whole-number coefficients?",
+    "choices": [
+      "2 C₂H₅OH + 7 O₂ → 4 CO₂ + 6 H₂O",
+      "C₂H₅OH + 3 O₂ → 2 CO₂ + 3 H₂O",
+      "C₂H₅OH + 2 O₂ → 2 CO₂ + 3 H₂O",
+      "2 C₂H₅OH + 6 O₂ → 4 CO₂ + 6 H₂O"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ethanol already carries one oxygen atom of its own — that O must be counted on the reactant side along with the O₂.",
+      "Two of these options tally correctly on every element; the winner is the one whose coefficients share no common factor."
+    ]
+  },
+  {
+    "id": "chem-reaction-types-001",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Aluminum is produced industrially by passing electricity through molten aluminum oxide: 2 Al₂O₃ → 4 Al + 3 O₂. How should this reaction be classified?",
+    "choices": [
+      "Combustion — O₂ appears in the equation",
+      "Synthesis — aluminum and oxygen are combining",
+      "Decomposition — a single compound breaks into two simpler substances",
+      "Single replacement — oxygen takes the place of aluminum"
+    ],
+    "answer": "C",
+    "hints": [
+      "Count the pieces before you look at the formulas: how many separate reactants are there?"
+    ]
+  },
+  {
+    "id": "chem-reaction-types-002",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Hard water is softened by the reaction K₂CO₃(aq) + CaCl₂(aq) → CaCO₃(s) + 2 KCl(aq). How should it be classified?",
+    "choices": [
+      "Single replacement — calcium takes the place of potassium",
+      "Double replacement — two compounds trade partners and CaCO₃ leaves as a solid",
+      "Synthesis — a solid is built from two solutions",
+      "Decomposition — the potassium carbonate falls apart"
+    ],
+    "answer": "B",
+    "hints": [
+      "First check whether either reactant is a lone ELEMENT. Are K₂CO₃ and CaCl₂ elements or compounds?",
+      "Two compounds in, two compounds out, with K and Ca having exchanged partners. Which pattern is that?"
+    ]
+  },
+  {
+    "id": "chem-reaction-types-003",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is a combustion reaction?",
+    "choices": [
+      "2 H₂O₂ → 2 H₂O + O₂",
+      "CaCO₃ → CaO + CO₂",
+      "Na₂SO₄ + BaCl₂ → BaSO₄ + 2 NaCl",
+      "2 C₂H₂ + 5 O₂ → 4 CO₂ + 2 H₂O"
+    ],
+    "answer": "D",
+    "hints": [
+      "Combustion needs O₂ going IN as a reactant, plus a fuel — not O₂ coming out as a product.",
+      "Look for the equation whose reactants are a hydrocarbon and oxygen gas, and whose only products are CO₂ and H₂O."
+    ]
+  },
+  {
+    "id": "chem-reaction-types-004",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Here are five balanced reactions. (1) 2 Na + 2 H₂O → 2 NaOH + H₂. (2) HNO₃ + KOH → KNO₃ + H₂O. (3) 2 Al + 3 Br₂ → 2 AlBr₃. (4) BaCl₂ + Na₂SO₄ → BaSO₄ + 2 NaCl. (5) 2 HgO → 2 Hg + O₂. How many of these five are DOUBLE REPLACEMENT reactions? Type your answer as a number.",
+    "answer": "2",
+    "hints": [
+      "Double replacement needs exactly TWO reactants and no lone element anywhere in the equation.",
+      "Reactions 1 and 3 each start with a lone element, and reaction 5 has only one reactant. Count what survives."
+    ]
+  },
+  {
+    "id": "chem-reaction-types-005",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Baking soda releases gas in an oven: 2 NaHCO₃ → Na₂CO₃ + H₂O + CO₂. How should this reaction be classified?",
+    "choices": [
+      "Decomposition — one reactant breaks apart into three simpler products",
+      "Combustion — CO₂ and H₂O are both produced",
+      "Double replacement — the sodium and the hydrogen swap partners",
+      "Synthesis — sodium carbonate is built up out of smaller pieces"
+    ],
+    "answer": "A",
+    "hints": [
+      "Do not pattern-match on the familiar CO₂ and H₂O. Count the reactants first.",
+      "Combustion requires O₂ as a reactant. Is there any O₂ on the left-hand side here?"
+    ]
+  },
+  {
+    "id": "chem-reaction-types-006",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Classify all three reactions: (i) 2 C₆H₁₄ + 19 O₂ → 12 CO₂ + 14 H₂O, (ii) H₂SO₄ + 2 NaOH → Na₂SO₄ + 2 H₂O, (iii) 3 Zn + 2 FeCl₃ → 3 ZnCl₂ + 2 Fe. Which statement is entirely correct?",
+    "choices": [
+      "(i) synthesis, (ii) double replacement, (iii) single replacement",
+      "(i) combustion, (ii) neutralization, which is its own sixth category and not a replacement, (iii) single replacement",
+      "(i) combustion, (ii) double replacement (specifically a neutralization), (iii) single replacement",
+      "(i) combustion, (ii) double replacement, (iii) double replacement — the two chlorides change places"
+    ],
+    "answer": "C",
+    "hints": [
+      "Take them one at a time with the count-the-pieces test, then check whether any special name also applies.",
+      "Acid + base → salt + water is a double replacement whose escape product happens to be water; and in (iii) Zn enters as a lone element, which rules out double replacement."
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-001",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Activity series excerpt, most reactive to least: K > Na > Mg > Al > Zn > Fe > H > Cu > Ag > Au. Which of these metals will NOT bubble when dropped into hydrochloric acid, HCl(aq)?",
+    "choices": [
+      "Zn",
+      "Mg",
+      "Ag",
+      "Fe"
+    ],
+    "answer": "C",
+    "hints": [
+      "Hydrogen is the acid line: metals ABOVE H hand their electrons to H⁺ and release H₂ gas, while metals below H cannot."
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-002",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A strip of aluminum metal is placed in zinc nitrate solution, Zn(NO₃)₂. Activity series excerpt: K > Na > Mg > Al > Zn > Fe > H > Cu > Ag. Aluminum forms Al³⁺ and nitrate is NO₃⁻. Which line correctly gives the products?",
+    "choices": [
+      "Al(NO₃)₃ + Zn",
+      "Al(NO₃)₂ + Zn — the subscript 2 carries over from Zn(NO₃)₂",
+      "AlNO₃ + Zn — one aluminum pairs with one nitrate",
+      "No reaction — aluminum ranks below zinc on the series"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two checks come first: is Al above Zn on the series, and does the free metal take the metal slot?",
+      "Build the product from charges alone — Al³⁺ paired with NO₃⁻ needs however many nitrates it takes to reach a neutral compound, regardless of the subscript in Zn(NO₃)₂."
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-003",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solubility facts: all nitrates are soluble, and all Na⁺ and K⁺ salts are soluble; most sulfates are soluble EXCEPT BaSO₄, PbSO₄, and CaSO₄; all common chlorides are soluble except AgCl and PbCl₂. Which pair of solutions produces a precipitate when mixed?",
+    "choices": [
+      "NaNO₃(aq) + KCl(aq)",
+      "Ba(NO₃)₂(aq) + Na₂SO₄(aq)",
+      "K₂SO₄(aq) + NaCl(aq)",
+      "NaNO₃(aq) + K₂SO₄(aq)"
+    ],
+    "answer": "B",
+    "hints": [
+      "For each pair, first write the two products a partner swap would make, then look each one up in the solubility facts.",
+      "Three of the pairs can only produce nitrates or Na⁺/K⁺ salts, and those are all soluble. Which pair can make something that is not?"
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-004",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Activity series excerpt: Mg > Al > Zn > Fe > H > Cu > Ag > Au. A student is asked what happens when silver wire is placed in zinc nitrate solution and writes 2 Ag + Zn(NO₃)₂ → 2 AgNO₃ + Zn, pointing out that the equation is balanced. Which evaluation is correct?",
+    "choices": [
+      "Correct — the equation balances, which shows the reaction happens",
+      "Incorrect — the silver formula should be Ag₂NO₃ so that the charges work out",
+      "Incorrect — silver can displace only nonmetals, never another metal",
+      "Incorrect — no reaction occurs, because Ag ranks below Zn on the series"
+    ],
+    "answer": "D",
+    "hints": [
+      "A balanced equation is never evidence that a reaction actually runs — only the activity series decides that.",
+      "The free metal here is silver. Find both metals on the list: is the free one ranked above or below the one locked in the compound?"
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-005",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Calcium metal is added to aluminum nitrate solution, Al(NO₃)₃. Activity series excerpt: K > Na > Ca > Mg > Al > Zn > Fe > H > Cu > Ag. Calcium forms Ca²⁺, aluminum forms Al³⁺, and nitrate is NO₃⁻. Predict the products, balance the equation, and state the coefficient of Al(NO₃)₃. Type your answer as a number.",
+    "answer": "2",
+    "hints": [
+      "Ca sits above Al, so the reaction runs. Build the products from charges: Ca²⁺ with NO₃⁻ gives Ca(NO₃)₂, and the displaced aluminum leaves as neutral Al.",
+      "Three Ca(NO₃)₂ units hold six nitrate groups, so the aluminum nitrate on the left must supply six as well — and each Al(NO₃)₃ carries three."
+    ]
+  },
+  {
+    "id": "chem-predicting-products-activity-006",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Activity series excerpt: K > Na > Ca > Mg > Al > Zn > Fe > H > Cu > Ag. A student predicts the reaction of magnesium metal with hydrochloric acid and writes Mg + HCl → MgCl + H. Which statement identifies ALL the errors and gives the correct equation?",
+    "choices": [
+      "The only error is the balancing; the correct equation is Mg + 2 HCl → MgCl + 2 H",
+      "The formulas are fine, but the reaction does not run, because Mg ranks below H on the series",
+      "Two formula errors: magnesium forms Mg²⁺ so the product is MgCl₂, and the hydrogen leaves as the diatomic gas H₂ — the correct equation is Mg + 2 HCl → MgCl₂ + H₂",
+      "The products MgCl₂ and H₂ are right, but the reaction still does not run, because no metal reacts with a dilute acid"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the formulas before you check the balance: what charge does magnesium form, and what chloride formula does that force?",
+      "Hydrogen released from an acid comes off as a gas — and gaseous hydrogen is one of the diatomic elements, never a lone H atom."
+    ]
+  },
+  {
+    "id": "chem-redox-intro-001",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Bromine exists as the pure element Br₂. What is the oxidation number of each bromine atom in Br₂?",
+    "choices": [
+      "−1, because bromine usually ends up as Br⁻",
+      "0",
+      "+1",
+      "+2, because there are two atoms bonded together"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rule 1 of oxidation numbers: an atom in a PURE element is assigned zero, no matter how many atoms the molecule holds."
+    ]
+  },
+  {
+    "id": "chem-redox-intro-002",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sulfuric acid, H₂SO₄, is neutral overall. Using the rules that hydrogen is +1 and each oxygen is −2, what is the oxidation number of the sulfur atom?",
+    "choices": [
+      "+2",
+      "+4",
+      "+6",
+      "−2"
+    ],
+    "answer": "C",
+    "hints": [
+      "The oxidation numbers of all seven atoms must sum to 0, because the compound carries no overall charge.",
+      "Two hydrogens give +2 and four oxygens give 4 × (−2) = −8, a running total of −6. What must sulfur contribute?"
+    ]
+  },
+  {
+    "id": "chem-redox-intro-003",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aluminum foil dropped into copper(II) chloride solution reacts: 2 Al + 3 CuCl₂ → 2 AlCl₃ + 3 Cu. Which species is OXIDIZED?",
+    "choices": [
+      "Al — its oxidation number rises from 0 to +3",
+      "Cu — its oxidation number moves from +2 to 0",
+      "Cl — it changes partners, moving from copper to aluminum",
+      "Nothing is oxidized, because no oxygen appears anywhere in the reaction"
+    ],
+    "answer": "A",
+    "hints": [
+      "Assign numbers first: Al and Cu on their own are pure elements (0), while Cu is +2 in CuCl₂ and Al is +3 in AlCl₃.",
+      "Oxidation is LOSS of electrons, which shows up as the oxidation number going UP."
+    ]
+  },
+  {
+    "id": "chem-redox-intro-004",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The dichromate ion, Cr₂O₇²⁻, is the orange ion used in some lab oxidizers. Each oxygen is −2 and the ion carries an overall charge of 2−. What is the oxidation number of EACH chromium atom? Type your answer as a number (write a negative answer like -2).",
+    "answer": "6",
+    "hints": [
+      "For a polyatomic ion the oxidation numbers sum to the ION'S CHARGE, which is −2 here, not to zero.",
+      "Seven oxygens contribute 7 × (−2) = −14, so the two chromium atoms together must contribute +12. Divide by 2 for a single atom."
+    ]
+  },
+  {
+    "id": "chem-redox-intro-005",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Zinc powder stirred into iron(III) chloride solution reacts: 3 Zn + 2 FeCl₃ → 3 ZnCl₂ + 2 Fe. Which species is the REDUCING agent?",
+    "choices": [
+      "Fe³⁺ — it is the species that gets reduced, so it must be the reducing agent",
+      "Cl⁻ — it carries the transferred charge from the iron over to the zinc",
+      "ZnCl₂ — the product is where the transferred electrons end up",
+      "Zn — it is oxidized from 0 to +2, and the electrons it gives away are what reduce the iron"
+    ],
+    "answer": "D",
+    "hints": [
+      "Assign the numbers: Zn goes 0 → +2, Fe goes +3 → 0, and chloride stays −1 on both sides.",
+      "The agent labels are always crossed: the species that is OXIDIZED is the reducing agent, because it supplies the electrons that reduce its partner."
+    ]
+  },
+  {
+    "id": "chem-redox-intro-006",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Oxidation-number rules: a pure element is 0; a monatomic ion equals its charge; hydrogen is +1; oxygen is −2 EXCEPT in peroxides such as H₂O₂, where it is −1; the numbers sum to the overall charge. Which of these reactions is NOT a redox reaction?",
+    "choices": [
+      "2 H₂O₂ → 2 H₂O + O₂",
+      "HNO₃ + KOH → KNO₃ + H₂O",
+      "2 NaBr + Cl₂ → 2 NaCl + Br₂",
+      "2 C₄H₁₀ + 13 O₂ → 8 CO₂ + 10 H₂O"
+    ],
+    "answer": "B",
+    "hints": [
+      "A reaction is redox only if at least ONE element's oxidation number differs between the reactant side and the product side.",
+      "Do not skip the peroxide: oxygen starts at −1 in H₂O₂ and ends at −2 in water and 0 in O₂, so that one does change. In the acid-base pair, check H, N, K, and O one at a time and watch them all hold still."
+    ]
+  }
+]

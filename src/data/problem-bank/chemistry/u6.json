@@ -1,0 +1,537 @@
+[
+  {
+    "id": "chem-the-mole-molar-mass-001",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the molar mass of sodium chloride, NaCl? Atomic masses: Na = 23.0, Cl = 35.5.",
+    "choices": [
+      "23.0 g/mol",
+      "35.5 g/mol",
+      "58.5 g/mol",
+      "117.0 g/mol"
+    ],
+    "answer": "C",
+    "hints": [
+      "Molar mass is the sum of the atomic masses of every atom in the formula — NaCl has one Na and one Cl."
+    ]
+  },
+  {
+    "id": "chem-the-mole-molar-mass-002",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the molar mass of sulfuric acid, H₂SO₄? Atomic masses: H = 1.0, S = 32.1, O = 16.0.",
+    "choices": [
+      "49.1 g/mol",
+      "50.1 g/mol",
+      "97.1 g/mol",
+      "98.1 g/mol"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiply each atomic mass by its subscript BEFORE adding — hydrogen appears twice and oxygen four times.",
+      "2(1.0) + 32.1 + 4(16.0) = 2.0 + 32.1 + 64.0."
+    ]
+  },
+  {
+    "id": "chem-the-mole-molar-mass-003",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three beakers hold 12.0 g of carbon (12.0 g/mol), 24.3 g of magnesium (24.3 g/mol), and 4.0 g of helium (4.0 g/mol). Which beaker contains the greatest number of atoms?",
+    "choices": [
+      "All three contain the same number of atoms — each sample is exactly one mole",
+      "The magnesium beaker, because it has the largest mass",
+      "The helium beaker, because helium atoms are the lightest so more of them fit in the sample",
+      "The carbon beaker, because the mole is defined from carbon"
+    ],
+    "answer": "A",
+    "hints": [
+      "Divide each mass by that element's molar mass before comparing anything.",
+      "Every sample works out to 1.00 mol, and one mole is always 6.02 × 10²³ atoms no matter what the substance is."
+    ]
+  },
+  {
+    "id": "chem-the-mole-molar-mass-004",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the molar mass of ammonium sulfate, (NH₄)₂SO₄? Atomic masses: N = 14.0, H = 1.0, S = 32.1, O = 16.0.",
+    "choices": [
+      "96.1 g/mol",
+      "114.1 g/mol",
+      "118.1 g/mol",
+      "132.1 g/mol"
+    ],
+    "answer": "D",
+    "hints": [
+      "The 2 outside the parentheses multiplies EVERY atom inside — write a flat atom list first.",
+      "The flat list is 2 N, 8 H, 1 S, 4 O: 2(14.0) + 8(1.0) + 32.1 + 4(16.0)."
+    ]
+  },
+  {
+    "id": "chem-the-mole-molar-mass-005",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Aluminum carbonate has the formula Al₂(CO₃)₃. What is its molar mass in grams per mole? Atomic masses: Al = 27.0, C = 12.0, O = 16.0.",
+    "answer": "234",
+    "hints": [
+      "The subscript 3 outside the parentheses multiplies both the C and the O₃ inside: the flat atom list is 2 Al, 3 C, 9 O.",
+      "2(27.0) + 3(12.0) + 9(16.0) = 54.0 + 36.0 + 144.0."
+    ]
+  },
+  {
+    "id": "chem-the-mole-molar-mass-006",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is asked how many moles are in a 48.0 g sample of oxygen GAS, O₂. The student divides 48.0 by 16.0 and reports 3.00 mol. Atomic mass O = 16.0. Which statement correctly evaluates this work?",
+    "choices": [
+      "No error — oxygen's mass on the periodic table is 16.0, so 3.00 mol is correct",
+      "The student should have multiplied by the molar mass instead of dividing, giving 768 mol",
+      "The student used oxygen's ATOMIC mass (16.0) instead of the molar mass of O₂ (32.0 g/mol); the sample is 1.50 mol",
+      "The student should have divided by 22.4 L/mol instead, giving 2.14 mol"
+    ],
+    "answer": "C",
+    "hints": [
+      "Oxygen gas is diatomic — the particle in the sample is O₂, not a lone O atom.",
+      "A molecule of O₂ weighs 2(16.0) = 32.0 g/mol, so 48.0 ÷ 32.0 gives the moles of molecules."
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-001",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What volume does 3.00 mol of neon gas occupy at STP? At STP one mole of any gas occupies 22.4 L.",
+    "choices": [
+      "0.134 L",
+      "3.00 L",
+      "22.4 L",
+      "67.2 L"
+    ],
+    "answer": "D",
+    "hints": [
+      "Moles × 22.4 L/mol = liters — write the factor so that moles cancel."
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-002",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How many moles of methane are in 40.0 g of CH₄? Molar mass CH₄ = 16.0 g/mol.",
+    "choices": [
+      "0.400 mol",
+      "2.50 mol",
+      "4.00 mol",
+      "640 mol"
+    ],
+    "answer": "B",
+    "hints": [
+      "Grams ÷ molar mass = moles. Any setup that multiplies leaves g²/mol, which is not a real unit.",
+      "40.0 ÷ 16.0 = ?"
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-003",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"One mole of solid sodium chloride occupies 22.4 L, because one mole of anything occupies 22.4 L.\" Which response is correct?",
+    "choices": [
+      "The student is right — 22.4 L/mol applies to one mole of any substance",
+      "The student is wrong — 22.4 L/mol applies only to GASES at STP; a solid's volume depends on its density",
+      "The student is wrong — one mole of a solid always occupies exactly half that volume, 11.2 L",
+      "The student is wrong — 22.4 L/mol applies only to diatomic gases such as O₂ and N₂"
+    ],
+    "answer": "B",
+    "hints": [
+      "Why does one number work for every gas? Because gas particles sit far apart, so identity stops mattering.",
+      "In a solid or a liquid the particles touch, so the volume depends on the substance itself — one mole of liquid water is about 18 mL, not 22.4 L."
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-004",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How many molecules of ammonia are in 34.0 g of NH₃? Molar mass NH₃ = 17.0 g/mol; one mole contains 6.02 × 10²³ particles.",
+    "choices": [
+      "1.204 × 10²⁴ molecules",
+      "6.02 × 10²³ molecules",
+      "3.01 × 10²³ molecules",
+      "2.05 × 10²⁵ molecules"
+    ],
+    "answer": "A",
+    "hints": [
+      "Grams and particles are two different spokes — ride into the mole hub first: grams → moles → molecules.",
+      "34.0 ÷ 17.0 = 2.00 mol, then multiply by 6.02 × 10²³."
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-005",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A sample of oxygen gas occupies 5.60 L at STP. At STP one mole of any gas occupies 22.4 L, and the molar mass of O₂ is 32.0 g/mol. What is the mass of the sample in grams?",
+    "answer": "8",
+    "hints": [
+      "Two spokes again: liters → moles → grams, through the hub.",
+      "5.60 ÷ 22.4 = 0.250 mol, and then 0.250 × 32.0 = ?"
+    ]
+  },
+  {
+    "id": "chem-mole-conversions-006",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "How many total ATOMS are in 9.0 g of water? Molar mass H₂O = 18.0 g/mol; one mole contains 6.02 × 10²³ particles.",
+    "choices": [
+      "3.01 × 10²³ atoms",
+      "6.02 × 10²³ atoms",
+      "1.81 × 10²⁴ atoms",
+      "9.03 × 10²³ atoms"
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert to moles, then to MOLECULES with Avogadro's number — and only then deal with the word \"atoms\".",
+      "9.0 ÷ 18.0 = 0.500 mol → 3.01 × 10²³ molecules, and each H₂O molecule holds 3 atoms."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-001",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Benzene has the molecular formula C₆H₆. What is its empirical formula?",
+    "choices": [
+      "C₆H₆",
+      "CH",
+      "C₂H₂",
+      "C₃H₃"
+    ],
+    "answer": "B",
+    "hints": [
+      "The empirical formula is the SMALLEST whole-number ratio of atoms — divide every subscript by their greatest common factor."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-002",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the percent by mass of oxygen in carbon dioxide, CO₂? Atomic masses: C = 12.0, O = 16.0.",
+    "choices": [
+      "27.3%",
+      "36.4%",
+      "50.0%",
+      "72.7%"
+    ],
+    "answer": "D",
+    "hints": [
+      "Percent composition = (mass of that element in one mole ÷ molar mass of the compound) × 100.",
+      "The molar mass is 12.0 + 2(16.0) = 44.0, and the oxygen inside it weighs 32.0, not 16.0."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-003",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Ammonium nitrate, NH₄NO₃, is sold as a fertilizer for its nitrogen content. What is the percent by mass of nitrogen in it? Atomic masses: N = 14.0, H = 1.0, O = 16.0. Type your answer as a plain number, without a percent sign.",
+    "answer": "35",
+    "hints": [
+      "Build the molar mass from the flat atom list: 2 N, 4 H, 3 O.",
+      "Molar mass = 28.0 + 4.0 + 48.0 = 80.0, and BOTH nitrogens count: (28.0 ÷ 80.0) × 100."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-004",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sulfur oxide is found to be 40.1% sulfur and 59.9% oxygen by mass. What is its empirical formula? Atomic masses: S = 32.1, O = 16.0.",
+    "choices": [
+      "SO₃",
+      "SO",
+      "SO₂",
+      "S₂O₃"
+    ],
+    "answer": "A",
+    "hints": [
+      "Assume exactly 100 g of sample so each percent becomes grams, then divide each mass by its atomic mass.",
+      "S = 40.1 ÷ 32.1 = 1.25 mol; O = 59.9 ÷ 16.0 = 3.74 mol. Now divide both by the smaller value."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-005",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A nitrogen oxide is 25.9% nitrogen and 74.1% oxygen by mass. What is its empirical formula? Atomic masses: N = 14.0, O = 16.0.",
+    "choices": [
+      "NO₂",
+      "NO₃",
+      "N₂O₅",
+      "N₂O₃"
+    ],
+    "answer": "C",
+    "hints": [
+      "In 100 g there are 25.9 g of N and 74.1 g of O. Convert both to moles, then divide by the smaller.",
+      "N = 1.85 mol and O = 4.63 mol, so the ratio is 1 : 2.50 — a .5 ending is doubled, never rounded."
+    ]
+  },
+  {
+    "id": "chem-percent-composition-empirical-006",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hydrocarbon has the empirical formula CH₂ (empirical formula mass 14.0 g/mol) and an experimentally measured molar mass of 70.0 g/mol. A student reports the molecular formula as C₅H₂. Which statement is correct? Atomic masses: C = 12.0, H = 1.0.",
+    "choices": [
+      "The molecular formula is C₅H₁₀ — n = 70.0 ÷ 14.0 = 5 multiplies EVERY subscript, not just the carbon",
+      "The molecular formula is CH₂ — the empirical formula is always the molecular formula for a hydrocarbon",
+      "C₅H₂ is correct, because only the carbon subscript scales up with the molar mass",
+      "The molecular formula is C₆H₁₂ — n = 70.0 ÷ 12.0 ≈ 6, using carbon's atomic mass"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find n = (molar mass of the compound) ÷ (empirical formula mass), using the EMPIRICAL FORMULA mass in the denominator.",
+      "n = 5, and n scales every subscript in CH₂ — including the invisible 1 on carbon. Check: C₅H₁₀ weighs 5(12.0) + 10(1.0) = 70.0."
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-001",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Iron rusts according to 4 Fe + 3 O₂ → 2 Fe₂O₃. You know the moles of Fe and want the moles of Fe₂O₃. Which conversion factor is correct?",
+    "choices": [
+      "4 mol Fe / 2 mol Fe₂O₃",
+      "2 mol Fe₂O₃ / 4 mol Fe",
+      "3 mol O₂ / 2 mol Fe₂O₃",
+      "160 g Fe₂O₃ / 56 g Fe"
+    ],
+    "answer": "B",
+    "hints": [
+      "The substance you WANT goes on top; the substance you HAVE goes on the bottom, and both numbers are coefficients from the balanced equation."
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-002",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Potassium chlorate decomposes: 2 KClO₃ → 2 KCl + 3 O₂. How many moles of O₂ are produced when 4.0 mol of KClO₃ decomposes completely?",
+    "choices": [
+      "2.7 mol",
+      "4.0 mol",
+      "6.0 mol",
+      "12.0 mol"
+    ],
+    "answer": "C",
+    "hints": [
+      "Cross the mole bridge with the ratio (3 mol O₂ / 2 mol KClO₃).",
+      "4.0 × 3/2 = ?"
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-003",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Limestone decomposes when heated: CaCO₃ → CaO + CO₂. How many moles of CO₂ form from 50.0 g of CaCO₃? Molar mass CaCO₃ = 100.0 g/mol.",
+    "choices": [
+      "0.500 mol",
+      "1.00 mol",
+      "2.00 mol",
+      "50.0 mol"
+    ],
+    "answer": "A",
+    "hints": [
+      "Step one is always the on-ramp: grams ÷ molar mass = moles.",
+      "50.0 ÷ 100.0 = 0.500 mol CaCO₃, and the mole ratio of CO₂ to CaCO₃ is 1 : 1."
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-004",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Natural gas burns: CH₄ + 2 O₂ → CO₂ + 2 H₂O. How many grams of CO₂ are produced when 32.0 g of CH₄ burns completely in excess oxygen? Molar masses: CH₄ = 16.0 g/mol, CO₂ = 44.0 g/mol.",
+    "answer": "88",
+    "hints": [
+      "Three steps: grams CH₄ → moles CH₄ → moles CO₂ → grams CO₂.",
+      "32.0 ÷ 16.0 = 2.00 mol CH₄; the CO₂ : CH₄ ratio is 1 : 1, so multiply 2.00 mol by 44.0 g/mol."
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-005",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hydrogen peroxide decomposes: 2 H₂O₂ → 2 H₂O + O₂. How many grams of H₂O₂ must decompose to produce 16.0 g of O₂? Molar masses: H₂O₂ = 34.0 g/mol, O₂ = 32.0 g/mol.",
+    "choices": [
+      "8.0 g",
+      "17.0 g",
+      "68.0 g",
+      "34.0 g"
+    ],
+    "answer": "D",
+    "hints": [
+      "The highway runs in either direction — start from the product and work backward to the reactant.",
+      "16.0 ÷ 32.0 = 0.500 mol O₂; the ratio is 2 mol H₂O₂ per 1 mol O₂, so 1.00 mol H₂O₂ × 34.0 g/mol."
+    ]
+  },
+  {
+    "id": "chem-mass-mass-stoichiometry-006",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Iron is smelted by Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂. A student wants the mass of iron obtainable from 159.6 g of Fe₂O₃ and writes: \"The coefficient of Fe is 2, so 159.6 g × 2 = 319.2 g of Fe.\" Molar masses: Fe₂O₃ = 159.6 g/mol, Fe = 55.8 g/mol. Which statement is correct?",
+    "choices": [
+      "The answer is 111.6 g — the coefficient 2 multiplies MOLES, so 1.00 mol Fe₂O₃ gives 2.00 mol Fe, then × 55.8 g/mol",
+      "The student is right — 319.2 g, because a coefficient of 2 doubles the mass as well as the moles",
+      "The answer is 79.8 g — the coefficient 2 should be divided out of the starting mass",
+      "The answer is 55.8 g — one mole of Fe₂O₃ can only ever release one mole of Fe"
+    ],
+    "answer": "A",
+    "hints": [
+      "Coefficients live on the mole bridge only; grams may never cross it directly.",
+      "159.6 ÷ 159.6 = 1.00 mol Fe₂O₃ → 2.00 mol Fe → 2.00 × 55.8 g/mol. Note that iron makes up only about 70% of Fe₂O₃'s mass, so the product mass MUST be smaller than 159.6 g."
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-001",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes the limiting reactant in a chemical reaction?",
+    "choices": [
+      "The reactant present in the smallest mass",
+      "The reactant that is completely used up first, capping how much product can form",
+      "The reactant with the smallest coefficient in the balanced equation",
+      "The reactant that is still sitting in the flask after the reaction stops"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think of the grilled-cheese analogy: which ingredient running out is what actually stops you making more sandwiches?"
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-002",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A reaction has a theoretical yield of 25.0 g of product. After the product is isolated and dried, the balance reads 20.0 g. What is the percent yield?",
+    "choices": [
+      "5%",
+      "20%",
+      "80%",
+      "125%"
+    ],
+    "answer": "C",
+    "hints": [
+      "Percent yield = (actual yield ÷ theoretical yield) × 100 — the measured mass goes on top.",
+      "20.0 ÷ 25.0 = 0.800."
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-003",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sodium burns in chlorine: 2 Na + Cl₂ → 2 NaCl. A vessel is charged with 4.0 mol of Na and 3.0 mol of Cl₂. Which reactant is limiting?",
+    "choices": [
+      "Na — dividing by coefficients gives 4.0 ÷ 2 = 2.0 for Na but 3.0 ÷ 1 = 3.0 for Cl₂",
+      "Cl₂ — there are fewer moles of it than of Na",
+      "Neither — the two amounts are in the exact ratio the equation requires",
+      "Cl₂ — its coefficient of 1 is the smallest in the equation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Never compare raw moles: each batch of this recipe eats two Na for every one Cl₂.",
+      "Divide each reactant's moles by its own coefficient; the smaller quotient is the limiting reactant."
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-004",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Ammonia is made by N₂ + 3 H₂ → 2 NH₃. A reactor is charged with 14.0 g of N₂ and 6.0 g of H₂. Molar masses: N₂ = 28.0 g/mol, H₂ = 2.0 g/mol, NH₃ = 17.0 g/mol. What is the theoretical yield of NH₃, in grams?",
+    "answer": "17",
+    "hints": [
+      "Convert BOTH reactants to moles, then divide each by its coefficient to see which one runs out first.",
+      "N₂: 0.500 ÷ 1 = 0.500; H₂: 3.00 ÷ 3 = 1.00, so N₂ is limiting. Then 0.500 mol N₂ × (2 mol NH₃ / 1 mol N₂) × 17.0 g/mol."
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-005",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For 2 Na + Cl₂ → 2 NaCl, 46.0 g of Na is mixed with 106.5 g of Cl₂. Molar masses: Na = 23.0 g/mol, Cl₂ = 71.0 g/mol. How much of the excess reactant is left over when the reaction stops?",
+    "choices": [
+      "0 g — both reactants are consumed completely",
+      "35.5 g of Cl₂",
+      "71.0 g of Cl₂",
+      "23.0 g of Na"
+    ],
+    "answer": "B",
+    "hints": [
+      "First find the limiting reactant: 2.00 mol Na ÷ 2 = 1.00, while 1.50 mol Cl₂ ÷ 1 = 1.50.",
+      "Na is limiting, and it consumes 2.00 mol Na × (1 mol Cl₂ / 2 mol Na) = 1.00 mol Cl₂ = 71.0 g. Subtract that from the starting 106.5 g."
+    ]
+  },
+  {
+    "id": "chem-limiting-reactant-yield-006",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Carbon burns: C + O₂ → CO₂. A student burns 12.0 g of carbon with 48.0 g of oxygen gas and collects 33.0 g of dry CO₂. Molar masses: C = 12.0 g/mol, O₂ = 32.0 g/mol, CO₂ = 44.0 g/mol. What is the percent yield?",
+    "choices": [
+      "50% — treating O₂ as limiting, which predicts a theoretical yield of 66.0 g",
+      "55% — comparing the collected mass with the 60.0 g of reactants used",
+      "133% — dividing the theoretical yield by the actual yield",
+      "75% — carbon is limiting, so the theoretical yield is 44.0 g"
+    ],
+    "answer": "D",
+    "hints": [
+      "Identify the limiting reactant before touching the yield: 1.00 mol C ÷ 1 versus 1.50 mol O₂ ÷ 1.",
+      "Carbon runs out first, so theoretical yield = 1.00 mol CO₂ × 44.0 g/mol = 44.0 g. Then (33.0 ÷ 44.0) × 100."
+    ]
+  }
+]

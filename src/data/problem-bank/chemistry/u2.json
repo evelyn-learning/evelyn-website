@@ -1,0 +1,434 @@
+[
+  {
+    "id": "chem-atomic-theory-001",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which idea was part of Dalton's original atomic theory of 1803?",
+    "choices": [
+      "Electrons are embedded in a soft sphere of positive charge, like plums in a pudding",
+      "Nearly all of an atom's mass is packed into a tiny central nucleus",
+      "Atoms are rearranged during a chemical reaction, never created or destroyed",
+      "Electrons can hold only certain fixed energies, so they occupy discrete levels"
+    ],
+    "answer": "C",
+    "hints": [
+      "Dalton worked before anyone had detected an electron or a nucleus — his theory is about whole atoms only.",
+      "Which statement explains conservation of mass without mentioning any particle inside the atom?"
+    ]
+  },
+  {
+    "id": "chem-atomic-theory-002",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a cathode-ray tube the beam bends toward a positively charged plate, and the same negatively charged particle is produced no matter which metal the cathode is made from. What conclusion did Thomson draw from this evidence?",
+    "choices": [
+      "Every atom, of every element, contains the same negatively charged particle, so atoms cannot be indivisible",
+      "The positive charge of an atom is concentrated in a tiny central core",
+      "Each metal produces its own distinct kind of negative particle",
+      "Negative particles exist only in heated metals, not inside ordinary atoms"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two separate clues: the direction of the bend tells you the charge, and 'same particle from every metal' tells you how widespread it is.",
+      "If the identical particle comes out of every element tested, it must be a piece of every atom — which contradicts one of Dalton's claims."
+    ]
+  },
+  {
+    "id": "chem-atomic-theory-003",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A researcher repeats the alpha-particle scattering experiment using a thin platinum foil and finds that about 1 in 12,000 alpha particles is deflected sharply backward. If Thomson's plum-pudding model had been correct, what should she have observed instead?",
+    "choices": [
+      "About half of the alpha particles would have bounced backward",
+      "Every alpha particle would have been absorbed and stopped by the foil",
+      "The alpha particles would have been pulled in and captured by the electrons",
+      "Essentially every alpha particle would have passed through with at most a tiny deflection, because thinly spread positive charge cannot reverse a fast, heavy particle"
+    ],
+    "answer": "D",
+    "hints": [
+      "In plum pudding the positive charge is smeared through the whole atom and the electrons are far too light to push a heavy alpha particle around.",
+      "Ask what force could possibly turn a fast, massive, positive particle around — and whether a thin smear of charge can supply it."
+    ]
+  },
+  {
+    "id": "chem-atomic-theory-004",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sealed tube of neon gas glows when a current passes through it. Sending that light through a prism produces a handful of sharp, separate colored lines instead of a continuous rainbow. Which conclusion does this observation support?",
+    "choices": [
+      "A neon atom contains exactly one electron for each line seen in the spectrum",
+      "The electrons in a neon atom can hold only certain energies, so only certain energy drops — and therefore only certain colors — are possible",
+      "The nucleus of a neon atom emits the light as it breaks apart",
+      "Neon must actually be a mixture of several different elements, each contributing one line"
+    ],
+    "answer": "B",
+    "hints": [
+      "The color of emitted light corresponds to a specific energy. Only a few colors appear, so only a few energies are being released.",
+      "Light is released when an electron drops from a higher energy to a lower one. Restricted colors mean restricted energies to drop between."
+    ]
+  },
+  {
+    "id": "chem-atomic-theory-005",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Dalton's atomic theory says a chemical reaction only rearranges atoms, so the total mass of the products equals the total mass of the reactants. In a sealed flask, 4.4 g of propane gas burns completely in 16.0 g of oxygen gas, forming carbon dioxide and water as the only products. If 13.2 g of carbon dioxide is produced, what mass of water is produced, in grams?",
+    "answer": "7.2",
+    "hints": [
+      "The flask is sealed and atoms are only rearranged, so start by adding the reactant masses: 4.4 g + 16.0 g.",
+      "That total product mass is split between only two products. Subtract the 13.2 g of carbon dioxide from it."
+    ]
+  },
+  {
+    "id": "chem-atomic-theory-006",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Suppose the gold-foil experiment had produced a completely different result: alpha particles emerged spread evenly across every angle, with none passing straight through undeflected. What would that outcome have implied about the structure of the atom?",
+    "choices": [
+      "The atom is mostly empty space with a tiny dense nucleus — the same conclusion Rutherford actually reached",
+      "The atom contains no positive charge at all",
+      "Positive charge and mass are spread through the atom's entire volume, so there is no empty space for a particle to cross — a pudding-like atom rather than a nuclear one",
+      "Electrons must be far more massive than alpha particles"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each observation carries its own conclusion. In the real experiment, which observation was the evidence for empty space — and what does its absence tell you?",
+      "If every single particle interacts strongly, then whatever they are hitting must fill the atom rather than sit in a tiny core."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-001",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two atoms belong to the same element if and only if they contain the same number of which particle?",
+    "choices": [
+      "Neutrons",
+      "Protons",
+      "Electrons",
+      "Protons and neutrons combined"
+    ],
+    "answer": "B",
+    "hints": [
+      "One count is the element's identity — it is the whole-number address printed in each periodic-table box.",
+      "Neutrons vary between isotopes and electrons vary between ions, yet the element never changes in either case."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-002",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Iron has atomic number 26. How many protons, neutrons, and electrons are in a neutral atom of iron-56?",
+    "choices": [
+      "26 protons, 56 neutrons, 26 electrons",
+      "26 protons, 30 neutrons, 30 electrons",
+      "26 protons, 30 neutrons, 26 electrons",
+      "30 protons, 26 neutrons, 30 electrons"
+    ],
+    "answer": "C",
+    "hints": [
+      "The 56 is the MASS number A, not a neutron count. Use neutrons = A − Z.",
+      "The atom is described as neutral, so electrons must equal protons."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-003",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phosphorus has atomic number 15. An atom contains 15 protons, 16 neutrons, and 15 electrons. Which symbol represents this atom?",
+    "choices": [
+      "³¹₁₅P",
+      "³⁰₁₅P",
+      "¹⁶₁₅P",
+      "¹⁵₃₁P"
+    ],
+    "answer": "A",
+    "hints": [
+      "In full isotope notation the mass number goes on top and the atomic number below.",
+      "Mass number = protons + neutrons = 15 + 16, and the atomic number stays 15."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-004",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Atom X has 20 protons, 22 neutrons, and 20 electrons. Particle Y has 20 protons, 20 neutrons, and 18 electrons. Which statement about X and Y is correct?",
+    "choices": [
+      "X and Y are different elements, because their mass numbers are different",
+      "X and Y are isotopes of the same element, and Y is also a 2+ ion",
+      "X and Y are the same isotope and differ only in charge",
+      "Y has been changed into a different element by losing two electrons"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the proton counts first — that settles whether they are the same element.",
+      "Then handle the two differences separately: neutrons differ (isotopes) and electrons differ from protons in Y (an ion)."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-005",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A monatomic ion has a mass number of 139, contains 54 electrons, and carries a charge of 3+. How many neutrons does this ion contain? Type your answer as a number.",
+    "answer": "82",
+    "hints": [
+      "A 3+ charge means the atom LOST three electrons, so protons = electrons + 3.",
+      "That gives 57 protons. Now use neutrons = mass number − protons."
+    ]
+  },
+  {
+    "id": "chem-subatomic-particles-isotopes-006",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A single particle contains 24 protons, 28 neutrons, and 21 electrons. Chromium (Cr) has atomic number 24 and iron (Fe) has atomic number 26. Which symbol represents this particle?",
+    "choices": [
+      "⁵²Cr³⁻",
+      "²⁸Cr³⁺",
+      "⁵²Fe³⁺",
+      "⁵²Cr³⁺"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work through the three counts one at a time: protons fix the element symbol, protons + neutrons fix the superscript mass number, and protons − electrons fix the charge.",
+      "24 protons − 21 electrons leaves a net of 3 more positives than negatives, and the mass number is 24 + 28, not 28."
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-001",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The periodic table lists chlorine's atomic mass as 35.5 u, yet every individual chlorine atom has a whole-number mass number. What does that decimal value describe?",
+    "choices": [
+      "The mass of one chlorine atom after the mass of its electrons has been subtracted",
+      "The abundance-weighted average mass of chlorine's naturally occurring isotopes",
+      "The uncertainty in the best available measurement of a single chlorine atom",
+      "The average of the mass of a proton and the mass of a neutron"
+    ],
+    "answer": "B",
+    "hints": [
+      "No single atom weighs 35.5 u — the number describes a population, not one particle.",
+      "Chlorine on Earth is a mixture of chlorine-35 and chlorine-37. What kind of average accounts for how common each one is?"
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-002",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Element M has exactly two natural isotopes: M-6 with a mass of 6.0 u and 25.0% abundance, and M-8 with a mass of 8.0 u and 75.0% abundance. What is the average atomic mass of M?",
+    "choices": [
+      "6.5 u",
+      "7.0 u",
+      "7.5 u",
+      "8.0 u"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert each percent to a decimal fraction (0.250 and 0.750) and check that they add to 1 before multiplying.",
+      "Compute 0.250 × 6.0 and 0.750 × 8.0, then add the two contributions. The answer must lean toward the more abundant isotope."
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-003",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Element R has exactly two natural isotopes: R-63 with a mass of 63.0 u and R-65 with a mass of 65.0 u. R's average atomic mass is 63.5 u. What does this tell you about R's natural mixture?",
+    "choices": [
+      "R-63 is much more abundant than R-65",
+      "R-65 is much more abundant than R-63",
+      "The two isotopes are present in nearly equal amounts",
+      "There must be a third isotope with a mass below 63.0 u"
+    ],
+    "answer": "A",
+    "hints": [
+      "The weighted average always lands between the two isotope masses, closer to whichever one is more common.",
+      "63.5 sits very close to 63.0 and far from 65.0. Which isotope is doing nearly all of the pulling?"
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-004",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Gallium has exactly two natural isotopes: gallium-69, with a mass of 69.0 u, makes up 60.0% of natural gallium, and gallium-71, with a mass of 71.0 u, makes up the rest. What is gallium's average atomic mass?",
+    "choices": [
+      "70.0 u",
+      "70.2 u",
+      "69.0 u",
+      "69.8 u"
+    ],
+    "answer": "D",
+    "hints": [
+      "Only one abundance is given. The two fractions must add to 1, so find the abundance of gallium-71 first.",
+      "Use 0.600 × 69.0 and 0.400 × 71.0, then add. A plain average of 70.0 ignores the abundances entirely."
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-005",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Element X has three natural isotopes: X-24 with a mass of 24.0 u and 80.0% abundance, X-25 with a mass of 25.0 u and 10.0% abundance, and X-26 with a mass of 26.0 u and 10.0% abundance. Calculate the average atomic mass of X in u. Type your answer as a number to one decimal place.",
+    "answer": "24.3",
+    "hints": [
+      "The method does not change with three isotopes: multiply each mass by its decimal fraction, then add all three contributions.",
+      "0.800 × 24.0 = 19.2, 0.100 × 25.0 = 2.5, and 0.100 × 26.0 = 2.6. Add them."
+    ]
+  },
+  {
+    "id": "chem-average-atomic-mass-006",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Element Z has exactly two natural isotopes: Z-10 with a mass of 10.0 u and Z-12 with a mass of 12.0 u. The average atomic mass of Z is 11.5 u. What is the percent abundance of Z-10?",
+    "choices": [
+      "50%",
+      "25%",
+      "75%",
+      "15%"
+    ],
+    "answer": "B",
+    "hints": [
+      "Call the fraction of Z-10 x. Then the fraction of Z-12 is 1 − x, and 10.0x + 12.0(1 − x) = 11.5.",
+      "Simplify to 12.0 − 2.0x = 11.5, solve for x, then convert the fraction to a percent. Check your answer against the fact that 11.5 sits much nearer 12.0."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-001",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the maximum number of electrons that a single p subshell can hold?",
+    "choices": [
+      "2",
+      "4",
+      "6",
+      "8"
+    ],
+    "answer": "C",
+    "hints": [
+      "Capacity comes from the number of orbitals: a p subshell has 3 orbitals.",
+      "The Pauli exclusion principle allows at most 2 electrons per orbital, so multiply."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-002",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Silicon has atomic number 14. Which is the correct ground-state electron configuration of a neutral silicon atom?",
+    "choices": [
+      "1s² 2s² 2p⁸ 3s²",
+      "1s² 2s² 2p⁶ 3s² 3p²",
+      "1s² 2s² 2p⁶ 3s² 3d²",
+      "1s² 2s² 2p⁶ 3p⁴"
+    ],
+    "answer": "B",
+    "hints": [
+      "Every choice sums to 14 electrons, so the arithmetic check will not separate them — check capacities and filling order instead.",
+      "A p subshell never exceeds 6 electrons, and 3s must be filled before anything goes into 3p or 3d."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-003",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An atom's ground-state electron configuration is 1s² 2s² 2p⁶ 3s² 3p². How many valence electrons does this atom have?",
+    "choices": [
+      "4",
+      "2",
+      "6",
+      "14"
+    ],
+    "answer": "A",
+    "hints": [
+      "Valence electrons are ALL the electrons in the highest occupied shell — here, everything with n = 3.",
+      "Add the 3s and the 3p electrons together; the n = 1 and n = 2 electrons are core, not valence."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-004",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Potassium has atomic number 19. Which is the correct ground-state electron configuration of a neutral potassium atom?",
+    "choices": [
+      "1s² 2s² 2p⁶ 3s² 3p⁶ 3d¹",
+      "1s² 2s² 2p⁶ 3s² 3p⁷",
+      "1s² 2s² 2p⁶ 3s² 3p⁵ 4s²",
+      "1s² 2s² 2p⁶ 3s² 3p⁶ 4s¹"
+    ],
+    "answer": "D",
+    "hints": [
+      "All four choices contain 19 electrons, so only the filling rules can decide — check capacity first, then order.",
+      "The Aufbau order follows energy, not shell number: after 3p is completely full, the next electron goes into 4s, not 3d."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-005",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Nickel has atomic number 28. Place its 28 electrons in Aufbau order (1s, 2s, 2p, 3s, 3p, 4s, 3d), then apply Hund's rule to the final subshell: the d subshell has 5 orbitals, and every orbital receives one electron before any orbital receives a second. How many unpaired electrons does a ground-state nickel atom have? Type your answer as a number.",
+    "answer": "2",
+    "hints": [
+      "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² accounts for 20 electrons, and every one of those subshells is completely full — full subshells contain no unpaired electrons. How many electrons are left for 3d?",
+      "Spread those 8 electrons over the 5 d orbitals: the first 5 go in singly, then the remaining 3 pair up with three of them. Count the orbitals still holding a lone electron."
+    ]
+  },
+  {
+    "id": "chem-electron-configurations-006",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An atom has the ground-state electron configuration [Ar] 4s² 3d¹⁰ 4p³, where [Ar] stands for a filled argon core of 18 electrons. Which statement about this atom is correct?",
+    "choices": [
+      "It has 15 valence electrons, because the 4s, 3d, and 4p electrons all lie outside the core",
+      "It has 3 valence electrons, because only p electrons count as valence",
+      "It has 5 valence electrons — the 4s² and 4p³ electrons in the highest occupied shell — so it tends to gain 3 electrons and form a 3− ion",
+      "It has 2 valence electrons, because only the s subshell counts as valence"
+    ],
+    "answer": "C",
+    "hints": [
+      "Valence electrons are the electrons in the highest occupied SHELL number n — so first identify the largest n that appears.",
+      "The 3d electrons sit in shell 3, not shell 4, so they are not valence here. Count only the n = 4 electrons, then compare that total with the 8 needed to fill an outer s and p shell."
+    ]
+  }
+]

@@ -1,0 +1,1377 @@
+[
+  {
+    "id": "chem-fa-mc-001",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chemist labels four containers on a shelf. Which container holds a COMPOUND?",
+    "choices": [
+      "Ammonia, NH₃",
+      "Neon, Ne, sealed in a sign tube",
+      "Brass, made by melting copper and zinc together in any chosen ratio",
+      "Filtered seawater"
+    ],
+    "answer": "A",
+    "solutionText": "Ammonia is a compound: two different elements chemically bonded in a fixed 1:3 ratio that can only be separated by a chemical change. Neon is a single element, and both brass and seawater are mixtures — their compositions can vary and their parts can be separated by physical means.",
+    "hints": [
+      "A compound's formula contains more than one element symbol, and its composition is fixed.",
+      "If the recipe can be varied and the parts separated physically, it is a mixture, not a compound."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-002",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A silver spoon left out in air slowly develops a black coating of silver sulfide. A gold ring left in the same air stays shiny for years. Which statement about these two observations is correct?",
+    "choices": [
+      "Tarnishing is a physical change, because the spoon's mass barely changes.",
+      "Tarnishing is a chemical change, and gold's resistance to tarnishing is a chemical property of gold.",
+      "Tarnishing is a chemical change, but gold's resistance to tarnishing is a physical property of gold.",
+      "Both observations describe physical properties, because color is a physical property."
+    ],
+    "answer": "B",
+    "solutionText": "Silver sulfide is a new substance with new properties, so tarnishing is a chemical change. How readily a substance reacts — including gold's refusal to react — is a chemical property, because describing it requires referring to a chemical change. A small mass change does not make a change physical, and color alone is not what is being described for gold.",
+    "hints": [
+      "A new substance with new properties means a chemical change occurred.",
+      "A chemical property describes how a substance behaves in a reaction, including not reacting at all."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-003",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A digital balance displays a sample's mass as 15.20 g. How many significant figures does this reading have, and why?",
+    "choices": [
+      "3 significant figures — trailing zeros are never significant.",
+      "3 significant figures — the leading 1 is only a placeholder.",
+      "4 significant figures — a trailing zero to the right of the decimal point is a measured digit.",
+      "2 significant figures — only the digits in front of the decimal point count."
+    ],
+    "answer": "C",
+    "solutionText": "All four digits in 15.20 are significant: nonzero digits always count, and a trailing zero to the right of the decimal point is reported only because the instrument actually measured it. Trailing zeros are ignored only when there is no decimal point, and leading digits are never placeholders.",
+    "hints": [
+      "Ask what the balance would have shown if the last digit had not been measured.",
+      "Trailing zeros after a decimal point are significant; leading zeros are not."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-004",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A procedure calls for 0.500 kg of glycerol, whose density is 1.25 g/mL. What volume of glycerol should be measured out, in liters? (1 kg = 1000 g; 1 L = 1000 mL.)",
+    "choices": [
+      "0.625 L",
+      "0.400 L",
+      "4.00 L",
+      "0.320 L"
+    ],
+    "answer": "B",
+    "solutionText": "Convert 0.500 kg to 500. g, then divide by the density: 500. g ÷ 1.25 g/mL = 400. mL, which is 0.400 L. Multiplying by the density instead of dividing gives the 0.625 L trap, and 4.00 L comes from a misplaced decimal in the mL-to-L conversion.",
+    "hints": [
+      "Density converts mass to volume — decide whether to multiply or divide by checking that grams cancel.",
+      "Finish by converting milliliters to liters."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-005",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clear solution of lead(II) nitrate is poured into a clear solution of potassium iodide in a beaker on a balance. A student records four observations: (1) the total mass of the beaker and contents is unchanged, (2) a bright yellow solid settles to the bottom, (3) the temperature of the mixture rises by 2 °C, and (4) the mixture instantly turns cloudy. Which observation is the WEAKEST evidence that a chemical change occurred?",
+    "choices": [
+      "Observation 1, the unchanged total mass",
+      "Observation 2, the yellow solid",
+      "Observation 3, the temperature rise",
+      "Observation 4, the sudden cloudiness"
+    ],
+    "answer": "A",
+    "solutionText": "Mass is conserved in every change, physical or chemical, so an unchanged total mass distinguishes nothing — it is expected either way. A new insoluble solid appearing, an energy change, and sudden cloudiness are all classic indicators that new substances formed.",
+    "hints": [
+      "Ask which observation would look exactly the same if only a physical change had happened.",
+      "Conservation of mass holds for dissolving and melting too."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-006",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular sheet of aluminum foil measures 30.0 cm by 20.0 cm and has a mass of 3.24 g. Aluminum's density is 2.70 g/cm³. What is the thickness of the foil, in centimeters?",
+    "choices": [
+      "0.0200 cm",
+      "0.500 cm",
+      "2.00 cm",
+      "0.00200 cm"
+    ],
+    "answer": "D",
+    "solutionText": "The foil's volume is 3.24 g ÷ 2.70 g/cm³ = 1.20 cm³, and its face area is 30.0 cm × 20.0 cm = 600. cm². Thickness is volume divided by area: 1.20 cm³ ÷ 600. cm² = 0.00200 cm. The 0.0200 cm and 2.00 cm choices come from dropping a factor of ten in the area or from dividing by 30.0 only.",
+    "hints": [
+      "Use the density to turn the mass into a volume first.",
+      "For a thin rectangular sheet, volume = length × width × thickness."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-007",
+    "loId": "chem.atomic-theory",
+    "cedCode": "CHEM-2.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which work gave the first experimental evidence that atoms contain negatively charged particles smaller than the atom itself?",
+    "choices": [
+      "Rutherford's gold-foil scattering experiment",
+      "J. J. Thomson's cathode-ray tube experiments",
+      "Dalton's measurements of the combining masses of elements",
+      "Bohr's analysis of the hydrogen line spectrum"
+    ],
+    "answer": "B",
+    "solutionText": "Thomson showed that cathode rays were streams of identical negatively charged particles regardless of which metal produced them, which established the electron as a subatomic particle. Rutherford's foil work revealed the nucleus, Dalton's mass ratios preceded any subatomic model, and Bohr's spectra work described where electrons could sit once they were already known.",
+    "hints": [
+      "Which experiment used a beam that bent toward a positive plate?"
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-008",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two neutral atoms are sampled from a mineral. Atom P contains 17 protons and 18 neutrons. Atom Q contains 17 protons and 20 neutrons. Which statement about P and Q is correct?",
+    "choices": [
+      "They are isotopes of the same element, and Q has the larger mass number.",
+      "They are atoms of two different elements, because their neutron counts differ.",
+      "They are isotopes of the same element, and P has the larger mass number.",
+      "They are ions of the same element, because a difference in neutrons creates a charge."
+    ],
+    "answer": "A",
+    "solutionText": "Element identity is set by the proton count alone, so two atoms with 17 protons each are the same element, and differing neutron counts make them isotopes. Mass number is protons plus neutrons, so Q's is 37 and P's is 35, making Q the heavier isotope. Neutrons are uncharged, so changing their number can never produce an ion.",
+    "hints": [
+      "Protons determine which element an atom is; neutrons determine which isotope.",
+      "Mass number = protons + neutrons, and charge depends only on protons versus electrons."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-009",
+    "loId": "chem.average-atomic-mass",
+    "cedCode": "CHEM-2.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Element T has exactly two natural isotopes: T-84, with a mass of 84.0 u and an abundance of 75.0%, and T-88, with a mass of 88.0 u and an abundance of 25.0%. What is the average atomic mass of element T?",
+    "choices": [
+      "84.0 u",
+      "86.0 u",
+      "88.0 u",
+      "85.0 u"
+    ],
+    "answer": "D",
+    "solutionText": "The average atomic mass is a weighted average: (0.750)(84.0 u) + (0.250)(88.0 u) = 63.0 u + 22.0 u = 85.0 u. The 86.0 u choice is the unweighted mean of 84 and 88, which ignores that the lighter isotope is three times as common.",
+    "hints": [
+      "Multiply each isotope mass by its abundance as a decimal, then add.",
+      "The answer must land closer to the more abundant isotope."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-010",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sulfur has atomic number 16. Which choice gives the correct ground-state electron configuration of a neutral sulfur atom AND the correct number of unpaired electrons, after applying Hund's rule to the outermost subshell?",
+    "choices": [
+      "1s² 2s² 2p⁶ 3s² 3p⁴ — 2 unpaired electrons",
+      "1s² 2s² 2p⁶ 3s² 3p⁴ — 4 unpaired electrons",
+      "1s² 2s² 2p⁶ 3s² 3p⁶ — 0 unpaired electrons",
+      "1s² 2s² 2p⁶ 3s¹ 3p⁵ — 2 unpaired electrons"
+    ],
+    "answer": "A",
+    "solutionText": "Sixteen electrons fill 1s², 2s², 2p⁶, 3s², leaving 4 for the 3p subshell. Hund's rule puts one electron in each of the three 3p orbitals before pairing, so the fourth electron pairs up and exactly 2 electrons remain unpaired. Choice B forgets the forced pairing, and the other two choices use the wrong electron count entirely.",
+    "hints": [
+      "Fill in the order 1s, 2s, 2p, 3s, 3p until all 16 electrons are placed.",
+      "Three p orbitals take one electron each before any orbital gets a second."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-011",
+    "loId": "chem.subatomic-particles-isotopes",
+    "cedCode": "CHEM-2.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Element E has exactly two natural isotopes. The lighter isotope has 12 neutrons and a mass number of 23. The heavier isotope has 14 neutrons. What is the mass number of the heavier isotope, and how many electrons does one neutral atom of it contain?",
+    "choices": [
+      "Mass number 25, with 14 electrons",
+      "Mass number 26, with 12 electrons",
+      "Mass number 25, with 11 electrons",
+      "Mass number 37, with 11 electrons"
+    ],
+    "answer": "C",
+    "solutionText": "The lighter isotope gives the proton count: 23 − 12 = 11 protons, and every atom of element E must have that same 11. The heavier isotope therefore has mass number 11 + 14 = 25, and being neutral it holds 11 electrons to match its 11 protons. Choice A counts electrons from neutrons, and choice D adds the two neutron counts together.",
+    "hints": [
+      "Use the lighter isotope to find the proton count first — it is the same for both isotopes.",
+      "A neutral atom's electron count always equals its proton count, never its neutron count."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-012",
+    "loId": "chem.electron-configurations",
+    "cedCode": "CHEM-2.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "One of the following ground-state electron configurations is impossible, and the reason given for it is also correct. Which one? (Aufbau filling order: 1s, 2s, 2p, 3s, 3p, 4s, 3d.)",
+    "choices": [
+      "1s² 2s² 2p⁶ 3s² 3p⁶ 4s² 3d¹⁰ — impossible, because 3d must fill before 4s.",
+      "1s² 2s² 2p⁷ 3s¹ — impossible, because a p subshell holds at most 6 electrons.",
+      "1s² 2s² 2p⁶ 3s² 3p³ — impossible, because 3p must be full before any 3s electron is added.",
+      "1s² 2s² 2p⁶ 3s² — impossible, because a neutral atom's configuration cannot end in an s subshell."
+    ],
+    "answer": "B",
+    "solutionText": "A p subshell has three orbitals holding two electrons each, so 2p⁷ violates a hard capacity limit and cannot exist. Choice A is a legitimate configuration written in the standard 4s-before-3d order, choice C is the ordinary ground state of a Group 15 element, and choice D is the ordinary ground state of a Group 2 element.",
+    "hints": [
+      "Check every subshell against its capacity: s holds 2, p holds 6, d holds 10.",
+      "Three of these are perfectly ordinary configurations — find the one that breaks a capacity rule."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-013",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Elements that sit in the same GROUP (the same vertical column) of the periodic table share which feature?",
+    "choices": [
+      "The same number of occupied electron shells",
+      "The same atomic mass",
+      "The same number of valence electrons",
+      "The same number of protons"
+    ],
+    "answer": "C",
+    "solutionText": "A group is a column of elements with matching valence-electron counts, which is why they show similar chemical behavior. Shared shell count is what a period (a row) indicates, and identical proton counts would make the elements the same element.",
+    "hints": [
+      "Columns predict chemical behavior — which electron count controls that?"
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-014",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Barium sits in Period 6, Group 2. Magnesium sits in Period 3, Group 2. Which atom has the larger atomic radius, and why?",
+    "choices": [
+      "Magnesium, because it has fewer electrons repelling one another",
+      "Barium, because it has more occupied electron shells than magnesium",
+      "Magnesium, because its nucleus holds its outer electrons more tightly than barium's does",
+      "They are the same size, because they are in the same group"
+    ],
+    "answer": "B",
+    "solutionText": "Moving down a group adds an occupied electron shell each period, so the outermost electrons sit farther from the nucleus and the atom is larger — barium, in Period 6, is much larger than magnesium in Period 3. Barium's extra protons do pull harder, but that effect is overwhelmed by the three additional shells and their shielding.",
+    "hints": [
+      "Compare period numbers to compare the number of occupied shells.",
+      "Down a group, added shells win over added nuclear charge."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-015",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Magnesium is in Group 2 and nitrogen is in Group 15. Which pair of monatomic ions do these two elements form?",
+    "choices": [
+      "Mg²⁺ and N³⁻",
+      "Mg²⁻ and N³⁺",
+      "Mg⁺ and N⁻",
+      "Mg²⁺ and N⁵⁻"
+    ],
+    "answer": "A",
+    "solutionText": "Magnesium is a metal with 2 valence electrons, so it loses both to form Mg²⁺. Nitrogen is a nonmetal with 5 valence electrons and needs 3 more to reach eight, so it gains 3 to form N³⁻. Metals lose and nonmetals gain, which rules out the reversed-sign choice, and nitrogen gains 3 rather than shedding all 5.",
+    "hints": [
+      "Metals lose their valence electrons; nonmetals gain enough to complete an octet.",
+      "Group 15 nonmetals need 8 − 5 = 3 more electrons."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-016",
+    "loId": "chem.periodic-table-organization",
+    "cedCode": "CHEM-3.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Element J sits in Period 4, Group 16. Element L sits in Period 3, Group 2. Which statement about the two neutral atoms is correct?",
+    "choices": [
+      "J has 16 valence electrons and 4 occupied shells; L has 2 valence electrons and 3 occupied shells.",
+      "J has 4 valence electrons and 6 occupied shells; L has 3 valence electrons and 2 occupied shells.",
+      "J and L have the same number of valence electrons, because both are main-group elements.",
+      "J has 6 valence electrons and 4 occupied shells; L has 2 valence electrons and 3 occupied shells."
+    ],
+    "answer": "D",
+    "solutionText": "For main-group elements, the period number gives the number of occupied shells and the group number gives the valence count (subtract 10 for groups 13 through 18). So J in Period 4, Group 16 has 4 shells and 16 − 10 = 6 valence electrons, while L in Period 3, Group 2 has 3 shells and 2 valence electrons. Choice A forgets the subtraction, and choice B swaps period with group.",
+    "hints": [
+      "Period number = number of occupied shells.",
+      "For groups 13 to 18, valence electrons = group number − 10."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-017",
+    "loId": "chem.periodic-trends",
+    "cedCode": "CHEM-3.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rank these three atoms from LOWEST to HIGHEST first ionization energy: potassium (Period 4, Group 1), calcium (Period 4, Group 2), and neon (Period 2, Group 18).",
+    "choices": [
+      "Ne < Ca < K",
+      "Ca < K < Ne",
+      "K < Ne < Ca",
+      "K < Ca < Ne"
+    ],
+    "answer": "D",
+    "solutionText": "Ionization energy rises across a period and falls down a group. Potassium and calcium share Period 4, and calcium is further right with a stronger nuclear pull, so K < Ca. Neon sits in tiny Period 2 with a full outer shell, giving it by far the highest first ionization energy, so the order is K < Ca < Ne. Choice A reverses the trend by assuming noble gases give up electrons easily.",
+    "hints": [
+      "Ionization energy increases left to right and decreases top to bottom.",
+      "A filled outer shell in a small atom is the hardest electron to remove."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-018",
+    "loId": "chem.ion-formation",
+    "cedCode": "CHEM-3.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A monatomic ion carries a 2+ charge and contains 36 electrons. Krypton atoms contain 36 electrons and argon atoms contain 18. How many protons does the element have, and which noble gas is the ION isoelectronic with (that is, has the same electron count as)?",
+    "choices": [
+      "34 protons; isoelectronic with krypton",
+      "38 protons; isoelectronic with krypton",
+      "36 protons; isoelectronic with argon",
+      "38 protons; isoelectronic with argon"
+    ],
+    "answer": "B",
+    "solutionText": "A 2+ ion has lost two electrons, so the neutral atom had 38 electrons and therefore 38 protons. The ion itself now holds 36 electrons, exactly matching krypton's electron count, so the ion is isoelectronic with krypton. Choice A subtracts instead of adds when recovering the proton count, and the argon choices compare against the wrong noble gas.",
+    "hints": [
+      "For a cation, protons = electrons + charge.",
+      "Compare the ion's electron count — not the atom's — to each noble gas."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-019",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which description best defines an ionic bond?",
+    "choices": [
+      "Two nonmetal atoms share one or more pairs of electrons.",
+      "Positive metal ions sit in a sea of delocalized electrons that move freely through the solid.",
+      "A hydrogen atom bonded to oxygen is attracted to a lone pair on a neighboring molecule.",
+      "Electrons are transferred from a metal atom to a nonmetal atom, and the oppositely charged ions that form attract each other."
+    ],
+    "answer": "D",
+    "solutionText": "An ionic bond is the electrostatic attraction between a cation and an anion produced by electron transfer, typically from a metal to a nonmetal. Sharing electrons describes a covalent bond, the electron sea describes metallic bonding, and the hydrogen description is an intermolecular force rather than a bond within a compound.",
+    "hints": [
+      "Ionic bonding involves transfer, not sharing."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-020",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the correct formula for magnesium phosphate? Magnesium forms Mg²⁺ and phosphate is the polyatomic ion PO₄³⁻.",
+    "choices": [
+      "MgPO₄",
+      "Mg₂(PO₄)₃",
+      "Mg₃(PO₄)₂",
+      "Mg(PO₄)₂"
+    ],
+    "answer": "C",
+    "solutionText": "The compound must be electrically neutral, so three Mg²⁺ ions (total 6+) balance two PO₄³⁻ ions (total 6−), giving Mg₃(PO₄)₂. Choice B is the classic crossed-charge slip that puts each subscript on the wrong ion, and the other two leave a leftover charge.",
+    "hints": [
+      "Find the smallest set of ions whose positive and negative charges cancel exactly.",
+      "Check your answer by adding up the total charge — it must come out to zero."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-021",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phosphine, PH₃, has phosphorus as the central atom single-bonded to three hydrogens. Phosphorus has 5 valence electrons, each hydrogen has 1, and hydrogen needs only 2 electrons total. In the correct Lewis structure, how many LONE PAIRS sit on the phosphorus atom?",
+    "choices": [
+      "0 lone pairs",
+      "1 lone pair",
+      "2 lone pairs",
+      "3 lone pairs"
+    ],
+    "answer": "B",
+    "solutionText": "The molecule has 5 + 3(1) = 8 valence electrons. Three P–H single bonds use 6 of them, leaving 2 electrons — one lone pair — on phosphorus, which completes its octet at 8 electrons. Hydrogen never carries lone pairs, so all leftover electrons go to the central atom.",
+    "hints": [
+      "Total the valence electrons first, then subtract 2 for each single bond.",
+      "Whatever is left over is placed on the central atom as lone pairs."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-022",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In sulfur dioxide, SO₂, the central sulfur atom has one single-bond region and one double-bond region to the two oxygens, plus one lone pair — three electron domains in total. What is the MOLECULAR shape of SO₂?",
+    "choices": [
+      "Linear",
+      "Trigonal planar",
+      "Bent",
+      "Trigonal pyramidal"
+    ],
+    "answer": "C",
+    "solutionText": "Three electron domains give a trigonal planar ELECTRON geometry, but one of those domains is a lone pair, so only two bonded atoms define the shape, making SO₂ bent with an angle slightly under 120°. Answering linear comes from copying CO₂, which has no lone pair; trigonal planar names the electron geometry rather than the molecular shape; trigonal pyramidal requires four domains.",
+    "hints": [
+      "Count all domains to get the electron geometry, then look only at the bonded atoms for the molecular shape.",
+      "A lone pair on a three-domain center pushes the two bonded atoms into a bend."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-023",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Methane, CH₄ (molar mass 16.0 g/mol), boils at −162 °C, while methanol, CH₃OH (molar mass 32.0 g/mol), boils at 65 °C. Which explanation best accounts for the enormous gap?",
+    "choices": [
+      "Methanol is ionic while methane is covalent, and ionic compounds always boil higher.",
+      "Methane is polar and methanol is nonpolar, so methane's molecules repel one another.",
+      "Methanol molecules hydrogen bond through their O–H group, while methane molecules attract one another only through weak dispersion forces.",
+      "Methanol's larger molar mass is the whole explanation, since molar mass alone determines boiling point."
+    ],
+    "answer": "C",
+    "solutionText": "Methanol has hydrogen bonded directly to oxygen, so its molecules form hydrogen bonds — the strongest intermolecular force here — and a great deal of energy is needed to pull them apart. Methane is a symmetric nonpolar molecule with only dispersion forces. Both compounds are molecular, not ionic, and doubling the molar mass alone could never account for a 227 °C difference.",
+    "hints": [
+      "Look for hydrogen bonded directly to N, O, or F.",
+      "Compare the strongest intermolecular force available to each substance."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-024",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Rank these three substances from LOWEST to HIGHEST boiling point: F₂ (nonpolar, molar mass 38.0 g/mol), HCl (polar, no hydrogen bonding, molar mass 36.5 g/mol), and HF (polar, hydrogen bonding, molar mass 20.0 g/mol).",
+    "choices": [
+      "HF < HCl < F₂",
+      "F₂ < HCl < HF",
+      "HCl < F₂ < HF",
+      "F₂ < HF < HCl"
+    ],
+    "answer": "B",
+    "solutionText": "With nearly equal molar masses, F₂ has only dispersion forces while HCl adds dipole-dipole attraction, so F₂ boils lowest. HF is the lightest of the three yet boils highest, because hydrogen bonded directly to fluorine produces hydrogen bonding that outweighs its small size. Ranking by molar mass alone gives choice A or D and misses that force strength, not mass, dominates here.",
+    "hints": [
+      "Identify the strongest intermolecular force for each substance before looking at molar mass.",
+      "Hydrogen bonding can beat a much larger molar mass."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-025",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Nitrogen gas and hydrogen gas combine to make ammonia. Which line is correctly balanced?",
+    "choices": [
+      "N₂ + H₂ → NH₃",
+      "N₂ + 3 H₂ → 2 NH₃",
+      "N₂ + 3 H₂ → NH₃",
+      "2 N₂ + 3 H₂ → 2 NH₃"
+    ],
+    "answer": "B",
+    "solutionText": "In N₂ + 3 H₂ → 2 NH₃ each side has 2 nitrogen atoms and 6 hydrogen atoms, so mass and atoms are conserved. The other lines leave nitrogen or hydrogen unbalanced — for instance, choice D has 4 nitrogen atoms on the left but only 2 on the right.",
+    "hints": [
+      "Count each element on both sides of the arrow.",
+      "A coefficient multiplies every atom in the formula that follows it."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-026",
+    "loId": "chem.reaction-types",
+    "cedCode": "CHEM-5.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these balanced reactions is a DOUBLE-REPLACEMENT reaction?",
+    "choices": [
+      "2 KClO₃(s) → 2 KCl(s) + 3 O₂(g)",
+      "Mg(s) + 2 AgNO₃(aq) → Mg(NO₃)₂(aq) + 2 Ag(s)",
+      "C₃H₈(g) + 5 O₂(g) → 3 CO₂(g) + 4 H₂O(g)",
+      "AgNO₃(aq) + NaCl(aq) → AgCl(s) + NaNO₃(aq)"
+    ],
+    "answer": "D",
+    "solutionText": "In choice D two compounds swap partners — silver pairs with chloride and sodium pairs with nitrate — which is the signature of a double replacement. Choice A is a decomposition (one reactant, several products), choice B is a single replacement (a free element displaces another from its compound), and choice C is a hydrocarbon burning in oxygen, a combustion.",
+    "hints": [
+      "Double replacement starts with two compounds and ends with two compounds.",
+      "Look for the reaction where the cations trade anions."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-027",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the oxidation number of nitrogen in the nitrate ion, NO₃⁻? Each oxygen is −2, and the ion's overall charge is 1−.",
+    "choices": [
+      "+5",
+      "+6",
+      "+3",
+      "−1"
+    ],
+    "answer": "A",
+    "solutionText": "The oxidation numbers must sum to the ion's charge: N + 3(−2) = −1, so N − 6 = −1 and N = +5. Choice B comes from setting the sum to zero as if the species were neutral, and choice D mistakes the ion's charge for the nitrogen's oxidation number.",
+    "hints": [
+      "In a polyatomic ion the oxidation numbers add up to the ion's charge, not to zero.",
+      "Three oxygens contribute a total of −6."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-028",
+    "loId": "chem.predicting-products-activity",
+    "cedCode": "CHEM-5.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Activity series excerpt, most reactive to least: K > Ca > Na > Mg > Al > Zn > Fe > Pb > H > Cu > Ag > Au. A student sets up two beakers: in one, a strip of lead metal is placed in magnesium sulfate solution, MgSO₄; in the other, a strip of zinc metal is placed in copper(II) sulfate solution, CuSO₄. What happens?",
+    "choices": [
+      "Both reactions occur, because any metal can replace any other metal.",
+      "Neither reaction occurs, because sulfate ions block single replacement.",
+      "Only the lead in MgSO₄ reacts.",
+      "Only the zinc in CuSO₄ reacts."
+    ],
+    "answer": "D",
+    "solutionText": "A free metal displaces another metal from solution only if it sits higher in the activity series. Zinc is above copper, so Zn + CuSO₄ → ZnSO₄ + Cu proceeds, but lead is below magnesium, so nothing happens in the first beaker. The spectator sulfate ion has no effect on whether a single replacement occurs.",
+    "hints": [
+      "Compare the position of the solid metal with the position of the metal already in solution.",
+      "Higher on the list displaces lower; lower cannot displace higher."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-029",
+    "loId": "chem.balancing-equations",
+    "cedCode": "CHEM-5.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Iron is extracted from its ore in a blast furnace: Fe₂O₃ + CO → Fe + CO₂. Which line balances this equation with the smallest whole-number coefficients?",
+    "choices": [
+      "Fe₂O₃ + 3 CO → 2 Fe + 3 CO₂",
+      "Fe₂O₃ + CO → 2 Fe + CO₂",
+      "2 Fe₂O₃ + 3 CO → 4 Fe + 3 CO₂",
+      "Fe₂O₃ + 3 CO → 2 Fe + 2 CO₂"
+    ],
+    "answer": "A",
+    "solutionText": "Choice A gives 2 Fe, 6 O, and 3 C on each side: the left has 3 + 3 = 6 oxygen atoms and the right has 3 × 2 = 6. Choice C balances iron and carbon but leaves 9 oxygen atoms on the left against 6 on the right, and choices B and D leave oxygen short on one side.",
+    "hints": [
+      "Balance iron first, then carbon, and check oxygen last since it appears in three formulas.",
+      "Remember to count the oxygen atoms inside Fe₂O₃ as well as those in CO."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-030",
+    "loId": "chem.redox-intro",
+    "cedCode": "CHEM-5.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Titanium metal is produced by the reaction 2 Mg(s) + TiCl₄(l) → 2 MgCl₂(s) + Ti(s). Oxidation-number rules: a pure element is 0, and chlorine is −1 in each of these compounds. Which statement is correct?",
+    "choices": [
+      "Magnesium is oxidized, and magnesium is also the oxidizing agent.",
+      "TiCl₄ is oxidized, and magnesium is the oxidizing agent.",
+      "Magnesium is oxidized, and TiCl₄ is the oxidizing agent.",
+      "Titanium is oxidized, and MgCl₂ is the oxidizing agent."
+    ],
+    "answer": "C",
+    "solutionText": "Magnesium goes from 0 to +2, a loss of electrons, so it is oxidized and acts as the reducing agent. Titanium goes from +4 in TiCl₄ to 0 in the metal, a gain of electrons, so TiCl₄ is reduced and is therefore the oxidizing agent. The common trap is choice A, which correctly identifies the oxidation but then labels the oxidized species as the oxidizing agent — the species that is oxidized is always the reducing agent.",
+    "hints": [
+      "Assign oxidation numbers to titanium and magnesium on both sides and see which way each moves.",
+      "The species reduced is the oxidizing agent; the species oxidized is the reducing agent."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-031",
+    "loId": "chem.the-mole-molar-mass",
+    "cedCode": "CHEM-6.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the molar mass of calcium nitrate, Ca(NO₃)₂? Atomic masses: Ca = 40.0, N = 14.0, O = 16.0.",
+    "choices": [
+      "102.0 g/mol",
+      "116.0 g/mol",
+      "164.0 g/mol",
+      "150.0 g/mol"
+    ],
+    "answer": "C",
+    "solutionText": "The subscript 2 outside the parentheses multiplies every atom inside, so the formula contains 1 Ca, 2 N, and 6 O: 40.0 + 2(14.0) + 6(16.0) = 40.0 + 28.0 + 96.0 = 164.0 g/mol. The 102.0 trap ignores the outer subscript entirely (Ca + N + 3 O), 116.0 applies it to nitrogen only, and 150.0 applies it to oxygen only.",
+    "hints": [
+      "A subscript written outside a set of parentheses multiplies every atom inside those parentheses.",
+      "Count the atoms first: 1 Ca, 2 N, 6 O — then multiply each by its atomic mass and add."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-032",
+    "loId": "chem.mole-conversions",
+    "cedCode": "CHEM-6.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the mass of 0.250 mol of glucose, C₆H₁₂O₆? Molar mass of glucose = 180.0 g/mol.",
+    "choices": [
+      "720. g",
+      "45.0 g",
+      "22.5 g",
+      "0.00139 g"
+    ],
+    "answer": "B",
+    "solutionText": "Going from moles to grams means multiplying by the molar mass: 0.250 mol × 180.0 g/mol = 45.0 g. The 720. g and 0.00139 g traps come from dividing in the wrong direction, and 22.5 g comes from halving the molar mass instead of taking one quarter of it.",
+    "hints": [
+      "Molar mass has units of grams per mole — decide whether you should multiply or divide by it.",
+      "Moles × (g/mol) leaves grams, which is what the question asks for."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-033",
+    "loId": "chem.percent-composition-empirical",
+    "cedCode": "CHEM-6.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the percent by mass of hydrogen in methanol, CH₃OH? Atomic masses: C = 12.0, H = 1.0, O = 16.0.",
+    "choices": [
+      "3.1%",
+      "37.5%",
+      "50.0%",
+      "12.5%"
+    ],
+    "answer": "D",
+    "solutionText": "Methanol contains 4 hydrogen atoms in total (3 in CH₃ plus 1 in OH), so the hydrogen mass is 4.0 and the molar mass is 12.0 + 4.0 + 16.0 = 32.0 g/mol, giving 4.0/32.0 = 12.5%. The 3.1% trap counts only one hydrogen atom, while 37.5% and 50.0% are the percentages of carbon and oxygen.",
+    "hints": [
+      "Add up every hydrogen atom in the formula — CH₃OH has hydrogens in two different places.",
+      "Percent by mass = (total mass of that element ÷ molar mass of the compound) × 100."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-034",
+    "loId": "chem.mass-mass-stoichiometry",
+    "cedCode": "CHEM-6.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Aluminum reacts with chlorine: 2 Al + 3 Cl₂ → 2 AlCl₃. How many grams of AlCl₃ form when 5.40 g of aluminum reacts completely with excess chlorine? Molar masses: Al = 27.0 g/mol, AlCl₃ = 133.5 g/mol.",
+    "choices": [
+      "13.4 g",
+      "26.7 g",
+      "40.1 g",
+      "53.4 g"
+    ],
+    "answer": "B",
+    "solutionText": "5.40 g ÷ 27.0 g/mol = 0.200 mol of Al, and the coefficients give a 2:2 (that is, 1:1) ratio of Al to AlCl₃, so 0.200 mol of AlCl₃ forms, weighing 0.200 × 133.5 = 26.7 g. The 40.1 g trap uses the 3 in front of Cl₂ as the product ratio, and 53.4 g doubles the moles as if the ratio were 1:2.",
+    "hints": [
+      "Convert grams of aluminum to moles first, then use the coefficients to get moles of AlCl₃.",
+      "The coefficients of Al and AlCl₃ are both 2, so their mole ratio is 1:1 — the 3 belongs to Cl₂."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-035",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Magnesium burns in oxygen: 2 Mg + O₂ → 2 MgO. A crucible is charged with 12.15 g of Mg and 12.8 g of O₂. Molar masses: Mg = 24.3 g/mol, O₂ = 32.0 g/mol, MgO = 40.3 g/mol. Which reactant limits the reaction, and what mass of MgO forms?",
+    "choices": [
+      "Mg is limiting; 20.2 g of MgO forms",
+      "O₂ is limiting; 32.2 g of MgO forms",
+      "Mg is limiting; 40.3 g of MgO forms",
+      "Neither is limiting; the two masses are close enough that both run out together"
+    ],
+    "answer": "A",
+    "solutionText": "The charge is 12.15/24.3 = 0.500 mol Mg and 12.8/32.0 = 0.400 mol O₂; the 2:1 ratio means 0.500 mol of Mg needs only 0.250 mol of O₂, so oxygen is in excess and magnesium runs out first. The 2:2 Mg-to-MgO ratio gives 0.500 mol × 40.3 = 20.2 g of MgO. Comparing raw masses instead of moles is what makes the O₂-limiting and both-run-out traps look reasonable.",
+    "hints": [
+      "Convert both masses to moles before comparing anything — grams cannot be compared directly.",
+      "Ask how much O₂ the 0.500 mol of Mg actually requires, then check whether that much is present."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-036",
+    "loId": "chem.limiting-reactant-yield",
+    "cedCode": "CHEM-6.5",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Zinc reacts with hydrochloric acid: Zn + 2 HCl → ZnCl₂ + H₂. A flask is charged with 13.08 g of Zn and 0.300 mol of HCl, and 0.240 g of H₂ gas is collected. Molar masses: Zn = 65.4 g/mol, H₂ = 2.0 g/mol. What is the percent yield of hydrogen?",
+    "choices": [
+      "60.0%",
+      "125.0%",
+      "40.0%",
+      "80.0%"
+    ],
+    "answer": "D",
+    "solutionText": "13.08 g ÷ 65.4 = 0.200 mol of Zn, which would require 0.400 mol of HCl, but only 0.300 mol is present, so HCl is limiting. The 2:1 HCl-to-H₂ ratio gives 0.150 mol = 0.300 g of H₂ as the theoretical yield, so the percent yield is 0.240/0.300 = 80.0%. The 60.0% trap assumes zinc is limiting, and 125.0% inverts the yield ratio.",
+    "hints": [
+      "Check both reactants against the balanced equation before computing any theoretical yield.",
+      "Percent yield = (actual ÷ theoretical) × 100, and the theoretical yield must come from the limiting reactant."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-037",
+    "loId": "chem.kinetic-molecular-theory",
+    "cedCode": "CHEM-7.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A sealed rigid flask of argon gas is moved from a warm room into a refrigerator. According to the kinetic-molecular theory, what happens to the average speed of the argon atoms?",
+    "choices": [
+      "It increases, because cooling packs the atoms closer together",
+      "It decreases, because average kinetic energy falls as temperature falls",
+      "It stays the same, because the flask's volume is fixed",
+      "It falls to zero as soon as the gas reaches 0 °C"
+    ],
+    "answer": "B",
+    "solutionText": "Temperature is a direct measure of the average kinetic energy of the particles, so cooling the gas lowers that average kinetic energy and therefore the average particle speed. The volume of a rigid flask is unchanged, but that does not freeze the particle speeds, and particle motion only ceases at absolute zero (−273 °C), not at 0 °C.",
+    "hints": [
+      "Temperature measures the average kinetic energy of the particles.",
+      "Kinetic energy depends on speed — if the average energy drops, the average speed must drop too."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-038",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How much heat is required to boil away 50.0 g of liquid water that is already sitting at 100.0 °C? For water, the heat of vaporization is 2260 J/g, the heat of fusion is 334 J/g, and the specific heat of the liquid is 4.18 J/(g·°C).",
+    "choices": [
+      "113,000 J",
+      "16,700 J",
+      "20,900 J",
+      "2,260 J"
+    ],
+    "answer": "A",
+    "solutionText": "The water is already at its boiling point, so the only step left is the phase change: q = m × ΔHvap = 50.0 g × 2260 J/g = 113,000 J. The 16,700 J trap uses the heat of fusion instead of vaporization, 20,900 J uses the specific heat to warm the liquid by 100 °C (a step that is already finished), and 2,260 J forgets the mass entirely.",
+    "hints": [
+      "The temperature never changes here, so the specific-heat equation q = mcΔT does not apply.",
+      "For a phase change, use q = m × ΔH, and pick the ΔH that matches liquid turning into gas."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-039",
+    "loId": "chem.phase-changes-heating-curves",
+    "cedCode": "CHEM-7.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A beaker of water is boiling steadily on a hot plate. The burner keeps delivering energy, yet a thermometer in the water reads a constant 100 °C for the whole time. Where is the added energy going?",
+    "choices": [
+      "Into increased average kinetic energy, which the thermometer is simply too slow to register",
+      "Nowhere — energy is destroyed during a phase change, which is why the temperature stops rising",
+      "Into overcoming the attractions between water molecules, raising potential energy rather than kinetic energy",
+      "Back out as visible light, since a constant temperature means no energy was absorbed at all"
+    ],
+    "answer": "C",
+    "solutionText": "During a phase change the absorbed energy separates particles against their intermolecular attractions, which raises potential energy while average kinetic energy — and therefore temperature — holds constant. A thermometer reading is a direct measure of average kinetic energy, so a rise in kinetic energy would show up immediately, and energy is never destroyed.",
+    "hints": [
+      "Temperature tracks the average KINETIC energy of the particles, not their total energy.",
+      "Think about what has to happen to the attractions holding liquid molecules together before a molecule can escape as a gas."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-040",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A flexible balloon holds 3.00 L of helium at 27 °C. It is warmed to 127 °C while the outside pressure stays constant. Use K = °C + 273. What is the new volume?",
+    "choices": [
+      "2.25 L",
+      "14.1 L",
+      "4.00 L",
+      "0.75 L"
+    ],
+    "answer": "C",
+    "solutionText": "Converting first gives 300 K and 400 K, and at constant pressure V₁/T₁ = V₂/T₂, so V₂ = 3.00 × (400/300) = 4.00 L. The 14.1 L trap plugs in Celsius values instead of kelvins, and 2.25 L flips the temperature ratio upside down even though heating must expand the gas.",
+    "hints": [
+      "Gas-law temperatures must always be in kelvins — convert before you set up the ratio.",
+      "Heating a balloon at constant pressure makes it bigger, so your answer must exceed 3.00 L."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-041",
+    "loId": "chem.gas-laws",
+    "cedCode": "CHEM-7.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sealed sample of gas occupies 2.00 L at 3.00 atm and 300 K. The sample is moved to conditions of 1.50 atm and 400 K. Use P₁V₁/T₁ = P₂V₂/T₂. What is its new volume?",
+    "choices": [
+      "5.33 L",
+      "4.00 L",
+      "2.67 L",
+      "1.50 L"
+    ],
+    "answer": "A",
+    "solutionText": "Rearranging gives V₂ = V₁ × (P₁/P₂) × (T₂/T₁) = 2.00 × (3.00/1.50) × (400/300) = 2.00 × 2 × 1.33 = 5.33 L. The 4.00 L trap applies only the pressure change and 2.67 L applies only the temperature change; both effects here push the volume up, so they must be combined.",
+    "hints": [
+      "Handle the two changes one at a time: halving the pressure doubles the volume, and warming 300 K to 400 K multiplies it by 4/3.",
+      "Both changes expand the gas, so the answer has to be larger than 4.00 L."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-042",
+    "loId": "chem.ideal-gas-law",
+    "cedCode": "CHEM-7.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A 0.500 L bulb is filled with 2.20 g of a pure unknown gas. The gas exerts 2.24 atm at 273 K. Use PV = nRT with R = 0.0821 L·atm/(mol·K). What is the molar mass of the gas?",
+    "choices": [
+      "22.0 g/mol",
+      "28.0 g/mol",
+      "88.0 g/mol",
+      "44.0 g/mol"
+    ],
+    "answer": "D",
+    "solutionText": "First find the moles: n = PV/RT = (2.24 × 0.500)/(0.0821 × 273) = 1.12/22.4 = 0.0500 mol. Molar mass is grams per mole, so 2.20 g ÷ 0.0500 mol = 44.0 g/mol. The 22.0 and 88.0 traps come from doubling or halving n before dividing, and 28.0 is a guess at the identity of the gas rather than a calculation.",
+    "hints": [
+      "Solve PV = nRT for n first; the mass is not part of that equation.",
+      "Molar mass = mass in grams ÷ moles."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-043",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student stirs a small spoonful of sugar into a large glass of water until it disappears. In this solution, what is the water called?",
+    "choices": [
+      "The solute, because it is the liquid",
+      "The solvent, because it is the component present in the greater amount and does the dissolving",
+      "The precipitate, because it holds the dissolved particles",
+      "The suspension, because the sugar particles are spread through it"
+    ],
+    "answer": "B",
+    "solutionText": "The solvent is the component present in the larger amount that does the dissolving, and the solute is the smaller amount that gets dissolved — so here water is the solvent and sugar is the solute. A precipitate is an insoluble solid that drops out of solution, and a suspension is a mixture whose particles settle rather than dissolve.",
+    "hints": [
+      "Which component is present in the larger amount here?"
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-044",
+    "loId": "chem.solutions-solubility",
+    "cedCode": "CHEM-8.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Potassium nitrate, KNO₃, dissolves to the extent of 110 g per 100 g of water at 60 °C and 32 g per 100 g of water at 20 °C. A student stirs 75 g of KNO₃ into 100 g of water at 60 °C, then slowly cools the beaker to 20 °C without disturbing it. What is the expected result?",
+    "choices": [
+      "Nothing dissolves at 60 °C, because 75 g is more than the solvent mass of 100 g",
+      "All 75 g dissolves at 60 °C, and about 43 g crystallizes out on cooling, leaving 32 g dissolved",
+      "All 75 g dissolves at 60 °C and all 75 g crystallizes out on cooling, since KNO₃ is insoluble at 20 °C",
+      "All 75 g dissolves at 60 °C and about 32 g crystallizes out, leaving 43 g dissolved"
+    ],
+    "answer": "B",
+    "solutionText": "At 60 °C the limit is 110 g per 100 g of water, so all 75 g dissolves comfortably. At 20 °C only 32 g can stay dissolved, so the excess 75 − 32 = 43 g comes out of solution as crystals. Choice D reverses which number stays dissolved, and KNO₃ is clearly not insoluble at 20 °C since 32 g still dissolves there.",
+    "hints": [
+      "Compare 75 g against each temperature's solubility limit separately.",
+      "The mass that crystallizes is the amount dissolved minus the amount that can remain dissolved at the cooler temperature."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-045",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student dissolves 20.2 g of potassium nitrate, KNO₃, in water and adds water until the total solution volume is 500. mL. Molar mass of KNO₃ = 101.0 g/mol. What is the molarity of the solution?",
+    "choices": [
+      "0.400 M",
+      "0.200 M",
+      "2.50 M",
+      "40.4 M"
+    ],
+    "answer": "A",
+    "solutionText": "20.2 g ÷ 101.0 g/mol = 0.200 mol of KNO₃, and 500. mL is 0.500 L, so the molarity is 0.200 mol ÷ 0.500 L = 0.400 M. The 0.200 M trap reports moles as if the volume were 1 L, and 40.4 M skips the conversion from grams to moles.",
+    "hints": [
+      "Molarity is moles of solute per LITER of solution — convert the milliliters first.",
+      "Dividing by 0.500 L is the same as multiplying by 2, so the molarity is larger than the mole count."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-046",
+    "loId": "chem.molarity",
+    "cedCode": "CHEM-8.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How many grams of urea, CH₄N₂O, are needed to prepare 250. mL of a 0.200 M urea solution? Molar mass of urea = 60.0 g/mol.",
+    "choices": [
+      "12.0 g",
+      "0.0500 g",
+      "15.0 g",
+      "3.00 g"
+    ],
+    "answer": "D",
+    "solutionText": "Moles needed = 0.200 mol/L × 0.250 L = 0.0500 mol, and 0.0500 mol × 60.0 g/mol = 3.00 g. The 12.0 g trap prepares a full liter instead of 250 mL, 0.0500 g reports the mole count as though it were already a mass, and 15.0 g divides by the molarity instead of multiplying.",
+    "hints": [
+      "Work backwards: molarity × volume in liters gives the moles of solute required.",
+      "Convert 250. mL to 0.250 L before multiplying, then turn moles into grams with the molar mass."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-047",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A technician measures out 50.0 mL of 1.20 M glucose solution and adds water until the total volume reaches 300.0 mL. Use M₁V₁ = M₂V₂. What is the molarity of the diluted solution?",
+    "choices": [
+      "0.400 M",
+      "7.20 M",
+      "0.200 M",
+      "0.0200 M"
+    ],
+    "answer": "C",
+    "solutionText": "M₂ = M₁V₁/V₂ = (1.20 M × 50.0 mL) ÷ 300.0 mL = 60.0/300.0 = 0.200 M. The 7.20 M trap multiplies by the volume ratio instead of dividing, which would mean adding water made the solution stronger, and 0.400 M uses only a 3-fold dilution rather than the actual 6-fold one.",
+    "hints": [
+      "Adding water cannot change the moles of solute, only the volume they are spread through.",
+      "The volume went up 6-fold (50.0 to 300.0 mL), so the concentration must fall by the same factor."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-048",
+    "loId": "chem.dilutions-colligative",
+    "cedCode": "CHEM-8.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three aqueous solutions are prepared: X is 0.30 m glucose, which stays as whole molecules in water; Y is 0.20 m NaCl, which splits into 2 ions per formula unit; Z is 0.15 m Na₃PO₄, which splits into 4 ions per formula unit. Which solution has the HIGHEST boiling point?",
+    "choices": [
+      "Solution X, because it contains the most dissolved solute by molality",
+      "Solution Y, because ionic compounds always raise the boiling point more than molecular ones",
+      "Solution Z, because it produces 0.60 mol/kg of dissolved particles — more than X or Y",
+      "All three boil at the same temperature, since the solvent in every case is water"
+    ],
+    "answer": "C",
+    "solutionText": "Boiling-point elevation is a colligative property, so what matters is the total concentration of dissolved PARTICLES: X gives 0.30 mol/kg, Y gives 0.20 × 2 = 0.40 mol/kg, and Z gives 0.15 × 4 = 0.60 mol/kg. Z therefore boils highest despite having the smallest molality on the label. Choice A compares labeled molalities without accounting for dissociation, and choice B ignores that Y is the more dilute ionic solution.",
+    "hints": [
+      "Colligative properties depend on the NUMBER of dissolved particles, not on what those particles are.",
+      "Multiply each molality by the number of particles that formula unit releases, then compare the three totals."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-049",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student mixes two solutions in a beaker and the outside of the beaker quickly becomes warm to the touch. How is this reaction best classified?",
+    "choices": [
+      "Endothermic, with a positive ΔH",
+      "Exothermic, with a negative ΔH",
+      "Exothermic, with a positive ΔH",
+      "Endothermic, with a negative ΔH"
+    ],
+    "answer": "B",
+    "solutionText": "A warm beaker means energy flowed from the reaction out to the surroundings, which is the definition of an exothermic reaction. The system lost energy, so ΔH for the reaction is negative; the two mismatched pairings simply attach the wrong sign to the right word.",
+    "hints": [
+      "Did energy flow out of the reaction into the surroundings, or the other way?",
+      "A system that loses energy has a negative ΔH."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-050",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How much heat is needed to warm 150. g of water from 25.0 °C to 75.0 °C? The specific heat of water is 4.18 J/(g·°C).",
+    "choices": [
+      "15,675 J",
+      "47,025 J",
+      "31,350 J",
+      "627 J"
+    ],
+    "answer": "C",
+    "solutionText": "Using q = mcΔT with ΔT = 75.0 − 25.0 = 50.0 °C: q = 150. × 4.18 × 50.0 = 31,350 J. The 47,025 J trap uses the final temperature 75.0 as ΔT instead of the change, and 627 J leaves ΔT out of the calculation entirely.",
+    "hints": [
+      "ΔT is the CHANGE in temperature, not the final reading.",
+      "q = m × c × ΔT — substitute 150., 4.18, and 50.0."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-051",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 50.0 g piece of metal is heated to 100.0 °C and dropped into 100.0 g of water at 20.0 °C inside an insulated calorimeter. The two settle at a final temperature of 24.0 °C. The specific heat of water is 4.18 J/(g·°C). What is the specific heat of the metal?",
+    "choices": [
+      "0.440 J/(g·°C)",
+      "0.418 J/(g·°C)",
+      "8.36 J/(g·°C)",
+      "2.09 J/(g·°C)"
+    ],
+    "answer": "A",
+    "solutionText": "The water absorbs q = 100.0 × 4.18 × 4.0 = 1672 J, and in an insulated calorimeter the metal must have released that same 1672 J. The metal cools from 100.0 °C to the final 24.0 °C, a change of 76.0 °C, so c = 1672 ÷ (50.0 × 76.0) = 0.440 J/(g·°C). The 0.418 trap measures the metal's drop down to the water's STARTING temperature of 20.0 °C instead of the final temperature, giving 1672 ÷ (50.0 × 80.0). The 8.36 trap reuses the water's own 4.0 °C change as the metal's ΔT: 1672 ÷ (50.0 × 4.0).",
+    "hints": [
+      "Heat lost by the metal equals heat gained by the water, so compute the water's q first.",
+      "The metal cools from 100.0 °C down to the FINAL temperature — its ΔT is not the same as the water's."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-052",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A strip of magnesium is dropped into hydrochloric acid and bubbles of hydrogen gas stream off. Which change would make this reaction go SLOWER?",
+    "choices": [
+      "Cutting the strip into many tiny pieces before adding it",
+      "Raising the acid concentration from 1.0 M to 3.0 M",
+      "Adding a catalyst to the beaker",
+      "Chilling the acid from 40 °C down to 10 °C before adding the metal"
+    ],
+    "answer": "D",
+    "solutionText": "Lowering the temperature slows the particles, so collisions become both less frequent and less likely to carry the activation energy — the rate drops. The other three changes all speed the reaction up: smaller pieces expose more surface area, higher concentration means more collisions per second, and a catalyst lowers the activation energy.",
+    "hints": [
+      "Three of these are the standard ways to speed a reaction up — find the one that works the other way.",
+      "Collision theory says rate depends on how often particles collide and how hard they hit."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-053",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ammonia is produced by N₂(g) + 3 H₂(g) ⇌ 2 NH₃(g), ΔH = −92 kJ. A plant operator raises the temperature of a vessel that has already reached equilibrium. Which way does the equilibrium shift, and what happens to the amount of NH₃ present?",
+    "choices": [
+      "Toward the products; NH₃ increases, because a higher temperature always drives a reaction forward",
+      "Toward the reactants; NH₃ decreases, because heat behaves as a product of this exothermic reaction and adding it pushes the system backward",
+      "No shift at all; temperature changes only how fast equilibrium is reached, never the amounts present",
+      "Toward the products; NH₃ increases, because a negative ΔH means the forward direction is favored under every condition"
+    ],
+    "answer": "B",
+    "solutionText": "Since ΔH is negative, the forward reaction releases heat, so heat can be written on the product side; adding heat is therefore a stress the system relieves by shifting toward the reactants, lowering the NH₃ yield. Temperature is the one stress that genuinely changes the equilibrium position rather than merely the rate, which rules out the no-shift choice.",
+    "hints": [
+      "Write heat as an actual term in the equation — for an exothermic reaction it goes on the product side.",
+      "Le Chatelier's principle says a system shifts away from whatever is added."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-054",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Limestone decomposes reversibly in a sealed vessel: CaCO₃(s) ⇌ CaO(s) + CO₂(g), ΔH = +178 kJ. Which single change would increase the amount of CO₂ gas present once equilibrium is re-established?",
+    "choices": [
+      "Adding more solid CaCO₃ to the vessel",
+      "Compressing the vessel to half its volume at constant temperature",
+      "Raising the temperature of the vessel",
+      "Scooping some of the solid CaO out of the vessel"
+    ],
+    "answer": "C",
+    "solutionText": "The reaction is endothermic, so heat acts as a reactant and raising the temperature shifts the equilibrium to the right, producing more CO₂. Adding or removing a pure solid does not shift the position of the equilibrium, and compressing the vessel shifts the system toward the side with fewer moles of gas — the left side, which has none — reducing the CO₂.",
+    "hints": [
+      "Only the gas matters for the pressure and volume argument; count the moles of gas on each side.",
+      "Changing the amount of a pure solid has no effect on where an equilibrium sits."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-055",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the Arrhenius definition, what does a base do when it dissolves in water?",
+    "choices": [
+      "It produces H⁺ ions in the solution",
+      "It produces OH⁻ ions in the solution",
+      "It donates a proton to a water molecule",
+      "It turns blue litmus paper red"
+    ],
+    "answer": "B",
+    "solutionText": "An Arrhenius base is defined as a substance that increases the concentration of hydroxide ions, OH⁻, when it dissolves in water, while an Arrhenius acid produces H⁺. Donating a proton is the Bronsted-Lowry definition of an ACID, and turning blue litmus red is an acid's behavior, not a base's.",
+    "hints": [
+      "Which ion do NaOH and KOH release when they dissolve?"
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-056",
+    "loId": "chem.acids-bases-definitions",
+    "cedCode": "CHEM-10.1",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the conjugate ACID of the dihydrogen phosphate ion, H₂PO₄⁻?",
+    "choices": [
+      "HPO₄²⁻",
+      "PO₄³⁻",
+      "H₃PO₄",
+      "H₃PO₄⁻"
+    ],
+    "answer": "C",
+    "solutionText": "A conjugate acid is formed by ADDING one H⁺ to the species, which adds one hydrogen and raises the charge by +1: H₂PO₄⁻ plus H⁺ gives neutral H₃PO₄. The HPO₄²⁻ and PO₄³⁻ choices remove protons, making conjugate bases instead, and H₃PO₄⁻ adds the hydrogen while forgetting to adjust the charge.",
+    "hints": [
+      "A conjugate ACID has one more proton than the species you started from.",
+      "Adding H⁺ raises the charge by one unit, so a −1 ion becomes neutral."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-057",
+    "loId": "chem.ph-scale",
+    "cedCode": "CHEM-10.2",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A window cleaner is measured at pH 10. In any aqueous solution [H⁺] × [OH⁻] = 1 × 10⁻¹⁴. What is the hydroxide-ion concentration, [OH⁻], of this cleaner?",
+    "choices": [
+      "1 × 10⁻¹⁰ M",
+      "1 × 10⁻¹⁴ M",
+      "1 × 10⁴ M",
+      "1 × 10⁻⁴ M"
+    ],
+    "answer": "D",
+    "solutionText": "A pH of 10 means [H⁺] = 1 × 10⁻¹⁰ M, and dividing 1 × 10⁻¹⁴ by 1 × 10⁻¹⁰ gives [OH⁻] = 1 × 10⁻⁴ M. The 1 × 10⁻¹⁰ M trap stops at the hydrogen-ion concentration and never uses the relationship, and 1 × 10⁴ M drops the negative sign on the exponent, which would be an impossibly large concentration.",
+    "hints": [
+      "Convert the pH to [H⁺] first: pH 10 means 1 × 10⁻¹⁰ M.",
+      "Divide 1 × 10⁻¹⁴ by that value — dividing powers of ten means subtracting exponents."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-058",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What volume of 0.500 M NaOH is required to exactly neutralize 40.0 mL of 0.250 M HCl? The balanced reaction is HCl + NaOH → NaCl + H₂O.",
+    "choices": [
+      "20.0 mL",
+      "10.0 mL",
+      "80.0 mL",
+      "50.0 mL"
+    ],
+    "answer": "A",
+    "solutionText": "The acid supplies 0.0400 L × 0.250 M = 0.0100 mol of HCl, and the 1:1 ratio means 0.0100 mol of NaOH is needed, so the volume is 0.0100 mol ÷ 0.500 M = 0.0200 L = 20.0 mL. The 80.0 mL trap inverts the concentration ratio; because the base is twice as concentrated as the acid, the base volume must be half the acid volume, not double it.",
+    "hints": [
+      "Find the moles of HCl first, then use the 1:1 ratio to get the moles of NaOH needed.",
+      "The base is more concentrated than the acid, so it should take LESS than 40.0 mL of it."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-059",
+    "loId": "chem.neutralization-titration",
+    "cedCode": "CHEM-10.3",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 25.0 mL sample of sulfuric acid of unknown concentration is titrated to the endpoint with 30.0 mL of 0.200 M NaOH. The balanced reaction is H₂SO₄ + 2 NaOH → Na₂SO₄ + 2 H₂O. What is the molarity of the sulfuric acid?",
+    "choices": [
+      "0.240 M",
+      "0.120 M",
+      "0.0600 M",
+      "0.167 M"
+    ],
+    "answer": "B",
+    "solutionText": "The buret delivers 0.0300 L × 0.200 M = 0.00600 mol of NaOH, and the 2:1 ratio means only half that, 0.00300 mol, of H₂SO₄ was present. Dividing by 0.0250 L gives 0.120 M. The 0.240 M trap treats the reaction as 1:1, and 0.0600 M halves the concentration a second time.",
+    "hints": [
+      "Sulfuric acid is diprotic — each mole of it neutralizes TWO moles of NaOH.",
+      "Moles of H₂SO₄ = half the moles of NaOH; then divide by 0.0250 L."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "chem-fa-mc-060",
+    "loId": "chem.nuclear-chemistry-intro",
+    "cedCode": "CHEM-10.4",
+    "topic": "chemistry",
+    "topicId": "chemistry",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital receives a 5.00 g sample of iodine-131, which has a half-life of 8.0 days. The sample sits unused in storage for 32 days. How much iodine-131 remains, and what fraction of the original sample has decayed?",
+    "choices": [
+      "1.25 g remains; 3/4 of the sample has decayed",
+      "0.625 g remains; 7/8 of the sample has decayed",
+      "0.313 g remains; 15/16 of the sample has decayed",
+      "0.156 g remains; 31/32 of the sample has decayed"
+    ],
+    "answer": "C",
+    "solutionText": "32 days ÷ 8.0 days per half-life = 4 half-lives, so the sample is halved four times: 5.00 → 2.50 → 1.25 → 0.625 → 0.313 g. Since 1/16 of the sample remains, 15/16 of it has decayed. The other choices correspond to 2, 3, and 5 half-lives — the usual result of miscounting how many 8.0-day intervals fit into 32 days.",
+    "hints": [
+      "Divide the elapsed time by the half-life to count how many halvings occur.",
+      "After n half-lives the fraction remaining is 1/2ⁿ, and the fraction decayed is whatever is left over from 1."
+    ],
+    "bankScope": "mock"
+  }
+]

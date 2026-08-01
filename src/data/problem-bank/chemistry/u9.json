@@ -1,0 +1,430 @@
+[
+  {
+    "id": "chem-endothermic-exothermic-001",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chemical reaction has ΔH = +178 kJ. What does that sign tell you about the reaction?",
+    "choices": [
+      "Endothermic — the system absorbs energy, so the surroundings cool down",
+      "Exothermic — the system releases energy, so the surroundings warm up",
+      "Endothermic — the system releases energy, so the surroundings warm up",
+      "Exothermic — a positive ΔH always means energy left the system"
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign is the whole message: positive ΔH means energy went INTO the system from its surroundings."
+    ]
+  },
+  {
+    "id": "chem-endothermic-exothermic-002",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following everyday processes is ENDOTHERMIC?",
+    "choices": [
+      "Burning propane in a camp stove",
+      "Photosynthesis, in which a leaf stores sunlight as glucose",
+      "Neutralizing hydrochloric acid with sodium hydroxide, which warms the beaker",
+      "Respiration in a working muscle cell"
+    ],
+    "answer": "B",
+    "hints": [
+      "An endothermic process only runs while energy is being delivered to it from outside.",
+      "Three of these give off energy you can feel as heat. The fourth one needs a constant supply of energy to keep going."
+    ]
+  },
+  {
+    "id": "chem-endothermic-exothermic-003",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A reaction is endothermic. What must be true when you compare its bond energies?",
+    "choices": [
+      "Forming the product bonds releases more energy than breaking the reactant bonds costs",
+      "The reactants must contain a larger total number of bonds than the products do",
+      "Breaking the reactant bonds costs more energy than forming the product bonds releases",
+      "The product bonds form without releasing any energy at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "Breaking absorbs energy; forming releases it. Which one has to win for the net flow to be INTO the system?",
+      "Endothermic means ΔH is positive, and ΔH = bonds broken − bonds formed."
+    ]
+  },
+  {
+    "id": "chem-endothermic-exothermic-004",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Methane burns in a furnace: CH₄ + 2 O₂ → CO₂ + 2 H₂O. Bond energies in kJ/mol: C-H = 413, O=O = 498, C=O = 799, O-H = 463. Calculate ΔH for the reaction. Type your answer as a number in kJ, with a minus sign in front if it is negative.",
+    "answer": "-802",
+    "hints": [
+      "Bonds broken: the 4 C-H bonds in one CH₄ plus 2 O=O bonds. Bonds formed: the 2 C=O bonds in CO₂ plus 4 O-H bonds spread over the two water molecules.",
+      "ΔH = broken − formed = (4 × 413 + 2 × 498) − (2 × 799 + 4 × 463) = 2648 − 3450."
+    ]
+  },
+  {
+    "id": "chem-endothermic-exothermic-005",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a certain reaction, the products end up 120 kJ HIGHER in energy than the reactants. Which statement describes this reaction correctly?",
+    "choices": [
+      "It is exothermic, and ΔH = −120 kJ",
+      "It is endothermic, and ΔH = −120 kJ",
+      "It is exothermic, and ΔH = +120 kJ",
+      "It is endothermic, and ΔH = +120 kJ"
+    ],
+    "answer": "D",
+    "hints": [
+      "Products higher than reactants means the system had to take energy in to climb to that level.",
+      "Energy flowing in is endothermic, and endothermic carries a positive ΔH equal to the size of the gap."
+    ]
+  },
+  {
+    "id": "chem-endothermic-exothermic-006",
+    "loId": "chem.endothermic-exothermic",
+    "cedCode": "CHEM-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student analyzes 2 HBr → H₂ + Br₂ using bond energies in kJ/mol: H-Br = 366, H-H = 436, Br-Br = 193. The student computes bonds broken = 732 kJ and bonds formed = 629 kJ, then reports ΔH = −103 kJ and calls the reaction exothermic. Which evaluation is correct?",
+    "choices": [
+      "Both totals are right, but ΔH = broken − formed = +103 kJ, so the reaction is endothermic",
+      "Both totals are right and ΔH = −103 kJ is right, but the reaction should be labeled endothermic",
+      "Bonds broken should be 366 kJ because only one H-Br bond breaks, giving ΔH = −263 kJ",
+      "Bonds formed should also be 732 kJ, so ΔH = 0 and the reaction is neither endothermic nor exothermic"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the two totals first: 2 × 366 = 732 for breaking, and 436 + 193 = 629 for forming. Both are fine.",
+      "The error is the subtraction order. ΔH = broken − formed, and when broken is the larger number the result is positive."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-001",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Water in a beaker is heated from 18.0 °C to 62.0 °C. What is ΔT for the water?",
+    "choices": [
+      "62.0 °C, because that is the temperature the water reached",
+      "44.0 °C, because ΔT is the final temperature minus the initial temperature",
+      "80.0 °C, because the two temperatures are added together",
+      "18.0 °C, because ΔT is measured from the starting temperature"
+    ],
+    "answer": "B",
+    "hints": [
+      "The Δ symbol means CHANGE, so subtract the starting temperature from the ending one."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-002",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Copper has a specific heat of 0.39 J/(g·°C) and water has a specific heat of 4.18 J/(g·°C). Equal masses of copper and water each absorb the same amount of heat. Which one warms up more, and why?",
+    "choices": [
+      "The water, because its larger specific heat lets it gain more degrees per joule absorbed",
+      "The water, because a substance with a large specific heat always ends up at a higher temperature",
+      "The copper, because a smaller specific heat means fewer joules are needed for each degree of rise",
+      "Neither — equal masses absorbing equal heat must undergo the same temperature change"
+    ],
+    "answer": "C",
+    "hints": [
+      "Rearrange q = m × c × ΔT into ΔT = q ÷ (m × c).",
+      "With q and m matched, a smaller value of c in the denominator produces a LARGER ΔT."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-003",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hot copper cylinder is dropped into cool water inside an insulated calorimeter, and the two settle at the same final temperature. Which statement is TRUE?",
+    "choices": [
+      "The heat released by the copper equals the heat gained by the water in magnitude, so q for the copper is negative and q for the water is positive",
+      "q is positive for both objects, because energy moved in both of them",
+      "The copper must undergo the same temperature change as the water, since they exchange the same energy",
+      "The water gains more energy than the copper releases, because water has the larger specific heat"
+    ],
+    "answer": "A",
+    "hints": [
+      "An insulated container lets no energy escape, so every joule that leaves the copper has to arrive in the water.",
+      "The sign of q follows the sign of ΔT: the copper cooled, the water warmed. Equal energy does not mean equal ΔT."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-004",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A 250.0 g block of an unknown metal absorbs 4500 J of heat, and its temperature rises from 20.0 °C to 65.0 °C. What is the specific heat of the metal, in J/(g·°C)? Type your answer as a number.",
+    "answer": "0.4",
+    "hints": [
+      "Rearrange q = m × c × ΔT into c = q ÷ (m × ΔT).",
+      "ΔT = 65.0 − 20.0 = 45.0 °C, so compute 4500 ÷ (250.0 × 45.0)."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-005",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student calculates the heat needed to warm 80.0 g of water from 15.0 °C to 55.0 °C and writes q = 80.0 × 4.18 × 55.0 = 18392 J. (c of water = 4.18 J/(g·°C)) Which statement is correct?",
+    "choices": [
+      "The calculation is correct, because ΔT is the temperature the water reached",
+      "ΔT should be 15.0 °C, the starting temperature, giving q = 5016 J",
+      "ΔT should be 70.0 °C, the sum of the two temperatures, giving q = 23408 J",
+      "ΔT should be 40.0 °C, the change in temperature, giving q = 13376 J"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compute ΔT as its own written step before anything touches the equation.",
+      "ΔT = T_final − T_initial = 55.0 − 15.0. Then multiply 80.0 × 4.18 by that difference."
+    ]
+  },
+  {
+    "id": "chem-specific-heat-calorimetry-006",
+    "loId": "chem.specific-heat-calorimetry",
+    "cedCode": "CHEM-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Sample X is 100.0 g of water (c = 4.18 J/(g·°C)) and sample Y is 100.0 g of copper (c = 0.39 J/(g·°C)). Each sample absorbs exactly 2090 J of heat. Which statement is TRUE?",
+    "choices": [
+      "The copper warms by about 53.6 °C while the water warms by 5.0 °C, because the smaller specific heat produces the larger temperature swing",
+      "The water warms by about 53.6 °C while the copper warms by 5.0 °C, because water holds more heat",
+      "Both warm by 5.0 °C, since they have equal masses and absorbed equal energy",
+      "The copper warms about 10.7 times more than the water because it absorbed 10.7 times more energy"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use ΔT = q ÷ (m × c) separately for each sample; the two q values and the two masses are identical.",
+      "Water: 2090 ÷ (100.0 × 4.18) = 5.0 °C. Copper: 2090 ÷ (100.0 × 0.39) ≈ 53.6 °C. A big swing signals a SMALL specific heat, not extra energy."
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-001",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to collision theory, a collision between reactant particles produces a reaction only if it satisfies two requirements. What are they?",
+    "choices": [
+      "The particles must be identical in size and must be travelling in exactly opposite directions",
+      "The collision must give off heat and the particles must be dissolved in water",
+      "The collision must carry at least the activation energy and the particles must hit with the correct orientation",
+      "The particles must collide at least twice and must both be at the same temperature"
+    ],
+    "answer": "C",
+    "hints": [
+      "One requirement is about how hard the particles hit; the other is about how they are aimed."
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-002",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A campfire built from one thick log only smolders, but the same wood split into thin kindling catches quickly. Which rate factor explains this, and how?",
+    "choices": [
+      "Surface area — splitting the wood exposes far more of it to oxygen, so successful collisions happen more often",
+      "Concentration — the kindling packs more wood into each unit of volume than the log does",
+      "Catalyst — splitting the wood lowers the activation energy of combustion",
+      "Temperature — the act of splitting the wood heats it up"
+    ],
+    "answer": "A",
+    "hints": [
+      "It is the same wood and the same air, so nothing about the substances changed.",
+      "A solid can only burn where oxygen can actually reach it. What did splitting change about that boundary?"
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-003",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Left alone, a certain reaction would eventually produce 12.0 g of product. A catalyst is added at the start instead. What happens?",
+    "choices": [
+      "More than 12.0 g of product forms, because the catalyst drives the reaction further along",
+      "12.0 g of product still forms, but it forms sooner, and the catalyst can be recovered unchanged afterwards",
+      "12.0 g of product forms, and an equal mass of catalyst is consumed in the process",
+      "Less than 12.0 g forms, because some reactant is spent regenerating the catalyst"
+    ],
+    "answer": "B",
+    "hints": [
+      "A catalyst changes the route, not the destination.",
+      "Lowering the activation energy makes more of the existing collisions succeed — it does not create extra product, and the catalyst comes back out at the end."
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-004",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "During a reaction, the concentration of reactant B falls from 2.00 M to 0.50 M over 60 seconds. Average rate = (change in concentration) ÷ (time elapsed), reported as a positive number. What is the average rate of consumption of B, in moles per liter per second? Type your answer as a number.",
+    "answer": "0.025",
+    "hints": [
+      "First find how much of B disappeared: subtract the final concentration from the starting concentration.",
+      "2.00 − 0.50 = 1.50 M was consumed. Divide that by the 60 seconds it took."
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-005",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A reaction has ΔH = −390 kJ, yet a sealed sample of the reactants shows no visible change after a week at room temperature. Which explanation is correct?",
+    "choices": [
+      "This is impossible — a negative ΔH guarantees that a reaction runs quickly",
+      "The reaction must really be endothermic, because slow reactions absorb energy",
+      "The reaction has a high activation energy, so very few collisions carry enough energy to get over the hill; ΔH describes the net energy change, not the speed",
+      "The reaction has an unusually low activation energy, and a low activation energy is what makes reactions slow"
+    ],
+    "answer": "C",
+    "hints": [
+      "ΔH is the height difference between reactants and products. Activation energy is the height of the hill in between. They are separate quantities.",
+      "Paper releases energy when it burns, but it does not ignite by itself at room temperature. Which quantity explains that delay?"
+    ]
+  },
+  {
+    "id": "chem-reaction-rates-collision-006",
+    "loId": "chem.reaction-rates-collision",
+    "cedCode": "CHEM-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two identical flasks each hold the same solution of reactant X. Flask 1 is warmed from 20 °C to 40 °C. Flask 2 is held at 20 °C but has a pinch of catalyst stirred in. Both flasks react faster than an untouched flask at 20 °C. Which statement correctly describes the two mechanisms?",
+    "choices": [
+      "Both changes work by lowering the activation energy of the reaction",
+      "Both changes work by increasing the concentration of the reactants",
+      "Warming lowers the activation energy, while the catalyst raises the average energy of the collisions",
+      "Warming raises the fraction of collisions that already reach the activation energy, while the catalyst lowers the activation energy so more ordinary collisions succeed"
+    ],
+    "answer": "D",
+    "hints": [
+      "Heating a flask cannot change the height of the energy hill — the hill belongs to the reaction pathway, not the thermometer.",
+      "One change moves the collisions up toward a fixed hill; the other lowers the hill toward the collisions already happening."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-001",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A reversible reaction in a sealed flask has reached equilibrium. What is happening inside the flask?",
+    "choices": [
+      "Both the forward and the reverse reaction have stopped, so nothing is changing",
+      "The forward and reverse reactions keep running at equal rates, so the concentrations hold steady",
+      "The flask now holds equal amounts of reactants and products",
+      "The forward reaction has finished, and only the reverse reaction is still running"
+    ],
+    "answer": "B",
+    "hints": [
+      "Equilibrium is DYNAMIC: it describes equal rates, not zero rates and not equal amounts."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-002",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The reaction 2 SO₂(g) + O₂(g) ⇌ 2 SO₃(g) sits at equilibrium in a sealed vessel. Extra O₂ gas is pumped in at constant temperature and volume. Which way does the equilibrium shift?",
+    "choices": [
+      "Left, because adding any gas raises the pressure on the reactant side",
+      "No shift, because O₂ appears only as a reactant and not as a product",
+      "Right, because the system shifts in the direction that consumes some of the added O₂, making more SO₃",
+      "Right at first, then back to the left once the added O₂ has been used up"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what you just added too much of, then ask which direction uses it up.",
+      "Adding a reactant always shifts a system toward the product side."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-003",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "For PCl₃(g) + Cl₂(g) ⇌ PCl₅(g), the reaction vessel is compressed to half its original volume at constant temperature. Which way does the equilibrium shift, and why?",
+    "choices": [
+      "Right — the right side has 1 mole of gas versus 2 on the left, and compression favors the side with fewer moles of gas",
+      "Left — compression always drives a system back toward its reactants",
+      "No shift — changing the pressure never moves the position of an equilibrium",
+      "Right — compressing the vessel raises the temperature, and higher temperature always makes more product"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the moles of gas on each side of the ⇌ before you decide anything.",
+      "Left: 1 + 1 = 2 moles of gas. Right: 1 mole. Squeezing a system pushes it toward the smaller gas count."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-004",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In the reaction 4 NH₃(g) + 3 O₂(g) ⇌ 2 N₂(g) + 6 H₂O(g), every substance is a gas. The vessel is expanded to a larger volume at constant temperature, so the equilibrium shifts toward the side with MORE moles of gas. How many total moles of gas are on the side the system shifts toward? Type your answer as a number.",
+    "answer": "8",
+    "hints": [
+      "Add up the coefficients of the gases on each side of the ⇌ separately.",
+      "Left side: 4 + 3. Right side: 2 + 6. Expansion favors the larger total — report that total."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-005",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The reaction 2 SO₂(g) + O₂(g) ⇌ 2 SO₃(g) has ΔH = −198 kJ. The reaction vessel is cooled. Which way does the equilibrium shift, and what happens to the amount of SO₃?",
+    "choices": [
+      "Left — cooling always drives a system back toward its reactants, so less SO₃",
+      "No shift — a temperature change alters only the rate, never the position of an equilibrium",
+      "Left — heat is a reactant here, so taking heat away starves the forward reaction and less SO₃ forms",
+      "Right — heat is a product of an exothermic reaction, so removing heat shifts the system toward more SO₃"
+    ],
+    "answer": "D",
+    "hints": [
+      "ΔH is negative, so the forward reaction gives off heat. Write heat on the correct side of the ⇌ and then treat it like any other substance.",
+      "Cooling removes heat. Removing something from the product side shifts the system toward products."
+    ]
+  },
+  {
+    "id": "chem-equilibrium-le-chatelier-006",
+    "loId": "chem.equilibrium-le-chatelier",
+    "cedCode": "CHEM-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An engineer runs the exothermic reaction 2 NO(g) + O₂(g) ⇌ 2 NO₂(g), ΔH = −114 kJ, and wants the largest possible amount of NO₂ present at equilibrium. Which plan achieves that?",
+    "choices": [
+      "Raise the pressure and lower the temperature; adding a catalyst would reach equilibrium sooner but would not raise the yield",
+      "Lower the pressure and raise the temperature, since both changes speed the reaction up",
+      "Raise both the pressure and the temperature, since higher values of each always favor the products",
+      "Add a catalyst, since that is the only change that increases the equilibrium amount of NO₂"
+    ],
+    "answer": "A",
+    "hints": [
+      "Handle the two stresses separately: count moles of gas for the pressure decision (3 on the left, 2 on the right), then place heat on the product side for the temperature decision.",
+      "Compression favors the 2-mole product side, and cooling removes heat from that same side — both push right. A catalyst speeds the forward and reverse reactions equally, so it never moves the position."
+    ]
+  }
+]

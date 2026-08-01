@@ -46,6 +46,7 @@ const COURSE_NAMES: Record<string, string> = {
   'algebra-1': 'Algebra 1',
   'geometry': 'Geometry',
   biology: 'Biology',
+  'chemistry': 'Chemistry',
 };
 // topic/topicId are derived from the --course dir name at upsert (the course
 // dir matches the engine topic, e.g. ap-statistics, ap-calculus-bc).

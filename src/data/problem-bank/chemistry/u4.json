@@ -1,0 +1,542 @@
+[
+  {
+    "id": "chem-ionic-bonding-001",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Barium is a metal in Group 2. What ion does a barium atom form when it bonds with a nonmetal?",
+    "choices": [
+      "Ba²⁻ — it gains two electrons to complete its octet",
+      "Ba²⁺ — it loses its two valence electrons",
+      "Ba⁺ — a metal always gives up exactly one electron",
+      "Ba⁶⁻ — it needs six more electrons to reach the next noble gas"
+    ],
+    "answer": "B",
+    "hints": [
+      "A metal reaches a full outer shell fastest by dumping its valence electrons, not by grabbing more.",
+      "A Group 2 atom has 2 valence electrons to give away, and losing negative electrons leaves the ion positive."
+    ]
+  },
+  {
+    "id": "chem-ionic-bonding-002",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Potassium is in Group 1 and sulfur is in Group 16. What is the formula of the ionic compound they form?",
+    "choices": [
+      "KS — one metal atom pairs with one nonmetal atom",
+      "KS₂ — sulfur is short two electrons, so two sulfur atoms are needed",
+      "K₂S — two K⁺ supply +2, which exactly cancels one S²⁻",
+      "K₂S₂ — the numbers 1 and 2 from the two groups written straight across as subscripts"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the charges off the groups first: Group 1 gives K⁺, and Group 16 gains two electrons to give S²⁻.",
+      "One S²⁻ carries −2. How many 1⁺ ions does it take to cancel that exactly?"
+    ]
+  },
+  {
+    "id": "chem-ionic-bonding-003",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solid magnesium oxide melts at 2852 °C and shatters when struck with a hammer, while solid copper melts at 1085 °C and simply flattens when struck. Which statement best explains the behavior of magnesium oxide?",
+    "choices": [
+      "Every ion is gripped by several oppositely charged neighbors in a rigid lattice, and a struck layer slides until like charges line up and repel",
+      "Its molecules are heavier than copper atoms, so more heat is needed to get them moving",
+      "It contains no charged particles at all, so only friction between grains holds it together",
+      "Its covalent bonds are stronger than metallic bonds, and covalent solids are always brittle"
+    ],
+    "answer": "A",
+    "hints": [
+      "An ionic solid is not made of separate pairs — it is a repeating 3D grid of alternating cations and anions.",
+      "Ask what happens to the charges when one whole layer of that grid shifts over by a single position."
+    ]
+  },
+  {
+    "id": "chem-ionic-bonding-004",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes the compound of calcium (Group 2) and sulfur (Group 16) as Ca₂S₂, explaining: \"Calcium is 2⁺ and sulfide is 2⁻, so I criss-crossed the charges into subscripts.\" Which formula is correct, and why?",
+    "choices": [
+      "Ca₂S₂ is correct — criss-crossing the charges into subscripts is the rule for ionic formulas",
+      "CaS₂ — calcium gives away two electrons, so two sulfur atoms are needed to take them",
+      "Ca₂S — sulfur needs two electrons, so two calcium atoms must supply them",
+      "CaS — Ca²⁺ and S²⁻ already cancel one to one, so the criss-crossed ratio has to be reduced"
+    ],
+    "answer": "D",
+    "hints": [
+      "Criss-crossing is a shortcut, not the rule. The real rule is that total positive charge must cancel total negative charge.",
+      "One +2 already cancels one −2. Subscripts of 2 and 2 share a common factor, and a formula unit must be the ratio in lowest terms."
+    ]
+  },
+  {
+    "id": "chem-ionic-bonding-005",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Aluminum forms Al³⁺ and sulfur forms S²⁻. In the neutral compound aluminum sulfide, how many sulfide ions are present for every 4 aluminum ions? Type your answer as a number.",
+    "answer": "6",
+    "hints": [
+      "Four Al³⁺ ions carry a total charge of 4 × (+3) = +12, and the sulfide ions must contribute exactly −12.",
+      "Each S²⁻ contributes −2. How many of them add up to −12?"
+    ]
+  },
+  {
+    "id": "chem-ionic-bonding-006",
+    "loId": "chem.ionic-bonding",
+    "cedCode": "CHEM-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Lithium chloride (LiCl) melts at 605 °C, while magnesium oxide (MgO) melts at 2852 °C. Both are ionic solids with a 1:1 ion ratio and ions of similar size. What best explains the enormous gap in melting point?",
+    "choices": [
+      "MgO is a covalent network solid, and covalent bonds always beat ionic attractions",
+      "MgO has the larger formula mass, and melting point always tracks formula mass",
+      "MgO is built from 2⁺ and 2⁻ ions instead of 1⁺ and 1⁻, so the electrostatic attraction throughout the lattice is far stronger",
+      "LiCl dissolves in water while MgO barely does, and soluble solids always melt at lower temperatures"
+    ],
+    "answer": "C",
+    "hints": [
+      "Melting an ionic solid means supplying enough energy to overcome the attraction between the ions themselves.",
+      "The size of an electrostatic attraction depends on the charges involved: compare a +1 pulling on a −1 with a +2 pulling on a −2."
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-001",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A covalent bond forms between two atoms when they do what?",
+    "choices": [
+      "Share a pair of valence electrons, and both atoms count that pair toward a full outer shell",
+      "Transfer electrons from one atom to the other, producing a cation and an anion",
+      "Attract each other because one carries a full positive charge and the other a full negative charge",
+      "Pool all of their electrons into a sea that drifts freely through the whole sample"
+    ],
+    "answer": "A",
+    "hints": [
+      "Covalent bonding happens between two nonmetals, neither of which can strip electrons off the other.",
+      "The defining feature is that the SAME pair of electrons is counted by both atoms at once."
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-002",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In ethyne the two carbon atoms are joined by a triple bond; in ethene the two carbon atoms are joined by a double bond. How do those two carbon-to-carbon bonds compare?",
+    "choices": [
+      "The triple bond is longer and weaker, because three pairs of electrons need more room between the nuclei",
+      "They are identical in length and strength, since both join the same pair of carbon atoms",
+      "The double bond is shorter and stronger, because fewer shared electrons repel each other less",
+      "The triple bond is shorter and stronger, because more shared pairs pull the two nuclei closer and hold them harder"
+    ],
+    "answer": "D",
+    "hints": [
+      "Bond order is the number of shared pairs — and more shared pairs means a tighter grip between the same two nuclei.",
+      "Strength runs triple > double > single, while bond LENGTH runs the opposite way."
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-003",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Build the Lewis structure of hydrogen sulfide, H₂S. Sulfur has 6 valence electrons, each hydrogen has 1, and sulfur is the central atom. Which description of the finished structure is correct?",
+    "choices": [
+      "Two S–H single bonds and three lone pairs on the sulfur",
+      "One S–H single bond, one sulfur-to-hydrogen double bond, and one lone pair on the sulfur",
+      "Two S–H single bonds and two lone pairs on the sulfur",
+      "Two S–H single bonds, one lone pair on the sulfur, and one lone pair on each hydrogen"
+    ],
+    "answer": "C",
+    "hints": [
+      "Budget first: 6 + 1 + 1 = 8 valence electrons, and two single bonds spend 4 of them.",
+      "Hydrogen is full at a duet of 2, so the remaining 4 electrons all sit on the sulfur — as how many pairs?"
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-004",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hydrogen cyanide, HCN, has carbon as the central atom bonded to one hydrogen on one side and to nitrogen on the other. Valence electrons: H = 1, C = 4, N = 5, for a total of 10. After one H–C single bond and one C–N single bond (4 electrons) plus three lone pairs on the nitrogen (6 electrons), the budget is spent but the carbon has only 4 electrons. What is the correct finished structure?",
+    "choices": [
+      "An H–C single bond, a C≡N triple bond, and one lone pair left on the nitrogen",
+      "An H–C single bond, a carbon-to-nitrogen double bond, and two lone pairs on the nitrogen",
+      "An H–C single bond, a C–N single bond, three lone pairs on the nitrogen, plus one extra lone pair added onto the carbon",
+      "A hydrogen-to-carbon double bond and a carbon-to-nitrogen double bond, with two lone pairs on the nitrogen"
+    ],
+    "answer": "A",
+    "hints": [
+      "The electron total is fixed at 10 — you may never invent electrons, only move existing lone pairs into bonds.",
+      "Carbon is 4 electrons short, and each lone pair pulled into the C–N bond adds 2 to carbon. Move two of them, then count what nitrogen has left."
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-005",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Build the Lewis structure of nitrogen trifluoride, NF₃: nitrogen is the central atom single-bonded to three fluorine atoms. Valence electrons: nitrogen has 5, each fluorine has 7. When every atom has a complete octet, how many LONE PAIRS appear in the whole molecule? Type your answer as a number.",
+    "answer": "10",
+    "hints": [
+      "Budget: 5 + 3 × 7 = 26 valence electrons. Three N–F single bonds spend 6, leaving 20.",
+      "20 electrons is 10 pairs: nine of them complete the three fluorine octets, and the last one stays on the nitrogen."
+    ]
+  },
+  {
+    "id": "chem-covalent-bonding-lewis-006",
+    "loId": "chem.covalent-bonding-lewis",
+    "cedCode": "CHEM-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In boron trifluoride, BF₃, boron is the central atom bonded to three fluorines. Valence electrons: boron 3, each fluorine 7, total 24. A student draws three B–F single bonds and three lone pairs on each fluorine, then objects: \"The boron only ends up with 6 electrons, so I must be wrong — I will convert one B–F bond into a double bond.\" Evaluate the student's structure and objection.",
+    "choices": [
+      "The student is right to change it: every central atom must reach 8, so a boron-to-fluorine double bond is required",
+      "The original structure is fine — boron is a well-known octet exception that commonly settles for 6 electrons",
+      "The original structure is fine, but only because fluorine can expand its octet to hold the extra pair",
+      "The student should instead add one more lone pair onto the boron, bringing it to 8 without changing any bonds"
+    ],
+    "answer": "B",
+    "hints": [
+      "Audit the budget first: does the original structure spend exactly 24 electrons with all three fluorines at a full octet?",
+      "Not every central atom needs 8. Hydrogen stops at a duet of 2, and boron very often stops at 6."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-001",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the correct name for the ionic compound Li₂O?",
+    "choices": [
+      "dilithium monoxide",
+      "lithium oxide",
+      "lithium(II) oxide",
+      "lithium oxygenide"
+    ],
+    "answer": "B",
+    "hints": [
+      "Lithium is a metal and oxygen is a nonmetal, so ionic rules apply: cation name unchanged, then the anion root plus -ide.",
+      "Lithium is a Group 1 metal with a fixed 1⁺ charge, so no Roman numeral is needed — and ionic names never take counting prefixes."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-002",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the correct name for SF₆, the dense gas used as an electrical insulator in high-voltage switchgear?",
+    "choices": [
+      "sulfur hexafluoride",
+      "monosulfur hexafluoride",
+      "sulfur(VI) fluoride",
+      "sulfur fluoride"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sulfur and fluorine are both nonmetals, so covalent rules apply and the prefixes carry the atom counts.",
+      "Six is hexa-, and the prefix mono- is dropped on the FIRST element."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-003",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aluminum nitrate is used as a mordant in dyeing. Aluminum is always Al³⁺ and nitrate is the polyatomic ion NO₃⁻. Which formula correctly represents aluminum nitrate?",
+    "choices": [
+      "AlNO₃₃",
+      "Al₃NO₃",
+      "Al(NO₃)₃",
+      "Al(NO₃)"
+    ],
+    "answer": "C",
+    "hints": [
+      "Balance the charge to zero: one Al³⁺ is +3, and each nitrate is only −1.",
+      "A polyatomic ion that needs a subscript above 1 must be wrapped in parentheses, or the subscript lands on just the last atom."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-004",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the correct name for Cr₂S₃? Sulfide is always S²⁻, and chromium is a transition metal that can carry more than one charge.",
+    "choices": [
+      "chromium(II) sulfide — the subscript 2 beside Cr gives the Roman numeral",
+      "dichromium trisulfide",
+      "chromium sulfide",
+      "chromium(III) sulfide"
+    ],
+    "answer": "D",
+    "hints": [
+      "Work from the anion, whose charge is fixed: three sulfide ions supply 3 × (−2) = −6.",
+      "The compound is neutral, so two chromium ions must split +6 between them — and the Roman numeral is the charge on ONE ion, never a subscript."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-005",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Ammonium carbonate, once sold as smelling salts, is built from the ammonium ion NH₄⁺ and the carbonate ion CO₃²⁻. Write its formula from charge balance, then count how many HYDROGEN atoms are in one formula unit. Type your answer as a number.",
+    "answer": "8",
+    "hints": [
+      "One CO₃²⁻ supplies −2. How many NH₄⁺ ions, each only +1, are needed to cancel it?",
+      "The formula is (NH₄)₂CO₃ — two ammonium groups, and each ammonium carries 4 hydrogen atoms."
+    ]
+  },
+  {
+    "id": "chem-naming-compounds-formulas-006",
+    "loId": "chem.naming-compounds-formulas",
+    "cedCode": "CHEM-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student names the acid H₂SO₃ \"sulfuric acid\" and the acid HNO₂ \"nitric acid.\" Which correction is right? (Useful ions: SO₄²⁻ sulfate, SO₃²⁻ sulfite, NO₃⁻ nitrate, NO₂⁻ nitrite.)",
+    "choices": [
+      "Both names are already correct as written",
+      "H₂SO₃ is sulfurous acid and HNO₂ is nitrous acid — an -ite anion gives the acid an -ous ending",
+      "H₂SO₃ is hydrosulfuric acid and HNO₂ is hydronitric acid — every acid formula beginning with H takes the hydro- prefix",
+      "H₂SO₃ is sulfurous acid but HNO₂ is nitric acid — only sulfur has an -ous form"
+    ],
+    "answer": "B",
+    "hints": [
+      "Identify which polyatomic ion each formula actually contains: SO₃²⁻ and NO₂⁻, not SO₄²⁻ and NO₃⁻.",
+      "An -ate anion gives an -ic acid, an -ite anion gives an -ous acid, and hydro- is reserved for binary acids that contain no oxygen."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-001",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A central atom has 3 electron domains around it. According to VSEPR, what is its ELECTRON geometry and ideal angle?",
+    "choices": [
+      "Bent, about 104.5°",
+      "Tetrahedral, 109.5°",
+      "Trigonal planar, 120°",
+      "Trigonal pyramidal, about 107°"
+    ],
+    "answer": "C",
+    "hints": [
+      "Domains repel, so three of them spread as far apart as possible — which they can do within a single flat plane.",
+      "Three evenly spaced directions in a plane divide 360° into three equal angles."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-002",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In gaseous beryllium chloride, BeCl₂, the central beryllium has two Be–Cl single bonds and no lone pairs. What are its molecular shape and Cl–Be–Cl bond angle?",
+    "choices": [
+      "Bent, about 104.5°, because two outer atoms on a central atom always make a V",
+      "Linear, 180° — two domains get farthest apart by pointing in exactly opposite directions",
+      "Trigonal planar, 120°",
+      "Tetrahedral, 109.5°"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count domains on the beryllium first: two bonds and zero lone pairs.",
+      "With no lone pairs, the molecular shape matches the electron geometry — and two domains have only one way to maximize their separation."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-003",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In phosphorus trichloride, PCl₃, the central phosphorus has three P–Cl single bonds and one lone pair. What is the MOLECULAR SHAPE of PCl₃?",
+    "choices": [
+      "Trigonal pyramidal — 4 domains arrange tetrahedrally, but one corner is held by the lone pair instead of an atom",
+      "Tetrahedral — the phosphorus has 4 electron domains",
+      "Trigonal planar — three chlorine atoms sit around the phosphorus",
+      "Bent — the lone pair pushes two of the chlorines together"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count all domains first: 3 bonds + 1 lone pair sets the ELECTRON geometry.",
+      "Then finish the second step — molecular shape names where the ATOMS are, and one tetrahedral corner has no atom in it."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-004",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In formaldehyde, CH₂O, the central carbon is single-bonded to two hydrogens and double-bonded to the oxygen, with no lone pairs on the carbon. What is the molecular shape around that carbon?",
+    "choices": [
+      "Tetrahedral — the double bond counts as two domains, giving 4 in all",
+      "Trigonal pyramidal — three outer atoms around one central atom always form a pyramid",
+      "Bent — the fat double bond squeezes the two hydrogens toward each other",
+      "Trigonal planar, about 120° — a double bond still counts as only one domain"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count domains, not bonds: a double bond is one fatter region of electron density, not two separate regions.",
+      "Three domains with zero lone pairs means atoms fill all three corners of a flat triangle."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-005",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The central carbon in CO₂ has 2 electron domains and no lone pairs. The central boron in BF₃ has 3 electron domains and no lone pairs. Subtract the ideal bond angle of BF₃ from the ideal bond angle of CO₂. Type your answer as a number of degrees.",
+    "answer": "60",
+    "hints": [
+      "Two domains give a linear arrangement; three domains give a trigonal planar arrangement. Look up each ideal angle from the domain count.",
+      "Linear is 180° and trigonal planar is 120° — now subtract."
+    ]
+  },
+  {
+    "id": "chem-molecular-shape-vsepr-006",
+    "loId": "chem.molecular-shape-vsepr",
+    "cedCode": "CHEM-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Rank the H–X–H bond angles in CH₄ (carbon: 4 bonds, 0 lone pairs), NH₃ (nitrogen: 3 bonds, 1 lone pair), and H₂O (oxygen: 2 bonds, 2 lone pairs) from largest to smallest, and give the reason.",
+    "choices": [
+      "H₂O > NH₃ > CH₄ — fewer outer atoms leaves each remaining bond more room to spread out",
+      "CH₄ > NH₃ > H₂O — all three centers have 4 domains, and each lone pair fans out wider than a bonding pair and squeezes the bonds closer together",
+      "All three are exactly 109.5°, because all three central atoms have four electron domains",
+      "NH₃ > CH₄ > H₂O — a pyramid opens its angles wider than a tetrahedron does"
+    ],
+    "answer": "B",
+    "hints": [
+      "All three central atoms have four electron domains, so all three start from the same ideal angle of 109.5°.",
+      "A lone pair is held by only one nucleus, so it spreads wider and shaves a few degrees off: 109.5° drops to about 107°, then to about 104.5°."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-001",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Hydrogen bonding, the strongest of the intermolecular forces, appears only when a hydrogen atom is bonded directly to which atoms?",
+    "choices": [
+      "Any nonmetal at all",
+      "Carbon, silicon, or sulfur",
+      "Nitrogen, oxygen, or fluorine",
+      "Chlorine, bromine, or iodine"
+    ],
+    "answer": "C",
+    "hints": [
+      "Only the smallest, most electronegative partners strip enough charge off the hydrogen to make this force possible.",
+      "Three elements qualify, and all three sit in the upper right of the table."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-002",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Classify the P–Cl bond using electronegativities P = 2.1 and Cl = 3.0. (ΔEN below 0.4 is nonpolar covalent, 0.4 to 1.7 is polar covalent, above 1.7 is ionic.)",
+    "choices": [
+      "Nonpolar covalent — 0.9 is a small gap, and both atoms are nonmetals",
+      "Polar covalent, with the partial negative end on the chlorine",
+      "Polar covalent, with the partial negative end on the phosphorus",
+      "Ionic — a difference of 0.9 is enough to transfer the electron outright"
+    ],
+    "answer": "B",
+    "hints": [
+      "Do the subtraction first: 3.0 − 2.1, then find which window that value falls in.",
+      "The MORE electronegative atom holds the shared pair closer, so it carries the partial negative end."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-003",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Table sugar dissolves readily in water but not in gasoline, which is a mixture of nonpolar hydrocarbons. What does this tell you about a sugar molecule?",
+    "choices": [
+      "It is polar, since like dissolves like and the polar solvent is the one that dissolved it",
+      "It is nonpolar, since only nonpolar substances dissolve in anything",
+      "It is ionic, since only ionic compounds can dissolve in water",
+      "It has no intermolecular forces at all, so nothing keeps it out of solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Like dissolves like: a solute dissolves best in a solvent whose polarity matches its own.",
+      "Water is polar and gasoline is nonpolar. Sugar went into only one of them."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-004",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Boron trifluoride, BF₃, is trigonal planar with no lone pairs on the boron. Nitrogen trifluoride, NF₃, is trigonal pyramidal with one lone pair on the nitrogen. Both molecules contain strongly polar bonds to fluorine. Which molecule is POLAR overall, and why?",
+    "choices": [
+      "Both are polar, because both contain strongly polar bonds",
+      "BF₃ only — boron is far less electronegative than nitrogen, so its bonds pull harder",
+      "Neither — three identical outer atoms always cancel, whatever the shape",
+      "NF₃ only — its lone pair breaks the symmetry so the bond dipoles cannot cancel, while BF₃'s three identical dipoles cancel in a flat symmetric triangle"
+    ],
+    "answer": "D",
+    "hints": [
+      "Bond dipoles are arrows that must be added up in the geometry VSEPR gives you — polar bonds alone never settle the question.",
+      "Run the shape test: no lone pairs on the central atom AND identical outer atoms means the dipoles cancel; a lone pair on the center breaks that symmetry."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-005",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "The refrigerant CCl₂F₂ contains both C–Cl bonds and C–F bonds. Using electronegativities C = 2.5, Cl = 3.0, and F = 4.0, calculate the electronegativity difference (ΔEN) of the MORE polar of those two bond types. Type your answer as a number.",
+    "answer": "1.5",
+    "hints": [
+      "Work out each ΔEN separately by subtracting the smaller electronegativity from the larger one.",
+      "C–Cl gives 3.0 − 2.5 and C–F gives 4.0 − 2.5. Report the larger of the two differences."
+    ]
+  },
+  {
+    "id": "chem-polarity-intermolecular-forces-006",
+    "loId": "chem.polarity-intermolecular-forces",
+    "cedCode": "CHEM-4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Butane (C₄H₁₀) boils at −1 °C, while propane (C₃H₈) boils at −42 °C. Both molecules are nonpolar, and butane is the larger of the two. What best explains butane's much higher boiling point?",
+    "choices": [
+      "Butane is polar and propane is not, so only butane has dipole–dipole attractions",
+      "Butane's C–C covalent bonds are stronger, so boiling it takes more energy to break them",
+      "Butane is the bigger molecule with more electrons, so its London dispersion forces are stronger",
+      "Butane can hydrogen bond to its neighbors because it contains hydrogen atoms"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both molecules are nonpolar, so only one type of intermolecular force is available to either of them.",
+      "Boiling pulls molecules apart from each other and never breaks the covalent bonds inside them — and dispersion grows with molecular size and electron count."
+    ]
+  }
+]

@@ -1,0 +1,430 @@
+[
+  {
+    "id": "chem-classifying-matter-001",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these samples is a pure ELEMENT?",
+    "choices": [
+      "Stainless steel, a uniform blend of iron, chromium, and nickel",
+      "Neon gas sealed inside a lighted sign",
+      "Ammonia, NH₃",
+      "Muddy river water with silt suspended in it"
+    ],
+    "answer": "B",
+    "hints": [
+      "An element contains only ONE kind of atom and cannot be broken down by any chemical reaction."
+    ]
+  },
+  {
+    "id": "chem-classifying-matter-002",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Gray iron filings are stirred into yellow powdered sulfur. The gray specks are still clearly visible among the yellow powder, and dragging a magnet through the pile pulls the iron back out. How should this sample be classified?",
+    "choices": [
+      "Compound, because iron and sulfur are now combined into one material",
+      "Element, because iron and sulfur are both elements",
+      "Heterogeneous mixture — the two solids are unbonded and you can point to visibly different regions",
+      "Homogeneous mixture, because stirring spread the two powders evenly"
+    ],
+    "answer": "C",
+    "hints": [
+      "A magnet is a PHYSICAL tool — anything it can undo was never chemically bonded.",
+      "Once you know it is a mixture, ask whether you can see regions of different composition."
+    ]
+  },
+  {
+    "id": "chem-classifying-matter-003",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these samples is a HOMOGENEOUS MIXTURE?",
+    "choices": [
+      "Vinegar — acetic acid fully dissolved in water, uniform throughout, and the strength can be adjusted",
+      "Dry ice, solid CO₂",
+      "A length of copper wire",
+      "Olive oil floating in a layer on top of water"
+    ],
+    "answer": "A",
+    "hints": [
+      "First decide pure or mixed: can the recipe be adjusted, or is the composition locked?",
+      "Then ask whether you could point at visibly different regions inside the sample."
+    ]
+  },
+  {
+    "id": "chem-classifying-matter-004",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two sealed flasks sit on a bench. Flask 1 is labeled H₂O. Flask 2 is labeled H₂ + O₂. Both contents are colorless and look perfectly uniform. What is the correct classification of each?",
+    "choices": [
+      "Both are compounds, because both flasks contain hydrogen and oxygen",
+      "Flask 1 is a mixture and Flask 2 is a compound",
+      "Flask 1 is a compound and Flask 2 is a homogeneous mixture of two elements",
+      "Both are homogeneous mixtures, because both look uniform"
+    ],
+    "answer": "C",
+    "hints": [
+      "One chemical formula with no plus sign means the atoms are chemically bonded.",
+      "A plus sign between two formulas means two separate substances happen to share the same container — nothing is bonded, so the ratio is adjustable."
+    ]
+  },
+  {
+    "id": "chem-classifying-matter-005",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A colorless liquid is gently boiled. The vapor is collected and condenses into pure water, and a dry white solid is left behind in the flask. Which conclusion about the original liquid is best supported?",
+    "choices": [
+      "It was a compound, because it came apart into two different substances",
+      "It was an element, because elements are the only substances that boil cleanly",
+      "It was a heterogeneous mixture, because two substances were recovered from it",
+      "It was a homogeneous mixture, because a purely physical change — boiling — separated it into two substances"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what kind of change boiling is, and what kind of change is required to break a compound apart.",
+      "Compounds only come apart in a chemical reaction; anything separable by boiling, filtering, or a magnet was a mixture. The liquid looked uniform before boiling, which fixes the second half of the label."
+    ]
+  },
+  {
+    "id": "chem-classifying-matter-006",
+    "loId": "chem.classifying-matter",
+    "cedCode": "CHEM-1.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Every sample of a certain compound of hydrogen and oxygen contains exactly 8.0 g of oxygen for each 1.0 g of hydrogen, no matter where on Earth the sample came from. A chemist fully decomposes a 27.0 g sample of this compound. How many grams of oxygen are released? Type your answer as a number.",
+    "answer": "24",
+    "hints": [
+      "A compound has a FIXED mass ratio, so the 8.0 : 1.0 split holds for a sample of any size.",
+      "8.0 g of oxygen plus 1.0 g of hydrogen makes 9.0 g of compound; 27.0 g is three of those portions."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-001",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is a CHEMICAL property of iron?",
+    "choices": [
+      "Its silvery gray color",
+      "Its density of 7.87 g/cm³",
+      "Its ability to rust when left in damp air",
+      "Its melting point of 1538 °C"
+    ],
+    "answer": "C",
+    "hints": [
+      "A chemical property can only be observed by letting the substance stop being itself."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-002",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these everyday events is a PHYSICAL change?",
+    "choices": [
+      "Candle wax melting and pooling around the wick",
+      "A silver spoon slowly turning black with tarnish",
+      "Baking soda fizzing when vinegar is poured on it",
+      "A firework burning with a bright green flame"
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the identity test on each: after the event, is the starting substance still chemically the same substance?",
+      "Three of the four produce substances that did not exist beforehand. One only changes state."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-003",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which pair lists TWO properties that are both intensive — that is, both independent of how much of the sample you have?",
+    "choices": [
+      "Mass and volume",
+      "Volume and melting point",
+      "Length and mass",
+      "Boiling point and density"
+    ],
+    "answer": "D",
+    "hints": [
+      "Imagine cutting the sample in half. Which listed values would change, and which would stay the same?",
+      "Mass, volume, and length all shrink when you cut the sample; the other two do not."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-004",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student watches bubbles form in two containers: (1) a pot of water held at a steady 100 °C on a stove, and (2) a chunk of limestone, CaCO₃, dropped into cold hydrochloric acid, which releases CO₂ gas. Which statement classifies the two events correctly?",
+    "choices": [
+      "Both are chemical changes, because gas is produced in both",
+      "Container 1 is a physical change and container 2 is a chemical change — the gas leaving the pot is still H₂O, while the CO₂ gas did not exist as CO₂ a moment earlier",
+      "Both are physical changes, because bubbling is only a change of state",
+      "Container 1 is a chemical change and container 2 is a physical change, because heating always drives a reaction"
+    ],
+    "answer": "B",
+    "hints": [
+      "Bubbles alone prove nothing. The useful question is whether the escaping gas is a NEW substance.",
+      "Steam is the same H₂O that was in the pot; the carbon dioxide had to be built out of the limestone and the acid."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-005",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 12.0 g piece of wood is burned in an open dish, and only 0.9 g of ash is left behind. A student concludes that mass was destroyed. Which explanation is correct?",
+    "choices": [
+      "Mass really is destroyed during burning, which is why ash always weighs less than the fuel",
+      "Wood is a mixture, and conservation of mass applies only to pure substances",
+      "Conservation of mass applies only to physical changes, never to chemical reactions",
+      "Mass was conserved — carbon dioxide and water vapor formed and drifted away into the room, and nobody weighed them"
+    ],
+    "answer": "D",
+    "hints": [
+      "Atoms are never created or destroyed. If the products weigh less, ask where some of them went.",
+      "The dish is open to the air, so any gaseous product escapes before the balance sees it."
+    ]
+  },
+  {
+    "id": "chem-physical-chemical-changes-006",
+    "loId": "chem.physical-chemical-changes",
+    "cedCode": "CHEM-1.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Inside a sealed steel flask, 8.0 g of methane, CH₄, burns completely in 32.0 g of oxygen gas. The only products are 22.0 g of carbon dioxide and some water. What mass of water, in grams, is produced? Type your answer as a number.",
+    "answer": "18",
+    "hints": [
+      "The flask is sealed, so nothing enters or leaves: total mass of reactants = total mass of products.",
+      "Add both reactant masses to get the total, then subtract the 22.0 g of carbon dioxide."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-001",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "How many significant figures are in the measurement 0.00830 g?",
+    "choices": [
+      "2",
+      "3",
+      "5",
+      "6"
+    ],
+    "answer": "B",
+    "hints": [
+      "Leading zeros only hold the decimal point in place; start counting at the first nonzero digit, and remember a trailing zero counts when a decimal point is written."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-002",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular piece of foil is measured as 6.0 cm by 4.25 cm. What is its area, correctly reported?",
+    "choices": [
+      "25.50 cm²",
+      "25.5 cm²",
+      "26 cm²",
+      "25 cm²"
+    ],
+    "answer": "C",
+    "hints": [
+      "Area is a multiplication, so the fewest-SIGNIFICANT-FIGURES rule applies.",
+      "6.0 has 2 sig figs and 4.25 has 3. The raw product is 25.5 — round it to 2 significant figures."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-003",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A chemist masses three portions of a solid and adds them: 24.68 g + 3.1 g + 0.257 g. What is the total, correctly reported?",
+    "choices": [
+      "28.037 g",
+      "28.04 g",
+      "28 g",
+      "28.0 g"
+    ],
+    "answer": "D",
+    "hints": [
+      "This is addition, so the limiting question is DECIMAL PLACES, not significant-figure count.",
+      "3.1 g is known only to the tenths place, so the sum can be too. The raw total is 28.037 g."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-004",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sample is recorded on a lab sheet as having a mass of 0.00450 kg. Which statement about this measurement is correct?",
+    "choices": [
+      "Rewritten in grams it is 4.50 g, and the measurement has 3 significant figures",
+      "Rewritten in grams it is 4.5 g, and the measurement has 2 significant figures",
+      "It has 5 significant figures, because five digits are written after the decimal point",
+      "Rewritten in grams it is 450 g, and the measurement has 3 significant figures"
+    ],
+    "answer": "A",
+    "hints": [
+      "Changing the prefix rescales the number but never changes how certain the measurement was.",
+      "Count sig figs first: the two leading zeros are placeholders, the 4 and 5 count, and the trailing zero counts because a decimal point is written. Then convert with 1 kg = 1000 g."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-005",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An empty beaker has a mass of 68.4 g. Filled with a liquid, the beaker and liquid together have a mass of 145.27 g. Report the mass of the liquid alone, in grams, to the correct number of significant figures. Type your answer as a number.",
+    "answer": "76.9",
+    "hints": [
+      "Subtraction follows the fewest-DECIMAL-PLACES rule, not the significant-figure rule.",
+      "145.27 − 68.4 = 76.87 on the calculator, but 68.4 is known only to the tenths place."
+    ]
+  },
+  {
+    "id": "chem-measurement-sig-figs-006",
+    "loId": "chem.measurement-sig-figs",
+    "cedCode": "CHEM-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student finds the density of a liquid. The empty graduated cylinder has a mass of 24.87 g. With the liquid in it, the cylinder has a mass of 45.2 g. The liquid occupies 25.0 mL. Which is the correctly reported density?",
+    "choices": [
+      "0.8 g/mL",
+      "0.81 g/mL",
+      "0.812 g/mL",
+      "0.8132 g/mL"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two operations, two different rules: the subtraction that gives the liquid's mass is limited by decimal places, and the division that follows is limited by significant figures.",
+      "45.2 − 24.87 = 20.33, which must be reported to the tenths place as 20.3 g — that is 3 significant figures. Now divide by 25.0 mL, which also has 3."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-001",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A solid block with a density of 0.78 g/cm³ is dropped into a tank of water, whose density is 1.00 g/mL. What will the block do, and why?",
+    "choices": [
+      "Float, because its density is less than the density of water",
+      "Sink, because every solid is denser than every liquid",
+      "Sink, because 0.78 g/cm³ is a smaller number and smaller numbers mean heavier packing",
+      "Stay suspended halfway down, because the two densities are fairly close"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sinking or floating compares the object's mass PER UNIT VOLUME to the fluid's, not its total mass."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-002",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sample of olive oil has a mass of 36.8 g and occupies a volume of 40.0 mL. What is its density?",
+    "choices": [
+      "1.09 g/mL",
+      "1472 g/mL",
+      "0.92 g/mL",
+      "0.092 g/mL"
+    ],
+    "answer": "C",
+    "hints": [
+      "Density = mass ÷ volume. Check that the units you end up with are grams per milliliter.",
+      "Dividing volume by mass instead gives 1.09, which is the flipped answer — make sure grams sits on top."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-003",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A metal cube has a mass of 40.5 g. Dropped into a graduated cylinder holding 22.0 mL of water, it raises the water level to 37.0 mL. Reference densities in g/cm³: magnesium 1.74, aluminum 2.70, zinc 7.14, silver 10.5. Which metal is it? (1 mL = 1 cm³)",
+    "choices": [
+      "Magnesium, 1.74 g/cm³",
+      "Aluminum, 2.70 g/cm³",
+      "Zinc, 7.14 g/cm³",
+      "Silver, 10.5 g/cm³"
+    ],
+    "answer": "B",
+    "hints": [
+      "Get the cube's volume by displacement: final water level minus initial water level.",
+      "The volume is 15.0 cm³. Divide 40.5 g by that and match the result to the reference list."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-004",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A crystal has a volume of 4.0 cm³. Convert this volume to cubic millimeters, given that 1 cm = 10 mm.",
+    "choices": [
+      "40 mm³",
+      "400 mm³",
+      "4000 mm³",
+      "0.40 mm³"
+    ],
+    "answer": "C",
+    "hints": [
+      "The conversion factor has to be applied to all three dimensions, so it gets cubed along with the unit.",
+      "1 cm³ = (10 mm)³ = 1000 mm³. Now scale that up to 4.0 cm³."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-005",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Mercury has a density of 13.6 g/mL. A procedure calls for 68.0 g of mercury, but the only glassware available measures volume. What volume should be measured out, and why?",
+    "choices": [
+      "924.8 mL, found by multiplying 68.0 g × 13.6 g/mL",
+      "5.00 mL, found by using the factor 1 mL / 13.6 g so that grams cancel",
+      "13.6 mL, because the density is the volume of any sample of mercury",
+      "68.0 mL, because 1 g of any liquid occupies 1 mL"
+    ],
+    "answer": "B",
+    "hints": [
+      "Write the units only and check what cancels: you start with grams and must finish with milliliters.",
+      "Multiplying grams by g/mL leaves g²/mL, a unit that does not exist — so the density factor has to be flipped."
+    ]
+  },
+  {
+    "id": "chem-density-dimensional-analysis-006",
+    "loId": "chem.density-dimensional-analysis",
+    "cedCode": "CHEM-1.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A rectangular bar of an unknown metal measures 5.0 cm by 2.0 cm by 2.0 cm and has a mass of 0.1792 kg. What is its density in g/cm³? Type your answer as a number. (1 kg = 1000 g)",
+    "answer": "8.96",
+    "hints": [
+      "The mass is in kilograms but the answer must be in grams per cubic centimeter — convert the mass first, using 1000 g / 1 kg.",
+      "The bar's volume is 5.0 × 2.0 × 2.0 = 20.0 cm³, and 0.1792 kg is 179.2 g. Now divide."
+    ]
+  }
+]
