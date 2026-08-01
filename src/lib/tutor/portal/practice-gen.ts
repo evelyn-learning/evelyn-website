@@ -405,14 +405,75 @@ export function practiceGenSources(): PracticeGenSources {
   };
 }
 
-/** Sample a generation anchor: an existing same-LO item at the target
- *  difficulty; if none at that difficulty, any same-LO item; null when the
- *  LO has zero existing practice at all (fresh-LO edge case). */
-function pickAnchor(items: PracticeItem[], difficulty?: Difficulty): PracticeItem | null {
-  if (items.length === 0) return null;
+/** Fisher-Yates shuffle of `[0, n)` using an injectable RNG (defaults to
+ *  `Math.random`) — kept separate from `pickAnchorsForSlots` so tests can
+ *  supply a deterministic sequence without monkeypatching the global. */
+function shuffledIndices(n: number, rng: () => number): number[] {
+  const idx = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
+}
+
+/**
+ * Sample one generation anchor PER SLOT: an existing same-LO item at the
+ * target difficulty; if none at that difficulty, any same-LO item; `null`
+ * for every slot when the LO has zero existing practice at all (fresh-LO
+ * edge case).
+ *
+ * Production defect (2026-08-01, prod LO `geom.angles-and-measure`): a
+ * 2-slot parallel-generation request sampled ONE anchor and reused it for
+ * BOTH slots. Same anchor + same prompt led both parallel calls to converge
+ * on the same problem template with only the numbers swapped — hash-dedup
+ * can't catch this since it hashes exact text. When the eligible pool has
+ * >=2 distinct items, each slot now gets a DIFFERENT one (sampled without
+ * replacement — cycling back through the shuffled pool only if there are
+ * more slots than pool items, which never happens today since
+ * `MAX_GENERATIONS_PER_REQUEST` is 2). A pool of exactly 1 item falls back
+ * to that same anchor for every slot (no crash) — variety in that case is
+ * carried instead by the per-slot prompt directive (see
+ * `slotVariationDirective`).
+ *
+ * `rng` defaults to `Math.random` (matching this module's prior sampling)
+ * but is injectable so tests can assert the distinct-per-slot assignment
+ * deterministically.
+ */
+export function pickAnchorsForSlots(
+  items: PracticeItem[],
+  slotCount: number,
+  difficulty?: Difficulty,
+  rng: () => number = Math.random,
+): Array<PracticeItem | null> {
+  if (slotCount <= 0) return [];
+  if (items.length === 0) return Array.from({ length: slotCount }, () => null);
   const sameDifficulty = difficulty ? items.filter((i) => i.difficulty === difficulty) : [];
   const pool = sameDifficulty.length > 0 ? sameDifficulty : items;
-  return pool[Math.floor(Math.random() * pool.length)];
+  if (pool.length === 1) return Array.from({ length: slotCount }, () => pool[0]);
+  const order = shuffledIndices(pool.length, rng);
+  return Array.from({ length: slotCount }, (_, i) => pool[order[i % order.length]]);
+}
+
+/**
+ * Per-slot variation directive appended to the generation prompt when
+ * multiple generations run in parallel for the same request. Even WITH a
+ * distinct anchor per slot (`pickAnchorsForSlots`), the model can still
+ * gravitate to the same "obvious" framing for a given LO — and a pool of
+ * exactly 1 anchor gives every slot the identical anchor text. Each slot
+ * gets a DIFFERENT instruction so siblings diverge in problem SHAPE, not
+ * just the numbers plugged into an identical template.
+ */
+const SLOT_VARIATION_DIRECTIVES = [
+  'This is generation 1 of up to 2 for this objective — write a natural, direct framing of the skill.',
+  'This is generation 2 of up to 2 for this objective, generated in parallel with a sibling problem that ' +
+    'may share the same anchor — make this one STRUCTURALLY distinct from a straightforward retelling: ' +
+    'change which quantity is the unknown, the surface context/scenario, the givens/unknown arrangement, ' +
+    'or the specific sub-skill angle within this objective. Do not just reuse the same setup with new numbers.',
+];
+
+function slotVariationDirective(slotIndex: number): string {
+  return SLOT_VARIATION_DIRECTIVES[slotIndex % SLOT_VARIATION_DIRECTIVES.length];
 }
 
 // Round-3 review mitigation for the parked bare-decimal residual (a percent
@@ -428,16 +489,18 @@ const PERCENT_ANSWER_CLAUSE =
   'asks for the answer "as a percent" (or "what percent...") and state finalAnswer as the percent ' +
   'numeral with a % sign (e.g. "50%"), never the decimal form ("0.5").';
 
-function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null): string {
+function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeItem | null, slotIndex: number): string {
   const difficultyLabel = opts.difficulty
     ? `difficulty bucket ${opts.difficulty} of 4 (1 = easier than typical, 4 = extension-grade)`
     : 'a typical practice difficulty for this objective';
+  const slotDirective = slotVariationDirective(slotIndex);
   if (anchor) {
     return (
       `ANCHOR problem (do NOT reuse its numbers or context):\n${anchor.problemText}\n` +
       (anchor.expectedAnswer ? `ANCHOR answer (for difficulty calibration): ${anchor.expectedAnswer}\n` : '') +
       `\nLearning objective: ${opts.loId} (topic: ${opts.topic}).\n` +
-      `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} Write the problem now.`
+      `\nWrite ONE fresh problem testing the same skill at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ` +
+      `${slotDirective} Write the problem now.`
     );
   }
   // Fresh-LO edge case: zero existing practice to anchor off of. Practice
@@ -447,7 +510,7 @@ function buildUserPrompt(opts: GeneratePracticeItemsOptions, anchor: PracticeIte
     `There is no existing practice problem yet for this learning objective (brand-new LO).\n` +
     `Learning objective id: ${opts.loId} (topic: ${opts.topic}).\n` +
     `Infer the likely skill this LO id names and write ONE self-contained practice problem testing ` +
-    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} Write the problem now.`
+    `it at ${difficultyLabel}. ${PERCENT_ANSWER_CLAUSE} ${slotDirective} Write the problem now.`
   );
 }
 
@@ -456,8 +519,9 @@ async function generateOne(
   anchor: PracticeItem | null,
   sources: PracticeGenSources,
   excludeHashes: string[],
+  slotIndex: number,
 ): Promise<PracticeItem | null> {
-  const prompt = buildUserPrompt(opts, anchor);
+  const prompt = buildUserPrompt(opts, anchor, slotIndex);
   const result = await sources.generateAndVerify(prompt, excludeHashes);
   if (!result) return null; // unverified/gate-failed — never served, never banked
   const { gen, hash } = result;
@@ -506,7 +570,13 @@ export async function generatePracticeItems(
   }
   if (allowed <= 0) return [];
 
-  const anchor = pickAnchor(opts.anchorItems, opts.difficulty);
+  // One anchor PER SLOT — distinct when the pool has >=2 candidates, so two
+  // parallel generations don't converge on the same template (see
+  // `pickAnchorsForSlots`'s doc comment for the production defect this
+  // fixes). Each slot also gets a different prompt directive
+  // (`slotVariationDirective`, applied inside `buildUserPrompt`) so even a
+  // pool of exactly 1 anchor still steers the two generations apart.
+  const anchors = pickAnchorsForSlots(opts.anchorItems, allowed, opts.difficulty);
   // Exclude-hash seed: every already-known same-LO item's text hash, so a
   // regeneration doesn't just reproduce existing content verbatim. Both
   // parallel generations share this same base list — there is no sibling
@@ -515,7 +585,7 @@ export async function generatePracticeItems(
   const excludeHashes = opts.anchorItems.map((it) => simpleHash(it.problemText));
 
   const settled = await Promise.allSettled(
-    Array.from({ length: allowed }, () => generateOne(opts, anchor, sources, excludeHashes)),
+    anchors.map((anchor, i) => generateOne(opts, anchor, sources, excludeHashes, i)),
   );
 
   const items: PracticeItem[] = [];
