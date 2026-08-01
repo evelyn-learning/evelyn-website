@@ -37,11 +37,35 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 interface PointerProposal {
   content: string;
-  kind: 'gotcha' | 'frq-vocab' | 'edge-case' | 'common-error' | 'tip';
+  kind: 'gotcha' | 'frq-vocab' | 'edge-case' | 'common-error' | 'tip' | 'vocab-note';
   rationale: string;
 }
 
-const SYSTEM = `You are an AP exam preparation expert producing study-notes "pointers" for a single CED topic.
+// HS course slug (from `evelyn.hs.<slug>.`) → exact portal course-title
+// string. Kept in sync with the same map in
+// extract-topic-notes-baselines.ts — must byte-match the portal course
+// title or the Notes tab silently resolves nothing.
+const HS_COURSE_NAMES: Record<string, string> = {
+  chem: 'Chemistry',
+  alg1: 'Algebra 1',
+};
+
+function isHS(plan: LessonPlan): boolean {
+  return plan.id.startsWith('evelyn.hs.');
+}
+
+function courseFor(plan: LessonPlan): string {
+  if (plan.id.startsWith('evelyn.ap.macro.')) return 'AP Macroeconomics';
+  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
+  return plan.title;
+}
+
+// AP courses are exam-prep by design (FRQ rubric vocabulary, CB Chief
+// Reader notes, etc.) — that framing is explicitly forbidden for HS
+// baselines (no SAT/ACT/AP mentions), so HS gets its own system prompt
+// rather than reusing the AP one with substitutions.
+const SYSTEM_AP = `You are an AP exam preparation expert producing study-notes "pointers" for a single CED topic.
 
 Pointers are tactical reminders for exam revision — gotchas, FRQ rubric vocabulary, edge cases, common errors, and exam-strategy tips. They are NOT theory (definitions/formulas/laws) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's revision notes; they're the things the student needs to remember the night before the exam.
 
@@ -59,6 +83,34 @@ Cover a mix of kinds. Prioritize:
 Avoid:
   - Restating theory that's already in the lesson plan.
   - Generic study advice ("review before the exam"). Pointers must be CONTENT-specific.
+  - Anything > 300 chars. Tighten.
+
+Return ONLY the JSON array. No prose, no code fences, no preamble.`;
+
+// HS variant: same tactical-reminder shape, but framed around ordinary
+// class work (homework, quizzes, tests) instead of a named external
+// exam. Do NOT mention SAT, ACT, AP, or any exam-prep vocabulary (FRQ,
+// Chief Reader, rubric, free-response) — this is core course content,
+// not test prep.
+const SYSTEM_HS = `You are an experienced high-school teacher producing study-notes "pointers" for a single topic in a course.
+
+Pointers are tactical reminders students actually need — gotchas, precise vocabulary/notation students misuse, edge cases, common errors, and quick self-check tips. They are NOT theory (definitions/formulas/laws) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's notes; they're the things a student needs to remember to avoid the mistakes this class makes over and over.
+
+Given a topic + the lesson content (theory key ideas, worked examples, recap takeaways), produce 4-8 pointers as a JSON array. Each pointer has:
+  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", "Always check for Z before you Y").
+  - "kind":      one of "gotcha" | "vocab-note" | "edge-case" | "common-error" | "tip".
+  - "rationale": 1-2 sentences explaining why this pointer is worth remembering. (Not persisted — for human review only.)
+
+Cover a mix of kinds. Prioritize:
+  - Precise vocabulary/notation students get wrong or use loosely (e.g. sign errors, notation students drop or mix up).
+  - Common errors this specific topic invites (the ones a teacher sees every year).
+  - Edge cases the lesson touches but doesn't emphasize.
+  - Conceptual confusions with adjacent topics in the same unit.
+
+Avoid:
+  - Restating theory that's already in the lesson content.
+  - Any mention of SAT, ACT, AP, standardized tests, exam strategy, FRQs, or rubrics — this is core class content, not test prep.
+  - Generic study advice ("review before the test"). Pointers must be CONTENT-specific.
   - Anything > 300 chars. Tighten.
 
 Return ONLY the JSON array. No prose, no code fences, no preamble.`;
@@ -91,8 +143,10 @@ function loadAllPlans(): LessonPlan[] {
   return plans;
 }
 
+let cachedPlans: LessonPlan[] | null = null;
 function findPlan(planId: string): LessonPlan | null {
-  return loadAllPlans().find((p) => p.id === planId) ?? null;
+  if (!cachedPlans) cachedPlans = loadAllPlans();
+  return cachedPlans.find((p) => p.id === planId) ?? null;
 }
 
 function fileNameFor(plan: LessonPlan): string {
@@ -103,15 +157,24 @@ function fileNameFor(plan: LessonPlan): string {
       : typeof cedUnitRaw === 'string'
         ? parseInt(cedUnitRaw, 10) || 0
         : 0;
-  const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
-  const courseSlug = plan.id.match(/^evelyn\.ap\.([a-z]+)\./)?.[1] ?? 'unknown';
-  return `ap-${courseSlug}-u${cedUnit}-${slugFromId}.ts`;
+  const apMatch = plan.id.match(/^evelyn\.ap\.([a-z]+)\./);
+  if (apMatch) {
+    const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
+    return `ap-${apMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  if (hsMatch) {
+    const slugFromId = plan.id.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
+  return `${fallbackSlug}.ts`;
 }
 
 function buildUserMessage(plan: LessonPlan): string {
   const metadata = (plan.metadata ?? {}) as { cedUnit?: string | number; cedTopic?: string; cedTitle?: string };
   const lines: string[] = [];
-  lines.push(`Course: ${plan.id.startsWith('evelyn.ap.macro.') ? 'AP Macroeconomics' : plan.title}`);
+  lines.push(`Course: ${courseFor(plan)}`);
   lines.push(`CED Unit: ${metadata.cedUnit ?? '?'}`);
   lines.push(`CED Topic: ${metadata.cedTopic ?? '?'}`);
   lines.push(`CED Title: ${metadata.cedTitle ?? plan.title}`);
@@ -150,6 +213,17 @@ function buildUserMessage(plan: LessonPlan): string {
       if (t.problem) lines.push(`  Problem: ${t.problem}`);
       if (t.expectedAnswer) lines.push(`  Expected: ${t.expectedAnswer}`);
       lines.push('');
+    } else if (seg.kind === 'misconception_check') {
+      const mc = seg as Segment & {
+        question?: string;
+        commonErrors?: Array<{ answer: string; misconception: string; correctsTo: string }>;
+      };
+      lines.push(`--- Misconception check "${seg.id}":`);
+      if (mc.question) lines.push(`  Question: ${mc.question}`);
+      for (const ce of mc.commonErrors ?? []) {
+        lines.push(`  - Wrong answer "${ce.answer}": ${ce.misconception} → ${ce.correctsTo}`);
+      }
+      lines.push('');
     } else if (seg.kind === 'recap') {
       const r = seg as Segment & { mustRemember?: string[] };
       lines.push(`--- Recap takeaways:`);
@@ -164,10 +238,11 @@ function buildUserMessage(plan: LessonPlan): string {
 
 async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
   const userMessage = buildUserMessage(plan);
+  const system = isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 4000,
-    system: SYSTEM,
+    system,
     messages: [{ role: 'user', content: userMessage }],
   });
   const text = response.content
@@ -189,16 +264,11 @@ async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
   return parsed as PointerProposal[];
 }
 
-async function main(): Promise<void> {
-  const planId = process.argv[2];
-  if (!planId) {
-    console.error('Usage: scripts/gen-topic-notes-pointers.ts <planId>');
-    process.exit(2);
-  }
+async function genOne(planId: string): Promise<boolean> {
   const plan = findPlan(planId);
   if (!plan) {
     console.error(`✗ plan not found: ${planId}`);
-    process.exit(1);
+    return false;
   }
   const baselineFile = path.join(
     __dirname,
@@ -213,7 +283,7 @@ async function main(): Promise<void> {
   if (!fs.existsSync(baselineFile)) {
     console.error(`✗ baseline file not found: ${baselineFile}`);
     console.error(`  run extractor first: scripts/extract-topic-notes-baselines.ts ${planId}`);
-    process.exit(1);
+    return false;
   }
 
   console.log(`→ generating pointers for ${planId} via ${MODEL}...`);
@@ -223,12 +293,33 @@ async function main(): Promise<void> {
   const draftFile = baselineFile.replace(/\.ts$/, '.pointers.draft.json');
   fs.writeFileSync(draftFile, JSON.stringify(pointers, null, 2), 'utf-8');
   console.log(`✓ wrote draft to ${draftFile}`);
-  console.log('');
+  return true;
+}
+
+async function main(): Promise<void> {
+  // Accepts one or more space-separated planIds. Each still gets its
+  // own Opus call (this is the paid step) — batching only amortizes
+  // the loadAllPlans() cost and lets a whole course run in one process.
+  const planIds = process.argv.slice(2);
+  if (planIds.length === 0) {
+    console.error('Usage: scripts/gen-topic-notes-pointers.ts <planId> [<planId2> ...]');
+    process.exit(2);
+  }
+
+  let okCount = 0;
+  for (const planId of planIds) {
+    const ok = await genOne(planId);
+    if (ok) okCount++;
+    console.log('');
+  }
+
+  console.log(`Done: ${okCount}/${planIds.length} pointer drafts generated.`);
   console.log('Next:');
-  console.log('  1. review the JSON draft — keep the strong pointers, drop the weak ones');
-  console.log(`  2. paste keepers into the pointers: [...] block of ${path.basename(baselineFile)}`);
+  console.log('  1. review each JSON draft — keep the strong pointers, drop the weak ones');
+  console.log('  2. paste keepers into the pointers: [...] block of the matching baseline seed file');
   console.log('  3. drop the rationale field when pasting (not persisted)');
   console.log('  4. delete the .pointers.draft.json file once merged (gitignored optional)');
+  if (okCount < planIds.length) process.exitCode = 1;
 }
 
 main().catch((err) => {

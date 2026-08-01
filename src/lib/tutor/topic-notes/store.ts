@@ -543,6 +543,48 @@ import { BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION } from './seeds/chem-u10-neu
 import { BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO } from './seeds/chem-u10-nuclear-chemistry-intro';
 import { BASELINE_CHEM_U10_PH_SCALE } from './seeds/chem-u10-ph-scale';
 
+// HS core: Algebra 1 (2026-08 backfill) — 40 baselines, units 1-10.
+import { BASELINE_ALG1_U1_REAL_NUMBERS_OPERATIONS } from './seeds/alg1-u1-real-numbers-operations';
+import { BASELINE_ALG1_U1_ORDER_OF_OPERATIONS } from './seeds/alg1-u1-order-of-operations';
+import { BASELINE_ALG1_U1_SIMPLIFYING_EXPRESSIONS } from './seeds/alg1-u1-simplifying-expressions';
+import { BASELINE_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA } from './seeds/alg1-u1-translating-words-to-algebra';
+import { BASELINE_ALG1_U2_ONE_TWO_STEP_EQUATIONS } from './seeds/alg1-u2-one-two-step-equations';
+import { BASELINE_ALG1_U2_MULTI_STEP_EQUATIONS } from './seeds/alg1-u2-multi-step-equations';
+import { BASELINE_ALG1_U2_LITERAL_EQUATIONS } from './seeds/alg1-u2-literal-equations';
+import { BASELINE_ALG1_U2_PROPORTIONS_PERCENTS } from './seeds/alg1-u2-proportions-percents';
+import { BASELINE_ALG1_U3_ONE_VARIABLE_INEQUALITIES } from './seeds/alg1-u3-one-variable-inequalities';
+import { BASELINE_ALG1_U3_COMPOUND_INEQUALITIES } from './seeds/alg1-u3-compound-inequalities';
+import { BASELINE_ALG1_U3_ABSOLUTE_VALUE } from './seeds/alg1-u3-absolute-value';
+import { BASELINE_ALG1_U4_RELATIONS_FUNCTIONS } from './seeds/alg1-u4-relations-functions';
+import { BASELINE_ALG1_U4_SLOPE_RATE_OF_CHANGE } from './seeds/alg1-u4-slope-rate-of-change';
+import { BASELINE_ALG1_U4_SLOPE_INTERCEPT_FORM } from './seeds/alg1-u4-slope-intercept-form';
+import { BASELINE_ALG1_U4_POINT_SLOPE_STANDARD_FORM } from './seeds/alg1-u4-point-slope-standard-form';
+import { BASELINE_ALG1_U4_PARALLEL_PERPENDICULAR } from './seeds/alg1-u4-parallel-perpendicular';
+import { BASELINE_ALG1_U5_SYSTEMS_BY_GRAPHING } from './seeds/alg1-u5-systems-by-graphing';
+import { BASELINE_ALG1_U5_SYSTEMS_SUBSTITUTION } from './seeds/alg1-u5-systems-substitution';
+import { BASELINE_ALG1_U5_SYSTEMS_ELIMINATION } from './seeds/alg1-u5-systems-elimination';
+import { BASELINE_ALG1_U5_SYSTEMS_APPLICATIONS } from './seeds/alg1-u5-systems-applications';
+import { BASELINE_ALG1_U6_EXPONENT_RULES } from './seeds/alg1-u6-exponent-rules';
+import { BASELINE_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION } from './seeds/alg1-u6-negative-exponents-scientific-notation';
+import { BASELINE_ALG1_U6_EXPONENTIAL_FUNCTIONS } from './seeds/alg1-u6-exponential-functions';
+import { BASELINE_ALG1_U6_EXPONENTIAL_GROWTH_DECAY } from './seeds/alg1-u6-exponential-growth-decay';
+import { BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS } from './seeds/alg1-u7-polynomial-operations';
+import { BASELINE_ALG1_U7_SPECIAL_PRODUCTS } from './seeds/alg1-u7-special-products';
+import { BASELINE_ALG1_U7_FACTORING_GCF_GROUPING } from './seeds/alg1-u7-factoring-gcf-grouping';
+import { BASELINE_ALG1_U7_FACTORING_TRINOMIALS } from './seeds/alg1-u7-factoring-trinomials';
+import { BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS } from './seeds/alg1-u7-factoring-special-forms';
+import { BASELINE_ALG1_U8_QUADRATIC_GRAPHS_VERTEX } from './seeds/alg1-u8-quadratic-graphs-vertex';
+import { BASELINE_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS } from './seeds/alg1-u8-solving-by-factoring-square-roots';
+import { BASELINE_ALG1_U8_COMPLETING_THE_SQUARE } from './seeds/alg1-u8-completing-the-square';
+import { BASELINE_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT } from './seeds/alg1-u8-quadratic-formula-discriminant';
+import { BASELINE_ALG1_U8_QUADRATIC_MODELS } from './seeds/alg1-u8-quadratic-models';
+import { BASELINE_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-radicals';
+import { BASELINE_ALG1_U9_RADICAL_EQUATIONS } from './seeds/alg1-u9-radical-equations';
+import { BASELINE_ALG1_U9_RATIONAL_EXPRESSIONS } from './seeds/alg1-u9-rational-expressions';
+import { BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS } from './seeds/alg1-u10-one-variable-statistics';
+import { BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES } from './seeds/alg1-u10-scatterplots-trend-lines';
+import { BASELINE_ALG1_U10_SEQUENCES } from './seeds/alg1-u10-sequences';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -947,6 +989,47 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION,
   BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO,
   BASELINE_CHEM_U10_PH_SCALE,
+  // HS core: Algebra 1 (2026-08 backfill)
+  BASELINE_ALG1_U1_REAL_NUMBERS_OPERATIONS,
+  BASELINE_ALG1_U1_ORDER_OF_OPERATIONS,
+  BASELINE_ALG1_U1_SIMPLIFYING_EXPRESSIONS,
+  BASELINE_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA,
+  BASELINE_ALG1_U2_ONE_TWO_STEP_EQUATIONS,
+  BASELINE_ALG1_U2_MULTI_STEP_EQUATIONS,
+  BASELINE_ALG1_U2_LITERAL_EQUATIONS,
+  BASELINE_ALG1_U2_PROPORTIONS_PERCENTS,
+  BASELINE_ALG1_U3_ONE_VARIABLE_INEQUALITIES,
+  BASELINE_ALG1_U3_COMPOUND_INEQUALITIES,
+  BASELINE_ALG1_U3_ABSOLUTE_VALUE,
+  BASELINE_ALG1_U4_RELATIONS_FUNCTIONS,
+  BASELINE_ALG1_U4_SLOPE_RATE_OF_CHANGE,
+  BASELINE_ALG1_U4_SLOPE_INTERCEPT_FORM,
+  BASELINE_ALG1_U4_POINT_SLOPE_STANDARD_FORM,
+  BASELINE_ALG1_U4_PARALLEL_PERPENDICULAR,
+  BASELINE_ALG1_U5_SYSTEMS_BY_GRAPHING,
+  BASELINE_ALG1_U5_SYSTEMS_SUBSTITUTION,
+  BASELINE_ALG1_U5_SYSTEMS_ELIMINATION,
+  BASELINE_ALG1_U5_SYSTEMS_APPLICATIONS,
+  BASELINE_ALG1_U6_EXPONENT_RULES,
+  BASELINE_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION,
+  BASELINE_ALG1_U6_EXPONENTIAL_FUNCTIONS,
+  BASELINE_ALG1_U6_EXPONENTIAL_GROWTH_DECAY,
+  BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS,
+  BASELINE_ALG1_U7_SPECIAL_PRODUCTS,
+  BASELINE_ALG1_U7_FACTORING_GCF_GROUPING,
+  BASELINE_ALG1_U7_FACTORING_TRINOMIALS,
+  BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS,
+  BASELINE_ALG1_U8_QUADRATIC_GRAPHS_VERTEX,
+  BASELINE_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS,
+  BASELINE_ALG1_U8_COMPLETING_THE_SQUARE,
+  BASELINE_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT,
+  BASELINE_ALG1_U8_QUADRATIC_MODELS,
+  BASELINE_ALG1_U9_SIMPLIFYING_RADICALS,
+  BASELINE_ALG1_U9_RADICAL_EQUATIONS,
+  BASELINE_ALG1_U9_RATIONAL_EXPRESSIONS,
+  BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS,
+  BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES,
+  BASELINE_ALG1_U10_SEQUENCES,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));

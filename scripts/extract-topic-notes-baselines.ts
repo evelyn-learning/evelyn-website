@@ -28,6 +28,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
+// HS course slug (from `evelyn.hs.<slug>.`) → exact portal course-title
+// string. Must byte-match the portal's course title or the Notes tab
+// silently resolves nothing for that course. Extend as new HS courses
+// are backfilled.
+const HS_COURSE_NAMES: Record<string, string> = {
+  chem: 'Chemistry',
+  alg1: 'Algebra 1',
+};
+
 interface BaselineDraft {
   baselineId: string;
   course: string;
@@ -81,8 +90,10 @@ function loadAllPlans(): LessonPlan[] {
   return plans;
 }
 
+let cachedPlans: LessonPlan[] | null = null;
 function findPlan(planId: string): LessonPlan | null {
-  return loadAllPlans().find((p) => p.id === planId) ?? null;
+  if (!cachedPlans) cachedPlans = loadAllPlans();
+  return cachedPlans.find((p) => p.id === planId) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +131,22 @@ function extract(plan: LessonPlan): BaselineDraft {
         vocabulary?: Array<{ term: string; definition: string }>;
       };
       for (const idea of c.keyIdeas ?? []) {
-        theory.push({ loId: defaultLoId, content: idea });
+        // Authoring convention across plans: many keyIdeas lead with an
+        // ALL-CAPS label ("THE ORDER — ...", "NESTED GROUPING — ...").
+        // When present, lift it into `title` (sentence-cased) so the
+        // renderer gets a headline; content stays the full original
+        // bullet (title is redundant-but-helpful, not a replacement).
+        const m = idea.match(/^([A-Z][A-Z0-9 ,'/\-]{2,70}) — ([\s\S]+)$/);
+        if (m) {
+          theory.push({
+            loId: defaultLoId,
+            kind: 'framework',
+            title: sentenceCase(m[1]),
+            content: idea,
+          });
+        } else {
+          theory.push({ loId: defaultLoId, content: idea });
+        }
       }
       for (const v of c.vocabulary ?? []) {
         theory.push({
@@ -138,6 +164,15 @@ function extract(plan: LessonPlan): BaselineDraft {
         example: w.problem && w.answer ? { problem: w.problem, solution: w.answer } : undefined,
         relatedLoIds: defaultLoId ? [defaultLoId] : undefined,
       });
+    } else if (seg.kind === 'misconception_check') {
+      // "Watch out for" distractor + correction — excellent pointer
+      // material (common-error kind) that was previously dropped.
+      const mc = seg as Segment & {
+        commonErrors?: Array<{ answer: string; misconception: string; correctsTo: string }>;
+      };
+      for (const ce of mc.commonErrors ?? []) {
+        pointers.push({ content: ce.correctsTo, kind: 'common-error' });
+      }
     } else if (seg.kind === 'recap') {
       const r = seg as Segment & { mustRemember?: string[] };
       for (const item of r.mustRemember ?? []) {
@@ -169,6 +204,8 @@ function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.envsci.')) return 'AP Environmental Science';
   if (plan.id.startsWith('evelyn.ap.psych.')) return 'AP Psychology';
   if (plan.id.startsWith('evelyn.ap.research.')) return 'AP Research';
+  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
   return plan.title;
 }
 
@@ -176,6 +213,13 @@ function humanizeSegmentId(id: string): string {
   // 'worked-deficit-crowding' → 'Worked: deficit crowding'
   // 'worked-curve-shifters'   → 'Worked: curve shifters'
   return id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ').replace(/^Worked /, 'Worked: ');
+}
+
+/** 'THE FRACTION BAR' → 'The fraction bar'. Used to turn an ALL-CAPS
+ *  authoring label into a headline-cased title. */
+function sentenceCase(label: string): string {
+  const trimmed = label.trim();
+  return trimmed.charAt(0) + trimmed.slice(1).toLowerCase();
 }
 
 // ---------------------------------------------------------------------------
@@ -192,14 +236,28 @@ function tsString(s: string): string {
   return "'" + s.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 }
 
-function constNameFor(planId: string): string {
-  // 'evelyn.ap.macro.loanable-funds-market.v1' → 'BASELINE_AP_MACRO_LOANABLE_FUNDS_MARKET'
+function constNameFor(planId: string, cedUnit: number): string {
+  const apMatch = planId.match(/^evelyn\.ap\.([a-z]+)\./);
+  if (apMatch) {
+    // 'evelyn.ap.macro.loanable-funds-market.v1' → 'BASELINE_AP_MACRO_LOANABLE_FUNDS_MARKET'
+    const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
+    return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
+  }
+  const hsMatch = planId.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  if (hsMatch) {
+    // 'evelyn.hs.chem.classifying-matter.v1' + unit 1 →
+    // 'BASELINE_CHEM_U1_CLASSIFYING_MATTER' — mirrors the lesson-plan
+    // seed's own const naming (SEED_CHEM_U1_CLASSIFYING_MATTER), which
+    // encodes the unit number the plan id itself doesn't carry.
+    const courseSlug = hsMatch[1];
+    const slug = planId.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `BASELINE_${courseSlug.toUpperCase()}_U${cedUnit}_${slug.toUpperCase().replace(/-/g, '_')}`;
+  }
   const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
   return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
 }
 
 function fileNameFor(plan: LessonPlan): string {
-  // Mirror the source plan's filename: 'ap-<course>-u<N>-<slug>.ts'
   const cedUnitRaw = (plan.metadata as { cedUnit?: string | number } | undefined)?.cedUnit;
   const cedUnit =
     typeof cedUnitRaw === 'number'
@@ -207,13 +265,25 @@ function fileNameFor(plan: LessonPlan): string {
       : typeof cedUnitRaw === 'string'
         ? parseInt(cedUnitRaw, 10) || 0
         : 0;
-  const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
-  const courseSlug = plan.id.match(/^evelyn\.ap\.([a-z]+)\./)?.[1] ?? 'unknown';
-  return `ap-${courseSlug}-u${cedUnit}-${slugFromId}.ts`;
+  const apMatch = plan.id.match(/^evelyn\.ap\.([a-z]+)\./);
+  if (apMatch) {
+    // 'ap-<course>-u<N>-<slug>.ts'
+    const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
+    return `ap-${apMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  if (hsMatch) {
+    // '<course>-u<N>-<slug>.ts' — mirrors the source lesson-plan
+    // filename exactly (e.g. 'alg1-u1-order-of-operations.ts').
+    const slugFromId = plan.id.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
+  return `${fallbackSlug}.ts`;
 }
 
 function emitConst(draft: BaselineDraft): string {
-  const constName = constNameFor(draft.baselineId);
+  const constName = constNameFor(draft.baselineId, draft.cedUnit);
 
   const theoryBlock = draft.theory
     .map((e) => {
@@ -298,17 +368,11 @@ ${pointersBlock},
 // CLI
 // ---------------------------------------------------------------------------
 
-function main(): void {
-  const planId = process.argv[2];
-  if (!planId) {
-    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId>');
-    console.error('Example: ... evelyn.ap.macro.loanable-funds-market.v1');
-    process.exit(2);
-  }
+function extractOne(planId: string): boolean {
   const plan = findPlan(planId);
   if (!plan) {
     console.error(`✗ plan not found: ${planId}`);
-    process.exit(1);
+    return false;
   }
   const draft = extract(plan);
   const source = emitConst(draft);
@@ -320,7 +384,7 @@ function main(): void {
   if (fs.existsSync(outFile)) {
     console.error(`✗ output file already exists: ${outFile}`);
     console.error('  delete it first if you want to re-extract — baseline edits should be hand-made after extraction');
-    process.exit(1);
+    return false;
   }
 
   fs.writeFileSync(outFile, source, 'utf-8');
@@ -328,10 +392,34 @@ function main(): void {
   console.log(`  theory entries: ${draft.theory.length}`);
   console.log(`  method entries: ${draft.methods.length}`);
   console.log(`  pointer seeds:  ${draft.pointers.length}`);
-  console.log('');
+  return true;
+}
+
+function main(): void {
+  // Accepts either a single planId (original behavior) or multiple
+  // space-separated planIds in one process invocation — the latter
+  // amortizes the ~40s loadAllPlans() cost across the whole batch
+  // instead of paying it once per plan (relevant for backfilling an
+  // entire course's worth of plans in one run).
+  const planIds = process.argv.slice(2);
+  if (planIds.length === 0) {
+    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId> [<planId2> ...]');
+    console.error('Example: ... evelyn.ap.macro.loanable-funds-market.v1');
+    process.exit(2);
+  }
+
+  let okCount = 0;
+  for (const planId of planIds) {
+    const ok = extractOne(planId);
+    if (ok) okCount++;
+    console.log('');
+  }
+
+  console.log(`Done: ${okCount}/${planIds.length} extracted.`);
   console.log('Next:');
-  console.log('  1. review and hand-edit the file (re-tag theory entries with kind, split LOs etc.)');
-  console.log(`  2. enrich pointers via Opus: scripts/gen-topic-notes-pointers.ts ${planId}`);
+  console.log('  1. review and hand-edit each file (re-tag theory entries with kind, split LOs etc.)');
+  console.log('  2. enrich pointers via Opus: scripts/gen-topic-notes-pointers.ts <planId>');
+  if (okCount < planIds.length) process.exit(1);
 }
 
 main();
