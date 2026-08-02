@@ -125,6 +125,7 @@
     "test:resume-cut": "npx tsx scripts/test-resume-from-cut.ts",
     "test:arith-claim": "npx tsx scripts/test-arithmetic-claim-check.ts",
     "test:simplification-verdict": "npx tsx scripts/test-simplification-verdict-check.ts",
+    "test:curated-demo": "npx tsx scripts/test-curated-demo-lessons.ts",
     "test:figure-evolve": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-figure-evolve.ts",
     "test:conic-primitives": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-primitives.ts",
     "test:render-sync": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-render-sync.ts",
