@@ -22,7 +22,7 @@ export const BASELINE_WHIST_U6_RENAISSANCE: TopicNotesBaseline = {
   lastUpdatedAt: '2026-08-01',
   sources: [{ type: 'plan', planId: 'evelyn.hs.whist.renaissance.v1' }],
   theory: [
-    { loId: 'whist.renaissance', kind: 'framework', title: 'Why italy first', content: `WHY ITALY FIRST — Italian cities sat on the Mediterranean trade routes that the Crusades (c. 1095–1291) had reopened and that Venice and Genoa then dominated. Money from spices, silk, cloth, and banking piled up in cities, not in the countryside — and cities are where scholars, artists, and workshops can be paid.` },
+    { loId: 'whist.renaissance', kind: 'framework', title: 'Why Italy first', content: `WHY ITALY FIRST — Italian cities sat on the Mediterranean trade routes that the Crusades (c. 1095–1291) had reopened and that Venice and Genoa then dominated. Money from spices, silk, cloth, and banking piled up in cities, not in the countryside — and cities are where scholars, artists, and workshops can be paid.` },
     { loId: 'whist.renaissance', kind: 'framework', title: 'Competing city-states', content: `COMPETING CITY-STATES — Italy was NOT a country. Florence, Venice, Milan, Rome, and Naples were rival states, each ruled by its own merchants, dukes, or popes, each trying to out-build and out-dazzle the others. Rivalry turned art into a competitive sport, which meant commissions and steady work for artists.` },
     { loId: 'whist.renaissance', kind: 'framework', title: 'The past was underfoot', content: `THE PAST WAS UNDERFOOT — Italians walked past Roman aqueducts, arches, and ruined forums every day, and the fall of Constantinople in 1453 (Unit 4) pushed Byzantine scholars west carrying Greek manuscripts of Plato, Aristotle, Euclid, and Archimedes. Recovered texts plus visible ruins made "the ancients did it better" a believable claim.` },
     { loId: 'whist.renaissance', kind: 'framework', title: 'Humanism', content: `HUMANISM — a program of study, not a rebellion against faith. Petrarch (1304–1374) hunted down forgotten Latin manuscripts and argued that classical literature, history, rhetoric, and moral philosophy should train people to live well in THIS world. Most humanists stayed devout Christians; many were priests. Their target was narrow scholastic argument, not God.` },
@@ -36,7 +36,7 @@ export const BASELINE_WHIST_U6_RENAISSANCE: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked why italy',
+      title: 'Worked why Italy',
       steps: [
         `Start with geography and trade: Italy juts into the Mediterranean, and after the Crusades reopened eastern trade, Venice and Genoa controlled the routes carrying spices, silk, and luxury goods into Europe.`,
         `Follow the money: that trade produced merchant and banking fortunes concentrated in cities. Northern Europe in this period was still mostly rural and land-based, where wealth sat in estates rather than in urban cash.`,

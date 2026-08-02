@@ -60,7 +60,7 @@ export const BASELINE_ALG1_U2_PROPORTIONS_PERCENTS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `They do not cancel, because the second percent is taken of a bigger base. Start at $100: the increase gives 100 × 1.20 = $120, then the decrease gives 120 × 0.80 = $96 — a 4% net loss, not a return to $100. Combine percent changes by multiplying the factors: 1.20 × 0.80 = 0.96.`, kind: 'common-error' },
+    { content: `The price does not return to the original value — the percents do not cancel, because the second percent is taken of a bigger base. Start at $100: the increase gives 100 × 1.20 = $120, then the decrease gives 120 × 0.80 = $96 — a 4% net loss, not a return to $100. Combine percent changes by multiplying the factors: 1.20 × 0.80 = 0.96.`, kind: 'common-error' },
     { content: `A proportion is a/b = c/d with matching units in matching slots; cross-multiply to ad = bc, then solve as usual.`, kind: 'tip' },
     { content: `Percent proportion: part/whole = percent/100 covers percent of, percent is, and find-the-whole.`, kind: 'tip' },
     { content: 'Percent change divides by the ORIGINAL value: (new − old)/old × 100.', kind: 'tip' },

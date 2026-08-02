@@ -23,19 +23,19 @@ export const BASELINE_ALG1_U7_FACTORING_GCF_GROUPING: TopicNotesBaseline = {
   sources: [{ type: 'plan', planId: 'evelyn.hs.alg1.factoring-gcf-grouping.v1' }],
   theory: [
     { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Factoring is un-distributing', content: `FACTORING IS UN-DISTRIBUTING — you are writing a sum as a PRODUCT. Distributing goes 3x(2x + 5) → 6x² + 15x; factoring goes 6x² + 15x → 3x(2x + 5). Same equation, read right to left.` },
-    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Find the gcf in two parts', content: `FIND THE GCF IN TWO PARTS — the coefficient part is the largest integer that divides EVERY coefficient; the variable part is the LOWEST power of each variable that appears in EVERY term. For 12x³ + 18x² − 30x: coefficients 12, 18, 30 share 6, and the lowest power of x is x¹, so the GCF is 6x.` },
-    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Divide every term by the gcf', content: `DIVIDE EVERY TERM BY THE GCF — including the term that IS the GCF. 9x² − 12x + 3 has GCF 3, and 3 ÷ 3 = 1, so the answer is 3(3x² − 4x + 1). The 1 must be written; dropping it changes the expression.` },
-    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Negative gcf', content: `NEGATIVE GCF — when the leading term is negative, pull the minus out with it and EVERY sign inside flips: −6x² + 15x = −3x(2x − 5). This is optional for most problems but required whenever you want a positive leading coefficient inside.` },
+    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Find the GCF in two parts', content: `FIND THE GCF IN TWO PARTS — the coefficient part is the largest integer that divides EVERY coefficient; the variable part is the LOWEST power of each variable that appears in EVERY term. For 12x³ + 18x² − 30x: coefficients 12, 18, 30 share 6, and the lowest power of x is x¹, so the GCF is 6x.` },
+    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Divide every term by the GCF', content: `DIVIDE EVERY TERM BY THE GCF — including the term that IS the GCF. 9x² − 12x + 3 has GCF 3, and 3 ÷ 3 = 1, so the answer is 3(3x² − 4x + 1). The 1 must be written; dropping it changes the expression.` },
+    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Negative GCF', content: `NEGATIVE GCF — when the leading term is negative, pull the minus out with it and EVERY sign inside flips: −6x² + 15x = −3x(2x − 5). This is optional for most problems but required whenever you want a positive leading coefficient inside.` },
     { loId: 'alg1.factoring-gcf-grouping', content: `FOUR TERMS → GROUPING — split into two pairs, factor the GCF out of each pair, and the two leftover parentheses must MATCH exactly. Then the matching binomial itself is a common factor: x³ + 5x² − 3x − 15 = x²(x + 5) − 3(x + 5) = (x + 5)(x² − 3).` },
     { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'The match is a sign choice', content: `THE MATCH IS A SIGN CHOICE — if the third term is negative, factor a NEGATIVE out of the second pair so the parentheses line up: 3x³ − 12x² − 2x + 8 = 3x²(x − 4) − 2(x − 4) = (x − 4)(3x² − 2). Factoring out +2 instead would leave (−x + 4) and nothing would match.` },
     { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Always check by re-multiplying', content: `ALWAYS CHECK BY RE-MULTIPLYING — distribute your answer back out. If you do not land on the original expression term for term, the factoring is wrong. This check is free and catches every sign slip.` },
-    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'Gcf first, always', content: `GCF FIRST, ALWAYS — take the GCF out before you try anything else. Every later method (trinomials, difference of squares, solving quadratics) is easier on the smaller expression left behind.` },
+    { loId: 'alg1.factoring-gcf-grouping', kind: 'framework', title: 'GCF first, always', content: `GCF FIRST, ALWAYS — take the GCF out before you try anything else. Every later method (trinomials, difference of squares, solving quadratics) is easier on the smaller expression left behind.` },
     { loId: 'alg1.factoring-gcf-grouping', kind: 'definition', title: 'GCF', content: `greatest common factor — the largest coefficient and lowest variable power shared by every term.` },
     { loId: 'alg1.factoring-gcf-grouping', kind: 'definition', title: 'factoring by grouping', content: `splitting four terms into two pairs, factoring each pair, and pulling out the binomial they share.` },
   ],
   methods: [
     {
-      title: 'Worked gcf',
+      title: 'Worked GCF',
       steps: [
         'Coefficient part of the GCF: the largest integer dividing 12, 18, and 30 is 6.',
         `Variable part: every term has an x, and the lowest power present is x¹. So the GCF is 6x.`,

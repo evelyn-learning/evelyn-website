@@ -37,7 +37,7 @@ export const BASELINE_BIO_U1_WATER_AND_MACROMOLECULES: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked ph steps',
+      title: 'Worked pH steps',
       steps: [
         `Read the scale: lower pH means MORE H+, so lemon juice at pH 2 is the stronger acid and coffee at pH 5 is closer to neutral. Both are below 7, so both are acidic.`,
         'Count the whole-number steps between them: from 5 down to 2 is 3 steps.',

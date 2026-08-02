@@ -64,7 +64,7 @@ export const BASELINE_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES: TopicNotesBaselin
     },
   ],
   pointers: [
-    { content: `That is a topic, not a question. A research question names what you want to find out and can be answered: "Why did the county move the fairgrounds to its current site in the 1950s, and how did attendance change afterward?" A topic tells you where to wander; a question tells you when you are done.`, kind: 'common-error' },
+    { content: `"The history of the county fairgrounds" is a topic, not a question. A research question names what you want to find out and can be answered: "Why did the county move the fairgrounds to its current site in the 1950s, and how did attendance change afterward?" A topic tells you where to wander; a question tells you when you are done.`, kind: 'common-error' },
     { content: `Primary means closer to the event, not more truthful. Meeting minutes record what officials chose to write down, and a participant's letter records that participant's view. Secondary sources supply context, comparison, and expert analysis that let you judge the primary material. Strong research uses both so each checks the other.`, kind: 'common-error' },
     { content: `A topic is a subject area; a research question is one answerable sentence that tells you when the project is finished.`, kind: 'tip' },
     { content: `Goldilocks scope: not a single fact, not a book — a question that needs several sources and fits the assigned length.`, kind: 'tip' },

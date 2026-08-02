@@ -22,7 +22,7 @@ export const BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION: TopicNotesBaseline = {
   lastUpdatedAt: '2026-08-01',
   sources: [{ type: 'plan', planId: 'evelyn.hs.whist.industrial-revolution.v1' }],
   theory: [
-    { loId: 'whist.industrial-revolution', kind: 'framework', title: 'Why britain first', content: `WHY BRITAIN FIRST — a stack of preconditions, not one cause: coal and iron at home; capital from Atlantic trade (including profits from the slave economy); colonies supplying raw cotton and buying finished goods; an Agricultural Revolution (crop rotation, enclosure) freeing workers from farms; stable banks and patent law; navigable rivers and no internal tariffs.` },
+    { loId: 'whist.industrial-revolution', kind: 'framework', title: 'Why Britain first', content: `WHY BRITAIN FIRST — a stack of preconditions, not one cause: coal and iron at home; capital from Atlantic trade (including profits from the slave economy); colonies supplying raw cotton and buying finished goods; an Agricultural Revolution (crop rotation, enclosure) freeing workers from farms; stable banks and patent law; navigable rivers and no internal tariffs.` },
     { loId: 'whist.industrial-revolution', kind: 'framework', title: 'The invention chain', content: `THE INVENTION CHAIN — textiles led: the spinning jenny and water frame made thread faster than weavers could use it, pulling cloth-making out of cottages into water-powered mills. Watt's improved steam engine (1769) then cut the cord to the river — factories could go anywhere near coal.` },
     { loId: 'whist.industrial-revolution', kind: 'framework', title: 'Steam shrank the map', content: `STEAM SHRANK THE MAP — railroads (Stockton–Darlington 1825) and steamships collapsed travel times from weeks to days. Fresh food, daily newspapers, national markets, and precise clock time all ride on the rails.` },
     { loId: 'whist.industrial-revolution', kind: 'framework', title: 'The factory system rewrote work', content: `THE FACTORY SYSTEM REWROTE WORK — the shift from task-time (work until the job is done, at home, at your pace) to clock-time (12–14 hour shifts, bells, fines for lateness). Workers became interchangeable machine-tenders; skilled hand-weavers were ruined.` },
@@ -35,7 +35,7 @@ export const BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked why britain',
+      title: 'Worked why Britain',
       steps: [
         `Reject the single-cause answer first: "Britain was cleverer" explains nothing — inventiveness existed everywhere. Look for the STACK of conditions that only Britain had at once.`,
         `Energy: Britain's coal seams were shallow, abundant, and close to iron and to ports. Wood-short Britain had already switched to coal for heating — mines flooding with water is literally the problem the steam engine was built to solve.`,

@@ -28,7 +28,7 @@ export const BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS: TopicNotesBaseline = {
     { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'Perfect-square trinomial', content: `PERFECT-SQUARE TRINOMIAL — a² + 2ab + b² = (a + b)² and a² − 2ab + b² = (a − b)². The test has two parts: the first and last terms are perfect squares, AND the middle term is exactly 2 × a × b. Example: 4x² − 12x + 9 = (2x − 3)² because 2 × 2x × 3 = 12x.` },
     { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'The sign lives in the middle term', content: `THE SIGN LIVES IN THE MIDDLE TERM — the last term of a perfect-square trinomial is always positive (it is b²); the middle term is what tells you whether the binomial is (a + b) or (a − b).` },
     { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'A sum of squares does not factor', content: `A SUM OF SQUARES DOES NOT FACTOR — a² + b² is prime over the real numbers. Test it yourself: (a + b)² = a² + 2ab + b², which carries an extra 2ab term that a² + b² simply does not have.` },
-    { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'Gcf first or you will miss the pattern', content: `GCF FIRST OR YOU WILL MISS THE PATTERN — 8x² − 50 looks unfactorable because 8 and 50 are not perfect squares, but pulling out the 2 gives 2(4x² − 25) = 2(2x + 5)(2x − 5).` },
+    { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'GCF first or you will miss the pattern', content: `GCF FIRST OR YOU WILL MISS THE PATTERN — 8x² − 50 looks unfactorable because 8 and 50 are not perfect squares, but pulling out the 2 gives 2(4x² − 25) = 2(2x + 5)(2x − 5).` },
     { loId: 'alg1.factoring-special-forms', kind: 'framework', title: 'Check by multiplying back', content: `CHECK BY MULTIPLYING BACK — every factoring answer is verifiable in ten seconds by expanding it. If the product is not the original expression, the factoring is wrong.` },
     { loId: 'alg1.factoring-special-forms', kind: 'definition', title: 'difference of squares', content: 'a two-term expression a² − b² — always factors as (a + b)(a − b).' },
     { loId: 'alg1.factoring-special-forms', kind: 'definition', title: 'perfect-square trinomial', content: 'a trinomial that is the square of a binomial, a² ± 2ab + b² = (a ± b)².' },
@@ -48,7 +48,7 @@ export const BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS: TopicNotesBaseline = {
       relatedLoIds: ['alg1.factoring-special-forms'],
     },
     {
-      title: 'Worked gcf then special form',
+      title: 'Worked GCF then special form',
       steps: [
         `Tempting wrong move: 8 is not a perfect square and 50 is not a perfect square, so a student who skips the GCF step declares this prime. It is not.`,
         'GCF first: 8 and 50 both divide by 2. Pull it out: 2(4x² − 25).',

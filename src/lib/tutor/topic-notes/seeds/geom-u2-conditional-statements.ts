@@ -60,7 +60,7 @@ export const BASELINE_GEOM_U2_CONDITIONAL_STATEMENTS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `That is the INVERSE. The converse SWAPS the parts: "If two lines form a right angle, then they are perpendicular." Swap = converse, negate = inverse, swap and negate = contrapositive.`, kind: 'common-error' },
+    { content: `"If two lines are not perpendicular, then they do not form a right angle" is the INVERSE, not the converse. The converse SWAPS the parts: "If two lines form a right angle, then they are perpendicular." Swap = converse, negate = inverse, swap and negate = contrapositive.`, kind: 'common-error' },
     { content: `Examples can only DISPROVE (one counterexample) or suggest. To establish a conditional you argue deductively from definitions, postulates, and proved theorems — which is exactly what a two-column proof does next lesson.`, kind: 'common-error' },
     { content: `A conditional is "if p (hypothesis), then q (conclusion)"; it is false only when p is true and q is false.`, kind: 'tip' },
     { content: 'Swap → converse. Negate → inverse. Swap AND negate → contrapositive.', kind: 'tip' },

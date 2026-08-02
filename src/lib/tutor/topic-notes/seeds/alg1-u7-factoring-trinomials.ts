@@ -28,7 +28,7 @@ export const BASELINE_ALG1_U7_FACTORING_TRINOMIALS: TopicNotesBaseline = {
     { loId: 'alg1.factoring-trinomials', kind: 'framework', title: 'Sign reading', content: `SIGN READING — do not guess the signs, read them. If c is POSITIVE the two numbers share a sign and that sign matches b: c = +24 with b = +11 gives 3 and 8; c = +24 with b = −11 gives −3 and −8. If c is NEGATIVE the two numbers have OPPOSITE signs, and the one that is bigger in size takes the sign of b: c = −28 with b = −3 gives −7 and +4.` },
     { loId: 'alg1.factoring-trinomials', content: `ax² + bx + c — AC-METHOD: multiply a·c, find two numbers with that product that add to b, split the middle term into those two pieces, then factor by grouping. For 3x² + 10x + 8: a·c = 24, the pair is 4 and 6, so 3x² + 6x + 4x + 8 → 3x(x + 2) + 4(x + 2) → (x + 2)(3x + 4).` },
     { loId: 'alg1.factoring-trinomials', kind: 'framework', title: 'Grouping check', content: `GROUPING CHECK — after the split, the two parentheses you produce MUST be identical. If they are not, either a sign is off or the two middle pieces need to be swapped; either way, stop and fix it before continuing.` },
-    { loId: 'alg1.factoring-trinomials', kind: 'framework', title: 'Check by foil, every time', content: `CHECK BY FOIL, EVERY TIME — multiply your factors back out. Landing on anything other than the original trinomial means the factoring is wrong, and you will catch it in about ten seconds.` },
+    { loId: 'alg1.factoring-trinomials', kind: 'framework', title: 'Check by FOIL, every time', content: `CHECK BY FOIL, EVERY TIME — multiply your factors back out. Landing on anything other than the original trinomial means the factoring is wrong, and you will catch it in about ten seconds.` },
     { loId: 'alg1.factoring-trinomials', kind: 'framework', title: 'Classic errors', content: `CLASSIC ERRORS — forgetting the GCF, or pulling it out and then dropping it from the final answer; guessing signs instead of reading them off c and b; and calling the job done while a factor like (2x + 4) still hides a common factor of 2 inside.` },
     { loId: 'alg1.factoring-trinomials', kind: 'definition', title: 'trinomial', content: 'a polynomial with exactly three terms, such as x² + 11x + 24.' },
     { loId: 'alg1.factoring-trinomials', kind: 'definition', title: 'ac-method', content: `for ax² + bx + c, split the middle term using two numbers that multiply to a·c and add to b, then factor by grouping.` },
@@ -47,7 +47,7 @@ export const BASELINE_ALG1_U7_FACTORING_TRINOMIALS: TopicNotesBaseline = {
       relatedLoIds: ['alg1.factoring-trinomials'],
     },
     {
-      title: 'Worked gcf ac method',
+      title: 'Worked GCF ac method',
       steps: [
         `GCF FIRST — 6, −2, and −20 all share 2: 6x² − 2x − 20 = 2(3x² − x − 10). Park that 2 outside; it belongs in the final answer.`,
         `Inside, a = 3, b = −1, c = −10, so the leading coefficient is not 1 — use the ac-method: a·c = 3(−10) = −30.`,
@@ -61,7 +61,7 @@ export const BASELINE_ALG1_U7_FACTORING_TRINOMIALS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `Not finished. Pull the GCF before anything else: 2x² + 12x + 16 = 2(x² + 6x + 8) = 2(x + 2)(x + 4). Same product, but now every factor is fully broken down.`, kind: 'common-error' },
+    { content: `(2x + 4)(x + 4) isn't fully factored — (2x + 4) still has a common factor of 2 hiding inside it. Pull the GCF before anything else: 2x² + 12x + 16 = 2(x² + 6x + 8) = 2(x + 2)(x + 4). Same product, but now every factor is fully broken down.`, kind: 'common-error' },
     { content: `The 2 is part of the answer: 2(x + 2)(x + 4). Without it the expression is only x² + 6x + 8, which is half of the original.`, kind: 'common-error' },
     { content: 'GCF first — and keep it in the final answer.', kind: 'tip' },
     { content: 'x² + bx + c: two numbers that multiply to c and add to b.', kind: 'tip' },

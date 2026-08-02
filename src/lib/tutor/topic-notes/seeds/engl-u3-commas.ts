@@ -62,7 +62,7 @@ export const BASELINE_ENGL_U3_COMMAS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `No — breathing is not one of the five comma jobs. That comma sits between the subject "The runner in the bright orange jacket" and its verb "crossed", and nothing may split a subject from its verb. Long subjects invite this error because they feel like they deserve a rest stop. CORRECT: "The runner in the bright orange jacket crossed the finish line first."`, kind: 'common-error' },
+    { content: `A pause is not one of the five comma jobs. That comma sits between the subject "The runner in the bright orange jacket" and its verb "crossed", and nothing may split a subject from its verb. Long subjects invite this error because they feel like they deserve a rest stop. CORRECT: "The runner in the bright orange jacket crossed the finish line first."`, kind: 'common-error' },
     { content: `A comma is legal only when it is doing a job: series, introductory element, coordinate adjectives, nonessential information, or joining two independent clauses with a conjunction.`, kind: 'tip' },
     { content: `Nonessential information takes a PAIR of commas; information that tells the reader WHICH one is meant is essential and takes none.`, kind: 'tip' },
     { content: `A comma plus a coordinating conjunction joins two complete sentences; a compound verb with no second subject takes no comma.`, kind: 'tip' },

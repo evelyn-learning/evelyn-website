@@ -37,7 +37,7 @@ export const BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked how britain started regulating',
+      title: 'Worked how Britain started regulating',
       steps: [
         `Start with visibility. Conditions inside mills and mines were invisible to the voting public until parliamentary committees went and asked. The 1842 mines committee reporting children hauling coal underground did something no speech could: it made the cost of cheap coal concrete, in testimony, to people who had never been down a shaft.`,
         `Follow the outrage into law — but notice WHICH law worked. Earlier child-labor rules existed and were widely ignored, because nobody checked. The Factory Act of 1833 added paid inspectors, and the Mines Act of 1842 followed the report directly. Enforcement, not good intentions, is the hinge.`,

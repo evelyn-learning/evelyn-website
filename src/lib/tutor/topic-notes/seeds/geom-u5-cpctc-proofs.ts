@@ -22,13 +22,13 @@ export const BASELINE_GEOM_U5_CPCTC_PROOFS: TopicNotesBaseline = {
   lastUpdatedAt: '2026-08-01',
   sources: [{ type: 'plan', planId: 'evelyn.hs.geom.cpctc-proofs.v1' }],
   theory: [
-    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'What cpctc stands for', content: `WHAT CPCTC STANDS FOR — Corresponding Parts of Congruent Triangles are Congruent. Once △ABC ≅ △DEF is on the page, all six matching parts follow for free: AB ≅ DE, BC ≅ EF, CA ≅ FD, ∠A ≅ ∠D, ∠B ≅ ∠E, ∠C ≅ ∠F.` },
+    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'What CPCTC stands for', content: `WHAT CPCTC STANDS FOR — Corresponding Parts of Congruent Triangles are Congruent. Once △ABC ≅ △DEF is on the page, all six matching parts follow for free: AB ≅ DE, BC ≅ EF, CA ≅ FD, ∠A ≅ ∠D, ∠B ≅ ∠E, ∠C ≅ ∠F.` },
     { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'The two-stage shape of every proof', content: `THE TWO-STAGE SHAPE OF EVERY PROOF — Stage 1: collect three parts and name a criterion (SSS, SAS, ASA, AAS, or HL) to conclude the triangles are congruent. Stage 2: write the ONE part you were asked about and justify it with CPCTC. Nothing else goes between those stages.` },
-    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'Cpctc comes last, never first', content: `CPCTC COMES LAST, NEVER FIRST — it is a conclusion drawn FROM congruence, so it may only appear on a line BELOW the congruence statement. Using it to supply one of the three parts you still need is circular reasoning.` },
+    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'CPCTC comes last, never first', content: `CPCTC COMES LAST, NEVER FIRST — it is a conclusion drawn FROM congruence, so it may only appear on a line BELOW the congruence statement. Using it to supply one of the three parts you still need is circular reasoning.` },
     { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'Every statement needs a reason', content: `EVERY STATEMENT NEEDS A REASON — in a two-column proof the left column states, the right column justifies. Legal reasons: Given, a definition (midpoint, angle bisector, perpendicular), a property (Reflexive), a theorem (Vertical Angles), a congruence criterion, or CPCTC.` },
     { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'Hidden givens feed stage 1', content: `HIDDEN GIVENS FEED STAGE 1 — a shared side is congruent to itself (Reflexive Property); vertical angles are congruent; a midpoint splits a segment into two congruent pieces; an angle bisector makes two congruent angles; ⊥ marks create two 90° angles.` },
     { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'Letter order is the lookup table', content: `LETTER ORDER IS THE LOOKUP TABLE — write the congruence statement with corresponding vertices in matching positions, and reading off a part becomes mechanical. △ABC ≅ △DEF pairs ∠B with ∠E; the sloppy △ABC ≅ △EDF pairs ∠B with ∠D instead and every CPCTC line after it is wrong.` },
-    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'What cpctc buys you downstream', content: `WHAT CPCTC BUYS YOU DOWNSTREAM — once CPCTC hands you an angle pair, you can keep going: congruent alternate interior angles prove two lines parallel, congruent adjacent angles prove a ray is a bisector, and a pair of congruent supplementary angles proves lines are perpendicular.` },
+    { loId: 'geom.cpctc-proofs', kind: 'framework', title: 'What CPCTC buys you downstream', content: `WHAT CPCTC BUYS YOU DOWNSTREAM — once CPCTC hands you an angle pair, you can keep going: congruent alternate interior angles prove two lines parallel, congruent adjacent angles prove a ray is a bisector, and a pair of congruent supplementary angles proves lines are perpendicular.` },
     { loId: 'geom.cpctc-proofs', kind: 'definition', title: 'CPCTC', content: `Corresponding Parts of Congruent Triangles are Congruent — the reason cited when a matching pair of sides or angles is claimed after the triangles have already been proved congruent.` },
     { loId: 'geom.cpctc-proofs', kind: 'definition', title: 'Reflexive Property', content: `any segment or angle is congruent to itself — the reason that lets a shared side count as a matching pair in both triangles.` },
   ],
@@ -47,7 +47,7 @@ export const BASELINE_GEOM_U5_CPCTC_PROOFS: TopicNotesBaseline = {
       relatedLoIds: ['geom.cpctc-proofs'],
     },
     {
-      title: 'Worked circular cpctc',
+      title: 'Worked circular CPCTC',
       steps: [
         `Read line 3 against line 4: CPCTC is a conclusion that follows FROM a congruence, but the congruence is not stated until line 4 — the proof borrows its own conclusion.`,
         `That circularity also breaks line 4: ASA needs a genuine side pair, and the only side offered came from the illegal line 3. Strip line 3 and just two angle pairs remain.`,

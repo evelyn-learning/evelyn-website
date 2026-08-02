@@ -28,7 +28,7 @@ export const BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS: TopicNotesBaseline = {
     { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'Add', content: `ADD — combine LIKE terms only, meaning same variable AND same exponent. 3x² + 4x² = 7x². But 3x² + 4x cannot combine and just stays as 3x² + 4x.` },
     { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'Subtract', content: `SUBTRACT — THE #1 TRAP: the minus sign belongs to EVERY term in the second polynomial, not just the first. (5x² − 3x + 8) − (2x² + 7x − 4) = 5x² − 3x + 8 − 2x² − 7x + 4. Safest habit: rewrite subtraction as "add the opposite" and flip all the signs before you combine anything.` },
     { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'Multiply', content: `MULTIPLY — every term in the first polynomial hits every term in the second. Multiply the coefficients, ADD the exponents: 3x(2x² − 5x + 4) = 6x³ − 15x² + 12x.` },
-    { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'Foil is just double distribution', content: `FOIL IS JUST DOUBLE DISTRIBUTION — (x + 2)(x + 5) = x(x + 5) + 2(x + 5) = x² + 5x + 2x + 10 = x² + 7x + 10. First, Outer, Inner, Last is a bookkeeping name for those four products; for anything bigger than 2 by 2, use a row-by-column grid so nothing is missed.` },
+    { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'FOIL is just double distribution', content: `FOIL IS JUST DOUBLE DISTRIBUTION — (x + 2)(x + 5) = x(x + 5) + 2(x + 5) = x² + 5x + 2x + 10 = x² + 7x + 10. First, Outer, Inner, Last is a bookkeeping name for those four products; for anything bigger than 2 by 2, use a row-by-column grid so nothing is missed.` },
     { loId: 'alg1.polynomial-operations', kind: 'framework', title: 'Closure', content: `CLOSURE — add, subtract, or multiply two polynomials and you always get another polynomial, exactly like integers under +, −, and ×. Division is the exception: x / (x + 1) is not a polynomial.` },
     { loId: 'alg1.polynomial-operations', kind: 'definition', title: 'like terms', content: `terms with the same variable raised to the same exponent — only these can be combined.` },
     { loId: 'alg1.polynomial-operations', kind: 'definition', title: 'standard form', content: 'a polynomial written with its terms in decreasing order of degree.' },
@@ -36,7 +36,7 @@ export const BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked foil',
+      title: 'Worked FOIL',
       steps: [
         `First: 2x × 3x = 6x² — multiply coefficients (2 × 3 = 6), add exponents (1 + 1 = 2).`,
         'Outer: 2x × (−4) = −8x.',

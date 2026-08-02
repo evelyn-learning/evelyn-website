@@ -60,7 +60,7 @@ export const BASELINE_ACT_U2_PREALGEBRA_REVIEW: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `They do not cancel, because the decrease is taken of a DIFFERENT (larger) base. Starting at $100: a 20% increase gives $100 × 1.20 = $120. A 20% decrease from there gives $120 × 0.80 = $96 — not $100. Every percent change must be applied to the CURRENT value, not the original one.`, kind: 'common-error' },
+    { content: `The price does not return to the original value — the percents do not cancel, because the decrease is taken of a DIFFERENT (larger) base. Starting at $100: a 20% increase gives $100 × 1.20 = $120. A 20% decrease from there gives $120 × 0.80 = $96 — not $100. Every percent change must be applied to the CURRENT value, not the original one.`, kind: 'common-error' },
     { content: `Percent change = multiply by (1 ± p/100); sequential percentages compound (multiply the keep-fractions), they never simply add.`, kind: 'tip' },
     { content: `A p% increase followed by a p% decrease does NOT return to the original value — the base changes at each step.`, kind: 'tip' },
     { content: `Ratios describe parts of a whole: for a:b, the whole is a + b parts — find the value of one part, then scale.`, kind: 'tip' },

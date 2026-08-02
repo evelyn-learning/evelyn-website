@@ -173,11 +173,28 @@ function extract(plan: LessonPlan): BaselineDraft {
     } else if (seg.kind === 'misconception_check') {
       // "Watch out for" distractor + correction — excellent pointer
       // material (common-error kind) that was previously dropped.
+      //
+      // ce.correctsTo is authored as a correction addressed to a student
+      // who just gave the wrong answer (ce.answer) — it often opens with a
+      // dangling anaphoric reference ("Wrong — the 12x is missing.", "That
+      // is the INVERSE.") that only resolves once you can see ce.answer.
+      // The Notes tab never displays ce.answer or ce.misconception on their
+      // own, only whatever we push here as the pointer's content — so a
+      // bare ce.correctsTo can read as a correction to a mistake the
+      // student was never shown. Prefix with the wrong answer so the
+      // pointer stands alone (2026-08 topic-notes backfill review, finding
+      // 2). Keep ce.misconception out of the default template — it's
+      // usually redundant with what correctsTo already explains — but it
+      // remains available on `mc.commonErrors` for hand-editing a specific
+      // pointer afterward if correctsTo alone still isn't clear.
       const mc = seg as Segment & {
         commonErrors?: Array<{ answer: string; misconception: string; correctsTo: string }>;
       };
       for (const ce of mc.commonErrors ?? []) {
-        pointers.push({ content: ce.correctsTo, kind: 'common-error' });
+        pointers.push({
+          content: `Students often say "${ce.answer}" — ${ce.correctsTo}`,
+          kind: 'common-error',
+        });
       }
     } else if (seg.kind === 'recap') {
       const r = seg as Segment & { mustRemember?: string[] };
@@ -218,14 +235,86 @@ function courseFor(plan: LessonPlan): string {
 function humanizeSegmentId(id: string): string {
   // 'worked-deficit-crowding' → 'Worked: deficit crowding'
   // 'worked-curve-shifters'   → 'Worked: curve shifters'
-  return id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ').replace(/^Worked /, 'Worked: ');
+  const humanized =
+    id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ').replace(/^Worked /, 'Worked: ');
+  return applyAllowlistCasing(humanized);
+}
+
+// ---------------------------------------------------------------------------
+// Acronym / proper-noun casing
+//
+// Both sentenceCase() (ALL-CAPS keyIdeas labels → title) and
+// humanizeSegmentId() (kebab-case segment ids → title) produce text whose
+// words are, by construction, all-lowercase except the very first letter.
+// That blind lowercasing mangles acronyms and proper nouns baked into the
+// authored label/id ('GCF FIRST, ALWAYS' → 'Gcf first, always',
+// 'worked-napoleon-chain' → 'Worked napoleon chain'). Both functions run
+// their output through this allowlist afterward to restore correct casing
+// for known abbreviations, initialisms, Roman numerals, and proper nouns
+// that recur across the HS/test-prep corpus (see the 2026-08 topic-notes
+// backfill review, finding 1). Extend this list as new courses surface new
+// acronyms/proper nouns — do not remove entries just because a course
+// doesn't currently use them.
+const ALLOWLIST_WORDS: string[] = [
+  // acronyms / initialisms
+  'DNA', 'RNA', 'mRNA', 'tRNA', 'rRNA', 'ATP', 'PCR', 'CNS', 'PNS', 'CPCTC',
+  'SSS', 'SAS', 'ASA', 'AAS', 'HL', 'GCF', 'LCM', 'FOIL', 'SAT', 'ACT', 'AP',
+  'WWI', 'WWII', 'US', 'USSR', 'NATO', 'pH', 'POV', 'GDP', 'EU',
+  // Roman numerals (e.g. 'Meiosis I', 'Prophase I', 'Metaphase I')
+  'I', 'II', 'III', 'IV', 'V',
+  // proper nouns / proper adjectives seen in the HS/test-prep corpus
+  'China', 'Japan', 'Rome', 'Roman', 'Britain', 'British', 'Europe',
+  'European', 'Africa', 'African', 'India', 'Indian', 'America', 'Americas',
+  'Nile', 'Persian', 'Peloponnesian', 'Vedic', 'Augustus', 'Caesar', 'Pax',
+  'Romana', 'Mongolica', 'Swahili', 'Islam', 'Congo', 'Napoleon', 'Hitler',
+  'Italy', 'Hajj', 'July', 'October', 'Orthodox', 'Catholic', 'Protestant',
+  'Rousseau', 'Beccaria', 'Wollstonecraft', 'Abbasids',
+];
+const ALLOWLIST_MAP = new Map(ALLOWLIST_WORDS.map((w) => [w.toUpperCase(), w]));
+
+/** Restore correct casing for known acronyms/proper nouns inside an
+ *  otherwise-correctly-cased string, without disturbing anything else.
+ *  Handles hyphenated compounds ('digital-sat' → 'digital-SAT') and a
+ *  trailing possessive ("sat's" → "SAT's"). */
+function applyAllowlistCasing(text: string): string {
+  return text
+    .split(/(\s+)/)
+    .map((token) => {
+      if (/^\s*$/.test(token)) return token;
+      if (token.includes('-')) {
+        return token.split('-').map(fixAllowlistWord).join('-');
+      }
+      return fixAllowlistWord(token);
+    })
+    .join('');
+}
+
+function fixAllowlistWord(word: string): string {
+  const m = word.match(/^([^A-Za-z0-9]*)([A-Za-z0-9']*)([^A-Za-z0-9]*)$/);
+  if (!m) return word;
+  const [, pre, core, post] = m;
+  if (!core) return word;
+  let base = core;
+  let suffix = '';
+  const possessive = core.match(/^(.*?)('s|')$/i);
+  if (possessive && possessive[1].length >= 2) {
+    base = possessive[1];
+    suffix = core.slice(base.length);
+  }
+  const correct = ALLOWLIST_MAP.get(base.toUpperCase());
+  if (!correct) return word;
+  return pre + correct + suffix + post;
 }
 
 /** 'THE FRACTION BAR' → 'The fraction bar'. Used to turn an ALL-CAPS
- *  authoring label into a headline-cased title. */
+ *  authoring label into a headline-cased title. Runs the result through
+ *  applyAllowlistCasing() so acronyms/proper nouns inside the label (which
+ *  are indistinguishable from ordinary words once the whole label is
+ *  upper-cased) don't get silently lowercased along with everything else. */
 function sentenceCase(label: string): string {
   const trimmed = label.trim();
-  return trimmed.charAt(0) + trimmed.slice(1).toLowerCase();
+  const lowered = trimmed.charAt(0) + trimmed.slice(1).toLowerCase();
+  return applyAllowlistCasing(lowered);
 }
 
 // ---------------------------------------------------------------------------

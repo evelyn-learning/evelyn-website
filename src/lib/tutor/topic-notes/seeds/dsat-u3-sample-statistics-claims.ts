@@ -58,7 +58,7 @@ export const BASELINE_DSAT_U3_SAMPLE_STATISTICS_CLAIMS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `No. Her respondents are a self-selected, convenience sample, not a random one. A bigger sample of the same non-random group would shrink the margin of error but would NOT fix the bias — the sample is still unrepresentative of the general population no matter how large it gets. Only a genuinely random sampling method fixes bias; sample size only affects precision.`, kind: 'common-error' },
+    { content: `A bigger sample does not fix the problem. Her respondents are a self-selected, convenience sample, not a random one. A bigger sample of the same non-random group would shrink the margin of error but would NOT fix the bias — the sample is still unrepresentative of the general population no matter how large it gets. Only a genuinely random sampling method fixes bias; sample size only affects precision.`, kind: 'common-error' },
     { content: `Statistic ± margin of error gives a plausible range for the true population value: low end = statistic − MOE, high end = statistic + MOE.`, kind: 'tip' },
     { content: `A larger random sample shrinks the margin of error, but no sample size fixes a non-random (biased) sampling method.`, kind: 'tip' },
     { content: `Random SAMPLING justifies generalizing to the exact population sampled — nothing broader. Random ASSIGNMENT justifies claiming causation.`, kind: 'tip' },

@@ -61,7 +61,7 @@ export const BASELINE_DSAT_U5_TEXTUAL_EVIDENCE: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `No — the claim is specifically about the CHARACTER becoming more cautious. This quotation is about the village's reaction, not the character's behavior. Command of Evidence questions require the quotation to prove the exact claim, not just share its topic — this is Trap 1, on-topic but unspecific.`, kind: 'common-error' },
+    { content: `Mentioning the betrayal isn't enough — the claim is specifically about the CHARACTER becoming more cautious. This quotation is about the village's reaction, not the character's behavior. Command of Evidence questions require the quotation to prove the exact claim, not just share its topic — this is Trap 1, on-topic but unspecific.`, kind: 'common-error' },
     { content: `Isolate the claim in your own words before reading any choice — name the exact point a quotation must prove.`, kind: 'tip' },
     { content: 'Test each quotation against the claim itself, not the general topic.', kind: 'tip' },
     { content: `Watch for the three traps: on-topic-but-unspecific, background/atmosphere, and contradicts-or-reverses the claim's direction.`, kind: 'tip' },

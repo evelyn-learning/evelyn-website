@@ -60,7 +60,7 @@ export const BASELINE_ALG1_U7_SPECIAL_PRODUCTS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `Wrong — the 12x is missing. (x + 6)² means (x + 6)(x + 6) = x² + 6x + 6x + 36 = x² + 12x + 36. Test at x = 1: the original is 7² = 49, and x² + 12x + 36 gives 1 + 12 + 36 = 49, while x² + 36 gives only 37.`, kind: 'common-error' },
+    { content: `x² + 36 is missing the 12x term. (x + 6)² means (x + 6)(x + 6) = x² + 6x + 6x + 36 = x² + 12x + 36. Test at x = 1: the original is 7² = 49, and x² + 12x + 36 gives 1 + 12 + 36 = 49, while x² + 36 gives only 37.`, kind: 'common-error' },
     { content: `a² − b² comes from (a + b)(a − b), where the middle terms cancel. Here both factors are (x + 6), so nothing cancels and the middle term survives: x² + 12x + 36.`, kind: 'common-error' },
     { content: `(a + b)² = a² + 2ab + b² and (a − b)² = a² − 2ab + b² — the last term is positive either way.`, kind: 'tip' },
     { content: '(a + b)(a − b) = a² − b² — opposite signs make the middle terms cancel.', kind: 'tip' },

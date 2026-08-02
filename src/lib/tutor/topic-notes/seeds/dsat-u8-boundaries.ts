@@ -62,7 +62,7 @@ export const BASELINE_DSAT_U8_BOUNDARIES: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `No — when the independent clause comes FIRST and the dependent clause (because/although/since/etc.) comes SECOND, no comma is needed: "The bridge closed because the inspectors found a crack." The comma-before-dependent-clause rule only applies when the dependent clause comes first: "Because the inspectors found a crack, the bridge closed."`, kind: 'common-error' },
+    { content: `"Because" does not always need a comma before it — it depends on clause order. When the independent clause comes FIRST and the dependent clause (because/although/since/etc.) comes SECOND, no comma is needed: "The bridge closed because the inspectors found a crack." The comma-before-dependent-clause rule only applies when the dependent clause comes first: "Because the inspectors found a crack, the bridge closed."`, kind: 'common-error' },
     { content: `Two independent clauses: period, semicolon, comma+FANBOYS, or (only if the second explains the first) a colon. A comma alone is a splice; no mark at all is a run-on.`, kind: 'tip' },
     { content: `Semicolons and colons both require a complete independent clause immediately BEFORE the mark — a dependent clause or fragment there is always wrong.`, kind: 'tip' },
     { content: `Dependent clause + independent clause (in that order) takes a comma after the dependent clause; flip the order and the comma usually disappears.`, kind: 'tip' },
