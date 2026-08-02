@@ -10,7 +10,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
-import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare, ChevronDown } from 'lucide-react';
 import { useDemoTracker } from '@/components/demos/DemoTracker';
 import {
   SESSION_GOALS,
@@ -31,6 +31,10 @@ import TutorSession from './components/session/TutorSession';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
+import { Header } from '@/components/layout/Header';
+import { CURATED_DEMO_LESSONS } from '@/lib/tutor/demo/curated-demo-lessons';
+import { ORIGINAL_TEACHER_IDS, ACCENT_CARD_HINTS } from '@/lib/tutor/demo/teacher-display';
+import { trackEvent } from '@/lib/analytics/events';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
@@ -90,25 +94,8 @@ const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_
 const OPENER_STORE_PREFIX = 'evelyn:tutor:lastOpener:';
 // Demo teacher choice survives refreshes (see selectedTeacherId below).
 const TEACHER_STORE_KEY = 'evelyn:tutor:selectedTeacher';
-// Accent hint shown on the new per-accent persona cards (the original four
-// render unchanged). Display copy only — accent truth lives in the registry.
-const ORIGINAL_TEACHER_IDS = new Set(['ms-elena-vasquez', 'mr-dev-khanna', 'dr-amara-osei', 'sofia']);
-const ACCENT_CARD_HINTS: Record<string, string> = {
-  'mr-jake-sullivan': 'American accent',
-  'ms-priya-nair': 'Indian accent',
-  'mr-oliver-hartley': 'British accent',
-  'ms-maryam-haddad': 'Gulf accent',
-  'mr-youssef-karim': 'Gulf accent',
-  'ms-anna-weber': 'German accent',
-  'mr-lukas-brandt': 'German accent',
-  'ms-anneliese-de-vries': 'Dutch accent',
-  'ms-grace-thompson': 'Australian accent',
-  'mr-cooper-reid': 'Australian accent',
-  'ms-nadia-lim': 'Singaporean accent',
-  'mr-kiran-raj': 'Singaporean accent',
-  'ms-zanele-dlamini': 'South African accent',
-  'mr-pieter-van-der-merwe': 'South African accent',
-};
+// Accent hints + original-four set moved to a shared module 2026-08-02 (the
+// /products/voice-tutor live demo shows the same copy).
 function readStoredOpener(teacherId: string): LastOpenerRecord | undefined {
   try {
     const raw = window.localStorage.getItem(OPENER_STORE_PREFIX + teacherId);
@@ -374,6 +361,9 @@ function TutorPage() {
   // an effect, not the initializer, to avoid an SSR hydration mismatch
   // (same pattern as the opener-recency store above).
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
+  // Lobby redesign 2026-08-02: the 18-card grid collapses behind a compact
+  // row; this gates the expanded radiogroup.
+  const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
   const teacherRestoredRef = useRef(false);
   useEffect(() => {
     if (!teacherRestoredRef.current) {
@@ -932,7 +922,8 @@ function TutorPage() {
   // the resolved cell (see resolve-cell.ts); for an orphan plan (no cell) we
   // fall back to its raw tags so it still starts. availableLessonPlans then
   // recomputes from the index on the next render — no DB round-trip.
-  const handleSearchSelect = useCallback((entry: PlanIndexEntry) => {
+  const handleSearchSelect = useCallback((entry: PlanIndexEntry, surface: string = 'search') => {
+    trackEvent('lesson_selected', { plan_id: entry.id, surface });
     setSelectedSubject(entry.cellSubject ?? entry.subject);
     setSelectedLevel(entry.cellLevel ?? entry.grade);
     setSelectedTopicId(entry.cellTopic ?? entry.topic ?? '');
@@ -1209,6 +1200,11 @@ function TutorPage() {
     // Track demo try
     onTry();
     trackInteraction('navigation', 'session_start', { topic: selectedTopicId, goal: sessionGoal, inputMode });
+    trackEvent('tutor_session_started', {
+      plan_id: selectedLessonPlanId || 'freestyle',
+      teacher_id: selectedTeacherId,
+      surface: 'tutor_lobby',
+    });
 
     // Full reset BEFORE flipping stage so the freshly-mounting
     // VoiceTutorRealtime (key={sessionId}) starts with no carry-over.
@@ -1309,7 +1305,7 @@ function TutorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
+  }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, selectedLessonPlanId, selectedTeacherId, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
 
   // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
   // NODE_ENV-guarded window hooks so the tutor-e2e harness can drive a real
@@ -2080,24 +2076,78 @@ function TutorPage() {
   // setup/picker screen flashes for a frame before the resume boot flips to the
   // session. The resumeBooting loader below owns that interim render.
   if (stage === 'setup' && !resumeBooting) {
+    // Curated tiles resolve against the loaded plan index; until it's ready
+    // they render as non-interactive skeletons (index is module+session
+    // cached, so this flash is first-visit only).
+    const curatedTiles = CURATED_DEMO_LESSONS.map((c) => ({
+      c,
+      entry: planIndex.entries.find((e) => e.id === c.planId),
+    }));
+    const curatedToneText: Record<string, string> = {
+      indigo: 'text-indigo-600',
+      emerald: 'text-emerald-600',
+      amber: 'text-amber-600',
+      rose: 'text-rose-600',
+    };
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Site chrome (setup stage only — the session stays full-screen). */}
+        <Header />
+        <div className="container mx-auto px-4 py-8 max-w-5xl">
           {/* Header */}
-          <div className="mb-8">
+          <div className="mb-6">
             <Link
-              href="/"
+              href="/products/voice-tutor"
               className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back
+              AI Voice Tutor
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">AI Tutor</h1>
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <h1 className="text-3xl font-bold text-gray-900">Try a live lesson</h1>
+              <p className="text-sm text-gray-500">
+                {planIndex.entries.length > 0 ? planIndex.entries.length.toLocaleString() : '1,700+'} lessons
+                · 8 subjects · 13 levels
+              </p>
+            </div>
             <p className="text-gray-600 mt-2">
-              Practice with an AI tutor across any subject and level.
+              Pick a flagship lesson below, or search anything — then start talking.
             </p>
           </div>
 
+          {/* Curated one-tap demo lessons */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            {curatedTiles.map(({ c, entry }) => {
+              const isSel = selectedLessonPlanId === c.planId;
+              return (
+                <button
+                  key={c.planId}
+                  type="button"
+                  disabled={!entry}
+                  onClick={() => entry && handleSearchSelect(entry, 'tutor_lobby')}
+                  aria-pressed={isSel}
+                  className={`text-left rounded-xl border-2 bg-white p-3.5 transition-colors disabled:opacity-50 ${
+                    isSel ? 'border-blue-500 bg-blue-50/60' : 'border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  <span className={`block text-[11px] font-semibold uppercase tracking-wider ${curatedToneText[c.tone]}`}>
+                    {c.subjectLabel} · {c.levelLabel}
+                  </span>
+                  <span className="block font-semibold text-gray-900 mt-0.5">{c.title}</span>
+                  <span className="block text-xs text-gray-500 mt-0.5 leading-snug">{c.hook}</span>
+                </button>
+              );
+            })}
+            <a
+              href="#lesson-picker"
+              className="rounded-xl border-2 border-dashed border-gray-300 p-3.5 flex flex-col justify-center hover:border-blue-300 transition-colors"
+            >
+              <span className="font-semibold text-gray-900">Browse everything →</span>
+              <span className="text-xs text-gray-500 mt-0.5">Search or pick by subject, level & topic</span>
+            </a>
+          </div>
+
+          <div id="lesson-picker" className="max-w-3xl">
           {/* Setup form */}
           <LessonPicker
             studentName={studentName}
@@ -2116,48 +2166,73 @@ function TutorPage() {
             inputMode={inputMode}
           />
 
-          {/* Your teacher — demo persona picker (flag-gated; radio-card style
-              matching the setup card). Selection feeds the teacherPersona
-              prop + the session voice at both render sites. */}
+          {/* Your teacher — compact row honoring the geo pre-select; the
+              full 18-card radiogroup lives behind "Change tutor". Selection
+              feeds the teacherPersona prop + session voice at both render
+              sites. */}
           {TUTOR_PEDAGOGY_OPENER && (
             <div className="mt-6 bg-white rounded-xl shadow-lg p-5 sm:p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Your teacher</h2>
-              <p className="text-xs text-gray-500 mt-1 mb-4">Pick who you&apos;d like to learn with today.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label="Your teacher">
-                {orderedTeachers.map((t) => {
-                  const isSel = t.id === selectedTeacherId;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={isSel}
-                      onClick={() => setSelectedTeacherId(t.id)}
-                      className={`text-left rounded-xl border-2 p-4 transition-colors ${
-                        isSel
-                          ? 'border-blue-500 bg-blue-50/60'
-                          : 'border-gray-200 bg-white hover:border-blue-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-semibold text-gray-900">{t.name}</span>
-                        <span
-                          className={`shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
-                            isSel ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'
-                          }`}
-                          aria-hidden
-                        >
-                          {isSel && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-600 mt-1.5 leading-snug">{t.intro}</p>
-                      {!ORIGINAL_TEACHER_IDS.has(t.id) && ACCENT_CARD_HINTS[t.id] && (
-                        <p className="text-[11px] text-gray-400 mt-1.5">{ACCENT_CARD_HINTS[t.id]}</p>
-                      )}
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-3">
+                <span className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white flex items-center justify-center font-semibold">
+                  {selectedTeacher.name.replace(/^(Ms\.|Mr\.|Dr\.)\s*/, '').charAt(0)}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 truncate">{selectedTeacher.name}</p>
+                  <p className="text-xs text-gray-500">
+                    {ACCENT_CARD_HINTS[selectedTeacher.id]
+                      ?? (geoPairIds.includes(selectedTeacher.id) ? 'Picked for your region' : 'Your tutor for this session')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTeacherPickerOpen((v) => !v)}
+                  aria-expanded={teacherPickerOpen}
+                  className="ml-auto shrink-0 inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3.5 py-1.5 text-sm text-gray-700 hover:border-blue-300"
+                >
+                  Change tutor
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${teacherPickerOpen ? 'rotate-180' : ''}`} />
+                </button>
               </div>
+              {teacherPickerOpen && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4" role="radiogroup" aria-label="Your teacher">
+                  {orderedTeachers.map((t) => {
+                    const isSel = t.id === selectedTeacherId;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isSel}
+                        onClick={() => {
+                          setSelectedTeacherId(t.id);
+                          trackEvent('teacher_changed', { teacher_id: t.id, surface: 'tutor_lobby' });
+                        }}
+                        className={`text-left rounded-xl border-2 p-4 transition-colors ${
+                          isSel
+                            ? 'border-blue-500 bg-blue-50/60'
+                            : 'border-gray-200 bg-white hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-gray-900">{t.name}</span>
+                          <span
+                            className={`shrink-0 inline-flex items-center justify-center w-4 h-4 rounded-full border-2 ${
+                              isSel ? 'border-blue-600 bg-blue-600' : 'border-gray-300 bg-white'
+                            }`}
+                            aria-hidden
+                          >
+                            {isSel && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1.5 leading-snug">{t.intro}</p>
+                        {!ORIGINAL_TEACHER_IDS.has(t.id) && ACCENT_CARD_HINTS[t.id] && (
+                          <p className="text-[11px] text-gray-400 mt-1.5">{ACCENT_CARD_HINTS[t.id]}</p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
@@ -2167,6 +2242,7 @@ function TutorPage() {
             {inputMode === 'voice' && (
               <p className="mt-1 text-blue-600">Microphone access required for voice mode</p>
             )}
+          </div>
           </div>
         </div>
       </div>

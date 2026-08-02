@@ -27,17 +27,6 @@ interface PlanSearchBarProps {
   autoFocus?: boolean;
 }
 
-const POPULAR_SUGGESTIONS = [
-  'fractions',
-  'photosynthesis',
-  'quadratic equations',
-  'the water cycle',
-  'Pythagoras theorem',
-  'ellipses',
-  "Newton's laws",
-  'essay writing',
-];
-
 export default function PlanSearchBar({
   onSelect,
   placeholder = '🔍 Search any lesson — try "fractions", "photosynthesis", "quadratic equations"',
@@ -151,23 +140,12 @@ export default function PlanSearchBar({
         <div className="absolute z-30 mt-2 w-full rounded-xl border border-gray-200 bg-white shadow-2xl max-h-[70vh] sm:max-h-[480px] overflow-y-auto">
           {query.trim().length === 0 ? (
             <div className="p-4">
-              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2 font-semibold">Try searching for…</p>
-              <div className="flex flex-wrap gap-2">
-                {POPULAR_SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => {
-                      setQuery(s);
-                      inputRef.current?.focus();
-                    }}
-                    className="px-3 py-1.5 text-sm rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-gray-500">
-                Or use the structured picker below to browse by subject and level.
+              {/* Suggestion chips removed 2026-08-02 — the lobby's curated
+                  one-tap tiles replaced them (chips read as a guide, not a
+                  search box, and duplicated the tiles' job). */}
+              <p className="text-xs text-gray-500">
+                Type a topic, lesson, or exam name — or use the structured
+                picker below to browse by subject and level.
               </p>
             </div>
           ) : loading ? (
