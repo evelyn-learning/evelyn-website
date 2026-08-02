@@ -8,14 +8,17 @@ const PAGE_PATH = "/press/time-top-edtech-2026";
 const PAGE_URL = `${SITE_URL}${PAGE_PATH}`;
 const OG_IMAGE = `${SITE_URL}/press/time-top-edtech-2026/og-image.png`;
 const PUBLISHED_AT = "2026-04-22";
+const MODIFIED_AT = "2026-07-22";
 const TIME_ARTICLE_URL =
   "https://time.com/article/2026/04/22/america-top-edtech-companies-2026/";
+const TIME_WORLD_ARTICLE_URL =
+  "https://time.com/article/2026/07/22/worlds-top-edtech-companies-2026/";
 
 export const metadata: Metadata = {
   title:
-    "Evelyn Learning Named One of TIME's Top EdTech Companies of 2026 | Evelyn Learning",
+    "Evelyn Learning Ranked #9 US & #35 World — TIME's Top EdTech Companies 2026 | Evelyn Learning",
   description:
-    "Evelyn Learning has been recognized by TIME and Statista as one of America's Top EdTech Companies of 2026, selected from 250 leading firms based on financial strength and industry impact.",
+    "Evelyn Learning ranked #9 of 250 in TIME's America's Top EdTech Companies of 2026 and #35 of 500 in the World's Top EdTech Companies — top 10 in the US, top 7% globally.",
   alternates: {
     canonical: PAGE_PATH,
   },
@@ -24,25 +27,26 @@ export const metadata: Metadata = {
     url: PAGE_URL,
     siteName: "Evelyn Learning",
     title:
-      "Evelyn Learning Named One of TIME's Top EdTech Companies of 2026",
+      "Evelyn Learning Ranked #9 US & #35 World — TIME's Top EdTech Companies 2026",
     description:
-      "Recognized by TIME and Statista as one of America's Top EdTech Companies of 2026 — selected from 250 leading firms based on financial strength and industry impact.",
+      "Evelyn Learning ranked #9 of 250 in TIME's America's Top EdTech Companies of 2026 and #35 of 500 in the World's Top EdTech Companies — top 10 in the US, top 7% globally.",
     publishedTime: `${PUBLISHED_AT}T00:00:00.000Z`,
+    modifiedTime: `${MODIFIED_AT}T00:00:00.000Z`,
     images: [
       {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "Evelyn Learning — Recognized by TIME as one of America's Top EdTech Companies of 2026",
+        alt: "Evelyn Learning — Ranked #9 US & #35 World in TIME's Top EdTech Companies of 2026",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title:
-      "Evelyn Learning Named One of TIME's Top EdTech Companies of 2026",
+      "Evelyn Learning Ranked #9 US & #35 World — TIME's Top EdTech Companies 2026",
     description:
-      "Recognized by TIME and Statista as one of America's Top EdTech Companies of 2026.",
+      "Ranked #9 of 250 in TIME's America's Top EdTech Companies of 2026 and #35 of 500 in the World's Top EdTech Companies.",
     images: [OG_IMAGE],
   },
 };
@@ -52,8 +56,9 @@ function NewsArticleJsonLd() {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline:
-      "Evelyn Learning Named One of TIME's Top EdTech Companies of 2026",
+      "Evelyn Learning Named to TIME's Top EdTech Companies of 2026 — US & World",
     datePublished: PUBLISHED_AT,
+    dateModified: MODIFIED_AT,
     image: [OG_IMAGE],
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -152,40 +157,63 @@ export default function TimeTopEdtech2026Page() {
             {/* Brand-styled "badge" — text only, no external marks */}
             <div className="inline-flex flex-col items-center gap-3 rounded-2xl border border-white/15 bg-white/5 backdrop-blur-sm px-8 py-6 mb-10">
               <span className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-300">
-                Recognition · April 2026
+                Recognition · 2026
               </span>
               <span className="font-heading text-2xl md:text-3xl font-bold text-white">
                 Top EdTech Companies of 2026
               </span>
               <span className="text-sm text-slate-300">
-                United States · Ranked by TIME and Statista
+                United States &amp; World · Ranked by TIME and Statista
               </span>
             </div>
 
-            {/* Rank callout */}
-            <div className="mb-10 flex items-baseline justify-center gap-4 md:gap-6">
-              <span
-                className="font-heading font-bold leading-none bg-gradient-to-br from-primary-300 via-purple-300 to-pink-300 bg-clip-text text-transparent"
-                style={{ fontSize: "clamp(5rem, 16vw, 11rem)" }}
-              >
-                #9
-              </span>
-              <span className="font-heading text-2xl md:text-4xl font-semibold text-slate-300">
-                of 250
-              </span>
+            {/* Rank callouts — US + World, equal weight */}
+            <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-6 max-w-3xl mx-auto">
+              <div className="flex flex-col items-center">
+                <div className="flex items-baseline gap-3">
+                  <span
+                    className="font-heading font-bold leading-none bg-gradient-to-br from-primary-300 via-purple-300 to-pink-300 bg-clip-text text-transparent"
+                    style={{ fontSize: "clamp(4rem, 10vw, 7rem)" }}
+                  >
+                    #9
+                  </span>
+                  <span className="font-heading text-xl md:text-3xl font-semibold text-slate-300">
+                    of 250
+                  </span>
+                </div>
+                <span className="mt-2 text-sm uppercase tracking-[0.2em] text-slate-400">
+                  United States
+                </span>
+              </div>
+              <div className="flex flex-col items-center">
+                <div className="flex items-baseline gap-3">
+                  <span
+                    className="font-heading font-bold leading-none bg-gradient-to-br from-primary-300 via-purple-300 to-pink-300 bg-clip-text text-transparent"
+                    style={{ fontSize: "clamp(4rem, 10vw, 7rem)" }}
+                  >
+                    #35
+                  </span>
+                  <span className="font-heading text-xl md:text-3xl font-semibold text-slate-300">
+                    of 500
+                  </span>
+                </div>
+                <span className="mt-2 text-sm uppercase tracking-[0.2em] text-slate-400">
+                  World
+                </span>
+              </div>
             </div>
 
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-              Evelyn Learning Named One of TIME&apos;s Top EdTech Companies of
-              2026
+              Evelyn Learning Named to TIME&apos;s Top EdTech Companies of 2026
+              — US &amp; World
             </h1>
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-3xl mx-auto">
-              Ranked #9 of 250 in TIME&apos;s America&apos;s Top EdTech
-              Companies 2026 — alongside Duolingo, Coursera, Grammarly, Udemy,
-              and ClassDojo.
+              Ranked #9 of 250 in America&apos;s Top EdTech Companies and #35
+              of 500 in the World&apos;s Top EdTech Companies.
             </p>
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-slate-400">
-              Published April 22, 2026
+              US list published April 22, 2026 · World list published July 22,
+              2026
             </p>
           </div>
         </div>
@@ -318,6 +346,38 @@ export default function TimeTopEdtech2026Page() {
         </div>
       </section>
 
+      {/* Also recognized globally */}
+      <section className="bg-white border-t border-slate-100">
+        <div className="container-wide py-16 md:py-20">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-primary-500 font-semibold text-sm uppercase tracking-wider">
+                The world ranking
+              </span>
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-slate-900 mt-3">
+                Also recognized globally
+              </h2>
+            </div>
+            <p className="text-xl text-slate-700 leading-relaxed">
+              In July 2026, TIME and Statista published the{" "}
+              <a
+                href={TIME_WORLD_ARTICLE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-primary-600 underline decoration-primary-300 underline-offset-4 hover:text-primary-700"
+              >
+                World&apos;s Top EdTech Companies of 2026
+              </a>{" "}
+              — a global evaluation of thousands of companies, narrowed to the
+              500 top performers based on financial performance and industry
+              impact. Evelyn Learning ranked #35 of 500, placing in the top 7%
+              worldwide alongside global names like Duolingo, Coursera,
+              Pearson, and McGraw Hill.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Why this matters */}
       <section className="bg-slate-50 border-y border-slate-100">
         <div className="container-wide py-16 md:py-20">
@@ -380,8 +440,8 @@ export default function TimeTopEdtech2026Page() {
               Read the full story
             </h2>
             <p className="text-primary-100 text-lg mb-8">
-              See the complete list of America&apos;s Top EdTech Companies of
-              2026 in TIME.
+              See the complete lists of TIME&apos;s Top EdTech Companies of
+              2026.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
@@ -390,7 +450,16 @@ export default function TimeTopEdtech2026Page() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-semibold rounded-xl hover:bg-slate-100 transition-all shadow-lg"
               >
-                Read the article on TIME
+                America&apos;s Top EdTech Companies 2026
+                <ExternalLink className="w-5 h-5" />
+              </a>
+              <a
+                href={TIME_WORLD_ARTICLE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-semibold rounded-xl hover:bg-slate-100 transition-all shadow-lg"
+              >
+                World&apos;s Top EdTech Companies 2026
                 <ExternalLink className="w-5 h-5" />
               </a>
             </div>

@@ -97,10 +97,10 @@ export function Footer() {
                 className="mt-3 block rounded-lg border border-white/10 bg-white/5 px-4 py-3 transition-colors hover:bg-white/10"
               >
                 <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-primary-300">
-                  TIME · April 2026
+                  TIME · 2026
                 </span>
                 <span className="mt-1 block text-sm text-gray-200">
-                  Top EdTech Companies of 2026
+                  Top EdTech Companies: #9 US · #35 World
                 </span>
               </Link>
             </div>

@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     apple: "/favicon.png",
   },
   description:
-    "Recognized by TIME as a top EdTech company of 2026. Evelyn Learning provides AI-powered learning solutions including AI voice tutors, AI essay feedback, virtual lab simulations, career exploration software, and 24/7 student support AI. Adaptive learning platform for K-12, higher education, and workforce development.",
+    "Ranked #9 in America's and #35 in the World's Top EdTech Companies of 2026 by TIME. Evelyn Learning provides AI-powered learning solutions including AI voice tutors, AI essay feedback, virtual lab simulations, career exploration software, and 24/7 student support AI. Adaptive learning platform for K-12, higher education, and workforce development.",
   keywords: [
     // Core GEO Keywords
     "AI-Powered Learning",

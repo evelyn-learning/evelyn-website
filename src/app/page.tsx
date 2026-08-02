@@ -64,7 +64,7 @@ function RecognitionStrip() {
             Recognition
           </span>
           <span className="text-sm text-slate-100">
-            Recognized by TIME as one of America&apos;s Top EdTech Companies of 2026
+            TIME 2026: Ranked #9 in America&apos;s Top EdTech · #35 in the World
           </span>
           <ArrowRight className="hidden sm:inline-block w-4 h-4 text-primary-300 group-hover:translate-x-1 transition-transform" />
         </div>
