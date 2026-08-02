@@ -70,6 +70,6 @@ export const BASELINE_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS: TopicNotesBaseline = {
     { content: `For end behavior, use the leading term only — the degree comes from the SUM of exponents across factors. (x + 1)²(x − 4)³ is degree 5, not 3 or 2. Expand nothing; just add the multiplicities.`, kind: 'tip' },
     { content: `A negative leading coefficient flips both ends. p(x) = −3x⁴ + 2x − 7 goes to −∞ on BOTH sides. The lower-degree terms (+2x, −7) never affect end behavior — ignore them entirely.`, kind: 'common-error' },
     { content: `'At most n − 1 turning points' runs one way only. A cubic can show 2 bumps or 0. So a graph with 3 visible bumps means degree ≥ 4 — the answer choice may be degree 5 or 6, not automatically 4.`, kind: 'edge-case' },
-    { content: `Y-intercept from factored form: plug in x = 0, don't read the constants. For f(x) = (x − 2)(x + 6), f(0) = (−2)(6) = −12 — not 2, −6, or 12. Sign errors here are the #1 miss on the free-response version.`, kind: 'gotcha' },
+    { content: `Y-intercept from factored form: plug in x = 0, don't read the constants. For f(x) = (x − 2)(x + 6), f(0) = (−2)(6) = −12 — not 2, −6, or 12. Sign errors here are the #1 miss on the SPR version.`, kind: 'gotcha' },
   ],
 };
