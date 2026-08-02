@@ -28,6 +28,21 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
+// Course slug (from `evelyn.hs.<slug>.` OR `evelyn.testprep.<slug>.`) →
+// exact portal course-title string. Must byte-match the portal's course
+// title or the Notes tab silently resolves nothing for that course.
+// Extend as new HS/test-prep courses are backfilled.
+const HS_COURSE_NAMES: Record<string, string> = {
+  chem: 'Chemistry',
+  alg1: 'Algebra 1',
+  geom: 'Geometry',
+  bio: 'Biology',
+  engl: 'HS English',
+  whist: 'World History',
+  dsat: 'Digital SAT',
+  act: 'ACT',
+};
+
 interface BaselineDraft {
   baselineId: string;
   course: string;
@@ -81,8 +96,10 @@ function loadAllPlans(): LessonPlan[] {
   return plans;
 }
 
+let cachedPlans: LessonPlan[] | null = null;
 function findPlan(planId: string): LessonPlan | null {
-  return loadAllPlans().find((p) => p.id === planId) ?? null;
+  if (!cachedPlans) cachedPlans = loadAllPlans();
+  return cachedPlans.find((p) => p.id === planId) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -120,7 +137,22 @@ function extract(plan: LessonPlan): BaselineDraft {
         vocabulary?: Array<{ term: string; definition: string }>;
       };
       for (const idea of c.keyIdeas ?? []) {
-        theory.push({ loId: defaultLoId, content: idea });
+        // Authoring convention across plans: many keyIdeas lead with an
+        // ALL-CAPS label ("THE ORDER — ...", "NESTED GROUPING — ...").
+        // When present, lift it into `title` (sentence-cased) so the
+        // renderer gets a headline; content stays the full original
+        // bullet (title is redundant-but-helpful, not a replacement).
+        const m = idea.match(/^([A-Z][A-Z0-9 ,'/\-→]{2,70}) — ([\s\S]+)$/);
+        if (m) {
+          theory.push({
+            loId: defaultLoId,
+            kind: 'framework',
+            title: sentenceCase(m[1]),
+            content: idea,
+          });
+        } else {
+          theory.push({ loId: defaultLoId, content: idea });
+        }
       }
       for (const v of c.vocabulary ?? []) {
         theory.push({
@@ -138,6 +170,32 @@ function extract(plan: LessonPlan): BaselineDraft {
         example: w.problem && w.answer ? { problem: w.problem, solution: w.answer } : undefined,
         relatedLoIds: defaultLoId ? [defaultLoId] : undefined,
       });
+    } else if (seg.kind === 'misconception_check') {
+      // "Watch out for" distractor + correction — excellent pointer
+      // material (common-error kind) that was previously dropped.
+      //
+      // ce.correctsTo is authored as a correction addressed to a student
+      // who just gave the wrong answer (ce.answer) — it often opens with a
+      // dangling anaphoric reference ("Wrong — the 12x is missing.", "That
+      // is the INVERSE.") that only resolves once you can see ce.answer.
+      // The Notes tab never displays ce.answer or ce.misconception on their
+      // own, only whatever we push here as the pointer's content — so a
+      // bare ce.correctsTo can read as a correction to a mistake the
+      // student was never shown. Prefix with the wrong answer so the
+      // pointer stands alone (2026-08 topic-notes backfill review, finding
+      // 2). Keep ce.misconception out of the default template — it's
+      // usually redundant with what correctsTo already explains — but it
+      // remains available on `mc.commonErrors` for hand-editing a specific
+      // pointer afterward if correctsTo alone still isn't clear.
+      const mc = seg as Segment & {
+        commonErrors?: Array<{ answer: string; misconception: string; correctsTo: string }>;
+      };
+      for (const ce of mc.commonErrors ?? []) {
+        pointers.push({
+          content: `Students often say "${ce.answer}" — ${ce.correctsTo}`,
+          kind: 'common-error',
+        });
+      }
     } else if (seg.kind === 'recap') {
       const r = seg as Segment & { mustRemember?: string[] };
       for (const item of r.mustRemember ?? []) {
@@ -169,13 +227,117 @@ function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.envsci.')) return 'AP Environmental Science';
   if (plan.id.startsWith('evelyn.ap.psych.')) return 'AP Psychology';
   if (plan.id.startsWith('evelyn.ap.research.')) return 'AP Research';
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
+  if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
   return plan.title;
 }
 
 function humanizeSegmentId(id: string): string {
   // 'worked-deficit-crowding' → 'Worked: deficit crowding'
   // 'worked-curve-shifters'   → 'Worked: curve shifters'
-  return id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ').replace(/^Worked /, 'Worked: ');
+  const humanized =
+    id.charAt(0).toUpperCase() + id.slice(1).replace(/-/g, ' ').replace(/^Worked /, 'Worked: ');
+  return applyAllowlistCasing(humanized);
+}
+
+// ---------------------------------------------------------------------------
+// Acronym / proper-noun casing
+//
+// Both sentenceCase() (ALL-CAPS keyIdeas labels → title) and
+// humanizeSegmentId() (kebab-case segment ids → title) produce text whose
+// words are, by construction, all-lowercase except the very first letter.
+// That blind lowercasing mangles acronyms and proper nouns baked into the
+// authored label/id ('GCF FIRST, ALWAYS' → 'Gcf first, always',
+// 'worked-napoleon-chain' → 'Worked napoleon chain'). Both functions run
+// their output through this allowlist afterward to restore correct casing
+// for known abbreviations, initialisms, Roman numerals, and proper nouns
+// that recur across the HS/test-prep corpus (see the 2026-08 topic-notes
+// backfill review, finding 1). Extend this list as new courses surface new
+// acronyms/proper nouns — do not remove entries just because a course
+// doesn't currently use them.
+// Every entry here must be a word with essentially zero risk of a
+// legitimate ordinary-English lowercase meaning — that's what keeps
+// applyAllowlistCasing() safe to run unconditionally over arbitrary
+// authored text. 'US', 'V', 'AP' were removed after the 2026-08 review's
+// second pass flagged them as landmines despite being unused today: 'US'
+// collides with the pronoun "us" (sentenceCase('LET US KNOW THE RULE')
+// would wrongly produce 'Let US know the rule'), 'V'/'III'/'IV' were
+// speculative Roman-numeral additions with no corpus justification (only
+// 'I'/'II' are actually used, for Meiosis/Prophase/Metaphase stages), and
+// 'AP' is unused by any HS/test-prep course this extractor targets. Apply
+// the same 'is this word ever legitimately lowercase, anywhere' test
+// before adding new entries — don't add a word just because the current
+// title list would benefit; confirm it has no ordinary-English meaning
+// first (this is why words like 'Church', 'Union', 'Revolution', 'State',
+// 'Reformation', 'Age', 'Road', 'Wars', 'Death', 'Mandate', 'Heaven',
+// 'Newton' — all genuinely ambiguous in this corpus, some proper only
+// inside one specific multi-word name — are deliberately NOT here; those
+// get hand-fixed per occurrence instead, same as before this list existed).
+const ALLOWLIST_WORDS: string[] = [
+  // acronyms / initialisms
+  'DNA', 'RNA', 'mRNA', 'tRNA', 'rRNA', 'ATP', 'PCR', 'CNS', 'PNS', 'CPCTC',
+  'SSS', 'SAS', 'ASA', 'AAS', 'HL', 'GCF', 'LCM', 'FOIL', 'SAT', 'ACT',
+  'WWI', 'WWII', 'USSR', 'NATO', 'pH', 'POV', 'GDP', 'EU',
+  // Roman numerals (e.g. 'Meiosis I', 'Prophase I', 'Metaphase I') — only
+  // the two actually attested in the corpus; see note above.
+  'I', 'II',
+  // proper nouns / proper adjectives seen in the HS/test-prep corpus
+  'China', 'Japan', 'Rome', 'Roman', 'Britain', 'British', 'Europe',
+  'European', 'Africa', 'African', 'India', 'Indian', 'America', 'Americas',
+  'Nile', 'Persian', 'Peloponnesian', 'Vedic', 'Augustus', 'Caesar', 'Pax',
+  'Romana', 'Mongolica', 'Swahili', 'Islam', 'Congo', 'Napoleon', 'Hitler',
+  'Italy', 'Hajj', 'July', 'October', 'Orthodox', 'Catholic', 'Protestant',
+  'Rousseau', 'Beccaria', 'Wollstonecraft', 'Abbasids',
+  'Indus', 'Hammurabi', 'Cuba', 'Gorbachev', 'Pericles', 'Ashoka',
+  'Buddhism', 'Hinduism', 'Baghdad', 'Sunni', 'Shia', 'Hangzhou', 'Slavic',
+  'Rus', 'Clermont', 'Andes', 'Mexica', 'Sahara', 'Cairo', 'Portugal',
+  'Columbus', 'Nahua', 'Versailles', 'Munich', 'Goldilocks',
+];
+const ALLOWLIST_MAP = new Map(ALLOWLIST_WORDS.map((w) => [w.toUpperCase(), w]));
+
+/** Restore correct casing for known acronyms/proper nouns inside an
+ *  otherwise-correctly-cased string, without disturbing anything else.
+ *  Handles hyphenated compounds ('digital-sat' → 'digital-SAT') and a
+ *  trailing possessive ("sat's" → "SAT's"). */
+function applyAllowlistCasing(text: string): string {
+  return text
+    .split(/(\s+)/)
+    .map((token) => {
+      if (/^\s*$/.test(token)) return token;
+      if (token.includes('-')) {
+        return token.split('-').map(fixAllowlistWord).join('-');
+      }
+      return fixAllowlistWord(token);
+    })
+    .join('');
+}
+
+function fixAllowlistWord(word: string): string {
+  const m = word.match(/^([^A-Za-z0-9]*)([A-Za-z0-9']*)([^A-Za-z0-9]*)$/);
+  if (!m) return word;
+  const [, pre, core, post] = m;
+  if (!core) return word;
+  let base = core;
+  let suffix = '';
+  const possessive = core.match(/^(.*?)('s|')$/i);
+  if (possessive && possessive[1].length >= 2) {
+    base = possessive[1];
+    suffix = core.slice(base.length);
+  }
+  const correct = ALLOWLIST_MAP.get(base.toUpperCase());
+  if (!correct) return word;
+  return pre + correct + suffix + post;
+}
+
+/** 'THE FRACTION BAR' → 'The fraction bar'. Used to turn an ALL-CAPS
+ *  authoring label into a headline-cased title. Runs the result through
+ *  applyAllowlistCasing() so acronyms/proper nouns inside the label (which
+ *  are indistinguishable from ordinary words once the whole label is
+ *  upper-cased) don't get silently lowercased along with everything else. */
+function sentenceCase(label: string): string {
+  const trimmed = label.trim();
+  const lowered = trimmed.charAt(0) + trimmed.slice(1).toLowerCase();
+  return applyAllowlistCasing(lowered);
 }
 
 // ---------------------------------------------------------------------------
@@ -192,14 +354,30 @@ function tsString(s: string): string {
   return "'" + s.replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 }
 
-function constNameFor(planId: string): string {
-  // 'evelyn.ap.macro.loanable-funds-market.v1' → 'BASELINE_AP_MACRO_LOANABLE_FUNDS_MARKET'
+function constNameFor(planId: string, cedUnit: number): string {
+  const apMatch = planId.match(/^evelyn\.ap\.([a-z]+)\./);
+  if (apMatch) {
+    // 'evelyn.ap.macro.loanable-funds-market.v1' → 'BASELINE_AP_MACRO_LOANABLE_FUNDS_MARKET'
+    const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
+    return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
+  }
+  const hsMatch = planId.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
+  if (hsMatch) {
+    // 'evelyn.hs.chem.classifying-matter.v1' + unit 1 →
+    // 'BASELINE_CHEM_U1_CLASSIFYING_MATTER' — mirrors the lesson-plan
+    // seed's own const naming (SEED_CHEM_U1_CLASSIFYING_MATTER), which
+    // encodes the unit number the plan id itself doesn't carry. Same
+    // pattern for test-prep ids ('evelyn.testprep.dsat.<slug>.v1' →
+    // 'BASELINE_DSAT_U<n>_<SLUG>').
+    const courseSlug = hsMatch[1];
+    const slug = planId.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `BASELINE_${courseSlug.toUpperCase()}_U${cedUnit}_${slug.toUpperCase().replace(/-/g, '_')}`;
+  }
   const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
   return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
 }
 
 function fileNameFor(plan: LessonPlan): string {
-  // Mirror the source plan's filename: 'ap-<course>-u<N>-<slug>.ts'
   const cedUnitRaw = (plan.metadata as { cedUnit?: string | number } | undefined)?.cedUnit;
   const cedUnit =
     typeof cedUnitRaw === 'number'
@@ -207,13 +385,26 @@ function fileNameFor(plan: LessonPlan): string {
       : typeof cedUnitRaw === 'string'
         ? parseInt(cedUnitRaw, 10) || 0
         : 0;
-  const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
-  const courseSlug = plan.id.match(/^evelyn\.ap\.([a-z]+)\./)?.[1] ?? 'unknown';
-  return `ap-${courseSlug}-u${cedUnit}-${slugFromId}.ts`;
+  const apMatch = plan.id.match(/^evelyn\.ap\.([a-z]+)\./);
+  if (apMatch) {
+    // 'ap-<course>-u<N>-<slug>.ts'
+    const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
+    return `ap-${apMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
+  if (hsMatch) {
+    // '<course>-u<N>-<slug>.ts' — mirrors the source lesson-plan
+    // filename exactly (e.g. 'alg1-u1-order-of-operations.ts',
+    // 'dsat-u1-linear-equations-one-var.ts').
+    const slugFromId = plan.id.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
+  return `${fallbackSlug}.ts`;
 }
 
 function emitConst(draft: BaselineDraft): string {
-  const constName = constNameFor(draft.baselineId);
+  const constName = constNameFor(draft.baselineId, draft.cedUnit);
 
   const theoryBlock = draft.theory
     .map((e) => {
@@ -298,17 +489,11 @@ ${pointersBlock},
 // CLI
 // ---------------------------------------------------------------------------
 
-function main(): void {
-  const planId = process.argv[2];
-  if (!planId) {
-    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId>');
-    console.error('Example: ... evelyn.ap.macro.loanable-funds-market.v1');
-    process.exit(2);
-  }
+function extractOne(planId: string): boolean {
   const plan = findPlan(planId);
   if (!plan) {
     console.error(`✗ plan not found: ${planId}`);
-    process.exit(1);
+    return false;
   }
   const draft = extract(plan);
   const source = emitConst(draft);
@@ -320,7 +505,7 @@ function main(): void {
   if (fs.existsSync(outFile)) {
     console.error(`✗ output file already exists: ${outFile}`);
     console.error('  delete it first if you want to re-extract — baseline edits should be hand-made after extraction');
-    process.exit(1);
+    return false;
   }
 
   fs.writeFileSync(outFile, source, 'utf-8');
@@ -328,10 +513,34 @@ function main(): void {
   console.log(`  theory entries: ${draft.theory.length}`);
   console.log(`  method entries: ${draft.methods.length}`);
   console.log(`  pointer seeds:  ${draft.pointers.length}`);
-  console.log('');
+  return true;
+}
+
+function main(): void {
+  // Accepts either a single planId (original behavior) or multiple
+  // space-separated planIds in one process invocation — the latter
+  // amortizes the ~40s loadAllPlans() cost across the whole batch
+  // instead of paying it once per plan (relevant for backfilling an
+  // entire course's worth of plans in one run).
+  const planIds = process.argv.slice(2);
+  if (planIds.length === 0) {
+    console.error('Usage: scripts/extract-topic-notes-baselines.ts <planId> [<planId2> ...]');
+    console.error('Example: ... evelyn.ap.macro.loanable-funds-market.v1');
+    process.exit(2);
+  }
+
+  let okCount = 0;
+  for (const planId of planIds) {
+    const ok = extractOne(planId);
+    if (ok) okCount++;
+    console.log('');
+  }
+
+  console.log(`Done: ${okCount}/${planIds.length} extracted.`);
   console.log('Next:');
-  console.log('  1. review and hand-edit the file (re-tag theory entries with kind, split LOs etc.)');
-  console.log(`  2. enrich pointers via Opus: scripts/gen-topic-notes-pointers.ts ${planId}`);
+  console.log('  1. review and hand-edit each file (re-tag theory entries with kind, split LOs etc.)');
+  console.log('  2. enrich pointers via Opus: scripts/gen-topic-notes-pointers.ts <planId>');
+  if (okCount < planIds.length) process.exit(1);
 }
 
 main();

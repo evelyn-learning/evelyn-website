@@ -543,6 +543,277 @@ import { BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION } from './seeds/chem-u10-neu
 import { BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO } from './seeds/chem-u10-nuclear-chemistry-intro';
 import { BASELINE_CHEM_U10_PH_SCALE } from './seeds/chem-u10-ph-scale';
 
+// HS core: Algebra 1 (2026-08 backfill) — 40 baselines, units 1-10.
+import { BASELINE_ALG1_U1_REAL_NUMBERS_OPERATIONS } from './seeds/alg1-u1-real-numbers-operations';
+import { BASELINE_ALG1_U1_ORDER_OF_OPERATIONS } from './seeds/alg1-u1-order-of-operations';
+import { BASELINE_ALG1_U1_SIMPLIFYING_EXPRESSIONS } from './seeds/alg1-u1-simplifying-expressions';
+import { BASELINE_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA } from './seeds/alg1-u1-translating-words-to-algebra';
+import { BASELINE_ALG1_U2_ONE_TWO_STEP_EQUATIONS } from './seeds/alg1-u2-one-two-step-equations';
+import { BASELINE_ALG1_U2_MULTI_STEP_EQUATIONS } from './seeds/alg1-u2-multi-step-equations';
+import { BASELINE_ALG1_U2_LITERAL_EQUATIONS } from './seeds/alg1-u2-literal-equations';
+import { BASELINE_ALG1_U2_PROPORTIONS_PERCENTS } from './seeds/alg1-u2-proportions-percents';
+import { BASELINE_ALG1_U3_ONE_VARIABLE_INEQUALITIES } from './seeds/alg1-u3-one-variable-inequalities';
+import { BASELINE_ALG1_U3_COMPOUND_INEQUALITIES } from './seeds/alg1-u3-compound-inequalities';
+import { BASELINE_ALG1_U3_ABSOLUTE_VALUE } from './seeds/alg1-u3-absolute-value';
+import { BASELINE_ALG1_U4_RELATIONS_FUNCTIONS } from './seeds/alg1-u4-relations-functions';
+import { BASELINE_ALG1_U4_SLOPE_RATE_OF_CHANGE } from './seeds/alg1-u4-slope-rate-of-change';
+import { BASELINE_ALG1_U4_SLOPE_INTERCEPT_FORM } from './seeds/alg1-u4-slope-intercept-form';
+import { BASELINE_ALG1_U4_POINT_SLOPE_STANDARD_FORM } from './seeds/alg1-u4-point-slope-standard-form';
+import { BASELINE_ALG1_U4_PARALLEL_PERPENDICULAR } from './seeds/alg1-u4-parallel-perpendicular';
+import { BASELINE_ALG1_U5_SYSTEMS_BY_GRAPHING } from './seeds/alg1-u5-systems-by-graphing';
+import { BASELINE_ALG1_U5_SYSTEMS_SUBSTITUTION } from './seeds/alg1-u5-systems-substitution';
+import { BASELINE_ALG1_U5_SYSTEMS_ELIMINATION } from './seeds/alg1-u5-systems-elimination';
+import { BASELINE_ALG1_U5_SYSTEMS_APPLICATIONS } from './seeds/alg1-u5-systems-applications';
+import { BASELINE_ALG1_U6_EXPONENT_RULES } from './seeds/alg1-u6-exponent-rules';
+import { BASELINE_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION } from './seeds/alg1-u6-negative-exponents-scientific-notation';
+import { BASELINE_ALG1_U6_EXPONENTIAL_FUNCTIONS } from './seeds/alg1-u6-exponential-functions';
+import { BASELINE_ALG1_U6_EXPONENTIAL_GROWTH_DECAY } from './seeds/alg1-u6-exponential-growth-decay';
+import { BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS } from './seeds/alg1-u7-polynomial-operations';
+import { BASELINE_ALG1_U7_SPECIAL_PRODUCTS } from './seeds/alg1-u7-special-products';
+import { BASELINE_ALG1_U7_FACTORING_GCF_GROUPING } from './seeds/alg1-u7-factoring-gcf-grouping';
+import { BASELINE_ALG1_U7_FACTORING_TRINOMIALS } from './seeds/alg1-u7-factoring-trinomials';
+import { BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS } from './seeds/alg1-u7-factoring-special-forms';
+import { BASELINE_ALG1_U8_QUADRATIC_GRAPHS_VERTEX } from './seeds/alg1-u8-quadratic-graphs-vertex';
+import { BASELINE_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS } from './seeds/alg1-u8-solving-by-factoring-square-roots';
+import { BASELINE_ALG1_U8_COMPLETING_THE_SQUARE } from './seeds/alg1-u8-completing-the-square';
+import { BASELINE_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT } from './seeds/alg1-u8-quadratic-formula-discriminant';
+import { BASELINE_ALG1_U8_QUADRATIC_MODELS } from './seeds/alg1-u8-quadratic-models';
+import { BASELINE_ALG1_U9_SIMPLIFYING_RADICALS } from './seeds/alg1-u9-simplifying-radicals';
+import { BASELINE_ALG1_U9_RADICAL_EQUATIONS } from './seeds/alg1-u9-radical-equations';
+import { BASELINE_ALG1_U9_RATIONAL_EXPRESSIONS } from './seeds/alg1-u9-rational-expressions';
+import { BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS } from './seeds/alg1-u10-one-variable-statistics';
+import { BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES } from './seeds/alg1-u10-scatterplots-trend-lines';
+import { BASELINE_ALG1_U10_SEQUENCES } from './seeds/alg1-u10-sequences';
+import { BASELINE_GEOM_U1_POINTS_LINES_PLANES } from './seeds/geom-u1-points-lines-planes';
+import { BASELINE_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT } from './seeds/geom-u1-segments-distance-midpoint';
+import { BASELINE_GEOM_U1_ANGLES_AND_MEASURE } from './seeds/geom-u1-angles-and-measure';
+import { BASELINE_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS } from './seeds/geom-u1-angle-pair-relationships';
+import { BASELINE_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING } from './seeds/geom-u2-inductive-deductive-reasoning';
+import { BASELINE_GEOM_U2_CONDITIONAL_STATEMENTS } from './seeds/geom-u2-conditional-statements';
+import { BASELINE_GEOM_U2_TWO_COLUMN_PROOFS } from './seeds/geom-u2-two-column-proofs';
+import { BASELINE_GEOM_U3_PARALLEL_LINES_TRANSVERSALS } from './seeds/geom-u3-parallel-lines-transversals';
+import { BASELINE_GEOM_U3_PROVING_LINES_PARALLEL } from './seeds/geom-u3-proving-lines-parallel';
+import { BASELINE_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR } from './seeds/geom-u3-slopes-parallel-perpendicular';
+import { BASELINE_GEOM_U4_TRANSLATIONS } from './seeds/geom-u4-translations';
+import { BASELINE_GEOM_U4_REFLECTIONS } from './seeds/geom-u4-reflections';
+import { BASELINE_GEOM_U4_ROTATIONS } from './seeds/geom-u4-rotations';
+import { BASELINE_GEOM_U4_COMPOSITIONS_SYMMETRY } from './seeds/geom-u4-compositions-symmetry';
+import { BASELINE_GEOM_U4_CONGRUENCE_RIGID_MOTIONS } from './seeds/geom-u4-congruence-rigid-motions';
+import { BASELINE_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS } from './seeds/geom-u5-triangle-angle-relationships';
+import { BASELINE_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA } from './seeds/geom-u5-triangle-congruence-criteria';
+import { BASELINE_GEOM_U5_CPCTC_PROOFS } from './seeds/geom-u5-cpctc-proofs';
+import { BASELINE_GEOM_U5_ISOSCELES_EQUILATERAL } from './seeds/geom-u5-isosceles-equilateral';
+import { BASELINE_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES } from './seeds/geom-u5-midsegments-bisectors-inequalities';
+import { BASELINE_GEOM_U6_DILATIONS_SCALE_FACTOR } from './seeds/geom-u6-dilations-scale-factor';
+import { BASELINE_GEOM_U6_SIMILAR_POLYGONS } from './seeds/geom-u6-similar-polygons';
+import { BASELINE_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA } from './seeds/geom-u6-triangle-similarity-criteria';
+import { BASELINE_GEOM_U6_PROPORTIONALITY_THEOREMS } from './seeds/geom-u6-proportionality-theorems';
+import { BASELINE_GEOM_U7_PYTHAGOREAN_THEOREM } from './seeds/geom-u7-pythagorean-theorem';
+import { BASELINE_GEOM_U7_SPECIAL_RIGHT_TRIANGLES } from './seeds/geom-u7-special-right-triangles';
+import { BASELINE_GEOM_U7_TRIG_RATIOS } from './seeds/geom-u7-trig-ratios';
+import { BASELINE_GEOM_U7_SOLVING_RIGHT_TRIANGLES } from './seeds/geom-u7-solving-right-triangles';
+import { BASELINE_GEOM_U8_POLYGON_ANGLE_SUMS } from './seeds/geom-u8-polygon-angle-sums';
+import { BASELINE_GEOM_U8_PARALLELOGRAMS } from './seeds/geom-u8-parallelograms';
+import { BASELINE_GEOM_U8_SPECIAL_PARALLELOGRAMS } from './seeds/geom-u8-special-parallelograms';
+import { BASELINE_GEOM_U8_TRAPEZOIDS_KITES } from './seeds/geom-u8-trapezoids-kites';
+import { BASELINE_GEOM_U9_CIRCLE_BASICS_ARCS } from './seeds/geom-u9-circle-basics-arcs';
+import { BASELINE_GEOM_U9_CENTRAL_INSCRIBED_ANGLES } from './seeds/geom-u9-central-inscribed-angles';
+import { BASELINE_GEOM_U9_TANGENTS_SECANTS_ANGLES } from './seeds/geom-u9-tangents-secants-angles';
+import { BASELINE_GEOM_U9_CIRCLE_EQUATIONS } from './seeds/geom-u9-circle-equations';
+import { BASELINE_GEOM_U10_AREA_POLYGONS } from './seeds/geom-u10-area-polygons';
+import { BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR } from './seeds/geom-u10-circumference-arc-length-sector';
+import { BASELINE_GEOM_U10_PRISMS_CYLINDERS } from './seeds/geom-u10-prisms-cylinders';
+import { BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES } from './seeds/geom-u10-pyramids-cones-spheres';
+import { BASELINE_BIO_U1_CHARACTERISTICS_OF_LIFE } from './seeds/bio-u1-characteristics-of-life';
+import { BASELINE_BIO_U1_SCIENTIFIC_METHOD_BIO } from './seeds/bio-u1-scientific-method-bio';
+import { BASELINE_BIO_U1_WATER_AND_MACROMOLECULES } from './seeds/bio-u1-water-and-macromolecules';
+import { BASELINE_BIO_U1_ENZYMES } from './seeds/bio-u1-enzymes';
+import { BASELINE_BIO_U2_CELL_THEORY_TYPES } from './seeds/bio-u2-cell-theory-types';
+import { BASELINE_BIO_U2_ORGANELLES } from './seeds/bio-u2-organelles';
+import { BASELINE_BIO_U2_CELL_MEMBRANE_STRUCTURE } from './seeds/bio-u2-cell-membrane-structure';
+import { BASELINE_BIO_U2_TRANSPORT_ACROSS_MEMBRANES } from './seeds/bio-u2-transport-across-membranes';
+import { BASELINE_BIO_U3_ATP_AND_ENERGY } from './seeds/bio-u3-atp-and-energy';
+import { BASELINE_BIO_U3_PHOTOSYNTHESIS } from './seeds/bio-u3-photosynthesis';
+import { BASELINE_BIO_U3_CELLULAR_RESPIRATION } from './seeds/bio-u3-cellular-respiration';
+import { BASELINE_BIO_U4_CELL_CYCLE_MITOSIS } from './seeds/bio-u4-cell-cycle-mitosis';
+import { BASELINE_BIO_U4_CELL_CYCLE_REGULATION_CANCER } from './seeds/bio-u4-cell-cycle-regulation-cancer';
+import { BASELINE_BIO_U4_MEIOSIS } from './seeds/bio-u4-meiosis';
+import { BASELINE_BIO_U4_MITOSIS_MEIOSIS_VARIATION } from './seeds/bio-u4-mitosis-meiosis-variation';
+import { BASELINE_BIO_U5_MENDEL_LAWS } from './seeds/bio-u5-mendel-laws';
+import { BASELINE_BIO_U5_PUNNETT_SQUARES_MONOHYBRID } from './seeds/bio-u5-punnett-squares-monohybrid';
+import { BASELINE_BIO_U5_DIHYBRID_CROSSES } from './seeds/bio-u5-dihybrid-crosses';
+import { BASELINE_BIO_U5_NON_MENDELIAN_INHERITANCE } from './seeds/bio-u5-non-mendelian-inheritance';
+import { BASELINE_BIO_U5_PEDIGREES_HUMAN_GENETICS } from './seeds/bio-u5-pedigrees-human-genetics';
+import { BASELINE_BIO_U6_DNA_STRUCTURE_REPLICATION } from './seeds/bio-u6-dna-structure-replication';
+import { BASELINE_BIO_U6_TRANSCRIPTION_TRANSLATION } from './seeds/bio-u6-transcription-translation';
+import { BASELINE_BIO_U6_MUTATIONS } from './seeds/bio-u6-mutations';
+import { BASELINE_BIO_U6_BIOTECHNOLOGY } from './seeds/bio-u6-biotechnology';
+import { BASELINE_BIO_U7_EVIDENCE_FOR_EVOLUTION } from './seeds/bio-u7-evidence-for-evolution';
+import { BASELINE_BIO_U7_NATURAL_SELECTION } from './seeds/bio-u7-natural-selection';
+import { BASELINE_BIO_U7_POPULATION_GENETICS } from './seeds/bio-u7-population-genetics';
+import { BASELINE_BIO_U7_SPECIATION } from './seeds/bio-u7-speciation';
+import { BASELINE_BIO_U8_TAXONOMY_CLASSIFICATION } from './seeds/bio-u8-taxonomy-classification';
+import { BASELINE_BIO_U8_PHYLOGENETICS_CLADOGRAMS } from './seeds/bio-u8-phylogenetics-cladograms';
+import { BASELINE_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY } from './seeds/bio-u8-domains-kingdoms-diversity';
+import { BASELINE_BIO_U9_ECOSYSTEMS_BIOMES } from './seeds/bio-u9-ecosystems-biomes';
+import { BASELINE_BIO_U9_ENERGY_FLOW_FOOD_WEBS } from './seeds/bio-u9-energy-flow-food-webs';
+import { BASELINE_BIO_U9_BIOGEOCHEMICAL_CYCLES } from './seeds/bio-u9-biogeochemical-cycles';
+import { BASELINE_BIO_U9_POPULATION_COMMUNITY_ECOLOGY } from './seeds/bio-u9-population-community-ecology';
+import { BASELINE_BIO_U10_HOMEOSTASIS_FEEDBACK } from './seeds/bio-u10-homeostasis-feedback';
+import { BASELINE_BIO_U10_CIRCULATORY_RESPIRATORY } from './seeds/bio-u10-circulatory-respiratory';
+import { BASELINE_BIO_U10_DIGESTIVE_EXCRETORY } from './seeds/bio-u10-digestive-excretory';
+import { BASELINE_BIO_U10_NERVOUS_ENDOCRINE } from './seeds/bio-u10-nervous-endocrine';
+import { BASELINE_BIO_U10_IMMUNE_SYSTEM } from './seeds/bio-u10-immune-system';
+import { BASELINE_ENGL_U1_PARTS_OF_SPEECH } from './seeds/engl-u1-parts-of-speech';
+import { BASELINE_ENGL_U1_SUBJECT_VERB_AGREEMENT } from './seeds/engl-u1-subject-verb-agreement';
+import { BASELINE_ENGL_U1_PRONOUN_AGREEMENT_CLARITY } from './seeds/engl-u1-pronoun-agreement-clarity';
+import { BASELINE_ENGL_U1_VERB_TENSE_AND_FORM } from './seeds/engl-u1-verb-tense-and-form';
+import { BASELINE_ENGL_U2_CLAUSES_AND_PHRASES } from './seeds/engl-u2-clauses-and-phrases';
+import { BASELINE_ENGL_U2_SENTENCE_TYPES_COMBINING } from './seeds/engl-u2-sentence-types-combining';
+import { BASELINE_ENGL_U2_FRAGMENTS_AND_RUN_ONS } from './seeds/engl-u2-fragments-and-run-ons';
+import { BASELINE_ENGL_U2_MODIFIERS_AND_PARALLELISM } from './seeds/engl-u2-modifiers-and-parallelism';
+import { BASELINE_ENGL_U3_COMMAS } from './seeds/engl-u3-commas';
+import { BASELINE_ENGL_U3_SEMICOLONS_AND_COLONS } from './seeds/engl-u3-semicolons-and-colons';
+import { BASELINE_ENGL_U3_APOSTROPHES_AND_POSSESSIVES } from './seeds/engl-u3-apostrophes-and-possessives';
+import { BASELINE_ENGL_U3_DASHES_PARENTHESES_QUOTATION } from './seeds/engl-u3-dashes-parentheses-quotation';
+import { BASELINE_ENGL_U4_PRECISION_AND_CONCISION } from './seeds/engl-u4-precision-and-concision';
+import { BASELINE_ENGL_U4_CONNOTATION_AND_DENOTATION } from './seeds/engl-u4-connotation-and-denotation';
+import { BASELINE_ENGL_U4_TONE_AND_REGISTER } from './seeds/engl-u4-tone-and-register';
+import { BASELINE_ENGL_U4_COMMONLY_CONFUSED_WORDS } from './seeds/engl-u4-commonly-confused-words';
+import { BASELINE_ENGL_U5_CLAIMS_AND_EVIDENCE } from './seeds/engl-u5-claims-and-evidence';
+import { BASELINE_ENGL_U5_RHETORICAL_APPEALS } from './seeds/engl-u5-rhetorical-appeals';
+import { BASELINE_ENGL_U5_LOGICAL_FALLACIES } from './seeds/engl-u5-logical-fallacies';
+import { BASELINE_ENGL_U5_COUNTERARGUMENT_AND_REBUTTAL } from './seeds/engl-u5-counterargument-and-rebuttal';
+import { BASELINE_ENGL_U6_PLOT_AND_CONFLICT } from './seeds/engl-u6-plot-and-conflict';
+import { BASELINE_ENGL_U6_CHARACTERIZATION } from './seeds/engl-u6-characterization';
+import { BASELINE_ENGL_U6_NARRATIVE_POINT_OF_VIEW } from './seeds/engl-u6-narrative-point-of-view';
+import { BASELINE_ENGL_U6_THEME } from './seeds/engl-u6-theme';
+import { BASELINE_ENGL_U7_CENTRAL_IDEA_AND_DETAILS } from './seeds/engl-u7-central-idea-and-details';
+import { BASELINE_ENGL_U7_AUTHORS_PURPOSE_AND_PERSPECTIVE } from './seeds/engl-u7-authors-purpose-and-perspective';
+import { BASELINE_ENGL_U7_TEXT_STRUCTURE } from './seeds/engl-u7-text-structure';
+import { BASELINE_ENGL_U7_INFERENCE_AND_EVIDENCE } from './seeds/engl-u7-inference-and-evidence';
+import { BASELINE_ENGL_U8_FIGURATIVE_LANGUAGE } from './seeds/engl-u8-figurative-language';
+import { BASELINE_ENGL_U8_IMAGERY_AND_SYMBOLISM } from './seeds/engl-u8-imagery-and-symbolism';
+import { BASELINE_ENGL_U8_SOUND_DEVICES } from './seeds/engl-u8-sound-devices';
+import { BASELINE_ENGL_U8_POETIC_FORM_AND_STRUCTURE } from './seeds/engl-u8-poetic-form-and-structure';
+import { BASELINE_ENGL_U9_THESIS_STATEMENTS } from './seeds/engl-u9-thesis-statements';
+import { BASELINE_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT } from './seeds/engl-u9-paragraph-unity-and-support';
+import { BASELINE_ENGL_U9_TRANSITIONS_AND_COHESION } from './seeds/engl-u9-transitions-and-cohesion';
+import { BASELINE_ENGL_U9_INTRODUCTIONS_AND_CONCLUSIONS } from './seeds/engl-u9-introductions-and-conclusions';
+import { BASELINE_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES } from './seeds/engl-u10-research-questions-and-sources';
+import { BASELINE_ENGL_U10_EVALUATING_SOURCES } from './seeds/engl-u10-evaluating-sources';
+import { BASELINE_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/engl-u10-quoting-paraphrasing-summarizing';
+import { BASELINE_ENGL_U10_CITING_AND_INTEGRATING_SOURCES } from './seeds/engl-u10-citing-and-integrating-sources';
+import { BASELINE_WHIST_U1_NEOLITHIC_REVOLUTION } from './seeds/whist-u1-neolithic-revolution';
+import { BASELINE_WHIST_U1_FEATURES_OF_CIVILIZATION } from './seeds/whist-u1-features-of-civilization';
+import { BASELINE_WHIST_U1_MESOPOTAMIA_EGYPT } from './seeds/whist-u1-mesopotamia-egypt';
+import { BASELINE_WHIST_U1_EARLY_INDIA_CHINA } from './seeds/whist-u1-early-india-china';
+import { BASELINE_WHIST_U2_CLASSICAL_GREECE } from './seeds/whist-u2-classical-greece';
+import { BASELINE_WHIST_U2_ROME_REPUBLIC_EMPIRE } from './seeds/whist-u2-rome-republic-empire';
+import { BASELINE_WHIST_U2_CLASSICAL_INDIA_CHINA } from './seeds/whist-u2-classical-india-china';
+import { BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS } from './seeds/whist-u2-world-belief-systems';
+import { BASELINE_WHIST_U3_RISE_OF_ISLAM } from './seeds/whist-u3-rise-of-islam';
+import { BASELINE_WHIST_U3_ISLAMIC_GOLDEN_AGE } from './seeds/whist-u3-islamic-golden-age';
+import { BASELINE_WHIST_U3_TANG_SONG_CHINA } from './seeds/whist-u3-tang-song-china';
+import { BASELINE_WHIST_U3_MONGOL_EMPIRE } from './seeds/whist-u3-mongol-empire';
+import { BASELINE_WHIST_U4_BYZANTINE_EMPIRE } from './seeds/whist-u4-byzantine-empire';
+import { BASELINE_WHIST_U4_FEUDAL_EUROPE } from './seeds/whist-u4-feudal-europe';
+import { BASELINE_WHIST_U4_CHURCH_AND_CRUSADES } from './seeds/whist-u4-church-and-crusades';
+import { BASELINE_WHIST_U4_LATE_MIDDLE_AGES } from './seeds/whist-u4-late-middle-ages';
+import { BASELINE_WHIST_U5_WEST_AFRICAN_EMPIRES } from './seeds/whist-u5-west-african-empires';
+import { BASELINE_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN } from './seeds/whist-u5-east-africa-indian-ocean';
+import { BASELINE_WHIST_U5_MAYA_AZTEC } from './seeds/whist-u5-maya-aztec';
+import { BASELINE_WHIST_U5_INCA_NORTH_AMERICA } from './seeds/whist-u5-inca-north-america';
+import { BASELINE_WHIST_U6_RENAISSANCE } from './seeds/whist-u6-renaissance';
+import { BASELINE_WHIST_U6_PROTESTANT_REFORMATION } from './seeds/whist-u6-protestant-reformation';
+import { BASELINE_WHIST_U6_AGE_OF_EXPLORATION } from './seeds/whist-u6-age-of-exploration';
+import { BASELINE_WHIST_U6_COLUMBIAN_EXCHANGE } from './seeds/whist-u6-columbian-exchange';
+import { BASELINE_WHIST_U7_SCIENTIFIC_REVOLUTION } from './seeds/whist-u7-scientific-revolution';
+import { BASELINE_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM } from './seeds/whist-u7-absolutism-constitutionalism';
+import { BASELINE_WHIST_U7_ENLIGHTENMENT } from './seeds/whist-u7-enlightenment';
+import { BASELINE_WHIST_U7_ATLANTIC_REVOLUTIONS } from './seeds/whist-u7-atlantic-revolutions';
+import { BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION } from './seeds/whist-u8-industrial-revolution';
+import { BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM } from './seeds/whist-u8-industrial-society-reform';
+import { BASELINE_WHIST_U8_NATIONALISM_UNIFICATION } from './seeds/whist-u8-nationalism-unification';
+import { BASELINE_WHIST_U8_NEW_IMPERIALISM } from './seeds/whist-u8-new-imperialism';
+import { BASELINE_WHIST_U9_WORLD_WAR_I } from './seeds/whist-u9-world-war-i';
+import { BASELINE_WHIST_U9_INTERWAR_YEARS } from './seeds/whist-u9-interwar-years';
+import { BASELINE_WHIST_U9_WORLD_WAR_II } from './seeds/whist-u9-world-war-ii';
+import { BASELINE_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS } from './seeds/whist-u9-holocaust-human-rights';
+import { BASELINE_WHIST_U10_COLD_WAR } from './seeds/whist-u10-cold-war';
+import { BASELINE_WHIST_U10_DECOLONIZATION } from './seeds/whist-u10-decolonization';
+import { BASELINE_WHIST_U10_END_OF_COLD_WAR } from './seeds/whist-u10-end-of-cold-war';
+import { BASELINE_WHIST_U10_GLOBALIZATION } from './seeds/whist-u10-globalization';
+import { BASELINE_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR } from './seeds/dsat-u1-linear-equations-one-var';
+import { BASELINE_DSAT_U1_LINEAR_FUNCTIONS } from './seeds/dsat-u1-linear-functions';
+import { BASELINE_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS } from './seeds/dsat-u1-linear-equations-two-vars';
+import { BASELINE_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS } from './seeds/dsat-u1-systems-of-linear-equations';
+import { BASELINE_DSAT_U1_LINEAR_INEQUALITIES } from './seeds/dsat-u1-linear-inequalities';
+import { BASELINE_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS } from './seeds/dsat-u1-equivalent-forms-solution-counts';
+import { BASELINE_DSAT_U2_EQUIVALENT_EXPRESSIONS } from './seeds/dsat-u2-equivalent-expressions';
+import { BASELINE_DSAT_U2_QUADRATIC_EQUATIONS } from './seeds/dsat-u2-quadratic-equations';
+import { BASELINE_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS } from './seeds/dsat-u2-nonlinear-functions-graphs';
+import { BASELINE_DSAT_U2_EXPONENTIAL_FUNCTIONS } from './seeds/dsat-u2-exponential-functions';
+import { BASELINE_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE } from './seeds/dsat-u2-rational-radical-absolute';
+import { BASELINE_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS } from './seeds/dsat-u2-nonlinear-systems-transformations';
+import { BASELINE_DSAT_U3_RATIOS_RATES_UNITS } from './seeds/dsat-u3-ratios-rates-units';
+import { BASELINE_DSAT_U3_PERCENTAGES } from './seeds/dsat-u3-percentages';
+import { BASELINE_DSAT_U3_ONE_VARIABLE_DATA } from './seeds/dsat-u3-one-variable-data';
+import { BASELINE_DSAT_U3_TWO_VARIABLE_DATA } from './seeds/dsat-u3-two-variable-data';
+import { BASELINE_DSAT_U3_PROBABILITY } from './seeds/dsat-u3-probability';
+import { BASELINE_DSAT_U3_SAMPLE_STATISTICS_CLAIMS } from './seeds/dsat-u3-sample-statistics-claims';
+import { BASELINE_DSAT_U4_AREA_VOLUME } from './seeds/dsat-u4-area-volume';
+import { BASELINE_DSAT_U4_LINES_ANGLES_TRIANGLES } from './seeds/dsat-u4-lines-angles-triangles';
+import { BASELINE_DSAT_U4_RIGHT_TRIANGLE_TRIG } from './seeds/dsat-u4-right-triangle-trig';
+import { BASELINE_DSAT_U4_CIRCLES } from './seeds/dsat-u4-circles';
+import { BASELINE_DSAT_U5_CENTRAL_IDEAS_DETAILS } from './seeds/dsat-u5-central-ideas-details';
+import { BASELINE_DSAT_U5_TEXTUAL_EVIDENCE } from './seeds/dsat-u5-textual-evidence';
+import { BASELINE_DSAT_U5_QUANTITATIVE_EVIDENCE } from './seeds/dsat-u5-quantitative-evidence';
+import { BASELINE_DSAT_U5_INFERENCES } from './seeds/dsat-u5-inferences';
+import { BASELINE_DSAT_U6_WORDS_IN_CONTEXT } from './seeds/dsat-u6-words-in-context';
+import { BASELINE_DSAT_U6_TEXT_STRUCTURE_PURPOSE } from './seeds/dsat-u6-text-structure-purpose';
+import { BASELINE_DSAT_U6_CROSS_TEXT_CONNECTIONS } from './seeds/dsat-u6-cross-text-connections';
+import { BASELINE_DSAT_U7_RHETORICAL_SYNTHESIS } from './seeds/dsat-u7-rhetorical-synthesis';
+import { BASELINE_DSAT_U7_TRANSITIONS } from './seeds/dsat-u7-transitions';
+import { BASELINE_DSAT_U8_BOUNDARIES } from './seeds/dsat-u8-boundaries';
+import { BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT } from './seeds/dsat-u8-subject-verb-pronoun-agreement';
+import { BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS } from './seeds/dsat-u8-verb-forms-modifiers';
+import { BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES } from './seeds/dsat-u8-plurals-possessives-confusables';
+import { BASELINE_ACT_U1_SENTENCE_STRUCTURE } from './seeds/act-u1-sentence-structure';
+import { BASELINE_ACT_U1_PUNCTUATION } from './seeds/act-u1-punctuation';
+import { BASELINE_ACT_U1_AGREEMENT } from './seeds/act-u1-agreement';
+import { BASELINE_ACT_U1_VERB_TENSE_FORM } from './seeds/act-u1-verb-tense-form';
+import { BASELINE_ACT_U1_MODIFIERS_PARALLELISM } from './seeds/act-u1-modifiers-parallelism';
+import { BASELINE_ACT_U1_CONCISENESS } from './seeds/act-u1-conciseness';
+import { BASELINE_ACT_U1_WORD_CHOICE_TONE } from './seeds/act-u1-word-choice-tone';
+import { BASELINE_ACT_U1_TRANSITIONS } from './seeds/act-u1-transitions';
+import { BASELINE_ACT_U1_RHETORICAL_SKILLS } from './seeds/act-u1-rhetorical-skills';
+import { BASELINE_ACT_U2_PREALGEBRA_REVIEW } from './seeds/act-u2-prealgebra-review';
+import { BASELINE_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES } from './seeds/act-u2-linear-equations-inequalities';
+import { BASELINE_ACT_U2_SYSTEMS } from './seeds/act-u2-systems';
+import { BASELINE_ACT_U2_QUADRATICS_POLYNOMIALS } from './seeds/act-u2-quadratics-polynomials';
+import { BASELINE_ACT_U2_FUNCTIONS_GRAPHS } from './seeds/act-u2-functions-graphs';
+import { BASELINE_ACT_U2_EXPONENTS_ROOTS_LOGS } from './seeds/act-u2-exponents-roots-logs';
+import { BASELINE_ACT_U2_COORDINATE_GEOMETRY } from './seeds/act-u2-coordinate-geometry';
+import { BASELINE_ACT_U2_PLANE_GEOMETRY } from './seeds/act-u2-plane-geometry';
+import { BASELINE_ACT_U2_TRIGONOMETRY } from './seeds/act-u2-trigonometry';
+import { BASELINE_ACT_U2_STATISTICS_PROBABILITY } from './seeds/act-u2-statistics-probability';
+import { BASELINE_ACT_U2_SEQUENCES_MATRICES_COMPLEX } from './seeds/act-u2-sequences-matrices-complex';
+import { BASELINE_ACT_U2_WORD_PROBLEMS_MODELING } from './seeds/act-u2-word-problems-modeling';
+import { BASELINE_ACT_U3_MAIN_IDEA_PURPOSE } from './seeds/act-u3-main-idea-purpose';
+import { BASELINE_ACT_U3_DETAIL_SEQUENCE } from './seeds/act-u3-detail-sequence';
+import { BASELINE_ACT_U3_INFERENCE_GENERALIZATION } from './seeds/act-u3-inference-generalization';
+import { BASELINE_ACT_U3_VOCABULARY_IN_CONTEXT } from './seeds/act-u3-vocabulary-in-context';
+import { BASELINE_ACT_U3_PAIRED_PASSAGES } from './seeds/act-u3-paired-passages';
+import { BASELINE_ACT_U3_READING_PACING_STRATEGY } from './seeds/act-u3-reading-pacing-strategy';
+import { BASELINE_ACT_U4_DATA_REPRESENTATION } from './seeds/act-u4-data-representation';
+import { BASELINE_ACT_U4_TRENDS_EXTRAPOLATION } from './seeds/act-u4-trends-extrapolation';
+import { BASELINE_ACT_U4_RESEARCH_SUMMARIES } from './seeds/act-u4-research-summaries';
+import { BASELINE_ACT_U4_VARIABLES_CONTROLS } from './seeds/act-u4-variables-controls';
+import { BASELINE_ACT_U4_CONFLICTING_VIEWPOINTS } from './seeds/act-u4-conflicting-viewpoints';
+import { BASELINE_ACT_U4_SCIENTIFIC_MATH_UNITS } from './seeds/act-u4-scientific-math-units';
+import { BASELINE_ACT_U4_SCIENCE_PACING_STRATEGY } from './seeds/act-u4-science-pacing-strategy';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -947,6 +1218,276 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_CHEM_U10_NEUTRALIZATION_TITRATION,
   BASELINE_CHEM_U10_NUCLEAR_CHEMISTRY_INTRO,
   BASELINE_CHEM_U10_PH_SCALE,
+  // HS core: Algebra 1 (2026-08 backfill)
+  BASELINE_ALG1_U1_REAL_NUMBERS_OPERATIONS,
+  BASELINE_ALG1_U1_ORDER_OF_OPERATIONS,
+  BASELINE_ALG1_U1_SIMPLIFYING_EXPRESSIONS,
+  BASELINE_ALG1_U1_TRANSLATING_WORDS_TO_ALGEBRA,
+  BASELINE_ALG1_U2_ONE_TWO_STEP_EQUATIONS,
+  BASELINE_ALG1_U2_MULTI_STEP_EQUATIONS,
+  BASELINE_ALG1_U2_LITERAL_EQUATIONS,
+  BASELINE_ALG1_U2_PROPORTIONS_PERCENTS,
+  BASELINE_ALG1_U3_ONE_VARIABLE_INEQUALITIES,
+  BASELINE_ALG1_U3_COMPOUND_INEQUALITIES,
+  BASELINE_ALG1_U3_ABSOLUTE_VALUE,
+  BASELINE_ALG1_U4_RELATIONS_FUNCTIONS,
+  BASELINE_ALG1_U4_SLOPE_RATE_OF_CHANGE,
+  BASELINE_ALG1_U4_SLOPE_INTERCEPT_FORM,
+  BASELINE_ALG1_U4_POINT_SLOPE_STANDARD_FORM,
+  BASELINE_ALG1_U4_PARALLEL_PERPENDICULAR,
+  BASELINE_ALG1_U5_SYSTEMS_BY_GRAPHING,
+  BASELINE_ALG1_U5_SYSTEMS_SUBSTITUTION,
+  BASELINE_ALG1_U5_SYSTEMS_ELIMINATION,
+  BASELINE_ALG1_U5_SYSTEMS_APPLICATIONS,
+  BASELINE_ALG1_U6_EXPONENT_RULES,
+  BASELINE_ALG1_U6_NEGATIVE_EXPONENTS_SCIENTIFIC_NOTATION,
+  BASELINE_ALG1_U6_EXPONENTIAL_FUNCTIONS,
+  BASELINE_ALG1_U6_EXPONENTIAL_GROWTH_DECAY,
+  BASELINE_ALG1_U7_POLYNOMIAL_OPERATIONS,
+  BASELINE_ALG1_U7_SPECIAL_PRODUCTS,
+  BASELINE_ALG1_U7_FACTORING_GCF_GROUPING,
+  BASELINE_ALG1_U7_FACTORING_TRINOMIALS,
+  BASELINE_ALG1_U7_FACTORING_SPECIAL_FORMS,
+  BASELINE_ALG1_U8_QUADRATIC_GRAPHS_VERTEX,
+  BASELINE_ALG1_U8_SOLVING_BY_FACTORING_SQUARE_ROOTS,
+  BASELINE_ALG1_U8_COMPLETING_THE_SQUARE,
+  BASELINE_ALG1_U8_QUADRATIC_FORMULA_DISCRIMINANT,
+  BASELINE_ALG1_U8_QUADRATIC_MODELS,
+  BASELINE_ALG1_U9_SIMPLIFYING_RADICALS,
+  BASELINE_ALG1_U9_RADICAL_EQUATIONS,
+  BASELINE_ALG1_U9_RATIONAL_EXPRESSIONS,
+  BASELINE_ALG1_U10_ONE_VARIABLE_STATISTICS,
+  BASELINE_ALG1_U10_SCATTERPLOTS_TREND_LINES,
+  BASELINE_ALG1_U10_SEQUENCES,
+  BASELINE_GEOM_U1_POINTS_LINES_PLANES,
+  BASELINE_GEOM_U1_SEGMENTS_DISTANCE_MIDPOINT,
+  BASELINE_GEOM_U1_ANGLES_AND_MEASURE,
+  BASELINE_GEOM_U1_ANGLE_PAIR_RELATIONSHIPS,
+  BASELINE_GEOM_U2_INDUCTIVE_DEDUCTIVE_REASONING,
+  BASELINE_GEOM_U2_CONDITIONAL_STATEMENTS,
+  BASELINE_GEOM_U2_TWO_COLUMN_PROOFS,
+  BASELINE_GEOM_U3_PARALLEL_LINES_TRANSVERSALS,
+  BASELINE_GEOM_U3_PROVING_LINES_PARALLEL,
+  BASELINE_GEOM_U3_SLOPES_PARALLEL_PERPENDICULAR,
+  BASELINE_GEOM_U4_TRANSLATIONS,
+  BASELINE_GEOM_U4_REFLECTIONS,
+  BASELINE_GEOM_U4_ROTATIONS,
+  BASELINE_GEOM_U4_COMPOSITIONS_SYMMETRY,
+  BASELINE_GEOM_U4_CONGRUENCE_RIGID_MOTIONS,
+  BASELINE_GEOM_U5_TRIANGLE_ANGLE_RELATIONSHIPS,
+  BASELINE_GEOM_U5_TRIANGLE_CONGRUENCE_CRITERIA,
+  BASELINE_GEOM_U5_CPCTC_PROOFS,
+  BASELINE_GEOM_U5_ISOSCELES_EQUILATERAL,
+  BASELINE_GEOM_U5_MIDSEGMENTS_BISECTORS_INEQUALITIES,
+  BASELINE_GEOM_U6_DILATIONS_SCALE_FACTOR,
+  BASELINE_GEOM_U6_SIMILAR_POLYGONS,
+  BASELINE_GEOM_U6_TRIANGLE_SIMILARITY_CRITERIA,
+  BASELINE_GEOM_U6_PROPORTIONALITY_THEOREMS,
+  BASELINE_GEOM_U7_PYTHAGOREAN_THEOREM,
+  BASELINE_GEOM_U7_SPECIAL_RIGHT_TRIANGLES,
+  BASELINE_GEOM_U7_TRIG_RATIOS,
+  BASELINE_GEOM_U7_SOLVING_RIGHT_TRIANGLES,
+  BASELINE_GEOM_U8_POLYGON_ANGLE_SUMS,
+  BASELINE_GEOM_U8_PARALLELOGRAMS,
+  BASELINE_GEOM_U8_SPECIAL_PARALLELOGRAMS,
+  BASELINE_GEOM_U8_TRAPEZOIDS_KITES,
+  BASELINE_GEOM_U9_CIRCLE_BASICS_ARCS,
+  BASELINE_GEOM_U9_CENTRAL_INSCRIBED_ANGLES,
+  BASELINE_GEOM_U9_TANGENTS_SECANTS_ANGLES,
+  BASELINE_GEOM_U9_CIRCLE_EQUATIONS,
+  BASELINE_GEOM_U10_AREA_POLYGONS,
+  BASELINE_GEOM_U10_CIRCUMFERENCE_ARC_LENGTH_SECTOR,
+  BASELINE_GEOM_U10_PRISMS_CYLINDERS,
+  BASELINE_GEOM_U10_PYRAMIDS_CONES_SPHERES,
+  BASELINE_BIO_U1_CHARACTERISTICS_OF_LIFE,
+  BASELINE_BIO_U1_SCIENTIFIC_METHOD_BIO,
+  BASELINE_BIO_U1_WATER_AND_MACROMOLECULES,
+  BASELINE_BIO_U1_ENZYMES,
+  BASELINE_BIO_U2_CELL_THEORY_TYPES,
+  BASELINE_BIO_U2_ORGANELLES,
+  BASELINE_BIO_U2_CELL_MEMBRANE_STRUCTURE,
+  BASELINE_BIO_U2_TRANSPORT_ACROSS_MEMBRANES,
+  BASELINE_BIO_U3_ATP_AND_ENERGY,
+  BASELINE_BIO_U3_PHOTOSYNTHESIS,
+  BASELINE_BIO_U3_CELLULAR_RESPIRATION,
+  BASELINE_BIO_U4_CELL_CYCLE_MITOSIS,
+  BASELINE_BIO_U4_CELL_CYCLE_REGULATION_CANCER,
+  BASELINE_BIO_U4_MEIOSIS,
+  BASELINE_BIO_U4_MITOSIS_MEIOSIS_VARIATION,
+  BASELINE_BIO_U5_MENDEL_LAWS,
+  BASELINE_BIO_U5_PUNNETT_SQUARES_MONOHYBRID,
+  BASELINE_BIO_U5_DIHYBRID_CROSSES,
+  BASELINE_BIO_U5_NON_MENDELIAN_INHERITANCE,
+  BASELINE_BIO_U5_PEDIGREES_HUMAN_GENETICS,
+  BASELINE_BIO_U6_DNA_STRUCTURE_REPLICATION,
+  BASELINE_BIO_U6_TRANSCRIPTION_TRANSLATION,
+  BASELINE_BIO_U6_MUTATIONS,
+  BASELINE_BIO_U6_BIOTECHNOLOGY,
+  BASELINE_BIO_U7_EVIDENCE_FOR_EVOLUTION,
+  BASELINE_BIO_U7_NATURAL_SELECTION,
+  BASELINE_BIO_U7_POPULATION_GENETICS,
+  BASELINE_BIO_U7_SPECIATION,
+  BASELINE_BIO_U8_TAXONOMY_CLASSIFICATION,
+  BASELINE_BIO_U8_PHYLOGENETICS_CLADOGRAMS,
+  BASELINE_BIO_U8_DOMAINS_KINGDOMS_DIVERSITY,
+  BASELINE_BIO_U9_ECOSYSTEMS_BIOMES,
+  BASELINE_BIO_U9_ENERGY_FLOW_FOOD_WEBS,
+  BASELINE_BIO_U9_BIOGEOCHEMICAL_CYCLES,
+  BASELINE_BIO_U9_POPULATION_COMMUNITY_ECOLOGY,
+  BASELINE_BIO_U10_HOMEOSTASIS_FEEDBACK,
+  BASELINE_BIO_U10_CIRCULATORY_RESPIRATORY,
+  BASELINE_BIO_U10_DIGESTIVE_EXCRETORY,
+  BASELINE_BIO_U10_NERVOUS_ENDOCRINE,
+  BASELINE_BIO_U10_IMMUNE_SYSTEM,
+  BASELINE_ENGL_U1_PARTS_OF_SPEECH,
+  BASELINE_ENGL_U1_SUBJECT_VERB_AGREEMENT,
+  BASELINE_ENGL_U1_PRONOUN_AGREEMENT_CLARITY,
+  BASELINE_ENGL_U1_VERB_TENSE_AND_FORM,
+  BASELINE_ENGL_U2_CLAUSES_AND_PHRASES,
+  BASELINE_ENGL_U2_SENTENCE_TYPES_COMBINING,
+  BASELINE_ENGL_U2_FRAGMENTS_AND_RUN_ONS,
+  BASELINE_ENGL_U2_MODIFIERS_AND_PARALLELISM,
+  BASELINE_ENGL_U3_COMMAS,
+  BASELINE_ENGL_U3_SEMICOLONS_AND_COLONS,
+  BASELINE_ENGL_U3_APOSTROPHES_AND_POSSESSIVES,
+  BASELINE_ENGL_U3_DASHES_PARENTHESES_QUOTATION,
+  BASELINE_ENGL_U4_PRECISION_AND_CONCISION,
+  BASELINE_ENGL_U4_CONNOTATION_AND_DENOTATION,
+  BASELINE_ENGL_U4_TONE_AND_REGISTER,
+  BASELINE_ENGL_U4_COMMONLY_CONFUSED_WORDS,
+  BASELINE_ENGL_U5_CLAIMS_AND_EVIDENCE,
+  BASELINE_ENGL_U5_RHETORICAL_APPEALS,
+  BASELINE_ENGL_U5_LOGICAL_FALLACIES,
+  BASELINE_ENGL_U5_COUNTERARGUMENT_AND_REBUTTAL,
+  BASELINE_ENGL_U6_PLOT_AND_CONFLICT,
+  BASELINE_ENGL_U6_CHARACTERIZATION,
+  BASELINE_ENGL_U6_NARRATIVE_POINT_OF_VIEW,
+  BASELINE_ENGL_U6_THEME,
+  BASELINE_ENGL_U7_CENTRAL_IDEA_AND_DETAILS,
+  BASELINE_ENGL_U7_AUTHORS_PURPOSE_AND_PERSPECTIVE,
+  BASELINE_ENGL_U7_TEXT_STRUCTURE,
+  BASELINE_ENGL_U7_INFERENCE_AND_EVIDENCE,
+  BASELINE_ENGL_U8_FIGURATIVE_LANGUAGE,
+  BASELINE_ENGL_U8_IMAGERY_AND_SYMBOLISM,
+  BASELINE_ENGL_U8_SOUND_DEVICES,
+  BASELINE_ENGL_U8_POETIC_FORM_AND_STRUCTURE,
+  BASELINE_ENGL_U9_THESIS_STATEMENTS,
+  BASELINE_ENGL_U9_PARAGRAPH_UNITY_AND_SUPPORT,
+  BASELINE_ENGL_U9_TRANSITIONS_AND_COHESION,
+  BASELINE_ENGL_U9_INTRODUCTIONS_AND_CONCLUSIONS,
+  BASELINE_ENGL_U10_RESEARCH_QUESTIONS_AND_SOURCES,
+  BASELINE_ENGL_U10_EVALUATING_SOURCES,
+  BASELINE_ENGL_U10_QUOTING_PARAPHRASING_SUMMARIZING,
+  BASELINE_ENGL_U10_CITING_AND_INTEGRATING_SOURCES,
+  BASELINE_WHIST_U1_NEOLITHIC_REVOLUTION,
+  BASELINE_WHIST_U1_FEATURES_OF_CIVILIZATION,
+  BASELINE_WHIST_U1_MESOPOTAMIA_EGYPT,
+  BASELINE_WHIST_U1_EARLY_INDIA_CHINA,
+  BASELINE_WHIST_U2_CLASSICAL_GREECE,
+  BASELINE_WHIST_U2_ROME_REPUBLIC_EMPIRE,
+  BASELINE_WHIST_U2_CLASSICAL_INDIA_CHINA,
+  BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS,
+  BASELINE_WHIST_U3_RISE_OF_ISLAM,
+  BASELINE_WHIST_U3_ISLAMIC_GOLDEN_AGE,
+  BASELINE_WHIST_U3_TANG_SONG_CHINA,
+  BASELINE_WHIST_U3_MONGOL_EMPIRE,
+  BASELINE_WHIST_U4_BYZANTINE_EMPIRE,
+  BASELINE_WHIST_U4_FEUDAL_EUROPE,
+  BASELINE_WHIST_U4_CHURCH_AND_CRUSADES,
+  BASELINE_WHIST_U4_LATE_MIDDLE_AGES,
+  BASELINE_WHIST_U5_WEST_AFRICAN_EMPIRES,
+  BASELINE_WHIST_U5_EAST_AFRICA_INDIAN_OCEAN,
+  BASELINE_WHIST_U5_MAYA_AZTEC,
+  BASELINE_WHIST_U5_INCA_NORTH_AMERICA,
+  BASELINE_WHIST_U6_RENAISSANCE,
+  BASELINE_WHIST_U6_PROTESTANT_REFORMATION,
+  BASELINE_WHIST_U6_AGE_OF_EXPLORATION,
+  BASELINE_WHIST_U6_COLUMBIAN_EXCHANGE,
+  BASELINE_WHIST_U7_SCIENTIFIC_REVOLUTION,
+  BASELINE_WHIST_U7_ABSOLUTISM_CONSTITUTIONALISM,
+  BASELINE_WHIST_U7_ENLIGHTENMENT,
+  BASELINE_WHIST_U7_ATLANTIC_REVOLUTIONS,
+  BASELINE_WHIST_U8_INDUSTRIAL_REVOLUTION,
+  BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM,
+  BASELINE_WHIST_U8_NATIONALISM_UNIFICATION,
+  BASELINE_WHIST_U8_NEW_IMPERIALISM,
+  BASELINE_WHIST_U9_WORLD_WAR_I,
+  BASELINE_WHIST_U9_INTERWAR_YEARS,
+  BASELINE_WHIST_U9_WORLD_WAR_II,
+  BASELINE_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS,
+  BASELINE_WHIST_U10_COLD_WAR,
+  BASELINE_WHIST_U10_DECOLONIZATION,
+  BASELINE_WHIST_U10_END_OF_COLD_WAR,
+  BASELINE_WHIST_U10_GLOBALIZATION,
+  BASELINE_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR,
+  BASELINE_DSAT_U1_LINEAR_FUNCTIONS,
+  BASELINE_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS,
+  BASELINE_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS,
+  BASELINE_DSAT_U1_LINEAR_INEQUALITIES,
+  BASELINE_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS,
+  BASELINE_DSAT_U2_EQUIVALENT_EXPRESSIONS,
+  BASELINE_DSAT_U2_QUADRATIC_EQUATIONS,
+  BASELINE_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS,
+  BASELINE_DSAT_U2_EXPONENTIAL_FUNCTIONS,
+  BASELINE_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE,
+  BASELINE_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS,
+  BASELINE_DSAT_U3_RATIOS_RATES_UNITS,
+  BASELINE_DSAT_U3_PERCENTAGES,
+  BASELINE_DSAT_U3_ONE_VARIABLE_DATA,
+  BASELINE_DSAT_U3_TWO_VARIABLE_DATA,
+  BASELINE_DSAT_U3_PROBABILITY,
+  BASELINE_DSAT_U3_SAMPLE_STATISTICS_CLAIMS,
+  BASELINE_DSAT_U4_AREA_VOLUME,
+  BASELINE_DSAT_U4_LINES_ANGLES_TRIANGLES,
+  BASELINE_DSAT_U4_RIGHT_TRIANGLE_TRIG,
+  BASELINE_DSAT_U4_CIRCLES,
+  BASELINE_DSAT_U5_CENTRAL_IDEAS_DETAILS,
+  BASELINE_DSAT_U5_TEXTUAL_EVIDENCE,
+  BASELINE_DSAT_U5_QUANTITATIVE_EVIDENCE,
+  BASELINE_DSAT_U5_INFERENCES,
+  BASELINE_DSAT_U6_WORDS_IN_CONTEXT,
+  BASELINE_DSAT_U6_TEXT_STRUCTURE_PURPOSE,
+  BASELINE_DSAT_U6_CROSS_TEXT_CONNECTIONS,
+  BASELINE_DSAT_U7_RHETORICAL_SYNTHESIS,
+  BASELINE_DSAT_U7_TRANSITIONS,
+  BASELINE_DSAT_U8_BOUNDARIES,
+  BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT,
+  BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS,
+  BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES,
+  BASELINE_ACT_U1_SENTENCE_STRUCTURE,
+  BASELINE_ACT_U1_PUNCTUATION,
+  BASELINE_ACT_U1_AGREEMENT,
+  BASELINE_ACT_U1_VERB_TENSE_FORM,
+  BASELINE_ACT_U1_MODIFIERS_PARALLELISM,
+  BASELINE_ACT_U1_CONCISENESS,
+  BASELINE_ACT_U1_WORD_CHOICE_TONE,
+  BASELINE_ACT_U1_TRANSITIONS,
+  BASELINE_ACT_U1_RHETORICAL_SKILLS,
+  BASELINE_ACT_U2_PREALGEBRA_REVIEW,
+  BASELINE_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES,
+  BASELINE_ACT_U2_SYSTEMS,
+  BASELINE_ACT_U2_QUADRATICS_POLYNOMIALS,
+  BASELINE_ACT_U2_FUNCTIONS_GRAPHS,
+  BASELINE_ACT_U2_EXPONENTS_ROOTS_LOGS,
+  BASELINE_ACT_U2_COORDINATE_GEOMETRY,
+  BASELINE_ACT_U2_PLANE_GEOMETRY,
+  BASELINE_ACT_U2_TRIGONOMETRY,
+  BASELINE_ACT_U2_STATISTICS_PROBABILITY,
+  BASELINE_ACT_U2_SEQUENCES_MATRICES_COMPLEX,
+  BASELINE_ACT_U2_WORD_PROBLEMS_MODELING,
+  BASELINE_ACT_U3_MAIN_IDEA_PURPOSE,
+  BASELINE_ACT_U3_DETAIL_SEQUENCE,
+  BASELINE_ACT_U3_INFERENCE_GENERALIZATION,
+  BASELINE_ACT_U3_VOCABULARY_IN_CONTEXT,
+  BASELINE_ACT_U3_PAIRED_PASSAGES,
+  BASELINE_ACT_U3_READING_PACING_STRATEGY,
+  BASELINE_ACT_U4_DATA_REPRESENTATION,
+  BASELINE_ACT_U4_TRENDS_EXTRAPOLATION,
+  BASELINE_ACT_U4_RESEARCH_SUMMARIES,
+  BASELINE_ACT_U4_VARIABLES_CONTROLS,
+  BASELINE_ACT_U4_CONFLICTING_VIEWPOINTS,
+  BASELINE_ACT_U4_SCIENTIFIC_MATH_UNITS,
+  BASELINE_ACT_U4_SCIENCE_PACING_STRATEGY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
