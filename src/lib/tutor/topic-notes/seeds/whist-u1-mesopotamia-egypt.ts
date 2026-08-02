@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U1_MESOPOTAMIA_EGYPT: TopicNotesBaseline = {
       relatedLoIds: ['whist.mesopotamia-egypt'],
     },
     {
-      title: 'Worked hammurabi source',
+      title: 'Worked Hammurabi source',
       steps: [
         `Read what the law actually does before judging it. It defines a specific wrong (shoddy construction with a fatal result) and attaches a specific, publicly known penalty. That alone tells you Babylon had a state willing to write rules down and take responsibility for enforcing them.`,
         `Notice who the punishment tracks. The penalty changes based on WHO died, not on how careless the builder was. A free owner's death costs the builder his life; an enslaved person's death costs him property. Babylonian law treated people as belonging to legally distinct ranks, and it says so out loud.`,

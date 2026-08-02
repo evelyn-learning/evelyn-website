@@ -23,7 +23,7 @@ export const BASELINE_ENGL_U7_CENTRAL_IDEA_AND_DETAILS: TopicNotesBaseline = {
   sources: [{ type: 'plan', planId: 'evelyn.hs.engl.central-idea-and-details.v1' }],
   theory: [
     { loId: 'engl.central-idea-and-details', content: `CENTRAL IDEA = TOPIC + WHAT THE TEXT SAYS ABOUT IT. The topic is a noun phrase you could put on a folder tab: "school gardens," "city buses." The central idea is a full sentence with a claim in it: "School gardens change what students are willing to eat." If your answer has no verb doing real work, you have named the topic, not the idea.` },
-    { loId: 'engl.central-idea-and-details', kind: 'framework', title: 'The goldilocks test', content: `THE GOLDILOCKS TEST — scope has to fit. TOO NARROW means you handed back one detail (a date, a number, a single example) and promoted it to the point. TOO BROAD means you handed back the whole subject ("transportation matters in cities"), a sentence that would fit a hundred other texts. The central idea is the one statement that covers THIS text and no more.` },
+    { loId: 'engl.central-idea-and-details', kind: 'framework', title: 'The Goldilocks test', content: `THE GOLDILOCKS TEST — scope has to fit. TOO NARROW means you handed back one detail (a date, a number, a single example) and promoted it to the point. TOO BROAD means you handed back the whole subject ("transportation matters in cities"), a sentence that would fit a hundred other texts. The central idea is the one statement that covers THIS text and no more.` },
     { loId: 'engl.central-idea-and-details', kind: 'framework', title: 'Details have a job', content: `DETAILS HAVE A JOB — every supporting detail SUPPORTS, EXPLAINS, or PROVES the central idea. It gives an example of it, spells out how it works, or offers evidence that it is true. A fact that does none of those three jobs may be interesting, but it is not supporting THIS idea.` },
     { loId: 'engl.central-idea-and-details', kind: 'framework', title: 'The first-sentence trap', content: `THE FIRST-SENTENCE TRAP — the central idea is not always sentence one. Writers open with background, a common belief, or a scene, then turn. Watch for the turn words: however, but, yet, still, in fact. What follows the turn is usually the actual claim, and the opening was the setup being corrected.` },
     { loId: 'engl.central-idea-and-details', kind: 'framework', title: 'The summarize-in-one-sentence check', content: `THE SUMMARIZE-IN-ONE-SENTENCE CHECK — say the whole text in a single sentence, in your own words, without looking. If your sentence uses only half the paragraph, it is too narrow. If it could describe a text you have never read, it is too broad. That sentence, tightened, is the central idea.` },
@@ -35,7 +35,7 @@ export const BASELINE_ENGL_U7_CENTRAL_IDEA_AND_DETAILS: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked goldilocks',
+      title: 'Worked Goldilocks',
       steps: [
         `Name the topic first, as a noun phrase: Saturday bus service on one city route. That is a folder tab, not yet an idea — no claim in it.`,
         `Ask what the text SAYS about that topic. Sentence 2 explains why the riders came (access to jobs and clinics), and sentence 3 states the conclusion planners drew: the problem was WHEN buses ran, not WHERE they went.`,

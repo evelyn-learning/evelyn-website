@@ -36,7 +36,7 @@ export const BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked buddhism spread',
+      title: 'Worked Buddhism spread',
       steps: [
         `Start with the teaching itself: the Buddha addressed suffering, a universal human problem, and made his path open to anyone — no priestly class required, no birth qualification. A teaching that does not depend on one society's social order is portable in a way that a birth-linked system is not.`,
         `Add the imperial sponsor: Ashoka, sickened by the slaughter of his Kalinga campaign, adopted Buddhism (c. 260 BCE) and used the machinery of the Mauryan Empire — carved edicts, funded monasteries, and missionaries sent to Sri Lanka and beyond. State resources turned a regional teaching into an organized movement.`,
@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U2_WORLD_BELIEF_SYSTEMS: TopicNotesBaseline = {
       relatedLoIds: ['whist.world-belief-systems'],
     },
     {
-      title: 'Worked buddhism hinduism confusion',
+      title: 'Worked Buddhism Hinduism confusion',
       steps: [
         `Grant the real overlap first: Buddhism arose in South Asia around the 500s BCE inside a world already shaped by Vedic and early Hindu ideas, so it INHERITED vocabulary — karma, dharma, rebirth. Shared vocabulary is why the two look identical from a distance.`,
         `Now name the break. The Buddha rejected the ritual authority of the brahmin priesthood and the idea that birth determines spiritual worth. His Four Noble Truths and Eightfold Path are a program anyone can follow — a deliberate move away from a birth-ordered system.`,

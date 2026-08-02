@@ -27,7 +27,7 @@ export const BASELINE_GEOM_U1_ANGLES_AND_MEASURE: TopicNotesBaseline = {
     { loId: 'geom.angles-and-measure', kind: 'framework', title: 'Size is opening, not length', content: `SIZE IS OPENING, NOT LENGTH — stretching the sides longer does not change the measure. Two angles drawn with sides of wildly different lengths can be congruent. Rays are infinite; only the spread between them is measured.` },
     { loId: 'geom.angles-and-measure', kind: 'framework', title: 'The four classes', content: `THE FOUR CLASSES — ACUTE: between 0° and 90°. RIGHT: exactly 90° (mark it with a small square). OBTUSE: between 90° and 180°. STRAIGHT: exactly 180°, the two rays forming a line. (Beyond 180° is called a reflex angle.)` },
     { loId: 'geom.angles-and-measure', kind: 'framework', title: `The protractor's two scales`, content: `THE PROTRACTOR'S TWO SCALES — every protractor carries an inner and an outer scale running opposite directions. Read the scale whose 0 sits on YOUR ray. Reading the wrong one returns 180° minus the true measure, so a 140° angle gets recorded as 40°. Sanity-check against the classification: an obtuse-looking opening cannot read 40°.` },
-    { loId: 'geom.angles-and-measure', kind: 'framework', title: 'Angle addition postulate', content: `ANGLE ADDITION POSTULATE — if ray BD lies in the INTERIOR of ∠ABC, then m∠ABD + m∠DBC = m∠ABC. This is the angle twin of the Segment Addition Postulate, and it is what turns diagrams into equations.` },
+    { loId: 'geom.angles-and-measure', kind: 'framework', title: 'Angle Addition Postulate', content: `ANGLE ADDITION POSTULATE — if ray BD lies in the INTERIOR of ∠ABC, then m∠ABD + m∠DBC = m∠ABC. This is the angle twin of the Segment Addition Postulate, and it is what turns diagrams into equations.` },
     { loId: 'geom.angles-and-measure', kind: 'framework', title: 'Angle bisector', content: `ANGLE BISECTOR — a ray from the vertex that cuts an angle into two congruent angles. If ray BD bisects ∠ABC, then m∠ABD = m∠DBC = half of m∠ABC. An interior ray is NOT a bisector unless you are told so or can prove it.` },
     { loId: 'geom.angles-and-measure', kind: 'framework', title: 'Congruent vs equal', content: `CONGRUENT VS EQUAL — ∠A ≅ ∠B compares the FIGURES; m∠A = m∠B compares the NUMBERS. They say the same thing, but the ≅ symbol goes between angles and the = sign goes between measures. Writing ∠A = 40° is a notation slip; write m∠A = 40°.` },
     { loId: 'geom.angles-and-measure', kind: 'definition', title: 'vertex', content: `the common endpoint of the two rays that form an angle; the middle letter in a three-letter angle name.` },
@@ -35,7 +35,7 @@ export const BASELINE_GEOM_U1_ANGLES_AND_MEASURE: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked angle addition',
+      title: 'Worked Angle Addition',
       steps: [
         `Check the naming: each angle has Q in the middle, so all three share vertex Q. Ray QS splits the big angle ∠PQR into two smaller ones.`,
         `Because QS is INTERIOR, the Angle Addition Postulate applies: m∠PQS + m∠SQR = m∠PQR.`,

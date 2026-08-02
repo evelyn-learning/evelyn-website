@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U10_END_OF_COLD_WAR: TopicNotesBaseline = {
       relatedLoIds: ['whist.end-of-cold-war'],
     },
     {
-      title: 'Worked gorbachev speech',
+      title: 'Worked Gorbachev speech',
       steps: [
         `Read it against the rule it replaced. For twenty years the operating principle in Eastern Europe had been the Brezhnev Doctrine: a Communist government in the bloc could count on Soviet troops if its own people turned against it. "Freedom of choice ... admits of no exceptions" cancels precisely that guarantee.`,
         `Ask who the audience really was. The speech was delivered to the United Nations, but the people who most needed to hear it were in Warsaw, Budapest, East Berlin, and Prague — both the governments relying on the guarantee and the citizens who had learned in 1956 and 1968 what happened without it.`,

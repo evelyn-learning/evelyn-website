@@ -255,13 +255,32 @@ function humanizeSegmentId(id: string): string {
 // backfill review, finding 1). Extend this list as new courses surface new
 // acronyms/proper nouns — do not remove entries just because a course
 // doesn't currently use them.
+// Every entry here must be a word with essentially zero risk of a
+// legitimate ordinary-English lowercase meaning — that's what keeps
+// applyAllowlistCasing() safe to run unconditionally over arbitrary
+// authored text. 'US', 'V', 'AP' were removed after the 2026-08 review's
+// second pass flagged them as landmines despite being unused today: 'US'
+// collides with the pronoun "us" (sentenceCase('LET US KNOW THE RULE')
+// would wrongly produce 'Let US know the rule'), 'V'/'III'/'IV' were
+// speculative Roman-numeral additions with no corpus justification (only
+// 'I'/'II' are actually used, for Meiosis/Prophase/Metaphase stages), and
+// 'AP' is unused by any HS/test-prep course this extractor targets. Apply
+// the same 'is this word ever legitimately lowercase, anywhere' test
+// before adding new entries — don't add a word just because the current
+// title list would benefit; confirm it has no ordinary-English meaning
+// first (this is why words like 'Church', 'Union', 'Revolution', 'State',
+// 'Reformation', 'Age', 'Road', 'Wars', 'Death', 'Mandate', 'Heaven',
+// 'Newton' — all genuinely ambiguous in this corpus, some proper only
+// inside one specific multi-word name — are deliberately NOT here; those
+// get hand-fixed per occurrence instead, same as before this list existed).
 const ALLOWLIST_WORDS: string[] = [
   // acronyms / initialisms
   'DNA', 'RNA', 'mRNA', 'tRNA', 'rRNA', 'ATP', 'PCR', 'CNS', 'PNS', 'CPCTC',
-  'SSS', 'SAS', 'ASA', 'AAS', 'HL', 'GCF', 'LCM', 'FOIL', 'SAT', 'ACT', 'AP',
-  'WWI', 'WWII', 'US', 'USSR', 'NATO', 'pH', 'POV', 'GDP', 'EU',
-  // Roman numerals (e.g. 'Meiosis I', 'Prophase I', 'Metaphase I')
-  'I', 'II', 'III', 'IV', 'V',
+  'SSS', 'SAS', 'ASA', 'AAS', 'HL', 'GCF', 'LCM', 'FOIL', 'SAT', 'ACT',
+  'WWI', 'WWII', 'USSR', 'NATO', 'pH', 'POV', 'GDP', 'EU',
+  // Roman numerals (e.g. 'Meiosis I', 'Prophase I', 'Metaphase I') — only
+  // the two actually attested in the corpus; see note above.
+  'I', 'II',
   // proper nouns / proper adjectives seen in the HS/test-prep corpus
   'China', 'Japan', 'Rome', 'Roman', 'Britain', 'British', 'Europe',
   'European', 'Africa', 'African', 'India', 'Indian', 'America', 'Americas',
@@ -269,6 +288,10 @@ const ALLOWLIST_WORDS: string[] = [
   'Romana', 'Mongolica', 'Swahili', 'Islam', 'Congo', 'Napoleon', 'Hitler',
   'Italy', 'Hajj', 'July', 'October', 'Orthodox', 'Catholic', 'Protestant',
   'Rousseau', 'Beccaria', 'Wollstonecraft', 'Abbasids',
+  'Indus', 'Hammurabi', 'Cuba', 'Gorbachev', 'Pericles', 'Ashoka',
+  'Buddhism', 'Hinduism', 'Baghdad', 'Sunni', 'Shia', 'Hangzhou', 'Slavic',
+  'Rus', 'Clermont', 'Andes', 'Mexica', 'Sahara', 'Cairo', 'Portugal',
+  'Columbus', 'Nahua', 'Versailles', 'Munich', 'Goldilocks',
 ];
 const ALLOWLIST_MAP = new Map(ALLOWLIST_WORDS.map((w) => [w.toUpperCase(), w]));
 

@@ -61,7 +61,7 @@ export const BASELINE_ALG1_U6_EXPONENTIAL_FUNCTIONS: TopicNotesBaseline = {
     },
   ],
   pointers: [
-    { content: `They are not the same function. At x = 2, 2·5² = 2·25 = 50, while 10² = 100. Order of operations raises b to the power FIRST, then multiplies by a. Their y-intercepts differ too: 2·5⁰ = 2 versus 10⁰ = 1.`, kind: 'common-error' },
+    { content: `y = 2·5ˣ and y = 10ˣ are not the same function, even though 2·5 = 10. At x = 2, 2·5² = 2·25 = 50, while 10² = 100. Order of operations raises b to the power FIRST, then multiplies by a. Their y-intercepts differ too: 2·5⁰ = 2 versus 10⁰ = 1.`, kind: 'common-error' },
     { content: 'y = a·bˣ — the variable is the exponent, not the base.', kind: 'tip' },
     { content: 'a is the y-intercept, because b⁰ = 1; the graph always passes through (0, a).', kind: 'tip' },
     { content: `b > 1 is growth, 0 < b < 1 is decay, and b is the constant ratio applied per step.`, kind: 'tip' },

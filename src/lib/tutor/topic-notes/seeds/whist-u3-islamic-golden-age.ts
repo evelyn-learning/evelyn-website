@@ -37,7 +37,7 @@ export const BASELINE_WHIST_U3_ISLAMIC_GOLDEN_AGE: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked why baghdad',
+      title: 'Worked why Baghdad',
       steps: [
         `Reject the single-cause answer first. "They valued learning" explains nothing on its own — plenty of societies valued learning without producing an Ibn al-Haytham. Look for conditions that stacked up in one place.`,
         `Start with geography: Baghdad sat at the junction of routes running to the Mediterranean, down the Persian Gulf to the Indian Ocean, and east along the Silk Roads. Goods moved through — and so did books, scholars, and techniques from Greek, Persian, and Indian traditions.`,

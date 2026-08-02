@@ -49,7 +49,7 @@ export const BASELINE_WHIST_U8_INDUSTRIAL_SOCIETY_REFORM: TopicNotesBaseline = {
       relatedLoIds: ['whist.industrial-society-reform'],
     },
     {
-      title: 'Worked manifesto paraphrase',
+      title: 'Worked Manifesto paraphrase',
       steps: [
         `Source it first. This is Marx and Engels in the Communist Manifesto (1848) — a political program written to persuade, not a neutral description of conditions. Read it as one competing answer among several, and check its claims against evidence rather than accepting or dismissing it on reputation.`,
         `Identify the claims. Three of them: (1) conflict between classes is the ENGINE of history, not an occasional breakdown; (2) industry has simplified older, layered hierarchies into a two-camp structure, owners versus workers; (3) the workers therefore have no stake in preserving the arrangement — the "chains" line is a claim about interest, not just a slogan.`,

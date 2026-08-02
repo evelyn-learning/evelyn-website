@@ -36,7 +36,7 @@ export const BASELINE_WHIST_U6_AGE_OF_EXPLORATION: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked why portugal sailed',
+      title: 'Worked why Portugal sailed',
       steps: [
         `Start at the source: pepper, cinnamon, cloves, and nutmeg grew in South and Southeast Asia, and silk and porcelain came from China. Europe wanted all of it and produced none of it.`,
         `Follow the route: goods crossed the Indian Ocean by ship, moved overland or up the Red Sea through Ottoman-controlled territory, and entered Europe through Venetian merchants at ports like Alexandria. Four or five handoffs, each with a toll and a profit margin.`,
@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U6_AGE_OF_EXPLORATION: TopicNotesBaseline = {
       relatedLoIds: ['whist.age-of-exploration'],
     },
     {
-      title: 'Worked columbus confusion',
+      title: 'Worked Columbus confusion',
       steps: [
         `Error one — the shape. Educated Europeans had accepted a spherical Earth for roughly eighteen centuries; the Greek scholar Eratosthenes even measured its circumference around 240 BCE, and any sailor could watch a ship's hull vanish over the horizon before its mast did. Nobody at the Spanish court doubted the shape.`,
         `Error two — the actual argument. The dispute was about SIZE and distance. Columbus cherry-picked the smallest estimates of the Earth's circumference and stretched Asia far eastward, making the westward crossing look like roughly 3,000 miles. Royal advisers in Portugal and Spain calculated a far longer distance and turned him down repeatedly — and they were right. On an empty ocean of that width, his crews would have died of thirst.`,

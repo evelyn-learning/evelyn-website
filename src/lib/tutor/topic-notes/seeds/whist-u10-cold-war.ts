@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U10_COLD_WAR: TopicNotesBaseline = {
       relatedLoIds: ['whist.cold-war'],
     },
     {
-      title: 'Worked cuba broadcast',
+      title: 'Worked Cuba broadcast',
       steps: [
         `Situate the moment: air reconnaissance had photographed Soviet nuclear missile sites going up in Cuba, roughly 90 miles from Florida. Moscow, for its part, could point to American missiles already stationed in Turkey, on the Soviet border.`,
         `Read the claim about danger. The key move in the statement is that the threat now begins BEFORE anything is fired — speed and destructive power mean that merely moving weapons is an act of war-level significance. That is the nuclear age redefining what counts as an attack.`,

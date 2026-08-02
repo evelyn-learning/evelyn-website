@@ -36,7 +36,7 @@ export const BASELINE_WHIST_U5_INCA_NORTH_AMERICA: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked govern the andes',
+      title: 'Worked govern the Andes',
       steps: [
         `Start with the terrain. The Andes are long, narrow, steep, and vertically stacked: a village can walk from frost-line potato fields to warm maize valleys in a day. Distance is measured in climbing, not in miles.`,
         `First consequence — hold several altitudes at once. Communities farm the vertical archipelago and terrace the slopes, so surplus arrives as bulky, perishable food from scattered elevations rather than as compact luxury goods.`,

@@ -48,7 +48,7 @@ export const BASELINE_WHIST_U3_TANG_SONG_CHINA: TopicNotesBaseline = {
       relatedLoIds: ['whist.tang-song-china'],
     },
     {
-      title: 'Worked hangzhou account',
+      title: 'Worked Hangzhou account',
       steps: [
         `Source it first: a city dweller describing his own capital, written after the Song had already lost the north — fond, possibly nostalgic, and about the single richest city in the empire.`,
         `Read the hours: markets running most of the night mean a large population with cash income and time to spend it, plus enough oil and coal to light and heat the work. Round-the-clock commerce is expensive; only a surplus economy can afford it.`,

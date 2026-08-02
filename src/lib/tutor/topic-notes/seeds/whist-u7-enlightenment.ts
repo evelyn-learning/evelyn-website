@@ -36,7 +36,7 @@ export const BASELINE_WHIST_U7_ENLIGHTENMENT: TopicNotesBaseline = {
   ],
   methods: [
     {
-      title: 'Worked newton to dynamite',
+      title: 'Worked Newton to dynamite',
       steps: [
         `Start with the method, not the content. Newton's achievement was not the specific law of gravitation — it was the demonstration that observation plus reason could uncover rules governing everything, with no appeal to mystery or authority.`,
         `Transfer the method. Philosophes asked what happens if you apply that same procedure to society. Locke had already reasoned from a starting premise — people exist before governments do — to a conclusion: government must therefore be a human arrangement serving human purposes, revisable when it fails.`,
