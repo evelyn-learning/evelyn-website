@@ -28,10 +28,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
 
-// HS course slug (from `evelyn.hs.<slug>.`) → exact portal course-title
-// string. Must byte-match the portal's course title or the Notes tab
-// silently resolves nothing for that course. Extend as new HS courses
-// are backfilled.
+// Course slug (from `evelyn.hs.<slug>.` OR `evelyn.testprep.<slug>.`) →
+// exact portal course-title string. Must byte-match the portal's course
+// title or the Notes tab silently resolves nothing for that course.
+// Extend as new HS/test-prep courses are backfilled.
 const HS_COURSE_NAMES: Record<string, string> = {
   chem: 'Chemistry',
   alg1: 'Algebra 1',
@@ -39,6 +39,7 @@ const HS_COURSE_NAMES: Record<string, string> = {
   bio: 'Biology',
   engl: 'HS English',
   whist: 'World History',
+  dsat: 'Digital SAT',
 };
 
 interface BaselineDraft {
@@ -208,7 +209,7 @@ function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.envsci.')) return 'AP Environmental Science';
   if (plan.id.startsWith('evelyn.ap.psych.')) return 'AP Psychology';
   if (plan.id.startsWith('evelyn.ap.research.')) return 'AP Research';
-  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
   return plan.title;
 }
@@ -247,14 +248,16 @@ function constNameFor(planId: string, cedUnit: number): string {
     const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
     return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
   }
-  const hsMatch = planId.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  const hsMatch = planId.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch) {
     // 'evelyn.hs.chem.classifying-matter.v1' + unit 1 →
     // 'BASELINE_CHEM_U1_CLASSIFYING_MATTER' — mirrors the lesson-plan
     // seed's own const naming (SEED_CHEM_U1_CLASSIFYING_MATTER), which
-    // encodes the unit number the plan id itself doesn't carry.
+    // encodes the unit number the plan id itself doesn't carry. Same
+    // pattern for test-prep ids ('evelyn.testprep.dsat.<slug>.v1' →
+    // 'BASELINE_DSAT_U<n>_<SLUG>').
     const courseSlug = hsMatch[1];
-    const slug = planId.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    const slug = planId.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `BASELINE_${courseSlug.toUpperCase()}_U${cedUnit}_${slug.toUpperCase().replace(/-/g, '_')}`;
   }
   const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
@@ -275,11 +278,12 @@ function fileNameFor(plan: LessonPlan): string {
     const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
     return `ap-${apMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
-  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch) {
     // '<course>-u<N>-<slug>.ts' — mirrors the source lesson-plan
-    // filename exactly (e.g. 'alg1-u1-order-of-operations.ts').
-    const slugFromId = plan.id.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    // filename exactly (e.g. 'alg1-u1-order-of-operations.ts',
+    // 'dsat-u1-linear-equations-one-var.ts').
+    const slugFromId = plan.id.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
   const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');

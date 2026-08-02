@@ -744,6 +744,41 @@ import { BASELINE_WHIST_U10_COLD_WAR } from './seeds/whist-u10-cold-war';
 import { BASELINE_WHIST_U10_DECOLONIZATION } from './seeds/whist-u10-decolonization';
 import { BASELINE_WHIST_U10_END_OF_COLD_WAR } from './seeds/whist-u10-end-of-cold-war';
 import { BASELINE_WHIST_U10_GLOBALIZATION } from './seeds/whist-u10-globalization';
+import { BASELINE_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR } from './seeds/dsat-u1-linear-equations-one-var';
+import { BASELINE_DSAT_U1_LINEAR_FUNCTIONS } from './seeds/dsat-u1-linear-functions';
+import { BASELINE_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS } from './seeds/dsat-u1-linear-equations-two-vars';
+import { BASELINE_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS } from './seeds/dsat-u1-systems-of-linear-equations';
+import { BASELINE_DSAT_U1_LINEAR_INEQUALITIES } from './seeds/dsat-u1-linear-inequalities';
+import { BASELINE_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS } from './seeds/dsat-u1-equivalent-forms-solution-counts';
+import { BASELINE_DSAT_U2_EQUIVALENT_EXPRESSIONS } from './seeds/dsat-u2-equivalent-expressions';
+import { BASELINE_DSAT_U2_QUADRATIC_EQUATIONS } from './seeds/dsat-u2-quadratic-equations';
+import { BASELINE_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS } from './seeds/dsat-u2-nonlinear-functions-graphs';
+import { BASELINE_DSAT_U2_EXPONENTIAL_FUNCTIONS } from './seeds/dsat-u2-exponential-functions';
+import { BASELINE_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE } from './seeds/dsat-u2-rational-radical-absolute';
+import { BASELINE_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS } from './seeds/dsat-u2-nonlinear-systems-transformations';
+import { BASELINE_DSAT_U3_RATIOS_RATES_UNITS } from './seeds/dsat-u3-ratios-rates-units';
+import { BASELINE_DSAT_U3_PERCENTAGES } from './seeds/dsat-u3-percentages';
+import { BASELINE_DSAT_U3_ONE_VARIABLE_DATA } from './seeds/dsat-u3-one-variable-data';
+import { BASELINE_DSAT_U3_TWO_VARIABLE_DATA } from './seeds/dsat-u3-two-variable-data';
+import { BASELINE_DSAT_U3_PROBABILITY } from './seeds/dsat-u3-probability';
+import { BASELINE_DSAT_U3_SAMPLE_STATISTICS_CLAIMS } from './seeds/dsat-u3-sample-statistics-claims';
+import { BASELINE_DSAT_U4_AREA_VOLUME } from './seeds/dsat-u4-area-volume';
+import { BASELINE_DSAT_U4_LINES_ANGLES_TRIANGLES } from './seeds/dsat-u4-lines-angles-triangles';
+import { BASELINE_DSAT_U4_RIGHT_TRIANGLE_TRIG } from './seeds/dsat-u4-right-triangle-trig';
+import { BASELINE_DSAT_U4_CIRCLES } from './seeds/dsat-u4-circles';
+import { BASELINE_DSAT_U5_CENTRAL_IDEAS_DETAILS } from './seeds/dsat-u5-central-ideas-details';
+import { BASELINE_DSAT_U5_TEXTUAL_EVIDENCE } from './seeds/dsat-u5-textual-evidence';
+import { BASELINE_DSAT_U5_QUANTITATIVE_EVIDENCE } from './seeds/dsat-u5-quantitative-evidence';
+import { BASELINE_DSAT_U5_INFERENCES } from './seeds/dsat-u5-inferences';
+import { BASELINE_DSAT_U6_WORDS_IN_CONTEXT } from './seeds/dsat-u6-words-in-context';
+import { BASELINE_DSAT_U6_TEXT_STRUCTURE_PURPOSE } from './seeds/dsat-u6-text-structure-purpose';
+import { BASELINE_DSAT_U6_CROSS_TEXT_CONNECTIONS } from './seeds/dsat-u6-cross-text-connections';
+import { BASELINE_DSAT_U7_RHETORICAL_SYNTHESIS } from './seeds/dsat-u7-rhetorical-synthesis';
+import { BASELINE_DSAT_U7_TRANSITIONS } from './seeds/dsat-u7-transitions';
+import { BASELINE_DSAT_U8_BOUNDARIES } from './seeds/dsat-u8-boundaries';
+import { BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT } from './seeds/dsat-u8-subject-verb-pronoun-agreement';
+import { BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS } from './seeds/dsat-u8-verb-forms-modifiers';
+import { BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES } from './seeds/dsat-u8-plurals-possessives-confusables';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1350,6 +1385,41 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_WHIST_U10_DECOLONIZATION,
   BASELINE_WHIST_U10_END_OF_COLD_WAR,
   BASELINE_WHIST_U10_GLOBALIZATION,
+  BASELINE_DSAT_U1_LINEAR_EQUATIONS_ONE_VAR,
+  BASELINE_DSAT_U1_LINEAR_FUNCTIONS,
+  BASELINE_DSAT_U1_LINEAR_EQUATIONS_TWO_VARS,
+  BASELINE_DSAT_U1_SYSTEMS_OF_LINEAR_EQUATIONS,
+  BASELINE_DSAT_U1_LINEAR_INEQUALITIES,
+  BASELINE_DSAT_U1_EQUIVALENT_FORMS_SOLUTION_COUNTS,
+  BASELINE_DSAT_U2_EQUIVALENT_EXPRESSIONS,
+  BASELINE_DSAT_U2_QUADRATIC_EQUATIONS,
+  BASELINE_DSAT_U2_NONLINEAR_FUNCTIONS_GRAPHS,
+  BASELINE_DSAT_U2_EXPONENTIAL_FUNCTIONS,
+  BASELINE_DSAT_U2_RATIONAL_RADICAL_ABSOLUTE,
+  BASELINE_DSAT_U2_NONLINEAR_SYSTEMS_TRANSFORMATIONS,
+  BASELINE_DSAT_U3_RATIOS_RATES_UNITS,
+  BASELINE_DSAT_U3_PERCENTAGES,
+  BASELINE_DSAT_U3_ONE_VARIABLE_DATA,
+  BASELINE_DSAT_U3_TWO_VARIABLE_DATA,
+  BASELINE_DSAT_U3_PROBABILITY,
+  BASELINE_DSAT_U3_SAMPLE_STATISTICS_CLAIMS,
+  BASELINE_DSAT_U4_AREA_VOLUME,
+  BASELINE_DSAT_U4_LINES_ANGLES_TRIANGLES,
+  BASELINE_DSAT_U4_RIGHT_TRIANGLE_TRIG,
+  BASELINE_DSAT_U4_CIRCLES,
+  BASELINE_DSAT_U5_CENTRAL_IDEAS_DETAILS,
+  BASELINE_DSAT_U5_TEXTUAL_EVIDENCE,
+  BASELINE_DSAT_U5_QUANTITATIVE_EVIDENCE,
+  BASELINE_DSAT_U5_INFERENCES,
+  BASELINE_DSAT_U6_WORDS_IN_CONTEXT,
+  BASELINE_DSAT_U6_TEXT_STRUCTURE_PURPOSE,
+  BASELINE_DSAT_U6_CROSS_TEXT_CONNECTIONS,
+  BASELINE_DSAT_U7_RHETORICAL_SYNTHESIS,
+  BASELINE_DSAT_U7_TRANSITIONS,
+  BASELINE_DSAT_U8_BOUNDARIES,
+  BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT,
+  BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS,
+  BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));

@@ -41,8 +41,8 @@ interface PointerProposal {
   rationale: string;
 }
 
-// HS course slug (from `evelyn.hs.<slug>.`) → exact portal course-title
-// string. Kept in sync with the same map in
+// Course slug (from `evelyn.hs.<slug>.` OR `evelyn.testprep.<slug>.`) →
+// exact portal course-title string. Kept in sync with the same map in
 // extract-topic-notes-baselines.ts — must byte-match the portal course
 // title or the Notes tab silently resolves nothing.
 const HS_COURSE_NAMES: Record<string, string> = {
@@ -52,15 +52,23 @@ const HS_COURSE_NAMES: Record<string, string> = {
   bio: 'Biology',
   engl: 'HS English',
   whist: 'World History',
+  dsat: 'Digital SAT',
 };
 
 function isHS(plan: LessonPlan): boolean {
   return plan.id.startsWith('evelyn.hs.');
 }
 
+// Digital SAT (and future test-prep courses) get their own system prompt —
+// unlike HS, exam framing is CORRECT here; unlike AP, there's no
+// FRQ/rubric/Chief-Reader apparatus. See SYSTEM_DSAT below.
+function isDSAT(plan: LessonPlan): boolean {
+  return plan.id.startsWith('evelyn.testprep.dsat.');
+}
+
 function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.macro.')) return 'AP Macroeconomics';
-  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
   return plan.title;
 }
@@ -119,6 +127,36 @@ Avoid:
 
 Return ONLY the JSON array. No prose, no code fences, no preamble.`;
 
+// Digital SAT (test-prep) variant: unlike HS, mentioning the exam is
+// CORRECT and expected here — the course exists to prepare for it. Unlike
+// AP, there is no FRQ/rubric/Chief-Reader apparatus to draw on — this is a
+// multiple-choice, time-boxed digital test with its own recurring traps.
+// The source lesson plans write their key ideas as named TRAPS rather than
+// definitions; pointers should reinforce that trap-first framing rather
+// than restate it as a definition.
+const SYSTEM_DSAT = `You are an experienced Digital SAT tutor producing study-notes "pointers" for a single topic in a Digital SAT test-prep course (Math or Reading & Writing).
+
+Pointers are tactical, exam-day reminders — named traps the digital SAT repeats on this topic, precise wording/phrasing students misread under time pressure, edge cases, common errors, and quick self-check moves. They are NOT theory (the traps/strategies already spelled out in the lesson) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's notes; they're the things a student needs to remember to avoid the mistakes this exact topic invites on test day.
+
+Given a topic + the lesson content (theory key ideas — often named as TRAPS — worked examples, recap takeaways), produce 4-8 pointers as a JSON array. Each pointer has:
+  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", "When you see Z, check W first").
+  - "kind":      one of "gotcha" | "vocab-note" | "edge-case" | "common-error" | "tip".
+  - "rationale": 1-2 sentences explaining why this pointer is worth remembering. (Not persisted — for human review only.)
+
+Cover a mix of kinds. Prioritize:
+  - A named SAT trap this topic repeats that the lesson content did NOT already spell out, or a sharper/more specific angle on one it did.
+  - Precise wording the test uses to signal this skill (question stems, answer-choice phrasing) that students mis-scan under time pressure.
+  - Common errors this specific topic invites on the actual digital SAT.
+  - Conceptual confusions with adjacent topics in the same unit that the test exploits.
+
+Avoid:
+  - Restating a trap or definition that's already spelled out in the lesson content — say something new, not a rephrase.
+  - FRQ, rubric, or "Chief Reader" vocabulary — that's AP framing, not this test. Mentioning the SAT/digital test itself, Desmos, timing, or the exam format is fine and expected here.
+  - Generic study advice ("review before test day"). Pointers must be CONTENT-specific.
+  - Anything > 300 chars. Tighten.
+
+Return ONLY the JSON array. No prose, no code fences, no preamble.`;
+
 function loadAllPlans(): LessonPlan[] {
   const seedsDir = path.join(__dirname, '..', 'src', 'lib', 'tutor', 'lesson-plan', 'seeds');
   const files = fs.readdirSync(seedsDir).filter((f) => f.endsWith('.ts') && !f.startsWith('_'));
@@ -166,9 +204,9 @@ function fileNameFor(plan: LessonPlan): string {
     const slugFromId = plan.id.replace(/^evelyn\.ap\.[a-z]+\./, '').replace(/\.v\d+$/, '');
     return `ap-${apMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
-  const hsMatch = plan.id.match(/^evelyn\.hs\.([a-z0-9]+)\./);
+  const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch) {
-    const slugFromId = plan.id.replace(/^evelyn\.hs\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    const slugFromId = plan.id.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
   const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
@@ -242,7 +280,7 @@ function buildUserMessage(plan: LessonPlan): string {
 
 async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
   const userMessage = buildUserMessage(plan);
-  const system = isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
+  const system = isDSAT(plan) ? SYSTEM_DSAT : isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 4000,
