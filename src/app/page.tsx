@@ -6,6 +6,11 @@ import { ArrowRight } from "lucide-react";
 
 export const revalidate = 60;
 
+// Canonical lives HERE, not in the root layout — see the note in layout.tsx.
+export const metadata = {
+  alternates: { canonical: "/" },
+};
+
 // Fetch latest posts for the blog section
 async function getLatestPosts() {
   try {

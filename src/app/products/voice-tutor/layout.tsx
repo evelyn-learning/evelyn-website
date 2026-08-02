@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: `${productName} | Voice Tutor AI for 24/7 Student Support`,
   description: productDescription,
   keywords: getKeywordsForProduct(productId),
+  alternates: { canonical: '/products/voice-tutor' },
   openGraph: {
     title: `${productName} | Real-Time AI Voice Tutoring with Visual Whiteboard`,
     description: productDescription,

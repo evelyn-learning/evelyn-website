@@ -113,9 +113,11 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Evelyn Learning" }],
   creator: "Evelyn Learning",
-  alternates: {
-    canonical: "/",
-  },
+  // No alternates here on purpose: a root-layout canonical is INHERITED by
+  // every page that doesn't declare its own, which stamped
+  // canonical="https://www.evelynlearning.com" on /products/* and /tutor
+  // (live-verified 2026-08-02). The homepage sets canonical "/" in
+  // src/app/page.tsx; pages that matter declare their own.
   openGraph: {
     type: "website",
     locale: "en_US",
