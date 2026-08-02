@@ -40,6 +40,7 @@ const HS_COURSE_NAMES: Record<string, string> = {
   engl: 'HS English',
   whist: 'World History',
   dsat: 'Digital SAT',
+  act: 'ACT',
 };
 
 interface BaselineDraft {

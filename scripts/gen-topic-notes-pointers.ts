@@ -53,6 +53,7 @@ const HS_COURSE_NAMES: Record<string, string> = {
   engl: 'HS English',
   whist: 'World History',
   dsat: 'Digital SAT',
+  act: 'ACT',
 };
 
 function isHS(plan: LessonPlan): boolean {
@@ -64,6 +65,16 @@ function isHS(plan: LessonPlan): boolean {
 // FRQ/rubric/Chief-Reader apparatus. See SYSTEM_DSAT below.
 function isDSAT(plan: LessonPlan): boolean {
   return plan.id.startsWith('evelyn.testprep.dsat.');
+}
+
+// ACT gets its own variant, not a reuse of SYSTEM_DSAT: it shares the
+// "exam framing is correct, no FRQ/rubric apparatus" shape with Digital
+// SAT, but the exam itself differs materially — no Desmos, no
+// student-produced-response grid-in, a dedicated Science section, a
+// stricter no-calculator-on-formula-sheet posture, and different
+// section/timing pressure. See SYSTEM_ACT below.
+function isACT(plan: LessonPlan): boolean {
+  return plan.id.startsWith('evelyn.testprep.act.');
 }
 
 function courseFor(plan: LessonPlan): string {
@@ -152,6 +163,43 @@ Cover a mix of kinds. Prioritize:
 Avoid:
   - Restating a trap or definition that's already spelled out in the lesson content — say something new, not a rephrase.
   - FRQ, rubric, or "Chief Reader" vocabulary — that's AP framing, not this test. Mentioning the SAT/digital test itself, Desmos, timing, or the exam format is fine and expected here.
+  - Generic study advice ("review before test day"). Pointers must be CONTENT-specific.
+  - Anything > 300 chars. Tighten.
+
+Return ONLY the JSON array. No prose, no code fences, no preamble.`;
+
+// ACT (test-prep) variant: shares the "exam framing is correct" posture
+// with SYSTEM_DSAT, but the ACT is a materially different test — no
+// Desmos (no calculator is provided or assumed by the test itself; a
+// personal calculator is merely allowed on Math), no student-produced-
+// response grid-in, a dedicated Science section (data interpretation +
+// experimental reasoning, minimal outside science content knowledge),
+// no provided formula sheet (unlike the SAT), an optional Writing/essay
+// test, and different section-by-section timing (e.g. Math is ~1
+// min/question; Science is the tightest-timed section). The source
+// lesson plans write their key ideas as named TRAPS/STRATEGY lines,
+// same as Digital SAT; pointers should add a new trap or sharper angle,
+// not restate one.
+const SYSTEM_ACT = `You are an experienced ACT tutor producing study-notes "pointers" for a single topic in an ACT test-prep course (English, Math, Reading, or Science).
+
+Pointers are tactical, exam-day reminders — named traps the ACT repeats on this topic, precise wording/phrasing students misread under time pressure, edge cases, common errors, and quick self-check moves. They are NOT theory (the traps/strategies already spelled out in the lesson) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's notes; they're the things a student needs to remember to avoid the mistakes this exact topic invites on test day.
+
+Given a topic + the lesson content (theory key ideas — often named as TRAPS — worked examples, recap takeaways), produce 4-8 pointers as a JSON array. Each pointer has:
+  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", "When you see Z, check W first").
+  - "kind":      one of "gotcha" | "vocab-note" | "edge-case" | "common-error" | "tip".
+  - "rationale": 1-2 sentences explaining why this pointer is worth remembering. (Not persisted — for human review only.)
+
+Cover a mix of kinds. Prioritize:
+  - A named ACT trap this topic repeats that the lesson content did NOT already spell out, or a sharper/more specific angle on one it did.
+  - Precise wording the test uses to signal this skill (question stems, answer-choice phrasing, Science-section figure/table labeling) that students mis-scan under time pressure.
+  - Common errors this specific topic invites on the actual ACT.
+  - Conceptual confusions with adjacent topics in the same unit that the test exploits.
+  - For Science-section topics specifically: keep pointers grounded in reading figures/tables/experimental setups and comparing viewpoints — the ACT Science section tests data interpretation and experimental reasoning, NOT recalled outside science content. Do not invent a pointer that requires outside science knowledge the passage wouldn't supply.
+
+Avoid:
+  - Restating a trap or definition that's already spelled out in the lesson content — say something new, not a rephrase.
+  - FRQ, rubric, or "Chief Reader" vocabulary — that's AP framing, not this test.
+  - Desmos, student-produced-response / grid-in formatting, or a "the test gives you a formula sheet" claim — those are Digital SAT features the ACT does NOT have. The ACT provides NO formula sheet, and calculator use is Math-only (not the whole test). Mentioning the ACT itself, its section names (English/Math/Reading/Science, optional Writing), timing, or exam format is fine and expected here.
   - Generic study advice ("review before test day"). Pointers must be CONTENT-specific.
   - Anything > 300 chars. Tighten.
 
@@ -280,7 +328,7 @@ function buildUserMessage(plan: LessonPlan): string {
 
 async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
   const userMessage = buildUserMessage(plan);
-  const system = isDSAT(plan) ? SYSTEM_DSAT : isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
+  const system = isDSAT(plan) ? SYSTEM_DSAT : isACT(plan) ? SYSTEM_ACT : isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 4000,

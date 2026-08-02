@@ -779,6 +779,40 @@ import { BASELINE_DSAT_U8_BOUNDARIES } from './seeds/dsat-u8-boundaries';
 import { BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT } from './seeds/dsat-u8-subject-verb-pronoun-agreement';
 import { BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS } from './seeds/dsat-u8-verb-forms-modifiers';
 import { BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES } from './seeds/dsat-u8-plurals-possessives-confusables';
+import { BASELINE_ACT_U1_SENTENCE_STRUCTURE } from './seeds/act-u1-sentence-structure';
+import { BASELINE_ACT_U1_PUNCTUATION } from './seeds/act-u1-punctuation';
+import { BASELINE_ACT_U1_AGREEMENT } from './seeds/act-u1-agreement';
+import { BASELINE_ACT_U1_VERB_TENSE_FORM } from './seeds/act-u1-verb-tense-form';
+import { BASELINE_ACT_U1_MODIFIERS_PARALLELISM } from './seeds/act-u1-modifiers-parallelism';
+import { BASELINE_ACT_U1_CONCISENESS } from './seeds/act-u1-conciseness';
+import { BASELINE_ACT_U1_WORD_CHOICE_TONE } from './seeds/act-u1-word-choice-tone';
+import { BASELINE_ACT_U1_TRANSITIONS } from './seeds/act-u1-transitions';
+import { BASELINE_ACT_U1_RHETORICAL_SKILLS } from './seeds/act-u1-rhetorical-skills';
+import { BASELINE_ACT_U2_PREALGEBRA_REVIEW } from './seeds/act-u2-prealgebra-review';
+import { BASELINE_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES } from './seeds/act-u2-linear-equations-inequalities';
+import { BASELINE_ACT_U2_SYSTEMS } from './seeds/act-u2-systems';
+import { BASELINE_ACT_U2_QUADRATICS_POLYNOMIALS } from './seeds/act-u2-quadratics-polynomials';
+import { BASELINE_ACT_U2_FUNCTIONS_GRAPHS } from './seeds/act-u2-functions-graphs';
+import { BASELINE_ACT_U2_EXPONENTS_ROOTS_LOGS } from './seeds/act-u2-exponents-roots-logs';
+import { BASELINE_ACT_U2_COORDINATE_GEOMETRY } from './seeds/act-u2-coordinate-geometry';
+import { BASELINE_ACT_U2_PLANE_GEOMETRY } from './seeds/act-u2-plane-geometry';
+import { BASELINE_ACT_U2_TRIGONOMETRY } from './seeds/act-u2-trigonometry';
+import { BASELINE_ACT_U2_STATISTICS_PROBABILITY } from './seeds/act-u2-statistics-probability';
+import { BASELINE_ACT_U2_SEQUENCES_MATRICES_COMPLEX } from './seeds/act-u2-sequences-matrices-complex';
+import { BASELINE_ACT_U2_WORD_PROBLEMS_MODELING } from './seeds/act-u2-word-problems-modeling';
+import { BASELINE_ACT_U3_MAIN_IDEA_PURPOSE } from './seeds/act-u3-main-idea-purpose';
+import { BASELINE_ACT_U3_DETAIL_SEQUENCE } from './seeds/act-u3-detail-sequence';
+import { BASELINE_ACT_U3_INFERENCE_GENERALIZATION } from './seeds/act-u3-inference-generalization';
+import { BASELINE_ACT_U3_VOCABULARY_IN_CONTEXT } from './seeds/act-u3-vocabulary-in-context';
+import { BASELINE_ACT_U3_PAIRED_PASSAGES } from './seeds/act-u3-paired-passages';
+import { BASELINE_ACT_U3_READING_PACING_STRATEGY } from './seeds/act-u3-reading-pacing-strategy';
+import { BASELINE_ACT_U4_DATA_REPRESENTATION } from './seeds/act-u4-data-representation';
+import { BASELINE_ACT_U4_TRENDS_EXTRAPOLATION } from './seeds/act-u4-trends-extrapolation';
+import { BASELINE_ACT_U4_RESEARCH_SUMMARIES } from './seeds/act-u4-research-summaries';
+import { BASELINE_ACT_U4_VARIABLES_CONTROLS } from './seeds/act-u4-variables-controls';
+import { BASELINE_ACT_U4_CONFLICTING_VIEWPOINTS } from './seeds/act-u4-conflicting-viewpoints';
+import { BASELINE_ACT_U4_SCIENTIFIC_MATH_UNITS } from './seeds/act-u4-scientific-math-units';
+import { BASELINE_ACT_U4_SCIENCE_PACING_STRATEGY } from './seeds/act-u4-science-pacing-strategy';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1420,6 +1454,40 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_DSAT_U8_SUBJECT_VERB_PRONOUN_AGREEMENT,
   BASELINE_DSAT_U8_VERB_FORMS_MODIFIERS,
   BASELINE_DSAT_U8_PLURALS_POSSESSIVES_CONFUSABLES,
+  BASELINE_ACT_U1_SENTENCE_STRUCTURE,
+  BASELINE_ACT_U1_PUNCTUATION,
+  BASELINE_ACT_U1_AGREEMENT,
+  BASELINE_ACT_U1_VERB_TENSE_FORM,
+  BASELINE_ACT_U1_MODIFIERS_PARALLELISM,
+  BASELINE_ACT_U1_CONCISENESS,
+  BASELINE_ACT_U1_WORD_CHOICE_TONE,
+  BASELINE_ACT_U1_TRANSITIONS,
+  BASELINE_ACT_U1_RHETORICAL_SKILLS,
+  BASELINE_ACT_U2_PREALGEBRA_REVIEW,
+  BASELINE_ACT_U2_LINEAR_EQUATIONS_INEQUALITIES,
+  BASELINE_ACT_U2_SYSTEMS,
+  BASELINE_ACT_U2_QUADRATICS_POLYNOMIALS,
+  BASELINE_ACT_U2_FUNCTIONS_GRAPHS,
+  BASELINE_ACT_U2_EXPONENTS_ROOTS_LOGS,
+  BASELINE_ACT_U2_COORDINATE_GEOMETRY,
+  BASELINE_ACT_U2_PLANE_GEOMETRY,
+  BASELINE_ACT_U2_TRIGONOMETRY,
+  BASELINE_ACT_U2_STATISTICS_PROBABILITY,
+  BASELINE_ACT_U2_SEQUENCES_MATRICES_COMPLEX,
+  BASELINE_ACT_U2_WORD_PROBLEMS_MODELING,
+  BASELINE_ACT_U3_MAIN_IDEA_PURPOSE,
+  BASELINE_ACT_U3_DETAIL_SEQUENCE,
+  BASELINE_ACT_U3_INFERENCE_GENERALIZATION,
+  BASELINE_ACT_U3_VOCABULARY_IN_CONTEXT,
+  BASELINE_ACT_U3_PAIRED_PASSAGES,
+  BASELINE_ACT_U3_READING_PACING_STRATEGY,
+  BASELINE_ACT_U4_DATA_REPRESENTATION,
+  BASELINE_ACT_U4_TRENDS_EXTRAPOLATION,
+  BASELINE_ACT_U4_RESEARCH_SUMMARIES,
+  BASELINE_ACT_U4_VARIABLES_CONTROLS,
+  BASELINE_ACT_U4_CONFLICTING_VIEWPOINTS,
+  BASELINE_ACT_U4_SCIENTIFIC_MATH_UNITS,
+  BASELINE_ACT_U4_SCIENCE_PACING_STRATEGY,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
