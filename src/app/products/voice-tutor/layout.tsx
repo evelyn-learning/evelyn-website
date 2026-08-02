@@ -5,7 +5,7 @@ import { getKeywordsForProduct } from '@/lib/seo/keywords';
 
 const productId = 'voice-tutor';
 const productName = 'AI Voice Tutor';
-const productDescription = 'An AI voice tutor is an intelligent tutoring system that lets students speak naturally and receive real-time spoken explanations with a visual whiteboard. Evelyn Learning\'s Voice Tutor AI provides 24/7 student support with step-by-step problem solving, homework photo upload, and interactive visual explanations for physics, math, and STEM subjects.';
+const productDescription = 'An AI voice tutor is an intelligent tutoring system that lets students speak naturally and receive real-time spoken explanations with a visual whiteboard. Evelyn Learning\'s Voice Tutor AI provides 24/7 student support with live equation rendering, step-by-step problem solving, homework photo upload, and 18 tutor personas across math, science, English, history, and test prep — try it live on this page.';
 
 export const metadata: Metadata = {
   title: `${productName} | Voice Tutor AI for 24/7 Student Support`,

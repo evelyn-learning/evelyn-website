@@ -6,8 +6,8 @@ import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
 import { Mic, MessageSquare, Upload, Pencil } from 'lucide-react';
 
-const VoiceTutorPreview = dynamic(
-  () => import('@/components/demos/VoiceTutorPreview'),
+const VoiceTutorLiveDemo = dynamic(
+  () => import('@/components/demos/VoiceTutorLiveDemo'),
   { ssr: false, loading: () => <div className="h-[420px] bg-gray-100 rounded-2xl animate-pulse" /> }
 );
 
@@ -83,13 +83,13 @@ function DemoSection() {
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mb-2">Try the AI Voice Tutor</h2>
           <p className="text-slate-600 max-w-xl mx-auto mb-6">
-            Watch a live preview of a tutoring session, then launch the full experience.
+            Pick a lesson and start talking — this is the real tutor, not a video. No signup, ~2 minutes.
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Interactive preview */}
-          <VoiceTutorPreview />
+          {/* Live demo — real embed behind a click-to-start cover */}
+          <VoiceTutorLiveDemo />
 
           {/* Feature cards */}
           <div className="grid md:grid-cols-2 gap-4">
