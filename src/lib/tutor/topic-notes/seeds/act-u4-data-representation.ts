@@ -48,7 +48,7 @@ export const BASELINE_ACT_U4_DATA_REPRESENTATION: TopicNotesBaseline = {
     { content: 'Figures first — the intro prose is usually skippable.', kind: 'tip' },
     { content: 'Anchor axes and units before reading any value.', kind: 'tip' },
     { content: 'Match every condition in the question (trial AND temperature AND week).', kind: 'tip' },
-    { content: 'ACT Science is timed reading of exhibits — about 52 seconds per question.', kind: 'tip' },
+    { content: 'ACT Science is timed reading of exhibits — about 60 seconds per question.', kind: 'tip' },
     { content: `Answer choices are often stated in the *other* column's units or a neighboring cell's value. Before bubbling, re-read the row label AND the column header of the cell you picked — wrong-cell distractors are always real numbers from the same table.`, kind: 'gotcha' },
     { content: `Watch for graphs with TWO y-axes (left and right scales, different units). Trace which curve the legend ties to which axis before reading a value — a point read off the wrong scale is the single most common Figure error.`, kind: 'edge-case' },
     { content: `"Closest to" and "approximately" mean the exact number may not be printed — interpolate between gridlines or rows. Don't abandon a question because your value falls between two tick marks.`, kind: 'vocab-note' },

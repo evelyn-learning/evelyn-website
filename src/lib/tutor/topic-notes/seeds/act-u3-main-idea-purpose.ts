@@ -29,7 +29,7 @@ export const BASELINE_ACT_U3_MAIN_IDEA_PURPOSE: TopicNotesBaseline = {
     { loId: 'act.main-idea-purpose', kind: 'framework', title: 'Trap 3', content: `TRAP 3 — UNMENTIONED: a choice introduces a plausible-sounding fact that never actually appears in the passage.` },
     { loId: 'act.main-idea-purpose', content: `PURPOSE questions hinge on a VERB: choices read like 'argue,' 'explain,' 'describe,' or 'compare.' Match the verb that fits what the passage actually DOES, not just its subject.` },
     { loId: 'act.main-idea-purpose', content: `SCOPE TEST: before picking, check whether the choice matches the passage's scope exactly — not zoomed in on one detail, not zoomed out past what was written.` },
-    { loId: 'act.main-idea-purpose', content: `PACE: budget about 52 seconds for this question type and do not re-read the whole passage to answer it — the first/last-sentence scan is usually enough.` },
+    { loId: 'act.main-idea-purpose', content: `PACE: budget about 67 seconds for this question type and do not re-read the whole passage to answer it — the first/last-sentence scan is usually enough.` },
     { loId: 'act.main-idea-purpose', kind: 'definition', title: 'main idea', content: 'what the passage as a whole is mostly about — not what any single sentence says.' },
     { loId: 'act.main-idea-purpose', kind: 'definition', title: `author's purpose`, content: `why the author wrote the passage — the verb (argue, explain, describe, compare…) that matches what the text does.` },
     { loId: 'act.main-idea-purpose', kind: 'definition', title: 'scope', content: `how broad or narrow a claim is; a correct main-idea answer matches the passage's scope exactly.` },

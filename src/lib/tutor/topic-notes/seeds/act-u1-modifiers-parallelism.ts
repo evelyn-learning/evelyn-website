@@ -64,7 +64,7 @@ export const BASELINE_ACT_U1_MODIFIERS_PARALLELISM: TopicNotesBaseline = {
     { content: `The word right after an opening comma must be the thing the modifier describes — not just mentioned somewhere in the sentence.`, kind: 'tip' },
     { content: `Items in a list, comparison, or correlative pair ("not only...but also," "either...or") must share the same grammatical form.`, kind: 'tip' },
     { content: `NO CHANGE is correct whenever the modifier already sits next to the right noun and the list or pair is already parallel.`, kind: 'tip' },
-    { content: `ACT English is passage-embedded and fast — about 9 minutes per passage — so scan for the comma-then-noun pattern the moment you see an opening phrase.`, kind: 'tip' },
+    { content: `ACT English is passage-embedded and fast — roughly 5-6 minutes per passage — so scan for the comma-then-noun pattern the moment you see an opening phrase.`, kind: 'tip' },
     { content: `On dangling-modifier items, the underline is usually AFTER the comma, so you can't fix the opening phrase — you must pick the choice that puts the right doer first. Scan answer choices for their first noun and eliminate any that start with an object or abstract noun.`, kind: 'tip' },
     { content: `Passive voice is the ACT's favorite dangling-modifier disguise. "Having sealed the envelope, the letter was mailed by Ana" is still wrong. If a choice after an opening phrase is passive, suspect it immediately.`, kind: 'gotcha' },
     { content: `Possessives don't count as the subject. "Trained as a chemist, Marisa's research changed the field" is dangling — the research is trained, not Marisa. The noun after the comma must be the doer, not a modifier attached to it.`, kind: 'edge-case' },

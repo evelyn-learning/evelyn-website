@@ -63,7 +63,7 @@ export const BASELINE_ACT_U2_FUNCTIONS_GRAPHS: TopicNotesBaseline = {
     { content: `Composite functions evaluate INSIDE OUT: compute the inner function first, then feed that result into the outer function.`, kind: 'tip' },
     { content: `f(g(x)) and g(f(x)) are usually different — always match the exact order the problem gives.`, kind: 'tip' },
     { content: `On a graph, f(a) = b means the point (a, b) sits on the curve; on a table, look up the row for the CURRENT input at each step, not the original x.`, kind: 'tip' },
-    { content: `About 60 seconds per question — write down the intermediate result before finishing the outer step.`, kind: 'tip' },
+    { content: `About 67 seconds per question — write down the intermediate result before finishing the outer step.`, kind: 'tip' },
     { content: `f(g(x)) is NOT f(x)·g(x). When answer choices include a product like (2x-3)(x²+1) next to a true composite, the product is the planted distractor. Composition means substitution, never multiplication.`, kind: 'gotcha' },
     { content: `When the question asks for f(g(x)) as an EXPRESSION (not a number), substitute the whole g(x) in parentheses and expand fully. f(x)=x²-1, g(x)=x+3 → (x+3)²-1 = x²+6x+8, not x²+9-1.`, kind: 'common-error' },
     { content: `Distinguish f(x+2) from f(x)+2 and f(-x) from -f(x). The inner change hits the input BEFORE the rule runs; the outer change hits the output AFTER. Circle whether the number is inside or outside the parentheses before you compute.`, kind: 'gotcha' },

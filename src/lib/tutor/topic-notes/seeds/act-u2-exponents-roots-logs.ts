@@ -62,7 +62,7 @@ export const BASELINE_ACT_U2_EXPONENTS_ROOTS_LOGS: TopicNotesBaseline = {
     { content: `log_b(x) = y is just another way of writing b^y = x — the ACT tests moving between these forms directly.`, kind: 'tip' },
     { content: `Exponent rules: same base multiplying → add exponents; power of a power → multiply exponents; negative exponent → reciprocal, not a negative value.`, kind: 'tip' },
     { content: `Radicals distribute over multiplication/division only — never over addition or subtraction: √(a+b) ≠ √a + √b.`, kind: 'tip' },
-    { content: `ACT Math gives ~60 seconds per question — spot which rule applies before reaching for the calculator.`, kind: 'tip' },
+    { content: `ACT Math gives ~67 seconds per question — spot which rule applies before reaching for the calculator.`, kind: 'tip' },
     { content: `Exponent rules only apply with the SAME base. For 2³ · 4² the ACT wants you to rewrite 4² as (2²)² = 2⁴ first, then add: 2⁷. Adding exponents across different bases (getting "8⁵") is a top wrong-answer choice.`, kind: 'gotcha' },
     { content: `Read a^(m/n) as "nth root of a, then mth power." So 8^(2/3) = (∛8)² = 4 — NOT 8²/3 and not 8·(2/3). Denominator = root, numerator = power. Roots first keeps the arithmetic small.`, kind: 'common-error' },
     { content: `Watch coefficient vs. exponent: (3x²)³ = 27x⁶, not 3x⁶. The outside exponent hits EVERY factor inside the parentheses, including the number. Same for (2x)⁻¹ = 1/(2x), not 2/x.`, kind: 'common-error' },

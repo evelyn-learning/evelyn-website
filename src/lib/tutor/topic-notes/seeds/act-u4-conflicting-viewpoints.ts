@@ -23,7 +23,7 @@ export const BASELINE_ACT_U4_CONFLICTING_VIEWPOINTS: TopicNotesBaseline = {
   sources: [{ type: 'plan', planId: 'evelyn.testprep.act.conflicting-viewpoints.v1' }],
   theory: [
     { loId: 'act.conflicting-viewpoints', content: `PASSAGE SHAPE: a short intro names the phenomenon being debated, then 2-3 labeled viewpoints (Scientist 1/2/3, Student A/B, Dr. X/Dr. Y). No tables, no graphs — every fact you need is in the prose.` },
-    { loId: 'act.conflicting-viewpoints', content: `TIME BUDGET: this passage appears once per test and runs longer than a data passage — plan on ~6-7 minutes for its ~6-7 questions.` },
+    { loId: 'act.conflicting-viewpoints', content: `TIME BUDGET: this passage appears once per test and runs longer than a data passage — plan on ~7-8 minutes for its ~6-7 questions.` },
     { loId: 'act.conflicting-viewpoints', content: `AS YOU READ, jot a 3-4 word margin note per viewpoint: their CLAIM and their key EVIDENCE — e.g. "Alvarez: selection, cost." This saves re-reading the whole passage per question.` },
     { loId: 'act.conflicting-viewpoints', content: `FIND THE SHARED FACT FIRST. Viewpoints almost always agree on ONE baseline observation (the phenomenon itself, or a basic cause) and diverge on the WHY/mechanism, not the WHAT.` },
     { loId: 'act.conflicting-viewpoints', content: `FIVE QUESTION TYPES: (1) WHAT ONE BELIEVES — direct lookup. (2) AGREEMENT — find the shared baseline. (3) DISAGREEMENT — find the mechanism they split on. (4) RESPONSE/PREDICT — extend one viewpoint's own logic to a new scenario. (5) SUPPORT/UNDERCUT WITH NEW EVIDENCE — pick the finding that moves ONE viewpoint, not all or none.` },

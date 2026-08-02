@@ -28,11 +28,11 @@ export const BASELINE_ACT_U2_WORD_PROBLEMS_MODELING: TopicNotesBaseline = {
     { loId: 'act.word-problems-modeling', content: `RATE: distance = rate × time (d = rt). Moving toward each other → ADD the two rates. Same direction, one catching up to the other → SUBTRACT the rates.` },
     { loId: 'act.word-problems-modeling', content: `WORK: convert "time to finish alone" into a RATE (job per hour, i.e. 1/time). Combined rate = sum of the individual rates. NEVER average the two times directly.` },
     { loId: 'act.word-problems-modeling', content: `MIXTURE: total amount of the substance = (amount × concentration) for each part, summed, then divided by the total volume. A straight average of two percentages is a trap unless the volumes happen to be equal.` },
-    { loId: 'act.word-problems-modeling', content: `THE 60-SECOND TRIAGE: if you don't see a clear path to an equation within about 60 seconds, mark the question, pick your best guess letter, and move on. Return to it only after finishing the rest of the section — rescuing one hard word problem isn't worth three easy questions lost to the clock.` },
+    { loId: 'act.word-problems-modeling', content: `THE 67-SECOND TRIAGE: if you don't see a clear path to an equation within about 67 seconds (the section's per-question average), mark the question, pick your best guess letter, and move on. Return to it only after finishing the rest of the section — rescuing one hard word problem isn't worth three easy questions lost to the clock.` },
     { loId: 'act.word-problems-modeling', kind: 'definition', title: 'rate', content: `a ratio of two quantities with different units, e.g. miles per hour or jobs per hour — the backbone of both distance and work problems.` },
     { loId: 'act.word-problems-modeling', kind: 'definition', title: 'combined rate', content: `the sum (working together / closing a gap) or difference (catching up) of two individual rates — never the average of two times.` },
     { loId: 'act.word-problems-modeling', kind: 'definition', title: 'concentration', content: `the fraction (or percent) of a mixture that is the substance of interest; amount of substance = concentration × volume.` },
-    { loId: 'act.word-problems-modeling', kind: 'definition', title: 'triage (60-second rule)', content: `the ACT pacing habit of abandoning a question that hasn't yielded a clear equation within ~60 seconds, marking it, and returning only after finishing easier questions.` },
+    { loId: 'act.word-problems-modeling', kind: 'definition', title: 'triage (67-second rule)', content: `the ACT pacing habit of abandoning a question that hasn't yielded a clear equation within ~67 seconds, marking it, and returning only after finishing easier questions.` },
   ],
   methods: [
     {
@@ -63,7 +63,7 @@ export const BASELINE_ACT_U2_WORD_PROBLEMS_MODELING: TopicNotesBaseline = {
     { content: `Define your variable in words before writing any equation — most word-problem points are lost to bad setup, not bad algebra.`, kind: 'tip' },
     { content: '"Less than" / "fewer than" reverses order: "A less than B" = B − A.', kind: 'tip' },
     { content: `Combine WORK RATES (1/time), never average raw times; add or subtract RATES for toward/catching-up rate problems.`, kind: 'tip' },
-    { content: `The 60-second triage: no clear equation within ~60 seconds means mark it, guess, and come back after the easier questions.`, kind: 'tip' },
+    { content: `The 67-second triage: no clear equation within ~67 seconds means mark it, guess, and come back after the easier questions.`, kind: 'tip' },
     { content: `**Answer the question asked.** ACT word problems love solving for x but asking for "2x + 5," "the larger number," or "Ben's time alone." Circle the final phrase before you start, and re-read it after you solve. The value of x is almost always a wrong answer choice.`, kind: 'gotcha' },
     { content: `"Less than" reverses order, but "less" / "is less than" does NOT. "5 less than x" = x − 5; "x is less than 5" = x < 5. Also "decreased by 5" = x − 5 in reading order. Only the *than* comparison phrases flip.`, kind: 'vocab-note' },
     { content: `Check units before plugging into d = rt. If the rate is in mph and the time is given in minutes (or "90 minutes," "40 seconds"), convert first. The ACT plants the unconverted answer as a choice.`, kind: 'common-error' },

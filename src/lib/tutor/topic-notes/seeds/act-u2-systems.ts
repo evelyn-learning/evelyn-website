@@ -65,7 +65,7 @@ export const BASELINE_ACT_U2_SYSTEMS: TopicNotesBaseline = {
     { content: `Elimination: add or scale-then-combine equations to cancel a variable; substitution: solve one equation for a variable and plug it into the other.`, kind: 'tip' },
     { content: `If the question asks for a combination like x + y or 2x − y directly, look for a shortcut combo of the two equations before solving for x and y separately.`, kind: 'tip' },
     { content: `Different slopes → one solution; same slope + different intercept → no solution; same line → infinitely many solutions.`, kind: 'tip' },
-    { content: `Check your (x, y) pair in BOTH original equations — about 60 seconds per question.`, kind: 'tip' },
+    { content: `Check your (x, y) pair in BOTH original equations — about 67 seconds per question.`, kind: 'tip' },
     { content: `Read the last line before you celebrate: the ACT often solves for x but asks for **y**, or for x + y, xy, or y − x. Circle the requested quantity before you start eliminating — the value you naturally get first is usually a trap answer choice.`, kind: 'gotcha' },
     { content: `"No solution" and "infinitely many" get decided by the CONSTANTS, not the variable terms. Once you scale so the x- and y-terms match, only compare the two right-hand numbers: equal → infinitely many, unequal → none.`, kind: 'tip' },
     { content: `If choices are simple numbers, plugging in beats algebra. Test a choice as x (or as the requested quantity) in BOTH equations — with the calculator this is often under 20 seconds, especially when coefficients are ugly fractions or decimals.`, kind: 'tip' },
