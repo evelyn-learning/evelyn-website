@@ -62,6 +62,29 @@ const fixtures: LabelFixture[] = [
       ],
     }),
   },
+  {
+    // R38 regression: step=0.333333 vs fractionTicks 1/3 differ by ~3e-7,
+    // far over old 1e-9 epsilon, so both passes printed "0.3333" at same pixel.
+    // With step-relative epsilon (step * 1e-3), the fraction tick 1/3 is
+    // properly deduplicated and no label overlap occurs.
+    name: 'numberline-decimal-step-fraction-dedup',
+    viewbox: { w: 500, h: 170 },
+    element: React.createElement(NumberLineRenderer, {
+      min: 0, max: 1, step: 0.333333,
+      fractionTicks: { denominator: 3, showLabels: true },
+    }),
+  },
+  {
+    // R38 regression: step=0.25 with fractionTicks denominator 3 should
+    // NOT over-deduplicate. Fraction ticks at 1/3, 2/3 should survive since
+    // step grid (0, 0.25, 0.5, 0.75, 1) doesn't align with 1/3, 2/3.
+    name: 'numberline-quarter-step-fraction-survives',
+    viewbox: { w: 500, h: 170 },
+    element: React.createElement(NumberLineRenderer, {
+      min: 0, max: 1, step: 0.25,
+      fractionTicks: { denominator: 3, showLabels: true },
+    }),
+  },
 ];
 
 export default fixtures;

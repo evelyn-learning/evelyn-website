@@ -243,8 +243,10 @@ export function NumberLineRenderer({
       for (let n = 1; n < denominator; n++) {
         const v = i + n / denominator;
         if (v >= min && v <= max) {
-          // Skip if it coincides with a major tick
-          if (!ticks.some((t) => Math.abs(t - v) < 1e-9)) {
+          // R38 (embed-1785738371329): step=0.333333 vs fractionTicks 1/3 differ by
+          // ~3e-7 — far over the old 1e-9 epsilon, so both passes printed "0.3333"
+          // at the same pixel. Compare in step-relative units instead.
+          if (!ticks.some((t) => Math.abs(t - v) < step * 1e-3)) {
             vals.push(v);
           }
         }
