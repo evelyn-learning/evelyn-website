@@ -50,5 +50,10 @@ test('show_diagram description warns boxplots are not diagram kinds', () => {
   assert.ok(sd!.description.includes('show_stats'), 'points to show_stats');
 });
 
+test('R32 verdict-agreement rule includes bidirectional praise-direction check', () => {
+  assert.ok(prompt.includes('Before speaking "Right." / "Yes." / "Exactly."'));
+  assert.ok(!prompt.includes('✓ "Right — 5.'));
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
