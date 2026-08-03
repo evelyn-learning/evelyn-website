@@ -13656,7 +13656,21 @@ export function VoiceTutorRealtime({
         awaitingDispatchTimerRef.current != null ||
         studentTypingRef.current;
       const hidden = typeof document !== 'undefined' && document.visibilityState === 'hidden';
-      const decision = decideIdleNudge({ busy, hidden, state: idleNudgeStateRef.current });
+      // R38: same time-boxed-demo eligibility predicate as the demoStop
+      // payload (:8237) — sessionWrapMinutes/maxDurationExplicit are embed-
+      // token-derived props, fixed for the session's lifetime (parsed once
+      // via useMemo off the URL token), so closing over them here is safe
+      // even though armIdleNudge's useCallback deps don't list them (the
+      // existing callBrainOnce demoStop block closes over the same props
+      // the same way). Computed at FIRE time (not arm time) so a timer
+      // armed pre-wrap still stands down if the wrap threshold is crossed
+      // while it's ticking.
+      const startedAtMs = voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current;
+      const wrapPhase =
+        sessionWrapMinutes != null &&
+        (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit)) &&
+        Math.floor((Date.now() - startedAtMs) / 60000) >= sessionWrapMinutes;
+      const decision = decideIdleNudge({ busy, hidden, wrapPhase, state: idleNudgeStateRef.current });
       if (decision === 'stand-down') return;
       if (decision === 'recheck') {
         idleNudgeTimerRef.current = setTimeout(fireOrRecheck, IDLE_NUDGE_RECHECK_MS);

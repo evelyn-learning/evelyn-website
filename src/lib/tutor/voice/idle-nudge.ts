@@ -64,8 +64,13 @@ export function decideIdleNudge(args: {
   /** document.visibilityState === 'hidden' — don't speak into a
    *  backgrounded tab; re-check instead (foreground fires it). */
   hidden: boolean;
+  /** R38: elapsed ≥ wrapAtMinutes on a time-boxed demo — the wrap
+   *  directive owns the endgame; a nudge here collides with the one-
+   *  sign-off rule. Never true for non-demo sessions. */
+  wrapPhase: boolean;
   state: IdleNudgeState;
 }): IdleNudgeDecision {
+  if (args.wrapPhase) return 'stand-down';
   if (
     args.state.stretchCount >= IDLE_NUDGE_MAX_PER_STRETCH ||
     args.state.sessionCount >= IDLE_NUDGE_MAX_PER_SESSION

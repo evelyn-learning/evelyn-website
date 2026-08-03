@@ -41,6 +41,27 @@ function check(name: string, cond: boolean, got?: unknown) {
   check('hidden-rechecks', decideIdleNudge({ busy: false, hidden: true, state: s }) === 'recheck');
 }
 
+// R38: wrap phase (elapsed ≥ wrapAtMinutes on a time-boxed demo) stands the
+// nudge down outright — the wrap directive already owns the endgame and a
+// nudge there would force a second sign-off.
+{
+  const s = createIdleNudgeState();
+  check(
+    'wrap-phase-stands-down',
+    decideIdleNudge({ busy: false, hidden: false, wrapPhase: true, state: s }) === 'stand-down',
+  );
+  check(
+    'wrap-phase-false-unchanged',
+    decideIdleNudge({ busy: false, hidden: false, wrapPhase: false, state: s }) === 'fire',
+  );
+  // The phase never un-wraps once entered, so a busy/hidden recheck loop
+  // would just spin forever — wrap beats the recheck path outright.
+  check(
+    'wrap-phase-beats-busy-recheck',
+    decideIdleNudge({ busy: true, hidden: false, wrapPhase: true, state: s }) === 'stand-down',
+  );
+}
+
 // After a fire, the same stretch re-arms at the longer repeat gap.
 {
   const s = createIdleNudgeState();
