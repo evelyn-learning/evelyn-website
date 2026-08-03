@@ -8,6 +8,7 @@ import {
   exceedsDragThreshold,
   qpinCollapseDeadline,
   clampQpinFraction,
+  latestSubstantiveTutorEntry,
   QPIN_POST_SPEECH_MS,
   QPIN_HARD_CAP_MS,
   QPIN_TOP_MIN_PX,
@@ -80,6 +81,33 @@ check(
   'degenerate tiny stage: min bounds win (no NaN/negative)',
   clampQpinFraction({ x: 0.5, y: 0.5 }, { width: 100, height: 100 }, PIN),
   { x: QPIN_SIDE_PX / 100, y: QPIN_TOP_MIN_PX / 100 },
+);
+
+// --- latestSubstantiveTutorEntry (R38: pin persists across idle-nudge/board-only turns) ---
+type Entry = { id: string; role: string; historyOnly?: boolean };
+const e = (id: string, role: string, historyOnly?: boolean): Entry => ({ id, role, historyOnly });
+
+check(
+  'skips a trailing historyOnly (board-only) tutor entry, returns the last substantive one',
+  latestSubstantiveTutorEntry([e('s1', 'student'), e('t1', 'tutor'), e('s2', 'student'), e('t2', 'tutor', true)])?.id,
+  't1',
+);
+check(
+  'idle-nudge line (a substantive, non-question tutor entry) IS the latest — returned as-is',
+  latestSubstantiveTutorEntry([e('t1', 'tutor'), e('s1', 'student'), e('t2', 'tutor')])?.id,
+  't2',
+);
+check('empty transcript → undefined', latestSubstantiveTutorEntry([]), undefined);
+check('no tutor entries → undefined', latestSubstantiveTutorEntry([e('s1', 'student')]), undefined);
+check(
+  'multiple trailing historyOnly entries are all skipped',
+  latestSubstantiveTutorEntry([e('t1', 'tutor'), e('t2', 'tutor', true), e('t3', 'tutor', true)])?.id,
+  't1',
+);
+check(
+  'all-historyOnly transcript → undefined (no substantive tutor entry at all)',
+  latestSubstantiveTutorEntry([e('t1', 'tutor', true), e('t2', 'tutor', true)]),
+  undefined,
 );
 
 console.log(`\n${pass} passed, ${fail} failed`);

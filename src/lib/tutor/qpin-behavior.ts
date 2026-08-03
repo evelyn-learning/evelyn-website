@@ -40,6 +40,16 @@ export function qpinCollapseDeadline(shownAt: number, speechEndedAt: number | nu
   return Math.min(speechEndedAt + QPIN_POST_SPEECH_MS, cap);
 }
 
+/** R38: the pin's owning turn no longer needs to be the LATEST tutor turn —
+ *  an idle-nudge line or a board-only (historyOnly) turn must not kill an
+ *  unanswered question. The pin dies only by ✕ dismiss or replacement
+ *  (the gist effect sets a NEW pin when a newer turn asks a question). */
+export function latestSubstantiveTutorEntry<T extends { role: string; historyOnly?: boolean }>(
+  transcript: T[],
+): T | undefined {
+  return [...transcript].reverse().find((t) => t.role === 'tutor' && !t.historyOnly);
+}
+
 export function clampQpinFraction(
   pos: QpinFraction,
   stage: { width: number; height: number },

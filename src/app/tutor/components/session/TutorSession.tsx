@@ -43,6 +43,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { latestSubstantiveTutorEntry } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
 
@@ -642,7 +643,16 @@ export default function TutorSession(props: TutorSessionProps) {
 
   // --- Derived presence/caption (computed BEFORE the dock so the caption can
   //     ride inside it as VTR's captionSlot — the one-line merged bar) ---
-  const lastTutorEntry = [...transcript].reverse().find((t) => t.role === 'tutor');
+  // R38: `historyOnly` entries are the "(rendered: tool, tool, …)"
+  // tool-only-turn placeholder (see TranscriptEntry.historyOnly doc) — they
+  // exist purely for the brain's next-turn context and are never meant to
+  // reach the student. lastTutorEntry now skips them everywhere it's used
+  // (live caption text, the caption's click-to-scroll transcript id, and the
+  // Q-pin's owning-turn tracking) — pointing the caption/click-target at one
+  // of these would either leak debug text into the dock or scroll to an
+  // entry TranscriptView filters out and never renders, so no consumer here
+  // wants the raw latest entry including these placeholders.
+  const lastTutorEntry = latestSubstantiveTutorEntry(transcript);
   const lastEntry = transcript[transcript.length - 1];
   const started = transcript.length > 0 || liveVoiceState !== 'idle';
   const derivedVoiceState: VoiceState =
@@ -814,8 +824,16 @@ export default function TutorSession(props: TutorSessionProps) {
   // turn is composing.
   useEffect(() => {
     if (!questionPin || pinShownForTurn === questionPin.turnId) return;
-    if (questionPin.turnId !== lastTutorFinal?.id) return;
     if (voiceState !== 'speaking') { setPinShownForTurn(questionPin.turnId); return; }
+    // R38: the staleness guard below (pin's turn must still be
+    // lastTutorFinal) only matters for the speaking-probe path — it reads
+    // lastTutorFinal.text to build the spoken-caption probe, which is
+    // meaningless once a newer turn is the one actually speaking. Under the
+    // persist-until-replaced semantics, a pin whose owning turn was
+    // superseded (idle nudge, board-only turn) while NOT speaking is marked
+    // shown by the branch above and never reaches this guard; it only fires
+    // while the (now different) latest turn is mid-speech.
+    if (questionPin.turnId !== lastTutorFinal?.id) return;
     const q = lastQuestionSentence(lastTutorFinal.text) ?? questionPin.gist;
     const probe = normalizeSpoken(q).slice(0, 16);
     if (!probe) return;
@@ -833,19 +851,17 @@ export default function TutorSession(props: TutorSessionProps) {
   // immediately in any non-speaking state, including 'thinking') — a
   // second, narrower `voiceState !== 'thinking'` gate here silently
   // dropped gists that finished marking-shown but landed/settled during
-  // the NEXT turn's 'thinking' (student answered fast). The
-  // `lastTutorEntry?.id === questionPin.turnId` check alone still hides
-  // the pin the instant the next turn starts composing (its id changes
-  // first), so dropping the redundant clause closes the gap without
-  // reopening the stale-turn case.
+  // the NEXT turn's 'thinking' (student answered fast).
+  // R38: no lastTutorEntry staleness clause — the pin persists across
+  // non-question tutor turns (idle nudge, board-only) and is retired only
+  // by ✕ or by the gist effect pinning the NEXT question.
   // R23: the pin can obstruct the board — dismissable via ✕. The root is a
   // div[role=button] (not <button>) because the ✕ inside must be a real
   // button and nested buttons are invalid HTML. Dismiss = setQuestionPin(null)
   // only: pinFetchedTurnRef already blocks a same-turn re-fetch, so the pin
   // cannot re-appear until the next finalized turn.
   const questionPinEl =
-    TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId &&
-    lastTutorEntry?.id === questionPin.turnId ? (
+    TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId ? (
       <div
         role="button"
         tabIndex={0}
