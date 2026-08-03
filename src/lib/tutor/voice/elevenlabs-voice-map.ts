@@ -61,6 +61,12 @@ const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
   '225ba8cf-9fc2-4371-a78c-fe38ba38898a': SONYA,   // Anneliese — en-nl (nearest)
   'ac197a78-cec7-4c50-93e5-93bdc1910b11': SONYA,   // Jennifer — en-de female (nearest)
   '42f14755-88c3-4124-aae3-5cc3a9618e8f': EARL,    // Jan — en-de male (nearest)
+  'c2ad7092-0447-47ea-948b-61fbb6faf153': SONYA,   // Grace — en-au female (nearest)
+  '49743b08-0f5d-4741-839c-b12933853780': EARL,    // Cooper — en-au male (nearest)
+  'efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f': ANJURA,  // Nadia — en-sg female (nearest)
+  'ac5a9529-3965-4eac-b574-dce63664fbf4': NAKUL,   // Kiran — en-sg male (nearest)
+  '263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18': SONYA,   // Zanele — en-za female (nearest)
+  'baf84392-fa95-4d44-8871-d32ee36b0e01': EARL,    // Pieter — en-za male (nearest)
 };
 
 export function resolveElevenLabsVoice(cartesiaVoiceId: string | undefined): string {

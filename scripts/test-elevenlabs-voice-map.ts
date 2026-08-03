@@ -52,6 +52,18 @@ check('Jameson (en-us male) → Earl',
   resolveElevenLabsVoice('a5136bf9-224c-4d76-b823-52bd5efcffcc'), EARL);
 check('Katie en-in localized (Indian female) → Anjura',
   resolveElevenLabsVoice('dc4725ab-a34f-4625-9ae3-e35296b456e2'), ANJURA);
+check('Grace (en-au female) → Sonya',
+  resolveElevenLabsVoice('c2ad7092-0447-47ea-948b-61fbb6faf153'), SONYA);
+check('Cooper (en-au male) → Earl',
+  resolveElevenLabsVoice('49743b08-0f5d-4741-839c-b12933853780'), EARL);
+check('Nadia (en-sg female) → Anjura',
+  resolveElevenLabsVoice('efddb3d2-4464-45e0-9f8a-fcd5fd4fc54f'), ANJURA);
+check('Kiran (en-sg male) → Nakul',
+  resolveElevenLabsVoice('ac5a9529-3965-4eac-b574-dce63664fbf4'), NAKUL);
+check('Zanele (en-za female) → Sonya',
+  resolveElevenLabsVoice('263b9cc0-0d99-44e7-ae92-3d4ad5d2ad18'), SONYA);
+check('Pieter (en-za male) → Earl',
+  resolveElevenLabsVoice('baf84392-fa95-4d44-8871-d32ee36b0e01'), EARL);
 
 // Defaults: unknown / absent voice ids fall back to Sonya (mirrors the
 // Cartesia default, Katie — en-us female).
