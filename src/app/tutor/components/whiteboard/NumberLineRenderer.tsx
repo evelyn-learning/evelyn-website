@@ -253,7 +253,7 @@ export function NumberLineRenderer({
       }
     }
     return vals;
-  }, [fractionTicks, min, max, ticks]);
+  }, [fractionTicks, min, max, step, ticks]);
 
   // Helper: convert value to SVG x
   const toX = (v: number) => valueToX(v, min, max);

@@ -78,12 +78,15 @@ const fixtures: LabelFixture[] = [
     // R38 regression: step=0.25 with fractionTicks denominator 3 should
     // NOT over-deduplicate. Fraction ticks at 1/3, 2/3 should survive since
     // step grid (0, 0.25, 0.5, 0.75, 1) doesn't align with 1/3, 2/3.
+    // Assert presence of labels to catch over-dedup (if dedup epsilon breaks,
+    // the 1/3 and 2/3 fraction ticks get dropped entirely, fewer labels render).
     name: 'numberline-quarter-step-fraction-survives',
     viewbox: { w: 500, h: 170 },
     element: React.createElement(NumberLineRenderer, {
       min: 0, max: 1, step: 0.25,
       fractionTicks: { denominator: 3, showLabels: true },
     }),
+    expectLabelSubstrings: ['0.3333', '0.6667'],
   },
 ];
 

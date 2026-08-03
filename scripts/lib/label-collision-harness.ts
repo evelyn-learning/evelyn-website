@@ -23,6 +23,9 @@ export interface LabelFixture {
   /** Estimated-bbox pairs allowed to touch (rare deliberate composites).
    *  Each entry is a [contentA, contentB] pair matched by exact text. */
   allowOverlap?: Array<[string, string]>;
+  /** Assert each substring appears in at least one rendered <text> node.
+   *  Used to catch over-dedup or missing features (e.g., fraction ticks dropped). */
+  expectLabelSubstrings?: string[];
 }
 
 interface TextBox {
@@ -132,6 +135,14 @@ export function runFixture(f: LabelFixture): string[] {
   for (const b of boxes) {
     if (b.left < -0.5 || b.right > f.viewbox.w + 0.5 || b.top < -0.5 || b.bottom > f.viewbox.h + 0.5) {
       failures.push(`${f.name}: "${b.content}" leaves the viewbox (${JSON.stringify(b)})`);
+    }
+  }
+  if (f.expectLabelSubstrings) {
+    const allContent = boxes.map((b) => b.content);
+    for (const substr of f.expectLabelSubstrings) {
+      if (!allContent.some((c) => c.includes(substr))) {
+        failures.push(`${f.name}: expected substring "${substr}" not found in rendered labels (found: ${JSON.stringify(allContent)})`);
+      }
     }
   }
   return failures;
