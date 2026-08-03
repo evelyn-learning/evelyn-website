@@ -3,7 +3,12 @@
 import { useState, useRef, useCallback, useMemo, useEffect, useLayoutEffect } from 'react';
 import { Play, Pause, RotateCcw, X, MessageSquareText } from 'lucide-react';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
-import { InlineMathText } from '@/app/tutor/components/whiteboard/InlineMathText';
+// R38 task 13: shared split-then-emphasize renderer (TranscriptView's own
+// math/prose split core, minus its normalizeSentenceGaps display fixup —
+// see inline-emphasis.tsx) so replay bubbles render *emphasis*/**strong**
+// instead of raw asterisks, matching the live drawer. Math segments still
+// route through InlineMathText internally.
+import { renderBubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
 import type { WhiteboardCommand } from '@/lib/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
 import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
@@ -78,8 +83,10 @@ export function TranscriptBubble({ entry }: { entry: { role: string; text: strin
           </span>
         </div>
         {/* Tutor speech carries $…$ KaTeX (live round-4: replay showed raw
-            \dfrac source) — render through the shared segmenter. */}
-        <p className="whitespace-pre-wrap leading-relaxed"><InlineMathText text={entry.text} /></p>
+            \dfrac source) and *emphasis* markers (R38 task 13: was raw
+            asterisks) — render through the shared split-then-emphasize
+            renderer, same core the live drawer uses. */}
+        <p className="whitespace-pre-wrap leading-relaxed">{renderBubbleEmphasis(entry.text)}</p>
       </div>
     </div>
   );

@@ -19,6 +19,10 @@ import { STUCK_TEXT, SKIP_TEXT } from '@/lib/tutor/quick-actions';
 // Round-20: bubble math rendering — see renderBubbleText.
 import { segment, normalizeSentenceGaps } from '@/lib/tutor/whiteboard/inline-math';
 import { InlineMathText } from './whiteboard/InlineMathText';
+// R38 task 13: renderInlineEmphasis hoisted to a shared module so the
+// replay TranscriptBubble (ReplayPlayer.tsx) can reuse it too — see
+// inline-emphasis.tsx for why renderBubbleText itself stays local.
+import { renderInlineEmphasis } from './inline-emphasis';
 
 interface TranscriptViewProps {
   transcript: TranscriptEntry[];
@@ -49,10 +53,6 @@ interface TranscriptViewProps {
   enablePacingChips?: boolean;
 }
 
-/** Render markdown-style *emphasis* and **strong** as actual styled spans
- *  instead of leaving the asterisks raw in the chat bubble. The brain
- *  uses *word* as a TTS hint AND as visual emphasis; we strip the
- *  asterisks and apply <em>/<strong> in their place. */
 /** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
  *  Rule 3b instructs the brain to wrap ALL spoken math in $…$ (the
  *  declared-pronunciation design) — without this, chat bubbles would fill
@@ -71,33 +71,6 @@ function renderBubbleText(text: string): React.ReactNode {
       ? <InlineMathText key={`m-${i}`} text={`$${p.body}$`} />
       : <React.Fragment key={`t-${i}`}>{renderInlineEmphasis(p.body)}</React.Fragment>,
   );
-}
-
-function renderInlineEmphasis(text: string): React.ReactNode {
-  if (!text) return text;
-  // Split on **bold** and *italic*. Order: bold first, then italic, so
-  // ** doesn't get eaten by the * matcher.
-  const parts: React.ReactNode[] = [];
-  let remaining = text;
-  let key = 0;
-  // Combined regex: capture either a bold (**...**) or italic (*...*) run.
-  const RE = /(\*\*([^*\n]+)\*\*|\*([^*\n]+)\*)/g;
-  let lastIdx = 0;
-  let m: RegExpExecArray | null;
-  while ((m = RE.exec(text)) !== null) {
-    if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
-    if (m[2] !== undefined) {
-      parts.push(<strong key={`b-${key++}`} className="font-semibold">{m[2]}</strong>);
-    } else if (m[3] !== undefined) {
-      parts.push(<em key={`i-${key++}`} className="italic">{m[3]}</em>);
-    }
-    lastIdx = m.index + m[0].length;
-  }
-  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
-  // If nothing matched, return the plain string unchanged.
-  if (parts.length === 0) return text;
-  void remaining; // silence linter
-  return parts;
 }
 
 /** Find the trailing question in a tutor turn — the actionable ask the
