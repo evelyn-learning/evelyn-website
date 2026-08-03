@@ -1,6 +1,6 @@
 'use client';
 
-import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
+import { InlineMathText } from './InlineMathText';
 /**
  * Fraction Bar Renderer
  *
@@ -49,7 +49,6 @@ const GRID_CELL = 28;
 const ITEM_GAP = 40; // gap between items
 const PADDING = 24; // canvas padding
 const LABEL_OFFSET = 22; // space below shape for label text
-const TITLE_HEIGHT = 28; // reserved height for title
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -379,7 +378,7 @@ export function FractionBarRenderer({
   const { positions, viewWidth, viewHeight } = useMemo(() => {
     const pos: Array<{ x: number; y: number; w: number; h: number }> = [];
     let cursorX = PADDING;
-    let cursorY = PADDING + (title ? TITLE_HEIGHT : 0);
+    let cursorY = PADDING;
     let maxW = 0;
     let maxH = 0;
 
@@ -410,72 +409,62 @@ export function FractionBarRenderer({
   }, [items, layout, title]);
 
   return (
-    <svg
-      viewBox={`0 0 ${viewWidth} ${viewHeight}`}
-      width="100%"
-      style={{ maxWidth: viewWidth, display: 'block', margin: '0 auto' }}
-      role="img"
-      aria-label={title ?? 'Fraction visualization'}
-    >
-      {/* Optional title */}
+    <div className="w-full flex flex-col items-center gap-2">
+      {/* Optional title — R38: centered SVG text in a shapes-only-width viewBox clipped long titles on both sides */}
       {title && (
-        <text
-          x={viewWidth / 2}
-          y={PADDING + 4}
-          textAnchor="middle"
-          fontSize={16}
-          fontWeight={600}
-          fill={LABEL_COLOR}
-          fontFamily="system-ui, sans-serif"
-        >
-          {mathifyDollarSpans(title)}
-        </text>
+        <h3 className="text-sm font-semibold text-slate-700 text-center"><InlineMathText text={title} /></h3>
       )}
+      <svg
+        viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+        width="100%"
+        style={{ maxWidth: viewWidth, display: 'block', margin: '0 auto' }}
+        role="img"
+        aria-label={title ?? 'Fraction visualization'}
+      >
+        {/* Render each fraction item */}
+        {items.map((item, idx) => {
+          const pos = positions[idx];
+          if (!pos) return null;
 
-      {/* Render each fraction item */}
-      {items.map((item, idx) => {
-        const pos = positions[idx];
-        if (!pos) return null;
+          const color = item.highlightColor ?? DEFAULT_COLOR;
+          const style = item.style ?? 'bar';
+          const labelText = item.label ?? `${item.numerator}/${item.denominator}`;
 
-        const color = item.highlightColor ?? DEFAULT_COLOR;
-        const style = item.style ?? 'bar';
-        const labelText = item.label ?? `${item.numerator}/${item.denominator}`;
+          // Determine shape center-x for label alignment
+          const labelX = pos.x + pos.w / 2;
+          const labelY = pos.y + pos.h + LABEL_OFFSET - 4;
 
-        // Determine shape center-x for label alignment
-        const labelX = pos.x + pos.w / 2;
-        const labelY = pos.y + pos.h + LABEL_OFFSET - 4;
+          return (
+            <g key={idx} {...feat(`bar-${idx + 1}`, { cx: pos.x + pos.w / 2, cy: pos.y + pos.h / 2, w: pos.w + 10, h: pos.h + 10 }, { width: viewWidth, height: viewHeight })}>
+              {/* Shape */}
+              {style === 'bar' && renderBar(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
+              {style === 'circle' &&
+                renderCircle(
+                  pos.x + CIRCLE_RADIUS,
+                  pos.y + CIRCLE_RADIUS,
+                  item.numerator,
+                  item.denominator,
+                  color,
+                  idx,
+                  { width: viewWidth, height: viewHeight },
+                )}
+              {style === 'grid' && renderGrid(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
 
-        return (
-          <g key={idx} {...feat(`bar-${idx + 1}`, { cx: pos.x + pos.w / 2, cy: pos.y + pos.h / 2, w: pos.w + 10, h: pos.h + 10 }, { width: viewWidth, height: viewHeight })}>
-            {/* Shape */}
-            {style === 'bar' && renderBar(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
-            {style === 'circle' &&
-              renderCircle(
-                pos.x + CIRCLE_RADIUS,
-                pos.y + CIRCLE_RADIUS,
-                item.numerator,
-                item.denominator,
-                color,
-                idx,
-                { width: viewWidth, height: viewHeight },
-              )}
-            {style === 'grid' && renderGrid(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
-
-            {/* Fraction label */}
-            <text
-              x={labelX}
-              y={labelY}
-              textAnchor="middle"
-              fontSize={13}
-              fontWeight={500}
-              fill={LABEL_COLOR}
-              fontFamily="system-ui, sans-serif"
-            >
-              {labelText}
-            </text>
-          </g>
-        );
-      })}
+              {/* Fraction label */}
+              <text
+                x={labelX}
+                y={labelY}
+                textAnchor="middle"
+                fontSize={13}
+                fontWeight={500}
+                fill={LABEL_COLOR}
+                fontFamily="system-ui, sans-serif"
+              >
+                {labelText}
+              </text>
+            </g>
+          );
+        })}
 
       {/* Comparison alignment lines (horizontal layout only) */}
       {showComparison &&
@@ -503,7 +492,8 @@ export function FractionBarRenderer({
             />
           );
         })}
-    </svg>
+      </svg>
+    </div>
   );
 }
 
