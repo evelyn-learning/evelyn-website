@@ -55,5 +55,11 @@ test('R32 verdict-agreement rule includes bidirectional praise-direction check',
   assert.ok(!prompt.includes('✓ "Right — 5.'));
 });
 
+test('R38 Task 11: Language policy — one language per session', () => {
+  assert.ok(prompt.includes('each session sticks to one language'), 'prompt must include "each session sticks to one language"');
+  assert.ok(!prompt.includes('## Multilingual Support'), 'prompt must NOT contain legacy "## Multilingual Support" section');
+  assert.ok(!prompt.includes('respond in the same language mix'), 'prompt must NOT contain old "respond in the same language mix" policy');
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
