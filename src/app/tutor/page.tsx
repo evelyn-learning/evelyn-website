@@ -432,6 +432,12 @@ function TutorPage() {
   }, [selectedTeacherId, stage]);
   // When the chosen teacher maps to an OpenAI Realtime voice, the session
   // speaks in THAT voice (flag-on only).
+  // R38 (teacher-persona.ts, DEMO_TEACHERS): the four original personas now
+  // declare provider: 'cartesia', so this openai branch is always false for
+  // them and they collapse to the single global selectedOpenAIVoice below in
+  // a realtime-engine dev/QA config. Inert (and thus unaffected) under
+  // prod's engine flags — see the R38 comment above Elena's voice field for
+  // the full trade-off.
   const effectiveOpenAIVoice: OpenAIVoice =
     TUTOR_PEDAGOGY_OPENER && selectedTeacher.voice?.provider === 'openai'
       ? (selectedTeacher.voice.voiceId as OpenAIVoice)

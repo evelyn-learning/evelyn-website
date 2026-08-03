@@ -66,9 +66,10 @@ export const TEACHER_IDENTITY_BOUNDS_CLAUSE =
  * EIGHTEEN house personas for demo sessions on /tutor — the original four plus one per accent/gender where a passing Cartesia voice exists (2026-07-19 accent-personas spec; geo pre-selects a local pair, every persona speaks its native voice). User-facing —
  * names/intros are spoken to real students. Subjects are broad on purpose
  * (any demo topic must work) and intros stay GENERIC about topics (no
- * curriculum claims we can't back). The original four keep their OpenAI
- * Realtime voices; the per-accent personas are Cartesia-native (voice ids
- * mirrored in cartesia-voice-registry.ts).
+ * curriculum claims we can't back). As of R38 all eighteen — including the
+ * original four — declare Cartesia voices (voice ids mirrored in
+ * cartesia-voice-registry.ts); see the R38 comment on the first original
+ * persona below for why and for a known side effect.
  */
 export const DEMO_TEACHERS: TeacherPersonaWire[] = [
   {
@@ -95,6 +96,20 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
       boardHabits: 'Small friendly visuals, one idea per board card, nothing crowded.',
     },
     // R38: declared voice now matches the registry voice actually used in prod — the embed reads THIS field and was falling back to openai 'coral' for every original persona.
+    // (Same fix applied to the other three originals below.) Prod speaks all
+    // four of these personas via the Cartesia registry on EVERY surface —
+    // /tutor already resolved them there through resolveCartesiaVoice
+    // (cartesiaVoiceId, page.tsx), so the openai voiceIds these used to
+    // declare were dead config even before this change; only the embed
+    // path was actually broken by them.
+    // Known side effect: /tutor/page.tsx's `effectiveOpenAIVoice`
+    // (~:435-438) gates on `selectedTeacher.voice?.provider === 'openai'`;
+    // that gate is now always false for these four, so in a realtime-engine
+    // dev/QA config (NEXT_PUBLIC_TUTOR_VOICE_ENGINE=realtime with TTS not
+    // forced to cartesia) they collapse to the single global
+    // selectedOpenAIVoice instead of 4 distinct OpenAI voices. Accepted,
+    // not reverted: that branch is inert under prod's engine flags
+    // (claude-brain + Cartesia TTS make effectiveOpenAIVoice unused there).
     voice: { provider: 'cartesia', voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' }, // Katie
   },
   {
