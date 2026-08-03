@@ -21,7 +21,7 @@ interface UseAudioRecorderConfig {
   // recorder falls back to "first audio chunk wins" — this only happens for
   // legacy callers and produces tracks that drift from the chat timeline.
   sessionStartedAtMs?: number;
-  flushIntervalMs?: number; // default 30000
+  flushIntervalMs?: number; // default 10000
 }
 
 interface UseAudioRecorderResult {
@@ -57,7 +57,7 @@ export function useAudioRecorder({
   sessionId,
   enabled,
   sessionStartedAtMs,
-  flushIntervalMs = 30000,
+  flushIntervalMs = 10000,
 }: UseAudioRecorderConfig): UseAudioRecorderResult {
   const studentBufferRef = useRef<TimedChunk[]>([]);
   const tutorBufferRef = useRef<TimedChunk[]>([]);
@@ -238,6 +238,10 @@ export function useAudioRecorder({
   // meta write survives teardown; the tail flush is best-effort (keepalive
   // caps bodies at ~64KB, so a big tail can still drop — honestly lossy).
   // bfcache restores (e.persisted) are NOT a close — skip those.
+  // R38: visibilitychange→hidden now flushes immediately on mobile close/switch,
+  // catching most tail loss before the pagehide handler fires. Residual loss
+  // (after the last hidden/interval flush) only occurs if the tab is destroyed
+  // without going hidden first (e.g. desktop ⌘W) — bounded by flushIntervalMs ≤10s.
   useEffect(() => {
     if (!enabled) return;
     const onPageHide = (e: PageTransitionEvent) => {
@@ -247,6 +251,18 @@ export function useAudioRecorder({
     window.addEventListener('pagehide', onPageHide);
     return () => window.removeEventListener('pagehide', onPageHide);
   }, [enabled, finalize]);
+
+  // R38: flush immediately when the tab goes hidden. On mobile, close/switch
+  // fires visibilitychange→hidden while the page can still run a NORMAL
+  // fetch (no keepalive body cap) — this catches most aborted-close tails
+  // that the pagehide keepalive path cannot carry (~64KB quota vs ~480KB of
+  // 10s PCM). Worst-case loss drops from flushIntervalMs to seconds.
+  useEffect(() => {
+    if (!enabled) return;
+    const onVis = () => { if (document.visibilityState === 'hidden') void flush().catch(() => {}); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [enabled, flush]);
 
   // Flush + finalize on unmount. Flush-only used to leave any session that
   // ended via remount/navigation (rather than the explicit End button) as a
