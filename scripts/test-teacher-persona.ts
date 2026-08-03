@@ -281,16 +281,17 @@ function main() {
   });
 
   // ── DEMO_TEACHERS roster ────────────────────────────────────────────────
-  // Round-7f pin refresh: the roster grew 4 → 18 with the geo-accent
-  // persona ship (2026-07-19, [[geo-accent-tutor-personas]]) — 4 openai
-  // originals + 14 cartesia native-accent teachers. The old "exactly 4 /
-  // all openai" pins had been failing ever since.
-  test('DEMO_TEACHERS: 18 entries (4 openai + 14 cartesia)', () => {
+  // R38 pin refresh: the 4 original personas' declared voices flipped from
+  // dead openai ids to their registry cartesia ids (the embed only ever
+  // reads the cartesia branch, so the openai declarations were silently
+  // ignored in prod). All 18 entries are now cartesia; 0 are openai. The
+  // round-7f "4 openai + 14 cartesia" pin is stale as of this change.
+  test('DEMO_TEACHERS: 18 entries (all cartesia)', () => {
     assert.equal(DEMO_TEACHERS.length, 18);
     const byProvider = { openai: 0, cartesia: 0 } as Record<string, number>;
     for (const t of DEMO_TEACHERS) byProvider[t.voice?.provider ?? 'none'] = (byProvider[t.voice?.provider ?? 'none'] ?? 0) + 1;
-    assert.equal(byProvider.openai, 4, `openai count (got ${JSON.stringify(byProvider)})`);
-    assert.equal(byProvider.cartesia, 14, `cartesia count (got ${JSON.stringify(byProvider)})`);
+    assert.equal(byProvider.openai, 0, `openai count (got ${JSON.stringify(byProvider)})`);
+    assert.equal(byProvider.cartesia, 18, `cartesia count (got ${JSON.stringify(byProvider)})`);
   });
 
   test('DEMO_TEACHERS: unique ids, unique names, unique voices', () => {

@@ -94,7 +94,8 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
       formality: 'casual',
       boardHabits: 'Small friendly visuals, one idea per board card, nothing crowded.',
     },
-    voice: { provider: 'openai', voiceId: 'coral' },
+    // R38: declared voice now matches the registry voice actually used in prod — the embed reads THIS field and was falling back to openai 'coral' for every original persona.
+    voice: { provider: 'cartesia', voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02' }, // Katie
   },
   {
     // id kept stable — referenced by the voice registry and stored sessions.
@@ -121,7 +122,8 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
       formality: 'balanced',
       boardHabits: 'Problem cards front and center, traps crossed out in red, a running tally of wins.',
     },
-    voice: { provider: 'openai', voiceId: 'ash' },
+    // R38: declared voice now matches the registry voice actually used in prod — the embed reads THIS field and was falling back to openai 'coral' for every original persona.
+    voice: { provider: 'cartesia', voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012' }, // Sameer
     boundaries: 'Never mock a slow answer — the speed talk is about the clock, never about the student.',
   },
   {
@@ -147,7 +149,8 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
       formality: 'balanced',
       boardHabits: 'Scene first: a sketch or diagram goes up before any formula does.',
     },
-    voice: { provider: 'openai', voiceId: 'sage' },
+    // R38: declared voice now matches the registry voice actually used in prod — the embed reads THIS field and was falling back to openai 'coral' for every original persona.
+    voice: { provider: 'cartesia', voiceId: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4' }, // Skylar
   },
   {
     id: 'sofia',
@@ -172,7 +175,8 @@ export const DEMO_TEACHERS: TeacherPersonaWire[] = [
       formality: 'balanced',
       boardHabits: 'Numbered derivation steps, each line justified; earlier steps stay visible for reference.',
     },
-    voice: { provider: 'openai', voiceId: 'ballad' },
+    // R38: declared voice now matches the registry voice actually used in prod — the embed reads THIS field and was falling back to openai 'coral' for every original persona.
+    voice: { provider: 'cartesia', voiceId: '62ae83ad-4f6a-430b-af41-a9bede9286ca' }, // Gemma
   },
   // ── Per-accent personas (2026-07-19 spec; names/intros user-approved).
   // Voice ids mirror TEACHER_VOICES in cartesia-voice-registry.ts — the

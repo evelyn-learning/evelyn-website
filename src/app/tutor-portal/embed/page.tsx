@@ -254,7 +254,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const sessionGoal: SessionGoal = config.session_goal || 'concept-review';
   const inputMode: InputMode = config.input_mode || 'voice';
   const voiceEngine: InternalEngine = mapEngine(config.engine);
-  const openAIVoice: OpenAIVoice = (config.voice as OpenAIVoice) || 'coral';
+  // R38: an openai-provider teacher voice was silently discarded (only the
+  // cartesia branch below read teacher.voice) — honor its voiceId ahead of
+  // the token-level `voice` field and the 'coral' default.
+  const openAIVoice: OpenAIVoice =
+    (config.teacher?.voice?.provider === 'openai' && config.teacher.voice.voiceId
+      ? (config.teacher.voice.voiceId as OpenAIVoice)
+      : (config.voice as OpenAIVoice)) || 'coral';
   // Honor the teacher persona's declared voice. A cartesia teacher voice drives
   // Cartesia TTS with that EXACT voiceId (the marketplace teacher's cloned
   // voice); the embed otherwise never wired a TTS provider and fell back to the
