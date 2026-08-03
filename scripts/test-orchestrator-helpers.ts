@@ -216,6 +216,15 @@ function check(name: string, cond: boolean): void {
   check('isVerdictOpener: "Good thinking, but…" → true (pre-existing)', isVerdictOpener('Good thinking, but look again.') === true);
   check('isVerdictOpener: "Close — but…" → true (pre-existing)', isVerdictOpener('Close — but check the denominator.') === true);
   check('isVerdictOpener: "The right idea here is…" mid-sentence → false', isVerdictOpener('The right idea here is substitution.') === false);
+  // R38: "Right — X." / "Yes — X." verdict openers must be held (embed-1785738371329:
+  // "Right — one half." fast-opened ungated, then the same turn taught "one third").
+  check('isVerdictOpener: "Right — one half." → true', isVerdictOpener('Right — one half.') === true);
+  check('isVerdictOpener: "Yes — that is exactly the pattern." → true', isVerdictOpener('Yes — that is exactly the pattern.') === true);
+  check('isVerdictOpener: "No — look at the denominator again." → true', isVerdictOpener('No — look at the denominator again.') === true);
+  check('isVerdictOpener: "Right, one half." → true', isVerdictOpener('Right, one half.') === true);
+  check('isVerdictOpener: "Right now, look at the board." → false', isVerdictOpener('Right now, look at the board.') === false);
+  check('isVerdictOpener: "No problem, take your time." → false', isVerdictOpener('No problem, take your time.') === false);
+  check('isVerdictOpener: "Yes and no — it depends on the base." → true', isVerdictOpener('Yes and no — it depends on the base.') === true);
 }
 
 // ── inferAdvanceFromSegmentCard ───────────────────────────────────

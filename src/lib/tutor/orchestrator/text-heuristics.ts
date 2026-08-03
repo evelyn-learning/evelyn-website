@@ -170,7 +170,7 @@ export function duplicateFunctionDef(latex: string): string | null {
 export function isVerdictOpener(s: string): boolean {
   const t = s.trim();
   if (!t || /\?\s*$/.test(t)) return false; // a question is a prompt, not a verdict
-  return /^(?:not\s+(?:quite|exactly|really|at\s+all|right|correct)\b|almost[.!,\s]|close[.!,\s]|so\s+close\b|nearly\s+there\b|nope\b|yep[.!,\s]|yes[.!,]|no[.!,]|hmm+,?\s+not\b|that'?s\s+(?:right|correct|exactly|it\b|not\b|wrong|close|almost)|exactly[.!,\s]|correct[.!,\s]|right[.!,]|right\s+(?:idea|track|direction|thinking|start)\b|perfect[.!,\s]|spot\s+on\b|bingo\b|you\s+(?:got|nailed|have)\s+it\b|you'?re\s+(?:right|correct|close|almost|nearly)\b|you\s+had\s+it\b|well\s+done\b|nice\s+(?:work|job|one)\b|great\s+(?:work|job)\b|good\s+(?:work|job|thinking|idea|start|instinct|thought)\b|wrong\b)/i.test(t);
+  return /^(?:not\s+(?:quite|exactly|really|at\s+all|right|correct)\b|almost[.!,\s]|close[.!,\s]|so\s+close\b|nearly\s+there\b|nope\b|yep[.!,\s]|yes\s*[.!,—–-]|yes\s+and\s+no\s*[.!,—–-]|no\s*[.!,—–-]|hmm+,?\s+not\b|that'?s\s+(?:right|correct|exactly|it\b|not\b|wrong|close|almost)|exactly[.!,\s]|correct[.!,\s]|right\s*[.!,—–-]|right\s+(?:idea|track|direction|thinking|start)\b|perfect[.!,\s]|spot\s+on\b|bingo\b|you\s+(?:got|nailed|have)\s+it\b|you'?re\s+(?:right|correct|close|almost|nearly)\b|you\s+had\s+it\b|well\s+done\b|nice\s+(?:work|job|one)\b|great\s+(?:work|job)\b|good\s+(?:work|job|thinking|idea|start|instinct|thought)\b|wrong\b)/i.test(t);
 }
 
 // ── Judge-kill Stage 3.1 (2026-06-16) restatement detector ────────────
