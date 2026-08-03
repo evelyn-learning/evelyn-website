@@ -72,6 +72,7 @@ import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
+import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
@@ -9174,6 +9175,37 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic simplification check: false denial of "${simp.correct}" in "${updatedSentence.slice(0, 80)}" — kill + retry`);
                       onDebugEvent?.('simplification_verdict_kill', `asked=${simp.asked?.slice(0, 40) ?? '?'} correct=${simp.correct ?? '?'}`);
+                      continue;
+                    }
+                  }
+                  // Deterministic praise-then-contradiction check (R38,
+                  // session embed-1785738371329): the brain's FIRST
+                  // sentence praised a value ("Right — one half.") and a
+                  // LATER sentence in the same turn contradicted that
+                  // exact phrase ("…you've gone one third of the way, not
+                  // one half."). Task 1 (this round) already fixed
+                  // isVerdictOpener so dash-form ("Right —") openers get
+                  // HELD instead of spoken immediately, but the held turn
+                  // can still be wrong once fully assembled — this is the
+                  // deterministic backstop for that case. It must run on
+                  // the FULL accumulated turn text (not sentence 0 alone),
+                  // since the contradiction only shows up once a later
+                  // sentence has streamed in — mirrors the nonAnswerPraise
+                  // accumulation pattern below. Pure phrase-match, no LLM,
+                  // no false-positive class — so it may kill.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const praiseContradictionTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                    const praiseContradiction = detectPraiseContradiction(praiseContradictionTextSoFar);
+                    if (praiseContradiction) {
+                      const { affirmed } = praiseContradiction;
+                      const reason =
+                        `Your opener affirmed "${affirmed}" but your own explanation says "not ${affirmed}". ` +
+                        `Re-deliver the turn with the verdict and explanation agreeing — open with the TRUE verdict.`;
+                      rejectionsThisAttempt.push({ action: 'praise_contradiction', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] deterministic praise-contradiction check: affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
+                      onDebugEvent?.('praise_contradiction_kill', `affirmed=${affirmed}`);
                       continue;
                     }
                   }
