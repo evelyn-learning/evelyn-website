@@ -200,4 +200,32 @@ check('teachersForAccent(unknown) -> empty', () => {
   assert.deepStrictEqual(teachersForAccent('en-xx'), {});
 });
 
+// ── R38 Task 6: per-voice Cartesia speed (Katie ≈22 chars/s vs 14–17
+// baseline) — resolveCartesiaVoice grows an optional `speed` field. ──
+check('elena -> Katie carries speed -0.25', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).speed, -0.25);
+});
+
+check('dev (no per-voice speed) -> speed undefined', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV }).speed, undefined);
+});
+
+check('bare-default resolve -> speed -0.25 (default IS Katie)', () => {
+  assert.strictEqual(resolveCartesiaVoice({}).speed, -0.25);
+  assert.strictEqual(resolveCartesiaVoice().speed, -0.25);
+});
+
+check('accent-only en-us (no teacher) -> Katie pool pick carries speed -0.25', () => {
+  const r = resolveCartesiaVoice({ accent: 'en-us' });
+  assert.strictEqual(r.voiceId, KATIE);
+  assert.strictEqual(r.speed, -0.25);
+});
+
+check('elena + en-in -> Katie-localized carries no speed (unmeasured, untouched)', () => {
+  assert.strictEqual(
+    resolveCartesiaVoice({ teacherId: ELENA, accent: 'en-in' }).speed,
+    undefined,
+  );
+});
+
 console.log(`\n${passed} passed`);

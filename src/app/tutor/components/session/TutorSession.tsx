@@ -93,6 +93,9 @@ export interface TutorSessionProps {
   ttsProvider?: VTRProps['ttsProvider'];
   /** Cartesia voice id (Task 3). Only consumed when ttsProvider === 'cartesia'. */
   cartesiaVoiceId?: VTRProps['cartesiaVoiceId'];
+  /** Per-voice Cartesia speed offset (R38 Task 6). Forwarded straight to the
+   *  runtime, typed from VoiceTutorRealtime to avoid drift. */
+  cartesiaVoiceSpeed?: VTRProps['cartesiaVoiceSpeed'];
   sessionMaxMinutes: number;
   /** Demo time-box (trial): wrap-phase threshold in minutes. Forwarded to the
    *  runtime, typed from VoiceTutorRealtime to avoid drift. */
@@ -205,7 +208,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -983,6 +986,7 @@ export default function TutorSession(props: TutorSessionProps) {
         useRealtimeV2={voiceEngine === 'realtime-2'}
         ttsProvider={ttsProvider}
         cartesiaVoiceId={cartesiaVoiceId}
+        cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}

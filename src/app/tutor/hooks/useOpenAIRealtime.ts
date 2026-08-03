@@ -308,6 +308,12 @@ export interface RealtimeConfig {
      *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
      *  cartesia-voice-registry.ts) — this hook just carries it through. */
     cartesiaVoiceId?: string;
+    /** Per-voice Cartesia speed offset (R38 Task 6), resolved by the caller
+     *  via resolveCartesiaVoice()'s `speed` field (Katie ≈22 chars/s vs
+     *  14–17 baseline gets -0.25). Ignored unless ttsProvider === 'cartesia'.
+     *  Merged with speakingRate below — the student "slow" toggle always
+     *  wins over this per-voice cadence normalization. */
+    cartesiaVoiceSpeed?: number;
     /** Task W4: per-session "Speak slower" toggle, independent of the
      *  explain-pace (paceBias) knob. 'slow' asks the HTTP-TTS provider to
      *  synthesize noticeably slower speech; 'normal' (default, or omitted)
@@ -992,6 +998,10 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       .synthesize(spoken, {
         contextId,
         voiceId: cartesiaVoiceIdRef.current,
+        // R38 Task 6: the 'slow' guard above already returns null before this
+        // point, so this is always the per-voice speed (no student-slow case
+        // to merge here) — same merged value as the HTTP path in spirit.
+        speed: cartesiaVoiceSpeedRef.current,
         onChunk: (chunk) => {
           if (job.sink) job.sink(chunk);
           else job.chunks.push(chunk);
@@ -1064,6 +1074,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     cartesiaVoiceIdRef.current = relayMode?.cartesiaVoiceId;
   }, [relayMode?.cartesiaVoiceId]);
+  // R38 Task 6: per-voice Cartesia speed offset, mirrors cartesiaVoiceIdRef
+  // exactly (session-static, same ref+effect pattern). Merged with
+  // speakingRateRef in fetchTTSPromise/fetchCartesiaStreamedHead/
+  // startWsSynthJob below — the student "slow" toggle always wins.
+  const cartesiaVoiceSpeedRef = useRef<number | undefined>(relayMode?.cartesiaVoiceSpeed);
+  useEffect(() => {
+    cartesiaVoiceSpeedRef.current = relayMode?.cartesiaVoiceSpeed;
+  }, [relayMode?.cartesiaVoiceSpeed]);
   // Task W4: "Speak slower" toggle. UNLIKE ttsProviderRef/cartesiaVoiceIdRef
   // above, this is NOT session-static — the ⋯ menu can flip it mid-session.
   // fetchTTSPromise's cache key below folds this in for exactly that reason.
@@ -3024,7 +3042,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       //    against the dev route (see task-W4-report.md).
       // 'normal' omits the field entirely so every existing call is
       // byte-for-byte unchanged when the toggle is off.
-      const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85) : undefined;
+      // R38 Task 6: per-voice cadence normalization (Katie -0.25) rides the
+      // same field when the student hasn't asked for 'slow' explicitly — the
+      // student toggle always wins over the per-voice default.
+      const voiceSpeed = cartesiaVoiceSpeedRef.current; // number | undefined, set beside cartesiaVoiceIdRef
+      const speed = speakingRateRef.current === 'slow' ? (useCartesia ? 'slow' : 0.85)
+                  : (useCartesia ? voiceSpeed : undefined);
       const body = useCartesia
         ? { text: trimmed, voiceId: cartesiaVoiceIdRef.current, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) }
         : { text: trimmed, studentName: studentNameRef.current, ...(speed !== undefined ? { speed } : {}) };
@@ -3118,7 +3141,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   // consumed by exactly one dispatch (prefetched sentences stay
   // whole-buffer; their bytes are ready before playback anyway).
   const fetchCartesiaStreamedHead = useCallback(async (trimmed: string): Promise<PcmChunkStream | null> => {
-    const speed = speakingRateRef.current === 'slow' ? 'slow' : undefined;
+    // R38 Task 6: mirrors the merge in fetchTTSPromise above — this path is
+    // Cartesia-only, so 'slow' wins, else the per-voice speed rides along.
+    const speed = speakingRateRef.current === 'slow' ? 'slow' : cartesiaVoiceSpeedRef.current;
     try {
       const res = await fetch('/api/tutor/tts-cartesia', {
         method: 'POST',

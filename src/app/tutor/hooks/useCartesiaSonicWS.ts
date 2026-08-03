@@ -63,6 +63,10 @@ export interface SonicSynthesizeOpts extends SonicContextHandlers {
   contextId: string;
   /** Raw (unsubstituted) Cartesia voice id; defaults like the HTTP route. */
   voiceId?: string;
+  /** Cartesia __experimental_controls.speed — preset label (e.g. 'slow') or
+   *  raw numeric offset ∈ [-1,1] (per-voice cadence normalization, R38 Task
+   *  6). Omitted ⇢ no speed field on the wire (byte-identical to before). */
+  speed?: string | number;
 }
 
 export interface UseCartesiaSonicWSOptions {
@@ -227,6 +231,10 @@ export function useCartesiaSonicWS(options: UseCartesiaSonicWSOptions): UseCarte
       voice: {
         mode: 'id' as const,
         id: applyCartesiaVoiceSubstitutions(opts.voiceId ?? CARTESIA_DEFAULT_VOICE_ID, voiceSubs),
+        // R38: WS path previously sent NO speed at all — a per-voice fix
+        // applied only to the HTTP route silently skips most sentences when
+        // NEXT_PUBLIC_TUTOR_TTS_WS=on.
+        ...(opts.speed !== undefined ? { __experimental_controls: { speed: opts.speed } } : {}),
       },
       language: 'en',
       output_format: { container: 'raw', encoding: 'pcm_f32le', sample_rate: 24000 },

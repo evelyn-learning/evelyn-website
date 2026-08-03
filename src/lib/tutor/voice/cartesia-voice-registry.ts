@@ -32,6 +32,9 @@ type Gender = 'female' | 'male';
 interface VoiceEntry {
   voiceId: string;
   label: string;
+  /** Optional Cartesia __experimental_controls.speed offset ∈ [-1,1] — per-voice
+   *  cadence normalization (R38: Katie ≈22 chars/s vs 14–17 baseline). */
+  speed?: number;
 }
 
 interface TeacherVoice extends VoiceEntry {
@@ -56,6 +59,7 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
     label: 'Katie',
     gender: 'female',
     nativeAccent: 'en-us',
+    speed: -0.25, // R38: Katie measures ~22 chars/s vs 14–17 baseline — slow her down.
   },
   'mr-dev-khanna': {
     voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012', // Sameer (user swap 2026-07-07: Amrit too soft/sleepy in live session)
@@ -168,7 +172,7 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
 // ── Accent pools (passing-only, round-1 verdicts) ──
 const ACCENT_POOLS: Record<string, AccentPool> = {
   'en-us': {
-    female: { voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', label: 'Katie' },
+    female: { voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', label: 'Katie', speed: -0.25 },
     male: { voiceId: 'a5136bf9-224c-4d76-b823-52bd5efcffcc', label: 'Jameson' },
   },
   'en-gb': {
@@ -282,6 +286,7 @@ export interface ResolveCartesiaVoiceOpts {
 export function resolveCartesiaVoice(opts: ResolveCartesiaVoiceOpts = {}): {
   voiceId: string;
   label: string;
+  speed?: number;
 } {
   const { teacherId, accent } = opts;
   const teacher = teacherId ? TEACHER_VOICES[teacherId] : undefined;
@@ -290,15 +295,15 @@ export function resolveCartesiaVoice(opts: ResolveCartesiaVoiceOpts = {}): {
     if (accent) {
       // Teacher's base voice is already native to this accent — no swap.
       if (teacher.nativeAccent === accent) {
-        return { voiceId: teacher.voiceId, label: teacher.label };
+        return { voiceId: teacher.voiceId, label: teacher.label, speed: teacher.speed };
       }
       const pool = ACCENT_POOLS[accent];
       const picked = pool && (pool[teacher.gender] ?? pool.default);
       if (picked) return picked;
       // Unknown/unpooled accent — fall back to the teacher's own base voice.
-      return { voiceId: teacher.voiceId, label: teacher.label };
+      return { voiceId: teacher.voiceId, label: teacher.label, speed: teacher.speed };
     }
-    return { voiceId: teacher.voiceId, label: teacher.label };
+    return { voiceId: teacher.voiceId, label: teacher.label, speed: teacher.speed };
   }
 
   if (accent) {
@@ -308,5 +313,6 @@ export function resolveCartesiaVoice(opts: ResolveCartesiaVoiceOpts = {}): {
     if (picked) return picked;
   }
 
-  return { voiceId: CARTESIA_DEFAULT_VOICE_ID, label: DEFAULT_LABEL };
+  // The default IS Katie — carry her per-voice speed offset here too.
+  return { voiceId: CARTESIA_DEFAULT_VOICE_ID, label: DEFAULT_LABEL, speed: TEACHER_VOICES['ms-elena-vasquez'].speed };
 }

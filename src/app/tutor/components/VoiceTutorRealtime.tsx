@@ -432,6 +432,11 @@ interface VoiceTutorRealtimeProps {
    *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
    *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */
   cartesiaVoiceId?: string;
+  /** Per-voice Cartesia speed offset (R38 Task 6), resolved by the caller via
+   *  resolveCartesiaVoice()'s `speed` field alongside cartesiaVoiceId. Only
+   *  consumed when ttsProvider === 'cartesia'; the student "slow" toggle
+   *  always wins over this. */
+  cartesiaVoiceSpeed?: number;
   /** Fires whenever the active lesson plan or current segment changes.
    *  Lets the parent render a progress strip above the whiteboard. */
   onLessonPlanProgress?: (info: {
@@ -686,6 +691,7 @@ export function VoiceTutorRealtime({
   useRealtimeV2 = false,
   ttsProvider = 'realtime',
   cartesiaVoiceId,
+  cartesiaVoiceSpeed,
   onLessonPlanProgress,
   onTutorBusy,
   onVoiceStateChange,
@@ -13322,6 +13328,7 @@ export function VoiceTutorRealtime({
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
           cartesiaVoiceId,
+          cartesiaVoiceSpeed,
           speakingRate,
           studentName,
         }

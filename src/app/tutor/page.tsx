@@ -449,15 +449,20 @@ function TutorPage() {
   // on. selectedTeacherId already reflects any __tutorTestStart
   // cfg.teacherId override (see the hook below), and defaults to
   // DEMO_TEACHERS[0].id (Elena) otherwise.
-  const cartesiaVoiceId = useMemo(
+  const resolvedCartesiaVoice = useMemo(
     // Persona-native voice (2026-07-19 accent-personas spec): geo now
     // pre-selects the TEACHER, never swaps voices — an explicit pick of
     // any persona always sounds like that persona. resolveCartesiaVoice's
     // accent support is reserved for a future portal/EmbedConfig override
     // (no current caller).
-    () => resolveCartesiaVoice({ teacherId: selectedTeacherId }).voiceId,
+    () => resolveCartesiaVoice({ teacherId: selectedTeacherId }),
     [selectedTeacherId],
   );
+  const cartesiaVoiceId = resolvedCartesiaVoice.voiceId;
+  // R38 Task 6: per-voice speed offset (Katie -0.25) rides alongside the
+  // resolved voiceId — undefined for every other persona (byte-identical
+  // requests when absent).
+  const cartesiaVoiceSpeed = resolvedCartesiaVoice.speed;
 
   // Session state
   // Reuse the URL's sid on reload so the engine session id is stable; else mint.
@@ -2285,6 +2290,7 @@ function TutorPage() {
         voiceEngine={voiceEngine}
         ttsProvider={ttsProvider}
         cartesiaVoiceId={cartesiaVoiceId}
+        cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         // Dev-hook override, default 30 — identical to the literal the page
         // always passed (production markup unchanged).
         sessionMaxMinutes={testSessionMaxMinutes}
@@ -2899,6 +2905,7 @@ function TutorPage() {
                   useRealtimeV2={voiceEngine === 'realtime-2'}
                   ttsProvider={ttsProvider}
                   cartesiaVoiceId={cartesiaVoiceId}
+                  cartesiaVoiceSpeed={cartesiaVoiceSpeed}
                   onLessonPlanProgress={setLessonProgress}
                   onTutorBusy={setIsProcessing}
                   onSessionStarted={() => setVoiceStartedAtMs((prev) => prev ?? Date.now())}
