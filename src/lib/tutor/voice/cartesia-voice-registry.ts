@@ -316,3 +316,27 @@ export function resolveCartesiaVoice(opts: ResolveCartesiaVoiceOpts = {}): {
   // The default IS Katie — carry her per-voice speed offset here too.
   return { voiceId: CARTESIA_DEFAULT_VOICE_ID, label: DEFAULT_LABEL, speed: TEACHER_VOICES['ms-elena-vasquez'].speed };
 }
+
+/**
+ * Per-voice speed lookup by RAW voiceId (R38 Task 6 embed fix). Surfaces
+ * that receive a raw voiceId directly — the embed token path
+ * (config.teacher.voice.voiceId), which never calls resolveCartesiaVoice()
+ * because it isn't keyed by teacherId — use this to pick up the same
+ * per-voice cadence normalization (e.g. Katie's -0.25) that /tutor gets via
+ * resolveCartesiaVoice(). Scans both TEACHER_VOICES and ACCENT_POOLS so a
+ * match is found regardless of which table originally carried the speed.
+ * Unknown/marketplace voice ids (partner-cloned voices) resolve undefined —
+ * no speed sent, unchanged behavior.
+ */
+export function cartesiaSpeedForVoiceId(voiceId: string | undefined): number | undefined {
+  if (!voiceId) return undefined;
+  for (const teacher of Object.values(TEACHER_VOICES)) {
+    if (teacher.voiceId === voiceId) return teacher.speed;
+  }
+  for (const pool of Object.values(ACCENT_POOLS)) {
+    for (const entry of [pool.female, pool.male, pool.default]) {
+      if (entry && entry.voiceId === voiceId) return entry.speed;
+    }
+  }
+  return undefined;
+}

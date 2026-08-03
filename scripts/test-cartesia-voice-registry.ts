@@ -7,6 +7,7 @@
 import assert from 'node:assert';
 import {
   CARTESIA_DEFAULT_VOICE_ID,
+  cartesiaSpeedForVoiceId,
   resolveCartesiaVoice,
   teachersForAccent,
 } from '../src/lib/tutor/voice/cartesia-voice-registry';
@@ -226,6 +227,24 @@ check('elena + en-in -> Katie-localized carries no speed (unmeasured, untouched)
     resolveCartesiaVoice({ teacherId: ELENA, accent: 'en-in' }).speed,
     undefined,
   );
+});
+
+// ── R38 Task 6 fix round: embed surface receives a raw voiceId (not a
+// teacherId), so it looks up per-voice speed by id via a separate helper. ──
+check('cartesiaSpeedForVoiceId(Katie) -> -0.25', () => {
+  assert.strictEqual(cartesiaSpeedForVoiceId(KATIE), -0.25);
+});
+
+check('cartesiaSpeedForVoiceId(Sameer) -> undefined (no per-voice speed)', () => {
+  assert.strictEqual(cartesiaSpeedForVoiceId(SAMEER), undefined);
+});
+
+check('cartesiaSpeedForVoiceId(made-up id) -> undefined', () => {
+  assert.strictEqual(cartesiaSpeedForVoiceId('not-a-real-voice-id'), undefined);
+});
+
+check('cartesiaSpeedForVoiceId(undefined) -> undefined', () => {
+  assert.strictEqual(cartesiaSpeedForVoiceId(undefined), undefined);
 });
 
 console.log(`\n${passed} passed`);

@@ -26,6 +26,7 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
+import { cartesiaSpeedForVoiceId } from '@/lib/tutor/voice/cartesia-voice-registry';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -270,6 +271,13 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   const useCartesiaVoice = teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId;
   const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice ? 'cartesia' : 'realtime';
   const cartesiaVoiceId = useCartesiaVoice ? teacherVoice.voiceId : undefined;
+  // R38 Task 6 fix round: the embed supplies a raw voiceId (not a
+  // teacherId), so resolveCartesiaVoice()'s teacher-keyed lookup never runs
+  // here — cartesiaSpeedForVoiceId scans by id instead. Elena/Katie is the
+  // marketing-demo persona, so this is the surface where the "too fast" bug
+  // is most visible; unknown/marketplace voice ids resolve undefined (no
+  // speed sent — unchanged behavior for every other partner voice).
+  const cartesiaVoiceSpeed = cartesiaSpeedForVoiceId(cartesiaVoiceId);
   // Clamp partner-supplied session length to [1, 120] min. The hard
   // ceiling matches the bound in lib/tutor/lesson-plan/session-budget
   // (MAX_SESSION_MINUTES) and exists to prevent runaway voice-API
@@ -860,6 +868,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}
         cartesiaVoiceId={cartesiaVoiceId}
+        cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         sessionMaxMinutes={maxDuration}
         sessionWrapMinutes={wrapAtMinutes}
         maxDurationExplicit={maxDurationExplicit}
