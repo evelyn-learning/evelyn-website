@@ -29,25 +29,47 @@ export async function getOutreachGmail(): Promise<gmail_v1.Gmail> {
   return google.gmail({ version: "v1", auth });
 }
 
+function assertSafeHeaderValue(value: string, field: string): void {
+  // `to`/`subject` land straight into raw MIME header lines below. `subject`
+  // in particular originates from LLM-generated draft content persisted on
+  // Lead — not a trusted constant — so a CR/LF in either would let an
+  // attacker inject arbitrary headers (Bcc, Reply-To, ...) or a header/body
+  // separator.
+  if (/[\r\n]/.test(value)) {
+    throw new Error(`Invalid ${field}: contains CR/LF`);
+  }
+}
+
 export async function createOutreachDraft(args: {
   to: string;
   subject: string;
   body: string;
   threadId?: string;
 }) {
+  assertSafeHeaderValue(args.to, "to");
+  assertSafeHeaderValue(args.subject, "subject");
+
   const gmail = await getOutreachGmail();
   let subject = args.subject;
   const extraHeaders: string[] = [];
   if (args.threadId) {
     // Reply into an existing thread: Re:-subject + In-Reply-To/References
-    // from the thread's latest Message-ID.
+    // from the thread's latest Message-ID. Drafts (including ones this same
+    // console left behind) can sit in the thread and are excluded — they're
+    // frequently the array's last element, and an unsent draft typically has
+    // no Message-ID header (Gmail assigns it at send time), so trusting
+    // array position silently degrades the reply to a subject-only stitch.
     const messages = await getThreadMessages(args.threadId);
-    const latest = messages[messages.length - 1];
+    const sent = messages.filter((m) => !m.labelIds.includes("DRAFT"));
+    const latest = sent.length
+      ? sent.reduce((a, b) => (b.internalDate > a.internalDate ? b : a))
+      : undefined;
     if (latest?.messageIdHeader) {
       extraHeaders.push(`In-Reply-To: ${latest.messageIdHeader}`);
       extraHeaders.push(`References: ${latest.messageIdHeader}`);
     }
     const original = latest?.subject || args.subject;
+    assertSafeHeaderValue(original, "thread subject");
     subject = /^re:/i.test(original) ? original : `Re: ${original}`;
   }
   const mime = [

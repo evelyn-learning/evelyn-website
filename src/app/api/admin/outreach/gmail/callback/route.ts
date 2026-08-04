@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { google } from "googleapis";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { OutreachToken } from "@/models";
@@ -42,9 +43,22 @@ export async function GET(req: NextRequest) {
       return errorRedirect(req, "missing_refresh_token");
     }
 
-    await connectDB();
-
+    // `login_hint` on the consent screen is only a hint — the user can switch
+    // accounts there. Verify the account that actually consented matches the
+    // configured outreach mailbox before we ever store its refresh token
+    // under that name; otherwise the wrong mailbox's token gets labelled as
+    // the outreach account (and reply-detection would classify the real
+    // operator's own sends as inbound replies).
+    client.setCredentials(tokens);
+    const gmail = google.gmail({ version: "v1", auth: client });
+    const profile = await gmail.users.getProfile({ userId: "me" });
+    const consentedEmail = profile.data.emailAddress?.toLowerCase();
     const account = getOutreachAccount();
+    if (!consentedEmail || consentedEmail !== account.toLowerCase()) {
+      return errorRedirect(req, "wrong_account");
+    }
+
+    await connectDB();
     await OutreachToken.findOneAndUpdate(
       { account },
       {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, X } from "lucide-react";
 import type { LeadSegment, LeadStatus, TouchChannel } from "@/models";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
@@ -57,12 +57,14 @@ type TabKey = "review" | "today" | "pipeline";
 interface GmailStatus {
   connected: boolean;
   account: string;
+  connectedAt: string | null;
 }
 
 export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJSON[] }) {
   const [leads, setLeads] = useState<LeadJSON[]>(initialLeads);
   const [tab, setTab] = useState<TabKey>("review");
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
+  const [gmailError, setGmailError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,6 +78,38 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
       cancelled = true;
     };
   }, []);
+
+  // The callback route encodes ?gmail_error=<code> (and ?gmail=connected) on
+  // redirect back here. Surface the error rather than letting a failed
+  // connect look identical to never having tried; strip both params from the
+  // URL afterward so a page refresh doesn't repeat the message.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get("gmail_error");
+    if (err) setGmailError(err);
+    if (err || params.has("gmail")) {
+      params.delete("gmail_error");
+      params.delete("gmail");
+      const qs = params.toString();
+      window.history.replaceState(
+        {},
+        "",
+        qs ? `${window.location.pathname}?${qs}` : window.location.pathname
+      );
+    }
+  }, []);
+
+  const gmailConnectedLabel = useMemo(() => {
+    if (!gmailStatus?.connectedAt) return null;
+    try {
+      return new Date(gmailStatus.connectedAt).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return null;
+    }
+  }, [gmailStatus]);
 
   const refresh = useCallback(async () => {
     const res = await fetch("/api/admin/outreach/leads");
@@ -114,10 +148,24 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
               <h1 className="text-2xl font-bold text-gray-900">Outreach Console</h1>
             </div>
             <div className="flex items-center gap-2">
+              {gmailError && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                  Gmail connect failed: {gmailError}
+                  <button
+                    type="button"
+                    onClick={() => setGmailError(null)}
+                    aria-label="Dismiss"
+                    className="text-red-700/70 hover:text-red-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
               {gmailStatus?.connected ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
                   <Mail className="h-3.5 w-3.5" />
-                  Gmail connected ({gmailStatus.account})
+                  Gmail connected ({gmailStatus.account}
+                  {gmailConnectedLabel ? ` since ${gmailConnectedLabel}` : ""})
                 </span>
               ) : gmailStatus ? (
                 <a
