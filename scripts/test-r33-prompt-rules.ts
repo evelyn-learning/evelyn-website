@@ -61,5 +61,16 @@ test('R38 Task 11: Language policy — one language per session', () => {
   assert.ok(!prompt.includes('respond in the same language mix'), 'prompt must NOT contain old "respond in the same language mix" policy');
 });
 
+test('R40: referencing earlier board content requires a scroll first', () => {
+  assert.ok(
+    prompt.includes('Referencing earlier board content — scroll to it FIRST'),
+    'prompt must include the R40 scroll-before-reference rule',
+  );
+  assert.ok(
+    prompt.includes('call tutor_scroll_whiteboard targeting that item in the SAME turn'),
+    'rule must name the tutor_scroll_whiteboard tool',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

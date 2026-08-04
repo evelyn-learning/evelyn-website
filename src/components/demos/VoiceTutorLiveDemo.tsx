@@ -38,10 +38,13 @@ const TONE_DOT: Record<CuratedDemoLesson['tone'], string> = {
 };
 
 /** Token contract: base64 JSON, decoded by parseToken in tutor-portal/embed. */
-function buildEmbedToken(lesson: CuratedDemoLesson, teacher: TeacherPersonaWire): string {
+function buildEmbedToken(lesson: CuratedDemoLesson, teacher: TeacherPersonaWire, studentName?: string): string {
   const cfg = {
     partner_id: 'evelyn-marketing',
     student_id: `demo-${Math.random().toString(36).slice(2, 10)}`,
+    // R40: /tutor collects a name and the tutor greets with it — the demo now
+    // does the same (optional; omitted → the opener stays name-less by design).
+    ...(studentName ? { student_name: studentName } : {}),
     subject: lesson.subjectLabel.toLowerCase(),
     level: lesson.levelLabel,
     curriculum_module: lesson.planId,
@@ -64,6 +67,9 @@ export default function VoiceTutorLiveDemo() {
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
+  // R40: optional student name, greeted by the tutor (parity with /tutor).
+  // Persisted so a returning visitor doesn't retype it.
+  const [studentName, setStudentName] = useState('');
   // R39: set when the embed reports its session ended — surfaces the
   // "Choose another lesson" affordance now that the header links are gone.
   const [sessionEnded, setSessionEnded] = useState(false);
@@ -89,6 +95,10 @@ export default function VoiceTutorLiveDemo() {
   // Teacher restore + geo pre-select — same semantics as /tutor (stored
   // choice wins; first visit picks from the local accent pair and persists).
   useEffect(() => {
+    try {
+      const storedName = window.localStorage.getItem('evelyn:demo:studentName');
+      if (storedName) setStudentName(storedName);
+    } catch {}
     try {
       const raw = window.localStorage.getItem(TEACHER_STORE_KEY);
       const accent = accentFromTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -151,7 +161,11 @@ export default function VoiceTutorLiveDemo() {
 
   const start = () => {
     trackEvent('demo_start_click', { plan_id: lesson.planId, teacher_id: teacher.id });
-    const token = buildEmbedToken(lesson, teacher);
+    const name = studentName.trim();
+    try {
+      if (name) window.localStorage.setItem('evelyn:demo:studentName', name);
+    } catch {}
+    const token = buildEmbedToken(lesson, teacher, name || undefined);
     setSessionEnded(false);
     setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
   };
@@ -229,6 +243,15 @@ export default function VoiceTutorLiveDemo() {
             <p className="text-sm text-slate-500">
               {lesson.subjectLabel} · {lesson.levelLabel} · {lesson.hook}
             </p>
+            <input
+              type="text"
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              placeholder="Your name (optional)"
+              aria-label="Your name (optional)"
+              maxLength={40}
+              className="w-full max-w-[260px] px-4 py-2.5 text-sm text-center border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
             <button
               type="button"
               onClick={start}

@@ -32,6 +32,31 @@
 export const AEC_PLAYBACK_ROUTE =
   process.env.NEXT_PUBLIC_TUTOR_AEC_PLAYBACK_ROUTE !== 'off';
 
+/** R40: force the media-element route on DESKTOP too (see gate below). */
+const AEC_ROUTE_DESKTOP = process.env.NEXT_PUBLIC_TUTOR_AEC_ROUTE_DESKTOP === 'on';
+
+/**
+ * R40 device gate. The media-element sink exists to fix MOBILE echo (the
+ * round-5 root cause was measured on mobile sessions; desktop ran for months
+ * on direct ctx.destination without echo complaints). Meanwhile the sink
+ * itself is the prime suspect for the chipmunk/slow-motion distortion class —
+ * now MEASURED on desktop: session embed-1785807805889 logged clock_ratio
+ * 0.929–0.931 sustained for ~30s (the element consuming media 7% slower than
+ * wall clock = the audible deep/slow voice, with catch-up heard as chipmunk).
+ * Desktop therefore goes back to the direct path; touch devices keep the
+ * route. NEXT_PUBLIC_TUTOR_AEC_ROUTE_DESKTOP=on restores the old behavior if
+ * desktop echo ever resurfaces.
+ */
+function isCoarsePointerDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    if ((navigator.maxTouchPoints ?? 0) > 0) return true;
+    return window.matchMedia?.('(pointer: coarse)').matches === true;
+  } catch {
+    return false;
+  }
+}
+
 interface RouteState {
   node: MediaStreamAudioDestinationNode;
   el: HTMLAudioElement;
@@ -80,6 +105,10 @@ function emitRouteEvent(kind: string, detail: string): void {
  */
 export function getPlaybackTarget(ctx: AudioContext): AudioNode {
   if (!AEC_PLAYBACK_ROUTE) return ctx.destination;
+  // R40: desktop bypasses the media-element sink entirely (see the device-gate
+  // doc above) — the AEC route is a mobile fix and the sink is the measured
+  // source of the desktop voice-speed distortions.
+  if (!AEC_ROUTE_DESKTOP && !isCoarsePointerDevice()) return ctx.destination;
   if (failed.has(ctx)) return ctx.destination;
   if (typeof document === 'undefined') return ctx.destination;
 

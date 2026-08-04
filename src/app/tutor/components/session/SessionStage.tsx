@@ -314,15 +314,18 @@ export default function SessionStage(props: SessionStageProps) {
   }, []);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
   // Tools cluster collapse-to-FAB (Task T1, 2026-07-16): the always-expanded
-  // icon column occluded board content on phones (IMG_7803). Default
-  // collapsed on mount; the FAB expands the SAME column in the SAME
-  // anchored spot (it only grows downward, never shifting position), and
-  // collapses again on a second FAB tap or on launching a tool (Draw /
-  // board-pen / Text note / Camera). Fullscreen and the E8 expand button are
-  // deliberately NOT wired to auto-collapse — their onClick handlers must
-  // stay byte-identical; only their visibility (inside the expanded column)
-  // changes.
-  const [toolsOpen, setToolsOpen] = useState(false);
+  // icon column occluded board content on phones (IMG_7803). The FAB expands
+  // the SAME column in the SAME anchored spot (it only grows downward, never
+  // shifting position), and collapses again on a second FAB tap or on
+  // launching a tool (Draw / board-pen / Text note / Camera). Fullscreen and
+  // the E8 expand button are deliberately NOT wired to auto-collapse — their
+  // onClick handlers must stay byte-identical; only their visibility (inside
+  // the expanded column) changes.
+  // R40 (user call): default OPEN on mount — students never discovered the
+  // fullscreen/tools buttons behind the bare wrench. The R35 outside-tap
+  // dismiss still collapses it on the first touch anywhere else, so the
+  // phone-occlusion concern T1 fixed only lasts until first interaction.
+  const [toolsOpen, setToolsOpen] = useState(true);
   // R35 T-C: close the tools cluster on any pointerdown outside its container
   // (FAB + expanded column together — ref-containment pattern matches
   // switcherRef below). Without this, tapping the whiteboard or anywhere

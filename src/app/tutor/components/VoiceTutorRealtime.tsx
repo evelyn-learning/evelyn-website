@@ -15726,6 +15726,17 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   }, [isTrial, maxDurationExplicit, targetKind, sessionMaxMinutes, onEndSession]);
 
   // Toggle listening
+  // R40 (session embed-1785808658013): a Start tap that lands while the relay
+  // is still 'disconnected'/'connecting' used to fall off the end of the
+  // if/else-if chain below and die silently — mic + perception then connected
+  // on their own (muted, hasStarted false) and the student sat in dead air
+  // until a second tap 142s later. The tap is now QUEUED: audio is unlocked
+  // inside the gesture (iOS requirement), the warmup overlay gives immediate
+  // feedback, and the effect below re-fires the click the moment the relay
+  // connects. The R32 T9 watchdog is armed at queue time so a connect that
+  // never completes still surfaces as warmupFailed instead of hanging.
+  const pendingGestureStartRef = useRef(false);
+
   const handleMicClick = useCallback(() => {
     // RESUME first-tap — handled BEFORE the connection gate below. On a fresh
     // reload the relay WS churns, so a tap can land while realtime.isConnected
@@ -15836,8 +15847,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       } else {
         console.log('[VoiceTutorRealtime] Start clicked while muted — skipping startListening');
       }
+    } else if (!hasStarted) {
+      // R40 queued start (see pendingGestureStartRef doc above). Unlock audio
+      // NOW — this is the user gesture iOS honours; the completion effect runs
+      // outside any gesture and could not unlock it later.
+      pendingGestureStartRef.current = true;
+      realtime.unlockAudio();
+      setIsWarmingUp(true);
+      setShowWarmupOverlay(true);
+      warmupStateRef.current = createWarmupState(Date.now());
+      warmupKickoffRef.current = null;
+      setWarmupFailed(false);
+      onDebugEvent?.('start_queued', `state=${realtime.state}`);
+      console.log(`[STARTUP] start tap queued — relay not ready (state=${realtime.state})`);
     }
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent]);
 
   // Keep the handle's startSession pointed at the CURRENT handleMicClick
   // closure — it reads hasStarted / isMicMuted / realtime.state, so a stale
@@ -15845,6 +15869,19 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   useEffect(() => {
     micClickRef.current = handleMicClick;
   }, [handleMicClick]);
+
+  // R40: complete a queued start the moment the relay connects. Re-firing the
+  // click handler (rather than duplicating the kickoff) keeps ONE start path:
+  // the re-entry now takes the isConnected branch and runs the full sequence.
+  // unlockAudio already ran inside the original gesture; calling it again from
+  // here is a harmless no-op on an unlocked context.
+  useEffect(() => {
+    if (!realtime.isConnected || !pendingGestureStartRef.current) return;
+    pendingGestureStartRef.current = false;
+    if (hasStartedRef.current) return; // student already started via another path
+    console.log('[STARTUP] relay connected — completing queued start tap.');
+    micClickRef.current?.();
+  }, [realtime.isConnected]);
 
   // Pause conversation (stop mic + audio, keep connection)
   const handlePause = useCallback(() => {

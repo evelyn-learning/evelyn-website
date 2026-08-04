@@ -52,6 +52,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'playback_route', 'shared_mic', 'stage3_', 'voice_mute', 'noise_nag',
   // Round-7g: idle re-engagement nudge firings (idle_nudge_sent).
   'idle_nudge',
+  // R40: a Start tap that landed before the relay connected and was queued
+  // (the dead-first-tap class, embed-1785808658013) — proves the queue ran.
+  'start_queued',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
