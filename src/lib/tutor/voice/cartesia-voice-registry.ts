@@ -55,11 +55,16 @@ interface AccentPool {
 // short names used in this plan's prose — 'elena' etc. are not real ids).
 const TEACHER_VOICES: Record<string, TeacherVoice> = {
   'ms-elena-vasquez': {
-    voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', // Katie
-    label: 'Katie',
+    // R39 (2026-08-04 user call): Katie ran ~22 chars/s and still read fast even
+    // with the R38 -0.25 offset — Elena now speaks via Sophie (the Coach Riley
+    // voice the user validated on SAT/ACT, seeded in the academy repo 2026-07-30).
+    // No speed offset: Sophie's natural cadence is the accepted baseline. NOTE:
+    // CARTESIA_DEFAULT_VOICE_ID derives from this entry, so Sophie is also the
+    // global no-match fallback voice.
+    voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5', // Sophie
+    label: 'Sophie',
     gender: 'female',
     nativeAccent: 'en-us',
-    speed: -0.25, // R38: Katie measures ~22 chars/s vs 14–17 baseline — slow her down.
   },
   'mr-dev-khanna': {
     voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012', // Sameer (user swap 2026-07-07: Amrit too soft/sleepy in live session)
@@ -172,7 +177,8 @@ const TEACHER_VOICES: Record<string, TeacherVoice> = {
 // ── Accent pools (passing-only, round-1 verdicts) ──
 const ACCENT_POOLS: Record<string, AccentPool> = {
   'en-us': {
-    female: { voiceId: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', label: 'Katie', speed: -0.25 },
+    // R39: pool female follows the Elena swap — Sophie, natural pace (see TEACHER_VOICES).
+    female: { voiceId: 'bf0a246a-8642-498a-9950-80c35e9276b5', label: 'Sophie' },
     male: { voiceId: 'a5136bf9-224c-4d76-b823-52bd5efcffcc', label: 'Jameson' },
   },
   'en-gb': {
@@ -237,7 +243,7 @@ export function teachersForAccent(accent: string): { female?: string; male?: str
   return out;
 }
 
-/** Default Cartesia voice when no teacher/accent match is found — Katie. */
+/** Default Cartesia voice when no teacher/accent match is found — Sophie (R39). */
 export const CARTESIA_DEFAULT_VOICE_ID = TEACHER_VOICES['ms-elena-vasquez'].voiceId;
 
 /**
@@ -268,7 +274,7 @@ export function applyCartesiaVoiceSubstitutions(voiceId: string, raw: string | u
   }
   return voiceId;
 }
-const DEFAULT_LABEL = 'Katie (default)';
+const DEFAULT_LABEL = 'Sophie (default)';
 
 export interface ResolveCartesiaVoiceOpts {
   /** DEMO_TEACHERS id, e.g. 'ms-elena-vasquez'. */

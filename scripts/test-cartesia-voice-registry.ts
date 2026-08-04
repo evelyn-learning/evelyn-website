@@ -26,6 +26,9 @@ function check(name: string, fn: () => void) {
 
 // Locked IDs from docs/superpowers/plans/2026-07-06-cartesia-migration-phase2.md
 const KATIE = 'f786b574-daa5-4673-aa0c-cbe3e8534c02';
+// R39 (2026-08-04): Elena/en-us-female/default swapped Katie -> Sophie (Coach
+// Riley's voice) — Katie read too fast even with the R38 -0.25 offset.
+const SOPHIE = 'bf0a246a-8642-498a-9950-80c35e9276b5';
 const SAMEER = '638efaaa-4d0c-442e-b701-3fae16aad012';
 const SKYLAR = 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4';
 const GEMMA = '62ae83ad-4f6a-430b-af41-a9bede9286ca';
@@ -39,12 +42,12 @@ const DEV = 'mr-dev-khanna';
 const AMARA = 'dr-amara-osei';
 const SOFIA = 'sofia';
 
-check('CARTESIA_DEFAULT_VOICE_ID is Katie', () => {
-  assert.strictEqual(CARTESIA_DEFAULT_VOICE_ID, KATIE);
+check('CARTESIA_DEFAULT_VOICE_ID is Sophie (R39 swap)', () => {
+  assert.strictEqual(CARTESIA_DEFAULT_VOICE_ID, SOPHIE);
 });
 
-check('elena -> Katie (persona-authentic base)', () => {
-  assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).voiceId, KATIE);
+check('elena -> Sophie (R39 swap — Katie too fast)', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).voiceId, SOPHIE);
 });
 
 check('dev -> Sameer (persona-authentic base, user-selected 2026-07-07)', () => {
@@ -201,25 +204,27 @@ check('teachersForAccent(unknown) -> empty', () => {
   assert.deepStrictEqual(teachersForAccent('en-xx'), {});
 });
 
-// ── R38 Task 6: per-voice Cartesia speed (Katie ≈22 chars/s vs 14–17
-// baseline) — resolveCartesiaVoice grows an optional `speed` field. ──
-check('elena -> Katie carries speed -0.25', () => {
-  assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).speed, -0.25);
+// ── R38 Task 6 machinery, R39 state: per-voice `speed` is kept as tuning
+// infrastructure, but after the Katie→Sophie swap NO table entry carries an
+// offset (Sophie's natural cadence is the baseline). These pins hold the
+// no-offset state; future per-voice tuning flips them deliberately. ──
+check('elena -> Sophie carries no speed offset (R39)', () => {
+  assert.strictEqual(resolveCartesiaVoice({ teacherId: ELENA }).speed, undefined);
 });
 
 check('dev (no per-voice speed) -> speed undefined', () => {
   assert.strictEqual(resolveCartesiaVoice({ teacherId: DEV }).speed, undefined);
 });
 
-check('bare-default resolve -> speed -0.25 (default IS Katie)', () => {
-  assert.strictEqual(resolveCartesiaVoice({}).speed, -0.25);
-  assert.strictEqual(resolveCartesiaVoice().speed, -0.25);
+check('bare-default resolve -> no speed offset (default IS Sophie, R39)', () => {
+  assert.strictEqual(resolveCartesiaVoice({}).speed, undefined);
+  assert.strictEqual(resolveCartesiaVoice().speed, undefined);
 });
 
-check('accent-only en-us (no teacher) -> Katie pool pick carries speed -0.25', () => {
+check('accent-only en-us (no teacher) -> Sophie pool pick, no speed offset (R39)', () => {
   const r = resolveCartesiaVoice({ accent: 'en-us' });
-  assert.strictEqual(r.voiceId, KATIE);
-  assert.strictEqual(r.speed, -0.25);
+  assert.strictEqual(r.voiceId, SOPHIE);
+  assert.strictEqual(r.speed, undefined);
 });
 
 check('elena + en-in -> Katie-localized carries no speed (unmeasured, untouched)', () => {
@@ -231,8 +236,8 @@ check('elena + en-in -> Katie-localized carries no speed (unmeasured, untouched)
 
 // ── R38 Task 6 fix round: embed surface receives a raw voiceId (not a
 // teacherId), so it looks up per-voice speed by id via a separate helper. ──
-check('cartesiaSpeedForVoiceId(Katie) -> -0.25', () => {
-  assert.strictEqual(cartesiaSpeedForVoiceId(KATIE), -0.25);
+check('cartesiaSpeedForVoiceId(Katie) -> undefined (Katie left the tables in R39)', () => {
+  assert.strictEqual(cartesiaSpeedForVoiceId(KATIE), undefined);
 });
 
 check('cartesiaSpeedForVoiceId(Sameer) -> undefined (no per-voice speed)', () => {

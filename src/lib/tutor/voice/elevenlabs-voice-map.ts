@@ -35,7 +35,7 @@ export const ELEVENLABS_VOICES = {
 
 const { NAKUL, ANJURA, EARL, SONYA } = ELEVENLABS_VOICES;
 
-/** Mirrors the Cartesia default (Katie — en-us female). */
+/** Mirrors the Cartesia default (Sophie since R39; was Katie — both en-us female → Sonya). */
 export const ELEVENLABS_DEFAULT_VOICE_ID = SONYA;
 
 const CARTESIA_TO_ELEVENLABS: Record<string, string> = {
