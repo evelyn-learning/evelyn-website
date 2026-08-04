@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check, Mail, Linkedin, Globe, FileText, Eye } from "lucide-react";
+import { Copy, Check, Mail, Linkedin, Globe, FileText, Eye, Pencil, ExternalLink } from "lucide-react";
 import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
 import type { TouchChannel } from "@/models";
 import type { LeadJSON } from "./OutreachConsole";
@@ -116,6 +116,25 @@ function LeadCard({
 }) {
   const dm = lead.decisionMaker;
   const [copied, setCopied] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editSubject, setEditSubject] = useState("");
+  const [editBody, setEditBody] = useState("");
+
+  const startEdit = () => {
+    setEditSubject(lead.currentDraft?.subject ?? "");
+    setEditBody(lead.currentDraft?.body ?? "");
+    setEditing(true);
+  };
+
+  const saveEdit = () => {
+    if (!lead.currentDraft) return;
+    onCreateGmailDraft({
+      channel: lead.currentDraft.channel,
+      subject: lead.currentDraft.channel === "email" ? editSubject : undefined,
+      body: editBody,
+    });
+    setEditing(false);
+  };
 
   const copy = async (key: string, text: string) => {
     try {
@@ -175,27 +194,72 @@ function LeadCard({
       <div className="mt-4 rounded-lg border border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-gray-700">Drafted message</h4>
-          {lead.currentDraft && (
-            <button
-              onClick={() => copy("body", lead.currentDraft!.body)}
-              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
-            >
-              {copied === "body" ? (
-                <>
-                  <Check className="h-3.5 w-3.5" />
-                  Copied ✓
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy
-                </>
-              )}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {lead.currentDraft && !editing && (
+              <button
+                onClick={startEdit}
+                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit draft
+              </button>
+            )}
+            {lead.currentDraft && !editing && (
+              <button
+                onClick={() => copy("body", lead.currentDraft!.body)}
+                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+              >
+                {copied === "body" ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" />
+                    Copied ✓
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
 
-        {lead.currentDraft ? (
+        {editing ? (
+          <div className="mt-2 space-y-2">
+            {lead.currentDraft?.channel === "email" && (
+              <input
+                type="text"
+                value={editSubject}
+                onChange={(e) => setEditSubject(e.target.value)}
+                placeholder="Subject"
+                className="w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-800 focus:border-primary-500 focus:outline-none"
+              />
+            )}
+            <textarea
+              value={editBody}
+              onChange={(e) => setEditBody(e.target.value)}
+              rows={6}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-primary-500 focus:outline-none"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={saveEdit}
+                disabled={busy || editBody.trim().length === 0}
+                className="inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+              >
+                Save draft
+              </button>
+              <button
+                onClick={() => setEditing(false)}
+                disabled={busy}
+                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : lead.currentDraft ? (
           <>
             {lead.currentDraft.subject && (
               <div className="mt-2 text-sm font-medium text-gray-800">
@@ -205,22 +269,35 @@ function LeadCard({
             <pre className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
               {lead.currentDraft.body}
             </pre>
-            {showCreateDraftButton && (
-              <button
-                onClick={() =>
-                  onCreateGmailDraft({
-                    channel: lead.currentDraft!.channel,
-                    subject: lead.currentDraft!.subject,
-                    body: lead.currentDraft!.body,
-                  })
-                }
-                disabled={busy}
-                className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
-              >
-                <FileText className="h-4 w-4" />
-                Create Gmail draft
-              </button>
-            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {showCreateDraftButton && (
+                <button
+                  onClick={() =>
+                    onCreateGmailDraft({
+                      channel: lead.currentDraft!.channel,
+                      subject: lead.currentDraft!.subject,
+                      body: lead.currentDraft!.body,
+                    })
+                  }
+                  disabled={busy}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <FileText className="h-4 w-4" />
+                  Create Gmail draft
+                </button>
+              )}
+              {lead.currentDraft.gmailDraftId && (
+                <a
+                  href={`https://mail.google.com/mail/u/0/#drafts?compose=${lead.currentDraft.gmailDraftId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open draft in Gmail
+                </a>
+              )}
+            </div>
           </>
         ) : (
           <p className="mt-2 text-sm text-gray-500">
