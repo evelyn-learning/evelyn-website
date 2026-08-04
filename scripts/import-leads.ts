@@ -3,7 +3,7 @@
  * Import Claude-researched leads into the outreach pipeline (status: staged).
  *
  * Usage:
- *   MONGODB_URI=... npx tsx scripts/import-leads.ts <file.json>          # dry-run
+ *   npx tsx scripts/import-leads.ts <file.json>                         # dry-run
  *   MONGODB_URI=... npx tsx scripts/import-leads.ts <file.json> --apply  # write
  *
  * Input: JSON array matching the Lead schema (see src/models/Lead.ts).
@@ -20,7 +20,13 @@ if (!file || file.startsWith("--")) {
   process.exit(1);
 }
 
-const rows: unknown[] = JSON.parse(readFileSync(file, "utf8"));
+let rows: unknown[];
+try {
+  rows = JSON.parse(readFileSync(file, "utf8"));
+} catch (e) {
+  console.error(`Cannot read ${file}: ${(e as Error).message}`);
+  process.exit(1);
+}
 if (!Array.isArray(rows)) { console.error("Input must be a JSON array"); process.exit(1); }
 
 const results = { valid: 0, invalid: 0, inserted: 0, skippedDupes: 0, errors: [] as string[] };
