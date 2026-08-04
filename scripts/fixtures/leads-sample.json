@@ -1,0 +1,30 @@
+[
+  {
+    "company": "Acme Nursing College",
+    "segment": "nursing_program",
+    "about": "200-student ADN program in Ohio",
+    "whyFit": "Public NCLEX pass-rate pressure; no tutoring budget for 1:1",
+    "useCaseHypothesis": "Voice tutor as unlimited NCLEX drill partner",
+    "decisionMaker": { "name": "Dana Smith", "title": "Program Director", "linkedinUrl": "https://linkedin.com/in/danasmith", "email": "dana@acmenursing.edu", "emailVerified": true },
+    "website": "https://acmenursing.edu",
+    "source": "claude-research-2026-08-04",
+    "currentDraft": { "channel": "email", "subject": "NCLEX prep that talks back", "body": "Hi Dana — saw Acme's NGN pass-rate note...", "gmailDraftId": "SHOULD-BE-STRIPPED" }
+  },
+  {
+    "company": "Summit Test Prep",
+    "segment": "testprep_academy",
+    "about": "SAT/ACT academy, 3 locations",
+    "whyFit": "Tutor payroll is their #1 cost",
+    "useCaseHypothesis": "White-label voice tutor between human sessions",
+    "decisionMaker": { "name": "Lee Park", "title": "Owner", "emailVerified": false },
+    "website": "https://summittestprep.com",
+    "source": "claude-research-2026-08-04"
+  },
+  {
+    "company": "Bad Row Inc",
+    "segment": "hospital",
+    "decisionMaker": { "name": "X", "title": "Y", "emailVerified": false },
+    "website": "https://bad.example",
+    "source": "test"
+  }
+]
