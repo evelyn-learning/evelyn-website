@@ -33,6 +33,8 @@
     "test:mock-report": "npx tsx src/lib/tutor/mock-exam/report.test.ts",
     "test:portal-mock": "npx tsx scripts/test-portal-mock-endpoints.ts",
     "test:outreach-model": "npx tsx src/models/Lead.test.ts",
+    "test:outreach-cadence": "npx tsx src/lib/outreach/cadence.test.ts",
+    "test:outreach": "npm run test:outreach-model && npm run test:outreach-cadence",
     "smoke:portal-grading": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/smoke-portal-grading-live.ts",
     "test:skip-cap": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-skip-render-cap.ts",
     "test:page-model": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-model.ts",
