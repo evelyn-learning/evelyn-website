@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import ExcelJS from 'exceljs';
 import {
@@ -134,6 +135,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 };
 
 export default function ProspectingPage() {
+  // Session gate: redirects to /admin/login (authOptions.pages.signIn) when unauthenticated
+  useSession({ required: true });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Config state (legacy)

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ShowcaseSite } from '@/models';
 
@@ -19,6 +21,10 @@ interface ToolRequestWithSite {
 
 // GET - Get all tool requests across all showcase sites
 export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     await connectDB();
 
@@ -101,6 +107,10 @@ export async function GET(request: NextRequest) {
 
 // PUT - Update a tool request status
 export async function PUT(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     await connectDB();
 

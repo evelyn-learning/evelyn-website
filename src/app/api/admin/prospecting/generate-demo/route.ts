@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ShowcaseSite, ProspectingConfig, generateAccessCode, type BusinessType } from '@/models';
 
@@ -67,6 +69,10 @@ interface GenerateDemoRequest {
 
 // POST - Generate a demo site from scraped content
 export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const data: GenerateDemoRequest = await request.json();
 

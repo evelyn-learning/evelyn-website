@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import {
   Plus,
@@ -122,6 +123,8 @@ const BUSINESS_TYPE_LABELS: Record<string, string> = {
 };
 
 export default function AdminShowcasePage() {
+  // Session gate: redirects to /admin/login (authOptions.pages.signIn) when unauthenticated
+  useSession({ required: true });
   const [sites, setSites] = useState<ShowcaseSite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ProspectingConfig, ShowcaseSite } from '@/models';
 import { sendOutreachEmail } from '@/lib/email';
 
 // POST - Send outreach for a showcase site
 export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const { slug, contactEmail, method = 'email' } = await request.json();
 
@@ -119,6 +125,10 @@ export async function POST(request: NextRequest) {
 
 // GET - Get outreach status for a site
 export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('slug');

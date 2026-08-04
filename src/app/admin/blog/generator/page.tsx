@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -106,6 +107,8 @@ function sanitizeImageUrl(url: string): string {
 }
 
 export default function BlogGeneratorPage() {
+  // Session gate: redirects to /admin/login (authOptions.pages.signIn) when unauthenticated
+  useSession({ required: true });
   const router = useRouter();
 
   // Form state

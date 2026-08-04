@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { connectDB } from '@/lib/db';
 import { ShowcaseSite, ProspectingConfig } from '@/models';
 
 // GET - Get all sites with pending contact forms
 export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     await connectDB();
 
@@ -39,6 +45,10 @@ export async function GET() {
 
 // POST - Mark a contact form as filled
 export async function POST(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const { slug, notes } = await request.json();
 

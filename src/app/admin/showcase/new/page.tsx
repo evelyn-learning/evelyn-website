@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -39,6 +40,8 @@ const TRIAL_OPTIONS = [
 ];
 
 export default function NewShowcasePage() {
+  // Session gate: redirects to /admin/login (authOptions.pages.signIn) when unauthenticated
+  useSession({ required: true });
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdSite, setCreatedSite] = useState<{ slug: string; accessCode: string } | null>(null);
