@@ -37,8 +37,41 @@ const TONE_DOT: Record<CuratedDemoLesson['tone'], string> = {
   rose: 'bg-rose-500',
 };
 
+/**
+ * Public lesson-chip shape for this component. `CuratedDemoLesson` (which
+ * also carries a `tone` used only for the default chip dot color) is mapped
+ * down into this shape for the default lesson list below — callers passing
+ * their own `lessons` (e.g. /solutions/[segment]) only need these five
+ * fields.
+ */
+export interface DemoLessonOption {
+  planId: string;
+  title: string;
+  subjectLabel: string;
+  levelLabel: string;
+  hook: string;
+}
+
+const DEFAULT_LESSONS: DemoLessonOption[] = CURATED_DEMO_LESSONS.map(
+  ({ planId, title, subjectLabel, levelLabel, hook }) => ({ planId, title, subjectLabel, levelLabel, hook }),
+);
+
+const DEFAULT_SOURCE = 'products-voice-tutor-demo';
+
+// Chip dot color for the curated defaults, keyed by planId (DemoLessonOption
+// has no `tone` field). Non-default lessons fall back to a neutral blue dot.
+const DEFAULT_TONE_DOT: Record<string, string> = Object.fromEntries(
+  CURATED_DEMO_LESSONS.map((l) => [l.planId, TONE_DOT[l.tone]]),
+);
+const FALLBACK_TONE_DOT = 'bg-blue-500';
+
 /** Token contract: base64 JSON, decoded by parseToken in tutor-portal/embed. */
-function buildEmbedToken(lesson: CuratedDemoLesson, teacher: TeacherPersonaWire, studentName?: string): string {
+function buildEmbedToken(
+  lesson: DemoLessonOption,
+  teacher: TeacherPersonaWire,
+  source: string,
+  studentName?: string,
+): string {
   const cfg = {
     partner_id: 'evelyn-marketing',
     student_id: `demo-${Math.random().toString(36).slice(2, 10)}`,
@@ -54,15 +87,25 @@ function buildEmbedToken(lesson: CuratedDemoLesson, teacher: TeacherPersonaWire,
     target_kind: 'lessonNode',
     teacher,
     features: { voice_mode: true, text_mode: true, homework_upload: false },
-    metadata: { source: 'products-voice-tutor-demo' },
+    metadata: { source },
   };
   // UTF-8-safe btoa (teacher intros contain no exotic chars today, but the
   // token must never break if one gains an em dash or accent).
   return btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
 }
 
-export default function VoiceTutorLiveDemo() {
-  const [lesson, setLesson] = useState<CuratedDemoLesson>(CURATED_DEMO_LESSONS[0]);
+export interface VoiceTutorLiveDemoProps {
+  /** Lesson chips to offer. Defaults to the curated flagship spread. */
+  lessons?: DemoLessonOption[];
+  /** Embed token `metadata.source`, for funnel attribution. */
+  source?: string;
+}
+
+export default function VoiceTutorLiveDemo({
+  lessons = DEFAULT_LESSONS,
+  source = DEFAULT_SOURCE,
+}: VoiceTutorLiveDemoProps = {}) {
+  const [lesson, setLesson] = useState<DemoLessonOption>(lessons[0]);
   const [teacherId, setTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
@@ -145,7 +188,7 @@ export default function VoiceTutorLiveDemo() {
     return [...pair, ...DEMO_TEACHERS.filter((t) => !geoPairIds.includes(t.id))];
   }, [geoPairIds]);
 
-  const pickLesson = (l: CuratedDemoLesson) => {
+  const pickLesson = (l: DemoLessonOption) => {
     setLesson(l);
     trackEvent('lesson_selected', { plan_id: l.planId, surface: 'product_embed' });
   };
@@ -165,7 +208,7 @@ export default function VoiceTutorLiveDemo() {
     try {
       if (name) window.localStorage.setItem('evelyn:demo:studentName', name);
     } catch {}
-    const token = buildEmbedToken(lesson, teacher, name || undefined);
+    const token = buildEmbedToken(lesson, teacher, source, name || undefined);
     setSessionEnded(false);
     setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
   };
@@ -209,7 +252,7 @@ export default function VoiceTutorLiveDemo() {
     <div>
       {/* Lesson chips */}
       <div className="flex flex-wrap justify-center gap-2 mb-5">
-        {CURATED_DEMO_LESSONS.map((l) => {
+        {lessons.map((l) => {
           const selected = l.planId === lesson.planId;
           return (
             <button
@@ -223,7 +266,7 @@ export default function VoiceTutorLiveDemo() {
                   : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${TONE_DOT[l.tone]}`} aria-hidden />
+              <span className={`w-2 h-2 rounded-full ${DEFAULT_TONE_DOT[l.planId] ?? FALLBACK_TONE_DOT}`} aria-hidden />
               {l.title}
               <span className="hidden sm:inline text-xs text-slate-400 font-normal">· {l.subjectLabel}</span>
             </button>
