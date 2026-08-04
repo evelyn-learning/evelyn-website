@@ -1408,7 +1408,6 @@ export default function TutorSession(props: TutorSessionProps) {
         practiceOverrideActive={practiceOverrideActive}
         practiceModeActive={practiceOverrideActive || (practiceStats?.active ?? false)}
         onTogglePracticeOverride={(active) => realtimeHandleRef.current?.setPracticeOverride(active)}
-        onBack={handleEndSession}
         boardPenActive={boardPenActive}
         onToggleBoardPen={studentMarksOn ? () => setBoardPenActive((v) => !v) : undefined}
       />

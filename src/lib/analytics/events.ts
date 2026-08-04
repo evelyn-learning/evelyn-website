@@ -10,7 +10,11 @@ export type DemoEventName =
   | 'tutor_session_started'
   | 'lesson_selected'
   | 'teacher_changed'
-  | 'demo_expand_fullscreen';
+  | 'demo_expand_fullscreen'
+  // R39: fullscreen link removed from the live-demo header; these two track the
+  // event-driven return path that replaced the always-visible header links.
+  | 'demo_session_ended'
+  | 'demo_change_lesson_after_end';
 
 export function trackEvent(
   name: DemoEventName,

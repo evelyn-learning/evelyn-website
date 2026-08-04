@@ -174,7 +174,6 @@ export interface SessionStageProps {
    *  so pre-practice the chip is redundant; mid-practice it reads as
    *  "back to teaching". */
   practiceModeActive?: boolean;
-  onBack?: () => void;
   // Phase 2 student marks — present only when the feature is enabled
   boardPenActive?: boolean;
   onToggleBoardPen?: () => void;
@@ -211,7 +210,7 @@ export default function SessionStage(props: SessionStageProps) {
   const {
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
-    quickActions, onStudentInput, onControlMessage, onBack,
+    quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
@@ -889,7 +888,11 @@ export default function SessionStage(props: SessionStageProps) {
       <div className="relative z-30 shrink-0 order-1">
         <div className="mx-2 mt-2 rounded-2xl bg-white/80 backdrop-blur-md border border-slate-200/80 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-4 px-2.5 sm:px-4 h-12">
-            <button onClick={onBack} className="shrink-0 grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"><ChevronLeft className="w-5 h-5" /></button>
+            {/* R39: the chevron-left "back" button is gone — it called the same
+                end handler as End/Pause but WITHOUT the R34 two-tap confirm, so
+                one stray tap ended a session instantly, and it duplicated a
+                control that already exists 200px to the right. Removing it also
+                reclaims header width for the title on phones. */}
             {headerBrand && <div className="shrink-0 flex items-center">{headerBrand}</div>}
             {/* Round-5: the header row carries seven controls, so on a phone the
                 title truncates to something useless ("U1…"). Tapping it drops a

@@ -64,7 +64,27 @@ export default function VoiceTutorLiveDemo() {
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
+  // R39: set when the embed reports its session ended — surfaces the
+  // "Choose another lesson" affordance now that the header links are gone.
+  const [sessionEnded, setSessionEnded] = useState(false);
   const teacherPanelRef = useRef<HTMLDivElement>(null);
+
+  // R39: the header's "Change lesson" / "Open full screen" links are removed
+  // ("Open full screen" read as a whiteboard-fullscreen control but navigated
+  // to the /tutor lobby; "Change lesson" duplicated End/Pause). The way back
+  // to the picker is now event-driven: the embed posts evelyn:session_ended
+  // when the session finishes, and we offer the picker then — the embed's own
+  // end-of-session summary stays visible until the student chooses.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if ((e.data as { type?: string } | null)?.type === 'evelyn:session_ended') {
+        setSessionEnded(true);
+        trackEvent('demo_session_ended', { plan_id: lesson.planId, surface: 'product_embed' });
+      }
+    };
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [lesson.planId]);
 
   // Teacher restore + geo pre-select — same semantics as /tutor (stored
   // choice wins; first visit picks from the local accent pair and persists).
@@ -132,6 +152,7 @@ export default function VoiceTutorLiveDemo() {
   const start = () => {
     trackEvent('demo_start_click', { plan_id: lesson.planId, teacher_id: teacher.id });
     const token = buildEmbedToken(lesson, teacher);
+    setSessionEnded(false);
     setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
   };
 
@@ -145,24 +166,20 @@ export default function VoiceTutorLiveDemo() {
           <p className="text-sm text-slate-600">
             <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name} — 10-minute demo
           </p>
-          <div className="flex items-center gap-4 text-sm">
+          {sessionEnded && (
             <button
               type="button"
-              onClick={() => setEmbedSrc(null)}
-              className="inline-flex items-center gap-1.5 text-slate-600 hover:text-slate-900"
+              onClick={() => {
+                setEmbedSrc(null);
+                setSessionEnded(false);
+                trackEvent('demo_change_lesson_after_end', { plan_id: lesson.planId, surface: 'product_embed' });
+              }}
+              className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Change lesson
+              Choose another lesson
             </button>
-            <Link
-              href="/tutor"
-              onClick={() => trackEvent('demo_expand_fullscreen', { plan_id: lesson.planId })}
-              className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Open full screen
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+          )}
         </div>
         <iframe
           src={embedSrc}
