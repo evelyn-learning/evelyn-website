@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  // Pin the Turbopack workspace root to this repo. Without it, builds on the
+  // prod server see stray /root/package-lock.json junk and infer /root as the
+  // workspace root ("multiple lockfiles" warning on every deploy), making
+  // Turbopack's root-relative resolution span the whole home directory.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   // Raise the middleware-enforced request body cap. Default is 10MB,
   // which was being exceeded by /api/tutor/session-audio flushes on
   // longer sessions (2026-04-24: Unterminated JSON at position

@@ -57,7 +57,11 @@ npm ci --production=false
 # Clean build every time: incremental next builds on this server keep dying
 # with ENOTEMPTY rmdir on stale .next/server/app/blog/*.segments dirs (hit
 # twice 2026-07-14/15). The running pm2 process keeps serving through the
-# ~2.5min rebuild; set -e above means a failed build never restarts pm2.
+# rebuild; set -e above means a failed build never restarts pm2.
+# TIMING (measured 2026-08-04): the remote build takes ~30 MINUTES on this
+# VPS since the Next 16/Turbopack era — this is the SLOW deploy path. For a
+# fast ship, prefer ./deploy-to-production.sh, which builds locally (~3min
+# on an M-series Mac) and uploads the artifacts instead.
 # Retry rm -rf against pm2-write race (hit 2026-07-15, 2026-07-16).
 for attempt in 1 2 3; do
   if rm -rf .next; then
