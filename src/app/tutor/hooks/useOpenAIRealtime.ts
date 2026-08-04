@@ -24,6 +24,7 @@ import {
 import {
   getPlaybackTarget,
   measureFirstPlayback,
+  startPlaybackClockMonitor,
   primePlaybackRoute,
   silencePlaybackRoute,
   unsilencePlaybackRoute,
@@ -1317,6 +1318,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     // media-element sink plays faster than wall clock over the next 10s
     // (Android first-turn fast speech; self-guards to once per ctx).
     measureFirstPlayback(ctx);
+    // R39: keep watching for the REST of the session — the reported chipmunk/
+    // slow-motion distortions are transient and mid-session, invisible to both
+    // the 10s first-turn probe and the recordings (tap is upstream of the
+    // sink). Emits playback_route clock_ratio events on >3% divergence;
+    // self-guards to once per ctx, timer cleared with the route.
+    startPlaybackClockMonitor(ctx);
   }, [updateState, isHttpTtsProvider, emitPlaybackStamp]);
 
   // Queue audio for playback

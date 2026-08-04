@@ -49,6 +49,9 @@ interface RouteState {
    *  consumed so a hidden→hidden transition (no visible in between) can't
    *  reuse a stale snapshot. */
   hiddenSnapshot?: { atMs: number; ct: number; ctxT: number; ctxState: string } | null;
+  /** R39: whole-session playback-clock monitor timer — cleared on
+   *  markFailed/release so a dead element can't emit ratio noise. */
+  clockTimer?: ReturnType<typeof setInterval> | null;
 }
 
 const routes = new WeakMap<AudioContext, RouteState>();
@@ -250,6 +253,7 @@ function markFailed(ctx: AudioContext): void {
   failed.add(ctx);
   const route = routes.get(ctx);
   if (!route) return;
+  if (route.clockTimer) { clearInterval(route.clockTimer); route.clockTimer = null; }
   if (route.onVisibility) {
     try { document.removeEventListener('visibilitychange', route.onVisibility); } catch {}
   }
@@ -345,10 +349,77 @@ export function measureFirstPlayback(ctx: AudioContext): void {
   }
 }
 
+/** Contexts whose whole-session clock monitor is already running. */
+const clockMonitored = new WeakSet<AudioContext>();
+const CLOCK_TICK_MS = 15_000;
+/** |ratio − 1| beyond this is an anomaly worth persisting. 3% is far above
+ *  scheduler jitter at a 15s window (~±0.5%) and far below the audible 2×/0.5×
+ *  chipmunk/slow-motion reports it exists to catch. */
+const CLOCK_ANOMALY_THRESHOLD = 0.03;
+/** Hard cap on persisted anomaly events per context — a permanently-degraded
+ *  session must not flood the debug-event channel. */
+const CLOCK_MAX_ANOMALY_EMITS = 40;
+
+/**
+ * R39 whole-session playback-clock monitor (chipmunk / slow-motion reports,
+ * sessions embed-1785782727978 + session-1785670103078).
+ *
+ * measureFirstPlayback above only watches the first 10s of turn 1, but the
+ * reported distortions are TRANSIENT and mid-session: speech goes
+ * fast-forward (element behind the live edge, catching up) or deep/slow
+ * (sink underrun) and recovers. The recordings can never show this — the
+ * tutor tap is upstream of the sink at nominal rate — so this is the only
+ * evidence channel. Every CLOCK_TICK_MS it compares element-clock advance
+ * to wall-clock advance over the window and persists a `clock_ratio` event
+ * when they diverge >3%: ratio > 1 = catch-up (chipmunk), ratio < 1 =
+ * underrun (slow-motion). One `clock_baseline` fires on the first healthy
+ * tick as an is-it-running existence proof. Hidden tabs are skipped —
+ * throttled timers make the window meaningless there and foreground_check
+ * already owns that case.
+ */
+export function startPlaybackClockMonitor(ctx: AudioContext): void {
+  if (clockMonitored.has(ctx)) return;
+  clockMonitored.add(ctx);
+  const route = routes.get(ctx);
+  if (!route) return; // direct-to-destination path — no element clock to watch
+  let last: { atMs: number; ct: number } | null = null;
+  let anomalyEmits = 0;
+  let baselineEmitted = false;
+  route.clockTimer = setInterval(() => {
+    const el = route.el;
+    const now = Date.now();
+    const ct = el.currentTime;
+    const prev = last;
+    last = { atMs: now, ct };
+    // No valid previous sample, tab hidden, or element paused → the window
+    // measures nothing; the fresh `last` re-anchors the next window.
+    if (!prev) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (el.paused) return;
+    const wallS = (now - prev.atMs) / 1000;
+    const elS = ct - prev.ct;
+    if (wallS < CLOCK_TICK_MS / 1000 - 1) return; // clamped/late timer — window unreliable
+    const ratio = elS / wallS;
+    if (Math.abs(ratio - 1) > CLOCK_ANOMALY_THRESHOLD) {
+      if (anomalyEmits >= CLOCK_MAX_ANOMALY_EMITS) return;
+      anomalyEmits++;
+      emitRouteEvent(
+        'clock_ratio',
+        `elAdv=${elS.toFixed(3)} wallAdv=${wallS.toFixed(3)} ratio=${ratio.toFixed(3)} ` +
+          `ctx=${ctx.state} sr=${ctx.sampleRate} emits=${anomalyEmits}`,
+      );
+    } else if (!baselineEmitted) {
+      baselineEmitted = true;
+      emitRouteEvent('clock_baseline', `ratio=${ratio.toFixed(3)} sr=${ctx.sampleRate}`);
+    }
+  }, CLOCK_TICK_MS);
+}
+
 /** Tear down the element/node for a context (session end). Safe to call twice. */
 export function releasePlaybackRoute(ctx: AudioContext): void {
   const route = routes.get(ctx);
   if (!route) return;
+  if (route.clockTimer) { clearInterval(route.clockTimer); route.clockTimer = null; }
   if (route.onVisibility) {
     try { document.removeEventListener('visibilitychange', route.onVisibility); } catch {}
   }
