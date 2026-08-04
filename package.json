@@ -127,6 +127,7 @@
     "test:simplification-verdict": "npx tsx scripts/test-simplification-verdict-check.ts",
     "test:praise-contradiction": "npx tsx scripts/test-praise-contradiction.ts",
     "test:curated-demo": "npx tsx scripts/test-curated-demo-lessons.ts",
+    "test:solutions-demo": "npx tsx scripts/test-solutions-demo-lessons.ts",
     "test:figure-evolve": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-figure-evolve.ts",
     "test:conic-primitives": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-conic-primitives.ts",
     "test:render-sync": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-render-sync.ts",
