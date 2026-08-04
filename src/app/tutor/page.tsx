@@ -33,7 +33,7 @@ import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
 import { Header } from '@/components/layout/Header';
 import { CURATED_DEMO_LESSONS } from '@/lib/tutor/demo/curated-demo-lessons';
-import { ORIGINAL_TEACHER_IDS, ACCENT_CARD_HINTS } from '@/lib/tutor/demo/teacher-display';
+import { ACCENT_CARD_HINTS } from '@/lib/tutor/demo/teacher-display';
 import { trackEvent } from '@/lib/analytics/events';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
@@ -2236,7 +2236,7 @@ function TutorPage() {
                           </span>
                         </div>
                         <p className="text-xs text-gray-600 mt-1.5 leading-snug">{t.intro}</p>
-                        {!ORIGINAL_TEACHER_IDS.has(t.id) && ACCENT_CARD_HINTS[t.id] && (
+                        {ACCENT_CARD_HINTS[t.id] && (
                           <p className="text-[11px] text-gray-400 mt-1.5">{ACCENT_CARD_HINTS[t.id]}</p>
                         )}
                       </button>
