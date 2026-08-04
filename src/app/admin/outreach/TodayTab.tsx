@@ -59,7 +59,10 @@ export default function TodayTab({
     }
   };
 
-  const createGmailDraft = async (id: string, draft: { channel: TouchChannel; subject?: string; body: string }) => {
+  const createGmailDraft = async (
+    id: string,
+    draft: { channel: TouchChannel; subject?: string; body: string }
+  ): Promise<boolean> => {
     setPendingId(id);
     try {
       const res = await fetch(`/api/admin/outreach/leads/${id}/draft`, {
@@ -70,11 +73,13 @@ export default function TodayTab({
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         alert(data.error || "Failed to create Gmail draft");
-        return;
+        return false;
       }
       await refresh();
+      return true;
     } catch {
       alert("Failed to create Gmail draft");
+      return false;
     } finally {
       setPendingId(null);
     }
@@ -112,7 +117,11 @@ function LeadCard({
   lead: LeadJSON;
   busy: boolean;
   onMarkSent: (channel: TouchChannel) => void;
-  onCreateGmailDraft: (draft: { channel: TouchChannel; subject?: string; body: string }) => void;
+  onCreateGmailDraft: (draft: {
+    channel: TouchChannel;
+    subject?: string;
+    body: string;
+  }) => Promise<boolean>;
 }) {
   const dm = lead.decisionMaker;
   const [copied, setCopied] = useState<string | null>(null);
@@ -126,14 +135,18 @@ function LeadCard({
     setEditing(true);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!lead.currentDraft) return;
-    onCreateGmailDraft({
+    // Only leave edit mode on success — on failure `onCreateGmailDraft`
+    // already alerted and didn't refresh, so snapping back to the
+    // read-only view here would silently discard the user's in-progress
+    // edit and show the stale pre-edit draft instead.
+    const success = await onCreateGmailDraft({
       channel: lead.currentDraft.channel,
       subject: lead.currentDraft.channel === "email" ? editSubject : undefined,
       body: editBody,
     });
-    setEditing(false);
+    if (success) setEditing(false);
   };
 
   const copy = async (key: string, text: string) => {
@@ -290,7 +303,7 @@ function LeadCard({
                 <a
                   href={`https://mail.google.com/mail/u/0/#drafts?compose=${lead.currentDraft.gmailDraftId}`}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
                 >
                   <ExternalLink className="h-4 w-4" />

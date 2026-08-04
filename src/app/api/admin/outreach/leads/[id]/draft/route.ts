@@ -63,12 +63,34 @@ export async function POST(
     }
 
     try {
-      // Re-draft cleanup: replacing an existing email draft leaves the old
-      // one orphaned in Gmail unless we delete it first. A 404 here just
-      // means it was already sent or removed by hand — that's fine; any
-      // other failure is logged (not swallowed) but doesn't block the
-      // re-draft, since a stray leftover draft is a lesser problem than
-      // failing to give the operator fresh copy.
+      // Reply-by-default (A2): once the lead has a sent thread, every
+      // subsequent draft (bump, breakup, ...) threads onto it unless the
+      // caller explicitly asks for a fresh thread.
+      const threadId =
+        lead.gmailThreadIds.length > 0 && newThread !== true
+          ? lead.gmailThreadIds[0]
+          : undefined;
+
+      // Create the new draft BEFORE touching the old one. If we deleted the
+      // old draft first and createOutreachDraft then threw (network blip,
+      // quota, the lib's own "no id/threadId" guard), lead.currentDraft
+      // would still point at a gmailDraftId that no longer exists in
+      // Gmail — the "Open draft in Gmail" link would dangle until the next
+      // successful save. Creating first means a failure here leaves the
+      // previous draft (and lead.currentDraft) fully intact.
+      const { draftId, threadId: resultThreadId } = await createOutreachDraft({
+        to,
+        subject: typeof subject === "string" ? subject : "",
+        body,
+        threadId,
+      });
+
+      // Re-draft cleanup: now that the new draft exists, the old one (if
+      // any) is safe to remove. A 404 here just means it was already sent
+      // or removed by hand — that's fine; any other failure is logged (not
+      // swallowed) but doesn't block persisting the new draft, since a
+      // stray leftover draft in Gmail is a lesser problem than losing the
+      // fresh copy we just successfully created.
       const oldDraftId = lead.currentDraft?.gmailDraftId;
       if (oldDraftId) {
         try {
@@ -80,21 +102,6 @@ export async function POST(
           }
         }
       }
-
-      // Reply-by-default (A2): once the lead has a sent thread, every
-      // subsequent draft (bump, breakup, ...) threads onto it unless the
-      // caller explicitly asks for a fresh thread.
-      const threadId =
-        lead.gmailThreadIds.length > 0 && newThread !== true
-          ? lead.gmailThreadIds[0]
-          : undefined;
-
-      const { draftId, threadId: resultThreadId } = await createOutreachDraft({
-        to,
-        subject: typeof subject === "string" ? subject : "",
-        body,
-        threadId,
-      });
 
       lead.currentDraft = {
         channel: "email",
