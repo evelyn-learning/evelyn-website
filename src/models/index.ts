@@ -81,3 +81,4 @@ export { MockForm, type IMockForm } from "./MockForm";
 export { MockAttempt, type IMockAttempt } from "./MockAttempt";
 export { Lead, LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS } from "./Lead";
 export type { ILead, ITouch, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus, TouchChannel } from "./Lead";
+export { OutreachToken, type IOutreachToken } from "./OutreachToken";
