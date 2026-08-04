@@ -1,0 +1,310 @@
+"use client";
+
+import { useState } from "react";
+import { Copy, Check, Mail, Linkedin, Globe, FileText, Eye } from "lucide-react";
+import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
+import type { TouchChannel } from "@/models";
+import type { LeadJSON } from "./OutreachConsole";
+import { SEGMENT_LABELS } from "./ReviewQueueTab";
+
+function relativeTime(iso: string): string {
+  const date = new Date(iso);
+  const diffMs = Date.now() - date.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  if (diffHours < 1) {
+    const mins = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+    return `${mins}m ago`;
+  } else if (diffHours < 24) {
+    return `${Math.floor(diffHours)}h ago`;
+  }
+  return `${Math.floor(diffHours / 24)}d ago`;
+}
+
+export default function TodayTab({
+  leads,
+  refresh,
+}: {
+  leads: LeadJSON[];
+  refresh: () => Promise<void>;
+}) {
+  const now = Date.now();
+  const due = leads.filter(
+    (l) =>
+      l.nextActionAt != null &&
+      new Date(l.nextActionAt).getTime() <= now &&
+      (l.status === "approved" || l.status === "contacted")
+  );
+
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const markSent = async (id: string, channel: TouchChannel) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}/mark-sent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to mark sent");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to mark sent");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const createGmailDraft = async (id: string, draft: { channel: TouchChannel; subject?: string; body: string }) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}/draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(draft),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to create Gmail draft");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to create Gmail draft");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  if (due.length === 0) {
+    return (
+      <div className="rounded-xl bg-white p-6 text-sm text-gray-500 shadow">
+        Nothing due right now.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {due.map((lead) => (
+        <LeadCard
+          key={lead._id}
+          lead={lead}
+          busy={pendingId === lead._id}
+          onMarkSent={(channel) => markSent(lead._id, channel)}
+          onCreateGmailDraft={(draft) => createGmailDraft(lead._id, draft)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function LeadCard({
+  lead,
+  busy,
+  onMarkSent,
+  onCreateGmailDraft,
+}: {
+  lead: LeadJSON;
+  busy: boolean;
+  onMarkSent: (channel: TouchChannel) => void;
+  onCreateGmailDraft: (draft: { channel: TouchChannel; subject?: string; body: string }) => void;
+}) {
+  const dm = lead.decisionMaker;
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const copy = async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(key);
+      setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
+    } catch {
+      // clipboard unavailable — silently no-op, copy button just won't flip state
+    }
+  };
+
+  const outboundCount = lead.touches.filter((t) => t.direction === "outbound").length;
+  const nextChannel = expectedNextChannel(
+    lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))
+  );
+  const lastVisit = lead.demoVisits.length > 0 ? lead.demoVisits[lead.demoVisits.length - 1] : null;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+  const demoLink = lead.demoToken ? `${siteUrl}/d/${lead.demoToken}` : null;
+  const contactGuess = lead.website ? `${lead.website.replace(/\/$/, "")}/contact` : null;
+
+  const canSendEmail = !!lead.currentDraft?.gmailThreadId;
+  const showCreateDraftButton =
+    lead.currentDraft?.channel === "email" && !lead.currentDraft?.gmailDraftId;
+
+  return (
+    <div className="rounded-xl bg-white p-6 shadow">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900">{lead.company}</h3>
+            <span className="inline-flex rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
+              {SEGMENT_LABELS[lead.segment] ?? lead.segment}
+            </span>
+            <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+              Touch {outboundCount} of {MAX_OUTBOUND_TOUCHES}
+            </span>
+            {nextChannel !== null && (
+              <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                Next: {SEQUENCE_STEP_LABELS[outboundCount]}
+              </span>
+            )}
+            {lastVisit && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                <Eye className="h-3.5 w-3.5" />
+                Visited {relativeTime(lastVisit.at)}
+              </span>
+            )}
+          </div>
+          <div className="mt-1 text-sm text-gray-500">
+            {dm?.name || "No decision maker on file"}
+            {dm?.title ? ` — ${dm.title}` : ""}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-700">Drafted message</h4>
+          {lead.currentDraft && (
+            <button
+              onClick={() => copy("body", lead.currentDraft!.body)}
+              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+            >
+              {copied === "body" ? (
+                <>
+                  <Check className="h-3.5 w-3.5" />
+                  Copied ✓
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {lead.currentDraft ? (
+          <>
+            {lead.currentDraft.subject && (
+              <div className="mt-2 text-sm font-medium text-gray-800">
+                {lead.currentDraft.subject}
+              </div>
+            )}
+            <pre className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+              {lead.currentDraft.body}
+            </pre>
+            {showCreateDraftButton && (
+              <button
+                onClick={() =>
+                  onCreateGmailDraft({
+                    channel: lead.currentDraft!.channel,
+                    subject: lead.currentDraft!.subject,
+                    body: lead.currentDraft!.body,
+                  })
+                }
+                disabled={busy}
+                className="mt-3 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+              >
+                <FileText className="h-4 w-4" />
+                Create Gmail draft
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-gray-500">
+            No draft yet. Drafts are written by the agent via the draft API (Task 8).
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+        {dm?.linkedinUrl && (
+          <a
+            href={dm.linkedinUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600"
+          >
+            <Linkedin className="h-3.5 w-3.5" />
+            LinkedIn profile
+          </a>
+        )}
+        {lead.website && (
+          <a
+            href={lead.website}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            Website
+          </a>
+        )}
+        {contactGuess && (
+          <a
+            href={contactGuess}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            contact page?
+          </a>
+        )}
+        {demoLink && (
+          <span className="inline-flex items-center gap-1 text-gray-500">
+            <a href={demoLink} target="_blank" rel="noreferrer" className="hover:text-primary-600">
+              Demo link
+            </a>
+            <button
+              onClick={() => copy("demo", demoLink)}
+              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-700 hover:bg-gray-200"
+            >
+              {copied === "demo" ? "Copied ✓" : <Copy className="h-3 w-3" />}
+            </button>
+          </span>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+        <button
+          onClick={() => onMarkSent("email")}
+          disabled={busy || !canSendEmail}
+          title={!canSendEmail ? "Nothing drafted to send — create a Gmail draft first" : undefined}
+          className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+        >
+          <Mail className="h-4 w-4" />
+          Mark Email sent
+        </button>
+        <button
+          onClick={() => onMarkSent("linkedin")}
+          disabled={busy}
+          className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+        >
+          <Linkedin className="h-4 w-4" />
+          Mark LinkedIn sent
+        </button>
+        <button
+          onClick={() => onMarkSent("form")}
+          disabled={busy}
+          className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+        >
+          <FileText className="h-4 w-4" />
+          Mark Form sent
+        </button>
+      </div>
+    </div>
+  );
+}

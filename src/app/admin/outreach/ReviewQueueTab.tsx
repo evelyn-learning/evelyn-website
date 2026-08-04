@@ -5,7 +5,7 @@ import { CheckCircle, XCircle, Pencil, Mail, Linkedin, Globe, BadgeCheck } from 
 import { LEAD_SEGMENTS } from "@/models";
 import type { LeadJSON } from "./OutreachConsole";
 
-const SEGMENT_LABELS: Record<string, string> = {
+export const SEGMENT_LABELS: Record<string, string> = {
   nursing_program: "Nursing Program",
   testprep_academy: "Test Prep Academy",
   homeschool_charter: "Homeschool Charter",

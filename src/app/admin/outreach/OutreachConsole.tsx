@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { LeadSegment, LeadStatus, TouchChannel } from "@/models";
 import ReviewQueueTab from "./ReviewQueueTab";
+import TodayTab from "./TodayTab";
+import PipelineTab from "./PipelineTab";
 
 export interface LeadTouch {
   at: string;
@@ -121,16 +123,8 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         </div>
 
         {tab === "review" && <ReviewQueueTab leads={leads} refresh={refresh} />}
-        {tab === "today" && (
-          <div className="rounded-xl bg-white p-6 text-sm text-gray-500 shadow">
-            Built in Task 6.
-          </div>
-        )}
-        {tab === "pipeline" && (
-          <div className="rounded-xl bg-white p-6 text-sm text-gray-500 shadow">
-            Built in Task 6.
-          </div>
-        )}
+        {tab === "today" && <TodayTab leads={leads} refresh={refresh} />}
+        {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
       </main>
     </div>
   );
