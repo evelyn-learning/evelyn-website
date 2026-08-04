@@ -326,6 +326,13 @@ export default function SessionStage(props: SessionStageProps) {
   // dismiss still collapses it on the first touch anywhere else, so the
   // phone-occlusion concern T1 fixed only lasts until first interaction.
   const [toolsOpen, setToolsOpen] = useState(true);
+  // R40b (embed-1785813017376): the Start tap is itself an "outside tap", so
+  // the R35 dismiss collapsed the default-open cluster at the exact moment the
+  // session began — open pre-start, gone once it mattered. Re-open when the
+  // session starts; the student's next outside tap collapses it as usual.
+  useEffect(() => {
+    if (started) setToolsOpen(true);
+  }, [started]);
   // R35 T-C: close the tools cluster on any pointerdown outside its container
   // (FAB + expanded column together — ref-containment pattern matches
   // switcherRef below). Without this, tapping the whiteboard or anywhere
