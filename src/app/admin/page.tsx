@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { connectDB, isDBConfigured } from "@/lib/db";
-import { BlogPost, Webinar, Interview, Speaker, ContactSubmission, TutorSession } from "@/models";
+import { BlogPost, Webinar, Interview, Speaker, ContactSubmission, TutorSession, Lead } from "@/models";
 import {
   FileText,
   Video,
@@ -19,27 +19,46 @@ import {
   Globe,
   Building2,
   GraduationCap,
+  Send,
 } from "lucide-react";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { HealthStatus } from "@/components/admin/HealthStatus";
 
 async function getStats() {
   if (!isDBConfigured()) {
-    return { posts: 0, webinars: 0, interviews: 0, speakers: 0, contacts: 0, tutorSessions: 0 };
+    return {
+      posts: 0,
+      webinars: 0,
+      interviews: 0,
+      speakers: 0,
+      contacts: 0,
+      tutorSessions: 0,
+      outreachStaged: 0,
+    };
   }
   try {
     await connectDB();
-    const [posts, webinars, interviews, speakers, contacts, tutorSessions] = await Promise.all([
-      BlogPost.countDocuments(),
-      Webinar.countDocuments(),
-      Interview.countDocuments(),
-      Speaker.countDocuments(),
-      ContactSubmission.countDocuments({ status: "new" }),
-      TutorSession.countDocuments(),
-    ]);
-    return { posts, webinars, interviews, speakers, contacts, tutorSessions };
+    const [posts, webinars, interviews, speakers, contacts, tutorSessions, outreachStaged] =
+      await Promise.all([
+        BlogPost.countDocuments(),
+        Webinar.countDocuments(),
+        Interview.countDocuments(),
+        Speaker.countDocuments(),
+        ContactSubmission.countDocuments({ status: "new" }),
+        TutorSession.countDocuments(),
+        Lead.countDocuments({ status: "staged" }),
+      ]);
+    return { posts, webinars, interviews, speakers, contacts, tutorSessions, outreachStaged };
   } catch {
-    return { posts: 0, webinars: 0, interviews: 0, speakers: 0, contacts: 0, tutorSessions: 0 };
+    return {
+      posts: 0,
+      webinars: 0,
+      interviews: 0,
+      speakers: 0,
+      contacts: 0,
+      tutorSessions: 0,
+      outreachStaged: 0,
+    };
   }
 }
 
@@ -94,6 +113,13 @@ export default async function AdminDashboard() {
       icon: GraduationCap,
       href: "/admin/tutor-sessions",
       color: "bg-teal-500",
+    },
+    {
+      title: "B2B Outreach",
+      count: stats.outreachStaged,
+      icon: Send,
+      href: "/admin/outreach",
+      color: "bg-amber-500",
     },
   ];
 
