@@ -156,6 +156,11 @@ export default async function SolutionSegmentPage(
               {s.demoSubject} · {s.demoLevel} — pick a lesson and start talking. This
               is the real tutor, not a video. No signup, ~2 minutes.
             </p>
+            {s.demoNote && (
+              <p className="text-sm text-slate-500 max-w-xl mx-auto mt-2 italic">
+                {s.demoNote}
+              </p>
+            )}
           </div>
           <div className="max-w-4xl mx-auto">
             <VoiceTutorLiveDemo lessons={s.demoLessons} source={`solutions-${s.slug}`} />

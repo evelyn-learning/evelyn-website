@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 /**
@@ -33,12 +32,11 @@ export default function CrimsoraClientStory() {
               See it live
               <ExternalLink className="w-4 h-4" />
             </a>
-            {/* /showcase/crimsora ships from the separate cross-promo plan
+            {/* A secondary "Read the client story" link to /showcase/crimsora
+                was removed here — that route doesn't exist yet and 404s in
+                production. Re-add once the separate cross-promo plan
                 (docs/superpowers/plans/2026-08-04-crimsora-evelyn-cross-promotion.md)
-                and may 404 in dev until that plan lands — not a blocker here. */}
-            <Link href="/showcase/crimsora" className="btn-secondary">
-              Read the client story
-            </Link>
+                ships that page. */}
           </div>
         </div>
       </div>

@@ -32,6 +32,13 @@ export interface SolutionSegment {
   }>;
   demoSubject: string;
   demoLevel: string;
+  /**
+   * Shown under the demo header, only for segments whose demo lessons are an
+   * interim stand-in (i.e. not yet purpose-built for the segment) — see the
+   * "Interim note" above. Omit for segments where the demo lessons already
+   * match the segment's claims (e.g. nursing's NCLEX plans).
+   */
+  demoNote?: string;
   showCrimsora: boolean;
   metaTitle: string;
   metaDescription: string;
@@ -89,7 +96,7 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     demoSubject: "Nursing",
     demoLevel: "NCLEX",
     showCrimsora: true,
-    metaTitle: "Evelyn Learning for Nursing Programs — 1-on-1 NCLEX Voice Tutoring",
+    metaTitle: "Nursing Programs — 1-on-1 NCLEX Voice Tutoring",
     metaDescription:
       "Give every nursing student a live voice tutor for NCLEX-NGN clinical-judgment prep. Scale faculty remediation and catch at-risk students earlier.",
   },
@@ -145,7 +152,7 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     demoSubject: "Test Prep",
     demoLevel: "SAT/ACT/AP",
     showCrimsora: true,
-    metaTitle: "Evelyn Learning for Test Prep Academies — Live Voice Tutoring at Scale",
+    metaTitle: "Test Prep Academies — Live Voice Tutoring at Scale",
     metaDescription:
       "Scale your best tutor to every student with live voice tutoring for the Digital SAT, ACT, and AP exams — without adding tutor headcount.",
   },
@@ -201,7 +208,7 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     demoSubject: "K-12",
     demoLevel: "All grades",
     showCrimsora: true,
-    metaTitle: "Evelyn Learning for Schools & Districts — 1-on-1 Voice Tutoring at Scale",
+    metaTitle: "Schools & Districts — 1-on-1 Voice Tutoring at Scale",
     metaDescription:
       "Live voice tutoring for every student and subject, from grade 3 fractions to high school algebra — scaling intervention, homework help, and IEP-level differentiation.",
   },
@@ -257,7 +264,7 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     demoSubject: "K-12",
     demoLevel: "All grades",
     showCrimsora: true,
-    metaTitle: "Evelyn Learning for Homeschool & Charter Programs — Live Voice Tutoring",
+    metaTitle: "Homeschool & Charter Programs — Live Voice Tutoring",
     metaDescription:
       "Curriculum-neutral live voice tutoring for homeschool and charter students, covering the subjects a parent-educator can't — with session records for funding documentation.",
   },
@@ -306,7 +313,7 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     demoSubject: "K-12",
     demoLevel: "All grades",
     showCrimsora: false,
-    metaTitle: "Evelyn Learning for Publishers & Agencies — White-Label Voice Tutoring",
+    metaTitle: "Publishers & Agencies — White-Label Voice Tutoring",
     metaDescription:
       "Embed Evelyn's live voice + whiteboard tutoring engine and 1,700+ lesson catalog into your product, white-labeled to your brand.",
   },
@@ -321,13 +328,13 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
         problem:
           "Most compliance training measures completion by whether an employee clicked 'next' through every slide, not whether they understood or retained anything.",
         solution:
-          "A live voice tutor requires an actual conversation to finish the module — asking questions, checking understanding, and adapting when an employee doesn't get it — so completion means comprehension.",
+          "A live voice tutor turns the training into an actual conversation — asking questions, checking understanding, and adapting when an employee doesn't get it — instead of a slide deck that never finds out whether anything landed.",
       },
       {
         problem:
-          "Employees walk into their first high-stakes conversation — a difficult performance review, a compliance escalation, a client negotiation — having never rehearsed it, only read about it.",
+          "Technical and compliance material is usually taught the same way regardless of what an employee already knows — a slide deck or recorded video that can't adjust pace or check whether a harder concept actually landed.",
         solution:
-          "Evelyn can role-play the conversation itself, live, so an employee practices the actual exchange out loud before the real one happens, not just the theory behind it.",
+          "Evelyn tutors the material live over its lesson catalog, working it out with the employee on a whiteboard they watch get drawn in real time — asking questions back and not moving on until the employee can explain the idea themselves.",
       },
       {
         problem:
@@ -352,10 +359,12 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
         hook: "Breaking a problem down the way an engineer would",
       },
     ],
-    demoSubject: "Professional",
+    demoSubject: "Business & technical concepts",
     demoLevel: "College-level",
+    demoNote:
+      "The demo below runs on our college-level catalog while the corporate modules are in development.",
     showCrimsora: false,
-    metaTitle: "Evelyn Learning for Corporate L&D — Voice Tutoring That Talks Back",
+    metaTitle: "Corporate L&D — Voice Tutoring That Talks Back",
     metaDescription:
       "Live voice tutoring for corporate learning and development — interactive training that requires real engagement, not another click-through compliance module.",
   },

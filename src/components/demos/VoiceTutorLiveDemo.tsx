@@ -105,7 +105,19 @@ export default function VoiceTutorLiveDemo({
   lessons = DEFAULT_LESSONS,
   source = DEFAULT_SOURCE,
 }: VoiceTutorLiveDemoProps = {}) {
-  const [lesson, setLesson] = useState<DemoLessonOption>(lessons[0]);
+  // GA4 `surface` dimension: preserve the exact historical value on the
+  // default (product-page) path, and attribute everyone else (e.g. the
+  // /solutions/[segment] pages) by their own `source` instead of lumping
+  // them all under 'product_embed'.
+  const surface = source === DEFAULT_SOURCE ? 'product_embed' : source;
+
+  // `lessons[0]` may be undefined if a caller passes `lessons={[]}` — fall
+  // back to an inert placeholder so the hooks below never dereference
+  // undefined. The real guard (render nothing) comes after all hooks run,
+  // per the Rules of Hooks — see the `if (lessons.length === 0)` below.
+  const [lesson, setLesson] = useState<DemoLessonOption>(
+    lessons[0] ?? { planId: '', title: '', subjectLabel: '', levelLabel: '', hook: '' },
+  );
   const [teacherId, setTeacherId] = useState<string>(DEMO_TEACHERS[0].id);
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
@@ -128,7 +140,7 @@ export default function VoiceTutorLiveDemo({
     const onMessage = (e: MessageEvent) => {
       if ((e.data as { type?: string } | null)?.type === 'evelyn:session_ended') {
         setSessionEnded(true);
-        trackEvent('demo_session_ended', { plan_id: lesson.planId, surface: 'product_embed' });
+        trackEvent('demo_session_ended', { plan_id: lesson.planId, surface });
       }
     };
     window.addEventListener('message', onMessage);
@@ -188,9 +200,14 @@ export default function VoiceTutorLiveDemo({
     return [...pair, ...DEMO_TEACHERS.filter((t) => !geoPairIds.includes(t.id))];
   }, [geoPairIds]);
 
+  // Must come after every hook above (Rules of Hooks) — `lessons={[]}`
+  // typechecks but leaves nothing to demo, so render nothing rather than
+  // crash on the placeholder lesson's empty planId.
+  if (lessons.length === 0) return null;
+
   const pickLesson = (l: DemoLessonOption) => {
     setLesson(l);
-    trackEvent('lesson_selected', { plan_id: l.planId, surface: 'product_embed' });
+    trackEvent('lesson_selected', { plan_id: l.planId, surface });
   };
 
   const pickTeacher = (id: string) => {
@@ -199,7 +216,7 @@ export default function VoiceTutorLiveDemo({
       window.localStorage.setItem(TEACHER_STORE_KEY, id);
     } catch {}
     setTeacherOpen(false);
-    trackEvent('teacher_changed', { teacher_id: id, surface: 'product_embed' });
+    trackEvent('teacher_changed', { teacher_id: id, surface });
   };
 
   const start = () => {
@@ -229,7 +246,7 @@ export default function VoiceTutorLiveDemo({
               onClick={() => {
                 setEmbedSrc(null);
                 setSessionEnded(false);
-                trackEvent('demo_change_lesson_after_end', { plan_id: lesson.planId, surface: 'product_embed' });
+                trackEvent('demo_change_lesson_after_end', { plan_id: lesson.planId, surface });
               }}
               className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium"
             >

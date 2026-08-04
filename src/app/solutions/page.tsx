@@ -4,9 +4,12 @@ import { ArrowRight } from "lucide-react";
 import { SOLUTION_SEGMENTS } from "@/data/solutions";
 
 export const metadata: Metadata = {
-  title: "Solutions | Evelyn Learning",
+  title: "Solutions",
+  // Deliberately generic (no per-segment enumeration) so this stays accurate
+  // as SOLUTION_SEGMENTS changes — everything else on this page is
+  // registry-derived; this description should be too, in spirit.
   description:
-    "Live voice + whiteboard tutoring for nursing programs, test prep academies, schools and districts, homeschool and charter programs, publishers and agencies, and corporate L&D.",
+    "Live voice + whiteboard tutoring, tailored to how each kind of organization we work with puts it to use.",
   alternates: { canonical: "/solutions" },
 };
 
