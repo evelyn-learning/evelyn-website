@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // Deploy-time override so the prod build can land in a staging dir and be
+  // atomically swapped into .next (deploy-update.sh). Unset everywhere else,
+  // including `next start`, which must keep reading the default .next.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Pin the Turbopack workspace root to this repo. Without it, builds on the
   // prod server see stray /root/package-lock.json junk and infer /root as the
   // workspace root ("multiple lockfiles" warning on every deploy), making

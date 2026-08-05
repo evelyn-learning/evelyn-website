@@ -54,30 +54,41 @@ ssh $SERVER << ENDSSH
 set -e
 cd $DEPLOY_PATH
 npm ci --production=false
-# Clean build every time: incremental next builds on this server keep dying
-# with ENOTEMPTY rmdir on stale .next/server/app/blog/*.segments dirs (hit
-# twice 2026-07-14/15). The running pm2 process keeps serving through the
-# rebuild; set -e above means a failed build never restarts pm2.
-# TIMING (measured 2026-08-04): the remote build takes ~30 MINUTES on this
-# VPS since the Next 16/Turbopack era — this is the SLOW deploy path. For a
-# fast ship, prefer ./deploy-to-production.sh, which builds locally (~3min
-# on an M-series Mac) and uploads the artifacts instead.
-# Retry rm -rf against pm2-write race (hit 2026-07-15, 2026-07-16).
+# Staged build + atomic swap (2026-08-05). Building straight into .next used
+# to start with rm -rf .next, so the live app served a directory that was
+# empty for the whole ~30-minute remote build — every admin/on-demand route
+# 500'd ("client reference manifest does not exist") until pm2 restarted.
+# Now the build lands in .next-staging (distDir override in next.config.ts)
+# while the running process keeps its intact .next; the swap below is two
+# renames. A failed build aborts before the swap (set -e), leaving the old
+# build serving. Needs disk for two builds side by side (~2x .next).
+# Clean staging every time: incremental builds on this server keep dying
+# with ENOTEMPTY rmdir on stale */blog/*.segments dirs (hit 2026-07-14/15);
+# retry the rm against slow-FS races (hit 2026-07-15/16).
 for attempt in 1 2 3; do
-  if rm -rf .next; then
+  if rm -rf .next-staging .next-prev; then
     break
   fi
   if [ \$attempt -lt 3 ]; then
     sleep 2
   fi
 done
-
-if [ -d .next ]; then
-  echo "Failed to remove .next after 3 attempts" >&2
+if [ -d .next-staging ] || [ -d .next-prev ]; then
+  echo "Failed to clean staging/prev dirs after 3 attempts" >&2
   exit 1
 fi
-npm run build
+# TIMING (measured 2026-08-04): ~30 MINUTES on this VPS (Next 16/Turbopack).
+# The site stays fully up for all of it now; for a faster ship,
+# ./deploy-to-production.sh builds locally and uploads artifacts instead.
+NEXT_DIST_DIR=.next-staging npm run build
+# Swap: the old process keeps serving .next-prev via its open handles until
+# the restart lands; only then is it deleted.
+if [ -d .next ]; then
+  mv .next .next-prev
+fi
+mv .next-staging .next
 pm2 restart $APP_NAME --update-env
+rm -rf .next-prev
 ENDSSH
 
 echo -e "${GREEN}Deployment complete!${NC}"
