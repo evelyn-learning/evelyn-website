@@ -45,10 +45,17 @@ export interface SolutionSegment {
 }
 
 /**
- * The owner's booking-call link. Null until supplied — consumers fall back
- * to `/contact?segment=<slug>&demo=true`.
+ * The owner's booking-call link (Google Calendar appointment schedule).
+ * When set, every segment CTA points here and opens in a new tab; when null,
+ * consumers fall back to `/contact?segment=<slug>&demo=true`.
+ *
+ * Note: Google appointment-schedule links don't accept prefill params, so the
+ * per-segment attribution the /contact fallback captured is not carried into
+ * the booking record. Which segment page drove a booking is visible via the
+ * GA4 page path preceding the outbound click, not in the calendar entry.
  */
-export const BOOKING_URL: string | null = null;
+export const BOOKING_URL: string | null =
+  "https://calendar.app.google/4EF3V1Qgy2rp9FQ19";
 
 export const SOLUTION_SEGMENTS: SolutionSegment[] = [
   {
