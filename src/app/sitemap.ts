@@ -3,6 +3,7 @@ import { connectDB, isDBConfigured } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { services } from "@/data/services";
 import { productCategories } from "@/data/products";
+import { SOLUTION_SEGMENTS } from "@/data/solutions";
 
 // Force dynamic rendering so sitemap fetches fresh data from DB
 export const dynamic = "force-dynamic";
@@ -48,6 +49,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
   ];
 
+  // Solutions: hub + 6 segment pages, generated from @/data/solutions
+  // (prevents sitemap drift — SOLUTION_SEGMENTS is the single source of truth)
+  const solutionPages: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}/solutions`,         lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    ...SOLUTION_SEGMENTS.map((segment) => ({
+      url: `${SITE_URL}/solutions/${segment.slug}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
+  ];
+
   // Resources
   const resourcePages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/blog`,              lastModified: now, changeFrequency: "daily",   priority: 0.9 },
@@ -81,6 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...corePages,
     ...servicePages,
     ...productPages,
+    ...solutionPages,
     ...resourcePages,
     ...blogPosts,
   ];

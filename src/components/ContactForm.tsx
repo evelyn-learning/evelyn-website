@@ -100,6 +100,7 @@ export function ContactForm() {
     const inquiry = searchParams.get('inquiry');
     const demo = searchParams.get('demo');
     const paper = searchParams.get('paper');
+    const segment = searchParams.get('segment');
 
     if (product) {
       const productName = SUBJECT_MAP[product] || product;
@@ -122,6 +123,15 @@ export function ContactForm() {
       setValue('subject', subjectText);
     } else if (demo === 'true') {
       setValue('subject', 'Request a Demo');
+    }
+
+    // Solutions segment landing pages (/solutions/[segment]) link here as a
+    // fallback CTA when no booking-call URL is configured. There's no
+    // ContactSubmission field for this, so — same approach as the
+    // whitepaper `paper` param above — stamp it into the message body as a
+    // machine-readable tag the admin view (and a future filter) can key off.
+    if (segment) {
+      setValue('message', `[segment: ${segment}]\n\n`);
     }
   }, [searchParams, setValue]);
 
