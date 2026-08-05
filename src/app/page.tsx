@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { connectDB } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { ArrowRight } from "lucide-react";
+import { CrimsoraBrowserFrame } from '@/components/showcase/CrimsoraBrowserFrame';
 
 export const revalidate = 60;
 
@@ -27,6 +28,7 @@ async function getLatestPosts() {
 
 // Client names - all companies we've worked with
 const CLIENTS = [
+  'Crimsora',
   'Coursera',
   'McGraw Hill',
   'Barnes & Noble',
@@ -182,6 +184,44 @@ function ClientLogosSection() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// Featured client — Crimsora runs its whole consumer product on the Voice Tutor
+function FeaturedClientSection() {
+  return (
+    <section className="py-16 bg-white border-b border-slate-100">
+      <div className="container-wide">
+        <div className="grid md:grid-cols-2 gap-10 items-center max-w-5xl mx-auto">
+          <div>
+            <span className="text-primary-500 font-semibold text-sm uppercase tracking-wider">Featured client</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-3 mb-4">
+              Crimsora runs on the Evelyn Voice Tutor
+            </h2>
+            <p className="text-slate-600 text-lg leading-relaxed mb-6">
+              Crimsora licenses Evelyn Learning&rsquo;s Voice Tutor engine to deliver live 1-on-1
+              voice tutoring — with an interactive whiteboard — across high school core courses,
+              AP, and SAT/ACT prep.
+            </p>
+            <Link
+              href="/showcase/crimsora"
+              className="inline-flex items-center gap-2 text-primary-500 font-semibold hover:text-primary-600 transition-colors"
+            >
+              See the client story <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <CrimsoraBrowserFrame label="Biology session">
+            <Image
+              src="/showcase/crimsora/crimsora-session.png"
+              alt="A live Crimsora tutoring session powered by the Evelyn Voice Tutor"
+              width={1600}
+              height={820}
+              className="w-full h-auto"
+            />
+          </CrimsoraBrowserFrame>
         </div>
       </div>
     </section>
@@ -853,6 +893,7 @@ export default async function HomePage() {
       <RecognitionStrip />
       <HeroSection />
       <ClientLogosSection />
+      <FeaturedClientSection />
       <AIProductsSection />
       <TestimonialsSection />
       <CustomDevelopmentSection />
