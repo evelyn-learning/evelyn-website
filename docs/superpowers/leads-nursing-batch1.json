@@ -1,0 +1,402 @@
+[
+  {
+    "company": "Rockland Community College - Nursing Program (SUNY)",
+    "segment": "nursing_program",
+    "about": "Associate Degree in Nursing (ADN/AS) program at a SUNY community college in Suffern, NY, accredited by ACEN. Full-time (2 years) or part-time (4 years), with a 2+2 RN-to-BSN articulation agreement with SUNY Empire. Its own program page reports first-time NCLEX-RN pass rates of 88% (2025), 96% (2024) and 98% (2023).",
+    "whyFit": "The program publishes year-by-year NCLEX pass rates on its own site and has seen the number move around (98% down to 88% most recently) - a visible signal that consistent exam-readiness support matters to them.",
+    "useCaseHypothesis": "Unlimited NCLEX-RN/NGN and clinical-judgment drill sessions students can use between clinicals, without adding faculty office hours.",
+    "decisionMaker": {
+      "name": "Angela Northrup",
+      "title": "Instructor / Program Director, Nursing",
+      "linkedinUrl": "https://www.linkedin.com/in/angela-northrup-phd-rn-fnp/",
+      "emailVerified": false
+    },
+    "website": "https://sunyrockland.edu/programs/nursing/",
+    "source": "claude-research-2026-08-05 | https://sunyrockland.edu/programs/nursing/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Rockland's NCLEX numbers and an always-on study option",
+      "body": "Dr. Northrup,\n\nRockland's nursing program page shows first-time NCLEX-RN pass rates moving between 88% and 98% over the last few years, with a 2+2 pathway into SUNY Empire's BSN giving students a lot riding on that first attempt. Evelyn Learning built a voice AI tutor for nursing students: a live spoken session with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and keeps asking questions until a student can explain the concept themselves, not just recognize the right answer. Our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy. It's available any hour, unlimited sessions, so students between clinicals have somewhere to go besides office hours. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth a quick look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Middlesex Community College - Nursing Program (Massachusetts)",
+    "segment": "nursing_program",
+    "about": "Associate Degree in Registered Nursing (ADN) program in Lowell/Bedford, MA. Ranked #1 among 42 nursing schools in Massachusetts for 2026 by RegisteredNursing.org, citing three consecutive years of 100% NCLEX pass rates, and ranked first nationally among 2,304 similarly sized associate-degree programs. The college is also developing a new LPN program with a $525,000 grant.",
+    "whyFit": "The program is actively scaling (new LPN track alongside its ADN program) while trying to protect a three-year streak of 100% NCLEX pass rates - growth and a pass-rate record to defend at the same time.",
+    "useCaseHypothesis": "Standardized, unlimited NCLEX-NGN and clinical-judgment tutoring to help maintain pass-rate consistency as the program scales into a new LPN track.",
+    "decisionMaker": {
+      "name": "Susan Lavallee",
+      "title": "Senior Director of Nursing Education",
+      "emailVerified": false
+    },
+    "website": "https://www.middlesex.edu/academics/health/healthprograms/nursing.html",
+    "source": "claude-research-2026-08-05 | https://www.middlesex.edu/newsroom/2025/10.28.25.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Congrats on the #1 Massachusetts ranking",
+      "body": "Susan,\n\nCongratulations on MCC's nursing program being ranked #1 in Massachusetts for 2026, with three straight years of 100% NCLEX pass rates. As you build out the new LPN track alongside the ADN program, keeping that streak going while scaling probably gets harder, not easier. Evelyn Learning makes a voice AI tutor built for nursing students: live spoken sessions with a shared whiteboard, working through NCLEX-NGN and clinical-judgment questions, where the tutor keeps asking questions until a student can explain the concept themselves rather than just recognize the right answer. It's unlimited and available any hour, so students between clinicals have somewhere to go besides office hours. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth 15 minutes to see it?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Bucks County Community College - Associate Degree Nursing Program",
+    "segment": "nursing_program",
+    "about": "Associate Degree Nursing (ADN) program in Newtown, PA. The college reported a 100% first-time NCLEX-RN pass rate for the 60 graduates tested October 2023-September 2024, its first cohort under a newly adopted concept-based curriculum.",
+    "whyFit": "They just moved to a new concept-based curriculum and hit 100% pass rate on the first cohort through it - a program actively managing a curriculum transition where consistent exam-readiness support has real stakes.",
+    "useCaseHypothesis": "Unlimited concept-based NCLEX-NGN and clinical-judgment practice to reinforce the new curriculum model between clinicals.",
+    "decisionMaker": {
+      "name": "Alex Aduboahen",
+      "title": "Director, Associate Degree Nursing",
+      "email": "alex.aduboahen@bucks.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.bucks.edu/nursing",
+    "source": "claude-research-2026-08-05 | https://ac.bucks.edu/apps/directory/departments/65/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "BCCC's 100% pass rate under the new curriculum",
+      "body": "Alex,\n\nBucks County Community College's ADN graduates hit a 100% first-time NCLEX-RN pass rate last year, the first cohort through the program's new concept-based curriculum - a strong early signal the redesign is working. Evelyn Learning builds a voice AI tutor for nursing students: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws out concepts, and keeps questioning the student until they can explain it themselves rather than just recognize the answer. Our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, and clinical topics like heart failure and insulin timing/DKA vs. HHS. It's available 24/7 with unlimited sessions, useful for reinforcing concept-based material between clinicals. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Cecil College - Nursing Program",
+    "segment": "nursing_program",
+    "about": "Associate Degree in Nursing (ADN) program in North East, MD. The college reports a 100% NCLEX pass rate in 2022, the third time in five years (also 2018 and 2019), a year in which it outperformed every other Maryland community college and 12 four-year programs. The program has six full-time faculty, four holding doctorates.",
+    "whyFit": "A small faculty (six full-time) is stretched to defend a pass-rate record that already beats every four-year program in the state - a program where extra tutoring capacity likely matters more than at larger schools.",
+    "useCaseHypothesis": "24/7 NCLEX-NGN and clinical-judgment tutoring to extend the reach of a small full-time faculty team.",
+    "decisionMaker": {
+      "name": "Nancy Norman-Marzella",
+      "title": "Dean, Health, Human and Business Sciences / Director of Nursing",
+      "linkedinUrl": "https://www.linkedin.com/in/dr-nancy-norman-marzella-ab241a76/",
+      "emailVerified": false
+    },
+    "website": "https://www.cecil.edu/programs-courses/academics/degrees-certificates/nursing",
+    "source": "claude-research-2026-08-05 | https://www.cecil.edu/news/100-of-nursing-graduates-pass-nclex",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Cecil's NCLEX track record and a 24/7 study option",
+      "body": "Dr. Norman-Marzella,\n\nCecil's nursing program has hit a 100% NCLEX pass rate three times in five years, and the last time it happened, Cecil outperformed every other community college and several four-year programs in Maryland. Evelyn Learning built a voice AI tutor for nursing students: a live spoken session with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and keeps asking questions until a student can explain the concept themselves, not just recognize the right answer. Our nursing catalog includes NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, and clinical lessons on heart failure and insulin timing/DKA vs. HHS. It's unlimited and available any hour, useful between clinicals when your six full-time faculty aren't. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "The College of New Jersey - School of Nursing and Health Sciences",
+    "segment": "nursing_program",
+    "about": "Public university BSN program in Ewing, NJ, including a traditional BSN and an Accelerated BSN track launched in 2023. RegisteredNursing.org gave TCNJ its top New Jersey ranking for 2026, citing a 100% NCLEX pass rate; TCNJ states the accelerated track was built to help address a projected 9% RN position vacancy rate in the state over the next decade.",
+    "whyFit": "The accelerated BSN track compresses the same licensure-critical material into a shorter timeline, and TCNJ frames it explicitly as a response to a stated state nursing shortage - students there have less slack for traditional office hours.",
+    "useCaseHypothesis": "24/7 NCLEX-NGN and clinical-judgment tutoring for accelerated-track students who don't have room in their schedule for standard office hours.",
+    "decisionMaker": {
+      "name": "Carole Kenner",
+      "title": "Dean, School of Nursing and Health Sciences",
+      "email": "kennerc@tcnj.edu",
+      "emailVerified": false
+    },
+    "website": "https://nursing.tcnj.edu/",
+    "source": "claude-research-2026-08-05 | https://tcnj.edu/2025/09/11/nursing-program-receives-top-ranking-from-registerednursing-org/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "TCNJ's accelerated BSN and the workload that comes with it",
+      "body": "Dr. Kenner,\n\nTCNJ's nursing program earned RegisteredNursing.org's top New Jersey ranking for 2026 with a 100% NCLEX pass rate, and the accelerated BSN track you built to help ease the state's projected RN shortage compresses that same material into far less time. Evelyn Learning built a voice AI tutor for nursing students: a live spoken session with a shared whiteboard where the tutor teaches conversationally and keeps asking questions until a student can explain the concept themselves, not just recognize the answer. It covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy, and it's available any hour, unlimited sessions - useful for accelerated students without slack in their schedule for office hours. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    },
+    "notes": "Email could not be independently confirmed on an official TCNJ page (cited source is a ranking news article). Confirm before sending."
+  },
+  {
+    "company": "Community College of Rhode Island - Nursing Program",
+    "segment": "nursing_program",
+    "about": "Rhode Island's only public associate-degree registered nursing program, offered across CCRI's four campuses (Knight/Warwick, Flanagan/Lincoln, Liston/Providence, Newport County). Dean Suzanne Carr led the program's ACEN re-accreditation and the implementation of a $1.9 million healthcare initiative.",
+    "whyFit": "As the state's sole public ADN pathway spread across four physical campuses, support quality is harder to keep consistent site-to-site than at a single-campus program.",
+    "useCaseHypothesis": "A single standardized 24/7 tutoring resource to even out exam-readiness support across four separate campuses.",
+    "decisionMaker": {
+      "name": "Suzanne Carr",
+      "title": "Dean of Health and Rehabilitative Sciences",
+      "email": "carr7@ccri.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.ccri.edu/nursing/",
+    "source": "claude-research-2026-08-05 | http://www.ccri.edu/faculty-staff/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "CCRI's statewide ADN program and exam-readiness prep",
+      "body": "Dr. Carr,\n\nCCRI is Rhode Island's only public associate-degree RN program, running across four campuses, which means real variation in how much one-on-one support any given student gets. Evelyn Learning built a voice AI tutor for nursing students: a live spoken session with a shared whiteboard where the tutor teaches conversationally, draws diagrams, and keeps questioning the student until they can explain the concept themselves. Our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, and clinical lessons on heart failure and insulin timing/DKA vs. HHS. It's available 24/7, unlimited sessions, which could help standardize support across sites. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista, and a version of this tutor already runs in a live consumer tutoring product.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "CT State Community College - Nursing, Allied Health and Human Services",
+    "segment": "nursing_program",
+    "about": "Connecticut's unified community college system (formed from the 2023 merger of 12 former community colleges), offering a shared nursing curriculum (the CT Community College Nursing Program) across six campuses including Capital, Gateway, Naugatuck Valley, Norwalk, Northwestern Connecticut, and Three Rivers.",
+    "whyFit": "Running one shared nursing curriculum across six campuses statewide is an operational challenge in delivering consistent exam-readiness support - a natural fit for a single tutoring resource available identically at every site.",
+    "useCaseHypothesis": "Unlimited NCLEX-NGN and clinical-judgment tutoring available identically to students at all six nursing campuses.",
+    "decisionMaker": {
+      "name": "Salvador Bondoc",
+      "title": "Dean, Nursing, Allied Health and Human Services",
+      "linkedinUrl": "https://www.linkedin.com/in/salvadorbondoc/",
+      "email": "salvador.bondoc@ctstate.edu",
+      "emailVerified": true
+    },
+    "website": "https://ctstate.edu/programs/nursing",
+    "source": "claude-research-2026-08-05 | https://ctstate.edu/about/leadership",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "A 24/7 study option across CT State's nursing campuses",
+      "body": "Dr. Bondoc,\n\nCT State's nursing program runs on a shared curriculum across six campuses, which is a lot of ground to cover consistently for exam-readiness support. Evelyn Learning built a voice AI tutor for nursing students: a live spoken session with a shared whiteboard where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept themselves. Our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, and two clinical lessons on heart failure and insulin timing/DKA vs. HHS. It's available any hour, unlimited sessions, so students at any of your six sites get the same level of support. We were ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Central Georgia Technical College - Nursing Programs",
+    "segment": "nursing_program",
+    "about": "Central Georgia Technical College in Warner Robins, GA offers an Associate of Science in Nursing (ASN) and a Practical Nursing (PN) diploma, both holding Continuing Accreditation status through the Accreditation Commission for Education in Nursing (ACEN).",
+    "whyFit": "The department runs two separate pre-licensure tracks (ASN and PN) out of one small technical-college faculty, which is the kind of setup where students have limited access to one-on-one review time between clinicals.",
+    "useCaseHypothesis": "Unlimited, on-demand NCLEX-NGN and clinical judgment (CJMM) drilling for ASN and PN students between clinical rotations, without adding faculty office hours.",
+    "decisionMaker": {
+      "name": "Jessica Willcox",
+      "title": "Director of Nursing, ASN Program Chair, PN Program Chair",
+      "email": "jwillcox@centralgatech.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.centralgatech.edu/programs-of-study/health-sciences/nursing",
+    "source": "claude-research-2026-08-05 | https://www.centralgatech.edu/programs-of-study/health-sciences/nursing",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "A question about your ASN and PN cohorts at Central Georgia Tech",
+      "body": "Hi Jessica,\n\nI saw you're running both the ASN and PN programs at Central Georgia Tech under ACEN accreditation - that's a lot of ground to cover with one faculty team.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: students have live, spoken sessions with a shared whiteboard where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7 for unlimited sessions, and our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, and two new clinical lessons on heart failure and insulin timing/DKA vs HHS.\n\nGiven how stretched pre-licensure programs get between didactic and clinical hours, this could give your ASN and PN students a place to work through concepts on their own time.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Pasco-Hernando State College - Nursing (ADN)",
+    "segment": "nursing_program",
+    "about": "Pasco-Hernando State College runs an ACEN-accredited Associate Degree in Nursing program across its West, East, North, and Porter campuses in the Tampa Bay area of Florida. PHSC's own announcement states the program scored a 97.27% first-time NCLEX-RN pass rate versus a 90.63% national average, and its Practical Nursing graduates scored a 100% first-time pass rate on the 2024 NCLEX-PN versus an 88.38% national average.",
+    "whyFit": "A program already posting pass rates well above the national average has a track record worth protecting; sustaining that across four campuses with different cohorts is a resourcing challenge unlimited practice access could help with.",
+    "useCaseHypothesis": "Standardized, unlimited NCLEX-NGN and clinical judgment practice available identically across all four PHSC campuses, so pass-rate performance doesn't depend on which campus a student attends.",
+    "decisionMaker": {
+      "name": "Billie Gabbard",
+      "title": "Dean of Nursing and Health Programs",
+      "email": "gabbarb@phsc.edu",
+      "emailVerified": true
+    },
+    "website": "https://phsc.edu/academics/programs/health/registered-nurse",
+    "source": "claude-research-2026-08-05 | https://phsc.edu/about/news/press-release/phsc-scores-above-national-average-nursing-examinations",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "PHSC's NCLEX numbers and a multi-campus question",
+      "body": "Hi Billie,\n\nCongratulations on the 97.27% first-time ADN NCLEX pass rate PHSC posted against a 90.63% national average - and 100% on the PN side. That's a strong result to be running across four campuses at once.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7, unlimited sessions, and our nursing catalog covers NCLEX-NGN, clinical judgment (CJMM), prioritization, plus new lessons on heart failure and insulin timing/DKA vs HHS.\n\nFor a program spread across West, East, North, and Porter, it could give every campus's cohort the same level of review access, not just the ones with more faculty hours.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Piedmont Community College - Associate Degree Nursing Program",
+    "segment": "nursing_program",
+    "about": "Piedmont Community College in Roxboro, NC runs a full-time Associate Degree Nursing program (five semesters traditional, six for evening/weekend cohorts). The college's own announcement reports its Class of 2026 ADN cohort achieved a 100% first-time NCLEX pass rate across all 21 graduates.",
+    "whyFit": "A small, competitive-admission rural program that just posted a perfect first-time pass rate has a strong result to defend with a small cohort size where individual student risk is highly visible.",
+    "useCaseHypothesis": "Unlimited NCLEX-NGN and clinical judgment practice for a small rural cohort to help sustain the program's 100% first-time pass rate as class sizes grow.",
+    "decisionMaker": {
+      "name": "Darrick A. Woods",
+      "title": "Dean/Director, Nursing Programs",
+      "email": "darrick.woods@piedmontcc.edu",
+      "emailVerified": true
+    },
+    "website": "https://piedmontcc.edu/program/associate-degree-nursing/",
+    "source": "claude-research-2026-08-05 | https://www.caswellmessenger.com/news/article_e4063a5a-761b-49fc-9438-9f9c8a9672bb.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Piedmont CC's 100% first-time pass rate",
+      "body": "Hi Dr. Woods,\n\nI saw all 21 of Piedmont CC's Class of 2026 ADN graduates passed the NCLEX on their first attempt - a genuinely hard thing to hit with a full cohort.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back on their own. It's available 24/7 for unlimited sessions, and the nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, plus new lessons on heart failure and insulin timing/DKA vs HHS.\n\nFor a program your size, it could give every student in a cohort the kind of individual review time that's hard to staff for directly.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Heartland Community College - Nursing Education Program",
+    "segment": "nursing_program",
+    "about": "Heartland Community College in Normal, IL offers an Associate in Applied Science - Nursing degree preparing graduates to practice as registered nurses. The college's own program page states the 2023 cohort achieved a 97.3% first-time NCLEX pass rate, while the 2025 cohort had a 71.4% first-time pass rate (25 of 35 students) with a 100% ultimate pass rate.",
+    "whyFit": "The swing from a 97.3% first-time pass rate in 2023 to 71.4% in 2025 (even with a 100% ultimate pass rate) suggests real cohort-to-cohort variability in how prepared students are for NCLEX on the first attempt.",
+    "useCaseHypothesis": "Unlimited NCLEX-NGN and clinical judgment drilling to help close the gap between first-time and ultimate pass rates, so more students pass on attempt one.",
+    "decisionMaker": {
+      "name": "Susan Carl",
+      "title": "Associate Dean of Health Sciences, Director of Nursing Education",
+      "email": "Susan.Carl@heartland.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.heartland.edu/academicDepartments/hhs/nursing.html",
+    "source": "claude-research-2026-08-05 | https://www.heartland.edu/academicDepartments/hhs/nursing.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Heartland's first-time vs. ultimate NCLEX pass rate",
+      "body": "Hi Susan,\n\nI noticed Heartland's nursing program posted a 100% ultimate NCLEX pass rate for 2025, even though the first-time rate was 71.4%. That gap between first-time and ultimate is usually where a program is losing the most time and stress, for students and faculty alike.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7, unlimited sessions, and the nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, plus new lessons on heart failure and insulin timing/DKA vs HHS.\n\nMight be worth a look if you're trying to move more students into that first-time-pass column.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "North Central Michigan College - Nursing Program",
+    "segment": "nursing_program",
+    "about": "North Central Michigan College in Petoskey, MI offers Practical Nurse Certificate, LPN-to-RN Bridge, and Associate Degree in Nursing (ADN-RN) pathways, with articulation agreements to four Michigan universities for RN-to-BSN advancement. The college's own press release reports the Class of 2023 (25 graduates) achieved a 100% first-time NCLEX-RN pass rate.",
+    "whyFit": "A rural Michigan college running three stacked nursing pathways (PN, bridge, and ADN) at once, with a perfect pass rate to maintain across all of them, is exactly the kind of small-faculty, multi-cohort setup where extra review capacity matters.",
+    "useCaseHypothesis": "Unlimited NCLEX-NGN and clinical judgment practice shared across the PN, LPN-bridge, and ADN cohorts without adding separate review sessions for each pathway.",
+    "decisionMaker": {
+      "name": "Brent LaFaive",
+      "title": "Dean of Nursing and Health Sciences",
+      "email": "blafaive@ncmich.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.ncmich.edu/academics/programs/nursing/index.html",
+    "source": "claude-research-2026-08-05 | https://www.ncmich.edu/community-events/news-and-press-releases/2023-nclex-pass-rate.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "North Central's 100% first-time NCLEX class",
+      "body": "Hi Brent,\n\nAll 25 of North Central's Class of 2023 nursing graduates passed the NCLEX-RN on their first try - a strong result for a program running PN, LPN-bridge, and ADN pathways side by side.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7 for unlimited sessions, and the nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, plus new lessons on heart failure and insulin timing/DKA vs HHS.\n\nFor a small team covering three pathways at once, it could give students in any of them a consistent place to practice without pulling more faculty hours.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "University of Missouri Sinclair School of Nursing - BSN Program",
+    "segment": "nursing_program",
+    "about": "The Sinclair School of Nursing at the University of Missouri offers a CCNE-accredited BSN with three pathways: a four-year traditional track, a 17-month accelerated on-campus option, and an RN-to-BSN online option. The school's own program page lists clinical judgment as a stated learner outcome for graduates.",
+    "whyFit": "Running a compressed 17-month accelerated track alongside a traditional four-year track and an online RN-to-BSN pathway means covering very different student paces and clinical-judgment readiness levels at once.",
+    "useCaseHypothesis": "Self-paced clinical judgment (CJMM) and NCLEX-NGN practice for accelerated-track students who have far less calendar time to build the same competencies as traditional-track peers.",
+    "decisionMaker": {
+      "name": "Lori Popejoy",
+      "title": "Dean & Professor, Sinclair School of Nursing",
+      "email": "popejoyl@missouri.edu",
+      "emailVerified": true
+    },
+    "website": "https://nursing.missouri.edu/academic-programs/bachelor-of-science-in-nursing-bsn/",
+    "source": "claude-research-2026-08-05 | https://nursing.missouri.edu/directory/position_type/leadership/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Sinclair's accelerated BSN track",
+      "body": "Hi Dr. Popejoy,\n\nI was looking at Sinclair's three BSN pathways - traditional, the 17-month accelerated option, and RN-to-BSN online - and the accelerated track in particular stood out as a lot of clinical judgment to build in a short calendar.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7, unlimited sessions, and the nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, plus new lessons on heart failure and insulin timing/DKA vs HHS. Evelyn was also just ranked #9 in America's Top EdTech Companies of 2026 by TIME and Statista.\n\nCould be a fit for accelerated-track students who don't have time to spare on catching up.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Chattanooga State Community College - Nursing and Allied Health",
+    "segment": "nursing_program",
+    "about": "Chattanooga State Community College in Chattanooga, TN offers an Associate Degree Nursing (RN) program within its Nursing and Allied Health division, with a second cohort site at Kimball. The program has held ACEN accreditation through a successful six-year re-accreditation cycle, and Nursing Schools Almanac ranked it the #1 associate degree nursing program in Tennessee based on multi-year first-time NCLEX-RN pass rates.",
+    "whyFit": "A program ranked #1 in the state on first-time NCLEX pass rates, running across two sites (main campus and Kimball), has a reputation to defend as it scales across locations.",
+    "useCaseHypothesis": "Consistent, unlimited NCLEX-NGN and clinical judgment practice available identically to students at both the main campus and Kimball site.",
+    "decisionMaker": {
+      "name": "Martina Suttle Harris",
+      "title": "Dean of Nursing and Allied Health",
+      "emailVerified": false
+    },
+    "website": "https://www.chattanoogastate.edu/nursing-allied-health",
+    "source": "claude-research-2026-08-05 | https://www.chattnewschronicle.com/featured/chattanooga-state-nursing-program-directed-by-dr-martina-harris-named-best-in-tennessee/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Chattanooga State's #1 ranking in Tennessee",
+      "body": "Hi Dr. Harris,\n\nCongratulations on ChattState's ADN program being ranked the top associate degree nursing program in Tennessee by Nursing Schools Almanac, based on first-time NCLEX-RN pass rates. Keeping that ranking consistent across both the main campus and the Kimball site can't be simple.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where the tutor teaches conversationally, draws diagrams, and won't move on until the student can explain the concept back. It's available 24/7 for unlimited sessions, and the nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), prioritization strategy, plus new lessons on heart failure and insulin timing/DKA vs HHS.\n\nThought it might be worth a look for keeping both sites performing at the same level.\n\n[DEMO_LINK]\n\nWorth a short call?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "South Texas College - Associate Degree Nursing Program",
+    "segment": "nursing_program",
+    "about": "South Texas College is a large public community college serving the Rio Grande Valley (McAllen, TX area) with ADN and BSN nursing programs, accredited by ACEN. In 2025 its ADN program posted a 99.43% first-time NCLEX pass rate (174 of 175 graduates), the highest among comparably sized Texas programs.",
+    "whyFit": "The program is under fairly new interim leadership (since summer 2024) and is being held up publicly as a model of pass-rate excellence, which puts pressure on maintaining that bar across every future cohort in a large, open-access program.",
+    "useCaseHypothesis": "Unlimited NCLEX-NGN and clinical judgment (CJMM) drill sessions students can use between clinical rotations, so faculty don't have to personally cover remediation for every student at risk of falling below the program's benchmark.",
+    "decisionMaker": {
+      "name": "Dr. Margo Vargas-Ayala",
+      "title": "Interim Dean, Nursing and Allied Health Division",
+      "email": "mavargas-ayala@southtexascollege.edu",
+      "emailVerified": true
+    },
+    "website": "https://nah.southtexascollege.edu/",
+    "source": "claude-research-2026-08-05 | https://news.southtexascollege.edu/stc-nursing-program-earns-9943-pass-rate-tops-large-texas-programs/ and https://news.southtexascollege.edu/leading-the-charge-for-nursing-and-allied-health-excellence-at-stc/",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Congrats on STC's 99.43% NCLEX pass rate",
+      "body": "Dr. Vargas-Ayala,\n\nSaw the news that STC's ADN program hit a 99.43% first-time NCLEX pass rate this year, the best among comparable Texas programs. That's a hard bar to hold every cohort.\n\nI'm Praveen, with Evelyn Learning. We build an AI voice tutor: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws things out, and won't move on until the student can explain the concept back. It's available 24/7 for unlimited sessions. Our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy. Given STC's cohort size, something students can use for extra reps between clinicals, without adding faculty hours, seemed worth flagging.\n\n[DEMO_LINK]\n\nWorth a look? Happy to do a short call if useful.\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "McLennan Community College - Associate Degree Nursing (ADN) Program",
+    "segment": "nursing_program",
+    "about": "McLennan Community College in Waco, TX offers an ACEN-accredited Associate Degree Nursing program with both a generic track and an LVN-to-ADN transition track. Its 2025 NCLEX pass rate was 95.35% overall, above both the Texas and national averages.",
+    "whyFit": "MCC runs two distinct admission tracks (generic and LVN-to-ADN) into one licensure exam, and its LVN-to-ADN transition cohort passed at a notably lower rate (83.33%) than the generic track (91.84%) in 2025, a gap that points to a specific at-risk group needing more review support.",
+    "useCaseHypothesis": "Targeted NCLEX-NGN and prioritization-strategy practice for the LVN-to-ADN transition cohort, who are bridging into RN licensure content on a compressed timeline.",
+    "decisionMaker": {
+      "name": "Dr. Shelley Blackwood",
+      "title": "Program Director, Associate Degree Nursing",
+      "email": "sblackwood@mclennan.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.mclennan.edu/health-professions/associate-degree-nursing/",
+    "source": "claude-research-2026-08-05 | https://www.mclennan.edu/health-professions/associate-degree-nursing/employees.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "MCC's 2025 NCLEX numbers and the LVN-to-ADN gap",
+      "body": "Dr. Blackwood,\n\nI came across MCC's 2025 NCLEX results: 95.35% overall, with the generic track at 91.84% and the LVN-to-ADN transition track at 83.33%. That gap between tracks is a common pattern when bridge students are absorbing new content fast.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws diagrams, and keeps asking questions until the student can actually explain the concept, not just recognize it. It's available 24/7, unlimited sessions, and covers NCLEX-NGN format and clinical judgment (CJMM). It could be a low-lift way to give the transition cohort more review reps without adding to faculty load.\n\n[DEMO_LINK]\n\nOpen to a short call, or just take a look and see if it's relevant?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Northern New Mexico College - Associate Degree Nursing (ADN) Program",
+    "segment": "nursing_program",
+    "about": "Northern New Mexico College, in Espanola, NM, offers an ACEN-accredited Associate Degree Nursing (AAS) program along with a CCNE-accredited RN-to-BSN track. The ADN program achieved a 100% NCLEX-RN first-time pass rate for two consecutive years, most recently for its 2024 graduating class.",
+    "whyFit": "A small rural-serving college that just posted back-to-back 100% NCLEX pass rates is explicitly trying to sustain that streak; the program director publicly credited both faculty support and peer mentoring as drivers, suggesting they invest in extra student support structures.",
+    "useCaseHypothesis": "Supplemental NCLEX-NGN and clinical judgment practice to help sustain the program's 100% pass-rate streak as cohort sizes or composition change, without stretching a small faculty team thinner.",
+    "decisionMaker": {
+      "name": "Ellen Trabka",
+      "title": "Chair, Nursing & Health Sciences",
+      "email": "etrabka@nnmc.edu",
+      "emailVerified": true
+    },
+    "website": "https://nnmc.edu/academics/nursing-and-health-sciences/index.html",
+    "source": "claude-research-2026-08-05 | https://nnmc.edu/employees/trabka_ellen.html and https://nnmc.edu/newsroom/100-percent-of-Northerns-ADN-2024-Graduates-Pass-Nursing-Licensure-Exam.html",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Northern's back-to-back 100% NCLEX pass rate",
+      "body": "Ellen,\n\nCongratulations on Northern's ADN program hitting a 100% first-time NCLEX-RN pass rate for the second year running. That's a genuinely hard streak to keep alive, especially with a small program.\n\nI'm Praveen, with Evelyn Learning. We built an AI voice tutor for exactly this kind of review load: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws things out, and won't move on until the student can explain the concept themselves. It's available 24/7 for unlimited sessions, and our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy. It's meant to extend what faculty and peer mentors are already doing, not replace it.\n\n[DEMO_LINK]\n\nWorth a short look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "New Mexico Junior College - Nursing (ADN/AAS) Program",
+    "segment": "nursing_program",
+    "about": "New Mexico Junior College, in Hobbs, NM, offers an ACEN-accredited Associate of Applied Science in Nursing (ADN/RN), with a 2025 first-attempt NCLEX-RN pass rate of 86.2%. The program is adding a new LPN-to-RN Transition Pathway starting summer 2026.",
+    "whyFit": "The program is expanding its pipeline (new LPN-to-RN pathway launching in 2026) while its current NCLEX pass rate sits closer to state/national averages than the standout 90%+ programs nearby, suggesting room to shore up exam readiness as the student mix diversifies.",
+    "useCaseHypothesis": "NCLEX-NGN and prioritization-strategy practice for both the existing ADN cohort and the incoming LPN-to-RN transition students, who will be entering RN-level content from a different starting point.",
+    "decisionMaker": {
+      "name": "Sally Lane",
+      "title": "Director of Allied Health & Nursing",
+      "email": "slane@nmjc.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.nmjc.edu/program/nursing/index.aspx",
+    "source": "claude-research-2026-08-05 | https://www.nmjc.edu/program/nursing/index.aspx",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "NMJC's new LPN-to-RN pathway starting 2026",
+      "body": "Sally,\n\nSaw that NMJC is launching a new LPN-to-RN Transition Pathway in summer 2026 alongside the existing ADN program. Bringing in a new cohort with a different starting point usually means uneven exam readiness in the first year or two.\n\nI'm Praveen, with Evelyn Learning. We build an AI voice tutor: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws diagrams, and keeps asking the student questions until they can explain the concept themselves, not just recognize the right answer. It's available 24/7, unlimited sessions, and covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy. Could be useful as a review layer for both your ADN students and the incoming transition pathway.\n\n[DEMO_LINK]\n\nOpen to a quick call, or just take a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Yakima Valley College - Registered Nursing Program",
+    "segment": "nursing_program",
+    "about": "Yakima Valley College, in Yakima, WA, offers an Associate in Nursing Direct Transfer Degree accredited by ACEN (continuing accreditation through March 2029) and approved by the Washington State Board of Nursing. The program has posted around a 92-94% first-time NCLEX-RN pass rate in recent years.",
+    "whyFit": "YVC serves the Yakima Valley, an agricultural region with a documented healthcare workforce shortage, and runs its nursing program under an interim/assistant dean rather than a large administrative team, which typically means less bandwidth for one-on-one exam remediation.",
+    "useCaseHypothesis": "24/7 NCLEX-NGN and clinical judgment practice for students juggling clinical rotations and, in many cases, work or family commitments in a rural-serving program with lean faculty support.",
+    "decisionMaker": {
+      "name": "Carol Milliron",
+      "title": "Assistant Dean of Nursing Programs",
+      "email": "cmilliron@yvcc.edu",
+      "emailVerified": true
+    },
+    "website": "https://yvcc.edu/academics/healthcare/nursing/index.php",
+    "source": "claude-research-2026-08-05 | https://yvcc.edu/academics/healthcare/nursing/index.php",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "Quick note for YVC's nursing program",
+      "body": "Carol,\n\nI was reading through YVC's nursing program page, ACEN continuing accreditation through 2029 and Washington State Board approval, serving a region where healthcare staffing is a known challenge. Programs like yours often run lean on faculty relative to student need.\n\nI'm Praveen, with Evelyn Learning. We build an AI voice tutor: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws things out, and won't move on until the student can explain the concept back. It's available 24/7 for unlimited sessions, and our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy, things students often need to drill outside of class and clinical hours.\n\n[DEMO_LINK]\n\nWorth a look?\n\nPraveen\nEvelyn Learning"
+    }
+  },
+  {
+    "company": "Arizona Western College - Nursing (ADN) Program",
+    "segment": "nursing_program",
+    "about": "Arizona Western College, in Yuma, AZ, offers an ACEN-accredited Associate of Applied Science in Nursing with an LPN exit option after the third semester. The college expanded its nursing cohort from 40 to 60 students per semester to help address the healthcare workforce shortage in rural Yuma County.",
+    "whyFit": "AWC explicitly grew its cohort size to meet a stated rural workforce gap, and its own director has publicly framed the expansion around 'Yuma County is a rural area that needs more healthcare workers.' A larger cohort with the same faculty headcount is a direct driver of needing scalable review support.",
+    "useCaseHypothesis": "Scalable NCLEX-NGN and clinical judgment practice to support a nursing cohort that grew 50% in size without a proportional increase in faculty, particularly for students in a rural area with limited access to outside tutoring.",
+    "decisionMaker": {
+      "name": "Stephanie Francis",
+      "title": "Director of Nursing",
+      "email": "Stephanie.Francis@azwestern.edu",
+      "emailVerified": true
+    },
+    "website": "https://www.azwestern.edu/degrees-and-certificates/nursing",
+    "source": "claude-research-2026-08-05 | https://www.azwestern.edu/career-and-technical-education/contact and https://www.azwestern.edu/news/nursing-cohort-expands-accept-60-students-semester",
+    "currentDraft": {
+      "channel": "email",
+      "subject": "AWC's nursing cohort growth in Yuma County",
+      "body": "Stephanie,\n\nI read about AWC growing its nursing cohort from 40 to 60 students per semester to help meet Yuma County's healthcare workforce needs. Fifty percent more students on the same faculty team usually means less one-on-one time for exam prep and remediation.\n\nI'm Praveen, with Evelyn Learning. We build an AI voice tutor: live spoken sessions with a shared whiteboard, where it teaches conversationally, draws diagrams, and won't move on until the student can explain the concept themselves. It's available 24/7 for unlimited sessions, and our nursing catalog covers NCLEX-NGN format, clinical judgment (CJMM), and prioritization strategy, which could help absorb some of that extra review load as the program scales.\n\n[DEMO_LINK]\n\nWorth a short look?\n\nPraveen\nEvelyn Learning"
+    }
+  }
+]
