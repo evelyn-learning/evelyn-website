@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { CrimsoraBrowserFrame } from '@/components/showcase/CrimsoraBrowserFrame';
 
 export const metadata: Metadata = {
   title: 'Client Story: Crimsora | Evelyn Learning',
   description:
     'How Crimsora delivers live 1-on-1 AI voice tutoring at consumer scale — high school core, AP, and SAT/ACT — on Evelyn Learning’s Voice Tutor engine.',
+  alternates: { canonical: '/showcase/crimsora' },
 };
 
 const OFFERINGS = [
   { title: 'High school core', body: 'Algebra 1, Geometry, Biology, Chemistry, English, and World History — full courses with lessons, notes, practice, and quizzes.' },
   { title: 'AP courses', body: '9 AP courses with exam-style practice and FRQs graded on real rubrics.' },
-  { title: 'SAT & ACT prep', body: 'Full prep courses plus a 15-form catalog of timed mock exams.' },
+  { title: 'SAT & ACT prep', body: 'Full SAT and ACT prep courses with timed, full-length mock exams — part of Crimsora’s 15-form mock catalog spanning SAT, ACT, and AP.' },
 ];
 
 const ENGINE_POINTS = [
@@ -71,12 +73,12 @@ export default function CrimsoraShowcasePage() {
           <div className="container-wide max-w-5xl mx-auto">
             <h2 className="text-3xl font-bold text-slate-900 mb-8 text-center">The Voice Tutor, in Crimsora&rsquo;s product</h2>
             <div className="space-y-10">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+              <CrimsoraBrowserFrame label="AP Macroeconomics session">
                 <Image src="/showcase/crimsora/whiteboard-1.png" alt="A live Crimsora AP Macroeconomics session: the tutor walking a student through a money-market supply and demand graph on the whiteboard" width={1600} height={820} className="w-full h-auto" />
-              </div>
-              <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+              </CrimsoraBrowserFrame>
+              <CrimsoraBrowserFrame label="Biology session">
                 <Image src="/showcase/crimsora/crimsora-session.png" alt="A live Crimsora Biology session: the tutor building a concept map on the whiteboard from spontaneous generation to cell theory" width={1600} height={820} className="w-full h-auto" />
-              </div>
+              </CrimsoraBrowserFrame>
             </div>
           </div>
         </section>

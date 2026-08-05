@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { connectDB } from "@/lib/db";
 import { BlogPost } from "@/models";
 import { ArrowRight } from "lucide-react";
+import { CrimsoraBrowserFrame } from '@/components/showcase/CrimsoraBrowserFrame';
 
 export const revalidate = 60;
 
@@ -212,7 +213,7 @@ function FeaturedClientSection() {
               See the client story <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+          <CrimsoraBrowserFrame label="Biology session">
             <Image
               src="/showcase/crimsora/crimsora-session.png"
               alt="A live Crimsora tutoring session powered by the Evelyn Voice Tutor"
@@ -220,7 +221,7 @@ function FeaturedClientSection() {
               height={820}
               className="w-full h-auto"
             />
-          </div>
+          </CrimsoraBrowserFrame>
         </div>
       </div>
     </section>
