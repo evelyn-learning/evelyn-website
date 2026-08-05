@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Mail, X } from "lucide-react";
+import { ArrowLeft, Mail, RefreshCw, X } from "lucide-react";
 import type { LeadSegment, LeadStatus, TouchChannel } from "@/models";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
@@ -65,6 +65,9 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
   const [tab, setTab] = useState<TabKey>("review");
   const [gmailStatus, setGmailStatus] = useState<GmailStatus | null>(null);
   const [gmailError, setGmailError] = useState<string | null>(null);
+  const [watcherActive, setWatcherActive] = useState<boolean | null>(null);
+  const [watcherChecking, setWatcherChecking] = useState(false);
+  const [watcherError, setWatcherError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,6 +75,19 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!cancelled && data) setGmailStatus(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/outreach/watcher")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setWatcherActive(!!data.active);
       })
       .catch(() => {});
     return () => {
@@ -118,6 +134,24 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
     setLeads(data.leads ?? []);
   }, []);
 
+  const checkRepliesNow = useCallback(async () => {
+    setWatcherChecking(true);
+    setWatcherError(null);
+    try {
+      const res = await fetch("/api/admin/outreach/watcher", { method: "POST" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        setWatcherError(data?.error || "Reply check failed");
+        return;
+      }
+      await refresh();
+    } catch {
+      setWatcherError("Reply check failed");
+    } finally {
+      setWatcherChecking(false);
+    }
+  }, [refresh]);
+
   const counts = useMemo(() => {
     const staged = leads.filter((l) => l.status === "staged").length;
     const now = Date.now();
@@ -148,6 +182,38 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
               <h1 className="text-2xl font-bold text-gray-900">Outreach Console</h1>
             </div>
             <div className="flex items-center gap-2">
+              {watcherError && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                  Reply check failed: {watcherError}
+                  <button
+                    type="button"
+                    onClick={() => setWatcherError(null)}
+                    aria-label="Dismiss"
+                    className="text-red-700/70 hover:text-red-700"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {watcherActive !== null && (
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+                    watcherActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Watcher {watcherActive ? "active" : "off"}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={checkRepliesNow}
+                disabled={watcherChecking}
+                className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${watcherChecking ? "animate-spin" : ""}`} />
+                {watcherChecking ? "Checking…" : "Check replies now"}
+              </button>
               {gmailError && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
                   Gmail connect failed: {gmailError}
