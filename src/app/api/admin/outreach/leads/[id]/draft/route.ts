@@ -126,6 +126,15 @@ export async function POST(
     }
   } catch (error) {
     console.error("[OUTREACH] draft Error:", error);
-    return NextResponse.json({ error: "Failed to create draft" }, { status: 500 });
+    // This route is admin-only, so it's safe to pass the Gmail API's own
+    // error message straight through — that's the difference between
+    // "insufficient scope", "invalid_grant" (revoked/expired refresh
+    // token), a 403 quota error, a bad threadId, and a TOKEN_ENCRYPTION_KEY
+    // rotation all looking identical as an opaque 500 vs. the operator
+    // being able to diagnose which one it actually was. Nothing beyond the
+    // Gmail API's own error message is exposed here.
+    const status = httpStatusOf(error) ?? 500;
+    const message = error instanceof Error ? error.message : "Failed to create draft";
+    return NextResponse.json({ error: message }, { status });
   }
 }

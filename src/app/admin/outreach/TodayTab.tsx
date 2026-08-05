@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Copy, Check, Mail, Linkedin, Globe, FileText, Eye, Pencil, ExternalLink } from "lucide-react";
 import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
-import type { TouchChannel } from "@/models";
+import type { TouchChannel } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
 

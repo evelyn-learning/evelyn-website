@@ -13,6 +13,31 @@ thread, etc).
 
 ---
 
+## 0. Confirm a real AdminUser row exists (do this FIRST)
+
+`src/lib/auth.ts:8-14,53-66` has a hardcoded fallback admin
+(`admin@evelynlearning.com` / `admin123`) that authenticates whenever no
+`AdminUser` document exists in the database yet. `getServerSession(authOptions)`
+is what gates every route in this checklist, including the OAuth connect in
+§3 — so until a real `AdminUser` row exists, that gate can be satisfied by
+the hardcoded fallback credentials, and whoever passes them gets a session
+able to read the outreach inbox and compose mail as
+`praveen@evelynlearning.com`.
+
+Before proceeding to §3 (Connect Gmail):
+
+1. Confirm at least one `AdminUser` document exists in the production
+   database (`db.adminusers.countDocuments()` or equivalent), with a real,
+   non-default password hash.
+2. If none exists, create one first (see the admin-user seed/creation path
+   for this codebase) and verify login with those real credentials at
+   `/admin/login` — do **not** proceed using the fallback
+   `admin@evelynlearning.com` / `admin123` credentials.
+3. Only once a real `AdminUser` row makes the fallback unreachable should you
+   complete the OAuth connect in §3 below.
+
+---
+
 ## 1. Prerequisites — GCP + env setup
 
 The outreach Gmail integration uses its own OAuth client, **separate from**
@@ -299,7 +324,10 @@ With `ENABLE_OUTREACH_WATCHER=true` set and the app restarted:
 
 - Every route above sits behind `getServerSession(authOptions)` — all
   requests must come from an authenticated admin browser session; there is
-  no separate service-account path.
+  no separate service-account path. That gate is only as strong as the admin
+  accounts behind it, though — see §0 above: until a real `AdminUser` row
+  exists, `authOptions`' hardcoded fallback admin can satisfy this same
+  check.
 - The reply watcher **only** polls Gmail thread ids already recorded on a
   lead (`lead.gmailThreadIds`) — it never lists or searches the wider
   inbox. This is deliberate (see the comment atop

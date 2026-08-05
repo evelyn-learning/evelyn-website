@@ -31,6 +31,20 @@ export async function POST(
       return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
     }
 
+    // applyMarkSent() only reads lead.status to decide the *next* status —
+    // it doesn't validate that mark-sent is a legal action from the
+    // CURRENT status. Without this guard, calling mark-sent on a
+    // replied/call_booked/dead lead silently flips it back to "contacted"
+    // (a fresh outbound touch on a lead that's already replied or is dead).
+    // Matches what the UI already enforces (Today tab only surfaces
+    // approved/contacted leads).
+    if (lead.status !== "approved" && lead.status !== "contacted") {
+      return NextResponse.json(
+        { error: `Cannot mark sent for a lead with status "${lead.status}"` },
+        { status: 400 }
+      );
+    }
+
     const result = applyMarkSent(
       { status: lead.status, touches: lead.touches },
       channel as TouchChannel,

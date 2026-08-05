@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle, XCircle, Pencil, Mail, Linkedin, Globe, BadgeCheck } from "lucide-react";
-import { LEAD_SEGMENTS } from "@/models";
+import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 
 export const SEGMENT_LABELS: Record<string, string> = {

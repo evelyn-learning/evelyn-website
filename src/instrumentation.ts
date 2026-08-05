@@ -58,8 +58,16 @@ export async function register() {
     // Independently gated from the blog scheduler above.
     if (process.env.ENABLE_OUTREACH_WATCHER === 'true') {
       setTimeout(async () => {
-        const { startReplyWatcher } = await import('@/lib/outreach/reply-watcher');
-        startReplyWatcher('*/15 * * * *');
+        try {
+          const { startReplyWatcher } = await import('@/lib/outreach/reply-watcher');
+          startReplyWatcher('*/15 * * * *');
+        } catch (error) {
+          // An uncaught throw here is an unhandled rejection inside a bare
+          // setTimeout callback — Node's default terminates the process on
+          // that, which puts pm2 into a restart loop. Same shape as the
+          // blog-scheduler block above; log and move on instead.
+          console.error('[Instrumentation] Failed to start outreach reply watcher:', error);
+        }
       }, 5000); // 5 second delay for DB connection
     } else {
       console.log('[Instrumentation] Outreach reply watcher disabled (set ENABLE_OUTREACH_WATCHER=true to enable)');

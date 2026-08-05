@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { LEAD_SEGMENTS, LEAD_STATUSES, type LeadStatus } from "@/models";
+import { LEAD_SEGMENTS, LEAD_STATUSES, type LeadStatus } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
 

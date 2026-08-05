@@ -29,6 +29,21 @@ export async function getOutreachGmail(): Promise<gmail_v1.Gmail> {
   return google.gmail({ version: "v1", auth });
 }
 
+// Subjects are LLM-written cold-email copy (em dashes, curly quotes,
+// etc. near-certain) landing directly in a raw MIME header line. A raw
+// non-ASCII `Subject:` header is undefined behavior per RFC 5322/2047 — most
+// mail clients (Outlook especially) will mangle it into mojibake rather than
+// reject it outright, which is worse for a cold-outreach send since it's
+// silent. Encode as RFC 2047 "B" (base64) encoded-word when the subject
+// contains any non-ASCII byte; leave plain ASCII subjects untouched (no
+// reason to pay the encoding overhead when it's not needed).
+function encodeMimeSubject(subject: string): string {
+  // eslint-disable-next-line no-control-regex
+  if (/^[\x00-\x7F]*$/.test(subject)) return subject;
+  const b64 = Buffer.from(subject, "utf8").toString("base64");
+  return `=?UTF-8?B?${b64}?=`;
+}
+
 function assertSafeHeaderValue(value: string, field: string): void {
   // `to`/`subject` land straight into raw MIME header lines below. `subject`
   // in particular originates from LLM-generated draft content persisted on
@@ -74,7 +89,8 @@ export async function createOutreachDraft(args: {
   }
   const mime = [
     `To: ${args.to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeMimeSubject(subject)}`,
+    "MIME-Version: 1.0",
     ...extraHeaders,
     'Content-Type: text/plain; charset="UTF-8"',
     "",

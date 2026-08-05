@@ -10,8 +10,22 @@ import { getOutreachAccount, getOutreachOAuthClient } from "@/lib/outreach/gmail
 
 const SUCCESS_PATH = "/admin/outreach";
 
+// See the identical helper + comment in `../auth/route.ts`: behind
+// nginx/Cloudflare `req.url` reports `http://` even for an https request, so
+// redirect URLs must be built from the configured callback URL's origin, not
+// `req.url` directly.
+function appBaseUrl(req: NextRequest): string {
+  const callback = process.env.GMAIL_OUTREACH_CALLBACK_URL || "";
+  try {
+    const u = new URL(callback);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return new URL(req.url).origin;
+  }
+}
+
 function errorRedirect(req: NextRequest, code: string) {
-  const url = new URL(SUCCESS_PATH, req.url);
+  const url = new URL(SUCCESS_PATH, appBaseUrl(req));
   url.searchParams.set("gmail_error", code);
   return NextResponse.redirect(url);
 }
@@ -71,7 +85,7 @@ export async function GET(req: NextRequest) {
       { upsert: true, new: true }
     );
 
-    const redirectUrl = new URL(SUCCESS_PATH, req.url);
+    const redirectUrl = new URL(SUCCESS_PATH, appBaseUrl(req));
     redirectUrl.searchParams.set("gmail", "connected");
     return NextResponse.redirect(redirectUrl);
   } catch (err) {

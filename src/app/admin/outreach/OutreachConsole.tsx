@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, RefreshCw, X } from "lucide-react";
-import type { LeadSegment, LeadStatus, TouchChannel } from "@/models";
+import type { LeadSegment, LeadStatus, TouchChannel } from "@/lib/outreach/enums";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
 import PipelineTab from "./PipelineTab";

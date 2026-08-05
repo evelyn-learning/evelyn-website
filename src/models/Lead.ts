@@ -1,19 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS } from "@/lib/outreach/enums";
+import type { LeadSegment, LeadStatus, TouchChannel } from "@/lib/outreach/enums";
 
-export const LEAD_SEGMENTS = [
-  "nursing_program", "testprep_academy", "homeschool_charter", "microschool",
-  "school_district", "private_school", "intl_school", "library",
-  "publisher", "agency", "corporate_ld", "other",
-] as const;
-export type LeadSegment = (typeof LEAD_SEGMENTS)[number];
-
-export const LEAD_STATUSES = [
-  "staged", "approved", "contacted", "replied", "call_booked", "parked", "dead",
-] as const;
-export type LeadStatus = (typeof LEAD_STATUSES)[number];
-
-export const TOUCH_CHANNELS = ["email", "linkedin", "form"] as const;
-export type TouchChannel = (typeof TOUCH_CHANNELS)[number];
+// Re-exported for existing server-side `@/models`/`./Lead` importers — no
+// breaking change. The canonical source is `@/lib/outreach/enums`, which is
+// mongoose-free and safe for client components to import directly (see that
+// file's header comment for why this file itself is NOT safe for them).
+export { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS };
+export type { LeadSegment, LeadStatus, TouchChannel };
 
 export interface ITouch {
   at: Date;
