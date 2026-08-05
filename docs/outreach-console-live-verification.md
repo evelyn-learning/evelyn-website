@@ -47,21 +47,36 @@ The outreach Gmail integration uses its own OAuth client, **separate from**
 1. In the GCP console, create a new OAuth 2.0 Client ID of type **Web
    application**.
 2. Enable the **Gmail API** for that GCP project (APIs & Services → Library).
-3. Add **Authorized redirect URIs**:
-   - `https://evelynlearning.com/api/admin/outreach/gmail/callback` (prod)
+3. Add **Authorized redirect URIs**. These must match `GMAIL_OUTREACH_CALLBACK_URL`
+   byte-for-byte — Google compares the string exactly, and `www.` vs the apex
+   counts as different. Production is canonical on **www** (`NEXT_PUBLIC_SITE_URL`
+   in `.env.local.production` is `https://www.evelynlearning.com`), so register:
+   - `https://www.evelynlearning.com/api/admin/outreach/gmail/callback` (prod — use this one)
+   - `https://evelynlearning.com/api/admin/outreach/gmail/callback` (apex, register as a safety net)
    - `http://localhost:3006/api/admin/outreach/gmail/callback` (dev — port
      3006 matches the value baked into `.env.local.example`)
-4. Under **OAuth consent screen**, either add `praveen@evelynlearning.com`
-   as a test user (if the app is in Testing mode) or publish the app
-   internally (Internal user type, if the GCP project is on a Workspace
-   org) — either unblocks consent without Google's public-app review.
+
+   A mismatch here is the worst failure mode to debug: Google refuses at its own
+   consent screen and never redirects back, so no `?gmail_error=` ever reaches
+   the console and the chip just stays disconnected. If that happens, read the
+   error on Google's page — it will say `redirect_uri_mismatch`.
+4. Under **OAuth consent screen**, set User type = **Internal**. `evelynlearning.com`
+   is on Google Workspace (`MX = SMTP.GOOGLE.com`), so this is available, and it is
+   the option you want for two reasons:
+   - The two Gmail scopes are "sensitive", so an **External** app would need
+     Google's verification review before it could be published.
+   - **Refresh tokens issued by an External app in "Testing" status expire after
+     7 days.** That would silently break the reply watcher every week —
+     `getOutreachGmail()` would start throwing `invalid_grant` and each console
+     action would surface a Gmail error until someone reconnected by hand.
+   Internal avoids both: no review, and non-expiring refresh tokens.
 5. Set these env vars (dev: `.env.local`; prod: `.env.local.production`,
    shipped via `./deploy-update.sh` — **not** `npm run deploy`, which ships
    to a dead directory):
    ```
    GMAIL_OUTREACH_CLIENT_ID=<client id from step 1>
    GMAIL_OUTREACH_CLIENT_SECRET=<client secret from step 1>
-   GMAIL_OUTREACH_CALLBACK_URL=https://evelynlearning.com/api/admin/outreach/gmail/callback   # or the localhost:3006 variant in dev
+   GMAIL_OUTREACH_CALLBACK_URL=https://www.evelynlearning.com/api/admin/outreach/gmail/callback   # www — must match the GCP entry exactly; localhost:3006 variant in dev
    GMAIL_OUTREACH_USER=praveen@evelynlearning.com
    ENABLE_OUTREACH_WATCHER=true
    ```
