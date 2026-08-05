@@ -830,6 +830,9 @@ import { SEED_JEE_ROTATIONAL_MECHANICS } from './seeds/jee-rotational-mechanics'
 import { SEED_JEE_COORDINATE_GEOMETRY } from './seeds/jee-coordinate-geometry';
 // Batch 50 — Rest tier: NCLEX-PN, GRE Subject (math+physics), JEE thermo+organic.
 import { SEED_NCLEX_PN_STRATEGY } from './seeds/nclex-pn-strategy';
+// Clinical-content NCLEX demo lessons (the other NCLEX seeds are exam-strategy).
+import { SEED_NCLEX_HEART_FAILURE } from './seeds/nclex-heart-failure';
+import { SEED_NCLEX_INSULIN_MANAGEMENT } from './seeds/nclex-insulin-management';
 import { SEED_GRE_SUBJECT_MATH } from './seeds/gre-subject-math';
 import { SEED_GRE_SUBJECT_PHYSICS } from './seeds/gre-subject-physics';
 import { SEED_JEE_THERMODYNAMICS } from './seeds/jee-thermodynamics';
@@ -1087,6 +1090,11 @@ import { SEED_COLLEGE_SS_WESTERN_CIVILIZATION } from './seeds/college-ss-western
 import { SEED_COLLEGE_SS_AMERICAN_GOVERNMENT } from './seeds/college-ss-american-government';
 import { SEED_COLLEGE_SS_INTRO_PSYCHOLOGY } from './seeds/college-ss-intro-psychology';
 import { SEED_COLLEGE_SS_INTRO_ECONOMICS } from './seeds/college-ss-intro-economics';
+// Corporate L&D demo lessons. No business/professional subject exists in the
+// taxonomy, so these resolve under existing cells (economics / intro-ai); the
+// corporate framing is applied via the demo tile's free-text display labels.
+import { SEED_CORPLD_READING_A_PL_STATEMENT } from './seeds/corpld-reading-a-pl-statement';
+import { SEED_CORPLD_HOW_GENERATIVE_AI_WORKS } from './seeds/corpld-how-generative-ai-works';
 import { SEED_COLLEGE_SS_INTRO_SOCIOLOGY } from './seeds/college-ss-intro-sociology';
 // World Languages batch.
 import { SEED_G35_LANG_SPANISH_BEGINNER } from './seeds/g35-lang-spanish-beginner';
@@ -2644,6 +2652,8 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_JEE_ROTATIONAL_MECHANICS,
   SEED_JEE_COORDINATE_GEOMETRY,
   SEED_NCLEX_PN_STRATEGY,
+  SEED_NCLEX_HEART_FAILURE,
+  SEED_NCLEX_INSULIN_MANAGEMENT,
   SEED_GRE_SUBJECT_MATH,
   SEED_GRE_SUBJECT_PHYSICS,
   SEED_JEE_THERMODYNAMICS,
@@ -2900,6 +2910,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_COLLEGE_CS_ALGORITHMS,
   SEED_COLLEGE_CS_DISCRETE_MATH,
   SEED_COLLEGE_CS_INTRO_AI,
+  SEED_CORPLD_HOW_GENERATIVE_AI_WORKS,
   // Science HS 9-10 + College batch.
   SEED_G910_SCI_BIOLOGY_OVERVIEW,
   SEED_G910_SCI_CHEMISTRY_OVERVIEW,
@@ -2921,6 +2932,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_COLLEGE_SS_AMERICAN_GOVERNMENT,
   SEED_COLLEGE_SS_INTRO_PSYCHOLOGY,
   SEED_COLLEGE_SS_INTRO_ECONOMICS,
+  SEED_CORPLD_READING_A_PL_STATEMENT,
   SEED_COLLEGE_SS_INTRO_SOCIOLOGY,
   // World Languages batch.
   SEED_G35_LANG_SPANISH_BEGINNER,

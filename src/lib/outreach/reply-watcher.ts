@@ -9,12 +9,40 @@ import { Lead, type ITouch } from "@/models";
 import { getThreadMessages, getOutreachAccount } from "./gmail";
 import { findInboundReply } from "./reply-detect";
 
-// Track scheduler state
-let isWatcherRunning = false;
-let watcherTask: ScheduledTask | null = null;
-// Overlap guard: a tick that starts while a previous run is still in
-// flight no-ops instead of running concurrently.
-let isCheckInProgress = false;
+// Scheduler state lives on globalThis, NOT in module scope.
+//
+// Next compiles instrumentation.ts into a different server bundle from the
+// route handlers, so `import('@/lib/outreach/reply-watcher')` from
+// instrumentation and `import ... from "@/lib/outreach/reply-watcher"` in
+// src/app/api/admin/outreach/watcher/route.ts resolve to two SEPARATE module
+// instances with two separate copies of any module-level `let`. With plain
+// module scope the cron started by instrumentation set its own copy, while the
+// route read a copy that was always null — so the console's chip reported
+// "Watcher off" while the cron was demonstrably running every 15 minutes
+// (observed on prod 2026-08-05), and the overlap guard could not see a run
+// started by the other context.
+//
+// globalThis is per-process, so both bundles share one record. Same reasoning
+// as the mongoose connection cache in src/lib/db.ts.
+interface WatcherState {
+  isWatcherRunning: boolean;
+  watcherTask: ScheduledTask | null;
+  isCheckInProgress: boolean;
+}
+
+const WATCHER_STATE_KEY = Symbol.for("evelyn.outreach.replyWatcherState");
+
+function watcherState(): WatcherState {
+  const g = globalThis as unknown as Record<symbol, WatcherState | undefined>;
+  if (!g[WATCHER_STATE_KEY]) {
+    g[WATCHER_STATE_KEY] = {
+      isWatcherRunning: false,
+      watcherTask: null,
+      isCheckInProgress: false,
+    };
+  }
+  return g[WATCHER_STATE_KEY];
+}
 
 export interface ReplyCheckStats {
   checkedThreads: number;
@@ -29,11 +57,12 @@ export interface ReplyCheckStats {
 export async function runReplyCheck(): Promise<ReplyCheckStats> {
   const stats: ReplyCheckStats = { checkedThreads: 0, repliesFound: 0, errors: 0 };
 
-  if (isCheckInProgress) {
+  const st = watcherState();
+  if (st.isCheckInProgress) {
     console.log("[Reply Watcher] Check already in progress, skipping this tick");
     return stats;
   }
-  isCheckInProgress = true;
+  st.isCheckInProgress = true;
 
   try {
     await connectDB();
@@ -88,7 +117,7 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
       console.error("[Reply Watcher] Error running reply check:", error);
     }
   } finally {
-    isCheckInProgress = false;
+    st.isCheckInProgress = false;
   }
 
   return stats;
@@ -96,7 +125,8 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
 
 // Start the reply watcher
 export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void {
-  if (isWatcherRunning) {
+  const st = watcherState();
+  if (st.isWatcherRunning) {
     console.log("[Reply Watcher] Watcher is already running");
     return;
   }
@@ -107,7 +137,7 @@ export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void
     return;
   }
 
-  watcherTask = cron.schedule(cronExpression, async () => {
+  st.watcherTask = cron.schedule(cronExpression, async () => {
     console.log(`[Reply Watcher] Running scheduled check at ${new Date().toISOString()}`);
     const stats = await runReplyCheck();
     if (stats.checkedThreads > 0 || stats.errors > 0) {
@@ -117,21 +147,22 @@ export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void
     }
   });
 
-  isWatcherRunning = true;
+  st.isWatcherRunning = true;
   console.log(`[Reply Watcher] Started with schedule: ${cronExpression}`);
 }
 
 // Stop the reply watcher
 export function stopReplyWatcher(): void {
-  if (watcherTask) {
-    watcherTask.stop();
-    watcherTask = null;
-    isWatcherRunning = false;
+  const st = watcherState();
+  if (st.watcherTask) {
+    st.watcherTask.stop();
+    st.watcherTask = null;
+    st.isWatcherRunning = false;
     console.log("[Reply Watcher] Stopped");
   }
 }
 
 // Check watcher status
 export function isReplyWatcherActive(): boolean {
-  return isWatcherRunning;
+  return watcherState().isWatcherRunning;
 }
