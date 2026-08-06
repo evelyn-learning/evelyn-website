@@ -37,7 +37,6 @@ export const SEED_NCLEX_INSULIN_MANAGEMENT: LessonPlan = {
       kind: 'hook',
       goal: 'Ground the lesson in a concrete near-miss scenario the learner must explain using timing, not just "insulin lowers blood sugar."',
       script: 'A patient receives rapid-acting insulin right before lunch. Lunch gets delayed — a family emergency, a procedure, whatever — and the tray never comes. Two hours later you find the patient diaphoretic, shaky, and confused. What happened, and could you have predicted exactly WHEN this would happen just from knowing which insulin was given?',
-      suggestedTools: ['show_function_graph'],
       estimatedMinutes: 1,
     },
     {
@@ -57,7 +56,19 @@ export const SEED_NCLEX_INSULIN_MANAGEMENT: LessonPlan = {
         { term: 'peak', definition: 'the time of maximum insulin effect — and therefore the time of greatest hypoglycemia risk.' },
         { term: 'basal insulin', definition: 'long-acting insulin providing steady background coverage between meals and overnight, without a pronounced peak.' },
       ],
-      suggestedTools: ['show_function_graph'],
+      suggestedTools: ['show_table'],
+      prescribedRender: {
+        tool: 'show_table',
+        params: {
+          headers: ['Insulin Type', 'Onset', 'Peak', 'Duration'],
+          rows: [
+            ['Rapid-acting (lispro, aspart, glulisine)', '10-15 min', '1-2 hr', '3-5 hr'],
+            ['Short-acting (Regular)', '30 min-1 hr', '2-4 hr', '5-8 hr'],
+            ['Intermediate-acting (NPH)', '1-2 hr', '4-12 hr (broad, variable)', '12-18 hr'],
+            ['Long-acting (glargine, detemir)', '1-2 hr', 'no pronounced peak', '20-24 hr'],
+          ],
+        },
+      },
       estimatedMinutes: 3,
     },
     {
@@ -71,7 +82,7 @@ export const SEED_NCLEX_INSULIN_MANAGEMENT: LessonPlan = {
         'TREATING HYPOGLYCEMIA (glucose typically <70 mg/dL, though nursing action thresholds may be facility-specific): if the patient is ALERT and can swallow, give 15-20 g of fast-acting oral carbohydrate (e.g., glucose tablets, juice), recheck glucose in 15 minutes, repeat if still low ("rule of 15"). If the patient is UNCONSCIOUS or unable to swallow safely, do NOT give anything by mouth — give IV dextrose (e.g., D50) or IM/subcutaneous glucagon per protocol.',
         'HOLD PARAMETERS: many facilities hold a scheduled insulin dose and notify the provider if the pre-dose glucose is below a set threshold (commonly around 70 mg/dL) — always confirm current glucose before administering, not just the scheduled time.',
       ],
-      suggestedTools: ['show_function_graph'],
+      suggestedTools: ['show_diagram'],
       estimatedMinutes: 2.5,
     },
     {
