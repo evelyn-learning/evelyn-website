@@ -10,25 +10,30 @@
  * safety net.
  *
  * Algorithm (stable: same input → same output):
- *   1. Estimate each label's bbox (char-count × fontSize heuristic — fine for
- *      SVG <text> where no canvas 2d context is at hand).
- *   2. Visit labels in reading order (original y, then x, then input index).
+ *   1. PRE-PASS: every label gets a horizontal edge clamp (char-count ×
+ *      fontSize bbox estimate, anchor-aware) so its box starts within
+ *      [edgePad, bounds.width - edgePad] — `bounds.width` exists as a
+ *      parameter precisely for this (2026-08 B2 fix; a lone off-canvas
+ *      label, e.g. a number-line caption near x=0, would otherwise never
+ *      get corrected, since a label with no collisions never reaches step
+ *      3 below). This MUST run before collision detection (round-2 fix):
+ *      clamping only labels that survive collision detection unclamped
+ *      checks a label's PRE-clamp box, so a label whose pre-clamp box
+ *      missed everything but whose CLAMPED box lands on an already-placed
+ *      label would slip through untouched-but-clamped, overlapping
+ *      silently. Clamping first means every collision check below already
+ *      sees final x positions.
+ *   2. Estimate each (now on-canvas) label's bbox (same estimate as above).
+ *   3. Visit labels in reading order (clamped y, then x, then input index).
  *      The first label of any colliding pile never moves.
- *   3. A label whose box intersects an already-placed box is nudged
+ *   4. A label whose box intersects an already-placed box is nudged
  *      VERTICALLY only (x / anchor untouched by collision resolution):
  *      stacked below the colliding pile, or above its original spot when
  *      the bottom of the canvas would clip it. Clamped to the bounds either
  *      way.
- *   4. EVERY label — moved or not — then gets a horizontal edge clamp (same
- *      bbox estimate, anchor-aware) so its box stays within
- *      [edgePad, bounds.width - edgePad]. A label with no collisions skips
- *      steps 2-3 entirely, so without this step a lone off-canvas label
- *      (e.g. a number-line caption near x=0) would never get corrected —
- *      `bounds.width` exists as a parameter precisely for this (2026-08
- *      B2 fix). A label wider than the usable width pins to the edge.
- *   5. Labels untouched by both steps 3 and 4 are returned as the SAME
- *      object reference — non-colliding, non-clamped input is bit-for-bit
- *      untouched.
+ *   5. Labels untouched by both the pre-pass clamp and collision resolution
+ *      are returned as the SAME object reference — non-colliding,
+ *      non-clamped input is bit-for-bit untouched.
  *
  * Deliberately NOT typography-aware or force-directed — a couple of small,
  * predictable nudges beat a clever layout that shifts on every render.
@@ -113,12 +118,16 @@ function intersects(a: Box, b: Box): boolean {
 /**
  * Horizontal clamp so a label's estimated box stays within
  * [edgePad, bounds.width - edgePad], per its anchor. Mirrors clampLabelPos
- * in sketch-render-core.ts (start/end/middle branching; a label wider than
- * the usable width pins to the edge rather than inverting).
+ * in sketch-render-core.ts: `start`/`end` anchors pin the box to the near
+ * edge when the label is wider than the usable width (there's no other
+ * side to invert to); a `middle`-anchored label that's too wide to fit
+ * with any half-width margin is instead CENTERED (`bounds.width / 2`) —
+ * pinning it to one edge would just clip the other side of the same box.
  *
- * The vertical collision pass above never touches x, so a solitary label
+ * The vertical collision pass below never touches x, so a solitary label
  * (no collisions) that starts off-canvas would otherwise stay off-canvas
- * forever — this is applied to EVERY output label as a final step.
+ * forever — this runs as a PRE-PASS over every label, before collision
+ * detection (see the algorithm doc above for why the order matters).
  */
 function clampX<T extends DeoverlapLabel>(
   l: T,
@@ -136,10 +145,11 @@ function clampX<T extends DeoverlapLabel>(
 }
 
 /**
- * De-overlap `labels` inside `bounds` by vertical nudging, then clamp every
- * label horizontally to `bounds.width`. Returns a new array in the ORIGINAL
- * order; entries that needed neither a vertical nudge nor a horizontal
- * clamp are the same object reference as the input.
+ * De-overlap `labels` inside `bounds`: clamp every label horizontally to
+ * `bounds.width` FIRST, then vertically nudge collisions among the clamped
+ * positions. Returns a new array in the ORIGINAL order; entries that needed
+ * neither a horizontal clamp nor a vertical nudge are the same object
+ * reference as the input.
  */
 export function deoverlapLabels<T extends DeoverlapLabel>(
   labels: readonly T[],
@@ -157,12 +167,27 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
     obstacles: options.obstacles ?? [],
   };
 
-  // Reading order: original y, then x, then input index (stable tiebreak).
-  const order = labels
-    .map((_, i) => i)
-    .sort((a, b) => labels[a].y - labels[b].y || labels[a].x - labels[b].x || a - b);
+  // PRE-PASS: horizontal edge clamp applied to EVERY label before collision
+  // detection runs, so the vertical de-overlap below always operates on
+  // already on-canvas x positions. Clamping AFTER collision resolution
+  // (round 1) checked a label's PRE-clamp box for collisions, then moved
+  // its x — a label whose pre-clamp box missed everything but whose
+  // CLAMPED box landed on an already-placed label slipped through
+  // untouched-but-clamped, overlapping silently (2026-08 B2 round-2 fix;
+  // repro: a short label placed near center, a long label near the far
+  // edge whose pre-clamp box missed it but whose clamped box didn't). A
+  // label whose clamp is a no-op keeps its input reference.
+  const clamped: T[] = labels.map((l) => {
+    const cx = clampX(l, bounds, o);
+    return cx === l.x ? l : ({ ...l, x: cx } as T);
+  });
 
-  const out: T[] = new Array(labels.length);
+  // Reading order: original y, then x, then input index (stable tiebreak).
+  const order = clamped
+    .map((_, i) => i)
+    .sort((a, b) => clamped[a].y - clamped[b].y || clamped[a].x - clamped[b].x || a - b);
+
+  const out: T[] = new Array(clamped.length);
   // Obstacles are pre-placed immovable boxes: labels route around them
   // exactly as they do around already-placed labels.
   const placed: Box[] = o.obstacles.map((b) => ({ ...b }));
@@ -199,18 +224,11 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
   };
 
   for (const i of order) {
-    const l = labels[i];
+    const l = clamped[i];
     const original = boxAt(l, l.y, o);
     if (!placed.some((p) => intersects(original, p))) {
-      const cx = clampX(l, bounds, o);
-      if (cx === l.x) {
-        out[i] = l; // untouched — same reference
-        placed.push(original);
-      } else {
-        const clamped = { ...l, x: cx };
-        out[i] = clamped;
-        placed.push(boxAt(clamped, l.y, o));
-      }
+      out[i] = l; // untouched by collision resolution — same ref as clamped[i]
+      placed.push(original);
       continue;
     }
     // Prefer stacking in the label's / caller's preferred direction
@@ -225,7 +243,7 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
       const maxY = yForTop(l, bounds.height - o.edgePad - h);
       y = Math.min(down, maxY);
     }
-    const moved = { ...l, y, x: clampX(l, bounds, o) };
+    const moved = { ...l, y };
     out[i] = moved;
     placed.push(boxAt(moved, y, o));
   }

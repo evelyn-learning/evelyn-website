@@ -161,5 +161,36 @@ function anyOverlap(ls: DeoverlapLabel[]): boolean {
   );
 }
 
+// ── 8. clamp-then-collide interaction (B2 round 2) ──────────────────
+// Round 1 clamped x AFTER deciding whether a label collides, using its
+// PRE-clamp box for that decision. A label whose pre-clamp box misses
+// everything but whose CLAMPED box lands on top of an already-placed label
+// slipped through untouched-but-clamped, overlapping silently. Repro
+// (review): A at x=150 (short label, placed first), B at x=480 with a long
+// label — B's pre-clamp box is far enough right to miss A, but clamping it
+// onto the canvas walks it left into A's box.
+{
+  const BOUNDS = { width: 500, height: 150 };
+  const A = L(150, 50, 'short label', 10); // width 11*10*0.55=60.5 → no clamp needed
+  const B = L(480, 50, 'x'.repeat(64), 10); // width 64*10*0.55=352 → clamps to x=323, overlapping A pre-nudge
+  const out = deoverlapLabels([A, B], BOUNDS);
+  check(
+    'clamp-then-collide: no residual overlap after clamping',
+    !anyOverlap(out),
+  );
+  check(
+    'clamp-then-collide: the clamped label was vertically nudged off A\'s row',
+    out[1].y !== B.y,
+  );
+  check(
+    'clamp-then-collide: A (never collides, never clamps) is untouched',
+    out[0] === A,
+  );
+  check(
+    'clamp-then-collide: B still respects the right edge after nudging',
+    box(out[1]).right <= BOUNDS.width - 1 + 1e-9,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
