@@ -16,6 +16,7 @@ import {
   type TruthTableFigure,
   type LogicGateFigure,
 } from '@/lib/tutor/diagrams/catalog/kinds/cs';
+import { layoutFlowchart } from './flowchart-layout';
 
 // ── Flowchart ─────────────────────────────────────────────────────────────
 export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFigure }) {
@@ -201,110 +202,6 @@ function NodeBox({
       <text x={x} y={y + 5} fontSize={fontSize} textAnchor="middle" fill="#1e3a8a" fontWeight={600}>{node.text}</text>
     </g>
   );
-}
-
-/** Layered layout for the flowchart: BFS longest-path depths from the start
- *  node assign each node to a row, then each row is PACKED left-to-right by the
- *  nodes' own widths + a gap and centered — so siblings never overlap no matter
- *  how many children a node has or what type it is. Rows after the first are
- *  ordered by the barycenter of each node's parents to keep edges short.
- *  Returns positions in unshifted coordinates (caller shifts to a viewBox);
- *  minX/maxX are the outer left/right edges (already include half-widths). */
-function layoutFlowchart(
-  nodes: FlowchartNode[],
-  edges: { from: string; to: string; label?: string }[],
-  widths: Map<string, number>,
-  rowHeight: number,
-  gap: number,
-): {
-  positions: Map<string, { x: number; y: number }>;
-  maxDepth: number;
-  minX: number;
-  maxX: number;
-} {
-  const incoming = new Map<string, string[]>();
-  const outgoing = new Map<string, { to: string; label?: string }[]>();
-  for (const n of nodes) {
-    incoming.set(n.id, []);
-    outgoing.set(n.id, []);
-  }
-  for (const e of edges) {
-    if (outgoing.has(e.from)) outgoing.get(e.from)!.push({ to: e.to, label: e.label });
-    if (incoming.has(e.to)) incoming.get(e.to)!.push(e.from);
-  }
-
-  // Depth via longest-path BFS from the start node (or nodes[0] as
-  // fallback). "Longest path" so a node converging from a deeper
-  // branch lands BELOW the branch tips.
-  const startNode = nodes.find((n) => n.type === 'start') || nodes[0];
-  const depth = new Map<string, number>();
-  depth.set(startNode.id, 0);
-  // Iterate until depths stabilize (handles diamonds without recursion).
-  let changed = true;
-  let safety = 0;
-  while (changed && safety++ < nodes.length * 4) {
-    changed = false;
-    for (const n of nodes) {
-      const d = depth.get(n.id);
-      if (d === undefined) continue;
-      for (const e of outgoing.get(n.id)!) {
-        const prev = depth.get(e.to);
-        if (prev === undefined || prev < d + 1) {
-          depth.set(e.to, d + 1);
-          changed = true;
-        }
-      }
-    }
-  }
-  // Any unreached nodes go below the deepest reached node.
-  const maxReachedDepth = Math.max(0, ...Array.from(depth.values()));
-  for (const n of nodes) if (!depth.has(n.id)) depth.set(n.id, maxReachedDepth + 1);
-
-  // Group node ids into rows by depth, preserving original array order.
-  const maxDepth = Math.max(0, ...Array.from(depth.values()));
-  const rows: string[][] = Array.from({ length: maxDepth + 1 }, () => []);
-  for (const n of nodes) rows[depth.get(n.id)!].push(n.id);
-
-  // Pack each row top-down. A row's nodes are spaced by their own widths + gap
-  // and centered on CENTER (so a linear chain stays a centered vertical spine).
-  // Rows below the first are ordered by the average x of their already-placed
-  // parents, reducing edge crossings.
-  const CENTER = 300;
-  const x = new Map<string, number>();
-  for (let d = 0; d <= maxDepth; d++) {
-    const row = rows[d];
-    if (d > 0) {
-      const bary = (id: string) => {
-        const ps = incoming.get(id)!.filter((p) => x.has(p));
-        if (ps.length === 0) return CENTER;
-        return ps.reduce((s, p) => s + x.get(p)!, 0) / ps.length;
-      };
-      row.sort((a, b) => {
-        const diff = bary(a) - bary(b);
-        if (diff !== 0) return diff;
-        return nodes.findIndex((n) => n.id === a) - nodes.findIndex((n) => n.id === b);
-      });
-    }
-    const totalW = row.reduce((s, id) => s + widths.get(id)!, 0) + gap * Math.max(0, row.length - 1);
-    let run = CENTER - totalW / 2;
-    for (const id of row) {
-      const w = widths.get(id)!;
-      x.set(id, run + w / 2);
-      run += w + gap;
-    }
-  }
-
-  const positions = new Map<string, { x: number; y: number }>();
-  let minX = Infinity;
-  let maxX = -Infinity;
-  for (const n of nodes) {
-    const xv = x.get(n.id)!;
-    const w = widths.get(n.id)!;
-    positions.set(n.id, { x: xv, y: 60 + depth.get(n.id)! * rowHeight });
-    minX = Math.min(minX, xv - w / 2);
-    maxX = Math.max(maxX, xv + w / 2);
-  }
-  return { positions, maxDepth, minX, maxX };
 }
 
 // ── State machine ─────────────────────────────────────────────────────────
