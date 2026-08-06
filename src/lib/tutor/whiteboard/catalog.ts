@@ -1297,8 +1297,11 @@ function structuralAxesFor(action: string, cmd: any): { tag: string; axes: unkno
  * calls with the same canonicalized JSON are treated as the same item.
  *
  * Strips bookkeeping fields (id, action, _internal markers, computed
- * targetId/targetFeature stamps) before hashing so signatures collide on
- * the user-meaningful payload only. Keys are sorted for determinism.
+ * targetId/targetFeature stamps) — TOP-LEVEL ONLY — before hashing so
+ * signatures collide on the user-meaningful payload only. Nested
+ * objects/arrays keep every key: a flowchart_simple edge's `label` is
+ * semantic (the branch text), not decoration, even though a top-level
+ * `label`/`title` is just a heading. Keys are sorted for determinism.
  *
  * For "organizer" kinds (see `structuralAxesFor`) the signature collapses
  * to structural axes only so reworded content cells still dedup.
@@ -1330,15 +1333,24 @@ export function buildShowSignature(action: string, cmd: any): string {
     'difficultyLabel', 'sourceTag', 'difficulty', 'source',
   ]);
   const seen = new WeakSet<object>();
-  const canon = (v: unknown): unknown => {
+  // STRIP applies ONLY to the top-level command object's own keys (isTop).
+  // Nested objects/arrays — flowchart_simple's `nodes`/`edges`, for
+  // instance — keep every key, since fields like `label` are bookkeeping
+  // at the top (the card's heading) but SEMANTIC CONTENT one level down
+  // (an edge's "yes"/"no" branch label, cs.ts FlowchartEdge.label). Two
+  // flowchart_simple commands with identical topology but different edge
+  // labels must hash DIFFERENT, not collide into the same signature.
+  const canon = (v: unknown, isTop: boolean): unknown => {
     if (v === null || typeof v !== 'object') return v;
     if (seen.has(v as object)) return undefined;
     seen.add(v as object);
-    if (Array.isArray(v)) return v.map(canon);
+    if (Array.isArray(v)) return v.map((item) => canon(item, false));
     const out: Record<string, unknown> = {};
-    const keys = Object.keys(v as Record<string, unknown>).filter((k) => !STRIP.has(k)).sort();
+    const keys = Object.keys(v as Record<string, unknown>)
+      .filter((k) => !isTop || !STRIP.has(k))
+      .sort();
     for (const k of keys) {
-      const cv = canon((v as Record<string, unknown>)[k]);
+      const cv = canon((v as Record<string, unknown>)[k], false);
       if (cv !== undefined) out[k] = cv;
     }
     return out;
@@ -1349,14 +1361,14 @@ export function buildShowSignature(action: string, cmd: any): string {
   const structural = structuralAxesFor(action, cmd);
   if (structural) {
     try {
-      return `${action}|${structural.tag}|${JSON.stringify(canon(structural.axes))}`;
+      return `${action}|${structural.tag}|${JSON.stringify(canon(structural.axes, true))}`;
     } catch {
       return `${action}|${structural.tag}|<unhashable>`;
     }
   }
 
   try {
-    return `${action}|${JSON.stringify(canon(cmd))}`;
+    return `${action}|${JSON.stringify(canon(cmd, true))}`;
   } catch {
     return `${action}|<unhashable>`;
   }

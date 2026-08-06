@@ -46,6 +46,7 @@
     "test:page-grouping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-page-grouping.ts",
     "test:energy-bars-scope": "npx tsx scripts/test-energy-bars-scope.ts",
     "test:dedup-scroll": "npx tsx scripts/test-dedup-scroll.ts",
+    "test:show-signature": "npx tsx scripts/test-show-signature.ts",
     "test:view-follow": "npx tsx scripts/test-view-follow.ts",
     "test:prestart": "npx tsx scripts/test-prestart-affordances.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
