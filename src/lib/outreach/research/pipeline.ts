@@ -128,7 +128,7 @@ export async function processJob(jobId: string, deps: PipelineDeps): Promise<voi
     let consecutiveErrors = 0;
     for (const candidate of job.candidates) {
       if (candidate.status !== "pending") continue;
-      if (job.progress.inserted + job.progress.noEmail >= job.count) break;
+      if (job.progress.inserted >= job.count) break;
 
       // Re-read status for cancel awareness (route flips it to "cancelled")
       const fresh = await ResearchJob.findById(jobId, { status: 1 }).lean() as { status: string } | null;
