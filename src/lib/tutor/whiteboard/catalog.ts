@@ -1297,11 +1297,16 @@ function structuralAxesFor(action: string, cmd: any): { tag: string; axes: unkno
  * calls with the same canonicalized JSON are treated as the same item.
  *
  * Strips bookkeeping fields (id, action, _internal markers, computed
- * targetId/targetFeature stamps) — TOP-LEVEL ONLY — before hashing so
- * signatures collide on the user-meaningful payload only. Nested
- * objects/arrays keep every key: a flowchart_simple edge's `label` is
- * semantic (the branch text), not decoration, even though a top-level
- * `label`/`title` is just a heading. Keys are sorted for determinism.
+ * targetId/targetFeature stamps, decorative title/label/difficulty fields)
+ * before hashing so signatures collide on the user-meaningful payload only
+ * — but ONLY on objects reached without passing through an array. Command
+ * payloads are commonly wrapped a level or two down in a plain object
+ * (show_diagram's `params.title`, show_problem's `problem.difficultyLabel`)
+ * and STRIP must still reach those. It must NOT reach into array items,
+ * though: a flowchart_simple edge's `label` (nodes[]/edges[]) is semantic
+ * (the branch text), not decoration, even though a same-named field at the
+ * command root or under `params`/`problem` is just a heading/badge. Keys
+ * are sorted for determinism.
  *
  * For "organizer" kinds (see `structuralAxesFor`) the signature collapses
  * to structural axes only so reworded content cells still dedup.
@@ -1333,24 +1338,27 @@ export function buildShowSignature(action: string, cmd: any): string {
     'difficultyLabel', 'sourceTag', 'difficulty', 'source',
   ]);
   const seen = new WeakSet<object>();
-  // STRIP applies ONLY to the top-level command object's own keys (isTop).
-  // Nested objects/arrays — flowchart_simple's `nodes`/`edges`, for
-  // instance — keep every key, since fields like `label` are bookkeeping
-  // at the top (the card's heading) but SEMANTIC CONTENT one level down
-  // (an edge's "yes"/"no" branch label, cs.ts FlowchartEdge.label). Two
-  // flowchart_simple commands with identical topology but different edge
-  // labels must hash DIFFERENT, not collide into the same signature.
-  const canon = (v: unknown, isTop: boolean): unknown => {
+  // STRIP applies on every object reached WITHOUT traversing an array
+  // (`insideArray` false at the root and through plain-object nesting —
+  // e.g. cmd → params → the params object is still "outside any array").
+  // Once recursion passes through an array, `insideArray` flips to true
+  // and STAYS true for everything under it (array items, and any object
+  // nested inside an array item) — so nodes[].label / edges[].label keep
+  // every key, while cmd.title, params.title, and problem.difficultyLabel
+  // (all reached via plain-object nesting, never through an array) still
+  // get stripped, exactly as before flowchart_simple's array payload
+  // exposed the bug.
+  const canon = (v: unknown, insideArray: boolean): unknown => {
     if (v === null || typeof v !== 'object') return v;
     if (seen.has(v as object)) return undefined;
     seen.add(v as object);
-    if (Array.isArray(v)) return v.map((item) => canon(item, false));
+    if (Array.isArray(v)) return v.map((item) => canon(item, true));
     const out: Record<string, unknown> = {};
     const keys = Object.keys(v as Record<string, unknown>)
-      .filter((k) => !isTop || !STRIP.has(k))
+      .filter((k) => insideArray || !STRIP.has(k))
       .sort();
     for (const k of keys) {
-      const cv = canon((v as Record<string, unknown>)[k], false);
+      const cv = canon((v as Record<string, unknown>)[k], insideArray);
       if (cv !== undefined) out[k] = cv;
     }
     return out;
@@ -1361,14 +1369,14 @@ export function buildShowSignature(action: string, cmd: any): string {
   const structural = structuralAxesFor(action, cmd);
   if (structural) {
     try {
-      return `${action}|${structural.tag}|${JSON.stringify(canon(structural.axes, true))}`;
+      return `${action}|${structural.tag}|${JSON.stringify(canon(structural.axes, false))}`;
     } catch {
       return `${action}|${structural.tag}|<unhashable>`;
     }
   }
 
   try {
-    return `${action}|${JSON.stringify(canon(cmd, true))}`;
+    return `${action}|${JSON.stringify(canon(cmd, false))}`;
   } catch {
     return `${action}|<unhashable>`;
   }
