@@ -45,6 +45,14 @@ const textMsg = (text: string, stop = "end_turn"): ResearchMessage =>
     );
   });
 
+  await test("max_tokens stop_reason throws RESEARCH_TRUNCATED", async () => {
+    const call: CallModel = async () => textMsg("cut off mid-json", "max_tokens");
+    await assert.rejects(
+      () => callWithToolLoop(call, { messages: [] }, () => {}),
+      /RESEARCH_TRUNCATED/
+    );
+  });
+
   await test("pause_turn cap: throws after 8 resumes", async () => {
     const call: CallModel = async () => textMsg("still going", "pause_turn");
     await assert.rejects(

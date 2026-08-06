@@ -98,7 +98,7 @@ export function discoveryParams(input: {
     : "";
   return {
     model: RESEARCH_MODEL,
-    max_tokens: 8192,
+    max_tokens: 16000,
     tools: RESEARCH_TOOLS,
     output_config: { format: { type: "json_schema", schema: DISCOVERY_SCHEMA } },
     messages: [{
@@ -117,7 +117,7 @@ export function candidateParams(input: {
   const kind = SEGMENT_CONTEXT[input.segment] ?? "education organization";
   return {
     model: RESEARCH_MODEL,
-    max_tokens: 8192,
+    max_tokens: 16000,
     tools: RESEARCH_TOOLS,
     output_config: { format: { type: "json_schema", schema: LEAD_SCHEMA } },
     messages: [{

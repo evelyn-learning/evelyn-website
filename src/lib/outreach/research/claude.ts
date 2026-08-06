@@ -35,6 +35,7 @@ export async function callWithToolLoop(
     const msg = await call(current);
     onUsage(msg.usage);
     if (msg.stop_reason === "refusal") throw new Error("RESEARCH_REFUSED");
+    if (msg.stop_reason === "max_tokens") throw new Error("RESEARCH_TRUNCATED");
     if (msg.stop_reason !== "pause_turn") return msg;
     current = {
       ...current,
