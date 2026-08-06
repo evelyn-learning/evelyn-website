@@ -24,3 +24,13 @@ export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 export const TOUCH_CHANNELS = ["email", "linkedin", "form"] as const;
 export type TouchChannel = (typeof TOUCH_CHANNELS)[number];
+
+export const RESEARCH_JOB_STATUSES = [
+  "queued", "running", "done", "failed", "aborted_cost", "cancelled",
+] as const;
+export type ResearchJobStatus = (typeof RESEARCH_JOB_STATUSES)[number];
+
+export const CANDIDATE_STATUSES = [
+  "pending", "inserted", "no_email", "dupe", "discarded", "error",
+] as const;
+export type CandidateStatus = (typeof CANDIDATE_STATUSES)[number];
