@@ -833,6 +833,7 @@ import { SEED_NCLEX_PN_STRATEGY } from './seeds/nclex-pn-strategy';
 // Clinical-content NCLEX demo lessons (the other NCLEX seeds are exam-strategy).
 import { SEED_NCLEX_HEART_FAILURE } from './seeds/nclex-heart-failure';
 import { SEED_NCLEX_INSULIN_MANAGEMENT } from './seeds/nclex-insulin-management';
+import { SEED_NCLEX_FLUID_ELECTROLYTES } from './seeds/nclex-fluid-electrolytes';
 import { SEED_GRE_SUBJECT_MATH } from './seeds/gre-subject-math';
 import { SEED_GRE_SUBJECT_PHYSICS } from './seeds/gre-subject-physics';
 import { SEED_JEE_THERMODYNAMICS } from './seeds/jee-thermodynamics';
@@ -2654,6 +2655,7 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_NCLEX_PN_STRATEGY,
   SEED_NCLEX_HEART_FAILURE,
   SEED_NCLEX_INSULIN_MANAGEMENT,
+  SEED_NCLEX_FLUID_ELECTROLYTES,
   SEED_GRE_SUBJECT_MATH,
   SEED_GRE_SUBJECT_PHYSICS,
   SEED_JEE_THERMODYNAMICS,

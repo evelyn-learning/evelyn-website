@@ -86,11 +86,11 @@ export const SOLUTION_SEGMENTS: SolutionSegment[] = [
     ],
     demoLessons: [
       {
-        planId: "evelyn.testprep.nclex.ngn-overview.v1",
-        title: "NCLEX-NGN Format & Clinical Judgment",
+        planId: "evelyn.testprep.nclex.fluid-electrolytes.v1",
+        title: "Fluid & Electrolytes: Potassium and the Heart",
         subjectLabel: "Nursing",
-        levelLabel: "NCLEX-NGN",
-        hook: "The Clinical Judgment Measurement Model, explained step by step",
+        levelLabel: "NCLEX",
+        hook: "Why one electrolyte turns into a cardiac emergency",
       },
       {
         planId: "evelyn.testprep.nclex.heart-failure.v1",
