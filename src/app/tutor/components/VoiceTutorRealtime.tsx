@@ -4655,12 +4655,17 @@ export function VoiceTutorRealtime({
     // new_page must NOT create a page or a visual break — figures of the same
     // topic stay together; splits happen only on segment-advance / topic-shift
     // / reset / overflow. So STRIP brain new_page from `processed` here, BEFORE
-    // the side-effect loop below opens a catalog page for it. We preserve its
-    // dedup-bypass role (newPageThisTurnRef — the divergence guard that lets
-    // fresh/off-plan content render, per system-prompt-builder.ts:604) and
-    // stash its title as a hint the page-grouping apply block prefers when the
-    // runtime DOES open a page this turn. Synthetic newPages (added after the
-    // decision) are appended later, so this filter only catches brain ones.
+    // the side-effect loop below opens a catalog page for it. newPageThisTurnRef
+    // no longer bypasses dedup for an EXACT signature match (C1 fix, 2026-08:
+    // that bypass let an identical re-emission render as a literal duplicate
+    // figure, since new_page carries no visual-break guarantee of its own).
+    // Fresh/off-plan content is unaffected — it has no existing match by
+    // definition, so the divergence guard (letting it render at all, per
+    // system-prompt-builder.ts:604) still holds; only the redundant-duplicate
+    // case changed. We still stash the title as a hint the page-grouping apply
+    // block prefers when the runtime DOES open a page this turn. Synthetic
+    // newPages (added after the decision) are appended later, so this filter
+    // only catches brain ones.
     let brainNewPageTitleHint: string | undefined;
     {
       const brainPages = processed.filter((c) => c.action === 'newPage');
@@ -5496,16 +5501,16 @@ export function VoiceTutorRealtime({
       | undefined
     > = commands.map(() => undefined);
     const droppedAsDuplicate = new Set<WhiteboardCommand>();
-    // Track whether THIS BATCH started with a newPage. If so, the brain
-    // explicitly intended to redraw on a fresh page — skip the dedup
-    // for show_* commands that follow the newPage in the same batch
-    // (otherwise we leave a blank new page while the original card
-    // sits on a previous page, and the student stares at an empty
-    // board while the brain insists the problem is "right there").
-    // Observed 2026-04-30 rational-expressions session: brain emitted
-    // newPage + show_problem(same statement) four times in a row,
-    // each show_problem dedupped, leaving four blank new pages and
-    // the brain switching to Malay trying to apologize.
+    // Track whether THIS BATCH started with a newPage — used for page-model
+    // bookkeeping (stamping the current page title, resetting per-page step
+    // tracking) and the dedup diagnostic log below. It no longer defeats
+    // dedup for an exact signature match (C1 fix, 2026-08 — see the dedup
+    // gate below): an identical re-emission now always dedups, new_page or
+    // not, since new_page carries no visual-break guarantee of its own (it's
+    // advisory — see the ADVISORY comment above). The 2026-04-30
+    // rational-expressions blank-page symptom this originally guarded
+    // against was a page-model problem, not a dedup one, and is unaffected —
+    // dedup dropping a duplicate never creates or leaves behind a page.
     let newPageThisBatch = false;
     // Generic evolve-in-place (project_tutor_figure_identity_design): prior
     // figures this batch's re-emissions supersede. A same-subject re-emit with
@@ -5565,15 +5570,21 @@ export function VoiceTutorRealtime({
           catalogRef.current.getItems().length,
         );
       }
-      // Skip dedup when there's a newPage in the same batch OR earlier
-      // in the same brain turn — brain explicitly wants this content on
-      // a fresh page, even if it matches something on a prior page. The
-      // turn-scoped guard catches the common pattern where new_page and
-      // show_problem are emitted as separate tool calls in one turn.
+      // An EXACT signature match always dedups — new_page (this batch or
+      // earlier in the same brain turn) no longer defeats it (C1 fix,
+      // 2026-08). new_page carries no visual-break guarantee of its own
+      // (it's advisory — stripped above, page-grouping.ts owns pagination),
+      // so honoring it here just meant an identical re-emission rendered as
+      // a literal duplicate figure with no page break to show for it. This
+      // is safe for "fresh"/off-plan content too: by definition it has no
+      // `existing` match, so it never reaches this branch and always
+      // renders — see the newPageThisTurnRef comment above (~line 4659).
+      // The ONE bypass that survives is an explicit redraw request
+      // (`redrawRequested`) — the caller asked for a redraw, so give it one.
       // EXCEPTION (2026-05-13): organizer-shaped show_diagram kinds
       // (comparison_table, t_chart, frayer_model, etc. — see
       // structuralAxesFor) ALWAYS dedup against an existing
-      // structurally-identical item, regardless of newPage state. These
+      // structurally-identical item, regardless of redrawRequested. These
       // kinds re-emit with reworded cells frequently and the brain has
       // no legitimate reason to want a duplicate on a fresh page —
       // observed session: brain emitted comparison_table 2× with same
@@ -5586,8 +5597,7 @@ export function VoiceTutorRealtime({
           'hierarchy_pyramid', 'argument_structure', 'government_branches',
           'body_system', 'life_cycle', 'water_cycle', 'rock_cycle',
         ]).has(cmdForAxes.type);
-      const dedupAllowedDespiteNewPage = isOrganizerKind;
-      if (existing && (dedupAllowedDespiteNewPage || (!newPageThisBatch && !newPageThisTurnRef.current && !redrawRequested))) {
+      if (existing && (isOrganizerKind || !redrawRequested)) {
         const inputIdx = commands.indexOf(cmd);
         if (inputIdx >= 0) {
           duplicates[inputIdx] = {
