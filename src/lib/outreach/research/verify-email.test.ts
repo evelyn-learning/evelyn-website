@@ -22,6 +22,15 @@ async function test(name: string, fn: () => void | Promise<void>) {
   await test("similar-but-different email not matched", () => {
     assert.equal(emailAppearsInText("dsmith@acme.edu", "asmith@acme.edu is the contact"), false);
   });
+  await test("domain-suffix false positive rejected", () => {
+    assert.equal(emailAppearsInText("dsmith@acme.edu", "contact dsmith@acme.education for help"), false);
+    assert.equal(emailAppearsInText("dsmith@acme.edu", "dsmith@acme.edu.au is the person"), false);
+  });
+  await test("email matched when followed by punctuation/space/end", () => {
+    assert.ok(emailAppearsInText("dsmith@acme.edu", "email dsmith@acme.edu."));
+    assert.ok(emailAppearsInText("dsmith@acme.edu", "dsmith@acme.edu is the contact"));
+    assert.ok(emailAppearsInText("dsmith@acme.edu", "dsmith@acme.edu"));
+  });
 
   await test("verifyEmailPublished true when page contains email", async () => {
     const fakeFetch = (async () => new Response("reach Dana at dsmith@acme.edu")) as typeof fetch;

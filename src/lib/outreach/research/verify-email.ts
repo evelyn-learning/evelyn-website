@@ -19,7 +19,18 @@ export function emailAppearsInText(email: string, pageText: string): boolean {
   const idx = haystack.indexOf(needle);
   if (idx === -1) return false;
   const before = idx === 0 ? "" : haystack[idx - 1];
-  return before === "" || !/[a-z0-9._%+-]/.test(before);
+  if (before !== "" && /[a-z0-9._%+-]/.test(before)) return false;
+  // Symmetric trailing boundary check: prevent "dsmith@acme.edu" matching in "dsmith@acme.education"
+  // or "dsmith@acme.edu.au", but allow sentence-ending punctuation like "dsmith@acme.edu."
+  const after = idx + needle.length >= haystack.length ? "" : haystack[idx + needle.length];
+  if (after === "") return true;  // end of string
+  if (after === ".") {
+    // "." could be domain extension like ".au" or sentence punctuation
+    const afterDot = idx + needle.length + 1 >= haystack.length ? "" : haystack[idx + needle.length + 1];
+    if (!/[a-z0-9]/.test(afterDot)) return true;  // punctuation, not domain extension
+    return false;  // domain extension, reject
+  }
+  return !/[a-z0-9_%+-]/.test(after);  // reject if email continues with these chars
 }
 
 export async function verifyEmailPublished(
