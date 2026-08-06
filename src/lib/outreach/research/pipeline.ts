@@ -121,6 +121,10 @@ export async function processJob(jobId: string, deps: PipelineDeps): Promise<voi
       job.candidates = parsed.candidates.map((c) => ({
         company: c.company, website: c.website, status: "pending" as const,
       })) as unknown as ICandidate[];
+      // Lease heartbeat — renewed each candidate (and here, after discovery)
+      // so a crashed process's job is re-claimable after LEASE_MS, not a
+      // full job duration.
+      job.claimedAt = new Date();
       await job.save();
     }
 
@@ -135,8 +139,13 @@ export async function processJob(jobId: string, deps: PipelineDeps): Promise<voi
       if (fresh?.status === "cancelled") { job.status = "cancelled"; await job.save(); return; }
 
       if (job.costUsd >= costCapUsd()) {
-        job.status = "aborted_cost";
-        await job.save();
+        // Guarded write: don't clobber a cancel that landed after the last
+        // per-candidate check — a job already flipped to "cancelled" stays
+        // "cancelled".
+        await ResearchJob.updateOne(
+          { _id: job._id, status: "running" },
+          { $set: { status: "aborted_cost" } }
+        );
         return;
       }
 
@@ -184,11 +193,19 @@ export async function processJob(jobId: string, deps: PipelineDeps): Promise<voi
           }
         }
       }
+      // Lease heartbeat — renewed each candidate so a crashed process's job
+      // is re-claimable after LEASE_MS, not a full job duration.
+      job.claimedAt = new Date();
       await job.save();
     }
 
-    job.status = "done";
-    await job.save();
+    // Guarded write: don't clobber a cancel that landed after the last
+    // per-candidate check — a job already flipped to "cancelled" stays
+    // "cancelled".
+    await ResearchJob.updateOne(
+      { _id: job._id, status: "running" },
+      { $set: { status: "done" } }
+    );
   } catch (e) {
     job.status = "failed";
     job.error = e instanceof Error ? e.message : String(e);

@@ -17,6 +17,12 @@ interface WorkerState {
 
 const WORKER_STATE_KEY = Symbol.for("evelyn.outreach.researchWorkerState");
 
+// Lease window for a "running" job. processJob renews claimedAt on every
+// candidate (a heartbeat), so this only needs to cover the gap left by a
+// crashed/restarted process — not a full job's duration. Kept well above
+// one candidate's worst case of ~2-3 min.
+const LEASE_MS = 10 * 60 * 1000;
+
 function workerState(): WorkerState {
   const g = globalThis as unknown as Record<symbol, WorkerState | undefined>;
   if (!g[WORKER_STATE_KEY]) {
@@ -27,8 +33,9 @@ function workerState(): WorkerState {
 
 // Claim and run at most one job. A "running" job with no in-process run is
 // a crash leftover — resume it before touching the queue.
-// claimedAt is a 30-min lease: a running job is only re-claimable when the
-// lease has expired, so two processes never resume the same job concurrently.
+// claimedAt is a LEASE_MS lease, heartbeat-renewed by processJob on every
+// candidate: a running job is only re-claimable once the lease has expired,
+// so two processes never resume the same job concurrently.
 export async function runResearchTick(): Promise<{ ran: boolean; jobId?: string }> {
   const st = workerState();
   if (st.isJobInProgress) return { ran: false };
@@ -43,7 +50,7 @@ export async function runResearchTick(): Promise<{ ran: boolean; jobId?: string 
             status: "running",
             $or: [
               { claimedAt: null },
-              { claimedAt: { $lt: new Date(Date.now() - 30 * 60 * 1000) } }
+              { claimedAt: { $lt: new Date(Date.now() - LEASE_MS) } }
             ]
           },
           { status: "queued" }

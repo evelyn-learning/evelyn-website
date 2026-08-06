@@ -2139,7 +2139,7 @@ git add -A && git commit -m "fix(outreach): live-smoke fixes for lead research" 
 
 - [ ] **Step 5: Deploy notes (do NOT deploy without the owner)**
 
-Deploy is owner-gated. When approved: use `./deploy-to-production.sh` (fast path — this change touches no blog/speaker content), then on the server set `ENABLE_LEAD_RESEARCH=true` and `LEAD_RESEARCH_COST_CAP_USD=20` in the prod env and `pm2 restart` (remember: `pm2 --update-env` never removes deleted vars, only changed ones). Verify: `/admin/outreach` → Find leads tab shows "worker active" (no amber warning), then run one real 20-count nursing batch with the owner watching.
+Deploy is owner-gated. When approved: use `./deploy-to-production.sh` (fast path — this change touches no blog/speaker content), then on the server set `ENABLE_LEAD_RESEARCH=true` and `LEAD_RESEARCH_COST_CAP_USD=20` in the prod env and `pm2 restart` (remember: `pm2 --update-env` never removes deleted vars, only changed ones). Verify: `/admin/outreach` → Find leads tab shows "worker active" (no amber warning), then run one real 20-count nursing batch with the owner watching. The `@anthropic-ai/sdk` bump (0.71→0.115) touches ~20 existing consumers (tutor/chat/showcase routes), so post-deploy verification must also include one live tutor-route call (e.g. a `/api/tutor/chat` exchange) in addition to the outreach checks.
 
 ---
 
