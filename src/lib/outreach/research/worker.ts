@@ -27,20 +27,31 @@ function workerState(): WorkerState {
 
 // Claim and run at most one job. A "running" job with no in-process run is
 // a crash leftover — resume it before touching the queue.
+// claimedAt is a 30-min lease: a running job is only re-claimable when the
+// lease has expired, so two processes never resume the same job concurrently.
 export async function runResearchTick(): Promise<{ ran: boolean; jobId?: string }> {
   const st = workerState();
   if (st.isJobInProgress) return { ran: false };
   st.isJobInProgress = true;
   try {
     await connectDB();
-    let job = await ResearchJob.findOne({ status: "running" }).sort({ createdAt: 1 });
-    if (!job) {
-      job = await ResearchJob.findOneAndUpdate(
-        { status: "queued" },
-        { $set: { status: "running" } },
-        { sort: { createdAt: 1 }, new: true }
-      );
-    }
+    // Atomically claim a stale running job (expired lease) or a queued job
+    let job = await ResearchJob.findOneAndUpdate(
+      {
+        $or: [
+          {
+            status: "running",
+            $or: [
+              { claimedAt: null },
+              { claimedAt: { $lt: new Date(Date.now() - 30 * 60 * 1000) } }
+            ]
+          },
+          { status: "queued" }
+        ]
+      },
+      { $set: { status: "running", claimedAt: new Date() } },
+      { sort: { createdAt: 1 }, new: true }
+    );
     if (!job) return { ran: false };
     console.log(`[Research Worker] Processing job ${job._id}`);
     await processJob(String(job._id), { call: realCallModel() });

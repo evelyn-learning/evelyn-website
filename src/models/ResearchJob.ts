@@ -22,6 +22,7 @@ export interface IResearchJob extends Document {
   costUsd: number;
   tokens: { input: number; output: number };
   error?: string;
+  claimedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +58,7 @@ const ResearchJobSchema = new Schema<IResearchJob>(
       output: { type: Number, default: 0 },
     },
     error: String,
+    claimedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

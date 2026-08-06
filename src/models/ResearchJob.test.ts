@@ -16,6 +16,7 @@ async function test(name: string, fn: () => void | Promise<void>) {
     assert.equal(j.tokens.input, 0);
     assert.equal(j.progress.inserted, 0);
     assert.deepEqual(j.candidates.toObject(), []);
+    assert.equal(j.claimedAt, null);
   });
 
   await test("count outside 1-25 fails", () => {
