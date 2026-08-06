@@ -344,10 +344,22 @@ export default function SessionStage(props: SessionStageProps) {
   // signal reachable here. The plain switcherRef pattern below doesn't need
   // that (its popover isn't the one this feedback item is about).
   const toolsClusterRef = useRef<HTMLDivElement>(null);
+  // B4 (embed-1785972176560): the mute button lives in the floating dock — a
+  // sibling overlay, not a descendant of toolsClusterRef — so a tap on mute
+  // bubbled to this document pointerdown listener, read as "outside", and
+  // collapsed the cluster before the button's own onClick fired. The R40b
+  // one-shot re-open (above) only covers the Start tap; mute is tapped
+  // repeatedly, so it needs a standing exemption. dockRef marks the dock's
+  // always-visible controls as never "outside" for this dismiss.
+  const dockRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!toolsOpen) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (toolsClusterRef.current && !toolsClusterRef.current.contains(e.target as Node)) {
+      if (
+        toolsClusterRef.current &&
+        !toolsClusterRef.current.contains(e.target as Node) &&
+        !dockRef.current?.contains(e.target as Node)
+      ) {
         setToolsOpen(false);
       }
     };
@@ -558,7 +570,14 @@ export default function SessionStage(props: SessionStageProps) {
   useEffect(() => {
     if (!switcherOpen) return;
     const onPointerDown = (e: PointerEvent) => {
-      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+      // B4 (embed-1785972176560): same dock exposure as toolsClusterRef
+      // above — mute lives in the floating dock, a sibling overlay outside
+      // switcherRef's container, so its taps must not read as "outside".
+      if (
+        switcherRef.current &&
+        !switcherRef.current.contains(e.target as Node) &&
+        !dockRef.current?.contains(e.target as Node)
+      ) {
         setSwitcherOpen(false);
       }
     };
@@ -1199,7 +1218,7 @@ export default function SessionStage(props: SessionStageProps) {
               board text behind the 65% bar merged with the dock caption and
               read as garbage. Solid white; board ink can always be scrolled
               fully above the bar (WhiteboardCanvas scroll headroom). */}
-          <div className="rounded-[24px] bg-white border border-slate-200/80 shadow-lg overflow-hidden">
+          <div ref={dockRef} className="rounded-[24px] bg-white border border-slate-200/80 shadow-lg overflow-hidden">
           <div className="px-2 sm:px-3 py-0.5">
             {voiceInput}
             {/* Quick-Actions chips (Skip / I'm stuck / quick answers) — HIDDEN
