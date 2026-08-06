@@ -15,7 +15,7 @@
  *
  * Run: npx tsx scripts/test-flowchart-layout.ts
  */
-import { layoutFlowchart } from '../src/app/tutor/components/whiteboard/flowchart-layout';
+import { layoutFlowchart, classifyFlowchartBackEdges, edgeKey } from '../src/app/tutor/components/whiteboard/flowchart-layout';
 import type { FlowchartNode } from '../src/lib/tutor/diagrams/catalog/kinds/cs';
 
 let passed = 0;
@@ -97,6 +97,41 @@ function depthsOf(nodes: FlowchartNode[], positions: Map<string, { x: number; y:
     Math.abs(addDepth - numbersDepth) === 1,
   );
   check('demo shape: no node deeper than node count', maxDepth < nodes.length);
+}
+
+// ── (d) diamond: a→b, a→c, b→d, c→d → zero back-edges ───────────────────
+// Two forward paths converging on `d` is NOT a cycle — classifyBackEdges
+// must not mistake a diamond's re-converging paths for a loop.
+{
+  const nodes = [node('a', 'start'), node('b', 'process'), node('c', 'process'), node('d', 'end')];
+  const edges = [
+    { from: 'a', to: 'b' },
+    { from: 'a', to: 'c' },
+    { from: 'b', to: 'd' },
+    { from: 'c', to: 'd' },
+  ];
+  const backEdges = classifyFlowchartBackEdges(nodes, edges);
+  check('diamond: zero back-edges', backEdges.size === 0);
+}
+
+// ── (e) disconnected component with an internal cycle ───────────────────
+// `start`→`a` is the reachable graph; `x`↔`y` is a SEPARATE component never
+// reached from `start`. Its internal cycle must still be classified (one of
+// x→y / y→x is a back-edge) so the depth loop can't spin on it either.
+{
+  const nodes = [node('start', 'start'), node('a', 'end'), node('x', 'process'), node('y', 'process')];
+  const edges = [
+    { from: 'start', to: 'a' },
+    { from: 'x', to: 'y' },
+    { from: 'y', to: 'x' },
+  ];
+  const backEdges = classifyFlowchartBackEdges(nodes, edges);
+  check(
+    'disconnected component: its internal cycle has exactly one back-edge',
+    backEdges.has(edgeKey('x', 'y')) !== backEdges.has(edgeKey('y', 'x')) // exactly one, not both/neither
+    && (backEdges.has(edgeKey('x', 'y')) || backEdges.has(edgeKey('y', 'x'))),
+  );
+  check('disconnected component: the reachable start→a edge is not a back-edge', !backEdges.has(edgeKey('start', 'a')));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
