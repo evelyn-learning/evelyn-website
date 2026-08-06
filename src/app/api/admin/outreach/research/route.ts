@@ -51,6 +51,24 @@ export async function POST(request: Request) {
     const job = await ResearchJob.create({
       segment, niche: String(niche).slice(0, 200), region: String(region).slice(0, 200), count: n,
     });
+    // Optimistic post-create check: the pre-create findOne above is a fast
+    // path, not a lock, so two concurrent POSTs can both pass it and both
+    // create a job (TOCTOU). Close the race here with a deterministic
+    // tiebreak: ObjectIds order by creation time, so of two racers, each
+    // looks for an active rival with a *smaller* _id. The later job always
+    // finds the earlier one and deletes itself; the earlier job's own _id
+    // is the smallest, so it finds nothing and survives. Exactly one job
+    // remains regardless of how many requests race.
+    const rival = await ResearchJob.findOne({
+      _id: { $lt: job._id },
+      status: { $in: ["queued", "running"] },
+    });
+    if (rival) {
+      await ResearchJob.deleteOne({ _id: job._id });
+      return NextResponse.json(
+        { error: "A research job is already queued or running" }, { status: 409 }
+      );
+    }
     return NextResponse.json({ job }, { status: 201 });
   } catch (error) {
     console.error("[OUTREACH] research POST Error:", error);
