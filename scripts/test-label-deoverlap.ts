@@ -128,5 +128,38 @@ function anyOverlap(ls: DeoverlapLabel[]): boolean {
   check('sketch: non-colliding labels keep their coords', spread[0].y === 20 && spread[1].y === 80);
 }
 
+// ── 7. horizontal edge clamp (B2 number-line clipping) ─────────────
+// bounds.width was accepted but never read: a solitary (no-collision) label
+// near an edge kept an off-canvas x forever. Mirrors clampLabelPos in
+// sketch-render-core.ts.
+{
+  const WIDE = { width: 500, height: 100 };
+  const LONG = 'a rather long axis caption label'; // len 33, fontSize 20 → w = 33*20*0.55 = 363
+
+  // (a) solitary centered label near the LEFT edge: box would cross x=0.
+  const left = L(40, 50, LONG, 20);
+  const outLeft = deoverlapLabels([left], WIDE);
+  check(
+    'edge clamp: left-edge label box.left >= edgePad',
+    box(outLeft[0]).left >= 1 - 1e-9,
+  );
+
+  // (b) mirrored right-edge case.
+  const right = L(460, 50, LONG, 20);
+  const outRight = deoverlapLabels([right], WIDE);
+  check(
+    'edge clamp: right-edge label box.right <= bounds.width - edgePad',
+    box(outRight[0]).right <= WIDE.width - 1 + 1e-9,
+  );
+
+  // (c) a mid-canvas label is untouched.
+  const mid = L(250, 50, 'mid', 10);
+  const outMid = deoverlapLabels([mid], WIDE);
+  check(
+    'edge clamp: mid-canvas label untouched (same reference)',
+    outMid[0] === mid,
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

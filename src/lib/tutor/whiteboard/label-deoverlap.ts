@@ -15,11 +15,20 @@
  *   2. Visit labels in reading order (original y, then x, then input index).
  *      The first label of any colliding pile never moves.
  *   3. A label whose box intersects an already-placed box is nudged
- *      VERTICALLY only (x / anchor untouched): stacked below the colliding
- *      pile, or above its original spot when the bottom of the canvas would
- *      clip it. Clamped to the bounds either way.
- *   4. Labels that collide with nothing are returned as the SAME object
- *      reference — non-colliding input is bit-for-bit untouched.
+ *      VERTICALLY only (x / anchor untouched by collision resolution):
+ *      stacked below the colliding pile, or above its original spot when
+ *      the bottom of the canvas would clip it. Clamped to the bounds either
+ *      way.
+ *   4. EVERY label — moved or not — then gets a horizontal edge clamp (same
+ *      bbox estimate, anchor-aware) so its box stays within
+ *      [edgePad, bounds.width - edgePad]. A label with no collisions skips
+ *      steps 2-3 entirely, so without this step a lone off-canvas label
+ *      (e.g. a number-line caption near x=0) would never get corrected —
+ *      `bounds.width` exists as a parameter precisely for this (2026-08
+ *      B2 fix). A label wider than the usable width pins to the edge.
+ *   5. Labels untouched by both steps 3 and 4 are returned as the SAME
+ *      object reference — non-colliding, non-clamped input is bit-for-bit
+ *      untouched.
  *
  * Deliberately NOT typography-aware or force-directed — a couple of small,
  * predictable nudges beat a clever layout that shifts on every render.
@@ -102,9 +111,35 @@ function intersects(a: Box, b: Box): boolean {
 }
 
 /**
- * De-overlap `labels` inside `bounds` by vertical nudging. Returns a new
- * array in the ORIGINAL order; entries that did not need to move are the
- * same object reference as the input.
+ * Horizontal clamp so a label's estimated box stays within
+ * [edgePad, bounds.width - edgePad], per its anchor. Mirrors clampLabelPos
+ * in sketch-render-core.ts (start/end/middle branching; a label wider than
+ * the usable width pins to the edge rather than inverting).
+ *
+ * The vertical collision pass above never touches x, so a solitary label
+ * (no collisions) that starts off-canvas would otherwise stay off-canvas
+ * forever — this is applied to EVERY output label as a final step.
+ */
+function clampX<T extends DeoverlapLabel>(
+  l: T,
+  bounds: { width: number },
+  o: Required<DeoverlapOptions>,
+): number {
+  const w = Math.max(o.minWidth, l.text.length * l.fontSize * o.charWidth);
+  const anchor = l.anchor ?? 'middle';
+  const lo = o.edgePad;
+  const hi = bounds.width - o.edgePad;
+  if (anchor === 'start') return Math.max(lo, Math.min(l.x, hi - w));
+  if (anchor === 'end') return Math.min(hi, Math.max(l.x, lo + w));
+  const half = w / 2;
+  return hi - half < lo + half ? bounds.width / 2 : Math.max(lo + half, Math.min(l.x, hi - half));
+}
+
+/**
+ * De-overlap `labels` inside `bounds` by vertical nudging, then clamp every
+ * label horizontally to `bounds.width`. Returns a new array in the ORIGINAL
+ * order; entries that needed neither a vertical nudge nor a horizontal
+ * clamp are the same object reference as the input.
  */
 export function deoverlapLabels<T extends DeoverlapLabel>(
   labels: readonly T[],
@@ -167,8 +202,15 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
     const l = labels[i];
     const original = boxAt(l, l.y, o);
     if (!placed.some((p) => intersects(original, p))) {
-      out[i] = l; // untouched — same reference
-      placed.push(original);
+      const cx = clampX(l, bounds, o);
+      if (cx === l.x) {
+        out[i] = l; // untouched — same reference
+        placed.push(original);
+      } else {
+        const clamped = { ...l, x: cx };
+        out[i] = clamped;
+        placed.push(boxAt(clamped, l.y, o));
+      }
       continue;
     }
     // Prefer stacking in the label's / caller's preferred direction
@@ -183,7 +225,7 @@ export function deoverlapLabels<T extends DeoverlapLabel>(
       const maxY = yForTop(l, bounds.height - o.edgePad - h);
       y = Math.min(down, maxY);
     }
-    const moved = { ...l, y };
+    const moved = { ...l, y, x: clampX(l, bounds, o) };
     out[i] = moved;
     placed.push(boxAt(moved, y, o));
   }
