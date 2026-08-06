@@ -7,6 +7,7 @@ import type { LeadSegment, LeadStatus, TouchChannel } from "@/lib/outreach/enums
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
 import PipelineTab from "./PipelineTab";
+import FindLeadsTab from "./FindLeadsTab";
 
 export interface LeadTouch {
   at: string;
@@ -52,7 +53,7 @@ export interface LeadJSON {
   updatedAt: string;
 }
 
-type TabKey = "review" | "today" | "pipeline";
+type TabKey = "review" | "today" | "pipeline" | "find";
 
 interface GmailStatus {
   connected: boolean;
@@ -164,10 +165,11 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
     return { staged, due, total: leads.length };
   }, [leads]);
 
-  const tabs: { key: TabKey; label: string; count: number }[] = [
+  const tabs: { key: TabKey; label: string; count?: number }[] = [
     { key: "review", label: "Review", count: counts.staged },
     { key: "today", label: "Today", count: counts.due },
     { key: "pipeline", label: "Pipeline", count: counts.total },
+    { key: "find", label: "Find leads" },
   ];
 
   return (
@@ -260,15 +262,17 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
               }`}
             >
               {t.label}
-              <span
-                className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                  tab === t.key
-                    ? "bg-primary-100 text-primary-700"
-                    : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {t.count}
-              </span>
+              {t.count !== undefined && (
+                <span
+                  className={`inline-flex min-w-[1.5rem] items-center justify-center rounded-full px-2 py-0.5 text-xs font-semibold ${
+                    tab === t.key
+                      ? "bg-primary-100 text-primary-700"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -276,6 +280,7 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         {tab === "review" && <ReviewQueueTab leads={leads} refresh={refresh} />}
         {tab === "today" && <TodayTab leads={leads} refresh={refresh} />}
         {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
+        {tab === "find" && <FindLeadsTab onLeadsChanged={refresh} />}
       </main>
     </div>
   );
