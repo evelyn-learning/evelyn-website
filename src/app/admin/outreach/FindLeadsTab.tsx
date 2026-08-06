@@ -56,6 +56,7 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
   const [count, setCount] = useState(20);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const [importText, setImportText] = useState("");
   const [importBusy, setImportBusy] = useState(false);
@@ -88,27 +89,41 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
       const data = await res.json();
       if (!res.ok) setError(data.error ?? "Failed to create job");
       await refresh();
+    } catch {
+      setError("Network error — request failed");
     } finally {
       setSubmitting(false);
     }
   };
 
   const cancelJob = async (id: string) => {
-    await fetch(`/api/admin/outreach/research/${id}/cancel`, { method: "POST" });
-    await refresh();
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/admin/outreach/research/${id}/cancel`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to cancel job");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to cancel job");
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const runImport = async (dryRun: boolean) => {
-    setImportBusy(true);
     setImportResult(null);
+    let rows: unknown;
     try {
-      let rows: unknown;
-      try {
-        rows = JSON.parse(importText);
-      } catch {
-        setImportResult("Not valid JSON");
-        return;
-      }
+      rows = JSON.parse(importText);
+    } catch {
+      setImportResult("Not valid JSON");
+      return;
+    }
+    setImportBusy(true);
+    try {
       const res = await fetch("/api/admin/outreach/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,6 +141,8 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
           (c.errors?.length ? ` — ${c.errors.slice(0, 3).join("; ")}` : "")
       );
       if (!dryRun) onLeadsChanged();
+    } catch {
+      setImportResult("Network error — import failed");
     } finally {
       setImportBusy(false);
     }
@@ -215,7 +232,8 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
             </h3>
             <button
               onClick={() => cancelJob(active._id)}
-              className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100"
+              disabled={cancelling}
+              className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
             >
               <Square className="h-3.5 w-3.5" />
               Cancel
