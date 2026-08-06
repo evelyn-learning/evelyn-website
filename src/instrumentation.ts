@@ -72,5 +72,22 @@ export async function register() {
     } else {
       console.log('[Instrumentation] Outreach reply watcher disabled (set ENABLE_OUTREACH_WATCHER=true to enable)');
     }
+
+    // Lead-research worker: claims queued ResearchJobs and runs Claude-powered
+    // lead research (set ENABLE_LEAD_RESEARCH=true in production env).
+    if (process.env.ENABLE_LEAD_RESEARCH === 'true') {
+      setTimeout(async () => {
+        try {
+          const { startResearchWorker } = await import('@/lib/outreach/research/worker');
+          startResearchWorker('* * * * *');
+        } catch (error) {
+          // Same rule as the watcher block above: a throw here is an unhandled
+          // rejection in a bare setTimeout — log, never crash the process.
+          console.error('[Instrumentation] Failed to start lead-research worker:', error);
+        }
+      }, 5000);
+    } else {
+      console.log('[Instrumentation] Lead-research worker disabled (set ENABLE_LEAD_RESEARCH=true to enable)');
+    }
   }
 }
