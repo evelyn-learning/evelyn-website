@@ -224,12 +224,38 @@ async function assertQuotaExhausted(promise: Promise<unknown>, provider: string)
     if (prior !== undefined) process.env.PROSPEO_API_KEY = prior;
   });
 
-  await test("prospeo happy path (nested shape) returns valid email + linkedin", async () => {
+  await test("prospeo posts to enrich-person with nested data body", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "s3cr3t", async () => {
+      let capturedUrl: string | undefined;
+      let capturedInit: RequestInit | undefined;
+      const fetchFn = (async (url: string | URL, init?: RequestInit) => {
+        capturedUrl = String(url);
+        capturedInit = init;
+        return new Response(JSON.stringify({ person: { email: {}, linkedin_url: "" } }));
+      }) as unknown as typeof fetch;
+      await prospeoProvider.match(input, fetchFn);
+      assert.equal(capturedUrl, "https://api.prospeo.io/enrich-person");
+      assert.equal(capturedInit?.method, "POST");
+      const headers = capturedInit?.headers as Record<string, string>;
+      assert.equal(headers["X-KEY"], "s3cr3t");
+      assert.equal(headers["content-type"], "application/json");
+      const body = JSON.parse(capturedInit?.body as string);
+      assert.deepEqual(body, {
+        data: {
+          full_name: "Jane Doe",
+          company_website: "acme-health.edu",
+          only_verified_email: true,
+        },
+      });
+    });
+  });
+
+  await test("prospeo happy path returns VERIFIED email + person-level linkedin", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       const fetchFn = fakeFetchJson({
-        response: {
-          email: { email: "jane@acme-health.edu", email_status: "VALID" },
-          linkedin: "https://linkedin.com/in/janedoe",
+        person: {
+          email: { status: "VERIFIED", revealed: true, email: "jane@acme-health.edu" },
+          linkedin_url: "https://linkedin.com/in/janedoe",
         },
       });
       const result = await prospeoProvider.match(input, fetchFn);
@@ -241,34 +267,41 @@ async function assertQuotaExhausted(promise: Promise<unknown>, provider: string)
     });
   });
 
-  await test("prospeo happy path (flat shape) returns valid email", async () => {
+  await test("prospeo legacy VALID status still accepted (backwards compat)", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       const fetchFn = fakeFetchJson({
-        response: { email: "jane@acme-health.edu", email_status: "VALID" },
+        response: { email: { status: "VALID", revealed: true, email: "jane@acme-health.edu" } },
       });
       const result = await prospeoProvider.match(input, fetchFn);
       assert.ok(result);
       assert.equal(result?.email, "jane@acme-health.edu");
-      assert.equal(result?.provider, "prospeo");
-      assert.equal(result?.creditsUsed, 1);
     });
   });
 
-  await test("prospeo INVALID status -> null (quality floor)", async () => {
+  await test("prospeo non-VERIFIED status -> email rejected (only_verified floor)", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       const fetchFn = fakeFetchJson({
-        response: { email: { email: "jane@acme-health.edu", email_status: "INVALID" } },
+        person: { email: { status: "GUESSED", revealed: true, email: "jane@acme-health.edu" } },
       });
       assert.equal(await prospeoProvider.match(input, fetchFn), null);
     });
   });
 
-  await test("prospeo non-string linkedin field ignored, valid email still returned", async () => {
+  await test("prospeo revealed:false -> email rejected even if status VERIFIED", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       const fetchFn = fakeFetchJson({
-        response: {
-          email: { email: "jane@acme-health.edu", email_status: "VALID" },
-          linkedin: { raw: "not-a-url" },
+        person: { email: { status: "VERIFIED", revealed: false, email: "jane@acme-health.edu" } },
+      });
+      assert.equal(await prospeoProvider.match(input, fetchFn), null);
+    });
+  });
+
+  await test("prospeo non-string linkedin_url field ignored, verified email still returned", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({
+        person: {
+          email: { status: "VERIFIED", revealed: true, email: "jane@acme-health.edu" },
+          linkedin_url: { raw: "not-a-url" },
         },
       });
       const result = await prospeoProvider.match(input, fetchFn);
@@ -278,16 +311,37 @@ async function assertQuotaExhausted(promise: Promise<unknown>, provider: string)
     });
   });
 
-  await test("prospeo empty-string linkedin field ignored -> null (no email either)", async () => {
+  await test("prospeo empty-string linkedin_url field ignored -> null (no email either)", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
-      const fetchFn = fakeFetchJson({ response: { linkedin: "" } });
+      const fetchFn = fakeFetchJson({ person: { linkedin_url: "" } });
       assert.equal(await prospeoProvider.match(input, fetchFn), null);
     });
   });
 
-  await test("prospeo missing response -> null", async () => {
+  await test("prospeo missing person/response/email -> null", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       assert.equal(await prospeoProvider.match(input, fakeFetchJson({})), null);
+    });
+  });
+
+  await test("prospeo 400 INSUFFICIENT_CREDITS -> QuotaExhaustedError", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({ req_status: false, error_code: "INSUFFICIENT_CREDITS" }, 400);
+      await assertQuotaExhausted(prospeoProvider.match(input, fetchFn), "prospeo");
+    });
+  });
+
+  await test("prospeo 400 NO_MATCH -> null", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({ req_status: false, error_code: "NO_MATCH" }, 400);
+      assert.equal(await prospeoProvider.match(input, fetchFn), null);
+    });
+  });
+
+  await test("prospeo 400 other error_code -> null", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({ req_status: false, error_code: "DEPRECATED" }, 400);
+      assert.equal(await prospeoProvider.match(input, fetchFn), null);
     });
   });
 

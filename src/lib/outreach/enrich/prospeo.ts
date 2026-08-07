@@ -1,25 +1,26 @@
 import { EnrichInput, EnrichProvider, EnrichResult, QuotaExhaustedError } from "./types";
 
-// Prospeo's email-finder returns either a nested shape
-// (`response.email.email` + `response.email.email_status`) or a flat one
-// (`response.email` as a string + a sibling `response.email_status`).
-// Accept both.
-function extractEmail(response: Record<string, unknown>): { email?: string; status?: string } {
-  const emailField = response.email;
-  if (emailField && typeof emailField === "object") {
-    const nested = emailField as Record<string, unknown>;
-    return {
-      email: typeof nested.email === "string" ? nested.email : undefined,
-      status: typeof nested.email_status === "string" ? nested.email_status : undefined,
-    };
-  }
-  if (typeof emailField === "string") {
-    return {
-      email: emailField,
-      status: typeof response.email_status === "string" ? (response.email_status as string) : undefined,
-    };
-  }
-  return {};
+// Prospeo's enrich-person response nesting isn't fully documented — probe
+// the plausible locations (`person`, `response`, top-level) for both the
+// email object and the linkedin url, same defensive pattern either way.
+function extractEmail(json: Record<string, unknown>): { email?: string; status?: string; revealed?: boolean } {
+  const person = json.person as Record<string, unknown> | undefined;
+  const response = json.response as Record<string, unknown> | undefined;
+  const emailField = person?.email ?? response?.email ?? json.email;
+  if (!emailField || typeof emailField !== "object") return {};
+  const nested = emailField as Record<string, unknown>;
+  return {
+    email: typeof nested.email === "string" ? nested.email : undefined,
+    status: typeof nested.status === "string" ? nested.status : undefined,
+    revealed: nested.revealed as boolean | undefined,
+  };
+}
+
+function extractLinkedin(json: Record<string, unknown>): string | undefined {
+  const person = json.person as Record<string, unknown> | undefined;
+  const response = json.response as Record<string, unknown> | undefined;
+  const linkedin = person?.linkedin_url ?? response?.linkedin_url ?? json.linkedin_url;
+  return typeof linkedin === "string" && linkedin.length > 0 ? linkedin : undefined;
 }
 
 async function match(input: EnrichInput, fetchFn: typeof fetch = fetch): Promise<EnrichResult | null> {
@@ -27,31 +28,44 @@ async function match(input: EnrichInput, fetchFn: typeof fetch = fetch): Promise
   if (!apiKey) return null;
 
   try {
-    const res = await fetchFn("https://api.prospeo.io/email-finder", {
+    const res = await fetchFn("https://api.prospeo.io/enrich-person", {
       method: "POST",
       headers: { "content-type": "application/json", "X-KEY": apiKey },
-      body: JSON.stringify({ full_name: input.name, company: input.websiteDomain }),
+      body: JSON.stringify({
+        data: {
+          full_name: input.name,
+          company_website: input.websiteDomain,
+          only_verified_email: true,
+        },
+      }),
       signal: AbortSignal.timeout(10_000),
     });
 
-    if (res.status === 402 || res.status === 429) throw new QuotaExhaustedError("prospeo");
+    if (res.status === 429 || res.status === 402) throw new QuotaExhaustedError("prospeo");
+
+    if (res.status === 400) {
+      // Prospeo signals credit depletion as a 400 with a body, not a 402 —
+      // has to be read before we can tell it apart from a plain miss
+      // (e.g. NO_MATCH).
+      const body = await res.json().catch(() => null);
+      if (body?.error_code === "INSUFFICIENT_CREDITS") throw new QuotaExhaustedError("prospeo");
+      return null;
+    }
+
     if (!res.ok) return null;
 
     const json = await res.json();
-    const response = json?.response;
-    if (!response) return null;
 
     const result: EnrichResult = { provider: "prospeo", creditsUsed: 1 };
 
-    const { email, status } = extractEmail(response);
-    if (email && status === "VALID") {
+    const { email, status, revealed } = extractEmail(json);
+    if (email && revealed !== false && (status === "VERIFIED" || status === "VALID")) {
       result.email = email;
     }
-    // Prospeo's docs don't guarantee `response.linkedin` is a string (it's
-    // absent, or occasionally a non-string placeholder, when no profile was
-    // matched) — only accept it as a real URL candidate.
-    if (typeof response.linkedin === "string" && response.linkedin.length > 0) {
-      result.linkedinUrl = response.linkedin;
+
+    const linkedinUrl = extractLinkedin(json);
+    if (linkedinUrl) {
+      result.linkedinUrl = linkedinUrl;
     }
 
     if (!result.email && !result.linkedinUrl) return null;
