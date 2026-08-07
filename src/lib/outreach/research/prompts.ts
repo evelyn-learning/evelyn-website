@@ -45,6 +45,10 @@ export interface ResearchedLead {
   sourceUrls: string[];
   draftSubject: string;
   draftBody: string;
+  contactPageUrl: string;
+  inmailSubject: string;
+  inmailBody: string;
+  contactFormBody: string;
 }
 
 export const LEAD_SCHEMA = {
@@ -65,11 +69,16 @@ export const LEAD_SCHEMA = {
     sourceUrls: { type: "array", items: { type: "string" } },
     draftSubject: { type: "string" },
     draftBody: { type: "string" },
+    contactPageUrl: { type: "string" },
+    inmailSubject: { type: "string" },
+    inmailBody: { type: "string" },
+    contactFormBody: { type: "string" },
   },
   required: [
     "company", "website", "about", "whyFit", "useCaseHypothesis", "source",
     "decisionMakerName", "decisionMakerTitle", "linkedinUrl", "email",
     "emailSourceUrl", "nameSourceUrl", "sourceUrls", "draftSubject", "draftBody",
+    "contactPageUrl", "inmailSubject", "inmailBody", "contactFormBody",
   ],
   additionalProperties: false,
 } as const;
@@ -141,6 +150,9 @@ Using web search and web fetch, research the organization's OWN website (program
 - linkedinUrl: the person's LinkedIn URL ONLY if you actually visited it; else "".
 - sourceUrls: every URL you actually used.
 - draftSubject/draftBody: a short (120-180 word) personalized intro email from Praveen at Evelyn Learning to that person (or "Hi there" if no person found). Reference the specific real thing from whyFit. Include this exact line on its own line where the demo link belongs: [DEMO_LINK]. End: "Best,\\nPraveen\\nEvelyn Learning". No pricing claims, no fake statistics.
+- contactPageUrl: the organization's contact/inquiry page URL if you found one (e.g. a "Contact Us" or "Request Info" page); else "".
+- inmailSubject/inmailBody: a LinkedIn InMail to the same person. inmailBody MUST be UNDER 500 characters — short and personal, citing the same real hook from whyFit. Include the literal line [DEMO_LINK] on its own line. End with "— Praveen, Evelyn Learning". If no person was found, leave both "".
+- contactFormBody: a self-contained message (100-150 words) suitable for pasting into the organization's own contact/inquiry form — it will NOT be threaded to an email, so it must stand alone: cite the same real hook, include the literal line [DEMO_LINK], and end with the sign-off block "Praveen — Evelyn Learning — praveen@evelynlearning.com".
 
 Accuracy over completeness: an empty field is correct; an invented one is a serious failure.`,
     }],

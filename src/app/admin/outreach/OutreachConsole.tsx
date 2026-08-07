@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Mail, RefreshCw, X } from "lucide-react";
-import type { LeadSegment, LeadStatus, TouchChannel } from "@/lib/outreach/enums";
+import type { EmailSource, LeadSegment, LeadStatus, LinkedinSource, TouchChannel } from "@/lib/outreach/enums";
 import ReviewQueueTab from "./ReviewQueueTab";
 import TodayTab from "./TodayTab";
 import PipelineTab from "./PipelineTab";
@@ -38,6 +38,10 @@ export interface LeadJSON {
     linkedinUrl?: string;
     email?: string;
     emailVerified: boolean;
+    emailSource?: EmailSource;
+    emailProvider?: string;
+    linkedinSource?: LinkedinSource;
+    linkedinProvider?: string;
   };
   website: string;
   source: string;
@@ -48,6 +52,9 @@ export interface LeadJSON {
   nextActionAt?: string | null;
   touches: LeadTouch[];
   currentDraft?: LeadDraft | null;
+  linkedinDraft?: { subject: string; body: string } | null;
+  contactFormDraft?: { body: string } | null;
+  contactPageUrl?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

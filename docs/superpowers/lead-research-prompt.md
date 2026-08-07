@@ -44,6 +44,18 @@ Rules that are non-negotiable:
   literal line [DEMO_LINK] on its own line where the demo link belongs. End
   with: Best,\nPraveen\nEvelyn Learning. No pricing claims, no invented
   statistics.
+- linkedinDraft.body (a LinkedIn InMail to the same decision-maker) MUST be
+  UNDER 500 characters — short and personal, citing the same real hook from
+  whyFit. Include the literal line [DEMO_LINK] on its own line. End with:
+  — Praveen, Evelyn Learning. If no decision-maker was found, omit
+  linkedinDraft entirely.
+- contactFormDraft.body is a self-contained message (100-150 words) suitable
+  for pasting into the organization's own contact/inquiry form — it will NOT
+  be threaded to an email, so it must stand alone: cite the same real hook,
+  include the literal line [DEMO_LINK], and end with the sign-off block:
+  Praveen — Evelyn Learning — praveen@evelynlearning.com.
+- contactPageUrl is the organization's contact/inquiry page URL if you found
+  one on their site; otherwise use "" (or omit the key).
 
 Output ONLY a JSON array (no prose, no markdown fence), one object per lead,
 exactly this shape:
@@ -69,6 +81,14 @@ exactly this shape:
       "subject": "NCLEX prep at Acme",
       "body": "Hi Dana,\n\n...\n\n[DEMO_LINK]\n\nBest,\nPraveen\nEvelyn Learning"
     },
+    "contactPageUrl": "https://acme.edu/contact",
+    "linkedinDraft": {
+      "subject": "NCLEX prep at Acme",
+      "body": "Hi Dana — quick note re: NCLEX pass rates.\n\n...\n\n[DEMO_LINK]\n\n— Praveen, Evelyn Learning"
+    },
+    "contactFormDraft": {
+      "body": "Hi — reaching out about NCLEX prep at Acme...\n\n[DEMO_LINK]\n\nPraveen — Evelyn Learning — praveen@evelynlearning.com"
+    },
     "notes": "Email published at https://acme.edu/staff. Sources: ..."
   }
 ]
@@ -78,7 +98,8 @@ testprep_academy, homeschool_charter, microschool, school_district,
 private_school, intl_school, library, publisher, agency, corporate_ld, other.
 
 Omit the email key entirely (and set emailVerified false) rather than
-including an unverified one.
+including an unverified one. Omit linkedinDraft and/or contactFormDraft
+entirely rather than including an empty or low-quality draft.
 ```
 
 ---

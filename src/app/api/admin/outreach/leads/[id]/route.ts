@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Lead, LEAD_STATUSES, type LeadStatus } from "@/models";
+import { mergeDecisionMakerEdit, type DecisionMakerEditInput } from "@/lib/outreach/lead-edit";
 
 const EDIT_FIELDS = [
   "company",
@@ -65,12 +66,27 @@ export async function PATCH(
         if (!fields || typeof fields !== "object") {
           return NextResponse.json({ error: "fields is required" }, { status: 400 });
         }
+        const fieldsRecord = fields as Record<string, unknown>;
         for (const key of EDIT_FIELDS) {
-          if (Object.prototype.hasOwnProperty.call(fields, key)) {
-            (lead as unknown as Record<string, unknown>)[key] = (
-              fields as Record<string, unknown>
-            )[key];
+          if (!Object.prototype.hasOwnProperty.call(fieldsRecord, key)) continue;
+          if (key === "decisionMaker") {
+            // Merge, don't replace: the client's edit form (ReviewQueueTab
+            // `EditFields`) only carries name/title/linkedinUrl/email/
+            // emailVerified — it has no UI for the vendor-provenance fields
+            // (emailSource/emailProvider/linkedinSource/linkedinProvider),
+            // so assigning its object wholesale would silently wipe that
+            // history on every edit, even a title-only typo fix. See
+            // lead-edit.ts for the merge rules.
+            const incoming = fieldsRecord.decisionMaker;
+            if (incoming && typeof incoming === "object") {
+              lead.decisionMaker = mergeDecisionMakerEdit(
+                lead.decisionMaker,
+                incoming as DecisionMakerEditInput
+              );
+            }
+            continue;
           }
+          (lead as unknown as Record<string, unknown>)[key] = fieldsRecord[key];
         }
         break;
       }
@@ -80,6 +96,23 @@ export async function PATCH(
           return NextResponse.json({ error: "Invalid status" }, { status: 400 });
         }
         lead.status = status as LeadStatus;
+        break;
+      }
+
+      case "workToday": {
+        // Only statuses with an active cadence make sense to bump into
+        // "today" — staged leads belong in Review (not yet worked), and
+        // replied/call_booked/dead have no cadence to bump. Parked leads
+        // are deliberately excluded too: they're at the touch cap, and
+        // reviving them past the cadence is an owner product decision —
+        // not silently supported by a "work today" click.
+        if (!["approved", "contacted"].includes(lead.status)) {
+          return NextResponse.json(
+            { error: "Only approved or contacted leads can be bumped to work today" },
+            { status: 409 }
+          );
+        }
+        lead.nextActionAt = new Date();
         break;
       }
 

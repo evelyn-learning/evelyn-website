@@ -84,3 +84,4 @@ export type { ILead, ITouch, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus,
 export { ResearchJob } from "./ResearchJob";
 export type { IResearchJob, ICandidate } from "./ResearchJob";
 export { OutreachToken, type IOutreachToken } from "./OutreachToken";
+export { ProviderCredit, type IProviderCredit } from "./ProviderCredit";

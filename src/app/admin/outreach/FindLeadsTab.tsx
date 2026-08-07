@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Check, ClipboardCopy, Loader2, Play, Square, Upload } from "lucide-react";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
 import { MANUAL_RESEARCH_PROMPT } from "@/lib/outreach/research-prompt";
@@ -49,6 +49,20 @@ const CANDIDATE_LABEL: Record<string, string> = {
   error: "text-red-600",
 };
 
+interface CreditRow {
+  provider: string;
+  configured: boolean;
+  used: number;
+  cap: number;
+  month: string;
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+  apollo: "Apollo",
+  hunter: "Hunter",
+  prospeo: "Prospeo",
+};
+
 export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () => void }) {
   const [state, setState] = useState<ResearchState | null>(null);
   const [segment, setSegment] = useState<LeadSegment>("nursing_program");
@@ -61,6 +75,19 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
 
   const [importText, setImportText] = useState("");
   const [promptCopied, setPromptCopied] = useState(false);
+
+  const [credits, setCredits] = useState<CreditRow[] | null>(null);
+  const refreshCredits = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/outreach/enrich/credits");
+      if (res.ok) {
+        const data = await res.json();
+        setCredits(data.providers ?? null);
+      }
+    } catch {
+      /* transient poll failure — keep last state */
+    }
+  }, []);
 
   const copyResearchPrompt = useCallback(async () => {
     try {
@@ -76,20 +103,36 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
   const [importBusy, setImportBusy] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
 
+  // Tracks the previously-active job id so we can tell when a job just
+  // finished (active -> null) and refresh the credit meters at that
+  // moment — enrichment happens mid-pipeline as jobs run, so usage moves
+  // in step with job completion, not with this component's own actions.
+  const prevActiveIdRef = useRef<string | null>(null);
   const refresh = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/outreach/research");
-      if (res.ok) setState(await res.json());
+      if (res.ok) {
+        const data: ResearchState = await res.json();
+        setState(data);
+        const wasActive = prevActiveIdRef.current;
+        const isActive = data.active?._id ?? null;
+        if (wasActive && !isActive) refreshCredits();
+        prevActiveIdRef.current = isActive;
+      }
     } catch {
       /* transient poll failure — keep last state */
     }
-  }, []);
+  }, [refreshCredits]);
 
   useEffect(() => {
     refresh();
     const t = setInterval(refresh, 5000);
     return () => clearInterval(t);
   }, [refresh]);
+
+  useEffect(() => {
+    refreshCredits();
+  }, [refreshCredits]);
 
   const createJob = async () => {
     setSubmitting(true);
@@ -171,6 +214,23 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
       {/* New job form */}
       <div className="rounded-xl bg-white p-6 shadow">
         <h3 className="text-lg font-semibold text-gray-900">Find leads</h3>
+        {credits && (
+          <p className="mt-1 text-xs text-gray-400">
+            {credits.map((c, i) => (
+              <span key={c.provider}>
+                {i > 0 && " · "}
+                <span
+                  className={
+                    c.configured && c.used >= c.cap ? "font-medium text-amber-600" : undefined
+                  }
+                >
+                  {PROVIDER_LABELS[c.provider] ?? c.provider}{" "}
+                  {c.configured ? `${c.used}/${c.cap}` : "— not configured"}
+                </span>
+              </span>
+            ))}
+          </p>
+        )}
         {state && !state.workerActive && (
           <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
             Research worker is off (ENABLE_LEAD_RESEARCH) — jobs will queue but not run.

@@ -38,6 +38,26 @@ await test("touch requires channel+direction", () => {
   const err = new Lead({ ...base, touches: [{ summary: "x" }] }).validateSync();
   assert.ok(err);
 });
+await test("channel drafts + provenance fields validate", () => {
+  const l = new Lead({
+    company: "T", segment: "nursing_program",
+    decisionMaker: { name: "A", title: "B", email: "a@t.edu", emailVerified: false, emailSource: "vendor", emailProvider: "apollo", linkedinUrl: "https://linkedin.com/in/a", linkedinSource: "vendor", linkedinProvider: "hunter" },
+    linkedinDraft: { subject: "Quick question", body: "Hi A... [DEMO_LINK]" },
+    contactFormDraft: { body: "Hello... [DEMO_LINK]" },
+    contactPageUrl: "https://t.edu/contact",
+  });
+  assert.equal(l.validateSync(), undefined);
+});
+await test("bad emailSource / linkedinSource rejected", () => {
+  assert.ok(new Lead({ company: "T", segment: "nursing_program", decisionMaker: { name: "A", title: "B", emailSource: "guessed" } }).validateSync());
+  assert.ok(new Lead({ company: "T", segment: "nursing_program", decisionMaker: { name: "A", title: "B", linkedinSource: "scraped" } }).validateSync());
+});
+await test("legacy lead without new fields still validates", () => {
+  const l = new Lead({ company: "T", segment: "nursing_program", decisionMaker: { name: "A", title: "B" } });
+  assert.equal(l.validateSync(), undefined);
+  assert.equal(l.linkedinDraft, null);
+  assert.equal(l.contactFormDraft, null);
+});
 
 console.log(`passed: ${passed}, failed: ${failed}`);
 if (failed > 0) process.exit(1);
