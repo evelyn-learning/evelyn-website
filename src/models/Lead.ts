@@ -115,12 +115,14 @@ const LeadSchema = new Schema<ILead>(
         subject: { type: String, required: true },
         body: { type: String, required: true },
       },
+      default: null,
       _id: false,
     },
     contactFormDraft: {
       type: {
         body: { type: String, required: true },
       },
+      default: null,
       _id: false,
     },
     contactPageUrl: String,

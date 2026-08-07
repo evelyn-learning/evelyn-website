@@ -55,7 +55,8 @@ await test("bad emailSource / linkedinSource rejected", () => {
 await test("legacy lead without new fields still validates", () => {
   const l = new Lead({ company: "T", segment: "nursing_program", decisionMaker: { name: "A", title: "B" } });
   assert.equal(l.validateSync(), undefined);
-  assert.equal(l.linkedinDraft, undefined);
+  assert.equal(l.linkedinDraft, null);
+  assert.equal(l.contactFormDraft, null);
 });
 
 console.log(`passed: ${passed}, failed: ${failed}`);
