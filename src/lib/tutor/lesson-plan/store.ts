@@ -3869,7 +3869,14 @@ export const TOPIC_ALIASES: Record<string, string[]> = {
   'intro-calculus': ['calculus', 'precalculus'],
   'sequences-series': ['sequences'],
   'logarithms-exponentials': ['logarithms', 'exponential-functions', 'exponents'],
-  'matrices': ['matrices', 'algebra-2'],
+  // 2026-08-07: 'algebra-2' removed from the matrices aliases — it made
+  // Matrices the ONLY 11-12 cell matching any g11 plan tagged 'algebra-2'
+  // (the band has no algebra-2 topic), so Conic Sections + Complex Numbers
+  // surfaced under Matrices and sessions recorded topic="matrices" for a
+  // conics lesson (session-1786064015703). The three g11 seeds are now
+  // exact-tagged; stray 'algebra-2' tags at 11-12 land in pre-calculus (see
+  // ORPHAN_ALIAS_ADDITIONS). Tests: scripts/test-g11-alg2-cell-resolution.ts.
+  'matrices': ['matrices'],
   'linear-functions': ['linear-functions', 'functions'],
   'quadratic-equations': ['quadratics'],
   'systems-of-equations': ['systems-of-equations', 'equations'],
@@ -4065,7 +4072,10 @@ const ORPHAN_ALIAS_ADDITIONS: Record<string, string[]> = {
   'pre-algebra': ['numbers'],
   'geometry-angles': ['transformations'],
   geometry: ['trigonometry'],
-  'pre-calculus': ['quadratics', 'rational-functions'],
+  // 'algebra-2' here (2026-08-07): the 11-12 catch-all for plans still
+  // raw-tagged 'algebra-2' (no such topic in that band). The 9-10 band is
+  // unaffected — its exact 'algebra-2' cell outranks any alias hit.
+  'pre-calculus': ['quadratics', 'rational-functions', 'algebra-2'],
   statistics: ['statistics'],
   // ── Science ──
   'physical-science': ['forces-and-motion', 'waves', 'energy', 'matter', 'engineering'],

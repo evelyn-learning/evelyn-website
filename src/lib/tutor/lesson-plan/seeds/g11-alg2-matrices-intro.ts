@@ -14,7 +14,7 @@ export const SEED_G11_ALG2_MATRICES_INTRO: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'math',
-  topic: 'algebra-2',
+  topic: 'matrices', // 2026-08-07: was 'algebra-2' — exact taxonomy topic, no longer relies on the removed matrices←algebra-2 alias
   locale: 'en',
   los: [
     {

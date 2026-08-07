@@ -13,7 +13,7 @@ export const SEED_G11_ALG2_COMPLEX_NUMBERS: LessonPlan = {
   curriculum: 'CCSS',
   grade: '11',
   subject: 'math',
-  topic: 'algebra-2',
+  topic: 'pre-calculus', // 2026-08-07: was 'algebra-2' — no such topic in the 11-12 band; the matrices alias mis-homed this plan under Matrices (see test-g11-alg2-cell-resolution)
   locale: 'en',
   los: [
     {
