@@ -221,9 +221,8 @@ export default function PipelineTab({
                             </option>
                           ))}
                         </select>
-                        {(lead.status === "approved" ||
-                          lead.status === "contacted" ||
-                          lead.status === "parked") && (
+                        {/* parked leads are at the touch cap; reviving them past the cadence is an owner product decision — not silently supported. */}
+                        {(lead.status === "approved" || lead.status === "contacted") && (
                           <button
                             onClick={() => workToday(lead._id)}
                             disabled={pendingId === lead._id}

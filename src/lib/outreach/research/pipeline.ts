@@ -120,20 +120,36 @@ export async function runCandidate(
             websiteDomain,
           });
           if (result) {
+            let emailMerged = false;
+            let linkedinMerged = false;
             if (!row.decisionMaker.email && result.email) {
               row.decisionMaker.email = result.email;
               row.decisionMaker.emailSource = "vendor";
               row.decisionMaker.emailVerified = false;
               row.decisionMaker.emailProvider = result.provider;
-              if (outcome === "no_email") {
-                outcome = "inserted";
-                note = `email via ${result.provider}`;
-              }
+              emailMerged = true;
+              // Email merging only ever happens when the row didn't already
+              // have one, which is exactly the condition that set
+              // `outcome = "no_email"` above — an email is what makes a
+              // lead actionable, so this is always an upgrade.
+              outcome = "inserted";
             }
             if (!row.decisionMaker.linkedinUrl && result.linkedinUrl) {
               row.decisionMaker.linkedinUrl = result.linkedinUrl;
               row.decisionMaker.linkedinSource = "vendor";
               row.decisionMaker.linkedinProvider = result.provider;
+              linkedinMerged = true;
+            }
+            // Surface which channel(s) the vendor call actually filled —
+            // visible in the pipeline UI's note column, so a reviewer can
+            // tell a linkedin-only vendor match apart from a fully
+            // vendor-sourced lead.
+            if (emailMerged && linkedinMerged) {
+              note = `email + linkedin via ${result.provider}`;
+            } else if (emailMerged) {
+              note = `email via ${result.provider}`;
+            } else if (linkedinMerged) {
+              note = `linkedin via ${result.provider}`;
             }
           }
         } catch {

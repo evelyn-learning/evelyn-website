@@ -269,7 +269,10 @@ function LeadCard({
               emailSource={dm?.emailSource}
               emailProvider={dm?.emailProvider}
             />
-            {missingChannel && (
+            {/* The enrich route 400s without a decision-maker name to match
+                against (mirrors the pipeline's auto-enrich gate) — hide the
+                button rather than let the click round-trip into an alert. */}
+            {missingChannel && dm?.name && (
               <button
                 onClick={handleEnrich}
                 disabled={busy}
@@ -487,7 +490,23 @@ function LeadCard({
                 </div>
               </>
             ) : (
-              <p className="mt-2 text-sm text-gray-500">No draft yet — run the backfill script</p>
+              // No drafted message on file, but the owner can still hand-
+              // write one outside this tool and log it here — the send did
+              // happen even though the agent never drafted it, so Mark Sent
+              // stays available.
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <button
+                    onClick={() => onMarkSent("linkedin")}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    Mark LinkedIn sent
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -542,7 +561,22 @@ function LeadCard({
                 </div>
               </>
             ) : (
-              <p className="mt-2 text-sm text-gray-500">No draft yet — run the backfill script</p>
+              // Same rationale as the LinkedIn tab above: no draft doesn't
+              // mean no send — keep Mark Sent available for a hand-filled
+              // contact form.
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <button
+                    onClick={() => onMarkSent("form")}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Mark Form sent
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}

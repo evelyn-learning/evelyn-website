@@ -34,6 +34,18 @@ export async function POST(
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
+    // Mirrors the pipeline's gate: runCandidate only auto-enriches when
+    // `r.decisionMakerName` is set (pipeline.ts ~line 106) because a vendor
+    // match call needs a person's name to search against — without one
+    // there's nothing to send Apollo/Hunter/Prospeo, so a manual re-run
+    // would just burn a capped credit for a guaranteed miss.
+    if (!lead.decisionMaker?.name) {
+      return NextResponse.json(
+        { error: "No decision-maker on file — enrichment needs a person to match" },
+        { status: 400 }
+      );
+    }
+
     // Same trigger condition as runCandidate's auto-enrich gate in
     // pipeline.ts (~line 105: `!row.decisionMaker.email ||
     // !row.decisionMaker.linkedinUrl`) — if both channels are already

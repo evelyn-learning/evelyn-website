@@ -263,6 +263,28 @@ async function assertQuotaExhausted(promise: Promise<unknown>, provider: string)
     });
   });
 
+  await test("prospeo non-string linkedin field ignored, valid email still returned", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({
+        response: {
+          email: { email: "jane@acme-health.edu", email_status: "VALID" },
+          linkedin: { raw: "not-a-url" },
+        },
+      });
+      const result = await prospeoProvider.match(input, fetchFn);
+      assert.ok(result);
+      assert.equal(result?.email, "jane@acme-health.edu");
+      assert.equal(result?.linkedinUrl, undefined);
+    });
+  });
+
+  await test("prospeo empty-string linkedin field ignored -> null (no email either)", async () => {
+    await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
+      const fetchFn = fakeFetchJson({ response: { linkedin: "" } });
+      assert.equal(await prospeoProvider.match(input, fetchFn), null);
+    });
+  });
+
   await test("prospeo missing response -> null", async () => {
     await withEnvVar("PROSPEO_API_KEY", "test-key", async () => {
       assert.equal(await prospeoProvider.match(input, fakeFetchJson({})), null);

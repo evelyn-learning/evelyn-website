@@ -47,7 +47,10 @@ async function match(input: EnrichInput, fetchFn: typeof fetch = fetch): Promise
     if (email && status === "VALID") {
       result.email = email;
     }
-    if (response.linkedin) {
+    // Prospeo's docs don't guarantee `response.linkedin` is a string (it's
+    // absent, or occasionally a non-string placeholder, when no profile was
+    // matched) — only accept it as a real URL candidate.
+    if (typeof response.linkedin === "string" && response.linkedin.length > 0) {
       result.linkedinUrl = response.linkedin;
     }
 

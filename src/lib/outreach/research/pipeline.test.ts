@@ -213,6 +213,39 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
     assert.equal(row.decisionMaker.linkedinProvider, "hunter");
   });
 
+  await test("runCandidate: linkedin-only vendor merge notes \"linkedin via <provider>\"", async () => {
+    // Email already published+verified, so only linkedin is missing and
+    // eligible to merge.
+    const call: CallModel = async () => leadMsg(researched());
+    const fetchFn = (async () => new Response("Dean Dana Smith — dsmith@acme.edu")) as typeof fetch;
+    const enrich = async (): Promise<ChainOutcome> =>
+      ({ result: { linkedinUrl: "https://linkedin.com/in/dana-vendor", provider: "hunter", creditsUsed: 1 }, attempts: [] });
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(out.outcome, "inserted");
+    assert.equal(out.note, "linkedin via hunter");
+    const row = out.row as { decisionMaker: { linkedinUrl?: string; linkedinProvider?: string } };
+    assert.equal(row.decisionMaker.linkedinUrl, "https://linkedin.com/in/dana-vendor");
+    assert.equal(row.decisionMaker.linkedinProvider, "hunter");
+  });
+
+  await test("runCandidate: email+linkedin both vendor-merge -> combined note", async () => {
+    const call: CallModel = async () => leadMsg(researched());
+    const fetchFn = (async () => new Response("no emails on this page")) as typeof fetch;
+    const enrich = async (): Promise<ChainOutcome> =>
+      ({ result: { email: "dana@vendor.example", linkedinUrl: "https://linkedin.com/in/dana-vendor", provider: "apollo", creditsUsed: 1 }, attempts: [] });
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(out.outcome, "inserted");
+    assert.equal(out.note, "email + linkedin via apollo");
+  });
+
   await test("runCandidate: enrich throwing -> outcome falls back to no_email, does not throw", async () => {
     const call: CallModel = async () => leadMsg(researched());
     const fetchFn = (async () => new Response("no emails on this page")) as typeof fetch;
