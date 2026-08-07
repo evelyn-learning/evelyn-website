@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Zap } from "lucide-react";
 import { LEAD_SEGMENTS, LEAD_STATUSES, type LeadStatus } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
@@ -66,6 +67,27 @@ export default function PipelineTab({
       await refresh();
     } catch {
       alert("Failed to update status");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const workToday = async (id: string) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "workToday" }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to bump lead to today");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to bump lead to today");
     } finally {
       setPendingId(null);
     }
@@ -186,18 +208,33 @@ export default function PipelineTab({
                       {lastTouch?.summary || "—"}
                     </td>
                     <td className="whitespace-nowrap px-4 py-2">
-                      <select
-                        className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
-                        value={lead.status}
-                        disabled={pendingId === lead._id}
-                        onChange={(e) => setStatus(lead._id, e.target.value as LeadStatus)}
-                      >
-                        {LEAD_STATUSES.map((s) => (
-                          <option key={s} value={s}>
-                            {STATUS_LABELS[s]}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <select
+                          className="rounded-lg border border-gray-300 px-2 py-1 text-xs"
+                          value={lead.status}
+                          disabled={pendingId === lead._id}
+                          onChange={(e) => setStatus(lead._id, e.target.value as LeadStatus)}
+                        >
+                          {LEAD_STATUSES.map((s) => (
+                            <option key={s} value={s}>
+                              {STATUS_LABELS[s]}
+                            </option>
+                          ))}
+                        </select>
+                        {(lead.status === "approved" ||
+                          lead.status === "contacted" ||
+                          lead.status === "parked") && (
+                          <button
+                            onClick={() => workToday(lead._id)}
+                            disabled={pendingId === lead._id}
+                            title="Bump this lead's next action to now"
+                            className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                          >
+                            <Zap className="h-3.5 w-3.5" />
+                            Work today
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

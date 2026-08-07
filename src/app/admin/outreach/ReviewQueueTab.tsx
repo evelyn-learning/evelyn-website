@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CheckCircle, XCircle, Pencil, Mail, Linkedin, Globe, BadgeCheck } from "lucide-react";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
+import type { EmailSource } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
 
 export const SEGMENT_LABELS: Record<string, string> = {
@@ -19,6 +20,42 @@ export const SEGMENT_LABELS: Record<string, string> = {
   corporate_ld: "Corporate L&D",
   other: "Other",
 };
+
+function titleCase(s: string): string {
+  return s.length ? s[0].toUpperCase() + s.slice(1) : s;
+}
+
+// Shared tiny badge showing where a decision-maker's email came from —
+// used next to the email address in both the Today card and the Review
+// queue card. Verified (a human-confirmed published email) always wins
+// over provenance; a vendor-sourced email that hasn't been verified shows
+// which vendor found it instead.
+export function EmailProvenanceBadge({
+  emailVerified,
+  emailSource,
+  emailProvider,
+}: {
+  emailVerified?: boolean;
+  emailSource?: EmailSource;
+  emailProvider?: string;
+}) {
+  if (emailVerified) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+        <BadgeCheck className="h-3.5 w-3.5" />
+        Verified
+      </span>
+    );
+  }
+  if (emailSource === "vendor") {
+    return (
+      <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+        {emailProvider ? titleCase(emailProvider) : "vendor"}
+      </span>
+    );
+  }
+  return null;
+}
 
 interface EditFields {
   company: string;
@@ -226,12 +263,11 @@ function ReviewCard({
           {dm?.name || "No decision maker on file"}
           {dm?.title ? ` — ${dm.title}` : ""}
         </span>
-        {dm?.emailVerified && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-            <BadgeCheck className="h-3.5 w-3.5" />
-            Verified
-          </span>
-        )}
+        <EmailProvenanceBadge
+          emailVerified={dm?.emailVerified}
+          emailSource={dm?.emailSource}
+          emailProvider={dm?.emailProvider}
+        />
         {dm?.email && (
           <a
             href={`mailto:${dm.email}`}
