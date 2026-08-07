@@ -34,6 +34,21 @@ export async function POST(
       return NextResponse.json({ error: "Lead not found" }, { status: 404 });
     }
 
+    // Same trigger condition as runCandidate's auto-enrich gate in
+    // pipeline.ts (~line 105: `!row.decisionMaker.email ||
+    // !row.decisionMaker.linkedinUrl`) — if both channels are already
+    // filled there's nothing a vendor call could add, so skip it entirely
+    // rather than burning a capped credit whose result the merge below
+    // would just discard. No UI guard exists yet against repeat clicks, so
+    // this is the only backstop.
+    if (lead.decisionMaker?.email && lead.decisionMaker?.linkedinUrl) {
+      return NextResponse.json({
+        lead,
+        outcome: { result: null, attempts: [] },
+        skipped: "nothing_missing",
+      });
+    }
+
     let websiteDomain: string;
     try {
       websiteDomain = new URL(lead.website).hostname;
@@ -55,17 +70,22 @@ export async function POST(
     const { result } = outcome;
 
     if (result) {
+      let merged = false;
       if (!lead.decisionMaker.email && result.email) {
         lead.decisionMaker.email = result.email;
         lead.decisionMaker.emailSource = "vendor";
         lead.decisionMaker.emailVerified = false;
         lead.decisionMaker.emailProvider = result.provider;
+        merged = true;
       }
       if (!lead.decisionMaker.linkedinUrl && result.linkedinUrl) {
         lead.decisionMaker.linkedinUrl = result.linkedinUrl;
         lead.decisionMaker.linkedinSource = "vendor";
+        merged = true;
       }
-      await lead.save();
+      if (merged) {
+        await lead.save();
+      }
     }
 
     return NextResponse.json({ lead, outcome });
