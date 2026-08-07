@@ -3758,6 +3758,27 @@ export async function getLessonTitles(ids: string[]): Promise<Record<string, str
   return titles;
 }
 
+/** Plan ids whose titles contain `q` (case-insensitive substring) — used by
+ *  the admin session search box so "Fractions" finds sessions via their
+ *  lessonProgress.lessonPlanId. Seeds first, then one Mongo title query. */
+export async function findLessonPlanIdsByTitle(q: string, limit = 200): Promise<string[]> {
+  const needle = q.trim().toLowerCase();
+  if (!needle) return [];
+  const ids = SEED_PLANS.filter((p) => p.title.toLowerCase().includes(needle)).map((p) => p.id);
+  try {
+    await connectDB();
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const docs = await LessonPlanModel.find({ title: new RegExp(escaped, 'i') })
+      .select('_id')
+      .limit(limit)
+      .lean();
+    for (const d of docs) ids.push(String(d._id));
+  } catch {
+    // best-effort — seeds-only fallback
+  }
+  return [...new Set(ids)].slice(0, limit);
+}
+
 export interface LessonPlanFilter {
   subject?: string;
   grade?: string;

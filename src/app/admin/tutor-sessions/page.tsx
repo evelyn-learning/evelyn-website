@@ -4,10 +4,10 @@ import Link from "next/link";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { TutorSession } from "@/models";
-import { getLessonTitles } from "@/lib/tutor/lesson-plan/store";
-import { ArrowLeft, Play, Clock, MessageSquare, Layers } from "lucide-react";
+import { getLessonTitles, findLessonPlanIdsByTitle } from "@/lib/tutor/lesson-plan/store";
+import { ArrowLeft, Play, Clock, MessageSquare, Layers, Search, X } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";
-import { buildSessionFilter, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
+import { buildSessionFilter, parseApproxDate, type SessionFilterParams } from "@/lib/tutor/recordings/filters";
 
 const PAGE_SIZE = 50;
 
@@ -37,7 +37,11 @@ async function getSessions(filters: SessionFilterParams, page: number) {
     },
     { $set: { status: 'abandoned' } },
   );
-  const query = buildSessionFilter(filters);
+  // Lesson-name search: resolve matching plan ids up front (title lookup is
+  // async; skipped when the query is a date, which searches startedAt instead).
+  const q = filters.q?.trim();
+  const searchPlanIds = q && !parseApproxDate(q) ? await findLessonPlanIdsByTitle(q) : [];
+  const query = buildSessionFilter(filters, new Date(), searchPlanIds);
   const [sessions, total, partners, hosts] = await Promise.all([
     TutorSession.find(query)
       .select('-transcript -whiteboardCommands -debugEvents -tokenUsage')
@@ -145,12 +149,13 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
     host: param(sp, 'host'),
     audio: param(sp, 'audio'),
     range: param(sp, 'range'),
+    q: param(sp, 'q'),
   };
   const page = Math.max(1, parseInt(param(sp, 'page') || '1', 10) || 1);
   const { sessions, total, partners, hosts, lessonTitles } = await getSessions(filters, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const now = new Date();
-  const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range);
+  const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range || filters.q);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -169,6 +174,38 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
       </header>
 
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-2">
+        <form method="get" action="/admin/tutor-sessions" className="flex items-center gap-2">
+          {Object.entries(filters)
+            .filter(([k, v]) => k !== 'q' && v)
+            .map(([k, v]) => (
+              <input key={k} type="hidden" name={k} value={v as string} />
+            ))}
+          <div className="relative w-full max-w-xl">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              name="q"
+              defaultValue={filters.q || ''}
+              placeholder="Search student, subject, lesson, grade, session ID, location, or date (e.g. Aug 3)…"
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+          >
+            Search
+          </button>
+          {filters.q && (
+            <Link
+              href={filterHref(filters, { q: undefined })}
+              className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear
+            </Link>
+          )}
+        </form>
         <div className="flex flex-wrap items-center gap-2">
           {SOURCE_CHIPS.map((c) => (
             <Link
