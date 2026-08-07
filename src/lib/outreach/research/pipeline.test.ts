@@ -2,6 +2,8 @@ import { strict as assert } from "node:assert";
 import { researchedToLeadRow, runCandidate } from "./pipeline";
 import type { ResearchedLead } from "./prompts";
 import type { CallModel, ResearchMessage } from "./claude";
+import type { ChainOutcome } from "../enrich/chain";
+import type { EnrichInput } from "../enrich/types";
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>) {
@@ -19,8 +21,12 @@ const researched = (over: Partial<ResearchedLead> = {}): ResearchedLead => ({
   emailSourceUrl: "https://acme.edu/staff", nameSourceUrl: "https://acme.edu/staff",
   sourceUrls: ["https://acme.edu/programs", "https://acme.edu/staff"],
   draftSubject: "NCLEX prep at Acme", draftBody: "Hi Dana...\n[DEMO_LINK]\nBest,\nPraveen\nEvelyn Learning",
+  contactPageUrl: "https://acme.edu/contact",
+  inmailSubject: "NCLEX prep", inmailBody: "Hi Dana — quick note.\n[DEMO_LINK]\n— Praveen, Evelyn Learning",
+  contactFormBody: "Hi — reaching out about NCLEX prep.\n[DEMO_LINK]\nPraveen — Evelyn Learning — praveen@evelynlearning.com",
   ...over,
 });
+const noResult: ChainOutcome = { result: null, attempts: [] };
 const leadMsg = (r: ResearchedLead): ResearchMessage =>
   ({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify(r) }], usage });
 
@@ -57,13 +63,34 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
     assert.equal(dropped.decisionMaker.linkedinUrl, undefined);
   });
 
+  await test("mapper: maps three-channel fields; empty strings map to null/undefined", () => {
+    const full = researchedToLeadRow(researched(), { segment: "nursing_program", jobId: "j1", emailVerified: true }) as {
+      linkedinDraft: { subject: string; body: string } | null;
+      contactFormDraft: { body: string } | null;
+      contactPageUrl?: string;
+    };
+    assert.deepEqual(full.linkedinDraft, { subject: "NCLEX prep", body: researched().inmailBody });
+    assert.deepEqual(full.contactFormDraft, { body: researched().contactFormBody });
+    assert.equal(full.contactPageUrl, "https://acme.edu/contact");
+
+    const empty = researchedToLeadRow(
+      researched({ inmailSubject: "", inmailBody: "", contactFormBody: "", contactPageUrl: "" }),
+      { segment: "nursing_program", jobId: "j1", emailVerified: true }
+    ) as { linkedinDraft: unknown; contactFormDraft: unknown; contactPageUrl?: string };
+    assert.equal(empty.linkedinDraft, null);
+    assert.equal(empty.contactFormDraft, null);
+    assert.equal(empty.contactPageUrl, undefined);
+  });
+
+  const noEnrich = { enrich: async () => noResult };
+
   await test("runCandidate: published email -> verified lead row", async () => {
     const call: CallModel = async () => leadMsg(researched());
     const fetchFn = (async () => new Response("Dean Dana Smith — dsmith@acme.edu")) as typeof fetch;
     const out = await runCandidate(
       { company: "Acme Nursing College", website: "https://acme.edu" },
       { segment: "nursing_program", niche: "", jobId: "j1" },
-      { call, fetchFn }, () => {}
+      { call, fetchFn, ...noEnrich }, () => {}
     );
     assert.equal(out.outcome, "inserted");
     const row = out.row as { decisionMaker: { emailVerified: boolean } };
@@ -76,7 +103,7 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
     const out = await runCandidate(
       { company: "Acme Nursing College", website: "https://acme.edu" },
       { segment: "nursing_program", niche: "", jobId: "j1" },
-      { call, fetchFn }, () => {}
+      { call, fetchFn, ...noEnrich }, () => {}
     );
     assert.equal(out.outcome, "no_email");
     const row = out.row as { decisionMaker: { email?: string } };
@@ -90,7 +117,7 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
     const out = await runCandidate(
       { company: "Acme Nursing College", website: "https://acme.edu" },
       { segment: "nursing_program", niche: "", jobId: "j1" },
-      { call, fetchFn }, () => {}
+      { call, fetchFn, ...noEnrich }, () => {}
     );
     assert.equal(out.outcome, "no_email");
   });
@@ -123,10 +150,78 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
     await runCandidate(
       { company: "Acme Nursing College", website: "https://acme.edu" },
       { segment: "nursing_program", niche: "", jobId: "j1" },
-      { call, fetchFn: (async () => new Response("")) as typeof fetch },
+      { call, fetchFn: (async () => new Response("")) as typeof fetch, ...noEnrich },
       () => { calls++; }
     );
     assert.equal(calls, 1);
+  });
+
+  await test("runCandidate: published email + linkedinUrl present -> enrichment skipped", async () => {
+    let enrichCalls = 0;
+    const call: CallModel = async () =>
+      leadMsg(researched({ linkedinUrl: "https://linkedin.com/in/dana", sourceUrls: ["https://acme.edu/programs", "https://acme.edu/staff", "https://linkedin.com/in/dana"] }));
+    const fetchFn = (async () => new Response("Dean Dana Smith — dsmith@acme.edu")) as typeof fetch;
+    const enrich = async (_input: EnrichInput): Promise<ChainOutcome> => { enrichCalls++; return noResult; };
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(enrichCalls, 0);
+    assert.equal(out.outcome, "inserted");
+  });
+
+  await test("runCandidate: no-email lead gets vendor email merged, outcome upgraded to inserted", async () => {
+    const call: CallModel = async () => leadMsg(researched());
+    const fetchFn = (async () => new Response("no emails on this page")) as typeof fetch;
+    const enrich = async (input: EnrichInput): Promise<ChainOutcome> => {
+      assert.equal(input.name, "Dana Smith");
+      assert.equal(input.company, "Acme Nursing College");
+      assert.equal(input.websiteDomain, "acme.edu");
+      return { result: { email: "dana@vendor.example", provider: "apollo", creditsUsed: 1 }, attempts: [{ provider: "apollo", status: "hit" }] };
+    };
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(out.outcome, "inserted");
+    assert.equal(out.note, "email via apollo");
+    const row = out.row as { decisionMaker: { email?: string; emailSource?: string; emailVerified: boolean; emailProvider?: string } };
+    assert.equal(row.decisionMaker.email, "dana@vendor.example");
+    assert.equal(row.decisionMaker.emailSource, "vendor");
+    assert.equal(row.decisionMaker.emailVerified, false);
+    assert.equal(row.decisionMaker.emailProvider, "apollo");
+  });
+
+  await test("runCandidate: vendor never overwrites a published+verified email; linkedin still merges as vendor", async () => {
+    const call: CallModel = async () => leadMsg(researched());
+    const fetchFn = (async () => new Response("Dean Dana Smith — dsmith@acme.edu")) as typeof fetch;
+    const enrich = async (): Promise<ChainOutcome> =>
+      ({ result: { email: "different@vendor.example", linkedinUrl: "https://linkedin.com/in/dana-vendor", provider: "hunter", creditsUsed: 1 }, attempts: [] });
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(out.outcome, "inserted");
+    const row = out.row as { decisionMaker: { email?: string; emailSource?: string; linkedinUrl?: string; linkedinSource?: string } };
+    assert.equal(row.decisionMaker.email, "dsmith@acme.edu");
+    assert.equal(row.decisionMaker.emailSource, "published");
+    assert.equal(row.decisionMaker.linkedinUrl, "https://linkedin.com/in/dana-vendor");
+    assert.equal(row.decisionMaker.linkedinSource, "vendor");
+  });
+
+  await test("runCandidate: enrich throwing -> outcome falls back to no_email, does not throw", async () => {
+    const call: CallModel = async () => leadMsg(researched());
+    const fetchFn = (async () => new Response("no emails on this page")) as typeof fetch;
+    const enrich = async (): Promise<ChainOutcome> => { throw new Error("vendor API down"); };
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    assert.equal(out.outcome, "no_email");
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

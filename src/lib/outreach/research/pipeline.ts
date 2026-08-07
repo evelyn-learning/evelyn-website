@@ -10,10 +10,13 @@ import { discoveryParams, candidateParams, type ResearchedLead } from "./prompts
 import { priceUsageUsd, costCapUsd, type UsageLike } from "./cost";
 import { verifyEmailPublished } from "./verify-email";
 import { validateLeadRows, insertLeads } from "../import-leads";
+import { enrichLead, type ChainOutcome } from "../enrich/chain";
+import type { EnrichInput } from "../enrich/types";
 
 export interface PipelineDeps {
   call: CallModel;
   fetchFn?: typeof fetch;
+  enrich?: (input: EnrichInput) => Promise<ChainOutcome>;
 }
 
 export function researchedToLeadRow(
@@ -21,6 +24,7 @@ export function researchedToLeadRow(
   opts: { segment: string; jobId: string; emailVerified: boolean }
 ): Record<string, unknown> {
   const linkedinOk = r.linkedinUrl && r.sourceUrls.includes(r.linkedinUrl);
+  const emailKept = opts.emailVerified && !!r.email;
   return {
     company: r.company,
     segment: opts.segment,
@@ -32,11 +36,14 @@ export function researchedToLeadRow(
     decisionMaker: {
       name: r.decisionMakerName,
       title: r.decisionMakerTitle,
-      ...(linkedinOk ? { linkedinUrl: r.linkedinUrl } : {}),
-      ...(opts.emailVerified && r.email ? { email: r.email } : {}),
-      emailVerified: opts.emailVerified && !!r.email,
+      ...(linkedinOk ? { linkedinUrl: r.linkedinUrl, linkedinSource: "research" } : {}),
+      ...(emailKept ? { email: r.email, emailSource: "published" } : {}),
+      emailVerified: emailKept,
     },
     currentDraft: { channel: "email", subject: r.draftSubject, body: r.draftBody },
+    linkedinDraft: r.inmailSubject && r.inmailBody ? { subject: r.inmailSubject, body: r.inmailBody } : null,
+    contactFormDraft: r.contactFormBody ? { body: r.contactFormBody } : null,
+    contactPageUrl: r.contactPageUrl || undefined,
     notes: `Researched by job ${opts.jobId}. Sources: ${r.sourceUrls.join(", ")}`,
   };
 }
@@ -83,8 +90,58 @@ export async function runCandidate(
 
     const row = researchedToLeadRow(r, {
       segment: job.segment, jobId: job.jobId, emailVerified,
-    });
-    return { outcome: emailVerified ? "inserted" : "no_email", row, note };
+    }) as Record<string, unknown> & {
+      decisionMaker: {
+        name: string; title: string;
+        linkedinUrl?: string; email?: string; emailVerified: boolean;
+        emailSource?: string; emailProvider?: string; linkedinSource?: string;
+      };
+    };
+    let outcome: CandidateOutcome["outcome"] = emailVerified ? "inserted" : "no_email";
+
+    // Auto-enrich: only when we have a real person and are missing either
+    // channel. Never lets an enrichment failure fail the candidate — this
+    // whole block is best-effort on top of an already-valid row.
+    if (r.decisionMakerName && (!row.decisionMaker.email || !row.decisionMaker.linkedinUrl)) {
+      let websiteDomain: string | undefined;
+      try {
+        websiteDomain = new URL(candidate.website).hostname;
+      } catch {
+        websiteDomain = undefined;
+      }
+      if (websiteDomain) {
+        try {
+          const enrich = deps.enrich ?? enrichLead;
+          const { result } = await enrich({
+            name: r.decisionMakerName,
+            title: r.decisionMakerTitle,
+            company: candidate.company,
+            websiteDomain,
+          });
+          if (result) {
+            if (!row.decisionMaker.email && result.email) {
+              row.decisionMaker.email = result.email;
+              row.decisionMaker.emailSource = "vendor";
+              row.decisionMaker.emailVerified = false;
+              row.decisionMaker.emailProvider = result.provider;
+              if (outcome === "no_email") {
+                outcome = "inserted";
+                note = `email via ${result.provider}`;
+              }
+            }
+            if (!row.decisionMaker.linkedinUrl && result.linkedinUrl) {
+              row.decisionMaker.linkedinUrl = result.linkedinUrl;
+              row.decisionMaker.linkedinSource = "vendor";
+            }
+          }
+        } catch {
+          // Enrichment is best-effort on top of an already-valid research
+          // result — a vendor/network hiccup must never fail the candidate.
+        }
+      }
+    }
+
+    return { outcome, row, note };
   } catch (e) {
     return { outcome: "error", note: e instanceof Error ? e.message : String(e) };
   }

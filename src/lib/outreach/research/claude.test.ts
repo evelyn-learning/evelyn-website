@@ -99,6 +99,7 @@ const textMsg = (text: string, stop = "end_turn"): ResearchMessage =>
     assert.ok(prompt.includes("Acme College"));
     assert.ok(prompt.includes("https://acme.edu"));
     assert.ok(/never guess|do not guess|NEVER guess/i.test(prompt));
+    assert.ok(/under 500 characters/i.test(prompt));
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);
