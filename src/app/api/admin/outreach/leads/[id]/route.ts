@@ -83,6 +83,20 @@ export async function PATCH(
         break;
       }
 
+      case "workToday": {
+        // Only statuses with an active cadence make sense to bump into
+        // "today" — staged leads belong in Review (not yet worked), and
+        // replied/call_booked/dead have no cadence to bump.
+        if (!["approved", "contacted", "parked"].includes(lead.status)) {
+          return NextResponse.json(
+            { error: "Only approved, contacted, or parked leads can be bumped to work today" },
+            { status: 409 }
+          );
+        }
+        lead.nextActionAt = new Date();
+        break;
+      }
+
       default:
         return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
