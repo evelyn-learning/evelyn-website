@@ -41,7 +41,7 @@ await test("touch requires channel+direction", () => {
 await test("channel drafts + provenance fields validate", () => {
   const l = new Lead({
     company: "T", segment: "nursing_program",
-    decisionMaker: { name: "A", title: "B", email: "a@t.edu", emailVerified: false, emailSource: "vendor", emailProvider: "apollo", linkedinUrl: "https://linkedin.com/in/a", linkedinSource: "vendor" },
+    decisionMaker: { name: "A", title: "B", email: "a@t.edu", emailVerified: false, emailSource: "vendor", emailProvider: "apollo", linkedinUrl: "https://linkedin.com/in/a", linkedinSource: "vendor", linkedinProvider: "hunter" },
     linkedinDraft: { subject: "Quick question", body: "Hi A... [DEMO_LINK]" },
     contactFormDraft: { body: "Hello... [DEMO_LINK]" },
     contactPageUrl: "https://t.edu/contact",

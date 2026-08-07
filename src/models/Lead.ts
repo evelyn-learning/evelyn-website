@@ -45,6 +45,7 @@ export interface ILead extends Document {
     emailSource?: EmailSource;
     emailProvider?: string;
     linkedinSource?: LinkedinSource;
+    linkedinProvider?: string;
   };
   website: string;
   source: string;
@@ -90,6 +91,7 @@ const LeadSchema = new Schema<ILead>(
       emailSource: { type: String, enum: EMAIL_SOURCES },
       emailProvider: String,
       linkedinSource: { type: String, enum: LINKEDIN_SOURCES },
+      linkedinProvider: String,
     },
     website: { type: String, default: "" },
     source: { type: String, default: "" },

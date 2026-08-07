@@ -81,6 +81,7 @@ export async function POST(
       if (!lead.decisionMaker.linkedinUrl && result.linkedinUrl) {
         lead.decisionMaker.linkedinUrl = result.linkedinUrl;
         lead.decisionMaker.linkedinSource = "vendor";
+        lead.decisionMaker.linkedinProvider = result.provider;
         merged = true;
       }
       if (merged) {

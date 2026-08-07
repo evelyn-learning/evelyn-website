@@ -41,6 +41,7 @@ export interface LeadJSON {
     emailSource?: EmailSource;
     emailProvider?: string;
     linkedinSource?: LinkedinSource;
+    linkedinProvider?: string;
   };
   website: string;
   source: string;

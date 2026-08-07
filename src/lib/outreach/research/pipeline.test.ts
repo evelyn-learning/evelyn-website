@@ -205,11 +205,12 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
       { call, fetchFn, enrich }, () => {}
     );
     assert.equal(out.outcome, "inserted");
-    const row = out.row as { decisionMaker: { email?: string; emailSource?: string; linkedinUrl?: string; linkedinSource?: string } };
+    const row = out.row as { decisionMaker: { email?: string; emailSource?: string; linkedinUrl?: string; linkedinSource?: string; linkedinProvider?: string } };
     assert.equal(row.decisionMaker.email, "dsmith@acme.edu");
     assert.equal(row.decisionMaker.emailSource, "published");
     assert.equal(row.decisionMaker.linkedinUrl, "https://linkedin.com/in/dana-vendor");
     assert.equal(row.decisionMaker.linkedinSource, "vendor");
+    assert.equal(row.decisionMaker.linkedinProvider, "hunter");
   });
 
   await test("runCandidate: enrich throwing -> outcome falls back to no_email, does not throw", async () => {

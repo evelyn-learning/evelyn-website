@@ -95,6 +95,7 @@ export async function runCandidate(
         name: string; title: string;
         linkedinUrl?: string; email?: string; emailVerified: boolean;
         emailSource?: string; emailProvider?: string; linkedinSource?: string;
+        linkedinProvider?: string;
       };
     };
     let outcome: CandidateOutcome["outcome"] = emailVerified ? "inserted" : "no_email";
@@ -132,6 +133,7 @@ export async function runCandidate(
             if (!row.decisionMaker.linkedinUrl && result.linkedinUrl) {
               row.decisionMaker.linkedinUrl = result.linkedinUrl;
               row.decisionMaker.linkedinSource = "vendor";
+              row.decisionMaker.linkedinProvider = result.provider;
             }
           }
         } catch {

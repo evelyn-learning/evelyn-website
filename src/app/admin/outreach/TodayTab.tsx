@@ -469,7 +469,9 @@ function LeadCard({
                   )}
                   {dm?.linkedinSource === "vendor" && (
                     <span className="inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-                      Apollo
+                      {dm.linkedinProvider
+                        ? dm.linkedinProvider[0].toUpperCase() + dm.linkedinProvider.slice(1)
+                        : "Vendor"}
                     </span>
                   )}
                 </div>
