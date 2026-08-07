@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Play, Square, Upload } from "lucide-react";
+import { Check, ClipboardCopy, Loader2, Play, Square, Upload } from "lucide-react";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
+import { MANUAL_RESEARCH_PROMPT } from "@/lib/outreach/research-prompt";
 import type { LeadSegment, ResearchJobStatus, CandidateStatus } from "@/lib/outreach/enums";
 import { SEGMENT_LABELS } from "./ReviewQueueTab";
 
@@ -59,6 +60,19 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
   const [cancelling, setCancelling] = useState(false);
 
   const [importText, setImportText] = useState("");
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const copyResearchPrompt = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(MANUAL_RESEARCH_PROMPT);
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2500);
+    } catch {
+      // Clipboard API denied (non-HTTPS or permissions) — fall back to
+      // dropping the prompt into the textarea so it can be copied by hand.
+      setImportText(MANUAL_RESEARCH_PROMPT);
+    }
+  }, []);
   const [importBusy, setImportBusy] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
 
@@ -276,9 +290,20 @@ export default function FindLeadsTab({ onLeadsChanged }: { onLeadsChanged: () =>
 
       {/* Import JSON */}
       <div className="rounded-xl bg-white p-6 shadow">
-        <h3 className="text-lg font-semibold text-gray-900">Import JSON</h3>
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-lg font-semibold text-gray-900">Import JSON</h3>
+          <button
+            onClick={copyResearchPrompt}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          >
+            {promptCopied ? <Check className="h-4 w-4 text-green-600" /> : <ClipboardCopy className="h-4 w-4" />}
+            {promptCopied ? "Copied" : "Copy research prompt"}
+          </button>
+        </div>
         <p className="mt-1 text-sm text-gray-500">
           Paste a JSON array matching the Lead schema (e.g. from a Claude research chat).
+          &ldquo;Copy research prompt&rdquo; gives you a ready-made prompt for Claude (web or Code) —
+          fill the three &lt;BLANKS&gt;, run it, paste the JSON output here.
         </p>
         <textarea
           value={importText}
