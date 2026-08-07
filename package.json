@@ -37,7 +37,7 @@
     "test:outreach-import": "npx tsx src/lib/outreach/import-leads.test.ts",
     "test:outreach-cadence": "npx tsx src/lib/outreach/cadence.test.ts",
     "test:outreach-reply": "npx tsx src/lib/outreach/reply-detect.test.ts",
-    "test:outreach-research": "npx tsx src/lib/outreach/research/cost.test.ts && npx tsx src/lib/outreach/research/verify-email.test.ts && npx tsx src/lib/outreach/research/claude.test.ts && npx tsx src/lib/outreach/research/pipeline.test.ts",
+    "test:outreach-research": "npx tsx src/lib/outreach/research/cost.test.ts && npx tsx src/lib/outreach/research/verify-email.test.ts && npx tsx src/lib/outreach/research/claude.test.ts && npx tsx src/lib/outreach/research/pipeline.test.ts && npx tsx src/lib/outreach/research/backfill-drafts.test.ts",
     "test:outreach-enrich": "npx tsx src/lib/outreach/enrich/ledger.test.ts && npx tsx src/lib/outreach/enrich/providers.test.ts && npx tsx src/lib/outreach/enrich/chain.test.ts",
     "test:outreach-guards": "npx tsx scripts/test-outreach-guards.ts",
     "test:outreach": "npm run test:outreach-model && npm run test:outreach-job && npm run test:outreach-import && npm run test:outreach-cadence && npm run test:outreach-reply && npm run test:outreach-research && npm run test:outreach-enrich && npm run test:outreach-guards",
