@@ -55,6 +55,16 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // R40: a Start tap that landed before the relay connected and was queued
   // (the dead-first-tap class, embed-1785808658013) — proves the queue ran.
   'start_queued',
+  // 2026-08-07 triage (embed-1786076855391): the brain/judge/tool families
+  // were all absent from this list, so an embed session that misbehaved
+  // (request treated as a correct answer) persisted 13 events and NO record
+  // of what the brain did or what the judge said about it — the same triage
+  // on a /tutor session had 166. Trap discovered: 'brain_watchdog' above
+  // does NOT cover 'brain_turn' (prefix match). All one-short-line-per-turn
+  // families; real-student volume stays modest vs the transcript payload.
+  'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
+  'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
+  'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
@@ -330,7 +340,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // at save time (pre-2026-07-15) collapsed the whole board onto the latest
   // periodic flush's `now`, which left replays with zero real WB timing and
   // forced ReplayPlayer's transcript-derived fallback.
-  const [whiteboardCommands, setWhiteboardCommands] = useState<{ cmd: WhiteboardCommand; capturedAt: string }[]>([]);
+  const [whiteboardCommands, setWhiteboardCommands] = useState<{ cmd: WhiteboardCommand; capturedAt: string; sourceMessageIndex?: number }[]>([]);
   // Guards the mirror above against a replayed resume seed (TutorSession/VTR
   // remount while this page persists) — see resume-seed.ts. Same lifetime as
   // the mirror: both live for this embed page instance.
@@ -343,11 +353,19 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
   // live latency baselines were uncapturable (found 2026-07-22). Persist a
   // small ALLOWLISTED subset — measurement events only, one short line per
   // turn — not the full /tutor-page firehose (real-student volume).
-  const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string }>>([]);
+  const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string; data?: Record<string, unknown> }>>([]);
   const lastSavedDebugCountRef = useRef(0);
-  const addDebugEvent = useCallback((type: string, message: string) => {
+  // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
+  // used to be silently dropped here (every embed event persisted without its
+  // structured payload). Message truncation mirrors /tutor's collector.
+  const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
-    debugEventsRef.current.push({ type, message, timestamp: new Date().toISOString() });
+    debugEventsRef.current.push({
+      type,
+      message: message.slice(0, 500),
+      timestamp: new Date().toISOString(),
+      ...(data ? { data } : {}),
+    });
   }, []);
 
   // E3 — resume boot. When the token asks to continue an existing session,
@@ -491,13 +509,17 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         })),
       } : {}),
       ...(whiteboardCommands.length > 0 ? {
-        whiteboardCommands: whiteboardCommands.map(({ cmd, capturedAt }) => ({
+        whiteboardCommands: whiteboardCommands.map(({ cmd, capturedAt, sourceMessageIndex }) => ({
           action: cmd.action,
           data: { ...cmd, action: undefined },
           // Capture time, NOT save time (`now`): the replay reconstructs WB
           // timing from these stamps, and same-stamped arrays break it for
           // paused-and-resumed sessions (2026-07-15 replay fix).
           timestamp: capturedAt,
+          // 2026-08-07: command↔message anchor, parity with /tutor. Omitted
+          // (not -1) when unknown so legacy consumers see the same absence
+          // shape as pre-fix rows.
+          ...(typeof sourceMessageIndex === 'number' && sourceMessageIndex >= 0 ? { sourceMessageIndex } : {}),
         })),
       } : {}),
       // Delta-append allowlisted debug events (same batching convention as
@@ -904,10 +926,26 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
           // resumed much later otherwise lands off the end of the replay
           // (session-1784507935152, 2026-07-19). Missing/empty stamp → now.
           const now = new Date().toISOString();
-          setWhiteboardCommands((prev) => [...prev, ...cmds.map((cmd, i) => ({
-            cmd,
-            capturedAt: meta?.seedStamps?.[i]?.timestamp || now,
-          }))]);
+          // 2026-08-07 parity fix: stamp the nearest tutor transcript index at
+          // emission time, same convention as /tutor — embed sessions saved
+          // whiteboardCommands with NO sourceMessageIndex, so replays/PDFs
+          // lost the command↔message anchor (embed-1786076855391: 12/12
+          // commands unanchored). Resume-seed batches keep their ORIGINAL
+          // stamp+index (meta.seedStamps), mirroring /tutor's reader.
+          const lastTutorIdx = (() => {
+            for (let i = transcript.length - 1; i >= 0; i--) {
+              if (transcript[i].role === 'tutor') return i;
+            }
+            return -1;
+          })();
+          setWhiteboardCommands((prev) => [...prev, ...cmds.map((cmd, i) => {
+            const seed = meta?.seedStamps?.[i];
+            return {
+              cmd,
+              capturedAt: seed?.timestamp || now,
+              sourceMessageIndex: typeof seed?.sourceMessageIndex === 'number' ? seed.sourceMessageIndex : lastTutorIdx,
+            };
+          })]);
         }}
         onLessonProgressChange={(p) => {
           planRef.current = p.plan;

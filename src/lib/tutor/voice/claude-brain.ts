@@ -20,6 +20,7 @@ import { getSegmentTruth } from '../lesson-plan/context';
 import type { Segment } from '../lesson-plan/types';
 import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
+import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
 import { normalizeSentenceSpacing, stripStageDirections, ABBREV_TAIL_RE } from './sentence-spacing';
 import type { DemoStopPayload } from './demo-stop-mode';
@@ -905,7 +906,8 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
     + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent in any notation or phrasing. '
     + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
-    + 'If the utterance is not an answer (a request, a question about the material, conversation): NO verdict word — just respond normally. '
+    + 'If the utterance is not an answer (a request, a question about the material, "I don\'t know", conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. '
+    + 'Never answer your own open question and praise as if the student had answered it; if you reveal after a give-up, reveal plainly ("No worries — it\'s …"), never as an affirmation. '
     + 'Never praise first and correct after.\n'
     + '</verdict_guard>\n\n';
 }
@@ -1110,17 +1112,29 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
   // card's numbers, put up a REPLACEMENT problem with different values, and
   // graded the student's correct card answer as wrong. Anchor hard on the
   // card's own statement + declared answer.
+  // 2026-08-07 triage (session-1786064015703): two failure modes fixed here.
+  // (1) The card's question goes STALE the moment the tutor asks a different
+  //     question aloud — the old unconditional "a spoken answer refers to THIS
+  //     card" made the brain grade a correct "an ellipse" (answering the newer
+  //     spoken tilt question) against the flat-slice card and loop for 3 min.
+  //     The card now defers to <active_question>.
+  // (2) A card with NO declared expectedAnswer still commanded "grade against
+  //     the declared expected answer" — the brain invented a verdict ("Right,
+  //     a circle!") for a bare "a" submission. Softened branch below.
   if (active.source === 'card') {
     return (
       `<active_problem>\n` +
-      `The student is answering the try-yourself card currently on the board — a card YOU authored. Its statement and expected answer are below. ` +
-      `A spoken or typed answer from the student refers to THIS card. Grade against the declared expected answer — the card's own auto-scorer uses exactly it, so your spoken verdict must agree with it. ` +
+      `The student is answering the try-yourself card currently on the board — a card YOU authored. Its statement${active.expectedAnswer ? ' and expected answer are' : ' is'} below. ` +
+      `A spoken or typed answer from the student refers to THIS card — UNLESS you have since asked a DIFFERENT question aloud; in that case <active_question> names the question actually on the table and you grade against THAT, not this card. ` +
+      (active.expectedAnswer
+        ? `Grade against the declared expected answer — the card's own auto-scorer uses exactly it, so your spoken verdict must agree with it. `
+        : '') +
       `Do NOT pose a different problem or change the numbers while this card is active; if you want a fresh problem, say so explicitly and render a new card first.\n\n` +
       `Statement: ${active.statement}\n` +
       (active.expectedAnswer
         ? `\nExpected answer (declared on the card; the typed-submit auto-scorer grades against it): ${active.expectedAnswer}\n` +
           `Check the student's attempts against THIS. If your own re-derivation disagrees, re-check your working before saying anything — and never reveal it before the student has genuinely attempted or given up.\n`
-        : '') +
+        : `\nThis card declares NO expected answer, so there is nothing pre-verified to grade against. Derive the correct answer yourself, silently, before judging any attempt — and if the student's reply doesn't parse as an answer to the card at all (a fragment, a request, "I don't know"), do NOT grade it as one: respond to what they actually said, or ask them to clarify.\n`) +
       `</active_problem>\n\n`
     );
   }
@@ -1135,6 +1149,34 @@ export function formatActiveProblemBlock(active: BrainTurnInput['activeProblem']
         `Check the student's attempts against THIS. Do not re-derive the answer from scratch mid-conversation — long verification threads are where dropped factors and sign slips creep in. If your own working disagrees with this answer, TRUST THIS and re-check your working before saying anything. Never reveal it before the student has genuinely attempted or given up.\n`
       : '') +
     `</active_problem>\n\n`
+  );
+}
+
+/**
+ * Render the `<active_question>` block — the tutor's LAST spoken question,
+ * extracted from the previous assistant turn (2026-08-07 triage,
+ * session-1786064015703). The prompt's answer-validation gate says "identify
+ * the literal question you just asked", but until this block nothing in the
+ * per-turn payload actually NAMED that question, while <active_problem
+ * source:'card'> asserted the board card owned every reply — so when board
+ * and speech diverged, the model graded against the stale card. This block
+ * is the counterweight: the newest spoken question wins.
+ *
+ * Server-derived (no client wiring): callers pass the last assistant message
+ * from conversationHistory; extraction reuses lastQuestionSentence — the same
+ * helper the Q-pin fallback uses, so brain and pin can't drift.
+ *
+ * Exported for scripts/test-active-problem-block.ts.
+ */
+export function formatActiveQuestionBlock(lastTutorMessage: string): string {
+  const question = lastQuestionSentence(lastTutorMessage);
+  if (!question) return '';
+  return (
+    `<active_question>\n` +
+    `The LAST question you asked the student aloud is quoted below. Their reply answers THIS question — grade it against THIS, even when an older try-yourself card in <active_problem> poses a different question (a card's question is stale the moment you ask a new one aloud; return to the card afterwards if it is still unfinished). ` +
+    `If their reply is correct for THIS question, say so — never mark it wrong for not answering an earlier question.\n\n` +
+    `Question: ${question}\n` +
+    `</active_question>\n\n`
   );
 }
 
@@ -1379,6 +1421,10 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
   const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
+  // 2026-08-07: the last spoken question outranks a stale card question —
+  // rendered directly after <active_problem> so the override reads in place.
+  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  if (activeQuestionBlock) console.log('[active-question] block attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1392,6 +1438,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    activeQuestionBlock +
     unrealizedMarksBlock +
     deduplicatedShowsBlock +
     studentStateBlock +
@@ -1573,6 +1620,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   const lastTutorMsgForGuard = [...input.conversationHistory].reverse().find((m) => m.role === 'assistant')?.content ?? '';
   const verdictGuardBlock = formatVerdictGuardBlock(input.studentTranscript, lastTutorMsgForGuard);
   if (verdictGuardBlock) console.log(verdictGuardBlock.includes('<continuation_guard>') ? '[verdict-guard] continuation guard attached' : '[verdict-guard] verdict guard attached');
+  // 2026-08-07: same twin-lockstep addition as runBrainTurn above.
+  const activeQuestionBlock = formatActiveQuestionBlock(lastTutorMsgForGuard);
+  if (activeQuestionBlock) console.log('[active-question] block attached');
   const userContent =
     profileBlock +
     openingDirectiveBlock +
@@ -1586,6 +1636,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     lessonBlock +
     truthBlock +
     activeProblemBlock +
+    activeQuestionBlock +
     unrealizedMarksBlock +
     deduplicatedShowsBlock +
     studentStateBlock +

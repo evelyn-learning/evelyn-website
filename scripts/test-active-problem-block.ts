@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-active-problem-block.ts
  */
-import { formatActiveProblemBlock } from '../src/lib/tutor/voice/claude-brain';
+import { formatActiveProblemBlock, formatActiveQuestionBlock } from '../src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
 let failed = 0;
@@ -63,6 +63,60 @@ check('empty statement → empty string', formatActiveProblemBlock({ statement: 
   check('student: verified answer renders', withAns.includes('3x^2'));
   check('student: VERIFIED framing present', /VERIFIED expected answer/.test(withAns));
   check('student: trust-this instruction present', /TRUST THIS/.test(withAns));
+}
+
+// ── 2026-08-07 triage (session-1786064015703): card-lock vs spoken question ──
+
+// Card WITHOUT a declared expected answer: the old text commanded "Grade
+// against the declared expected answer" even when none existed — the brain
+// invented a verdict for a bare "a" submission. Softened branch required.
+{
+  const block = formatActiveProblemBlock({
+    statement: 'If you slice the cone straight across, what shape do you get?',
+    source: 'card',
+  });
+  check('card/no-answer: statement renders', block.includes('slice the cone straight across'));
+  check('card/no-answer: no "declared expected answer" grading command', !/Grade against the declared expected answer/.test(block));
+  check('card/no-answer: silent-derive instruction present', /[Dd]erive the correct answer.*(yourself|silently)|silently.*derive/i.test(block));
+  check('card/no-answer: non-answer guard present', /doesn'?t parse as an answer|not an answer/i.test(block));
+}
+
+// Card branch (either variant) must defer to a NEWER spoken question — the
+// 2026-08-06 conics session graded "an ellipse" (correct for the spoken tilt
+// question) against the stale flat-slice card and looped for 3 minutes.
+{
+  const withAns = formatActiveProblemBlock({
+    statement: 'If you slice the cone straight across, what shape do you get?',
+    source: 'card',
+    expectedAnswer: 'a circle',
+  });
+  const noAns = formatActiveProblemBlock({
+    statement: 'If you slice the cone straight across, what shape do you get?',
+    source: 'card',
+  });
+  check('card/with-answer: defers to <active_question>', withAns.includes('<active_question>'));
+  check('card/no-answer: defers to <active_question>', noAns.includes('<active_question>'));
+  check('card/with-answer: still anchors grading on card answer', /Grade against the declared expected answer/.test(withAns));
+}
+
+// ── formatActiveQuestionBlock: the tutor's LAST spoken question ──
+{
+  check('aq: empty message → empty', formatActiveQuestionBlock('') === '');
+  check('aq: no question in message → empty', formatActiveQuestionBlock('Right, a circle! Slicing flat gives that shape.') === '');
+
+  const block = formatActiveQuestionBlock(
+    'Right, a circle! Now here\'s the fun part — what if you tilt that same slice just a little instead of keeping it flat? What shape do you picture then?'
+  );
+  check('aq: block renders', block.startsWith('<active_question>'));
+  check('aq: closes tag', block.includes('</active_question>'));
+  check('aq: extracts LAST question sentence', block.includes('What shape do you picture then?'));
+  check('aq: does not include earlier sentences', !block.includes('fun part'));
+  check('aq: grade-against-this instruction', /grade.*against/i.test(block));
+  check('aq: overrides stale card question', /card|<active_problem>/i.test(block));
+
+  // Over-long or absent questions never render a block (lastQuestionSentence caps at 220).
+  const longQ = 'x'.repeat(230) + '?';
+  check('aq: over-long question → empty', formatActiveQuestionBlock(longQ) === '');
 }
 
 console.log(`\nactive-problem-block: ${passed} passed, ${failed} failed`);

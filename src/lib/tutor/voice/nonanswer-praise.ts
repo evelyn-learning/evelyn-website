@@ -47,11 +47,55 @@ export function isPureAcknowledgment(text: string): boolean {
   return ACK_PHRASES.has(words.join(' '));
 }
 
+/** 2026-08-07 triage extension: two more non-answer classes, same closed-set
+ *  philosophy as ACK_PHRASES.
+ *  - 'idk'    — an explicit give-up ("I don't know." → "Right, a circle!" in
+ *               session-1786064015703: the reveal must never be praise-phrased).
+ *  - 'request'— the student asked for something instead of answering
+ *               ("gtive another example" → "One eighth. Nice." in
+ *               embed-1786076855391: a request is never gradeable).
+ *  Apostrophes are stripped WITHOUT inserting a space ("don't" → "dont") so
+ *  contraction variants collapse to one spelling. */
+export type NonAnswerKind = 'ack' | 'idk' | 'request';
+
+const IDK_RE =
+  /^(?:i\s+)?(?:dont\s+know|do\s+not\s+know|dunno|idk|no\s+idea|have\s+no\s+idea|not\s+sure|im\s+not\s+sure|i\s+am\s+not\s+sure|no\s+clue|forget|forgot|dont\s+remember)$/;
+
+/** Anchored request shapes — imperative ask, polite ask, or the "another
+ *  example/one" tail (covers STT-mangled verbs like "gtive"). */
+const REQUEST_RES: RegExp[] = [
+  /^(?:please\s+)?(?:give|show|tell|explain|teach|repeat)\b/,
+  /^(?:can|could|would|will)\s+(?:you|we)\b/,
+  /\banother\s+(?:example|one)\b/,
+  /^what\s+do\s+you\s+mean\b/,
+  /^(?:please\s+)?help(?:\s+me)?$/,
+  /^(?:give\s+me\s+)?a\s+hint$|^hints?$/,
+];
+
+export function classifyNonAnswer(text: string): NonAnswerKind | null {
+  if (isPureAcknowledgment(text)) return 'ack';
+  const words = text
+    .toLowerCase()
+    .replace(/'/g, '')
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w && !FILLER.has(w));
+  if (words.length === 0) return null;
+  const joined = words.join(' ');
+  // A long utterance carries content — grade it, don't classify it away.
+  if (words.length <= 5 && IDK_RE.test(joined)) return 'idk';
+  if (words.length <= 8 && REQUEST_RES.some((re) => re.test(joined))) return 'request';
+  return null;
+}
+
 /** Praise verdict opener followed IMMEDIATELY by a numeric value — the
  *  answer-reveal shape ("Exactly.4 meters…", "Right. 45 N…"). Prose after
  *  the praise ("Right. Here's the next one…") deliberately does not match. */
+/** `(?:\\[a-z]+[^a-z\d]*)*` steps over TeX commands so a latex-wrapped reveal
+ *  ("Exactly. $\frac{1}{8}$ …") still counts as praise-then-value; ordinary
+ *  prose after the praise ("Right. Here's the next one…") still doesn't. */
 const PRAISE_THEN_VALUE_RE =
-  /^\s*(?:exactly|correct|perfect|right|spot on|nailed it|you got it|that['’]s (?:right|it|correct))[.!,]?\s*[^a-z\d]*\d/i;
+  /^\s*(?:exactly|correct|perfect|right|spot on|nailed it|you got it|that['’]s (?:right|it|correct))[.!,]?\s*[^a-z\d]*(?:\\[a-z]+[^a-z\d]*)*\d/i;
 
 /**
  * Should this attempt be killed as praise-plus-reveal to a non-answer?
@@ -59,14 +103,30 @@ const PRAISE_THEN_VALUE_RE =
  * each new sentence; fires as soon as the reveal shape completes.
  */
 export function shouldKillNonAnswerPraise(studentText: string, attemptText: string): boolean {
-  if (!isPureAcknowledgment(studentText)) return false;
+  if (classifyNonAnswer(studentText) === null) return false;
   return PRAISE_THEN_VALUE_RE.test(attemptText);
 }
 
-/** Retry feedback fed to the brain via the standard rejection channel. */
+/** Retry feedback fed to the brain via the standard rejection channel —
+ *  worded per non-answer class. */
 export function nonAnswerPraiseFeedback(studentText: string): string {
+  const quoted = `The student said "${studentText.trim()}"`;
+  const kind = classifyNonAnswer(studentText);
+  if (kind === 'idk') {
+    return (
+      `${quoted} — they do NOT know and gave no answer, yet you opened with praise and revealed the answer as if grading a correct reply. ` +
+      `Re-emit your response: no verdict or praise word ("Right." / "Exactly." / "Nice."). ` +
+      `Either guide them with a smaller step or hint, or — if you choose to reveal — reveal plainly and kindly ("No worries — it's …"), never as an affirmation.`
+    );
+  }
+  if (kind === 'request') {
+    return (
+      `${quoted} — a REQUEST, not an answer. You treated it as a correct answer: you answered your own open question and praised. ` +
+      `Re-emit your response: respond to the request itself, no verdict or praise word, and do NOT answer your own question for them.`
+    );
+  }
   return (
-    `The student said "${studentText.trim()}" — an acknowledgment, NOT an answer. ` +
+    `${quoted} — an acknowledgment, NOT an answer. ` +
     `You affirmed it and revealed the answer to your own open question. ` +
     `Re-emit your response: no verdict word, do NOT state the answer or its value. ` +
     `The student has not answered yet — briefly re-invite them (e.g. "Take your time — what do you get?") or keep waiting.`

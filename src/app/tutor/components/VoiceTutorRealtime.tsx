@@ -185,6 +185,8 @@ import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/li
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
+import { buildJudgeCorrectionNote } from '@/lib/tutor/voice/judge-correction-note';
+import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -2560,6 +2562,12 @@ export function VoiceTutorRealtime({
   // pendingCadenceNoteRef but a SEPARATE ref/concern (a turn can lapse on
   // cadence and anchoring independently).
   const pendingBoardAnchorNoteRef = useRef<string | null>(null);
+  // 2026-08-07 triage: judge kill-class survivor → next-turn correction note
+  // (buildJudgeCorrectionNote). The judge stays advisory (no kill, no audio
+  // chop) but its verdict now reaches the brain on the following turn so a
+  // false reject can be owned instead of standing forever. Same lifecycle as
+  // the three refs above.
+  const pendingJudgeCorrectionNoteRef = useRef<string | null>(null);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -7624,6 +7632,28 @@ export function VoiceTutorRealtime({
         transcriptRef.current = [...transcriptRef.current, studentEntry];
         onTranscriptUpdate([...transcriptRef.current]);
       }
+      // 2026-08-07 triage: `silent = isBracketed` conflates "system
+      // directive" with "carries no student content". Markers like
+      // [try-yourself submission: "a"] QUOTE the student's own words —
+      // without this append the saved transcript/replay showed the tutor
+      // affirming out of nowhere, and later brain turns had no record the
+      // student answered. Append the quoted content as historyOnly (saved
+      // + in brain history; no live chat bubble — the card already shows
+      // it). The current request is unaffected: priorWithoutCurrent below
+      // drops this entry, and the full marker still rides studentTranscript.
+      const currentEcho = silent && isBracketed ? extractStudentEcho(transcript) : null;
+      if (currentEcho && (!lastEntry || lastEntry.role !== 'student' || lastEntry.text !== currentEcho)) {
+        const echoEntry: TranscriptEntry = {
+          id: `student-${Date.now()}`,
+          timestamp: new Date(),
+          role: 'student',
+          text: currentEcho,
+          historyOnly: true,
+        };
+        transcriptRef.current = [...transcriptRef.current, echoEntry];
+        onTranscriptUpdate([...transcriptRef.current]);
+        onDebugEvent?.('student_echo_appended', currentEcho.slice(0, 60));
+      }
       // Convert the transcript log to the Claude conversation shape. We
       // collapse 'system' entries (greeting prompts, etc.) — they're not
       // genuine turns from Claude's perspective.
@@ -7634,8 +7664,13 @@ export function VoiceTutorRealtime({
           content: e.text,
         }));
       // Drop the just-recorded user turn from history; it goes in the
-      // dedicated studentTranscript field.
-      const priorWithoutCurrent = history.length > 0 && history[history.length - 1].role === 'user' && history[history.length - 1].content === transcript
+      // dedicated studentTranscript field. Same for a just-appended student
+      // echo — its content is already inside the marker riding
+      // studentTranscript, so keeping it in history would duplicate it
+      // within this one request (it stays for FUTURE turns).
+      const priorWithoutCurrent = history.length > 0 && history[history.length - 1].role === 'user'
+        && (history[history.length - 1].content === transcript
+          || (currentEcho !== null && history[history.length - 1].content === currentEcho))
         ? history.slice(0, -1)
         : history;
       // Synthetic greeting prepend: the tutor system prompt has a Rule 6
@@ -7899,6 +7934,12 @@ export function VoiceTutorRealtime({
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
+      }
+      // Judge correction note (2026-08-07) — same convention, own concern.
+      if (pendingJudgeCorrectionNoteRef.current) {
+        runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
+        pendingJudgeCorrectionNoteRef.current = null;
+        onDebugEvent?.('judge_correction_note_consumed', 'delivered with this turn');
       }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
@@ -11424,6 +11465,17 @@ export function VoiceTutorRealtime({
                   // suppress the numeric false positives.
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill — Pillar 2b) — ${killIssues.length} board-contradiction claim(s):`, summary);
                   onDebugEvent?.('judge_advisory_was_kill', `${killIssues.length}: ${killIssues[0].claim.slice(0, 60)}…`);
+                  // 2026-08-07: the verdict no longer dead-ends in telemetry —
+                  // plant a next-turn correction note so the brain re-checks
+                  // the flagged claim with the student's next utterance in
+                  // hand and can own a false reject. Advisory stays advisory:
+                  // no kill, no re-narration; the note itself instructs
+                  // silent continue when the brain stands by its claim.
+                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim));
+                  if (correctionNote) {
+                    pendingJudgeCorrectionNoteRef.current = correctionNote;
+                    onDebugEvent?.('judge_correction_note_planted', killIssues[0].claim.slice(0, 60));
+                  }
                   // Round-7 Fix D: detect re-assertion loops. Tokenize
                   // each new claim into structural tokens (multi-digit
                   // numbers, multi-char identifiers, and bracketed

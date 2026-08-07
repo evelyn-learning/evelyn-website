@@ -6,6 +6,7 @@
  */
 import {
   isPureAcknowledgment,
+  classifyNonAnswer,
   shouldKillNonAnswerPraise,
   nonAnswerPraiseFeedback,
 } from '../src/lib/tutor/voice/nonanswer-praise';
@@ -60,10 +61,53 @@ check('non-praise teaching with numbers → no kill',
 check('direction answer "right" + praise+value → no kill',
   !shouldKillNonAnswerPraise('Right.', 'Exactly. 20 N to the right.'));
 
-// Feedback message sanity.
+// ─── 2026-08-07 triage: "I don't know" + request classes ───
+// session-1786064015703: "I don't know." ×2 → "Right, a circle!" (praise-
+// phrased reveal); embed-1786076855391: "gtive another example" →
+// "One eighth. Nice." (request treated as a correct answer).
+
+// classifyNonAnswer — kinds
+check('ack classifies as ack', classifyNonAnswer('Oh, okay.') === 'ack');
+check('"I don\'t know." is idk', classifyNonAnswer("I don't know.") === 'idk');
+check('"I dont know" is idk (no apostrophe)', classifyNonAnswer('I dont know') === 'idk');
+check('"Um, I don\'t know." is idk (filler stripped)', classifyNonAnswer("Um, I don't know.") === 'idk');
+check('"No idea." is idk', classifyNonAnswer('No idea.') === 'idk');
+check('"I\'m not sure." is idk', classifyNonAnswer("I'm not sure.") === 'idk');
+check('"dunno" is idk', classifyNonAnswer('dunno') === 'idk');
+check('"give one example" is request', classifyNonAnswer('give one example') === 'request');
+check('"gtive another example" is request (live STT typo)', classifyNonAnswer('gtive another example') === 'request');
+check('"Can you explain that again?" is request', classifyNonAnswer('Can you explain that again?') === 'request');
+check('"what do you mean?" is request', classifyNonAnswer('what do you mean?') === 'request');
+check('"help" is request', classifyNonAnswer('help') === 'request');
+
+// NOT non-answers — real attempts must classify null.
+check('"an ellipse" is null (real answer)', classifyNonAnswer('an ellipse') === null);
+check('"Is it 5?" is null (hedged answer)', classifyNonAnswer('Is it 5?') === null);
+check('"the applied force" is null', classifyNonAnswer('the applied force') === null);
+check('"Yes." is null (yes/no answer)', classifyNonAnswer('Yes.') === null);
+check('"I don\'t know if that\'s the slope or the intercept" is null (too long / carries content)',
+  classifyNonAnswer("I don't know if that's the slope or the intercept, maybe slope") === null);
+
+// Kill decision extends to idk/request + praise-then-value.
+check('idk + "Right. 45 N." kills',
+  shouldKillNonAnswerPraise("I don't know.", 'Right. 45 N up the incline.'));
+check('request + praise-then-value kills',
+  shouldKillNonAnswerPraise('gtive another example', 'Exactly. $\\frac{1}{8}$ of the pizza.'));
+check('idk + plain reveal (no praise) → no kill',
+  !shouldKillNonAnswerPraise("I don't know.", "No worries — it's a circle. Flat slice, round shape."));
+check('request + honoring the request → no kill',
+  !shouldKillNonAnswerPraise('give one example', "Sure. Look at the board — that pizza's cut into four slices."));
+
+// Feedback message sanity — per-class wording.
 const fb = nonAnswerPraiseFeedback('Oh, okay.');
 check('feedback quotes the utterance', fb.includes('"Oh, okay."'));
 check('feedback forbids reveal', /do NOT state the answer/i.test(fb));
+const fbIdk = nonAnswerPraiseFeedback("I don't know.");
+check('idk feedback names the give-up', /not know|gave up|no answer/i.test(fbIdk));
+check('idk feedback forbids praise-phrased reveal', /praise|verdict/i.test(fbIdk));
+const fbReq = nonAnswerPraiseFeedback('give another example');
+check('request feedback names the request', /request/i.test(fbReq));
+check('request feedback says respond to it', /respond to (the|their) request/i.test(fbReq));
 
 if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
 console.log(`\nAll ${passed} nonanswer-praise tests passed.`);

@@ -81,6 +81,8 @@
     "test:judge-prompt": "npx tsx scripts/test-judge-question-context.ts",
     "test:rule8-repair": "npx tsx scripts/test-rule8-repair.ts",
     "test:nonanswer-praise": "npx tsx scripts/test-nonanswer-praise.ts",
+    "test:judge-correction-note": "npx tsx scripts/test-judge-correction-note.ts",
+    "test:marker-student-echo": "npx tsx scripts/test-marker-student-echo.ts",
     "test:manifest-coverage": "npx tsx scripts/test-manifest-coverage.ts",
     "test:ack-layer": "npx tsx scripts/test-ack-layer.ts",
     "test:cover-layer": "npx tsx scripts/test-cover-layer.ts",
