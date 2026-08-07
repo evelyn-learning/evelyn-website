@@ -285,7 +285,9 @@ export default function OutreachConsole({ initialLeads }: { initialLeads: LeadJS
         </div>
 
         {tab === "review" && <ReviewQueueTab leads={leads} refresh={refresh} />}
-        {tab === "today" && <TodayTab leads={leads} refresh={refresh} />}
+        {tab === "today" && (
+          <TodayTab leads={leads} refresh={refresh} gmailAccount={gmailStatus?.account ?? null} />
+        )}
         {tab === "pipeline" && <PipelineTab leads={leads} refresh={refresh} />}
         {tab === "find" && <FindLeadsTab onLeadsChanged={refresh} />}
       </main>

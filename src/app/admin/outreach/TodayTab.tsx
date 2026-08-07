@@ -45,9 +45,11 @@ function relativeTime(iso: string): string {
 export default function TodayTab({
   leads,
   refresh,
+  gmailAccount,
 }: {
   leads: LeadJSON[];
   refresh: () => Promise<void>;
+  gmailAccount?: string | null;
 }) {
   const now = Date.now();
   const due = leads.filter(
@@ -146,6 +148,7 @@ export default function TodayTab({
           onMarkSent={(channel) => markSent(lead._id, channel)}
           onCreateGmailDraft={(draft) => createGmailDraft(lead._id, draft)}
           onEnrich={() => enrichLead(lead._id)}
+          gmailAccount={gmailAccount}
         />
       ))}
     </div>
@@ -158,9 +161,11 @@ function LeadCard({
   onMarkSent,
   onCreateGmailDraft,
   onEnrich,
+  gmailAccount,
 }: {
   lead: LeadJSON;
   busy: boolean;
+  gmailAccount?: string | null;
   onMarkSent: (channel: TouchChannel) => void;
   onCreateGmailDraft: (draft: {
     channel: TouchChannel;
@@ -264,6 +269,15 @@ function LeadCard({
               {dm?.name || "No decision maker on file"}
               {dm?.title ? ` — ${dm.title}` : ""}
             </span>
+            {dm?.email && (
+              <a
+                href={`mailto:${dm.email}`}
+                className="inline-flex items-center gap-1 text-gray-500 hover:text-primary-600"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                {dm.email}
+              </a>
+            )}
             <EmailProvenanceBadge
               emailVerified={dm?.emailVerified}
               emailSource={dm?.emailSource}
@@ -401,9 +415,14 @@ function LeadCard({
                       Create Gmail draft
                     </button>
                   )}
+                  {/* Route by account email, not session index: /u/0/ opens
+                      whichever Google account signed in first on this browser,
+                      where the outreach draft doesn't exist (Gmail then shows a
+                      blank compose). /u/<email>/ resolves to the right session
+                      regardless of sign-in order. */}
                   {lead.currentDraft.gmailDraftId && (
                     <a
-                      href={`https://mail.google.com/mail/u/0/#drafts?compose=${lead.currentDraft.gmailDraftId}`}
+                      href={`https://mail.google.com/mail/u/${encodeURIComponent(gmailAccount || "0")}/#drafts?compose=${lead.currentDraft.gmailDraftId}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200"
