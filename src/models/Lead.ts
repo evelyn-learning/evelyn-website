@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS } from "@/lib/outreach/enums";
-import type { LeadSegment, LeadStatus, TouchChannel } from "@/lib/outreach/enums";
+import { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES } from "@/lib/outreach/enums";
+import type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource } from "@/lib/outreach/enums";
 
 // Re-exported for existing server-side `@/models`/`./Lead` importers — no
 // breaking change. The canonical source is `@/lib/outreach/enums`, which is
 // mongoose-free and safe for client components to import directly (see that
 // file's header comment for why this file itself is NOT safe for them).
-export { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS };
-export type { LeadSegment, LeadStatus, TouchChannel };
+export { LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS, EMAIL_SOURCES, LINKEDIN_SOURCES };
+export type { LeadSegment, LeadStatus, TouchChannel, EmailSource, LinkedinSource };
 
 export interface ITouch {
   at: Date;
@@ -42,6 +42,9 @@ export interface ILead extends Document {
     linkedinUrl?: string;
     email?: string;
     emailVerified: boolean;
+    emailSource?: EmailSource;
+    emailProvider?: string;
+    linkedinSource?: LinkedinSource;
   };
   website: string;
   source: string;
@@ -52,6 +55,9 @@ export interface ILead extends Document {
   nextActionAt?: Date | null;
   touches: ITouch[];
   currentDraft?: ICurrentDraft | null;
+  linkedinDraft?: { subject: string; body: string } | null;
+  contactFormDraft?: { body: string } | null;
+  contactPageUrl?: string;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -81,6 +87,9 @@ const LeadSchema = new Schema<ILead>(
       linkedinUrl: String,
       email: String,
       emailVerified: { type: Boolean, default: false },
+      emailSource: { type: String, enum: EMAIL_SOURCES },
+      emailProvider: String,
+      linkedinSource: { type: String, enum: LINKEDIN_SOURCES },
     },
     website: { type: String, default: "" },
     source: { type: String, default: "" },
@@ -101,6 +110,20 @@ const LeadSchema = new Schema<ILead>(
       default: null,
       _id: false,
     },
+    linkedinDraft: {
+      type: {
+        subject: { type: String, required: true },
+        body: { type: String, required: true },
+      },
+      _id: false,
+    },
+    contactFormDraft: {
+      type: {
+        body: { type: String, required: true },
+      },
+      _id: false,
+    },
+    contactPageUrl: String,
     notes: String,
   },
   { timestamps: true }

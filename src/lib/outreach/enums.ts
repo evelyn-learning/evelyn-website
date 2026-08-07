@@ -34,3 +34,9 @@ export const CANDIDATE_STATUSES = [
   "pending", "inserted", "no_email", "dupe", "discarded", "error",
 ] as const;
 export type CandidateStatus = (typeof CANDIDATE_STATUSES)[number];
+
+export const EMAIL_SOURCES = ["published", "vendor"] as const;
+export type EmailSource = (typeof EMAIL_SOURCES)[number];
+
+export const LINKEDIN_SOURCES = ["research", "vendor"] as const;
+export type LinkedinSource = (typeof LINKEDIN_SOURCES)[number];
