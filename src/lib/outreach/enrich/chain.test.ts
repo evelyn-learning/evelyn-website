@@ -18,22 +18,36 @@ const input: EnrichInput = {
 };
 
 // In-memory LedgerOps fake — Task 4 tests must never touch Mongo.
-function fakeLedger(seed: Record<string, number> = {}): LedgerOps & { calls: Array<{ op: string; provider: string; month: string; n?: number }> } {
+// `throwOn` lets a test simulate a transient Mongo error on a specific op
+// (optionally scoped to one provider) to exercise the chain's
+// ledger-error resilience.
+function fakeLedger(
+  seed: Record<string, number> = {},
+  throwOn?: { op: "getUsed" | "addUse" | "setExhausted"; provider?: string }
+): LedgerOps & { calls: Array<{ op: string; provider: string; month: string; n?: number }> } {
   const used = new Map<string, number>(Object.entries(seed));
   const calls: Array<{ op: string; provider: string; month: string; n?: number }> = [];
   const key = (provider: string, month: string) => `${provider}:${month}`;
+  const maybeThrow = (op: "getUsed" | "addUse" | "setExhausted", provider: string) => {
+    if (throwOn && throwOn.op === op && (!throwOn.provider || throwOn.provider === provider)) {
+      throw new Error("ECONNRESET: simulated Mongo hiccup");
+    }
+  };
   return {
     calls,
     async getUsed(provider, month) {
       calls.push({ op: "getUsed", provider, month });
+      maybeThrow("getUsed", provider);
       return used.get(key(provider, month)) ?? 0;
     },
     async addUse(provider, month, n) {
       calls.push({ op: "addUse", provider, month, n });
+      maybeThrow("addUse", provider);
       used.set(key(provider, month), (used.get(key(provider, month)) ?? 0) + n);
     },
     async setExhausted(provider, month) {
       calls.push({ op: "setExhausted", provider, month });
+      maybeThrow("setExhausted", provider);
       used.set(key(provider, month), Number.MAX_SAFE_INTEGER);
     },
   };
@@ -191,6 +205,49 @@ const MONTH = "2026-08";
     const marker = (async () => new Response("{}")) as unknown as typeof fetch;
     await enrichLead(input, { providers: [provider], ledger: fakeLedger(), fetchFn: marker, now: NOW });
     assert.equal(seenFetch, marker);
+  });
+
+  await test("ledger.getUsed throwing is treated as a miss (no blind credit spend) and the chain continues to a hit", async () => {
+    const apollo = fakeProvider({ name: "apollo", result: { provider: "apollo", email: "should-not-be-used@x.com", creditsUsed: 1 } });
+    const hunterHit: EnrichResult = { provider: "hunter", email: "jane@x.com", creditsUsed: 1 };
+    const hunter = fakeProvider({ name: "hunter", result: hunterHit });
+    const ledger = fakeLedger({}, { op: "getUsed", provider: "apollo" });
+
+    const outcome = await enrichLead(input, { providers: [apollo, hunter], ledger, now: NOW });
+
+    // apollo's getUsed threw, so match() must never have been called on it.
+    assert.equal(apollo.calls, 0);
+    assert.deepEqual(outcome.attempts, [
+      { provider: "apollo", status: "miss" },
+      { provider: "hunter", status: "hit" },
+    ]);
+    assert.deepEqual(outcome.result, hunterHit);
+  });
+
+  await test("ledger.addUse throwing after a hit still returns the hit (lost credit record is the lesser harm)", async () => {
+    const hit: EnrichResult = { provider: "apollo", email: "jane@x.com", creditsUsed: 1 };
+    const apollo = fakeProvider({ name: "apollo", result: hit });
+    const ledger = fakeLedger({}, { op: "addUse", provider: "apollo" });
+
+    const outcome = await enrichLead(input, { providers: [apollo], ledger, now: NOW });
+
+    assert.deepEqual(outcome.result, hit);
+    assert.deepEqual(outcome.attempts, [{ provider: "apollo", status: "hit" }]);
+  });
+
+  await test("ledger.setExhausted throwing still records exhausted and the chain continues", async () => {
+    const apollo = fakeProvider({ name: "apollo", throwQuota: true });
+    const hunterHit: EnrichResult = { provider: "hunter", email: "jane@x.com", creditsUsed: 1 };
+    const hunter = fakeProvider({ name: "hunter", result: hunterHit });
+    const ledger = fakeLedger({}, { op: "setExhausted", provider: "apollo" });
+
+    const outcome = await enrichLead(input, { providers: [apollo, hunter], ledger, now: NOW });
+
+    assert.deepEqual(outcome.attempts, [
+      { provider: "apollo", status: "exhausted" },
+      { provider: "hunter", status: "hit" },
+    ]);
+    assert.deepEqual(outcome.result, hunterHit);
   });
 
   await test("never throws even when every provider throws a plain error", async () => {

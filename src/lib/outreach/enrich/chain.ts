@@ -30,7 +30,10 @@ export interface ChainOutcome {
 
 // Runs the enrichment chain for a single lead. Never throws: every
 // per-provider failure mode (unconfigured, at-cap, quota-exhausted, plain
-// error, null miss) is captured as an attempt and the chain moves on.
+// error, null miss) is captured as an attempt and the chain moves on. This
+// includes ledger errors (getUsed/setExhausted/addUse) — a transient Mongo
+// hiccup on one provider must not abort a batch enrichment run over many
+// leads; see the try/catch around each ledger call below.
 export async function enrichLead(input: EnrichInput, deps: ChainDeps = {}): Promise<ChainOutcome> {
   const providers = deps.providers ?? [apolloProvider, hunterProvider, prospeoProvider];
   const ledger = deps.ledger ?? mongoLedger;
@@ -48,7 +51,16 @@ export async function enrichLead(input: EnrichInput, deps: ChainDeps = {}): Prom
       continue;
     }
 
-    const used = await ledger.getUsed(provider.name, month);
+    let used: number;
+    try {
+      used = await ledger.getUsed(provider.name, month);
+    } catch {
+      // Ledger read failed (e.g. transient Mongo error) — treat as miss,
+      // don't spend a credit blind. A batch of many leads shouldn't abort
+      // over one DB hiccup; the next lead's read may well succeed.
+      attempts.push({ provider: provider.name, status: "miss" });
+      continue;
+    }
     const cap = capForProvider(provider.name);
     if (used >= cap) {
       attempts.push({ provider: provider.name, status: "skipped_cap" });
@@ -60,7 +72,13 @@ export async function enrichLead(input: EnrichInput, deps: ChainDeps = {}): Prom
       result = await provider.match(input, fetchFn);
     } catch (err) {
       if (err instanceof QuotaExhaustedError) {
-        await ledger.setExhausted(provider.name, month);
+        try {
+          await ledger.setExhausted(provider.name, month);
+        } catch {
+          // Best-effort write: if it fails, the exhausted flag just
+          // doesn't stick this time and a later call will retry it. The
+          // chain still records/continues either way.
+        }
         attempts.push({ provider: provider.name, status: "exhausted" });
         continue;
       }
@@ -73,7 +91,13 @@ export async function enrichLead(input: EnrichInput, deps: ChainDeps = {}): Prom
     }
 
     if (result) {
-      await ledger.addUse(provider.name, month, result.creditsUsed);
+      try {
+        await ledger.addUse(provider.name, month, result.creditsUsed);
+      } catch {
+        // The enrichment itself succeeded; a lost credit-usage record is
+        // the lesser harm vs. throwing away a real hit. Ledger may
+        // under-count this provider's usage for the month as a result.
+      }
       attempts.push({ provider: provider.name, status: "hit" });
       return { result, attempts };
     }
