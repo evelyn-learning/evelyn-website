@@ -19,8 +19,31 @@ export function CatalogPhaseDiagramRenderer({ figure }: { figure: PhaseDiagramFi
   const mx = (t: number) => x0 + t * (xR - x0);
   const my = (p: number) => yBot - p * (yBot - yTop);
 
+  // Width-aware side flip + edge clamp for point-attached labels (2026-08-07
+  // clip audit): the start-anchored critical label near the right edge (even
+  // the "critical point" fallback clips at t≥0.9) and the end-anchored triple
+  // label near the left edge escaped the viewBox. Same char-width estimate as
+  // ProjectileMotionRenderer; flip to the roomy side, then clamp.
+  const estW = (s: string, fontSize: number) => s.length * fontSize * 0.55;
+  const placeLabel = (
+    x: number, text: string, fontSize: number, prefer: 'start' | 'end', pad: number,
+  ): { x: number; anchor: 'start' | 'end' } => {
+    const w = estW(text, fontSize);
+    const anchor: 'start' | 'end' = prefer === 'start'
+      ? (x + pad + w > W - 3 ? 'end' : 'start')
+      : (x - pad - w < 3 ? 'start' : 'end');
+    const lx = anchor === 'start'
+      ? Math.max(3, Math.min(x + pad, W - 3 - w))
+      : Math.min(W - 3, Math.max(x - pad, 3 + w));
+    return { x: lx, anchor };
+  };
+
   const T: [number, number] = [mx(figure.triple.t), my(figure.triple.p)];
   const C: [number, number] = [mx(figure.critical.t), my(figure.critical.p)];
+  const tripleText = figure.triple.label || 'triple point';
+  const tripleL = placeLabel(T[0], tripleText, 11.5, 'end', 8);
+  const criticalText = figure.critical.label || 'critical point';
+  const criticalL = placeLabel(C[0], criticalText, 11.5, 'start', 8);
   const O: [number, number] = [x0, yBot];
   const fTopT = figure.triple.t + (figure.fusionSlope === 'positive' ? 0.06 : -0.06);
   const F: [number, number] = [mx(fTopT), yTop];
@@ -68,20 +91,21 @@ export function CatalogPhaseDiagramRenderer({ figure }: { figure: PhaseDiagramFi
         {/* triple + critical points */}
         <g data-feature={N.triple} data-feature-label="triple point">
           <circle cx={T[0]} cy={T[1]} r={4} fill="#dc2626" />
-          <text x={T[0] - 8} y={T[1] + 16} fontSize={11.5} fill="#dc2626" fontWeight={600} textAnchor="end">{figure.triple.label || 'triple point'}</text>
+          <text x={tripleL.x} y={T[1] + 16} fontSize={11.5} fill="#dc2626" fontWeight={600} textAnchor={tripleL.anchor}>{tripleText}</text>
         </g>
         <g data-feature={N.critical} data-feature-label="critical point">
           <circle cx={C[0]} cy={C[1]} r={4} fill="#7c3aed" />
-          <text x={C[0] + 8} y={C[1] - 6} fontSize={11.5} fill="#7c3aed" fontWeight={600}>{figure.critical.label || 'critical point'}</text>
+          <text x={criticalL.x} y={C[1] - 6} fontSize={11.5} fill="#7c3aed" fontWeight={600} textAnchor={criticalL.anchor}>{criticalText}</text>
         </g>
 
         {/* optional state marker */}
         {figure.marker && (() => {
           const m: [number, number] = [mx(figure.marker.t), my(figure.marker.p)];
+          const markerL = figure.marker.label ? placeLabel(m[0], figure.marker.label, 11.5, 'start', 7) : null;
           return (
             <g>
               <circle cx={m[0]} cy={m[1]} r={4.5} fill="none" stroke="#111827" strokeWidth={2} />
-              {figure.marker.label && <text x={m[0] + 7} y={m[1] + 4} fontSize={11.5} fill="#111827" fontWeight={600}>{figure.marker.label}</text>}
+              {figure.marker.label && markerL && <text x={markerL.x} y={m[1] + 4} fontSize={11.5} fill="#111827" fontWeight={600} textAnchor={markerL.anchor}>{figure.marker.label}</text>}
             </g>
           );
         })()}

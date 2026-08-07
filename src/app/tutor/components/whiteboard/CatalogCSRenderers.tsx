@@ -10,6 +10,7 @@ import {
   logicGateFeatureNames,
   type FlowchartFigure,
   type FlowchartNode,
+  type FlowchartEdge,
   type StateMachineFigure,
   type BinaryTreeFigure,
   type BinaryTreeNode,
@@ -36,15 +37,23 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
   // skip-edges (forward edges that jump more than one row — e.g. a
   // decision branch going straight to End past a process row). Both
   // route through the gutter to avoid crossing intermediate nodes.
-  const needsGutter = edges.some((e) => {
+  const isGutterEdge = (e: FlowchartEdge) => {
     const a = positions.get(e.from);
     const b = positions.get(e.to);
     if (!a || !b) return false;
     if (b.y < a.y) return true; // back edge
     if ((b.y - a.y) > ROW_H * 1.5) return true; // skip edge
     return false;
-  });
-  const rightGutter = needsGutter ? 100 : 20;
+  };
+  const needsGutter = edges.some(isGutterEdge);
+  // Gutter-routed edge labels render anchor=start just right of the gutter
+  // line, so the gutter must fit the longest such label (~6.6px/char at
+  // fontSize 11, cf. estNodeWidth) — a fixed 100 clipped anything past ~6
+  // characters at the right viewBox edge.
+  const longestGutterLabel = needsGutter
+    ? Math.max(0, ...edges.filter(isGutterEdge).map((e) => (e.label ?? '').length))
+    : 0;
+  const rightGutter = needsGutter ? Math.max(100, 56 + Math.round(longestGutterLabel * 6.6) + 8) : 20;
   const layoutSpan = maxX - minX; // outer-edge to outer-edge (minX/maxX already include half-widths)
   const W = Math.max(600, layoutSpan + 40 + rightGutter);
   const H = 60 + (maxDepth + 1) * ROW_H;
@@ -54,7 +63,7 @@ export function CatalogFlowchartSimpleRenderer({ figure }: { figure: FlowchartFi
   const layoutCenter = (minX + maxX) / 2;
   const shiftX = usableCenter - layoutCenter;
   for (const p of positions.values()) p.x += shiftX;
-  const BACK_EDGE_X = W - 50;
+  const BACK_EDGE_X = W - rightGutter + 50; // 50 into the gutter (≡ old W-50 at the default 100 gutter)
   return (
     <div
       className="flowchart-renderer w-full flex flex-col items-center"
@@ -350,7 +359,12 @@ export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure
   const N = binaryTreeFeatureNames;
   // Compute depth + assign x positions via recursive layout.
   const depth = treeDepth(root);
-  const W = Math.max(120, (1 << (depth - 1)) * 80);
+  // Slot width is value-aware (cf. estNodeWidth): the old 2^(depth-1)*80 was
+  // depth-only, so long values overflowed both their r=20 circles and the
+  // viewBox at the outer columns. Long values shrink a font notch and widen
+  // their node into an ellipse; every level's slot fits the widest node.
+  const slotW = Math.max(80, 2 * maxNodeRx(root) + 16);
+  const W = Math.max(120, (1 << (depth - 1)) * slotW);
   const H = depth * 80 + 40;
   const positions: Array<{ x: number; y: number; value: string; path: string; parent?: { x: number; y: number } }> = [];
   function layout(n: BinaryTreeNode, x0: number, x1: number, depthLevel: number, path: string, parent?: { x: number; y: number }) {
@@ -379,11 +393,11 @@ export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure
             data-feature-label={p.value}
             data-feature-cx={p.x / W}
             data-feature-cy={p.y / H}
-            data-feature-w={48 / W}
+            data-feature-w={(2 * nodeRx(p.value) + 8) / W}
             data-feature-h={48 / H}
           >
-            <circle cx={p.x} cy={p.y} r={20} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
-            <text x={p.x} y={p.y + 5} fontSize={13} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>{p.value}</text>
+            <ellipse cx={p.x} cy={p.y} rx={nodeRx(p.value)} ry={20} fill="#dbeafe" stroke="#3b82f6" strokeWidth={2} />
+            <text x={p.x} y={p.y + 5} fontSize={nodeFontSize(p.value)} textAnchor="middle" fill="#1e3a8a" fontWeight={700}>{p.value}</text>
           </g>
         ))}
       </svg>
@@ -393,6 +407,18 @@ export function CatalogBinaryTreeRenderer({ figure }: { figure: BinaryTreeFigure
 function treeDepth(n: BinaryTreeNode | undefined): number {
   if (!n) return 0;
   return 1 + Math.max(treeDepth(n.left), treeDepth(n.right));
+}
+/** Long values drop a font notch (cf. NodeBox) before the node widens. */
+function nodeFontSize(v: string): number {
+  return v.length > 5 ? 11 : 13;
+}
+/** Node half-width from the value's estimated text width (min = old r=20). */
+function nodeRx(v: string): number {
+  return Math.max(20, Math.round(v.length * nodeFontSize(v) * 0.3) + 6);
+}
+function maxNodeRx(n: BinaryTreeNode | undefined): number {
+  if (!n) return 0;
+  return Math.max(nodeRx(n.value), maxNodeRx(n.left), maxNodeRx(n.right));
 }
 
 // ── Truth table ───────────────────────────────────────────────────────────
@@ -448,10 +474,18 @@ export function CatalogTruthTableRenderer({ figure }: { figure: TruthTableFigure
 export function CatalogLogicGateRenderer({ figure }: { figure: LogicGateFigure }) {
   const { gate, inputs, output, title } = figure;
   const N = logicGateFeatureNames;
-  const W = 320;
+  // Side gutters are label-aware (cf. estNodeWidth): input labels sit
+  // anchor=end left of their wires and the output label anchor=start after
+  // its wire, so the old fixed 14px gutters in a fixed W=320 clipped
+  // anything ~1 glyph past the default A/B/Y. ~7.8px/char at fontSize 13.
+  const inGutter = Math.max(14, ...inputs.map((s) => Math.round(s.length * 7.8) + 6));
+  const outGutter = Math.max(14, Math.round(output.length * 7.8) + 6);
+  const W = inGutter + 292 + outGutter; // 292 = wires + gate (≡ old 320 at 14px gutters)
   const H = 200;
-  const cx = W / 2;
+  const cx = inGutter + 146; // gate center (≡ old W/2 at 14px gutters)
   const cy = H / 2;
+  const inWireX = inGutter + 6;
+  const outWireEndX = W - outGutter - 6;
   return (
     <div
       className="logic-gate-renderer w-full flex flex-col items-center"
@@ -468,26 +502,26 @@ export function CatalogLogicGateRenderer({ figure }: { figure: LogicGateFigure }
               key={`in-${i}`}
               data-feature={N.input(label)}
               data-feature-label={label}
-              data-feature-cx={((20 + (cx - 50)) / 2) / W}
+              data-feature-cx={((inWireX + (cx - 50)) / 2) / W}
               data-feature-cy={y / H}
-              data-feature-w={(cx - 70) / W}
+              data-feature-w={(cx - 50 - inWireX) / W}
               data-feature-h={20 / H}
             >
-              <line x1={20} y1={y} x2={cx - 50} y2={y} stroke="#1f2937" strokeWidth={1.5} />
-              <text x={14} y={y + 4} fontSize={13} textAnchor="end" fill="#1f2937" fontWeight={700}>{label}</text>
+              <line x1={inWireX} y1={y} x2={cx - 50} y2={y} stroke="#1f2937" strokeWidth={1.5} />
+              <text x={inGutter} y={y + 4} fontSize={13} textAnchor="end" fill="#1f2937" fontWeight={700}>{label}</text>
             </g>
           );
         })}
         <g
           data-feature={N.output}
           data-feature-label={output}
-          data-feature-cx={((cx + 60 + W - 20) / 2) / W}
+          data-feature-cx={((cx + 60 + outWireEndX) / 2) / W}
           data-feature-cy={cy / H}
-          data-feature-w={(W - cx - 80) / W}
+          data-feature-w={(outWireEndX - cx - 60) / W}
           data-feature-h={20 / H}
         >
-          <line x1={cx + 60} y1={cy} x2={W - 20} y2={cy} stroke="#1f2937" strokeWidth={1.5} />
-          <text x={W - 14} y={cy + 4} fontSize={13} fill="#1f2937" fontWeight={700}>{output}</text>
+          <line x1={cx + 60} y1={cy} x2={outWireEndX} y2={cy} stroke="#1f2937" strokeWidth={1.5} />
+          <text x={W - outGutter} y={cy + 4} fontSize={13} fill="#1f2937" fontWeight={700}>{output}</text>
         </g>
       </svg>
     </div>

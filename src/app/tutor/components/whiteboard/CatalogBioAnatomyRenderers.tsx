@@ -624,7 +624,6 @@ const PYRAMID_COLORS = ['#16a34a', '#65a30d', '#d97706', '#dc2626', '#9333ea', '
 
 export function CatalogEnergyPyramidRenderer({ figure }: { figure: EnergyPyramidFigure }) {
   const N = energyPyramidFeatureNames;
-  const W = 640;
   const H = 460;
   const cx = 300;
   const n = figure.levels.length;
@@ -633,6 +632,14 @@ export function CatalogEnergyPyramidRenderer({ figure }: { figure: EnergyPyramid
   const baseY = 380;
   const Wtop = 150;   // truncated apex width (keeps top label readable)
   const Wbase = 460;
+  // The per-tier energy annotation renders anchor=start just right of its
+  // tier, so the canvas must fit the longest energy string (~6.9px/char at
+  // fontSize 11.5) — a fixed 640 clipped even the solver defaults
+  // ("10,000 kcal/m²/yr") beside the base tier.
+  const longestEnergy = figure.showEnergy
+    ? Math.max(0, ...figure.levels.map((l) => `${l.energy.toLocaleString()} ${figure.units}`.length))
+    : 0;
+  const W = Math.max(640, cx + Wbase / 2 + 8 + Math.round(longestEnergy * 6.9) + 8);
   const th = (baseY - apexY) / n;
   const widthAt = (y: number) => Wtop + (Wbase - Wtop) * ((y - apexY) / (baseY - apexY));
 

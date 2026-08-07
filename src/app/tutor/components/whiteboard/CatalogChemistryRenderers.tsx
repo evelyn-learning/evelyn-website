@@ -654,11 +654,16 @@ export function CatalogPhScaleRenderer({ figure }: { figure: PhScaleFigure }) {
           const row = i % rowCount;
           const ly = barY + barH + 42 + row * 34;
           const mx = phX(m.ph);
+          // Clamp the centered label near both ends (2026-08-07 clip audit:
+          // pH 0/14 markers center at x=56/724 of W=780, so anything longer
+          // than ~17 chars escaped). Tick line + dot stay at the true pH x.
+          const textW = (m.label.length + ` (${m.ph})`.length) * 11 * 0.55;
+          const lx = Math.max(4 + textW / 2, Math.min(mx, W - 4 - textW / 2));
           return (
             <g key={i} data-feature={N.marker(i)} data-feature-label={m.label}>
               <line x1={mx} y1={barY + barH + 26} x2={mx} y2={ly - 9} stroke="#94a3b8" strokeWidth={0.8} />
               <circle cx={mx} cy={barY + barH + 26} r={3} fill={PH_COLORS[Math.round(m.ph)]} stroke="#fff" strokeWidth={1} />
-              <text x={mx} y={ly} textAnchor="middle" fontSize={11} fill={INK}>
+              <text x={lx} y={ly} textAnchor="middle" fontSize={11} fill={INK}>
                 <tspan fontWeight={600}>{m.label}</tspan>
                 <tspan fill="#64748b"> ({m.ph})</tspan>
               </text>

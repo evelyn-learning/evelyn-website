@@ -961,6 +961,17 @@ export function CatalogComplexPlaneRenderer({ figure }: { figure: ComplexPlaneFi
           const zText = p.label || `${p.re}${p.im >= 0 ? ' + ' : ' − '}${Math.abs(p.im)}i`;
           const modulus = Math.hypot(p.re, p.im);
           const angleDeg = Math.atan2(p.im, p.re) * 180 / Math.PI;
+          // Width-aware side pick + clamp (cf. ProjectileMotionRenderer's
+          // estW/clampX): the sign-of-re flip alone clipped labels at BOTH
+          // viewBox edges once the point sat near ±range — even the default
+          // "a + bi" string overflowed at re = range.
+          const labelW = zText.length * 12 * 0.55;
+          const labelSide: 'start' | 'end' = p.re >= 0
+            ? (px + 9 + labelW > W - 3 ? 'end' : 'start')
+            : (px - 9 - labelW < 3 ? 'start' : 'end');
+          const labelX = labelSide === 'start'
+            ? Math.min(px + 9, W - 3 - labelW)
+            : Math.max(px - 9, 3 + labelW);
           return (
             <g key={i} data-feature={N.point(i)} data-feature-label={zText}>
               {p.showVector && (
@@ -973,7 +984,7 @@ export function CatalogComplexPlaneRenderer({ figure }: { figure: ComplexPlaneFi
                 />
               )}
               <circle cx={px} cy={py} r={5} fill={color} stroke="#fff" strokeWidth={1.5} />
-              <text x={px + (p.re >= 0 ? 9 : -9)} y={py + (p.im >= 0 ? -8 : 16)} fontSize={12} fontWeight={700} fill={color} textAnchor={p.re >= 0 ? 'start' : 'end'}>{zText}</text>
+              <text x={labelX} y={py + (p.im >= 0 ? -8 : 16)} fontSize={12} fontWeight={700} fill={color} textAnchor={labelSide}>{zText}</text>
               {p.showModulus && (
                 <text x={(cx + px) / 2 + 6} y={(cy + py) / 2 - 4} fontSize={10.5} fontStyle="italic" fill={color}>|z|={modulus.toFixed(2)}</text>
               )}

@@ -11,6 +11,10 @@ import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 
 import { useMemo } from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+// Width-aware label helpers (FractionBar fix, commit 009dc645) — node boxes
+// used to be a fixed 80u wide, so any label longer than ~11 chars clipped at
+// the viewBox edge. Labels now wrap and the boxes/bounds grow to fit.
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,14 +49,34 @@ interface TreeRendererProps {
 // Layout constants
 // ---------------------------------------------------------------------------
 
-const NODE_W = 80;          // default node width
-const NODE_H = 36;          // default node height
+const NODE_W = 80;          // minimum node width — grows to the wrapped label
+const NODE_H = 36;          // minimum node height — grows with wrapped label lines
 const LEVEL_GAP = 90;       // vertical (or horizontal) gap between levels
 const SIBLING_GAP = 24;     // minimum horizontal gap between siblings
 const PADDING = 40;         // SVG padding around the tree
 const FONT_SIZE = 13;
 const SMALL_FONT = 11;
 const PRIME_RADIUS = 18;    // radius for factor-tree prime circles
+const LABEL_LINE_H = 15;    // line height for wrapped node labels
+/** Max estimated node-label line width before wrapping (13px units). */
+const NODE_LABEL_WRAP = 160;
+/** Max estimated branch-label width (11px). wrapLabel estimates at 13px, so scale the cap. */
+const BRANCH_LABEL_WRAP = (110 * 13) / SMALL_FONT;
+
+/**
+ * Label-aware node box: width fits the widest wrapped label line (and the
+ * value line), height grows with extra label lines.
+ */
+function nodeBoxSize(node: TreeNode): { w: number; h: number; labelLines: string[] } {
+  const labelLines = wrapLabel(node.label ?? '', NODE_LABEL_WRAP);
+  const labelW = Math.max(...labelLines.map((l) => estimateLabelWidth(l, FONT_SIZE)));
+  const valueW = node.value ? estimateLabelWidth(node.value, SMALL_FONT) : 0;
+  return {
+    w: Math.max(NODE_W, Math.ceil(Math.max(labelW, valueW)) + 16),
+    h: NODE_H + (labelLines.length - 1) * LABEL_LINE_H,
+    labelLines,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Layout helpers
@@ -72,6 +96,8 @@ interface LayoutNode {
   }>;
   subtreeWidth: number;     // total width this subtree needs
   isLeaf: boolean;
+  /** Wrapped node-label lines (always ≥1). */
+  labelLines: string[];
   /** Cumulative probability string from root to this leaf */
   leafProbability?: string;
 }
@@ -83,15 +109,17 @@ interface LayoutNode {
 function measureSubtree(node: TreeNode | undefined): number {
   // Defensive guard: the model sometimes omits `node` on a child entry or
   // sends a tree where the root is missing. Treat as a leaf.
-  if (!node || !node.children || node.children.length === 0) {
-    return NODE_W;
+  if (!node) return NODE_W;
+  const ownW = nodeBoxSize(node).w;
+  if (!node.children || node.children.length === 0) {
+    return ownW;
   }
   const childrenWidth = node.children.reduce(
     (sum, c) => sum + measureSubtree(c?.node),
     0
   );
   const gaps = (node.children.length - 1) * SIBLING_GAP;
-  return Math.max(NODE_W, childrenWidth + gaps);
+  return Math.max(ownW, childrenWidth + gaps);
 }
 
 /**
@@ -110,6 +138,7 @@ function positionNode(
   const isLeaf = !safeNode.children || safeNode.children.length === 0;
   const x = xStart + subtreeWidth / 2;
   const y = PADDING + depth * (NODE_H + LEVEL_GAP);
+  const { w: boxW, h: boxH, labelLines } = nodeBoxSize(safeNode);
 
   // Compute cumulative leaf probability
   let leafProbability: string | undefined;
@@ -120,11 +149,12 @@ function positionNode(
   if (isLeaf) {
     return {
       x, y,
-      w: NODE_W, h: NODE_H,
+      w: boxW, h: boxH,
       node: safeNode,
       children: [],
       subtreeWidth,
       isLeaf,
+      labelLines,
       leafProbability,
     };
   }
@@ -135,11 +165,12 @@ function positionNode(
   if (children.length === 0) {
     return {
       x, y,
-      w: NODE_W, h: NODE_H,
+      w: boxW, h: boxH,
       node: safeNode,
       children: [],
       subtreeWidth,
       isLeaf: true,
+      labelLines,
       leafProbability,
     };
   }
@@ -165,12 +196,23 @@ function positionNode(
 
   return {
     x, y,
-    w: NODE_W, h: NODE_H,
+    w: boxW, h: boxH,
     node: safeNode,
     children: positionedChildren,
     subtreeWidth,
     isLeaf,
+    labelLines,
   };
+}
+
+/**
+ * Branch-label anchor — mirrors the placement logic in renderTree() so
+ * getBounds() can account for the estimated label extents.
+ */
+function branchLabelAnchor(parent: LayoutNode, child: LayoutNode): number {
+  const dx = child.x - parent.x;
+  const offsetX = dx === 0 ? -20 : (dx > 0 ? -14 : 14);
+  return (parent.x + child.x) / 2 + offsetX;
 }
 
 /**
@@ -182,12 +224,33 @@ function getBounds(layout: LayoutNode): { minX: number; minY: number; maxX: numb
   let minY = layout.y - layout.h / 2;
   let maxY = layout.y + layout.h / 2;
 
-  // Account for leaf probability labels below leaf nodes
+  // Account for leaf probability labels below leaf nodes ("P = x/y",
+  // centered — include its estimated width so it can't clip at the edge).
   if (layout.isLeaf && layout.leafProbability) {
     maxY = Math.max(maxY, layout.y + layout.h / 2 + 22);
+    const half = estimateLabelWidth(`P = ${layout.leafProbability}`, SMALL_FONT) / 2;
+    minX = Math.min(minX, layout.x - half);
+    maxX = Math.max(maxX, layout.x + half);
   }
 
   for (const child of layout.children) {
+    // Branch labels (probability + wrapped label lines) are centered beside
+    // the branch midpoint — include their estimated extents in the bounds.
+    const anchorX = branchLabelAnchor(layout, child.layoutNode);
+    let labelHalf = 0;
+    if (child.probability) {
+      labelHalf = estimateLabelWidth(child.probability, SMALL_FONT) / 2;
+    }
+    if (child.label) {
+      for (const line of wrapLabel(child.label, BRANCH_LABEL_WRAP)) {
+        labelHalf = Math.max(labelHalf, estimateLabelWidth(line, SMALL_FONT) / 2);
+      }
+    }
+    if (labelHalf > 0) {
+      minX = Math.min(minX, anchorX - labelHalf);
+      maxX = Math.max(maxX, anchorX + labelHalf);
+    }
+
     const cb = getBounds(child.layoutNode);
     minX = Math.min(minX, cb.minX);
     maxX = Math.max(maxX, cb.maxX);
@@ -318,19 +381,17 @@ function renderTree(
       />
     );
 
-    // Branch label (probability or text)
-    const midX = (x1 + x2) / 2;
+    // Branch label (probability or text) — anchor mirrored in
+    // branchLabelAnchor() so getBounds() accounts for the extents.
     const midY = (y1 + y2) / 2;
-    // Offset label slightly to the side so it doesn't overlap the line
-    const dx = x2 - x1;
-    const offsetX = dx === 0 ? -20 : (dx > 0 ? -14 : 14);
+    const anchorX = branchLabelAnchor(layout, child.layoutNode);
 
     if (child.probability) {
       // Probability label in red
       elements.push(
         <text
           key={`${keyPrefix}-prob-${i}`}
-          x={midX + offsetX}
+          x={anchorX}
           y={midY - 4}
           textAnchor="middle"
           fill="#dc2626"
@@ -343,18 +404,23 @@ function renderTree(
     }
 
     if (child.label) {
-      // Branch label text
+      // Branch label text — wrapped so long labels can't clip at the edge
       const labelOffsetY = child.probability ? 12 : 0;
+      const branchLines = wrapLabel(child.label, BRANCH_LABEL_WRAP);
       elements.push(
         <text
           key={`${keyPrefix}-blabel-${i}`}
-          x={midX + offsetX}
+          x={anchorX}
           y={midY - 4 + labelOffsetY}
           textAnchor="middle"
           fill="#475569"
           fontSize={SMALL_FONT}
         >
-          {child.label}
+          {branchLines.map((line, li) => (
+            <tspan key={li} x={anchorX} dy={li === 0 ? 0 : 13}>
+              {line}
+            </tspan>
+          ))}
         </text>
       );
     }
@@ -410,19 +476,25 @@ function renderTree(
         {...featureProps}
       />
     );
-    // Label text
+    // Label text — wrapped lines, vertically centered in the (grown) box
+    const labelLines = layout.labelLines;
+    const labelExtra = ((labelLines.length - 1) * LABEL_LINE_H) / 2;
     elements.push(
       <text
         key={`${keyPrefix}-label`}
         x={x}
-        y={node.value ? y - 4 : y + 1}
+        y={(node.value ? y - 4 : y + 1) - labelExtra}
         textAnchor="middle"
         dominantBaseline="middle"
         fill="#1e293b"
         fontSize={FONT_SIZE}
         fontWeight={600}
       >
-        {node.label}
+        {labelLines.map((line, li) => (
+          <tspan key={li} x={x} dy={li === 0 ? 0 : LABEL_LINE_H}>
+            {line}
+          </tspan>
+        ))}
       </text>
     );
     // Optional value text (smaller, below the label)
@@ -431,7 +503,7 @@ function renderTree(
         <text
           key={`${keyPrefix}-value`}
           x={x}
-          y={y + 12}
+          y={y + 12 + labelExtra}
           textAnchor="middle"
           dominantBaseline="middle"
           fill="#64748b"
@@ -579,38 +651,20 @@ export function TreeRenderer({
     const vbW = bounds.maxX - bounds.minX + PADDING * 2;
     const vbH = bounds.maxY - bounds.minY + PADDING * 2;
 
-    // If there's a title, add space at the top
-    const titleOffset = title ? 30 : 0;
-
-    // 4. Collect SVG elements
+    // 4. Collect SVG elements. (The title is NOT drawn in the SVG — a long
+    // title over a node-only viewBox clipped on both sides; it renders as an
+    // HTML heading above the svg instead, the R38 FractionBar pattern.)
     const elements: JSX.Element[] = [];
 
-    // Title text
-    if (title) {
-      elements.push(
-        <text
-          key="title"
-          x={vbX + vbW / 2}
-          y={vbY + 20}
-          textAnchor="middle"
-          fill="#0f172a"
-          fontSize={16}
-          fontWeight={700}
-        >
-          {mathifyDollarSpans(title)}
-        </text>
-      );
-    }
-
-    const viewBoxStr = `${vbX} ${vbY - titleOffset} ${vbW} ${vbH + titleOffset}`;
+    const viewBoxStr = `${vbX} ${vbY} ${vbW} ${vbH}`;
     // Feat coordinates need viewBox-space translation: our layout's x/y are in
     // the same coord system as the viewBox, so fractions are relative to the
     // viewBox width/height and origin.
     renderTree(layout, type, showLeafProbabilities, elements, 'n',
-      { width: vbW, height: vbH + titleOffset, ox: vbX, oy: vbY - titleOffset });
+      { width: vbW, height: vbH, ox: vbX, oy: vbY });
 
     return { svgContent: elements, viewBox: viewBoxStr };
-  }, [root, type, showLeafProbabilities, title]);
+  }, [root, type, showLeafProbabilities]);
 
   // direction='left-right' formerly applied an SVG `rotate(90) scale(1, -1)`
   // wrapper to a top-down layout, but that rotated/flipped every text node
@@ -623,7 +677,11 @@ export function TreeRenderer({
   void direction;
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full flex flex-col items-center">
+      {/* Title as HTML above the svg — R38: centered SVG text over a node-only viewBox clipped long titles on both sides */}
+      {title && (
+        <h3 className="text-sm font-semibold text-slate-700 text-center">{mathifyDollarSpans(title)}</h3>
+      )}
       <svg
         viewBox={viewBox}
         className="w-full max-w-full"

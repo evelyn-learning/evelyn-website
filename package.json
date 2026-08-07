@@ -87,6 +87,7 @@
     "test:marker-student-echo": "npx tsx scripts/test-marker-student-echo.ts",
     "test:g11-alg2-cells": "npx tsx scripts/test-g11-alg2-cell-resolution.ts",
     "test:fraction-bar-layout": "npx tsx scripts/test-fraction-bar-layout.ts",
+    "test:svg-clip": "npx tsx scripts/audit-svg-text-extents.ts",
     "test:manifest-coverage": "npx tsx scripts/test-manifest-coverage.ts",
     "test:ack-layer": "npx tsx scripts/test-ack-layer.ts",
     "test:cover-layer": "npx tsx scripts/test-cover-layer.ts",

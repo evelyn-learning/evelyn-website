@@ -219,6 +219,9 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
           // p.color (e.g. "blue" for a "before growth" point) that would
           // otherwise put an unlabeled color on the board.
           const fill = colorFor(p.position);
+          // Width-aware anchor flip (2026-08-07 clip audit): a labelled point
+          // at xAxis.max hung its start-anchored label off the viewBox.
+          const labelFlip = p.label ? cx + 10 + p.label.length * 13 * 0.55 > W - 2 : false;
           return (
             <g
               key={`pt-${i}`}
@@ -232,11 +235,12 @@ export function ProductionPossibilitiesRenderer({ figure }: { figure: PPCFigure 
               <circle cx={cx} cy={cy} r={6} fill={fill} stroke="#fff" strokeWidth={2} />
               {p.label && (
                 <text
-                  x={cx + 10}
+                  x={cx + (labelFlip ? -10 : 10)}
                   y={cy - 8}
                   fontSize={13}
                   fontWeight={700}
                   fill={fill}
+                  textAnchor={labelFlip ? 'end' : undefined}
                 >
                   {p.label}
                 </text>

@@ -31,6 +31,20 @@ export function CatalogVectors3DRenderer({ figure }: { figure: Vectors3DFigure }
   const proj = ([x, y, z]: Vec3): P => [ox + s * 0.866 * (x - y), oy + s * (0.5 * (x + y) - z)];
   const O = proj([0, 0, 0]);
 
+  // Width-aware label placement (2026-08-07 clip audit): the isometric
+  // projection deliberately fills the frame, so a start-anchored label at
+  // tip+pad overflows the right edge for any tip in the right half. Flip to an
+  // end anchor when the label would overflow; clamp into the viewBox either
+  // way (same char-width estimate as ProjectileMotionRenderer).
+  const estW = (str: string, fontSize: number) => str.length * fontSize * 0.55;
+  const labelAt = (x: number, text: string, fontSize: number, pad = 6): { x: number; anchor: 'start' | 'end' } => {
+    const w = estW(text, fontSize);
+    if (x + pad + w > W - 3) {
+      return { x: Math.min(W - 3, Math.max(x - pad, 3 + w)), anchor: 'end' };
+    }
+    return { x: Math.max(3, Math.min(x + pad, W - 3 - w)), anchor: 'start' };
+  };
+
   const arrowHead = (tip: P, from: P, color: string, size = 9) => {
     const dx = tip[0] - from[0], dy = tip[1] - from[1];
     const len = Math.hypot(dx, dy) || 1;
@@ -73,7 +87,10 @@ export function CatalogVectors3DRenderer({ figure }: { figure: Vectors3DFigure }
         {planeQuad && (
           <g data-feature={N.plane} data-feature-label={figure.plane?.label || 'plane'}>
             <polygon points={planeQuad.map((p) => p.join(',')).join(' ')} fill={PLANE} fillOpacity={0.14} stroke={PLANE} strokeWidth={1.5} />
-            {figure.plane?.label && <text x={planeQuad[0][0]} y={planeQuad[0][1] - 4} fontSize={12} fill={PLANE} fontWeight={700}>{figure.plane.label}</text>}
+            {figure.plane?.label && (() => {
+              const l = labelAt(planeQuad![0][0], figure.plane.label, 12, 0);
+              return <text x={l.x} y={planeQuad![0][1] - 4} fontSize={12} fill={PLANE} fontWeight={700} textAnchor={l.anchor}>{figure.plane.label}</text>;
+            })()}
           </g>
         )}
 
@@ -101,7 +118,10 @@ export function CatalogVectors3DRenderer({ figure }: { figure: Vectors3DFigure }
           return (
             <g data-feature={N.line} data-feature-label={figure.line!.label || 'line'}>
               <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#16a34a" strokeWidth={2.25} />
-              {figure.line!.label && <text x={b[0] + 6} y={b[1]} fontSize={12} fill="#16a34a" fontWeight={700}>{figure.line!.label}</text>}
+              {figure.line!.label && (() => {
+                const l = labelAt(b[0], figure.line!.label!, 12);
+                return <text x={l.x} y={b[1]} fontSize={12} fill="#16a34a" fontWeight={700} textAnchor={l.anchor}>{figure.line!.label}</text>;
+              })()}
             </g>
           );
         })()}
@@ -118,7 +138,10 @@ export function CatalogVectors3DRenderer({ figure }: { figure: Vectors3DFigure }
               {(v.to[2] !== 0) && <line x1={tip[0]} y1={tip[1]} x2={foot[0]} y2={foot[1]} stroke={color} strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.5} />}
               <line x1={from[0]} y1={from[1]} x2={tip[0]} y2={tip[1]} stroke={color} strokeWidth={2.5} />
               {arrowHead(tip, from, color, 10)}
-              {v.label && <text x={tip[0] + 6} y={tip[1] - 5} fontSize={13} fill={color} fontWeight={700}>{v.label}</text>}
+              {v.label && (() => {
+                const l = labelAt(tip[0], v.label!, 13);
+                return <text x={l.x} y={tip[1] - 5} fontSize={13} fill={color} fontWeight={700} textAnchor={l.anchor}>{v.label}</text>;
+              })()}
             </g>
           );
         })}
@@ -132,7 +155,10 @@ export function CatalogVectors3DRenderer({ figure }: { figure: Vectors3DFigure }
             <g key={i} data-feature={N.point(i)} data-feature-label={p.label || `point ${i + 1}`}>
               {(p.at[2] !== 0) && <line x1={sp[0]} y1={sp[1]} x2={foot[0]} y2={foot[1]} stroke={color} strokeWidth={1} strokeDasharray="3 3" strokeOpacity={0.5} />}
               <circle cx={sp[0]} cy={sp[1]} r={4} fill={color} />
-              {p.label && <text x={sp[0] + 7} y={sp[1] - 4} fontSize={12.5} fill={color} fontWeight={700}>{p.label}</text>}
+              {p.label && (() => {
+                const l = labelAt(sp[0], p.label!, 12.5, 7);
+                return <text x={l.x} y={sp[1] - 4} fontSize={12.5} fill={color} fontWeight={700} textAnchor={l.anchor}>{p.label}</text>;
+              })()}
             </g>
           );
         })}

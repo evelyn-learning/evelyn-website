@@ -71,6 +71,23 @@ const LEVEL_COLORS: Record<number, string> = {
   5: DIAGRAM_COLORS.slate,
 };
 
+/** Greedy word wrap on the 0.55 average-glyph estimate (fraction-bar-layout.ts
+ *  pattern) — level labels wrap inside the left gutter instead of clipping at
+ *  the viewBox edge (audit 2026-08-07). */
+function wrapWords(text: string, maxWidth: number, fontSize: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [text];
+  const lines: string[] = [];
+  let line = words[0];
+  for (const word of words.slice(1)) {
+    const candidate = `${line} ${word}`;
+    if (candidate.length * fontSize * 0.55 <= maxWidth) line = candidate;
+    else { lines.push(line); line = word; }
+  }
+  lines.push(line);
+  return lines;
+}
+
 /**
  * Pure manifest builder — enumerates the named features this renderer emits
  * for a given set of props. MUST stay in sync with the feat() calls below.
@@ -142,10 +159,15 @@ export default function FoodWebRenderer({
         {/* Level labels */}
         {showLevelLabels && Array.from({ length: lvCount }, (_, i) => {
           const lv = minLv + i;
+          const lines = wrapWords(LEVEL_LABELS[lv] || `Level ${lv}`, pad.left - 14, 11);
           return (
             <g key={lv}>
               <text x={pad.left - 10} y={yForLevel(lv) + 4} fontSize={11} fill={LEVEL_COLORS[lv] || DIAGRAM_COLORS.muted} textAnchor="end" fontWeight={700}>
-                {LEVEL_LABELS[lv] || `Level ${lv}`}
+                {lines.map((line, li) => (
+                  <tspan key={li} x={pad.left - 10} y={yForLevel(lv) + 4 + (li - (lines.length - 1) / 2) * 12}>
+                    {line}
+                  </tspan>
+                ))}
               </text>
               <line x1={pad.left - 4} y1={yForLevel(lv)} x2={W - 10} y2={yForLevel(lv)} stroke={DIAGRAM_COLORS.grid} strokeWidth={0.5} strokeDasharray="3 3" />
             </g>

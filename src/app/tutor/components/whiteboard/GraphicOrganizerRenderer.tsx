@@ -101,15 +101,24 @@ function renderKWL(spec: Extract<GraphicOrganizerSpec, { kind: 'kwl' }>) {
     { label: 'L — what I Learned', items: spec.learned, color: '#10b981', x: 352 },
   ];
   const colW = 152;
+  // Items (and headers) render as wrapping HTML in foreignObject, matching
+  // the sibling variants (story_map/sequence/cause_effect) — bare <text> in
+  // a 152u column clipped anything longer than ~20 chars.
   return (
     <g>
       {cols.map((c) => (
         <g key={c.label}>
           <rect x={c.x} y={30} width={colW} height={SVG_H - 50} fill="#fff" stroke={c.color} strokeWidth={3} rx={6} />
-          <text x={c.x + colW / 2} y={20} fontSize={12} textAnchor="middle" fontWeight={700} fill={c.color}>{c.label}</text>
-          {c.items.map((item, i) => (
-            <text key={i} x={c.x + 10} y={56 + i * 22} fontSize={12} fill="#0f172a">• {item}</text>
-          ))}
+          <foreignObject x={c.x} y={4} width={colW} height={26}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: c.color, textAlign: 'center', lineHeight: 1.1 }}>{c.label}</div>
+          </foreignObject>
+          <foreignObject x={c.x + 8} y={40} width={colW - 16} height={SVG_H - 66}>
+            <div style={{ fontSize: 12, color: '#0f172a', lineHeight: 1.35 }}>
+              {c.items.map((item, i) => (
+                <div key={i} style={{ marginBottom: 4 }}>• {item}</div>
+              ))}
+            </div>
+          </foreignObject>
         </g>
       ))}
     </g>
@@ -118,18 +127,33 @@ function renderKWL(spec: Extract<GraphicOrganizerSpec, { kind: 'kwl' }>) {
 
 function renderTChart(spec: Extract<GraphicOrganizerSpec, { kind: 't_chart' }>) {
   const colW = (SVG_W - 30) / 2;
+  // Headers and items render as wrapping HTML in foreignObject, matching the
+  // sibling variants (story_map/sequence/cause_effect) — bare <text> clipped
+  // long brain-authored headers/items at the column/viewBox edge.
   return (
     <g>
       <line x1={SVG_W / 2} y1={30} x2={SVG_W / 2} y2={SVG_H - 20} stroke="#0f172a" strokeWidth={3} />
       <line x1={20} y1={56} x2={SVG_W - 20} y2={56} stroke="#0f172a" strokeWidth={3} />
-      <text x={20 + colW / 2} y={46} fontSize={16} textAnchor="middle" fontWeight={700} fill="#0f172a">{spec.leftHeader}</text>
-      <text x={SVG_W / 2 + colW / 2} y={46} fontSize={16} textAnchor="middle" fontWeight={700} fill="#0f172a">{spec.rightHeader}</text>
-      {spec.leftItems.map((it, i) => (
-        <text key={i} x={28} y={84 + i * 22} fontSize={13} fill="#0f172a">• {it}</text>
-      ))}
-      {spec.rightItems.map((it, i) => (
-        <text key={i} x={SVG_W / 2 + 8} y={84 + i * 22} fontSize={13} fill="#0f172a">• {it}</text>
-      ))}
+      <foreignObject x={24} y={30} width={colW - 12} height={24}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', textAlign: 'center', lineHeight: 1.1 }}>{spec.leftHeader}</div>
+      </foreignObject>
+      <foreignObject x={SVG_W / 2 + 8} y={30} width={colW - 12} height={24}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', textAlign: 'center', lineHeight: 1.1 }}>{spec.rightHeader}</div>
+      </foreignObject>
+      <foreignObject x={28} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
+        <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
+          {spec.leftItems.map((it, i) => (
+            <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
+          ))}
+        </div>
+      </foreignObject>
+      <foreignObject x={SVG_W / 2 + 8} y={68} width={SVG_W / 2 - 40} height={SVG_H - 90}>
+        <div style={{ fontSize: 13, color: '#0f172a', lineHeight: 1.4 }}>
+          {spec.rightItems.map((it, i) => (
+            <div key={i} style={{ marginBottom: 4 }}>• {it}</div>
+          ))}
+        </div>
+      </foreignObject>
     </g>
   );
 }

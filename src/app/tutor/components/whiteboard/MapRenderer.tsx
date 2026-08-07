@@ -366,6 +366,26 @@ export default function MapRenderer({
     { charWidth: 0.62, pad: 2, baseline: 'alphabetic', edgePad: 2 },
   );
 
+  // Region labels go through the SAME deoverlap pass as pin labels
+  // (2026-08-07 clip audit): a centroid near the map edge used to draw its
+  // centered label straight off the viewBox. The clampX pre-pass pulls it
+  // back inside; the vertical pass keeps stacked region labels apart.
+  const regionLabelInputs = regions.flatMap((region, i) => {
+    if (!region.points || !region.label) return [];
+    const coords = region.points.trim().split(/\s+/).map((pt) => pt.split(',').map(Number));
+    const rcx = coords.reduce((s, [x]) => s + x, 0) / coords.length;
+    const rcy = coords.reduce((s, [, y]) => s + y, 0) / coords.length;
+    const [lx, ly] = normToSvg(rcx, rcy);
+    return [{ key: i, x: lx, y: ly, text: region.label, fontSize: 12, anchor: 'middle' as const }];
+  });
+  const regionLabelPos = new Map(
+    deoverlapLabels(
+      regionLabelInputs,
+      { width: SVG_WIDTH, height: SVG_HEIGHT },
+      { charWidth: 0.62, pad: 2, baseline: 'alphabetic', edgePad: 2 },
+    ).map((l) => [l.key, { x: l.x, y: l.y }]),
+  );
+
   return (
     <div className="map-renderer">
       {title && (
@@ -435,14 +455,11 @@ export default function MapRenderer({
                   stroke={color}
                   strokeWidth={1.5}
                 />
-                {region.label && (() => {
-                  // Centroid for label
-                  const coords = region.points!.trim().split(/\s+/).map((pt) => pt.split(',').map(Number));
-                  const cx = coords.reduce((s, [x]) => s + x, 0) / coords.length;
-                  const cy = coords.reduce((s, [, y]) => s + y, 0) / coords.length;
-                  const [lx, ly] = normToSvg(cx, cy);
+                {region.label && regionLabelPos.has(i) && (() => {
+                  // Centroid-seeded position, clamped/de-overlapped above.
+                  const pos = regionLabelPos.get(i)!;
                   return (
-                    <text x={lx} y={ly} textAnchor="middle" fontSize={12} fontWeight={600} fill="#1f2937">
+                    <text x={pos.x} y={pos.y} textAnchor="middle" fontSize={12} fontWeight={600} fill="#1f2937">
                       {region.label}
                     </text>
                   );

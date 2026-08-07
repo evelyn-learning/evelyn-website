@@ -137,21 +137,35 @@ export function ParametricCurveRenderer({ figure }: { figure: ParametricCurveFig
         )}
 
         {/* highlight point */}
-        {highlightT && (
-          <g
-            data-feature={N.highlightT}
-            data-feature-label={highlightT.label || (highlightT.t !== undefined ? `t = ${highlightT.t}` : 'highlight point')}
-            data-feature-cx={xAt(highlightT.x) / W}
-            data-feature-cy={yAt(highlightT.y) / H}
-            data-feature-w={36 / W}
-            data-feature-h={32 / H}
-          >
-            <circle cx={xAt(highlightT.x)} cy={yAt(highlightT.y)} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
-            <text x={xAt(highlightT.x) + 8} y={yAt(highlightT.y) - 8} fontSize={11} fill={COLOR_HL} fontWeight={600}>
-              {highlightT.label ?? (highlightT.t !== undefined ? `t = ${Number(highlightT.t.toFixed(3))}` : '')}
-            </text>
-          </g>
-        )}
+        {highlightT && (() => {
+          const hpx = xAt(highlightT.x);
+          const hpy = yAt(highlightT.y);
+          const hlText = highlightT.label ?? (highlightT.t !== undefined ? `t = ${Number(highlightT.t.toFixed(3))}` : '');
+          // Width-aware anchor flip + edge clamp (ProjectileMotionRenderer
+          // :197-208 idiom): a start-anchored label on a point at xMax runs
+          // past the viewBox — flip it to the left side of the point, then
+          // clamp the extent into [3, W-3].
+          const hlW = hlText.length * 11 * 0.55;
+          const hlFlip = hpx + 8 + hlW > W - 3;
+          let hlX = hlFlip ? hpx - 8 : hpx + 8;
+          const hlLeft = hlFlip ? hlX - hlW : hlX;
+          hlX += Math.max(3 - hlLeft, 0) - Math.max(hlLeft + hlW - (W - 3), 0);
+          return (
+            <g
+              data-feature={N.highlightT}
+              data-feature-label={highlightT.label || (highlightT.t !== undefined ? `t = ${highlightT.t}` : 'highlight point')}
+              data-feature-cx={hpx / W}
+              data-feature-cy={hpy / H}
+              data-feature-w={36 / W}
+              data-feature-h={32 / H}
+            >
+              <circle cx={hpx} cy={hpy} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
+              <text x={hlX} y={hpy - 8} fontSize={11} fill={COLOR_HL} fontWeight={600} textAnchor={hlFlip ? 'end' : 'start'}>
+                {hlText}
+              </text>
+            </g>
+          );
+        })()}
 
         {/* tick labels */}
         {xTicks.map((tx, i) => (

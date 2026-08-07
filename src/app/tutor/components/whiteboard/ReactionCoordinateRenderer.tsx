@@ -224,6 +224,34 @@ export default function ReactionCoordinateRenderer({
 
   const deltaH = products_energy - reactants_energy;
 
+  // ── Baseline label wrapping (2026-08-07 clip audit) ──
+  // The products label starts at xProdEnd+8 with only ~132u of right margin
+  // (≈20 chars at fontSize 12), so any qualified label ("Ammonia products
+  // (2 NH₃ molecules)") ran off the viewBox. Wrap to the margin budget and
+  // clamp each line for unsplittable words. The reactants label gets the same
+  // wrap at a conservative cap so long labels stack instead of running
+  // through the hump (it can't clip — anchor=start near x=64 — but overlaps).
+  const estTextW = (s: string, fs: number) => s.length * fs * 0.55;
+  const wrapWords = (text: string, maxChars: number): string[] => {
+    const words = text.split(/\s+/).filter(Boolean);
+    const lines: string[] = [];
+    let cur = '';
+    for (const w of words) {
+      const next = cur ? `${cur} ${w}` : w;
+      if (next.length > maxChars && cur) { lines.push(cur); cur = w; }
+      else cur = next;
+    }
+    if (cur) lines.push(cur);
+    return lines.length > 0 ? lines : [text];
+  };
+  const prodBudget = Math.max(8, Math.floor((SVG_WIDTH - 4 - (xProdEnd + 8)) / (12 * 0.55)));
+  const prodLines = wrapWords(product_label, prodBudget);
+  const prodLineX = (ln: string) => Math.min(xProdEnd + 8, SVG_WIDTH - 4 - estTextW(ln, 12));
+  const prodEnergyLines = wrapWords(`(${products_energy} ${units})`, Math.max(8, Math.floor((SVG_WIDTH - 4 - (xProdEnd + 8)) / (11 * 0.55))));
+  const prodEnergyLineX = (ln: string) => Math.min(xProdEnd + 8, SVG_WIDTH - 4 - estTextW(ln, 11));
+  const reactText = `${reactant_label}${reactants_energy !== 0 ? ` (${reactants_energy} ${units})` : ''}`;
+  const reactLines = wrapWords(reactText, 24);
+
   return (
     <div className="reaction-coordinate-renderer">
       {title && (
@@ -322,40 +350,39 @@ export default function ReactionCoordinateRenderer({
           Energy ({units})
         </text>
 
-        {/* Reactants baseline + label */}
+        {/* Reactants baseline + label (wrapped lines stack upward) */}
         <text
-          x={xReactStart - 6}
-          y={yReact - 8}
           textAnchor="start"
           fontSize={12}
           fontWeight={600}
           fill="#1f2937"
           {...feat('reactants', { cx: (xReactStart + xReactEnd) / 2, cy: yReact, w: xReactEnd - xReactStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
-          {reactant_label}
-          {reactants_energy !== 0 && ` (${reactants_energy} ${units})`}
+          {reactLines.map((ln, i) => (
+            <tspan key={i} x={xReactStart - 6} y={yReact - 8 - (reactLines.length - 1 - i) * 13}>{ln}</tspan>
+          ))}
         </text>
 
-        {/* Products baseline + label (on right) */}
+        {/* Products baseline + label (on right; wrapped lines stack upward) */}
         <text
-          x={xProdEnd + 8}
-          y={yProd - 8}
           textAnchor="start"
           fontSize={12}
           fontWeight={600}
           fill="#1f2937"
           {...feat('products', { cx: (xProdStart + xProdEnd) / 2, cy: yProd, w: xProdEnd - xProdStart + 40, h: 40 }, { width: SVG_WIDTH, height: SVG_HEIGHT })}
         >
-          {product_label}
+          {prodLines.map((ln, i) => (
+            <tspan key={i} x={prodLineX(ln)} y={yProd - 8 - (prodLines.length - 1 - i) * 13}>{ln}</tspan>
+          ))}
         </text>
         <text
-          x={xProdEnd + 8}
-          y={yProd + 8}
           textAnchor="start"
           fontSize={11}
           fill="#64748b"
         >
-          ({products_energy} {units})
+          {prodEnergyLines.map((ln, i) => (
+            <tspan key={i} x={prodEnergyLineX(ln)} y={yProd + 8 + i * 12}>{ln}</tspan>
+          ))}
         </text>
 
         {/* One curve per activation energy */}

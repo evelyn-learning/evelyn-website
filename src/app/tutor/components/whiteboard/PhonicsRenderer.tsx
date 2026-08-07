@@ -60,28 +60,55 @@ const TYPE_COLOR: Record<string, string> = {
   silent: '#94a3b8',
 };
 
+/** Average-glyph width as a fraction of fontSize (same heuristic as
+ *  fraction-bar-layout.ts). */
+const CHAR_W = 0.55;
+/** The syllable line scales its font down to fit; below this floor the
+ *  canvas grows instead (a 5-year-old still needs BIG letters). */
+const SYLLABLE_MIN_FONT = 20;
+
+/** Content-driven canvas width (2026-08-07 clip audit): sound_out with ≥9
+ *  graphemes and blend words >16 chars used to push their layout origin
+ *  negative in the fixed 480 view, clipping the first/last boxes. Grow the
+ *  viewBox from the content width instead — the svg scales down to the
+ *  container, so a wider canvas just means slightly smaller boxes. */
+function specWidth(spec: PhonicsSpec): number {
+  if (spec.kind === 'sound_out') {
+    const N = (spec.graphemes ?? spec.word.split('')).length || 1;
+    const boxW = Math.min(70, (SVG_W - 60) / N);
+    return Math.max(SVG_W, Math.ceil(boxW * N + (N - 1) * 8 + 40));
+  }
+  if (spec.kind === 'blend') {
+    return Math.max(SVG_W, spec.word.length * 30 + 40);
+  }
+  // syllables: sized so the line still fits at the minimum font size.
+  const totalText = spec.syllables.join(' · ');
+  return Math.max(SVG_W, Math.ceil(totalText.length * SYLLABLE_MIN_FONT * CHAR_W) + 40);
+}
+
 export default function PhonicsRenderer({ spec }: { spec: PhonicsSpec }) {
+  const svgW = specWidth(spec);
   return (
     <div className="phonics-renderer">
       {spec.title && (
         <div className="text-center text-sm font-semibold text-gray-700 mb-1">{spec.title}</div>
       )}
-      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} className="w-full h-auto" style={{ maxWidth: SVG_W }}>
-        <rect width={SVG_W} height={SVG_H} fill="#fafbfc" rx={4} />
-        {spec.kind === 'sound_out' && renderSoundOut(spec)}
-        {spec.kind === 'syllables' && renderSyllables(spec)}
-        {spec.kind === 'blend' && renderBlend(spec)}
+      <svg viewBox={`0 0 ${svgW} ${SVG_H}`} className="w-full h-auto" style={{ maxWidth: svgW }}>
+        <rect width={svgW} height={SVG_H} fill="#fafbfc" rx={4} />
+        {spec.kind === 'sound_out' && renderSoundOut(spec, svgW)}
+        {spec.kind === 'syllables' && renderSyllables(spec, svgW)}
+        {spec.kind === 'blend' && renderBlend(spec, svgW)}
       </svg>
     </div>
   );
 }
 
-function renderSoundOut(spec: Extract<PhonicsSpec, { kind: 'sound_out' }>) {
+function renderSoundOut(spec: Extract<PhonicsSpec, { kind: 'sound_out' }>, svgW: number) {
   const graphemes = spec.graphemes ?? spec.word.split('').map((c) => ({ text: c }));
   const N = graphemes.length;
   const boxW = Math.min(70, (SVG_W - 60) / N);
   const totalW = boxW * N + (N - 1) * 8;
-  const ox = (SVG_W - totalW) / 2;
+  const ox = (svgW - totalW) / 2;
   const oy = 60;
 
   return (
@@ -101,43 +128,48 @@ function renderSoundOut(spec: Extract<PhonicsSpec, { kind: 'sound_out' }>) {
         );
       })}
       {spec.phonetic && (
-        <text x={SVG_W / 2} y={SVG_H - 20} fontSize={18} textAnchor="middle" fill="#475569" fontStyle="italic">
+        <text x={svgW / 2} y={SVG_H - 20} fontSize={18} textAnchor="middle" fill="#475569" fontStyle="italic">
           /{spec.phonetic}/
         </text>
       )}
-      <text x={SVG_W / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">sound it out</text>
+      <text x={svgW / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">sound it out</text>
     </g>
   );
 }
 
-function renderSyllables(spec: Extract<PhonicsSpec, { kind: 'syllables' }>) {
+function renderSyllables(spec: Extract<PhonicsSpec, { kind: 'syllables' }>, svgW: number) {
   const N = spec.syllables.length;
   const cy = SVG_H / 2;
   const totalText = spec.syllables.join(' · ');
+  // Fixed 48px used to clip long words on both sides (2026-08-07 clip
+  // audit — wrapping a single word reads wrong here, so instead scale the
+  // font down from the estimated total width, floored at SYLLABLE_MIN_FONT
+  // (specWidth grows the canvas whenever the floor would still overflow).
+  const fs = Math.max(SYLLABLE_MIN_FONT, Math.min(48, (svgW - 40) / (totalText.length * CHAR_W)));
 
   // Render with bullets between syllables
   return (
     <g>
-      <text x={SVG_W / 2} y={cy + 14} fontSize={48} textAnchor="middle" fontWeight={700} fill="#0f172a">
+      <text x={svgW / 2} y={cy + fs * 0.3} fontSize={fs} textAnchor="middle" fontWeight={700} fill="#0f172a">
         {spec.syllables.map((s, i) => (
           <tspan key={i} fill={i === spec.stressed ? '#ef4444' : '#0f172a'}>
             {s}
-            {i < N - 1 && <tspan fill="#7c3aed" fontSize={36}>{' · '}</tspan>}
+            {i < N - 1 && <tspan fill="#7c3aed" fontSize={fs * 0.75}>{' · '}</tspan>}
           </tspan>
         ))}
       </text>
-      <text x={SVG_W / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">
+      <text x={svgW / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">
         {N} syllable{N === 1 ? '' : 's'}
         {spec.stressed !== undefined && ` (stress on "${spec.syllables[spec.stressed]}")`}
       </text>
-      <text x={SVG_W / 2} y={SVG_H - 18} fontSize={11} textAnchor="middle" fill="#94a3b8">
+      <text x={svgW / 2} y={SVG_H - 18} fontSize={11} textAnchor="middle" fill="#94a3b8">
         {totalText}
       </text>
     </g>
   );
 }
 
-function renderBlend(spec: Extract<PhonicsSpec, { kind: 'blend' }>) {
+function renderBlend(spec: Extract<PhonicsSpec, { kind: 'blend' }>, svgW: number) {
   const word = spec.word;
   const cluster = spec.cluster ?? word.slice(0, 2);
   const clusterStart = spec.clusterStart ?? word.toLowerCase().indexOf(cluster.toLowerCase());
@@ -147,7 +179,7 @@ function renderBlend(spec: Extract<PhonicsSpec, { kind: 'blend' }>) {
   // Render letter-by-letter so we can underline the cluster precisely.
   const letterW = 30;
   const totalW = word.length * letterW;
-  const ox = (SVG_W - totalW) / 2;
+  const ox = (svgW - totalW) / 2;
 
   return (
     <g>
@@ -177,7 +209,7 @@ function renderBlend(spec: Extract<PhonicsSpec, { kind: 'blend' }>) {
         strokeWidth={4}
         strokeLinecap="round"
       />
-      <text x={SVG_W / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">
+      <text x={svgW / 2} y={30} fontSize={14} textAnchor="middle" fill="#64748b">
         blend "{cluster}"
       </text>
     </g>

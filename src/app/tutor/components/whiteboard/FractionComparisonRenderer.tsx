@@ -3,6 +3,12 @@
 import { InlineMathText } from './InlineMathText';
 import React from 'react';
 import type { FractionComparisonFigure } from '@/lib/tutor/diagrams/catalog/kinds/fraction-comparison';
+// Width-aware label layout (the FractionBar "anted square out" fix, commit
+// 009dc645): labels used to get a fixed 68u left gutter (bars) / a fixed
+// 140u-per-item canvas (circles), so any label longer than ~8 chars clipped
+// at the viewBox edge. Reuse the shared wrap/estimate helpers so the gutter
+// and per-item boxes grow to the (wrapped) label instead.
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -17,23 +23,54 @@ export function FractionComparisonRenderer({ figure }: { figure: FractionCompari
 }
 
 function Bars({ fractions }: { fractions: FractionComparisonFigure['fractions'] }) {
-  const W = 600;
   const BAR_H = 38;
   const BAR_GAP = 16;
-  const PAD_X = 80;
-  const usableW = W - PAD_X - 60;
-  const H = 24 + fractions.length * (BAR_H + BAR_GAP);
+  const LABEL_FONT = 14;
+  const LABEL_LINE_H = 16;
+  /** Max label line width in 14px units; wrapLabel estimates at 13px, so scale the cap. */
+  const LABEL_WRAP = 190;
+  const usableW = 460;
+
+  // Wrap each label and size the left gutter to the widest wrapped line
+  // (was a fixed 68u ≈ 8 chars).
+  const labelLines = fractions.map((f) =>
+    wrapLabel(f.label || `${f.numerator}/${f.denominator}`, (LABEL_WRAP * 13) / LABEL_FONT),
+  );
+  const gutterW = Math.max(
+    68,
+    ...labelLines.map((lines) => Math.max(...lines.map((l) => estimateLabelWidth(l, LABEL_FONT)))),
+  );
+  const PAD_X = Math.ceil(gutterW) + 12;
+  const W = PAD_X + usableW + 60;
+
+  // Rows grow when a wrapped label is taller than the bar.
+  const rowH = labelLines.map((lines) => Math.max(BAR_H, lines.length * LABEL_LINE_H));
+  const rowY: number[] = [];
+  let cursor = 12;
+  for (const h of rowH) {
+    rowY.push(cursor);
+    cursor += h + BAR_GAP;
+  }
+  const H = cursor - BAR_GAP + 12;
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
       {fractions.map((f, i) => {
-        const y = 12 + i * (BAR_H + BAR_GAP);
+        const y = rowY[i] + (rowH[i] - BAR_H) / 2;
         const color = f.color || PALETTE[i % PALETTE.length];
         const cellW = usableW / f.denominator;
         const filled = f.numerator;
+        const lines = labelLines[i];
+        // Wrapped label lines, vertically centered on the bar.
+        const firstLineY = y + BAR_H / 2 + 5 - ((lines.length - 1) * LABEL_LINE_H) / 2;
         return (
           <g key={i}>
-            <text x={PAD_X - 12} y={y + BAR_H / 2 + 5} fontSize={14} textAnchor="end" fill="#374151" fontWeight={600}>
-              {f.label || `${f.numerator}/${f.denominator}`}
+            <text x={PAD_X - 12} y={firstLineY} fontSize={LABEL_FONT} textAnchor="end" fill="#374151" fontWeight={600}>
+              {lines.map((line, li) => (
+                <tspan key={li} x={PAD_X - 12} dy={li === 0 ? 0 : LABEL_LINE_H}>
+                  {line}
+                </tspan>
+              ))}
             </text>
             {Array.from({ length: f.denominator }).map((_, j) => (
               <rect
@@ -56,13 +93,28 @@ function Bars({ fractions }: { fractions: FractionComparisonFigure['fractions'] 
 
 function Circles({ fractions }: { fractions: FractionComparisonFigure['fractions'] }) {
   const R = 52;
-  const SP = 140;
-  const W = Math.max(fractions.length * SP, SP);
-  const H = R * 2 + 60;
+  const MIN_ITEM_W = 140;
+  const LABEL_LINE_H = 15;
+  // 13px labels — estimateLabelWidth/wrapLabel defaults match.
+  const items = fractions.map((f) => {
+    const lines = wrapLabel(f.label || `${f.numerator}/${f.denominator}`);
+    const labelW = Math.max(...lines.map((l) => estimateLabelWidth(l)));
+    // Item box grows to the widest wrapped label line (was a fixed 140u
+    // per item sized from the shape alone — the exact FractionBar disease).
+    const w = Math.max(MIN_ITEM_W, Math.ceil(labelW) + 12);
+    return { lines, w };
+  });
+  const W = Math.max(items.reduce((s, it) => s + it.w, 0), MIN_ITEM_W);
+  const maxLines = Math.max(...items.map((it) => it.lines.length));
+  const H = R * 2 + 16 + 22 + (maxLines - 1) * LABEL_LINE_H + 12;
+
+  let xCursor = 0;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[640px]">
       {fractions.map((f, i) => {
-        const cx = SP / 2 + i * SP;
+        const item = items[i];
+        const cx = xCursor + item.w / 2;
+        xCursor += item.w;
         const cy = R + 16;
         const color = f.color || PALETTE[i % PALETTE.length];
         return (
@@ -88,7 +140,11 @@ function Circles({ fractions }: { fractions: FractionComparisonFigure['fractions
               );
             })}
             <text x={cx} y={cy + R + 22} fontSize={13} textAnchor="middle" fill="#374151" fontWeight={600}>
-              {f.label || `${f.numerator}/${f.denominator}`}
+              {item.lines.map((line, li) => (
+                <tspan key={li} x={cx} dy={li === 0 ? 0 : LABEL_LINE_H}>
+                  {line}
+                </tspan>
+              ))}
             </text>
           </g>
         );

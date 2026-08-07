@@ -105,21 +105,35 @@ export function PolarGraphRenderer({ figure }: { figure: PolarGraphFigure }) {
         />
 
         {/* highlight point */}
-        {highlightPoint && (
-          <g
-            data-feature={N.highlightPoint}
-            data-feature-label={hlLabel || 'highlight point'}
-            data-feature-cx={xAt(highlightPoint.x) / W}
-            data-feature-cy={yAt(highlightPoint.y) / H}
-            data-feature-w={36 / W}
-            data-feature-h={32 / H}
-          >
-            <circle cx={xAt(highlightPoint.x)} cy={yAt(highlightPoint.y)} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
-            <text x={xAt(highlightPoint.x) + 8} y={yAt(highlightPoint.y) - 8} fontSize={11} fill={COLOR_HL} fontWeight={600}>
-              {hlLabel ?? `(r=${Number(highlightPoint.r.toFixed(2))}, θ=${Number(highlightPoint.theta.toFixed(2))})`}
-            </text>
-          </g>
-        )}
+        {highlightPoint && (() => {
+          const hpx = xAt(highlightPoint.x);
+          const hpy = yAt(highlightPoint.y);
+          const hlText = hlLabel ?? `(r=${Number(highlightPoint.r.toFixed(2))}, θ=${Number(highlightPoint.theta.toFixed(2))})`;
+          // Width-aware anchor flip + edge clamp (ProjectileMotionRenderer
+          // :197-208 idiom): a start-anchored label on a point near the
+          // curve's right edge runs past the viewBox — flip it to the left
+          // side of the point, then clamp the extent into [3, W-3].
+          const hlW = hlText.length * 11 * 0.55;
+          const hlFlip = hpx + 8 + hlW > W - 3;
+          let hlX = hlFlip ? hpx - 8 : hpx + 8;
+          const hlLeft = hlFlip ? hlX - hlW : hlX;
+          hlX += Math.max(3 - hlLeft, 0) - Math.max(hlLeft + hlW - (W - 3), 0);
+          return (
+            <g
+              data-feature={N.highlightPoint}
+              data-feature-label={hlLabel || 'highlight point'}
+              data-feature-cx={hpx / W}
+              data-feature-cy={hpy / H}
+              data-feature-w={36 / W}
+              data-feature-h={32 / H}
+            >
+              <circle cx={hpx} cy={hpy} r={5} fill={COLOR_HL} stroke="#fff" strokeWidth={2} />
+              <text x={hlX} y={hpy - 8} fontSize={11} fill={COLOR_HL} fontWeight={600} textAnchor={hlFlip ? 'end' : 'start'}>
+                {hlText}
+              </text>
+            </g>
+          );
+        })()}
 
         {/* polar tick labels along positive x-axis */}
         {showAxes && gridRs.map((r, i) => (

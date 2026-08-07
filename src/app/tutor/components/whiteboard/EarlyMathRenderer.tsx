@@ -21,10 +21,19 @@
  */
 
 import React from 'react';
+// Width-aware label helpers (FractionBar fix, commit 009dc645) — bar_model
+// labels/question wrap and clamp instead of clipping at the viewBox edge.
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 const SVG_W = 480;
 const SVG_H = 280;
 const FONT = 16;
+
+/** Greedy wrap of `text` to lines that fit `maxWidth` at `fontSize`
+ *  (wrapLabel estimates at 13px, so scale the pixel cap). */
+function wrapAt(text: string, fontSize: number, maxWidth: number): string[] {
+  return wrapLabel(text, (maxWidth * 13) / fontSize);
+}
 
 // ─── Spec ─────────────────────────────────────────────────────────────────────
 
@@ -67,6 +76,13 @@ export default function EarlyMathRenderer({ spec }: EarlyMathRendererProps) {
   if (spec.kind === 'place_value') {
     return <PlaceValueRenderer spec={spec} />;
   }
+  // bar_model also renders its own SVG: its height depends on content (a
+  // wrapped question line, leader labels for narrow parts), and labels of
+  // tiny proportional segments need width-aware placement — see
+  // BarModelRenderer.
+  if (spec.kind === 'bar_model') {
+    return <BarModelRenderer spec={spec} />;
+  }
   return (
     <div className="early-math-renderer">
       {spec.title && (
@@ -77,7 +93,6 @@ export default function EarlyMathRenderer({ spec }: EarlyMathRendererProps) {
         {spec.kind === 'ten_frame' && renderTenFrame(spec)}
         {spec.kind === 'array' && renderArray(spec)}
         {spec.kind === 'skip_count' && renderSkipCount(spec)}
-        {spec.kind === 'bar_model' && renderBarModel(spec)}
       </svg>
     </div>
   );
@@ -418,7 +433,14 @@ function renderSkipCount(spec: Extract<EarlyMathSpec, { kind: 'skip_count' }>) {
 
 // ─── bar_model ────────────────────────────────────────────────────────────────
 
-function renderBarModel(spec: Extract<EarlyMathSpec, { kind: 'bar_model' }>) {
+/**
+ * bar_model gets its own component+SVG (like place_value) so the viewBox
+ * height can grow with content: the question wraps to tspan lines, and a
+ * part label that doesn't fit its (possibly tiny) proportional segment
+ * moves below the bar on a staggered leader — centered 18px text over a
+ * narrow segment used to clip at the viewBox edge.
+ */
+function BarModelRenderer({ spec }: { spec: Extract<EarlyMathSpec, { kind: 'bar_model' }> }) {
   const { whole, parts, question } = spec;
   const totalNumeric = parts.every((p) => typeof p.value === 'number')
     ? (parts as Array<{ value: number }>).reduce((s, p) => s + p.value, 0)
@@ -432,46 +454,100 @@ function renderBarModel(spec: Extract<EarlyMathSpec, { kind: 'bar_model' }>) {
   const wholeY = 60;
   const partsY = wholeY + BAR_H + 36;
 
+  // Whole-bar label — wraps inside the bar if long.
+  const wholeText = whole
+    ? `${whole.label ? `${whole.label} · ` : ''}${whole.value !== undefined ? whole.value : (totalNumeric ?? '?')}`
+    : '';
+  const wholeLines = whole ? wrapAt(wholeText, 20, fullW - 12) : [];
+
+  // Part segments + label placement: inside the segment when the estimated
+  // width fits, otherwise below the bar on a staggered leader, clamped into
+  // the viewBox.
+  let xCursor = margin;
+  let belowCount = 0;
+  const partBoxes = parts.map((p, i) => {
+    const weight = typeof p.value === 'number' ? Math.max(0, p.value) : 1;
+    const w = sumForWeights > 0 ? (weight / sumForWeights) * fullW : fullW / parts.length;
+    const x = xCursor;
+    xCursor += w;
+    const text = `${p.label ? `${p.label} · ` : ''}${p.value ?? '?'}`;
+    const inside = estimateLabelWidth(text, 18) <= w - 8;
+    let labelX = x + w / 2;
+    let labelY = partsY + BAR_H / 2 + 6;
+    if (!inside) {
+      const half = estimateLabelWidth(text, 13) / 2;
+      labelX = Math.max(8 + half, Math.min(x + w / 2, SVG_W - 8 - half));
+      labelY = partsY + BAR_H + 20 + (belowCount % 2) * 16;
+      belowCount += 1;
+    }
+    return { p, i, x, w, text, inside, labelX, labelY, color: p.color || PALETTE[i % PALETTE.length] };
+  });
+  const belowRows = Math.min(belowCount, 2);
+  const labelsBottom = partsY + BAR_H + (belowCount > 0 ? 8 + belowRows * 16 : 0);
+
+  // Question — wrapped, centered, height grows to fit.
+  const qLines = question ? wrapAt(question, FONT, SVG_W - 40) : [];
+  const questionY = labelsBottom + 32;
+  const viewHeight = Math.max(
+    SVG_H,
+    question ? questionY + (qLines.length - 1) * 20 + 16 : labelsBottom + 20,
+  );
+
   return (
-    <g>
-      {/* Whole bar (top) */}
-      {whole && (
-        <g>
-          <rect x={margin} y={wholeY} width={fullW} height={BAR_H} fill="#cbd5e1" stroke="#475569" strokeWidth={2} />
-          <text x={margin + fullW / 2} y={wholeY + BAR_H / 2 + 6} fontSize={20} textAnchor="middle" fill="#0f172a" fontWeight={700}>
-            {whole.label ? `${whole.label} · ` : ''}
-            {whole.value !== undefined ? whole.value : (totalNumeric ?? '?')}
-          </text>
-          <text x={margin} y={wholeY - 6} fontSize={11} fill="#64748b">whole</text>
-        </g>
+    <div className="early-math-renderer">
+      {spec.title && (
+        <div className="text-center text-sm font-semibold text-gray-700 mb-1">{spec.title}</div>
       )}
-      {/* Parts row (bottom) */}
-      <g>
-        <text x={margin} y={partsY - 6} fontSize={11} fill="#64748b">parts</text>
-        {(() => {
-          let xCursor = margin;
-          return parts.map((p, i) => {
-            const weight = typeof p.value === 'number' ? Math.max(0, p.value) : 1;
-            const w = sumForWeights > 0 ? (weight / sumForWeights) * fullW : fullW / parts.length;
-            const x = xCursor;
-            xCursor += w;
-            return (
-              <g key={i}>
-                <rect x={x} y={partsY} width={w} height={BAR_H} fill={p.color || PALETTE[i % PALETTE.length]} fillOpacity={0.6} stroke={p.color || PALETTE[i % PALETTE.length]} strokeWidth={2} />
-                <text x={x + w / 2} y={partsY + BAR_H / 2 + 6} fontSize={18} textAnchor="middle" fill="#0f172a" fontWeight={700}>
-                  {p.label ? `${p.label} · ` : ''}
-                  {p.value ?? '?'}
+      <svg viewBox={`0 0 ${SVG_W} ${viewHeight}`} className="w-full h-auto" style={{ maxWidth: SVG_W }}>
+        <rect width={SVG_W} height={viewHeight} fill="#fafbfc" rx={4} />
+        <g>
+          {/* Whole bar (top) */}
+          {whole && (
+            <g>
+              <rect x={margin} y={wholeY} width={fullW} height={BAR_H} fill="#cbd5e1" stroke="#475569" strokeWidth={2} />
+              <text
+                x={margin + fullW / 2}
+                y={wholeY + BAR_H / 2 + 6 - ((wholeLines.length - 1) * 22) / 2}
+                fontSize={20}
+                textAnchor="middle"
+                fill="#0f172a"
+                fontWeight={700}
+              >
+                {wholeLines.map((line, li) => (
+                  <tspan key={li} x={margin + fullW / 2} dy={li === 0 ? 0 : 22}>
+                    {line}
+                  </tspan>
+                ))}
+              </text>
+              <text x={margin} y={wholeY - 6} fontSize={11} fill="#64748b">whole</text>
+            </g>
+          )}
+          {/* Parts row (bottom) */}
+          <g>
+            <text x={margin} y={partsY - 6} fontSize={11} fill="#64748b">parts</text>
+            {partBoxes.map((b) => (
+              <g key={b.i}>
+                <rect x={b.x} y={partsY} width={b.w} height={BAR_H} fill={b.color} fillOpacity={0.6} stroke={b.color} strokeWidth={2} />
+                {!b.inside && (
+                  <line x1={b.x + b.w / 2} y1={partsY + BAR_H} x2={b.labelX} y2={b.labelY - 10} stroke="#64748b" strokeWidth={1} />
+                )}
+                <text x={b.labelX} y={b.labelY} fontSize={b.inside ? 18 : 13} textAnchor="middle" fill="#0f172a" fontWeight={700}>
+                  {b.text}
                 </text>
               </g>
-            );
-          });
-        })()}
-      </g>
-      {question && (
-        <text x={SVG_W / 2} y={SVG_H - 16} fontSize={FONT} textAnchor="middle" fill="#7c3aed" fontStyle="italic">
-          {question}
-        </text>
-      )}
-    </g>
+            ))}
+          </g>
+          {question && (
+            <text x={SVG_W / 2} y={questionY} fontSize={FONT} textAnchor="middle" fill="#7c3aed" fontStyle="italic">
+              {qLines.map((line, li) => (
+                <tspan key={li} x={SVG_W / 2} dy={li === 0 ? 0 : 20}>
+                  {line}
+                </tspan>
+              ))}
+            </text>
+          )}
+        </g>
+      </svg>
+    </div>
   );
 }

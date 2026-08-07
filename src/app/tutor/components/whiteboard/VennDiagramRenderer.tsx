@@ -10,9 +10,22 @@ import { mathifyDollarSpans } from '@/lib/utils/export/latex-readable';
 
 import { useMemo } from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+// Width-aware label helpers (FractionBar fix, commit 009dc645) — set labels
+// and region items sit at hand-tuned anchors in a fixed 500×400 viewBox, so
+// long strings clipped at the edges. They now wrap and clamp into the box.
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 const VB_W = 500;
 const VB_H = 400;
+/** Keep clamped text off the universal-set rectangle stroke (x=10). */
+const EDGE_PAD = 12;
+
+/** Clamp a text center-x so the estimated extent stays inside the viewBox. */
+function clampCenterX(x: number, estWidth: number): number {
+  const half = estWidth / 2;
+  if (VB_W - EDGE_PAD - half < EDGE_PAD + half) return VB_W / 2;
+  return Math.max(EDGE_PAD + half, Math.min(x, VB_W - EDGE_PAD - half));
+}
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -108,12 +121,19 @@ function RegionText({
   const hasItems = region.items && region.items.length > 0;
   if (!hasValue && !hasItems) return null;
 
+  // Wrap the items list and clamp every line into the viewBox — region
+  // anchors are hand-tuned (`neither` sits at x=60), so long item lists
+  // clipped at the left/right edge. wrapLabel estimates at 13px; scale the
+  // ~130u cap into estimator units for the 11px items font.
+  const itemLines = hasItems ? wrapLabel(region.items!.join(', '), (130 * 13) / 11) : [];
+  const valueX = hasValue ? clampCenterX(x, estimateLabelWidth(region.value!, 14)) : x;
+
   return (
     <g>
       {/* Primary value */}
       {hasValue && (
         <text
-          x={x}
+          x={valueX}
           y={hasItems ? y - 8 : y}
           textAnchor="middle"
           dominantBaseline="central"
@@ -135,7 +155,14 @@ function RegionText({
           fontSize={11}
           fill="#475569"
         >
-          {region.items!.join(', ')}
+          {itemLines.map((line, li) => {
+            const lineX = clampCenterX(x, estimateLabelWidth(line, 11));
+            return (
+              <tspan key={li} x={lineX} dy={li === 0 ? 0 : 12}>
+                {line}
+              </tspan>
+            );
+          })}
         </text>
       )}
     </g>
@@ -354,6 +381,11 @@ export function VennDiagramRenderer({
   }, [isThreeSet]);
 
   return (
+    <div className="venn-diagram-renderer w-full flex flex-col items-center">
+      {/* Title as HTML above the svg — R38: centered SVG text in the fixed 500u viewBox clipped long titles on both sides */}
+      {title && (
+        <h3 className="text-sm font-semibold text-slate-700 text-center">{mathifyDollarSpans(title)}</h3>
+      )}
     <svg
       viewBox="0 0 500 400"
       xmlns="http://www.w3.org/2000/svg"
@@ -378,20 +410,6 @@ export function VennDiagramRenderer({
       {universalLabel && (
         <text x={20} y={30} fontSize={12} fill="#64748b" fontWeight={500}>
           {universalLabel}
-        </text>
-      )}
-
-      {/* Title */}
-      {title && (
-        <text
-          x={250}
-          y={universalLabel ? 30 : 30}
-          textAnchor="middle"
-          fontSize={16}
-          fontWeight={700}
-          fill="#0f172a"
-        >
-          {mathifyDollarSpans(title)}
         </text>
       )}
 
@@ -434,20 +452,34 @@ export function VennDiagramRenderer({
         );
       })}
 
-      {/* Set labels */}
-      {circles.map((c, i) => (
-        <text
-          key={`label-${i}`}
-          x={labelPositions[i].x}
-          y={labelPositions[i].y}
-          textAnchor="middle"
-          fontSize={14}
-          fontWeight={600}
-          fill={c.color}
-        >
-          {c.label}
-        </text>
-      ))}
+      {/* Set labels — wrapped and clamped: the anchors are hand-tuned
+          (3-set B sits at x=360), so long labels clipped at the viewBox
+          edge. Lines stack UP from the anchor so the label stays above
+          (A/B) or just below (C) its circle. */}
+      {circles.map((c, i) => {
+        const lines = wrapLabel(c.label ?? '', (170 * 13) / 14);
+        const firstY = labelPositions[i].y - (lines.length - 1) * 15;
+        return (
+          <text
+            key={`label-${i}`}
+            x={labelPositions[i].x}
+            y={firstY}
+            textAnchor="middle"
+            fontSize={14}
+            fontWeight={600}
+            fill={c.color}
+          >
+            {lines.map((line, li) => {
+              const lineX = clampCenterX(labelPositions[i].x, estimateLabelWidth(line, 14));
+              return (
+                <tspan key={li} x={lineX} dy={li === 0 ? 0 : 15}>
+                  {line}
+                </tspan>
+              );
+            })}
+          </text>
+        );
+      })}
 
       {/* Region values and items */}
       {Object.entries(safeRegions).map(([key, region]) => {
@@ -514,6 +546,7 @@ export function VennDiagramRenderer({
         ));
       })()}
     </svg>
+    </div>
   );
 }
 

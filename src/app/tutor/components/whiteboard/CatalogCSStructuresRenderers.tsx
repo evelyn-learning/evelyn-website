@@ -167,7 +167,11 @@ function QueueRenderer({ figure, N }: { figure: DataStructureFigure; N: typeof d
 function LinkedListRenderer({ figure, N }: { figure: DataStructureFigure; N: typeof dataStructureFeatureNames }) {
   const items = figure.items;
   const n = items.length;
-  const VW = 54; // value cell
+  // Value cells are label-aware (cf. CatalogHashTableRenderer's noteText
+  // max): a fixed 54u cell clipped monospace values past ~6 chars, and W
+  // only counted cells. ~9px/char at fontSize 15 monospace.
+  const longestItem = Math.max(0, ...items.map((s) => s.length));
+  const VW = Math.max(54, longestItem * 9 + 12); // value cell
   const PW = 30; // next-pointer cell
   const BH = 48;
   const NODEW = VW + PW;
@@ -175,7 +179,8 @@ function LinkedListRenderer({ figure, N }: { figure: DataStructureFigure; N: typ
   const leftPad = 24;
   const rightPad = 70; // room for → null
   const rowY = 70;
-  const W = leftPad + n * NODEW + n * ARROW + rightPad;
+  const CAPTION = 'Singly linked list — each node stores a value and a pointer to the next';
+  const W = Math.max(leftPad + n * NODEW + n * ARROW + rightPad, CAPTION.length * 7 + 20);
   const H = 170;
 
   return (
@@ -230,7 +235,7 @@ function LinkedListRenderer({ figure, N }: { figure: DataStructureFigure; N: typ
           })}
         </g>
 
-        <text x={W / 2} y={H - 16} fontSize={12} textAnchor="middle" fill={INK} fontWeight={600}>Singly linked list — each node stores a value and a pointer to the next</text>
+        <text x={W / 2} y={H - 16} fontSize={12} textAnchor="middle" fill={INK} fontWeight={600}>{CAPTION}</text>
       </svg>
     </div>
   );

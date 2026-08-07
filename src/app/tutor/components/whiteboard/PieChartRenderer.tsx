@@ -6,10 +6,44 @@ import type { PieChartFigure } from '@/lib/tutor/diagrams/catalog/kinds/pie-char
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
 
+const LEGEND_BOX_X = 340;
+const LEGEND_TEXT_X = 362;
+const LEGEND_LINE_H = 17;
+
+/** Average-glyph width heuristic — same 0.55 factor as fraction-bar-layout.ts. */
+function estW(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.55;
+}
+
+/** Greedy word wrap on the estimated width (fraction-bar-layout.ts pattern). */
+function wrapWords(text: string, maxWidth: number, fontSize: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [text];
+  const lines: string[] = [];
+  let line = words[0];
+  for (const word of words.slice(1)) {
+    const candidate = `${line} ${word}`;
+    if (estW(candidate, fontSize) <= maxWidth) line = candidate;
+    else { lines.push(line); line = word; }
+  }
+  lines.push(line);
+  return lines;
+}
+
 export function PieChartRenderer({ figure }: { figure: PieChartFigure }) {
   const { slices, title } = figure;
-  const W = 480;
-  const H = 360;
+  // Legend labels wrap at the space right of the pie; rows and the viewBox
+  // grow to fit the wrapped lines (audit 2026-08-07).
+  const legendLines = slices.map((s) => wrapWords(`${s.label} (${s.value})`, 480 - LEGEND_TEXT_X - 8, 13));
+  const legendYs: number[] = [];
+  let legendCursor = 40;
+  for (const lines of legendLines) {
+    legendYs.push(legendCursor);
+    legendCursor += Math.max(22, lines.length * LEGEND_LINE_H + 5);
+  }
+  const maxLegendLineW = Math.max(0, ...legendLines.flatMap((ls) => ls.map((l) => estW(l, 13))));
+  const W = Math.max(480, LEGEND_TEXT_X + maxLegendLineW + 8); // over-cap single words widen the canvas
+  const H = Math.max(360, legendCursor + 4);
   const cx = 180;
   const cy = 170;
   const r = 130;
@@ -48,12 +82,16 @@ export function PieChartRenderer({ figure }: { figure: PieChartFigure }) {
         {/* Legend on the right */}
         {slices.map((s, i) => {
           const color = s.color || PALETTE[i % PALETTE.length];
-          const ly = 40 + i * 22;
+          const ly = legendYs[i];
           return (
             <g key={`lg-${i}`}>
-              <rect x={340} y={ly - 10} width={14} height={14} fill={color} />
-              <text x={362} y={ly + 1} fontSize={13} fill="#374151">
-                {s.label} ({s.value})
+              <rect x={LEGEND_BOX_X} y={ly - 10} width={14} height={14} fill={color} />
+              <text x={LEGEND_TEXT_X} y={ly + 1} fontSize={13} fill="#374151">
+                {legendLines[i].map((line, li) => (
+                  <tspan key={li} x={LEGEND_TEXT_X} y={ly + 1 + li * LEGEND_LINE_H}>
+                    {line}
+                  </tspan>
+                ))}
               </text>
             </g>
           );

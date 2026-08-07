@@ -17,6 +17,8 @@ import { InlineMathText } from './InlineMathText';
 
 import React from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 export interface EnergyBarsPosition {
   label: string;        // e.g. "Top", "Middle", "Bottom", or "A", "B", "C"
@@ -416,6 +418,19 @@ export default function EnergyBarsRenderer({
 
           const total = (p.ke ?? 0) + (p.pe ?? 0) + (p.spring ?? 0) + (p.thermal ?? 0);
           const barName = p.label ? `bar-${featSlug(p.label)}` : `bar-${i + 1}`;
+          // Column label: wrap to the column width and clamp each line's
+          // center into the viewBox (2026-08-07 clip audit — the manifest
+          // even anticipates parenthetical qualifiers like "Release (10 m)",
+          // which used to clip at the outer columns). wrapLabel estimates
+          // at fontSize 13; scale its cap so the char budget matches the
+          // 12px this text draws at.
+          const labelLines = wrapLabel(p.label ?? '', (Math.max(columnWidth - 8, 90) * 13) / 12);
+          const clampLineX = (w: number): number => {
+            const half = w / 2;
+            const lo = 4 + half;
+            const hi = VIEWBOX_W - 4 - half;
+            return hi < lo ? VIEWBOX_W / 2 : Math.max(lo, Math.min(centerX, hi));
+          };
           return (
             <g key={p.label} {...feat(barName, { cx: centerX, cy: plotBottom - plotHeight / 2, w: barWidth + 16, h: plotHeight }, { width: VIEWBOX_W, height: VIEWBOX_H })}>
               {segments}
@@ -428,7 +443,9 @@ export default function EnergyBarsRenderer({
                 fontWeight={600}
                 textAnchor="middle"
               >
-                {p.label}
+                {labelLines.map((line, li) => (
+                  <tspan key={li} x={clampLineX(estimateLabelWidth(line, 12))} dy={li === 0 ? 0 : 14}>{line}</tspan>
+                ))}
               </text>
               {/* Total above the stack, if shown */}
               {!drawTotalLine && total > 0 && (
@@ -470,18 +487,11 @@ export default function EnergyBarsRenderer({
           });
         })()}
 
-        {notes && (
-          <text
-            x={VIEWBOX_W / 2}
-            y={VIEWBOX_H - 10}
-            fontSize={12}
-            fill={COLORS.muted}
-            textAnchor="middle"
-          >
-            {notes}
-          </text>
-        )}
       </svg>
+      {/* Notes as wrapping HTML below the SVG (shared DiagramNotes idiom,
+          matching the HTML title above — the in-SVG single-line version
+          clipped long captions; 2026-08-07 clip audit). */}
+      <DiagramNotes notes={notes} />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { InlineMathText } from './InlineMathText';
 import React from 'react';
+import { wrapLabel } from './fraction-bar-layout';
 import { cycleStagesFeatureNames, type CycleStagesFigure } from '@/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
@@ -85,8 +86,22 @@ export function CatalogCycleStagesRenderer({ figure }: { figure: CycleStagesFigu
               data-feature-h={sideFrac}
             >
               <circle cx={p.x} cy={p.y} r={nodeR} fill={color + '22'} stroke={color} strokeWidth={2.5} />
-              <text x={p.x} y={p.y + 4} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={700}>
-                {s.label}
+              {/* Long stage labels wrap to tspans near the node width and each
+                  line clamps into the viewBox (2026-08-07 clip audit: ring
+                  nodes sit at x=90/430 of W=520, so a long centered label
+                  escaped the frame). Ring geometry is unchanged. */}
+              <text x={p.x} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={700}>
+                {(() => {
+                  const lines = wrapLabel(s.label, 96);
+                  const lineH = 13;
+                  return lines.map((ln, j) => {
+                    const lw = ln.length * 12 * 0.55;
+                    const lx = Math.max(3 + lw / 2, Math.min(p.x, W - 3 - lw / 2));
+                    return (
+                      <tspan key={j} x={lx} y={p.y + 4 - ((lines.length - 1) * lineH) / 2 + j * lineH}>{ln}</tspan>
+                    );
+                  });
+                })()}
               </text>
             </g>
           );

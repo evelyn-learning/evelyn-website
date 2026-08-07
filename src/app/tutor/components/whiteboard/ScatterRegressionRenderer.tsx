@@ -141,24 +141,32 @@ export function ScatterRegressionRenderer({ figure }: { figure: ScatterRegressio
           })}
         </g>
 
-        {/* highlighted point label */}
-        {highlightPoint && (
-          <g
-            data-feature={N.highlightPoint}
-            data-feature-label={highlightPoint.label || `(${highlightPoint.x}, ${highlightPoint.y})`}
-            data-feature-cx={xAt(highlightPoint.x) / W}
-            data-feature-cy={yAt(highlightPoint.y) / H}
-            data-feature-w={32 / W}
-            data-feature-h={32 / H}
-          >
-            <text
-              x={xAt(highlightPoint.x) + 8} y={yAt(highlightPoint.y) - 6}
-              fontSize={11} fill={COLOR_HL} fontWeight={600}
+        {/* highlighted point label — width-aware anchor flip (2026-08-07 clip
+            audit): a right-edge outlier hung its start-anchored label off the
+            viewBox. */}
+        {highlightPoint && (() => {
+          const hlText = highlightPoint.label ?? `(${Number(highlightPoint.x.toFixed(2))}, ${Number(highlightPoint.y.toFixed(2))})`;
+          const hx = xAt(highlightPoint.x);
+          const hlFlip = hx + 8 + hlText.length * 11 * 0.55 > W - 2;
+          return (
+            <g
+              data-feature={N.highlightPoint}
+              data-feature-label={highlightPoint.label || `(${highlightPoint.x}, ${highlightPoint.y})`}
+              data-feature-cx={hx / W}
+              data-feature-cy={yAt(highlightPoint.y) / H}
+              data-feature-w={32 / W}
+              data-feature-h={32 / H}
             >
-              {highlightPoint.label ?? `(${Number(highlightPoint.x.toFixed(2))}, ${Number(highlightPoint.y.toFixed(2))})`}
-            </text>
-          </g>
-        )}
+              <text
+                x={hx + (hlFlip ? -8 : 8)} y={yAt(highlightPoint.y) - 6}
+                fontSize={11} fill={COLOR_HL} fontWeight={600}
+                textAnchor={hlFlip ? 'end' : undefined}
+              >
+                {hlText}
+              </text>
+            </g>
+          );
+        })()}
 
         {/* axes */}
         <line x1={PAD_L} y1={PAD_T} x2={PAD_L} y2={PAD_T + plotH} stroke={COLOR_AXIS} strokeWidth={1.5} />

@@ -106,6 +106,10 @@ export function BusinessCycleRenderer({ figure }: { figure: BusinessCycleFigure 
         {drawnMarkers && drawnMarkers.map((m, i) => {
           const x = xAt(m.t);
           const yc = yAt(cycleAt(m.t));
+          // Clamp the centered label into the viewBox (2026-08-07 clip
+          // audit): markers at t≈0/1 centered their label half off-canvas.
+          const half = (m.label.length * 11 * 0.55) / 2;
+          const labelX = Math.max(2 + half, Math.min(x, W - 2 - half));
           return (
             <g
               key={`mk-${i}`}
@@ -120,7 +124,7 @@ export function BusinessCycleRenderer({ figure }: { figure: BusinessCycleFigure 
                 <line x1={x} y1={yc} x2={x} y2={PAD_T + plotH + 4} stroke={COLOR_MARKER} strokeDasharray="3 3" strokeWidth={1} />
               )}
               <circle cx={x} cy={yc} r={4} fill={COLOR_MARKER} />
-              <text x={x} y={yc - 10} fontSize={11} fontWeight={600} fill={COLOR_MARKER} textAnchor="middle">
+              <text x={labelX} y={yc - 10} fontSize={11} fontWeight={600} fill={COLOR_MARKER} textAnchor="middle">
                 {m.label}
               </text>
             </g>

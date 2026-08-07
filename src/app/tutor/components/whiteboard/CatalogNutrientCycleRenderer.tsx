@@ -2,6 +2,7 @@
 
 import { InlineMathText } from './InlineMathText';
 import React from 'react';
+import { wrapLabel, estimateLabelWidth } from './fraction-bar-layout';
 import {
   nutrientCycleFeatureNames,
   type NutrientCycleFigure,
@@ -29,17 +30,28 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
   const cy = H / 2 + 6;
   const ring = Math.min(W, H) / 2 - 90;
 
-  // Reservoir boxes on a ring, starting at the top.
+  // Reservoir boxes on a ring, starting at the top. Long labels wrap to
+  // tspans inside the box and the box grows vertically to fit (2026-08-07
+  // clip audit: the old single-line width estimate was capped at 168 and
+  // never fed the viewBox, so a long centered label on the ring's rightmost
+  // box at x≈460 of W=600 escaped the frame). Box centers are then clamped
+  // so the box — and the wider of box/label — stays inside the viewBox.
   const boxH = 42;
+  const LINE_H = 15;
   const layout = reservoirs.map((r, i) => {
     const a = -Math.PI / 2 + (i * 2 * Math.PI) / reservoirs.length;
-    const w = Math.max(96, Math.min(168, Math.round(r.label.length * 7.2) + 24));
+    const lines = wrapLabel(r.label, 144);
+    const lineW = Math.ceil(Math.max(...lines.map((l) => estimateLabelWidth(l, 12.5))));
+    const w = Math.max(96, Math.min(168, lineW + 24));
+    const h = Math.max(boxH, lines.length * LINE_H + 18);
+    const clampW = Math.max(w, lineW); // a single unbreakable word can exceed the box cap
     return {
       ...r,
-      x: cx + ring * Math.cos(a),
-      y: cy + ring * Math.sin(a),
+      lines,
+      x: Math.max(4 + clampW / 2, Math.min(cx + ring * Math.cos(a), W - 4 - clampW / 2)),
+      y: Math.max(4 + h / 2, Math.min(cy + ring * Math.sin(a), H - 4 - h / 2)),
       w,
-      h: boxH,
+      h,
       color: r.color || PALETTE[i % PALETTE.length],
     };
   });
@@ -113,20 +125,31 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
                 markerEnd="url(#nc-arr)"
               />
               {f.label && (() => {
-                const rectW = Math.min(150, f.label.length * 6.6) + 8;
+                // Wrap long flux labels so they stay inside the backing rect,
+                // and clamp the whole block into the viewBox (2026-08-07 clip
+                // audit: the rect capped at 158 while the text kept growing).
+                const lines = wrapLabel(f.label, 142);
+                const lineW = Math.ceil(Math.max(...lines.map((l) => l.length * 6.6)));
+                const rectW = Math.min(150, lineW) + 8;
+                const rectH = 16 + (lines.length - 1) * 13;
+                const clampW = Math.max(rectW, lineW + 8);
+                const lx = Math.max(4 + clampW / 2, Math.min(labelX, W - 4 - clampW / 2));
+                const lyTop = Math.max(4, Math.min(labelY - 9, H - 4 - rectH));
                 return (
                   <g>
                     <rect
-                      x={labelX - rectW / 2}
-                      y={labelY - 9}
+                      x={lx - rectW / 2}
+                      y={lyTop}
                       width={rectW}
-                      height={16}
+                      height={rectH}
                       rx={3}
                       fill="#ffffff"
                       opacity={0.92}
                     />
-                    <text x={labelX} y={labelY + 3} fontSize={10.5} textAnchor="middle" fill="#b91c1c" fontWeight={600}>
-                      {f.label}
+                    <text x={lx} fontSize={10.5} textAnchor="middle" fill="#b91c1c" fontWeight={600}>
+                      {lines.map((ln, j) => (
+                        <tspan key={j} x={lx} y={lyTop + 12 + j * 13}>{ln}</tspan>
+                      ))}
                     </text>
                   </g>
                 );
@@ -156,8 +179,10 @@ export function CatalogNutrientCycleRenderer({ figure }: { figure: NutrientCycle
               stroke={r.color}
               strokeWidth={2.5}
             />
-            <text x={r.x} y={r.y + 4} fontSize={12.5} textAnchor="middle" fill="#1f2937" fontWeight={700}>
-              {r.label}
+            <text x={r.x} fontSize={12.5} textAnchor="middle" fill="#1f2937" fontWeight={700}>
+              {r.lines.map((ln, j) => (
+                <tspan key={j} x={r.x} y={r.y + 4 - ((r.lines.length - 1) * LINE_H) / 2 + j * LINE_H}>{ln}</tspan>
+              ))}
             </text>
           </g>
         ))}

@@ -149,7 +149,7 @@ export function ElasticityRenderer({ figure }: { figure: ElasticityFigure }) {
 
 export function ComparativeAdvantageRenderer({ figure }: { figure: ComparativeAdvantageFigure }) {
   const N = comparativeAdvantageFeatureNames;
-  const W = 740, H = 320;
+  const W = 740;
   const fmt = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2));
   const NB = ' '; // non-breaking space (SVG tspan collapses leading spaces)
 
@@ -173,6 +173,52 @@ export function ComparativeAdvantageRenderer({ figure }: { figure: ComparativeAd
 
   const caXWinner = figure.caX === 'A' ? figure.producerA : figure.producerB;
   const caYWinner = figure.caY === 'A' ? figure.producerA : figure.producerB;
+
+  // ── Conclusion sentence, wrapped (2026-08-07 clip audit) ──
+  // Four concatenated content strings centered at W/2 formed one unwrapped
+  // line (~66 literal chars + producers + goods) that clipped both viewBox
+  // edges for realistic names. Greedy word-wrap by estimated glyph width
+  // (0.55 × fontSize), keeping the bold/colored winner-name styling per word,
+  // then grow the viewBox height by the extra lines.
+  const CONCL_FS = 12.5;
+  type ConclusionWord = { text: string; bold?: boolean; fill?: string };
+  const caXColor = figure.caX === 'A' ? ROW_COLOR : COL_COLOR;
+  const caYColor = figure.caY === 'A' ? ROW_COLOR : COL_COLOR;
+  const conclusionWords: ConclusionWord[] = [
+    { text: caXWinner, bold: true, fill: caXColor },
+    { text: `has the comparative advantage in ${figure.goodX};` },
+    { text: caYWinner, bold: true, fill: caYColor },
+    { text: `in ${figure.goodY} (lower opportunity cost).` },
+  ].flatMap((seg) => seg.text.split(/\s+/).filter(Boolean).map((w) => ({ ...seg, text: w })));
+  const maxLineChars = Math.floor((W - 48) / (CONCL_FS * 0.55));
+  const conclusionLines: ConclusionWord[][] = [];
+  {
+    let cur: ConclusionWord[] = [];
+    let curLen = 0;
+    for (const w of conclusionWords) {
+      const nextLen = curLen === 0 ? w.text.length : curLen + 1 + w.text.length;
+      if (nextLen > maxLineChars && cur.length > 0) {
+        conclusionLines.push(cur);
+        cur = [w];
+        curLen = w.text.length;
+      } else {
+        cur.push(w);
+        curLen = nextLen;
+      }
+    }
+    if (cur.length > 0) conclusionLines.push(cur);
+  }
+  // Merge consecutive same-style words into one tspan per run.
+  const conclusionLineChunks = conclusionLines.map((line) => {
+    const chunks: ConclusionWord[] = [];
+    for (const w of line) {
+      const last = chunks[chunks.length - 1];
+      if (last && last.bold === w.bold && last.fill === w.fill) last.text += ` ${w.text}`;
+      else chunks.push({ ...w });
+    }
+    return chunks;
+  });
+  const H = 320 + (conclusionLineChunks.length - 1) * 17;
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -218,13 +264,14 @@ export function ComparativeAdvantageRenderer({ figure }: { figure: ComparativeAd
           <line key={i} x1={x} y1={headTop} x2={x} y2={rowBY + rowH / 2} stroke="#e2e8f0" strokeWidth={1} />
         ))}
 
-        {/* conclusion */}
-        <text x={W / 2} y={rowBY + rowH / 2 + 34} textAnchor="middle" fontSize={12.5} fill={INK} xmlSpace="preserve">
-          <tspan fontWeight={700} fill={figure.caX === 'A' ? ROW_COLOR : COL_COLOR}>{caXWinner}</tspan>
-          <tspan>{`${NB}has the comparative advantage in ${figure.goodX};${NB}${NB}`}</tspan>
-          <tspan fontWeight={700} fill={figure.caY === 'A' ? ROW_COLOR : COL_COLOR}>{caYWinner}</tspan>
-          <tspan>{`${NB}in ${figure.goodY} (lower opportunity cost).`}</tspan>
-        </text>
+        {/* conclusion (wrapped — see conclusionLineChunks above) */}
+        {conclusionLineChunks.map((chunks, li) => (
+          <text key={li} x={W / 2} y={rowBY + rowH / 2 + 34 + li * 17} textAnchor="middle" fontSize={CONCL_FS} fill={INK} xmlSpace="preserve">
+            {chunks.map((c, ci) => (
+              <tspan key={ci} fontWeight={c.bold ? 700 : undefined} fill={c.fill}>{ci === 0 ? c.text : `${NB}${c.text}`}</tspan>
+            ))}
+          </text>
+        ))}
       </svg>
     </div>
   );

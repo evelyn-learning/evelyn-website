@@ -39,6 +39,29 @@ export function CatalogSimpleCircuitRenderer({ figure }: { figure: SimpleCircuit
             </g>
           );
         })}
+        {/* Labels in a separate non-rotated pass (2026-08-07 clip audit):
+            inside the rotated groups they inherited rotate(180/270) —
+            sideways/upside-down text — and their centered local x=0 clipped
+            at the loop corners. Absolute positions keep them upright; the
+            local "below the symbol" offset is rotated so labels stay on the
+            inside of the loop; x is clamped into the viewBox. */}
+        {components.map((c, i) => {
+          const p = positions[i];
+          const letter = c.type === 'ammeter' ? 'A' : c.type === 'voltmeter' ? 'V' : null;
+          const spec = labelSpec(c);
+          if (!letter && !spec) return null;
+          const rad = (p.angle * Math.PI) / 180;
+          const lblX = spec ? p.x - spec.dy * Math.sin(rad) : 0;
+          const lblY = spec ? p.y + spec.dy * Math.cos(rad) : 0;
+          const w = spec ? spec.text.length * spec.fontSize * 0.55 : 0;
+          const lx = Math.max(4 + w / 2, Math.min(lblX, W - 4 - w / 2));
+          return (
+            <g key={`lbl-${i}`}>
+              {letter && <text x={p.x} y={p.y + 5} fontSize={14} textAnchor="middle" fill="#1f2937" fontWeight={700}>{letter}</text>}
+              {spec && <text x={lx} y={lblY} fontSize={spec.fontSize} textAnchor="middle" fill="#1f2937" fontWeight={spec.weight}>{spec.text}</text>}
+            </g>
+          );
+        })}
       </svg>
     </div>
   );
@@ -53,24 +76,31 @@ function placeOnPerimeter(t: number): { x: number; y: number; angle: number } {
   return { x: x, y: y + h - (t - top - right - bottom), angle: 270 };
 }
 
-function ComponentSymbol({ c }: { c: CircuitComponent }) {
+/** Label text + its local "below the symbol" offset for the non-rotated
+ *  label pass (the meter A/V letter is handled separately). */
+function labelSpec(c: CircuitComponent): { text: string; dy: number; fontSize: number; weight?: number } | null {
   const label = c.label || c.value || '';
+  if (c.type === 'battery') return { text: label || 'V', dy: 36, fontSize: 12, weight: 600 };
+  if (c.type === 'resistor') return { text: label || 'R', dy: 28, fontSize: 12, weight: 600 };
+  if (c.type === 'bulb') return label ? { text: label, dy: 32, fontSize: 12, weight: 600 } : null;
+  if (c.type === 'switch') return { text: label || (c.closed === true ? 'closed' : 'open'), dy: 28, fontSize: 12, weight: 600 };
+  if (c.type === 'ammeter' || c.type === 'voltmeter') return label ? { text: label, dy: 32, fontSize: 11 } : null;
+  return null;
+}
+
+function ComponentSymbol({ c }: { c: CircuitComponent }) {
   if (c.type === 'battery') {
     return (
       <g>
         <rect x={-26} y={-12} width={52} height={24} fill="#fff" stroke="#1f2937" strokeWidth={1.5} />
         <line x1={-10} y1={-14} x2={-10} y2={14} stroke="#1f2937" strokeWidth={4} />
         <line x1={6} y1={-8} x2={6} y2={8} stroke="#1f2937" strokeWidth={2} />
-        <text x={0} y={36} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={600}>{label || 'V'}</text>
       </g>
     );
   }
   if (c.type === 'resistor') {
     return (
-      <g>
-        <path d="M -28 0 L -22 0 L -18 -10 L -10 10 L -2 -10 L 6 10 L 14 -10 L 22 10 L 26 0 L 28 0" fill="none" stroke="#1f2937" strokeWidth={2} />
-        <text x={0} y={28} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={600}>{label || 'R'}</text>
-      </g>
+      <path d="M -28 0 L -22 0 L -18 -10 L -10 10 L -2 -10 L 6 10 L 14 -10 L 22 10 L 26 0 L 28 0" fill="none" stroke="#1f2937" strokeWidth={2} />
     );
   }
   if (c.type === 'bulb') {
@@ -79,7 +109,6 @@ function ComponentSymbol({ c }: { c: CircuitComponent }) {
         <circle cx={0} cy={0} r={14} fill="#fef3c7" stroke="#f59e0b" strokeWidth={2} />
         <line x1={-10} y1={-10} x2={10} y2={10} stroke="#f59e0b" strokeWidth={1.5} />
         <line x1={10} y1={-10} x2={-10} y2={10} stroke="#f59e0b" strokeWidth={1.5} />
-        <text x={0} y={32} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={600}>{label}</text>
       </g>
     );
   }
@@ -90,18 +119,11 @@ function ComponentSymbol({ c }: { c: CircuitComponent }) {
         <circle cx={-14} cy={0} r={3} fill="#1f2937" />
         <circle cx={14} cy={0} r={3} fill="#1f2937" />
         <line x1={-14} y1={0} x2={closed ? 14 : 12} y2={closed ? 0 : -12} stroke="#1f2937" strokeWidth={2} />
-        <text x={0} y={28} fontSize={12} textAnchor="middle" fill="#1f2937" fontWeight={600}>{label || (closed ? 'closed' : 'open')}</text>
       </g>
     );
   }
   if (c.type === 'ammeter' || c.type === 'voltmeter') {
-    return (
-      <g>
-        <circle cx={0} cy={0} r={14} fill="#fff" stroke="#1f2937" strokeWidth={2} />
-        <text x={0} y={5} fontSize={14} textAnchor="middle" fill="#1f2937" fontWeight={700}>{c.type === 'ammeter' ? 'A' : 'V'}</text>
-        <text x={0} y={32} fontSize={11} textAnchor="middle" fill="#1f2937">{label}</text>
-      </g>
-    );
+    return <circle cx={0} cy={0} r={14} fill="#fff" stroke="#1f2937" strokeWidth={2} />;
   }
   return null;
 }

@@ -72,6 +72,16 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
   const adLine = clipToBounds(-1, adIntercept0);
   const srasLine = clipToBounds(1, srasIntercept0);
 
+  // Width-aware label clamps (2026-08-07 clip audit): curve labels sit past
+  // their line ends (anchor=start at x2+4, ~x524 of 580) and LRAS is centered
+  // on a line that can sit at the axis max — long brain-authored labels ran
+  // off the viewBox. Shift the anchor point just enough for the estimated
+  // text width (0.55 × fontSize per glyph) to fit.
+  const estW = (s: string, fs: number) => s.length * fs * 0.55;
+  const clampStartX = (x: number, s: string, fs: number) => Math.max(2, Math.min(x, W - 2 - estW(s, fs)));
+  const clampMidX = (x: number, s: string, fs: number) =>
+    Math.max(2 + estW(s, fs) / 2, Math.min(x, W - 2 - estW(s, fs) / 2));
+
   // Compute shifted curve(s) if any.
   let adShiftedLine: ReturnType<typeof clipToBounds> | null = null;
   let srasShiftedLine: ReturnType<typeof clipToBounds> | null = null;
@@ -111,7 +121,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
             data-feature-h={plotH / H}
           >
             <line x1={xAt(potentialGdp)} y1={PAD_T} x2={xAt(potentialGdp)} y2={PAD_T + plotH} stroke={COLOR_LRAS} strokeWidth={2} />
-            <text x={xAt(potentialGdp)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
+            <text x={clampMidX(xAt(potentialGdp), labels.lras, 12)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
               {labels.lras}
             </text>
           </g>
@@ -126,7 +136,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
             data-feature-h={plotH / H}
           >
             <line x1={xAt(lrasShifted)} y1={PAD_T} x2={xAt(lrasShifted)} y2={PAD_T + plotH} stroke={COLOR_LRAS} strokeWidth={2} strokeDasharray="6 4" />
-            <text x={xAt(lrasShifted)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
+            <text x={clampMidX(xAt(lrasShifted), `${labels.lras}'`, 12)} y={PAD_T - 6} fontSize={12} fontWeight={600} fill={COLOR_LRAS} textAnchor="middle">
               {labels.lras}&apos;
             </text>
           </g>
@@ -142,7 +152,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
           data-feature-h={24 / H}
         >
           <line x1={adLine.x1} y1={adLine.y1} x2={adLine.x2} y2={adLine.y2} stroke={COLOR_AD} strokeWidth={2.5} />
-          <text x={adLine.x2 + 4} y={adLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD}>
+          <text x={clampStartX(adLine.x2 + 4, labels.ad, 12)} y={adLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD}>
             {labels.ad}
           </text>
         </g>
@@ -156,7 +166,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
             data-feature-h={24 / H}
           >
             <line x1={adShiftedLine.x1} y1={adShiftedLine.y1} x2={adShiftedLine.x2} y2={adShiftedLine.y2} stroke={COLOR_AD_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
-            <text x={adShiftedLine.x2 + 4} y={adShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD_NEW}>
+            <text x={clampStartX(adShiftedLine.x2 + 4, `${labels.ad}'`, 12)} y={adShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_AD_NEW}>
               {labels.ad}&apos;
             </text>
           </g>
@@ -172,7 +182,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
           data-feature-h={24 / H}
         >
           <line x1={srasLine.x1} y1={srasLine.y1} x2={srasLine.x2} y2={srasLine.y2} stroke={COLOR_SRAS} strokeWidth={2.5} />
-          <text x={srasLine.x2 + 4} y={srasLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS}>
+          <text x={clampStartX(srasLine.x2 + 4, labels.sras, 12)} y={srasLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS}>
             {labels.sras}
           </text>
         </g>
@@ -186,7 +196,7 @@ export function AdAsRenderer({ figure }: { figure: AdAsFigure }) {
             data-feature-h={24 / H}
           >
             <line x1={srasShiftedLine.x1} y1={srasShiftedLine.y1} x2={srasShiftedLine.x2} y2={srasShiftedLine.y2} stroke={COLOR_SRAS_NEW} strokeWidth={2.5} strokeDasharray="6 4" />
-            <text x={srasShiftedLine.x2 + 4} y={srasShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS_NEW}>
+            <text x={clampStartX(srasShiftedLine.x2 + 4, `${labels.sras}'`, 12)} y={srasShiftedLine.y2 + 4} fontSize={12} fontWeight={600} fill={COLOR_SRAS_NEW}>
               {labels.sras}&apos;
             </text>
           </g>

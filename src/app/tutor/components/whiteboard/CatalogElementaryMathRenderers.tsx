@@ -390,10 +390,17 @@ export function CatalogCoordinateGridRenderer({ figure }: { figure: CoordinateGr
           const cy = py(p.y);
           const color = p.color || POINT_COLORS[i % POINT_COLORS.length];
           const nm = p.label || `(${p.x}, ${p.y})`;
-          // Offset the label to the upper-right, flipping near the right/top edges.
-          const flipX = cx > M.left + plotW - 60;
+          // Offset the label to the upper-right, flipping near the right/top
+          // edges. The flip threshold is width-aware (2026-08-07 clip audit:
+          // the old fixed 60u guard was sized for "(x, y)" — longer labels
+          // overflowed before the flip kicked in), and the final x is clamped
+          // into the viewBox either way.
+          const labelW = nm.length * 14 * 0.55;
+          const flipX = cx + 8 + labelW > W - 3;
           const flipY = cy < M.top + 24;
-          const lx = flipX ? cx - 8 : cx + 8;
+          const lx = flipX
+            ? Math.min(W - 3, Math.max(cx - 8, 3 + labelW))
+            : Math.max(3, Math.min(cx + 8, W - 3 - labelW));
           const ly = flipY ? cy + 18 : cy - 10;
           return (
             <g key={`p${i}`} data-feature={N.point(i)} data-feature-label={`${nm} at (${p.x}, ${p.y})`}>

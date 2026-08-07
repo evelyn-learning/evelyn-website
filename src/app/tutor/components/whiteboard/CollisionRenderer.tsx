@@ -22,7 +22,9 @@ import { InlineMathText } from './InlineMathText';
 
 import React from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
 import { deoverlapLabels, type DeoverlapLabel, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
+import { wrapLabel } from './fraction-bar-layout';
 
 export interface CollisionBody {
   label?: string;
@@ -329,6 +331,19 @@ export default function CollisionRenderer({
     );
   }
 
+  // Momentum annotation, wrapped to the viewBox width (2026-08-07 clip
+  // audit: a long brain-authored annotation used to render as one unwrapped
+  // centered line and clip on BOTH sides). wrapLabel's estimate runs at
+  // fontSize 13 — the same size this text draws at. Lines past the first
+  // two extend the svg height (the space the in-SVG notes line used to
+  // occupy — notes now render as HTML below, see <DiagramNotes>).
+  const momentumLines = momentumAnnotation ? wrapLabel(momentumAnnotation, VIEWBOX_W - 16) : [];
+  const MOMENTUM_LINE_H = 16;
+  const momentumY = PANEL_Y + PANEL_H + 30;
+  const momentumExtraH = momentumLines.length > 0
+    ? Math.max(0, momentumY + (momentumLines.length - 1) * MOMENTUM_LINE_H + 6 - VIEWBOX_H)
+    : 0;
+
   // ── Panel/body geometry + shared label layout (2026-07-19 renderer
   // label-collision audit) ── velocity / mass / "at rest" labels were placed
   // per body with no knowledge of neighbors: head-on 1D collisions cap both
@@ -565,11 +580,14 @@ export default function CollisionRenderer({
     estTextBox(RIGHT_PANEL_X + PANEL_W / 2, PANEL_Y - 8, 'After', 13),
     estTextBox(VIEWBOX_W / 2, 30, `${labelForType(type)} · ${dimension}`, 13),
   ];
-  if (momentumAnnotation) {
-    labelObstacles.push(estTextBox(VIEWBOX_W / 2, PANEL_Y + PANEL_H + 30, momentumAnnotation, 13));
-  }
-  if (notes) {
-    labelObstacles.push(estTextBox(VIEWBOX_W / 2, VIEWBOX_H - 10, notes, 12));
+  if (momentumLines.length > 0) {
+    const momentumW = Math.max(...momentumLines.map((l) => l.length)) * 13 * 0.55;
+    labelObstacles.push({
+      left: VIEWBOX_W / 2 - momentumW / 2,
+      right: VIEWBOX_W / 2 + momentumW / 2,
+      top: momentumY - 13,
+      bottom: momentumY + (momentumLines.length - 1) * MOMENTUM_LINE_H + 4,
+    });
   }
   const resolvedBodyLabels = new Map(
     deoverlapLabels(bodyLabels, { width: VIEWBOX_W, height: VIEWBOX_H }, { obstacles: labelObstacles, baseline: 'alphabetic' })
@@ -661,9 +679,9 @@ export default function CollisionRenderer({
         </div>
       )}
       <svg
-        viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H + warnings.length * 18}`}
+        viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H + momentumExtraH + warnings.length * 18}`}
         xmlns="http://www.w3.org/2000/svg"
-        style={{ width: '100%', height: 'auto', maxHeight: 400 + warnings.length * 18 }}
+        style={{ width: '100%', height: 'auto', maxHeight: 400 + momentumExtraH + warnings.length * 18 }}
       >
         <defs>
           <marker
@@ -710,29 +728,19 @@ export default function CollisionRenderer({
         {renderPanel(beforeGeoms)}
         {renderPanel(afterGeoms)}
 
-        {momentumAnnotation && (
+        {momentumAnnotation && momentumLines.length > 0 && (
           <text
             x={VIEWBOX_W / 2}
-            y={PANEL_Y + PANEL_H + 30}
+            y={momentumY}
             fontSize={13}
             fill={COLORS.text}
             textAnchor="middle"
             fontWeight={600}
-            {...feat('momentum', { cx: VIEWBOX_W / 2, cy: PANEL_Y + PANEL_H + 30, w: Math.max(240, momentumAnnotation.length * 8 + 20), h: 24 }, { width: VIEWBOX_W, height: VIEWBOX_H })}
+            {...feat('momentum', { cx: VIEWBOX_W / 2, cy: momentumY + ((momentumLines.length - 1) * MOMENTUM_LINE_H) / 2, w: Math.min(VIEWBOX_W, Math.max(240, momentumAnnotation.length * 8 + 20)), h: 8 + momentumLines.length * MOMENTUM_LINE_H }, { width: VIEWBOX_W, height: VIEWBOX_H })}
           >
-            {momentumAnnotation}
-          </text>
-        )}
-
-        {notes && (
-          <text
-            x={VIEWBOX_W / 2}
-            y={VIEWBOX_H - 10}
-            fontSize={12}
-            fill={COLORS.muted}
-            textAnchor="middle"
-          >
-            {notes}
+            {momentumLines.map((line, i) => (
+              <tspan key={i} x={VIEWBOX_W / 2} dy={i === 0 ? 0 : MOMENTUM_LINE_H}>{line}</tspan>
+            ))}
           </text>
         )}
 
@@ -741,7 +749,7 @@ export default function CollisionRenderer({
           <text
             key={`warn-${i}`}
             x={VIEWBOX_W / 2}
-            y={VIEWBOX_H + 8 + i * 18}
+            y={VIEWBOX_H + momentumExtraH + 8 + i * 18}
             fontSize={12}
             fill="#b91c1c"
             fontWeight={600}
@@ -751,6 +759,10 @@ export default function CollisionRenderer({
           </text>
         ))}
       </svg>
+      {/* Notes as wrapping HTML below the SVG (shared DiagramNotes idiom —
+          the in-SVG single-line version clipped long captions; 2026-08-07
+          clip audit). */}
+      <DiagramNotes notes={notes} />
     </div>
   );
 }

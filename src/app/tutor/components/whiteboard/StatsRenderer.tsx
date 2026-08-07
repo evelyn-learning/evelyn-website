@@ -251,6 +251,23 @@ function anchorAt(x: number, text: string, fontSize: number): 'start' | 'middle'
   return 'middle';
 }
 
+/** Greedy word-wrap by estimated glyph width (same 0.55 × fontSize factor as
+ *  anchorAt) — 2026-08-07 clip audit: pie legend labels near the right edge
+ *  ran a single line off the fixed 500u viewBox. */
+function wrapByWidth(text: string, maxW: number, fontSize: number): string[] {
+  const maxChars = Math.max(8, Math.floor(maxW / (fontSize * 0.55)));
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = '';
+  for (const w of words) {
+    const next = cur ? `${cur} ${w}` : w;
+    if (next.length > maxChars && cur) { lines.push(cur); cur = w; }
+    else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines.length > 0 ? lines : [text];
+}
+
 function BoxPlot({ boxplot, xLabel }: StatsRendererProps) {
   if (!boxplot || boxplot.datasets.length === 0) return null;
 
@@ -509,6 +526,19 @@ function PieChart({ pie }: StatsRendererProps) {
         const edgeY = cy + r * Math.sin(arc.midAngle);
         const pct = (arc.fraction * 100).toFixed(1).replace(/\.0$/, '') + '%';
 
+        // Legend label — wrapped + edge-clamped (2026-08-07 clip audit): a
+        // long slice label on the right side (anchor=start at labelR) ran off
+        // the viewBox. Wrap to the room left on the label's side of the pie;
+        // clamp each line for unsplittable words.
+        const isRight = Math.cos(arc.midAngle) > 0;
+        const labelTx = lx + (isRight ? 4 : -4);
+        const legendText = `${arc.label}${showPercentages ? ` (${pct})` : ''}`;
+        const legendLines = wrapByWidth(legendText, isRight ? WIDTH - 2 - labelTx : labelTx - 2, 10);
+        const legendLineX = (ln: string) => {
+          const w = ln.length * 10 * 0.55;
+          return isRight ? Math.min(labelTx, WIDTH - 2 - w) : Math.max(labelTx, 2 + w);
+        };
+
         const sliceName = arc.label ? `slice-${featSlug(arc.label)}` : `slice-${arc.index + 1}`;
         return (
           <g key={arc.index} {...feat(sliceName, { cx: cx + (r / 2) * Math.cos(arc.midAngle), cy: cy + (r / 2) * Math.sin(arc.midAngle), w: r + 20, h: r + 20 }, { width: WIDTH, height: HEIGHT })}>
@@ -520,13 +550,13 @@ function PieChart({ pie }: StatsRendererProps) {
 
             {/* Label */}
             <text
-              x={lx + (Math.cos(arc.midAngle) > 0 ? 4 : -4)}
-              y={ly + 4}
-              textAnchor={Math.cos(arc.midAngle) > 0 ? 'start' : 'end'}
+              textAnchor={isRight ? 'start' : 'end'}
               fontSize={10}
               fill="#374151"
             >
-              {arc.label}{showPercentages ? ` (${pct})` : ''}
+              {legendLines.map((ln, li) => (
+                <tspan key={li} x={legendLineX(ln)} y={ly + 4 + (li - (legendLines.length - 1) / 2) * 11}>{ln}</tspan>
+              ))}
             </text>
 
             {/* Percentage inside slice (only if slice is big enough) */}
@@ -784,12 +814,14 @@ function DistributionChart({
       )}
 
       {/* Probability label in the shaded region — dark text with white halo
-          so it stays legible against the light shade fill */}
+          so it stays legible against the light shade fill. Edge-anchored via
+          anchorAt (2026-08-07 clip audit): a tail shade near the plot edge
+          centered the label half off the viewBox. */}
       {probabilityLabel && shadeLabelX !== null && (
         <text
           x={toX(shadeLabelX)}
           y={MARGIN.top + CHART_H / 2}
-          textAnchor="middle"
+          textAnchor={anchorAt(toX(shadeLabelX), probabilityLabel, 14)}
           fontSize={14}
           fontWeight={700}
           fill="#1e293b"
@@ -1118,14 +1150,19 @@ function Scatter({
 
   const xRange = niceRange(xMin, xMax, 6);
   const yRange = niceRange(yMin, yMax, 6);
+  // niceRange extends to the next "nice" value, which can land past the
+  // padded data range — those ticks/gridlines drew beyond the plot (and off
+  // the viewBox on the right). Keep only in-range ticks (2026-08-07 audit).
+  const xTicks = xRange.ticks.filter((t) => t >= xMin && t <= xMax);
+  const yTicks = yRange.ticks.filter((t) => t >= yMin && t <= yMax);
 
   return (
     <g>
       {/* gridlines */}
-      {xRange.ticks.map((t) => (
+      {xTicks.map((t) => (
         <line key={`gx-${t}`} x1={toX(t)} y1={MARGIN.top} x2={toX(t)} y2={MARGIN.top + CHART_H} stroke="#e5e7eb" strokeWidth={1} />
       ))}
-      {yRange.ticks.map((t) => (
+      {yTicks.map((t) => (
         <line key={`gy-${t}`} x1={MARGIN.left} y1={toY(t)} x2={MARGIN.left + CHART_W} y2={toY(t)} stroke="#e5e7eb" strokeWidth={1} />
       ))}
 
@@ -1189,30 +1226,38 @@ function Scatter({
           />
         );
       })}
-      {highlightPoint && (
-        <text
-          x={toX(highlightPoint.x) + 8}
-          y={toY(highlightPoint.y) - 6}
-          fontSize={11}
-          fill="#16a34a"
-          fontWeight={600}
-        >
-          {highlightPoint.label ?? `(${fmt(highlightPoint.x)}, ${fmt(highlightPoint.y)})`}
-        </text>
-      )}
+      {highlightPoint && (() => {
+        // Width-aware anchor flip (2026-08-07 clip audit): a highlight near
+        // xMax hung its start-anchored label off the right viewBox edge.
+        const hlText = highlightPoint.label ?? `(${fmt(highlightPoint.x)}, ${fmt(highlightPoint.y)})`;
+        const hx = toX(highlightPoint.x);
+        const hlFlip = hx + 8 + hlText.length * 11 * 0.55 > WIDTH - 2;
+        return (
+          <text
+            x={hx + (hlFlip ? -8 : 8)}
+            y={toY(highlightPoint.y) - 6}
+            fontSize={11}
+            fill="#16a34a"
+            fontWeight={600}
+            textAnchor={hlFlip ? 'end' : undefined}
+          >
+            {hlText}
+          </text>
+        );
+      })()}
 
       {/* axes */}
       <line x1={MARGIN.left} y1={MARGIN.top} x2={MARGIN.left} y2={MARGIN.top + CHART_H} stroke="#374151" strokeWidth={1.5} />
       <line x1={MARGIN.left} y1={MARGIN.top + CHART_H} x2={MARGIN.left + CHART_W} y2={MARGIN.top + CHART_H} stroke="#374151" strokeWidth={1.5} />
 
       {/* tick labels */}
-      {xRange.ticks.map((t) => (
+      {xTicks.map((t) => (
         <g key={`xt-${t}`}>
           <line x1={toX(t)} y1={MARGIN.top + CHART_H} x2={toX(t)} y2={MARGIN.top + CHART_H + 4} stroke="#374151" strokeWidth={1} />
           <text x={toX(t)} y={MARGIN.top + CHART_H + 18} fontSize={11} textAnchor="middle" fill="#374151">{fmt(t)}</text>
         </g>
       ))}
-      {yRange.ticks.map((t) => (
+      {yTicks.map((t) => (
         <g key={`yt-${t}`}>
           <line x1={MARGIN.left - 4} y1={toY(t)} x2={MARGIN.left} y2={toY(t)} stroke="#374151" strokeWidth={1} />
           <text x={MARGIN.left - 6} y={toY(t) + 4} fontSize={11} textAnchor="end" fill="#374151">{fmt(t)}</text>
@@ -1290,22 +1335,25 @@ export function StatsRenderer(props: StatsRendererProps) {
   }
 
   return (
-    <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ width: '100%', maxWidth: 600, height: 'auto' }}
-      role="img"
-      aria-label={title ?? `${type} chart`}
-    >
-      {/* Title */}
+    <div style={{ width: '100%', maxWidth: 600 }}>
+      {/* Title — HTML above the SVG (R38 pattern, 2026-08-07 clip audit: a
+          long in-SVG title centered over the fixed 500u viewBox clipped on
+          both sides; HTML wraps instead) */}
       {title && (
-        <text x={WIDTH / 2} y={22} textAnchor="middle" fontSize={15} fill="#111827" fontWeight={600}>
+        <div style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, color: '#111827', marginBottom: 2 }}>
           {mathifyDollarSpans(title)}
-        </text>
+        </div>
       )}
-
-      {chart}
-    </svg>
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ width: '100%', height: 'auto' }}
+        role="img"
+        aria-label={title ?? `${type} chart`}
+      >
+        {chart}
+      </svg>
+    </div>
   );
 }
 

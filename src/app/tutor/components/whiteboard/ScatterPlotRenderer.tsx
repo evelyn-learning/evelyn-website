@@ -240,11 +240,14 @@ export default function ScatterPlotRenderer({
           const key = p.series || '__default__';
           const color = p.color || seriesMap.get(key) || DIAGRAM_COLORS.secondary;
           const ptName = p.label ? `point-${featSlug(p.label)}` : `point-${i + 1}`;
+          // Width-aware anchor flip (2026-08-07 clip audit): a labelled point
+          // near the right edge hung its start-anchored label off the viewBox.
+          const labelFlip = p.label ? sx(p.x) + 5 + p.label.length * 9 * 0.55 > VIEWBOX_W - 2 : false;
           return (
             <g key={`pt${i}`} {...feat(ptName, { cx: sx(p.x), cy: sy(p.y), w: 20, h: 20 })}>
               <circle cx={sx(p.x)} cy={sy(p.y)} r={3.5} fill={color} stroke="white" strokeWidth={1} />
               {p.label && (
-                <text x={sx(p.x) + 5} y={sy(p.y) - 5} fontSize={9} fill={DIAGRAM_COLORS.muted}>{p.label}</text>
+                <text x={sx(p.x) + (labelFlip ? -5 : 5)} y={sy(p.y) - 5} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor={labelFlip ? 'end' : undefined}>{p.label}</text>
               )}
             </g>
           );

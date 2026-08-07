@@ -19,6 +19,7 @@ import React from 'react';
 import { DIAGRAM_COLORS } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, formatValue, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { wrapLabel } from './fraction-bar-layout';
 
 export interface MotionSample {
   t: number;
@@ -196,18 +197,48 @@ export default function MotionDiagramRenderer({
               <path d={path} stroke={color} strokeWidth={2} fill="none" />
 
               {/* Rotated series label in the far-left margin (well clear of
-                  the numeric min/max tick labels in the gutter). */}
-              <text
-                x={18}
-                y={midY}
-                fontSize={12}
-                fill={color}
-                textAnchor="middle"
-                fontWeight={700}
-                transform={`rotate(-90 18 ${midY})`}
-              >
-                {label}
-              </text>
+                  the numeric min/max tick labels in the gutter). Budget is
+                  the PANEL height — a long brain-authored label rotated -90
+                  at fontSize 12 used to spill past the viewBox top/bottom
+                  (2026-08-07 clip audit; the audit checker skips
+                  transformed text, so verify by construction): with 3
+                  panels, panelH ≈ 106 and budget ≈ 94, so a 41-char label
+                  (est 41×12×0.55 ≈ 271) wraps to two ≤22-char lines and
+                  scales to fs = 94/(22×0.55) ≈ 7.8–12 → extent ≤ 94,
+                  centered on midY → stays inside the panel. At the 8px
+                  floor a 24-char line runs 24×8×0.55 ≈ 106 — spilling only
+                  ≈6px into the 8px inter-panel gap, never off-canvas.
+                  Lines are tspans offset in pre-rotation y, which the
+                  rotate(-90) maps to screen-x stacking beside the axis. */}
+              {(() => {
+                const labelBudget = panelH - gap - 4;
+                const estW = label.length * 12 * 0.55;
+                // wrapLabel estimates at fontSize 13 → rescale its cap so
+                // the char budget matches 12px; cap at ~half the label so
+                // the wrap lands on two lines.
+                const lines = estW > labelBudget
+                  ? wrapLabel(label, (Math.max(labelBudget, estW / 2 + 12) * 13) / 12)
+                  : [label];
+                const longest = Math.max(...lines.map((l) => l.length), 1);
+                const labelFs = Math.max(8, Math.min(12, labelBudget / (longest * 0.55)));
+                return (
+                  <text
+                    x={18}
+                    y={midY}
+                    fontSize={labelFs}
+                    fill={color}
+                    textAnchor="middle"
+                    fontWeight={700}
+                    transform={`rotate(-90 18 ${midY})`}
+                  >
+                    {lines.length === 1
+                      ? label
+                      : lines.map((line, li) => (
+                        <tspan key={li} x={18} y={midY + (li - (lines.length - 1) / 2) * (labelFs + 2)}>{line}</tspan>
+                      ))}
+                  </text>
+                );
+              })()}
 
               {/* Numeric min/max ticks in the gutter immediately left of the panel. */}
               <text x={pad.left - 6} y={panelTop + 10} fontSize={10} fill={DIAGRAM_COLORS.muted} textAnchor="end">{formatValue(vHi)}</text>

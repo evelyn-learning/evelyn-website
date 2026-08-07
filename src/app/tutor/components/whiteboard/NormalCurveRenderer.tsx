@@ -37,6 +37,16 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
   const xAt = (x: number) => PAD_L + ((x - xMin) / (xMax - xMin)) * plotW;
   const yAt = (y: number) => PAD_T + plotH - (y / yMax) * plotH;
 
+  // Clamp middle-anchored value labels into the viewBox so marks near the
+  // plot edges never clip (ProjectileMotionRenderer estW/clampX pattern,
+  // audit 2026-08-07).
+  const estW = (s: string, fontSize: number) => s.length * fontSize * 0.55;
+  const clampX = (x: number, w: number) => {
+    const left = x - w / 2;
+    const shift = Math.max(3 - left, 0) - Math.max(left + w - (W - 3), 0);
+    return x + shift;
+  };
+
   // Curve points.
   const curve: Array<[number, number]> = [];
   for (let i = 0; i <= N; i += 1) {
@@ -128,7 +138,7 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
         {mean >= xMin && mean <= xMax && (
           <>
             <line x1={xAt(mean)} y1={yAt(0)} x2={xAt(mean)} y2={yAt(peak)} stroke={COLOR_MEAN} strokeWidth={1.8} strokeDasharray="6 4" />
-            <text x={xAt(mean)} y={yAt(peak) - 6} fontSize={11} textAnchor="middle" fill={COLOR_MEAN} fontWeight={600}>
+            <text x={clampX(xAt(mean), estW(`μ = ${Number(mean.toFixed(2))}`, 11))} y={yAt(peak) - 6} fontSize={11} textAnchor="middle" fill={COLOR_MEAN} fontWeight={600}>
               μ = {Number(mean.toFixed(2))}
             </text>
           </>
@@ -167,7 +177,7 @@ export function NormalCurveRenderer({ figure }: { figure: NormalCurveFigure }) {
           >
             <line x1={xAt(m.x)} y1={yAt(0)} x2={xAt(m.x)} y2={yAt(pdf(m.x))} stroke={COLOR_MARK} strokeWidth={1.5} strokeDasharray="3 3" />
             {m.label && (
-              <text x={xAt(m.x)} y={yAt(pdf(m.x)) - 4} fontSize={11} textAnchor="middle" fill={COLOR_MARK} fontWeight={600}>
+              <text x={clampX(xAt(m.x), estW(m.label, 11))} y={yAt(pdf(m.x)) - 4} fontSize={11} textAnchor="middle" fill={COLOR_MARK} fontWeight={600}>
                 {m.label}
               </text>
             )}

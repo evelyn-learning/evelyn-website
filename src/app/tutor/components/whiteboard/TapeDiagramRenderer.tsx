@@ -17,14 +17,48 @@ export interface TapeDiagramRendererProps {
 }
 
 const W = 720;
-const PAD_X = 100; // room for bar name on the left
+const PAD_X = 100; // minimum room for bar name on the left
 const RIGHT_PAD = 32;
 const BAR_H = 56;
 const BAR_GAP = 28;
 const TOP_PAD = 36;
 const BRACE_H = 22;
+const NAME_FONT = 14;
+const NAME_GAP = 12; // gap between the name's right edge and the bar
+const NAME_LINE_H = 16;
+/** Max estimated name-line width before wrapping — the gutter grows to the
+ *  longest wrapped line so end-anchored names never clip (audit 2026-08-07). */
+const NAME_WRAP_W = 150;
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316'];
+
+/** Average-glyph width heuristic — same 0.55 factor as fraction-bar-layout.ts. */
+function estW(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.55;
+}
+
+/** Greedy word wrap on the estimated width (fraction-bar-layout.ts pattern). */
+function wrapWords(text: string, maxWidth: number, fontSize: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  if (words.length === 0) return [text];
+  const lines: string[] = [];
+  let line = words[0];
+  for (const word of words.slice(1)) {
+    const candidate = `${line} ${word}`;
+    if (estW(candidate, fontSize) <= maxWidth) line = candidate;
+    else { lines.push(line); line = word; }
+  }
+  lines.push(line);
+  return lines;
+}
+
+/** Clamp a label's x so its estimated box stays inside the viewBox
+ *  (ProjectileMotionRenderer clampX pattern). */
+function clampX(x: number, w: number, anchor: 'start' | 'middle' | 'end'): number {
+  const left = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+  const shift = Math.max(3 - left, 0) - Math.max(left + w - (W - 3), 0);
+  return x + shift;
+}
 
 function totalOf(bar: TapeBar): number {
   return bar.segments.reduce((s, seg) => s + seg.length, 0);
@@ -32,7 +66,12 @@ function totalOf(bar: TapeBar): number {
 
 export function TapeDiagramRenderer({ figure }: TapeDiagramRendererProps) {
   const { bars, title, sharedScale } = figure;
-  const usableW = W - PAD_X - RIGHT_PAD;
+
+  // Left gutter sized from the longest wrapped bar name (min PAD_X).
+  const nameLines = bars.map((bar) => (bar.name ? wrapWords(bar.name, NAME_WRAP_W, NAME_FONT) : []));
+  const maxNameW = Math.max(0, ...nameLines.flatMap((ls) => ls.map((l) => estW(l, NAME_FONT))));
+  const padX = Math.max(PAD_X, maxNameW + NAME_GAP + 8);
+  const usableW = W - padX - RIGHT_PAD;
 
   // When sharedScale is on, every bar uses the same px-per-unit so
   // segment lengths are visually comparable across bars.
@@ -51,21 +90,29 @@ export function TapeDiagramRenderer({ figure }: TapeDiagramRendererProps) {
           const total = totalOf(bar);
           const barW = pxPerUnit !== null ? total * pxPerUnit : usableW;
           const yTop = TOP_PAD + bi * rowH;
-          const xStart = PAD_X;
+          const xStart = padX;
           let cursorX = xStart;
           return (
             <g key={`bar-${bi}`} data-feature={`bar-${bi}`}>
-              {/* Bar name on the left */}
+              {/* Bar name on the left — wrapped tspans, centered on the bar */}
               {bar.name && (
                 <text
-                  x={PAD_X - 12}
+                  x={padX - NAME_GAP}
                   y={yTop + BAR_H / 2 + 5}
-                  fontSize={14}
+                  fontSize={NAME_FONT}
                   textAnchor="end"
                   fill="#374151"
                   fontWeight={600}
                 >
-                  {bar.name}
+                  {nameLines[bi].map((line, li) => (
+                    <tspan
+                      key={li}
+                      x={padX - NAME_GAP}
+                      y={yTop + BAR_H / 2 + 5 + (li - (nameLines[bi].length - 1) / 2) * NAME_LINE_H}
+                    >
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
               )}
               {/* Segments */}
@@ -91,7 +138,7 @@ export function TapeDiagramRenderer({ figure }: TapeDiagramRendererProps) {
                     />
                     {labelText && (
                       <text
-                        x={x + segW / 2}
+                        x={clampX(x + segW / 2, estW(labelText, 14), 'middle')}
                         y={yTop + BAR_H / 2 + 5}
                         fontSize={14}
                         textAnchor="middle"
@@ -114,7 +161,7 @@ export function TapeDiagramRenderer({ figure }: TapeDiagramRendererProps) {
                     strokeWidth={1.5}
                   />
                   <text
-                    x={xStart + barW / 2}
+                    x={clampX(xStart + barW / 2, estW(bar.totalLabel, 13), 'middle')}
                     y={yTop + BAR_H + 26}
                     fontSize={13}
                     textAnchor="middle"

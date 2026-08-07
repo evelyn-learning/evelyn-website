@@ -14,6 +14,7 @@ import React from 'react';
 import { DIAGRAM_COLORS, withAlpha } from '@/lib/tutor/diagrams/theme';
 import { DIAGRAM_VIEWBOX, feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { DiagramNotes } from '@/lib/tutor/diagrams/DiagramNotes';
+import { estimateLabelWidth, wrapLabel } from './fraction-bar-layout';
 
 export interface CellDiagramProps {
   title?: string;
@@ -228,23 +229,30 @@ export default function CellDiagramRenderer({ title, type, highlight, notes }: C
           const anchorY = org.labelPos.y;
           // Place label outside the cell. For left-side labels the text
           // is right-anchored, so its visible left edge is roughly
-          // `outside.x - <label-width>` — clamping to 10 leaves a
-          // ~22-char label like "Endoplasmic Reticulum" with its start
-          // off the viewBox. Clamp to ~140 so the longest expected
-          // label still lands inside the canvas (observed 2026-04-30
-          // cell-bio session: "lasmic Reticulum" / "lgi Apparatus" cut
-          // on the left). Right side similarly clamped against the
-          // right edge.
-          const outside = { x: anchorX > cx ? Math.min(W - 140, anchorX + 80) : Math.max(140, anchorX - 80), y: anchorY + (i % 2 === 0 ? -20 : 14) };
+          // `outside.x - <label-width>` — clamping to a FIXED 140 (sized
+          // for the longest organelle NAME) left a longer highlight NOTE
+          // clipped on the left (2026-08-07 clip audit). Wrap the note to
+          // (usually) two lines and clamp against the callout's own
+          // estimated width — name and note lines alike — so the widest
+          // line still lands inside the canvas. Right side mirrored.
+          // (wrapLabel estimates at fontSize 13; the ×13/9 rescale keeps
+          // the char budget correct for the 9px note text.)
+          const noteCapChars = h?.note ? Math.max(30, Math.ceil(h.note.length * 0.6)) : 0;
+          const noteLines = h?.note ? wrapLabel(h.note, noteCapChars * 13 * 0.55) : [];
+          const calloutW = Math.max(
+            estimateLabelWidth(org.label, 11),
+            ...noteLines.map((line) => estimateLabelWidth(line, 9)),
+          );
+          const outside = { x: anchorX > cx ? Math.min(W - 10 - calloutW, anchorX + 80) : Math.max(10 + calloutW, anchorX - 80), y: anchorY + (i % 2 === 0 ? -20 : 14) };
           return (
             <g key={org.id}>
               <line x1={anchorX} y1={anchorY} x2={outside.x} y2={outside.y} stroke={DIAGRAM_COLORS.muted} strokeWidth={0.75} />
               <text x={outside.x} y={outside.y - 2} fontSize={11} fill={DIAGRAM_COLORS.text} fontWeight={600} textAnchor={anchorX > cx ? 'start' : 'end'}>
                 {org.label}
               </text>
-              {h?.note && (
-                <text x={outside.x} y={outside.y + 10} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor={anchorX > cx ? 'start' : 'end'}>{h.note}</text>
-              )}
+              {noteLines.map((line, li) => (
+                <text key={li} x={outside.x} y={outside.y + 10 + li * 11} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor={anchorX > cx ? 'start' : 'end'}>{line}</text>
+              ))}
             </g>
           );
         })}

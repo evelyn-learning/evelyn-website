@@ -932,6 +932,21 @@ function idealOffset(a: LabelBox): { dx: number; dy: number } {
  *   • doesn't anchor label A in place while pushing B halfway across.
  *   • converges symmetrically when two labels both want the same spot.
  */
+/** Horizontal shift that brings a label's estimated box back inside the
+ *  viewBox, [pad, SVG_WIDTH - pad], honoring its text-anchor. A label wider
+ *  than the whole canvas is centered instead (pinning it to one edge would
+ *  just clip the other side of the same box). Returns 0 when already
+ *  inside. Added 2026-08-07 (clip audit): the force-directed resolver was
+ *  bounds-blind, so a start-anchored point label near the right edge — or
+ *  a wide middle-anchored segment label — drifted past SVG_WIDTH and got
+ *  clipped by the viewport. */
+function labelEdgeShift(l: LabelBox): number {
+  const pad = 3;
+  if (l.w >= SVG_WIDTH - 2 * pad) return SVG_WIDTH / 2 - labelCenter(l).x;
+  const left = textLeft(l);
+  return Math.max(pad - left, 0) - Math.max(left + l.w - (SVG_WIDTH - pad), 0);
+}
+
 function resolveLabelCollisions(
   labels: LabelBox[],
   /** Axis pixel positions when both axes are visible. The resolver
@@ -947,6 +962,17 @@ function resolveLabelCollisions(
   const AXIS_BUFFER = 4;        // distance from axis line considered "too close"
   const SPRING_K = 0.06;        // fraction of displacement reverted per iter
   const MIN_DELTA = 0.5;        // stop early when no label moves more than this
+  // PRE-PASS: clamp every label (and its spring rest position, so the
+  // spring doesn't spend the whole iteration fighting the clamp) into the
+  // viewBox before collision forces run — collision checks then operate on
+  // on-canvas positions.
+  for (const l of labels) {
+    const s = labelEdgeShift(l);
+    if (s !== 0) {
+      l.x += s;
+      l.idealX += s;
+    }
+  }
   for (let iter = 0; iter < MAX_ITERS; iter++) {
     let maxMove = 0;
     for (let i = 0; i < labels.length; i++) {
@@ -998,6 +1024,11 @@ function resolveLabelCollisions(
       if (move > maxMove) maxMove = move;
     }
     if (maxMove < MIN_DELTA) break;
+  }
+  // POST-PASS: repulsion may have nudged a label back over the edge during
+  // the iterations above — clamp the final positions into the viewBox.
+  for (const l of labels) {
+    l.x += labelEdgeShift(l);
   }
 }
 

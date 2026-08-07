@@ -58,6 +58,18 @@ export interface CoordinatePlaneProps {
 const VIEWBOX_W = DIAGRAM_VIEWBOX.width;
 const VIEWBOX_H = DIAGRAM_VIEWBOX.height;
 
+/** Average-glyph width estimate + x-clamp into the viewBox
+ *  (ProjectileMotionRenderer estW/clampX pattern, audit 2026-08-07) so
+ *  point/vector/segment/axis labels near the range edges never clip. */
+function estW(text: string, fontSize: number): number {
+  return text.length * fontSize * 0.55;
+}
+function clampLabelX(x: number, w: number, anchor: 'start' | 'middle' | 'end'): number {
+  const left = anchor === 'start' ? x : anchor === 'end' ? x - w : x - w / 2;
+  const shift = Math.max(3 - left, 0) - Math.max(left + w - (VIEWBOX_W - 3), 0);
+  return x + shift;
+}
+
 /**
  * Pure manifest builder — enumerates the named features this renderer emits
  * for a given set of props. MUST stay in sync with the feat() calls below.
@@ -232,7 +244,7 @@ export default function CoordinatePlaneRenderer({
               <g {...feat('grid', { cx: pad.left + plotW / 2, cy: pad.top + plotH / 2, w: plotW, h: plotH })} />
               {/* Axis labels */}
               <text x={pad.left + plotW - 2} y={axisY - 4} fontSize={11} fill={DIAGRAM_COLORS.axis} textAnchor="end">{xLabel}</text>
-              <text x={axisX + 4} y={pad.top + 10} fontSize={11} fill={DIAGRAM_COLORS.axis}>{yLabel}</text>
+              <text x={clampLabelX(axisX + 4, estW(yLabel, 11), 'start')} y={pad.top + 10} fontSize={11} fill={DIAGRAM_COLORS.axis}>{yLabel}</text>
               {/* Tick numbers (skip origin duplication) */}
               {xTicks.filter((t) => t !== 0).map((t) => (
                 <text key={`xl${t}`} x={sx(t)} y={axisY + 12} fontSize={9} fill={DIAGRAM_COLORS.muted} textAnchor="middle">{t}</text>
@@ -268,7 +280,7 @@ export default function CoordinatePlaneRenderer({
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2} strokeDasharray={s.dashed ? '6 4' : undefined}
                 markerEnd={s.arrow ? `url(#${arrowMarkerId(color, 'cp-arrow')})` : undefined} />
               {s.label && (
-                <text x={segLx} y={segLy} fontSize={11} fill={color} textAnchor="middle" fontWeight={600}>{s.label}</text>
+                <text x={clampLabelX(segLx, estW(s.label, 11), 'middle')} y={segLy} fontSize={11} fill={color} textAnchor="middle" fontWeight={600}>{s.label}</text>
               )}
             </g>
           );
@@ -298,7 +310,7 @@ export default function CoordinatePlaneRenderer({
               <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth={2.5}
                 markerEnd={`url(#${arrowMarkerId(color, 'cp-arrow')})`} />
               {v.label && (
-                <text x={vecLx} y={vecLy} fontSize={12} fill={color} fontWeight={700}>{v.label}</text>
+                <text x={clampLabelX(vecLx, estW(v.label, 12), 'start')} y={vecLy} fontSize={12} fill={color} fontWeight={700}>{v.label}</text>
               )}
             </g>
           );
@@ -323,7 +335,7 @@ export default function CoordinatePlaneRenderer({
             <g key={`pt${i}`} {...feat(ptName, { cx, cy, w: 28, h: 28 })}>
               <circle cx={cx} cy={cy} r={4} fill={color} stroke="white" strokeWidth={1.5} />
               {p.label && (
-                <text x={cx + corner.dx} y={cy + corner.dy} fontSize={11} fill={DIAGRAM_COLORS.text} fontWeight={600} textAnchor={corner.anchor}>{p.label}</text>
+                <text x={clampLabelX(cx + corner.dx, estW(p.label, 11), corner.anchor)} y={cy + corner.dy} fontSize={11} fill={DIAGRAM_COLORS.text} fontWeight={600} textAnchor={corner.anchor}>{p.label}</text>
               )}
             </g>
           );
