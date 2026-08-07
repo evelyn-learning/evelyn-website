@@ -11,6 +11,22 @@ import { InlineMathText } from './InlineMathText';
 
 import { useMemo } from 'react';
 import { feat, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+// Width-aware layout (2026-08-07, embed-1786139818867): the viewBox used to
+// be sized from the shapes alone, so a long item label centered under a
+// small shape clipped on both sides ("One planted square out of four" →
+// "anted square out"). All sizing constants + the layout pass now live in
+// the pure module so the unit suite exercises them headless.
+import {
+  computeFractionLayout,
+  gridDimensions,
+  BAR_WIDTH,
+  BAR_HEIGHT,
+  CIRCLE_RADIUS,
+  GRID_CELL,
+  ITEM_GAP,
+  LABEL_FONT_SIZE,
+  LABEL_LINE_HEIGHT,
+} from './fraction-bar-layout';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -39,16 +55,6 @@ const DEFAULT_COLOR = '#2563eb';
 const UNSHADED_COLOR = '#f1f5f9';
 const BORDER_COLOR = '#cbd5e1';
 const LABEL_COLOR = '#334155';
-
-/** Spacing and sizing (in SVG user units) */
-const BAR_WIDTH = 160;
-const BAR_HEIGHT = 32;
-const CIRCLE_RADIUS = 48;
-const GRID_CELL = 28;
-
-const ITEM_GAP = 40; // gap between items
-const PADDING = 24; // canvas padding
-const LABEL_OFFSET = 22; // space below shape for label text
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -89,15 +95,6 @@ function sectorPath(
     `A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`,
     'Z',
   ].join(' ');
-}
-
-/**
- * Compute a roughly-square grid layout (rows x cols) for `total` cells.
- */
-function gridDimensions(total: number): { rows: number; cols: number } {
-  const cols = Math.ceil(Math.sqrt(total));
-  const rows = Math.ceil(total / cols);
-  return { rows, cols };
 }
 
 // ---------------------------------------------------------------------------
@@ -243,24 +240,6 @@ function renderGrid(
 }
 
 // ---------------------------------------------------------------------------
-// Measurement helpers
-// ---------------------------------------------------------------------------
-
-/** Return the bounding width and height of a single fraction item's shape. */
-function itemShapeSize(item: FractionItem): { w: number; h: number } {
-  const style = item.style ?? 'bar';
-  if (style === 'bar') {
-    return { w: BAR_WIDTH, h: BAR_HEIGHT };
-  }
-  if (style === 'circle') {
-    return { w: CIRCLE_RADIUS * 2, h: CIRCLE_RADIUS * 2 };
-  }
-  // Grid
-  const { rows, cols } = gridDimensions(item.denominator);
-  return { w: cols * GRID_CELL, h: rows * GRID_CELL };
-}
-
-// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -372,41 +351,14 @@ export function FractionBarRenderer({
   showComparison = false,
 }: FractionBarRendererProps) {
   /**
-   * Pre-compute positions and total SVG dimensions so the viewBox
-   * scales automatically to fit all items.
+   * Pre-compute positions and total SVG dimensions so the viewBox scales
+   * automatically to fit all items — INCLUDING their (possibly wrapped)
+   * labels, so a long label under a small shape can't clip.
    */
-  const { positions, viewWidth, viewHeight } = useMemo(() => {
-    const pos: Array<{ x: number; y: number; w: number; h: number }> = [];
-    let cursorX = PADDING;
-    let cursorY = PADDING;
-    let maxW = 0;
-    let maxH = 0;
-
-    for (const item of items) {
-      const { w, h } = itemShapeSize(item);
-
-      if (layout === 'horizontal') {
-        pos.push({ x: cursorX, y: cursorY, w, h });
-        cursorX += w + ITEM_GAP;
-        maxW = cursorX;
-        maxH = Math.max(maxH, cursorY + h + LABEL_OFFSET + PADDING);
-      } else {
-        pos.push({ x: cursorX, y: cursorY, w, h });
-        cursorY += h + LABEL_OFFSET + ITEM_GAP;
-        maxW = Math.max(maxW, cursorX + w + PADDING);
-        maxH = cursorY;
-      }
-    }
-
-    // Add trailing padding
-    if (layout === 'horizontal') {
-      maxW += PADDING - ITEM_GAP; // remove last gap, add padding
-    } else {
-      maxH += PADDING - ITEM_GAP;
-    }
-
-    return { positions: pos, viewWidth: Math.max(maxW, 100), viewHeight: Math.max(maxH, 80) };
-  }, [items, layout, title]);
+  const { positions, viewWidth, viewHeight } = useMemo(
+    () => computeFractionLayout(items, layout),
+    [items, layout],
+  );
 
   return (
     <div className="w-full flex flex-col items-center gap-2">
@@ -428,39 +380,38 @@ export function FractionBarRenderer({
 
           const color = item.highlightColor ?? DEFAULT_COLOR;
           const style = item.style ?? 'bar';
-          const labelText = item.label ?? `${item.numerator}/${item.denominator}`;
-
-          // Determine shape center-x for label alignment
-          const labelX = pos.x + pos.w / 2;
-          const labelY = pos.y + pos.h + LABEL_OFFSET - 4;
 
           return (
-            <g key={idx} {...feat(`bar-${idx + 1}`, { cx: pos.x + pos.w / 2, cy: pos.y + pos.h / 2, w: pos.w + 10, h: pos.h + 10 }, { width: viewWidth, height: viewHeight })}>
-              {/* Shape */}
-              {style === 'bar' && renderBar(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
+            <g key={idx} {...feat(`bar-${idx + 1}`, { cx: pos.shapeX + pos.shapeW / 2, cy: pos.shapeY + pos.shapeH / 2, w: pos.shapeW + 10, h: pos.shapeH + 10 }, { width: viewWidth, height: viewHeight })}>
+              {/* Shape — centered inside the item box when the label is wider */}
+              {style === 'bar' && renderBar(pos.shapeX, pos.shapeY, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
               {style === 'circle' &&
                 renderCircle(
-                  pos.x + CIRCLE_RADIUS,
-                  pos.y + CIRCLE_RADIUS,
+                  pos.shapeX + CIRCLE_RADIUS,
+                  pos.shapeY + CIRCLE_RADIUS,
                   item.numerator,
                   item.denominator,
                   color,
                   idx,
                   { width: viewWidth, height: viewHeight },
                 )}
-              {style === 'grid' && renderGrid(pos.x, pos.y, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
+              {style === 'grid' && renderGrid(pos.shapeX, pos.shapeY, item.numerator, item.denominator, color, idx, { width: viewWidth, height: viewHeight })}
 
-              {/* Fraction label */}
+              {/* Fraction label — wrapped lines, each centered */}
               <text
-                x={labelX}
-                y={labelY}
+                x={pos.labelX}
+                y={pos.labelY}
                 textAnchor="middle"
-                fontSize={13}
+                fontSize={LABEL_FONT_SIZE}
                 fontWeight={500}
                 fill={LABEL_COLOR}
                 fontFamily="system-ui, sans-serif"
               >
-                {labelText}
+                {pos.labelLines.map((line, li) => (
+                  <tspan key={li} x={pos.labelX} dy={li === 0 ? 0 : LABEL_LINE_HEIGHT}>
+                    {line}
+                  </tspan>
+                ))}
               </text>
             </g>
           );
@@ -474,10 +425,11 @@ export function FractionBarRenderer({
           const next = positions[idx + 1];
           if (!next) return null;
 
-          // Vertical dotted line halfway between current item's right edge and next item's left edge
+          // Vertical dotted line halfway between current item's right edge and next item's left edge.
+          // Span the SHAPES (not the item boxes — those now include label lines).
           const lineX = pos.x + pos.w + ITEM_GAP / 2;
-          const topY = Math.min(pos.y, next.y) - 4;
-          const bottomY = Math.max(pos.y + pos.h, next.y + next.h) + 4;
+          const topY = Math.min(pos.shapeY, next.shapeY) - 4;
+          const bottomY = Math.max(pos.shapeY + pos.shapeH, next.shapeY + next.shapeH) + 4;
 
           return (
             <line
