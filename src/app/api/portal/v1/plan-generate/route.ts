@@ -7,12 +7,13 @@
  * text->plan generation pipeline (`generate-from-text.ts`, already driving
  * `/api/tutor/plan-from-text`) and adds:
  *   - portal HMAC auth (`withPortalAuth`)
- *   - a topic/grade-band/length-bucket generation cache (Task 3) so repeat
- *     requests for "the same lesson" skip the LLM entirely
+ *   - a topic/subject/grade-band/length-bucket/locale generation cache
+ *     (Task 3, extended here — see generation-cache.ts) so repeat requests
+ *     for "the same lesson" skip the LLM entirely
  *   - durable persistence (upsertLessonPlan) — NOT best-effort here; if
  *     persistence fails we return 502 so the portal falls back to freestyle
  *     rather than minting a session pointed at a plan that doesn't exist
- *   - a contract-shaped PlanGenerateResponse
+ *   - a contract-shaped, schema-validated PlanGenerateResponse
  *
  * Mode decision mirrors `/api/tutor/plan-from-text/route.ts` EXACTLY (Stage
  * 1 extracts the LO list; Y = LOs found vs X = maxLOsForBudget(sessionMinutes,
@@ -20,21 +21,23 @@
  * POST /api/portal/v1/plan-expand (Task 5), Y <= X runs Stage 2 inline and
  * returns a 'full' plan) — kept in lockstep so both entry points behave
  * identically for the same input. The one difference: this endpoint never
- * hard-fails a generation. On a Stage 1 / Stage 2 failure it falls through
- * to `generatePlanFromText`'s deterministic fallback plan (same one used by
- * the one-shot pipeline) and reports `generatorOk: false` — a usable
- * skeleton beats no plan for a portal session, but it's worth a spot-review.
+ * hard-fails a generation. On a Stage 1 / Stage 2 failure it serves
+ * `generate-from-text.ts`'s deterministic `fallbackPlan` directly (no
+ * retry — see the comment at each failure branch) and reports
+ * `generatorOk: false` — a usable skeleton beats no plan for a portal
+ * session, but it's never written into the generation cache (see
+ * `generatedPlanMetadata` in plan-generate-contract.ts) and it's worth a
+ * spot-review.
  */
 
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import {
   extractLearningObjectives,
   expandSegmentsForLOs,
   buildPickerPlan,
-  generatePlanFromText,
+  fallbackPlan,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
@@ -42,71 +45,15 @@ import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generatio
 import { parseLessonPlan } from '@/lib/tutor/lesson-plan/parser';
 import { LESSON_PLAN_SCHEMA_VERSION } from '@/lib/tutor/lesson-plan/types';
 import type { LessonPlan, Segment } from '@/lib/tutor/lesson-plan/types';
+import {
+  PlanGenerateRequestSchema,
+  PlanGenerateResponseSchema,
+  toResponse,
+  generatedPlanMetadata,
+  type PlanGenerateRequest,
+} from '@/lib/tutor/lesson-plan/plan-generate-contract';
 
 export const runtime = 'nodejs';
-
-// TODO(contract v1.9.0): import from @evelyn/portal-contract once the engine's
-// npm pin bumps past v1.8.0 (the tag exists in the portal-contract repo as of
-// this writing but hasn't been pushed to GitHub yet — `npm install` of the
-// new tag isn't possible right now). These two schemas are copied VERBATIM
-// from portal-contract's `src/v1/schemas.ts` (commit fd954d0, "feat(v1.9.0):
-// additive plan-generate/plan-expand schemas for runtime lesson generation").
-// Swap this block for the real import at ship time (Task 11) and delete it.
-const PlanGenerateRequestSchema = z.object({
-  /** Source text: a normalized topic (Phase 1) or pasted material (Phase 2). */
-  text: z.string().min(3).max(8000),
-  subject: z.string().min(1),
-  grade: z.string().min(1),
-  topic: z.string().max(300).optional(),
-  locale: z.string().optional(),
-  /** Target session length; engine clamps to [5, 120]. */
-  sessionMinutes: z.number().int().min(5).max(120).optional(),
-});
-type PlanGenerateRequest = z.infer<typeof PlanGenerateRequestSchema>;
-
-const PlanLoSummarySchema = z.object({
-  id: z.string(),
-  description: z.string(),
-});
-
-const PlanGenerateResponseSchema = z.object({
-  planId: z.string(),
-  title: z.string(),
-  /** 'full' = plan ready to run; 'picker' = LOs exceed budget, caller must pick then call plan-expand. */
-  mode: z.enum(['full', 'picker']),
-  los: z.array(PlanLoSummarySchema),
-  /** Max LOs the session budget fits (picker mode: how many the student may pick). */
-  maxPickableLos: z.number().int().positive(),
-  estimatedMinutes: z.number().int().positive(),
-  /** False when the engine served its deterministic fallback plan. */
-  generatorOk: z.boolean(),
-  cached: z.boolean(),
-});
-type PlanGenerateResponse = z.infer<typeof PlanGenerateResponseSchema>;
-// --- end TODO(contract v1.9.0) block ---
-
-/** `sessionMinutes` is always the CURRENT request's clamped value, not
- *  whatever the plan happened to be generated under — on a cache hit two
- *  requests can land in the same length bucket (e.g. 22 min and 28 min
- *  both bucket to 'std') without sharing an exact sessionMinutes, and
- *  maxPickableLos must reflect what THIS caller asked for. */
-function toResponse(
-  plan: LessonPlan,
-  flags: { cached: boolean; sessionMinutes: number; generatorOk?: boolean },
-): PlanGenerateResponse {
-  const generatorOk = flags.generatorOk ?? plan.metadata?.generatorOk !== false;
-  const mode: 'full' | 'picker' = plan.metadata?.pendingPicker === true ? 'picker' : 'full';
-  return {
-    planId: plan.id,
-    title: plan.title,
-    mode,
-    los: plan.los.map((lo) => ({ id: lo.id, description: lo.description })),
-    maxPickableLos: maxLOsForBudget({ sessionMinutes: flags.sessionMinutes, grade: plan.grade }),
-    estimatedMinutes: plan.estimatedMinutes,
-    generatorOk,
-    cached: flags.cached,
-  };
-}
 
 const INTRO_SEGMENT_GOAL =
   'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.';
@@ -119,10 +66,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
   const { text, subject, grade, topic, locale }: PlanGenerateRequest = parsed.data;
   const sessionMinutes = clampSessionMinutes(parsed.data.sessionMinutes);
 
-  const cacheKey = topicCacheKey({ topic: topic ?? text, grade, sessionMinutes });
+  const cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale });
   const cachedPlan = await findCachedPlan(cacheKey);
   if (cachedPlan) {
-    return NextResponse.json(toResponse(cachedPlan, { cached: true, sessionMinutes }));
+    return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));
   }
 
   const genInput = { text, subject, grade, topic, locale };
@@ -133,12 +80,14 @@ export const POST = withPortalAuth(async (_req, auth) => {
 
   const stage1 = await extractLearningObjectives(genInput);
   if (!stage1.ok || stage1.los.length === 0) {
-    // Stage 1 failed outright — fall through to the one-shot pipeline's
-    // deterministic fallback rather than 502ing (portal treats a fallback
-    // skeleton as usable; logged below for spot-review).
-    const fallback = await generatePlanFromText(genInput);
-    plan = fallback.plan;
-    generatorOk = fallback.ok;
+    // Stage 1 failed outright — serve the canonical fallback directly.
+    // Do NOT retry via the one-shot pipeline: that would re-run Stage 1
+    // (the exact stage that just failed) and, on a retry success, hand
+    // back a mode:'full' plan that was never checked against X — an
+    // over-budget plan that breaks parity with plan-from-text. A usable
+    // 1-LO skeleton beats a second live call at synchronous request time.
+    plan = fallbackPlan(genInput, stage1.reason);
+    generatorOk = false;
   } else if (stage1.los.length > X) {
     // Y > X: hand back a picker plan (all discovered LOs, unexpanded).
     // The portal shows a picker UI and resolves via plan-expand (Task 5).
@@ -156,9 +105,9 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // Stage 1 call since we already ran it above).
     const stage2 = await expandSegmentsForLOs(stage1.los, genInput);
     if (!stage2.ok || stage2.segments.length === 0) {
-      const fallback = await generatePlanFromText(genInput);
-      plan = fallback.plan;
-      generatorOk = fallback.ok;
+      // Same no-retry rule as the Stage 1 failure above.
+      plan = fallbackPlan(genInput, stage2.reason);
+      generatorOk = false;
     } else {
       const introSegment: Segment = { id: 'intro', kind: 'hook', goal: INTRO_SEGMENT_GOAL };
       try {
@@ -185,32 +134,27 @@ export const POST = withPortalAuth(async (_req, auth) => {
         });
         generatorOk = true;
       } catch (err) {
-        console.warn('[plan-generate] full-plan parse failed, falling back:', (err as Error).message);
-        const fallback = await generatePlanFromText(genInput);
-        plan = fallback.plan;
-        generatorOk = fallback.ok;
+        console.warn('[plan-generate] full-plan parse failed, serving fallback:', (err as Error).message);
+        plan = fallbackPlan(genInput, `parse failed: ${(err as Error).message}`);
+        generatorOk = false;
       }
     }
   }
 
   if (!generatorOk) {
-    console.warn(`[plan-generate] served fallback plan (generatorOk=false) for cacheKey="${cacheKey}"`);
+    console.warn(`[plan-generate] served fallback plan (generatorOk=false), NOT cached, for cacheKey="${cacheKey}"`);
   }
 
   // Mint the durable id and stamp portal-owned metadata. Overrides the
   // pipeline's own minted id (freestyle-*, freestyle-fallback-*) — the
   // portal contract needs a stable "gen-" prefix it can recognize.
+  // generatedPlanMetadata omits cacheKey when generatorOk is false, so a
+  // fallback skeleton is persisted (inspectable, has a durable id) but
+  // never becomes the cached answer for its topic/band/bucket.
   plan = {
     ...plan,
     id: `gen-${randomUUID()}`,
-    metadata: {
-      ...plan.metadata,
-      generatedFromText: true,
-      generatorOk,
-      cacheKey,
-      portalPartnerId: auth.partnerId,
-      sessionMinutes,
-    },
+    metadata: generatedPlanMetadata(plan, { cacheKey, generatorOk, portalPartnerId: auth.partnerId, sessionMinutes }),
   };
 
   try {
@@ -223,5 +167,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'persistence_failed' }, { status: 502 });
   }
 
-  return NextResponse.json(toResponse(plan, { cached: false, generatorOk, sessionMinutes }));
+  // Schema-validate before responding so contract drift fails loudly
+  // instead of silently shipping a malformed body to the portal.
+  return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(plan, { cached: false, generatorOk, sessionMinutes })));
 });

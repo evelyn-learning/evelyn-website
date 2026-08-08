@@ -35,7 +35,7 @@ export function minutesPerLOForGrade(grade: string): number {
   if (g === '3' || g === '4' || g === '5' || g === '3-5') return 7;
   if (g === '6' || g === '7' || g === '8' || g === '6-8') return 6;
   if (g === '9' || g === '10' || g === '9-10') return 5;
-  if (g === '11' || g === '12' || g === '11-12') return 5;
+  if (g === '11' || g === '12' || g === '11-12' || g === '9-12') return 5;
   if (g === 'ap' || g === 'college' || g === 'sat-act' || g === 'iitjee' || g === 'graduate' || g === 'nursing') return 5;
   return 6; // safe fallback
 }

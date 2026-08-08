@@ -360,8 +360,13 @@ export interface GenerateFromTextResult {
 }
 
 /** Minimal fallback when generation fails. Keeps the orchestrator
- *  running rather than crashing. */
-function fallbackPlan(input: GenerateFromTextInput, reason: string): LessonPlan {
+ *  running rather than crashing. Exported so callers with their own
+ *  Stage 1 / Stage 2 branching (e.g. /api/portal/v1/plan-generate) can
+ *  serve this directly on a failure instead of re-running the whole
+ *  pipeline through `generatePlanFromText` (which would redundantly
+ *  retry the stage that just failed, burning an extra live LLM call at
+ *  synchronous request time). */
+export function fallbackPlan(input: GenerateFromTextInput, reason: string): LessonPlan {
   const id = `freestyle-fallback-${Date.now()}`;
   const lo: LearningObjective = {
     id: 'lo-1',

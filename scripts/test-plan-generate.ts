@@ -21,6 +21,7 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 import assert from 'node:assert';
 import { upsertLessonPlan, listLessonPlans, deleteLessonPlan, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
+import { minutesPerLOForGrade } from '@/lib/tutor/lesson-plan/session-budget';
 import { LessonPlanModel } from '@/models/LessonPlan';
 import connectDB from '@/lib/db';
 
@@ -30,6 +31,12 @@ process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ portalA: 'secret-a' });
 
 import { signPortalRequest } from '@evelyn/portal-contract/auth';
 import { POST as planGeneratePOST } from '@/app/api/portal/v1/plan-generate/route';
+import {
+  toResponse,
+  generatedPlanMetadata,
+  PlanGenerateResponseSchema,
+} from '@/lib/tutor/lesson-plan/plan-generate-contract';
+import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { NextRequest } from 'next/server';
 
 const PLAN_GENERATE_SECRET = 'secret-a';
@@ -103,29 +110,63 @@ async function testGeneratedPlansHiddenFromListings() {
  *  row. Grade 10 and 11 both fall in the 9-12 band; 28 and 22 minutes
  *  both fall in the <=30 'std' bucket. */
 async function testTopicCacheKeySameBandAndBucketCollide() {
-  const a = topicCacheKey({ topic: '  Pythagorean   Theorem ', grade: '10', sessionMinutes: 28 });
-  const b = topicCacheKey({ topic: 'pythagorean theorem', grade: '11', sessionMinutes: 22 });
+  const a = topicCacheKey({ topic: '  Pythagorean   Theorem ', subject: 'math', grade: '10', sessionMinutes: 28 });
+  const b = topicCacheKey({ topic: 'pythagorean theorem', subject: 'Math', grade: '11', sessionMinutes: 22 });
   assert.strictEqual(a, b, `expected normalized keys to collide, got "${a}" vs "${b}"`);
 }
 
 /** topicCacheKey must still distinguish requests that are genuinely
  *  different — different grade band, different length bucket, different
- *  topic — otherwise the cache would serve wrong-fit plans. */
+ *  topic, different subject, different locale — otherwise the cache would
+ *  serve wrong-fit (or outright wrong-subject / wrong-language) plans.
+ *  Motivating bug (review finding #5): without subject/locale in the key,
+ *  a "waves" request in physics could serve a cached music plan, and an
+ *  es-locale request could serve an English-language plan. */
 async function testTopicCacheKeyDifferentInputsDiverge() {
-  const base = topicCacheKey({ topic: 'pythagorean theorem', grade: '10', sessionMinutes: 28 });
-  const differentGrade = topicCacheKey({ topic: 'pythagorean theorem', grade: '4', sessionMinutes: 28 });
-  const differentLength = topicCacheKey({ topic: 'pythagorean theorem', grade: '10', sessionMinutes: 45 });
-  const differentTopic = topicCacheKey({ topic: 'quadratic formula', grade: '10', sessionMinutes: 28 });
+  const base = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '10', sessionMinutes: 28 });
+  const differentGrade = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '4', sessionMinutes: 28 });
+  const differentLength = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '10', sessionMinutes: 45 });
+  const differentTopic = topicCacheKey({ topic: 'quadratic formula', subject: 'math', grade: '10', sessionMinutes: 28 });
+  const differentSubject = topicCacheKey({ topic: 'waves', subject: 'physics', grade: '10', sessionMinutes: 28 });
+  const sameTopicMusicSubject = topicCacheKey({ topic: 'waves', subject: 'music', grade: '10', sessionMinutes: 28 });
+  const differentLocale = topicCacheKey({
+    topic: 'pythagorean theorem',
+    subject: 'math',
+    grade: '10',
+    sessionMinutes: 28,
+    locale: 'es',
+  });
   assert.notStrictEqual(base, differentGrade, 'different grade band must diverge');
   assert.notStrictEqual(base, differentLength, 'different length bucket must diverge');
   assert.notStrictEqual(base, differentTopic, 'different topic must diverge');
+  assert.notStrictEqual(base, differentLocale, 'different locale must diverge');
+  assert.notStrictEqual(differentSubject, sameTopicMusicSubject, 'same topic, different subject must diverge');
+}
+
+/** Review finding #4: the portal is likely to send band labels directly
+ *  ('9-12'), not individual grade numbers. That literal string must map
+ *  to the SAME band as a grade number within it, in BOTH
+ *  gradeBandForCacheKey (via topicCacheKey) and minutesPerLOForGrade —
+ *  the two are meant to be kept in lockstep. */
+async function testGradeBandLiteral9To12MatchesNumberedGrades() {
+  const viaLiteralBand = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '9-12', sessionMinutes: 20 });
+  const viaNumberedGrade = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '10', sessionMinutes: 20 });
+  assert.strictEqual(
+    viaLiteralBand,
+    viaNumberedGrade,
+    `expected grade '9-12' to band-match grade '10', got "${viaLiteralBand}" vs "${viaNumberedGrade}"`,
+  );
+}
+
+async function testMinutesPerLOForGrade9To12EqualsFive() {
+  assert.strictEqual(minutesPerLOForGrade('9-12'), 5, "minutesPerLOForGrade('9-12') should be 5, matching '10'/'11'/'12'");
 }
 
 /** findCachedPlan must return a plan previously upserted with a matching
  *  metadata.cacheKey, parsed through the store's canonical getLessonPlan
  *  path (not a raw Mongo doc). */
 async function testFindCachedPlanReturnsUpsertedPlan() {
-  const cacheKey = topicCacheKey({ topic: 'gen cache hit test', grade: '9', sessionMinutes: 20 });
+  const cacheKey = topicCacheKey({ topic: 'gen cache hit test', subject: 'math', grade: '9', sessionMinutes: 20 });
   const plan = await upsertLessonPlan({
     id: 'gen-test-cache-hit-1',
     title: 'Test Gen Cache Plan',
@@ -151,7 +192,7 @@ async function testFindCachedPlanReturnsUpsertedPlan() {
 /** findCachedPlan must treat rows older than the TTL (default 30 days) as
  *  a miss — a topic's "best current explanation" can go stale. */
 async function testFindCachedPlanReturnsNullForExpired() {
-  const cacheKey = topicCacheKey({ topic: 'gen cache expiry test', grade: '9', sessionMinutes: 20 });
+  const cacheKey = topicCacheKey({ topic: 'gen cache expiry test', subject: 'math', grade: '9', sessionMinutes: 20 });
   const plan = await upsertLessonPlan({
     id: 'gen-test-cache-expired-1',
     title: 'Test Gen Cache Expired Plan',
@@ -183,11 +224,98 @@ async function testFindCachedPlanReturnsNullForExpired() {
   }
 }
 
+/** Fabricated base plan for the pure toResponse/generatedPlanMetadata
+ *  tests below — no DB, no LLM. */
+function fakePlan(over: Partial<LessonPlan> = {}): LessonPlan {
+  return {
+    id: 'freestyle-fake-1',
+    title: 'Fake Plan',
+    curriculum: 'freestyle',
+    grade: '9-12',
+    subject: 'math',
+    los: [{ id: 'lo1', description: 'test lo' }],
+    estimatedMinutes: 20,
+    segments: [{ id: 'seg1', kind: 'hook', goal: 'g' }],
+    schemaVersion: 1,
+    metadata: {},
+    ...over,
+  };
+}
+
+/** Review finding #2: a picker plan's maxPickableLos in the response MUST
+ *  be the plan's OWN stored metadata.allowedMaxLOs (the cap its prose
+ *  already told the student about, and that plan-expand/Task 5 will
+ *  enforce), not a fresh recompute from the CURRENT request's
+ *  sessionMinutes — the 'long' length bucket spans 31-120 min, so
+ *  maxLOsForBudget can swing widely within one bucket, and a cache hit
+ *  could otherwise report a bigger number than the persisted plan
+ *  actually allows. Pure — no DB, no LLM. */
+async function testToResponsePickerPlanUsesStoredAllowedMaxLOs() {
+  const picker = fakePlan({
+    metadata: { pendingPicker: true, allowedMaxLOs: 3, generatorOk: true },
+  });
+  // sessionMinutes: 120 (top of the 'long' bucket) would recompute a much
+  // bigger X than the plan's stored cap of 3 if maxPickableLos ignored
+  // metadata.allowedMaxLOs.
+  const res = toResponse(picker, { cached: true, sessionMinutes: 120 });
+  assert.strictEqual(res.mode, 'picker');
+  assert.strictEqual(res.maxPickableLos, 3, `expected the stored allowedMaxLOs (3), got ${res.maxPickableLos}`);
+  PlanGenerateResponseSchema.parse(res);
+}
+
+/** Non-picker plans carry no stored cap, so maxPickableLos is a fresh,
+ *  purely informational compute from the CURRENT request's
+ *  sessionMinutes/grade. Pure — no DB, no LLM. */
+async function testToResponseFullPlanRecomputesMaxPickableLos() {
+  const full = fakePlan({ metadata: { generatorOk: true } });
+  const res = toResponse(full, { cached: false, sessionMinutes: 20, generatorOk: true });
+  assert.strictEqual(res.mode, 'full');
+  assert.ok(res.maxPickableLos > 0, 'expected a positive recomputed maxPickableLos');
+  PlanGenerateResponseSchema.parse(res);
+}
+
+/** Review finding #1: generatedPlanMetadata must OMIT cacheKey when
+ *  generatorOk is false — a fallback skeleton must never become the
+ *  cached answer for its topic/band/bucket for the next 30 days. It's
+ *  still persisted with everything else (generatedFromText,
+ *  portalPartnerId, sessionMinutes) — just not findable via the cache.
+ *  Pure — no DB, no LLM. */
+async function testGeneratedPlanMetadataOmitsCacheKeyOnFallback() {
+  const plan = fakePlan();
+  const meta = generatedPlanMetadata(plan, {
+    cacheKey: 'should-not-appear|math|9-12|std|en',
+    generatorOk: false,
+    portalPartnerId: 'portalA',
+    sessionMinutes: 20,
+  });
+  assert.strictEqual(meta.cacheKey, undefined, 'cacheKey must be omitted when generatorOk is false');
+  assert.strictEqual(meta.generatorOk, false);
+  assert.strictEqual(meta.generatedFromText, true);
+  assert.strictEqual(meta.portalPartnerId, 'portalA');
+  assert.strictEqual(meta.sessionMinutes, 20);
+}
+
+/** ...and MUST include cacheKey when generatorOk is true — the happy path
+ *  is what makes the cache useful at all. Pure — no DB, no LLM. */
+async function testGeneratedPlanMetadataIncludesCacheKeyOnSuccess() {
+  const plan = fakePlan();
+  const meta = generatedPlanMetadata(plan, {
+    cacheKey: 'pythagorean theorem|math|9-12|std|en',
+    generatorOk: true,
+    portalPartnerId: 'portalA',
+    sessionMinutes: 20,
+  });
+  assert.strictEqual(meta.cacheKey, 'pythagorean theorem|math|9-12|std|en');
+}
+
 /** Task 4, cases 1+2 combined: a real (live Anthropic) generation must
- *  200 with a "gen-"-prefixed planId, a mode of 'full' or 'picker', and
- *  durably persist the plan (getLessonPlan resolves it) with
- *  metadata.generatedFromText === true and metadata.cacheKey set. A
- *  second, identical request must then hit the Task 3 generation cache:
+ *  200 with a full-schema-valid PlanGenerateResponse (a "gen-"-prefixed
+ *  planId, a mode of 'full' or 'picker') and durably persist the plan
+ *  (getLessonPlan resolves it) with metadata.generatedFromText === true
+ *  and metadata.cacheKey set (this generation succeeds, so per finding #1
+ *  the cacheKey MUST be present — the omit-on-failure path is covered
+ *  separately, purely, by testGeneratedPlanMetadataOmitsCacheKeyOnFallback).
+ *  A second, identical request must then hit the Task 3 generation cache:
  *  cached: true, same planId, no second live generation. */
 async function testPlanGenerateRealGenerationThenCacheHit() {
   const body = { text: 'pythagorean theorem', subject: 'math', grade: '9-12', sessionMinutes: 20 };
@@ -198,21 +326,19 @@ async function testPlanGenerateRealGenerationThenCacheHit() {
       signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
     );
     assert.strictEqual(first.status, 200, `expected 200, got ${first.status}: ${JSON.stringify(first.json)}`);
-    planId = first.json.planId;
+    const firstBody = PlanGenerateResponseSchema.parse(first.json);
+    planId = firstBody.planId;
+    assert.ok(planId.startsWith('gen-'), `planId should start with "gen-", got ${JSON.stringify(planId)}`);
     assert.ok(
-      typeof planId === 'string' && planId.startsWith('gen-'),
-      `planId should start with "gen-", got ${JSON.stringify(planId)}`,
+      ['full', 'picker'].includes(firstBody.mode),
+      `mode should be 'full' or 'picker', got ${JSON.stringify(firstBody.mode)}`,
     );
-    assert.ok(
-      ['full', 'picker'].includes(first.json.mode),
-      `mode should be 'full' or 'picker', got ${JSON.stringify(first.json.mode)}`,
-    );
-    assert.strictEqual(first.json.cached, false, 'first request should not be a cache hit');
+    assert.strictEqual(firstBody.cached, false, 'first request should not be a cache hit');
 
-    const stored = await getLessonPlan(planId as string);
+    const stored = await getLessonPlan(planId);
     assert.ok(stored, 'generated plan should be durably persisted');
     assert.strictEqual(stored?.metadata?.generatedFromText, true, 'metadata.generatedFromText should be true');
-    assert.ok(stored?.metadata?.cacheKey, 'metadata.cacheKey should be set');
+    assert.ok(stored?.metadata?.cacheKey, 'metadata.cacheKey should be set (generatorOk true on this path)');
 
     // Case 2: identical request → cache hit, same planId, no live regeneration.
     const second = await callPlanGenerate(
@@ -220,8 +346,9 @@ async function testPlanGenerateRealGenerationThenCacheHit() {
       signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
     );
     assert.strictEqual(second.status, 200, `expected 200, got ${second.status}: ${JSON.stringify(second.json)}`);
-    assert.strictEqual(second.json.cached, true, 'repeat request should be a cache hit');
-    assert.strictEqual(second.json.planId, planId, 'cache hit should return the same planId');
+    const secondBody = PlanGenerateResponseSchema.parse(second.json);
+    assert.strictEqual(secondBody.cached, true, 'repeat request should be a cache hit');
+    assert.strictEqual(secondBody.planId, planId, 'cache hit should return the same planId');
   } finally {
     if (planId) await deleteLessonPlan(planId);
   }
@@ -244,13 +371,26 @@ async function main() {
 
   await test('generated plans hidden from listings by default, visible with includeGenerated', testGeneratedPlansHiddenFromListings);
   await test('topicCacheKey collides for same grade band + length bucket after normalization', testTopicCacheKeySameBandAndBucketCollide);
-  await test('topicCacheKey diverges for different grade band / length bucket / topic', testTopicCacheKeyDifferentInputsDiverge);
+  await test(
+    'topicCacheKey diverges for different grade band / length bucket / topic / subject / locale',
+    testTopicCacheKeyDifferentInputsDiverge,
+  );
   await test('findCachedPlan returns a previously upserted plan by cacheKey', testFindCachedPlanReturnsUpsertedPlan);
   await test('findCachedPlan returns null for an expired createdAt', testFindCachedPlanReturnsNullForExpired);
 
+  console.log("\nFix review — grade band '9-12' literal (finding #4):\n");
+  await test("topicCacheKey: grade '9-12' band-matches grade '10'", testGradeBandLiteral9To12MatchesNumberedGrades);
+  await test("minutesPerLOForGrade('9-12') === 5", testMinutesPerLOForGrade9To12EqualsFive);
+
+  console.log('\nFix review — toResponse / generatedPlanMetadata (findings #1, #2, #6a) — pure:\n');
+  await test('toResponse: picker plan uses its own stored allowedMaxLOs, not a fresh recompute', testToResponsePickerPlanUsesStoredAllowedMaxLOs);
+  await test('toResponse: full plan recomputes maxPickableLos from the current request', testToResponseFullPlanRecomputesMaxPickableLos);
+  await test('generatedPlanMetadata: omits cacheKey when generatorOk is false', testGeneratedPlanMetadataOmitsCacheKeyOnFallback);
+  await test('generatedPlanMetadata: includes cacheKey when generatorOk is true', testGeneratedPlanMetadataIncludesCacheKeyOnSuccess);
+
   console.log('\nPOST /api/portal/v1/plan-generate (Task 4):\n');
   await test(
-    'valid request → 200, gen- planId, mode full|picker, durably persisted; repeat request → cache hit',
+    'valid request → 200, schema-valid gen- planId, mode full|picker, durably persisted; repeat request → cache hit',
     testPlanGenerateRealGenerationThenCacheHit,
   );
   await test('missing subject → 400', testPlanGenerateMissingSubjectReturns400);
