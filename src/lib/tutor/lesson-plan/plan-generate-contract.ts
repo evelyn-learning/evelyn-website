@@ -8,67 +8,33 @@
  * (`src/app/api/portal/v1/plan-generate/route.ts`) stays thin: parse, call
  * the generation pipeline, call these helpers, persist, respond.
  *
- * TODO(contract v1.9.0): import PlanGenerateRequestSchema /
- * PlanGenerateResponseSchema from @evelyn/portal-contract/v1 once the
- * engine's npm pin bumps past v1.8.0. The v1.9.0 tag exists in the
- * portal-contract repo (commit fd954d0, "feat(v1.9.0): additive
- * plan-generate/plan-expand schemas for runtime lesson generation") and has
- * now been pushed to GitHub — the npm pin bump just hasn't happened yet.
- * The two schemas below are copied VERBATIM from portal-contract's
- * `src/v1/schemas.ts` at that commit. Swap this block for the real import
- * at ship time (Task 11) and delete it.
+ * The plan-generate/plan-expand schemas are defined in
+ * @evelyn/portal-contract/v1 (v1.9.0+) and re-exported here so the route
+ * handlers and test script keep importing from this module unchanged.
  */
 
-import { z } from 'zod';
+import {
+  PlanGenerateRequestSchema,
+  PlanGenerateResponseSchema,
+  PlanLoSummarySchema,
+  PlanExpandRequestSchema,
+  PlanExpandResponseSchema,
+  type PlanGenerateRequest,
+  type PlanGenerateResponse,
+  type PlanExpandRequest,
+  type PlanExpandResponse,
+} from '@evelyn/portal-contract/v1';
 import { maxLOsForBudget } from './session-budget';
 import type { LessonPlan } from './types';
 
-export const PlanGenerateRequestSchema = z.object({
-  /** Source text: a normalized topic (Phase 1) or pasted material (Phase 2). */
-  text: z.string().min(3).max(8000),
-  subject: z.string().min(1),
-  grade: z.string().min(1),
-  topic: z.string().max(300).optional(),
-  locale: z.string().optional(),
-  /** Target session length; engine clamps to [5, 120]. */
-  sessionMinutes: z.number().int().min(5).max(120).optional(),
-});
-export type PlanGenerateRequest = z.infer<typeof PlanGenerateRequestSchema>;
-
-export const PlanLoSummarySchema = z.object({
-  id: z.string(),
-  description: z.string(),
-});
-
-export const PlanGenerateResponseSchema = z.object({
-  planId: z.string(),
-  title: z.string(),
-  /** 'full' = plan ready to run; 'picker' = LOs exceed budget, caller must pick then call plan-expand. */
-  mode: z.enum(['full', 'picker']),
-  los: z.array(PlanLoSummarySchema),
-  /** Max LOs the session budget fits (picker mode: how many the student may pick). */
-  maxPickableLos: z.number().int().positive(),
-  estimatedMinutes: z.number().int().positive(),
-  /** False when the engine served its deterministic fallback plan. */
-  generatorOk: z.boolean(),
-  cached: z.boolean(),
-});
-export type PlanGenerateResponse = z.infer<typeof PlanGenerateResponseSchema>;
-
-export const PlanExpandRequestSchema = z.object({
-  planId: z.string(),
-  pickedLoIds: z.array(z.string()).min(1).max(12),
-});
-export type PlanExpandRequest = z.infer<typeof PlanExpandRequestSchema>;
-
-export const PlanExpandResponseSchema = z.object({
-  planId: z.string(),
-  estimatedMinutes: z.number().int().positive(),
-  expandedCount: z.number().int().nonnegative(),
-  pendingExpansion: z.boolean(),
-});
-export type PlanExpandResponse = z.infer<typeof PlanExpandResponseSchema>;
-// --- end TODO(contract v1.9.0) block ---
+export {
+  PlanGenerateRequestSchema,
+  PlanGenerateResponseSchema,
+  PlanLoSummarySchema,
+  PlanExpandRequestSchema,
+  PlanExpandResponseSchema,
+};
+export type { PlanGenerateRequest, PlanGenerateResponse, PlanExpandRequest, PlanExpandResponse };
 
 /**
  * Build the PlanGenerateResponse body for a plan (fresh or cache-hit).
