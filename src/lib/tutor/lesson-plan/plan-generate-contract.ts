@@ -54,6 +54,20 @@ export const PlanGenerateResponseSchema = z.object({
   cached: z.boolean(),
 });
 export type PlanGenerateResponse = z.infer<typeof PlanGenerateResponseSchema>;
+
+export const PlanExpandRequestSchema = z.object({
+  planId: z.string(),
+  pickedLoIds: z.array(z.string()).min(1).max(12),
+});
+export type PlanExpandRequest = z.infer<typeof PlanExpandRequestSchema>;
+
+export const PlanExpandResponseSchema = z.object({
+  planId: z.string(),
+  estimatedMinutes: z.number().int().positive(),
+  expandedCount: z.number().int().nonnegative(),
+  pendingExpansion: z.boolean(),
+});
+export type PlanExpandResponse = z.infer<typeof PlanExpandResponseSchema>;
 // --- end TODO(contract v1.9.0) block ---
 
 /**

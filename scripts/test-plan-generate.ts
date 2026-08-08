@@ -31,11 +31,14 @@ process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ portalA: 'secret-a' });
 
 import { signPortalRequest } from '@evelyn/portal-contract/auth';
 import { POST as planGeneratePOST } from '@/app/api/portal/v1/plan-generate/route';
+import { POST as planExpandPOST } from '@/app/api/portal/v1/plan-expand/route';
 import {
   toResponse,
   generatedPlanMetadata,
   PlanGenerateResponseSchema,
+  PlanExpandResponseSchema,
 } from '@/lib/tutor/lesson-plan/plan-generate-contract';
+import { buildPickerPlan } from '@/lib/tutor/lesson-plan/generate-from-text';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { NextRequest } from 'next/server';
 
@@ -366,6 +369,117 @@ async function testPlanGenerateMissingSubjectReturns400() {
   assert.strictEqual(status, 400, `expected 400 for missing subject, got ${status}`);
 }
 
+/** Deterministically builds and upserts a picker-mode plan for the
+ *  plan-expand tests below — no LLM call. Mirrors the shape
+ *  plan-generate (Task 4) produces via `buildPickerPlan` when Y > X, but
+ *  built directly so setup is fast and doesn't depend on a live Stage 1
+ *  extraction landing on a specific LO count. */
+async function upsertTestPickerPlan(id: string, allowedMaxLOs: number): Promise<LessonPlan> {
+  const los = [
+    { id: 'lo-a', description: 'First test learning objective' },
+    { id: 'lo-b', description: 'Second test learning objective' },
+    { id: 'lo-c', description: 'Third test learning objective' },
+  ];
+  const built = buildPickerPlan({
+    input: { text: 'test picker source text', subject: 'math', grade: '9-12', locale: 'en' },
+    titleSuggestion: 'Test Picker Plan',
+    los,
+    allowedMaxLOs,
+    sessionMinutes: 20,
+  });
+  return upsertLessonPlan({ ...built, id });
+}
+
+async function callPlanExpand(req: NextRequest) {
+  const res = await planExpandPOST(req, undefined);
+  return { status: res.status, json: await res.json() };
+}
+
+function signedPlanExpandRequest(bodyObj?: unknown): NextRequest {
+  return signedPlanGenerateRequest('POST', '/api/portal/v1/plan-expand', bodyObj);
+}
+
+/** Task 5, happy path: a picker plan built deterministically (no LLM),
+ *  expanded via a live LLM call for a small 2-LO pick. Must 200 with a
+ *  schema-valid PlanExpandResponse, expandedCount >= 1, and the stored
+ *  plan must now carry hook/concept/worked/try segments for the picked
+ *  LOs (mode flips out of picker: metadata.pendingPicker === false). */
+async function testPlanExpandSuccessExpandsPickedLOs() {
+  const planId = 'gen-test-plan-expand-success-1';
+  await upsertTestPickerPlan(planId, 2);
+  try {
+    const { status, json } = await callPlanExpand(
+      signedPlanExpandRequest({ planId, pickedLoIds: ['lo-a', 'lo-b'] }),
+    );
+    assert.strictEqual(status, 200, `expected 200, got ${status}: ${JSON.stringify(json)}`);
+    const body = PlanExpandResponseSchema.parse(json);
+    assert.strictEqual(body.planId, planId);
+    assert.ok(body.expandedCount >= 1, `expected expandedCount >= 1, got ${body.expandedCount}`);
+    assert.strictEqual(body.pendingExpansion, false, 'a full (non-priority) expand must not leave anything pending');
+
+    const stored = await getLessonPlan(planId);
+    assert.ok(stored, 'expanded plan should still be stored under the same id');
+    assert.strictEqual(stored?.metadata?.pendingPicker, false, 'plan must exit picker mode after expansion');
+    const kinds = new Set((stored?.segments ?? []).map((s) => s.kind));
+    const expectedKinds = ['hook', 'concept', 'worked_example', 'try_yourself'] as const;
+    for (const expectedKind of expectedKinds) {
+      assert.ok(kinds.has(expectedKind), `expected a "${expectedKind}" segment among [${[...kinds].join(',')}]`);
+    }
+  } finally {
+    await deleteLessonPlan(planId);
+  }
+}
+
+/** Task 5, error case: an unknown planId must 404 without attempting any
+ *  expansion. Pure — no LLM call reached. */
+async function testPlanExpandUnknownPlanIdReturns404() {
+  const { status } = await callPlanExpand(
+    signedPlanExpandRequest({ planId: 'gen-does-not-exist-plan-expand', pickedLoIds: ['lo-a'] }),
+  );
+  assert.strictEqual(status, 404, `expected 404 for unknown planId, got ${status}`);
+}
+
+/** Task 5, error case: pickedLoIds that don't match any LO in the plan
+ *  must 400 rather than silently no-op or attempt an LLM call. */
+async function testPlanExpandPickedIdsNotInPlanReturns400() {
+  const planId = 'gen-test-plan-expand-bad-ids-1';
+  await upsertTestPickerPlan(planId, 2);
+  try {
+    const { status } = await callPlanExpand(
+      signedPlanExpandRequest({ planId, pickedLoIds: ['bogus-lo-1', 'bogus-lo-2'] }),
+    );
+    assert.strictEqual(status, 400, `expected 400 for unmatched pickedLoIds, got ${status}`);
+  } finally {
+    await deleteLessonPlan(planId);
+  }
+}
+
+/** Task 5: the endpoint must enforce the plan's OWN stored
+ *  metadata.allowedMaxLOs cap — a pick exceeding it is REJECTED (400),
+ *  unlike the dev route's silent-truncate behaviour. This is what
+ *  plan-generate's cache-hit path (Task 4, finding #2) relies on being
+ *  enforced server-side. Pure — no LLM call reached (the cap check runs
+ *  before expandSegmentsForLOs). */
+async function testPlanExpandExceedsStoredCapReturns400() {
+  const planId = 'gen-test-plan-expand-cap-1';
+  await upsertTestPickerPlan(planId, 2);
+  try {
+    const { status } = await callPlanExpand(
+      signedPlanExpandRequest({ planId, pickedLoIds: ['lo-a', 'lo-b', 'lo-c'] }),
+    );
+    assert.strictEqual(status, 400, `expected 400 for a pick exceeding allowedMaxLOs, got ${status}`);
+  } finally {
+    await deleteLessonPlan(planId);
+  }
+}
+
+/** Task 5: an invalid body (missing pickedLoIds) must 400 via
+ *  PlanExpandRequestSchema before touching the store. */
+async function testPlanExpandInvalidBodyReturns400() {
+  const { status } = await callPlanExpand(signedPlanExpandRequest({ planId: 'whatever' }));
+  assert.strictEqual(status, 400, `expected 400 for a body missing pickedLoIds, got ${status}`);
+}
+
 async function main() {
   console.log('\nRuntime lesson generation — engine store:\n');
 
@@ -394,6 +508,16 @@ async function main() {
     testPlanGenerateRealGenerationThenCacheHit,
   );
   await test('missing subject → 400', testPlanGenerateMissingSubjectReturns400);
+
+  console.log('\nPOST /api/portal/v1/plan-expand (Task 5):\n');
+  await test(
+    'valid pick on a deterministic picker plan → 200, expandedCount >= 1, stored plan has hook/concept/worked/try segments',
+    testPlanExpandSuccessExpandsPickedLOs,
+  );
+  await test('unknown planId → 404', testPlanExpandUnknownPlanIdReturns404);
+  await test('pickedLoIds not in the plan → 400', testPlanExpandPickedIdsNotInPlanReturns400);
+  await test('pick exceeding the plan\'s stored allowedMaxLOs → 400', testPlanExpandExceedsStoredCapReturns400);
+  await test('invalid body (missing pickedLoIds) → 400', testPlanExpandInvalidBodyReturns400);
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
   process.exit(failed > 0 ? 1 : 0);
