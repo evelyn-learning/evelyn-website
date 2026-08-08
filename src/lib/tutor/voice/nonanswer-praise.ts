@@ -122,7 +122,8 @@ export function nonAnswerPraiseFeedback(studentText: string): string {
   if (kind === 'request') {
     return (
       `${quoted} — a REQUEST, not an answer. You treated it as a correct answer: you answered your own open question and praised. ` +
-      `Re-emit your response: respond to the request itself, no verdict or praise word, and do NOT answer your own question for them.`
+      `Re-emit your response: respond to the request itself, no verdict or praise word, and do NOT answer your own question for them. ` +
+      `Do not narrate this classification ("that's a request, not an answer") — just respond naturally ("Sure — here's one more.").`
     );
   }
   return (

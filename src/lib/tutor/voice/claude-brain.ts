@@ -907,6 +907,7 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
     + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
     + 'If the utterance is not an answer (a request, a question about the material, "I don\'t know", conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. '
+    + 'Classify silently: never announce the sorting aloud ("that\'s a request", "not an answer", "nothing to grade") — just respond ("Sure — here\'s one more."). '
     + 'Never answer your own open question and praise as if the student had answered it; if you reveal after a give-up, reveal plainly ("No worries — it\'s …"), never as an affirmation. '
     + 'Never praise first and correct after.\n'
     + '</verdict_guard>\n\n';
