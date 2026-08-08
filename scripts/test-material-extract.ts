@@ -162,6 +162,23 @@ async function testTooManyMaterials() {
   assert.equal(result.code, 'too_large');
 }
 
+async function testAllMaterialsEmptyTextYieldsExtractFailed() {
+  // I2 fix: a well-formed DOCX with zero text runs (mammoth legitimately
+  // returns '') is the deterministic, no-live-LLM-call stand-in for "every
+  // attached material extracted 'successfully' but had nothing readable in
+  // it" — same failure mode as a batch of all-illegible photos (vision's
+  // "[no legible text]" collapses to ''). Must 422-shape extract_failed,
+  // never a silent ok:true on empty combinedText (which would otherwise run
+  // a full downstream generation on nothing).
+  const material = loadFixtureAsMaterial('empty.docx', 'docx');
+
+  const result = await extractMaterials([material]);
+  assert.equal(result.ok, false, 'expected an extract_failed error result for an all-empty material set');
+  if (result.ok) return;
+  assert.equal(result.code, 'extract_failed');
+  assert.ok(result.message.length > 0, 'expected a friendly explanatory message');
+}
+
 async function testEmptyMaterialsIsOk() {
   const result = await extractMaterials([]);
   assert.equal(result.ok, true);
@@ -229,6 +246,7 @@ async function main() {
   await test('material: unknown kind -> unsupported', testUnsupportedKind);
   await test('image material: disallowed mime type -> unsupported', testUnsupportedImageMimeType);
   await test('materials: >4 files -> too_large', testTooManyMaterials);
+  await test('docx material: well-formed but no text runs -> extract_failed (I2, all-empty guard)', testAllMaterialsEmptyTextYieldsExtractFailed);
   await test('materials: empty array -> ok with no materials', testEmptyMaterialsIsOk);
   await test('condenseForPipeline: under target passes through (no LLM call)', testCondensePassthroughUnderTarget);
 

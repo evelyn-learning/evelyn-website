@@ -152,6 +152,52 @@ async function generateDocx(): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/* DOCX — well-formed but textless (I2: all-empty-materials -> extract_failed) */
+/* ------------------------------------------------------------------ */
+
+async function generateEmptyDocx(): Promise<void> {
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  const documentRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+</Relationships>`;
+
+  // A valid document with a body but no <w:t> text runs at all (just an
+  // empty paragraph) — mammoth.extractRawText legitimately returns '' for
+  // this, same shape as a student uploading a template/cover-page-only
+  // DOCX with no body content. This is what exercises material-extract.ts's
+  // "materials present, combinedText.trim() === ''" -> extract_failed
+  // branch deterministically, with NO live LLM call.
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p/>
+    <w:sectPr/>
+  </w:body>
+</w:document>`;
+
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypesXml);
+  zip.file('_rels/.rels', relsXml);
+  zip.file('word/document.xml', documentXml);
+  zip.file('word/_rels/document.xml.rels', documentRelsXml);
+
+  const buf = await zip.generateAsync({ type: 'nodebuffer' });
+  fs.writeFileSync(path.join(OUT_DIR, 'empty.docx'), buf);
+  console.log(`  empty.docx: ${buf.length} bytes (valid DOCX, no text runs)`);
+}
+
+/* ------------------------------------------------------------------ */
 /* PNG — printed text, rasterized from SVG via sharp                   */
 /* ------------------------------------------------------------------ */
 
@@ -180,6 +226,7 @@ async function main(): Promise<void> {
   generateScannedPdf();
   generateManyPagesPdf();
   await generateDocx();
+  await generateEmptyDocx();
   await generateTextPng();
 
   console.log('\nDone. Verify with: npm run test:material-extract');

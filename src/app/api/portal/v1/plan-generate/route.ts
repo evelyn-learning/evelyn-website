@@ -188,15 +188,27 @@ export const POST = withPortalAuth(async (_req, auth) => {
         });
         generatorOk = true;
       } catch (err) {
-        console.warn('[plan-generate] full-plan parse failed, serving fallback:', (err as Error).message);
-        plan = fallbackPlan(genInput, `parse failed: ${(err as Error).message}`);
+        // Never log `.message` here: parseLessonPlan's Zod validation
+        // errors embed the RECEIVED values inline (document/topic-derived
+        // content, possibly student-pasted material) — not a content-safety
+        // boundary, same discipline material-extract.ts's `errorKind`
+        // enforces for its own catch sites. Constructor name only.
+        const errorKind = err instanceof Error ? err.constructor.name || 'Error' : typeof err;
+        console.warn(`[plan-generate] full-plan parse failed, serving fallback: errorType=${errorKind}`);
+        plan = fallbackPlan(genInput, `parse failed: ${errorKind}`);
         generatorOk = false;
       }
     }
   }
 
   if (!generatorOk) {
-    console.warn(`[plan-generate] served fallback plan (generatorOk=false), NOT cached, for cacheKey="${cacheKey}"`);
+    // cacheKey is undefined on the materials path (see the module doc) — no
+    // point printing the literal string "undefined"; omit the field there
+    // instead of implying a cache key exists when it never does.
+    console.warn(
+      `[plan-generate] served fallback plan (generatorOk=false), NOT cached` +
+        (cacheKey ? `, for cacheKey="${cacheKey}"` : ' (materials path, no cacheKey)'),
+    );
   }
 
   // Mint the durable id and stamp portal-owned metadata. Overrides the

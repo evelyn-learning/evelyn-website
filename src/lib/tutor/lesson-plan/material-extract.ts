@@ -222,6 +222,24 @@ export async function extractMaterials(materials: PlanMaterial[]): Promise<Extra
       ? await condenseForPipeline(combinedRaw, { targetChars: DEFAULT_PIPELINE_TARGET_CHARS })
       : combinedRaw;
 
+  // Every individual material extracted "successfully" (no parser threw,
+  // no scanned/too-large/too-many-pages rejection fired) but yielded no
+  // usable text — e.g. every attached photo was illegible (the vision
+  // transcriber's "[no legible text]" collapses to ''), or a DOCX/PDF whose
+  // text layer is present but empty. Left unchecked, this would fall
+  // through to the caller as `ok: true, combinedText: ''`, and the
+  // downstream LO-extraction pass would then run a full (real-money)
+  // generation against nothing. Fail loud here instead, same as any other
+  // user-fixable input problem this module reports.
+  if (combinedText.trim() === '') {
+    console.warn(`[material-extract] all ${finalMaterials.length} material(s) yielded empty text`);
+    return {
+      ok: false,
+      code: 'extract_failed',
+      message: "We couldn't read any text in what you uploaded — try clearer photos or a different file.",
+    };
+  }
+
   console.log(
     `[material-extract] done: ${finalMaterials.length} material(s), combinedText=${combinedText.length}c` +
       (combinedRaw.length !== combinedText.length ? ` (condensed from ${combinedRaw.length}c)` : ''),
