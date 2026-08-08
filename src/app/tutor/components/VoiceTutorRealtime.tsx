@@ -4932,9 +4932,26 @@ export function VoiceTutorRealtime({
             // checkGeneratedPlanAdvance is pure, so re-running it here
             // (resolveAdvanceTarget already ran it once to decide `next`
             // was null) just recovers the WHY, at negligible cost.
-            const genPlanBlock = planForReject
+            //
+            // Review fix (round 1): this must NOT fire for (a) curated
+            // plans — checkGeneratedPlanAdvance has no curated-plan
+            // meaning, it would just compute a spurious LO grouping off
+            // whatever the ids happen to look like; and (b) off-topic
+            // targets — resolveAdvanceTarget's off-topic check runs
+            // BEFORE the generated-plan branch (context.ts), so an
+            // off-topic target's null ALSO satisfies "exists in the
+            // plan" here, and checkGeneratedPlanAdvance (which doesn't
+            // know about offTopic) can synthesize a false "different
+            // learning objective" reason for a target that was actually
+            // refused for being off-topic. Excluding both falls through
+            // to the generic "could not resolve" message below, which
+            // was already the correct behavior for off-topic targets
+            // pre-E6.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const targetSegForReject = planForReject ? (getSegment(planForReject, to) as any) : undefined;
+            const genPlanBlock = planForReject && isGeneratedPlan(planForReject)
               && to !== 'next' && to !== 'previous' && to !== 'free'
-              && planForReject.segments.some((s) => s.id === to)
+              && targetSegForReject && targetSegForReject.offTopic !== true
               ? checkGeneratedPlanAdvance(planForReject, fromSegId, to, completedSegmentIdsRef.current)
               : null;
             let reason: string;
@@ -4945,7 +4962,14 @@ export function VoiceTutorRealtime({
               } else if (kind === 'recap-incomplete') {
                 reason = `advance_lesson({to: "${to}"}) failed: "recap" isn't reachable yet — these try_yourself segments are still incomplete: ${remainingSegmentIds.join(', ')}. Finish every LO (ending on its "-try" segment) before recapping.`;
               } else {
-                reason = `advance_lesson({to: "${to}"}) failed: "${to}" belongs to a different learning objective than the current segment "${fromSegId}" (LO "${currentLoGroup}"), and that LO isn't finished yet. Finish the current LO first — remaining segments: ${remainingSegmentIds.length ? remainingSegmentIds.join(', ') : `${currentLoGroup}-try`}. Advance through them by explicit id, or call advance_lesson({to: "next"}) to move forward one segment at a time. Only an explicit whole-topic skip request from the student authorizes jumping LOs early.`;
+                // Review fix (round 1): dropped the false "an explicit
+                // whole-topic skip request authorizes jumping LOs early"
+                // claim — no such override exists in code (this block IS
+                // the unconditional enforcement). Inviting the brain to
+                // retry with that framing just sets up the next silent
+                // failure. State the constraint as absolute and point at
+                // the two paths that actually work.
+                reason = `advance_lesson({to: "${to}"}) failed: "${to}" belongs to a different learning objective than the current segment "${fromSegId}" (LO "${currentLoGroup}"), and that LO isn't finished yet. Early LO jumps aren't available on this plan — finish the current LO's remaining segments first: ${remainingSegmentIds.length ? remainingSegmentIds.join(', ') : `${currentLoGroup}-try`}. Advance through them by explicit id, or call advance_lesson({to: "next"}) to move forward one segment at a time.`;
               }
             } else if (isAtLastSegment) {
               reason = `advance_lesson({to: "${to}"}) failed: the current segment "${fromSegId}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`;

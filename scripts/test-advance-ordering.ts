@@ -220,5 +220,60 @@ check(
 }
 check('unknown explicit id still refused', resolveAdvanceTarget(genPlan, 'lo-1-hook', 'no-such-segment') === null);
 
+/* ------------------------------------------------------------------ */
+/* Round-1 review fix: off-topic vs. LO-ordering attribution           */
+/* ------------------------------------------------------------------ */
+// resolveAdvanceTarget's off-topic check (context.ts) runs BEFORE the
+// generated-plan LO-ordering branch, so an off-topic target that ALSO
+// crosses an LO boundary is refused for being off-topic, not for LO
+// order. checkGeneratedPlanAdvance itself has no offTopic awareness (it
+// only sees ids/completion state), so calling it directly on such a
+// target — which is what VoiceTutorRealtime.tsx's rejection-message
+// builder used to do unconditionally — misreports 'lo-incomplete'. The
+// fix excludes off-topic targets at the call site in
+// VoiceTutorRealtime.tsx (checked via `targetSegForReject.offTopic !==
+// true` before trusting checkGeneratedPlanAdvance's reason); that guard
+// lives in the React component, not in any pure helper here, so it is
+// NOT exercised by this script — verified instead by re-reading the
+// call site and by `npx tsc --noEmit`. What IS verified here, at the
+// pure-helper level: (a) resolveAdvanceTarget correctly refuses the
+// off-topic+cross-LO target (the off-topic check wins), and (b)
+// checkGeneratedPlanAdvance, called in isolation without offTopic
+// awareness, WOULD misattribute it as 'lo-incomplete' — which is
+// exactly the bug the React-site guard exists to prevent.
+{
+  const offTopicSegments2: Segment[] = buildSegments().map((s): Segment => (
+    s.id === 'lo-2-hook' ? ({ ...s, offTopic: true } as Segment) : s
+  ));
+  const withOffTopic2: LessonPlan = { ...genPlan, segments: offTopicSegments2 };
+  check(
+    'resolveAdvanceTarget refuses an off-topic cross-LO target outright (off-topic check wins over LO-ordering)',
+    resolveAdvanceTarget(withOffTopic2, 'lo-1-hook', 'lo-2-hook') === null,
+  );
+  check(
+    'checkGeneratedPlanAdvance called in isolation (no offTopic awareness) DOES misreport this as lo-incomplete — this is exactly why VoiceTutorRealtime.tsx\'s rejection-message builder must check offTopic before trusting this reason (fixed there; not fixable inside this pure helper since offTopic lives on the Segment, not the ids checkGeneratedPlanAdvance receives)',
+    (() => {
+      const d = checkGeneratedPlanAdvance(withOffTopic2, 'lo-1-hook', 'lo-2-hook', new Set());
+      return !d.allowed && d.reason.kind === 'lo-incomplete';
+    })(),
+  );
+}
+{
+  // Round-1 review fix, other half: checkGeneratedPlanAdvance has no
+  // curated-plan awareness of its own by design — resolveAdvanceTarget's
+  // early-return (`if (!isGeneratedPlan(plan)) return target.id;`) is
+  // what protects curated plans THERE. The React-site rejection-message
+  // builder must independently gate on isGeneratedPlan(planForReject)
+  // before calling checkGeneratedPlanAdvance, or a curated plan whose
+  // ids happen to look LO-shaped (curatedPlan here has the identical
+  // buildSegments() shape) could get a spurious 'lo-incomplete'-style
+  // message attributed to a null caused by something else entirely.
+  const d = checkGeneratedPlanAdvance(curatedPlan, 'lo-1-worked', 'lo-2-hook', new Set());
+  check(
+    'checkGeneratedPlanAdvance has no curated-plan awareness on its own — proves the isGeneratedPlan(planForReject) guard at the React call site is load-bearing, not redundant',
+    !d.allowed && d.reason.kind === 'lo-incomplete',
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
