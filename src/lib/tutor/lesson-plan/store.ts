@@ -3785,6 +3785,12 @@ export interface LessonPlanFilter {
   curriculum?: string;
   topic?: string;
   locale?: string;
+  /** Include runtime-generated plans (metadata.generatedFromText === true)
+   *  in the results. Defaults to false: curated listings (subject/grade
+   *  pickers, demo pages) must never surface freestyle plans generated
+   *  from a student's own text/topic. Callers resuming a generation flow
+   *  by known id should pass true explicitly. */
+  includeGenerated?: boolean;
 }
 
 /** Map a "band" id (k-2, 3-5, 6-8, 9-10, 11-12) to the set of single
@@ -4202,6 +4208,11 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
     if (filter.locale) query.locale = filter.locale;
     const docs = await LessonPlanModel.find(query).limit(200);
     dbHits = docs.map(toLessonPlan);
+    if (!filter.includeGenerated) {
+      // Runtime-generated plans (plan-from-text / plan-generate) are
+      // opt-in only — curated listings must not surface them.
+      dbHits = dbHits.filter((p) => p.metadata?.generatedFromText !== true);
+    }
   } catch {
     // DB not configured / unreachable — seeds-only mode.
   }
