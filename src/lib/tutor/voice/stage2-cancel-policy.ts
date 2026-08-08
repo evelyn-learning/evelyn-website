@@ -65,53 +65,91 @@ export type Stage2CancelAction =
 const NOISE_FAMILY = new Set<Stage2Verdict>(['drop_self_voice', 'noise', 'filler']);
 
 /**
- * Fillers stripped before the duplicate-multiset comparison. Not the same
- * list as transcript-filters.ts's NOISE_PATTERNS (that one drops whole
- * *utterances*; this one drops individual *tokens* inside an otherwise
- * substantive utterance — "yeah, sure 60" needs "yeah"/"sure" gone so the
- * remaining {60} can compare against the original {60}).
+ * Fillers stripped ONLY from the leading/trailing edges of the NEW
+ * transcript before the duplicate comparison (rule (c) below) — never from
+ * the middle, and never reordered/collapsed to a set (review-round-1
+ * ruling: order-sensitive). Not the same list as transcript-filters.ts's
+ * NOISE_PATTERNS (that one drops whole *utterances*; this one drops
+ * individual edge *tokens* inside an otherwise substantive utterance —
+ * "yeah, sure 60" needs the leading "yeah"/"sure" gone so the remainder
+ * can compare against "60").
+ *
+ * 'like', 'right', 'so' are deliberately NOT here — review-round-1 ruling:
+ * substantive in math/English ("So, what's next?", "right angle", "like
+ * terms") and must never be silently stripped.
  */
-const DUPLICATE_CHECK_FILLERS = new Set([
-  'um', 'umm', 'uh', 'uhh', 'er', 'ah', 'hmm', 'oh',
-  'so', 'well', 'like', 'right',
+const EDGE_FILLERS = new Set([
+  'um', 'umm', 'uh', 'uhh', 'er', 'ah', 'hmm', 'oh', 'well',
   'yeah', 'yep', 'yup', 'yea', 'ya', 'sure', 'okay', 'ok',
 ]);
 
 /**
- * Lowercase, strip punctuation, drop filler tokens, return the SET of
- * remaining words (repeats collapse — "60 60" and "60" both normalize to
- * {60}, which is exactly the word-multiset-repeat case the design calls
- * out).
+ * Lowercase, strip punctuation, split into an ORDERED token list. No filler
+ * removal, no reordering, no dedup — this is the raw normalized token
+ * sequence rules (a)-(c) below compare.
  */
-export function normalizeForDuplicateCheck(text: string): Set<string> {
-  const words = text
+export function normalizeForDuplicateCheck(text: string): string[] {
+  return text
     .toLowerCase()
     .replace(/[.,!?;:'"]+/g, ' ')
     .trim()
     .split(/\s+/)
-    .filter((w) => w.length > 0 && !DUPLICATE_CHECK_FILLERS.has(w));
-  return new Set(words);
+    .filter((w) => w.length > 0);
+}
+
+/** Strip EDGE_FILLERS tokens from the front and back of `tokens` only —
+ *  order of the remaining middle is untouched. */
+export function stripLeadingTrailingFillers(tokens: string[]): string[] {
+  let start = 0;
+  let end = tokens.length;
+  while (start < end && EDGE_FILLERS.has(tokens[start])) start++;
+  while (end > start && EDGE_FILLERS.has(tokens[end - 1])) end--;
+  return tokens.slice(start, end);
+}
+
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((w, i) => w === b[i]);
 }
 
 /**
  * Is `newTranscript` a duplicate/repeat of `originalTranscript` — the
- * transcript the in-flight brain turn is already answering? True for an
- * exact match ("60" vs "60"), a repeated-word echo ("60 60" vs "60"), and
- * a filler-padded repeat ("yeah 60" / "yeah, sure 60" vs "60"). False when
- * either side is empty after filler-stripping (nothing substantive to
- * compare — let the ordinary noise/heuristic classification handle it)
- * or when the new transcript carries any word the original didn't
- * (genuinely new content, e.g. "60 and then what" vs "60").
+ * transcript the in-flight brain turn is already answering?
+ *
+ * Review-round-1 ruling: order-sensitive and strict. Duplicate iff, after
+ * normalization (lowercase + strip punctuation, tokenized):
+ *   (a) exact token-sequence equality ("60" vs "60", "SIXTY" vs "sixty"), OR
+ *   (b) the in-flight transcript is a SINGLE token and the new one is 1+
+ *       repetitions of that exact token ("60 60" / "60 60 60" vs "60"), OR
+ *   (c) the new transcript equals the in-flight one after stripping ONLY
+ *       leading/trailing filler tokens — order of whatever remains is
+ *       preserved, nothing in the middle is touched, nothing reordered
+ *       ("yeah, sure 60" vs "60"; "Um, sixty." vs "sixty").
+ *
+ * Explicitly NOT a duplicate: reordered content carrying the same words
+ * ("5 minus 12" vs "12 minus 5" — a genuinely different math statement),
+ * or the new transcript adding any substantive word ("60 and then what"
+ * vs "60").
  */
 export function isDuplicateTranscript(newTranscript: string, originalTranscript: string): boolean {
-  const a = normalizeForDuplicateCheck(newTranscript);
-  const b = normalizeForDuplicateCheck(originalTranscript);
-  if (a.size === 0 || b.size === 0) return false;
-  if (a.size !== b.size) return false;
-  for (const w of a) {
-    if (!b.has(w)) return false;
+  const newTokens = normalizeForDuplicateCheck(newTranscript);
+  const originalTokens = normalizeForDuplicateCheck(originalTranscript);
+  if (newTokens.length === 0 || originalTokens.length === 0) return false;
+
+  // (a) exact equality
+  if (arraysEqual(newTokens, originalTokens)) return true;
+
+  // (b) single-token original, repeated 1+ times in the new transcript
+  if (originalTokens.length === 1 && newTokens.every((t) => t === originalTokens[0])) {
+    return true;
   }
-  return true;
+
+  // (c) new transcript, minus leading/trailing fillers only, equals the
+  // original — order preserved.
+  const strippedNew = stripLeadingTrailingFillers(newTokens);
+  if (strippedNew.length > 0 && arraysEqual(strippedNew, originalTokens)) return true;
+
+  return false;
 }
 
 /**
@@ -121,7 +159,7 @@ export function isDuplicateTranscript(newTranscript: string, originalTranscript:
  *
  * Duplicate overrides verdict — even if the generic classifier would have
  * called a filler-padded repeat 'new_turn' (3+ words, so it slips past the
- * heuristic's brief-utterance filler gate), the multiset match still
+ * heuristic's brief-utterance filler gate), the duplicate match still
  * routes to 'continue'.
  */
 export function decideStage2CancelAction(args: {

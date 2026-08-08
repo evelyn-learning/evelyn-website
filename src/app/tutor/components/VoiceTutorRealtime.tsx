@@ -1075,13 +1075,36 @@ export function VoiceTutorRealtime({
   // logic lives in the pure decideStage2CancelAction (test:stage2-cancel).
   // 'speaking' (true barge-in) and 'listening' are unaffected — this ref
   // is only ever armed for a 'processing'-state onset.
-  const stage2LazyPendingRef = useRef<{ minSeqForDispatch: number } | null>(null);
+  //
+  // Review-round-1 fix (findings 1+2): armedAt is a wall-clock stamp so a
+  // leaked arm (see STAGE2_LAZY_ARM_MAX_AGE_MS below) can't sit forever and
+  // later misfire against a totally unrelated turn — a bare mySeq ordering
+  // check alone is satisfied by ANY future transcript, not just the one
+  // that resolves THIS onset. The arm is explicitly cleared at every site
+  // that can leak it: mute-drop, transcription_failed, dev-pinned-verdict
+  // bypass, a new checkpoint superseding it (inside runPerceptionKill), the
+  // brain turn completing naturally (inFlightBrainAbortRef nulled), session
+  // end / rotation-disconnect, and any speech_started while prod isn't
+  // 'processing' — plus the age-based watchdog in perceptionOnTranscript
+  // (mirrors the existing checkpoint-staleness watchdog immediately below
+  // it) for the case where nothing else happens to clear it in time.
+  const stage2LazyPendingRef = useRef<{ minSeqForDispatch: number; armedAt: number } | null>(null);
   // Forward-ref-via-ref (same pattern as applyPerceptionVerdictRef /
   // perceptionOnTranscriptRef below): runPerceptionKill is declared later
   // in render order (just above perceptionOnSpeechStart) so
   // perceptionOnTranscript's stage2-lazy resolver — declared earlier —
   // reaches it through this ref instead of a direct closure reference.
   const runPerceptionKillRef = useRef<((cancelStage: 'processing' | 'speaking') => void) | null>(null);
+  // Review-round-1 (finding 2): shared clear for stage2LazyPendingRef, used
+  // at every site that can otherwise leak an armed-but-never-consumed lazy
+  // pending — see stage2LazyPendingRef's declaration comment for the full
+  // list. A no-op (no log) when nothing is armed.
+  const clearStage2LazyPending = useCallback((reason: string) => {
+    if (!stage2LazyPendingRef.current) return;
+    console.warn(`[PERCEPTION] STAGE-2 lazy-arm cleared: ${reason}`);
+    onDebugEvent?.('perception_stage2_lazy_cleared', reason);
+    stage2LazyPendingRef.current = null;
+  }, [onDebugEvent]);
   // Clears the post-speech "Got that — one sec…" state + its didn't-catch timer.
   // Called when a real student turn reaches the brain, the tutor starts talking,
   // or the student begins a new utterance.
@@ -1093,15 +1116,14 @@ export function VoiceTutorRealtime({
     setPerceptionAwaitingDispatch(false);
   }, []);
   const PERCEPTION_MID_UTTERANCE_WATCHDOG_MS = 30_000;
-  // E1: bounded poll step/cap for the stage2-lazy abort_and_dispatch path
-  // (perceptionOnTranscript's resolveStage2LazyVerdict) — waits for
-  // brainBusyRef to clear after a same-tick runPerceptionKill abort before
-  // dispatching directly, so the dispatch takes the same path (preserving
-  // opts.injectedHistoryTail) the pre-E1 eager design always got for free
-  // by aborting seconds earlier, at onset time. See that function's
-  // comment for the full rationale.
-  const STAGE2_LAZY_ABORT_DISPATCH_WAIT_STEP_MS = 20;
-  const STAGE2_LAZY_ABORT_DISPATCH_WAIT_CAP_MS = 500;
+  // Review-round-1 (finding 2): max age for an armed stage2LazyPendingRef
+  // before perceptionOnTranscript's watchdog treats it as leaked and clears
+  // it unconsumed. Same bound as the existing checkpoint-staleness
+  // watchdog a few lines below in perceptionOnTranscript ("stale checkpoint
+  // cleared by watchdog") — perception latency tops out well under this,
+  // so a still-armed lazy pending past this age can no longer belong to a
+  // legitimate in-flight resolution.
+  const STAGE2_LAZY_ARM_MAX_AGE_MS = 20_000;
   // Stage 3 fix #10 (2026-05-28): synchronous speakText gate for the
   // brain orchestrator's emit-after-abort race. When a perception
   // cancel fires (onSpeechStart, retro-cancel useEffect, or any
@@ -12324,6 +12346,14 @@ export function VoiceTutorRealtime({
       // call is no longer in flight so a later abort() would be a no-op
       // against a stale controller.
       inFlightBrainAbortRef.current = null;
+      // Review-round-1 (finding 2): this attempt just ended (naturally OR
+      // via abort — either way inFlightBrainAbortRef just went null). Any
+      // STILL-armed lazy-pending can no longer legitimately abort/protect
+      // THIS turn (it either already resolved, in which case it's null
+      // here already, or belongs to some other in-flight-tracking edge
+      // case) — clear it rather than let it dangle into whatever the NEXT
+      // brain call turns out to be.
+      clearStage2LazyPending('brain turn ended (natural completion or abort)');
       // Kill-recovery (B): roll back any deferred killed renders the retry did
       // NOT re-confirm. Restatement-confirmed ids were dropped from the set at
       // dedup time, so this only sweeps genuinely superseded (a correction
@@ -12439,7 +12469,7 @@ export function VoiceTutorRealtime({
       renderSyncActiveRef.current = false;
       captionSyncRef.current.markStreamEnd();
     }
-  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord, drainStudentMarks]);
+  }, [handleWhiteboardCommand, onDebugEvent, onTranscriptUpdate, onTrackInteraction, applyResolvedAdvance, flushAllRenderBuffer, dropRenderBuffer, planKillKeep, onOpenerRecord, drainStudentMarks, clearStage2LazyPending]);
 
   // R32 Task 6: extracted from the original ack/escalation-arm site inside
   // handleStudentTranscriptForBrain (Tasks 3 + 4) so the SAME cover
@@ -13880,6 +13910,25 @@ export function VoiceTutorRealtime({
       onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
       return;
     }
+    // Review-round-1 ruling 6: a 'processing' retro-transition is the SAME
+    // bug class as an onset-time 'processing' cancel (perceptionOnSpeechStart)
+    // — this path used to eager-kill the in-flight brain turn on the state
+    // transition, and a later RESTORE could re-fire the whole turn from
+    // scratch on a mere repeat, exactly like the pre-E1 onset path did. Give
+    // it the same lazy treatment: arm instead of kill, and let
+    // resolveStage2LazyVerdict (perceptionOnTranscript) decide once the
+    // interrupting utterance's transcript + classification is known.
+    // 'speaking' (canRetroStage3, below) is UNCHANGED — still the eager
+    // kill+checkpoint path, cancel-storm/self-echo guards and all.
+    if (canRetroStage2) {
+      console.warn(`[PERCEPTION] STAGE-2 retro lazy-arm: waiting for verdict before deciding whether to abort (→${toState})`);
+      onDebugEvent?.('perception_stage2_lazy_armed', `retro→${toState}`);
+      stage2LazyPendingRef.current = { minSeqForDispatch: perceptionTranscriptSeqRef.current, armedAt: Date.now() };
+      // Same defensive production-WS dedupe as the onset-time arm — see
+      // that site's comment (orthogonal to the abort decision).
+      productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
+      return;
+    }
     // Cancel-storm breaker: repeated cancels with no delivered reply is
     // the "tutor is deaf" livelock — let the in-flight turn play out;
     // the student's transcript queues behind the busy brain instead.
@@ -13897,8 +13946,10 @@ export function VoiceTutorRealtime({
       return;
     }
     const ctx = lastBrainCallContextRef.current;
-    const cancelStage: 'processing' | 'speaking' = canRetroStage3 ? 'speaking' : 'processing';
-    const stageLabel = canRetroStage3 ? 'STAGE-3' : 'STAGE-2';
+    // Only reachable via canRetroStage3 now — canRetroStage2 always
+    // returns above (lazy-armed instead).
+    const cancelStage: 'processing' | 'speaking' = 'speaking';
+    const stageLabel = 'STAGE-3';
     const executeRetroCancel = () => {
       // Deferred-execution re-checks (round-6d): by gate-fire time another
       // cancel path may have opened a checkpoint, or the turn context may
@@ -13932,6 +13983,11 @@ export function VoiceTutorRealtime({
         // captured BEFORE clearSpeechQueue empties the audio queue.
         cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
       };
+      // Review-round-1 (finding 2): this checkpoint (a 'speaking' retro
+      // cancel) supersedes any dangling 'processing' lazy-arm from an
+      // earlier, unrelated onset — it must not later abort THIS cancel's
+      // resolution.
+      clearStage2LazyPending('superseded by a new retro-cancel checkpoint');
       // Stage 3 fix #10: arm the speakText gate BEFORE abort so any
       // sentence drained from the in-flight orchestrator's SSE buffer
       // between this point and AbortError propagation drops silently.
@@ -14003,7 +14059,7 @@ export function VoiceTutorRealtime({
       return;
     }
     executeRetroCancel();
-  }, [realtime, perceptionStage, onDebugEvent]);
+  }, [realtime, perceptionStage, onDebugEvent, clearStage2LazyPending]);
 
   // ── STT engine gating (Cartesia migration Phase 2, Task 5) ─────────────
   // TUTOR_STT_ENGINE_INK2 selects useCartesiaInkWS in place of
@@ -14069,6 +14125,25 @@ export function VoiceTutorRealtime({
           // The arm site paused the render buffer pending the verdict —
           // un-pause so buffered renders aren't stuck too.
           renderBufferPausedRef.current = false;
+        }
+      }
+      // E1 lazy-arm watchdog (review-round-1 finding 2) — same shape as the
+      // checkpoint watchdog immediately above. stage2LazyPendingRef is
+      // consumed inside resolveStage2LazyVerdict, but several sites can
+      // leak it unconsumed (mute-drop, transcription_failed, a dev-pinned
+      // verdict bypassing the resolver, a NEW checkpoint superseding it, or
+      // simply no further transcript ever arriving for the onset that armed
+      // it). An arm this old can no longer belong to a legitimate
+      // resolution — a bare mySeq-ordering check is satisfied by ANY future
+      // transcript, so an un-expired leaked arm could otherwise abort a
+      // completely unrelated LATER turn.
+      {
+        const lazyPending = stage2LazyPendingRef.current;
+        const lazyAgeMs = lazyPending ? Date.now() - lazyPending.armedAt : 0;
+        if (lazyPending && lazyAgeMs > STAGE2_LAZY_ARM_MAX_AGE_MS) {
+          console.warn(`[PERCEPTION] stale STAGE-2 lazy-arm cleared by watchdog (age=${lazyAgeMs}ms)`);
+          onDebugEvent?.('perception_stage2_lazy_expired', `age=${lazyAgeMs}ms`);
+          stage2LazyPendingRef.current = null;
         }
       }
       // R34 T3: incomplete-utterance hold (TUTOR_INCOMPLETE_HOLD). Placed
@@ -14155,26 +14230,45 @@ export function VoiceTutorRealtime({
         } else {
           console.warn(`[PERCEPTION] dropped — student muted: ${JSON.stringify(t.text).slice(0, 80)}`);
           onDebugEvent?.('perception_dropped_muted', t.text.slice(0, 80));
+          // Review-round-1 (finding 2): this transcript is being dropped
+          // entirely — it will never reach resolveStage2LazyVerdict. Clear
+          // any armed lazy-pending now rather than leave it dangling for a
+          // later, unrelated transcript to accidentally consume.
+          clearStage2LazyPending('transcript dropped (muted)');
           return;
         }
       }
 
       // ── E1: STAGE-2 lazy-cancel resolution ───────────────────────────
-      // perceptionOnSpeechStart deferred the abort decision for a
-      // 'processing' onset (armed stage2LazyPendingRef instead of eagerly
-      // killing — see that ref's declaration comment). This is the single
-      // place that resolves it once THIS transcript's classification is
-      // known; called from every site below that produces a verdict for
-      // `t.text` (the classifyTranscript noise check, the Stage-1
-      // heuristic, and both Haiku outcomes). Returns true when it consumed
-      // the pending arm — the caller should stop; its normal
-      // checkpoint/late-fallback handling doesn't apply to this
-      // transcript. Returns false when nothing was armed (ordinary
-      // eager-path transcript) or the arm belongs to an older utterance
-      // (stale mySeq) — caller proceeds exactly as before E1.
+      // perceptionOnSpeechStart (or the retro-cancel useEffect) deferred
+      // the abort decision for a 'processing' onset/transition (armed
+      // stage2LazyPendingRef instead of eagerly killing — see that ref's
+      // declaration comment). This is the single place that resolves it
+      // once THIS transcript's classification is known; called from every
+      // site below that produces a verdict for `t.text` (the
+      // classifyTranscript noise check, the Stage-1 heuristic, and both
+      // Haiku outcomes). Returns true when it consumed the pending arm —
+      // the caller should stop; its normal checkpoint/late-fallback
+      // handling doesn't apply to this transcript. Returns false when
+      // nothing was armed (ordinary eager-path transcript) or the arm
+      // belongs to an older utterance (stale mySeq) — caller proceeds
+      // exactly as before E1.
       const resolveStage2LazyVerdict = (verdict: Stage2Verdict, text: string): boolean => {
         const lazyPending = stage2LazyPendingRef.current;
-        if (!lazyPending || prodState !== 'processing') return false;
+        // Review-round-1 fix (finding 1): gate on the ARM itself, not on
+        // prodState AT THIS TRANSCRIPT'S ARRIVAL — perception latency
+        // (6-16s) routinely outlives an 8-23s brain turn, so by the time
+        // this resolves, prod has often moved on (TTS started, or the
+        // turn already finished and prod is back to 'listening'). The arm
+        // already records that the ORIGINAL onset happened during
+        // 'processing'; that's the only thing that determines whether
+        // this resolver owns the transcript. (The old `prodState !==
+        // 'processing'` bail here made the duplicate override — and the
+        // whole lazy-continue path — never run once TTS started playing,
+        // so a filler-padded repeat like "yeah, sure 60" arriving during
+        // playback fired as a FRESH turn over the answer already in
+        // progress.)
+        if (!lazyPending) return false;
         if (mySeq <= lazyPending.minSeqForDispatch) return false; // belongs to an earlier utterance
         stage2LazyPendingRef.current = null; // consume
         const originalTranscript = lastBrainCallContextRef.current?.transcript ?? '';
@@ -14183,70 +14277,53 @@ export function VoiceTutorRealtime({
         if (action !== 'abort_and_dispatch') {
           // noise/filler/drop_self_voice, OR a duplicate repeat of the
           // in-flight turn's own transcript ("60 60", "yeah, sure 60" vs
-          // "60") — do nothing. The in-flight brain turn (and any TTS that
-          // may have started playing while we waited) continues exactly
-          // as if this utterance never happened.
-          console.warn(`[PERCEPTION] STAGE-2 lazy-cancel: verdict=${verdict}${isDuplicate ? ' (duplicate of in-flight turn)' : ''} — in-flight turn continues undisturbed: ${JSON.stringify(text).slice(0, 80)}`);
+          // "60") — do nothing. The in-flight/completed turn (and any TTS
+          // that may have started playing while we waited) is undisturbed.
+          console.warn(`[PERCEPTION] STAGE-2 lazy-cancel: verdict=${verdict}${isDuplicate ? ' (duplicate of in-flight turn)' : ''} — in-flight/completed turn undisturbed: ${JSON.stringify(text).slice(0, 80)}`);
           onDebugEvent?.('perception_stage2_lazy_continue', `${verdict}${isDuplicate ? ':dup' : ''}`);
           return true;
         }
-        console.warn(`[PERCEPTION] STAGE-2 lazy-cancel: verdict=${verdict} — genuine new turn, aborting in-flight turn now: ${JSON.stringify(text).slice(0, 80)}`);
+        console.warn(`[PERCEPTION] STAGE-2 lazy-cancel: verdict=${verdict} — genuine new turn: ${JSON.stringify(text).slice(0, 80)}`);
         onDebugEvent?.('perception_stage2_lazy_abort', verdict);
-        if (inFlightBrainAbortRef.current === null) {
-          // The in-flight turn already completed on its own while we
-          // waited on the verdict — nothing to cut. Design: "let it
-          // complete and play; a subsequent new_turn verdict then behaves
-          // like normal ... next-turn handling" — dispatch as an ordinary
-          // fresh turn (no <cut> history entry, since nothing was cut).
-          console.warn('[PERCEPTION] STAGE-2 lazy-cancel: in-flight turn already finished — dispatching as a fresh turn (no cut)');
-          void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true });
+        // Review-round-1 fix (finding 2): consult the SAME dispatch
+        // deduper the pre-E1 late-fallback / direct-dispatch paths always
+        // have (below, and in the Haiku handlers) — without it, an ASR
+        // near-duplicate of this exact transcript (re-emission after a
+        // perception-WS reconnect, etc.) could fire this whole
+        // abort+dispatch sequence twice.
+        if (!perceptionDispatchDeduperRef.current.shouldDispatch(text, Date.now())) {
+          console.warn(`[PERCEPTION] STAGE-2 lazy-cancel duplicate dropped: ${JSON.stringify(text).slice(0, 80)}`);
+          onDebugEvent?.('perception_dispatch_duplicate_dropped', text.slice(0, 80));
           return true;
         }
-        // Still genuinely in flight — abort it now. Use the LIVE
-        // production state, not a stale 'processing' assumption: TTS for
-        // this turn may have started playing during the wait (design:
-        // keep it playing unless the verdict says new_turn — now that it
-        // does, cut it exactly like an ordinary Stage-3 barge-in).
-        const cancelStage: 'processing' | 'speaking' = productionStateRef.current === 'speaking' ? 'speaking' : 'processing';
-        runPerceptionKillRef.current?.(cancelStage);
-        if (!perceptionInterruptCheckpointRef.current) {
-          // A guard inside runPerceptionKill declined (self-echo immunity
-          // / cancel-storm cap) — same fallback as the pre-E1 late-fallback
-          // path below: can't cancel right now, so queue the new turn
-          // behind the in-flight reply instead of losing it.
-          console.warn('[PERCEPTION] STAGE-2 lazy-cancel: runPerceptionKill declined (guard) — dispatching without abort (queues behind in-flight turn)');
-          void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true });
-          return true;
+        // Abort the in-flight turn if it's still genuinely running — read
+        // the LIVE production state, not a stale 'processing' assumption:
+        // TTS for this turn may have started playing during the wait
+        // (design: keep it playing unless the verdict says new_turn — now
+        // that it does, cut it exactly like an ordinary Stage-3 barge-in).
+        // A no-op (via runPerceptionKill's own guards, or its
+        // checkpoint-null outcome) if the turn already finished or a
+        // self-echo/cancel-storm guard declines — either way we still
+        // dispatch the new transcript below.
+        if (inFlightBrainAbortRef.current !== null) {
+          const cancelStage: 'processing' | 'speaking' = productionStateRef.current === 'speaking' ? 'speaking' : 'processing';
+          runPerceptionKillRef.current?.(cancelStage);
         }
-        const dispatch = () => applyPerceptionVerdictRef.current?.(verdict, text);
-        if (!brainBusyRef.current) {
-          dispatch();
-          return true;
-        }
-        // Same-tick abort: unlike the pre-E1 eager path (where the abort
-        // happened seconds earlier, at onset time, giving callBrainOnce's
-        // AbortError catch/finally ample time to clear brainBusyRef before
-        // any verdict dispatch), runPerceptionKill JUST fired above, in
-        // THIS tick. Dispatching immediately would very likely hit the
-        // busy-queue branch (a plain-string push that drops
-        // opts.injectedHistoryTail's <cut> history entry) instead of the
-        // direct dispatch path. Bounded poll — not a fixed setTimeout(0) —
-        // because the abort's unwind can span more than one microtask hop
-        // and a fixed guess would be a silent flake under load. If the cap
-        // is ever hit, dispatch anyway (same graceful-degradation
-        // philosophy as the file's other bounded pollers, e.g. the H1
-        // queue-drain timer above): the turn still reaches the brain, just
-        // via the busy queue.
-        let waited = 0;
-        const poll = () => {
-          if (!brainBusyRef.current || waited >= STAGE2_LAZY_ABORT_DISPATCH_WAIT_CAP_MS) {
-            dispatch();
-            return;
-          }
-          waited += STAGE2_LAZY_ABORT_DISPATCH_WAIT_STEP_MS;
-          setTimeout(poll, STAGE2_LAZY_ABORT_DISPATCH_WAIT_STEP_MS);
-        };
-        setTimeout(poll, STAGE2_LAZY_ABORT_DISPATCH_WAIT_STEP_MS);
+        // Review-round-1 fix (minor #4): dispatch DIRECTLY — never through
+        // the checkpoint-dependent applyPerceptionVerdict path.
+        // runPerceptionKill above (if it ran) created a checkpoint that
+        // something else could consume/clear before a later read of it —
+        // "checkpoint theft" — and applyPerceptionVerdict silently no-ops
+        // on a missing checkpoint, losing the genuine turn entirely.
+        // Dispatching directly means this lazy path never carries the
+        // <cut> interrupted-turn history injection FRESH/MERGE normally
+        // would; accepted trade — the alternative is a turn that can
+        // vanish outright.
+        // Review-round-1 fix (minor #3): queueOnMidUtterance, same as
+        // every other orchestrator-authored re-dispatch (RESTORE/MERGE/
+        // FRESH in applyPerceptionVerdict) — a student already mid their
+        // NEXT utterance when this lands must not get it bare-dropped.
+        void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true, queueOnMidUtterance: true });
         return true;
       };
 
@@ -14383,6 +14460,11 @@ export function VoiceTutorRealtime({
       const pinned = pinnedClassifierVerdictRef.current;
       if (pinned && perceptionStage >= 2) {
         pinnedClassifierVerdictRef.current = null;
+        // Review-round-1 (finding 2): the dev pin bypasses
+        // resolveStage2LazyVerdict entirely for this transcript — clear
+        // any armed lazy-pending here too, or it leaks (dev-only path, but
+        // the same dangling-arm hazard).
+        clearStage2LazyPending('dev-pinned verdict bypass');
         const cp = perceptionInterruptCheckpointRef.current;
         if (!cp) {
           // Bug 3 fix: explicit no-op log when no Stage-2 checkpoint is
@@ -14790,6 +14872,13 @@ export function VoiceTutorRealtime({
           // clearSpeechQueue empties it. See retro-cancel useEffect.
           unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
         };
+        // Review-round-1 (finding 2): this checkpoint supersedes any
+        // dangling lazy-arm from an earlier, unrelated 'processing' onset
+        // — it must not later abort THIS cancel's resolution. (A no-op
+        // when this call itself came from resolveStage2LazyVerdict's own
+        // abort_and_dispatch action — that path already consumed/cleared
+        // the arm before calling runPerceptionKill.)
+        clearStage2LazyPending('superseded by a new cancel checkpoint');
         // Round-28: no-verdict recovery for 'processing' cancels. If the
         // interrupting sound never resolves to a transcript, no verdict
         // ever consumes this checkpoint — re-fire the aborted turn after
@@ -14892,11 +14981,20 @@ export function VoiceTutorRealtime({
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
-  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
+  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending]);
   runPerceptionKillRef.current = runPerceptionKill;
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
       console.warn(`[PERCEPTION] speech_started (prod=${prodState}, t=${e.tMs}ms)`);
+      // Review-round-1 (finding 2): a genuinely NEW onset firing while prod
+      // isn't 'processing' can only be a different utterance than whatever
+      // armed a dangling 'processing' lazy-pending (two speech_started
+      // events can't share one continuous utterance without a
+      // speech_stopped between them) — clear it so it can't later resolve
+      // against — or worse, abort — this unrelated one.
+      if (prodState !== 'processing') {
+        clearStage2LazyPending(`new speech_started while prod=${prodState}`);
+      }
       // Round-7c: the mic picking up speech at all — even before any
       // transcript resolves — is proof it isn't silent. Permanently drop
       // any gated/pending mic-silent notice; a stuck-open mic ("dead"
@@ -15092,7 +15190,7 @@ export function VoiceTutorRealtime({
         }
         console.warn(`[PERCEPTION] STAGE-2 lazy-arm: waiting for verdict before deciding whether to abort (prod=${prodState})`);
         onDebugEvent?.('perception_stage2_lazy_armed', `prev=${prodState}`);
-        stage2LazyPendingRef.current = { minSeqForDispatch: perceptionTranscriptSeqRef.current };
+        stage2LazyPendingRef.current = { minSeqForDispatch: perceptionTranscriptSeqRef.current, armedAt: Date.now() };
         // Still suppress production-WS from independently dispatching the
         // same physical utterance while we wait for a verdict — this is
         // orthogonal to the abort decision (defensive dedupe only, matches
@@ -15203,7 +15301,7 @@ export function VoiceTutorRealtime({
         }, BARGEIN_GATE_POLL_MS);
         return;
       }
-  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill]);
+  }, [onDebugEvent, perceptionStage, realtime, runPerceptionKill, clearStage2LazyPending]);
   const perceptionOnSpeechStop = useCallback((e: PerceptionSpeechEvent) => {
       console.warn(`[PERCEPTION] speech_stopped (prod=${productionStateRef.current}, t=${e.tMs}ms)`);
       // turn_latency: provisional endpoint (Ink-2 fires this on turn.eager_end).
@@ -15266,7 +15364,11 @@ export function VoiceTutorRealtime({
   // the parent stores it in a ref so it doesn't re-render the page 12×/sec).
   const perceptionOnTranscriptionFailed = useCallback((errorType: string | undefined) => {
     console.warn(`[PERCEPTION] transcription_failed errorType=${errorType ?? 'unknown'}`);
-  }, []);
+    // Review-round-1 (finding 2): the utterance that would have resolved
+    // an armed lazy-pending just failed to transcribe at all — clear it
+    // rather than leave it dangling for a later, unrelated transcript.
+    clearStage2LazyPending('transcription_failed');
+  }, [clearStage2LazyPending]);
   const perceptionOnStateChange = useCallback((next: PerceptionState) => {
     onDebugEvent?.('perception_state', next);
   }, [onDebugEvent]);
@@ -16264,6 +16366,10 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       return;
     }
     const summary = buildContextSummary();
+    // Review-round-1 (finding 2): session reset/disconnect — any armed
+    // lazy-pending belongs to a turn on the connection about to be torn
+    // down; it must not survive into the reconnected session.
+    clearStage2LazyPending('session rotation disconnect');
     realtime.disconnect();
     // Reset session-start timestamp so the new session gets its own 45/55 gates.
     sessionStartMsRef.current = Date.now();
@@ -16282,7 +16388,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         );
       }
     }, 1500);
-  }, [realtime, buildContextSummary, onDebugEvent]);
+  }, [realtime, buildContextSummary, onDebugEvent, clearStage2LazyPending]);
 
   const handleWrapUpRotation = useCallback(() => {
     setSessionRotationPrompt(false);
@@ -16340,6 +16446,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // the PLAYING AudioBufferSourceNode, not just the queue — hence
   // clearSpeechQueue + interrupt before anything else.
   endSessionNowRef.current = async () => {
+    // Review-round-1 (finding 2): session ending — any armed lazy-pending
+    // is moot, and must not dangle across a session-summary/teardown race.
+    clearStage2LazyPending('session ending');
     try { void realtime.clearSpeechQueue(); } catch {}
     try { realtime.interrupt(); } catch {}
     // Instant end — no recap delay, no spinner. Finalize recording and

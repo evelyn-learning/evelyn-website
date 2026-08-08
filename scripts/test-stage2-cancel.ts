@@ -15,6 +15,13 @@
  *   'abort_and_dispatch'→ 'processing' + genuine new content — abort now,
  *                          then dispatch
  *
+ * Review-round-1 ruling on the duplicate check (isDuplicateTranscript):
+ * order-sensitive and strict — exact match, single-token repetition
+ * ("60 60" vs "60"), or leading/trailing-filler-stripped match ("yeah,
+ * sure 60" vs "60"), with 'like'/'right'/'so' removed from the filler list
+ * (substantive in math/English) and reordered content ("5 minus 12" vs
+ * "12 minus 5") explicitly NOT a duplicate.
+ *
  * Run: npx tsx scripts/test-stage2-cancel.ts
  */
 import {
@@ -22,11 +29,12 @@ import {
   decideStage2CancelPolicy,
   isDuplicateTranscript,
   normalizeForDuplicateCheck,
+  stripLeadingTrailingFillers,
 } from '../src/lib/tutor/voice/stage2-cancel-policy';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
-  const ok = actual === expected;
+  const ok = JSON.stringify(actual) === JSON.stringify(expected);
   if (!ok) failures++;
   console.log(`${ok ? 'PASS' : 'FAIL'} — ${name} (expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)})`);
 }
@@ -129,41 +137,74 @@ check(
   'abort_and_dispatch',
 );
 check(
+  'policy: processing, "5 minus 12" vs "12 minus 5", verdict new_turn → abort_and_dispatch (reordered ≠ duplicate)',
+  decideStage2CancelPolicy({ state: 'processing', verdict: 'new_turn', newTranscript: '5 minus 12', originalTranscript: '12 minus 5' }),
+  'abort_and_dispatch',
+);
+check(
   'policy: speaking, "60 60" vs "60", verdict new_turn → eager (state gates first, no duplicate logic applied)',
   decideStage2CancelPolicy({ state: 'speaking', verdict: 'new_turn', newTranscript: '60 60', originalTranscript: '60' }),
   'eager',
 );
 
-// ── isDuplicateTranscript + normalizeForDuplicateCheck: normalization edges ─
+// ── isDuplicateTranscript: rules (a) exact, (b) single-token repeat, ──────
+// (c) leading/trailing-filler-stripped match — order-sensitive, strict.
 
-check('duplicate: exact match', isDuplicateTranscript('60', '60'), true);
-check('duplicate: word-multiset repeat "60 60" vs "60"', isDuplicateTranscript('60 60', '60'), true);
-check('duplicate: filler-padded "yeah 60" vs "60"', isDuplicateTranscript('yeah 60', '60'), true);
-check('duplicate: multi-filler "yeah, sure 60" vs "60"', isDuplicateTranscript('yeah, sure 60', '60'), true);
-check('duplicate: case-insensitive "SIXTY" vs "sixty"', isDuplicateTranscript('SIXTY', 'sixty'), true);
-check('duplicate: trailing punctuation "60?" vs "60"', isDuplicateTranscript('60?', '60'), true);
-check('duplicate: um/uh stripped "Um, sixty." vs "sixty"', isDuplicateTranscript('Um, sixty.', 'sixty'), true);
+check('duplicate: (a) exact match', isDuplicateTranscript('60', '60'), true);
+check('duplicate: (a) case-insensitive "SIXTY" vs "sixty"', isDuplicateTranscript('SIXTY', 'sixty'), true);
+check('duplicate: (a) trailing punctuation "60?" vs "60"', isDuplicateTranscript('60?', '60'), true);
+check('duplicate: (b) single-token repeat "60 60" vs "60"', isDuplicateTranscript('60 60', '60'), true);
+check('duplicate: (b) single-token triple repeat "60 60 60" vs "60"', isDuplicateTranscript('60 60 60', '60'), true);
+check('duplicate: (c) leading filler "yeah 60" vs "60"', isDuplicateTranscript('yeah 60', '60'), true);
+check('duplicate: (c) multi leading filler "yeah, sure 60" vs "60"', isDuplicateTranscript('yeah, sure 60', '60'), true);
+check('duplicate: (c) leading filler + punctuation "Um, sixty." vs "sixty"', isDuplicateTranscript('Um, sixty.', 'sixty'), true);
+check('duplicate: (c) "60, right, um" vs "60" is NOT a duplicate — "right" is substantive (not a filler), so it survives edge-stripping and blocks the match', isDuplicateTranscript('60, right, um', '60'), false);
+check('duplicate: (c) trailing filler only "60 um" vs "60"', isDuplicateTranscript('60 um', '60'), true);
+
+// ── Review-round-1 ruling: reorder is NOT a duplicate ──────────────────────
+check('duplicate: reordered content "5 minus 12" vs "12 minus 5" is NOT a duplicate', isDuplicateTranscript('5 minus 12', '12 minus 5'), false);
+check('duplicate: reordered two-word "the derivative" vs "derivative the" is NOT a duplicate', isDuplicateTranscript('the derivative', 'derivative the'), false);
+
+// ── Review-round-1 ruling: 'like'/'right'/'so' are substantive, NOT fillers ─
+check('duplicate: "so 60" vs "60" is NOT a duplicate ("so" is substantive, not stripped)', isDuplicateTranscript('so 60', '60'), false);
+check('duplicate: "right 60" vs "60" is NOT a duplicate ("right" is substantive, not stripped)', isDuplicateTranscript('right 60', '60'), false);
+check('duplicate: "like 60" vs "60" is NOT a duplicate ("like" is substantive, not stripped)', isDuplicateTranscript('like 60', '60'), false);
+check('duplicate: "so" is substantive — "so 5 minus 12" vs "5 minus 12" is NOT a duplicate', isDuplicateTranscript('so 5 minus 12', '5 minus 12'), false);
+
+// ── Other non-duplicate cases ──────────────────────────────────────────────
 check('duplicate: extra substantive word is NOT a duplicate', isDuplicateTranscript('60 and then what', '60'), false);
 check('duplicate: different number is NOT a duplicate', isDuplicateTranscript('61', '60'), false);
 check('duplicate: pure filler vs substantive is NOT a duplicate', isDuplicateTranscript('um', '60'), false);
 check('duplicate: both pure filler is NOT a duplicate (nothing to compare)', isDuplicateTranscript('um', 'uh'), false);
-check('duplicate: multi-word exact match, different order still matches (set-based)', isDuplicateTranscript('the derivative', 'derivative the'), true);
 check('duplicate: subset (fewer words than original) is NOT a duplicate', isDuplicateTranscript('60', '60 and then what'), false);
+check('duplicate: multi-token original — new is not a repetition of it', isDuplicateTranscript('60 60', '5 minus 12'), false);
+
+// ── normalizeForDuplicateCheck / stripLeadingTrailingFillers: edges ────────
 
 check(
-  'normalize: strips fillers + punctuation + case',
-  [...normalizeForDuplicateCheck('Yeah, Sure, 60!')].sort().join(','),
-  '60',
+  'normalize: lowercase + strip punctuation, ordered tokens (no filler removal)',
+  normalizeForDuplicateCheck('Yeah, Sure, 60!'),
+  ['yeah', 'sure', '60'],
 );
 check(
-  'normalize: collapses repeats into a set',
-  normalizeForDuplicateCheck('60 60 60').size,
-  1,
+  'normalize: no dedup — repeats preserved in order',
+  normalizeForDuplicateCheck('60 60 60'),
+  ['60', '60', '60'],
 );
 check(
-  'normalize: pure filler normalizes to empty set',
-  normalizeForDuplicateCheck('um uh yeah').size,
-  0,
+  'stripLeadingTrailingFillers: strips both edges, preserves middle order',
+  stripLeadingTrailingFillers(['yeah', 'sure', '60', 'um']),
+  ['60'],
+);
+check(
+  'stripLeadingTrailingFillers: does not touch "so"/"right"/"like" (removed from filler list)',
+  stripLeadingTrailingFillers(['so', '60']),
+  ['so', '60'],
+);
+check(
+  'stripLeadingTrailingFillers: all-filler input strips to empty',
+  stripLeadingTrailingFillers(['um', 'uh', 'yeah']),
+  [],
 );
 
 if (failures > 0) {
