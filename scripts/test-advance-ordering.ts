@@ -16,8 +16,9 @@ import {
   loGroupOf,
   firstLoGroup,
   isGeneratedPlan,
+  filterRecapMustRemember,
 } from '../src/lib/tutor/lesson-plan/context';
-import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
 
 let passed = 0;
@@ -303,6 +304,146 @@ check('unknown explicit id still refused', resolveAdvanceTarget(genPlan, 'lo-1-h
     !d.allowed && d.reason.kind === 'lo-incomplete',
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* filterRecapMustRemember — recap-wrapup-fix CRITICAL review fix      */
+/* ------------------------------------------------------------------ */
+// buildRecapSegment (generate-from-text.ts) stamps EVERY LO's description
+// into mustRemember at generation time. Now that 'recap' is reachable from
+// anywhere (above), a student who leaves after LO 2 of 10 would otherwise
+// get a card + mandated walkthrough of LOs 3-10 — "must remember" facts
+// never taught. filterRecapMustRemember scopes the card to LO groups
+// actually covered: a group counts when it has >=1 completed segment id,
+// OR it's currentSegmentId's own group (mid-LO when the student wrapped).
+
+/** Four-LO generated plan (mirrors the "LO 2 of 10" review scenario at
+ *  smaller scale) — recap's mustRemember built the same way
+ *  buildRecapSegment does it: `los.map(lo => lo.description)`, so index i
+ *  of `los` lines up with index i of `mustRemember` by construction. */
+function buildFourLoPlan(): LessonPlan {
+  const los = [
+    { id: 'lo-1', description: 'Master LO one' },
+    { id: 'lo-2', description: 'Master LO two' },
+    { id: 'lo-3', description: 'Master LO three' },
+    { id: 'lo-4', description: 'Master LO four' },
+  ];
+  const segments: Segment[] = [{ id: 'intro', kind: 'hook', goal: 'Acknowledge the material.' }];
+  for (const lo of los) {
+    segments.push(
+      { id: `${lo.id}-hook`, kind: 'hook', goal: `Hook for ${lo.id}.` },
+      { id: `${lo.id}-concept`, kind: 'concept', goal: `Teach ${lo.id}.`, keyIdeas: ['idea'] },
+      { id: `${lo.id}-worked`, kind: 'worked_example', problem: '1+1', steps: ['add'], answer: '2' },
+      { id: `${lo.id}-try`, kind: 'try_yourself', problem: '2+2', expectedAnswer: '4' },
+    );
+  }
+  const recap: SegmentRecap = { id: 'recap', kind: 'recap', mustRemember: los.map((lo) => lo.description) };
+  segments.push(recap);
+  return {
+    id: 'test-plan-four-lo',
+    title: 'Four-LO test plan',
+    curriculum: 'freestyle',
+    grade: '8',
+    subject: 'math',
+    los,
+    estimatedMinutes: 40,
+    segments,
+    prerequisites: [],
+    followUps: [],
+    schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
+    metadata: { generatedFromText: true },
+  };
+}
+
+const fourLoPlan = buildFourLoPlan();
+const fourLoRecap = fourLoPlan.segments.find((s) => s.kind === 'recap') as SegmentRecap;
+
+check(
+  'the prod failure shape: wraps up mid-LO-2 of 4 with nothing marked complete — only LO2 (current) qualifies',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, new Set(), 'lo-2-concept');
+    return !r.skip && r.items.length === 1 && r.items[0] === 'Master LO two';
+  })(),
+);
+
+check(
+  'completed LO1 + currently mid-LO3: both qualify, in PLAN order (not visitation order)',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, new Set(['lo-1-try']), 'lo-3-hook');
+    return !r.skip && r.items.length === 2 && r.items[0] === 'Master LO one' && r.items[1] === 'Master LO three';
+  })(),
+);
+
+check(
+  'wraps up from "intro" (never started an LO) — zero LOs qualify, skip:true, empty items',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, new Set(), 'intro');
+    return r.skip === true && r.items.length === 0;
+  })(),
+);
+
+check(
+  'currentSegmentId already moved to "recap" itself (no LO group) — only completed LOs qualify, none here — skip:true',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, new Set(), 'recap');
+    return r.skip === true && r.items.length === 0;
+  })(),
+);
+
+check(
+  'currentSegmentId "recap" WITH a genuinely completed LO still surfaces that LO — skip:false',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, new Set(['lo-2-try']), 'recap');
+    return !r.skip && r.items.length === 1 && r.items[0] === 'Master LO two';
+  })(),
+);
+
+check(
+  'every LO genuinely complete — full unfiltered mustRemember, matching pre-fix behavior exactly',
+  (() => {
+    const allTries = new Set(['lo-1-try', 'lo-2-try', 'lo-3-try', 'lo-4-try']);
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, allTries, 'lo-4-try');
+    return !r.skip && r.items.length === 4
+      && r.items.join('|') === fourLoRecap.mustRemember.join('|');
+  })(),
+);
+
+check(
+  'completedSegmentIds omitted entirely (undefined) still resolves via currentSegmentId alone',
+  (() => {
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, undefined, 'lo-1-worked');
+    return !r.skip && r.items.length === 1 && r.items[0] === 'Master LO one';
+  })(),
+);
+
+// CALLER CONTRACT regression guard: this is exactly the contamination
+// scenario the doc comment warns callers about. applyResolvedAdvance
+// (VoiceTutorRealtime.tsx) auto-marks every segment a forward jump passes
+// OVER as "completed" — so if a caller read completedSegmentIds AFTER
+// applying this turn's advance_lesson({to:"recap"}) instead of BEFORE,
+// every skipped LO would incorrectly qualify. Simulating that contaminated
+// input here proves the filter itself has no defense against it — the
+// defense is the caller's snapshot-before-advance discipline, documented
+// and exercised (not re-derived) at the VoiceTutorRealtime.tsx call site.
+check(
+  'contamination sanity check: an already-contaminated completedSegmentIds (as if read post-advance) WOULD wrongly pass every LO — proves the pre-turn-snapshot caller contract is load-bearing, not redundant',
+  (() => {
+    const contaminatedAsIfPostAdvance = new Set([
+      'lo-1-hook', 'lo-1-concept', 'lo-1-worked', 'lo-1-try',
+      'lo-2-hook', 'lo-2-concept', // auto-marked "visited" by the SAME turn's forced jump past LO2
+      'lo-3-hook', 'lo-3-concept', 'lo-3-worked', 'lo-3-try',
+      'lo-4-hook', 'lo-4-concept', 'lo-4-worked', 'lo-4-try',
+    ]);
+    const r = filterRecapMustRemember(fourLoPlan, fourLoRecap, contaminatedAsIfPostAdvance, 'recap');
+    return !r.skip && r.items.length === 4;
+  })(),
+);
+
+// Curated-plan callers pass mustRemember through UNFILTERED —
+// VoiceTutorRealtime.tsx gates the filter on isGeneratedPlan(plan) at the
+// call site, so filterRecapMustRemember is never invoked for a curated
+// plan's recap card. That gating is a call-site `if`, not a branch inside
+// this pure helper, so it isn't exercised here — verified instead by
+// re-reading the call site and by `npx tsc --noEmit`.
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

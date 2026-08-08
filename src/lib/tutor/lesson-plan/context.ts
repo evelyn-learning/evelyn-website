@@ -5,7 +5,7 @@
  * segment is inlined; earlier/later segments are listed by id+kind.
  */
 
-import type { LessonPlan, Segment } from './types';
+import type { LessonPlan, Segment, SegmentRecap } from './types';
 import type { LessonPlanContext } from '@/lib/tutor/voice/claude-brain';
 
 export function buildLessonPlanContext(
@@ -318,4 +318,77 @@ export function resolveAdvanceTarget(
   if (!isGeneratedPlan(plan)) return target.id;
   const decision = checkGeneratedPlanAdvance(plan, currentSegmentId, target.id, opts?.completedSegmentIds);
   return decision.allowed ? target.id : null;
+}
+
+/* ------------------------------------------------------------------ */
+/* recap-wrapup-fix — render-time mustRemember scoping (review fix)   */
+/* ------------------------------------------------------------------ */
+
+/** Result of `filterRecapMustRemember`. */
+export interface RecapMustRememberFilter {
+  /** mustRemember entries for LO groups the student actually reached
+   *  this session, in plan-LO order. Empty when `skip` is true. */
+  items: string[];
+  /** True when NO LO group qualifies (student left before the FIRST
+   *  LO was even started — e.g. wrapped up from 'intro'). The caller
+   *  should skip rendering the recap card entirely and use a brief
+   *  spoken goodbye instead of an empty card. */
+  skip: boolean;
+}
+
+/** recap-wrapup-fix CRITICAL review fix: `buildRecapSegment`
+ *  (generate-from-text.ts) stamps EVERY LO's description into
+ *  `mustRemember` at generation time — correct once the plan runs to
+ *  completion, wrong for the early exit this whole fix exists to
+ *  support. Now that 'recap' is reachable from anywhere (see
+ *  `checkGeneratedPlanAdvance` above), a student who leaves after LO 2
+ *  of 10 must NOT get a card + mandated walkthrough of LOs 3-10 —
+ *  "must remember" facts they were never taught.
+ *
+ *  Filters `seg.mustRemember` down to the LO groups the student
+ *  actually reached: a group counts as covered when EITHER (a) it has
+ *  at least one segment id in `completedSegmentIds`, OR (b) it's
+ *  `currentSegmentId`'s own group (the LO the student was mid-way
+ *  through when they wrapped up still counts, even if not yet marked
+ *  complete — they were actively being taught it).
+ *
+ *  Mapping is POSITIONAL, not id-keyed: `buildRecapSegment` builds
+ *  `mustRemember` as `los.map(lo => lo.description)`, so `plan.los[i]`
+ *  and `seg.mustRemember[i]` are always the same index for every i.
+ *  Relied on here instead of stamping a parallel loId array onto the
+ *  segment, because `parseLessonPlan`'s `case 'recap'`
+ *  (lesson-plan/parser.ts) whitelists exactly `mustRemember` and would
+ *  silently strip any additional field without a matching parser
+ *  change — every generated plan round-trips through parseLessonPlan
+ *  (generate-from-text.ts, expand.ts, plan-generate/route.ts all call
+ *  it), so an implicit field would vanish on every real call.
+ *
+ *  CALLER CONTRACT (important): `completedSegmentIds` and
+ *  `currentSegmentId` MUST be captured BEFORE this turn's
+ *  advance_lesson can mutate them. `applyResolvedAdvance`
+ *  (VoiceTutorRealtime.tsx) auto-marks every segment it jumps OVER as
+ *  "completed" (visited, not demonstrated) — so a single-turn
+ *  `advance_lesson({to:"recap"})` from lo-2 auto-marks lo-3..lo-9's
+ *  segments complete too. Reading the LIVE refs at
+ *  show_segment_card("recap") time — AFTER that same turn's
+ *  advance_lesson already ran — would see every skipped LO as
+ *  "covered" and silently defeat this filter. VoiceTutorRealtime.tsx
+ *  snapshots both at the very top of callBrainOnce, before any tool
+ *  call in the turn is processed, for exactly this reason. */
+export function filterRecapMustRemember(
+  plan: LessonPlan,
+  seg: SegmentRecap,
+  completedSegmentIds: ReadonlySet<string> | ReadonlyArray<string> | undefined,
+  currentSegmentId: string,
+): RecapMustRememberFilter {
+  const completed = normalizeCompleted(completedSegmentIds);
+  const currentGroup = loGroupOf(currentSegmentId);
+  const groupIsCovered = (loId: string): boolean => {
+    if (loId === currentGroup) return true;
+    return plan.segments.some((s) => loGroupOf(s.id) === loId && completed.has(s.id));
+  };
+  const items = plan.los
+    .map((lo, i) => seg.mustRemember[i])
+    .filter((text, i) => typeof text === 'string' && text.length > 0 && groupIsCovered(plan.los[i].id));
+  return { items, skip: items.length === 0 };
 }

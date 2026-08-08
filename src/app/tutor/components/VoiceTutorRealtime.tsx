@@ -58,8 +58,9 @@ import {
   loGroupOf,
   remainingGroupSegmentIds,
   isGeneratedPlan,
+  filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
-import { getSegment, type LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -7709,6 +7710,20 @@ export function VoiceTutorRealtime({
     // (it's a one-shot "is this the opener turn" flag seeded once at mount
     // and consumed in the finally below, not a per-turn flag).
     if (TUTOR_PEDAGOGY_OPENER) openingTurnValidRenderCountRef.current = 0;
+    // recap-wrapup-fix: snapshot the pedagogical cursor + completed-segment
+    // set BEFORE any tool call this turn can mutate them. filterRecapMustRemember
+    // (context.ts) needs "what was true before THIS turn's possible
+    // advance_lesson({to:"recap"})" — applyResolvedAdvance auto-marks every
+    // segment it jumps OVER as "completed" (visited, not demonstrated), so
+    // an explicit recap jump from lo-2 would auto-mark lo-3..lo-9 complete
+    // too. Reading the live refs at show_segment_card("recap") time, AFTER
+    // that same turn's advance_lesson already ran, would see every skipped
+    // LO as "covered" and silently defeat the filter. These are plain
+    // per-call consts (not refs) — callBrainOnce's internal kill/retry
+    // loop re-attempts the SAME logical turn, so one snapshot at the top
+    // correctly stays fixed across retries.
+    const turnStartSegmentId = currentSegmentIdRef.current;
+    const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -10620,8 +10635,30 @@ export function VoiceTutorRealtime({
                           title = 'Key ideas';
                           body = s.keyIdeas.map((k: string, i: number) => `${i + 1}. ${k}`).join('\n');
                         } else if (seg.kind === 'recap' && Array.isArray(s.mustRemember) && s.mustRemember.length > 0) {
-                          title = 'Recap';
-                          body = s.mustRemember.map((k: string) => `• ${k}`).join('\n');
+                          // recap-wrapup-fix (CRITICAL review fix): on a
+                          // generated plan, buildRecapSegment's mustRemember
+                          // lists EVERY LO — including ones the student
+                          // never reached on an early wrap-up. Scope the
+                          // card to LO groups actually covered this session
+                          // (filterRecapMustRemember, context.ts), using the
+                          // PRE-TURN snapshots (turnStartSegmentId /
+                          // turnStartCompletedSegmentIds) so this SAME
+                          // turn's advance_lesson({to:"recap"}) — which
+                          // auto-marks every segment it jumps over as
+                          // "completed" — can't contaminate the filter.
+                          // Curated plans are untouched: isGeneratedPlan
+                          // gates the filter, matching every other E6/E7
+                          // generated-plan-only guard in this file.
+                          const filtered = isGeneratedPlan(plan)
+                            ? filterRecapMustRemember(plan, seg as SegmentRecap, turnStartCompletedSegmentIds, turnStartSegmentId)
+                            : { items: s.mustRemember as string[], skip: false };
+                          if (filtered.skip) {
+                            console.log(`[brain-orchestrator] show_segment_card: recap card skipped — no LO group covered yet this session (pre-turn cursor "${turnStartSegmentId || '(none)'}")`);
+                            onDebugEvent?.('show_segment_card_recap_skipped_no_coverage', segId);
+                          } else {
+                            title = 'Recap';
+                            body = filtered.items.map((k: string) => `• ${k}`).join('\n');
+                          }
                         }
                         if (title && body) {
                           catalogRef.current.setCurrentSegment(segId);

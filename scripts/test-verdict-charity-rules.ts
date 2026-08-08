@@ -104,13 +104,13 @@ test('Rule 12(b) scopes the verbal whole-LO skip to system-enforced generated pl
 // is Fix 2 — tells the brain to actually TAKE that jump on a wrap-up
 // signal, and to render the authored recap card once there instead of
 // improvising.
-test('prompt directs early wrap-up on a generated plan to jump to "recap" instead of forcing "next"', () => {
+test('Rule 12(c) is labeled and carries the soft-wrap path: jump to "recap" instead of forcing "next"', () => {
   assert.ok(
-    prompt.includes('Wrapping up early on a generated plan'),
-    'rule header present',
+    prompt.includes('Rule 12(c) — Wrapping up early on a generated plan'),
+    'rule has an actual label matching file convention (Rule N letter), not just a bare bold header',
   );
   assert.ok(
-    prompt.includes('do NOT call advance_lesson({to: "next"}) — that forces the remaining worked_example / try_yourself segments on a student who is leaving'),
+    prompt.includes('Do NOT call advance_lesson({to: "next"}) — that forces the remaining worked_example / try_yourself segments on a student who is already leaving'),
     'rule bans forcing next on a departing student',
   );
   assert.ok(
@@ -123,29 +123,85 @@ test('prompt directs early wrap-up on a generated plan to jump to "recap" instea
   );
 });
 
-test('prompt requires show_segment_card on entering recap, then walking mustRemember conversationally', () => {
+test('Rule 12(c) requires show_segment_card on entering recap, gated by the Rule 13 boardSnapshot dedup signal', () => {
   assert.ok(
-    prompt.includes('call show_segment_card({segmentId: "recap"}) in the SAME turn'),
-    'rule requires the recap card render in the same turn as the advance',
+    prompt.includes('call show_segment_card({segmentId: "recap"}) in the SAME turn UNLESS your boardSnapshot already lists a "Recap" card for this segment'),
+    'rule requires the recap card render in the same turn as the advance, unless the boardSnapshot already shows it',
   );
   assert.ok(
-    prompt.includes('do not improvise a spoken-only recap from memory'),
+    prompt.includes("Rule 13's dedup convention — it means an earlier turn already rendered it; don't re-emit"),
+    'rule spells out the "already shown" signal explicitly via the Rule 13 dedup convention (review fix #4)',
+  );
+  assert.ok(
+    prompt.includes('Do not improvise a spoken-only recap from memory'),
     'rule bans the spoken-only improvised recap that caused the prod failure',
-  );
-  assert.ok(
-    prompt.includes('walk the mustRemember list conversationally, one student-facing takeaway per LO'),
-    'rule requires walking the authored mustRemember points, one per LO',
   );
 });
 
-test('Session-end signals HARD RULE carves out the recap-card exception (else it contradicts Fix 2)', () => {
+// CRITICAL review fix: buildRecapSegment stamps EVERY LO into mustRemember
+// at generation time — right for a completed run, wrong for an early exit,
+// which is the whole point of this fix. The prompt must tell the brain the
+// card it's about to see is ALREADY scoped (filterRecapMustRemember,
+// context.ts, applied at render time) — otherwise the brain has no reason
+// not to also narrate/invent takeaways for LOs it never taught.
+test('Rule 12(c) tells the brain the recap card is scoped to LOs actually covered this session', () => {
   assert.ok(
-    prompt.includes('EXCEPT the one carve-out in Rule 12(b)'),
-    'session-end rule references the Rule 12(b) exception',
+    prompt.includes('the runtime scopes the card to the LO groups you actually covered this session (never the plan\'s full LO list)'),
+    'rule states the card is pre-scoped to covered LOs, not the full plan LO list',
   );
   assert.ok(
-    prompt.includes('advance to it and call show_segment_card({segmentId: "recap"}) as PART of wrapping up'),
-    'session-end rule explicitly allows the recap show_segment_card call',
+    prompt.includes('walk THOSE takeaways only, one per covered LO'),
+    'rule instructs walking only the covered takeaways, not the full mustRemember set',
+  );
+});
+
+// IMPORTANT review fix: the original carve-out fired on EVERY session-end
+// trigger phrase, including abrupt "stop" / "gotta go" exits where forcing
+// a recap card + walkthrough is exactly the kind of thing that makes an
+// already-leaving student repeat themselves. Two tiers: soft wrap (recap
+// ask / unhurried close / all-LOs-done) gets the card; hard stop (abrupt
+// exit language) gets AT MOST one offer, never a mandate.
+test('Rule 12(c) splits soft wrap-up from hard stop — the recap card is never mandatory on an abrupt exit', () => {
+  assert.ok(prompt.includes('**Soft wrap (default)**'), 'soft-wrap tier is labeled');
+  assert.ok(prompt.includes('**Hard stop**'), 'hard-stop tier is labeled');
+  assert.ok(
+    prompt.includes('abrupt/dismissive exit language ("stop", "let\'s just call it here", "gotta go", "quit", "exit")'),
+    'hard-stop tier names abrupt exit phrasing distinct from the soft-wrap phrasing',
+  );
+  assert.ok(
+    prompt.includes('The recap card is PERMITTED here but never MANDATED'),
+    'hard-stop tier states the card is optional, not required',
+  );
+  assert.ok(
+    prompt.includes('Make AT MOST one short offer'),
+    'hard-stop tier bounds the offer to a single ask',
+  );
+  assert.ok(
+    prompt.includes('do not push the card or a mustRemember walkthrough on a student who is already out the door'),
+    'hard-stop tier bans pushing the walkthrough on a clearly-final exit',
+  );
+});
+
+test('Session-end signals HARD RULE carves out the recap-card exception, labeled Rule 12(c) and marked permitted-not-required', () => {
+  assert.ok(
+    prompt.includes('EXCEPT the one carve-out in Rule 12(c) above'),
+    'session-end rule references Rule 12(c) by its actual label (review fix #3)',
+  );
+  assert.ok(
+    prompt.includes('whose "recap" segment isn\'t already in your boardSnapshot (Rule 13\'s dedup signal for "already shown")'),
+    'session-end carve-out spells out the "hasn\'t been shown yet" signal via the Rule 13 boardSnapshot convention (review fix #4)',
+  );
+  assert.ok(
+    prompt.includes('you may advance to it and call show_segment_card({segmentId: "recap"}) as PART of wrapping up'),
+    'session-end rule explicitly allows (not mandates) the recap show_segment_card call',
+  );
+  assert.ok(
+    prompt.includes('This is PERMITTED, not mandatory'),
+    'session-end carve-out explicitly states permitted-not-required (review fix #2)',
+  );
+  assert.ok(
+    prompt.includes('a hard-stop trigger phrase below does NOT by itself require the card'),
+    'session-end carve-out states a hard-stop trigger alone never mandates the card',
   );
 });
 
