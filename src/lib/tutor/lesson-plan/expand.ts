@@ -48,7 +48,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { getLessonPlan, upsertLessonPlan } from './store';
-import { expandSegmentsForLOs } from './generate-from-text';
+import { expandSegmentsForLOs, buildRecapSegment } from './generate-from-text';
 import { parseLessonPlan } from './parser';
 import type { LessonPlan, Segment, LearningObjective } from './types';
 
@@ -233,13 +233,23 @@ export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPl
     delete baseMetadata.pendingPicker;
   }
 
+  // Only append the recap once every picked LO has segments. A priority
+  // (partial) call — dev-route-only — expands just the first LO(s) to
+  // unblock the brain fast, with the rest expanded by a background
+  // follow-up call that rebuilds segments in full; appending a recap
+  // mid-plan on a partial call would place it before LOs that haven't
+  // been taught yet, ahead of the segments the follow-up call still owes.
+  const finalSegments: Segment[] = isPriorityCall
+    ? [introSegment, ...stage2.segments]
+    : [introSegment, ...stage2.segments, buildRecapSegment(capped)];
+
   let updatedPlan: LessonPlan;
   try {
     updatedPlan = parseLessonPlan({
       ...plan,
       id: targetId,
       los: capped,
-      segments: [introSegment, ...stage2.segments],
+      segments: finalSegments,
       metadata: {
         ...baseMetadata,
         ...(writeMode === 'in-place' ? { pendingPicker: false } : {}),

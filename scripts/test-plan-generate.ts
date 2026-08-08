@@ -38,7 +38,8 @@ import {
   PlanGenerateResponseSchema,
   PlanExpandResponseSchema,
 } from '@/lib/tutor/lesson-plan/plan-generate-contract';
-import { buildPickerPlan } from '@/lib/tutor/lesson-plan/generate-from-text';
+import { buildPickerPlan, STAGE2_SYSTEM } from '@/lib/tutor/lesson-plan/generate-from-text';
+import { resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { NextRequest } from 'next/server';
 
@@ -394,6 +395,21 @@ async function testPlanGenerateRealGenerationThenCacheHit() {
     assert.strictEqual(stored?.metadata?.generatedFromText, true, 'metadata.generatedFromText should be true');
     assert.ok(stored?.metadata?.cacheKey, 'metadata.cacheKey should be set (generatorOk true on this path)');
 
+    // E4: a 'full' mode plan (Y <= X, expanded inline — no picker
+    // round-trip needed) must end with a deterministic recap segment.
+    // 'picker' mode plans don't get one yet — they're unexpanded until
+    // plan-expand runs, which is covered by
+    // testPlanExpandCloneLeavesOriginalCacheUntouched below.
+    if (firstBody.mode === 'full') {
+      const storedSegments = stored?.segments ?? [];
+      assert.ok(storedSegments.length > 0, 'expected the full plan to have segments');
+      assert.strictEqual(
+        storedSegments[storedSegments.length - 1]?.kind,
+        'recap',
+        `expected the last segment of a 'full' mode plan to be a recap, got "${storedSegments[storedSegments.length - 1]?.kind}"`,
+      );
+    }
+
     // Case 2: identical request → cache hit, same planId, no live regeneration.
     const second = await callPlanGenerate(
       planGeneratePOST,
@@ -506,6 +522,27 @@ async function testPlanExpandCloneLeavesOriginalCacheUntouched() {
       assert.ok(kinds.has(expectedKind), `expected a "${expectedKind}" segment among [${[...kinds].join(',')}]`);
     }
 
+    // E4: a full (non-priority) expand must end with a deterministic
+    // recap segment, and resolving `advance_lesson({ to: 'next' })` off
+    // the last try_yourself segment must land on it — this is the fix
+    // for the dangling-session bug (advance off the last -try segment
+    // used to resolve to null because nothing followed it).
+    const clonedSegments = cloned?.segments ?? [];
+    assert.ok(clonedSegments.length > 0, 'expected the cloned plan to have segments');
+    assert.strictEqual(
+      clonedSegments[clonedSegments.length - 1]?.kind,
+      'recap',
+      `expected the last segment to be a recap, got "${clonedSegments[clonedSegments.length - 1]?.kind}"`,
+    );
+    const lastTry = [...clonedSegments].reverse().find((s) => s.kind === 'try_yourself');
+    assert.ok(lastTry, 'expected at least one try_yourself segment in the cloned plan');
+    const resolved = resolveAdvanceTarget(cloned as LessonPlan, lastTry!.id, 'next');
+    assert.strictEqual(
+      resolved,
+      clonedSegments[clonedSegments.length - 1]?.id,
+      `expected advance('next') off the last try segment to resolve to the recap segment, got "${resolved}"`,
+    );
+
     // (b) the ORIGINAL picker plan: untouched — still pendingPicker true,
     // still its full LO list, still its cacheKey.
     const original = await getLessonPlan(planId);
@@ -580,6 +617,29 @@ async function testPlanExpandInvalidBodyReturns400() {
   assert.strictEqual(status, 400, `expected 400 for a body missing pickedLoIds, got ${status}`);
 }
 
+/** E5: the stage-2 prompt must carry a hard authoring rule against
+ *  number collisions (a context/setup number equal to the problem's
+ *  expected answer) for hook/worked_example/try_yourself, and must cover
+ *  the 'answer' / 'expectedAnswer' fields the prompt itself asks for.
+ *  Content-quality of generated problems can't be cheaply unit-tested —
+ *  this only asserts the rule text is present in the system prompt.
+ *  Pure — no DB, no LLM. */
+async function testStage2SystemPromptHasNumberCollisionRule() {
+  assert.match(
+    STAGE2_SYSTEM,
+    /MUST/,
+    'expected the number-collision rule to be phrased as a MUST',
+  );
+  assert.ok(
+    /number[\s\S]*collision|collision[\s\S]*number/.test(STAGE2_SYSTEM.toLowerCase()),
+    'expected a number-collision rule in STAGE2_SYSTEM',
+  );
+  assert.ok(
+    STAGE2_SYSTEM.includes('expectedAnswer') && STAGE2_SYSTEM.includes("'answer'"),
+    'expected the rule to reference both the worked_example answer field and the try_yourself expectedAnswer field',
+  );
+}
+
 async function main() {
   console.log('\nRuntime lesson generation — engine store:\n');
 
@@ -603,16 +663,19 @@ async function main() {
   await test('generatedPlanMetadata: omits cacheKey when generatorOk is false', testGeneratedPlanMetadataOmitsCacheKeyOnFallback);
   await test('generatedPlanMetadata: includes cacheKey when generatorOk is true', testGeneratedPlanMetadataIncludesCacheKeyOnSuccess);
 
+  console.log('\ngenplan-live-fixes E5 — stage-2 prompt number-collision rule — pure:\n');
+  await test('STAGE2_SYSTEM carries a MUST-phrased number-collision rule covering answer/expectedAnswer', testStage2SystemPromptHasNumberCollisionRule);
+
   console.log('\nPOST /api/portal/v1/plan-generate (Task 4):\n');
   await test(
-    'valid request → 200, schema-valid gen- planId, mode full|picker, durably persisted; repeat request → cache hit',
+    'valid request → 200, schema-valid gen- planId, mode full|picker, durably persisted, full-mode ends in recap (E4); repeat request → cache hit',
     testPlanGenerateRealGenerationThenCacheHit,
   );
   await test('missing subject → 400', testPlanGenerateMissingSubjectReturns400);
 
   console.log('\nPOST /api/portal/v1/plan-expand (Task 5) + clone-on-expand fix:\n');
   await test(
-    'valid pick on a cache-keyed picker plan → 200, new "gen-" planId, expanded clone; ORIGINAL cached picker plan untouched (clone-on-expand)',
+    'valid pick on a cache-keyed picker plan → 200, new "gen-" planId, expanded clone ending in recap whose advance("next") resolves from the last try segment (E4); ORIGINAL cached picker plan untouched (clone-on-expand)',
     testPlanExpandCloneLeavesOriginalCacheUntouched,
   );
   await test('unknown planId → 404', testPlanExpandUnknownPlanIdReturns404);

@@ -23,6 +23,7 @@ import {
   extractLearningObjectives,
   expandSegmentsForLOs,
   buildPickerPlan,
+  buildRecapSegment,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { findCuratedMatches } from '@/lib/tutor/lesson-plan/match-curated';
 import { detectFreestyleText } from '@/lib/tutor/lesson-plan/freestyle-trigger';
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
       locale: body.locale ?? 'en',
       los: stage1.los,
       estimatedMinutes: sessionMinutes,
-      segments: [introSegment, ...stage2.segments],
+      segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
       prerequisites: [],
       followUps: [],
       schemaVersion: LESSON_PLAN_SCHEMA_VERSION,

@@ -40,6 +40,7 @@ import type {
   LessonPlan,
   LearningObjective,
   Segment,
+  SegmentRecap,
 } from './types';
 import { LESSON_PLAN_SCHEMA_VERSION } from './types';
 import { parseLessonPlan } from './parser';
@@ -191,14 +192,17 @@ export async function extractLearningObjectives(
 /* STAGE 2 — expand chosen LOs into segments                          */
 /* ------------------------------------------------------------------ */
 
-const STAGE2_SYSTEM = `You expand a list of learning objectives into teaching segments for a lesson plan, in JSON.
+// Exported (test-only use) so scripts/test-plan-generate.ts can assert the
+// E5 number-collision rule text is present without duplicating the prompt.
+export const STAGE2_SYSTEM = `You expand a list of learning objectives into teaching segments for a lesson plan, in JSON.
 
 Rules:
 1. For every supplied objective, emit exactly four segments in order: a hook, a concept, a worked_example, and a try_yourself.
 2. Segment ids are deterministic: "<loId>-hook", "<loId>-concept", "<loId>-worked", "<loId>-try" — using the LO id supplied in the input.
 3. KEEP FIELDS TERSE. Hooks: 'goal' ≤ 12 words. Concepts: 'goal' ≤ 12 words; 'keyIdeas' ≤ 3 bullets of ≤ 12 words each. Worked-example: 'problem' ≤ 20 words; 'steps' ≤ 4 steps of ≤ 12 words each; 'answer' ≤ 12 words. Try-yourself: 'problem' ≤ 20 words; 'expectedAnswer' ≤ 12 words. Verbosity will truncate the JSON — be ruthlessly short.
 4. Do NOT invent content beyond what the LO description implies. If the LO is bare ("Cell respiration"), use the most central ideas an introductory source would teach.
-5. Output ONLY valid JSON matching the schema below. No prose, no markdown fences, no commentary.
+5. NUMBER-COLLISION MUST: in every hook, worked_example, and try_yourself, no context/setup number (a fee, starting value, coefficient, count, etc.) may be numerically equal to that problem's expected answer ('answer' on worked_example, 'expectedAnswer' on try_yourself), and that expected answer MUST itself be a single unambiguous value — a student's correct spoken answer must never be confusable with a number already sitting in the problem's setup.
+6. Output ONLY valid JSON matching the schema below. No prose, no markdown fences, no commentary.
 
 Schema:
 {
@@ -261,6 +265,38 @@ export async function expandSegmentsForLOs(
     return { segments: [], ok: false, reason: 'segments field missing or non-array' };
   }
   return { segments: segments as Segment[], ok: true, reason: 'expanded' };
+}
+
+/* ------------------------------------------------------------------ */
+/* Recap segment (E4)                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Build a deterministic recap segment — NO extra LLM call. Every
+ * generated plan (full-mode inline build, `expandPlanLos`'s rebuilt
+ * segment list, and `fallbackPlan`) must end with one: previously,
+ * generated plans ended on the last LO's `-try` segment with nothing
+ * after it. In a real session that meant `advance_lesson({ to: 'next'
+ * })` off the last try segment had no segment to land on —
+ * `resolveAdvanceTarget` (context.ts) returned null, the orchestrator
+ * rejected the advance as unresolvable, and the session dangled at
+ * end-of-plan instead of closing out.
+ *
+ * `teacherNote` carries the brain-facing instructions (read, never
+ * spoken) rather than `mustRemember` because this is a procedural
+ * script ("do this"), not a list of facts to remind the student of;
+ * `mustRemember` instead carries the actual LO descriptions as the
+ * brain's per-LO takeaway anchors.
+ */
+export function buildRecapSegment(los: ReadonlyArray<LearningObjective>): SegmentRecap {
+  const titles = los.map((lo) => lo.description);
+  const n = los.length;
+  return {
+    id: 'recap',
+    kind: 'recap',
+    teacherNote: `Recap the ${n} learning objective${n === 1 ? '' : 's'} covered (${titles.join('; ')}). Have the student state one takeaway per LO in their own words, celebrate their progress, and close the session.`,
+    mustRemember: titles,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -379,6 +415,7 @@ export function fallbackPlan(input: GenerateFromTextInput, reason: string): Less
       goal: 'Teach the material the student supplied, in their order.',
       keyIdeas: ['The student supplied free text; teach that material directly.'],
     },
+    buildRecapSegment([lo]),
   ];
   return {
     id,
@@ -441,7 +478,7 @@ export async function generatePlanFromText(
     locale: input.locale ?? 'en',
     los: stage1.los,
     estimatedMinutes: Math.max(10, stage1.los.length * 5),
-    segments: [introSegment, ...stage2.segments],
+    segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
     prerequisites: [],
     followUps: [],
     schemaVersion: LESSON_PLAN_SCHEMA_VERSION,

@@ -38,6 +38,7 @@ import {
   expandSegmentsForLOs,
   buildPickerPlan,
   fallbackPlan,
+  buildRecapSegment,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
@@ -121,7 +122,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
           locale: locale ?? 'en',
           los: stage1.los,
           estimatedMinutes: sessionMinutes,
-          segments: [introSegment, ...stage2.segments],
+          segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
           prerequisites: [],
           followUps: [],
           schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
