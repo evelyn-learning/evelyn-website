@@ -117,13 +117,33 @@ check(
   'cross-LO ALLOWED once lo-1-try is in completedSegmentIds',
   resolveAdvanceTarget(genPlan, 'lo-1-worked', 'lo-2-hook', { completedSegmentIds: new Set(['lo-1-try']) }) === 'lo-2-hook',
 );
+// recap-wrapup-fix (root cause: prod session portal-db21d8f2 — student
+// wrapped up early from lo-10-concept ("I'm done, can you recap the
+// whole thing?"); recap was gated behind every LO's "-try" being
+// complete, so the explicit jump was refused, 'next' would have forced
+// more worked/try content on a departing student, and the brain never
+// reached the recap segment at all. Early wrap-up is the NORMAL case
+// for these variable-length sessions, not an edge case — recap must be
+// reachable from anywhere, in any completion state.
 check(
-  'recap BLOCKED until all LOs\' -try segments complete (only lo-1-try done)',
-  resolveAdvanceTarget(genPlan, 'lo-2-worked', 'recap', { completedSegmentIds: new Set(['lo-1-try']) }) === null,
+  'recap ALLOWED from any segment with NOTHING complete (early wrap-up, the prod failure mode)',
+  resolveAdvanceTarget(genPlan, 'lo-1-concept', 'recap', { completedSegmentIds: new Set() }) === 'recap',
 );
 check(
-  'recap ALLOWED once every LO\'s -try is complete',
+  'recap ALLOWED from intro itself (student ends before any LO content)',
+  resolveAdvanceTarget(genPlan, 'intro', 'recap', { completedSegmentIds: new Set() }) === 'recap',
+);
+check(
+  'recap ALLOWED with only ONE of two LOs\' -try complete',
+  resolveAdvanceTarget(genPlan, 'lo-2-worked', 'recap', { completedSegmentIds: new Set(['lo-1-try']) }) === 'recap',
+);
+check(
+  'recap ALLOWED once every LO\'s -try is complete (unaffected — was already allowed)',
   resolveAdvanceTarget(genPlan, 'lo-2-worked', 'recap', { completedSegmentIds: new Set(['lo-1-try', 'lo-2-try']) }) === 'recap',
+);
+check(
+  'recap ALLOWED with completedSegmentIds entirely omitted (no opts passed at all)',
+  resolveAdvanceTarget(genPlan, 'lo-1-hook', 'recap') === 'recap',
 );
 check(
   'backward-to-intro from an LO group is allowed (harmless revisit)',
@@ -155,11 +175,20 @@ check(
   );
 }
 {
-  const d = checkGeneratedPlanAdvance(genPlan, 'lo-2-worked', 'recap', new Set(['lo-1-try']));
+  // recap-wrapup-fix: there is no 'recap-incomplete' reason kind any
+  // more — checkGeneratedPlanAdvance's targetGroup === 'recap' branch
+  // always returns { allowed: true }, from any current segment, at any
+  // completion state (including none at all).
+  const cases: Array<[string, ReadonlySet<string> | undefined]> = [
+    ['lo-2-worked', new Set(['lo-1-try'])],
+    ['intro', new Set()],
+    ['lo-1-hook', undefined],
+    ['lo-1-try', new Set(['lo-1-try', 'lo-2-try'])],
+  ];
   check(
-    'checkGeneratedPlanAdvance reason kind=recap-incomplete, lists lo-2-try',
-    !d.allowed && d.reason.kind === 'recap-incomplete' && d.reason.remainingSegmentIds.includes('lo-2-try'),
-    JSON.stringify(d),
+    'checkGeneratedPlanAdvance always allows target=recap regardless of current segment / completion state',
+    cases.every(([from, completed]) => checkGeneratedPlanAdvance(genPlan, from, 'recap', completed).allowed === true),
+    JSON.stringify(cases.map(([from, completed]) => [from, checkGeneratedPlanAdvance(genPlan, from, 'recap', completed)])),
   );
 }
 

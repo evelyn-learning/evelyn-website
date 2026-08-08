@@ -4959,9 +4959,12 @@ export function VoiceTutorRealtime({
               const { kind, currentLoGroup, remainingSegmentIds } = genPlanBlock.reason;
               if (kind === 'intro-skip') {
                 reason = `advance_lesson({to: "${to}"}) failed: from "intro" you may only advance into the FIRST learning objective's segments${remainingSegmentIds.length ? ` (${remainingSegmentIds.join(', ')})` : ''}. Call advance_lesson({to: "next"}) to enter it in order, or target one of those ids directly.`;
-              } else if (kind === 'recap-incomplete') {
-                reason = `advance_lesson({to: "${to}"}) failed: "recap" isn't reachable yet — these try_yourself segments are still incomplete: ${remainingSegmentIds.join(', ')}. Finish every LO (ending on its "-try" segment) before recapping.`;
               } else {
+                // Fix note (recap-wrapup-fix): 'recap-incomplete' no
+                // longer exists as a reason kind — explicit jumps to
+                // 'recap' are unconditionally allowed now (see
+                // checkGeneratedPlanAdvance in context.ts), so this
+                // branch is only ever 'lo-incomplete'.
                 // Review fix (round 1): dropped the false "an explicit
                 // whole-topic skip request authorizes jumping LOs early"
                 // claim — no such override exists in code (this block IS

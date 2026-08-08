@@ -92,5 +92,62 @@ test('Rule 12(b) scopes the verbal whole-LO skip to system-enforced generated pl
   );
 });
 
+// recap-wrapup-fix (root cause: prod session portal-db21d8f2 — student
+// wrapped up early from lo-10-concept ("I'm done, can you recap the
+// whole thing?"). E6's checkGeneratedPlanAdvance gated the explicit
+// jump to 'recap' behind every LO's "-try" being complete; 'next' would
+// have forced remaining worked/try segments on the departing student;
+// neither path reached the recap segment, so the model improvised a
+// spoken-only recap (having to ask what to recap, since it never saw
+// the segment's authored content) and rendered nothing on the board.
+// Fix 1 (context.ts) makes the explicit jump unconditional; this rule
+// is Fix 2 — tells the brain to actually TAKE that jump on a wrap-up
+// signal, and to render the authored recap card once there instead of
+// improvising.
+test('prompt directs early wrap-up on a generated plan to jump to "recap" instead of forcing "next"', () => {
+  assert.ok(
+    prompt.includes('Wrapping up early on a generated plan'),
+    'rule header present',
+  );
+  assert.ok(
+    prompt.includes('do NOT call advance_lesson({to: "next"}) — that forces the remaining worked_example / try_yourself segments on a student who is leaving'),
+    'rule bans forcing next on a departing student',
+  );
+  assert.ok(
+    prompt.includes('advance_lesson({to: "recap"}) directly by that explicit id'),
+    'rule instructs the explicit recap jump',
+  );
+  assert.ok(
+    prompt.includes('this jump is ALWAYS allowed, from any segment, at any completion state'),
+    'rule states the jump is unconditional, matching Fix 1 in context.ts',
+  );
+});
+
+test('prompt requires show_segment_card on entering recap, then walking mustRemember conversationally', () => {
+  assert.ok(
+    prompt.includes('call show_segment_card({segmentId: "recap"}) in the SAME turn'),
+    'rule requires the recap card render in the same turn as the advance',
+  );
+  assert.ok(
+    prompt.includes('do not improvise a spoken-only recap from memory'),
+    'rule bans the spoken-only improvised recap that caused the prod failure',
+  );
+  assert.ok(
+    prompt.includes('walk the mustRemember list conversationally, one student-facing takeaway per LO'),
+    'rule requires walking the authored mustRemember points, one per LO',
+  );
+});
+
+test('Session-end signals HARD RULE carves out the recap-card exception (else it contradicts Fix 2)', () => {
+  assert.ok(
+    prompt.includes('EXCEPT the one carve-out in Rule 12(b)'),
+    'session-end rule references the Rule 12(b) exception',
+  );
+  assert.ok(
+    prompt.includes('advance to it and call show_segment_card({segmentId: "recap"}) as PART of wrapping up'),
+    'session-end rule explicitly allows the recap show_segment_card call',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

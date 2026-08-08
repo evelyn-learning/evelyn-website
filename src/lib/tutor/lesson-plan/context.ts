@@ -145,35 +145,16 @@ export function remainingGroupSegmentIds(
     .map((s) => s.id);
 }
 
-/** For every LO group with a "<group>-try" segment in the plan, the id
- *  of that segment IF it is not yet complete. Used to gate entry into
- *  'recap' — every LO's try_yourself must be done first. A group with
- *  no "-try" segment (e.g. a fallback single-concept plan) is
- *  vacuously satisfied — nothing to gate. */
-export function incompleteTryIds(
-  plan: LessonPlan,
-  completedSegmentIds?: ReadonlySet<string> | ReadonlyArray<string>,
-): string[] {
-  const completed = normalizeCompleted(completedSegmentIds);
-  const groups = new Set(
-    plan.segments.map((s) => loGroupOf(s.id)).filter((g) => g !== 'intro' && g !== 'recap'),
-  );
-  const out: string[] = [];
-  for (const g of groups) {
-    const tryId = `${g}-try`;
-    if (plan.segments.some((s) => s.id === tryId) && !completed.has(tryId)) out.push(tryId);
-  }
-  return out;
-}
-
 /** Why `checkGeneratedPlanAdvance` blocked an explicit-id advance.
  *  `remainingSegmentIds` is the "go finish these first" list the
  *  rejection message hands back to the brain:
  *    - 'intro-skip'        → the first LO group's not-yet-completed ids
  *    - 'lo-incomplete'      → the CURRENT LO group's not-yet-completed ids
- *    - 'recap-incomplete'   → every LO's still-incomplete "-try" id */
+ *
+ *  There is no 'recap-incomplete' kind — explicit jumps to 'recap' are
+ *  never blocked (see the targetGroup === 'recap' branch below). */
 export interface AdvanceBlockReason {
-  kind: 'intro-skip' | 'lo-incomplete' | 'recap-incomplete';
+  kind: 'intro-skip' | 'lo-incomplete';
   currentLoGroup: string;
   targetLoGroup: string;
   remainingSegmentIds: string[];
@@ -186,8 +167,17 @@ export interface AdvanceBlockReason {
  *  or backward — re-visiting a hook after the try is harmless);
  *  crossing into a DIFFERENT LO group before the current one's "-try"
  *  is complete is not, and neither is skipping from 'intro' straight
- *  to a non-first LO. 'recap' additionally requires every LO's "-try"
- *  to be complete.
+ *  to a non-first LO. 'recap' is the one exception to LO-ordering
+ *  enforcement: an explicit jump to 'recap' is ALWAYS allowed, from any
+ *  segment, at any completion state. Recap is the wrap-up segment for
+ *  these variable-length sessions — students routinely end early
+ *  ("I'm done, can you recap?"), and gating recap behind full
+ *  completion just strands the model with no reachable segment to
+ *  close the session on (root cause of prod session portal-
+ *  db21d8f2 — recap unreachable, brain improvised a spoken-only recap
+ *  and never rendered the board card). See the
+ *  system-prompt-builder.ts Rule 12(b) wrap-up clause for when the
+ *  brain is expected to make this jump.
  *
  *  Called both from `resolveAdvanceTarget` (to decide allow/block) and
  *  from the VoiceTutorRealtime rejection-message builder (to explain
@@ -204,19 +194,11 @@ export function checkGeneratedPlanAdvance(
   const targetGroup = loGroupOf(targetSegmentId);
   if (currentGroup === targetGroup) return { allowed: true };
 
-  if (targetGroup === 'recap') {
-    const incomplete = incompleteTryIds(plan, completedSegmentIds);
-    if (incomplete.length === 0) return { allowed: true };
-    return {
-      allowed: false,
-      reason: {
-        kind: 'recap-incomplete',
-        currentLoGroup: currentGroup,
-        targetLoGroup: targetGroup,
-        remainingSegmentIds: incomplete,
-      },
-    };
-  }
+  // Explicit jump to 'recap' is unconditionally allowed — see the
+  // doc comment above. Early wrap-up is the normal case, not an edge
+  // case: gating recap behind every LO's "-try" made it unreachable
+  // for a student who leaves mid-lesson.
+  if (targetGroup === 'recap') return { allowed: true };
 
   // Outbound from recap is unrestricted (e.g. remediation back into an
   // earlier LO) — recap is terminal, not itself LO-gated.
