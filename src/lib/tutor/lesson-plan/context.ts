@@ -33,6 +33,10 @@ export function buildLessonPlanContext(
       offTopic: (s as any).offTopic === true ? true : undefined,
     })),
     completedSegmentIds: completedSegmentIds ? [...completedSegmentIds] : undefined,
+    // Final-review fix (Rule 12(b) prompt/code contradiction): forward-
+    // declared below (isGeneratedPlan is defined further down this file);
+    // function hoisting makes this reference safe at call time.
+    isGeneratedPlan: isGeneratedPlan(plan) || undefined,
   };
 }
 

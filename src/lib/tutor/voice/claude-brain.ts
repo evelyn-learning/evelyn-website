@@ -318,6 +318,16 @@ export interface LessonPlanContext {
    *  TUTOR_CONTENT_VARIETY flag is on AND there is prior-session content to
    *  diverge from. Absent ⇒ no <content_variety> block ⇒ byte-identical. */
   contentVariety?: PlanContentSeen;
+  /** Final-review fix (Rule 12(b) prompt/code contradiction): true when
+   *  this plan was minted at runtime by generate-from-text.ts (mirrors
+   *  lesson-plan/context.ts's isGeneratedPlan). Surfaced so
+   *  formatLessonPlanContext can tell the brain that LO order is
+   *  system-enforced on THIS plan (E6's checkGeneratedPlanAdvance blocks
+   *  cross-LO jumps unconditionally) — without it, Rule 12(b) reads as
+   *  globally true and the brain attempts a verbal whole-LO skip that
+   *  always gets rejected. False/absent ⇒ no marker ⇒ curated-plan output
+   *  byte-identical. */
+  isGeneratedPlan?: boolean;
 }
 
 export interface BrainToolCall {
@@ -641,8 +651,15 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
             `When the session winds down, close warm and in-character — land the learning, celebrate the win, say a real goodbye. NEVER pitch, upsell, or steer toward signing up — no "sign up", "subscribe", "upgrade", "unlock", no pricing talk. If the student explicitly asks how to continue or get more sessions, answer plainly and briefly, then hand off — the page around you owns that conversation.`,
           ]
         : [];
+  // Final-review fix (Rule 12(b) prompt/code contradiction): tell the
+  // brain, on THIS plan, whether a verbal whole-LO skip is even honorable.
+  // Absent/false ⇒ no line ⇒ curated-plan output byte-identical.
+  const generatedPlanMarker = ctx.isGeneratedPlan
+    ? [``, `This is a runtime-generated plan — LO order is enforced by the system (see Rule 12(b)); a requested whole-LO skip will be declined, not honored.`]
+    : [];
   return [
     `plan: ${plan.title} — grade ${plan.grade}, ${plan.subject} (${plan.estimatedMinutes} min)`,
+    ...generatedPlanMarker,
     `learning objectives:`,
     ...plan.los.map((lo) => `  - ${lo.description} (${lo.id})`),
     ``,

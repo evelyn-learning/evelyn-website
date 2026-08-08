@@ -69,5 +69,28 @@ test('both new rules are HARD RULEs, matching the file\'s severity convention', 
   assert.ok(prompt.includes('Ambiguous short answers resolve toward the student, not away from them (HARD RULE)'));
 });
 
+// Final-review fix (Rule 12(b) prompt/code contradiction): the prompt
+// used to tell the brain a verbal whole-LO skip was "the only way to
+// bypass the try_yourself requirement" with no scoping — but E6's
+// checkGeneratedPlanAdvance (lesson-plan/context.ts) forecloses cross-LO
+// jumps on runtime-generated plans unconditionally, so the model would
+// attempt a move that always gets rejected (a killed turn + retry, every
+// time). Pins that Rule 12(b) now scopes the skip to plans where the
+// system doesn't already enforce LO order.
+test('Rule 12(b) scopes the verbal whole-LO skip to system-enforced generated plans', () => {
+  assert.ok(
+    prompt.includes('On a runtime-generated plan'),
+    'rule names the generated-plan case',
+  );
+  assert.ok(
+    prompt.includes('LO order is enforced by the system instead'),
+    'rule states the system enforces order on generated plans',
+  );
+  assert.ok(
+    prompt.includes("decline the skip with a brief explanation and advance with 'next'"),
+    'rule instructs decline + advance-with-next instead of attempting the jump',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

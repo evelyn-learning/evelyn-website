@@ -20,7 +20,7 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import assert from 'node:assert';
 import { upsertLessonPlan, listLessonPlans, deleteLessonPlan, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
-import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
+import { topicCacheKey, findCachedPlan, CACHE_KEY_VERSION } from '@/lib/tutor/lesson-plan/generation-cache';
 import { minutesPerLOForGrade } from '@/lib/tutor/lesson-plan/session-budget';
 import { LessonPlanModel } from '@/models/LessonPlan';
 import connectDB from '@/lib/db';
@@ -201,6 +201,24 @@ async function testGradeBandLiteral9To12MatchesNumberedGrades() {
 
 async function testMinutesPerLOForGrade9To12EqualsFive() {
   assert.strictEqual(minutesPerLOForGrade('9-12'), 5, "minutesPerLOForGrade('9-12') should be 5, matching '10'/'11'/'12'");
+}
+
+/** Final-review fix (E4 recap unreachable for already-cached plans): the
+ *  key format had no version component, so a pre-deploy cached plan (up
+ *  to 30 days old — including the incident topic on prod) kept matching
+ *  new requests under the OLD key shape and served its recap-less
+ *  content straight through E4's fix. Pins that the key now carries a
+ *  trailing version segment (CACHE_KEY_VERSION) — any future bump of
+ *  that constant is a deliberate, visible cache-busting decision, not a
+ *  format change nobody thought to make. */
+async function testTopicCacheKeyCarriesVersionSegment() {
+  const key = topicCacheKey({ topic: 'pythagorean theorem', subject: 'math', grade: '10', sessionMinutes: 28 });
+  assert.strictEqual(
+    key,
+    `pythagorean theorem|math|9-12|std|en|${CACHE_KEY_VERSION}`,
+    `expected key to end with the version segment, got "${key}"`,
+  );
+  assert.ok(key.endsWith(`|${CACHE_KEY_VERSION}`), 'key must end with the version segment');
 }
 
 /** findCachedPlan must return a plan previously upserted with a matching
@@ -655,6 +673,7 @@ async function main() {
   console.log("\nFix review — grade band '9-12' literal (finding #4):\n");
   await test("topicCacheKey: grade '9-12' band-matches grade '10'", testGradeBandLiteral9To12MatchesNumberedGrades);
   await test("minutesPerLOForGrade('9-12') === 5", testMinutesPerLOForGrade9To12EqualsFive);
+  await test('topicCacheKey carries the CACHE_KEY_VERSION segment (E4 recap cache-bust)', testTopicCacheKeyCarriesVersionSegment);
 
   console.log('\nFix review — toResponse / generatedPlanMetadata (findings #1, #2, #6a) — pure:\n');
   await test('toResponse: picker plan uses its own stored allowedMaxLOs, not a fresh recompute', testToResponsePickerPlanUsesStoredAllowedMaxLOs);

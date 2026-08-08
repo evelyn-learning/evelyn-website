@@ -5004,9 +5004,22 @@ export function VoiceTutorRealtime({
           const remaining = remainingGroupSegmentIds(planNow, currentGroup, completedSegmentIdsRef.current);
           console.warn(`[VoiceTutorRealtime] mark_segment_complete rejected: "${c.segmentId}" is outside the current LO group ("${currentGroup}", current segment "${currentSegmentIdRef.current}")`);
           onDebugEvent?.('mark_segment_complete_cross_lo_rejected', `target="${c.segmentId}" current="${currentSegmentIdRef.current}"`);
+          // Final-review fix (minor): the old message unconditionally
+          // suggested advance_lesson({to: c.segmentId}) as the recovery —
+          // but that same move can itself be a cross-LO jump the intro-
+          // skip / lo-incomplete gate above would ALSO reject (e.g. the
+          // current LO's own "-try" isn't done, or the cursor is still on
+          // "intro"), sending the brain into a second guaranteed-killed
+          // turn. Only suggest the explicit target when
+          // checkGeneratedPlanAdvance would actually allow that advance;
+          // otherwise fall back to "next", which is always honorable.
+          const advanceCheck = checkGeneratedPlanAdvance(planNow, currentSegmentIdRef.current, c.segmentId, completedSegmentIdsRef.current);
+          const recoveryAdvance = advanceCheck.allowed
+            ? `advance_lesson({to: "${c.segmentId}"}) to move into that LO before completing it`
+            : `advance_lesson({to: "next"}) to move forward one segment at a time`;
           rejected.push({
             action: 'mark_segment_complete',
-            reason: `mark_segment_complete({segmentId: "${c.segmentId}"}) failed: that segment belongs to a different learning objective than the CURRENT segment "${currentSegmentIdRef.current}" (LO "${currentGroup}"). You can only mark a segment complete once it IS the current segment. Finish the current LO's remaining segments (${remaining.length ? remaining.join(', ') : `${currentGroup}-try`}) via advance_lesson, or call advance_lesson({to: "${c.segmentId}"}) to move into that LO before completing it.`,
+            reason: `mark_segment_complete({segmentId: "${c.segmentId}"}) failed: that segment belongs to a different learning objective than the CURRENT segment "${currentSegmentIdRef.current}" (LO "${currentGroup}"). You can only mark a segment complete once it IS the current segment. Finish the current LO's remaining segments (${remaining.length ? remaining.join(', ') : `${currentGroup}-try`}) via advance_lesson, or call ${recoveryAdvance}.`,
           });
           continue;
         }
@@ -10561,10 +10574,25 @@ export function VoiceTutorRealtime({
                         // FIRST, call show_segment_card after" ordering,
                         // since no further 'sentence' events may arrive to
                         // trigger the sentence-branch check below.
-                        cardNarrationPending = { segId, cardText: truth.problemText };
-                        if (!attemptKilled && checkCardNarrationMismatch(attemptText)) {
-                          await performKill();
-                          continue;
+                        // Final-review ruling: scope the arm to
+                        // runtime-generated plans ONLY. E2's validator has
+                        // a residual false-positive class on deictic
+                        // teaching ("look at the board — divide the miles
+                        // by the hours and you get sixty… what would two
+                        // hours give?" — 2 foreign numbers, zero card
+                        // numbers — kills a clean turn) that curated,
+                        // hand-authored courses are more exposed to than
+                        // generated plans. Not arming on curated plans
+                        // means checkCardNarrationMismatch's cardNarrationPending
+                        // read below is always null there — a guaranteed
+                        // no-op — so no separate guard is needed at either
+                        // check call site (9518, 10565-adjacent).
+                        if (isGeneratedPlan(plan)) {
+                          cardNarrationPending = { segId, cardText: truth.problemText };
+                          if (!attemptKilled && checkCardNarrationMismatch(attemptText)) {
+                            await performKill();
+                            continue;
+                          }
                         }
                       } else if (seg) {
                         // Hook / concept / recap segments don't have a
@@ -14468,6 +14496,24 @@ export function VoiceTutorRealtime({
         // FRESH in applyPerceptionVerdict) — a student already mid their
         // NEXT utterance when this lands must not get it bare-dropped.
         void handleStudentTranscriptForBrain(text, { bypassPerceptionDedupe: true, queueOnMidUtterance: true });
+        // Final-review fix (stranded checkpoint): runPerceptionKill above
+        // (if it ran) armed perceptionInterruptCheckpointRef AND the 7s
+        // stage2TimeoutRestoreTimerRef, on the assumption its caller
+        // consumes the checkpoint via applyPerceptionVerdict. This path
+        // deliberately dispatches directly instead (minor #4 above) —
+        // nothing else was going to clear either. Left armed, the
+        // checkpoint-first guards (onSpeechStart's `if
+        // (perceptionInterruptCheckpointRef.current) return`) suppress
+        // ALL perception cancels — including a genuine barge-in on THIS
+        // turn's TTS — until the watchdog fires and re-plays the STALE
+        // pre-cancel transcript over live content. This dispatch already
+        // owns resolution; clear both explicitly, mirroring
+        // applyPerceptionVerdict's first lines.
+        if (stage2TimeoutRestoreTimerRef.current) {
+          clearTimeout(stage2TimeoutRestoreTimerRef.current);
+          stage2TimeoutRestoreTimerRef.current = null;
+        }
+        perceptionInterruptCheckpointRef.current = null;
         return true;
       };
 
@@ -15036,10 +15082,13 @@ export function VoiceTutorRealtime({
         // rather than 'restore'.
         //
         // E1 note: when this fires from perceptionOnTranscript's stage2-lazy
-        // resolver (verdict-time, not onset-time), the caller consumes the
-        // checkpoint synchronously right after via applyPerceptionVerdict —
-        // this timer arms and then gets cleared immediately (applyPerception-
-        // Verdict's first lines clear it), a harmless no-op in that path.
+        // resolver (verdict-time, not onset-time), that resolver does NOT
+        // route through applyPerceptionVerdict — it dispatches directly
+        // (minor #4 above) and then explicitly clears both this checkpoint
+        // and this timer itself, right after the dispatch call. Same net
+        // effect (armed-then-immediately-cleared, harmless in that path),
+        // different mechanism — don't assume applyPerceptionVerdict runs
+        // here.
         {
           const armedCheckpoint = perceptionInterruptCheckpointRef.current;
           if (stage2TimeoutRestoreTimerRef.current) clearTimeout(stage2TimeoutRestoreTimerRef.current);

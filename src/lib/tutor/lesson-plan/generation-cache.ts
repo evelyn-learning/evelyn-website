@@ -17,6 +17,20 @@ import type { LessonPlan } from './types';
 
 const DEFAULT_TTL_DAYS = 30;
 
+/** Final-review fix (E4 recap unreachable for already-cached plans): the
+ *  key format had no version component, so a pre-deploy cached plan (up
+ *  to DEFAULT_TTL_DAYS old — including the incident topic on prod) kept
+ *  matching new requests and serving its recap-less content straight
+ *  through E4's fix. Bumping this segment changes every key, so no
+ *  pre-existing `metadata.cacheKey` row can match — the next request for
+ *  any topic regenerates (and gets a recap) instead of hitting the stale
+ *  cache. Bump again any time a generation-shape change (new required
+ *  segment, changed authoring rule that alters output) needs the same
+ *  forced-miss treatment. Exported so tests can assert against it instead
+ *  of hardcoding the literal, so a future bump doesn't also require
+ *  editing test string literals in lockstep. */
+export const CACHE_KEY_VERSION = 'gen-v2';
+
 type GradeBand = 'K-2' | '3-5' | '6-8' | '9-12' | 'other';
 
 /** Grade -> band, mirroring `minutesPerLOForGrade`'s token matching
@@ -57,7 +71,11 @@ function lengthBucketFor(sessionMinutes: number): LengthBucket {
  *  request serving a Spanish-locale student a plan they can't read.
  *
  *  e.g. topicCacheKey({ topic: 'Pythagorean Theorem', subject: 'Math',
- *  grade: '10', sessionMinutes: 28 }) === "pythagorean theorem|math|9-12|std|en" */
+ *  grade: '10', sessionMinutes: 28 }) === "pythagorean theorem|math|9-12|std|en|gen-v2"
+ *
+ *  The trailing `|gen-v2` (CACHE_KEY_VERSION) segment is a version tag,
+ *  not part of the equivalence class — it exists purely so bumping it
+ *  invalidates every previously-cached key at once. See CACHE_KEY_VERSION. */
 export function topicCacheKey(args: {
   topic: string;
   subject: string;
@@ -70,7 +88,7 @@ export function topicCacheKey(args: {
   const band = gradeBandForCacheKey(args.grade);
   const bucket = lengthBucketFor(args.sessionMinutes);
   const locale = (args.locale ?? 'en').trim().toLowerCase();
-  return `${topic}|${subject}|${band}|${bucket}|${locale}`;
+  return `${topic}|${subject}|${band}|${bucket}|${locale}|${CACHE_KEY_VERSION}`;
 }
 
 /** Look up a previously generated plan by cache key, within `ttlDays` of
