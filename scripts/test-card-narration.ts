@@ -138,5 +138,66 @@ const CAR_CARD = 'A car travels 240 miles in 4 hours. Find the rate of change.';
   check('solo "one" as pronoun, no other numbers → pass (not treated as a numeral)', r.reject === false, JSON.stringify(r));
 }
 
+// ---------- REVIEW ROUND 2 (2026-08-08): unconditional solo-"one" suppression was unsafe ----------
+// Round 1's suppression treated EVERY standalone "one" as the pronoun,
+// unconditionally. That silently passed a genuine-numeral "one" paired
+// with exactly one other foreign number, because the spokenNums.size<2
+// early-pass gate and the newNums.length>=2 reject gate sit at the same
+// threshold. Verified failing before the fix: reject:false.
+{
+  const r = detectCardNarrationMismatch(
+    CAR_CARD,
+    'The answer here is one, and it also costs five dollars.',
+  );
+  check(
+    'round-2 (a): genuine-numeral "one" (not a determiner/pronoun slot) + one foreign number → reject',
+    r.reject === true,
+    JSON.stringify(r),
+  );
+}
+
+// Round-2 (b): the ORIGINAL verbatim-incident test above must stay green.
+// It's unaffected either way (it rejects on "five" + "one fifty" alone),
+// but re-asserted here explicitly per the round-2 review requirement.
+{
+  const r = detectCardNarrationMismatch(
+    CAR_CARD,
+    "Here's a real-world one — a taxi ride costs a flat five dollars, plus one fifty for every kilometer.",
+  );
+  check(
+    'round-2 (b): verbatim live narration still rejects regardless of how "one" itself resolves',
+    r.reject === true,
+    JSON.stringify(r),
+  );
+}
+
+// ---------- Round-2 bonus: directly exercise the context-aware suppression paths ----------
+// (Neither mandated round-2 case above actually walks the suppression
+// branch: (a) hits the "count as numeral" branch, (b)'s "a real-world one"
+// has "world" — not "a" — as its immediate predecessor due to hyphen
+// splitting, so it also falls through to "count as numeral" and only
+// passes because five + one-fifty already clear the reject bar on their
+// own. These two cases pin the suppression branch itself.)
+{
+  // prevTok "the" is in DETERMINER_CONTEXT → suppressed → only "five" is
+  // foreign → below the 2-number threshold → pass.
+  const r = detectCardNarrationMismatch(CAR_CARD, "That's the one, and it also costs five dollars.");
+  check(
+    'round-2 bonus: "the one" (determiner immediately before) → suppressed → pass',
+    r.reject === false,
+    JSON.stringify(r),
+  );
+}
+{
+  // nextTok "that" is in FOLLOWED_BY_PRONOUN_CONTEXT → suppressed → only
+  // "five" is foreign → below the 2-number threshold → pass.
+  const r = detectCardNarrationMismatch(CAR_CARD, "I'll pick one that costs five dollars.");
+  check(
+    'round-2 bonus: "one that" (pronoun-context word immediately after) → suppressed → pass',
+    r.reject === false,
+    JSON.stringify(r),
+  );
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

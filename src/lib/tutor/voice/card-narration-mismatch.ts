@@ -24,6 +24,17 @@
  * hundred/thousand compounds) via extractWordNumbers below, applied
  * symmetrically to both the card and the spoken text.
  *
+ * REVIEW FIX ROUND 2 (2026-08-08): round 1's word-number extractor
+ * unconditionally suppressed a solo "one" as an assumed pronoun collision
+ * ("a real-world ONE"). That's unsafe: the spokenNums.size<2 early-pass
+ * gate and the newNums.length>=2 reject gate sit at the SAME threshold, so
+ * a suppressed genuine numeral "one" plus exactly one other foreign number
+ * silently passed ("The answer here is one, and it also costs five
+ * dollars." vs the car card). Suppression is now context-aware — see
+ * DETERMINER_CONTEXT / FOLLOWED_BY_PRONOUN_CONTEXT and
+ * resolveChunkCandidates below — firing only when "one" sits in an actual
+ * determiner/pronoun grammatical slot, not unconditionally.
+ *
  * Digit extraction mirrors the show_worked_example numeric-set check's
  * approach (VoiceTutorRealtime.tsx, `numRe = /-?\d+(?:\.\d+)?/g` numeric-
  * set comparison) — reused here as NUMBER_RE, UNCHANGED — but the LEFT
@@ -70,25 +81,50 @@ function isNumberWord(tok: string): boolean {
   return tok in ONES_OR_TEENS || tok in TENS || tok === 'hundred' || tok === 'thousand';
 }
 
+interface NumberChunk {
+  /** Raw tokens of the chunk (may include a trailing "and" connector). */
+  tokens: string[];
+  /** Index of this chunk's first token within the full token stream — kept
+   * so a solo "one" can inspect its immediate neighbors for pronoun vs.
+   * numeral context (see resolveChunkCandidates). */
+  startIdx: number;
+}
+
 /**
  * Groups a token stream into contiguous runs of number-words (allowing
  * "and" as a mid-run connector, e.g. "two hundred and forty"). Non-number
  * tokens ("miles", "dollars", "for") end a run, same as punctuation would.
  */
-function groupNumberWordChunks(tokens: string[]): string[][] {
-  const chunks: string[][] = [];
+function groupNumberWordChunks(tokens: string[]): NumberChunk[] {
+  const chunks: NumberChunk[] = [];
   let current: string[] = [];
-  for (const tok of tokens) {
+  let currentStart = -1;
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
     if (isNumberWord(tok) || (tok === 'and' && current.length > 0)) {
+      if (current.length === 0) currentStart = i;
       current.push(tok);
     } else {
-      if (current.some(isNumberWord)) chunks.push(current);
+      if (current.some(isNumberWord)) chunks.push({ tokens: current, startIdx: currentStart });
       current = [];
     }
   }
-  if (current.some(isNumberWord)) chunks.push(current);
+  if (current.some(isNumberWord)) chunks.push({ tokens: current, startIdx: currentStart });
   return chunks;
 }
+
+// REVIEW ROUND 2 (2026-08-08): round 1's unconditional "solo one is always
+// the pronoun" suppression was unsafe — the spokenNums.size<2 early-pass
+// gate and the newNums.length>=2 reject gate are the same threshold, so a
+// suppressed GENUINE numeral "one" plus exactly one other foreign number
+// silently passed ("The answer here is one, and it also costs five
+// dollars." vs the car card returned reject:false). Suppression is now
+// context-aware: only fire it when "one" sits in a determiner/pronoun
+// grammatical slot, not unconditionally.
+const DETERMINER_CONTEXT = new Set([
+  'a', 'an', 'the', 'this', 'that', 'which', 'each', 'another', 'other', 'any', 'no', 'some',
+]);
+const FOLLOWED_BY_PRONOUN_CONTEXT = new Set(['of', 'that', 'which']);
 
 /**
  * Resolves one contiguous number-word chunk into one or more candidate
@@ -100,16 +136,27 @@ function groupNumberWordChunks(tokens: string[]): string[][] {
  * (150) — so BOTH candidates are returned; the caller's set-membership
  * check treats a match against either as a card-number match.
  *
- * A solo "one" ("a good ONE", "which ONE", "a real-world ONE") is
- * suppressed entirely: in isolation it is far more often the indefinite
- * pronoun than the numeral, and this check only needs to catch clear
- * multi-number problem statements, not single stray words. "one" still
- * participates fully in multi-token chunks ("one fifty", "one hundred").
+ * A solo "one" ("a good ONE", "which ONE") is suppressed ONLY when it
+ * sits in a determiner/pronoun grammatical slot — immediately preceded by
+ * a word in DETERMINER_CONTEXT ("a one", "the one", "which one", …) or
+ * immediately followed by a word in FOLLOWED_BY_PRONOUN_CONTEXT ("one of",
+ * "one that", "one which"). Everywhere else — including a bare "The
+ * answer is one" — a standalone "one" counts as the numeral 1. "one"
+ * still participates fully in multi-token chunks ("one fifty", "one
+ * hundred") regardless of context.
  */
-function resolveChunkCandidates(rawChunk: string[]): number[] {
-  const toks = rawChunk.filter((t) => t !== 'and');
+function resolveChunkCandidates(chunk: NumberChunk, fullTokens: string[]): number[] {
+  const toks = chunk.tokens.filter((t) => t !== 'and');
   if (toks.length === 0) return [];
-  if (toks.length === 1 && toks[0] === 'one') return [];
+  if (toks.length === 1 && toks[0] === 'one') {
+    const prevTok = chunk.startIdx > 0 ? fullTokens[chunk.startIdx - 1] : undefined;
+    const nextTok = chunk.startIdx + 1 < fullTokens.length ? fullTokens[chunk.startIdx + 1] : undefined;
+    const isPronounSlot =
+      (prevTok !== undefined && DETERMINER_CONTEXT.has(prevTok)) ||
+      (nextTok !== undefined && FOLLOWED_BY_PRONOUN_CONTEXT.has(nextTok));
+    if (isPronounSlot) return [];
+    return [1];
+  }
   if (toks.length === 2 && toks[0] in ONES_OR_TEENS && toks[1] in TENS) {
     const a = ONES_OR_TEENS[toks[0]];
     const b = TENS[toks[1]];
@@ -137,7 +184,7 @@ function extractWordNumbers(text: string): string[] {
   const tokens = text.toLowerCase().split(/[^a-z']+/).filter(Boolean);
   const values: string[] = [];
   for (const chunk of groupNumberWordChunks(tokens)) {
-    for (const v of resolveChunkCandidates(chunk)) {
+    for (const v of resolveChunkCandidates(chunk, tokens)) {
       values.push(String(v));
     }
   }
