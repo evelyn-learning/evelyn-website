@@ -59,7 +59,17 @@ type ErrResult = Extract<ExtractResult, { ok: false }>;
 /* ------------------------------------------------------------------ */
 
 const MAX_MATERIALS = 4;
-const MAX_DECODED_BYTES = 8 * 1024 * 1024; // 8MB decoded per file (contract caps base64 ≤11MB).
+// 7MB decoded per file. NOT 8MB: the contract's `data` field caps the
+// base64 STRING at 11,000,000 chars (PlanMaterialSchema, v1.10.0), which
+// only round-trips a decoded payload up to ~8,250,000 bytes (base64
+// overhead + padding) — a hair under the 8,388,608-byte "8MB" this check
+// used to enforce. At exactly 8MB, this check could never fire through
+// the only caller that reaches it (plan-generate/route.ts): the schema
+// itself would already reject the request one layer up as a 400, with a
+// generic zod issue instead of this module's friendly `too_large`
+// message/code. 7MB keeps clear headroom under the schema's real ceiling
+// so a schema-valid oversized file still surfaces this check's message.
+const MAX_DECODED_BYTES = 7 * 1024 * 1024;
 const MAX_PDF_PAGES = 30;
 const SCANNED_PDF_MIN_AVG_CHARS_PER_PAGE = 40;
 const DEFAULT_PIPELINE_TARGET_CHARS = 8000; // matches MAX_INPUT_CHARS in plan-from-text/route.ts

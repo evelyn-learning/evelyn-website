@@ -19,6 +19,7 @@ import path from 'path';
 config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import assert from 'node:assert';
+import fs from 'node:fs';
 import { upsertLessonPlan, listLessonPlans, deleteLessonPlan, getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { topicCacheKey, findCachedPlan, CACHE_KEY_VERSION } from '@/lib/tutor/lesson-plan/generation-cache';
 import { minutesPerLOForGrade } from '@/lib/tutor/lesson-plan/session-budget';
@@ -41,7 +42,17 @@ import {
 import { buildPickerPlan, STAGE2_SYSTEM } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import type { NextRequest } from 'next/server';
+
+// Task 3 (Phase-2 doc ingestion) — POST /api/portal/v1/plan-generate with
+// `materials`. Fixtures are shared with test-material-extract.ts.
+const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');
+
+function loadFixtureAsMaterial(filename: string, kind: PlanMaterial['kind'], mimeType?: string): PlanMaterial {
+  const buf = fs.readFileSync(path.join(FIXTURES_DIR, filename));
+  return { kind, data: buf.toString('base64'), name: filename, mimeType };
+}
 
 const PLAN_GENERATE_SECRET = 'secret-a';
 const PLAN_GENERATE_PARTNER = 'portalA';
@@ -454,6 +465,128 @@ async function testPlanGenerateMissingSubjectReturns400() {
   assert.strictEqual(status, 400, `expected 400 for missing subject, got ${status}`);
 }
 
+/** Task 3 (Phase-2 doc ingestion), happy path: a request carrying a
+ *  `materials` attachment (the Task-2 DOCX fixture, small so this stays
+ *  fast) must run `extractMaterials()` first, generate off the extracted
+ *  `combinedText`, and SKIP the topic cache entirely — no `cacheKey`
+ *  ends up in the persisted metadata, and `sourceKind`/`materialsMeta`
+ *  are stamped instead. A 'full' mode plan must still end in a recap
+ *  segment (shared generation path with the text-only case). A SECOND,
+ *  IDENTICAL request must NOT hit a cache — it mints a brand-new planId
+ *  (the only way to prove the cache truly was skipped is to observe two
+ *  distinct live generations landing on two distinct ids), so this test
+ *  makes two live Anthropic calls; the fixture is a two-sentence DOCX to
+ *  keep both cheap. */
+async function testPlanGenerateMaterialsHappyPathSkipsCache() {
+  const body = {
+    text: 'Review my attached notes',
+    subject: 'science',
+    grade: '9-12',
+    sessionMinutes: 20,
+    materials: [loadFixtureAsMaterial('sample.docx', 'docx')],
+  };
+  let planIdA: string | undefined;
+  let planIdB: string | undefined;
+  try {
+    const first = await callPlanGenerate(
+      planGeneratePOST,
+      signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
+    );
+    assert.strictEqual(first.status, 200, `expected 200, got ${first.status}: ${JSON.stringify(first.json)}`);
+    const firstBody = PlanGenerateResponseSchema.parse(first.json);
+    planIdA = firstBody.planId;
+    assert.ok(planIdA.startsWith('gen-'), `planId should start with "gen-", got ${JSON.stringify(planIdA)}`);
+    assert.strictEqual(firstBody.cached, false, 'materials-derived plan must never be reported as a cache hit');
+
+    const stored = await getLessonPlan(planIdA);
+    assert.ok(stored, 'materials-derived plan should be durably persisted');
+    assert.strictEqual(stored?.metadata?.sourceKind, 'materials', 'expected metadata.sourceKind === "materials"');
+    assert.strictEqual(stored?.metadata?.cacheKey, undefined, 'materials-derived plan must NOT carry a cacheKey');
+    const materialsMeta = stored?.metadata?.materialsMeta as
+      | { count: number; kinds: string[]; totalChars: number }
+      | undefined;
+    assert.ok(materialsMeta, 'expected metadata.materialsMeta to be set');
+    assert.strictEqual(materialsMeta?.count, 1, 'expected materialsMeta.count === 1');
+    assert.deepStrictEqual(materialsMeta?.kinds, ['docx'], 'expected materialsMeta.kinds === ["docx"]');
+    assert.ok(materialsMeta && materialsMeta.totalChars > 0, 'expected materialsMeta.totalChars > 0');
+
+    if (firstBody.mode === 'full') {
+      const storedSegments = stored?.segments ?? [];
+      assert.ok(storedSegments.length > 0, 'expected the full plan to have segments');
+      assert.strictEqual(
+        storedSegments[storedSegments.length - 1]?.kind,
+        'recap',
+        `expected the last segment of a 'full' mode materials plan to be a recap, got "${storedSegments[storedSegments.length - 1]?.kind}"`,
+      );
+    }
+
+    // Second, identical request: cache must be skipped entirely — a
+    // fresh live generation, landing on a DIFFERENT planId.
+    const second = await callPlanGenerate(
+      planGeneratePOST,
+      signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
+    );
+    assert.strictEqual(second.status, 200, `expected 200, got ${second.status}: ${JSON.stringify(second.json)}`);
+    const secondBody = PlanGenerateResponseSchema.parse(second.json);
+    planIdB = secondBody.planId;
+    assert.strictEqual(secondBody.cached, false, 'second materials request must not be a cache hit either');
+    assert.notStrictEqual(planIdB, planIdA, 'identical materials request must mint a DIFFERENT planId (cache provably skipped)');
+  } finally {
+    if (planIdA) await deleteLessonPlan(planIdA);
+    if (planIdB) await deleteLessonPlan(planIdB);
+  }
+}
+
+/** Task 3, error case: a scanned (no text layer) PDF material must be
+ *  rejected with 422 and `error: 'scanned_pdf'` — a user-fixable input
+ *  problem, not a 502 generation failure. No LLM call is reached (the
+ *  extraction failure short-circuits before Stage 1). */
+async function testPlanGenerateMaterialsScannedPdfReturns422() {
+  const body = {
+    text: 'Review my scanned notes',
+    subject: 'science',
+    grade: '9-12',
+    materials: [loadFixtureAsMaterial('scanned-no-text.pdf', 'pdf')],
+  };
+  const { status, json } = await callPlanGenerate(
+    planGeneratePOST,
+    signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
+  );
+  assert.strictEqual(status, 422, `expected 422 for a scanned PDF, got ${status}: ${JSON.stringify(json)}`);
+  assert.strictEqual(json.error, 'scanned_pdf', `expected error 'scanned_pdf', got ${JSON.stringify(json.error)}`);
+}
+
+/** Task 3, error case: an oversized material must be rejected with 422
+ *  and `error: 'too_large'` before any LLM call — extractMaterials()
+ *  enforces the decoded-size limit synchronously. Synthetic buffer, no
+ *  fixture file needed.
+ *
+ *  Sized at 7.5MB decoded (base64 ≈10,000,000 chars): strictly ABOVE
+ *  material-extract's MAX_DECODED_BYTES (7MB — see that module's comment
+ *  for why 7MB, not the rounder 8MB, is the real enforceable ceiling)
+ *  and strictly BELOW the contract's own `data` field cap
+ *  (`PlanMaterialSchema.data`, 11,000,000 base64 chars). A larger buffer
+ *  would round-trip through base64 to MORE than 11,000,000 chars and get
+ *  rejected one layer up by `PlanGenerateRequestSchema` itself (400
+ *  invalid_request) before ever reaching extractMaterials — this size is
+ *  the one place that actually exercises extractMaterials' own
+ *  too_large branch end-to-end through the route. */
+async function testPlanGenerateMaterialsOversizedReturns422() {
+  const oversized = Buffer.alloc(7_500_000, 'a');
+  const body = {
+    text: 'Review my attached notes',
+    subject: 'science',
+    grade: '9-12',
+    materials: [{ kind: 'text', data: oversized.toString('base64') }],
+  };
+  const { status, json } = await callPlanGenerate(
+    planGeneratePOST,
+    signedPlanGenerateRequest('POST', '/api/portal/v1/plan-generate', body),
+  );
+  assert.strictEqual(status, 422, `expected 422 for an oversized material, got ${status}: ${JSON.stringify(json)}`);
+  assert.strictEqual(json.error, 'too_large', `expected error 'too_large', got ${JSON.stringify(json.error)}`);
+}
+
 /** Deterministically builds and upserts a picker-mode plan for the
  *  plan-expand tests below — no LLM call. Mirrors the shape
  *  plan-generate (Task 4) produces via `buildPickerPlan` when Y > X, but
@@ -691,6 +824,14 @@ async function main() {
     testPlanGenerateRealGenerationThenCacheHit,
   );
   await test('missing subject → 400', testPlanGenerateMissingSubjectReturns400);
+
+  console.log('\nPOST /api/portal/v1/plan-generate — materials (Task 3, Phase-2 doc ingestion):\n');
+  await test(
+    'materials request → 200, sourceKind:"materials", no cacheKey, full-mode ends in recap; identical repeat → different planId (cache skipped)',
+    testPlanGenerateMaterialsHappyPathSkipsCache,
+  );
+  await test('scanned-PDF material → 422 scanned_pdf', testPlanGenerateMaterialsScannedPdfReturns422);
+  await test('oversized material → 422 too_large (no LLM call)', testPlanGenerateMaterialsOversizedReturns422);
 
   console.log('\nPOST /api/portal/v1/plan-expand (Task 5) + clone-on-expand fix:\n');
   await test(

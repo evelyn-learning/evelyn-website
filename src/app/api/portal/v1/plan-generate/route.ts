@@ -28,6 +28,20 @@
  * session, but it's never written into the generation cache (see
  * `generatedPlanMetadata` in plan-generate-contract.ts) and it's worth a
  * spot-review.
+ *
+ * Phase-2 doc ingestion (v1.10.0's `materials` field): when the request
+ * carries one or more `materials`, they go through `extractMaterials()`
+ * FIRST. An extraction failure (scanned PDF, oversized file, too many
+ * pages, unsupported kind, or a parser crash) is a user-fixable input
+ * problem, not a generation failure, so it short-circuits with 422 before
+ * any LLM call. On success, the extracted `combinedText` becomes the
+ * pipeline's `text` and the request's own `text` (the free-form prompt the
+ * student typed alongside their upload) becomes a topic hint instead —
+ * `topic ?? text`. Materials-derived plans skip the topic cache entirely
+ * (no lookup, no `cacheKey` stamped) since a document's content isn't a
+ * stable topic/grade-band/length-bucket equivalence class the way a typed
+ * topic is; everything else — picker/full mode decision, id minting,
+ * persistence, response shaping — is identical to the text-only path.
  */
 
 import { NextResponse } from 'next/server';
@@ -40,6 +54,7 @@ import {
   fallbackPlan,
   buildRecapSegment,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
+import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
 import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
@@ -64,13 +79,40 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const { text, subject, grade, topic, locale }: PlanGenerateRequest = parsed.data;
+  const { text: requestText, subject, grade, topic: requestTopic, locale, materials }: PlanGenerateRequest = parsed.data;
   const sessionMinutes = clampSessionMinutes(parsed.data.sessionMinutes);
+  const hasMaterials = !!materials && materials.length > 0;
 
-  const cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale });
-  const cachedPlan = await findCachedPlan(cacheKey);
-  if (cachedPlan) {
-    return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));
+  let text = requestText;
+  let topic = requestTopic;
+  // Only set for the materials path — stays undefined (no cache lookup,
+  // no cacheKey stamped) on the text-only path below.
+  let cacheKey: string | undefined;
+  let materialsMeta: { count: number; kinds: string[]; totalChars: number } | undefined;
+
+  if (materials && materials.length > 0) {
+    const extracted = await extractMaterials(materials);
+    if (!extracted.ok) {
+      // User-fixable input problem (bad file, not a generation failure) —
+      // 422, not 502, and no LLM call has happened yet.
+      return NextResponse.json({ error: extracted.code, message: extracted.message }, { status: 422 });
+    }
+    // The extracted document text drives generation; the student's own
+    // typed `text` becomes a topic hint instead (only if they didn't
+    // already supply an explicit `topic`).
+    text = extracted.combinedText;
+    topic = requestTopic ?? requestText;
+    materialsMeta = {
+      count: extracted.materials.length,
+      kinds: extracted.materials.map((m) => m.kind),
+      totalChars: extracted.combinedText.length,
+    };
+  } else {
+    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale });
+    const cachedPlan = await findCachedPlan(cacheKey);
+    if (cachedPlan) {
+      return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));
+    }
   }
 
   const genInput = { text, subject, grade, topic, locale };
@@ -149,13 +191,21 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // Mint the durable id and stamp portal-owned metadata. Overrides the
   // pipeline's own minted id (freestyle-*, freestyle-fallback-*) — the
   // portal contract needs a stable "gen-" prefix it can recognize.
-  // generatedPlanMetadata omits cacheKey when generatorOk is false, so a
-  // fallback skeleton is persisted (inspectable, has a durable id) but
-  // never becomes the cached answer for its topic/band/bucket.
+  // generatedPlanMetadata omits cacheKey whenever it's undefined (the
+  // materials path never computes one — see the module doc) OR when
+  // generatorOk is false, so a fallback skeleton is persisted (inspectable,
+  // has a durable id) but never becomes the cached answer for its
+  // topic/band/bucket.
   plan = {
     ...plan,
     id: `gen-${randomUUID()}`,
-    metadata: generatedPlanMetadata(plan, { cacheKey, generatorOk, portalPartnerId: auth.partnerId, sessionMinutes }),
+    metadata: generatedPlanMetadata(plan, {
+      cacheKey,
+      generatorOk,
+      portalPartnerId: auth.partnerId,
+      sessionMinutes,
+      ...(hasMaterials ? { sourceKind: 'materials' as const, materialsMeta } : {}),
+    }),
   };
 
   try {

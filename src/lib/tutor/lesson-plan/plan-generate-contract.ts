@@ -96,17 +96,37 @@ export function toResponse(
  * LLM is healthy again. The plan is still durably persisted (has a stable
  * "gen-" id, is inspectable) — it's just not *findable* via the cache, so
  * the next request regenerates fresh.
+ *
+ * `cacheKey` is also optional/absent for the Phase-2 materials path (v1.10.0):
+ * a document's content isn't a stable topic/grade-band/length-bucket
+ * equivalence class the way a typed topic is, so the route never computes
+ * one there in the first place — this just omits it the same way it omits
+ * one on generatorOk:false, without conflating "no cache key to store" with
+ * "generation failed" (materials-path plans still report their real
+ * `generatorOk`).
+ *
+ * `sourceKind`/`materialsMeta` (Phase-2, materials path only): counts and
+ * kinds of the attached materials, never their content or names.
  */
 export function generatedPlanMetadata(
   plan: LessonPlan,
-  opts: { cacheKey: string; generatorOk: boolean; portalPartnerId: string; sessionMinutes: number },
+  opts: {
+    cacheKey?: string;
+    generatorOk: boolean;
+    portalPartnerId: string;
+    sessionMinutes: number;
+    sourceKind?: 'materials';
+    materialsMeta?: { count: number; kinds: string[]; totalChars: number };
+  },
 ): Record<string, unknown> {
   return {
     ...plan.metadata,
     generatedFromText: true,
     generatorOk: opts.generatorOk,
-    ...(opts.generatorOk ? { cacheKey: opts.cacheKey } : {}),
+    ...(opts.generatorOk && opts.cacheKey ? { cacheKey: opts.cacheKey } : {}),
     portalPartnerId: opts.portalPartnerId,
     sessionMinutes: opts.sessionMinutes,
+    ...(opts.sourceKind ? { sourceKind: opts.sourceKind } : {}),
+    ...(opts.materialsMeta ? { materialsMeta: opts.materialsMeta } : {}),
   };
 }
