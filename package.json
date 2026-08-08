@@ -72,6 +72,7 @@
     "test:graph-consistency": "npx tsx scripts/test-graph-consistency.ts",
     "test:secant-tangent": "npx tsx scripts/test-secant-tangent.ts",
     "test:equation-guards": "npx tsx scripts/test-equation-guards.ts",
+    "test:advance-ordering": "npx tsx scripts/test-advance-ordering.ts",
     "test:graph-js-expr": "npx tsx scripts/test-graph-js-expr.ts",
     "test:choice-label": "npx tsx scripts/test-choice-label.ts",
     "test:continuity": "npx tsx scripts/test-continuity.ts",

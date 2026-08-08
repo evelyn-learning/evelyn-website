@@ -50,7 +50,15 @@ import {
 } from '@/lib/tutor/ai/completion-gate';
 import { filterToolsForSubject, resolveToolSubjects } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
-import { buildLessonPlanContext, resolveAdvanceTarget, getSegmentTruth } from '@/lib/tutor/lesson-plan/context';
+import {
+  buildLessonPlanContext,
+  resolveAdvanceTarget,
+  getSegmentTruth,
+  checkGeneratedPlanAdvance,
+  loGroupOf,
+  remainingGroupSegmentIds,
+  isGeneratedPlan,
+} from '@/lib/tutor/lesson-plan/context';
 import { getSegment, type LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
@@ -4889,7 +4897,10 @@ export function VoiceTutorRealtime({
           // before this fix. Falls back to plan-start resume inside
           // resolveAdvanceTarget when there is no stashed segment.
           const fromSegId = currentSegmentIdRef.current || segmentBeforeFreeRef.current;
-          const next = resolveAdvanceTarget(plan, fromSegId, to, { consumedHashes });
+          const next = resolveAdvanceTarget(plan, fromSegId, to, {
+            consumedHashes,
+            completedSegmentIds: completedSegmentIdsRef.current,
+          });
           if (next) {
             // Behavior-preserving extraction (2026-05-22): the advance-
             // apply side-effects now live in applyResolvedAdvance so the
@@ -4914,9 +4925,33 @@ export function VoiceTutorRealtime({
             const isAtLastSegment = planForReject
               ? currentSegIdx === planForReject.segments.length - 1
               : false;
-            const reason = isAtLastSegment
-              ? `advance_lesson({to: "${to}"}) failed: the current segment "${fromSegId}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`
-              : `advance_lesson({to: "${to}"}) failed: could not resolve target "${to}"${fromSegId ? ` from segment "${fromSegId}"` : ' (no active plan position — session is in free conversation; advance by an explicit segment id to re-enter the plan, or just keep teaching)'}. Valid targets are "next", "previous", or an explicit segment id from this plan.`;
+            // E6: an explicit-id target that DOES exist in the plan but
+            // was refused by resolveAdvanceTarget's LO-ordering guard
+            // (generated plans only) gets its own instructive message —
+            // distinguish "unknown id" from "valid id, wrong LO order".
+            // checkGeneratedPlanAdvance is pure, so re-running it here
+            // (resolveAdvanceTarget already ran it once to decide `next`
+            // was null) just recovers the WHY, at negligible cost.
+            const genPlanBlock = planForReject
+              && to !== 'next' && to !== 'previous' && to !== 'free'
+              && planForReject.segments.some((s) => s.id === to)
+              ? checkGeneratedPlanAdvance(planForReject, fromSegId, to, completedSegmentIdsRef.current)
+              : null;
+            let reason: string;
+            if (genPlanBlock && !genPlanBlock.allowed) {
+              const { kind, currentLoGroup, remainingSegmentIds } = genPlanBlock.reason;
+              if (kind === 'intro-skip') {
+                reason = `advance_lesson({to: "${to}"}) failed: from "intro" you may only advance into the FIRST learning objective's segments${remainingSegmentIds.length ? ` (${remainingSegmentIds.join(', ')})` : ''}. Call advance_lesson({to: "next"}) to enter it in order, or target one of those ids directly.`;
+              } else if (kind === 'recap-incomplete') {
+                reason = `advance_lesson({to: "${to}"}) failed: "recap" isn't reachable yet — these try_yourself segments are still incomplete: ${remainingSegmentIds.join(', ')}. Finish every LO (ending on its "-try" segment) before recapping.`;
+              } else {
+                reason = `advance_lesson({to: "${to}"}) failed: "${to}" belongs to a different learning objective than the current segment "${fromSegId}" (LO "${currentLoGroup}"), and that LO isn't finished yet. Finish the current LO first — remaining segments: ${remainingSegmentIds.length ? remainingSegmentIds.join(', ') : `${currentLoGroup}-try`}. Advance through them by explicit id, or call advance_lesson({to: "next"}) to move forward one segment at a time. Only an explicit whole-topic skip request from the student authorizes jumping LOs early.`;
+              }
+            } else if (isAtLastSegment) {
+              reason = `advance_lesson({to: "${to}"}) failed: the current segment "${fromSegId}" is the LAST segment in the lesson plan, so there is no "next" to advance to. If the student wants more practice, call generate_problem (with difficulty matching the pacing hint). If they want to wrap up, acknowledge briefly and stop.`;
+            } else {
+              reason = `advance_lesson({to: "${to}"}) failed: could not resolve target "${to}"${fromSegId ? ` from segment "${fromSegId}"` : ' (no active plan position — session is in free conversation; advance by an explicit segment id to re-enter the plan, or just keep teaching)'}. Valid targets are "next", "previous", or an explicit segment id from this plan.`;
+            }
             rejected.push({ action: 'advance_lesson', reason });
           }
         }
@@ -4926,6 +4961,31 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
         console.log(`[VoiceTutorRealtime] segment complete: "${c.segmentId}"${typeof c.masteryDelta === 'number' ? ` Δ=${c.masteryDelta}` : ''}${c.notes ? ` — ${c.notes}` : ''}`);
+        const planNow = lessonPlanRef.current;
+        // E6: on a generated plan, mark_segment_complete naming a
+        // segment OUTSIDE the CURRENT segment's LO group is the same
+        // failure mode as the advance-side cross-LO jump (a real prod
+        // session called this on "lo-2-try" while the cursor was still
+        // on "intro" — it silently gated as "visited, not mastered"
+        // below instead of being rejected, and the segment still
+        // counted as visited for the progress strip). Reject outright
+        // instead of falling through to the demonstrated-mastery gate.
+        // Only fires when we KNOW the current segment (empty cursor /
+        // free-conversation is left alone — unrelated to this fix).
+        if (planNow && isGeneratedPlan(planNow)
+            && typeof c.segmentId === 'string' && c.segmentId
+            && currentSegmentIdRef.current
+            && loGroupOf(c.segmentId) !== loGroupOf(currentSegmentIdRef.current)) {
+          const currentGroup = loGroupOf(currentSegmentIdRef.current);
+          const remaining = remainingGroupSegmentIds(planNow, currentGroup, completedSegmentIdsRef.current);
+          console.warn(`[VoiceTutorRealtime] mark_segment_complete rejected: "${c.segmentId}" is outside the current LO group ("${currentGroup}", current segment "${currentSegmentIdRef.current}")`);
+          onDebugEvent?.('mark_segment_complete_cross_lo_rejected', `target="${c.segmentId}" current="${currentSegmentIdRef.current}"`);
+          rejected.push({
+            action: 'mark_segment_complete',
+            reason: `mark_segment_complete({segmentId: "${c.segmentId}"}) failed: that segment belongs to a different learning objective than the CURRENT segment "${currentSegmentIdRef.current}" (LO "${currentGroup}"). You can only mark a segment complete once it IS the current segment. Finish the current LO's remaining segments (${remaining.length ? remaining.join(', ') : `${currentGroup}-try`}) via advance_lesson, or call advance_lesson({to: "${c.segmentId}"}) to move into that LO before completing it.`,
+          });
+          continue;
+        }
         // Track completed segment for downstream show_segment_card block.
         if (typeof c.segmentId === 'string' && c.segmentId) {
           const before = completedSegmentIdsRef.current.size;
@@ -4947,7 +5007,6 @@ export function VoiceTutorRealtime({
         // demonstratedSegmentsRef). The completedSegmentIdsRef add above
         // stays unconditional in both modes — a gated segment is still
         // "visited" for the progress strip.
-        const planNow = lessonPlanRef.current;
         const hasSegId = typeof c.segmentId === 'string' && !!c.segmentId;
         const doneSeg = hasSegId && planNow ? getSegment(planNow, c.segmentId) : undefined;
         // Treat completion as success unless an explicit non-positive
