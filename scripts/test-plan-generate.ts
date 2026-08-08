@@ -82,11 +82,35 @@ async function test(name: string, fn: () => Promise<void>) {
 /** Generated plans (metadata.generatedFromText === true) must not surface
  *  in default listLessonPlans() results — only curated/seed content should
  *  populate pickers. They remain reachable with an explicit opt-in filter
- *  (`includeGenerated: true`) for callers that resume a generation flow. */
+ *  (`includeGenerated: true`) for callers that resume a generation flow.
+ *
+ *  Also covers the store.ts fix: the generatedFromText exclusion must live
+ *  IN THE MONGO QUERY, not just as a JS-side `.filter()` applied AFTER
+ *  `.find(query).limit(200)` — a JS-only filter still lets accumulating
+ *  gen- rows consume slots out of the 200-doc budget, starving curated
+ *  listings. This test inserts several generated rows alongside one
+ *  ordinary (non-generated) row and asserts the ordinary row still
+ *  surfaces in the default listing — a cheap proxy for "generated rows
+ *  don't compete for the limit" without actually inserting 200 rows. */
 async function testGeneratedPlansHiddenFromListings() {
-  const plan = await upsertLessonPlan({
-    id: 'gen-test-hidden-1',
-    title: 'Test Gen Plan',
+  const makeGenerated = (id: string) =>
+    upsertLessonPlan({
+      id,
+      title: 'Test Gen Plan',
+      curriculum: 'freestyle',
+      grade: '9-12',
+      subject: 'math',
+      los: [{ id: 'lo1', description: 'test lo' }],
+      estimatedMinutes: 12,
+      segments: [{ id: 'seg1', kind: 'hook', loId: 'lo1', goal: 'g' }],
+      schemaVersion: 1,
+      metadata: { generatedFromText: true },
+    });
+  const plan = await makeGenerated('gen-test-hidden-1');
+  const extraGenerated = await Promise.all(['gen-test-hidden-2', 'gen-test-hidden-3'].map(makeGenerated));
+  const curated = await upsertLessonPlan({
+    id: 'test-hidden-curated-1',
+    title: 'Test Curated Plan',
     curriculum: 'freestyle',
     grade: '9-12',
     subject: 'math',
@@ -94,15 +118,28 @@ async function testGeneratedPlansHiddenFromListings() {
     estimatedMinutes: 12,
     segments: [{ id: 'seg1', kind: 'hook', loId: 'lo1', goal: 'g' }],
     schemaVersion: 1,
-    metadata: { generatedFromText: true },
+    metadata: {},
   });
   try {
     const visible = await listLessonPlans({ subject: 'math', grade: '9-12' });
     assert.ok(!visible.some((p) => p.id === plan.id), 'generated plan must NOT appear in default listing');
+    for (const g of extraGenerated) {
+      assert.ok(!visible.some((p) => p.id === g.id), `generated plan ${g.id} must NOT appear in default listing`);
+    }
+    assert.ok(
+      visible.some((p) => p.id === curated.id),
+      'the non-generated (curated-proxy) row must still surface in the default listing alongside generated rows',
+    );
+
     const withGenerated = await listLessonPlans({ subject: 'math', grade: '9-12', includeGenerated: true });
     assert.ok(withGenerated.some((p) => p.id === plan.id), 'generated plan MUST appear with includeGenerated');
+    for (const g of extraGenerated) {
+      assert.ok(withGenerated.some((p) => p.id === g.id), `generated plan ${g.id} MUST appear with includeGenerated`);
+    }
   } finally {
     await deleteLessonPlan(plan.id);
+    await Promise.all(extraGenerated.map((g) => deleteLessonPlan(g.id)));
+    await deleteLessonPlan(curated.id);
   }
 }
 
@@ -277,6 +314,20 @@ async function testToResponseFullPlanRecomputesMaxPickableLos() {
   PlanGenerateResponseSchema.parse(res);
 }
 
+/** toResponse must clamp maxPickableLos to the contract's max of 12
+ *  (`PlanExpandRequestSchema.pickedLoIds` is `.max(12)`) — a stored
+ *  allowedMaxLOs above that (e.g. a long-session picker plan) would
+ *  otherwise tell the picker UI it can submit a pick that plan-expand
+ *  would reject outright with `cap_exceeded`. Pure — no DB, no LLM. */
+async function testToResponseClampsMaxPickableLosTo12() {
+  const picker = fakePlan({
+    metadata: { pendingPicker: true, allowedMaxLOs: 20, generatorOk: true },
+  });
+  const res = toResponse(picker, { cached: true, sessionMinutes: 20 });
+  assert.strictEqual(res.maxPickableLos, 12, `expected maxPickableLos clamped to 12, got ${res.maxPickableLos}`);
+  PlanGenerateResponseSchema.parse(res);
+}
+
 /** Review finding #1: generatedPlanMetadata must OMIT cacheKey when
  *  generatorOk is false — a fallback skeleton must never become the
  *  cached answer for its topic/band/bucket for the next 30 days. It's
@@ -374,7 +425,11 @@ async function testPlanGenerateMissingSubjectReturns400() {
  *  plan-generate (Task 4) produces via `buildPickerPlan` when Y > X, but
  *  built directly so setup is fast and doesn't depend on a live Stage 1
  *  extraction landing on a specific LO count. */
-async function upsertTestPickerPlan(id: string, allowedMaxLOs: number): Promise<LessonPlan> {
+async function upsertTestPickerPlan(
+  id: string,
+  allowedMaxLOs: number,
+  extraMetadata: Record<string, unknown> = {},
+): Promise<LessonPlan> {
   const los = [
     { id: 'lo-a', description: 'First test learning objective' },
     { id: 'lo-b', description: 'Second test learning objective' },
@@ -387,7 +442,7 @@ async function upsertTestPickerPlan(id: string, allowedMaxLOs: number): Promise<
     allowedMaxLOs,
     sessionMinutes: 20,
   });
-  return upsertLessonPlan({ ...built, id });
+  return upsertLessonPlan({ ...built, id, metadata: { ...built.metadata, ...extraMetadata } });
 }
 
 async function callPlanExpand(req: NextRequest) {
@@ -399,34 +454,79 @@ function signedPlanExpandRequest(bodyObj?: unknown): NextRequest {
   return signedPlanGenerateRequest('POST', '/api/portal/v1/plan-expand', bodyObj);
 }
 
-/** Task 5, happy path: a picker plan built deterministically (no LLM),
- *  expanded via a live LLM call for a small 2-LO pick. Must 200 with a
- *  schema-valid PlanExpandResponse, expandedCount >= 1, and the stored
- *  plan must now carry hook/concept/worked/try segments for the picked
- *  LOs (mode flips out of picker: metadata.pendingPicker === false). */
-async function testPlanExpandSuccessExpandsPickedLOs() {
+/** Task 5 + clone-on-expand fix, happy path: a picker plan built
+ *  deterministically (no LLM) — seeded with a cacheKey, as a real
+ *  plan-generate picker plan would carry — expanded via a live LLM call
+ *  for a small 2-LO pick. This is the ONE live LLM call this suite makes
+ *  for plan-expand; both the base expand behavior and the clone-on-expand
+ *  fix are asserted off this single call rather than duplicating it.
+ *
+ *  Must 200 with a schema-valid PlanExpandResponse whose planId is a
+ *  BRAND-NEW "gen-" id, distinct from the request's planId (the portal
+ *  route writes via `writeMode: 'clone'` — see expand.ts's module doc).
+ *  The clone must carry the expanded hook/concept/worked/try segments and
+ *  drop cacheKey/pendingPicker entirely. The ORIGINAL picker plan at the
+ *  request's planId must be completely untouched: still pendingPicker
+ *  true, still its full 3-LO list, still its cacheKey — and
+ *  findCachedPlan(cacheKey) must still resolve to that original plan
+ *  (cache-immunity), not the clone. This is the regression test for the
+ *  cache-poisoning bug: expanding used to rewrite the cached picker plan
+ *  in place, so the next student hitting the same cache key would get the
+ *  first student's narrowed pick served as mode:'full'. */
+async function testPlanExpandCloneLeavesOriginalCacheUntouched() {
   const planId = 'gen-test-plan-expand-success-1';
-  await upsertTestPickerPlan(planId, 2);
+  const cacheKey = topicCacheKey({
+    topic: 'plan expand clone test topic',
+    subject: 'math',
+    grade: '9-12',
+    sessionMinutes: 20,
+  });
+  await upsertTestPickerPlan(planId, 2, { cacheKey });
+  let newPlanId: string | undefined;
   try {
     const { status, json } = await callPlanExpand(
       signedPlanExpandRequest({ planId, pickedLoIds: ['lo-a', 'lo-b'] }),
     );
     assert.strictEqual(status, 200, `expected 200, got ${status}: ${JSON.stringify(json)}`);
     const body = PlanExpandResponseSchema.parse(json);
-    assert.strictEqual(body.planId, planId);
+    newPlanId = body.planId;
+    assert.notStrictEqual(newPlanId, planId, 'expand must NOT write back to the request planId (clone-on-expand)');
+    assert.ok(newPlanId.startsWith('gen-'), `expected the new planId to start with "gen-", got ${JSON.stringify(newPlanId)}`);
     assert.ok(body.expandedCount >= 1, `expected expandedCount >= 1, got ${body.expandedCount}`);
     assert.strictEqual(body.pendingExpansion, false, 'a full (non-priority) expand must not leave anything pending');
 
-    const stored = await getLessonPlan(planId);
-    assert.ok(stored, 'expanded plan should still be stored under the same id');
-    assert.strictEqual(stored?.metadata?.pendingPicker, false, 'plan must exit picker mode after expansion');
-    const kinds = new Set((stored?.segments ?? []).map((s) => s.kind));
+    // (c) the NEW plan: expanded segments, no cacheKey, no pendingPicker.
+    const cloned = await getLessonPlan(newPlanId);
+    assert.ok(cloned, 'expanded plan should be stored under the new id');
+    assert.strictEqual(cloned?.metadata?.cacheKey, undefined, 'clone must NOT carry cacheKey');
+    assert.strictEqual(cloned?.metadata?.pendingPicker, undefined, 'clone must NOT carry pendingPicker');
+    const kinds = new Set((cloned?.segments ?? []).map((s) => s.kind));
     const expectedKinds = ['hook', 'concept', 'worked_example', 'try_yourself'] as const;
     for (const expectedKind of expectedKinds) {
       assert.ok(kinds.has(expectedKind), `expected a "${expectedKind}" segment among [${[...kinds].join(',')}]`);
     }
+
+    // (b) the ORIGINAL picker plan: untouched — still pendingPicker true,
+    // still its full LO list, still its cacheKey.
+    const original = await getLessonPlan(planId);
+    assert.ok(original, 'original picker plan should still exist under its original id');
+    assert.strictEqual(original?.metadata?.pendingPicker, true, 'original picker plan must remain pendingPicker:true');
+    assert.strictEqual(original?.metadata?.cacheKey, cacheKey, 'original picker plan must keep its cacheKey');
+    assert.deepStrictEqual(
+      (original?.los ?? []).map((lo) => lo.id).sort(),
+      ['lo-a', 'lo-b', 'lo-c'],
+      'original picker plan must keep its full (unpicked) LO list',
+    );
+
+    // Cache-immunity: findCachedPlan(cacheKey) must still resolve to the
+    // ORIGINAL plan, id unchanged — not the clone, and not mutated.
+    const cachedLookup = await findCachedPlan(cacheKey);
+    assert.ok(cachedLookup, 'expected the cache key to still resolve to a plan');
+    assert.strictEqual(cachedLookup?.id, planId, 'cache lookup must still resolve to the ORIGINAL picker plan');
+    assert.strictEqual(cachedLookup?.metadata?.pendingPicker, true, 'cache-served plan must still be the untouched picker plan');
   } finally {
     await deleteLessonPlan(planId);
+    if (newPlanId) await deleteLessonPlan(newPlanId);
   }
 }
 
@@ -499,6 +599,7 @@ async function main() {
   console.log('\nFix review — toResponse / generatedPlanMetadata (findings #1, #2, #6a) — pure:\n');
   await test('toResponse: picker plan uses its own stored allowedMaxLOs, not a fresh recompute', testToResponsePickerPlanUsesStoredAllowedMaxLOs);
   await test('toResponse: full plan recomputes maxPickableLos from the current request', testToResponseFullPlanRecomputesMaxPickableLos);
+  await test('toResponse: maxPickableLos is clamped to the contract max of 12', testToResponseClampsMaxPickableLosTo12);
   await test('generatedPlanMetadata: omits cacheKey when generatorOk is false', testGeneratedPlanMetadataOmitsCacheKeyOnFallback);
   await test('generatedPlanMetadata: includes cacheKey when generatorOk is true', testGeneratedPlanMetadataIncludesCacheKeyOnSuccess);
 
@@ -509,10 +610,10 @@ async function main() {
   );
   await test('missing subject → 400', testPlanGenerateMissingSubjectReturns400);
 
-  console.log('\nPOST /api/portal/v1/plan-expand (Task 5):\n');
+  console.log('\nPOST /api/portal/v1/plan-expand (Task 5) + clone-on-expand fix:\n');
   await test(
-    'valid pick on a deterministic picker plan → 200, expandedCount >= 1, stored plan has hook/concept/worked/try segments',
-    testPlanExpandSuccessExpandsPickedLOs,
+    'valid pick on a cache-keyed picker plan → 200, new "gen-" planId, expanded clone; ORIGINAL cached picker plan untouched (clone-on-expand)',
+    testPlanExpandCloneLeavesOriginalCacheUntouched,
   );
   await test('unknown planId → 404', testPlanExpandUnknownPlanIdReturns404);
   await test('pickedLoIds not in the plan → 400', testPlanExpandPickedIdsNotInPlanReturns400);

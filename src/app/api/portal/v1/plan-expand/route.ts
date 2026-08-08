@@ -7,17 +7,30 @@
  * student an LO-picker UI, collects the picked LO ids, and calls this
  * endpoint. It expands the picked LOs into hook/concept/worked-example/
  * try-yourself segments via the Stage 2 generator and persists the
- * result under the SAME plan id — the session then starts on that plan.
+ * result under a BRAND-NEW plan id — the response's `planId` is that new
+ * id, and the portal threads it into the session (no portal changes
+ * needed; it already reads `planId` off this response).
  *
  * Shares its validate → expand → upsert core with the engine dev page's
  * `/api/tutor/expand-plan-los` route via `expandPlanLos`
- * (`src/lib/tutor/lesson-plan/expand.ts`). One behavioural difference
- * from the dev route: this endpoint REJECTS (400) a pick that exceeds
- * the plan's stored `metadata.allowedMaxLOs` instead of silently
- * truncating it — see `expandPlanLos`'s `capBehavior` doc comment. This
- * also backstops plan-generate's cache-hit path: a cache hit reports
- * `maxPickableLos` from the STORED plan's own cap (Task 4), and this
- * endpoint is what actually enforces that stored cap server-side.
+ * (`src/lib/tutor/lesson-plan/expand.ts`). Two behavioural differences
+ * from the dev route:
+ *   - this endpoint REJECTS (400) a pick that exceeds the plan's stored
+ *     `metadata.allowedMaxLOs` instead of silently truncating it — see
+ *     `expandPlanLos`'s `capBehavior` doc comment. This also backstops
+ *     plan-generate's cache-hit path: a cache hit reports
+ *     `maxPickableLos` from the STORED plan's own cap (Task 4), and this
+ *     endpoint is what actually enforces that stored cap server-side.
+ *   - this endpoint expands via `writeMode: 'clone'`, NOT in-place. The
+ *     plan at `planId` here can be a topic-cache-served picker plan
+ *     (`findCachedPlan`) shared by every student who asks about the same
+ *     topic/grade-band/length-bucket — expanding it in place would mutate
+ *     that shared cached row under the first student's picks (silent
+ *     wrong content for the next cache hit, or a 400-on-confirm for any
+ *     other concurrent holder). Cloning leaves the cached picker plan
+ *     (and its `cacheKey`/`pendingPicker` metadata) completely untouched
+ *     and writes the expansion under a fresh `gen-` id instead. See
+ *     `expandPlanLos`'s module doc for the full hazard writeup.
  */
 
 import { NextResponse } from 'next/server';
@@ -37,7 +50,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   }
   const { planId, pickedLoIds } = parsed.data;
 
-  const result = await expandPlanLos({ planId, pickedLoIds, capBehavior: 'reject' });
+  const result = await expandPlanLos({ planId, pickedLoIds, capBehavior: 'reject', writeMode: 'clone' });
 
   if (!result.ok) {
     switch (result.kind) {

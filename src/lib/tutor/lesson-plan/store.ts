@@ -4206,11 +4206,23 @@ export async function listLessonPlans(filter: LessonPlanFilter = {}): Promise<Le
       }
     }
     if (filter.locale) query.locale = filter.locale;
+    if (!filter.includeGenerated) {
+      // Runtime-generated plans (plan-from-text / plan-generate) are
+      // opt-in only — curated listings must not surface them. Exclude
+      // them IN THE QUERY (not just via a JS-side filter after
+      // `.limit(200)`): a JS-side-only filter still counts generated
+      // rows against the 200-doc limit, so once enough gen- rows
+      // accumulate they can crowd curated plans out of the result page
+      // entirely. Filtering server-side means the 200-doc budget is
+      // spent only on rows that can actually surface.
+      query['metadata.generatedFromText'] = { $ne: true };
+    }
     const docs = await LessonPlanModel.find(query).limit(200);
     dbHits = docs.map(toLessonPlan);
     if (!filter.includeGenerated) {
-      // Runtime-generated plans (plan-from-text / plan-generate) are
-      // opt-in only — curated listings must not surface them.
+      // Belt-and-suspenders: keep the JS-side filter too, in case a
+      // legacy row has generatedFromText stored as a truthy non-`true`
+      // value the query's strict $ne: true wouldn't catch.
       dbHits = dbHits.filter((p) => p.metadata?.generatedFromText !== true);
     }
   } catch {

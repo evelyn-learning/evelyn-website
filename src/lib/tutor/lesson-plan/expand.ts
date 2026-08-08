@@ -27,8 +27,26 @@
  * the portal route always expands every picked LO in one call — but it's
  * a shared capability because the underlying mechanics (which LOs get
  * segments this call vs. remain pending) live in this core.
+ *
+ * A third knob, `writeMode`, exists for a correctness reason rather than a
+ * UX one. A picker plan served from `findCachedPlan` (plan-generate's topic
+ * cache) can be handed out to MULTIPLE students hitting the same
+ * topic/grade-band/length-bucket cache key concurrently. If expansion
+ * rewrote that plan IN PLACE (same id, `cacheKey` surviving the metadata
+ * spread), the first student to expand it would silently mutate the
+ * cached row for everyone else: the next cache hit would serve their
+ * narrowed, already-expanded plan as `mode: 'full'` (wrong content), and
+ * any OTHER concurrent holder whose picks aren't a match would 400 on
+ * confirm. `writeMode: 'clone'` (the portal route's mode) avoids this by
+ * writing the expanded plan under a brand-new `gen-` id and leaving the
+ * plan at the original `planId` — cache row included — completely
+ * untouched. `writeMode: 'in-place'` (default, the dev route's legacy
+ * behaviour) keeps rewriting under the same id; the dev route's planIds
+ * are single-use dev-page sessions, never cache-served, so the hazard
+ * doesn't apply there.
  */
 
+import { randomUUID } from 'node:crypto';
 import { getLessonPlan, upsertLessonPlan } from './store';
 import { expandSegmentsForLOs } from './generate-from-text';
 import { parseLessonPlan } from './parser';
@@ -47,6 +65,15 @@ export interface ExpandPlanLosInput {
    *  first N — the dev route's legacy behaviour. 'reject' fails with
    *  `{ ok: false, kind: 'cap_exceeded' }` instead. */
   capBehavior?: 'truncate' | 'reject';
+  /** Where to persist the expanded plan. 'in-place' (default) rebuilds
+   *  and upserts under the SAME id — the dev route's legacy behaviour.
+   *  'clone' writes the expanded plan under a NEW `gen-${randomUUID()}`
+   *  id, with `cacheKey` and `pendingPicker` dropped from its metadata,
+   *  and leaves the plan at `planId` (and anything cached under it)
+   *  completely untouched — required for the portal route, whose
+   *  `planId` may be a topic-cache-served picker plan shared by
+   *  concurrent students. See the module doc for the full hazard. */
+  writeMode?: 'in-place' | 'clone';
 }
 
 export interface ExpandPlanLosSuccess {
@@ -81,7 +108,7 @@ export type ExpandPlanLosFailure =
 export type ExpandPlanLosResult = ExpandPlanLosSuccess | ExpandPlanLosFailure;
 
 export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPlanLosResult> {
-  const { planId, pickedLoIds, priorityLoIds, capBehavior = 'truncate' } = input;
+  const { planId, pickedLoIds, priorityLoIds, capBehavior = 'truncate', writeMode = 'in-place' } = input;
 
   const plan = await getLessonPlan(planId);
   if (!plan) {
@@ -168,10 +195,13 @@ export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPl
     return { ok: false, kind: 'expand_failed', reason: stage2.reason, timing: { stage2Ms } };
   }
 
-  // Rebuild the plan: keep the original id, swap the segments to
-  // [intro, ...expanded]. The intro segment is regenerated to reflect
-  // the picked count and order. los array is narrowed to the picked ones
-  // so downstream LO-tracking is accurate.
+  // Rebuild the plan: in-place mode keeps the original id; clone mode
+  // mints a fresh "gen-" id so the write lands as a brand-new document
+  // and the plan at `planId` (and its cache row, if any) is never
+  // touched — see the module doc's writeMode section. Either way the
+  // segments swap to [intro, ...expanded] and the intro segment is
+  // regenerated to reflect the picked count and order; los array is
+  // narrowed to the picked ones so downstream LO-tracking is accurate.
   const introSegment: Segment = {
     id: 'intro',
     kind: 'hook',
@@ -184,15 +214,35 @@ export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPl
     ? capped.map((lo) => lo.id).filter((id) => !expandedIds.has(id))
     : [];
 
+  const targetId = writeMode === 'clone' ? `gen-${randomUUID()}` : plan.id;
+
+  // Base the new metadata on the ORIGINAL plan's metadata. cacheKey is
+  // ALWAYS stripped before anything else touches it, in-place or clone:
+  // an expanded plan must never remain findable via findCachedPlan under
+  // its source picker plan's cache key (the dev route is unauthenticated
+  // and planIds are user-visible via embed tokens, so leaving cacheKey in
+  // place there would let anyone mutate a cache-served plan). In clone
+  // mode pendingPicker is also stripped — the original's `true` must not
+  // carry over onto a plan that's fully expanded from the moment it's
+  // written (in-place mode instead sets it to `false` explicitly below,
+  // which achieves the same end for that path).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseMetadata: Record<string, any> = { ...(plan.metadata ?? {}) };
+  delete baseMetadata.cacheKey;
+  if (writeMode === 'clone') {
+    delete baseMetadata.pendingPicker;
+  }
+
   let updatedPlan: LessonPlan;
   try {
     updatedPlan = parseLessonPlan({
       ...plan,
+      id: targetId,
       los: capped,
       segments: [introSegment, ...stage2.segments],
       metadata: {
-        ...(plan.metadata ?? {}),
-        pendingPicker: false,
+        ...baseMetadata,
+        ...(writeMode === 'in-place' ? { pendingPicker: false } : {}),
         pickedLoIds: capped.map((lo) => lo.id),
         expandedAt: new Date().toISOString(),
         droppedIds: droppedIds.length > 0 ? droppedIds : undefined,

@@ -10,13 +10,13 @@
  *
  * TODO(contract v1.9.0): import PlanGenerateRequestSchema /
  * PlanGenerateResponseSchema from @evelyn/portal-contract/v1 once the
- * engine's npm pin bumps past v1.8.0. As of this writing the v1.9.0 tag
- * exists in the portal-contract repo (commit fd954d0, "feat(v1.9.0):
- * additive plan-generate/plan-expand schemas for runtime lesson
- * generation") but has NOT been pushed to GitHub — `npm install` of it is
- * impossible right now. The two schemas below are copied VERBATIM from
- * portal-contract's `src/v1/schemas.ts` at that commit. Swap this block for
- * the real import at ship time (Task 11) and delete it.
+ * engine's npm pin bumps past v1.8.0. The v1.9.0 tag exists in the
+ * portal-contract repo (commit fd954d0, "feat(v1.9.0): additive
+ * plan-generate/plan-expand schemas for runtime lesson generation") and has
+ * now been pushed to GitHub — the npm pin bump just hasn't happened yet.
+ * The two schemas below are copied VERBATIM from portal-contract's
+ * `src/v1/schemas.ts` at that commit. Swap this block for the real import
+ * at ship time (Task 11) and delete it.
  */
 
 import { z } from 'zod';
@@ -89,6 +89,10 @@ export type PlanExpandResponse = z.infer<typeof PlanExpandResponseSchema>;
  * picker segment's hard-coded prose) actually allows. Non-picker plans
  * don't carry allowedMaxLOs, so they fall back to a fresh compute (there's
  * no stored cap to violate — it's purely informational for those).
+ *
+ * Either source is clamped to 12: `PlanExpandRequestSchema.pickedLoIds` is
+ * `.max(12)`, so reporting anything above that would tell the picker UI it
+ * can submit a pick plan-expand would reject outright with `cap_exceeded`.
  */
 export function toResponse(
   plan: LessonPlan,
@@ -96,10 +100,11 @@ export function toResponse(
 ): PlanGenerateResponse {
   const generatorOk = flags.generatorOk ?? plan.metadata?.generatorOk !== false;
   const mode: 'full' | 'picker' = plan.metadata?.pendingPicker === true ? 'picker' : 'full';
-  const maxPickableLos =
+  const rawMaxPickableLos =
     typeof plan.metadata?.allowedMaxLOs === 'number'
       ? (plan.metadata.allowedMaxLOs as number)
       : maxLOsForBudget({ sessionMinutes: flags.sessionMinutes, grade: plan.grade });
+  const maxPickableLos = Math.min(12, rawMaxPickableLos);
   return {
     planId: plan.id,
     title: plan.title,
