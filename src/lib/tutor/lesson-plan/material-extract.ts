@@ -70,7 +70,10 @@ const VISION_MODEL_ID = 'claude-sonnet-4-6';
 // Same Haiku id generate-from-text.ts uses for its Stage 1/2 calls.
 const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
 const CONDENSE_MAX_TOKENS = 4096;
-const VISION_MAX_TOKENS = 4096;
+// Vision output scales with how many images are in the batch (more images
+// → more transcription text needed) — see transcribeImagesBatch.
+const VISION_TOKENS_PER_IMAGE = 2500;
+const VISION_MAX_TOKENS_CAP = 8192;
 
 // Lazy singleton rather than a module-load-time `new Anthropic(...)`: in
 // Next.js, env vars are guaranteed loaded before request handling, but a
@@ -118,7 +121,7 @@ export async function extractMaterials(materials: PlanMaterial[]): Promise<Extra
     try {
       buffer = Buffer.from(material.data, 'base64');
     } catch (err) {
-      console.error('[material-extract] base64 decode failed', err instanceof Error ? err.message : err);
+      console.error(`[material-extract] base64 decode failed errorType=${errorKind(err)}`);
       return { ok: false, code: 'extract_failed', message: 'Could not read one of the attached files.' };
     }
 
@@ -156,7 +159,7 @@ export async function extractMaterials(materials: PlanMaterial[]): Promise<Extra
       try {
         text = buffer.toString('utf8');
       } catch (err) {
-        console.error('[material-extract] text decode failed', err instanceof Error ? err.message : err);
+        console.error(`[material-extract] text decode failed errorType=${errorKind(err)}`);
         return { ok: false, code: 'extract_failed', message: 'Could not read one of the attached files.' };
       }
       results[i] = { text, kind: 'text' };
@@ -209,6 +212,19 @@ function isKnownKind(kind: unknown): kind is PlanMaterial['kind'] {
   return kind === 'pdf' || kind === 'docx' || kind === 'image' || kind === 'text';
 }
 
+/**
+ * Some extraction libraries (pdf-parse, mammoth) and the Anthropic SDK can
+ * embed request/document content inside their thrown error's `.message`
+ * (e.g. a parser quoting the offending bytes, or an API error echoing part
+ * of the request). `.message` is therefore NOT a content-safety boundary —
+ * never log it. This gives every catch site a fixed, content-free string
+ * (constructor name only) to log instead.
+ */
+function errorKind(err: unknown): string {
+  if (err instanceof Error) return err.constructor.name || 'Error';
+  return typeof err;
+}
+
 /* ------------------------------------------------------------------ */
 /* PDF                                                                  */
 /* ------------------------------------------------------------------ */
@@ -231,10 +247,7 @@ async function extractPdf(
     const raw = await pdfParseFn(buffer);
     parsed = { text: raw.text || '', numpages: raw.numpages || 0 };
   } catch (err) {
-    console.error(
-      `[material-extract] pdf parse failed bytes=${buffer.byteLength}`,
-      err instanceof Error ? err.message : err,
-    );
+    console.error(`[material-extract] pdf parse failed bytes=${buffer.byteLength} errorType=${errorKind(err)}`);
     return {
       ok: false,
       error: {
@@ -285,10 +298,7 @@ async function extractDocx(
     const raw = await extractDocxText(buffer);
     return { ok: true, text: normalizeExtractedText(raw) };
   } catch (err) {
-    console.error(
-      `[material-extract] docx parse failed bytes=${buffer.byteLength}`,
-      err instanceof Error ? err.message : err,
-    );
+    console.error(`[material-extract] docx parse failed bytes=${buffer.byteLength} errorType=${errorKind(err)}`);
     return {
       ok: false,
       error: {
@@ -340,11 +350,17 @@ async function transcribeImagesBatch(
   const instructionText =
     n === 1 ? 'Transcribe this teaching material.' : `Transcribe these ${n} teaching materials, in order.`;
 
+  // A fixed token budget starves larger batches (more images → more
+  // transcription output needed) and, worse, lets a truncated response
+  // pass through silently. Scale with batch size instead, capped at the
+  // model's practical ceiling for this call.
+  const visionMaxTokens = Math.min(VISION_MAX_TOKENS_CAP, n * VISION_TOKENS_PER_IMAGE);
+
   let raw = '';
   try {
     const response = await getAnthropicClient().messages.create({
       model: VISION_MODEL_ID,
-      max_tokens: VISION_MAX_TOKENS,
+      max_tokens: visionMaxTokens,
       system: buildBatchTranscribePrompt(n),
       messages: [
         {
@@ -353,14 +369,30 @@ async function transcribeImagesBatch(
         },
       ],
     });
+
+    if (response.stop_reason === 'max_tokens') {
+      // Don't silently hand back a transcript that was cut off mid-page —
+      // that's worse than failing loudly, since a downstream LO-extraction
+      // pass would silently work off incomplete material.
+      console.warn(`[material-extract] vision transcription truncated count=${n} maxTokens=${visionMaxTokens}`);
+      return {
+        ok: false,
+        error: {
+          ok: false,
+          code: 'extract_failed',
+          message:
+            n === 1
+              ? 'This photo has too much text to transcribe in one pass. Try a clearer or more focused photo.'
+              : 'These photos have too much text to transcribe in one pass. Try uploading fewer or clearer photos.',
+        },
+      };
+    }
+
     for (const block of response.content) {
       if (block.type === 'text') raw += block.text;
     }
   } catch (err) {
-    console.error(
-      `[material-extract] vision transcription failed count=${n}`,
-      err instanceof Error ? err.message : err,
-    );
+    console.error(`[material-extract] vision transcription failed count=${n} errorType=${errorKind(err)}`);
     return {
       ok: false,
       error: {
@@ -449,8 +481,7 @@ export async function condenseForPipeline(text: string, opts: { targetChars: num
     condensed = condensed.trim();
   } catch (err) {
     console.error(
-      `[material-extract] condense call failed inputLen=${text.length} target=${target}`,
-      err instanceof Error ? err.message : err,
+      `[material-extract] condense call failed inputLen=${text.length} target=${target} errorType=${errorKind(err)}`,
     );
     // Fail-safe: hard-truncate the original rather than dropping the request.
     return text.slice(0, target);
