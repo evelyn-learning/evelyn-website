@@ -49,6 +49,11 @@ import type { NextRequest } from 'next/server';
 // `materials`. Fixtures are shared with test-material-extract.ts.
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');
 
+// Mirrors PlanGenerateRequestSchema's `topic: z.string().max(300)` and
+// route.ts's own REQUEST_TOPIC_MAX_LENGTH — the cap the materials path
+// clamps its text-derived topic hint to.
+const CONTRACT_TOPIC_MAX_LENGTH = 300;
+
 function loadFixtureAsMaterial(filename: string, kind: PlanMaterial['kind'], mimeType?: string): PlanMaterial {
   const buf = fs.readFileSync(path.join(FIXTURES_DIR, filename));
   return { kind, data: buf.toString('base64'), name: filename, mimeType };
@@ -510,6 +515,16 @@ async function testPlanGenerateMaterialsHappyPathSkipsCache() {
     assert.deepStrictEqual(materialsMeta?.kinds, ['docx'], 'expected materialsMeta.kinds === ["docx"]');
     assert.ok(materialsMeta && materialsMeta.totalChars > 0, 'expected materialsMeta.totalChars > 0');
 
+    // Topic-clamp review fix: the materials path falls back to the
+    // request's raw `text` as a topic hint (no explicit `topic` was sent
+    // here), which must be clamped to the contract's own topic length cap
+    // before landing on the persisted plan — never ride an unclamped
+    // multi-thousand-char blob onto plan.topic or the generation prompt.
+    assert.ok(
+      (stored?.topic?.length ?? 0) <= CONTRACT_TOPIC_MAX_LENGTH,
+      `expected plan.topic to be clamped to ${CONTRACT_TOPIC_MAX_LENGTH} chars, got ${stored?.topic?.length ?? 0}`,
+    );
+
     if (firstBody.mode === 'full') {
       const storedSegments = stored?.segments ?? [];
       assert.ok(storedSegments.length > 0, 'expected the full plan to have segments');
@@ -561,18 +576,20 @@ async function testPlanGenerateMaterialsScannedPdfReturns422() {
  *  enforces the decoded-size limit synchronously. Synthetic buffer, no
  *  fixture file needed.
  *
- *  Sized at 7.5MB decoded (base64 ≈10,000,000 chars): strictly ABOVE
- *  material-extract's MAX_DECODED_BYTES (7MB — see that module's comment
- *  for why 7MB, not the rounder 8MB, is the real enforceable ceiling)
- *  and strictly BELOW the contract's own `data` field cap
- *  (`PlanMaterialSchema.data`, 11,000,000 base64 chars). A larger buffer
- *  would round-trip through base64 to MORE than 11,000,000 chars and get
- *  rejected one layer up by `PlanGenerateRequestSchema` itself (400
- *  invalid_request) before ever reaching extractMaterials — this size is
- *  the one place that actually exercises extractMaterials' own
- *  too_large branch end-to-end through the route. */
+ *  Sized at 8.1MB decoded (base64 = 10,800,000 chars): strictly ABOVE
+ *  material-extract's MAX_DECODED_BYTES (8,000,000 bytes — see that
+ *  module's comment for why the decimal 8,000,000, not the binary
+ *  8*1024*1024, is the real enforceable ceiling) and strictly BELOW the
+ *  contract's own `data` field cap (`PlanMaterialSchema.data`,
+ *  11,000,000 base64 chars, which round-trips to ~8,250,000 decoded
+ *  bytes). A larger buffer would round-trip through base64 to MORE than
+ *  11,000,000 chars and get rejected one layer up by
+ *  `PlanGenerateRequestSchema` itself (400 invalid_request) before ever
+ *  reaching extractMaterials — this size is the one place that actually
+ *  exercises extractMaterials' own too_large branch end-to-end through
+ *  the route. */
 async function testPlanGenerateMaterialsOversizedReturns422() {
-  const oversized = Buffer.alloc(7_500_000, 'a');
+  const oversized = Buffer.alloc(8_100_000, 'a');
   const body = {
     text: 'Review my attached notes',
     subject: 'science',

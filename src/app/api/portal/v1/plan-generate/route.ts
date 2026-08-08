@@ -37,7 +37,9 @@
  * any LLM call. On success, the extracted `combinedText` becomes the
  * pipeline's `text` and the request's own `text` (the free-form prompt the
  * student typed alongside their upload) becomes a topic hint instead —
- * `topic ?? text`. Materials-derived plans skip the topic cache entirely
+ * `topic ?? text`, clamped to the contract's own topic length cap
+ * (`REQUEST_TOPIC_MAX_LENGTH`) since `text` can run to 8000 chars.
+ * Materials-derived plans skip the topic cache entirely
  * (no lookup, no `cacheKey` stamped) since a document's content isn't a
  * stable topic/grade-band/length-bucket equivalence class the way a typed
  * topic is; everything else — picker/full mode decision, id minting,
@@ -74,6 +76,14 @@ export const runtime = 'nodejs';
 const INTRO_SEGMENT_GOAL =
   'Acknowledge the material the student supplied: name how many learning objectives you see, list them in the planned order in 1 sentence, and propose starting with the first one. Stay brief — under 25 spoken words.';
 
+// Mirrors PlanGenerateRequestSchema's own `topic: z.string().max(300)`
+// (contract v1.9.0+). The materials path falls back to the request's raw
+// `text` (up to 8000 chars, per the same schema) as a topic hint when the
+// caller didn't supply an explicit `topic` — clamp it to the field's own
+// documented max so an 8000-char blob never rides the generation prompt's
+// topic line or ends up verbatim in the persisted plan's `topic` field.
+const REQUEST_TOPIC_MAX_LENGTH = 300;
+
 export const POST = withPortalAuth(async (_req, auth) => {
   const parsed = PlanGenerateRequestSchema.safeParse(auth.body);
   if (!parsed.success) {
@@ -90,8 +100,8 @@ export const POST = withPortalAuth(async (_req, auth) => {
   let cacheKey: string | undefined;
   let materialsMeta: { count: number; kinds: string[]; totalChars: number } | undefined;
 
-  if (materials && materials.length > 0) {
-    const extracted = await extractMaterials(materials);
+  if (hasMaterials) {
+    const extracted = await extractMaterials(materials!);
     if (!extracted.ok) {
       // User-fixable input problem (bad file, not a generation failure) —
       // 422, not 502, and no LLM call has happened yet.
@@ -99,9 +109,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
     }
     // The extracted document text drives generation; the student's own
     // typed `text` becomes a topic hint instead (only if they didn't
-    // already supply an explicit `topic`).
+    // already supply an explicit `topic`) — clamped to the contract's own
+    // topic length cap, see REQUEST_TOPIC_MAX_LENGTH.
     text = extracted.combinedText;
-    topic = requestTopic ?? requestText;
+    topic = requestTopic ?? requestText.slice(0, REQUEST_TOPIC_MAX_LENGTH);
     materialsMeta = {
       count: extracted.materials.length,
       kinds: extracted.materials.map((m) => m.kind),
