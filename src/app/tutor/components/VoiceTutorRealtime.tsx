@@ -74,6 +74,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
+import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
@@ -8609,6 +8610,13 @@ export function VoiceTutorRealtime({
         // (rollback scope = full attempt, original behavior).
         let renderCountAtAdvance: number | null = null;
         let attemptText = '';
+        // E2 (prod session 2026-08-06/07): the authored card most recently
+        // resolved by show_segment_card this attempt, if its text carries
+        // numbers — set in the show_segment_card tool-call branch, consumed
+        // (and cleared) by checkCardNarrationMismatch below. Per-attempt —
+        // resets on every retry so a killed attempt's pending card doesn't
+        // leak into the replacement attempt's check.
+        let cardNarrationPending: { segId: string; cardText: string } | null = null;
         // Validate-before-speak chat gating: the streaming chat bubble shows
         // `attemptText`, which keeps accumulating even AFTER a kill (the
         // killed attempt streams to completion, audio-gated by attemptKilled
@@ -8965,6 +8973,31 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('vbs_dropped_pre_audio', `${pendingSentences.length} sentence(s) — ${why}`);
             pendingSentences.length = 0;
           }
+        };
+        // E2 (prod session 2026-08-06/07): card/narration numeric-match
+        // check. Called from TWO sites — right after show_segment_card
+        // resolves (covers "narrate first, call the tool after") and on
+        // every subsequent sentence event (covers "call the tool, then
+        // narrate") — so either ordering of tool-call vs. speech is
+        // caught. Pushes a rejection and returns true (caller performs
+        // the kill + continue, mirroring every other rejection site in
+        // this loop) when the turn's spoken text so far clearly narrates
+        // a DIFFERENT problem than the authored card the tool just put on
+        // the board. Only clears cardNarrationPending on a reject — a
+        // clean pass leaves it armed so later sentences in the same
+        // attempt keep getting checked against the same card (the mismatch
+        // may only become clear once more of the turn has streamed in).
+        const checkCardNarrationMismatch = (textSoFar: string): boolean => {
+          if (!cardNarrationPending) return false;
+          const { segId, cardText } = cardNarrationPending;
+          const result = detectCardNarrationMismatch(cardText, textSoFar);
+          if (!result.reject) return false;
+          const reason = `You called show_segment_card for segment "${segId}" and the runtime rendered the AUTHORED card onto the whiteboard: "${cardText.slice(0, 80)}". But your narration this turn describes a DIFFERENT problem ("${textSoFar.slice(0, 160)}") — none of your spoken numbers match the card's numbers. The student sees the authored card on the board but hears you set up a different scenario, and will be graded against whichever one you actually meant. Re-narrate THE CARD's problem using its literal numbers: "${cardText.slice(0, 200)}". If you genuinely intended a fresh, off-script problem, use generate_problem or a topic-switch (new_page) instead of show_segment_card.`;
+          rejectionsThisAttempt.push({ action: 'show_segment_card_narration_mismatch', reason });
+          console.warn(`[brain-orchestrator] show_segment_card narration mismatch for segment "${segId}" — card="${cardText.slice(0, 60)}" spoken="${textSoFar.slice(0, 60)}". Killing attempt for retry.`);
+          onDebugEvent?.('show_segment_card_narration_mismatch', `segId="${segId}"`);
+          cardNarrationPending = null;
+          return true;
         };
         // Skip turns (#4): never auto-open on the 1s timer — the gate
         // opens only when advance_lesson / generate_problem dispatches,
@@ -9393,6 +9426,21 @@ export function VoiceTutorRealtime({
                     console.warn('[brain-orchestrator] praise+reveal to a non-answer — retrying:', `student="${transcript.slice(0, 40)}" text="${nonAnswerTextSoFar.slice(0, 60)}"`);
                     onDebugEvent?.('nonanswer_praise_retry', `student="${transcript.slice(0, 30)}" → "${nonAnswerTextSoFar.slice(0, 50)}"`);
                     continue;
+                  }
+                  // E2 (prod session 2026-08-06/07): card/narration numeric-
+                  // match check — the "call the tool, THEN narrate a
+                  // different problem" ordering. (The reverse ordering,
+                  // "narrate first, call the tool after", is caught inline
+                  // in the show_segment_card tool-call branch below.) Runs
+                  // on the FULL accumulated text-so-far, same textSoFar
+                  // pattern as the nonAnswerPraise / praiseContradiction
+                  // checks above.
+                  if (!attemptKilled) {
+                    const cardCheckTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                    if (checkCardNarrationMismatch(cardCheckTextSoFar)) {
+                      await performKill();
+                      continue;
+                    }
                   }
                   // Round-7++ meta-narration filter. The system prompt
                   // already forbids speaking internal reasoning ("the
@@ -10422,6 +10470,19 @@ export function VoiceTutorRealtime({
                         } as unknown as any;
                         console.log(`[brain-orchestrator] show_segment_card resolved: ${segId} → "${truth.problemText.slice(0, 60)}…"`);
                         onDebugEvent?.('show_segment_card_resolved', `${segId}: "${truth.problemText.slice(0, 50)}…"`);
+                        // E2 (prod session 2026-08-06/07): arm the card/
+                        // narration numeric-match check for this attempt's
+                        // remaining sentences (see checkCardNarrationMismatch
+                        // above), then immediately check text spoken so
+                        // far — covers the "narrate the invented problem
+                        // FIRST, call show_segment_card after" ordering,
+                        // since no further 'sentence' events may arrive to
+                        // trigger the sentence-branch check below.
+                        cardNarrationPending = { segId, cardText: truth.problemText };
+                        if (!attemptKilled && checkCardNarrationMismatch(attemptText)) {
+                          await performKill();
+                          continue;
+                        }
                       } else if (seg) {
                         // Hook / concept / recap segments don't have a
                         // problem field, but they DO have authored
@@ -14795,7 +14856,7 @@ export function VoiceTutorRealtime({
             });
         }
       }
-  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain, flushManualBuffer, wasTutorSpeakingAt]);
+  }, [onDebugEvent, perceptionStage, handleStudentTranscriptForBrain, flushManualBuffer, wasTutorSpeakingAt, clearStage2LazyPending]);
   // R34 T3: always points at the latest render's perceptionOnTranscript, so
   // the hold-flush timer and the mic-mute flush (toggleMicMute, below) never
   // re-enter a stale closure — same forward-ref-via-ref pattern as
