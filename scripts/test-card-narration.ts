@@ -4,6 +4,15 @@
  * resolved the AUTHORED card onto the board, but the brain narrated a
  * completely different improvised problem in the same turn's speech, then
  * scolded the student for answering the board's (authored) problem.
+ *
+ * REVIEW FIX (2026-08-08): the first cut only extracted digits, so it
+ * silently passed the exact incident it was built for — the VERBATIM
+ * live narration has zero digits ("Here's a real-world one — a taxi ride
+ * costs a flat five dollars, plus one fifty for every kilometer."). The
+ * $-notation taxi phrasing below is a secondary, easier-to-read case, NOT
+ * the live failure shape — the verbatim-shape test is the one using
+ * spelled-out numbers.
+ *
  * Usage: npx tsx scripts/test-card-narration.ts
  */
 import { detectCardNarrationMismatch } from '../src/lib/tutor/voice/card-narration-mismatch';
@@ -16,22 +25,40 @@ function check(name: string, cond: boolean, detail?: string) {
 
 const CAR_CARD = 'A car travels 240 miles in 4 hours. Find the rate of change.';
 
-// ---------- The live failure, verbatim shape: improvised taxi problem ----------
+// ---------- The live failure, VERBATIM shape (spelled-out, zero digits) ----------
+{
+  const r = detectCardNarrationMismatch(
+    CAR_CARD,
+    "Here's a real-world one — a taxi ride costs a flat five dollars, plus one fifty for every kilometer.",
+  );
+  check('verbatim live narration (spelled-out, zero digits) vs car card → reject', r.reject === true, JSON.stringify(r));
+}
+
+// ---------- Secondary shape: same scenario, $-notation instead of prose ----------
 {
   const r = detectCardNarrationMismatch(
     CAR_CARD,
     "Let's say a taxi charges a $5 flat fee plus $1.50 per kilometer traveled. What's the rate of change here?",
   );
-  check('improvised different problem (taxi vs car) → reject', r.reject === true, JSON.stringify(r));
+  check('improvised different problem, digit/$ notation (taxi vs car) → reject', r.reject === true, JSON.stringify(r));
 }
 
-// ---------- Paraphrase using the card's own numbers → pass ----------
+// ---------- Spelled-out paraphrase using the CARD's own numbers → pass ----------
+{
+  const r = detectCardNarrationMismatch(
+    CAR_CARD,
+    'So imagine a car going two hundred forty miles over four hours — what\'s the rate of change?',
+  );
+  check('spelled-out paraphrase reusing card numbers → pass', r.reject === false, JSON.stringify(r));
+}
+
+// ---------- Digit paraphrase using the card's own numbers → pass ----------
 {
   const r = detectCardNarrationMismatch(
     CAR_CARD,
     "So we've got a car going 240 miles over 4 hours — what's the rate of change?",
   );
-  check('paraphrase reusing card numbers → pass', r.reject === false, JSON.stringify(r));
+  check('digit paraphrase reusing card numbers → pass', r.reject === false, JSON.stringify(r));
 }
 
 // ---------- Short transition, <2 numbers spoken → pass ----------
@@ -41,7 +68,11 @@ const CAR_CARD = 'A car travels 240 miles in 4 hours. Find the rate of change.';
 }
 {
   const r = detectCardNarrationMismatch(CAR_CARD, "That's 5. Nicely done.");
-  check('short verdict with 1 number → pass', r.reject === false, JSON.stringify(r));
+  check('short verdict with 1 digit → pass', r.reject === false, JSON.stringify(r));
+}
+{
+  const r = detectCardNarrationMismatch(CAR_CARD, "That's five. Nicely done.");
+  check('short verdict with 1 spelled-out number → pass', r.reject === false, JSON.stringify(r));
 }
 
 // ---------- Speech reuses card numbers plus one new (computed step) → pass ----------
@@ -75,6 +106,36 @@ const CAR_CARD = 'A car travels 240 miles in 4 hours. Find the rate of change.';
     'Actually, 240 — no wait, imagine instead a taxi with a $5 flat fee plus $1.50 per kilometer.',
   );
   check('one card number present among new numbers → pass (conservative)', r.reject === false, JSON.stringify(r));
+}
+
+// ---------- "one fifty" ambiguity: EITHER reading matching the card favors passing ----------
+{
+  const RENTAL_CARD = 'A rental costs a flat $150 plus $2 per mile. Find the cost after 10 miles.';
+  const r = detectCardNarrationMismatch(RENTAL_CARD, "That's one fifty, right?");
+  check(
+    '"one fifty" ambiguous phrase, the 150 reading matches the card → pass (favors passing)',
+    r.reject === false,
+    JSON.stringify(r),
+  );
+}
+
+// ---------- "one fifty" ambiguity: neither reading matches → both candidates count as foreign ----------
+{
+  const r = detectCardNarrationMismatch(CAR_CARD, "Actually, it's one fifty, not the car problem.");
+  check(
+    '"one fifty" ambiguous phrase, neither reading matches the card → reject (both candidates foreign)',
+    r.reject === true,
+    JSON.stringify(r),
+  );
+}
+
+// ---------- Solo "one" as pronoun (not numeral) must not false-trigger ----------
+{
+  const r = detectCardNarrationMismatch(
+    CAR_CARD,
+    "Here's a real-world one — let's think about it differently.",
+  );
+  check('solo "one" as pronoun, no other numbers → pass (not treated as a numeral)', r.reject === false, JSON.stringify(r));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
