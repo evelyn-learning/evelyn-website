@@ -14,7 +14,8 @@
  * degenerates gracefully to the count-based equivalent.
  */
 
-import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import type { LessonPlan, LearningObjective } from '@/lib/tutor/lesson-plan/types';
+import { isGeneratedPlan, loGroupOf } from '@/lib/tutor/lesson-plan/context';
 import {
   segmentLabel,
   type LessonProgress,
@@ -24,6 +25,22 @@ import {
 /** Per-segment pacing weight for the % calculation. Missing/zero minutes → 1. */
 function segmentWeight(estimatedMinutes: number | undefined): number {
   return typeof estimatedMinutes === 'number' && estimatedMinutes > 0 ? estimatedMinutes : 1;
+}
+
+/** Max words in a title derived from an LO's description when it has no
+ *  `shortTitle` (contract v1.11.0). Keeps un-authored fallback titles
+ *  chip-sized; long descriptions truncate with an ellipsis. */
+const LO_TITLE_MAX_WORDS = 6;
+
+/** Display title for an LO progress chip: `shortTitle` when authored
+ *  (stage-1 generated or curated), else a bounded truncation of
+ *  `description`. */
+function loDisplayTitle(lo: LearningObjective): string {
+  if (lo.shortTitle) return lo.shortTitle;
+  const words = lo.description.replace(/[.?!]+$/, '').split(/\s+/).filter(Boolean);
+  return words.length <= LO_TITLE_MAX_WORDS
+    ? words.join(' ')
+    : words.slice(0, LO_TITLE_MAX_WORDS).join(' ') + '…';
 }
 
 /**
@@ -38,7 +55,35 @@ export function buildLessonProgress(
 ): LessonProgress | null {
   if (!plan || !plan.segments?.length) return null;
 
-  const segments: LessonSegmentRef[] = plan.segments.map((s) => ({ id: s.id, kind: s.kind }));
+  // LO view (contract v1.11.0): map each segment to the LO it teaches and
+  // surface the LO list itself, so the portal can render named progress
+  // chips instead of raw segment kinds. Generated plans (E6's
+  // "<loId>-hook/-concept/-worked/-try" convention) map via loGroupOf,
+  // leaving 'intro'/'recap' unmapped (they aren't any one LO). Curated
+  // plans don't follow that id convention, but the common case is a
+  // single-LO plan — group every segment under that LO, titled by the
+  // plan's own title. Plans with no LOs at all (or curated multi-LO
+  // plans, which have no reliable segment→LO signal) fall back to the
+  // pre-v1.11.0 shape with `los`/`loId` simply absent.
+  const planLos = plan.los ?? [];
+  let segments: LessonSegmentRef[];
+  let los: { id: string; title: string }[] | undefined;
+
+  if (isGeneratedPlan(plan) && planLos.length > 0) {
+    const loIds = new Set(planLos.map((l) => l.id));
+    segments = plan.segments.map((s) => {
+      const group = loGroupOf(s.id);
+      return loIds.has(group) ? { id: s.id, kind: s.kind, loId: group } : { id: s.id, kind: s.kind };
+    });
+    los = planLos.map((l) => ({ id: l.id, title: loDisplayTitle(l) }));
+  } else if (planLos.length > 0) {
+    const primary = planLos[0].id;
+    segments = plan.segments.map((s) => ({ id: s.id, kind: s.kind, loId: primary }));
+    los = [{ id: primary, title: plan.title }];
+  } else {
+    segments = plan.segments.map((s) => ({ id: s.id, kind: s.kind }));
+  }
+
   const completed = new Set(completedSegmentIds);
 
   // Minutes-weighted percent: completed = full, current (if not already
@@ -63,5 +108,6 @@ export function buildLessonProgress(
     completedSegmentIds: [...completedSegmentIds],
     currentSegmentLabel: segmentLabel(segments, currentSegmentId),
     percent,
+    ...(los ? { los } : {}),
   };
 }
