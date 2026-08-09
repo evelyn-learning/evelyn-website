@@ -38,6 +38,7 @@ const LearningObjectiveSchema = new Schema<LearningObjective>(
     id: { type: String, required: true },
     description: { type: String, required: true },
     standard: { type: String },
+    shortTitle: { type: String },
   },
   { _id: false },
 );

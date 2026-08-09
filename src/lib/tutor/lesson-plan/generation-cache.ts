@@ -28,8 +28,9 @@ const DEFAULT_TTL_DAYS = 30;
  *  segment, changed authoring rule that alters output) needs the same
  *  forced-miss treatment. Exported so tests can assert against it instead
  *  of hardcoding the literal, so a future bump doesn't also require
- *  editing test string literals in lockstep. */
-export const CACHE_KEY_VERSION = 'gen-v2';
+ *  editing test string literals in lockstep.
+ *  gen-v3 (2026-08-09): LO shortTitle added at stage-1. */
+export const CACHE_KEY_VERSION = 'gen-v3';
 
 type GradeBand = 'K-2' | '3-5' | '6-8' | '9-12' | 'other';
 

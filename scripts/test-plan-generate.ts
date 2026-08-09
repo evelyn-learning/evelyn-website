@@ -39,7 +39,7 @@ import {
   PlanGenerateResponseSchema,
   PlanExpandResponseSchema,
 } from '@/lib/tutor/lesson-plan/plan-generate-contract';
-import { buildPickerPlan, STAGE2_SYSTEM } from '@/lib/tutor/lesson-plan/generate-from-text';
+import { buildPickerPlan, STAGE2_SYSTEM, parseStage1Los } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
@@ -808,6 +808,25 @@ async function testStage2SystemPromptHasNumberCollisionRule() {
   );
 }
 
+/** shortTitle (session-agenda Task 2): stage-1 parse must pass through a
+ *  provided shortTitle (capped to 4 words), derive one from `description`
+ *  when the model omits it, and cap an overlong model-provided shortTitle
+ *  to 4 words rather than rejecting it. Pure — no DB, no LLM. */
+async function testParseStage1LosShortTitle() {
+  const los = parseStage1Los([
+    { id: 'lo-a', description: 'Explain the causes of the Columbian Exchange', shortTitle: 'Columbian Exchange causes' },
+    { id: 'lo-b', description: 'Describe demographic effects of disease on Native populations' },
+    { id: 'lo-c', description: 'x', shortTitle: 'one two three four five six seven' },
+  ]);
+  assert(los[0].shortTitle === 'Columbian Exchange causes', 'shortTitle passthrough');
+  assert(typeof los[1].shortTitle === 'string' && los[1].shortTitle.split(' ').length <= 4, 'fallback derived');
+  assert(los[2].shortTitle!.split(' ').length <= 4, 'overlong shortTitle capped');
+}
+
+async function testCacheKeyVersionBumpedForShortTitle() {
+  assert(CACHE_KEY_VERSION === 'gen-v3', 'cache key bumped for shortTitle');
+}
+
 async function main() {
   console.log('\nRuntime lesson generation — engine store:\n');
 
@@ -834,6 +853,10 @@ async function main() {
 
   console.log('\ngenplan-live-fixes E5 — stage-2 prompt number-collision rule — pure:\n');
   await test('STAGE2_SYSTEM carries a MUST-phrased number-collision rule covering answer/expectedAnswer', testStage2SystemPromptHasNumberCollisionRule);
+
+  console.log('\nsession-agenda Task 2 — LO shortTitle (stage-1 parse) — pure:\n');
+  await test('parseStage1Los: shortTitle passthrough, fallback derivation, overlong capping', testParseStage1LosShortTitle);
+  await test('CACHE_KEY_VERSION bumped to gen-v3 for shortTitle', testCacheKeyVersionBumpedForShortTitle);
 
   console.log('\nPOST /api/portal/v1/plan-generate (Task 4):\n');
   await test(

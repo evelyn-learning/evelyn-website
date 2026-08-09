@@ -35,6 +35,8 @@ export interface LearningObjective {
   description: string;
   /** Optional standard reference if `id` isn't already a standard code. */
   standard?: string;
+  /** 2–4 word display label for progress chips/agenda; generated stage-1 or derived. */
+  shortTitle?: string;
 }
 
 /** Tool ids the brain might invoke during a segment. Free-form because new

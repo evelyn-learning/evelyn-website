@@ -86,14 +86,15 @@ Rules:
 2. Output AT MOST ${MAX_OBJECTIVES} objectives. If the text has more, GROUP related items into a single objective and order objectives so each builds on the previous one. Truncate ruthlessly.
 3. Do NOT emit segments — only the LO list. Per-LO teaching content is generated in a separate later step.
 4. Keep each LO description ≤ 14 words.
-5. Output ONLY valid JSON matching the schema below. No prose, no markdown fences, no commentary.
+5. shortTitle: a 2-4 word noun-phrase label for the objective (e.g. "Columbian Exchange causes"). No trailing punctuation.
+6. Output ONLY valid JSON matching the schema below. No prose, no markdown fences, no commentary.
 
 Schema:
 {
   "titleSuggestion": string,          // short plan title (≤ 8 words)
   "los": [
-    { "id": "lo-1", "description": string },
-    { "id": "lo-2", "description": string },
+    { "id": "lo-1", "description": string, "shortTitle": string },
+    { "id": "lo-2", "description": string, "shortTitle": string },
     ...
   ]
 }`;
@@ -109,6 +110,38 @@ function safeJsonParse(s: string): unknown | null {
   } catch {
     return null;
   }
+}
+
+const MAX_SHORT_TITLE_WORDS = 4;
+
+/** Fallback shortTitle when the model omits one: first N words of the
+ *  description, trailing sentence punctuation stripped first so it
+ *  doesn't get trapped inside the word slice. */
+export function deriveShortTitle(description: string): string {
+  const words = description.replace(/[.?!]+$/, '').split(/\s+/).filter(Boolean);
+  return words.slice(0, MAX_SHORT_TITLE_WORDS).join(' ');
+}
+
+/** Parses the stage-1 `los` array from the model's JSON response into
+ *  validated `LearningObjective`s. Extracted so it's independently
+ *  testable (scripts/test-plan-generate.ts) without going through the
+ *  Haiku call. Caps at MAX_OBJECTIVES, same as the original inline loop. */
+export function parseStage1Los(raw: unknown[]): LearningObjective[] {
+  const los: LearningObjective[] = [];
+  for (let i = 0; i < raw.length && los.length < MAX_OBJECTIVES; i++) {
+    const lo = raw[i];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const li = lo as any;
+    const description = typeof li?.description === 'string' ? li.description.trim() : '';
+    if (!description) continue;
+    const id = typeof li?.id === 'string' && li.id.trim() ? li.id.trim() : `lo-${i + 1}`;
+    const st = typeof li?.shortTitle === 'string' ? li.shortTitle.trim() : '';
+    const shortTitle = st
+      ? st.split(/\s+/).filter(Boolean).slice(0, MAX_SHORT_TITLE_WORDS).join(' ')
+      : deriveShortTitle(description);
+    los.push({ id, description, shortTitle });
+  }
+  return los;
 }
 
 export async function extractLearningObjectives(
@@ -172,16 +205,7 @@ export async function extractLearningObjectives(
       reason: 'haiku returned no LOs',
     };
   }
-  const los: LearningObjective[] = [];
-  for (let i = 0; i < losRaw.length && los.length < MAX_OBJECTIVES; i++) {
-    const lo = losRaw[i];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const li = lo as any;
-    const description = typeof li?.description === 'string' ? li.description.trim() : '';
-    if (!description) continue;
-    const id = typeof li?.id === 'string' && li.id.trim() ? li.id.trim() : `lo-${i + 1}`;
-    los.push({ id, description });
-  }
+  const los = parseStage1Los(losRaw);
   if (los.length === 0) {
     return { titleSuggestion, los: [], ok: false, reason: 'no valid LOs after parsing' };
   }
