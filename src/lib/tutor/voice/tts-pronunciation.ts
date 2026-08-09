@@ -697,6 +697,18 @@ const SINGLE_VAR_RE = /^\s*[A-Za-z]\s*$/;
 // this gate ran) plus unconditional in-span letter respelling.
 const CURRENCY_ARTIFACT_RE = /^\s*\d/;
 const PROSE_WORD_RE = /[a-z]{3,}/i;
+// R37 (session-polish, live: "$5. So $\sin(\pi/6) = \tfrac12$…" spoke
+// "S o sine ( theta )$" for a similarly-shaped case): a digit-led inner
+// ending on a SHORT connector word ("So", "ok", "no" — 1-2 letters) has
+// no PROSE_WORD_RE match, so the math-by-default gate below waved it
+// through as a real span — the price's own $ paired with the NEXT
+// legitimate span's opener, and the swallowed short word got shredded by
+// in-span letter respelling ("So" → "S o"). A span whose inner crosses a
+// SENTENCE boundary (terminal punctuation + a new capitalized word) can
+// never be legitimate math — the brain wraps individual math TOKENS in
+// $…$, never whole sentences — so that shape is an artifact unconditionally,
+// independent of the prose-word-length heuristic below.
+const SENTENCE_BOUNDARY_RE = /[.!?]\s+[A-Z]/;
 /** Round-23: primes and function inverses, IN-SPAN ONLY. The apostrophe in
  *  f'(x) breaks the [fgh]( function-application match, so the span reached
  *  Cartesia raw ("fe"/"fef"); f^{-1} fell to the general exponent rule and
@@ -1163,8 +1175,10 @@ function chemArrowContext(full: string, offset: number, len: number): boolean {
  *  "y-intercept") are masked before the operand-op-operand test: their
  *  hyphen matches the math-operator shape but a hyphen glued to a 2+
  *  letter word-run is English, not algebra ("x-y" keeps both sides single
- *  so genuine variable arithmetic still reads as math). */
+ *  so genuine variable arithmetic still reads as math). R37: a sentence
+ *  boundary inside inner is checked FIRST — see SENTENCE_BOUNDARY_RE. */
 function isCurrencyPairingArtifact(inner: string): boolean {
+  if (SENTENCE_BOUNDARY_RE.test(inner)) return true;
   if (!CURRENCY_ARTIFACT_RE.test(inner) || !PROSE_WORD_RE.test(inner)) return false;
   if (MATH_SIGNAL_RE.test(inner)) return false;
   const masked = inner.replace(/\b[A-Za-z]+-[A-Za-z]{2,}\b|\b[A-Za-z]{2,}-[A-Za-z]+\b/g, ' ');

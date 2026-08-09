@@ -290,6 +290,19 @@ function runCurated(): void {
   // ── 8. Trig ──────────────────────────────────────────────────────
   tts('So $\\sin^2(x) + \\cos^2(x) = 1$ always.', 'So sine squared (x) plus cosine squared (x) equals 1 always.', 'pythagorean-identity');
   tts('Why is $\\tan(\\theta)$ undefined there?', 'Why is tangent (theta) undefined there?', 'tan-theta');
+  // R37 (session-polish, live report): "sin" was heard mispronounced
+  // inside a two-span sentence like this one. Exhaustively re-fed through
+  // rewriteForTTS, this exact shape (and every \sin variant tried —
+  // parens, no parens, subscript, glued coefficient, adjacent spans) came
+  // out correctly as "sine" — the reproducible defect turned out to be the
+  // currency-artifact gate above (see currency-short-word-sentence-boundary
+  // pins), not this rule ordering. Pinned here as a straight regression
+  // guard on the exact live shape.
+  tts('Right — $\\sin(\\pi/6) = \\tfrac12$, and $\\cos(\\pi/3)$…',
+    'Right, sine (pie over 6) equals 12, and cosine (pie over 3),', 'live-report-sin-two-span');
+  tts('$\\cos(-\\pi/6) = \\cos(\\pi/6)$', 'cosine (minus pie over 6) equals cosine (pie over 6)', 'cos-even-identity');
+  tts('$\\sin(-\\theta) = -\\sin\\theta$', 'sine (minus theta) equals minus sine theta', 'sin-odd-identity-span');
+  tts('\\sin(-\\theta) = -\\sin\\theta', 'sine (- theta ) equals - sine theta', 'sin-odd-identity-bare');
   tts('And $\\sin^{-1}(0.5)$ is 30 degrees.', 'And arc sine (0.5) is 30 degrees.', 'inverse-trig');
   tts('Convert $\\frac{\\pi}{6}$ radians to 30°.', 'Convert pie over 6 radians to 30 degrees.', 'radians-degrees');
 
@@ -478,6 +491,24 @@ function runCurated(): void {
     'currency-span-pairing-artifact');
   tts('It costs $5 and shipping is $10 for the set.',
     'It costs $5 and shipping is $10 for the set.', 'currency-double-price-guard');
+  // R37 (session-polish, live: "$5. So $\sin(\pi/6)…$" spoke "S o sine
+  // ( theta )$"): isCurrencyPairingArtifact's PROSE_WORD_RE only counts a
+  // 3+ letter run as prose evidence. A digit-led inner ending on a SHORT
+  // (1-2 letter) connector word — "So", "ok", "no" — has no such run, so
+  // the round-20 math-by-default gate misclassified the real currency+
+  // filler-word gap as math: the price's own $ paired with the NEXT
+  // real span's opener, swallowing "So" into the bogus span (in-span
+  // letter respelling then split it into "S o"), and left the real
+  // span's closing $ dangling raw for the second sentence-boundary
+  // verbalizeMathForSpeech pass to partially recover. Any inner text
+  // that crosses a SENTENCE boundary (terminal punctuation + a new
+  // capitalized word) can never be a legitimate math span — LaTeX
+  // spans don't contain full sentences — so that shape is now always
+  // treated as an artifact regardless of the short-word gap.
+  tts('It costs $5. So $\\sin(\\theta)$ is the ratio.',
+    'It costs $5. So sine (theta) is the ratio.', 'currency-short-word-sentence-boundary');
+  tts('It costs $5. Ok $x + 2 = 5$ works.',
+    'It costs $5. Ok x plus 2 equals 5 works.', 'currency-short-word-sentence-boundary-2');
   // Letter m: 'em' is voiced /əm/ ("um") by Cartesia — live-heard as
   // "um ex" for $mx$ and "um and bee" for prose "m and b". Bare capital
   // M reads as the letter name (same round-30 rationale as capital A).
