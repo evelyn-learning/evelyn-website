@@ -222,12 +222,26 @@ function wordifyMathOperators(s: string): string {
 // fraction — the brain uses \dfrac heavily on cards and (post-Rule-3b) in
 // speech spans, which previously reached the speaker raw.
 const SPEECH_FRAC_RE = /\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/;
+// R37 (session-polish, live: "$\sin(\pi/6) = \tfrac12$" spoke "equals
+// 12"): brace-less \frac/\dfrac/\tfrac is valid LaTeX — it takes the next
+// SINGLE token as numerator and the token after that as denominator
+// ("\tfrac12" == "\tfrac{1}{2}"). SPEECH_FRAC_RE above only matches the
+// braced form, so the bare two-digit shape fell through to the residual
+// \command-strip in speakMathSpan, which deleted "\tfrac" and left the
+// bare digits "1" "2" to collapse into "12" with nothing voicing the
+// fraction at all. Scoped deliberately narrow — single BARE digit
+// numerator + single BARE digit denominator only (LaTeX's one-token rule
+// means anything past 2 chars, e.g. "\frac123", is genuinely "(1/2)3" —
+// out of scope here, same as any letter-denominator bare form); multi-
+// digit/letter arguments always require braces and take the path above.
+const SPEECH_FRAC_BARE_DIGIT_RE = /\\[dt]?frac([0-9])([0-9])/;
 function resolveFractionsForSpeech(t: string): string {
   let prev: string;
   do {
     prev = t;
     t = t.replace(SPEECH_FRAC_RE, (_m, num: string, den: string) =>
       ` ${wordifyMathOperators(num)} over ${wordifyMathOperators(den)} `);
+    t = t.replace(SPEECH_FRAC_BARE_DIGIT_RE, (_m, num: string, den: string) => ` ${num} over ${den} `);
   } while (t !== prev);
   return t;
 }

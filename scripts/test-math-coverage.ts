@@ -299,10 +299,21 @@ function runCurated(): void {
   // pins), not this rule ordering. Pinned here as a straight regression
   // guard on the exact live shape.
   tts('Right — $\\sin(\\pi/6) = \\tfrac12$, and $\\cos(\\pi/3)$…',
-    'Right, sine (pie over 6) equals 12, and cosine (pie over 3),', 'live-report-sin-two-span');
+    'Right, sine (pie over 6) equals 1 over 2, and cosine (pie over 3),', 'live-report-sin-two-span');
   tts('$\\cos(-\\pi/6) = \\cos(\\pi/6)$', 'cosine (minus pie over 6) equals cosine (pie over 6)', 'cos-even-identity');
   tts('$\\sin(-\\theta) = -\\sin\\theta$', 'sine (minus theta) equals minus sine theta', 'sin-odd-identity-span');
   tts('\\sin(-\\theta) = -\\sin\\theta', 'sine (- theta ) equals - sine theta', 'sin-odd-identity-bare');
+  // R37 (session-polish, live report — same sentence as the sin bug above):
+  // brace-less \frac/\dfrac/\tfrac ("\tfrac12" == "\tfrac{1}{2}" in real
+  // LaTeX) fell through the braced-only SPEECH_FRAC_RE and collapsed to
+  // the bare concatenated digits ("equals 12"), silencing the fraction
+  // entirely. Bare two-digit form must match the braced form's output
+  // exactly; braced multi-digit args are untouched.
+  tts('$\\tfrac12$', '1 over 2', 'bare-tfrac-matches-braced');
+  tts('$\\frac{1}{2}$', '1 over 2', 'braced-frac-one-half-reference');
+  tts('$\\frac34$', '3 over 4', 'bare-frac-matches-braced');
+  tts('$\\frac{3}{4}$', '3 over 4', 'braced-frac-three-fourths-reference');
+  tts('$\\tfrac{11}{2}$', '11 over 2', 'braced-multidigit-tfrac-unchanged');
   tts('And $\\sin^{-1}(0.5)$ is 30 degrees.', 'And arc sine (0.5) is 30 degrees.', 'inverse-trig');
   tts('Convert $\\frac{\\pi}{6}$ radians to 30°.', 'Convert pie over 6 radians to 30 degrees.', 'radians-degrees');
 
