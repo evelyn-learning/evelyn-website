@@ -513,13 +513,25 @@ function runCurated(): void {
   // span's closing $ dangling raw for the second sentence-boundary
   // verbalizeMathForSpeech pass to partially recover. Any inner text
   // that crosses a SENTENCE boundary (terminal punctuation + a new
-  // capitalized word) can never be a legitimate math span — LaTeX
-  // spans don't contain full sentences — so that shape is now always
-  // treated as an artifact regardless of the short-word gap.
+  // capitalized word) is treated as an artifact — UNLESS the inner
+  // already carries its own strong math signal (^ _ \ =), which is
+  // checked first and always wins (review fix below).
   tts('It costs $5. So $\\sin(\\theta)$ is the ratio.',
     'It costs $5. So sine (theta) is the ratio.', 'currency-short-word-sentence-boundary');
   tts('It costs $5. Ok $x + 2 = 5$ works.',
     'It costs $5. Ok x plus 2 equals 5 works.', 'currency-short-word-sentence-boundary-2');
+  // Review fix (post-R37): the sentence-boundary check above was
+  // originally the FIRST gate in isCurrencyPairingArtifact, ahead of
+  // MATH_SIGNAL_RE — so a genuinely strong math span whose inner text
+  // happens to contain a ". Capital" shape got misclassified as a
+  // currency artifact and left as literal, unconverted "$" text (a
+  // regression: real math with its own = / ^ / _ / \ signal silently
+  // failed to speak as math). MATH_SIGNAL_RE is now checked FIRST, so a
+  // strong-signal span is never routed through the boundary check at all.
+  tts('The vector is $x = 5. Yes$ still valid.',
+    'The vector is x equals 5. Yes still valid.', 'strong-signal-span-not-misclassified');
+  tts('Consider $F = 5. Newtons apply$ here.',
+    'Consider F equals 5. Newtons apply here.', 'strong-signal-span-not-misclassified-2');
   // Letter m: 'em' is voiced /əm/ ("um") by Cartesia — live-heard as
   // "um ex" for $mx$ and "um and bee" for prose "m and b". Bare capital
   // M reads as the letter name (same round-30 rationale as capital A).

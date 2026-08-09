@@ -718,10 +718,14 @@ const PROSE_WORD_RE = /[a-z]{3,}/i;
 // through as a real span — the price's own $ paired with the NEXT
 // legitimate span's opener, and the swallowed short word got shredded by
 // in-span letter respelling ("So" → "S o"). A span whose inner crosses a
-// SENTENCE boundary (terminal punctuation + a new capitalized word) can
-// never be legitimate math — the brain wraps individual math TOKENS in
-// $…$, never whole sentences — so that shape is an artifact unconditionally,
-// independent of the prose-word-length heuristic below.
+// SENTENCE boundary (terminal punctuation + a new capitalized word) is
+// treated as an artifact — the brain wraps individual math TOKENS in
+// $…$, never whole sentences, so that shape is never legitimate math EXCEPT
+// when the inner already carries its own strong math signal (^ _ \ =), in
+// which case isCurrencyPairingArtifact checks MATH_SIGNAL_RE first and
+// this check never runs (review fix: an earlier version checked this
+// BEFORE MATH_SIGNAL_RE and could misclassify a genuinely strong math span
+// — e.g. "x = 5. Yes" — as an artifact just for containing ". Y").
 const SENTENCE_BOUNDARY_RE = /[.!?]\s+[A-Z]/;
 /** Round-23: primes and function inverses, IN-SPAN ONLY. The apostrophe in
  *  f'(x) breaks the [fgh]( function-application match, so the span reached
@@ -1189,12 +1193,23 @@ function chemArrowContext(full: string, offset: number, len: number): boolean {
  *  "y-intercept") are masked before the operand-op-operand test: their
  *  hyphen matches the math-operator shape but a hyphen glued to a 2+
  *  letter word-run is English, not algebra ("x-y" keeps both sides single
- *  so genuine variable arithmetic still reads as math). R37: a sentence
- *  boundary inside inner is checked FIRST — see SENTENCE_BOUNDARY_RE. */
+ *  so genuine variable arithmetic still reads as math).
+ *
+ *  R37: a sentence boundary inside inner (terminal punctuation + a new
+ *  capitalized word — see SENTENCE_BOUNDARY_RE) is ALSO treated as an
+ *  artifact, but ONLY for spans that would otherwise fall through to the
+ *  digit-led/prose-word heuristic below — it is checked AFTER
+ *  MATH_SIGNAL_RE, not before. A strong math signal (^ _ \ =) always wins
+ *  first and is never reclassified as an artifact just because its inner
+ *  text happens to contain a period-space-capital shape (review fix: the
+ *  boundary check was originally the very first gate, which would have
+ *  misclassified a genuinely math span like "x = 5. Yes" — anything with
+ *  its own strong signal — as a currency artifact and left it as literal
+ *  "$" text). */
 function isCurrencyPairingArtifact(inner: string): boolean {
+  if (MATH_SIGNAL_RE.test(inner)) return false;
   if (SENTENCE_BOUNDARY_RE.test(inner)) return true;
   if (!CURRENCY_ARTIFACT_RE.test(inner) || !PROSE_WORD_RE.test(inner)) return false;
-  if (MATH_SIGNAL_RE.test(inner)) return false;
   const masked = inner.replace(/\b[A-Za-z]+-[A-Za-z]{2,}\b|\b[A-Za-z]{2,}-[A-Za-z]+\b/g, ' ');
   return !MATH_OPERAND_OP_RE.test(masked);
 }
