@@ -152,5 +152,81 @@ function mkPlan(opts: {
   assert(!prompt.includes('"hook"') && !prompt.includes('"recap"'), 'hook/recap not sent for labeling');
 }
 
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+/* ------------------------------------------------------------------ */
+/* deriveSegmentLabels — cache-through Haiku derivation (Mongo)       */
+/* ------------------------------------------------------------------ */
+
+async function runMongoCases() {
+  if (!process.env.MONGODB_URI) {
+    console.log('skip mongo cases');
+    return;
+  }
+
+  const { deriveSegmentLabels } = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
+  const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
+  const { RAIL_LABELS_VERSION } = await import('../src/lib/tutor/lesson-plan/rail-labels');
+  const { default: connectDB } = await import('../src/lib/db');
+
+  await connectDB();
+
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  curated.id = 'test-plan-rail-mongo-1';
+  const rowId = buildRailLabelsId(curated.id, RAIL_LABELS_VERSION);
+
+  try {
+    // Case: first call — no cache row, calls fn, parses + persists.
+    let calls = 0;
+    const fakeComplete = async (_prompt: string) => {
+      calls++;
+      return '{"labels":[{"id":"concept-cx","label":"Two-way exchange"},{"id":"worked-letter","label":"Columbus letter"},{"id":"try-saq","label":"SAQ practice"},{"id":"misconception-one-way","label":"One-way myth"}]}';
+    };
+    const first = await deriveSegmentLabels(curated, fakeComplete);
+    assert(first !== null && first['concept-cx'] === 'Two-way exchange', 'mongo: first call returns parsed labels');
+    assert(calls === 1, 'mongo: first call invokes complete once');
+    const row = await LessonPlanRailLabelsModel.findById(rowId).lean();
+    assert(!!row && row.planId === curated.id, 'mongo: row persisted under planId::version id');
+
+    // Case: second call — cache hit, does NOT re-invoke fn.
+    const second = await deriveSegmentLabels(curated, fakeComplete);
+    assert(second !== null && second['concept-cx'] === 'Two-way exchange', 'mongo: second call returns same labels');
+    assert(calls === 1, 'mongo: second call is a cache hit (calls still 1)');
+
+    // Case: atomic plan — fn returns {"atomic":true}, marker row written, no re-invoke.
+    const atomicPlan = mkPlan({
+      title: 'Atomic lesson',
+      segmentIds: ['hook', 'concept-only', 'recap'],
+    });
+    atomicPlan.id = 'test-plan-rail-mongo-atomic-1';
+    const atomicRowId = buildRailLabelsId(atomicPlan.id, RAIL_LABELS_VERSION);
+    try {
+      let atomicCalls = 0;
+      const atomicComplete = async (_prompt: string) => { atomicCalls++; return '{"atomic": true}'; };
+      const atomicFirst = await deriveSegmentLabels(atomicPlan, atomicComplete);
+      assert(atomicFirst === null, 'mongo: atomic first call returns null');
+      assert(atomicCalls === 1, 'mongo: atomic first call invokes complete once');
+      const atomicRow = await LessonPlanRailLabelsModel.findById(atomicRowId).lean();
+      assert(!!atomicRow && atomicRow.atomic === true, 'mongo: atomic marker row written');
+      const atomicSecond = await deriveSegmentLabels(atomicPlan, atomicComplete);
+      assert(atomicSecond === null, 'mongo: atomic second call returns null');
+      assert(atomicCalls === 1, 'mongo: atomic second call does NOT re-invoke fn');
+    } finally {
+      await LessonPlanRailLabelsModel.deleteOne({ _id: atomicRowId });
+    }
+  } finally {
+    await LessonPlanRailLabelsModel.deleteOne({ _id: rowId });
+  }
+}
+
+runMongoCases()
+  .then(() => {
+    console.log(`\n${passed} passed, ${failed} failed`);
+    process.exit(failed > 0 ? 1 : 0);
+  })
+  .catch((err) => {
+    console.error('Fatal error running test-rail-labels:', err);
+    process.exit(1);
+  });
