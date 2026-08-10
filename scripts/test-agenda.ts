@@ -1,6 +1,7 @@
 /**
  * Session-agenda + LO-named progress — buildLessonProgress LO view (E-task3)
- * and (Task 4 will extend this file with agenda-card cases below).
+ * and buildAgendaItems, which feeds the opener's spoken agenda preview (the
+ * visual agenda is the persistent rail — agenda-rail Task 3/4).
  *
  * Pure/deterministic tests against buildLessonProgress in
  * src/lib/tutor/portal/lesson-progress.ts. No DB, no LLM calls — builds
@@ -10,7 +11,7 @@
  * Usage: npx tsx scripts/test-agenda.ts
  */
 import { buildLessonProgress } from '../src/lib/tutor/portal/lesson-progress';
-import { buildAgendaItems, buildAgendaCommand } from '../src/lib/tutor/lesson-plan/agenda';
+import { buildAgendaItems } from '../src/lib/tutor/lesson-plan/agenda';
 import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
 
@@ -116,7 +117,8 @@ function mkPlan(opts: {
 }
 
 /* ------------------------------------------------------------------ */
-/* buildAgendaItems / buildAgendaCommand — opening Agenda card (Task 4) */
+/* buildAgendaItems — feeds the opener's spoken agenda preview (rail is  */
+/* the visual artifact — agenda-rail Task 3/4)                          */
 /* ------------------------------------------------------------------ */
 
 function deepEq(a: unknown, b: unknown): boolean {
@@ -181,15 +183,13 @@ function deepEq(a: unknown, b: unknown): boolean {
     segmentIds: ['pick-los'],
   });
   assert(deepEq(buildAgendaItems(picker), []), 'agenda picker: empty');
-  assert(buildAgendaCommand(picker) === null, 'agenda picker: command null');
 }
 
 // Case A5: zero-LO plan, recap with empty mustRemember → [] (segmentFor
-// builds recap with mustRemember: []). And no items ⇒ null command.
+// builds recap with mustRemember: []).
 {
   const bare = mkPlan({ los: [], segmentIds: ['hook', 'recap'] });
   assert(deepEq(buildAgendaItems(bare), []), 'agenda bare: empty');
-  assert(buildAgendaCommand(bare) === null, 'agenda bare: command null');
 }
 
 // Case A6: more than 8 items → capped at 8.
@@ -211,32 +211,16 @@ function deepEq(a: unknown, b: unknown): boolean {
   assert(deepEq(buildAgendaItems(blanks), ['Real point']), 'agenda blanks filtered');
 }
 
-// Case A8: markdown emphasis stripped from display items — the injected
-// command bypasses the funcArgs deepStripWbEmphasis pass, so the module
-// must strip **bold**/*italic* itself (board renderers print verbatim).
+// Case A8: markdown emphasis stripped from display items — items feed the
+// opener's spoken preview and the rail's labels, neither of which passes
+// through the funcArgs deepStripWbEmphasis pass, so the module must strip
+// **bold**/*italic* itself.
 {
   const emph = mkPlan({
     segmentIds: ['hook', 'recap'],
     recapMustRemember: ['**Crops** moved *both* ways'],
   });
   assert(deepEq(buildAgendaItems(emph), ['Crops moved both ways']), 'agenda emphasis stripped');
-}
-
-// Case A9: buildAgendaCommand shape — showProblem titled "Agenda",
-// free-response, bullet-per-item statement.
-{
-  const curated = mkPlan({
-    segmentIds: ['hook', 'recap'],
-    recapMustRemember: ['First point', 'Second point'],
-  });
-  const cmd = buildAgendaCommand(curated);
-  assert(cmd !== null, 'agenda command: non-null');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const c = cmd as any;
-  assert(c?.action === 'showProblem', 'agenda command: action showProblem');
-  assert(c?.problem?.title === 'Agenda', 'agenda command: title Agenda');
-  assert(c?.problem?.format === 'free-response', 'agenda command: format free-response');
-  assert(c?.problem?.statement === '• First point\n• Second point', 'agenda command: bullet statement');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

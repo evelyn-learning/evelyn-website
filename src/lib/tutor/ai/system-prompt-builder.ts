@@ -158,11 +158,11 @@ export interface SystemPromptContext {
    *  the orchestrator wiring that sets this lands in a later task. */
   selfReportRouting?: boolean;
 
-  /** Task 4 (session agenda) — number of items on the deterministic
-   *  opening "Agenda" card the orchestrator just injected. >0 ⇒
-   *  buildOpenerClause appends the one-sentence spoken-preview directive;
-   *  absent/0 (every non-fresh-plan-start session) ⇒ output
-   *  byte-identical to before. */
+  /** Agenda rail (2026-08-10) — number of items on the persistent agenda
+   *  rail (Task 3) for a fresh plan start. >0 ⇒ buildOpenerClause prepends
+   *  a one-sentence spoken rail-preview directive, anchored FIRST; absent/0
+   *  (every non-fresh-plan-start session) ⇒ output byte-identical to
+   *  before. */
   agendaItemCount?: number;
 
   /** Teacher persona — the session is taught AS this specific teacher
@@ -1454,21 +1454,26 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     'whiteboard render (a written hook, sketch, diagram, or the day\'s problem), issued before ' +
     'or alongside your first substantive sentence. Do not end the turn with an empty board.';
 
-  // Task 4 (session agenda): the orchestrator injected a deterministic
-  // "Agenda" card as the first render of this opening turn — direct the
-  // brain to preview it in one spoken sentence, never re-render or read
-  // it verbatim. n===0 (no card injected) leaves every branch byte-identical.
+  // Agenda rail (2026-08-10, retiring the opening "Agenda" card): the
+  // persistent rail (Task 3) is already on the board above the whiteboard —
+  // no card is injected. Direct the brain to preview the rail's contents in
+  // one spoken sentence, in its own words, then launch straight into the
+  // first item. Anchored FIRST in the directive (grill-me Q1: highest-
+  // priority position) rather than appended, so it can't be crowded out by
+  // the branch text that follows. n===0 (no agenda items) leaves every
+  // branch byte-identical to the pre-rail text.
   const n = ctx.agendaItemCount ?? 0;
   const agendaClause = n > 0
-    ? ` The board already shows an "Agenda" card listing today's ${n === 1 ? 'goal' : String(n) + ' goals'}. In your opening turn, preview it in ONE short spoken sentence in your own words — do NOT read the card verbatim and do NOT re-render it — then launch straight into the first item.`
+    ? `Above the board is a persistent agenda rail listing today's ${n === 1 ? 'goal' : `${n} goals`}. FIRST, preview today's agenda in ONE short spoken sentence in your own words — do not read the rail labels verbatim and do not render an agenda card — then launch straight into the first item. `
     : '';
 
   if (ctx.entryMode === 'typed-content') {
     return (
+      agendaClause +
       'The student opened with their own words — respond to THAT directly and put ' +
       "something relevant on the board; weave in only the calibration you still need " +
       "(don't re-ask what they've told you), never a canned 'tell me about yourself' reset." +
-      boardFirstClause + noNameClause + agendaClause
+      boardFirstClause + noNameClause
     );
   }
 
@@ -1480,6 +1485,7 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     // progress arc" — which, stacked with the profile block's callback
     // mandate, made openers a recap monologue. Present-session first.
     return (
+      agendaClause +
       "Open with THIS session's content: greet them warmly by name, then get the day's hook " +
       'onto the board and moving. Include exactly ONE short continuity sentence, and make it ' +
       'CONCRETE — name what you actually did last time from the prior-sessions list ("last ' +
@@ -1489,30 +1495,31 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
       'already precedes this directive, that line IS your continuity sentence — do not add ' +
       'a second. Do NOT ask a returning student what they already know — you have their ' +
       'history. NEVER repeat the same opening move twice in a row.' +
-      boardFirstClause + noNameClause + agendaClause
+      boardFirstClause + noNameClause
     );
   }
 
   // Default: demo, first-ever subscribed session, or entryMode 'typed-greeting'
   // — treated as the full opener per the brief.
   return (
+    agendaClause +
     'Open by ACTING FIRST: put one intriguing, level-appropriate thing about the topic on ' +
     'the board, greet them by name if you have it, then get to know them briefly like a real ' +
     "teacher would — roughly where they're at with this topic, their grade if unclear, and " +
     'what they\'re hoping to get from this session (just exploring, thinking about joining, ' +
     'curious how an AI teaches). Have a short human exchange, THEN teach, informed by it. ' +
-    // Task 4: the bare "Today we are going to learn…" opener stays banned;
-    // when an Agenda card was injected (n > 0), the one-sentence preview
-    // directed by agendaClause below is the sanctioned exception.
+    // Agenda rail: the bare "Today we are going to learn…" opener stays
+    // banned; when the rail carries items (n > 0), the one-sentence
+    // preview directed by agendaClause above is the sanctioned exception.
     (n > 0
-      ? "NEVER open with 'Today we are going to learn…' or a bare bold title — the one-sentence Agenda-card preview described below is the exception. "
+      ? "NEVER open with 'Today we are going to learn…' or a bare bold title — the one-sentence agenda-rail preview described above is the exception. "
       : "NEVER open with 'Today we are going to learn…' or a bare bold title. ") +
     'Start IN the substance, not with a curtain-raiser: stock lead-ins like ' +
     '"here\'s a little puzzle to kick us off", "let\'s dive in", "before we start", or ' +
     '"don\'t worry about getting it right" read as the same script every session — skip the ' +
     'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
     'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
-    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause + agendaClause
+    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause
   );
 }
 

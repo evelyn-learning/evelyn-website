@@ -65,8 +65,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
-  // Task 4 (session agenda): agenda_card_shown — one line per fresh plan
-  // start, proves the deterministic opening Agenda card actually painted.
+  // Agenda rail (2026-08-10): agenda_rail_active — one line per fresh plan
+  // start, proves the opener resolved a non-zero agenda item count (rail
+  // preview clause armed). No card is ever dispatched.
   'agenda_',
 ];
 

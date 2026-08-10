@@ -42,7 +42,7 @@ import {
   shouldEmitOpenerFallback,
   buildOpenerFallbackCommand,
 } from '@/lib/tutor/ai/opener-fallback';
-import { buildAgendaCommand, buildAgendaItems, isAgendaCardCommand } from '@/lib/tutor/lesson-plan/agenda';
+import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import {
@@ -1335,14 +1335,15 @@ export function VoiceTutorRealtime({
   // resurrect a retired directive). Fresh per session via key={sessionId}.
   const openingDirectiveRef = useRef<string | null>(null);
   const openingDirectiveBrainTurnsRef = useRef(0);
-  // Task 4 (session agenda): the exact ctx buildInstructions used to seed
+  // Agenda rail (2026-08-10): the exact ctx buildInstructions used to seed
   // the opening directive, plus whether the stale-checkpoint re-orient
   // prefix applied. buildInstructions runs at MOUNT — before the Start tap
-  // that arms the agenda card — so the directive is seeded WITHOUT the
-  // agenda-preview clause. When handleMicClick arms the card, it rebuilds
-  // the directive from this stashed ctx with agendaItemCount set, so the
-  // clause reaches the opening turn without duplicating buildOpenerClause's
-  // branch logic. Null until the one-shot seed runs (flag-off: stays null).
+  // that resolves the fresh-start agenda count — so the directive is
+  // seeded WITHOUT the agenda-preview clause. When handleMicClick resolves
+  // the count, it rebuilds the directive from this stashed ctx with
+  // agendaItemCount set, so the clause reaches the opening turn without
+  // duplicating buildOpenerClause's branch logic. Null until the one-shot
+  // seed runs (flag-off: stays null).
   const openerClauseCtxRef = useRef<SystemPromptContext | null>(null);
   const openerStaleReorientRef = useRef(false);
   // Teacher self-intro (2026-07-09): carried SEPARATELY from the opening
@@ -1667,12 +1668,6 @@ export function VoiceTutorRealtime({
   // mount; segment progression is tracked locally.
   const lessonPlanRef = useRef<import('@/lib/tutor/lesson-plan/types').LessonPlan | null>(null);
   const currentSegmentIdRef = useRef<string>('');
-  // Task 4 (session agenda): the deterministic opening Agenda card. Armed
-  // by handleMicClick's plan-kickoff branch on FRESH plan starts only
-  // (never resume/diagnostic/picker/no-plan); consumed at the top of the
-  // next callBrainOnce so the card is the first buffered render of the
-  // opening brain turn. Cleared on consumption and on plan change.
-  const pendingAgendaCommandRef = useRef<WhiteboardCommand | null>(null);
   // realtime-2: guards one-time lesson-plan injection per plan, and holds
   // the inject-current-segment function (assigned after the hook call so
   // it can close over injectContextRef).
@@ -4780,12 +4775,7 @@ export function VoiceTutorRealtime({
     // --- Track declarations + integrands + current problem for next turn ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const cmd of processed) {
-      // Task 4 (session agenda): the runtime-injected Agenda card is a
-      // board artifact, not a problem the student is answering — tracking
-      // it would ground the opening turn's <active_problem> block (and the
-      // judge's focus) on the bullet list, and push "Agenda" into
-      // topicsCovered. Skip it entirely.
-      if (cmd.action === 'showProblem' && !isAgendaCardCommand(cmd)) {
+      if (cmd.action === 'showProblem') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = (cmd as any).problem;
         if (p?.statement) {
@@ -7319,10 +7309,7 @@ export function VoiceTutorRealtime({
           console.log('[VoiceTutorRealtime] resume: rehydrated active problem (try-yourself card):', statement.slice(0, 80));
           break;
         }
-        // Task 4 (session agenda): never rehydrate the Agenda card as the
-        // active problem — a session checkpointed right after the opener
-        // would otherwise resume grounded on the bullet list.
-        if (cmd?.action === 'showProblem' && cmd.problem?.statement && !isAgendaCardCommand(cmd)) {
+        if (cmd?.action === 'showProblem' && cmd.problem?.statement) {
           const statement = String(cmd.problem.statement);
           currentProblemRef.current = {
             statement,
@@ -7357,9 +7344,6 @@ export function VoiceTutorRealtime({
     // text served under the old plan (freestyle plans reuse content), and a
     // stale entry would wrongly kill its first render.
     servedProblemStatementsRef.current = new Set();
-    // Task 4 (session agenda): an armed-but-unconsumed agenda card belongs
-    // to the outgoing plan — never let it paint under the new one.
-    pendingAgendaCommandRef.current = null;
     // realtime-2: a new plan must be re-injected into the RT-2 session.
     lessonPlanV2InjectedRef.current = false;
     if (!lessonPlanId) {
@@ -7761,34 +7745,6 @@ export function VoiceTutorRealtime({
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     try {
-      // Task 4 (session agenda): consume the armed Agenda card so it is the
-      // FIRST buffered render of the opening brain turn. Routed through
-      // handleWhiteboardCommand — the same funnel a show_segment_card
-      // resolvedCmd takes (structural validation → catalog registration →
-      // render buffering → TTS-synced flush) — so it lands in boardSnapshot
-      // (Rule-13 dedup stops the brain re-rendering it) and counts as a
-      // valid opener render (isBoardRenderCommand 'show*' — the board
-      // genuinely isn't blank, so the opener-fallback guard seeing it is
-      // correct). Deliberately OUTSIDE the attempt loop: a judge/validator
-      // kill must not roll the deterministic card off the board. Cleared
-      // before the await so a mid-flight failure can't re-emit next turn.
-      if (pendingAgendaCommandRef.current) {
-        const agendaCmd = pendingAgendaCommandRef.current;
-        pendingAgendaCommandRef.current = null;
-        try {
-          const agendaResult = await handleWhiteboardCommand([agendaCmd]);
-          if (!agendaResult?.rejected?.length) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const stmt = String((agendaCmd as any)?.problem?.statement ?? '');
-            onDebugEvent?.('agenda_card_shown', `${stmt.split('\n').length} items`);
-          } else {
-            console.warn('[brain-orchestrator] agenda card rejected:', agendaResult.rejected);
-            onDebugEvent?.('agenda_card_rejected', agendaResult.rejected.map((r) => r.reason).join('; ').slice(0, 120));
-          }
-        } catch (agendaErr) {
-          console.warn('[brain-orchestrator] agenda card dispatch failed:', agendaErr);
-        }
-      }
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
       // handleTranscriptUpdate appends before this runs; in typed-input
@@ -16177,20 +16133,18 @@ export function VoiceTutorRealtime({
               topic,
               level,
             } as SystemPromptContext;
-            // Task 4 (session agenda): stash the ctx so handleMicClick can
-            // rebuild this directive WITH the agenda-preview clause when it
-            // arms the card (the Start tap normally lands after this
-            // mount-time seed — ref still null here ⇒ count 0). The direct
-            // pass below covers the reverse ordering: on studentId sessions
-            // the H2 profile-settle re-run can seed AFTER the tap already
-            // armed the card.
+            // Agenda rail (2026-08-10): stash the ctx so handleMicClick can
+            // rebuild this directive WITH the agenda-preview clause once it
+            // resolves the fresh-start item count (the Start tap normally
+            // lands after this mount-time seed, so the count is always 0
+            // here). The direct pass below covers the reverse ordering: on
+            // studentId sessions the H2 profile-settle re-run can seed
+            // AFTER the tap already resolved the count.
             openerClauseCtxRef.current = openerCtx;
             openerStaleReorientRef.current = beh.journey === 'resume-stale';
             const openerClause = buildOpenerClause({
               ...openerCtx,
-              agendaItemCount: pendingAgendaCommandRef.current && lessonPlanRef.current
-                ? buildAgendaItems(lessonPlanRef.current).length
-                : 0,
+              agendaItemCount: 0,
             });
             // Resume-stale nuance: the student HAD started this lesson but
             // the checkpoint was too old to restore — prepend the one-line
@@ -16493,25 +16447,30 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // kickoff and it is NEVER retried → the lesson never starts → "preparing
           // your tutor" hangs forever (2026-06-23 recursion startup-hang repro).
           // R32 T9: stash it so the watchdog can silently re-kick once at 20s.
-          // Task 4 (session agenda): arm the deterministic opening Agenda
-          // card for FRESH plan starts only. Checkpoint resumes never reach
-          // this branch (the resumeState first-tap path above returns
-          // early, and the guard below re-checks); a STALE-checkpoint
-          // restart does reach it — that's a cold start with a blank board,
-          // so the agenda is correct there. Diagnostic sessions are
-          // excluded; picker/zero-item plans yield null from
-          // buildAgendaCommand on their own.
+          // Agenda rail (2026-08-10): resolve the fresh-start agenda item
+          // count so the opener's spoken preview clause can reference the
+          // persistent rail (Task 3) — no card is dispatched here, the rail
+          // is already on the board. Checkpoint resumes never reach this
+          // branch (the resumeState first-tap path above returns early, and
+          // the guard below re-checks); a STALE-checkpoint restart does
+          // reach it — that's a cold start with a blank board, so the
+          // preview is correct there. Diagnostic sessions are excluded;
+          // picker/zero-item plans yield 0 from buildAgendaItems on their
+          // own.
           const planForAgenda = lessonPlanRef.current;
           const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
-          if (isFreshStart && targetKind !== 'diagnostic') {
-            pendingAgendaCommandRef.current = buildAgendaCommand(planForAgenda);
+          const agendaItemCount = (planForAgenda && isFreshStart && targetKind !== 'diagnostic')
+            ? buildAgendaItems(planForAgenda).length
+            : 0;
+          if (agendaItemCount > 0) {
+            onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
             // Rebuild the opening directive WITH the agenda-preview clause —
             // the mount-time seed ran before this tap, so the seeded
             // directive lacks it (see openerClauseCtxRef doc).
-            if (pendingAgendaCommandRef.current && openingDirectiveRef.current && openerClauseCtxRef.current) {
+            if (openingDirectiveRef.current && openerClauseCtxRef.current) {
               const rebuilt = buildOpenerClause({
                 ...openerClauseCtxRef.current,
-                agendaItemCount: buildAgendaItems(planForAgenda).length,
+                agendaItemCount,
               });
               if (rebuilt) {
                 openingDirectiveRef.current = openerStaleReorientRef.current

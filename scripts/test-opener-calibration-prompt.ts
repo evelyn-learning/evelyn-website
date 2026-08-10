@@ -83,9 +83,9 @@ function main() {
       entryMode: 'button',
     });
     assert.ok(clause, 'clause should not be null');
-    assert.match(clause!, /warm and personal/i);
+    assert.match(clause!, /greet them warmly by name/i);
     assert.match(clause!, /do NOT ask a returning student what they already know/i);
-    assert.match(clause!, /NEVER repeat an opener or the same KIND of opener twice in a row/i);
+    assert.match(clause!, /NEVER repeat the same opening move twice in a row/i);
     assert.doesNotMatch(clause!, /thinking about joining/i);
   });
 
@@ -136,7 +136,7 @@ function main() {
       entryMode: 'typed-greeting',
     });
     assert.ok(clause, 'clause should not be null');
-    assert.match(clause!, /warm and personal/i);
+    assert.match(clause!, /greet them warmly by name/i);
   });
 
   // ── first-ever subscribed session (not returning) falls to the demo/act-first path ──
@@ -226,6 +226,19 @@ function main() {
     // Legacy boring-opener text is still present elsewhere in BASE_PROMPT
     // (this task only ADDS the new clause; it doesn't strip the old text).
     assert.match(prompt, /Hey \[name\]!/);
+  });
+
+  // ── agenda rail preview (Task 4) ─────────────────────────────────────────
+  test('agenda clause present and FIRST when agendaItemCount > 0', () => {
+    const c = buildOpenerClause({ ...baseCtx, openingPhase: true, agendaItemCount: 3 })!;
+    assert(c.includes('agenda rail'), 'names the rail, not a card');
+    assert(!c.includes('"Agenda" card'), 'card wording gone');
+    assert(c.trimStart().startsWith('Above the board'), 'clause anchored first');
+  });
+  test('agenda clause absent at count 0, ban unconditional', () => {
+    const c = buildOpenerClause({ ...baseCtx, openingPhase: true, agendaItemCount: 0 })!;
+    assert(!c.includes('agenda rail'), 'no clause');
+    assert(c.includes('Today we are going to learn'), 'plain ban present in demo branch');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);
