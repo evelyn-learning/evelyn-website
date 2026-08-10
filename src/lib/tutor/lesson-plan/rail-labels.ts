@@ -118,6 +118,7 @@ export function parseLabelResponse(raw: string, plan: LessonPlan): SegmentLabels
   const validIds = new Set(plan.segments.map((s) => s.id));
   const out: SegmentLabels = {};
   for (const item of arr) {
+    if (!item || typeof item !== 'object') return null;
     const id = (item as { id?: unknown }).id;
     const label = (item as { label?: unknown }).label;
     if (typeof id !== 'string' || typeof label !== 'string' || !label.trim()) return null;

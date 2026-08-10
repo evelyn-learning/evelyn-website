@@ -27,7 +27,7 @@ function assert(cond: boolean, name: string) {
 /** Build a minimal Segment for a given id. Kind defaults to 'concept'
  *  except ids containing hook/try/recap, per the task pattern. */
 function segmentFor(id: string): Segment {
-  if (id.includes('hook')) return { id, kind: 'hook', goal: 'test hook' };
+  if (id === 'intro' || id.includes('hook')) return { id, kind: 'hook', goal: 'test hook' };
   if (id.includes('try')) return { id, kind: 'try_yourself', problem: 'test problem', expectedAnswer: 'test answer' };
   if (id === 'recap' || id.includes('recap')) return { id, kind: 'recap', mustRemember: [] };
   // Default segment types for other cases
@@ -133,6 +133,8 @@ function mkPlan(opts: {
   assert(p('```json\n{"labels":[{"id":"concept-cx","label":"Fenced"}]}\n```')!['concept-cx'] === 'Fenced', 'fence tolerant');
   assert(p('not json') === null && p('{"labels":[{"id":"nope","label":"X"}]}') === null, 'junk + unknown ids → null');
   assert(p('{"labels":[{"id":"concept-cx","label":"Same"},{"id":"worked-letter","label":"Same"}]}') === null, 'all-duplicate labels → null (atomic)');
+  assert(p('{"labels":[null]}') === null, 'null array entry → null');
+  assert(p('{"labels":[42]}') === null, 'non-object array entry → null');
 }
 
 /* ------------------------------------------------------------------ */
