@@ -91,6 +91,11 @@ export const TUTOR_NOISE_NAG =
 // src/lib/tutor/voice/idle-nudge.ts (test:idle-nudge).
 export const TUTOR_IDLE_NUDGE =
   process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE !== 'off';
+/**
+ * Agenda rail (2026-08-10): persistent content-labeled progress rail above the
+ * whiteboard. Kill switch: NEXT_PUBLIC_TUTOR_AGENDA_RAIL=off.
+ */
+export const TUTOR_AGENDA_RAIL = process.env.NEXT_PUBLIC_TUTOR_AGENDA_RAIL !== 'off';
 // Task B2 — proactive opener wiring (orchestrator). Client-side, DEFAULT OFF.
 // When on, the mount-time buildSystemPrompt call additionally passes the B4/B5
 // opener/self-report context fields (sessionMode/openingPhase/entryMode/

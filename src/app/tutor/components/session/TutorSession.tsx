@@ -8,7 +8,7 @@
  * It owns the session-VIEW state (transcript, whiteboard, lesson progress,
  * voice/presence signals) and the simple session-internal handlers, and
  * composes `<SessionStage>` with its slots (WhiteboardCanvas, VoiceTutorRealtime,
- * TranscriptView, LessonPlanProgress, SessionControls + the ⋯ pacing/humor menu).
+ * TranscriptView, AgendaRail, SessionControls + the ⋯ pacing/humor menu).
  *
  * Page-orchestration concerns (plan swap/confirm, freestyle plan-gen, debug,
  * analytics, homework upload, the free-practice nudge picker) are OPTIONAL
@@ -25,9 +25,10 @@ import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
-import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
+import { AgendaRail } from './AgendaRail';
+import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
@@ -41,7 +42,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
-import { TUTOR_MANUAL_MIC } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 import { latestSubstantiveTutorEntry } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
@@ -245,6 +246,21 @@ export default function TutorSession(props: TutorSessionProps) {
   const [whiteboardCommands, setWhiteboardCommands] = useState<WhiteboardCommand[]>([]);
   const [lessonProgress, setLessonProgress] = useState<LessonProgressState>({ plan: null, currentSegmentId: '' });
   const [completedSegmentIds, setCompletedSegmentIds] = useState<string[]>([]);
+  // Agenda rail (2026-08-10): cached content labels for the current plan.
+  // Rendered stage-only (buildRailModel's fallback) until this lands, then
+  // upgrades in place — session boot never waits on the Haiku call.
+  const [segmentLabels, setSegmentLabels] = useState<SegmentLabels | null>(null);
+  const railPlanId = lessonProgress.plan?.id ?? null;
+  useEffect(() => {
+    setSegmentLabels(null);
+    if (!railPlanId || !TUTOR_AGENDA_RAIL) return;
+    let cancelled = false;
+    fetch(`/api/tutor/lesson-plans/${encodeURIComponent(railPlanId)}/rail-labels`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d && typeof d === 'object') setSegmentLabels(d.labels ?? null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [railPlanId]);
   const [liveVoiceState, setLiveVoiceState] = useState<VoiceState>('idle');
   // Wallclock ms when the student actually starts the voice session (mic tap).
   // Drives the SessionControls timer so it counts from start, not page mount.
@@ -1004,6 +1020,7 @@ export default function TutorSession(props: TutorSessionProps) {
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
+        segmentLabels={segmentLabels}
         onTutorBusy={handleTutorBusy}
         onVoiceStateChange={setLiveVoiceState}
         resumeState={resumeState}
@@ -1075,9 +1092,20 @@ export default function TutorSession(props: TutorSessionProps) {
       <span className="text-slate-400">{practiceStats.presented} shown</span>
     </div>
   ) : null;
-  const beatsEl = practiceMeterEl ?? (lessonProgress.plan ? (
-    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
-  ) : null);
+  // Agenda rail (2026-08-10) replaces the old LessonPlanProgress strip as the
+  // `beats` slot's plan-progress content; the practice meter above stays the
+  // `beats` content while practice mode is active. LessonPlanProgress.tsx
+  // itself stays — the legacy flag-OFF /tutor path (page.tsx) still uses it.
+  const beatsEl = practiceMeterEl ?? null;
+
+  const railItems = TUTOR_AGENDA_RAIL && lessonProgress.plan
+    ? buildRailModel(lessonProgress.plan, lessonProgress.currentSegmentId ?? '',
+        new Set(completedSegmentIds), segmentLabels)
+    : null;
+  const agendaRailEl = railItems && railItems.length > 0
+    ? <AgendaRail items={railItems} orientation="horizontal" /> : undefined;
+  const agendaRailVerticalEl = railItems && railItems.length > 0
+    ? <AgendaRail items={railItems} orientation="vertical" /> : undefined;
 
   const controlsEl = (
     <SessionControls
@@ -1363,6 +1391,8 @@ export default function TutorSession(props: TutorSessionProps) {
         isFreePractice={!lessonProgress.plan}
         objective={objective}
         beats={beatsEl}
+        agendaRail={agendaRailEl}
+        agendaRailVertical={agendaRailVerticalEl}
         controls={controlsEl}
         headerClock={
           <HeaderClock

@@ -457,6 +457,10 @@ interface VoiceTutorRealtimeProps {
     plan: import('@/lib/tutor/lesson-plan/types').LessonPlan | null;
     currentSegmentId: string;
   }) => void;
+  /** Agenda rail (2026-08-10): cached content labels for the active plan's
+   *  segments, fetched by TutorSession from the rail-labels route. Mirrored
+   *  to a ref (Task 5 reads it) — not otherwise consumed here yet. */
+  segmentLabels?: import('@/lib/tutor/lesson-plan/rail-labels').SegmentLabels | null;
   /** Fires whenever the tutor enters / leaves a "composing" state — the
    *  brain is fetching a response, warm-up is in progress, or TTS is
    *  rendering. Parent can use this to drive a typing indicator. */
@@ -707,6 +711,7 @@ export function VoiceTutorRealtime({
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   onLessonPlanProgress,
+  segmentLabels,
   onTutorBusy,
   onVoiceStateChange,
   onSessionStarted,
@@ -1689,6 +1694,9 @@ export function VoiceTutorRealtime({
   // a progress strip outside this control row.
   const onLessonPlanProgressRef = useRef(onLessonPlanProgress);
   useEffect(() => { onLessonPlanProgressRef.current = onLessonPlanProgress; }, [onLessonPlanProgress]);
+  // Agenda rail (2026-08-10): mirrored for Task 5's consumption; not read here yet.
+  const segmentLabelsRef = useRef<import('@/lib/tutor/lesson-plan/rail-labels').SegmentLabels | null>(null);
+  useEffect(() => { segmentLabelsRef.current = segmentLabels ?? null; }, [segmentLabels]);
 
   // Task WS3: mock-review context mirrored to a ref. The embed fetches it
   // asynchronously AFTER mount, and callBrainOnce (memoized, mockReview not in

@@ -55,6 +55,14 @@ export interface SessionStageProps {
   isFreePractice: boolean;
   objective?: string;            // current LO / goal chip text
   beats?: ReactNode;             // <LessonPlanProgress/> (restyled host)
+  /** Agenda rail (2026-08-10): persistent content-labeled progress rail,
+   *  horizontal orientation, rendered above the board when not fullscreen.
+   *  Absent/undefined ⇒ no rail (flag off, no plan, or single-segment plan). */
+  agendaRail?: ReactNode;
+  /** Vertical orientation of the same rail data, shown as a left overlay
+   *  while the stage is browser-fullscreen. Falls back to `agendaRail` when
+   *  absent so callers may pass only one orientation. */
+  agendaRailVertical?: ReactNode;
   controls?: ReactNode;          // <SessionControls/> (timer / end / upload)
   adaptiveMenu?: ReactNode;      // the pacing ⋯ menu element
   /** Round-5: compact clock chip for the header row. Rendered sm:hidden so it
@@ -208,7 +216,7 @@ const TITLE_REVEAL_MS = 4000;
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -668,6 +676,16 @@ export default function SessionStage(props: SessionStageProps) {
     } catch { /* unsupported — button is hidden on those devices anyway */ }
   };
 
+  // Agenda rail (2026-08-10): browser-fullscreen state drives which
+  // orientation of the rail renders (horizontal row above the board vs a
+  // vertical left overlay while fullscreen, which has no room for a top row).
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
+
   return (
     <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col">
       <style>{`
@@ -689,7 +707,7 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Board area (flex row — fills everything below the top bar; the
               caption+dock bar FLOATS over its bottom edge, translucent, so the
               board keeps the full height even in a ~600px iframe) ===== */}
-      <div className="relative z-10 flex-1 min-h-0 order-2">
+      <div className="relative z-10 flex-1 min-h-0 order-3">
         {/* The board CONTENT sits in a centered, readable column (word problems
             / prose shouldn't stretch edge-to-edge). Only small padding is
             needed (plus clearance for the floating switcher when shown) — the
@@ -912,6 +930,18 @@ export default function SessionStage(props: SessionStageProps) {
           </div>
         )}
       </div>
+
+      {/* Agenda rail (2026-08-10) — horizontal row above the board, hidden in
+          fullscreen (no room); vertical variant takes over as a left overlay
+          instead (same layer treatment as the tools cluster). */}
+      {agendaRail && !isFullscreen ? (
+        <div className="relative z-20 shrink-0 order-2 px-2 pt-1.5">{agendaRail}</div>
+      ) : null}
+      {agendaRail && isFullscreen ? (
+        <div className="absolute left-2 top-16 bottom-24 z-20 w-44 rounded-2xl bg-white/80 backdrop-blur-md shadow-sm overflow-hidden">
+          {agendaRailVertical ?? agendaRail}
+        </div>
+      ) : null}
 
       {/* ===== Top bar (flex row) ===== */}
       <div className="relative z-30 shrink-0 order-1">
