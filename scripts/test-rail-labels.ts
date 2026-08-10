@@ -166,8 +166,19 @@ async function runMongoCases() {
   const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
   const { RAIL_LABELS_VERSION } = await import('../src/lib/tutor/lesson-plan/rail-labels');
   const { default: connectDB } = await import('../src/lib/db');
+  const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
+  const { GET: railLabelsGET } = await import('../src/app/api/tutor/lesson-plans/[id]/rail-labels/route');
 
   await connectDB();
+
+  /** Minimal forged NextRequest + params-promise ctx, mirroring
+   *  test-plan-generate.ts's `new Request(...) as unknown as NextRequest`
+   *  pattern for calling a route handler in-process. */
+  async function callRailLabelsRoute(id: string) {
+    const req = new Request(`https://engine.test/api/tutor/lesson-plans/${id}/rail-labels`) as unknown as Parameters<typeof railLabelsGET>[0];
+    const res = await railLabelsGET(req, { params: Promise.resolve({ id }) });
+    return { status: res.status, json: await res.json() };
+  }
 
   const curated = mkPlan({
     title: 'U1.4 The Columbian Exchange',
@@ -215,6 +226,102 @@ async function runMongoCases() {
       assert(atomicCalls === 1, 'mongo: atomic second call does NOT re-invoke fn');
     } finally {
       await LessonPlanRailLabelsModel.deleteOne({ _id: atomicRowId });
+    }
+
+    // Case: complete() throws (transient transport error) → null, and
+    // crucially NO cache row is written — a throw must not get blackholed
+    // as a permanent "atomic" verdict. The throw happens before create().
+    const throwPlan = mkPlan({ title: 'Throw plan', segmentIds: ['hook', 'concept-t', 'recap'] });
+    throwPlan.id = 'test-plan-rail-mongo-throw-1';
+    const throwRowId = buildRailLabelsId(throwPlan.id, RAIL_LABELS_VERSION);
+    try {
+      const throwingComplete = async (_prompt: string) => { throw new Error('simulated transport failure'); };
+      const throwResult = await deriveSegmentLabels(throwPlan, throwingComplete);
+      assert(throwResult === null, 'mongo: throwing complete() returns null');
+      const throwRow = await LessonPlanRailLabelsModel.findById(throwRowId).lean();
+      assert(throwRow === null, 'mongo: throwing complete() writes NO cache row (not blackholed as atomic)');
+    } finally {
+      await LessonPlanRailLabelsModel.deleteOne({ _id: throwRowId });
+    }
+
+    // Case: complete() returns malformed JSON → parseLabelResponse returns
+    // null → per current design this DOES write the atomic marker row
+    // (a parse failure is treated the same as an explicit atomic verdict).
+    const malformedPlan = mkPlan({ title: 'Malformed plan', segmentIds: ['hook', 'concept-m', 'recap'] });
+    malformedPlan.id = 'test-plan-rail-mongo-malformed-1';
+    const malformedRowId = buildRailLabelsId(malformedPlan.id, RAIL_LABELS_VERSION);
+    try {
+      const malformedComplete = async (_prompt: string) => 'not json at all {{{';
+      const malformedResult = await deriveSegmentLabels(malformedPlan, malformedComplete);
+      assert(malformedResult === null, 'mongo: malformed JSON complete() returns null');
+      const malformedRow = await LessonPlanRailLabelsModel.findById(malformedRowId).lean();
+      assert(!!malformedRow && malformedRow.atomic === true, 'mongo: malformed JSON writes atomic marker row');
+    } finally {
+      await LessonPlanRailLabelsModel.deleteOne({ _id: malformedRowId });
+    }
+
+    // ---------------------------------------------------------------
+    // Route handler — GET /api/tutor/lesson-plans/:id/rail-labels
+    // ---------------------------------------------------------------
+
+    // (a) unknown plan id → 404.
+    {
+      const { status, json } = await callRailLabelsRoute('test-plan-rail-mongo-does-not-exist');
+      assert(status === 404, `route: unknown plan id → 404 (got ${status})`);
+      assert(json.error !== undefined, 'route: 404 body carries an error field');
+    }
+
+    // (b) generated plan → 200 { labels: null }, and derivation was never
+    // invoked for it (no cache row was created for this plan id).
+    {
+      const generatedPlan = await upsertLessonPlan({
+        id: 'test-plan-rail-mongo-generated-1',
+        title: 'Test Generated Plan',
+        curriculum: 'freestyle',
+        grade: '9-12',
+        subject: 'math',
+        los: [{ id: 'lo1', description: 'test lo' }],
+        estimatedMinutes: 12,
+        segments: [{ id: 'seg1', kind: 'hook', goal: 'g' }],
+        schemaVersion: 1,
+        metadata: { generatedFromText: true },
+      });
+      const generatedRowId = buildRailLabelsId(generatedPlan.id, RAIL_LABELS_VERSION);
+      try {
+        const { status, json } = await callRailLabelsRoute(generatedPlan.id);
+        assert(status === 200 && json.labels === null, `route: generated plan → 200 { labels: null } (got ${status}, ${JSON.stringify(json)})`);
+        const generatedRow = await LessonPlanRailLabelsModel.findById(generatedRowId).lean();
+        assert(generatedRow === null, 'route: generated plan never reaches derivation — no cache row created');
+      } finally {
+        await deleteLessonPlan(generatedPlan.id);
+        await LessonPlanRailLabelsModel.deleteOne({ _id: generatedRowId });
+      }
+    }
+
+    // (c) curated (real seed) plan id — pre-seed the cache row so the route
+    // exercises ONLY the cache-hit read path (no live Anthropic call). The
+    // real GET handler calls deriveSegmentLabels with the REAL CompleteFn,
+    // so this is the one way to test it offline.
+    {
+      const seedPlanId = 'evelyn.hs.whist.columbian-exchange.v1';
+      const seedRowId = buildRailLabelsId(seedPlanId, RAIL_LABELS_VERSION);
+      const seededLabels = { 'concept-cx': 'Two-way exchange', 'worked-letter': 'Columbus letter' };
+      await LessonPlanRailLabelsModel.create({
+        _id: seedRowId,
+        planId: seedPlanId,
+        labels: seededLabels,
+        atomic: false,
+      });
+      try {
+        const { status, json } = await callRailLabelsRoute(seedPlanId);
+        assert(status === 200, `route: curated plan → 200 (got ${status})`);
+        assert(
+          JSON.stringify(json.labels) === JSON.stringify(seededLabels),
+          `route: curated plan returns the seeded cache row's labels, got ${JSON.stringify(json.labels)}`,
+        );
+      } finally {
+        await LessonPlanRailLabelsModel.deleteOne({ _id: seedRowId });
+      }
     }
   } finally {
     await LessonPlanRailLabelsModel.deleteOne({ _id: rowId });
