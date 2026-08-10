@@ -31,7 +31,12 @@ export function AgendaRail({ items, orientation }: AgendaRailProps) {
         title={it.label}
         aria-current={it.current ? 'step' : undefined}
         className={[
-          'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs',
+          // Horizontal: one-line pills, row scrolls. Vertical: the panel is
+          // width-bound (fullscreen left rail), so labels wrap inside the
+          // pill instead of bleeding past its edge (live-test 2026-08-10).
+          orientation === 'vertical'
+            ? 'shrink-0 whitespace-normal break-words rounded-xl px-2.5 py-1 text-xs'
+            : 'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs',
           it.current ? 'bg-slate-900 text-white font-medium'
             : it.done ? 'bg-emerald-50 text-emerald-700'
             : 'bg-slate-100 text-slate-500',

@@ -453,6 +453,22 @@ export default function SessionStage(props: SessionStageProps) {
   // student can drag it). Known limitation, accepted: rects are the CONTENT
   // BOXES, so whitespace *inside* a tall sparse component is invisible to
   // this measurement — the fallback is simply today's behavior.
+  // Agenda rail (2026-08-10): browser-fullscreen state drives which
+  // orientation of the rail renders (horizontal row above the board vs a
+  // vertical left overlay while fullscreen, which has no room for a top row).
+  // Declared here, above the Q-pin placement logic, which reads it.
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onFs = () => setIsFullscreen(Boolean((document as any).fullscreenElement || (document as any).webkitFullscreenElement));
+    document.addEventListener('fullscreenchange', onFs);
+    document.addEventListener('webkitfullscreenchange', onFs);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      document.removeEventListener('webkitfullscreenchange', onFs);
+    };
+  }, []);
+
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
     if (!questionPin || qpinMode !== 'expanded' || qpinCustomPos) {
@@ -464,7 +480,9 @@ export default function SessionStage(props: SessionStageProps) {
       const stageEl = box?.offsetParent as HTMLElement | null;
       if (!box || !stageEl) return;
       const stage = stageEl.getBoundingClientRect();
-      const HEADER_CLEARANCE = 56;  // stage header row
+      // Header row, plus the in-flow agenda-rail row when present (the rail
+      // sits between header and board, so "top of board" moves down with it).
+      const HEADER_CLEARANCE = 56 + (agendaRail && !isFullscreen ? 40 : 0);
       const DOCK_CLEARANCE = 96;    // floating tutor bar + margin
       let lowestBottom = stage.top + HEADER_CLEARANCE;
       stageEl.querySelectorAll<HTMLElement>('[data-wb-item-index], [data-wb-note]').forEach((el) => {
@@ -483,7 +501,7 @@ export default function SessionStage(props: SessionStageProps) {
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionPinKey, qpinMode, questionPin, qpinCustomPos]);
+  }, [questionPinKey, qpinMode, questionPin, qpinCustomPos, agendaRail, isFullscreen]);
   const qpinDrag = useRef<{
     pointerId: number;
     startX: number;
@@ -676,20 +694,6 @@ export default function SessionStage(props: SessionStageProps) {
     } catch { /* unsupported — button is hidden on those devices anyway */ }
   };
 
-  // Agenda rail (2026-08-10): browser-fullscreen state drives which
-  // orientation of the rail renders (horizontal row above the board vs a
-  // vertical left overlay while fullscreen, which has no room for a top row).
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const onFs = () => setIsFullscreen(Boolean((document as any).fullscreenElement || (document as any).webkitFullscreenElement));
-    document.addEventListener('fullscreenchange', onFs);
-    document.addEventListener('webkitfullscreenchange', onFs);
-    return () => {
-      document.removeEventListener('fullscreenchange', onFs);
-      document.removeEventListener('webkitfullscreenchange', onFs);
-    };
-  }, []);
 
   return (
     <div ref={stageRef} className="fixed inset-0 overflow-hidden bg-white select-none session-stage flex flex-col">
@@ -1216,7 +1220,16 @@ export default function SessionStage(props: SessionStageProps) {
           // end-to-end covers less board VERTICALLY (the text wraps into
           // fewer lines) and reads as a banner rather than a floating card.
           // Desktop keeps the centered card.
-          className={`absolute ${showSwitcher ? 'top-[100px]' : 'top-16'} inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
+          // Default anchor clears the header row, the agenda-rail row when
+          // present (in-flow, ~40px, not in fullscreen), and the page
+          // switcher when shown — the pin floats over the BOARD, never the
+          // rail (live-test 2026-08-10 collision report). Static class
+          // literals only: Tailwind JIT cannot see interpolated names.
+          className={`absolute ${
+            agendaRail && !isFullscreen
+              ? (showSwitcher ? 'top-[140px]' : 'top-[104px]')
+              : (showSwitcher ? 'top-[100px]' : 'top-16')
+          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing`}
         >
           {questionPin}
         </div>
