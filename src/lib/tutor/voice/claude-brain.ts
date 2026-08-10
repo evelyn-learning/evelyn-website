@@ -284,7 +284,15 @@ export interface LessonPlanContext {
     title: string;
     grade: string;
     subject: string;
-    los: Array<{ id: string; description: string }>;
+    // Task 5 correction: shortTitle is optional/additive — present for
+    // (almost) every runtime-generated LO since gen-v3, absent for
+    // older/curated plans. route.ts's makeToolResultProvider forwards
+    // this straight through to loBoundaryBeat's title derivation so
+    // the spoken beat names the SAME label the rail (client-side)
+    // displays. formatLessonPlanContext below does NOT render it (the
+    // LO listing stays description-only) — this field exists purely
+    // to ride along to route.ts, not to change the brain's plan dump.
+    los: Array<{ id: string; description: string; shortTitle?: string }>;
     estimatedMinutes: number;
   };
   /** Id of the segment the brain is currently in. */

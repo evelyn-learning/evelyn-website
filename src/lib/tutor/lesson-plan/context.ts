@@ -27,7 +27,17 @@ export function buildLessonPlanContext(
       title: plan.title,
       grade: plan.grade,
       subject: plan.subject,
-      los: plan.los.map((lo) => ({ id: lo.id, description: lo.description })),
+      // Task 5 correction: carry shortTitle through (optional, additive
+      // — every gen-v3 runtime-generated LO has one; parseStage1Los
+      // derives a fallback when the model omits it). loBoundaryBeat's
+      // title path (railLoTitle → loDisplay → lo.shortTitle ??
+      // capWords(description,4)) MUST resolve the same shortTitle the
+      // rail displays client-side, or the spoken beat and the rail
+      // disagree on the LO's name. Without this field the los
+      // projection silently dropped shortTitle even though the source
+      // LearningObjective carries it — beats would have spoken a
+      // capped-description variant instead.
+      los: plan.los.map((lo) => ({ id: lo.id, description: lo.description, shortTitle: lo.shortTitle })),
       estimatedMinutes: plan.estimatedMinutes,
     },
     currentSegmentId,

@@ -72,6 +72,26 @@ const genPlan = buildPlan({ generated: true });
 const curatedPlan = buildPlan({ generated: false });
 const curatedPlanNoMeta: LessonPlan = { ...buildPlan({ generated: false }), metadata: undefined };
 
+// Task 5 correction: a generated plan whose target LO carries an
+// authored `shortTitle` that DIFFERS from what the description-capped
+// fallback (capWords(description, 4)) would produce — since gen-v3,
+// every runtime-generated LO carries one (stage-1 generates it;
+// parseStage1Los derives a fallback when the model omits it). Kept as
+// a SEPARATE fixture from genPlan (rather than adding shortTitle to
+// genPlan.los directly) so the existing "beat title == 'LO two'"
+// checks against genPlan stay unperturbed.
+const genPlanWithShortTitle: LessonPlan = {
+  ...buildPlan({ generated: true }),
+  los: [
+    { id: 'lo-1', description: 'LO one' },
+    {
+      id: 'lo-2',
+      description: 'Trace the light reactions of photosynthesis step by step',
+      shortTitle: 'Trace the light',
+    },
+  ],
+};
+
 /* ------------------------------------------------------------------ */
 /* loGroupOf / firstLoGroup / isGeneratedPlan — unit sanity            */
 /* ------------------------------------------------------------------ */
@@ -524,6 +544,26 @@ async function runAdvanceToolResultProviderChecks(): Promise<void> {
     'makeToolResultProvider (route.ts): curated-plan advance_lesson tool_result NEVER carries a beat note, even on an LO-shaped id crossing',
     curatedResult.ok === true && !String(curatedResult.instruction).includes('agenda item'),
     JSON.stringify(curatedResult),
+  );
+
+  // Task 5 correction: the los projection reaching route.ts (via
+  // buildLessonPlanContext → the brain request body → ctx.plan.los)
+  // must carry shortTitle, and the beat must name THAT — not the
+  // capWords(description, 4) fallback — so the spoken beat and the
+  // rail (which displays shortTitle client-side) agree on the LO's
+  // name. capWords('Trace the light reactions of photosynthesis step
+  // by step', 4) would yield "Trace the light reactions" (4 words) —
+  // a DIFFERENT string from the authored shortTitle "Trace the light"
+  // — so this only passes if shortTitle actually made it through.
+  const shortTitleCtx = buildLessonPlanContext(genPlanWithShortTitle, 'lo-1-try')!;
+  const shortTitleProvider = makeToolResultProvider(shortTitleCtx, [], []);
+  const shortTitleResult = JSON.parse(await shortTitleProvider!('advance_lesson', { to: 'lo-2-hook' }));
+  check(
+    'makeToolResultProvider (route.ts): beat title uses the LO shortTitle end-to-end (los projection carries it), not the description-derived fallback',
+    shortTitleResult.ok === true
+      && String(shortTitleResult.instruction).includes('"Trace the light".')
+      && !String(shortTitleResult.instruction).includes('"Trace the light reactions"'),
+    JSON.stringify(shortTitleResult),
   );
 }
 
