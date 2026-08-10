@@ -157,6 +157,7 @@ import {
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_RESUME_FROM_CLAUSE,
   TUTOR_PEDAGOGY_OPENER,
+  TUTOR_AGENDA_RAIL,
   TUTOR_VALIDATE_BEFORE_SPEAK,
   TUTOR_KEEP_VALIDATED_ON_KILL,
   TUTOR_WOLFRAM_MATH_CHECK,
@@ -1346,6 +1347,21 @@ export function VoiceTutorRealtime({
   // seed runs (flag-off: stays null).
   const openerClauseCtxRef = useRef<SystemPromptContext | null>(null);
   const openerStaleReorientRef = useRef(false);
+  // Agenda rail (final-review fix, 2026-08-10): the tap-resolved fresh-start
+  // agenda item count, stashed the instant handleMicClick resolves it
+  // (including the resolved 0 for non-fresh/diagnostic/flag-off starts —
+  // never left stale from a prior mount because this ref is fresh per
+  // session, same as its siblings above). Exists to cover the REVERSE
+  // ordering the tap-time rebuild (see handleMicClick) cannot: for
+  // studentId sessions the mount-time seed below waits on
+  // profileFetchSettled, so if the student taps Start FIRST, the tap-time
+  // rebuild no-ops (openingDirectiveRef/openerClauseCtxRef are still null —
+  // nothing to rebuild yet) and the seed below would otherwise build the
+  // directive with a hard-coded 0, permanently losing the agenda-preview
+  // clause for the whole session. The seed's buildOpenerClause call reads
+  // this ref instead of a literal 0, so whichever order the tap and the
+  // seed land in, the resolved count reaches the directive.
+  const pendingAgendaItemCountRef = useRef<number>(0);
   // Teacher self-intro (2026-07-09): carried SEPARATELY from the opening
   // directive so it rides the FIRST brain turn only — the directive
   // itself rides ≤4 turns, and the embedded intro was re-spoken on each
@@ -16151,15 +16167,20 @@ export function VoiceTutorRealtime({
             // Agenda rail (2026-08-10): stash the ctx so handleMicClick can
             // rebuild this directive WITH the agenda-preview clause once it
             // resolves the fresh-start item count (the Start tap normally
-            // lands after this mount-time seed, so the count is always 0
-            // here). The direct pass below covers the reverse ordering: on
-            // studentId sessions the H2 profile-settle re-run can seed
-            // AFTER the tap already resolved the count.
+            // lands after this mount-time seed, so the count usually isn't
+            // resolved yet here). For the reverse ordering — studentId
+            // sessions where the H2 profile-settle re-run of THIS effect can
+            // land AFTER the tap already resolved the count — the tap-time
+            // rebuild below has nothing to rebuild (this seed hasn't run
+            // yet), so it reads pendingAgendaItemCountRef instead of a
+            // hard-coded 0: handleMicClick stashes the resolved count there
+            // the instant it computes it, so whichever of the tap / this
+            // seed lands second, the count still reaches the directive.
             openerClauseCtxRef.current = openerCtx;
             openerStaleReorientRef.current = beh.journey === 'resume-stale';
             const openerClause = buildOpenerClause({
               ...openerCtx,
-              agendaItemCount: 0,
+              agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
             });
             // Resume-stale nuance: the student HAD started this lesson but
             // the checkpoint was too old to restore — prepend the one-line
@@ -16471,12 +16492,20 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // reach it — that's a cold start with a blank board, so the
           // preview is correct there. Diagnostic sessions are excluded;
           // picker/zero-item plans yield 0 from buildAgendaItems on their
-          // own.
+          // own. Gated on TUTOR_AGENDA_RAIL (final-review fix): flag off ⇒
+          // count forced to 0 ⇒ no agenda_rail_active event and no
+          // agenda-preview clause, matching the legacy-strip UI. This is
+          // the single resolution point for the count, so stashing it into
+          // pendingAgendaItemCountRef here (including the resolved 0 for
+          // non-fresh/diagnostic/flag-off starts) covers both this tap-time
+          // rebuild AND the mount-time seed's buildOpenerClause call above,
+          // whichever runs second — see pendingAgendaItemCountRef's doc.
           const planForAgenda = lessonPlanRef.current;
           const isFreshStart = completedSegmentIdsRef.current.size === 0 && !resumeState;
-          const agendaItemCount = (planForAgenda && isFreshStart && targetKind !== 'diagnostic')
+          const agendaItemCount = (TUTOR_AGENDA_RAIL && planForAgenda && isFreshStart && targetKind !== 'diagnostic')
             ? buildAgendaItems(planForAgenda).length
             : 0;
+          pendingAgendaItemCountRef.current = agendaItemCount;
           if (agendaItemCount > 0) {
             onDebugEvent?.('agenda_rail_active', `${agendaItemCount} item${agendaItemCount === 1 ? '' : 's'}`, { itemCount: agendaItemCount });
             // Rebuild the opening directive WITH the agenda-preview clause —
