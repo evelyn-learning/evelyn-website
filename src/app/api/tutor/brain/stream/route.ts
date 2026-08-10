@@ -30,6 +30,8 @@ import {
   type ToolFilterResult,
 } from '@/lib/tutor/ai/tool-subject-taxonomy';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import { loBoundaryBeat, buildAdvanceBeatNote } from '@/lib/tutor/lesson-plan/rail-labels';
 import {
   generateProblem,
   type Difficulty,
@@ -162,7 +164,7 @@ interface BrainStreamRequestBody {
  * instructed (in the system prompt) to quote canonicalText verbatim
  * in the next show_problem call.
  */
-function makeToolResultProvider(
+export function makeToolResultProvider(
   ctx: BrainTurnInput['lessonPlanContext'] | undefined,
   shownProblemIds: string[],
   shownProblemHashes: string[],
@@ -242,13 +244,36 @@ function makeToolResultProvider(
           break;
         }
       }
+      // Task 5 fix (2026-08-10): the deterministic LO-boundary spoken
+      // beat rides THIS tool_result — the genuine intra-generation
+      // Anthropic tool_result for advance_lesson (claude-brain.ts's
+      // agent loop pauses on the tool_use, resolves it via THIS
+      // provider, and continues the SAME generation) — instead of the
+      // client-side rejected→retry channel an earlier version used
+      // (extra brain round-trip + a spurious "Re-rendering
+      // whiteboard…" toast on every LO crossing; reverted in
+      // VoiceTutorRealtime.tsx). loBoundaryBeat is the single source
+      // of truth for WHEN the beat fires (generated plans only, LO
+      // group actually changes, target is a real LO id — never intro/
+      // recap/curated) — nothing here duplicates or bypasses that
+      // gate. `ctx.plan.los` only carries {id, description} (no
+      // shortTitle), so the shim plan below falls back to a capped
+      // description for the title; `ctx.isGeneratedPlan` (Rule 12(b)
+      // fix) already tells us generated-vs-curated without needing
+      // plan.metadata directly.
+      const beatPlan = {
+        metadata: { generatedFromText: ctx.isGeneratedPlan === true },
+        los: ctx.plan.los,
+      } as unknown as LessonPlan;
+      const beat = loBoundaryBeat(beatPlan, ctx.currentSegmentId, resolvedSegmentId);
+      const beatNote = beat ? ` ${buildAdvanceBeatNote(beat)}` : '';
       return JSON.stringify({
         ok: true,
         advancedTo: resolvedSegmentId,
         segmentKind: resolvedSeg?.kind ?? null,
         loId,
         loDescription,
-        instruction: `You are now at segment "${resolvedSegmentId}" (kind: ${resolvedSeg?.kind ?? 'unknown'}${loDescription ? `, LO: "${loDescription}"` : ''}). Teach the content of THIS segment. Do not skip ahead further on your own — the next advance must come from another advance_lesson call or natural completion.`,
+        instruction: `You are now at segment "${resolvedSegmentId}" (kind: ${resolvedSeg?.kind ?? 'unknown'}${loDescription ? `, LO: "${loDescription}"` : ''}). Teach the content of THIS segment. Do not skip ahead further on your own — the next advance must come from another advance_lesson call or natural completion.${beatNote}`,
       });
     }
     if (name !== 'generate_problem') {

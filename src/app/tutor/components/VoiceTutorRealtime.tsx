@@ -62,7 +62,6 @@ import {
   filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
-import { loBoundaryBeat, buildAdvanceBeatNote } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -4928,28 +4927,22 @@ export function VoiceTutorRealtime({
             // apply side-effects now live in applyResolvedAdvance so the
             // app-side deterministic Skip-button advance (FIX B) runs the
             // exact same transition logic.
+            //
+            // Task 5 fix (2026-08-10): the deterministic LO-boundary
+            // spoken beat does NOT ride this success path — it rides
+            // the REAL advance_lesson tool_result inside
+            // makeToolResultProvider (src/app/api/tutor/brain/stream/
+            // route.ts), the genuine intra-generation Anthropic
+            // tool_result channel. An earlier version of this fix
+            // pushed the beat note into the `rejected` array below
+            // (Rule 12's rejection→retry channel) — that reused the
+            // validator-KILL machinery for a routine, frequent event:
+            // an extra full brain round-trip plus a spurious
+            // "Re-rendering whiteboard…" status toast on every LO
+            // crossing. Reverted in favor of the route.ts wiring,
+            // which delivers the beat mid-generation with zero extra
+            // round-trips and zero UI side effects.
             applyResolvedAdvance(plan, fromSegId, next);
-            // Task 5 — deterministic LO-boundary spoken beat. Non-null
-            // only for a runtime-generated plan crossing INTO a
-            // different LO group (loBoundaryBeat mirrors the exact
-            // grouping the rail + E6 LO-ordering use). Pushed through
-            // the same rejected→retry feedback channel Rule 12's
-            // messages use above, so the beat note reaches the brain
-            // as tool-result text for THIS advance_lesson call and the
-            // brain's very next sentence names the new agenda item in
-            // its own voice — deterministic trigger, persona-voiced
-            // wording. Curated plans and within-LO advances never
-            // reach here (loBoundaryBeat returns null for both); this
-            // is the brain-turn advance_lesson path only — the
-            // Skip-button (FIX B, applyResolvedAdvance's other caller)
-            // and inferred advances are not brain-turn contexts and
-            // intentionally get no beat.
-            const beat = loBoundaryBeat(plan, fromSegId, next);
-            if (beat) {
-              console.log(`[VoiceTutorRealtime] LO-boundary beat: "${fromSegId}" → "${next}" crosses into agenda item ${beat.index}/${beat.total} ("${beat.title}")`);
-              onDebugEvent?.('lo_boundary_beat', `${fromSegId} → ${next} · item ${beat.index}/${beat.total} "${beat.title}"`);
-              rejected.push({ action: 'advance_lesson', reason: buildAdvanceBeatNote(beat) });
-            }
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
             // 2026-05-15: when `to: "next"` from the LAST segment fails

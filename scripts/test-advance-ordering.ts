@@ -17,6 +17,7 @@ import {
   firstLoGroup,
   isGeneratedPlan,
   filterRecapMustRemember,
+  buildLessonPlanContext,
 } from '../src/lib/tutor/lesson-plan/context';
 import { loBoundaryBeat, buildAdvanceBeatNote } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
@@ -476,5 +477,62 @@ check(
 // this pure helper, so it isn't exercised here — verified instead by
 // re-reading the call site and by `npx tsc --noEmit`.
 
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+/* ------------------------------------------------------------------ */
+/* Task 5 fix — makeToolResultProvider's advance_lesson branch         */
+/* (src/app/api/tutor/brain/stream/route.ts): the REAL intra-          */
+/* generation Anthropic tool_result for advance_lesson. The LO-        */
+/* boundary beat now rides THIS channel (folded into `instruction`)    */
+/* instead of the client-side rejected→retry channel (reverted in      */
+/* VoiceTutorRealtime.tsx — that channel forced an extra brain round-  */
+/* trip + a spurious "Re-rendering whiteboard…" toast on every LO      */
+/* crossing). `makeToolResultProvider` doesn't touch the DB or an LLM  */
+/* for the advance_lesson case (only generate_problem does), so it's   */
+/* async-but-pure here and safe to exercise directly. Imported lazily  */
+/* (async) so a route.ts import failure surfaces as a single failed    */
+/* check rather than crashing the whole script before the synchronous  */
+/* checks above get a chance to run/report.                            */
+/* ------------------------------------------------------------------ */
+
+async function runAdvanceToolResultProviderChecks(): Promise<void> {
+  const { makeToolResultProvider } = await import('../src/app/api/tutor/brain/stream/route');
+
+  const crossingCtx = buildLessonPlanContext(genPlan, 'lo-1-try')!;
+  const crossingProvider = makeToolResultProvider(crossingCtx, [], []);
+  const crossingResult = JSON.parse(await crossingProvider!('advance_lesson', { to: 'lo-2-hook' }));
+  check(
+    'makeToolResultProvider (route.ts): generated-plan LO-crossing advance_lesson tool_result names the agenda item in `instruction`',
+    crossingResult.ok === true
+      && typeof crossingResult.instruction === 'string'
+      && crossingResult.instruction.includes('agenda item')
+      && crossingResult.instruction.includes('LO two'),
+    JSON.stringify(crossingResult),
+  );
+
+  const withinCtx = buildLessonPlanContext(genPlan, 'lo-1-hook')!;
+  const withinProvider = makeToolResultProvider(withinCtx, [], []);
+  const withinResult = JSON.parse(await withinProvider!('advance_lesson', { to: 'lo-1-try' }));
+  check(
+    'makeToolResultProvider (route.ts): within-LO advance_lesson tool_result carries NO beat note',
+    withinResult.ok === true && !String(withinResult.instruction).includes('agenda item'),
+    JSON.stringify(withinResult),
+  );
+
+  const curatedCtx = buildLessonPlanContext(curatedPlan, 'lo-1-try')!;
+  const curatedProvider = makeToolResultProvider(curatedCtx, [], []);
+  const curatedResult = JSON.parse(await curatedProvider!('advance_lesson', { to: 'lo-2-hook' }));
+  check(
+    'makeToolResultProvider (route.ts): curated-plan advance_lesson tool_result NEVER carries a beat note, even on an LO-shaped id crossing',
+    curatedResult.ok === true && !String(curatedResult.instruction).includes('agenda item'),
+    JSON.stringify(curatedResult),
+  );
+}
+
+runAdvanceToolResultProviderChecks()
+  .catch((err) => {
+    failed++;
+    console.log(`  ✗ makeToolResultProvider checks threw: ${(err as Error).message}`);
+  })
+  .then(() => {
+    console.log(`\n${passed} passed, ${failed} failed`);
+    if (failed > 0) process.exit(1);
+  });
