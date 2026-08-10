@@ -32,6 +32,7 @@ import type { ExamBlueprint } from './blueprints';
 import { answersMatch, applyCurves } from './scoring';
 import type { MockStores, AttemptDoc } from './service';
 import { appendEvidence as appendLearnerEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { buildMockItemEvidence, buildSectionIdByItem } from './evidence';
 
 /** A grading attempt whose lock is older than this is treated as a crashed run
  *  and re-lockable (`gradingStartedAt` is stamped at finalize by Task 8, so it
@@ -163,12 +164,7 @@ async function gradeAndComplete(
   const responseByItem = new Map(attempt.responses.map((r) => [r.itemId, r]));
 
   // Section a served item belongs to (sectionIdx → blueprint sectionId).
-  const sectionIdByItem = new Map<string, string>();
-  for (const mod of attempt.servedModules) {
-    const bpSection = blueprint.sections[mod.sectionIdx];
-    if (!bpSection) continue;
-    for (const id of mod.itemIds) sectionIdByItem.set(id, bpSection.sectionId);
-  }
+  const sectionIdByItem = buildSectionIdByItem(attempt.servedModules, blueprint.sections);
 
   // Reuse an existing grade set on a crashed-then-retried pass (done-marker).
   const frqGrades: NonNullable<AttemptDoc['frqGrades']> = attempt.frqGrades ? [...attempt.frqGrades] : [];
@@ -260,56 +256,22 @@ async function gradeAndComplete(
     }
   }
 
-  // Task 8 — per-item mock evidence for the learner model, built from the
-  // same itemById/responseByItem/sectionIdByItem/frqGrades already in scope.
-  // Pure (no I/O) — the actual append is awaited below, ONLY on the branch
-  // that wins the lease-fence, so a superseded poll (see the fence check
-  // right after) never double-emits; that's the idempotency guard for this
-  // path (on top of the `mock:<attemptId>:<itemId>` keys themselves).
-  const evidenceOccurredAt = new Date(now);
-  const frqGradeByItem = new Map(frqGrades.map((g) => [g.itemId, g]));
-  const evidenceInputs: EvidenceInput[] = [];
-  for (const mod of attempt.servedModules) {
-    for (const id of mod.itemIds) {
-      const item = itemById.get(id);
-      if (!item) continue;
-      const sectionId = sectionIdByItem.get(id);
-      if (item.responseFormat === 'frq') {
-        const grade = frqGradeByItem.get(id);
-        if (!grade || grade.ungraded) continue; // grader failure — not student evidence
-        evidenceInputs.push({
-          idempotencyKey: `mock:${attempt.attemptId}:${id}`,
-          studentId: attempt.studentId,
-          loId: item.loId,
-          source: 'mock',
-          sessionId: `mock:${attempt.attemptId}`,
-          itemId: id,
-          sectionId,
-          difficulty: item.difficulty,
-          outcome: grade.maxPoints > 0 ? grade.totalPoints / grade.maxPoints : 0,
-          pointsAwarded: grade.totalPoints,
-          maxPoints: grade.maxPoints,
-          occurredAt: evidenceOccurredAt,
-        });
-      } else {
-        const correct = answersMatch(item, responseByItem.get(id)?.answer);
-        evidenceInputs.push({
-          idempotencyKey: `mock:${attempt.attemptId}:${id}`,
-          studentId: attempt.studentId,
-          loId: item.loId,
-          source: 'mock',
-          sessionId: `mock:${attempt.attemptId}`,
-          itemId: id,
-          sectionId,
-          difficulty: item.difficulty,
-          outcome: correct ? 1 : 0,
-          pointsAwarded: correct ? 1 : 0,
-          maxPoints: 1,
-          occurredAt: evidenceOccurredAt,
-        });
-      }
-    }
-  }
+  // Task 8 — per-item mock evidence for the learner model (shared with
+  // finalizeOpenModule's MCQ-only fast path — see evidence.ts). Pure (no
+  // I/O) — the actual append is awaited below, ONLY on the branch that wins
+  // the lease-fence, so a superseded poll (see the fence check right after)
+  // never double-emits; that's the idempotency guard for THIS path (on top
+  // of the `mock:<attemptId>:<itemId>` keys themselves).
+  const evidenceInputs = buildMockItemEvidence({
+    attemptId: attempt.attemptId,
+    studentId: attempt.studentId,
+    servedModules: attempt.servedModules,
+    items,
+    responseByItem,
+    sectionIdByItem,
+    frqGrades,
+    occurredAt: new Date(now),
+  });
 
   // Fence the lease at completion. Grading may have run past the 10-min stale
   // window, letting a second poll take over, complete, and feed. Re-read before

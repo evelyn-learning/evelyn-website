@@ -212,10 +212,11 @@ async function runServerAppendPointTests() {
   const { emitSessionResult } = await import('../src/lib/tutor/portal/session-result');
   const { submitAssessment } = await import('../src/lib/tutor/portal/assessment');
   const { ensureGraded } = await import('../src/lib/tutor/mock-exam/report');
-  const { memoryMockStores, startOrResume, saveResponses, advance } = await import(
+  const { memoryMockStores, startOrResume, saveResponses, advance, finalizeOpenModule } = await import(
     '../src/lib/tutor/mock-exam/service'
   );
   const { FIXTURE_FORM, FIXTURE_ITEMS } = await import('../src/lib/tutor/mock-exam/fixtures');
+  const { registerBlueprint } = await import('../src/lib/tutor/mock-exam/blueprints');
 
   console.log('\nServer append points — emit / assessment / mock (Task 8):\n');
 
@@ -476,6 +477,107 @@ async function runServerAppendPointTests() {
         !!frqRow && frqRow.sectionId === 'sec2' && frqRow.pointsAwarded === 4 && frqRow.maxPoints === 4 && frqRow.outcome === 1,
         'mock: FRQ item → per-item evidence row w/ points fraction + sectionId',
       );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (d) FIX ROUND: MCQ-only mock form (finalizeOpenModule's fast path) ---
+  // digital-sat / act / hs-* forms carry no FRQ items at all, so they NEVER
+  // pass through gradeAndComplete (that only runs once status enters
+  // 'grading') — this is the only place they can emit evidence. Registers a
+  // throwaway single-section, no-FRQ blueprint (mirrors FIXTURE_BLUEPRINT's
+  // shape but with no sec2/FRQ) so `advance()` closes straight to
+  // 'completed' via the `!hasFrq` branch in finalizeOpenModule.
+  {
+    const ALL_TOOLS = { desmos: true, referenceSheet: true, eliminator: true, highlighter: true };
+    const MCQ_ONLY_BLUEPRINT = {
+      examKey: 'lmtest-mcq-only',
+      examType: 'fixture' as const,
+      label: 'MCQ-Only Fixture Exam',
+      sections: [
+        {
+          sectionId: 'sec1',
+          label: 'Section 1',
+          tools: ALL_TOOLS,
+          modules: [{ moduleId: 'm1', label: 'Module 1', questionCount: 2, timeLimitMin: 4 }],
+        },
+      ],
+      scoring: {
+        kind: 'scaled-sections' as const,
+        sectionScaledMin: 10,
+        sectionScaledMax: 40,
+        compositeMin: 10,
+        compositeMax: 40,
+        curves: { sec1: { default: [[0, 10], [2, 40]] as [number, number][] } },
+      },
+    };
+    registerBlueprint(MCQ_ONLY_BLUEPRINT);
+
+    const MCQ_ONLY_FORM = {
+      formId: 'lmtest-mcq-only-form',
+      examKey: 'lmtest-mcq-only',
+      topicIds: ['lmtest-mcq-only'],
+      label: 'MCQ-Only Fixture Form',
+      status: 'live' as const,
+      sections: [{ sectionId: 'sec1', modules: [{ moduleId: 'm1', itemIds: ['mo-1', 'mo-2'] }] }],
+    };
+    const MCQ_ONLY_ITEMS = [
+      {
+        id: 'mo-1', loId: 'mo.lo1', topic: 'Fixture', topicId: 'lmtest-mcq-only',
+        difficulty: 2 as const, responseFormat: 'mcq' as const, problemText: 'pick A',
+        choices: ['A', 'B', 'C', 'D'], answer: 'A', bankScope: 'mock' as const,
+      },
+      {
+        id: 'mo-2', loId: 'mo.lo1', topic: 'Fixture', topicId: 'lmtest-mcq-only',
+        difficulty: 2 as const, responseFormat: 'mcq' as const, problemText: 'pick B',
+        choices: ['A', 'B', 'C', 'D'], answer: 'B', bankScope: 'mock' as const,
+      },
+    ];
+
+    const studentId = `lmtest:mcqonly:${process.pid}`;
+    await deleteLearnerModelData(studentId);
+    try {
+      const stores = memoryMockStores({ forms: [MCQ_ONLY_FORM], items: MCQ_ONLY_ITEMS });
+      const T0 = 1_750_200_000_000;
+      const s = await startOrResume(stores, { studentId, topicId: 'lmtest-mcq-only', formId: 'lmtest-mcq-only-form' }, T0);
+      const attemptId = s.attemptId;
+      await saveResponses(
+        stores,
+        {
+          studentId,
+          attemptId,
+          cursor: { sectionIdx: 0, moduleIdx: 0 },
+          // mo-1: A == A (correct); mo-2: C != B (wrong)
+          responses: [{ itemId: 'mo-1', answer: 'A' }, { itemId: 'mo-2', answer: 'C' }],
+        },
+        T0 + 1_000,
+      );
+      const st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 } }, T0 + 2_000);
+      assert(st.status === 'completed', 'MCQ-only fixture: single-section close finalizes directly to completed (never grading)');
+
+      const attempt = (await stores.findAttempt(attemptId))!;
+      const lo1 = attempt.loBreakdown!.find((e) => e.loId === 'mo.lo1');
+      assert(!!lo1 && lo1.sectionId === 'sec1' && lo1.correct === 1 && lo1.total === 2, 'MCQ-only: loBreakdown carries sectionId (fast path)');
+
+      const row1 = await EvidenceEventModel.findById(`mock:${attemptId}:mo-1`);
+      const row2 = await EvidenceEventModel.findById(`mock:${attemptId}:mo-2`);
+      assert(
+        !!row1 && row1.outcome === 1 && row1.sectionId === 'sec1' && row1.difficulty === 2 && row1.source === 'mock',
+        'MCQ-only: correct item → evidence row w/ sectionId + difficulty (the FIX — this used to be zero rows)',
+      );
+      assert(!!row2 && row2.outcome === 0, 'MCQ-only: wrong item → evidence row outcome 0');
+
+      // Re-finalize/replay: directly re-invoke finalizeOpenModule on the now-
+      // completed attempt (cursor never advances past the closed module, so
+      // the "last section closed" branch re-runs identically) — the SAME
+      // mock:<attemptId>:<itemId> idempotency keys must dedupe, not double-insert.
+      const countBefore = await EvidenceEventModel.countDocuments({ studentId });
+      const attemptAgain = (await stores.findAttempt(attemptId))!;
+      const formAgain = (await stores.findForm('lmtest-mcq-only-form'))!;
+      await finalizeOpenModule(stores, attemptAgain, formAgain, T0 + 3_000);
+      const countAfter = await EvidenceEventModel.countDocuments({ studentId });
+      assert(countBefore === countAfter, 'MCQ-only: re-finalize (replay) does not duplicate evidence rows');
     } finally {
       await deleteLearnerModelData(studentId);
     }

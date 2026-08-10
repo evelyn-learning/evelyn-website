@@ -35,6 +35,8 @@ import { getBlueprint } from './blueprints';
 import type { ExamBlueprint } from './blueprints';
 import type { SeedableItem } from './fixtures';
 import { answersMatch, scoreMcqSections, applyCurves } from './scoring';
+import { buildMockItemEvidence, buildSectionIdByItem } from './evidence';
+import { appendEvidence } from '@/lib/tutor/learner-model/store';
 
 export const GRACE_MS = 15_000;
 export const ATTEMPT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -443,15 +445,44 @@ export async function finalizeOpenModule(
 
   if (hasFrq) {
     // Curves wait for FRQ points, folded in by Task 9's report/grading path.
+    // Per-item mock evidence is ALSO deferred to that path (gradeAndComplete) —
+    // it needs the graded FRQ points, which don't exist yet here.
     attempt.status = 'grading';
     attempt.gradingStartedAt = new Date(now);
-  } else {
-    const { scaled } = applyCurves(blueprint, rawSections, attempt.moduleRouting, {});
-    attempt.scaled = scaled;
-    attempt.status = 'completed';
-    attempt.completedAt = new Date(now);
+    await stores.saveAttempt(attempt);
+    return attempt;
   }
+
+  // MCQ-only attempt (no FRQ item served anywhere in it) — this NEVER passes
+  // through gradeAndComplete (that only runs when status enters 'grading'),
+  // so this is the only chance to emit per-item mock evidence for it. This is
+  // the highest-volume completion path (digital-sat / act / hs-* forms carry
+  // no FRQ items at all) — see evidence.ts for why the build itself is a
+  // shared helper with gradeAndComplete's FRQ-bearing path. Awaited (this
+  // finalize call is not latency-sensitive, unlike the emit/assessment
+  // append points). Idempotency-key-safe on its own (`mock:<attemptId>:
+  // <itemId>` — the store dedupes a same-attempt replay via the row's `_id`),
+  // so no additional locking here per the learner-model store's own
+  // documented concurrency stance.
+  const { scaled } = applyCurves(blueprint, rawSections, attempt.moduleRouting, {});
+  attempt.scaled = scaled;
+  attempt.status = 'completed';
+  attempt.completedAt = new Date(now);
   await stores.saveAttempt(attempt);
+
+  const sectionIdByItem = buildSectionIdByItem(attempt.servedModules, blueprint.sections);
+  const responseByItem = new Map(attempt.responses.map((r) => [r.itemId, r]));
+  const evidenceInputs = buildMockItemEvidence({
+    attemptId: attempt.attemptId,
+    studentId: attempt.studentId,
+    servedModules: attempt.servedModules,
+    items: allItems,
+    responseByItem,
+    sectionIdByItem,
+    occurredAt: new Date(now),
+  });
+  await appendEvidence(evidenceInputs);
+
   return attempt;
 }
 
