@@ -158,6 +158,13 @@ export interface SystemPromptContext {
    *  the orchestrator wiring that sets this lands in a later task. */
   selfReportRouting?: boolean;
 
+  /** Task 4 (session agenda) — number of items on the deterministic
+   *  opening "Agenda" card the orchestrator just injected. >0 ⇒
+   *  buildOpenerClause appends the one-sentence spoken-preview directive;
+   *  absent/0 (every non-fresh-plan-start session) ⇒ output
+   *  byte-identical to before. */
+  agendaItemCount?: number;
+
   /** Teacher persona — the session is taught AS this specific teacher
    *  (name, intro, style, identity bounds). Optional/additive (same
    *  pattern as B4/B5): absent ⇒ buildSystemPrompt's output is
@@ -1447,12 +1454,21 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     'whiteboard render (a written hook, sketch, diagram, or the day\'s problem), issued before ' +
     'or alongside your first substantive sentence. Do not end the turn with an empty board.';
 
+  // Task 4 (session agenda): the orchestrator injected a deterministic
+  // "Agenda" card as the first render of this opening turn — direct the
+  // brain to preview it in one spoken sentence, never re-render or read
+  // it verbatim. n===0 (no card injected) leaves every branch byte-identical.
+  const n = ctx.agendaItemCount ?? 0;
+  const agendaClause = n > 0
+    ? ` The board already shows an "Agenda" card listing today's ${n === 1 ? 'goal' : String(n) + ' goals'}. In your opening turn, preview it in ONE short spoken sentence in your own words — do NOT read the card verbatim and do NOT re-render it — then launch straight into the first item.`
+    : '';
+
   if (ctx.entryMode === 'typed-content') {
     return (
       'The student opened with their own words — respond to THAT directly and put ' +
       "something relevant on the board; weave in only the calibration you still need " +
       "(don't re-ask what they've told you), never a canned 'tell me about yourself' reset." +
-      boardFirstClause + noNameClause
+      boardFirstClause + noNameClause + agendaClause
     );
   }
 
@@ -1473,7 +1489,7 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
       'already precedes this directive, that line IS your continuity sentence — do not add ' +
       'a second. Do NOT ask a returning student what they already know — you have their ' +
       'history. NEVER repeat the same opening move twice in a row.' +
-      boardFirstClause + noNameClause
+      boardFirstClause + noNameClause + agendaClause
     );
   }
 
@@ -1485,13 +1501,18 @@ export function buildOpenerClause(ctx: SystemPromptContext): string | null {
     "teacher would — roughly where they're at with this topic, their grade if unclear, and " +
     'what they\'re hoping to get from this session (just exploring, thinking about joining, ' +
     'curious how an AI teaches). Have a short human exchange, THEN teach, informed by it. ' +
-    "NEVER open with 'Today we are going to learn…' or a bare bold title. " +
+    // Task 4: the bare "Today we are going to learn…" opener stays banned;
+    // when an Agenda card was injected (n > 0), the one-sentence preview
+    // directed by agendaClause below is the sanctioned exception.
+    (n > 0
+      ? "NEVER open with 'Today we are going to learn…' or a bare bold title — the one-sentence Agenda-card preview described below is the exception. "
+      : "NEVER open with 'Today we are going to learn…' or a bare bold title. ") +
     'Start IN the substance, not with a curtain-raiser: stock lead-ins like ' +
     '"here\'s a little puzzle to kick us off", "let\'s dive in", "before we start", or ' +
     '"don\'t worry about getting it right" read as the same script every session — skip the ' +
     'framing sentence entirely and lead with the intriguing thing ITSELF, phrased however ' +
     'THIS topic is most striking: a pointed question, a surprising claim, a concrete ' +
-    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause
+    'scenario, a what-would-happen-if.' + boardFirstClause + noNameClause + agendaClause
   );
 }
 

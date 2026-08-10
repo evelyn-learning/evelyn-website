@@ -10,7 +10,8 @@
  * Usage: npx tsx scripts/test-agenda.ts
  */
 import { buildLessonProgress } from '../src/lib/tutor/portal/lesson-progress';
-import type { LessonPlan, LearningObjective, Segment } from '../src/lib/tutor/lesson-plan/types';
+import { buildAgendaItems, buildAgendaCommand } from '../src/lib/tutor/lesson-plan/agenda';
+import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
 
 let passed = 0;
@@ -36,7 +37,15 @@ function mkPlan(opts: {
   los?: LearningObjective[];
   title?: string;
   metadata?: Record<string, unknown>;
+  /** Task 4: when set, every recap segment gets this mustRemember list. */
+  recapMustRemember?: string[];
 }): LessonPlan {
+  const segments = opts.segmentIds.map(segmentFor);
+  if (opts.recapMustRemember) {
+    for (const s of segments) {
+      if (s.kind === 'recap') (s as SegmentRecap).mustRemember = [...opts.recapMustRemember];
+    }
+  }
   return {
     id: 'test-plan-agenda',
     title: opts.title ?? 'Test plan',
@@ -45,7 +54,7 @@ function mkPlan(opts: {
     subject: 'science',
     los: opts.los ?? [],
     estimatedMinutes: 30,
-    segments: opts.segmentIds.map(segmentFor),
+    segments,
     prerequisites: [],
     followUps: [],
     schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
@@ -104,6 +113,130 @@ function mkPlan(opts: {
   if (p3) {
     assert(p3.los === undefined && p3.segments.every((s) => s.loId === undefined), 'no-LO fallback');
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* buildAgendaItems / buildAgendaCommand — opening Agenda card (Task 4) */
+/* ------------------------------------------------------------------ */
+
+function deepEq(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+// Case A1: generated plan → shortTitle when present, else the LO
+// description (bounded fallback — generate-from-text always mints
+// shortTitles, so the bare-description path only serves legacy cache rows).
+{
+  const gen = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [
+      { id: 'lo-a', description: 'Explain photosynthesis inputs and outputs', shortTitle: 'Photosynthesis inputs' },
+      { id: 'lo-b', description: 'Trace the light reactions step by step' }, // no shortTitle
+    ],
+    segmentIds: ['intro', 'lo-a-hook', 'lo-a-try', 'lo-b-hook', 'lo-b-try', 'recap'],
+  });
+  const items = buildAgendaItems(gen);
+  assert(items[0] === 'Photosynthesis inputs', 'agenda gen: shortTitle preferred');
+  assert(deepEq(items, ['Photosynthesis inputs', 'Trace the light reactions step by step']), 'agenda gen: fallback = description');
+  assert(items.every((t) => t.split(' ').length <= 7), 'agenda gen: items bounded');
+}
+
+// Case A2: curated plan WITH a recap segment → mustRemember verbatim
+// (the agenda is the forward-looking mirror of the recap card).
+{
+  const curatedWithRecap = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-meaning', 'try-1', 'recap'],
+    recapMustRemember: ['Crops moved both ways', 'Disease devastated Native populations'],
+  });
+  assert(
+    deepEq(buildAgendaItems(curatedWithRecap), ['Crops moved both ways', 'Disease devastated Native populations']),
+    'agenda curated: recap mustRemember verbatim',
+  );
+}
+
+// Case A3: curated, no recap segment → LO descriptions.
+{
+  const curatedNoRecap = mkPlan({
+    title: 'Curated no recap',
+    los: [
+      { id: 'lo-x', description: 'Identify the parts of a cell' },
+      { id: 'lo-y', description: 'Compare plant and animal cells' },
+    ],
+    segmentIds: ['hook', 'concept-meaning', 'try-1'],
+  });
+  assert(
+    deepEq(buildAgendaItems(curatedNoRecap), ['Identify the parts of a cell', 'Compare plant and animal cells']),
+    'agenda curated no-recap: LO descriptions',
+  );
+}
+
+// Case A4: picker plan (metadata.pendingPicker) → [] — the student
+// hasn't chosen LOs yet, an agenda would promise the wrong list.
+{
+  const picker = mkPlan({
+    metadata: { generatedFromText: true, pendingPicker: true },
+    los: [{ id: 'lo-1', description: 'Pick me', shortTitle: 'Pick me' }],
+    segmentIds: ['pick-los'],
+  });
+  assert(deepEq(buildAgendaItems(picker), []), 'agenda picker: empty');
+  assert(buildAgendaCommand(picker) === null, 'agenda picker: command null');
+}
+
+// Case A5: zero-LO plan, recap with empty mustRemember → [] (segmentFor
+// builds recap with mustRemember: []). And no items ⇒ null command.
+{
+  const bare = mkPlan({ los: [], segmentIds: ['hook', 'recap'] });
+  assert(deepEq(buildAgendaItems(bare), []), 'agenda bare: empty');
+  assert(buildAgendaCommand(bare) === null, 'agenda bare: command null');
+}
+
+// Case A6: more than 8 items → capped at 8.
+{
+  const many = mkPlan({
+    segmentIds: ['hook', 'recap'],
+    recapMustRemember: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
+  });
+  const items = buildAgendaItems(many);
+  assert(items.length === 8 && items[7] === 'h', 'agenda cap: 8 items max');
+}
+
+// Case A7: blank/whitespace items filtered out.
+{
+  const blanks = mkPlan({
+    segmentIds: ['hook', 'recap'],
+    recapMustRemember: ['Real point', '   ', ''],
+  });
+  assert(deepEq(buildAgendaItems(blanks), ['Real point']), 'agenda blanks filtered');
+}
+
+// Case A8: markdown emphasis stripped from display items — the injected
+// command bypasses the funcArgs deepStripWbEmphasis pass, so the module
+// must strip **bold**/*italic* itself (board renderers print verbatim).
+{
+  const emph = mkPlan({
+    segmentIds: ['hook', 'recap'],
+    recapMustRemember: ['**Crops** moved *both* ways'],
+  });
+  assert(deepEq(buildAgendaItems(emph), ['Crops moved both ways']), 'agenda emphasis stripped');
+}
+
+// Case A9: buildAgendaCommand shape — showProblem titled "Agenda",
+// free-response, bullet-per-item statement.
+{
+  const curated = mkPlan({
+    segmentIds: ['hook', 'recap'],
+    recapMustRemember: ['First point', 'Second point'],
+  });
+  const cmd = buildAgendaCommand(curated);
+  assert(cmd !== null, 'agenda command: non-null');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const c = cmd as any;
+  assert(c?.action === 'showProblem', 'agenda command: action showProblem');
+  assert(c?.problem?.title === 'Agenda', 'agenda command: title Agenda');
+  assert(c?.problem?.format === 'free-response', 'agenda command: format free-response');
+  assert(c?.problem?.statement === '• First point\n• Second point', 'agenda command: bullet statement');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

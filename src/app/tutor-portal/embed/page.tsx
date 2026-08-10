@@ -65,6 +65,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
+  // Task 4 (session agenda): agenda_card_shown — one line per fresh plan
+  // start, proves the deterministic opening Agenda card actually painted.
+  'agenda_',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
