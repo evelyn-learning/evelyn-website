@@ -26,6 +26,32 @@
 const MAX_CLAIMS = 2;
 const MAX_CLAIM_CHARS = 160;
 
+/**
+ * Planting-policy predicate (2026-08-10 root cause, session
+ * portal-7cfa226c): kill-class judge issues always plant a correction note
+ * (see the VoiceTutorRealtime.tsx killIssues branch), but advisory-class
+ * issues previously never did — logged via `judge_advisory_flag` and
+ * dropped, even when the flagged claim was a genuine board-contradiction
+ * carrying an actual math expression (the incident shape: a board card
+ * whose math contradicted the tutor's own correct narration). This
+ * extends planting to advisory issues, but ONLY when the claim text
+ * contains a math expression — a bare tone/phrasing/common-knowledge
+ * advisory (the majority of advisory issues, and the class Pillar 2b's
+ * advisory-only default exists to protect) still gets no note.
+ *
+ * Extracted as a pure predicate so the "which claims count as math" line
+ * is unit-testable independent of the VoiceTutorRealtime.tsx wiring.
+ */
+export function hasMathExpression(claim: string): boolean {
+  return /\$|\\\(|=/.test(claim);
+}
+
+/** Filters a claim list down to the ones that qualify for note-planting
+ * under the advisory math-expression policy (see hasMathExpression). */
+export function claimsWithMathExpression(claims: string[]): string[] {
+  return claims.filter(hasMathExpression);
+}
+
 export function buildJudgeCorrectionNote(claims: string[]): string | null {
   const quoted = claims
     .slice(0, MAX_CLAIMS)
