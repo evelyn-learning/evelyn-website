@@ -40,7 +40,7 @@ async function run() {
     assert.equal(rawSections[0].rawCorrect, 3);
     const { scaled } = applyCurves(bp, rawSections, [{ sectionId: 'sec1', variant: 'hard' }], {});
     assert.equal(scaled.sections[0].scaled, 40);   // hard curve anchor [3,40]
-    assert.deepEqual(loBreakdown.find((l) => l.loId === 'fx.lo1'), { loId: 'fx.lo1', correct: 2, total: 2 });
+    assert.deepEqual(loBreakdown.find((l) => l.loId === 'fx.lo1'), { loId: 'fx.lo1', correct: 2, total: 2, sectionId: 'sec1' });
   });
   await test('ap-composite maps weighted fraction through cutPoints', () => {
     const spec = { kind: 'ap-composite', sectionScaledMin: 1, sectionScaledMax: 5, compositeMin: 1, compositeMax: 5,

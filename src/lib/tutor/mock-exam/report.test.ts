@@ -10,6 +10,7 @@ import {
 import { FIXTURE_FORM, FIXTURE_ITEMS } from './fixtures';
 import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { ensureGraded, getReport, getReview, type ReportDeps } from './report';
+import type { EvidenceInput } from '@/lib/tutor/learner-model/store';
 
 const T0 = 1_750_000_000_000;
 const START = { topicId: 'fixture', formId: 'fixture-form-a' };
@@ -64,6 +65,23 @@ function makeProfileStore() {
     },
   };
   return { store, saved, getCalls: () => getCalls, saveCalls: () => saveCalls };
+}
+
+/** Task 8 — no-op appendEvidence for tests that don't assert on it (keeps
+ *  this suite network-free: without an injected fake, gradeAndComplete would
+ *  call the REAL learner-model store, which needs a DB). */
+async function noopAppendEvidence(): Promise<void> {}
+
+/** Task 8 — capturing appendEvidence fake for the dedicated evidence-shape
+ *  test below. */
+function makeEvidenceCapture() {
+  const calls: EvidenceInput[][] = [];
+  return {
+    appendEvidence: async (inputs: EvidenceInput[]) => {
+      calls.push(inputs);
+    },
+    calls,
+  };
 }
 
 // --- driver: run the REAL service functions to a grading-state attempt ----
@@ -144,7 +162,7 @@ async function run() {
     const stores = freshStores();
     const attemptId = await driveToGrading(stores, 's1', ['A', 'B'], 'my proof'); // m1 2/2 -> hard
     const grade = makeGradeDeps({ points: 2 }); // full marks: 2 + 2 = 4/4
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     const a = (await stores.findAttempt(attemptId))!;
@@ -160,14 +178,70 @@ async function run() {
     // FRQ folded into loBreakdown for fx.lo3 (4/4 >= 0.5 -> correct).
     const lo3 = a.loBreakdown!.find((e) => e.loId === 'fx.lo3')!;
     assert.deepEqual({ correct: lo3.correct, total: lo3.total }, { correct: 1, total: 1 });
+    // Task 8: FRQ fold-in carries sectionId via sectionIdByItem; MCQ entries
+    // already carry it from scoreMcqSections.
+    assert.equal(lo3.sectionId, 'sec2');
+    const lo1 = a.loBreakdown!.find((e) => e.loId === 'fx.lo1')!;
+    assert.equal(lo1.sectionId, 'sec1');
     assert.ok(!a.footnote);
+  });
+
+  // --- Task 8: per-item mock evidence -----------------------------------
+
+  await test('gradeAndComplete emits per-item mock evidence w/ sectionId + points fraction', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's-evid', ['A', 'B'], 'my proof'); // m1 2/2 -> hard
+    const grade = makeGradeDeps({ points: 2 }); // full marks: 2 + 2 = 4/4
+    const capture = makeEvidenceCapture();
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: capture.appendEvidence };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+
+    assert.equal(capture.calls.length, 1, 'appendEvidence called exactly once (awaited, post-lease-fence)');
+    const inputs = capture.calls[0];
+    const byItem = new Map(inputs.map((i) => [i.itemId, i]));
+
+    const mcq1 = byItem.get('fx-m1-1')!;
+    assert.ok(mcq1, 'MCQ item fx-m1-1 has an evidence row');
+    assert.equal(mcq1.idempotencyKey, `mock:${attemptId}:fx-m1-1`);
+    assert.equal(mcq1.source, 'mock');
+    assert.equal(mcq1.sessionId, `mock:${attemptId}`);
+    assert.equal(mcq1.loId, 'fx.lo1');
+    assert.equal(mcq1.sectionId, 'sec1');
+    assert.equal(mcq1.difficulty, 1);
+    assert.equal(mcq1.outcome, 1, 'fx-m1-1 answered A (correct)');
+    assert.equal(mcq1.pointsAwarded, 1);
+    assert.equal(mcq1.maxPoints, 1);
+
+    const frq = byItem.get('fx-frq-1')!;
+    assert.ok(frq, 'FRQ item fx-frq-1 has an evidence row');
+    assert.equal(frq.idempotencyKey, `mock:${attemptId}:fx-frq-1`);
+    assert.equal(frq.sectionId, 'sec2');
+    assert.equal(frq.difficulty, 3);
+    assert.equal(frq.pointsAwarded, 4);
+    assert.equal(frq.maxPoints, 4);
+    assert.equal(frq.outcome, 1, 'full marks -> points fraction 4/4 = 1');
+  });
+
+  await test('gradeAndComplete skips evidence for an ungraded (grader-failure) FRQ', async () => {
+    const stores = freshStores();
+    const attemptId = await driveToGrading(stores, 's-evid-ungraded', ['A', 'B'], 'my proof');
+    const grade = makeGradeDeps({ fail: true });
+    const capture = makeEvidenceCapture();
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: capture.appendEvidence };
+
+    await ensureGraded(stores, attemptId, deps, T0 + 8_000);
+
+    const inputs = capture.calls[0];
+    assert.ok(!inputs.some((i) => i.itemId === 'fx-frq-1'), 'ungraded FRQ produces no evidence row (grader failure, not student evidence)');
+    assert.ok(inputs.some((i) => i.itemId === 'fx-m1-1'), 'MCQ rows still emitted');
   });
 
   await test('grader failing 3x marks ungraded + footnote, still completes', async () => {
     const stores = freshStores();
     const attemptId = await driveToGrading(stores, 's2', ['A', 'B'], 'my proof');
     const grade = makeGradeDeps({ fail: true });
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     const a = (await stores.findAttempt(attemptId))!;
@@ -186,7 +260,7 @@ async function run() {
     const stores = freshStores();
     const attemptId = await driveToGrading(stores, 's3', ['A', 'B'], 'my proof');
     const grade = makeGradeDeps({ points: 2 });
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     const callsAfterFirst = grade.calls();
@@ -204,7 +278,7 @@ async function run() {
     const attemptId = await driveToGrading(stores, 's4', ['D', 'D'], 'my proof');
     const grade = makeGradeDeps({ points: 2 });
     const ps = makeProfileStore();
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     assert.equal(ps.saveCalls(), 1);
@@ -227,7 +301,7 @@ async function run() {
   await test('getReport for another studentId throws forbidden', async () => {
     const stores = freshStores();
     const attemptId = await driveToGrading(stores, 's5', ['A', 'B'], 'my proof');
-    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
     await assert.rejects(() => getReport(stores, 'intruder', attemptId, deps, T0 + 8_000), /forbidden/);
     // Owner still gets a completed report.
     const report = await getReport(stores, 's5', attemptId, deps, T0 + 8_000);
@@ -242,7 +316,7 @@ async function run() {
 
     // After completion the review joins verdicts + solutions + frq grades.
     const attemptId = await driveToGrading(stores, 's7', ['A', 'B'], 'my proof');
-    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({ points: 2 }).deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     const review = await getReview(stores, 's7', attemptId);
     const mcq = review.items.find((i) => i.itemId === 'fx-m1-1')!;
@@ -261,7 +335,7 @@ async function run() {
     const attemptId = await driveToGrading(stores, 's8', ['A', 'B'], 'my proof');
     const grade = makeGradeDeps({ points: 2, slow: true }); // slow → the two polls interleave
     const ps = makeProfileStore();
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: ps.store, appendEvidence: noopAppendEvidence };
 
     await Promise.all([
       ensureGraded(stores, attemptId, deps, T0 + 8_000),
@@ -283,7 +357,7 @@ async function run() {
     held.gradingStartedAt = new Date(T0 + 8_000);
     await stores.saveAttempt(held);
     const grade = makeGradeDeps({ points: 2 });
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     const result = await ensureGraded(stores, attemptId, deps, T0 + 8_000 + 1_000);
     assert.equal(result.status, 'grading'); // backed off → route 202
@@ -299,7 +373,7 @@ async function run() {
     crashed.gradingStartedAt = new Date(T0);
     await stores.saveAttempt(crashed);
     const grade = makeGradeDeps({ points: 2 });
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 11 * 60 * 1_000);
     const a = (await stores.findAttempt(attemptId))!;
@@ -322,6 +396,7 @@ async function run() {
         async judgeSingleAnswer() { return { correct: true, feedback: '' }; },
       },
       profileStore: ps.store,
+      appendEvidence: noopAppendEvidence,
     };
     const now1 = T0 + 8_000;
     const p1 = ensureGraded(stores, attemptId, p1Deps, now1);
@@ -332,7 +407,12 @@ async function run() {
 
     // P2 takes over after the 10-min stale window and fully completes + feeds.
     const p2Grade = makeGradeDeps({ points: 2 });
-    await ensureGraded(stores, attemptId, { gradeDeps: p2Grade.deps, profileStore: ps.store }, now1 + 11 * 60 * 1_000);
+    await ensureGraded(
+      stores,
+      attemptId,
+      { gradeDeps: p2Grade.deps, profileStore: ps.store, appendEvidence: noopAppendEvidence },
+      now1 + 11 * 60 * 1_000,
+    );
     const afterP2 = (await stores.findAttempt(attemptId))!;
     assert.equal(afterP2.status, 'completed');
     const p2FedAt = afterP2.gapsFedAt!.getTime();
@@ -355,7 +435,7 @@ async function run() {
     const stores = freshStores();
     const attemptId = await driveToGrading(stores, 'k1', ['A', 'B'], null); // FRQ left blank
     const grade = makeGradeDeps({ points: 2 });
-    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: grade.deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
 
     await ensureGraded(stores, attemptId, deps, T0 + 8_000);
     const a = (await stores.findAttempt(attemptId))!;
@@ -383,7 +463,7 @@ async function run() {
     assert.ok(a.rawSections && a.rawSections.length >= 1);
     assert.ok(!a.scaled);
 
-    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
     const report = await getReport(stores, 'e1', attemptId, deps, T0 + ATTEMPT_TTL_MS + 2);
     assert.equal(report.status, 'expired');
     assert.equal(report.footnote, 'Attempt expired before completion — partial results.');
@@ -399,7 +479,7 @@ async function run() {
     const a = (await stores.findAttempt(attemptId))!;
     assert.equal(a.status, 'expired');
     assert.ok(!a.rawSections);
-    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store };
+    const deps: ReportDeps = { gradeDeps: makeGradeDeps({}).deps, profileStore: makeProfileStore().store, appendEvidence: noopAppendEvidence };
     await assert.rejects(() => getReport(stores, 'e2', attemptId, deps, T0 + ATTEMPT_TTL_MS + 2), /not_found/);
   });
 

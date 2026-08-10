@@ -49,6 +49,7 @@ import {
 } from '@evelyn/portal-contract/v1';
 import { extractSocialThreads } from './extract-social-threads';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -205,6 +206,44 @@ function masterySnapshot(profile: StudentProfile, losTouched: string[]) {
     .filter((m): m is NonNullable<typeof m> => !!m);
 }
 
+/** Task 8 — evidence for the learner model's server append point. Prefers
+ *  the caller-supplied `req.evidence[]` (contract v1.12.0, one row per
+ *  index, keyed `emit:<sessionId>:<i>`); when absent, falls back to one row
+ *  per `masteryDeltas` entry (keyed `emit:<sessionId>:lo:<loId>`, source
+ *  'session', outcome derived from delta sign) so pre-v1.12.0 portal
+ *  callers still feed the learner model. Only ever called from the commit
+ *  path (after the idempotency-replay guard above), so a replayed terminal
+ *  emit never re-builds this — belt-and-suspenders with the idempotency
+ *  keys themselves. Pure. */
+function buildEmitEvidence(req: SessionEmitRequest): EvidenceInput[] {
+  const occurredAt = new Date();
+  if (req.evidence && req.evidence.length > 0) {
+    return req.evidence.map((e, i) => ({
+      idempotencyKey: `emit:${req.sessionId}:${i}`,
+      studentId: req.studentId,
+      loId: e.loId,
+      source: e.source,
+      sessionId: req.sessionId,
+      itemId: e.itemId,
+      outcome: e.outcome,
+      difficulty: e.difficulty,
+      latencyMs: e.latencyMs,
+      occurredAt,
+      subject: req.subject,
+    }));
+  }
+  return req.masteryDeltas.map((m) => ({
+    idempotencyKey: `emit:${req.sessionId}:lo:${m.loId}`,
+    studentId: req.studentId,
+    loId: m.loId,
+    source: 'session',
+    sessionId: req.sessionId,
+    outcome: m.delta >= 0 ? 1 : 0,
+    occurredAt,
+    subject: req.subject,
+  }));
+}
+
 export async function emitSessionResult(
   req: SessionEmitRequest,
   opts: EmitOptions = {},
@@ -301,6 +340,16 @@ export async function emitSessionResult(
     masteryDeltas: req.masteryDeltas,
   });
   const saved = await saveStudentProfile(next);
+
+  // Task 8 — learner-model evidence append. Fire-and-forget (this is a
+  // latency-sensitive session-end path); appendEvidence is itself
+  // best-effort and never throws, so the .catch is belt-and-suspenders.
+  const emitEvidence = buildEmitEvidence(req);
+  if (emitEvidence.length > 0) {
+    appendEvidence(emitEvidence).catch((err) =>
+      console.error('[learner-model] emit evidence append failed', err),
+    );
+  }
 
   // Phase 3(a): reconcile notes ↔ gaps links for each touched baseline.
   const gapLinkInputs = saved.gaps.map((g) => ({ id: g.id, kind: g.kind, loId: g.loId, conceptLabel: g.conceptLabel }));

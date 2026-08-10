@@ -85,7 +85,7 @@ export interface AttemptDoc {
       inComposite?: boolean;
     }>;
   };
-  loBreakdown?: Array<{ loId: string; correct: number; total: number }>;
+  loBreakdown?: Array<{ loId: string; correct: number; total: number; sectionId?: string }>;
   frqGrades?: Array<{
     itemId: string;
     totalPoints: number;

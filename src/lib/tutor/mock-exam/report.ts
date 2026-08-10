@@ -31,6 +31,7 @@ import { getBlueprint } from './blueprints';
 import type { ExamBlueprint } from './blueprints';
 import { answersMatch, applyCurves } from './scoring';
 import type { MockStores, AttemptDoc } from './service';
+import { appendEvidence as appendLearnerEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 
 /** A grading attempt whose lock is older than this is treated as a crashed run
  *  and re-lockable (`gradingStartedAt` is stamped at finalize by Task 8, so it
@@ -49,6 +50,9 @@ export interface ReportDeps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     save(p: any): Promise<unknown>;
   };
+  /** Task 8 — optional injection for tests; defaults to the real
+   *  learner-model evidence-append service. */
+  appendEvidence?: (inputs: EvidenceInput[]) => Promise<void>;
 }
 
 function profileStoreOf(deps: ReportDeps) {
@@ -250,9 +254,60 @@ async function gradeAndComplete(
       entry.correct += correct;
       entry.total += 1;
     } else {
-      const created = { loId: item.loId, correct, total: 1 };
+      const created = { loId: item.loId, correct, total: 1, sectionId: sectionIdByItem.get(g.itemId) };
       loBreakdown.push(created);
       loById.set(item.loId, created);
+    }
+  }
+
+  // Task 8 — per-item mock evidence for the learner model, built from the
+  // same itemById/responseByItem/sectionIdByItem/frqGrades already in scope.
+  // Pure (no I/O) — the actual append is awaited below, ONLY on the branch
+  // that wins the lease-fence, so a superseded poll (see the fence check
+  // right after) never double-emits; that's the idempotency guard for this
+  // path (on top of the `mock:<attemptId>:<itemId>` keys themselves).
+  const evidenceOccurredAt = new Date(now);
+  const frqGradeByItem = new Map(frqGrades.map((g) => [g.itemId, g]));
+  const evidenceInputs: EvidenceInput[] = [];
+  for (const mod of attempt.servedModules) {
+    for (const id of mod.itemIds) {
+      const item = itemById.get(id);
+      if (!item) continue;
+      const sectionId = sectionIdByItem.get(id);
+      if (item.responseFormat === 'frq') {
+        const grade = frqGradeByItem.get(id);
+        if (!grade || grade.ungraded) continue; // grader failure — not student evidence
+        evidenceInputs.push({
+          idempotencyKey: `mock:${attempt.attemptId}:${id}`,
+          studentId: attempt.studentId,
+          loId: item.loId,
+          source: 'mock',
+          sessionId: `mock:${attempt.attemptId}`,
+          itemId: id,
+          sectionId,
+          difficulty: item.difficulty,
+          outcome: grade.maxPoints > 0 ? grade.totalPoints / grade.maxPoints : 0,
+          pointsAwarded: grade.totalPoints,
+          maxPoints: grade.maxPoints,
+          occurredAt: evidenceOccurredAt,
+        });
+      } else {
+        const correct = answersMatch(item, responseByItem.get(id)?.answer);
+        evidenceInputs.push({
+          idempotencyKey: `mock:${attempt.attemptId}:${id}`,
+          studentId: attempt.studentId,
+          loId: item.loId,
+          source: 'mock',
+          sessionId: `mock:${attempt.attemptId}`,
+          itemId: id,
+          sectionId,
+          difficulty: item.difficulty,
+          outcome: correct ? 1 : 0,
+          pointsAwarded: correct ? 1 : 0,
+          maxPoints: 1,
+          occurredAt: evidenceOccurredAt,
+        });
+      }
     }
   }
 
@@ -274,6 +329,12 @@ async function gradeAndComplete(
   fenced.status = 'completed';
   fenced.completedAt = new Date(now);
   await stores.saveAttempt(fenced);
+
+  // Task 8 — awaited (mock grading is already async-slow, unlike the
+  // latency-sensitive emit/assessment paths, which fire-and-forget).
+  const emitEvidence = deps.appendEvidence ?? appendLearnerEvidence;
+  await emitEvidence(evidenceInputs);
+
   return fenced;
 }
 

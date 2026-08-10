@@ -20,6 +20,7 @@ import { randomUUID } from 'crypto';
 import { retrievePractice, type PracticeSources } from './practice';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
+import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import type { ResolvedAssessmentKey } from './adapters';
 import type {
   AssessmentRequest,
@@ -198,6 +199,15 @@ export async function submitAssessment(
   deps: GradeDeps,
   resolveItem: AssessmentItemResolver,
 ): Promise<AssessmentResult> {
+  // Task 8 — quiz vs silent-diagnostic discriminator: `notesTouched` is the
+  // submission's existing signal (v1.4.0 comment on AssessmentSubmissionSchema:
+  // "Absent/empty (the diagnostic path)"). A unit quiz passes its baselines;
+  // the course-start silent diagnostic never does.
+  const evidenceSource: EvidenceInput['source'] =
+    sub.notesTouched && sub.notesTouched.length > 0 ? 'assessment' : 'diagnostic';
+  const evidenceOccurredAt = new Date();
+  const evidenceInputs: EvidenceInput[] = [];
+
   const perLo = new Map<string, { awarded: number; max: number }>();
   const review: AssessmentReviewItem[] = [];
   for (const r of sub.responses) {
@@ -219,13 +229,43 @@ export async function submitAssessment(
         feedback: detail.feedback,
         rubricParts: detail.rubricParts,
       });
+      evidenceInputs.push({
+        idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
+        studentId: sub.studentId,
+        loId: r.loId,
+        source: evidenceSource,
+        sessionId: sub.sessionId,
+        itemId: r.itemId,
+        outcome: detail.maxPoints > 0 ? detail.pointsAwarded / detail.maxPoints : 0,
+        pointsAwarded: detail.pointsAwarded,
+        maxPoints: detail.maxPoints,
+        occurredAt: evidenceOccurredAt,
+      });
     } else {
       // Unresolved item — count it as a 1-point miss so totals stay honest.
       agg.max += 1;
       review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
+      evidenceInputs.push({
+        idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
+        studentId: sub.studentId,
+        loId: r.loId,
+        source: evidenceSource,
+        sessionId: sub.sessionId,
+        itemId: r.itemId,
+        outcome: 0,
+        pointsAwarded: 0,
+        maxPoints: 1,
+        occurredAt: evidenceOccurredAt,
+      });
     }
     perLo.set(r.loId, agg);
   }
+
+  // Task 8 — fire-and-forget (this is a latency-sensitive submit path);
+  // appendEvidence is itself best-effort and never throws.
+  appendEvidence(evidenceInputs).catch((err) =>
+    console.error('[learner-model] assessment evidence append failed', err),
+  );
 
   const masteryDeltas: SessionEmitRequest['masteryDeltas'] = [];
   const gaps: SessionEmitRequest['gaps'] = [];

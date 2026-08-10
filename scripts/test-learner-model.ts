@@ -2,10 +2,14 @@
  * Learner-model estimator — pure/deterministic tests against
  * src/lib/tutor/learner-model/estimator.ts. No DB, no LLM calls (Task 6).
  * Task 7 extends this script with a DB-backed section for appendEvidence.
+ * Task 8 further extends it with the server append points (emit / assessment
+ * / mock) that call appendEvidence internally.
  *
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
 import { estimateLo, trendOf, nextReviewAt } from '../src/lib/tutor/learner-model/estimator';
+import type { SessionEmitRequest } from '@evelyn/portal-contract/v1';
+import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 
 let passed = 0;
 let failed = 0;
@@ -180,7 +184,306 @@ async function runDbTests() {
   }
 }
 
+/** Poll until `check()` is truthy or `timeoutMs` elapses. Needed because the
+ *  emit/assessment append points are fire-and-forget (latency-sensitive
+ *  paths — see Task 8 brief) — the evidence row can land a beat after the
+ *  awaited call returns. */
+async function waitFor(check: () => Promise<boolean>, timeoutMs = 3000, stepMs = 25): Promise<boolean> {
+  const start = Date.now();
+  for (;;) {
+    if (await check()) return true;
+    if (Date.now() - start >= timeoutMs) return false;
+    await new Promise((r) => setTimeout(r, stepMs));
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Server append points — emit / assessment / mock (Task 8)           */
+/* ------------------------------------------------------------------ */
+
+async function runServerAppendPointTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 8 server append-point tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { EvidenceEventModel } = await import('../src/models');
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { emitSessionResult } = await import('../src/lib/tutor/portal/session-result');
+  const { submitAssessment } = await import('../src/lib/tutor/portal/assessment');
+  const { ensureGraded } = await import('../src/lib/tutor/mock-exam/report');
+  const { memoryMockStores, startOrResume, saveResponses, advance } = await import(
+    '../src/lib/tutor/mock-exam/service'
+  );
+  const { FIXTURE_FORM, FIXTURE_ITEMS } = await import('../src/lib/tutor/mock-exam/fixtures');
+
+  console.log('\nServer append points — emit / assessment / mock (Task 8):\n');
+
+  // --- (a) emitSessionResult: evidence[] → per-index rows; replay is a no-op ---
+  {
+    const studentId = `lmtest:emit:${process.pid}`;
+    const sessionId = `lmtest-emit-session-${process.pid}`;
+    const emitReq: SessionEmitRequest = {
+      sessionId,
+      studentId,
+      courseId: 'ap-statistics',
+      status: 'completed',
+      milestone: 'none',
+      losTouched: ['lo1'],
+      masteryDeltas: [{ loId: 'lo1', delta: 0.5 }],
+      gaps: [],
+      notesTouched: [],
+      evidence: [{ loId: 'lo1', outcome: 1, source: 'practice', itemId: 'i1' }],
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await emitSessionResult(emitReq);
+
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`emit:${sessionId}:0`)));
+      assert(landed, 'emitSessionResult: evidence[] produces a row keyed emit:<sid>:0');
+      const row = await EvidenceEventModel.findById(`emit:${sessionId}:0`);
+      assert(
+        !!row && row.source === 'practice' && row.outcome === 1 && row.itemId === 'i1' && row.loId === 'lo1',
+        'emitSessionResult: evidence row carries loId/source/outcome/itemId from evidence[0]',
+      );
+
+      // Replay (same sessionId) hits the idempotency guard before the evidence
+      // build even runs — no new/duplicate rows.
+      const countBefore = await EvidenceEventModel.countDocuments({ studentId });
+      await emitSessionResult(emitReq);
+      await new Promise((r) => setTimeout(r, 200)); // let any (wrongly) fired append settle
+      const countAfter = await EvidenceEventModel.countDocuments({ studentId });
+      assert(countBefore === countAfter, 'emitSessionResult: replayed terminal emit adds no evidence rows');
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (a) emitSessionResult: no evidence[] → one row per masteryDeltas LO ---
+  {
+    const studentId = `lmtest:emitfb:${process.pid}`;
+    const sessionId = `lmtest-emitfb-session-${process.pid}`;
+    const emitReq: SessionEmitRequest = {
+      sessionId,
+      studentId,
+      courseId: 'ap-statistics',
+      status: 'completed',
+      milestone: 'none',
+      losTouched: ['lo1', 'lo2'],
+      masteryDeltas: [{ loId: 'lo1', delta: 0.5 }, { loId: 'lo2', delta: -0.3 }],
+      gaps: [],
+      notesTouched: [],
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await emitSessionResult(emitReq);
+
+      const landed = await waitFor(
+        async () =>
+          !!(await EvidenceEventModel.findById(`emit:${sessionId}:lo:lo1`)) &&
+          !!(await EvidenceEventModel.findById(`emit:${sessionId}:lo:lo2`)),
+      );
+      assert(landed, 'emitSessionResult: no evidence[] → falls back to one row per masteryDeltas LO');
+      const row1 = await EvidenceEventModel.findById(`emit:${sessionId}:lo:lo1`);
+      const row2 = await EvidenceEventModel.findById(`emit:${sessionId}:lo:lo2`);
+      assert(
+        !!row1 && row1.source === 'session' && row1.outcome === 1,
+        'emitSessionResult: fallback row — delta >= 0 → outcome 1, source session',
+      );
+      assert(
+        !!row2 && row2.source === 'session' && row2.outcome === 0,
+        'emitSessionResult: fallback row — delta < 0 → outcome 0',
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (b) submitAssessment: per-item rows with points fractions ---
+  {
+    const studentId = `lmtest:diag:${process.pid}`;
+    const sessionId = `lmtest-diag-session-${process.pid}`;
+    const LO_A = 'lmtest.lo-a';
+    const LO_B = 'lmtest.lo-b';
+    const KEYS: Record<string, { responseFormat: 'numeric'; expectedAnswer: string }> = {
+      qa: { responseFormat: 'numeric', expectedAnswer: '5' },
+      qb: { responseFormat: 'numeric', expectedAnswer: '5' },
+    };
+    const resolver = async (id: string) => KEYS[id] ?? null;
+    const deps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: '' };
+      },
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await submitAssessment(
+        {
+          assessmentId: 'lmtest-asmt-1',
+          studentId,
+          courseId: 'ap-statistics',
+          sessionId,
+          responses: [
+            { itemId: 'qa', loId: LO_A, response: { text: '5' } }, // correct → 1/1
+            { itemId: 'qb', loId: LO_B, response: { text: '1' } }, // wrong → 0/1
+          ],
+        },
+        deps,
+        resolver,
+      );
+
+      const landed = await waitFor(
+        async () =>
+          !!(await EvidenceEventModel.findById(`diag:${sessionId}:qa`)) &&
+          !!(await EvidenceEventModel.findById(`diag:${sessionId}:qb`)),
+      );
+      assert(landed, 'submitAssessment: produces 2 per-item evidence rows keyed diag:<sid>:<itemId>');
+      const rowA = await EvidenceEventModel.findById(`diag:${sessionId}:qa`);
+      const rowB = await EvidenceEventModel.findById(`diag:${sessionId}:qb`);
+      assert(
+        !!rowA && rowA.outcome === 1 && rowA.pointsAwarded === 1 && rowA.maxPoints === 1 && rowA.source === 'diagnostic',
+        'submitAssessment: correct item → outcome 1, points fraction 1/1, source diagnostic (no notesTouched)',
+      );
+      assert(
+        !!rowB && rowB.outcome === 0 && rowB.pointsAwarded === 0 && rowB.maxPoints === 1,
+        'submitAssessment: wrong item → outcome 0, points fraction 0/1',
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (b) submitAssessment: notesTouched present → source 'assessment' (quiz) ---
+  {
+    const studentId = `lmtest:quiz:${process.pid}`;
+    const sessionId = `lmtest-quiz-session-${process.pid}`;
+    const KEYS: Record<string, { responseFormat: 'numeric'; expectedAnswer: string }> = {
+      qc: { responseFormat: 'numeric', expectedAnswer: '5' },
+    };
+    const resolver = async (id: string) => KEYS[id] ?? null;
+    const deps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: '' };
+      },
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await submitAssessment(
+        {
+          assessmentId: 'lmtest-asmt-2',
+          studentId,
+          courseId: 'ap-statistics',
+          sessionId,
+          responses: [{ itemId: 'qc', loId: 'lmtest.lo-c', response: { text: '5' } }],
+          notesTouched: [{ baselineId: 'b1', cedTopic: 'topic', cedTitle: 'title' }],
+        },
+        deps,
+        resolver,
+      );
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qc`)));
+      assert(landed, 'submitAssessment (quiz): evidence row lands');
+      const row = await EvidenceEventModel.findById(`diag:${sessionId}:qc`);
+      assert(!!row && row.source === 'assessment', "submitAssessment: notesTouched present → source 'assessment'");
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (c) mock grading: per-item rows + loBreakdown carry sectionId ---
+  {
+    const studentId = `lmtest:mock:${process.pid}`;
+    await deleteLearnerModelData(studentId);
+    try {
+      const stores = memoryMockStores({ forms: [FIXTURE_FORM], items: FIXTURE_ITEMS });
+      const T0 = 1_750_000_000_000;
+      const s = await startOrResume(stores, { studentId, topicId: 'fixture', formId: 'fixture-form-a' }, T0);
+      const attemptId = s.attemptId;
+      await saveResponses(
+        stores,
+        {
+          studentId,
+          attemptId,
+          cursor: { sectionIdx: 0, moduleIdx: 0 },
+          responses: [{ itemId: 'fx-m1-1', answer: 'A' }, { itemId: 'fx-m1-2', answer: 'B' }],
+        },
+        T0 + 1_000,
+      );
+      let st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 0 } }, T0 + 2_000);
+      const m2ItemId = st.section!.items[0].itemId;
+      await saveResponses(
+        stores,
+        { studentId, attemptId, cursor: { sectionIdx: 0, moduleIdx: 1 }, responses: [{ itemId: m2ItemId, answer: 'A' }] },
+        T0 + 3_000,
+      );
+      await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 0, moduleIdx: 1 } }, T0 + 4_000);
+      st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 } }, T0 + 5_000);
+      assert(st.status === 'in_section', 'mock fixture: section 2 (FRQ) opened');
+      await saveResponses(
+        stores,
+        { studentId, attemptId, cursor: { sectionIdx: 1, moduleIdx: 0 }, responses: [{ itemId: 'fx-frq-1', frqText: 'my proof' }] },
+        T0 + 6_000,
+      );
+      st = await advance(stores, { studentId, attemptId, fromCursor: { sectionIdx: 1, moduleIdx: 0 } }, T0 + 7_000);
+      assert(st.status === 'grading', 'mock fixture: reached grading state');
+
+      const gradeDeps: GradeDeps = {
+        async gradeRubricPart(args) {
+          return { pointsAwarded: args.maxPoints, feedback: 'ok' };
+        },
+        async judgeSingleAnswer() {
+          return { correct: true, feedback: 'ok' };
+        },
+      };
+      const profiles = new Map<string, Record<string, unknown>>();
+      const profileStore = {
+        async getOrCreate(id: string) {
+          const existing = profiles.get(id);
+          if (existing) return existing;
+          const fresh = { id, mastery: {}, gaps: [], recentSessions: [] };
+          profiles.set(id, fresh);
+          return fresh;
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        async save(p: any) {
+          profiles.set(p.id, p);
+          return p;
+        },
+      };
+      await ensureGraded(stores, attemptId, { gradeDeps, profileStore }, T0 + 8_000);
+      const attempt = (await stores.findAttempt(attemptId))!;
+
+      const lo3 = attempt.loBreakdown!.find((e) => e.loId === 'fx.lo3'); // the FRQ's LO
+      assert(!!lo3 && lo3.sectionId === 'sec2', 'mock: FRQ-folded loBreakdown entry carries sectionId (sec2)');
+      const lo1 = attempt.loBreakdown!.find((e) => e.loId === 'fx.lo1'); // MCQ LO
+      assert(!!lo1 && lo1.sectionId === 'sec1', 'mock: MCQ loBreakdown entry carries sectionId (sec1)');
+
+      // gradeAndComplete awaits its evidence append (unlike emit/assessment),
+      // so no polling needed here — it's already landed by the time
+      // ensureGraded resolves.
+      const mcqRow = await EvidenceEventModel.findById(`mock:${attemptId}:fx-m1-1`);
+      assert(
+        !!mcqRow && mcqRow.outcome === 1 && mcqRow.sectionId === 'sec1' && mcqRow.difficulty === 1 && mcqRow.source === 'mock',
+        'mock: correct MCQ item → per-item evidence row w/ sectionId + difficulty',
+      );
+      const frqRow = await EvidenceEventModel.findById(`mock:${attemptId}:fx-frq-1`);
+      assert(
+        !!frqRow && frqRow.sectionId === 'sec2' && frqRow.pointsAwarded === 4 && frqRow.maxPoints === 4 && frqRow.outcome === 1,
+        'mock: FRQ item → per-item evidence row w/ points fraction + sectionId',
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+}
+
 runDbTests()
+  .then(() => runServerAppendPointTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section

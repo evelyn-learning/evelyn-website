@@ -80,12 +80,12 @@ export function scoreMcqSections(
   items: SeedableItem[]
 ): {
   rawSections: Array<{ sectionId: string; rawCorrect: number; rawTotal: number }>;
-  loBreakdown: Array<{ loId: string; correct: number; total: number }>;
+  loBreakdown: Array<{ loId: string; correct: number; total: number; sectionId?: string }>;
 } {
   const itemById = new Map(items.map((it) => [it.id, it]));
   const responseByItem = new Map(responses.map((r) => [r.itemId, r.answer]));
   const rawSections: Array<{ sectionId: string; rawCorrect: number; rawTotal: number }> = [];
-  const loMap = new Map<string, { correct: number; total: number }>();
+  const loMap = new Map<string, { correct: number; total: number; sectionId: string }>();
 
   blueprint.sections.forEach((section, sectionIdx) => {
     const modulesForSection = servedModules.filter((m) => m.sectionIdx === sectionIdx);
@@ -102,7 +102,7 @@ export function scoreMcqSections(
         const correct = answersMatch(item, responseByItem.get(itemId));
         if (correct) rawCorrect += 1;
 
-        const lo = loMap.get(item.loId) ?? { correct: 0, total: 0 };
+        const lo = loMap.get(item.loId) ?? { correct: 0, total: 0, sectionId: section.sectionId };
         lo.total += 1;
         if (correct) lo.correct += 1;
         loMap.set(item.loId, lo);
@@ -112,7 +112,7 @@ export function scoreMcqSections(
   });
 
   const loBreakdown = Array.from(loMap.entries()).map(([loId, v]) => ({
-    loId, correct: v.correct, total: v.total,
+    loId, correct: v.correct, total: v.total, sectionId: v.sectionId,
   }));
 
   return { rawSections, loBreakdown };

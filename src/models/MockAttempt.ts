@@ -48,7 +48,7 @@ export interface IMockAttempt extends Document {
       inComposite?: boolean;
     }>;
   };
-  loBreakdown?: Array<{ loId: string; correct: number; total: number }>;
+  loBreakdown?: Array<{ loId: string; correct: number; total: number; sectionId?: string }>;
   frqGrades?: Array<{
     itemId: string;
     totalPoints: number;
@@ -158,6 +158,7 @@ const LoBreakdownSchema = new Schema(
     loId: { type: String, required: true },
     correct: { type: Number, required: true },
     total: { type: Number, required: true },
+    sectionId: { type: String },
   },
   { _id: false }
 );
