@@ -328,6 +328,15 @@ export interface LessonPlanContext {
    *  always gets rejected. False/absent ⇒ no marker ⇒ curated-plan output
    *  byte-identical. */
   isGeneratedPlan?: boolean;
+  /** Task 5: the CURATED rail's label for the current segment (curated
+   *  plans only — context.ts's buildLessonPlanContext scopes this off
+   *  for generated plans, which get the deterministic LO-boundary
+   *  spoken beat instead via rail-labels.ts's loBoundaryBeat). Absent
+   *  ⇒ no naming line rendered ⇒ byte-identical to the pre-Task-5
+   *  block. Lets the brain name the agenda item naturally on entry
+   *  instead of the generic stage word ("Now — Columbus's letter."
+   *  instead of "Now — the worked example."). */
+  currentSegmentRailLabel?: string;
 }
 
 export interface BrainToolCall {
@@ -544,7 +553,7 @@ export function buildContentVarietyDirective(seen: PlanContentSeen | undefined):
  *  asks for. Kind-specific fields are inlined as a small structured
  *  block so the brain doesn't have to guess at the schema. */
 export function formatLessonPlanContext(ctx: LessonPlanContext): string {
-  const { plan, currentSegmentId, currentSegment, segmentIndex, completedSegmentIds } = ctx;
+  const { plan, currentSegmentId, currentSegment, segmentIndex, completedSegmentIds, currentSegmentRailLabel } = ctx;
   const completedSet = new Set(completedSegmentIds ?? []);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const seg = currentSegment as any;
@@ -573,7 +582,9 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
   // said "radius 8, 90°".
   const idx = segmentIndex
     .map((s, i) => {
-      const isCurrent = s.id === currentSegmentId ? '  ← current' : '';
+      const isCurrent = s.id === currentSegmentId
+        ? (currentSegmentRailLabel ? `  ← current — agenda item: "${currentSegmentRailLabel}"` : '  ← current')
+        : '';
       const isCompleted = completedSet.has(s.id) ? '  ✓ COMPLETED' : '';
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sg = s as any;
@@ -666,7 +677,7 @@ export function formatLessonPlanContext(ctx: LessonPlanContext): string {
     `segments:`,
     idx,
     ``,
-    `current segment "${currentSegmentId}" [${seg?.kind ?? 'unknown'}]:`,
+    `current segment "${currentSegmentId}" [${seg?.kind ?? 'unknown'}]${currentSegmentRailLabel ? ` — agenda item: "${currentSegmentRailLabel}"` : ''}:`,
     segDetail,
     ...problemLock,
     ``,

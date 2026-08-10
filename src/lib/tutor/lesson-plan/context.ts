@@ -12,6 +12,12 @@ export function buildLessonPlanContext(
   plan: LessonPlan,
   currentSegmentId: string,
   completedSegmentIds?: ReadonlyArray<string>,
+  // Task 5: curated-only rail-label naming. Generated plans get the
+  // deterministic LO-boundary spoken beat instead (rail-labels.ts's
+  // loBoundaryBeat, wired at the VoiceTutorRealtime.tsx advance_lesson
+  // call site) — the rail label here is scoped OFF for generated plans
+  // below so the two naming mechanisms never both fire.
+  segmentLabels?: Record<string, string> | null,
 ): LessonPlanContext | undefined {
   const seg: Segment | undefined = plan.segments.find((s) => s.id === currentSegmentId);
   if (!seg) return undefined;
@@ -37,6 +43,10 @@ export function buildLessonPlanContext(
     // declared below (isGeneratedPlan is defined further down this file);
     // function hoisting makes this reference safe at call time.
     isGeneratedPlan: isGeneratedPlan(plan) || undefined,
+    // Task 5: only curated (non-generated) plans surface a rail label —
+    // generated plans get the LO-boundary beat instead, so a label here
+    // would be a second, redundant naming mechanism on the same turn.
+    currentSegmentRailLabel: !isGeneratedPlan(plan) ? segmentLabels?.[currentSegmentId] : undefined,
   };
 }
 

@@ -35,6 +35,14 @@ function loDisplay(plan: LessonPlan, loId: string): string {
   return lo.shortTitle ?? capWords(lo.description, 4);
 }
 
+/** Exported thin wrapper over the module-private `loDisplay` (Task 1) —
+ *  lets VTR and tests share the exact same LO-title derivation
+ *  `loBoundaryBeat` uses below, without duplicating the shortTitle-or-
+ *  capped-description fallback logic. */
+export function railLoTitle(plan: LessonPlan, loId: string): string {
+  return loDisplay(plan, loId);
+}
+
 export function buildRailModel(
   plan: LessonPlan,
   currentSegmentId: string,
@@ -129,4 +137,43 @@ export function parseLabelResponse(raw: string, plan: LessonPlan): SegmentLabels
   if (values.length === 0) return null;
   if (new Set(values.map((v) => v.toLowerCase())).size < values.length) return null; // duplicates → treat as atomic
   return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Task 5 — deterministic LO-boundary spoken beat (generated plans)   */
+/* ------------------------------------------------------------------ */
+
+/** Non-null only when `fromSegId` → `toSegId` crosses INTO a different
+ *  LO group on a runtime-generated plan (`isGeneratedPlan`) AND that
+ *  target group is one of the plan's actual LO ids — crossing into
+ *  'intro', 'recap', or an unmatched/singleton id returns null (recap
+ *  has its own card flow; there's nothing to announce entering intro).
+ *  Curated plans never get a beat — curated sessions get the rail
+ *  label named in the brain's context instead (see
+ *  `buildLessonPlanContext`'s `currentSegmentRailLabel`). Called from
+ *  VoiceTutorRealtime.tsx's `advance_lesson` success path, using the
+ *  SAME `loGroupOf` grouping the rail (Task 1) and E6 LO-ordering
+ *  (context.ts) both use, so "crossing" here means exactly what the
+ *  rail visually shows as a new agenda item. */
+export function loBoundaryBeat(
+  plan: LessonPlan, fromSegId: string, toSegId: string,
+): { loId: string; title: string; index: number; total: number } | null {
+  if (!isGeneratedPlan(plan)) return null;
+  const los = plan.los ?? [];
+  if (los.length === 0) return null;
+  const toGroup = loGroupOf(toSegId);
+  if (loGroupOf(fromSegId) === toGroup) return null;
+  const index = los.findIndex((l) => l.id === toGroup);
+  if (index === -1) return null; // intro/recap/unmatched targets: no beat
+  return { loId: toGroup, title: railLoTitle(plan, toGroup), index: index + 1, total: los.length };
+}
+
+/** Renders a `loBoundaryBeat` result as the extra text appended to the
+ *  `advance_lesson` tool-result the brain sees this turn. The CODE
+ *  decides deterministically WHEN this fires (exactly on LO crossings,
+ *  via `loBoundaryBeat` above); the brain composes the actual spoken
+ *  sentence in its own persona voice — this instructs it to, it does
+ *  not script the words. */
+export function buildAdvanceBeatNote(beat: { title: string; index: number; total: number }): string {
+  return `You just crossed into agenda item ${beat.index} of ${beat.total}: "${beat.title}". Before teaching it, say ONE short spoken transition sentence in your own words that closes the previous item and names this one (e.g. "Nice — that's done. Next up: ${beat.title}."). Then teach. Do not skip this sentence.`;
 }

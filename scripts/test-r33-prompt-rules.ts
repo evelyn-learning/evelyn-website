@@ -61,6 +61,17 @@ test('R38 Task 11: Language policy — one language per session', () => {
   assert.ok(!prompt.includes('respond in the same language mix'), 'prompt must NOT contain old "respond in the same language mix" policy');
 });
 
+test('rail: curated agenda-item labels must be named naturally on entry, never the rail itself', () => {
+  assert.ok(
+    prompt.includes('your transition sentence must name it naturally'),
+    'prompt must include the curated agenda-item naming sentence',
+  );
+  assert.ok(
+    prompt.includes('Never read multiple labels aloud or narrate the rail itself'),
+    'prompt must warn against narrating multiple labels or the rail',
+  );
+});
+
 test('R40: referencing earlier board content requires a scroll first', () => {
   assert.ok(
     prompt.includes('Referencing earlier board content — scroll to it FIRST'),

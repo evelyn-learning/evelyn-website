@@ -18,6 +18,7 @@ import {
   isGeneratedPlan,
   filterRecapMustRemember,
 } from '../src/lib/tutor/lesson-plan/context';
+import { loBoundaryBeat, buildAdvanceBeatNote } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
 
@@ -117,6 +118,36 @@ check(
 check(
   'cross-LO ALLOWED once lo-1-try is in completedSegmentIds',
   resolveAdvanceTarget(genPlan, 'lo-1-worked', 'lo-2-hook', { completedSegmentIds: new Set(['lo-1-try']) }) === 'lo-2-hook',
+);
+
+/* ------------------------------------------------------------------ */
+/* loBoundaryBeat + buildAdvanceBeatNote — deterministic LO-boundary   */
+/* spoken beat wired into the advance_lesson tool-result text (Task 5) */
+/* ------------------------------------------------------------------ */
+
+check(
+  'loBoundaryBeat fires on a generated-plan LO crossing (lo-1-try -> lo-2-hook)',
+  (() => {
+    const beat = loBoundaryBeat(genPlan, 'lo-1-try', 'lo-2-hook');
+    return beat !== null && beat.loId === 'lo-2' && beat.index === 2 && beat.total === 2;
+  })(),
+);
+check(
+  'loBoundaryBeat: advance tool-result text for a generated-plan LO crossing contains "agenda item" and the LO title',
+  (() => {
+    const beat = loBoundaryBeat(genPlan, 'lo-1-try', 'lo-2-hook');
+    if (!beat) return false;
+    const note = buildAdvanceBeatNote(beat);
+    return note.includes('agenda item') && note.includes(beat.title);
+  })(),
+);
+check(
+  'loBoundaryBeat: no beat within the same LO group (lo-1-hook -> lo-1-try)',
+  loBoundaryBeat(genPlan, 'lo-1-hook', 'lo-1-try') === null,
+);
+check(
+  'loBoundaryBeat: curated plans never get a beat',
+  loBoundaryBeat(curatedPlan, 'lo-1-hook', 'lo-2-hook') === null,
 );
 // recap-wrapup-fix (root cause: prod session portal-db21d8f2 — student
 // wrapped up early from lo-10-concept ("I'm done, can you recap the

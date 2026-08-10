@@ -13,6 +13,8 @@ import {
   buildLabelPrompt,
   parseLabelResponse,
   railStageLabel,
+  loBoundaryBeat,
+  buildAdvanceBeatNote,
 } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
@@ -114,6 +116,42 @@ function mkPlan(opts: {
 // Case 4: suppression — pendingPicker → null
 {
   assert(buildRailModel(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), 'hook', new Set(), null) === null, 'picker suppressed');
+}
+
+/* ------------------------------------------------------------------ */
+/* loBoundaryBeat — deterministic LO-boundary spoken beat (Task 5)    */
+/* ------------------------------------------------------------------ */
+
+{
+  const gen = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [
+      { id: 'lo-a', description: 'Explain photosynthesis inputs and outputs', shortTitle: 'Photosynthesis inputs' },
+      { id: 'lo-b', description: 'Trace the light reactions step by step', shortTitle: 'Trace the light' },
+    ],
+    segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'lo-b-hook', 'lo-b-concept', 'recap'],
+  });
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  assert(loBoundaryBeat(gen, 'lo-a-try', 'lo-b-hook')!.title === 'Trace the light', 'beat on crossing (derived title)');
+  assert(loBoundaryBeat(gen, 'lo-a-hook', 'lo-a-concept') === null, 'no beat within group');
+  assert(loBoundaryBeat(gen, 'intro', 'lo-a-hook')!.index === 1, 'intro→first LO counts as crossing, index 1-based');
+  assert(loBoundaryBeat(gen, 'lo-b-concept', 'recap') === null, 'crossing into recap: no beat (recap has its own card flow)');
+  assert(loBoundaryBeat(curated, 'hook', 'concept-cx') === null, 'curated: never');
+}
+
+/* ------------------------------------------------------------------ */
+/* buildAdvanceBeatNote — tool-result text wording                    */
+/* ------------------------------------------------------------------ */
+
+{
+  const note = buildAdvanceBeatNote({ title: 'Trace the light', index: 2, total: 2 });
+  assert(note.includes('agenda item 2 of 2'), 'buildAdvanceBeatNote includes agenda item index/total');
+  assert(note.includes('Trace the light'), 'buildAdvanceBeatNote includes the LO title');
+  assert(/ONE short spoken transition sentence/.test(note), 'buildAdvanceBeatNote instructs ONE short spoken transition sentence');
 }
 
 /* ------------------------------------------------------------------ */

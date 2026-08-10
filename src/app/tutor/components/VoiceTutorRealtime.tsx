@@ -62,6 +62,7 @@ import {
   filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
+import { loBoundaryBeat, buildAdvanceBeatNote } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -4928,6 +4929,27 @@ export function VoiceTutorRealtime({
             // app-side deterministic Skip-button advance (FIX B) runs the
             // exact same transition logic.
             applyResolvedAdvance(plan, fromSegId, next);
+            // Task 5 — deterministic LO-boundary spoken beat. Non-null
+            // only for a runtime-generated plan crossing INTO a
+            // different LO group (loBoundaryBeat mirrors the exact
+            // grouping the rail + E6 LO-ordering use). Pushed through
+            // the same rejected→retry feedback channel Rule 12's
+            // messages use above, so the beat note reaches the brain
+            // as tool-result text for THIS advance_lesson call and the
+            // brain's very next sentence names the new agenda item in
+            // its own voice — deterministic trigger, persona-voiced
+            // wording. Curated plans and within-LO advances never
+            // reach here (loBoundaryBeat returns null for both); this
+            // is the brain-turn advance_lesson path only — the
+            // Skip-button (FIX B, applyResolvedAdvance's other caller)
+            // and inferred advances are not brain-turn contexts and
+            // intentionally get no beat.
+            const beat = loBoundaryBeat(plan, fromSegId, next);
+            if (beat) {
+              console.log(`[VoiceTutorRealtime] LO-boundary beat: "${fromSegId}" → "${next}" crosses into agenda item ${beat.index}/${beat.total} ("${beat.title}")`);
+              onDebugEvent?.('lo_boundary_beat', `${fromSegId} → ${next} · item ${beat.index}/${beat.total} "${beat.title}"`);
+              rejected.push({ action: 'advance_lesson', reason: buildAdvanceBeatNote(beat) });
+            }
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
             // 2026-05-15: when `to: "next"` from the LAST segment fails
@@ -8371,7 +8393,7 @@ export function VoiceTutorRealtime({
         // this — `lessonPlanRef.current` is null.
         const plan = lessonPlanRef.current;
         const baseLessonPlanContext = plan && currentSegmentIdRef.current
-          ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current])
+          ? buildLessonPlanContext(plan, currentSegmentIdRef.current, [...completedSegmentIdsRef.current], segmentLabelsRef.current)
           : undefined;
         // Task C1 (flag-gated): attach the resolved session mode so
         // formatLessonPlanContext renders the plan-as-seed framing
