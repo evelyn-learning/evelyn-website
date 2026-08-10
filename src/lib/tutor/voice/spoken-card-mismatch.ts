@@ -11,20 +11,54 @@
  * feedback loop — the wrong card then re-enters context on the NEXT turn
  * as ground truth, snowballing the error.
  *
- * Mechanism: extract the card latex's top-level equality RHS and split it
- * into a signed-term multiset (+/- at brace-depth 0). Do the same for
- * every inline-math equality found in the turn's spoken sentences. A
- * transposition error like the incident above shares NO term if terms are
- * compared whole ("2\cos t" vs "2\sin t" vs "2t\cos t" vs "2t\sin t" are
- * four distinct strings) — so the "is this even about the same
- * expression" signal is computed at a LOOSER grain: each term's function/
- * variable core with its leading numeric-ish coefficient stripped ("2\cos
- * t" and "2t\cos t" both key to "\cos t"). Two RHS's are flagged when they
- * share >=1 LOOSE term (same functions/variables in play — the false-
- * positive guard: genuinely unrelated equations share none) but their
- * STRICT signed multisets (coefficient + sign included) differ. Identical
- * RHS's (up to term order) match strictly and pass; a coefficient swap or
- * sign flip matches loosely but differs strictly and is flagged.
+ * Mechanism (FP-hardening review round, 2026-08-10): extract the card
+ * latex's top-level equality RHS and split it into a signed-term multiset
+ * (+/- at brace-depth 0). Do the same for every inline-math equality found
+ * in the turn's spoken sentences. Each term is further split into a
+ * COEFFICIENT token (a leading numeric-ish multiplier, e.g. "2" / "2t") and
+ * a LOOSE base (the remainder — "\cos t" / "x" / a bare constant with no
+ * coefficient at all). A transposition error like the incident above
+ * shares NO term if terms are compared whole ("2\cos t" vs "2\sin t" vs
+ * "2t\cos t" vs "2t\sin t" are four distinct strings), so "is this even
+ * about the same expression" is judged at the coefficient/base level
+ * instead:
+ *
+ *   PERMUTATION GATE — a spoken RHS only QUALIFIES for comparison against
+ *   the card when its terms are built from the exact same PARTS as the
+ *   card's: the multiset of loose bases matches AND the multiset of
+ *   coefficient tokens matches (same ingredients, count included — not
+ *   just "shares one term"). This is what the original "shares >= 1 loose
+ *   term" gate got wrong: "2x + 7" spoken against a "2x + 4" card shared
+ *   the "2x" term and used to flag even though 7 and 4 are just two
+ *   different unrelated constants (a recap / multi-part / aside shape) —
+ *   under the full-multiset gate, base multisets {x,7} vs {x,4} don't
+ *   match, so it's correctly treated as unrelated. The real incident
+ *   passes the gate: card {2·cos t, 2t·sin t} vs spoken {2·sin t,
+ *   2t·cos t} have the SAME coefficient multiset {2, 2t} and the SAME base
+ *   multiset {cos t, sin t} — same parts, different pairing.
+ *
+ *   LAST-ASSERTION-WINS — of every spoken equality that qualifies (passes
+ *   the gate above), only the LAST one in turn order is judged against the
+ *   card, mirroring Fix A's (praise-contradiction.ts) "final assertion
+ *   wins" design. This absorbs in-turn self-correction: "You said
+ *   $y=3x-2$ by mistake — it should be $y=3x+2$" has a first equality that
+ *   legitimately qualifies (same coefficient/base parts as the card, just
+ *   a sign typo) and would flag under a first-match rule — but it's
+ *   superseded by the later, correct equality, so only that final one is
+ *   judged. A qualifying equality is then flagged only when its STRICT
+ *   signed-term multiset (coefficient + sign included) differs from the
+ *   card's; identical (up to term order) RHS's pass.
+ *
+ *   KNOWN LIMITATION (accepted, not fixed here): "two parallel lines in
+ *   one breath" — spoken text asserting BOTH "$y=2x+3$" and "$y=2x-3$" in
+ *   the same turn against a card showing just "$y=2x+3$" — is structurally
+ *   IDENTICAL to a real self-correction sign-flip typo (case 1 in
+ *   test-spoken-card-mismatch.ts, kept as a documented "flags" case).
+ *   Last-assertion-wins has no syntactic signal to tell "two intentionally
+ *   distinct lines stated together" apart from "a typo, corrected" — both
+ *   are [qualifying-match, qualifying-sign-flip] in raw text order, and
+ *   disambiguating them would need discourse-level understanding (an LLM
+ *   judge), not a deterministic parse. Accepted false-positive class.
  *
  * Pure module — no imports, no side effects. Never throws.
  */
@@ -74,12 +108,38 @@ interface SignedTerm {
   /** Full normalized body, coefficient included — used for the STRICT
    * equality/differ check. */
   strictKey: string;
-  /** Body with a short leading numeric (optionally +1 trailing letter)
-   * coefficient stripped — used only for the LOOSE "same expression"
-   * overlap gate. Falls back to strictKey when stripping would empty it
-   * (e.g. a bare numeric term), so two different plain constants never
-   * collide via an empty key. */
+  /** The term's base with any leading numeric-ish coefficient peeled off
+   * (e.g. "2\cos t" -> "\cos t", "2t\sin t" -> "\sin t", "2x" -> "x") —
+   * one half of the structural "same parts" permutation gate. A bare
+   * constant term (e.g. "7") has no coefficient to peel and IS its own
+   * base, so two different constants never collide. */
   looseKey: string;
+  /** The coefficient token peeled off to produce looseKey ("2", "2t", or
+   * "" when the term had none) — the other half of the permutation gate. */
+  coefficient: string;
+}
+
+/** Splits a normalized term body into {coefficient, base}. A leading
+ * digit run is the coefficient magnitude; if exactly one bare letter
+ * immediately follows AND something further remains after that letter
+ * (e.g. "2t\sin t" -> digits "2", letter "t", remainder "\sint"), the
+ * letter joins the coefficient ("2t") and the remainder is the base. If
+ * nothing (or only that one letter) follows the digits, the digits alone
+ * are the coefficient and whatever's left is the base (e.g. "2x" ->
+ * coefficient "2", base "x"). A bare numeric term with nothing after the
+ * digits (e.g. "7") has NO coefficient — the whole term is its own base. */
+function splitCoefficientAndBase(strictKey: string): { coefficient: string; base: string } {
+  const digitMatch = strictKey.match(/^\d+(?:\.\d+)?/);
+  if (!digitMatch) return { coefficient: '', base: strictKey };
+  const digits = digitMatch[0];
+  const rest = strictKey.slice(digits.length);
+  if (rest.length === 0) {
+    return { coefficient: '', base: strictKey };
+  }
+  if (/^[a-zA-Z]/.test(rest) && rest.length > 1) {
+    return { coefficient: digits + rest[0], base: rest.slice(1) };
+  }
+  return { coefficient: digits, base: rest };
 }
 
 function parseSignedTerm(raw: string): SignedTerm {
@@ -89,9 +149,8 @@ function parseSignedTerm(raw: string): SignedTerm {
   if (body.startsWith('+')) body = body.slice(1);
   else if (body.startsWith('-')) { sign = '-'; body = body.slice(1); }
   const strictKey = normalizeMathText(body);
-  const stripped = strictKey.replace(/^\d+[a-zA-Z]?/, '');
-  const looseKey = stripped.length > 0 ? stripped : strictKey;
-  return { sign, strictKey, looseKey };
+  const { coefficient, base } = splitCoefficientAndBase(strictKey);
+  return { sign, strictKey, looseKey: base, coefficient };
 }
 
 /** Position of the first top-level ('{'/'}' depth 0) '=' in `s`, or -1. */
@@ -120,32 +179,45 @@ function termMultiset(rhs: string): SignedTerm[] {
     .filter((t) => t.strictKey.length > 0);
 }
 
-/** Multiset equality (order-independent) on the STRICT (sign+coefficient
- * included) key. */
-function strictSetsEqual(a: SignedTerm[], b: SignedTerm[]): boolean {
+/** Order-independent multiset equality on plain string keys. */
+function multisetEqual(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
-  const bKeys = b.map((t) => `${t.sign}${t.strictKey}`);
-  const used = new Array(bKeys.length).fill(false);
-  outer: for (const t of a) {
-    const key = `${t.sign}${t.strictKey}`;
-    for (let i = 0; i < bKeys.length; i++) {
-      if (!used[i] && bKeys[i] === key) { used[i] = true; continue outer; }
-    }
-    return false;
+  const remaining = [...b];
+  for (const x of a) {
+    const idx = remaining.indexOf(x);
+    if (idx === -1) return false;
+    remaining.splice(idx, 1);
   }
   return true;
 }
 
-/** True when any term's LOOSE key appears in the other side's LOOSE-key
- * set — the "these two RHS's are about the same expression" gate. */
-function shareLooseTerm(a: SignedTerm[], b: SignedTerm[]): boolean {
-  const bLoose = new Set(b.map((t) => t.looseKey));
-  return a.some((t) => bLoose.has(t.looseKey));
+/** Multiset equality (order-independent) on the STRICT (sign+coefficient
+ * included) key. */
+function strictSetsEqual(a: SignedTerm[], b: SignedTerm[]): boolean {
+  return multisetEqual(
+    a.map((t) => `${t.sign}${t.strictKey}`),
+    b.map((t) => `${t.sign}${t.strictKey}`),
+  );
+}
+
+/** The permutation gate: true only when both sides are built from the
+ * exact same PARTS — the full multiset of loose bases matches AND the
+ * full multiset of coefficient tokens matches (sign-agnostic; term count
+ * included via the underlying length check). This is the false-positive
+ * guard: two RHS's that merely share one term in passing (different
+ * problems, a recap aside) don't match on the full multiset and are
+ * ignored; the real incident's coefficient/base sets line up exactly
+ * (same parts, different pairing) and qualifies for the strict check. */
+function sameStructure(a: SignedTerm[], b: SignedTerm[]): boolean {
+  return (
+    multisetEqual(a.map((t) => t.looseKey), b.map((t) => t.looseKey)) &&
+    multisetEqual(a.map((t) => t.coefficient), b.map((t) => t.coefficient))
+  );
 }
 
 /** Finds every inline-math span ($...$ or \(...\)) containing a top-level
- * '=' across the given sentences and returns each one's RHS term
- * multiset. */
+ * '=' across the given sentences, IN TURN ORDER, and returns each one's
+ * RHS term multiset. */
 function extractSpokenEqualityMultisets(spokenSentences: string[]): SignedTerm[][] {
   const spanRe = /\$([^$]+)\$|\\\(([\s\S]+?)\\\)/g;
   const out: SignedTerm[][] = [];
@@ -163,6 +235,13 @@ function extractSpokenEqualityMultisets(spokenSentences: string[]): SignedTerm[]
   return out;
 }
 
+function describeTerms(terms: SignedTerm[]): string {
+  return terms
+    .map((t) => `${t.sign === '-' ? '-' : ''}${t.strictKey}`)
+    .join(' + ')
+    .replace(/\+ -/g, '- ');
+}
+
 export function checkSpokenCardMismatch(
   spokenSentences: string[],
   cardLatex: string,
@@ -173,16 +252,21 @@ export function checkSpokenCardMismatch(
   if (cardTerms.length === 0) return { mismatch: false };
 
   const spokenMultisets = extractSpokenEqualityMultisets(spokenSentences);
-  for (const spokenTerms of spokenMultisets) {
-    if (spokenTerms.length === 0) continue;
-    if (!shareLooseTerm(spokenTerms, cardTerms)) continue; // unrelated equation — ignore
-    if (strictSetsEqual(spokenTerms, cardTerms)) continue; // identical (up to reorder) — ignore
-    const spokenStr = spokenTerms.map((t) => `${t.sign === '-' ? '-' : ''}${t.strictKey}`).join(' + ').replace(/\+ -/g, '- ');
-    const cardStr = cardTerms.map((t) => `${t.sign === '-' ? '-' : ''}${t.strictKey}`).join(' + ').replace(/\+ -/g, '- ');
-    return {
-      mismatch: true,
-      reason: `spoken RHS "${spokenStr}" vs card RHS "${cardStr}"`,
-    };
-  }
-  return { mismatch: false };
+  // Permutation gate first: only equalities built from the SAME parts as
+  // the card even enter consideration — a genuinely different value
+  // (different base/coefficient multiset) is ignored outright, not just
+  // out-voted by a later equality.
+  const qualifying = spokenMultisets.filter(
+    (terms) => sameStructure(terms, cardTerms),
+  );
+  if (qualifying.length === 0) return { mismatch: false };
+  // Last-assertion-wins: only the turn's SETTLED final equality among the
+  // qualifying ones is judged — an earlier qualifying equality that gets
+  // corrected later (self-correction) is superseded, not flagged.
+  const finalTerms = qualifying[qualifying.length - 1];
+  if (strictSetsEqual(finalTerms, cardTerms)) return { mismatch: false };
+  return {
+    mismatch: true,
+    reason: `spoken RHS "${describeTerms(finalTerms)}" vs card RHS "${describeTerms(cardTerms)}"`,
+  };
 }
