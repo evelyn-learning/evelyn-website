@@ -63,7 +63,6 @@ export function AgendaRail({ items, orientation }: AgendaRailProps) {
     return (
       <div className="flex flex-col gap-1.5 overflow-y-auto p-2" data-testid="agenda-rail" data-orientation="vertical">
         {items.map(tab)}
-        {overlay}
       </div>
     );
   }

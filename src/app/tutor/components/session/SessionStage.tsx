@@ -54,7 +54,7 @@ export interface SessionStageProps {
   hasPlan: boolean;
   isFreePractice: boolean;
   objective?: string;            // current LO / goal chip text
-  beats?: ReactNode;             // <LessonPlanProgress/> (restyled host)
+  beats?: ReactNode;             // practice meter; legacy plan strip (<LessonPlanProgress/>) only when the agenda rail is off
   /** Agenda rail (2026-08-10): persistent content-labeled progress rail,
    *  horizontal orientation, rendered above the board when not fullscreen.
    *  Absent/undefined ⇒ no rail (flag off, no plan, or single-segment plan). */
@@ -681,9 +681,14 @@ export default function SessionStage(props: SessionStageProps) {
   // vertical left overlay while fullscreen, which has no room for a top row).
   const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
-    const onFs = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onFs = () => setIsFullscreen(Boolean((document as any).fullscreenElement || (document as any).webkitFullscreenElement));
     document.addEventListener('fullscreenchange', onFs);
-    return () => document.removeEventListener('fullscreenchange', onFs);
+    document.addEventListener('webkitfullscreenchange', onFs);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFs);
+      document.removeEventListener('webkitfullscreenchange', onFs);
+    };
   }, []);
 
   return (

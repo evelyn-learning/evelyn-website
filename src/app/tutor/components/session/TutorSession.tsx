@@ -8,7 +8,8 @@
  * It owns the session-VIEW state (transcript, whiteboard, lesson progress,
  * voice/presence signals) and the simple session-internal handlers, and
  * composes `<SessionStage>` with its slots (WhiteboardCanvas, VoiceTutorRealtime,
- * TranscriptView, AgendaRail, SessionControls + the ⋯ pacing/humor menu).
+ * TranscriptView, AgendaRail (LessonPlanProgress when the flag is off),
+ * SessionControls + the ⋯ pacing/humor menu).
  *
  * Page-orchestration concerns (plan swap/confirm, freestyle plan-gen, debug,
  * analytics, homework upload, the free-practice nudge picker) are OPTIONAL
@@ -25,6 +26,7 @@ import { TranscriptView } from '../TranscriptView';
 import { SessionControls } from '../SessionControls';
 import { WhiteboardCanvas } from '../whiteboard';
 import { VoiceTutorRealtime, type RealtimeHandle } from '../VoiceTutorRealtime';
+import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
 import { AgendaRail } from './AgendaRail';
@@ -1093,10 +1095,13 @@ export default function TutorSession(props: TutorSessionProps) {
     </div>
   ) : null;
   // Agenda rail (2026-08-10) replaces the old LessonPlanProgress strip as the
-  // `beats` slot's plan-progress content; the practice meter above stays the
-  // `beats` content while practice mode is active. LessonPlanProgress.tsx
-  // itself stays — the legacy flag-OFF /tutor path (page.tsx) still uses it.
-  const beatsEl = practiceMeterEl ?? null;
+  // `beats` slot's plan-progress content when the flag is on — the rail
+  // handles plan progress instead. When the flag is off, fall back to the
+  // exact pre-rail composition (practice meter still takes precedence) so
+  // flag-off is byte-identical to the old behavior.
+  const beatsEl = practiceMeterEl ?? (TUTOR_AGENDA_RAIL ? null : (lessonProgress.plan ? (
+    <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
+  ) : null));
 
   const railItems = TUTOR_AGENDA_RAIL && lessonProgress.plan
     ? buildRailModel(lessonProgress.plan, lessonProgress.currentSegmentId ?? '',
