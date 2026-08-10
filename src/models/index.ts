@@ -85,3 +85,20 @@ export { ResearchJob } from "./ResearchJob";
 export type { IResearchJob, ICandidate } from "./ResearchJob";
 export { OutreachToken, type IOutreachToken } from "./OutreachToken";
 export { ProviderCredit, type IProviderCredit } from "./ProviderCredit";
+export {
+  EvidenceEventModel,
+  type IEvidenceEvent,
+  type IEvidenceEventDoc,
+} from "./EvidenceEvent";
+export {
+  LearnerStateProjectionModel,
+  buildLearnerStateProjectionId,
+  type ILearnerStateProjection,
+  type ILearnerStateProjectionDoc,
+} from "./LearnerStateProjection";
+export {
+  LearnerStateSnapshotModel,
+  type ILearnerStateSnapshot,
+  type ILearnerStateSnapshotLo,
+} from "./LearnerStateSnapshot";
+export { EloRatingModel, type IEloRating, type IEloRatingDoc } from "./EloRating";
