@@ -181,6 +181,22 @@ export function makeToolResultProvider(
   difficultyBias?: number
 ): BrainTurnInput['toolResultProvider'] {
   if (!ctx) return undefined;
+  // Fix (2026-08-10, code-review finding): this closure is created ONCE
+  // per HTTP request, but claude-brain.ts's agent loop can call
+  // advance_lesson multiple times in the SAME turn (up to
+  // MAX_AGENT_ITERATIONS). `ctx.currentSegmentId` is the TURN-START
+  // position and never changes — a second advance in the same turn was
+  // resolving `curIdx` (off-topic-skip scanning) and loBoundaryBeat's
+  // fromSegId against the stale turn-start segment instead of the
+  // segment the FIRST advance actually landed on, which could both
+  // misresolve "next"/"previous" off a stale index AND emit a spurious
+  // duplicate LO-boundary beat for a group already entered earlier in
+  // the same turn. `liveSegmentId` tracks the provider's own view of
+  // "current position," mutated after each successfully resolved
+  // advance_lesson call — closure state private to this provider
+  // instance, not shared with anything outside it, and `ctx` itself is
+  // never mutated.
+  let liveSegmentId = ctx.currentSegmentId;
   return async (name, args) => {
     // Incoherence-fix: advance_lesson failures (end-of-plan, unknown
     // segment id) must be reported back to the brain. Without this,
@@ -195,7 +211,7 @@ export function makeToolResultProvider(
     if (name === 'advance_lesson') {
       const to = String((args as { to?: unknown }).to ?? 'next');
       const segIdx = ctx.segmentIndex;
-      const curIdx = segIdx.findIndex((s) => s.id === ctx.currentSegmentId);
+      const curIdx = segIdx.findIndex((s) => s.id === liveSegmentId);
       const isOffTopic = (s: { offTopic?: boolean }) => s.offTopic === true;
       let resolvedSegmentId: string | null = null;
       if (to === 'next') {
@@ -223,7 +239,7 @@ export function makeToolResultProvider(
           message: to === 'next'
             ? 'Cannot advance — no more on-topic segments remain in the lesson plan. Do NOT pretend to advance. Preferred next move: keep the student engaged with more practice on the concepts already covered via generate_problem (difficulty="same" or "slightly_harder"). Only suggest wrap-up if the student has signaled they want to stop. DO NOT call show_segment_card or show_problem assuming a fresh segment is now active.'
             : `Cannot advance to "${to}" — that segment id is either not in this plan or is marked off-topic and cannot be entered. Either correct the id or call generate_problem to continue practice.`,
-          currentSegmentId: ctx.currentSegmentId,
+          currentSegmentId: liveSegmentId,
           segmentIndex: segIdx,
         });
       }
@@ -256,17 +272,29 @@ export function makeToolResultProvider(
       // of truth for WHEN the beat fires (generated plans only, LO
       // group actually changes, target is a real LO id — never intro/
       // recap/curated) — nothing here duplicates or bypasses that
-      // gate. `ctx.plan.los` only carries {id, description} (no
-      // shortTitle), so the shim plan below falls back to a capped
-      // description for the title; `ctx.isGeneratedPlan` (Rule 12(b)
-      // fix) already tells us generated-vs-curated without needing
-      // plan.metadata directly.
+      // gate. `ctx.plan.los` carries `shortTitle` (added in the
+      // shortTitle end-to-end fix) so the title matches what the rail
+      // displays client-side, falling back to a capped description
+      // when a LO lacks one; `ctx.isGeneratedPlan` (Rule 12(b) fix)
+      // already tells us generated-vs-curated without needing
+      // plan.metadata directly. fromSegId is `liveSegmentId`, NOT
+      // `ctx.currentSegmentId` — see the closure-scoped comment above —
+      // so a second advance_lesson call later in the SAME turn computes
+      // the crossing against where the FIRST call actually landed, not
+      // the turn-start position, which is what prevents a spurious
+      // duplicate beat for an LO group already entered this turn.
       const beatPlan = {
         metadata: { generatedFromText: ctx.isGeneratedPlan === true },
         los: ctx.plan.los,
       } as unknown as LessonPlan;
-      const beat = loBoundaryBeat(beatPlan, ctx.currentSegmentId, resolvedSegmentId);
+      const beat = loBoundaryBeat(beatPlan, liveSegmentId, resolvedSegmentId);
       const beatNote = beat ? ` ${buildAdvanceBeatNote(beat)}` : '';
+      // Advance the closure's own live position AFTER using the prior
+      // value for both curIdx resolution and the beat above — a later
+      // advance_lesson call in this same turn (agent loop, up to
+      // MAX_AGENT_ITERATIONS) now resolves relative to where THIS call
+      // landed, not the frozen turn-start ctx.currentSegmentId.
+      liveSegmentId = resolvedSegmentId;
       return JSON.stringify({
         ok: true,
         advancedTo: resolvedSegmentId,

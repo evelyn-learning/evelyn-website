@@ -565,6 +565,44 @@ async function runAdvanceToolResultProviderChecks(): Promise<void> {
       && !String(shortTitleResult.instruction).includes('"Trace the light reactions"'),
     JSON.stringify(shortTitleResult),
   );
+
+  // Code-review fix (2026-08-10): the provider closure is created ONCE
+  // per HTTP request, but the agent loop can call advance_lesson
+  // multiple times in the SAME turn (MAX_AGENT_ITERATIONS). Prove the
+  // SAME provider instance tracks ITS OWN live segment position across
+  // repeated calls rather than resolving every call against the frozen
+  // turn-start ctx.currentSegmentId. Sequence: intro -> lo-1 (beat 1
+  // of 2) -> lo-2 (beat 2 of 2, no leftover LO-1 text) -> a second
+  // lo-2 segment (no beat — this third call is the one that actually
+  // distinguishes the fix: pre-fix, loBoundaryBeat would compare
+  // against the frozen 'intro' turn-start position, see 'intro' !=
+  // 'lo-2' groups, and spuriously re-fire the LO-2 beat a second time
+  // for content already announced by call 2).
+  const multiAdvanceCtx = buildLessonPlanContext(genPlan, 'intro')!;
+  const multiAdvanceProvider = makeToolResultProvider(multiAdvanceCtx, [], []);
+
+  const multiAdvance1 = JSON.parse(await multiAdvanceProvider!('advance_lesson', { to: 'lo-1-hook' }));
+  check(
+    'makeToolResultProvider (route.ts) multi-advance turn, call 1 (intro -> lo-1-hook): beat for LO 1 of 2',
+    multiAdvance1.ok === true && String(multiAdvance1.instruction).includes('agenda item 1 of 2: "LO one"'),
+    JSON.stringify(multiAdvance1),
+  );
+
+  const multiAdvance2 = JSON.parse(await multiAdvanceProvider!('advance_lesson', { to: 'lo-2-hook' }));
+  check(
+    'makeToolResultProvider (route.ts) multi-advance turn, call 2 (lo-1-hook -> lo-2-hook, SAME provider instance): beat for LO 2 of 2, NOT a duplicate LO-1 beat',
+    multiAdvance2.ok === true
+      && String(multiAdvance2.instruction).includes('agenda item 2 of 2: "LO two"')
+      && !String(multiAdvance2.instruction).includes('agenda item 1 of 2'),
+    JSON.stringify(multiAdvance2),
+  );
+
+  const multiAdvance3 = JSON.parse(await multiAdvanceProvider!('advance_lesson', { to: 'lo-2-concept' }));
+  check(
+    'makeToolResultProvider (route.ts) multi-advance turn, call 3 (lo-2-hook -> lo-2-concept, WITHIN lo-2, SAME provider instance): NO beat (proves liveSegmentId, not frozen ctx.currentSegmentId, drives the crossing check)',
+    multiAdvance3.ok === true && !String(multiAdvance3.instruction).includes('agenda item'),
+    JSON.stringify(multiAdvance3),
+  );
 }
 
 runAdvanceToolResultProviderChecks()
