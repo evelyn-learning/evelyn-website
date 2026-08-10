@@ -1214,9 +1214,47 @@ function isCurrencyPairingArtifact(inner: string): boolean {
   return !MATH_OPERAND_OP_RE.test(masked);
 }
 
+/** LaTeX digit-group ("thousands separator") idioms — `{,}`, `\,`, and
+ *  `,\!` — must become a plain comma BEFORE anything downstream can split
+ *  them apart. Two later passes would otherwise do exactly that: the
+ *  `\,`/`\!` kerning-macro rule in MATH_COMMAND_REPLACEMENTS (`\[,;!:]` →
+ *  a bare space, run inside verbalizeMathForSpeech below) and speakMathSpan's
+ *  own residual `[{}]` → space strip at the end of its chain. Either one
+ *  turns "12{,}000"/"12\,000" into "12 000"-shaped text, which Cartesia
+ *  reads as "twelve" then "zero zero zero" instead of "twelve thousand"
+ *  (R38, live session portal-74590b27: "$P'(5) = 12{,}000$ people per
+ *  year" spoke "…12, 000 people…").
+ *
+ *  Scoped narrowly to the DIGIT-GROUP shape — a digit immediately
+ *  followed by the idiom, followed by EXACTLY a 3-digit run (lookahead
+ *  `\d{3}` that isn't itself followed by a 4th digit) — so genuine `\,`
+ *  SPACING is untouched: an integral's "$\int f(x)\,dx$" and a
+ *  coefficient's "$2\,x$" never have a 3-digit run immediately after, so
+ *  they fall through unchanged to the existing kerning-macro rule (still
+ *  "f of x dee ex" / "2 x", exactly as before this fix). Repeated groups
+ *  ("$1{,}234{,}567$") resolve correctly in one global-regex pass because
+ *  each match's lookahead only inspects the text immediately after ITS
+ *  OWN idiom, independent of any other match. Plain "12,000" (no LaTeX
+ *  idiom at all, in or out of a span) never matches any of these three
+ *  patterns and is untouched, matching the existing "comma-grouped" pin. */
+function normalizeThousandsSeparatorsForSpeech(inner: string): string {
+  const GROUP_AHEAD = String.raw`\d{3}(?!\d)`;
+  return inner
+    // 12{,}000
+    .replace(new RegExp(String.raw`(\d)\{,\}(?=${GROUP_AHEAD})`, 'g'), '$1,')
+    // 12\,000 (thin space used AS the thousands separator)
+    .replace(new RegExp(String.raw`(\d)\\,(?=${GROUP_AHEAD})`, 'g'), '$1,')
+    // 12,\!000 (comma + negative-thin-space kerning idiom)
+    .replace(new RegExp(String.raw`,\\!(?=${GROUP_AHEAD})`, 'g'), ',');
+}
+
 /** One declared span's content → spoken words (the round-21 cleanup +
  *  chem/genetics/unit prep, unchanged from the pre-R36 inline body). */
-function speakMathSpan(inner: string): string {
+function speakMathSpan(rawInner: string): string {
+  // R38: normalize thousands-separator idioms FIRST, before anything else
+  // (unit/genetics/chemistry prep, then verbalizeMathForSpeech, then the
+  // residual brace strip below) touches the span — see doc comment above.
+  const inner = normalizeThousandsSeparatorsForSpeech(rawInner);
   // Round-21: post-verbalization span cleanup — square brackets are
   // grouping (silent), and any RESIDUAL braces or unknown \commands
   // must never reach the speaker (the raw-"\lim sub x\to ay" class).

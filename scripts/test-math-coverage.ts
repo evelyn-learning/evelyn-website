@@ -554,4 +554,29 @@ function runCurated(): void {
   tts('The rod is 5 m long and the wire is 3.50 m.',
     'The rod is 5 meters long and the wire is 3.50 meters.', 'unit-spaced-m-still-meters');
   tts('It weighs 5kg and holds 500ml.', 'It weighs 5 kilograms and holds 500ml.', 'unit-glued-multiletter-kept');
+
+  // ── 27. R38 (2026-08-09, live session portal-74590b27): LaTeX digit-
+  // group ("thousands separator") idioms spoken as split digits.
+  // "$P'(5) = 12{,}000$ people per year" spoke "…12, 000 people…" — after
+  // brace-stripping, "12{,}000" became "12, 000", and Cartesia reads a
+  // detached "000" digit-by-digit ("zero zero zero") instead of as part
+  // of "twelve thousand". Same failure class for the thin-space idiom
+  // ("12\,000") and the comma+kerning idiom ("12,\!000"). Plain
+  // "12,000" (no LaTeX idiom, in or out of a span — see 'comma-grouped'
+  // above) was always correct and stays untouched. ──
+  tts("$P'(5) = 12{,}000$ people per year.",
+    "P prime of 5 equals 12,000 people per year.", 'span-thousands-braced-comma');
+  tts('The deficit was $-3{,}000$ dollars.',
+    'The deficit was minus 3,000 dollars.', 'span-thousands-braced-comma-negative');
+  tts('It grew to $12\\,000$ units.',
+    'It grew to 12,000 units.', 'span-thousands-thinspace');
+  tts('It grew to $12,\\!000$ units.',
+    'It grew to 12,000 units.', 'span-thousands-comma-negthinspace');
+  tts('The population reached $1{,}234{,}567$ that year.',
+    'The population reached 1,234,567 that year.', 'span-thousands-multi-group');
+  // Negative control: `\,` as GENUINE spacing (not a thousands separator)
+  // must keep its current reading — no 3-digit group follows it here.
+  tts('Evaluate $\\int f(x)\\,dx$ over the interval.',
+    'Evaluate the integral of f of x dee ex over the interval.', 'span-thinspace-integral-unchanged');
+  tts('so $2\\,x$ here.', 'so 2 x here.', 'span-thinspace-coefficient-unchanged');
 }
