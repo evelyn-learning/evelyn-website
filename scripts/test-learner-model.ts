@@ -1322,14 +1322,17 @@ async function runBackfillEvidenceTests() {
   }
 
   const { EvidenceEventModel } = await import('../src/models');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('../src/lib/db');
   const { MockAttempt } = await import('../src/models/MockAttempt');
-  const { ProblemBank } = await import('../src/models/ProblemBank');
   const { StudentProfileModel } = await import('../src/models/StudentProfile');
-  const { runBackfill, parseJsonlEvidence, buildMockEvidence, buildDiagnosticPriorEvidence } = await import(
-    '../scripts/backfill-evidence'
-  );
+  const {
+    runBackfill,
+    parseJsonlEvidence,
+    buildMockEvidence,
+    liveMockAttemptIdsFrom,
+    buildDiagnosticPriorEvidence,
+  } = await import('../scripts/backfill-evidence');
   const fs = await import('node:fs');
   const os = await import('node:os');
   const path = await import('node:path');
@@ -1340,9 +1343,9 @@ async function runBackfillEvidenceTests() {
 
   const studentId = `lmtest:bf:${process.pid}`;
   const attemptId = `lmtest-bf-attempt-${process.pid}`;
-  const frqItemId = `lmtest-bf-frq-${process.pid}`;
+  const attemptIdLive = `lmtest-bf-attempt-live-${process.pid}`;
   const LO_MOCK = 'lmtest.bf.lo-mock';
-  const LO_FRQ = 'lmtest.bf.lo-frq';
+  const LO_LIVE = 'lmtest.bf.lo-live';
   const LO_PRIOR = 'lmtest.bf.lo-prior';
   const LO_QUIZ = 'lmtest.bf.lo-quiz';
   const LO_PRACTICE = 'lmtest.bf.lo-practice';
@@ -1376,7 +1379,7 @@ async function runBackfillEvidenceTests() {
   async function cleanup() {
     await deleteLearnerModelData(studentId);
     await MockAttempt.deleteOne({ attemptId });
-    await ProblemBank.deleteOne({ id: frqItemId });
+    await MockAttempt.deleteOne({ attemptId: attemptIdLive });
     await StudentProfileModel.deleteOne({ _id: studentId });
     if (fs.existsSync(jsonlPath)) fs.unlinkSync(jsonlPath);
   }
@@ -1394,34 +1397,40 @@ async function runBackfillEvidenceTests() {
     );
     assert(parsedTrial.length === 0, "parseJsonlEvidence: drops 'trial:' studentId rows");
 
-    const mockEv = buildMockEvidence(
-      [
-        {
-          attemptId: 'a1',
-          studentId,
-          status: 'completed',
-          completedAt: new Date('2026-01-03T00:00:00Z'),
-          loBreakdown: [{ loId: LO_MOCK, correct: 1, total: 2 }],
-          frqGrades: [
-            { itemId: 'fx1', totalPoints: 3, maxPoints: 4 },
-            { itemId: 'fx2', totalPoints: 0, maxPoints: 4, ungraded: true },
-            { itemId: 'fx3', totalPoints: 1, maxPoints: 1 }, // no ProblemBank row → loId unresolved → dropped
-          ],
-        },
-      ],
-      new Map([['fx1', LO_FRQ]]),
+    // buildMockEvidence's MockAttemptLike no longer even has a `frqGrades`
+    // field (review finding #1: report.ts's gradeAndComplete already folds
+    // graded FRQ points into loBreakdown at grading time, so a separate
+    // frqGrades pass would double-represent the same signal at the 'mock'
+    // source weight) — the exclusion is enforced by the type, not runtime
+    // logic; this just locks in the loBreakdown → row shape.
+    const mockEv = buildMockEvidence([
+      {
+        attemptId: 'a1',
+        studentId,
+        status: 'completed',
+        completedAt: new Date('2026-01-03T00:00:00Z'),
+        loBreakdown: [{ loId: LO_MOCK, correct: 1, total: 2 }],
+      },
+      { attemptId: 'a2', studentId, status: 'in_section' }, // not completed → no rows
+    ]);
+    assert(
+      mockEv.length === 1 && mockEv[0]!.idempotencyKey === `bf:mock:a1:lo:${LO_MOCK}`,
+      'buildMockEvidence: one row per loBreakdown entry; non-completed attempts produce nothing',
     );
     assert(
-      mockEv.length === 2,
-      'buildMockEvidence: loBreakdown row + one resolvable graded frqGrades row; ungraded + loId-unresolved rows dropped',
-    );
-    assert(
-      mockEv.some((e) => e.idempotencyKey === `bf:mock:a1:lo:${LO_MOCK}` && e.outcome === 0.5 && e.source === 'mock'),
+      mockEv[0]!.outcome === 0.5 && mockEv[0]!.source === 'mock',
       'buildMockEvidence: loBreakdown row is a correct/total fraction, keyed bf:mock:<id>:lo:<loId>',
     );
+
+    const liveIds = liveMockAttemptIdsFrom([
+      `mock:${attemptIdLive}:some-item`,
+      `mock:${attemptIdLive}:other-item`,
+      `bf:mock:${attemptId}:lo:${LO_MOCK}`, // bf:-prefixed — not a live key, ignored
+      'not-a-mock-key',
+    ]);
     assert(
-      mockEv.some((e) => e.idempotencyKey === 'bf:mock:a1:fx1' && e.outcome === 0.75 && e.loId === LO_FRQ),
-      'buildMockEvidence: frqGrades row is a points fraction, keyed bf:mock:<id>:<itemId>, loId via ProblemBank lookup',
+      liveIds.size === 1 && liveIds.has(attemptIdLive),
+      'liveMockAttemptIdsFrom: extracts the attemptId from live mock:<attemptId>:<itemId> keys only, dedupes multiple items per attempt',
     );
 
     const priorEv = buildDiagnosticPriorEvidence([
@@ -1449,23 +1458,9 @@ async function runBackfillEvidenceTests() {
       responses: [],
       moduleRouting: [],
       loBreakdown: [{ loId: LO_MOCK, correct: 1, total: 2 }],
-      frqGrades: [{ itemId: frqItemId, totalPoints: 3, maxPoints: 4, parts: [] }],
       isRetake: false,
       startedAt: new Date('2026-01-03T00:00:00Z'),
       completedAt: new Date('2026-01-03T00:10:00Z'),
-    });
-    await ProblemBank.create({
-      id: frqItemId,
-      topic: 'lmtest-bf',
-      difficulty: 1,
-      loId: LO_FRQ,
-      bankScope: 'mock',
-      problemText: 'fixture',
-      answer: 'fixture',
-      source: { name: 'fixture' },
-      license: 'internal-original',
-      verifiedAt: new Date(),
-      verifierModel: 'fixture',
     });
     await StudentProfileModel.create({
       _id: studentId,
@@ -1478,27 +1473,61 @@ async function runBackfillEvidenceTests() {
       schemaVersion: 1,
     });
 
+    // Review finding #2: a MockAttempt that already has LIVE per-item mock
+    // evidence (Task 8's append points, keyed mock:<attemptId>:<itemId>)
+    // must be excluded from the backfill entirely — its loBreakdown would
+    // otherwise re-derive the same signal a second time under a bf:-prefixed
+    // key the live keys can never dedupe against.
+    await MockAttempt.create({
+      attemptId: attemptIdLive,
+      studentId,
+      formId: 'lmtest-bf-form',
+      examKey: 'lmtest-bf',
+      status: 'completed',
+      cursor: { sectionIdx: 0, moduleIdx: 0 },
+      servedModules: [],
+      responses: [],
+      moduleRouting: [],
+      loBreakdown: [{ loId: LO_LIVE, correct: 1, total: 1 }],
+      isRetake: false,
+      startedAt: new Date('2026-01-05T00:00:00Z'),
+      completedAt: new Date('2026-01-05T00:10:00Z'),
+    });
+    await appendEvidence([
+      {
+        idempotencyKey: `mock:${attemptIdLive}:some-item`,
+        studentId,
+        loId: LO_LIVE,
+        source: 'mock',
+        itemId: 'some-item',
+        outcome: 1,
+        occurredAt: new Date('2026-01-05T00:05:00Z'),
+      },
+    ]);
+
+    const countBeforeDry = await EvidenceEventModel.countDocuments({ studentId });
+    assert(countBeforeDry === 1, 'setup: only the directly-seeded live mock evidence row exists before runBackfill runs');
+
     const dryCounts = await runBackfill({ jsonlPath, dryRun: true });
     assert(
-      dryCounts.assessment >= 1 && dryCounts.practice >= 1 && dryCounts.mock >= 2 && dryCounts.diagnostic >= 1,
+      dryCounts.assessment >= 1 && dryCounts.practice >= 1 && dryCounts.mock >= 1 && dryCounts.diagnostic >= 1,
       'runBackfill dry-run: per-source counts non-zero and include this run\'s fixtures ' +
-        '(assessment/practice from jsonl, mock from loBreakdown+frqGrades, diagnostic from the prior)',
+        '(assessment/practice from jsonl, mock from loBreakdown, diagnostic from the prior)',
     );
     const countAfterDry = await EvidenceEventModel.countDocuments({ studentId });
-    assert(countAfterDry === 0, 'runBackfill dry-run: writes nothing (this student has zero evidence rows)');
+    assert(countAfterDry === countBeforeDry, 'runBackfill dry-run: writes nothing (evidence count for this student unchanged)');
 
     await runBackfill({ jsonlPath, dryRun: false });
     const EXPECTED_KEYS = [
       jsonlRows[0]!.idempotencyKey,
       jsonlRows[1]!.idempotencyKey,
       `bf:mock:${attemptId}:lo:${LO_MOCK}`,
-      `bf:mock:${attemptId}:${frqItemId}`,
       `bf:prior:${studentId}:${LO_PRIOR}`,
     ];
     const written = await EvidenceEventModel.find({ _id: { $in: EXPECTED_KEYS } }).lean();
     assert(
-      written.length === 5,
-      'runBackfill real run: all 5 expected rows land (jsonl quiz + practice, mock loBreakdown + frqGrades, prior)',
+      written.length === 4,
+      'runBackfill real run: all 4 expected rows land (jsonl quiz + practice, mock loBreakdown, prior)',
     );
     const mockLoRow = written.find((w) => w._id === `bf:mock:${attemptId}:lo:${LO_MOCK}`);
     assert(
@@ -1511,7 +1540,20 @@ async function runBackfillEvidenceTests() {
       'runBackfill: diagnostic prior row — source diagnostic, outcome = mastery score',
     );
 
-    const countBeforeRerun = await EvidenceEventModel.countDocuments({ studentId });
+    const excludedRow = await EvidenceEventModel.findById(`bf:mock:${attemptIdLive}:lo:${LO_LIVE}`);
+    assert(
+      !excludedRow,
+      'runBackfill: an attempt with existing live mock evidence is excluded entirely — no bf:mock row for it',
+    );
+    const liveRowStillThere = await EvidenceEventModel.findById(`mock:${attemptIdLive}:some-item`);
+    assert(!!liveRowStillThere, 'runBackfill: the pre-existing live evidence row itself is untouched');
+    const countAfterReal = await EvidenceEventModel.countDocuments({ studentId });
+    assert(
+      countAfterReal === countBeforeDry + written.length,
+      'runBackfill real run: total evidence count = 1 pre-existing live row + the 4 newly-backfilled rows (nothing extra for the excluded attempt)',
+    );
+
+    const countBeforeRerun = countAfterReal;
     await runBackfill({ jsonlPath, dryRun: false });
     const countAfterRerun = await EvidenceEventModel.countDocuments({ studentId });
     assert(

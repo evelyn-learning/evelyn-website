@@ -5,15 +5,15 @@
  * academy repo — quiz/practice attempts) alongside two engine-local sources,
  * so day-one learner-model estimates aren't built from a cold evidence log:
  *
- *   - MockAttempt (loBreakdown + frqGrades): `loBreakdown` gives one coarse
- *     per-LO row per completed attempt (MCQ, and FRQ contributions already
- *     folded in for attempts graded after the Task-8 fold-in code shipped —
- *     see gradeAndComplete in mock-exam/report.ts); `frqGrades` additionally
- *     gives one finer per-item row per successfully-graded FRQ (loId resolved
- *     via ProblemBank, since frqGrades carries no loId of its own) — this
- *     recovers per-item granularity for older attempts whose loBreakdown
- *     predates that fold-in. Ungraded FRQs (grader failure) are skipped —
- *     not student evidence.
+ *   - MockAttempt.loBreakdown: one coarse per-LO row per completed attempt.
+ *     `loBreakdown` is MCQ+FRQ combined — `gradeAndComplete` (mock-exam/
+ *     report.ts) has folded successfully-graded FRQ points into it at
+ *     grading time since the mock platform launched (pre-existing prod
+ *     behavior, not something Task 8 added), so this is already the full
+ *     per-attempt signal. `frqGrades` is deliberately NOT walked separately:
+ *     doing so would re-derive the same FRQ signal a second time, and at
+ *     'mock' source weight (3.0, the estimator's highest) that's a 2-4x
+ *     amplification per FRQ-touched LO, not a granularity gain.
  *   - StudentProfile.mastery priors: one low-weight ('diagnostic' source —
  *     the estimator's lowest source weight) prior event per existing mastery
  *     entry, so an LO whose only history predates the evidence log entirely
@@ -21,7 +21,16 @@
  *
  * Idempotent: every row's idempotencyKey is `bf:`-prefixed (distinguishable
  * from the live append points' `mock:<attemptId>:<itemId>` etc. keys) and
- * appendEvidence's insertMany dedupes on it — safe to re-run.
+ * appendEvidence's insertMany dedupes on it — safe to re-run. That `bf:` vs
+ * `mock:` prefix split means the built-in `_id` dedup gives ZERO protection
+ * against double-counting a mock attempt that has BOTH a live per-item
+ * evidence trail (Task 8's append points, keyed `mock:<attemptId>:<itemId>`)
+ * AND this script's own loBreakdown-derived row for the same attempt — e.g.
+ * a student who completes a mock in the window between the engine deploy
+ * that turned on live mock evidence and the prod run of this backfill. Any
+ * MockAttempt with at least one existing `source: 'mock'` EvidenceEvent is
+ * therefore excluded from the backfill entirely (see `liveMockAttemptIdsFrom`
+ * / the exclusion in `runBackfill`) — it already has real evidence.
  *
  * Ordering: the WHOLE evidence set (JSONL + MockAttempt + priors) is sorted
  * oldest-first before being chunked into batches of 500 and appended — Elo
@@ -41,8 +50,8 @@ import fs from 'node:fs';
 import connectDB from '@/lib/db';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import type { EvidenceSource } from '@/lib/tutor/learner-model/estimator';
+import { EvidenceEventModel } from '@/models';
 import { MockAttempt } from '@/models/MockAttempt';
-import { ProblemBank } from '@/models/ProblemBank';
 import { StudentProfileModel } from '@/models/StudentProfile';
 
 const BATCH_SIZE = 500;
@@ -93,7 +102,7 @@ export function parseJsonlEvidence(raw: string): EvidenceInput[] {
   return inputs;
 }
 
-// --- Source 2: MockAttempt (loBreakdown + frqGrades) ------------------------
+// --- Source 2: MockAttempt.loBreakdown --------------------------------------
 
 /** Structural subset of IMockAttempt this script reads. */
 export interface MockAttemptLike {
@@ -102,19 +111,17 @@ export interface MockAttemptLike {
   status: string;
   completedAt?: Date;
   loBreakdown?: Array<{ loId: string; correct: number; total: number; sectionId?: string }>;
-  frqGrades?: Array<{ itemId: string; totalPoints: number; maxPoints: number; ungraded?: boolean }>;
 }
 
-/** loBreakdown → one coarse per-LO row (`bf:mock:<attemptId>:lo:<loId>`);
- *  frqGrades → one finer per-item row (`bf:mock:<attemptId>:<itemId>`), loId
- *  resolved via `loIdByItemId` (a ProblemBank lookup the caller builds once
- *  for the whole batch) — items with no bank row are skipped, not invented.
- *  Only `status: 'completed'` attempts with a `completedAt` are considered
- *  (in-progress/expired attempts have no graded evidence). Pure. */
-export function buildMockEvidence(
-  attempts: MockAttemptLike[],
-  loIdByItemId: Map<string, string>,
-): EvidenceInput[] {
+/** loBreakdown → one per-LO row per completed attempt (`bf:mock:<attemptId>:
+ *  lo:<loId>`). `frqGrades` is intentionally NOT walked here — see the
+ *  module doc comment: `gradeAndComplete` already folds successfully-graded
+ *  FRQ points into `loBreakdown` at grading time (pre-existing prod
+ *  behavior), so a separate frqGrades pass would double-represent the same
+ *  signal at the 'mock' source weight. Only `status: 'completed'` attempts
+ *  with a `completedAt` are considered (in-progress/expired attempts have no
+ *  graded evidence). Pure. */
+export function buildMockEvidence(attempts: MockAttemptLike[]): EvidenceInput[] {
   const inputs: EvidenceInput[] = [];
   for (const a of attempts) {
     if (a.status !== 'completed' || !a.completedAt || isTrialId(a.studentId)) continue;
@@ -133,25 +140,29 @@ export function buildMockEvidence(
         occurredAt,
       });
     }
-
-    for (const g of a.frqGrades ?? []) {
-      if (g.ungraded) continue;
-      const loId = loIdByItemId.get(g.itemId);
-      if (!loId) continue;
-      inputs.push({
-        idempotencyKey: `bf:mock:${a.attemptId}:${g.itemId}`,
-        studentId: a.studentId,
-        loId,
-        source: 'mock',
-        itemId: g.itemId,
-        outcome: g.maxPoints > 0 ? g.totalPoints / g.maxPoints : 0,
-        pointsAwarded: g.totalPoints,
-        maxPoints: g.maxPoints,
-        occurredAt,
-      });
-    }
   }
   return inputs;
+}
+
+/** Attempt ids that already have LIVE per-item mock evidence — Task 8's
+ *  append points key these `mock:<attemptId>:<itemId>`, disjoint from this
+ *  script's own `bf:mock:...` keys, so `appendEvidence`'s `_id` dedup gives
+ *  no protection against re-deriving the same signal from `loBreakdown` for
+ *  an attempt that already has real evidence. Takes the raw `_id` strings of
+ *  every `EvidenceEvent` with `source: 'mock'`; parses the attemptId as
+ *  everything between the `mock:` prefix and the LAST `:` (item ids carry no
+ *  colons, attempt ids — crypto.randomUUID() — don't either, but splitting
+ *  on the last separator is robust either way). Pure. */
+export function liveMockAttemptIdsFrom(liveMockEvidenceIds: string[]): Set<string> {
+  const ids = new Set<string>();
+  for (const id of liveMockEvidenceIds) {
+    if (!id.startsWith('mock:')) continue;
+    const rest = id.slice('mock:'.length);
+    const sep = rest.lastIndexOf(':');
+    if (sep === -1) continue;
+    ids.add(rest.slice(0, sep));
+  }
+  return ids;
 }
 
 // --- Source 3: StudentProfile.mastery priors --------------------------------
@@ -227,21 +238,13 @@ export async function runBackfill(opts: RunBackfillOptions): Promise<BackfillCou
     allInputs.push(...jsonlInputs);
   }
 
-  const mockAttempts = (await MockAttempt.find({ status: 'completed', completedAt: { $exists: true } })
+  const liveMockDocs = await EvidenceEventModel.find({ source: 'mock' }).select('_id').lean();
+  const liveMockAttemptIds = liveMockAttemptIdsFrom(liveMockDocs.map((d) => String(d._id)));
+
+  const mockAttemptsAll = (await MockAttempt.find({ status: 'completed', completedAt: { $exists: true } })
     .lean()) as unknown as MockAttemptLike[];
-  const frqItemIds = [
-    ...new Set(
-      mockAttempts.flatMap((a) => (a.frqGrades ?? []).filter((g) => !g.ungraded).map((g) => g.itemId)),
-    ),
-  ];
-  const bankDocs = frqItemIds.length
-    ? ((await ProblemBank.find({ id: { $in: frqItemIds } }).select('id loId').lean()) as unknown as Array<{
-        id: string;
-        loId?: string;
-      }>)
-    : [];
-  const loIdByItemId = new Map(bankDocs.filter((d) => d.loId).map((d) => [d.id, d.loId as string]));
-  const mockInputs = buildMockEvidence(mockAttempts, loIdByItemId);
+  const mockAttempts = mockAttemptsAll.filter((a) => !liveMockAttemptIds.has(a.attemptId));
+  const mockInputs = buildMockEvidence(mockAttempts);
   countBy(mockInputs, counts);
   allInputs.push(...mockInputs);
 
