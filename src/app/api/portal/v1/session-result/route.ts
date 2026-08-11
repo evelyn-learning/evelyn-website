@@ -23,6 +23,6 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // subscribed-only territory: demo/logged-out sessions never reach it, and
   // the academy sends no transcript carrier for trial / opted-out students.
   const social = extractSocialCarrier(auth.body);
-  const result = await emitSessionResult(parsed.data, social ? { social } : {});
+  const result = await emitSessionResult(parsed.data, { ...(social ? { social } : {}), partnerId: auth.partnerId });
   return NextResponse.json(stripNullsDeep(result));
 });

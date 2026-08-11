@@ -45,6 +45,11 @@
  *   MONGODB_URI=... npx tsx scripts/backfill-evidence.ts --dry-run
  *   MONGODB_URI=... npx tsx scripts/backfill-evidence.ts --jsonl /path/to/evidence.jsonl
  *   (omit --jsonl to skip the portal sources — engine-local sources only)
+ *
+ * `--student-ids <id1,id2,...>` (I1 fix, optional) scopes the two
+ * engine-local sources (MockAttempt, StudentProfile) to the given
+ * studentIds only — for a scoped/test/backfill-one-partner run. A real prod
+ * run OMITS this flag entirely (the point of the backfill is every student).
  */
 import fs from 'node:fs';
 import connectDB from '@/lib/db';
@@ -220,6 +225,15 @@ function countBy(inputs: EvidenceInput[], counts: BackfillCounts): void {
 export interface RunBackfillOptions {
   jsonlPath?: string;
   dryRun: boolean;
+  /** I1 fix — scope the two engine-local sources (MockAttempt, StudentProfile)
+   *  to these studentIds only. Tests MUST pass their fixture ids here: an
+   *  unscoped `dryRun: false` run walks EVERY MockAttempt + StudentProfile in
+   *  the configured DB and writes `bf:`-prefixed rows for every one of
+   *  them — fine (idempotent) against a real prod DB run once, but ran
+   *  against a shared dev DB from a test suite it silently backfilled evidence
+   *  for real students that were never meant to be touched. Omit for a real
+   *  prod run (the whole point is to backfill every student). */
+  studentIds?: string[];
 }
 
 /** Collects evidence from every source (portal JSONL when given, MockAttempt,
@@ -230,6 +244,7 @@ export interface RunBackfillOptions {
 export async function runBackfill(opts: RunBackfillOptions): Promise<BackfillCounts> {
   const counts = emptyCounts();
   const allInputs: EvidenceInput[] = [];
+  const studentIdFilter = opts.studentIds && opts.studentIds.length > 0 ? { $in: opts.studentIds } : undefined;
 
   if (opts.jsonlPath) {
     const raw = fs.readFileSync(opts.jsonlPath, 'utf8');
@@ -238,17 +253,21 @@ export async function runBackfill(opts: RunBackfillOptions): Promise<BackfillCou
     allInputs.push(...jsonlInputs);
   }
 
-  const liveMockDocs = await EvidenceEventModel.find({ source: 'mock' }).select('_id').lean();
+  const liveMockQuery: Record<string, unknown> = { source: 'mock' };
+  if (studentIdFilter) liveMockQuery.studentId = studentIdFilter;
+  const liveMockDocs = await EvidenceEventModel.find(liveMockQuery).select('_id').lean();
   const liveMockAttemptIds = liveMockAttemptIdsFrom(liveMockDocs.map((d) => String(d._id)));
 
-  const mockAttemptsAll = (await MockAttempt.find({ status: 'completed', completedAt: { $exists: true } })
-    .lean()) as unknown as MockAttemptLike[];
+  const mockAttemptQuery: Record<string, unknown> = { status: 'completed', completedAt: { $exists: true } };
+  if (studentIdFilter) mockAttemptQuery.studentId = studentIdFilter;
+  const mockAttemptsAll = (await MockAttempt.find(mockAttemptQuery).lean()) as unknown as MockAttemptLike[];
   const mockAttempts = mockAttemptsAll.filter((a) => !liveMockAttemptIds.has(a.attemptId));
   const mockInputs = buildMockEvidence(mockAttempts);
   countBy(mockInputs, counts);
   allInputs.push(...mockInputs);
 
-  const profiles = (await StudentProfileModel.find({}).lean()) as unknown as StudentProfileLike[];
+  const profileQuery: Record<string, unknown> = studentIdFilter ? { _id: studentIdFilter } : {};
+  const profiles = (await StudentProfileModel.find(profileQuery).lean()) as unknown as StudentProfileLike[];
   const priorInputs = buildDiagnosticPriorEvidence(profiles);
   countBy(priorInputs, counts);
   allInputs.push(...priorInputs);
@@ -270,14 +289,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const dryRun = process.argv.includes('--dry-run');
     const jsonlIdx = process.argv.indexOf('--jsonl');
     const jsonlPath = jsonlIdx !== -1 ? process.argv[jsonlIdx + 1] : undefined;
+    const studentIdsIdx = process.argv.indexOf('--student-ids');
+    const studentIds =
+      studentIdsIdx !== -1
+        ? process.argv[studentIdsIdx + 1]?.split(',').map((s) => s.trim()).filter(Boolean)
+        : undefined;
 
     await connectDB();
-    const counts = await runBackfill({ jsonlPath, dryRun });
+    const counts = await runBackfill({ jsonlPath, dryRun, studentIds });
 
     console.log(
       `[backfill-evidence] ${dryRun ? 'DRY RUN — ' : ''}assessment=${counts.assessment} practice=${counts.practice} ` +
         `mock=${counts.mock} diagnostic=${counts.diagnostic}` +
-        (jsonlPath ? ` (jsonl=${jsonlPath})` : ' (no --jsonl — portal sources skipped)'),
+        (jsonlPath ? ` (jsonl=${jsonlPath})` : ' (no --jsonl — portal sources skipped)') +
+        (studentIds ? ` (scoped to ${studentIds.length} studentIds)` : ''),
     );
     process.exit(0);
   };

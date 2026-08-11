@@ -109,6 +109,20 @@ export interface EmitOptions {
   loadArtifacts?: (sessionId: string) => Promise<unknown>;
   /** Task D3 — see SocialEmitOptions. */
   social?: SocialEmitOptions;
+  /** Final-review fix (C1) — internal callers that already wrote their own
+   *  per-item evidence rows (e.g. `submitAssessment`'s `diag:` rows) set this
+   *  so `buildEmitEvidence` does NOT ALSO synthesize a `masteryDeltas`
+   *  fallback row on top of them (that produced a spurious `emit:<sid>:
+   *  lo:<loId>` row double-counting the same outcome — a 50% quiz measured
+   *  as estimate 0.6, not 0.5). Only suppresses the fallback; an explicit
+   *  `req.evidence[]` (contract-level callers) is never affected. NOT part
+   *  of the portal contract — internal engine option only. */
+  skipEvidenceFallback?: boolean;
+  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
+   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
+   *  row this call produces. Route handlers pass it through; direct/test
+   *  callers may omit it. */
+  partnerId?: string;
 }
 
 /**
@@ -208,19 +222,28 @@ function masterySnapshot(profile: StudentProfile, losTouched: string[]) {
 
 /** Task 8 — evidence for the learner model's server append point. Prefers
  *  the caller-supplied `req.evidence[]` (contract v1.12.0, one row per
- *  index, keyed `emit:<sessionId>:<i>`); when absent, falls back to one row
- *  per `masteryDeltas` entry (keyed `emit:<sessionId>:lo:<loId>`, source
- *  'session', outcome derived from delta sign) so pre-v1.12.0 portal
- *  callers still feed the learner model. Only ever called from the commit
- *  path (after the idempotency-replay guard above), so a replayed terminal
- *  emit never re-builds this — belt-and-suspenders with the idempotency
- *  keys themselves. Pure. */
-function buildEmitEvidence(req: SessionEmitRequest): EvidenceInput[] {
+ *  index, keyed `emit:<sessionId>:<i>`); when absent AND `skipFallback` is
+ *  not set, falls back to one row per `masteryDeltas` entry (keyed
+ *  `emit:<sessionId>:lo:<loId>`, source 'session', outcome derived from
+ *  delta sign) so pre-v1.12.0 portal callers still feed the learner model.
+ *  `skipFallback` (C1 fix) is set by internal callers — e.g.
+ *  `submitAssessment` — that already wrote their own per-item evidence for
+ *  this outcome and must not have this fallback double-count it; it never
+ *  suppresses an explicit `req.evidence[]`. Only ever called from the
+ *  commit path (after the idempotency-replay guard above), so a replayed
+ *  terminal emit never re-builds this — belt-and-suspenders with the
+ *  idempotency keys themselves. Pure. */
+function buildEmitEvidence(
+  req: SessionEmitRequest,
+  skipFallback: boolean,
+  partnerId: string | undefined,
+): EvidenceInput[] {
   const occurredAt = new Date();
   if (req.evidence && req.evidence.length > 0) {
     return req.evidence.map((e, i) => ({
       idempotencyKey: `emit:${req.sessionId}:${i}`,
       studentId: req.studentId,
+      partnerId,
       loId: e.loId,
       source: e.source,
       sessionId: req.sessionId,
@@ -228,13 +251,16 @@ function buildEmitEvidence(req: SessionEmitRequest): EvidenceInput[] {
       outcome: e.outcome,
       difficulty: e.difficulty,
       latencyMs: e.latencyMs,
+      hintUsed: e.hintUsed,
       occurredAt,
       subject: req.subject,
     }));
   }
+  if (skipFallback) return [];
   return req.masteryDeltas.map((m) => ({
     idempotencyKey: `emit:${req.sessionId}:lo:${m.loId}`,
     studentId: req.studentId,
+    partnerId,
     loId: m.loId,
     source: 'session',
     sessionId: req.sessionId,
@@ -344,7 +370,7 @@ export async function emitSessionResult(
   // Task 8 — learner-model evidence append. Fire-and-forget (this is a
   // latency-sensitive session-end path); appendEvidence is itself
   // best-effort and never throws, so the .catch is belt-and-suspenders.
-  const emitEvidence = buildEmitEvidence(req);
+  const emitEvidence = buildEmitEvidence(req, opts.skipEvidenceFallback ?? false, opts.partnerId);
   if (emitEvidence.length > 0) {
     appendEvidence(emitEvidence).catch((err) =>
       console.error('[learner-model] emit evidence append failed', err),

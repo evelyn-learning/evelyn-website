@@ -37,6 +37,9 @@ export const TUNING = {
   recencyTauDays: 30,
   confidence: { medium: 2, high: 6 }, // n_eff floors
   trendDelta: 0.05,
+  /** learner-state route (Task 9): how far back the "prior" snapshot for
+   *  trend comparison is dated (M4 — was a bare `14` at the call site). */
+  trendWindowDays: 14,
   untouchedPrior: 0.3,
   review: {
     minOutcome: 0.7,
@@ -49,6 +52,13 @@ export const TUNING = {
     mockAlpha: 0.6,
     bandHalfWidth: { sat: 80, act: 4, ap: 1, readiness: 15 },
     highConfidenceScale: 0.5,
+    /** projection.ts's `meanConfidenceWeight` (M4 — was a module-local
+     *  `CONFIDENCE_WEIGHT` const). 0 (all low) .. 1 (all high). */
+    confidenceWeight: { low: 0, medium: 0.5, high: 1 } as Record<'low' | 'medium' | 'high', number>,
+    /** projection.ts's `pickCurveVariant` — the router-approximation cutoff
+     *  (section mean >= this → 'hard' variant) for adaptive digital-SAT
+     *  sections (M4 — was a bare `0.5` at the call site). */
+    hardVariantThreshold: 0.5,
   },
 };
 

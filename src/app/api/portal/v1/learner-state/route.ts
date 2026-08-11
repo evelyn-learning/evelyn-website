@@ -35,7 +35,7 @@ import {
 } from '@/models';
 import { getOrCreateStudentProfile, isGapStale } from '@/lib/tutor/student-profile/store';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
-import { trendOf } from '@/lib/tutor/learner-model/estimator';
+import { trendOf, TUNING } from '@/lib/tutor/learner-model/estimator';
 import { getBlueprint, type ScoringSpec } from '@/lib/tutor/mock-exam/blueprints';
 import { projectScore, scaleForTopic, mapLoIdsToSections, type ProjectLo } from '@/lib/tutor/learner-model/projection';
 
@@ -108,9 +108,9 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
   // have whatever projections already exist for the student.
   const effectiveLoIds = loIds && loIds.length > 0 ? loIds : projections.map((p) => p.loId);
 
-  // trend: against the snapshot dated >= 14 days ago (most recent such row);
-  // none → 'flat' (trendOf's own null-handling).
-  const cutoffDate = new Date(now.getTime() - 14 * MS_PER_DAY).toISOString().slice(0, 10);
+  // trend: against the snapshot dated >= TUNING.trendWindowDays ago (most
+  // recent such row); none → 'flat' (trendOf's own null-handling).
+  const cutoffDate = new Date(now.getTime() - TUNING.trendWindowDays * MS_PER_DAY).toISOString().slice(0, 10);
   const priorSnapshot = await LearnerStateSnapshotModel.findOne({ studentId, date: { $lte: cutoffDate } })
     .sort({ date: -1 })
     .lean();

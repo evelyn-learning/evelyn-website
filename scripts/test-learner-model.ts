@@ -399,11 +399,11 @@ async function runServerAppendPointTests() {
       masteryDeltas: [{ loId: 'lo1', delta: 0.5 }],
       gaps: [],
       notesTouched: [],
-      evidence: [{ loId: 'lo1', outcome: 1, source: 'practice', itemId: 'i1' }],
+      evidence: [{ loId: 'lo1', outcome: 1, source: 'practice', itemId: 'i1', hintUsed: true }],
     };
     await deleteLearnerModelData(studentId);
     try {
-      await emitSessionResult(emitReq);
+      await emitSessionResult(emitReq, { partnerId: 'lmtest-partner-emit' });
 
       const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`emit:${sessionId}:0`)));
       assert(landed, 'emitSessionResult: evidence[] produces a row keyed emit:<sid>:0');
@@ -411,6 +411,11 @@ async function runServerAppendPointTests() {
       assert(
         !!row && row.source === 'practice' && row.outcome === 1 && row.itemId === 'i1' && row.loId === 'lo1',
         'emitSessionResult: evidence row carries loId/source/outcome/itemId from evidence[0]',
+      );
+      assert(row?.hintUsed === true, 'emitSessionResult: hintUsed (M2) threaded from the contract evidence item');
+      assert(
+        row?.partnerId === 'lmtest-partner-emit',
+        'emitSessionResult: partnerId (M3, opts.partnerId) threaded onto the evidence row',
       );
 
       // Replay (same sessionId) hits the idempotency guard before the evidence
@@ -517,6 +522,58 @@ async function runServerAppendPointTests() {
         !!rowB && rowB.outcome === 0 && rowB.pointsAwarded === 0 && rowB.maxPoints === 1,
         'submitAssessment: wrong item → outcome 0, points fraction 0/1',
       );
+
+      // C1 fix: submitAssessment's internal emitSessionResult call must NOT
+      // ALSO synthesize a masteryDeltas-fallback `emit:<sid>:lo:<loId>` row
+      // on top of the two `diag:` rows already asserted above (that used to
+      // double-count the same outcome — a 50% quiz measured as estimate 0.6,
+      // not 0.5). Give any (wrongly) fired fallback append time to settle
+      // (mirrors the replay-guard wait above), then count ALL rows for this
+      // student: must be exactly 2 (diag:qa, diag:qb — nothing else).
+      await new Promise((r) => setTimeout(r, 200));
+      const totalRows = await EvidenceEventModel.countDocuments({ studentId });
+      assert(
+        totalRows === 2,
+        'submitAssessment: exactly 2 evidence rows total (diag: only) — C1 fix, no spurious emit: fallback row',
+      );
+      assert(rowA?.partnerId === undefined, 'submitAssessment: partnerId omitted when the caller passes none');
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (b) submitAssessment: partnerId (M3) — threaded onto every diag: row ---
+  {
+    const studentId = `lmtest:diagpartner:${process.pid}`;
+    const sessionId = `lmtest-diagpartner-session-${process.pid}`;
+    const resolver = async (id: string) =>
+      id === 'qa' ? ({ responseFormat: 'numeric' as const, expectedAnswer: '5' }) : null;
+    const deps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: '' };
+      },
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await submitAssessment(
+        {
+          assessmentId: 'lmtest-asmt-partner',
+          studentId,
+          courseId: 'ap-statistics',
+          sessionId,
+          responses: [{ itemId: 'qa', loId: 'lmtest.lo-partner', response: { text: '5' } }],
+        },
+        deps,
+        resolver,
+        'lmtest-partner-a',
+      );
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qa`)));
+      assert(landed, 'submitAssessment (partnerId): evidence row lands');
+      const row = await EvidenceEventModel.findById(`diag:${sessionId}:qa`);
+      assert(row?.partnerId === 'lmtest-partner-a', 'submitAssessment: partnerId (M3) threaded onto the diag: row');
     } finally {
       await deleteLearnerModelData(studentId);
     }
@@ -637,6 +694,10 @@ async function runServerAppendPointTests() {
         !!mcqRow && mcqRow.outcome === 1 && mcqRow.sectionId === 'sec1' && mcqRow.difficulty === 1 && mcqRow.source === 'mock',
         'mock: correct MCQ item → per-item evidence row w/ sectionId + difficulty',
       );
+      assert(
+        mcqRow?.partnerId === 'lmtest',
+        "mock: partnerId (M3) derived from the studentId convention ('lmtest:mock:<pid>' -> 'lmtest')",
+      );
       const frqRow = await EvidenceEventModel.findById(`mock:${attemptId}:fx-frq-1`);
       assert(
         !!frqRow && frqRow.sectionId === 'sec2' && frqRow.pointsAwarded === 4 && frqRow.maxPoints === 4 && frqRow.outcome === 1,
@@ -725,6 +786,16 @@ async function runServerAppendPointTests() {
       const lo1 = attempt.loBreakdown!.find((e) => e.loId === 'mo.lo1');
       assert(!!lo1 && lo1.sectionId === 'sec1' && lo1.correct === 1 && lo1.total === 2, 'MCQ-only: loBreakdown carries sectionId (fast path)');
 
+      // I4 fix: finalizeOpenModule's evidence append is now fire-and-forget
+      // (was awaited inline on the student's finalize request) — poll for
+      // the rows to land instead of reading them synchronously right after
+      // advance() returns.
+      const rowsLanded = await waitFor(
+        async () =>
+          !!(await EvidenceEventModel.findById(`mock:${attemptId}:mo-1`)) &&
+          !!(await EvidenceEventModel.findById(`mock:${attemptId}:mo-2`)),
+      );
+      assert(rowsLanded, 'MCQ-only: fire-and-forget evidence rows land (I4)');
       const row1 = await EvidenceEventModel.findById(`mock:${attemptId}:mo-1`);
       const row2 = await EvidenceEventModel.findById(`mock:${attemptId}:mo-2`);
       assert(
@@ -1508,7 +1579,11 @@ async function runBackfillEvidenceTests() {
     const countBeforeDry = await EvidenceEventModel.countDocuments({ studentId });
     assert(countBeforeDry === 1, 'setup: only the directly-seeded live mock evidence row exists before runBackfill runs');
 
-    const dryCounts = await runBackfill({ jsonlPath, dryRun: true });
+    // I1 fix: scope to this test's own studentId — an unscoped run walks
+    // EVERY MockAttempt + StudentProfile in the configured DB (previously
+    // left stray bf: rows for real students in the dev DB when this test
+    // ran with dryRun: false against a shared MONGODB_URI).
+    const dryCounts = await runBackfill({ jsonlPath, dryRun: true, studentIds: [studentId] });
     assert(
       dryCounts.assessment >= 1 && dryCounts.practice >= 1 && dryCounts.mock >= 1 && dryCounts.diagnostic >= 1,
       'runBackfill dry-run: per-source counts non-zero and include this run\'s fixtures ' +
@@ -1517,7 +1592,7 @@ async function runBackfillEvidenceTests() {
     const countAfterDry = await EvidenceEventModel.countDocuments({ studentId });
     assert(countAfterDry === countBeforeDry, 'runBackfill dry-run: writes nothing (evidence count for this student unchanged)');
 
-    await runBackfill({ jsonlPath, dryRun: false });
+    await runBackfill({ jsonlPath, dryRun: false, studentIds: [studentId] });
     const EXPECTED_KEYS = [
       jsonlRows[0]!.idempotencyKey,
       jsonlRows[1]!.idempotencyKey,
@@ -1554,7 +1629,7 @@ async function runBackfillEvidenceTests() {
     );
 
     const countBeforeRerun = countAfterReal;
-    await runBackfill({ jsonlPath, dryRun: false });
+    await runBackfill({ jsonlPath, dryRun: false, studentIds: [studentId] });
     const countAfterRerun = await EvidenceEventModel.countDocuments({ studentId });
     assert(
       countBeforeRerun === 5 && countAfterRerun === 5,

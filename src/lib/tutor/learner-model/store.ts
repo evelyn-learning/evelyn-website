@@ -41,6 +41,10 @@ export interface EvidenceInput {
   maxPoints?: number;
   difficulty?: number;
   latencyMs?: number;
+  /** Whether the student used a hint before this outcome (M2 — threaded
+   *  from the contract evidence item; the portal's practice/quiz UI sends
+   *  it). No estimator weighting yet — stored for future use. */
+  hintUsed?: boolean;
   signals?: string[];
   streakAtComplete?: number;
   turns?: number;
@@ -195,6 +199,7 @@ async function appendEvidenceInner(inputs: EvidenceInput[]): Promise<void> {
     maxPoints: i.maxPoints,
     difficulty: i.difficulty,
     latencyMs: i.latencyMs,
+    hintUsed: i.hintUsed,
     signals: i.signals,
     streakAtComplete: i.streakAtComplete,
     turns: i.turns,
@@ -216,6 +221,14 @@ async function appendEvidenceInner(inputs: EvidenceInput[]): Promise<void> {
   } catch (err) {
     const partial = (err as { insertedDocs?: typeof insertedDocs }).insertedDocs;
     if (!partial) throw err;
+    // M1 fix: `partial` is truthy even when insertMany's OWN error carried
+    // an EMPTY insertedDocs array (e.g. every doc in the batch collided) —
+    // that used to fall through to `insertedDocs.length === 0 → return`
+    // below with no log at all. Log here, unconditionally on `partial`'s
+    // presence, so a real (non-duplicate-key) batch failure is never
+    // silent just because nothing happened to land. The `!partial` branch
+    // above re-throws instead — its caller (`appendEvidence`) logs it.
+    console.error('[learner-model] evidence append failed', err);
     insertedDocs = partial;
   }
 

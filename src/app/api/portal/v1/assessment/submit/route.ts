@@ -18,6 +18,6 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const result = await submitAssessment(parsed.data, defaultGradeDeps(), resolveAssessmentItem);
+  const result = await submitAssessment(parsed.data, defaultGradeDeps(), resolveAssessmentItem, auth.partnerId);
   return NextResponse.json(stripNullsDeep(result));
 });

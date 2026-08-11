@@ -327,5 +327,13 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
   });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
-  if (failed > 0) process.exit(1);
-})();
+  // REPO NIT fix: explicit exit code either way (mirrors test-learner-model.ts)
+  // — falling off the end of this IIFE never returned control to
+  // `npm run test:portal`'s aggregate script when something upstream kept
+  // the event loop open (e.g. a live DB/connection handle), which meant a
+  // successful run could hang instead of exiting 0.
+  process.exit(failed > 0 ? 1 : 0);
+})().catch((err) => {
+  console.error('Fatal error running portal-assessment tests:', err);
+  process.exit(1);
+});

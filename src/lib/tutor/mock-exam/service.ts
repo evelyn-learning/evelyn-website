@@ -458,30 +458,43 @@ export async function finalizeOpenModule(
   // so this is the only chance to emit per-item mock evidence for it. This is
   // the highest-volume completion path (digital-sat / act / hs-* forms carry
   // no FRQ items at all) — see evidence.ts for why the build itself is a
-  // shared helper with gradeAndComplete's FRQ-bearing path. Awaited (this
-  // finalize call is not latency-sensitive, unlike the emit/assessment
-  // append points). Idempotency-key-safe on its own (`mock:<attemptId>:
-  // <itemId>` — the store dedupes a same-attempt replay via the row's `_id`),
-  // so no additional locking here per the learner-model store's own
-  // documented concurrency stance.
+  // shared helper with gradeAndComplete's FRQ-bearing path.
   const { scaled } = applyCurves(blueprint, rawSections, attempt.moduleRouting, {});
   attempt.scaled = scaled;
   attempt.status = 'completed';
   attempt.completedAt = new Date(now);
   await stores.saveAttempt(attempt);
 
-  const sectionIdByItem = buildSectionIdByItem(attempt.servedModules, blueprint.sections);
-  const responseByItem = new Map(attempt.responses.map((r) => [r.itemId, r]));
-  const evidenceInputs = buildMockItemEvidence({
-    attemptId: attempt.attemptId,
-    studentId: attempt.studentId,
-    servedModules: attempt.servedModules,
-    items: allItems,
-    responseByItem,
-    sectionIdByItem,
-    occurredAt: new Date(now),
-  });
-  await appendEvidence(evidenceInputs);
+  // I4 fix: this finalize call IS latency-sensitive (it's on the student's
+  // own advance/finalize request — a full SAT-sized attempt is ~400 evidence
+  // ops), and the attempt is ALREADY saved as 'completed' above — nothing
+  // downstream should be able to turn a request whose result already landed
+  // into a 500. So: fire-and-forget the append (appendEvidence is itself
+  // best-effort and never throws — the .catch is belt-and-suspenders,
+  // matching the emit/assessment append points), and wrap the two pure
+  // builders in the same try/catch (an unexpected throw there is caught
+  // rather than propagating out of this function). Idempotency-key-safe on
+  // its own either way (`mock:<attemptId>:<itemId>` — the store dedupes a
+  // same-attempt replay via the row's `_id`), so no additional locking here
+  // per the learner-model store's own documented concurrency stance.
+  try {
+    const sectionIdByItem = buildSectionIdByItem(attempt.servedModules, blueprint.sections);
+    const responseByItem = new Map(attempt.responses.map((r) => [r.itemId, r]));
+    const evidenceInputs = buildMockItemEvidence({
+      attemptId: attempt.attemptId,
+      studentId: attempt.studentId,
+      servedModules: attempt.servedModules,
+      items: allItems,
+      responseByItem,
+      sectionIdByItem,
+      occurredAt: new Date(now),
+    });
+    appendEvidence(evidenceInputs).catch((err) =>
+      console.error('[learner-model] evidence append failed', err),
+    );
+  } catch (err) {
+    console.error('[learner-model] evidence append failed', err);
+  }
 
   return attempt;
 }

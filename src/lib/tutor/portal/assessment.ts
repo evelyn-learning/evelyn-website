@@ -198,6 +198,11 @@ export async function submitAssessment(
   sub: AssessmentSubmission,
   deps: GradeDeps,
   resolveItem: AssessmentItemResolver,
+  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
+   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
+   *  row this submission produces. The route passes it through; direct/test
+   *  callers may omit it. */
+  partnerId?: string,
 ): Promise<AssessmentResult> {
   // Task 8 — quiz vs silent-diagnostic discriminator: `notesTouched` is the
   // submission's existing signal (v1.4.0 comment on AssessmentSubmissionSchema:
@@ -232,6 +237,7 @@ export async function submitAssessment(
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
         studentId: sub.studentId,
+        partnerId,
         loId: r.loId,
         source: evidenceSource,
         sessionId: sub.sessionId,
@@ -248,6 +254,7 @@ export async function submitAssessment(
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
         studentId: sub.studentId,
+        partnerId,
         loId: r.loId,
         source: evidenceSource,
         sessionId: sub.sessionId,
@@ -304,7 +311,11 @@ export async function submitAssessment(
     gaps,
     notesTouched: sub.notesTouched ?? [],
   };
-  const result = await emitSessionResult(emitReq);
+  // C1 fix: submitAssessment already wrote its own per-item `diag:` evidence
+  // rows above — skipEvidenceFallback stops emitSessionResult's internal
+  // masteryDeltas fallback from ALSO synthesizing a spurious `emit:<sid>:
+  // lo:<loId>` row on top of them (that double-counted the same outcome).
+  const result = await emitSessionResult(emitReq, { skipEvidenceFallback: true, partnerId });
   const score: AssessmentScore = {
     pointsAwarded: totalAwarded,
     maxPoints: totalMax,

@@ -124,7 +124,9 @@ function readinessCenter(los: ProjectLo[]): number {
  */
 function pickCurveVariant(curveSet: Record<string, CurveAnchor[]>, sectionMean: number): CurveAnchor[] {
   if (curveSet.default) return curveSet.default;
-  if (curveSet.easy && curveSet.hard) return sectionMean >= 0.5 ? curveSet.hard : curveSet.easy;
+  if (curveSet.easy && curveSet.hard) {
+    return sectionMean >= TUNING.projection.hardVariantThreshold ? curveSet.hard : curveSet.easy;
+  }
   return Object.values(curveSet)[0] ?? [];
 }
 
@@ -203,12 +205,10 @@ function mockTrendline(anchors: Array<{ composite: number; at: Date }>, now: Dat
   return intercept + slope * nowX;
 }
 
-const CONFIDENCE_WEIGHT: Record<ProjectLo['confidence'], number> = { low: 0, medium: 0.5, high: 1 };
-
 /** 0 (all low) .. 1 (all high); linear for a medium/mixed mean. */
 function meanConfidenceWeight(los: ProjectLo[]): number {
   if (los.length === 0) return 0;
-  const sum = los.reduce((s, lo) => s + CONFIDENCE_WEIGHT[lo.confidence], 0);
+  const sum = los.reduce((s, lo) => s + TUNING.projection.confidenceWeight[lo.confidence], 0);
   return sum / los.length;
 }
 

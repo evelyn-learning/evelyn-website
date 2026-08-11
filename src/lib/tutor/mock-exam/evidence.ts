@@ -31,6 +31,19 @@ export interface MockFrqGradeLike {
   ungraded?: boolean;
 }
 
+/** Final-review fix (M3, spec §4.1) — mock evidence has no authenticated
+ *  partner in scope (unlike the session-result/assessment routes), so
+ *  partnerId is derived from the studentId convention: `<partnerId>:<...>`.
+ *  `'trial'` is excluded (trial: ids are dropped entirely before any write
+ *  anyway — see `appendEvidence` — this just avoids stamping the literal
+ *  string as a partnerId in the meantime). No colon → undefined. Pure. */
+export function partnerIdFromStudentId(studentId: string): string | undefined {
+  const i = studentId.indexOf(':');
+  if (i === -1) return undefined;
+  const prefix = studentId.slice(0, i);
+  return prefix === 'trial' ? undefined : prefix;
+}
+
 export function buildMockItemEvidence(params: {
   attemptId: string;
   studentId: string;
@@ -46,6 +59,7 @@ export function buildMockItemEvidence(params: {
   const itemById = new Map(items.map((it) => [it.id, it]));
   const frqGradeByItem = new Map((frqGrades ?? []).map((g) => [g.itemId, g]));
   const sessionId = `mock:${attemptId}`;
+  const partnerId = partnerIdFromStudentId(studentId);
   const evidenceInputs: EvidenceInput[] = [];
 
   for (const mod of servedModules) {
@@ -60,6 +74,7 @@ export function buildMockItemEvidence(params: {
         evidenceInputs.push({
           idempotencyKey: `mock:${attemptId}:${id}`,
           studentId,
+          partnerId,
           loId: item.loId,
           source: 'mock',
           sessionId,
@@ -76,6 +91,7 @@ export function buildMockItemEvidence(params: {
         evidenceInputs.push({
           idempotencyKey: `mock:${attemptId}:${id}`,
           studentId,
+          partnerId,
           loId: item.loId,
           source: 'mock',
           sessionId,

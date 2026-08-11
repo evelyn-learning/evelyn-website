@@ -31,6 +31,8 @@ export interface IEvidenceEvent {
   maxPoints?: number;
   difficulty?: number;
   latencyMs?: number;
+  /** Whether the student used a hint before this outcome (M2). */
+  hintUsed?: boolean;
   signals?: string[];
   streakAtComplete?: number;
   turns?: number;
@@ -62,6 +64,7 @@ const EvidenceEventSchema = new Schema<IEvidenceEvent>(
     maxPoints: Number,
     difficulty: Number,
     latencyMs: Number,
+    hintUsed: Boolean,
     signals: { type: [String], default: undefined },
     streakAtComplete: Number,
     turns: Number,
