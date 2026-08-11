@@ -747,17 +747,32 @@ interface PacingStreakSnapshot {
    *  identical-problem solve register instead of deduping to a no-op. */
   addedSolvedHash: string | null;
   /** Guard (c) data: segIds `mark_segment_complete` newly completed during
-   *  THIS turn (mirrors segmentsCompletedThisTurnRef). Seeded from the live
-   *  ref at pacing-snapshot time, then OVERWRITTEN with a fresh recapture
-   *  of the same live ref inside claimSupersededStreakForCheckpoint() at
-   *  claim time — the authoritative value revertSupersededStreak's guard
-   *  (c) reads. The live ref itself is unsafe to read at revert/resolution
-   *  time: callBrainOnce resets it on every dispatch, and the same
-   *  Haiku-wait-window dispatch race that motivates claiming
-   *  lastStreakChangeRef at construction (not comparison at resolution)
-   *  applies here too — by resolution time the live ref could belong to a
-   *  newer, unrelated turn. Capturing a copy at the synchronous claim
-   *  moment (before that race window opens) is what makes it safe. */
+   *  THIS turn (mirrors segmentsCompletedThisTurnRef). Captured ONCE, here,
+   *  at pacing-snapshot time — deliberately NEVER re-read from the live ref
+   *  anywhere later (not even at checkpoint-claim time). Turn N is still
+   *  synchronously executing when this snapshot is taken (mark_segment_
+   *  complete's push, if any, happened mid-stream, strictly before this
+   *  post-stream code runs, within the SAME turn) — that makes this the
+   *  ONE moment the live ref is provably turn N's data, no exceptions.
+   *
+   *  A claim-time re-read was tried and reverted (review round 2): most
+   *  checkpoint-construction sites (executeRetroCancel, the eager
+   *  onSpeechStart kill) do run synchronously relative to the interrupt
+   *  that triggers them, but the STAGE-2 LAZY path does not — runPerceptionKill
+   *  is called from resolveStage2LazyVerdict, itself called from inside the
+   *  Haiku classifier fetch's OWN `.then()` (up to ~3s after the original
+   *  onset). A SILENT dispatch (queue-drain, idle-nudge, etc.) landing in
+   *  that window resets segmentsCompletedThisTurnRef via callBrainOnce's
+   *  UNCONDITIONAL turn-start reset — unconditional because silent turns
+   *  don't skip it, only pacingTurnCounterRef's increment is silent-gated.
+   *  So a live re-read at claim time could silently replace turn N's real
+   *  data with a foreign (or empty) array from whatever turn is executing
+   *  NOW. The turnMarker check on `lastStreakChangeRef` itself doesn't have
+   *  this problem — only NON-silent dispatches write a new record AND
+   *  advance pacingTurnCounterRef, in lockstep, so a stale rec can never
+   *  spuriously match — but segmentsCompletedThisTurnRef has no such
+   *  silent-immune counterpart to gate a re-read against. Simplest correct
+   *  fix: don't re-read it, ever, after this one capture. */
   completedThisTurn: string[];
   /** This turn's ordinal (pacingTurnCounterRef.current at snapshot time).
    *  NOT used to gate the revert directly (see the checkpoint-creation
@@ -2485,26 +2500,27 @@ export function VoiceTutorRealtime({
   // `checkpoint.supersededStreak` at resolution time — no comparison, no
   // race, immune to whatever dispatches during the Haiku-wait window.
   const lastStreakChangeRef = useRef<PacingStreakSnapshot | null>(null);
-  // R47 Task 2: called synchronously by every checkpoint-construction site,
-  // in the same statement block that reads lastBrainCallContextRef.current
-  // — see lastStreakChangeRef's declaration comment for why this must
-  // happen at construction time rather than at verdict-resolution time.
+  // R47 Task 2: called synchronously (same statement group as the
+  // checkpoint object literal) by every checkpoint-construction site — see
+  // lastStreakChangeRef's declaration comment for why the turnMarker check
+  // below is safe to run at that moment rather than at verdict-resolution
+  // time. Note (review round 2): "checkpoint construction" itself does NOT
+  // always happen immediately upon the original interrupt — the STAGE-2
+  // LAZY path (runPerceptionKill, called from resolveStage2LazyVerdict
+  // inside the Haiku classifier's OWN async `.then()`) can defer it up to
+  // ~3s. That's fine for the turnMarker check here (only non-silent
+  // dispatches ever write a NEW lastStreakChangeRef record, and only
+  // non-silent dispatches ever advance pacingTurnCounterRef — the two
+  // move in lockstep regardless of elapsed time, so a stale `rec` can
+  // never spuriously re-match no matter how late this runs). It is NOT
+  // fine for segmentsCompletedThisTurnRef, which is why that field is
+  // captured exactly once, at pacing-snapshot time, and never re-read
+  // here — see PacingStreakSnapshot's `completedThisTurn` doc comment.
   // Pure ref read/write, no external deps — stable across renders.
   const claimSupersededStreakForCheckpoint = useCallback((): PacingStreakSnapshot | null => {
     const rec = lastStreakChangeRef.current;
     if (!rec || rec.turnMarker !== pacingTurnCounterRef.current) return null;
     lastStreakChangeRef.current = null;
-    // Review round (F3): re-capture completedThisTurn HERE, at the same
-    // synchronous claim moment, overwriting the pacing-block's earlier
-    // seed. segmentsCompletedThisTurnRef is reset by callBrainOnce on
-    // EVERY dispatch — the identical Haiku-wait-window race that motivates
-    // claiming lastStreakChangeRef here (rather than comparing
-    // pacingTurnCounterRef later, at resolution) also applies to this ref:
-    // reading it live at resolution time could read a NEWER turn's
-    // (already-reset) array. Claim time is safe because it happens at
-    // checkpoint construction, synchronously, before the Haiku-wait window
-    // (and therefore before any intervening dispatch) even opens.
-    rec.completedThisTurn = [...segmentsCompletedThisTurnRef.current];
     return rec;
   }, []);
   // Buffer of [pacing] events fired during the most recent brain turn.
@@ -14412,27 +14428,30 @@ export function VoiceTutorRealtime({
     const supersededStreak = checkpoint.supersededStreak;
     const revertSupersededStreak = (reason: string) => {
       if (!supersededStreak) return;
-      // Guard (c) (review round: narrowed, then fixed again for the same
-      // read-live-ref-at-resolution-time race as F2). completedSegmentIdsRef
-      // is SESSION-lifetime, so testing membership there would block a
-      // revert for ANY segment ever completed earlier in the session (e.g.
-      // a review-question revisit), not just one completed by the turn
-      // actually being reverted — segmentsCompletedThisTurnRef fixed that.
-      // But segmentsCompletedThisTurnRef is itself reset by callBrainOnce
-      // on EVERY dispatch, so reading it LIVE here (at resolution time,
-      // after the Haiku wait) is exactly the same race F2 closed for
-      // lastStreakChangeRef: an intervening turn dispatched during that
-      // wait resets it, and by the time this code runs the live array
-      // could belong to that newer turn, not the one being reverted.
-      // supersededStreak.completedThisTurn is the fix — a copy taken at
-      // the synchronous claim moment (claimSupersededStreakForCheckpoint),
-      // before the wait window (and therefore before any intervening
-      // dispatch) opens. If mark_segment_complete fired for this segId
-      // during THIS turn, its evidence push / segmentMasteredFlagRef read
-      // already happened synchronously at tool-call time — BEFORE this
-      // post-stream snapshot was even taken — so rewinding the streak
-      // refs now would desync them from evidence that already committed.
-      // Leave the streak standing in that case.
+      // Guard (c) (review round 1: narrowed off session-lifetime
+      // completedSegmentIdsRef; review round 2: fixed the read timing).
+      // completedSegmentIdsRef is SESSION-lifetime, so testing membership
+      // there would block a revert for ANY segment ever completed earlier
+      // in the session (e.g. a review-question revisit), not just one
+      // completed by the turn actually being reverted —
+      // segmentsCompletedThisTurnRef (a per-turn array) fixed that. Reading
+      // THAT ref live here, though, turned out to be its own bug: it's
+      // reset by callBrainOnce's turn-start block on EVERY dispatch —
+      // including SILENT ones, which don't advance pacingTurnCounterRef —
+      // and on the STAGE-2 lazy path the claim itself can happen up to ~3s
+      // after the original onset (see claimSupersededStreakForCheckpoint's
+      // comment), a window a silent dispatch can easily land in. So this
+      // now reads `supersededStreak.completedThisTurn` — captured exactly
+      // ONCE, at pacing-snapshot time (still turn N executing, no gap at
+      // all) — and is never re-read from the live ref anywhere later,
+      // including at claim time (see PacingStreakSnapshot's field comment
+      // for why a claim-time re-read was tried and reverted). If
+      // mark_segment_complete fired for this segId during THIS turn, its
+      // evidence push / segmentMasteredFlagRef read already happened
+      // synchronously at tool-call time — BEFORE this post-stream snapshot
+      // was even taken — so rewinding the streak refs now would desync
+      // them from evidence that already committed. Leave the streak
+      // standing in that case.
       if (supersededStreak.completedThisTurn.includes(supersededStreak.segId)) {
         onDebugEvent?.('pacing_streak_revert_skipped_consumed', `seg="${supersededStreak.segId}" — mark_segment_complete already consumed this turn`);
         return;
@@ -16353,8 +16372,18 @@ export function VoiceTutorRealtime({
           cancelStage === 'speaking' ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
           `prev=${productionStateRef.current} stage=${cancelStage}`,
         );
-        // R47 Task 2: see executeRetroCancel's identical claim for why
-        // this happens here, synchronously with construction.
+        // R47 Task 2: claim right here, in the same statement group as
+        // this checkpoint's construction — see executeRetroCancel's
+        // identical claim for the base rationale. Note this function
+        // (runPerceptionKill) is shared: the eager onSpeechStart caller
+        // invokes it immediately upon detecting the interrupt, but the
+        // STAGE-2 lazy caller (resolveStage2LazyVerdict) invokes it from
+        // inside the Haiku classifier's own async `.then()` — up to ~3s
+        // after the original onset. The claim below is correct either way
+        // (see claimSupersededStreakForCheckpoint's comment for why); only
+        // completedThisTurn needed a fix for that timing difference, and
+        // that fix lives entirely in PacingStreakSnapshot's field capture,
+        // not here.
         const supersededStreak = claimSupersededStreakForCheckpoint();
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
