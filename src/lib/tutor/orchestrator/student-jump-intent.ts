@@ -20,15 +20,48 @@
  * item. Firing a jump there would skip-complete whatever sits between the
  * cursor and the named item. Only destination verbs (move/switch/jump/
  * skip/go [back] to) count.
+ *
+ * Post-review hardening (same round, coordinator pass):
+ *  - Negation guard: "don't move to X yet" / "let's not move to X" must
+ *    not fire just because the verb+label pattern is present. Checked
+ *    ONLY against the words immediately preceding the chosen verb match —
+ *    a bare "no wait, move to X" correction-lead-in is NOT a negator
+ *    (no don't/not/never/do not token) and must still resolve normally.
+ *  - Self-correction re-anchoring: "move to derivative patterns, no
+ *    wait, second derivatives" must resolve against "second derivatives"
+ *    (the corrected destination), never the abandoned first mention. Two
+ *    mechanisms cover this: (a) when the student re-issues the verb
+ *    ("...actually, move to X"), only the LAST verb-phrase occurrence
+ *    anchors the destination text; (b) within a single destination span,
+ *    text is split on correction markers (no wait/actually/i mean/…) and
+ *    only the LAST fragment is scored.
+ *  - Bag-of-words scatter guard: a token-fraction match (not a full-label
+ *    substring) is only trusted if the matched tokens sit within a
+ *    compact window of the destination text — otherwise "move to the
+ *    second example, we'll cover the derivative next" wrongly matches
+ *    "Second derivative example" purely by coincidental word overlap
+ *    scattered across an unrelated sentence.
  */
 
 export interface JumpCandidateItem { segmentIds: string[]; label: string }
 
 // Requires an explicit destination preposition (to/onto/back to) directly
 // after the verb — "go over X" and "go X" (no preposition) never match,
-// which is what excludes review phrasing and bare "let's move on".
+// which is what excludes review phrasing and bare "let's move on". Global
+// so every occurrence can be found (self-correction may re-issue the verb).
 const MOVE_VERB_RE =
-  /\b(?:move|switch|jump|go|skip)(?:\s+\w+){0,2}?\s+(?:on to|onto|back to|to)\s+/i;
+  /\b(?:move|switch|jump|go|skip)(?:\s+\w+){0,2}?\s+(?:on to|onto|back to|to)\s+/gi;
+
+// Negator immediately governing the verb, allowing up to two intervening
+// words ("don't want to move…"). Deliberately does NOT include bare "no"
+// or "wait" — those are correction lead-ins ("no wait, move to X"), not
+// negation, and must never block a match.
+const NEGATION_RE = /(?:\bdon'?t\b|\bdo not\b|\bnot\b|\bnever\b)(?:\s+\w+){0,2}\s*$/i;
+
+// Mid-utterance self-correction markers. Only the fragment AFTER the last
+// one names the destination the student actually wants.
+const CORRECTION_SPLIT_RE =
+  /\b(?:no wait|wait no|wait,?\s|actually|i mean|sorry|scratch that|rather)\b/gi;
 
 function normalizeLabel(s: string): string {
   return (s ?? '')
@@ -52,24 +85,49 @@ export function matchStudentJumpIntent(
 ): { targetSegmentId: string; matchedLabel: string } | null {
   const t = (transcript ?? '').trim();
   if (!t || items.length === 0) return null;
-  const verbMatch = MOVE_VERB_RE.exec(t);
-  if (!verbMatch) return null;
-  // Only the text AFTER the verb phrase names the destination.
-  const tail = normalizeLabel(t.slice(verbMatch.index + verbMatch[0].length));
+
+  const verbMatches = [...t.matchAll(MOVE_VERB_RE)];
+  if (verbMatches.length === 0) return null;
+  // Last occurrence: a re-issued verb ("...actually, move to Y") means Y,
+  // not the first-mentioned destination.
+  const verbMatch = verbMatches[verbMatches.length - 1];
+  const matchIndex = verbMatch.index ?? -1;
+  if (matchIndex < 0) return null;
+
+  const prefix = t.slice(0, matchIndex);
+  if (NEGATION_RE.test(prefix)) return null;
+
+  // Only the text AFTER the verb phrase names the destination; within
+  // that, only the text after the last correction marker does.
+  const rawTail = t.slice(matchIndex + verbMatch[0].length);
+  const fragments = rawTail.split(CORRECTION_SPLIT_RE);
+  const rawDestination = fragments[fragments.length - 1];
+
+  const tail = normalizeLabel(rawDestination);
   if (!tail) return null;
-  const tailTokens = new Set(contentTokens(tail));
+  const tailTokenList = contentTokens(rawDestination);
+  const tailTokens = new Set(tailTokenList);
   if (tailTokens.size === 0) return null;
 
   // Score every item: fraction of the LABEL's content tokens present in the
-  // tail. Full-label containment (normalized substring) is an immediate max.
+  // tail. Full-label containment (normalized substring) is an immediate max
+  // and is exempt from the scatter-window check below (an intact substring
+  // is definitionally compact).
   type Scored = { item: JumpCandidateItem; score: number };
   const scored: Scored[] = items.map((item) => {
     const norm = normalizeLabel(item.label);
     if (norm && tail.includes(norm)) return { item, score: 1 };
     const toks = contentTokens(item.label);
     if (toks.length === 0) return { item, score: 0 };
-    const hit = toks.filter((w) => tailTokens.has(w)).length;
-    return { item, score: hit / toks.length };
+    const matchedToks = toks.filter((w) => tailTokens.has(w));
+    const score = matchedToks.length / toks.length;
+    if (score < 0.75) return { item, score };
+    // Scatter guard: the matched tokens must span a compact window of the
+    // destination text, not be strewn across an unrelated sentence.
+    const positions = matchedToks.map((w) => tailTokenList.indexOf(w));
+    const span = Math.max(...positions) - Math.min(...positions) + 1;
+    if (span > toks.length + 2) return { item, score: 0 };
+    return { item, score };
   });
   scored.sort((a, b) => b.score - a.score);
   const best = scored[0];

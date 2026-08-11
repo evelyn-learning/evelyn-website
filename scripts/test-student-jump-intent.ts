@@ -61,5 +61,36 @@ check('whitespace-only transcript → null', matchStudentJumpIntent('   ', items
 // verb present but tail is pure stopwords (no content tokens) → null, no crash.
 check('verb with stopword-only tail → null', matchStudentJumpIntent('move to the one', items, 'seg-1a') === null);
 
+// ── coordinator review round: negation guard ────────────────────────
+// A negator governing the verb ("don't"/"do not"/"not"/"never", up to 2
+// intervening words) must block the match entirely — firing here would
+// jump AWAY from where the student explicitly said not to go.
+check('negation: "don\'t move to X yet" → null', matchStudentJumpIntent("don't move to derivative patterns yet", items, 'seg-1a') === null);
+check('negation: "let\'s not move to X" → null', matchStudentJumpIntent("let's not move to derivative patterns", items, 'seg-1a') === null);
+check('negation: "I don\'t want to move to X" → null (2 intervening words)', matchStudentJumpIntent("I don't want to move to derivative patterns", items, 'seg-1a') === null);
+// CAUTION case: a bare "no wait" / "wait" lead-in is a correction, not a
+// negator — must NOT block.
+check('correction lead-in "no wait, move to X" is NOT negation → resolves', matchStudentJumpIntent('no wait, move to derivative patterns', items, 'seg-1a')?.targetSegmentId === 'seg-4a');
+
+// ── coordinator review round: self-correction re-anchoring ──────────
+// The abandoned first-mentioned target must never win; a safe null beats
+// a wrong target when the corrected destination itself is ambiguous.
+check('self-correction via marker: "no wait" abandons first target → null, not the wrong one', matchStudentJumpIntent('move to derivative patterns, no wait, second derivatives', items, 'seg-1a') === null);
+check('self-correction via re-issued verb: last "move to" wins', matchStudentJumpIntent('move to derivative patterns, actually move to second derivatives practice', items, 'seg-1a')?.targetSegmentId === 'seg-3');
+
+// ── coordinator review round: bag-of-words scatter guard ────────────
+// Token overlap alone is not enough — the label must be referenced as a
+// unit (compact span), not assembled by coincidence from an unrelated
+// sentence.
+check('scattered tokens across an unrelated sentence → null', matchStudentJumpIntent("move to the second example, we'll cover the derivative next", items, 'seg-1a') === null);
+check('compact partial-label span still resolves (regression guard)', matchStudentJumpIntent('switch to the derivative patterns one', items, 'seg-2')?.targetSegmentId === 'seg-4a');
+
+// ── coordinator review round: near-collision ambiguity (reviewer-verified) ──
+const chainItems = [
+  { segmentIds: ['seg-c1'], label: 'Chain rule basics' },
+  { segmentIds: ['seg-c2'], label: 'Chain rule practice' },
+];
+check('near-collision labels, true tie at 1.0 → null (tie-guard fires)', matchStudentJumpIntent('move to chain rule basics and practice', chainItems, 'seg-c1') === null);
+
 console.log(`\nstudent-jump-intent: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
