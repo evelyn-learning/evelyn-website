@@ -3160,9 +3160,9 @@ export function VoiceTutorRealtime({
     // inferred segment-card advance), the pending entry is cleared unused.
     // If the turn completes WITHOUT navigation, we apply the advance the
     // brain forgot — same philosophy as inferAdvanceFromSegmentCard.
-    if (lessonPlanRef.current && currentSegmentIdRef.current) {
+    if (lessonPlanRef.current) {
       const candidates = railJumpCandidates(lessonPlanRef.current, segmentLabelsRef.current);
-      const jump = matchStudentJumpIntent(text, candidates, currentSegmentIdRef.current);
+      const jump = matchStudentJumpIntent(text, candidates, currentSegmentIdRef.current ?? '');
       if (jump) {
         pendingStudentJumpRef.current = { segId: jump.targetSegmentId, label: jump.matchedLabel, atMs: Date.now() };
         onDebugEvent?.('agenda_jump_pending', `${jump.matchedLabel} → ${jump.targetSegmentId}`);
