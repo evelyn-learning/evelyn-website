@@ -34,6 +34,12 @@ export function canonicalizeMathExpression(s: string): string | null {
     .replace(/[{}]/g, m => (m === '{' ? '(' : ')'))
     .toLowerCase()
     .replace(/\s+/g, '')
+    // trailing-zero decimals: "9.0" ≡ "9" as canonical strings too (the
+    // numeric path already treats them equal via parseFloat; this fixes the
+    // expression path's string compare). Lookahead excludes "9.05" — only a
+    // run of ALL zeros after the point, not followed by another digit,
+    // normalizes.
+    .replace(/(\d+)\.0+(?![0-9])/g, '$1')
     .replace(/[.?!,;]+$/, '');
   if (!t) return null;
   if (/\\/.test(t)) return null;            // residual latex command → unparseable
@@ -178,7 +184,7 @@ function isMultiValueUtterance(t: string): boolean {
  *  so e.g. "3x maybe with a constant" keeps its residue for the
  *  prose-rejection check downstream. Looped (bounded) to peel stacked
  *  hedges like "um, I think the answer is...". */
-const HEDGE_PREFIX_RE = /^(?:um+|uh+|okay|ok|so|well|hmm+|oh|i think|i guess|i'd say|maybe|probably|it'?s|it is|that'?s|the answer is|my answer is|is it|would it be|could it be|i got|i get)\b[\s,]*/i;
+const HEDGE_PREFIX_RE = /^(?:um+|uh+|okay|ok|so|well|hmm+|oh|i think|i guess|i'd say|maybe|probably|it'?s|it is|it'?ll be|it will be|it would be|that'?s|that would be|the answer is|my answer is|is it|would it be|could it be|shouldn'?t it be|wouldn'?t it be|won'?t it be|isn'?t it|couldn'?t it be|i got|i get|just)\b[\s,]*/i;
 
 /** Spoken math vocabulary → symbolic. Order matters: multi-word phrases
  *  ("e to the", "square root of", the fraction words) must be listed
@@ -191,7 +197,12 @@ const SPOKEN_REPLACEMENTS: Array<[RegExp, string]> = [
   [/\bdivided by\b/gi, '/'], [/\bover\b/gi, '/'],
   [/\bequals?\b/gi, '='],
   [/\bsquared\b/gi, '^2'], [/\bcubed\b/gi, '^3'],
-  [/\be to the\b/gi, 'e^'], [/\bto the power of\b/gi, '^'], [/\bto the\b/gi, '^'],
+  // "to the power of" must run BEFORE the shorter "e to the": in "e to the
+  // power of 3 x" the shorter rule would fire first and consume just "e to
+  // the", stranding "power of" as unmatched prose residue (Task 4 finding —
+  // "e to the power of" is a real spoken form, not covered by any existing
+  // test until the negative-question hedge case exercised it).
+  [/\bto the power of\b/gi, '^'], [/\be to the\b/gi, 'e^'], [/\bto the\b/gi, '^'],
   [/\bsquare root of\b/gi, 'sqrt'],
   [/\bone half\b/gi, '1/2'], [/\bone third\b/gi, '1/3'], [/\bone quarter\b/gi, '1/4'],
   [/\btwo thirds\b/gi, '2/3'], [/\bthree quarters\b/gi, '3/4'],
@@ -290,14 +301,20 @@ export function matchUtteranceToAnswer(
     // Fix (round-3 review Critical): a blanket 1%-relative tolerance let
     // '359' vs '360' read as agreement — fine for messy real-valued
     // answers, wrong for two plain integers that just differ. Exact
-    // equality when BOTH canonical sides are plain integer literals;
-    // tolerance stays for anything involving a decimal point, fraction,
-    // π, √, or % (isPlainIntegerLiteral is false for all of those).
-    const bothIntegers = isPlainIntegerLiteral(cu) && isPlainIntegerLiteral(ce);
-    const agrees = bothIntegers ? nu === ne : withinTolerance(nu, ne);
+    // equality when EITHER canonical side is a plain integer literal
+    // (Task 4: widened from "both" — a bare whole-number side, e.g. an
+    // expected answer of '9', means the comparison IS a whole-number
+    // question; '9.05' spoken against it is off by a real amount, not
+    // rounding noise, and the old both-sides gate let 9*1%=0.09 of slack
+    // wave it through as agreement). Tolerance stays for pairs where
+    // NEITHER side is a bare integer — decimal-vs-fraction-vs-π forms
+    // ('0.785' vs 'π/4', '1/2' vs '0.5') still need it and are unaffected,
+    // since neither operand in those pairs is ever a plain integer literal.
+    const eitherPlainInteger = isPlainIntegerLiteral(cu) || isPlainIntegerLiteral(ce);
+    const agrees = eitherPlainInteger ? nu === ne : withinTolerance(nu, ne);
     return agrees
-      ? { verdict: 'agree', reason: bothIntegers ? `integer ${nu}=${ne}` : `numeric ${nu}≈${ne}` }
-      : { verdict: 'disagree', reason: bothIntegers ? `integer ${nu}≠${ne}` : `numeric ${nu}≠${ne}` };
+      ? { verdict: 'agree', reason: eitherPlainInteger ? `integer ${nu}=${ne}` : `numeric ${nu}≈${ne}` }
+      : { verdict: 'disagree', reason: eitherPlainInteger ? `integer ${nu}≠${ne}` : `numeric ${nu}≠${ne}` };
   }
   // 3) expression path — full-parse required on BOTH sides for any verdict
   if (cu === null || ce === null) return { verdict: 'unknown', reason: 'unparseable side' };

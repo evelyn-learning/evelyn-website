@@ -101,5 +101,17 @@ check('exact integers: comma thousands-separator does not break exactness', matc
 check('non-integer tolerance path unaffected: π/4 vs 0.785 still agree', matchUtteranceToAnswer('0.785', 'π/4').verdict === 'agree');
 check('non-integer tolerance path unaffected: 1/2 vs 0.5 still agree', matchUtteranceToAnswer('1/2', '0.5').verdict === 'agree');
 
+// — Task 4: hedge-list extension (negative-question / contracted-future
+// forms) + trailing-.0 decimal normalization. Two live sessions had correct
+// answers land on `unknown` because these hedge prefixes weren't stripped.
+check('negative-question hedge', matchUtteranceToAnswer("shouldn't it be uh 9.0 e to the power of 3 x?", '9e^{3x}').verdict === 'agree');
+check('contracted-future hedge', matchUtteranceToAnswer("it'll be just 3 x squared e to the 3 x", '3x^2e^{3x}').verdict === 'agree');
+check('wouldnt-it hedge', matchUtteranceToAnswer("wouldn't it be 15?", '15').verdict === 'agree');
+check('isnt-it hedge', matchUtteranceToAnswer("isn't it 3x + 2?", '3x+2').verdict === 'agree');
+check('trailing .0 normalized', matchUtteranceToAnswer('9.0', '9').verdict === 'agree');
+check('trailing .0 in expression', canonicalizeMathExpression('9.0e^(3x)') === canonicalizeMathExpression('9e^(3x)'));
+check('non-trailing decimal untouched', matchUtteranceToAnswer('9.05', '9').verdict === 'disagree');
+check('hedge does not flip a wrong answer', matchUtteranceToAnswer("shouldn't it be 7?", '9').verdict === 'disagree');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
