@@ -2670,12 +2670,25 @@ export function VoiceTutorRealtime({
   // consumed (applied or discarded) at that same turn's completion seam
   // otherwise. Lives for exactly one brain turn — no timers.
   const pendingStudentJumpRef = useRef<{ segId: string; label: string; atMs: number } | null>(null);
-  // R44: did THIS brain turn call advance_lesson (any `to`, resolved or
-  // not)? Reset false at the top of callBrainOnce, set true in the
-  // advanceLesson command handler. Used by the off-plan cursor-release
-  // check at turn-completion so it doesn't fire on a turn where the brain
-  // already navigated.
+  // R44: did THIS brain turn NAVIGATE the lesson cursor — either an
+  // explicit advance_lesson call (any `to`, resolved or not) OR an
+  // inferred advance from the show_segment_card site (review round 2,
+  // Finding 1 — a same-turn inferred advance is a real navigation too;
+  // without this the off-plan-release check below couldn't see it and
+  // would immediately revert a just-applied correct advance)? Reset
+  // false at the top of callBrainOnce, set true at both navigation
+  // sites. Used by the off-plan cursor-release check at turn-completion
+  // so it doesn't fire on a turn where the brain already navigated.
   const advanceLessonCalledThisTurnRef = useRef(false);
+  // R44 (review round 2, Finding 2): monotonic per-turn counter,
+  // incremented once at the top of every callBrainOnce call (alongside
+  // advanceLessonCalledThisTurnRef's reset — same single-per-turn reset
+  // site). Lets async work started during turn N (the embedding-based
+  // topic-shift check below) detect whether turn N is still the CURRENT
+  // turn by the time its promise resolves, so a late resolution (turn
+  // N+1 already started) can drop its signal instead of leaking into an
+  // unrelated later turn.
+  const brainTurnSeqRef = useRef(0);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -3159,11 +3172,30 @@ export function VoiceTutorRealtime({
     // Embedding-based topic shift (async) — catches pivots that the
     // keyword list misses (e.g. "What's photosynthesis?" after a physics
     // thread).
+    // R44 (review round 2, Finding 2): stamp the turn-identity counter
+    // BEFORE kicking off the async check. checkTopicShift is a real
+    // network round-trip (embedding API call) — by the time it resolves,
+    // a brain turn may have started AND FINISHED (its own seam already
+    // ran, reading topicShiftForReleaseRef as false since this hadn't
+    // resolved yet) and a completely unrelated later turn may be in
+    // flight. Comparing brainTurnSeqRef.current against this snapshot in
+    // the .then() below tells us whether that happened.
+    const seqAtDetection = brainTurnSeqRef.current;
     void checkTopicShift(topicShiftStateRef.current, text).then((result) => {
       topicShiftStateRef.current = result.nextState;
       if (result.shifted) {
+        // topicShiftPendingRef feeds the pre-existing newPage heuristic
+        // (a different consumer, handleWhiteboardCommand, with its own
+        // one-shot clearing) — unconditional, NOT part of this guard.
         topicShiftPendingRef.current = { fromDistance: result.distance ?? 0 };
-        topicShiftForReleaseRef.current = true;
+        if (brainTurnSeqRef.current === seqAtDetection) {
+          topicShiftForReleaseRef.current = true;
+        } else {
+          // Late resolution: a turn has started (and possibly finished)
+          // since this check began — misses quietly rather than leaking
+          // the release signal into whatever turn is current now.
+          onDebugEvent?.('topic_shift_late_drop', 'resolved after turn start — release skipped');
+        }
         console.log(
           '[VoiceTutorRealtime] Topic shift detected (distance=',
           result.distance?.toFixed(3), ')',
@@ -7927,10 +7959,16 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
-    // R44: fresh per-turn "did advance_lesson fire" tracker (sub-step d,
+    // R44: fresh per-turn "did the brain navigate" tracker (sub-step d,
     // off-plan release gate below). This is a genuinely new turn — any
-    // prior turn's advanceLesson call is irrelevant now.
+    // prior turn's navigation is irrelevant now.
     advanceLessonCalledThisTurnRef.current = false;
+    // R44 (review round 2, Finding 2): this callBrainOnce call IS a new
+    // turn starting — bump the turn-identity counter so any async work
+    // kicked off by a PRIOR turn's student utterance (the embedding-based
+    // topic-shift check in runStudentTurnDetection) can tell, when it
+    // resolves, that it's now late relative to whatever turn is current.
+    brainTurnSeqRef.current += 1;
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -11136,6 +11174,19 @@ export function VoiceTutorRealtime({
                           // moot, regardless of whether it targeted this
                           // same segment. Discard unused.
                           pendingStudentJumpRef.current = null;
+                          // R44 fix (review round 2, Finding 1): this IS a
+                          // navigation — mark it so the off-plan-release
+                          // check at turn-completion sees it (that check
+                          // only looked for an explicit advance_lesson
+                          // call before this fix, so a same-turn topic-
+                          // shift signal would release the cursor right
+                          // back to '' immediately after this correct
+                          // advance). Also drop any pending release
+                          // signal outright: the turn navigated inside
+                          // the plan, so there is nothing "off-plan" left
+                          // to release for.
+                          advanceLessonCalledThisTurnRef.current = true;
+                          topicShiftForReleaseRef.current = false;
                         }
                       }
                     } else {
