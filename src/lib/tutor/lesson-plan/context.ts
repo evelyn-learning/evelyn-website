@@ -106,7 +106,7 @@ function consumedHash(s: string): string {
 /* E6 — LO-ordering enforcement for runtime-generated plans            */
 /* ------------------------------------------------------------------ */
 
-const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked|try)$/;
+const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked2|worked|try)$/;
 
 /** Derive the LO-group key for a segment id. Generated plans mint ids
  *  as "<loId>-hook" / "-concept" / "-worked" / "-try" (see
@@ -118,7 +118,15 @@ const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked|try)$/;
  *  group — this degrades gracefully for ids that don't follow the
  *  convention (e.g. fallbackPlan's "lo1-concept" still strips to
  *  "lo1"; a bare custom id like "pick-los" is simply its own
- *  group-of-one). */
+ *  group-of-one).
+ *
+ *  `worked2` (Task 12, learner-conditioned generation): the STAGE2_SYSTEM
+ *  EXCEPTION rule mints a second worked-example segment "<loId>-worked2"
+ *  for building-band students. It must be listed BEFORE the bare `worked`
+ *  alternative in the regex — both are anchored at `$` so order doesn't
+ *  actually affect which one wins here (each only matches its own exact
+ *  suffix), but keeping the more specific alternative first avoids relying
+ *  on that subtlety if the pattern ever grows a real ambiguity. */
 export function loGroupOf(segmentId: string): string {
   if (segmentId === 'intro' || segmentId === 'recap') return segmentId;
   const m = segmentId.match(LO_SEGMENT_SUFFIX_RE);

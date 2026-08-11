@@ -57,6 +57,7 @@ import {
   buildRecapSegment,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
+import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
 import { topicCacheKey, findCachedPlan } from '@/lib/tutor/lesson-plan/generation-cache';
@@ -89,9 +90,17 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   }
-  const { text: requestText, subject, grade, topic: requestTopic, locale, materials }: PlanGenerateRequest = parsed.data;
+  const { text: requestText, subject, grade, topic: requestTopic, locale, materials, studentId }: PlanGenerateRequest = parsed.data;
   const sessionMinutes = clampSessionMinutes(parsed.data.sessionMinutes);
   const hasMaterials = !!materials && materials.length > 0;
+
+  // Learner-conditioning hints (Task 12, contract v1.13.0's optional
+  // studentId): resolved BEFORE the cache branch below because whether a
+  // gap topic is present decides whether that branch even consults the
+  // cache at all. getLearnerHints never throws — no studentId means no
+  // lookup at all (`learner` stays undefined, generation is unconditioned,
+  // byte-identical to pre-Task-12 behavior).
+  const learner = studentId ? await getLearnerHints(studentId, subject) : undefined;
 
   let text = requestText;
   let topic = requestTopic;
@@ -118,15 +127,22 @@ export const POST = withPortalAuth(async (_req, auth) => {
       kinds: extracted.materials.map((m) => m.kind),
       totalChars: extracted.combinedText.length,
     };
+  } else if (learner?.gapTopics.length) {
+    // Known gap topics must always drive fresh, gap-aware generation —
+    // mirrors the materials-path cache bypass above. A generic cached plan
+    // for this topic/band/bucket would never mention the student's actual
+    // misconceptions, so it's never even looked up. cacheKey stays
+    // undefined, same as the materials path (see generatedPlanMetadata:
+    // it omits cacheKey whenever this is undefined).
   } else {
-    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale });
+    cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band });
     const cachedPlan = await findCachedPlan(cacheKey);
     if (cachedPlan) {
       return NextResponse.json(PlanGenerateResponseSchema.parse(toResponse(cachedPlan, { cached: true, sessionMinutes })));
     }
   }
 
-  const genInput = { text, subject, grade, topic, locale };
+  const genInput = { text, subject, grade, topic, locale, learner };
   const X = maxLOsForBudget({ sessionMinutes, grade });
 
   let plan: LessonPlan;

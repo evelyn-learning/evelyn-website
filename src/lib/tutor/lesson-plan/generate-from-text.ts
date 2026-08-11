@@ -44,6 +44,8 @@ import type {
 } from './types';
 import { LESSON_PLAN_SCHEMA_VERSION } from './types';
 import { parseLessonPlan } from './parser';
+import type { LearnerHints } from '../learner-model/hints';
+import { TUNING } from '../learner-model/estimator';
 
 const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
 const MAX_OBJECTIVES = 12;
@@ -66,6 +68,15 @@ export interface GenerateFromTextInput {
   topic?: string;
   /** Optional locale; defaults to 'en'. */
   locale?: string;
+  /** Learner-conditioning hints (Task 11 -> Task 12): ability band + gap
+   *  topics for the requesting student. Absent when the caller has no
+   *  studentId to look up (e.g. the unauthenticated plan-from-text twin
+   *  route never sets this field) — generation then degrades to today's
+   *  unconditioned prompt, byte-for-byte. When present, its `band` and
+   *  `gapTopics` may still be the neutral steady/no-gaps default (that's
+   *  what getLearnerHints returns for a fresh student or on any lookup
+   *  failure) — that's a normal, expected value, not an absence. */
+  learner?: LearnerHints;
 }
 
 /* ------------------------------------------------------------------ */
@@ -221,7 +232,7 @@ export async function extractLearningObjectives(
 export const STAGE2_SYSTEM = `You expand a list of learning objectives into teaching segments for a lesson plan, in JSON.
 
 Rules:
-1. For every supplied objective, emit exactly four segments in order: a hook, a concept, a worked_example, and a try_yourself.
+1. For every supplied objective, emit exactly four segments in order: a hook, a concept, a worked_example, and a try_yourself. EXCEPTION: when the student-profile block below instructs two worked examples, emit five segments — the second worked_example uses id "<loId>-worked2" and sits between the first worked_example and the try_yourself.
 2. Segment ids are deterministic: "<loId>-hook", "<loId>-concept", "<loId>-worked", "<loId>-try" — using the LO id supplied in the input.
 3. KEEP FIELDS TERSE. Hooks: 'goal' ≤ 12 words. Concepts: 'goal' ≤ 12 words; 'keyIdeas' ≤ 3 bullets of ≤ 12 words each. Worked-example: 'problem' ≤ 20 words; 'steps' ≤ 4 steps of ≤ 12 words each; 'answer' ≤ 12 words. Try-yourself: 'problem' ≤ 20 words; 'expectedAnswer' ≤ 12 words. Verbosity will truncate the JSON — be ruthlessly short.
 4. Do NOT invent content beyond what the LO description implies. If the LO is bare ("Cell respiration"), use the most central ideas an introductory source would teach.
@@ -242,6 +253,72 @@ export interface ExpandSegmentsResult {
   segments: Segment[];
   ok: boolean;
   reason: string;
+}
+
+/** Numeral -> word for the handful of counts TUNING.generation.workedExamples
+ *  actually configures (1 or 2 today). Falls back to the numeral itself for
+ *  anything else so a future TUNING tweak degrades gracefully instead of
+ *  emitting a broken sentence. */
+function numberWord(n: number): string {
+  if (n === 1) return 'one';
+  if (n === 2) return 'two';
+  return String(n);
+}
+
+/** The per-band pedagogical instruction line. Worked-example counts come
+ *  from TUNING.generation.workedExamples — never a literal duplicated here —
+ *  so a future TUNING change (e.g. building -> 3) reflects in the prompt
+ *  without a second edit site. */
+function abilityLineFor(band: LearnerHints['band']): string {
+  const count = TUNING.generation.workedExamples[band];
+  const word = numberWord(count);
+  switch (band) {
+    case 'building':
+      return `Include ${word} worked examples per objective and a gentler first try_yourself.`;
+    case 'strong':
+      return `${word.charAt(0).toUpperCase()}${word.slice(1)} worked example; make the try_yourself a stretch problem.`;
+    case 'steady':
+    default:
+      return `Standard pacing: ${word} worked example per objective.`;
+  }
+}
+
+/** Builds the "Student profile" block appended to the stage-2 user message
+ *  when `learner` is present. Reads worked-example counts and the success-
+ *  target band from TUNING.generation so this text can never drift from the
+ *  numbers the rest of the system (STAGE2_SYSTEM's -worked2 exception,
+ *  practice generation) actually uses. */
+function studentProfileBlock(learner: LearnerHints): string {
+  const low = Math.round(TUNING.generation.successTargetLow * 100);
+  const high = Math.round(TUNING.generation.successTargetHigh * 100);
+  const lines = [
+    'Student profile (adapt HOW you teach, never the subject matter):',
+    `- ability: ${learner.band}. ${abilityLineFor(learner.band)}`,
+    `- Pitch each try_yourself so this student succeeds roughly ${low}-${high}% of the time.`,
+  ];
+  if (learner.gapTopics.length > 0) {
+    lines.push(
+      `- Known misconception areas: ${learner.gapTopics.join('; ')}. Where an objective touches these, address the misconception explicitly.`,
+    );
+  }
+  return lines.join('\n');
+}
+
+/** Builds the stage-2 user message text. Pure and exported so tests can
+ *  assert against it directly instead of duplicating the template string.
+ *
+ *  CRITICAL: when `input.learner` is absent, this must return BYTE-
+ *  IDENTICAL output to the pre-Task-12 inline template — that's the
+ *  regression guard scripts/test-plan-generate.ts asserts. Only append the
+ *  student-profile block when `input.learner` is present; never alter the
+ *  base string itself. */
+export function buildStage2UserMessage(
+  losPayload: ReadonlyArray<{ id: string; description: string }>,
+  input: GenerateFromTextInput,
+): string {
+  const base = `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nLearning objectives to expand (JSON):\n${JSON.stringify(losPayload, null, 2)}`;
+  if (!input.learner) return base;
+  return `${base}\n\n${studentProfileBlock(input.learner)}`;
 }
 
 export async function expandSegmentsForLOs(
@@ -266,7 +343,7 @@ export async function expandSegmentsForLOs(
           content: [
             {
               type: 'text',
-              text: `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nLearning objectives to expand (JSON):\n${JSON.stringify(losPayload, null, 2)}`,
+              text: buildStage2UserMessage(losPayload, input),
             },
           ],
         },

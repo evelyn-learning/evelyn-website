@@ -39,8 +39,15 @@ import {
   PlanGenerateResponseSchema,
   PlanExpandResponseSchema,
 } from '@/lib/tutor/lesson-plan/plan-generate-contract';
-import { buildPickerPlan, STAGE2_SYSTEM, parseStage1Los } from '@/lib/tutor/lesson-plan/generate-from-text';
-import { resolveAdvanceTarget } from '@/lib/tutor/lesson-plan/context';
+import {
+  buildPickerPlan,
+  STAGE2_SYSTEM,
+  parseStage1Los,
+  buildStage2UserMessage,
+} from '@/lib/tutor/lesson-plan/generate-from-text';
+import { resolveAdvanceTarget, loGroupOf } from '@/lib/tutor/lesson-plan/context';
+import { TUNING } from '@/lib/tutor/learner-model/estimator';
+import type { LearnerHints } from '@/lib/tutor/learner-model/hints';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import type { NextRequest } from 'next/server';
@@ -824,7 +831,144 @@ async function testParseStage1LosShortTitle() {
 }
 
 async function testCacheKeyVersionBumpedForShortTitle() {
-  assert(CACHE_KEY_VERSION === 'gen-v3', 'cache key bumped for shortTitle');
+  assert(CACHE_KEY_VERSION === 'gen-v4', 'cache key bumped to gen-v4 (Task 12: learner-conditioned generation)');
+}
+
+/* -------------------------------------------------------------------- */
+/* Task 12 — learner-conditioned generation                             */
+/* -------------------------------------------------------------------- */
+
+/** Fixture LOs + base input shared by the byte-identical guard and the
+ *  learner-present assertion below. Kept tiny and deterministic. */
+const T12_FIXTURE_LOS = [
+  { id: 'lo-1', description: 'Solve quadratic equations by factoring' },
+  { id: 'lo-2', description: 'Apply the quadratic formula' },
+];
+const T12_FIXTURE_INPUT = {
+  text: 'test text',
+  subject: 'math',
+  grade: '9-12',
+  topic: 'Quadratics',
+  locale: 'en',
+};
+
+/** Hand-captured fixture of the pre-Task-12 stage-2 user message template
+ *  — written out by hand (not derived by calling buildStage2UserMessage or
+ *  re-assembling the same template), so it actually catches a regression
+ *  in the base template rather than trivially re-asserting whatever the
+ *  function currently does. Only the JSON body is machine-generated (via
+ *  JSON.stringify, matching the template's own `JSON.stringify(los, null,
+ *  2)` call) since hand-typing indentation-sensitive JSON is itself a
+ *  regression risk; the surrounding prefix/separator text — the part a
+ *  Task-12 edit could actually disturb — is a literal string here. */
+const T12_EXPECTED_BASE_MESSAGE =
+  'Subject: math\n' +
+  'Grade: 9-12\n' +
+  'Topic: Quadratics\n' +
+  '\n' +
+  'Learning objectives to expand (JSON):\n' +
+  JSON.stringify(T12_FIXTURE_LOS, null, 2);
+
+/** Critical regression guard (Task 12 brief, case (a)): with `learner`
+ *  absent, the stage-2 user message must be BYTE-IDENTICAL to today's —
+ *  asserted via strict string equality against the hand-captured fixture
+ *  above, not a substring/regex check that could pass despite a shape
+ *  change. Pure — no DB, no LLM. */
+async function testStage2UserMessageByteIdenticalWithoutLearner() {
+  const message = buildStage2UserMessage(T12_FIXTURE_LOS, T12_FIXTURE_INPUT);
+  assert.strictEqual(
+    message,
+    T12_EXPECTED_BASE_MESSAGE,
+    'stage-2 user message without `learner` must be byte-identical to the pre-Task-12 template',
+  );
+}
+
+/** Task 12 brief, case (a) continued: with `learner` present, the message
+ *  must still start with the UNCHANGED base message (the append-only
+ *  contract) and must contain the ability line, the success-target line
+ *  (read from TUNING.generation, not a hardcoded "70-80%"), and — when
+ *  gapTopics is non-empty — the gap line. Pure — no DB, no LLM. */
+async function testStage2UserMessageWithLearnerAppendsStudentProfile() {
+  const learner: LearnerHints = { band: 'building', gapTopics: ['fraction division'] };
+  const message = buildStage2UserMessage(T12_FIXTURE_LOS, { ...T12_FIXTURE_INPUT, learner });
+
+  assert.ok(
+    message.startsWith(T12_EXPECTED_BASE_MESSAGE),
+    'message with `learner` present must still start with the unchanged base message',
+  );
+  assert.ok(message.includes('Student profile'), 'expected the student-profile block header');
+  assert.ok(message.includes('ability: building'), 'expected the ability line naming the band');
+
+  const low = Math.round(TUNING.generation.successTargetLow * 100);
+  const high = Math.round(TUNING.generation.successTargetHigh * 100);
+  assert.ok(
+    message.includes(`${low}-${high}%`),
+    `expected the success-target line derived from TUNING.generation (${low}-${high}%)`,
+  );
+  assert.ok(
+    message.includes('Known misconception areas') && message.includes('fraction division'),
+    'expected the gap line naming the confirmed gap topic',
+  );
+}
+
+/** The gap line is conditional — no confirmed gaps, no line. Pure — no DB,
+ *  no LLM. */
+async function testStage2UserMessageWithLearnerNoGapsOmitsGapLine() {
+  const learner: LearnerHints = { band: 'strong', gapTopics: [] };
+  const message = buildStage2UserMessage(T12_FIXTURE_LOS, { ...T12_FIXTURE_INPUT, learner });
+  assert.ok(message.includes('ability: strong'), 'expected the ability line naming the band');
+  assert.ok(
+    !message.includes('Known misconception areas'),
+    'expected no gap line when gapTopics is empty',
+  );
+}
+
+/** Task 12 brief, case (b): STAGE2_SYSTEM must still carry the
+ *  deterministic-id rule (untouched) and now also the conditional
+ *  `-worked2` EXCEPTION clause. Pure — no DB, no LLM. */
+async function testStage2SystemHasDeterministicIdRuleAndWorked2Exception() {
+  assert.ok(
+    STAGE2_SYSTEM.includes('Segment ids are deterministic'),
+    'expected the pre-existing deterministic-id rule to still be present',
+  );
+  assert.ok(STAGE2_SYSTEM.includes('EXCEPTION'), 'expected the -worked2 EXCEPTION clause');
+  assert.ok(
+    STAGE2_SYSTEM.includes('"<loId>-worked2"'),
+    'expected the -worked2 id convention spelled out in the exception rule',
+  );
+}
+
+/** Task 12 brief, case (c): topicCacheKey gains an optional `band` that
+ *  must (1) sit alongside the CACHE_KEY_VERSION bump — a pre-bump key
+ *  literal no longer matches — and (2) distinguish different ability
+ *  bands for an otherwise-identical request. Pure — no DB, no LLM. */
+async function testTopicCacheKeyBandAndVersionBump() {
+  const argsBase = { topic: 'pythagorean theorem', subject: 'math', grade: '10', sessionMinutes: 28 };
+  const noBand = topicCacheKey(argsBase);
+  assert.ok(noBand.endsWith(`|${CACHE_KEY_VERSION}`), 'expected the key to carry the bumped CACHE_KEY_VERSION');
+
+  const preBumpKey = 'pythagorean theorem|math|9-12|std|en|gen-v3';
+  assert.notStrictEqual(noBand, preBumpKey, 'post-bump key (gen-v4) must differ from the pre-bump (gen-v3) key');
+
+  const building = topicCacheKey({ ...argsBase, band: 'building' });
+  const strong = topicCacheKey({ ...argsBase, band: 'strong' });
+  assert.notStrictEqual(building, strong, "band:'building' and band:'strong' keys must diverge");
+  assert.notStrictEqual(building, noBand, 'a banded key must differ from the unbanded key for the same request');
+}
+
+/** "Critical regression guard" adjacent requirement: segment ids stay
+ *  `<loId>-` prefixed so LO grouping by id prefix (`loGroupOf`,
+ *  context.ts) still resolves for the new `-worked2` segment the same way
+ *  it does for `-worked` — otherwise the second worked example would land
+ *  in its own singleton group, breaking progress tracking / advance-target
+ *  resolution for building-band students. Pure — no DB, no LLM. */
+async function testLoGroupOfGroupsWorked2WithItsLo() {
+  assert.strictEqual(
+    loGroupOf('lo-1-worked2'),
+    loGroupOf('lo-1-worked'),
+    'a -worked2 segment id must group with its LO the same way -worked does',
+  );
+  assert.strictEqual(loGroupOf('lo-1-worked2'), 'lo-1', 'expected -worked2 to strip to the bare loId');
 }
 
 async function main() {
@@ -856,7 +1000,30 @@ async function main() {
 
   console.log('\nsession-agenda Task 2 — LO shortTitle (stage-1 parse) — pure:\n');
   await test('parseStage1Los: shortTitle passthrough, fallback derivation, overlong capping', testParseStage1LosShortTitle);
-  await test('CACHE_KEY_VERSION bumped to gen-v3 for shortTitle', testCacheKeyVersionBumpedForShortTitle);
+  await test('CACHE_KEY_VERSION bumped to gen-v4 (Task 12: learner-conditioned generation)', testCacheKeyVersionBumpedForShortTitle);
+
+  console.log('\nTask 12 — learner-conditioned generation — pure:\n');
+  await test(
+    'stage-2 user message without learner is byte-identical to the pre-Task-12 template (regression guard)',
+    testStage2UserMessageByteIdenticalWithoutLearner,
+  );
+  await test(
+    'stage-2 user message with learner appends ability + success-target + gap lines after the unchanged base',
+    testStage2UserMessageWithLearnerAppendsStudentProfile,
+  );
+  await test(
+    'stage-2 user message with learner but no gapTopics omits the gap line',
+    testStage2UserMessageWithLearnerNoGapsOmitsGapLine,
+  );
+  await test(
+    'STAGE2_SYSTEM keeps the deterministic-id rule and gains the -worked2 EXCEPTION clause',
+    testStage2SystemHasDeterministicIdRuleAndWorked2Exception,
+  );
+  await test(
+    'topicCacheKey: band diverges building vs strong, and the key carries the gen-v4 bump',
+    testTopicCacheKeyBandAndVersionBump,
+  );
+  await test('loGroupOf: a -worked2 segment id groups with its LO like -worked does', testLoGroupOfGroupsWorked2WithItsLo);
 
   console.log('\nPOST /api/portal/v1/plan-generate (Task 4):\n');
   await test(

@@ -29,8 +29,13 @@ const DEFAULT_TTL_DAYS = 30;
  *  forced-miss treatment. Exported so tests can assert against it instead
  *  of hardcoding the literal, so a future bump doesn't also require
  *  editing test string literals in lockstep.
- *  gen-v3 (2026-08-09): LO shortTitle added at stage-1. */
-export const CACHE_KEY_VERSION = 'gen-v3';
+ *  gen-v3 (2026-08-09): LO shortTitle added at stage-1.
+ *  gen-v4 (Task 12, 2026-08-11): learner-conditioned generation — the
+ *  student-profile block (ability band, worked-example count, gap-topic
+ *  care) changes stage-2 output shape for any request carrying a
+ *  studentId, so a pre-Task-12 cached plan (generic, no band-aware
+ *  worked2 segments) must not keep matching band-aware requests. */
+export const CACHE_KEY_VERSION = 'gen-v4';
 
 type GradeBand = 'K-2' | '3-5' | '6-8' | '9-12' | 'other';
 
@@ -72,24 +77,39 @@ function lengthBucketFor(sessionMinutes: number): LengthBucket {
  *  request serving a Spanish-locale student a plan they can't read.
  *
  *  e.g. topicCacheKey({ topic: 'Pythagorean Theorem', subject: 'Math',
- *  grade: '10', sessionMinutes: 28 }) === "pythagorean theorem|math|9-12|std|en|gen-v2"
+ *  grade: '10', sessionMinutes: 28 }) === "pythagorean theorem|math|9-12|std|en|gen-v4"
  *
- *  The trailing `|gen-v2` (CACHE_KEY_VERSION) segment is a version tag,
+ *  The trailing `|gen-v4` (CACHE_KEY_VERSION) segment is a version tag,
  *  not part of the equivalence class — it exists purely so bumping it
- *  invalidates every previously-cached key at once. See CACHE_KEY_VERSION. */
+ *  invalidates every previously-cached key at once. See CACHE_KEY_VERSION.
+ *
+ *  `band` (Task 12, optional): the requesting student's ability band
+ *  ('building'/'steady'/'strong', from getLearnerHints). A student with
+ *  known gap topics never reaches this function at all — the caller
+ *  bypasses the cache entirely for that case (gap-topic care must always
+ *  be freshly generated, never served from a generic cached plan) — so
+ *  `band` only ever distinguishes "no ability signal" (the field omitted,
+ *  e.g. no studentId on the request) from a specific band. When present it
+ *  is inserted as its own key segment so a 'building' request never
+ *  collides with a 'strong' request for the same topic/band/bucket; when
+ *  absent the key is IDENTICAL in shape to the pre-Task-12 format (no
+ *  empty segment, no extra pipe) so the version-bump-only case stays a
+ *  single-field diff. */
 export function topicCacheKey(args: {
   topic: string;
   subject: string;
   grade: string;
   sessionMinutes: number;
   locale?: string;
+  band?: string;
 }): string {
   const topic = args.topic.trim().toLowerCase().replace(/\s+/g, ' ');
   const subject = args.subject.trim().toLowerCase();
-  const band = gradeBandForCacheKey(args.grade);
+  const gradeBand = gradeBandForCacheKey(args.grade);
   const bucket = lengthBucketFor(args.sessionMinutes);
   const locale = (args.locale ?? 'en').trim().toLowerCase();
-  return `${topic}|${subject}|${band}|${bucket}|${locale}|${CACHE_KEY_VERSION}`;
+  const abilityBandSeg = args.band ? `${args.band.trim().toLowerCase()}|` : '';
+  return `${topic}|${subject}|${gradeBand}|${bucket}|${locale}|${abilityBandSeg}${CACHE_KEY_VERSION}`;
 }
 
 /** Look up a previously generated plan by cache key, within `ttlDays` of
