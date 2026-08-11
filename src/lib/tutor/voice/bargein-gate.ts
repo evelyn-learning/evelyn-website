@@ -1,5 +1,6 @@
 /**
- * Sustained-energy barge-in gate (Task V1 — echo fix layer 1).
+ * Sustained-energy barge-in gate (Task V1 — echo fix layer 1; R44 — windowed
+ * accumulation).
  *
  * ROOT CAUSE this defends against (session portal-81f2b582): the tutor's own
  * TTS leaks into the mic, the perception VAD fires `speech_started`, and the
@@ -7,7 +8,24 @@
  * on the tutor's OWN echo — cutting it off mid-sentence. Echo bursts are SHORT
  * and correlated with playback; a genuine student barge-in ("wait, stop") is
  * SUSTAINED. So during 'speaking' ONLY, the kill is withheld until the mic has
- * carried above-threshold energy continuously for `sustainMs` (default 400).
+ * carried above-threshold energy for `sustainMs` (default 400).
+ *
+ * R44 — windowed accumulation (session portal-dc74208b): live evidence showed
+ * 2 of 5 armed barge-in gates never fired on sustained real student speech.
+ * The original rule required that energy for `sustainMs` be a CONTINUOUS run
+ * — it reset to zero on any single below-threshold frame. Real speech isn't
+ * continuous: inter-word dips drop below threshold for ~100ms between voiced
+ * segments, and echo cancellation actively ducks the mic while the tutor's
+ * TTS is playing, further chopping up genuine student audio into runs shorter
+ * than `sustainMs` even when the student never stopped talking. So the
+ * continuity requirement is now WINDOWED ACCUMULATION: instead of requiring
+ * one unbroken run, the gate sums above-threshold coverage across the
+ * trailing `accumWindowMs` (default 700, see {@link
+ * DEFAULT_BARGEIN_ACCUM_WINDOW_MS}) and fires once that sum reaches
+ * `sustainMs`. A genuine sustained utterance with dips still accumulates
+ * enough coverage to fire; a short or sparse echo blip still doesn't. The
+ * liveness guards (currently-quiet mic, stale latest frame) are unchanged —
+ * accumulated coverage never overrides a currently-dead mic.
  *
  * This module is the PURE decision core — no React, no DOM, no timers, no
  * component state — so it is script-testable (`npm run test:bargein-gate`).
@@ -50,8 +68,13 @@ export interface BargeInGateInput {
   /** Max gap between consecutive in-run frames (and between the latest frame
    *  and now) before the run is considered broken/stale. Guards against a
    *  reception gap being read as continuous energy. Defaults to
-   *  {@link DEFAULT_MAX_FRAME_GAP_MS}. */
+   *  {@link DEFAULT_MAX_FRAME_GAP_MS}. Also caps the per-frame credit in the
+   *  windowed-accumulation sum (see {@link shouldFireBargeInKill}). */
   maxFrameGapMs?: number;
+  /** Trailing window (ms, ending at `nowMs`) over which above-threshold
+   *  coverage is accumulated. Defaults to
+   *  {@link DEFAULT_BARGEIN_ACCUM_WINDOW_MS}. */
+  accumWindowMs?: number;
 }
 
 /** ~3 perception frames at the ~85ms ScriptProcessor cadence (4096 / 24k... the
@@ -59,14 +82,25 @@ export interface BargeInGateInput {
  *  frame without reading a genuine silence gap as sustained energy. */
 export const DEFAULT_MAX_FRAME_GAP_MS = 250;
 
+/** Trailing window over which above-threshold coverage is accumulated (R44).
+ *  700ms comfortably spans a few inter-word dips (~100ms each) around a
+ *  `sustainMs`-sized (350ms default) run of genuine speech without being so
+ *  wide that sparse, unrelated echo blips accumulate into a false fire. */
+export const DEFAULT_BARGEIN_ACCUM_WINDOW_MS = 700;
+
 /**
  * Should the stage-3 barge-in kill fire?
  *
  * - NON-'speaking' onset → true immediately (gate bypassed; instant path, today's
  *   behavior, ZERO added latency).
- * - 'speaking' onset → true only when the mic has carried a CONTINUOUS run of
- *   above-threshold energy for ≥ `sustainMs`, measured to `nowMs`. A short echo
- *   blip (run ends before `sustainMs`, or the mic has already gone quiet) → false.
+ * - 'speaking' onset → true only once the mic has carried ≥ `sustainMs` of
+ *   above-threshold energy, ACCUMULATED (not necessarily continuous) within
+ *   the trailing `accumWindowMs` window ending at `nowMs` (R44 — see the
+ *   module header). A short or sparse echo blip (accumulated coverage stays
+ *   under `sustainMs`, or the mic has already gone quiet) → false.
+ * - Liveness is still required regardless of accumulated coverage: a
+ *   currently-quiet or stale mic never fires, no matter how much coverage it
+ *   carried earlier.
  *
  * Pure: identical output for identical input.
  */
@@ -76,6 +110,7 @@ export function shouldFireBargeInKill(input: BargeInGateInput): boolean {
   if (input.state !== 'speaking') return true;
 
   const gap = input.maxFrameGapMs ?? DEFAULT_MAX_FRAME_GAP_MS;
+  const accumWindowMs = input.accumWindowMs ?? DEFAULT_BARGEIN_ACCUM_WINDOW_MS;
   const frames = input.frames
     .filter((f) => f.tMs >= input.speechStartMs && f.tMs <= input.nowMs)
     .sort((a, b) => a.tMs - b.tMs);
@@ -87,21 +122,24 @@ export function shouldFireBargeInKill(input: BargeInGateInput): boolean {
   // Latest frame is stale relative to now (no fresh audio) → run not live.
   if (input.nowMs - last.tMs > gap) return false;
 
-  // Walk backwards over the trailing above-threshold run. It breaks on the
-  // first below-threshold frame OR on a reception gap larger than `gap`.
-  let runStart = last.tMs;
-  let prevT = last.tMs;
-  for (let i = frames.length - 2; i >= 0; i--) {
+  // Windowed accumulation (R44): walk the frames inside [nowMs -
+  // accumWindowMs, nowMs]. Each above-threshold frame is credited the
+  // duration to its successor frame (or to `nowMs` for the trailing frame),
+  // capped at `gap` so a reception gap can't be misread as sustained energy.
+  // Fire as soon as the running sum reaches `sustainMs` — this tolerates
+  // inter-word dips and AEC-attenuated capture that would break a strict
+  // continuous run, while a short/sparse blip still can't accumulate enough.
+  const windowStart = input.nowMs - accumWindowMs;
+  let coveredMs = 0;
+  for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
-    if (f.energy < input.energyThreshold) break;
-    if (prevT - f.tMs > gap) break;
-    runStart = f.tMs;
-    prevT = f.tMs;
+    if (f.tMs < windowStart) continue;
+    if (f.energy < input.energyThreshold) continue;
+    const nextT = i + 1 < frames.length ? frames[i + 1].tMs : input.nowMs;
+    coveredMs += Math.min(nextT - f.tMs, gap);
+    if (coveredMs >= input.sustainMs) return true;
   }
-
-  // Measured to NOW (not to the last frame) so a still-live run fires the
-  // instant it has been loud for `sustainMs`.
-  return input.nowMs - runStart >= input.sustainMs;
+  return false;
 }
 
 /**

@@ -20,7 +20,9 @@ import {
   shouldDrainAfterOrphanedFetch,
   shouldFireSpeakingWatchdog,
   resolveBargeInEnergyThreshold,
+  DEFAULT_BARGEIN_ACCUM_WINDOW_MS,
   type BargeInFrame,
+  type BargeInGateInput,
 } from '../src/lib/tutor/voice/bargein-gate';
 import {
   BARGEIN_SUSTAIN_MS,
@@ -156,6 +158,130 @@ function main() {
       frames: hum, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
     });
     assert.equal(fire, false, 'below-threshold energy never counts as voice');
+  });
+
+  // ── R44: windowed accumulation (dip-tolerant sustain) ──
+  // Live evidence (session portal-dc74208b): 2 of 5 armed barge-in gates never
+  // passed on sustained real student speech. The strict continuous-run walk
+  // above resets on ANY below-threshold frame, and inter-word dips + AEC
+  // ducking the mic during TTS playback break the run before it reaches
+  // sustainMs. Windowed accumulation credits above-threshold coverage inside
+  // the trailing `accumWindowMs` (default 700) instead of requiring an
+  // unbroken run — a genuine sustained utterance still fires; short/sparse
+  // echo blips still don't.
+  console.log('\nWindowed accumulation (dip-tolerant sustain) — shouldFireBargeInKill\n');
+
+  test(`DEFAULT_BARGEIN_ACCUM_WINDOW_MS is 700`, () => {
+    assert.equal(DEFAULT_BARGEIN_ACCUM_WINDOW_MS, 700);
+  });
+
+  function framesWithDips(): BargeInGateInput {
+    // ~85ms-cadence capture (FRAME_MS below), energy alternating 0.3 (voiced)
+    // / 0.1 (inter-word dip) in 200ms voiced runs with 100ms dips — the exact
+    // live-incident shape. Total above-threshold coverage inside the trailing
+    // 700ms window is 440ms (>= 350 sustainMs) → FIRES under windowed
+    // accumulation. Under the OLD strict continuous-run rule the trailing run
+    // is only 200ms (600..800, broken by the 500..600 dip) → does NOT fire.
+    // This is the case that must be RED before the fix and GREEN after.
+    const dipFrames: BargeInFrame[] = [
+      ...frames(0, 160, 0.3),    // voiced 0-200ish
+      ...frames(200, 280, 0.1),  // dip
+      ...frames(300, 460, 0.3),  // voiced
+      ...frames(500, 580, 0.1),  // dip
+      ...frames(600, 760, 0.3),  // voiced (trailing run only 200ms long)
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 800,
+      frames: dipFrames, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function shortBlip(): BargeInGateInput {
+    // A single ~200ms echo blip then silence. Accumulated coverage (~200ms)
+    // stays well under sustainMs (350) regardless of windowing.
+    const blipFrames: BargeInFrame[] = [
+      ...frames(0, 160, LOUD),
+      ...frames(200, 440, QUIET),
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 440,
+      frames: blipFrames, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function sparseBlips(): BargeInGateInput {
+    // 3x80ms voiced blips spread over 2s. Only the trailing pair falls inside
+    // any 700ms window (~100ms total coverage) — refused.
+    const sparse: BargeInFrame[] = [
+      ...frames(0, 80, LOUD),
+      ...frames(900, 980, LOUD),
+      ...frames(1900, 1980, LOUD),
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 2000,
+      frames: sparse, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function continuousRun(): BargeInGateInput {
+    // The old passing shape: an unbroken 350ms run still fires under
+    // windowed accumulation (it's a degenerate case of the same rule).
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: SUSTAIN,
+      frames: frames(0, SUSTAIN - 30, LOUD), energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function deadBurst(): BargeInGateInput {
+    // 320ms of loud energy (would be MORE than enough accumulated coverage)
+    // immediately followed by a currently-quiet frame. The liveness guard
+    // (`last.energy < threshold`) must still refuse this — sufficient past
+    // coverage does not override a currently-dead mic.
+    const burst: BargeInFrame[] = [
+      ...frames(0, 320, LOUD),
+      { tMs: 400, energy: QUIET },
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 400,
+      frames: burst, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function nonSpeaking(): BargeInGateInput {
+    return {
+      state: 'processing', speechStartMs: 0, nowMs: 0,
+      frames: [], energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  test('dips within window fire (live-incident shape: inter-word dips no longer reset the gate)', () => {
+    assert.equal(shouldFireBargeInKill(framesWithDips()), true,
+      'sustained speech with inter-word dips must fire once windowed coverage reaches sustainMs');
+  });
+
+  test('short blip still refused (accumulated < sustainMs)', () => {
+    assert.equal(shouldFireBargeInKill(shortBlip()), false,
+      'a single short blip must not accumulate enough coverage to fire');
+  });
+
+  test('sparse blips refused (coverage inside any 700ms window is too small)', () => {
+    assert.equal(shouldFireBargeInKill(sparseBlips()), false,
+      'blips spread far apart in time must not fire even though they sum to more than sustainMs overall');
+  });
+
+  test('continuous run still fires (old passing shape unaffected)', () => {
+    assert.equal(shouldFireBargeInKill(continuousRun()), true,
+      'an unbroken run of sustainMs must still fire under windowed accumulation');
+  });
+
+  test('dead burst refused (liveness guard unchanged: currently-quiet mic refused even with past coverage)', () => {
+    assert.equal(shouldFireBargeInKill(deadBurst()), false,
+      'a currently-quiet mic must refuse regardless of how much coverage it accumulated earlier');
+  });
+
+  test('non-speaking instant path unchanged', () => {
+    assert.equal(shouldFireBargeInKill(nonSpeaking()), true,
+      "non-'speaking' states keep the instant kill path, untouched by accumulation");
   });
 
   // ── Task X3: Ink2 time-based deferred-kill variant (no energy window) ──
