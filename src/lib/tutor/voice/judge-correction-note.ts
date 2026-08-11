@@ -52,6 +52,28 @@ export function claimsWithMathExpression(claims: string[]): string[] {
   return claims.filter(hasMathExpression);
 }
 
+/**
+ * Consumption-gating predicate (2026-08-10 root cause, session
+ * portal-cb2addf5): a planted correction note used to be consumed by
+ * WHICHEVER brain call happened to run next, including synthetic
+ * dispatches that carry no student content at all — an idle-nudge
+ * ("Take your time. Here's a fresh one…") or a bracketed cover/system-note
+ * turn. Consuming the note there means it's gone (pendingJudgeCorrectionNoteRef
+ * is cleared unconditionally on delivery) without ever reaching a turn
+ * where the tutor could actually voice the correction to the student —
+ * observed twice in one session (planted at 787.8s, burned by an idle
+ * nudge at 880.5s; planted at 2143.4s, burned at 2241.7s).
+ *
+ * The note must hold until the NEXT REAL student-turn response. Synthetic
+ * dispatches use the same bracketed `[…]` convention as every other
+ * system-originated transcript in this codebase (idle-nudge directive,
+ * `[start lesson]`, cover turns, etc.) — see the `isSynthetic` check
+ * VoiceTutorRealtime already uses at its cover-arm site.
+ */
+export function shouldConsumeJudgeCorrectionNote(transcript: string): boolean {
+  return !/^\s*\[/.test(transcript);
+}
+
 export function buildJudgeCorrectionNote(claims: string[]): string | null {
   const quoted = claims
     .slice(0, MAX_CLAIMS)

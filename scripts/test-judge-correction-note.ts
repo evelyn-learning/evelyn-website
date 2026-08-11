@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-judge-correction-note.ts
  */
-import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression } from '../src/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression, shouldConsumeJudgeCorrectionNote } from '../src/lib/tutor/voice/judge-correction-note';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -61,6 +61,20 @@ check('common-knowledge claim does not qualify', !hasMathExpression('Paris is no
   const filtered = claimsWithMathExpression(['just a tone note', 'another plain-prose note']);
   check('claimsWithMathExpression returns empty when nothing qualifies', filtered.length === 0);
 }
+
+// ---------- R42 consumption gate (2026-08-10, session portal-cb2addf5) ----------
+// A planted note used to be consumed by whichever brain call ran next,
+// including synthetic dispatches (idle-nudge, cover turns) that never
+// voice anything to do with the correction — burned with nothing to show
+// for it. Only a real student-turn transcript may consume the note.
+check('real student transcript consumes', shouldConsumeJudgeCorrectionNote('an ellipse'));
+check('typed real transcript consumes', shouldConsumeJudgeCorrectionNote('Is it 42?'));
+check('idle-nudge directive does NOT consume', !shouldConsumeJudgeCorrectionNote(
+  '[System note: the student has been quiet for a while since your last turn. Re-engage gently in ONE short sentence.]',
+));
+check('bracketed system dispatch does NOT consume', !shouldConsumeJudgeCorrectionNote('[start lesson]'));
+check('leading-whitespace bracketed dispatch does NOT consume', !shouldConsumeJudgeCorrectionNote('   [start session]'));
+check('a real transcript that merely mentions a bracket mid-sentence still consumes', shouldConsumeJudgeCorrectionNote('I think [x] should be 4'));
 
 if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
 console.log(`\nAll ${passed} judge-correction-note tests passed.`);

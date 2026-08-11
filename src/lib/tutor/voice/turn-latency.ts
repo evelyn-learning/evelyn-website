@@ -46,6 +46,27 @@ export function formatTurnLatency(s: TurnLatencySummary): string {
   );
 }
 
+/**
+ * R42 (2026-08-10, session portal-cb2addf5): negative-latency backstop.
+ *
+ * `turn_latency end→fetch=-75941ms TOTAL=-70934ms` was observed live —
+ * a synthetic/nudge dispatch's `mark('brainFetch', …)` landed on a ledger
+ * that a genuinely LATER real turn's `mark('turnEnd', …)` also wrote into
+ * (the ref is reused across calls via `??=`), so `diff('turnEnd',
+ * 'brainFetch')` computed a real turn's later timestamp minus a synthetic
+ * turn's earlier one — chronologically backwards, and meaningless as a
+ * latency number. A genuine measurement can never be negative; this is a
+ * pure predicate the caller uses to skip the misleading emit rather than
+ * publish garbage. See VoiceTutorRealtime.tsx's turn_latency emit sites
+ * (skip-with-debug-note) and the callBrainOnce brainFetch-mark site
+ * (synthetic dispatches now start a fresh ledger instead of reusing one
+ * that might belong to a concurrent real turn).
+ */
+export function hasNegativeLatency(s: TurnLatencySummary): boolean {
+  return [s.eagerToEndMs, s.endToBrainFetchMs, s.brainFirstSentenceMs, s.ttsToFirstAudioMs, s.totalMs]
+    .some((v) => v !== null && v < 0);
+}
+
 export function createTurnLatencyLedger(): TurnLatencyLedger {
   const marks = new Map<TurnLatencyMark, number>();
   const diff = (a: TurnLatencyMark, b: TurnLatencyMark): number | null => {

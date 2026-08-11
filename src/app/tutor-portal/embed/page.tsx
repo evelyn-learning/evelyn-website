@@ -69,6 +69,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // start, proves the opener resolved a non-zero agenda item count (rail
   // preview clause armed). No card is ever dispatched.
   'agenda_',
+  // R42 (2026-08-10): transcript_drawer — every open/close of the
+  // transcript drawer with its trigger source (icon/caption/qpin/event),
+  // added to diagnose the header-icon ghost-second-open bug.
+  'transcript_',
+  // R42: mcq_letter_normalized — a spoken letter homophone ("See.") was
+  // rewritten to the literal MCQ choice letter before dispatch.
+  'mcq_letter_normalized',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

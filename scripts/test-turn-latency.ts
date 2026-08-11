@@ -1,4 +1,4 @@
-import { createTurnLatencyLedger, formatTurnLatency } from '../src/lib/tutor/voice/turn-latency';
+import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency } from '../src/lib/tutor/voice/turn-latency';
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -51,6 +51,35 @@ check('has', l4.has('turnEnd') === true && l4.has('firstAudio') === false);
 check('format', formatTurnLatency(s1) ===
   'eager→end=400ms end→fetch=2ms brain_first=1498ms tts→audio=695ms TOTAL=2200ms complete=true');
 check('formatNulls', formatTurnLatency(l4.summarize()).includes('TOTAL=nullms complete=false'));
+
+// ---------- R42 (2026-08-10, session portal-cb2addf5): negative-latency backstop ----------
+// Live shape: a stale/shared ledger got 'brainFetch' marked by a synthetic
+// dispatch AFTER a real turn's later 'turnEnd' — end→fetch computed
+// negative. hasNegativeLatency is the pure predicate the wiring uses to
+// skip publishing a corrupted turn_latency emit.
+check('happy-path summary has no negative field', !hasNegativeLatency(s1));
+{
+  const corrupted = createTurnLatencyLedger();
+  // turnEnd stamped LATER in wall-clock terms than brainFetch — the
+  // stale-ledger-reuse shape.
+  corrupted.mark('brainFetch', 100);
+  corrupted.mark('turnEnd', 90_000); // an unrelated, much-later real turn
+  const cs = corrupted.summarize();
+  check('corrupted ledger reproduces a negative end→fetch', (cs.endToBrainFetchMs ?? 0) < 0);
+  check('hasNegativeLatency flags it', hasNegativeLatency(cs));
+}
+{
+  // All-null summary (nothing marked yet) must never false-flag.
+  const empty = createTurnLatencyLedger().summarize();
+  check('all-null summary is not flagged negative', !hasNegativeLatency(empty));
+}
+{
+  // Only totalMs negative (turnEnd after firstAudio somehow) still flags.
+  const l5 = createTurnLatencyLedger();
+  l5.mark('firstAudio', 100);
+  l5.mark('turnEnd', 500);
+  check('negative totalMs alone is flagged', hasNegativeLatency(l5.summarize()));
+}
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:turn-latency PASS');

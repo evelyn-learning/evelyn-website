@@ -8,7 +8,12 @@
  *
  * Usage: npx tsx scripts/test-continuity.ts  (npm run test:continuity)
  */
-import { extractDeclarations, normalizeRenamedFunction, isTryAloneRequest } from '../src/lib/tutor/validation/continuity';
+import {
+  extractDeclarations,
+  normalizeRenamedFunction,
+  harvestPreNormalizationDeclarations,
+  isTryAloneRequest,
+} from '../src/lib/tutor/validation/continuity';
 import type { DeclaredFunction } from '../src/lib/tutor/validation/continuity';
 
 let passed = 0;
@@ -49,6 +54,51 @@ check('multiple declared bases → no rename (ambiguous)', !multi.changed);
 
 const already = normalizeRenamedFunction("f(x) = x^2", [decl('f')]);
 check('matching name untouched', !already.changed);
+
+// ─── R42 regression: pre-normalization declaration harvest ───
+// (session portal-cb2addf5, 2026-08-10 — 24 renames in one session, all
+// collapsing to the wrong name because a metaphor \text{} card locked in
+// "h" as the sole declared base and every REAL new function afterward got
+// silently renamed to it before it could register.)
+{
+  // \text{}-RHS metaphor card alone → no canonical base registers.
+  const textOnly = extractDeclarations('h(t) = \\text{height of the drone at time } t');
+  check('\\text{} card alone → no canonical base', textOnly.length === 0, JSON.stringify(textOnly));
+
+  // Simulate the VTR pipeline order fix: harvest-then-normalize, per card,
+  // exactly as VoiceTutorRealtime's normalize pass now does.
+  let declared: DeclaredFunction[] = [];
+  const process = (latex: string) => {
+    declared = harvestPreNormalizationDeclarations(latex, declared);
+    return normalizeRenamedFunction(latex, declared);
+  };
+
+  // Metaphor h-card first — contributes nothing (no canonical base).
+  const hCard = process('h(t) = \\text{height of the drone at time } t');
+  check('metaphor h-card is left untouched', !hCard.changed, hCard.latex);
+  check('metaphor h-card does not become a canonical base', declared.length === 0, JSON.stringify(declared));
+
+  // Genuinely new declaration g(x) = x^2 e^{3x} — must survive unrenamed
+  // (there was no real declared base yet) and register.
+  const gCard = process('g(x) = x^2 e^{3x}');
+  check('new declaration g survives (not renamed to h)', !gCard.changed && gCard.latex.includes('g(x)'), gCard.latex);
+  check('g registers as a declared base', declared.some(d => d.name === 'g'), JSON.stringify(declared));
+
+  // A second new declaration k(x) = sin(x^2) after g — multi-base session;
+  // normalization must be disabled (the OLD bug: this would have been
+  // rewritten to g(x) since g was the sole declared base at rename time).
+  const kCard = process('k(x) = \\sin(x^2)');
+  check('k(x) after g survives (multi-base disables normalization)', !kCard.changed && kCard.latex.includes('k(x)'), kCard.latex);
+  check('declared bases are now multi (g, k)', declared.filter(d => !d.name.includes("'")).length === 2, JSON.stringify(declared));
+
+  // A PRIMED usage of an already-declared base must still be left to the
+  // original drift-correction mechanism — harvestPreNormalizationDeclarations
+  // must not itself register primed forms as new bases (that job belongs
+  // to normalizeRenamedFunction's rename pass, tested above).
+  let singleBase: DeclaredFunction[] = [decl('f')];
+  const primedHarvest = harvestPreNormalizationDeclarations("g'(x) = 2x", singleBase);
+  check('primed declaration-shaped latex is NOT harvested as a new base', primedHarvest === singleBase || primedHarvest.length === 1, JSON.stringify(primedHarvest));
+}
 
 // ─── isTryAloneRequest (round 29 — hands-off mode) ───
 {

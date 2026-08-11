@@ -36,11 +36,18 @@ export function extractDeclarations(latex: string): DeclaredFunction[] {
     const argVar = m[3] || 'x';
     const primes = m[2] || m[4] || '';
     const body = m[5].trim();
+    // R42 (session portal-cb2addf5, 2026-08-10): a `\text{...}` RHS is a
+    // caption/metaphor label ("h(t) = \text{height of the drone at time
+    // t}"), not a real function declaration. Registering it locked in a
+    // spurious canonical base — every genuinely-new function the tutor
+    // introduced afterward (g, k, ...) got silently renamed to it via
+    // normalizeRenamedFunction's single-declared-base rewrite.
+    const isTextLabel = /^\\text\s*\{/.test(body);
     // Only treat single-letter left-side as a declaration (skip "sin(x)=...", "P = ...").
     // R34: a paren-less "x = …" is a variable being SOLVED, not a function
     // declaration — x is the independent variable by convention. ("y = …"
     // stays a legitimate declaration.)
-    if (/^[a-zA-Z]$/.test(name) && !['e', 'i', 'd'].includes(name) && !(name === 'x' && !m[3])) {
+    if (!isTextLabel && /^[a-zA-Z]$/.test(name) && !['e', 'i', 'd'].includes(name) && !(name === 'x' && !m[3])) {
       out.push({ name: primes ? `${name}${primes}` : name, argVar, body, declaredAt: Date.now() });
     }
   }
@@ -165,6 +172,52 @@ export function normalizeRenamedFunction(
 // ------------------------------------------------------------------
 // Pure greeting detection
 // ------------------------------------------------------------------
+/**
+ * R42 (session portal-cb2addf5, 2026-08-10): pre-normalization declaration
+ * harvest — closes a self-reinforcing lock-in in the VoiceTutorRealtime
+ * call site. The rename pass (normalizeRenamedFunction) and declaration
+ * harvest used to run in the WRONG order: harvest read the latex AFTER the
+ * rename pass had already rewritten it, so a genuinely new declaration like
+ * "g(x) = x^2 e^{3x}" got silently renamed to the session's sole existing
+ * base ("h") before g ever had a chance to register. Every later function
+ * (k, R, P, s, ...) then collapsed into the same wrong name — 24 renames in
+ * one session, all rewriting to h.
+ *
+ * Fix: the CALLER (VoiceTutorRealtime) must harvest a card's declarations
+ * from its latex BEFORE calling normalizeRenamedFunction on that same
+ * latex — this function does exactly that merge. Only UNPRIMED
+ * declarations are eligible: an unprimed "NAME(x) = …" is read as
+ * introducing a fresh base function by definition, and merging it in
+ * before the rename check runs naturally trips normalizeRenamedFunction's
+ * existing `declaredBases.length !== 1` escape hatch (multi-base sessions
+ * skip renaming), which is how the new base survives unrenamed — no
+ * separate "is this a declaration" special-case is needed inside
+ * normalizeRenamedFunction itself.
+ *
+ * A PRIMED form ("g'(x) = 2x") is deliberately EXCLUDED from this harvest.
+ * That shape is far more likely to be a derivative reference to an
+ * EXISTING function under a drifted name than an intentional new
+ * declaration — it's exactly the round-34 "silent rename" case
+ * normalizeRenamedFunction exists to correct (see test-continuity.ts
+ * "legit drift g'→f' still normalized"). Harvesting it here would disable
+ * that correction by making every primed drift look like a fresh base.
+ */
+export function harvestPreNormalizationDeclarations(
+  latex: string,
+  declared: DeclaredFunction[],
+): DeclaredFunction[] {
+  const decls = extractDeclarations(latex);
+  if (decls.length === 0) return declared;
+  let next = declared;
+  for (const d of decls) {
+    if (d.name.includes("'")) continue; // primed — leave to drift-correction
+    const idx = next.findIndex(x => x.name === d.name);
+    if (next === declared) next = [...declared];
+    if (idx >= 0) next[idx] = d;
+    else next.push(d);
+  }
+  return next;
+}
 
 const GREETING_TOKENS = [
   'hi', 'hello', 'hey', 'yo', 'hiya', 'howdy',

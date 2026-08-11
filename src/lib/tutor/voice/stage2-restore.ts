@@ -28,6 +28,19 @@ export const STAGE2_NO_VERDICT_RESTORE_MS = 7_000;
  *  re-firing a minute-old turn out of nowhere would be worse than silence. */
 const STALE_CUTOFF_MS = 60_000;
 
+/** R42 (2026-08-10, session portal-cb2addf5): how recently VAD activity
+ *  (speech_started OR speech_stopped — either edge of a speech window)
+ *  must have been seen to still defer a 'speaking'-cancel timeout-resume.
+ *  `midUtterance` alone only catches the INSTANT the check runs — an
+ *  inter-clause pause (a breath between "the answer is..." and "...42")
+ *  fires speech_stopped and clears it, even though the student is still
+ *  mid-answer and about to resume. Observed live: gate passed, TTS
+ *  cancelled, then stage3_timeout_resume fired 7002ms later and talked
+ *  over the student while their 13.9s utterance was still 6+ seconds from
+ *  finalizing. 4s comfortably covers a clause-boundary breath without
+ *  meaningfully delaying recovery from a genuinely abandoned utterance. */
+export const RECENT_VAD_ACTIVITY_WINDOW_MS = 4_000;
+
 export function decideStage2TimeoutRestore(args: {
   /** The armed checkpoint is still unresolved (same object, not cleared).
    *  Optional — omitted/undefined is treated as still-active; only an
@@ -40,6 +53,13 @@ export function decideStage2TimeoutRestore(args: {
   brainTurnAborted: boolean;
   /** Student is speaking right now — their transcript will resolve this. */
   midUtterance: boolean;
+  /** R42 (2026-08-10): ms since the last VAD edge (speech_started OR
+   *  speech_stopped) of ANY kind — covers the inter-clause-pause gap that
+   *  bare `midUtterance` misses (see RECENT_VAD_ACTIVITY_WINDOW_MS above).
+   *  Undefined ⇒ no recency signal available; falls back to `midUtterance`
+   *  alone (today's behavior, unchanged). Only consulted in the 'speaking'
+   *  branch — 'processing' cancels are unaffected by this fix. */
+  msSinceLastVadActivity?: number;
   /** A new brain call is already running — the stall self-resolved. */
   newBrainCallInFlight: boolean;
   ageMs: number;
@@ -61,6 +81,12 @@ export function decideStage2TimeoutRestore(args: {
     // if a new brain turn is already speaking, the stall self-resolved —
     // replaying the old unplayed sentences now would talk over the new turn.
     if (args.newBrainCallInFlight) return 'drop';
+    // R42: defer if the student is mid-utterance RIGHT NOW, or VAD saw
+    // activity recently enough that they're plausibly mid-clause-pause
+    // rather than genuinely done. Computed once, used by both sub-branches
+    // below.
+    const recentActivity = args.midUtterance ||
+      (args.msSinceLastVadActivity !== undefined && args.msSinceLastVadActivity <= RECENT_VAD_ACTIVITY_WINDOW_MS);
     if (!args.hasUnplayedSnapshot) {
       // Round-6c (live 2026-07-28, portal-28ee6557): empty snapshot used to
       // hard-drop, which swallowed the whole turn when the cancel hit with
@@ -73,11 +99,11 @@ export function decideStage2TimeoutRestore(args: {
       // mirror it here, with the same genuinely-cut-off guard so a
       // completed turn is never duplicated.
       if (!args.brainWasInFlight || !args.brainTurnAborted) return 'drop';
-      if (args.midUtterance) return 'defer';
+      if (recentActivity) return 'defer';
       if (args.ageMs < timeoutMs) return 'defer';
       return 'restore';
     }
-    if (args.midUtterance) return 'defer';
+    if (recentActivity) return 'defer';
     if (args.ageMs < timeoutMs) return 'defer';
     return 'resume-tts';
   }
