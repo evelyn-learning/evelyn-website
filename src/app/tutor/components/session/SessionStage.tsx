@@ -722,7 +722,7 @@ export default function SessionStage(props: SessionStageProps) {
             needed (plus clearance for the floating switcher when shown) — the
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
-        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : 'pt-2'} pb-2 px-2 sm:px-0 flex justify-center`}>
+        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}>
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
               scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
@@ -1047,7 +1047,7 @@ export default function SessionStage(props: SessionStageProps) {
           outer anchor (top/right) never moves; the FAB toggles whether the
           rest of the column renders below it, so expanding never shifts this
           overlay's position, only grows it downward. */}
-      <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
+      <div className={`absolute ${agendaRail && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20`}>
         <div ref={toolsClusterRef} className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <div className="relative">
             <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
@@ -1120,7 +1120,7 @@ export default function SessionStage(props: SessionStageProps) {
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
               suppressed (chrome="minimal"). ===== */}
       {showSwitcher && boardPages && (
-        <div ref={switcherRef} className="absolute top-[58px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
