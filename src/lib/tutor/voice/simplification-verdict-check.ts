@@ -49,7 +49,7 @@ const OK: SimplificationVerdictResult = { verdict: 'ok' };
 // Denial detection — the sentence must OPEN with an unambiguous denial.
 // ---------------------------------------------------------------------------
 
-const DENIAL_RE =
+export const DENIAL_RE =
   /^\s*(?:not\s+(?:quite|exactly|really|right|correct)\b|nope\b|that'?s\s+not\b|hmm+,?\s+not\s+(?:quite|exactly)\b|close,?\s+but\b|not\s+what\b)/i;
 
 // ---------------------------------------------------------------------------

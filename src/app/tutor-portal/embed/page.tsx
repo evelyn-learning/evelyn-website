@@ -84,6 +84,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // any prefix here — pre-existing gap, out of scope for this entry, see
   // task-4-report.md.
   'praise_echo',
+  // Task 5, verdict-detector round (2026-08-10): inverse_verdict_kill /
+  // inverse_verdict_advisory / inverse_verdict_unverified_pinned /
+  // inverse_verdict_correction_note_planted — the false-DENIAL counterpart
+  // to praise_echo above (tutor denies an answer that matches the verified
+  // expected answer). Same triage-gap class.
+  'inverse_verdict',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

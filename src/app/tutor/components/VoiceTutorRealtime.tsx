@@ -85,6 +85,7 @@ import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check'
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
+import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
@@ -2021,7 +2022,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -9634,6 +9635,46 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // Inverse-verdict check (verdict-detector round): tutor DENIES an answer
+                  // that matches the verified expected answer — the "(3x+2)" class. Kill
+                  // tier = verified expectedAnswer only; brain-claimed-but-unverified card
+                  // answers are advisory (correction note, no kill) — a wrong unverified
+                  // card + correct denial must never kill a good turn.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                      : undefined;
+                    const inv = checkInverseVerdict({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript,
+                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      choices: mcqChoices,
+                    });
+                    if (inv.verdict === 'false_denial') {
+                      const reason =
+                        `You denied the student's answer, but "${(transcript ?? '').slice(0, 80)}" MATCHES the verified expected answer (${inv.expected}). ` +
+                        `Their answer is correct. Re-emit your response: affirm it plainly, then move the lesson forward.`;
+                      rejectionsThisAttempt.push({ action: 'inverse_verdict_false_denial', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] inverse-verdict check: false denial of verified "${inv.expected}" — kill + retry`);
+                      onDebugEvent?.('inverse_verdict_kill', `expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)} (${inv.matchReason})`);
+                      continue;
+                    }
+                    if (inv.verdict === 'advisory_false_denial') {
+                      onDebugEvent?.('inverse_verdict_advisory', `unverified expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)}`);
+                      // Plant a next-real-turn correction note via the same ref the
+                      // judge advisory path uses (~line 11945), same "never clobber a
+                      // kill-class note" rule (R41 kill-class-wins-slot behavior) —
+                      // only plant when the slot is currently empty.
+                      if (!pendingJudgeCorrectionNoteRef.current) {
+                        pendingJudgeCorrectionNoteRef.current =
+                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them.`;
+                        onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
+                      }
+                    }
+                  }
                   // Round-7+ Fix 5: contradiction-inversion within a
                   // single sentence ("not quite right ... actually
                   // correct" / "wrong ... you're right"). The brain
@@ -10199,6 +10240,28 @@ export function VoiceTutorRealtime({
                           } else {
                             console.warn(`[VoiceTutorRealtime] improvised answer MISMATCH — claimed "${claimedAnswer.slice(0, 60)}" vs blind solve "${(v.solved ?? '').slice(0, 60)}" — nothing pinned.`);
                             onDebugEvent?.('improvised_answer_mismatch', `claimed="${claimedAnswer.slice(0, 40)}" solved="${(v.solved ?? '').slice(0, 40)}"`);
+                            // Inverse-verdict advisory tier (verdict-detector round, Task
+                            // 5): the brain's own claimed answer for this improvised card
+                            // failed pipeline verification, so it can never be pinned as a
+                            // VERIFIED expectedAnswer — but it's still what the brain
+                            // believes the card's answer is, and a false denial of a
+                            // student answer that matches it still deserves a re-check
+                            // nudge (advisory only, never a kill — see
+                            // checkInverseVerdict's tier split; a wrong unverified card +
+                            // a correct denial must never kill a good turn). Guarded the
+                            // same way the VERIFIED branch above pins expectedAnswer:
+                            // same statement-match against the currently tracked problem,
+                            // and never overwrite an existing VERIFIED expectedAnswer (the
+                            // kill tier always wins the slot).
+                            const normWsUnverified = (s: string) => s.replace(/\s+/g, ' ').trim();
+                            if (
+                              currentProblemRef.current &&
+                              !currentProblemRef.current.expectedAnswer &&
+                              normWsUnverified(currentProblemRef.current.statement) === normWsUnverified(claimedStatement)
+                            ) {
+                              currentProblemRef.current.unverifiedCardAnswer = claimedAnswer;
+                              onDebugEvent?.('inverse_verdict_unverified_pinned', claimedAnswer.slice(0, 60));
+                            }
                           }
                         })
                         .catch(() => { /* verification is best-effort */ });
