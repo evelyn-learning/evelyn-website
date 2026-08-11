@@ -13834,9 +13834,23 @@ export function VoiceTutorRealtime({
       // never consume turn B's jump/release/newPage signals.
       //
       // Gates:
-      //  - !opts?.silent — bracketed/synthetic dispatches (kickoffs, idle
-      //    nudge, cutoff-resume, demo directives) are not student speech
-      //    and must never move the agenda cursor or the whiteboard page.
+      //  - !opts?.silent — silent dispatches (kickoffs, idle nudge,
+      //    cutoff-resume) are not student speech and must never move the
+      //    agenda cursor or the whiteboard page.
+      //  - NOT a bracketed marker. opts.silent alone is NOT sufficient:
+      //    sendTextMessage's relay branch never sets it (its meta type
+      //    carries only `typed`), so every system-generated marker routed
+      //    through realtimeHandleRef.sendTextMessage — try-yourself
+      //    submissions, whiteboard-write and homework-photo OCR markers
+      //    ("[The student uploaded the whiteboard. It contains: …]"),
+      //    control-channel picks — arrives here as a NON-silent 'voice'
+      //    dispatch that classifies 'clean'. OCR'd homework text like
+      //    "Draw a free-body diagram…" matches NEW_PROBLEM_PATTERNS, which
+      //    would set topicShiftForReleaseRef and let a photo upload
+      //    spuriously release the lesson cursor. This function already
+      //    treats a leading '[' as the synthetic-marker signal three times
+      //    over (idle-nudge reset, both queue-push sites, the latency
+      //    anchor) — same test here, in its whitespace-tolerant form.
       //  - voice only: classification must be 'clean'. This preserves the
       //    gate that lived at the old voice-finalize site ("we don't want a
       //    garbled transcript to look like a topic pivot"). 'noise' never
@@ -13844,10 +13858,22 @@ export function VoiceTutorRealtime({
       //    onUserTranscript); 'uncertain' does, and must still be skipped.
       //    Typed input is exempt, matching the old typed call site, which
       //    ran detection unconditionally.
-      if (!opts?.silent) {
+      //
+      // Wrapped defensively: this now sits inside the try that owns
+      // callBrainOnce, and that try has no catch — only a finally. A throw
+      // out of detection (a malformed plan reaching railJumpCandidates, a
+      // regex blowup in the intent matcher) would skip the brain call
+      // entirely and cost the student their answer. Detection is an
+      // enhancement; it must never be load-bearing for the reply.
+      if (!opts?.silent && !/^\s*\[/.test(transcript)) {
         const detectSource = opts?.typed === true ? 'typed' : 'voice';
         if (detectSource === 'typed' || classifyTranscript(transcript) === 'clean') {
-          runStudentTurnDetection(transcript, detectSource);
+          try {
+            runStudentTurnDetection(transcript, detectSource);
+          } catch (err) {
+            console.warn('[brain-orchestrator] student-turn detection threw — continuing to the brain call:', err);
+            onDebugEvent?.('student_turn_detection_error', String(err).slice(0, 120));
+          }
         }
       }
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
@@ -13982,8 +14008,25 @@ export function VoiceTutorRealtime({
         // passed to callBrainOnce below only suppresses a duplicate chat-add.
         // Same voice 'clean' gate as the direct site; queued entries are bare
         // strings that lost their opts, so modality is unknown ('queued').
-        if (classifyTranscript(combined) === 'clean') {
-          runStudentTurnDetection(combined, 'queued');
+        //
+        // Bracketed-marker guard, same as the direct site. Read of what can
+        // actually land in `combined`: both push sites drop a marker rather
+        // than queue it (busy-gate `if (transcript.startsWith('[')) return`,
+        // and the queueOnMidUtterance branch's identical check), and the
+        // splice above filters `!s.startsWith('[')` again — so in practice a
+        // marker cannot reach here. Those three checks are all bare
+        // `startsWith('[')` though, not the whitespace-tolerant `/^\s*\[/`
+        // used elsewhere, so a marker with leading whitespace would slip
+        // every one of them. No current producer emits one, but the cost of
+        // being wrong is a spurious cursor release, so guard rather than
+        // rely on the producers. Same defensive try/catch as the direct site.
+        if (!/^\s*\[/.test(combined) && classifyTranscript(combined) === 'clean') {
+          try {
+            runStudentTurnDetection(combined, 'queued');
+          } catch (err) {
+            console.warn('[brain-orchestrator] student-turn detection threw on queue drain — continuing to the brain call:', err);
+            onDebugEvent?.('student_turn_detection_error', String(err).slice(0, 120));
+          }
         }
         armCoverForDispatch(combined);
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
