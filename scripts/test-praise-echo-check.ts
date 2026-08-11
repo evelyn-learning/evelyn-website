@@ -111,5 +111,23 @@ function check(name: string, cond: boolean, detail?: string) {
   check('denial opener ok', r.verdict === 'ok', JSON.stringify(r));
 }
 
+// Fix (round-3 review Important): mirror-image of the single-letter guard
+// above. Student says a bare choice LETTER ("C"); the opener affirms that
+// choice's VALUE ("Right — $5$."), which extractPraiseEcho legitimately
+// captures as a math token. 'c' vs '5' both full-parse and disagree, so
+// without a guard this wrongfully kills a correct turn — the affirmed
+// value can never be resolved back to a letter, so the comparison is
+// unjudgeable.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — $5$. Nice.', studentUtterance: 'C', choices: [{ letter: 'A', text: '3' }, { letter: 'B', text: '4' }, { letter: 'C', text: '5' }] });
+  check('bare choice letter vs affirmed VALUE, live MCQ → ok (unjudgeable)', r.verdict === 'ok', JSON.stringify(r));
+}
+// Regression: a non-letter utterance in the same MCQ context is unaffected
+// by the new guard and still reaches the comparator.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — $2x$.', studentUtterance: 'three x', choices: [{ letter: 'A', text: '3' }, { letter: 'B', text: '4' }, { letter: 'C', text: '2x' }] });
+  check('non-letter utterance with live MCQ choices still fires false_praise', r.verdict === 'false_praise', JSON.stringify(r));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

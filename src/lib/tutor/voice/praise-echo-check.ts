@@ -66,6 +66,28 @@ export function checkPraiseEcho(args: {
     if (/^[a-zA-Z]'{0,2}$/.test(strippedAffirmed)) {
       return { verdict: 'ok' };
     }
+    // Fix (round-3 review Important): the mirror-image collision. Student
+    // says a bare choice LETTER ("C"); the opener affirms that choice's
+    // VALUE ("Right — $5$.") — extractPraiseEcho's isMathValueToken gate
+    // grabbed "5" as a legit math token (it's not the ambiguous-letter
+    // shape the guard above exists for), so 'c' vs '5' both full-parse in
+    // the comparator and DISAGREE, wrongfully killing a correct turn. The
+    // affirmed math value can never be resolved back to a letter — there's
+    // no principled way to judge "does 5 agree with C" — so once an MCQ is
+    // live AND the student's utterance is nothing but a live choice letter
+    // (optionally trailing punctuation), the comparison is unjudgeable:
+    // bail to 'ok' before matchUtteranceToAnswer ever runs. A genuine
+    // math-value utterance ("three x") is untouched — it isn't a bare
+    // letter, so it still reaches the comparator below.
+    if (args.choices && args.choices.length > 0) {
+      const bareLetter = args.studentUtterance.trim().replace(/[.!?,;:]+$/, '');
+      if (
+        /^[a-zA-Z]$/.test(bareLetter) &&
+        args.choices.some((c) => c.letter.toUpperCase() === bareLetter.toUpperCase())
+      ) {
+        return { verdict: 'ok' };
+      }
+    }
     // `choices` deliberately withheld here (fix, same review): extractPraiseEcho's
     // output is always a math token (isMathValueToken gate), never an MCQ
     // letter — choices have no legitimate role in resolving it, and passing
