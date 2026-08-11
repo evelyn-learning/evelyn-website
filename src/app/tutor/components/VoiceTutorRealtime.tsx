@@ -746,6 +746,19 @@ interface PacingStreakSnapshot {
    *  statement). Deleting it on revert is what lets the REAL turn's
    *  identical-problem solve register instead of deduping to a no-op. */
   addedSolvedHash: string | null;
+  /** Guard (c) data: segIds `mark_segment_complete` newly completed during
+   *  THIS turn (mirrors segmentsCompletedThisTurnRef). Seeded from the live
+   *  ref at pacing-snapshot time, then OVERWRITTEN with a fresh recapture
+   *  of the same live ref inside claimSupersededStreakForCheckpoint() at
+   *  claim time — the authoritative value revertSupersededStreak's guard
+   *  (c) reads. The live ref itself is unsafe to read at revert/resolution
+   *  time: callBrainOnce resets it on every dispatch, and the same
+   *  Haiku-wait-window dispatch race that motivates claiming
+   *  lastStreakChangeRef at construction (not comparison at resolution)
+   *  applies here too — by resolution time the live ref could belong to a
+   *  newer, unrelated turn. Capturing a copy at the synchronous claim
+   *  moment (before that race window opens) is what makes it safe. */
+  completedThisTurn: string[];
   /** This turn's ordinal (pacingTurnCounterRef.current at snapshot time).
    *  NOT used to gate the revert directly (see the checkpoint-creation
    *  "claim" sites for why a resolution-time counter comparison is
@@ -2481,6 +2494,17 @@ export function VoiceTutorRealtime({
     const rec = lastStreakChangeRef.current;
     if (!rec || rec.turnMarker !== pacingTurnCounterRef.current) return null;
     lastStreakChangeRef.current = null;
+    // Review round (F3): re-capture completedThisTurn HERE, at the same
+    // synchronous claim moment, overwriting the pacing-block's earlier
+    // seed. segmentsCompletedThisTurnRef is reset by callBrainOnce on
+    // EVERY dispatch — the identical Haiku-wait-window race that motivates
+    // claiming lastStreakChangeRef here (rather than comparing
+    // pacingTurnCounterRef later, at resolution) also applies to this ref:
+    // reading it live at resolution time could read a NEWER turn's
+    // (already-reset) array. Claim time is safe because it happens at
+    // checkpoint construction, synchronously, before the Haiku-wait window
+    // (and therefore before any intervening dispatch) even opens.
+    rec.completedThisTurn = [...segmentsCompletedThisTurnRef.current];
     return rec;
   }, []);
   // Buffer of [pacing] events fired during the most recent brain turn.
@@ -13002,6 +13026,12 @@ export function VoiceTutorRealtime({
                 ? { ...segmentMasteredFlagRef.current }
                 : null,
               addedSolvedHash: null,
+              // Seeded here (turn N is still actively executing, so this
+              // already reflects turn N's own completions with no race) —
+              // claimSupersededStreakForCheckpoint() re-captures this same
+              // field at claim time, which is the value that actually gets
+              // read. See PacingStreakSnapshot's declaration.
+              completedThisTurn: [...segmentsCompletedThisTurnRef.current],
               turnMarker: pacingTurnCounterRef.current,
             };
           }
@@ -14382,20 +14412,28 @@ export function VoiceTutorRealtime({
     const supersededStreak = checkpoint.supersededStreak;
     const revertSupersededStreak = (reason: string) => {
       if (!supersededStreak) return;
-      // Guard (c) (review round: narrowed). completedSegmentIdsRef is
-      // SESSION-lifetime, so testing membership there would block a
-      // revert for ANY segment ever completed earlier in the session
-      // (e.g. a review-question revisit), not just one completed by the
-      // turn actually being reverted. segmentsCompletedThisTurnRef is the
-      // exact, per-turn signal: it only holds segIds newly completed
-      // during the CURRENT (about-to-be-discarded) turn, cleared at every
-      // turn's start. If mark_segment_complete fired for this segId
-      // during that turn, its evidence push / segmentMasteredFlagRef read
+      // Guard (c) (review round: narrowed, then fixed again for the same
+      // read-live-ref-at-resolution-time race as F2). completedSegmentIdsRef
+      // is SESSION-lifetime, so testing membership there would block a
+      // revert for ANY segment ever completed earlier in the session (e.g.
+      // a review-question revisit), not just one completed by the turn
+      // actually being reverted — segmentsCompletedThisTurnRef fixed that.
+      // But segmentsCompletedThisTurnRef is itself reset by callBrainOnce
+      // on EVERY dispatch, so reading it LIVE here (at resolution time,
+      // after the Haiku wait) is exactly the same race F2 closed for
+      // lastStreakChangeRef: an intervening turn dispatched during that
+      // wait resets it, and by the time this code runs the live array
+      // could belong to that newer turn, not the one being reverted.
+      // supersededStreak.completedThisTurn is the fix — a copy taken at
+      // the synchronous claim moment (claimSupersededStreakForCheckpoint),
+      // before the wait window (and therefore before any intervening
+      // dispatch) opens. If mark_segment_complete fired for this segId
+      // during THIS turn, its evidence push / segmentMasteredFlagRef read
       // already happened synchronously at tool-call time — BEFORE this
       // post-stream snapshot was even taken — so rewinding the streak
       // refs now would desync them from evidence that already committed.
       // Leave the streak standing in that case.
-      if (segmentsCompletedThisTurnRef.current.includes(supersededStreak.segId)) {
+      if (supersededStreak.completedThisTurn.includes(supersededStreak.segId)) {
         onDebugEvent?.('pacing_streak_revert_skipped_consumed', `seg="${supersededStreak.segId}" — mark_segment_complete already consumed this turn`);
         return;
       }
