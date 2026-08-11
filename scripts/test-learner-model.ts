@@ -5,6 +5,8 @@
  * Task 8 further extends it with the server append points (emit / assessment
  * / mock) that call appendEvidence internally. Task 9 further extends it
  * with pure projection.ts tests and a DB-backed learner-state route section.
+ * Task 10 further extends it with a DB-backed `runLearnerSnapshot` section
+ * and a DB-backed student-erase route section.
  *
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
@@ -943,9 +945,253 @@ async function runLearnerStateRouteTests() {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* runLearnerSnapshot — DB-backed (Task 10)                            */
+/* ------------------------------------------------------------------ */
+
+async function runLearnerSnapshotTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 10 runLearnerSnapshot tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { runLearnerSnapshot } = await import('../src/lib/tutor/learner-model/snapshot-job');
+  const { LearnerStateProjectionModel, LearnerStateSnapshotModel, buildLearnerStateProjectionId } = await import(
+    '../src/models'
+  );
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+
+  await connectDB();
+
+  console.log('\nrunLearnerSnapshot (Task 10):\n');
+
+  const studentId = `lmtest:snap:${process.pid}`;
+  const trialStudentId = `trial:lmtest:snap:${process.pid}`;
+  const loA = 'lmtest.snap.lo-a';
+  const loB = 'lmtest.snap.lo-b';
+  const loNull = 'lmtest.snap.lo-null';
+  const now = new Date('2026-08-10T12:00:00Z');
+
+  async function cleanupAll() {
+    await deleteLearnerModelData(studentId);
+    await deleteLearnerModelData(trialStudentId);
+  }
+
+  await cleanupAll();
+  try {
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loA),
+      studentId,
+      loId: loA,
+      estimate: 0.7,
+      confidence: 'high',
+      trend: 'flat',
+      nEff: 8,
+      lastEvidenceAt: now,
+    });
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loB),
+      studentId,
+      loId: loB,
+      estimate: 0.3,
+      confidence: 'low',
+      trend: 'flat',
+      nEff: 1,
+      lastEvidenceAt: now,
+    });
+    // Inserted below the Mongoose schema (which types estimate as required
+    // number) to exercise the runtime "skip null estimates" rule the brief
+    // calls out — a row landing in this shape shouldn't be reachable via
+    // recomputeProjection (it bails before upserting on a null estimate),
+    // but the snapshot job defends against it anyway.
+    await LearnerStateProjectionModel.collection.insertOne({
+      _id: buildLearnerStateProjectionId(studentId, loNull) as unknown as string,
+      studentId,
+      loId: loNull,
+      estimate: null,
+      confidence: 'low',
+      trend: 'flat',
+      nEff: 0,
+      lastEvidenceAt: now,
+      updatedAt: now,
+      schemaVersion: 1,
+    } as never);
+    // trial: student — must never get a snapshot row.
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(trialStudentId, loA),
+      studentId: trialStudentId,
+      loId: loA,
+      estimate: 0.5,
+      confidence: 'low',
+      trend: 'flat',
+      nEff: 1,
+      lastEvidenceAt: now,
+    });
+
+    const stats = await runLearnerSnapshot(now);
+    assert(stats.studentsSnapshotted >= 1 && stats.errors === 0, 'runLearnerSnapshot: completes with no errors');
+
+    const snap = await LearnerStateSnapshotModel.findOne({ studentId, date: '2026-08-10' }).lean();
+    assert(!!snap, "runLearnerSnapshot: writes one LearnerStateSnapshot dated 'YYYY-MM-DD' of `now` (UTC)");
+    assert(
+      snap!.los.length === 2 &&
+        snap!.los.some((l) => l.loId === loA && l.estimate === 0.7) &&
+        snap!.los.some((l) => l.loId === loB && l.estimate === 0.3),
+      'runLearnerSnapshot: los = [{loId, estimate}] from the projections, null estimate skipped',
+    );
+
+    const trialSnap = await LearnerStateSnapshotModel.findOne({ studentId: trialStudentId }).lean();
+    assert(!trialSnap, "runLearnerSnapshot: 'trial:' students are skipped — no snapshot row");
+
+    // Second run same day → upsert, not a duplicate.
+    await runLearnerSnapshot(now);
+    const countSameDay = await LearnerStateSnapshotModel.countDocuments({ studentId, date: '2026-08-10' });
+    assert(countSameDay === 1, 'runLearnerSnapshot: second run same day upserts (no duplicate doc)');
+
+    // Update a projection and re-run same day → the existing doc's los reflect the latest state.
+    await LearnerStateProjectionModel.updateOne(
+      { _id: buildLearnerStateProjectionId(studentId, loA) },
+      { $set: { estimate: 0.9 } },
+    );
+    await runLearnerSnapshot(now);
+    const updatedSnap = await LearnerStateSnapshotModel.findOne({ studentId, date: '2026-08-10' }).lean();
+    assert(
+      updatedSnap!.los.some((l) => l.loId === loA && l.estimate === 0.9),
+      'runLearnerSnapshot: same-day re-run overwrites the doc with the latest estimates',
+    );
+  } finally {
+    await cleanupAll();
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* student-erase route — signed POST (Task 10)                        */
+/* ------------------------------------------------------------------ */
+
+async function runStudentEraseRouteTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 10 student-erase route tests — no MONGODB_URI)');
+    return;
+  }
+
+  process.env.PORTAL_PARTNER_SECRETS = process.env.PORTAL_PARTNER_SECRETS ?? JSON.stringify({ portalA: 'secret-a' });
+  const { signPortalRequest } = await import('@evelyn/portal-contract/auth');
+  const { StudentEraseResponseSchema } = await import('@evelyn/portal-contract/v1');
+  const { POST: eraseRoutePOST } = await import('../src/app/api/portal/v1/student-erase/route');
+  const { EvidenceEventModel, LearnerStateProjectionModel, LearnerStateSnapshotModel } = await import(
+    '../src/models'
+  );
+  const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  const SECRET = 'secret-a';
+  const PARTNER = 'portalA';
+  function signed(method: string, pathWithQuery: string, bodyObj?: unknown) {
+    const body = bodyObj === undefined ? '' : JSON.stringify(bodyObj);
+    const timestamp = String(Date.now());
+    const sig = signPortalRequest(SECRET, { method, path: pathWithQuery, timestamp, body });
+    const init: RequestInit = {
+      method,
+      headers: { 'x-evelyn-partner': PARTNER, 'x-evelyn-timestamp': timestamp, 'x-evelyn-signature': sig },
+    };
+    if (method !== 'GET' && body) init.body = body;
+    return new Request(`https://engine.test${pathWithQuery}`, init) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function unsignedRequest(pathWithQuery: string) {
+    return new Request(`https://engine.test${pathWithQuery}`, { method: 'POST' }) as unknown as InstanceType<
+      typeof NextRequest
+    >;
+  }
+  async function call(
+    h: (r: InstanceType<typeof NextRequest>, c: unknown) => Promise<Response>,
+    req: InstanceType<typeof NextRequest>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<{ status: number; json: any }> {
+    const res = await h(req, undefined);
+    return { status: res.status, json: await res.json() };
+  }
+
+  console.log('\nstudent-erase route (Task 10):\n');
+
+  const studentId = `lmtest:erase:${process.pid}`;
+  const loId = 'lmtest.erase.lo-a';
+
+  await deleteLearnerModelData(studentId);
+  try {
+    const wallClock = new Date();
+    await appendEvidence([
+      {
+        studentId,
+        loId,
+        source: 'practice',
+        occurredAt: wallClock,
+        outcome: 1,
+        idempotencyKey: `${studentId}:${loId}:1`,
+      },
+    ]);
+    await LearnerStateSnapshotModel.create({ studentId, date: '2026-08-01', los: [{ loId, estimate: 0.5 }] });
+
+    const { status, json } = await call(
+      eraseRoutePOST,
+      signed('POST', '/api/portal/v1/student-erase', { studentId }),
+    );
+    assert(status === 200, 'student-erase POST: seeded student → 200');
+    assert(
+      StudentEraseResponseSchema.safeParse(json).success,
+      'student-erase POST: response validates against contract StudentEraseResponseSchema',
+    );
+    assert(json.ok === true, 'student-erase POST: ok: true');
+    assert(
+      json.deleted.evidenceEvents === 1 &&
+        json.deleted.learnerStateProjections === 1 &&
+        json.deleted.learnerStateSnapshots === 1,
+      'student-erase POST: deleted counts reflect what was actually removed',
+    );
+
+    const remainingEvents = await EvidenceEventModel.countDocuments({ studentId });
+    const remainingProjections = await LearnerStateProjectionModel.countDocuments({ studentId });
+    const remainingSnapshots = await LearnerStateSnapshotModel.countDocuments({ studentId });
+    assert(
+      remainingEvents === 0 && remainingProjections === 0 && remainingSnapshots === 0,
+      'student-erase POST: data is actually gone from the DB, not just reported gone',
+    );
+  } finally {
+    await deleteLearnerModelData(studentId);
+  }
+
+  // trial: id — still calls the helper (harmless zero counts), not a 4xx branch.
+  {
+    const trialStudentId = `trial:lmtest:erase:${process.pid}`;
+    const { status, json } = await call(
+      eraseRoutePOST,
+      signed('POST', '/api/portal/v1/student-erase', { studentId: trialStudentId }),
+    );
+    assert(status === 200, "student-erase POST: 'trial:' studentId → 200 (not special-cased to an error)");
+    assert(
+      json.ok === true &&
+        Object.values(json.deleted as Record<string, number>).every((n) => n === 0),
+      "student-erase POST: 'trial:' studentId → harmless all-zero deleted counts",
+    );
+  }
+
+  {
+    const { status } = await call(
+      eraseRoutePOST,
+      unsignedRequest('/api/portal/v1/student-erase'),
+    );
+    assert(status === 401, 'student-erase POST: unsigned request → 401');
+  }
+}
+
 runDbTests()
   .then(() => runServerAppendPointTests())
   .then(() => runLearnerStateRouteTests())
+  .then(() => runLearnerSnapshotTests())
+  .then(() => runStudentEraseRouteTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section
