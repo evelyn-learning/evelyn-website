@@ -303,6 +303,41 @@ console.log('OK — tts-pronunciation rewrites validated');
   console.log('OK — live-session 2026-07-15 regressions (caps emphasis, a/b/c lists)');
 }
 
+// Task R47-3 (session portal-1349716e): ALL-CAPS emphasis words must be
+// SPOKEN, not spelled letter-by-letter — the brain wrote "Whatever ELSE he
+// could've done with that same hour" and Cartesia spelled "E L S E".
+// Generalizes the block above from a closed whitelist to two shape rules
+// (lowercaseCapsEmphasis, tts-pronunciation.ts): Rule A (4+ letters with a
+// vowel, minus a small initialism blocklist) and Rule B (an explicit 2-3
+// letter emphasis-word list). Pins below are the brief's exact list,
+// including the negatives (AP/FTC/USDA/$F$ must stay untouched).
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  // Live bug's exact shape.
+  eq("Whatever ELSE he could've done with that same hour.",
+     "Whatever else he could've done with that same hour.",
+     'caps-else-live-bug');
+  eq("That's NOT the same thing.", "That's not the same thing.", 'caps-not-contraction');
+  // Word-acronym: vowel-bearing 4+ caps reads as a WORD, not spelled.
+  eq('NASA launched.', 'nasa launched.', 'caps-nasa-word-acronym');
+  // Negative: genuine short initialisms (<=3 letters) stay spelled — Rule
+  // B never reaches them (no entry in the explicit short-word list).
+  eq('AP Calc BC uses the FTC.', 'AP Calc BC uses the FTC.', 'caps-ap-ftc-untouched');
+  // Negative: a blocklisted 4+ letter initialism stays spelled even though
+  // it carries vowels.
+  eq('the USDA says.', 'the USDA says.', 'caps-usda-blocklisted');
+  // Negative: single-letter $-span content is untouched — CAPS_RUN_RE
+  // requires a run of 2+ consecutive caps, so a lone "F" never matches
+  // (and it's inside a span, converted to spoken form before this rule
+  // ever runs, per the doc comment's placement rationale).
+  eq('The constant is $F$ here.', 'The constant is F here.', 'caps-dollar-f-span-untouched');
+  console.log('OK — Task R47-3 (ALL-CAPS emphasis spoken, not spelled)');
+}
+
 // Task X1 (session portal-236c6e8f): TTS math verbalization + prosody
 // smoothing. Bugs: (a) `$...$` LaTeX delimiters reaching TTS raw ("dollar
 // a cubed bee circumflex 3 dollar" for $a^3 b^3$); (b) "pi" voiced as
