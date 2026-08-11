@@ -38,19 +38,37 @@ function check(name: string, cond: boolean, detail?: string) {
   const r = checkPraiseEcho({ turnTextSoFar: 'Right — $2x$. Good.', studentUtterance: 'yeah that thing we did' });
   check('unparseable utterance ok', r.verdict === 'ok', JSON.stringify(r));
 }
-// MCQ shape — NEEDS_CONTEXT (see task-4-report.md): the brief's expectation
-// here is 'false_praise', but extractPraiseEcho (Task 3, frozen — this
-// round's Task 4 brief forbids modifying praise-contradiction.ts) gates its
-// capture on isMathValueToken, which requires a digit/operator/`$`/backslash
-// in the captured span. A bare MCQ letter like "B" has none of those, so
-// extractPraiseEcho('Right — B. Moving on.') returns null and checkPraiseEcho
-// never reaches the comparator — 'ok', not 'false_praise'. Verified directly:
-// extractPraiseEcho('Right — B. Moving on.') === null. Asserting actual
-// (correct-given-upstream) behavior here rather than patching praise-echo-check.ts
-// with letter-specific extraction logic the brief's Step 3 code doesn't call for.
+// MCQ shape (design decision 2026-08-10, resolving the earlier NEEDS_CONTEXT
+// — see task-4-report.md): extractPraiseEcho stays frozen and never returns
+// a bare letter, so this now goes through checkPraiseEcho's own MCQ-scoped
+// second branch — PRAISE_OPENER_RE re-matched directly, capture resolved
+// against `choices` via matchUtteranceToAnswer's MCQ path. Gated on
+// `choices` being present, so this can ONLY fire when an MCQ problem is
+// live — never turns a bare-letter LABEL reference in prose into a kill.
 {
   const r = checkPraiseEcho({ turnTextSoFar: 'Right — B. Moving on.', studentUtterance: 'C', choices: [{ letter: 'B', text: '4' }, { letter: 'C', text: '6' }] });
-  check('mcq bare-letter echo: extractPraiseEcho math-value gate blocks capture → ok (brief expected false_praise; see NEEDS_CONTEXT)', r.verdict === 'ok', JSON.stringify(r));
+  check('mcq echo mismatch fires', r.verdict === 'false_praise', JSON.stringify(r));
+}
+// Negative: the identical opener text, but no MCQ problem is live (no
+// `choices`) — the MCQ-scoped branch must not even attempt the match, since
+// a bare letter with no choices context is exactly the "label reference,
+// not a choice" shape the design decision says must never fire.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — B. Moving on.', studentUtterance: 'C' });
+  check('mcq-shaped opener with NO choices → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// Negative: choices present, but the student's utterance actually AGREES
+// with the affirmed letter — must resolve to 'ok', not fire.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — B. Moving on.', studentUtterance: 'B', choices: [{ letter: 'B', text: '4' }, { letter: 'C', text: '6' }] });
+  check('mcq echo agrees with utterance → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// Negative: choices present, opener captures a long CLAUSE rather than a
+// letter/"option B" shape — the length guard must reject it before it ever
+// reaches the comparator, regardless of what the student said.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — this looks correct. Next problem.', studentUtterance: 'B', choices: [{ letter: 'B', text: '4' }, { letter: 'C', text: '6' }] });
+  check('mcq long-clause capture (length guard) → ok', r.verdict === 'ok', JSON.stringify(r));
 }
 // denial opener is not praise
 {
