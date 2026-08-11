@@ -113,5 +113,15 @@ check('trailing .0 in expression', canonicalizeMathExpression('9.0e^(3x)') === c
 check('non-trailing decimal untouched', matchUtteranceToAnswer('9.05', '9').verdict === 'disagree');
 check('hedge does not flip a wrong answer', matchUtteranceToAnswer("shouldn't it be 7?", '9').verdict === 'disagree');
 
+// — review follow-up: either-integer branch must use an absolute epsilon,
+// not strict equality — a calculator-artifact utterance ('6.999', '7.001')
+// against an integer expected answer ('7') is the same number and must
+// still agree; a genuinely different decimal ('9.05' vs '9', '99.5' vs
+// '100') must still disagree.
+check('float rounding artifact just under: 6.999 vs 7 agree', matchUtteranceToAnswer('6.999', '7').verdict === 'agree');
+check('float rounding artifact just over: 7.001 vs 7 agree', matchUtteranceToAnswer('7.001', '7').verdict === 'agree');
+check('non-trailing decimal still disagrees: 9.05 vs 9', matchUtteranceToAnswer('9.05', '9').verdict === 'disagree');
+check('non-trailing decimal still disagrees: 99.5 vs 100', matchUtteranceToAnswer('99.5', '100').verdict === 'disagree');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

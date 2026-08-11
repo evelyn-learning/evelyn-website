@@ -300,7 +300,7 @@ export function matchUtteranceToAnswer(
   if (nu !== null && ne !== null && uIsPureNumber && eIsPureNumber && cu !== null && ce !== null) {
     // Fix (round-3 review Critical): a blanket 1%-relative tolerance let
     // '359' vs '360' read as agreement — fine for messy real-valued
-    // answers, wrong for two plain integers that just differ. Exact
+    // answers, wrong for two plain integers that just differ. Near-exact
     // equality when EITHER canonical side is a plain integer literal
     // (Task 4: widened from "both" — a bare whole-number side, e.g. an
     // expected answer of '9', means the comparison IS a whole-number
@@ -310,10 +310,20 @@ export function matchUtteranceToAnswer(
     // NEITHER side is a bare integer — decimal-vs-fraction-vs-π forms
     // ('0.785' vs 'π/4', '1/2' vs '0.5') still need it and are unaffected,
     // since neither operand in those pairs is ever a plain integer literal.
+    //
+    // Review fix (Task 4 follow-up): strict `nu === ne` here created a NEW
+    // false-disagree class — a calculator-artifact utterance like '6.999'
+    // against an integer-expected '7' would kill a correct praise-echo.
+    // Integer-expected answers demand near-exactness (no 1%-relative
+    // forgiveness — that's what let '359' vs '360' slip through), but a
+    // sub-hundredth float/rounding artifact is still the same number. Use a
+    // small ABSOLUTE epsilon instead of strict equality: 0.01 keeps '9.05'
+    // vs '9' (diff .05) and '99.5' vs '100' (diff .5) disagreeing, while
+    // '6.999'/'7.001' vs '7' (diff .001) agree.
     const eitherPlainInteger = isPlainIntegerLiteral(cu) || isPlainIntegerLiteral(ce);
-    const agrees = eitherPlainInteger ? nu === ne : withinTolerance(nu, ne);
+    const agrees = eitherPlainInteger ? Math.abs(nu - ne) <= 0.01 : withinTolerance(nu, ne);
     return agrees
-      ? { verdict: 'agree', reason: eitherPlainInteger ? `integer ${nu}=${ne}` : `numeric ${nu}≈${ne}` }
+      ? { verdict: 'agree', reason: eitherPlainInteger ? `integer ${nu}≈${ne}` : `numeric ${nu}≈${ne}` }
       : { verdict: 'disagree', reason: eitherPlainInteger ? `integer ${nu}≠${ne}` : `numeric ${nu}≠${ne}` };
   }
   // 3) expression path — full-parse required on BOTH sides for any verdict
