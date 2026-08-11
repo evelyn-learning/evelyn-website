@@ -98,6 +98,19 @@ Live bug (session portal-1349716e): the brain emphasizes with ALL CAPS ("Whateve
 
 - [ ] TDD pins first; implement; run the FULL math battery (`npm run test:math-coverage` — curated + stress, 0 failures) + physics/chem/subject-notation suites + the prompt-pin harness + `npx tsc --noEmit`. Commit `fix(tts): ALL-CAPS emphasis words are spoken lowercase, not spelled — initialisms preserved`.
 
+### Task 3b: Stray dollar glued to prose in problem statements
+
+**Files:**
+- Create: `src/lib/tutor/whiteboard/statement-dollar-sanitizer.ts` (pure; + `scripts/test-statement-dollar-sanitizer.ts`, register `test:statement-dollars`)
+- Modify: the showProblem/showTryYourself statement render intake (locate where `problem.statement` reaches the renderer/InlineMathText — one choke point preferred; state which)
+- Modify: `src/lib/tutor/ai/system-prompt-builder.ts` (one sentence near the currency/`$` formatting guidance if such a rule area exists — grep `currency` / `dollar`; pin it)
+
+Live bug (session portal-1349716e, stored command verified): the brain emitted `"...You choose the movie ticket.$What is the opportunity cost of that choice?"` — a stray `$` glued to a prose word in a currency-laden statement; the card renders it literally.
+
+**Sanitizer rule (deterministic, conservative):** in a statement string, remove a `$` when (a) it is immediately followed by a letter, (b) the text from it to the next `$`-or-end reads as PROSE (contains ≥2 spaces-separated alphabetic words and none of the math signals `^ _ \ =` or digit-adjacency within 2 chars), and (c) removing it leaves the remaining `$`s all currency-shaped (`$` followed by a digit) or absent. Anything else — untouched. Pins: the live statement → `$` dropped, currency `$20`s intact; `"solve $x+2$ please"` untouched; `"costs $20"` untouched; `"What is $f(3)$?"` untouched; `"$What"` alone (no other $s) → dropped.
+
+- [ ] TDD; wire at the intake choke point; run the new harness + `npx tsx scripts/test-inline-math.ts` (82 — must not flip) + tsc. Commit `fix(whiteboard): strip brain-emitted stray $ glued to prose in problem statements`.
+
 ### Task 4: Battery + repro trace
 
 - [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), full math battery + physics/chem/subject-notation, r33-prompt-rules, `npx tsc --noEmit`, `npm run build`.
