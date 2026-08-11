@@ -109,5 +109,25 @@ function check(name: string, cond: boolean, detail?: string) {
   check('non-praise returns null', r === null, JSON.stringify(r));
 }
 
+// ---------- Coordinator review fix: whole-token check, not existence check ----------
+// A backslash appearing ANYWHERE (not the whole token being a delimited
+// math span) must not qualify a whole prose clause as an affirmed value.
+{
+  const text = 'Right — you used $\\sqrt{4}$ correctly here, nice job! Now let\'s move to the next problem.';
+  const echo = extractPraiseEcho(text);
+  check('prose clause with embedded backslash span → no echo', echo === null, JSON.stringify(echo));
+  const r = detectPraiseContradiction(text);
+  check('prose clause with embedded backslash span → benign, no fire', r === null, JSON.stringify(r));
+}
+// A greedy `^\$.*\$$` must not span multiple $-delimited pairs as if they
+// were one token.
+{
+  const text = 'Right — $2x$ and $3y$. Not that.';
+  const echo = extractPraiseEcho(text);
+  check('multi $-pair capture → no echo', echo === null, JSON.stringify(echo));
+  const r = detectPraiseContradiction(text);
+  check('multi $-pair capture → benign, no fire', r === null, JSON.stringify(r));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
