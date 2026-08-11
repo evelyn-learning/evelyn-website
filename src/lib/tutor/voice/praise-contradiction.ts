@@ -53,8 +53,8 @@
  * Pure module — no imports, no side effects. Never throws.
  */
 
-const PRAISE_OPENER_RE =
-  /^\s*(?:right|yes|exactly|correct|perfect|spot on|that'?s (?:right|correct|it))\s*[—–,.:!-]\s*([^.!?\n]{1,40})[.!?]/i;
+export const PRAISE_OPENER_RE =
+  /^\s*(?:right|yes|exactly|correct|perfect|spot on|that'?s (?:right|correct|it))\s*[—–,.:!-]\s*([^!?\n]{1,120}?)[.!?](?:\s|$)/i;
 
 /** Strips $, \( \), and braces, then all whitespace — used to compare an
  * affirmed value token against equation fragments regardless of delimiter
@@ -68,12 +68,31 @@ function normalizeMathToken(s: string): string {
 }
 
 /** True when the affirmed phrase looks like a compact math value (a
- * digit/operator/$-delimited token with no internal whitespace) rather
- * than prose ("one half", "great job") — the value-substitution branch is
- * scoped to this shape only. */
+ * digit/operator/$-delimited token) rather than prose ("one half", "great
+ * job") — the value-substitution branch is scoped to this shape only.
+ *
+ * A token with no internal whitespace always qualifies on the trailing
+ * digit/operator/$/backslash check below. A token WITH internal whitespace
+ * only qualifies if the ENTIRE trimmed capture is a single delimited math
+ * span — either one `$...$` pair or one `\(...\)` pair — and nothing else.
+ * This is intentionally a whole-token check, not an existence check: an
+ * earlier version accepted whitespace-bearing captures merely for
+ * containing a `$` or a backslash ANYWHERE, which let whole prose clauses
+ * like "you used $\sqrt{4}$ correctly here, nice job" (backslash present)
+ * or multi-span captures like "$2x$ and $3y$" (two `$`-pairs, outer `$`s
+ * still satisfy a greedy `^\$.*\$$`) through as a "math value" — exactly
+ * the shape `extractPraiseEcho` must never hand back as an affirmed value,
+ * since a caller (Task 4) treats that return as ground truth for a kill
+ * decision. Requiring a SINGLE unbroken delimited span closes both holes:
+ * a clause with English words around a `$...$` token no longer starts/ends
+ * with `$`/`\(`+`\)`, and a two-span capture has extra `$` chars inside the
+ * outer pair, which the non-greedy-interior `[^$]*`/`[^)]*` reject. */
 function isMathValueToken(affirmed: string): boolean {
   const raw = affirmed.trim();
-  if (!raw || /\s/.test(raw)) return false;
+  if (!raw) return false;
+  if (/\s/.test(raw) && !/^\$[^$]*\$$/.test(raw) && !/^\\\([^)]*\\\)$/.test(raw)) {
+    return false;
+  }
   return /[$\d^*/+\-\\]/.test(raw);
 }
 
@@ -103,7 +122,14 @@ export function detectPraiseContradiction(turnText: string): { affirmed: string 
   if (!affirmed) return null;
   const rest = turnText.slice(m.index! + m[0].length).replace(/\*/g, '');
   const escaped = affirmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const contra = new RegExp(`\\bnot\\s+${escaped}\\b`, 'i');
+  // Trailing boundary uses a negative lookahead rather than \b: \b requires
+  // a word\/non-word transition, which fails when the affirmed token itself
+  // ends in a non-word char (e.g. a `$`-delimited math span) followed by
+  // whitespace or end-of-string — both sides non-word, no transition, so a
+  // literal "not $2x$" would never match. (?!\w) keeps the same protection
+  // for word-ending tokens (still rejects "not one halves" as a match for
+  // "one half") while correctly closing after symbol-ending tokens.
+  const contra = new RegExp(`\\bnot\\s+${escaped}(?!\\w)`, 'i');
   if (contra.test(rest)) return { affirmed };
 
   if (isMathValueToken(affirmed)) {
@@ -121,4 +147,27 @@ export function detectPraiseContradiction(turnText: string): { affirmed: string 
   }
 
   return null;
+}
+
+/** Extracts the affirmed value phrase from a praise opener (same capture and
+ * cleanup as `detectPraiseContradiction`), independent of whether a later
+ * contradiction exists in the turn. Returns null when there is no opener
+ * match, the cleaned-up capture is empty, or the capture is not a
+ * math-value token per `isMathValueToken` (Task 4 uses this to seed
+ * echo/board comparisons for math-shaped affirmations only — prose phrases
+ * like "one half" are out of scope here, matching the value-substitution
+ * branch above).
+ *
+ * Note on "bare praise" ("Right. Now try the next one."): that case is
+ * rejected by the LAST check (not a math-value token), not by an absent or
+ * empty capture — the opener regex still captures the trailing clause
+ * ("Now try the next one"), it is simply prose, so `isMathValueToken`
+ * correctly refuses it. */
+export function extractPraiseEcho(turnText: string): string | null {
+  const m = turnText.match(PRAISE_OPENER_RE);
+  if (!m) return null;
+  const affirmed = m[1].replace(/\*/g, '').trim().replace(/\s+/g, ' ');
+  if (!affirmed) return null;
+  if (!isMathValueToken(affirmed)) return null;
+  return affirmed;
 }

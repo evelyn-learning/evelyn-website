@@ -9,7 +9,7 @@
  * sentence 0 alone.
  * Usage: npx tsx scripts/test-praise-contradiction.ts
  */
-import { detectPraiseContradiction } from '../src/lib/tutor/voice/praise-contradiction';
+import { detectPraiseContradiction, extractPraiseEcho } from '../src/lib/tutor/voice/praise-contradiction';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {
@@ -82,6 +82,51 @@ function check(name: string, cond: boolean, detail?: string) {
 {
   const r = detectPraiseContradiction('Right — great job! Let\'s move on to the next one.');
   check('value-substitution: plain prose praise (no math token) → null', r === null, JSON.stringify(r));
+}
+
+// ---------- R42 post-mortem: loosened captures ----------
+// 40-char cap never latched on long math openers
+{
+  const r = detectPraiseContradiction("Right — $f'(x) = 3x^2 e^{3x} + 2x e^{3x} \\cdot x$. Wait, that should be not $f'(x) = 3x^2 e^{3x} + 2x e^{3x} \\cdot x$ ...");
+  check('long math opener latches', r !== null, JSON.stringify(r));
+}
+// whitespace-bearing $-token enters the value-substitution branch
+{
+  const r = detectPraiseContradiction('Right — $3 \\cdot 2x$. So we get $3 \\cdot 2x = 7x$.');
+  check('whitespace math token qualifies', r !== null, JSON.stringify(r));
+}
+// extractPraiseEcho: capture without requiring a contradiction
+{
+  const r = extractPraiseEcho('Right — $2x$. Now differentiate again.');
+  check('echo extraction', r === '$2x$', JSON.stringify(r));
+}
+{
+  const r = extractPraiseEcho('Right. Now try the next one.');
+  check('bare praise no echo', r === null, JSON.stringify(r));
+}
+{
+  const r = extractPraiseEcho('Not quite — check the sign.');
+  check('non-praise returns null', r === null, JSON.stringify(r));
+}
+
+// ---------- Coordinator review fix: whole-token check, not existence check ----------
+// A backslash appearing ANYWHERE (not the whole token being a delimited
+// math span) must not qualify a whole prose clause as an affirmed value.
+{
+  const text = 'Right — you used $\\sqrt{4}$ correctly here, nice job! Now let\'s move to the next problem.';
+  const echo = extractPraiseEcho(text);
+  check('prose clause with embedded backslash span → no echo', echo === null, JSON.stringify(echo));
+  const r = detectPraiseContradiction(text);
+  check('prose clause with embedded backslash span → benign, no fire', r === null, JSON.stringify(r));
+}
+// A greedy `^\$.*\$$` must not span multiple $-delimited pairs as if they
+// were one token.
+{
+  const text = 'Right — $2x$ and $3y$. Not that.';
+  const echo = extractPraiseEcho(text);
+  check('multi $-pair capture → no echo', echo === null, JSON.stringify(echo));
+  const r = detectPraiseContradiction(text);
+  check('multi $-pair capture → benign, no fire', r === null, JSON.stringify(r));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
