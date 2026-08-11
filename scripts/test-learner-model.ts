@@ -1290,6 +1290,137 @@ async function runStudentProfileEmbedAuthTests() {
 }
 
 /* ------------------------------------------------------------------ */
+/* session-usage route — embed-token gating, allow paths (Task 3)      */
+/*                                                                      */
+/* runSessionUsageRouteDenyTests in test-embed-token.ts covers the      */
+/* DB-free deny (401) paths — auth is checked before checkRateLimit /   */
+/* connectDB on POST, and before the sessionId-missing 400 on GET, so   */
+/* those never touch Mongo. The allow paths below (and the studentId-   */
+/* absent anonymous POST, which is unauthenticated by design) fall      */
+/* through into TutorSession.findOne/findOneAndUpdate, so they live     */
+/* here alongside the rest of the DB-backed suite.                      */
+/* ------------------------------------------------------------------ */
+
+async function runSessionUsageEmbedAuthTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 3 session-usage embed-auth tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { GET: usageGET, POST: usagePOST } = await import('../src/app/api/tutor/session-usage/route');
+  const { signEmbedToken } = await import('../src/lib/tutor/portal/embed-token');
+  const { TutorSession } = await import('../src/models/TutorSession');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  console.log('\nsession-usage route — embed-token gating, allow paths (Task 3):\n');
+
+  process.env.PORTAL_PARTNER_SECRETS = process.env.PORTAL_PARTNER_SECRETS ?? JSON.stringify({ portalA: 'secret-a' });
+  const savedEnforce = process.env.EMBED_TOKEN_ENFORCE;
+
+  function getReq(qs: string, headers?: Record<string, string>) {
+    return new Request(`https://engine.test/api/tutor/session-usage${qs}`, {
+      method: 'GET',
+      headers,
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function postReq(bodyObj: unknown, headers?: Record<string, string>) {
+    return new Request('https://engine.test/api/tutor/session-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(headers ?? {}) },
+      body: JSON.stringify(bodyObj),
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+
+  const studentId = `lmtest:sessionusage:${process.pid}`;
+  const sessionIds: string[] = [];
+  const baseFields = { subject: 'Math', topic: 'Algebra', level: '9', sessionGoal: 'practice', inputMode: 'text' };
+
+  try {
+    // (b) GET with a valid token, enforce=on → 200 (no expectedStudentId —
+    // the GET is keyed by opaque sessionId, not gated per-student).
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await usageGET(getReq(`?sessionId=lmtest-usage-nonexistent-${process.pid}`, { 'x-embed-token': token }));
+      assert(res.status === 200, 'GET session-usage: valid token, enforce=on → 200');
+    }
+
+    // (e) POST without studentId, no token, enforce=on → 200 (anonymous demo
+    // surfaces stay unauthenticated by design).
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const sessionId = `lmtest-usage-anon-${process.pid}`;
+      sessionIds.push(sessionId);
+      const res = await usagePOST(postReq({ sessionId, ...baseFields }));
+      assert(res.status === 200, 'POST session-usage: no studentId, no token, enforce=on → 200 (anonymous)');
+      const doc = await TutorSession.findOne({ sessionId }).lean();
+      assert(!!doc && doc.studentId === undefined, 'POST session-usage (anonymous): stored row has no studentId');
+    }
+
+    // (d) POST with studentId + matching-claim token in BODY (embedToken
+    // field, the sendBeacon pagehide path that can't set headers) → 200.
+    // Assert the stored row's studentId round-trips AND embedToken never
+    // lands in the persisted document.
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const sessionId = `lmtest-usage-bodytoken-${process.pid}`;
+      sessionIds.push(sessionId);
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await usagePOST(
+        postReq({ sessionId, studentId, ...baseFields, embedToken: token }),
+      );
+      assert(res.status === 200, 'POST session-usage: matching-claim token via body.embedToken → 200');
+      const doc = await TutorSession.findOne({ sessionId }).lean();
+      assert(!!doc && doc.studentId === studentId, 'POST session-usage (body token): stored row studentId matches');
+      assert(
+        !!doc && !Object.prototype.hasOwnProperty.call(doc, 'embedToken'),
+        'POST session-usage (body token): embedToken never persisted on the stored document',
+      );
+    }
+
+    // Happy path via header, enforce=on → 200.
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const sessionId = `lmtest-usage-header-${process.pid}`;
+      sessionIds.push(sessionId);
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await usagePOST(
+        postReq({ sessionId, studentId, ...baseFields }, { 'x-embed-token': token }),
+      );
+      assert(res.status === 200, 'POST session-usage: matching-claim token via header, enforce=on → 200');
+      const doc = await TutorSession.findOne({ sessionId }).lean();
+      assert(!!doc && doc.studentId === studentId, 'POST session-usage (header token): stored row studentId matches');
+    }
+
+    // log-mode: POST with studentId + no token → 200, unchanged behavior
+    // (log mode verifies but never blocks).
+    process.env.EMBED_TOKEN_ENFORCE = 'log';
+    {
+      const sessionId = `lmtest-usage-log-${process.pid}`;
+      sessionIds.push(sessionId);
+      const res = await usagePOST(postReq({ sessionId, studentId, ...baseFields }));
+      assert(res.status === 200, 'POST session-usage: studentId present, no token, enforce=log → 200 (unchanged behavior)');
+    }
+  } finally {
+    if (savedEnforce === undefined) delete process.env.EMBED_TOKEN_ENFORCE;
+    else process.env.EMBED_TOKEN_ENFORCE = savedEnforce;
+    if (sessionIds.length) await TutorSession.deleteMany({ sessionId: { $in: sessionIds } });
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* runLearnerSnapshot — DB-backed (Task 10)                            */
 /* ------------------------------------------------------------------ */
 
@@ -1794,6 +1925,7 @@ runDbTests()
   .then(() => runLearnerStateRouteTests())
   .then(() => runStudentProfileSegmentOutcomesTests())
   .then(() => runStudentProfileEmbedAuthTests())
+  .then(() => runSessionUsageEmbedAuthTests())
   .then(() => runLearnerSnapshotTests())
   .then(() => runStudentEraseRouteTests())
   .then(() => runBackfillEvidenceTests())

@@ -10,15 +10,30 @@ import { connectDB } from "@/lib/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";
+import { checkEmbedAuth } from "@/lib/tutor/portal/embed-token";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
  * embed's resume boot (contract v1.2.0, E3). Returns just what rehydration
  * needs: the lesson-position checkpoint + transcript + whiteboard. Keyed on the
- * opaque sessionId, same trust model as the unauthenticated POST below. The
- * embed enforces RESUME_MAX_AGE_MS on the checkpoint's updatedAt itself.
+ * opaque sessionId. The embed enforces RESUME_MAX_AGE_MS on the checkpoint's
+ * updatedAt itself.
+ *
+ * Auth (learner-model Phase C, Task 3): a valid embed token (any partner) is
+ * required in `on` mode — no expectedStudentId, since this read is keyed by
+ * opaque sessionId rather than per-student; the token just proves a
+ * legitimate embed context. Checked BEFORE the sessionId-missing 400 and
+ * before connectDB(), so a denied request never touches Mongo.
  */
 export async function GET(req: NextRequest) {
+  const auth = checkEmbedAuth({
+    token: req.headers.get("x-embed-token"),
+    route: "session-usage:GET",
+  });
+  if (!auth.allow) {
+    return NextResponse.json({ error: "unauthorized", reason: auth.reason }, { status: 401 });
+  }
+
   const sessionId = new URL(req.url).searchParams.get("sessionId");
   if (!sessionId) {
     return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
@@ -77,6 +92,33 @@ export async function POST(req: NextRequest) {
         { error: "sessionId is required" },
         { status: 400 }
       );
+    }
+
+    // Auth (learner-model Phase C, Task 3): token comes via the
+    // x-embed-token header or, for the sendBeacon pagehide path (which can't
+    // set headers — see embed/page.tsx:583-584), body.embedToken. Header
+    // wins when both are present. Strip embedToken from body BEFORE any
+    // further use so it can never leak into a stored session document.
+    const token =
+      req.headers.get("x-embed-token") ??
+      (typeof body.embedToken === "string" ? body.embedToken : null);
+    delete body.embedToken;
+
+    // Conditional: only when a studentId is present does this POST need to
+    // prove it belongs to that student. Anonymous demo surfaces (the
+    // engine's own /tutor page, no partner student identity) post with no
+    // studentId and stay unauthenticated by design. Checked BEFORE
+    // checkRateLimit/connectDB so a forged flood of studentId-bearing
+    // requests gets 401s, not DB-adjacent work.
+    if (body.studentId) {
+      const auth = checkEmbedAuth({
+        token,
+        expectedStudentId: String(body.studentId),
+        route: "session-usage:POST",
+      });
+      if (!auth.allow) {
+        return NextResponse.json({ error: "unauthorized", reason: auth.reason }, { status: 401 });
+      }
     }
 
     if (!checkRateLimit(sessionId)) {

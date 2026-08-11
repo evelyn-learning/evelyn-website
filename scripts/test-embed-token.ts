@@ -278,7 +278,121 @@ async function runStudentProfileRouteDenyTests() {
   resetEnv();
 }
 
+// ---------------------------------------------------------------------------
+// Route-level gating: session-usage GET/POST (Task 3)
+//
+// Same split as student-profile (Task 2): this section only covers the DENY
+// paths. GET checks auth BEFORE the sessionId-missing 400 / connectDB, and
+// POST checks auth (when body.studentId is present) BEFORE checkRateLimit /
+// connectDB, so a denied request never reaches Mongo — safe in this DB-free
+// script. If either check were ever reordered to run after connectDB(), these
+// tests would fail loudly here (no MONGODB_URI in this process → connectDB()
+// throws → 500, not 401) rather than silently in a DB-backed run. The 200
+// (allow) paths, and the studentId-absent anonymous-POST path (which is
+// unauthenticated by design but still upserts), necessarily touch Mongo, so
+// that coverage lives in test-learner-model.ts's DB-backed section instead
+// (runSessionUsageEmbedAuthTests).
+// ---------------------------------------------------------------------------
+async function runSessionUsageRouteDenyTests() {
+  console.log('\nsession-usage route — embed-token gating (deny paths, Task 3):\n');
+
+  const { GET: usageGET, POST: usagePOST } = await import(
+    '../src/app/api/tutor/session-usage/route'
+  );
+  const { NextRequest } = await import('next/server');
+
+  function getReq(qs: string, headers?: Record<string, string>) {
+    return new Request(`https://engine.test/api/tutor/session-usage${qs}`, {
+      method: 'GET',
+      headers,
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function postReq(bodyObj: unknown, headers?: Record<string, string>) {
+    return new Request('https://engine.test/api/tutor/session-usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(headers ?? {}) },
+      body: JSON.stringify(bodyObj),
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+
+  clearEnv();
+  process.env.PORTAL_PARTNER_ID = 'academy';
+  process.env.PORTAL_API_SECRET = 'test-secret';
+  process.env.EMBED_TOKEN_ENFORCE = 'on';
+
+  // (a) GET without a token, enforce=on → 401. No sessionId in the query
+  // either — proves auth runs BEFORE the sessionId-missing 400.
+  {
+    const res = await usageGET(getReq(''));
+    const json = await res.json();
+    assert(res.status === 401, 'GET session-usage: no token, enforce=on → 401');
+    assert(
+      json.error === 'unauthorized' && typeof json.reason === 'string' && json.reason.length > 0,
+      'GET session-usage: 401 body shape {error: "unauthorized", reason}',
+    );
+  }
+
+  // (c) POST with studentId in body, no token, enforce=on → 401.
+  {
+    const res = await usagePOST(
+      postReq({ sessionId: `sess-deny-${Date.now()}`, studentId: 'stu-1' }),
+    );
+    const json = await res.json();
+    assert(res.status === 401, 'POST session-usage: studentId present, no token, enforce=on → 401');
+    assert(json.error === 'unauthorized', 'POST session-usage: 401 body has error:"unauthorized"');
+  }
+
+  // (f) POST with studentId in body + a token whose student_id mismatches →
+  // 401, reason "student_mismatch".
+  {
+    const mismatchToken = signEmbedToken(
+      { partner_id: 'academy', student_id: 'stu-OTHER', exp: Math.floor(now / 1000) + 7200 },
+      'test-secret',
+    );
+    const res = await usagePOST(
+      postReq(
+        { sessionId: `sess-deny-mismatch-${Date.now()}`, studentId: 'stu-1' },
+        { 'x-embed-token': mismatchToken },
+      ),
+    );
+    const json = await res.json();
+    assert(res.status === 401, 'POST session-usage: mismatched student_id token, enforce=on → 401');
+    assert(json.reason === 'student_mismatch', 'POST session-usage: 401 reason is "student_mismatch"');
+  }
+
+  // Same mismatch case, but the token rides in body.embedToken (beacon path,
+  // no header) — proves the header-or-body extraction feeds the same auth
+  // check on the POST deny path too.
+  {
+    const mismatchToken = signEmbedToken(
+      { partner_id: 'academy', student_id: 'stu-OTHER', exp: Math.floor(now / 1000) + 7200 },
+      'test-secret',
+    );
+    const res = await usagePOST(
+      postReq({
+        sessionId: `sess-deny-mismatch-body-${Date.now()}`,
+        studentId: 'stu-1',
+        embedToken: mismatchToken,
+      }),
+    );
+    const json = await res.json();
+    assert(res.status === 401, 'POST session-usage: mismatched student_id token via body.embedToken → 401');
+    assert(json.reason === 'student_mismatch', 'POST session-usage (body token): 401 reason is "student_mismatch"');
+  }
+
+  // Note: the "(b) GET valid token → 200", "(d) POST matching-claim token via
+  // body.embedToken → 200", "(e) POST without studentId, no token → 200
+  // (anonymous demo)", and "log-mode POST with studentId, no token → 200"
+  // cases from the task brief are deliberately NOT tested here — every allow
+  // path here falls through into connectDB()/TutorSession, which requires a
+  // live Mongo connection. Those live in test-learner-model.ts
+  // (runSessionUsageEmbedAuthTests) so this script stays DB-free.
+
+  resetEnv();
+}
+
 runStudentProfileRouteDenyTests()
+  .then(() => runSessionUsageRouteDenyTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     process.exit(failed > 0 ? 1 : 0);
