@@ -106,7 +106,7 @@ function consumedHash(s: string): string {
 /* E6 — LO-ordering enforcement for runtime-generated plans            */
 /* ------------------------------------------------------------------ */
 
-const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked2|worked|try)$/;
+const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked2|worked|recall|try2|try)$/;
 
 /** Derive the LO-group key for a segment id. Generated plans mint ids
  *  as "<loId>-hook" / "-concept" / "-worked" / "-try" (see
@@ -126,7 +126,14 @@ const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked2|worked|try)$/;
  *  alternative in the regex — both are anchored at `$` so order doesn't
  *  actually affect which one wins here (each only matches its own exact
  *  suffix), but keeping the more specific alternative first avoids relying
- *  on that subtlety if the pattern ever grows a real ambiguity. */
+ *  on that subtlety if the pattern ever grows a real ambiguity.
+ *
+ *  `recall` / `try2` (Task 14, review-plan composer): REVIEW_STAGE2_SYSTEM
+ *  mints "<loId>-recall" (recall-first re-activation, replaces hook+concept
+ *  for review plans) and, for LOs below the reteach threshold, an extra
+ *  "<loId>-try2" easier second try_yourself. Same reasoning as worked2 —
+ *  `try2` is listed before the bare `try` alternative for readability;
+ *  the `$` anchor makes the order not actually matter. */
 export function loGroupOf(segmentId: string): string {
   if (segmentId === 'intro' || segmentId === 'recap') return segmentId;
   const m = segmentId.match(LO_SEGMENT_SUFFIX_RE);

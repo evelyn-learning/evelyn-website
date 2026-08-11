@@ -19,6 +19,8 @@ import { getBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
 import type { ScoringSpec } from '../src/lib/tutor/mock-exam/blueprints';
 import type { SessionEmitRequest } from '@evelyn/portal-contract/v1';
 import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
+import type { LearningObjective, Segment } from '@/lib/tutor/lesson-plan/types';
+import type { GenerateFromTextInput, ExpandSegmentsResult } from '@/lib/tutor/lesson-plan/generate-from-text';
 
 let passed = 0;
 let failed = 0;
@@ -2120,6 +2122,277 @@ async function runBackfillEvidenceTests() {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Task 14 — review-plan composer (compose-review-plan.ts)            */
+/* ------------------------------------------------------------------ */
+
+/** Records every call and returns canned segments shaped like a real
+ *  expander response: "<loId>-recall" + "<loId>-try" for every supplied
+ *  LO, plus "<loId>-try2" whenever the composer's per-LO description
+ *  carries the reteach marker (mirrors what REVIEW_STAGE2_SYSTEM asks a
+ *  real model to do with that same marker). Lets test (c) assert on the
+ *  REQUEST (which LOs got marked) rather than only on the output. */
+function makeStubExpandFn(
+  calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }>,
+): (
+  los: ReadonlyArray<LearningObjective>,
+  input: GenerateFromTextInput,
+  opts?: { system?: string },
+) => Promise<ExpandSegmentsResult> {
+  return async (los, input, opts) => {
+    calls.push({ los: [...los], input, opts });
+    const segments: Segment[] = [];
+    for (const lo of los) {
+      segments.push({ id: `${lo.id}-recall`, kind: 'concept', goal: `Recall: ${lo.id}`, keyIdeas: [`Key idea for ${lo.id}`] });
+      segments.push({ id: `${lo.id}-try`, kind: 'try_yourself', problem: `Try: ${lo.id}`, expectedAnswer: '42' });
+      if (lo.description.includes('try2')) {
+        segments.push({ id: `${lo.id}-try2`, kind: 'try_yourself', problem: `Easier try: ${lo.id}`, expectedAnswer: '7' });
+      }
+    }
+    return { segments, ok: true, reason: 'stub' };
+  };
+}
+
+/** Drops null/undefined leaves recursively. Mongo's Mixed-typed fields
+ *  round-trip an explicitly-`undefined` key as `null` (BSON has no
+ *  `undefined`); this normalizes both sides before a content comparison
+ *  so that storage quirk doesn't register as a data-loss bug. */
+function stripNullish(v: unknown): unknown {
+  if (Array.isArray(v)) return v.map(stripNullish);
+  if (v && typeof v === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (val === null || val === undefined) continue;
+      out[k] = stripNullish(val);
+    }
+    return out;
+  }
+  return v;
+}
+
+async function runReviewPlanComposerTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 14 review-plan composer tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { composeReviewPlan, REVIEW_STAGE2_SYSTEM } = await import('../src/lib/tutor/lesson-plan/compose-review-plan');
+  const { getLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
+  const { loGroupOf } = await import('../src/lib/tutor/lesson-plan/context');
+  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../src/models');
+  const { default: connectDB } = await import('../src/lib/db');
+
+  await connectDB();
+
+  const studentId = `revtest:${process.pid}`;
+  const createdPlanIds: string[] = [];
+
+  async function seedProjection(loId: string, estimate: number) {
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loId),
+      studentId,
+      loId,
+      estimate,
+      confidence: 'medium',
+      trend: 'flat',
+      nEff: 3,
+      lastEvidenceAt: new Date(),
+    });
+  }
+
+  async function cleanup() {
+    await LearnerStateProjectionModel.deleteMany({ studentId });
+    await Promise.all(createdPlanIds.map((id) => deleteLessonPlan(id)));
+    createdPlanIds.length = 0;
+  }
+
+  console.log('\nTask 14 — review-plan composer (compose-review-plan.ts):\n');
+
+  // Pure sanity: REVIEW_STAGE2_SYSTEM carries the recall-first / -try2
+  // contract the brief specifies, and loGroupOf (context.ts) recognizes
+  // the new suffixes so progress-tracking still groups review segments
+  // under their LO — same requirement Task 12 had for -worked2.
+  assert(
+    REVIEW_STAGE2_SYSTEM.includes('-recall') && REVIEW_STAGE2_SYSTEM.includes('-try2') && REVIEW_STAGE2_SYSTEM.includes('NOT a fresh introduction'),
+    'REVIEW_STAGE2_SYSTEM: documents the recall-first (not fresh-intro) + optional -try2 contract',
+  );
+  assert(loGroupOf('lo-1-recall') === 'lo-1', 'loGroupOf: strips -recall to the bare loId');
+  assert(
+    loGroupOf('lo-1-try2') === loGroupOf('lo-1-try') && loGroupOf('lo-1-try2') === 'lo-1',
+    'loGroupOf: -try2 groups with its LO exactly like -try does',
+  );
+
+  await cleanup();
+  try {
+    const loA = `revA-${process.pid}`; // strong: estimate 0.8
+    const loB = `revB-${process.pid}`; // weak: estimate 0.2 (below 0.5 reteach threshold)
+    const loC = `revC-${process.pid}`; // untouched: no projection at all
+    await seedProjection(loA, 0.8);
+    await seedProjection(loB, 0.2);
+
+    // (a) ordering: ascending estimate, missing → TUNING.untouchedPrior (0.3)
+    // — lands loC between loB (0.2) and loA (0.8).
+    {
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const plan = await composeReviewPlan({
+        studentId,
+        los: [
+          { loId: loA, title: 'Quadratic formula' },
+          { loId: loB, title: 'Linear equations' },
+          { loId: loC, title: 'Slope-intercept form' },
+        ],
+        expandFn: makeStubExpandFn(calls),
+      });
+      createdPlanIds.push(plan.id);
+      assert(
+        plan.los.map((lo) => lo.id).join(',') === [loB, loC, loA].join(','),
+        '(a) composeReviewPlan orders LOs ascending by estimate (B 0.2, C untouched→0.3, A 0.8)',
+      );
+      assert(
+        calls[0]!.opts?.system === REVIEW_STAGE2_SYSTEM,
+        '(a) composeReviewPlan invokes the expander with REVIEW_STAGE2_SYSTEM, not STAGE2_SYSTEM',
+      );
+    }
+
+    // (c) weak LO gets a -try2 request marker, strong LO doesn't — assert
+    // on the REQUEST payload (what composeReviewPlan asked the expander
+    // for), not just on the resulting segments.
+    {
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const plan = await composeReviewPlan({
+        studentId,
+        los: [
+          { loId: loA, title: 'Quadratic formula' },
+          { loId: loB, title: 'Linear equations' },
+        ],
+        expandFn: makeStubExpandFn(calls),
+      });
+      createdPlanIds.push(plan.id);
+      const sentLoA = calls[0]!.los.find((lo) => lo.id === loA);
+      const sentLoB = calls[0]!.los.find((lo) => lo.id === loB);
+      assert(
+        !!sentLoB && sentLoB.description.includes('try2'),
+        '(c) weak LO (estimate 0.2 < reteachBelowEstimate 0.5) carries a -try2 request marker',
+      );
+      assert(
+        !!sentLoA && !sentLoA.description.includes('try2'),
+        "(c) strong LO (estimate 0.8) does NOT carry a -try2 request marker",
+      );
+      assert(
+        plan.segments.some((s) => s.id === `${loB}-try2`) && !plan.segments.some((s) => s.id === `${loA}-try2`),
+        '(c) resulting plan: only the weak LO actually gets a -try2 segment',
+      );
+    }
+
+    // (b) budget cap: 8 LOs at sessionMinutes 30 → floor((30-4)/5) = 5 kept,
+    // the weakest 5 by estimate.
+    {
+      const capIds = Array.from({ length: 8 }, (_, i) => `revCap${i}-${process.pid}`);
+      const estimates = [0.9, 0.2, 0.7, 0.1, 0.6, 0.3, 0.8, 0.4]; // unsorted on purpose
+      for (let i = 0; i < capIds.length; i++) await seedProjection(capIds[i]!, estimates[i]!);
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const plan = await composeReviewPlan({
+        studentId,
+        los: capIds.map((loId, i) => ({ loId, title: `Cap topic ${i}` })),
+        sessionMinutes: 30,
+        expandFn: makeStubExpandFn(calls),
+      });
+      createdPlanIds.push(plan.id);
+      // weakest 5 estimates are 0.1, 0.2, 0.3, 0.4, 0.6 → indices 3,1,5,7,4
+      const expectedOrder = [capIds[3], capIds[1], capIds[5], capIds[7], capIds[4]];
+      assert(
+        plan.los.length === 5 && plan.los.map((lo) => lo.id).join(',') === expectedOrder.join(','),
+        '(b) budget cap keeps floor((30-4)/5)=5 LOs — the weakest 5, in ascending-estimate order',
+      );
+    }
+
+    // (d) persistence round-trip + metadata.reviewPlan, and (e) title/los
+    // echo the portal-supplied titles.
+    {
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const plan = await composeReviewPlan({
+        studentId,
+        los: [
+          { loId: loA, title: 'Quadratic formula' },
+          { loId: loB, title: 'Linear equations' },
+          { loId: loC, title: 'Slope-intercept form' },
+        ],
+        expandFn: makeStubExpandFn(calls),
+      });
+      createdPlanIds.push(plan.id);
+
+      assert(plan.id.startsWith('rev-'), '(d) plan id is minted as rev-<randomUUID>');
+      assert(
+        plan.metadata?.reviewPlan === true && plan.metadata?.studentId === studentId,
+        '(d) metadata.reviewPlan === true and metadata.studentId echoes the composing student',
+      );
+
+      // Mongo's Mixed-typed segments array round-trips absent-optional-field
+      // `undefined`s (parseSegment always sets keys like teacherNote, even
+      // when undefined) as `null` — a BSON storage quirk of every generated
+      // plan, not something composeReviewPlan introduces. Strip nullish
+      // leaves before comparing so the assertion checks actual content.
+      const reloaded = await getLessonPlan(plan.id);
+      assert(
+        !!reloaded &&
+          reloaded.id === plan.id &&
+          JSON.stringify(stripNullish(reloaded.segments)) === JSON.stringify(stripNullish(plan.segments)) &&
+          reloaded.metadata?.reviewPlan === true,
+        '(d) getLessonPlan round-trips the persisted plan (segments + metadata.reviewPlan survive)',
+      );
+
+      // (e) title: "Review: <first 2 titles>…" (3 kept → ellipsis); los
+      // descriptions echo the portal-supplied titles verbatim.
+      assert(
+        plan.title === 'Review: Linear equations, Slope-intercept form…',
+        '(e) title is "Review: <first 2 LO titles>…" in composed (weakest-first) order, ellipsis for a 3rd',
+      );
+      assert(
+        plan.los.find((lo) => lo.id === loA)?.description === 'Quadratic formula' &&
+          plan.los.find((lo) => lo.id === loB)?.description === 'Linear equations' &&
+          plan.los.find((lo) => lo.id === loC)?.description === 'Slope-intercept form',
+        '(e) plan.los echoes the portal-supplied LO titles verbatim',
+      );
+    }
+
+    // Title has no dangling ellipsis for exactly 2 kept LOs.
+    {
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const plan = await composeReviewPlan({
+        studentId,
+        los: [
+          { loId: loA, title: 'Quadratic formula' },
+          { loId: loB, title: 'Linear equations' },
+        ],
+        expandFn: makeStubExpandFn(calls),
+      });
+      createdPlanIds.push(plan.id);
+      assert(
+        plan.title === 'Review: Linear equations, Quadratic formula',
+        '(e) title: exactly 2 kept LOs → no trailing ellipsis',
+      );
+    }
+
+    // Expander failure throws (route turns this into a 502 — Task 15).
+    {
+      const failingExpandFn = async () => ({ segments: [], ok: false, reason: 'stub failure' }) as ExpandSegmentsResult;
+      let threw = false;
+      try {
+        await composeReviewPlan({
+          studentId,
+          los: [{ loId: loA, title: 'Quadratic formula' }],
+          expandFn: failingExpandFn,
+        });
+      } catch {
+        threw = true;
+      }
+      assert(threw, 'composeReviewPlan: expander failure throws rather than falling back to a stub plan');
+    }
+  } finally {
+    await cleanup();
+  }
+}
+
 runDbTests()
   .then(() => runLearnerHintsTests())
   .then(() => runServerAppendPointTests())
@@ -2130,6 +2403,7 @@ runDbTests()
   .then(() => runLearnerSnapshotTests())
   .then(() => runStudentEraseRouteTests())
   .then(() => runBackfillEvidenceTests())
+  .then(() => runReviewPlanComposerTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section

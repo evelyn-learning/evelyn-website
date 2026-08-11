@@ -321,9 +321,18 @@ export function buildStage2UserMessage(
   return `${base}\n\n${studentProfileBlock(input.learner)}`;
 }
 
+export interface ExpandSegmentsOptions {
+  /** Overrides STAGE2_SYSTEM for this call. Task 14's review composer uses
+   *  this to swap in REVIEW_STAGE2_SYSTEM (recall + try-heavy segments)
+   *  without duplicating the request-building / parsing plumbing below.
+   *  Defaults to STAGE2_SYSTEM — every pre-Task-14 caller is unaffected. */
+  system?: string;
+}
+
 export async function expandSegmentsForLOs(
   los: ReadonlyArray<LearningObjective>,
   input: GenerateFromTextInput,
+  opts?: ExpandSegmentsOptions,
 ): Promise<ExpandSegmentsResult> {
   if (!los || los.length === 0) {
     return { segments: [], ok: false, reason: 'no LOs supplied' };
@@ -336,7 +345,7 @@ export async function expandSegmentsForLOs(
     const response = await anthropic.messages.create({
       model: HAIKU_MODEL_ID,
       max_tokens: STAGE2_MAX_TOKENS,
-      system: STAGE2_SYSTEM,
+      system: opts?.system ?? STAGE2_SYSTEM,
       messages: [
         {
           role: 'user',
