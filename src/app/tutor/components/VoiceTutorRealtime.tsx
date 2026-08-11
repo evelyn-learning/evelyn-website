@@ -337,6 +337,15 @@ interface VoiceTutorRealtimeProps {
    *  sessions) and end-of-session deltas are committed. Demo flows
    *  without auth omit this — the session is ephemeral. */
   studentId?: string;
+  /** Task 4 (embed-auth): raw embed token string (the iframe URL's `token`
+   *  query param, undecoded). When present, attached as the `x-embed-token`
+   *  header on the student-profile fetch/POST calls below (and folded into
+   *  the session-usage beacon/body via the embed page's own saveSession —
+   *  this component doesn't touch session-usage). Absent on the standalone
+   *  /tutor page and on any embed session whose token failed to parse;
+   *  enforcement is env-staged server-side, so an absent token is a no-op
+   *  today. */
+  embedToken?: string;
   /** Task D1b (pedagogy opener) — TRANSIENT session-scoped social threads
    *  from the portal's StudentContext (embed carrier). Read once at mount,
    *  rendered into a <student_context_transient> block appended to the
@@ -717,6 +726,7 @@ export function VoiceTutorRealtime({
   mockReview,
   lessonPlanId,
   studentId,
+  embedToken,
   socialMemory,
   progressDigest,
   lastOpener,
@@ -1666,7 +1676,7 @@ export function VoiceTutorRealtime({
     try {
       const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify(body),
         // pagehide path: let the request outlive the page teardown.
         ...(opts?.keepalive ? { keepalive: true } : {}),
@@ -1682,7 +1692,7 @@ export function VoiceTutorRealtime({
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
     }
-  }, [studentId, subject, topic, level, lessonPlanId]);
+  }, [studentId, subject, topic, level, lessonPlanId, embedToken]);
   // Count of commits already posted this session — lets the final commit
   // post transcript+summary even when its own accumulator increment is
   // empty (everything already flushed incrementally).
@@ -7332,7 +7342,10 @@ export function VoiceTutorRealtime({
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`);
+        const res = await fetch(
+          `/api/tutor/student-profile/${encodeURIComponent(studentId)}`,
+          embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
+        );
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
@@ -7366,7 +7379,7 @@ export function VoiceTutorRealtime({
       }
     })();
     return () => { cancelled = true; };
-  }, [studentId]);
+  }, [studentId, embedToken]);
 
   // RESUME (E3) — one-time guards. Position is applied inside the plan-load
   // effect (it must run AFTER the plan resets to segment 1); transcript +

@@ -286,10 +286,10 @@ function EmbedSession() {
     );
   }
 
-  return <EmbedSessionInner config={config} />;
+  return <EmbedSessionInner config={config} embedToken={tokenParam ?? undefined} />;
 }
 
-function EmbedSessionInner({ config }: { config: EmbedConfig }) {
+function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
   const subject = config.subject;
   const level = config.level;
   const topic = config.topic || '';
@@ -421,7 +421,10 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sessionId)}`);
+        const res = await fetch(
+          `/api/tutor/session-usage?sessionId=${encodeURIComponent(sessionId)}`,
+          embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
+        );
         if (res.ok) {
           const { state: rs, hadStaleCheckpoint } = resolveResumeOutcome(await res.json());
           if (!cancelled) {
@@ -435,7 +438,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       if (!cancelled) setResumeReady(true);
     })();
     return () => { cancelled = true; };
-  }, [wantsResume, sessionId]);
+  }, [wantsResume, sessionId, embedToken]);
 
   // Task WS3 — mock-review context boot. When the session is a mock-review and
   // the token carries the completed attempt, fetch the missed-item review
@@ -517,6 +520,9 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
       duration,
       messageCount: transcript.length,
       whiteboardItemCount: whiteboardCommands.length,
+      // Task 4: sendBeacon can't set headers, so the raw embed token rides in
+      // the JSON body instead — the session-usage route accepts either.
+      ...(embedToken ? { embedToken } : {}),
       ...(status !== 'active' ? { endedAt: now.toISOString(), status } : {}),
       // A1: token/cost telemetry + covered topics (were always 0/empty for
       // embed sessions — this is what makes Sonnet-5 cost tracking visible).
@@ -568,7 +574,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     if (status === 'active') {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
       return;
@@ -593,24 +599,24 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     if (new Blob([body]).size <= 60_000) {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
         keepalive: true,
       }).catch(() => {});
     } else {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify(basePayload),
         keepalive: true,
       }).catch(() => {});
       fetch('/api/tutor/session-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
     }
-  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands]);
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken]);
 
   // Session-quality A1 (2026-07-08): accumulate per-attempt claude-brain
   // token usage so the TutorSession record stops reading 0 tokens / $0 for
@@ -712,7 +718,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
     // before the first full save (required-field validation on insert).
     fetch('/api/tutor/session-usage', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
       body: JSON.stringify({
         sessionId,
         subject, topic, level, sessionGoal, inputMode,
@@ -732,7 +738,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         ...brainUsageTotals(),
       }),
     }).catch(() => {});
-  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName]);
+  }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, embedToken]);
 
   // End session — save to DB + notify parent window
   const handleEndSession = useCallback((reason?: 'time_limit', endIntent?: 'finish' | 'discard') => {
@@ -909,6 +915,7 @@ function EmbedSessionInner({ config }: { config: EmbedConfig }) {
         level={level}
         studentName={studentName || undefined}
         studentId={config.student_id}
+        embedToken={embedToken}
         sessionId={sessionId}
         // Round 29 (replay-desync audit): the embed never passed the
         // recorder's canonical T0, so portal tracks fell into the

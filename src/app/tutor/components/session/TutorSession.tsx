@@ -84,6 +84,11 @@ export interface TutorSessionProps {
   sessionId: string;
   sessionStartedAtMs?: number;
   sessionGoal: SessionGoal;
+  /** Task 4 (embed-auth): raw embed token string, forwarded to the runtime
+   *  so it can attach it to the student-profile fetch/beacon calls. Typed
+   *  from VoiceTutorRealtime to avoid drift. Absent on the standalone
+   *  /tutor page (no embed token there). */
+  embedToken?: VTRProps['embedToken'];
   /** Task WS3: mock-review context, forwarded to the runtime. Present only for
    *  a mock-review session whose context fetch succeeded. */
   mockReview?: MockReviewContext;
@@ -211,7 +216,7 @@ interface LessonProgressState {
 
 export default function TutorSession(props: TutorSessionProps) {
   const {
-    subject, topic, level, studentName, studentId, sessionId, sessionStartedAtMs,
+    subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
     sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
@@ -988,6 +993,7 @@ export default function TutorSession(props: TutorSessionProps) {
         level={level}
         studentName={studentName || undefined}
         studentId={studentId}
+        embedToken={embedToken}
         socialMemory={socialMemory}
         progressDigest={progressDigest}
         lastOpener={lastOpener}
