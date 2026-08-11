@@ -133,6 +133,32 @@ function expressionsMatch(a: string, b: string): boolean {
   return ta === tb;
 }
 
+/** Shared numeric-agreement tolerance: exact-if-close for small values, 1%
+ *  relative for larger ones. Was duplicated inline at both call sites below
+ *  (round-3 review minor) — extracted so they can't drift apart. */
+function withinTolerance(a: number, b: number): boolean {
+  return Math.abs(a - b) <= Math.max(0.01, Math.abs(b) * 0.01);
+}
+
+/** True when a canonical numeric string is a plain (optionally signed)
+ *  integer literal — no decimal point, fraction slash, or grouping parens.
+ *  Thousand-separator commas are stripped first so '12,000' reads as the
+ *  same integer extractAnswerNumber itself extracts from it ('12000'),
+ *  keeping this check consistent with what nu/ne actually hold rather than
+ *  re-deriving its own notion of "integer".
+ *
+ *  Gates the exact-equality carve-out in the numeric path below (round-3
+ *  review Critical): '359' vs '360' is off by 0.3%, comfortably inside the
+ *  1%-relative tolerance meant for messy real-valued answers — but two
+ *  plain integers that differ at all are a different problem entirely, not
+ *  rounding noise, and tolerance-agreeing them turns a correct denial into
+ *  a wrongful kill (inverse-verdict) or forces credit for a wrong answer.
+ *  Non-integer forms ('0.785' vs 'π/4', '1/2' vs '0.5') still need the
+ *  tolerance path and must NOT be routed through this carve-out. */
+function isPlainIntegerLiteral(canon: string): boolean {
+  return /^-?\d+$/.test(canon.replace(/,/g, ''));
+}
+
 /** True when the utterance contains 2+ separate numeric values in a
  *  multi-assignment shape ("m is 4 and b is -2", or the symbolic "x=4, y=-2")
  *  — same class the R36 cover-layer extractAnswerToken refuses. The '='
@@ -225,8 +251,23 @@ export function matchUtteranceToAnswer(
   expected: string,
   choices?: Array<{ letter: string; text: string }>
 ): AnswerMatchResult {
-  const u = normalizeSpokenMath(utterance), e = (expected ?? '').trim();
-  if (!u || !e) return { verdict: 'unknown', reason: 'empty side' };
+  const uRaw = normalizeSpokenMath(utterance), e = (expected ?? '').trim();
+  if (!uRaw || !e) return { verdict: 'unknown', reason: 'empty side' };
+  // Fix (round-3 review Critical): assignment-form spoken answers
+  // ("x equals five" → "x=5" after normalizeSpokenMath) were comparing
+  // their FULL "x=5" text against a bare expected answer ("5") — both
+  // full-parse, multisets differ ('x=5' has no top-level +/- to split on),
+  // so it read as a false `disagree` and killed correct praise. Strip a
+  // SINGLE leading "letter[prime]*=" prefix from the utterance only, only
+  // when something is left afterward (a bare "x=" utterance has nothing to
+  // compare and should fall through to unparseable/unknown on its own
+  // text, not become empty and misfire elsewhere). Deliberately anchored
+  // (^, no /g) so it strips only the FIRST assignment, never a later one —
+  // isMultiValueUtterance below must still see "y=-2" in "x=4, y=-2" or its
+  // multi-value guard silently loses its `=` signal (do not reorder this
+  // strip to run after that guard, and do not make it global).
+  const uAssignStripped = uRaw.replace(/^[a-z]'{0,2}=/i, '');
+  const u = uAssignStripped.length > 0 ? uAssignStripped : uRaw;
   // 1) MCQ path — only when choices are supplied
   if (choices && choices.length > 0) {
     const lu = resolveMcqLetter(u, choices), le = resolveMcqLetter(e, choices);
@@ -242,11 +283,18 @@ export function matchUtteranceToAnswer(
   const cu = canonicalizeMathExpression(u), ce = canonicalizeMathExpression(e);
   const uIsPureNumber = cu !== null && /^-?[0-9.,/()]+$/.test(cu);
   const eIsPureNumber = ce !== null && /^-?[0-9.,/()]+$/.test(ce);
-  if (nu !== null && ne !== null && uIsPureNumber && eIsPureNumber) {
-    const tol = Math.max(0.01, Math.abs(ne) * 0.01);
-    return Math.abs(nu - ne) <= tol
-      ? { verdict: 'agree', reason: `numeric ${nu}≈${ne}` }
-      : { verdict: 'disagree', reason: `numeric ${nu}≠${ne}` };
+  if (nu !== null && ne !== null && uIsPureNumber && eIsPureNumber && cu !== null && ce !== null) {
+    // Fix (round-3 review Critical): a blanket 1%-relative tolerance let
+    // '359' vs '360' read as agreement — fine for messy real-valued
+    // answers, wrong for two plain integers that just differ. Exact
+    // equality when BOTH canonical sides are plain integer literals;
+    // tolerance stays for anything involving a decimal point, fraction,
+    // π, √, or % (isPlainIntegerLiteral is false for all of those).
+    const bothIntegers = isPlainIntegerLiteral(cu) && isPlainIntegerLiteral(ce);
+    const agrees = bothIntegers ? nu === ne : withinTolerance(nu, ne);
+    return agrees
+      ? { verdict: 'agree', reason: bothIntegers ? `integer ${nu}=${ne}` : `numeric ${nu}≈${ne}` }
+      : { verdict: 'disagree', reason: bothIntegers ? `integer ${nu}≠${ne}` : `numeric ${nu}≠${ne}` };
   }
   // 3) expression path — full-parse required on BOTH sides for any verdict
   if (cu === null || ce === null) return { verdict: 'unknown', reason: 'unparseable side' };
@@ -258,7 +306,7 @@ export function matchUtteranceToAnswer(
   if (
     nu !== null && ne !== null && nu !== 0 &&
     isNumericEvaluable(cu) && isNumericEvaluable(ce) &&
-    Math.abs(nu - ne) <= Math.max(0.01, Math.abs(ne) * 0.01)
+    withinTolerance(nu, ne)
   ) {
     return { verdict: 'agree', reason: 'numeric-eval match' };
   }
@@ -275,6 +323,18 @@ export function matchUtteranceToAnswer(
   // `agree`, so fall back to `unknown`.
   if (cu.includes('(') || ce.includes('(')) {
     return { verdict: 'unknown', reason: 'unresolved grouping' };
+  }
+  // Backstop (round-3 review Critical, alongside the assignment-prefix
+  // strip above): the strip only touches the UTTERANCE side. An
+  // assignment-form EXPECTED side ("x=5") compared against a bare
+  // utterance ("5") — or any other shape where exactly one side still
+  // carries an unstripped '=' this far into the pipeline — can't be
+  // safely resolved to a term-multiset match, and asserting `disagree`
+  // here risks the same false-kill class the strip exists to prevent.
+  // Demote to unknown rather than guess. Both-or-neither carrying '=' is
+  // unaffected and falls through to the real disagree below.
+  if (cu.includes('=') !== ce.includes('=')) {
+    return { verdict: 'unknown', reason: 'assignment-form side mismatch' };
   }
   return { verdict: 'disagree', reason: `expr ${cu}≠${ce}` };
 }
