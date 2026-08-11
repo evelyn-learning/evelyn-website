@@ -6,10 +6,15 @@ import type { RailItem } from '@/lib/tutor/lesson-plan/rail-labels';
 interface AgendaRailProps {
   items: RailItem[];
   orientation: 'horizontal' | 'vertical';
+  /** True when the client has released the lesson cursor (barge-in /
+   *  off-plan tutoring) — no item is `current`. Renders a trailing
+   *  muted "Off plan" chip so the rail reads as intentional rather
+   *  than broken (rail-bargein Task 3). */
+  offPlan?: boolean;
 }
 
 /** Persistent agenda rail. Display-only v1 (no jump navigation — grill-me 2026-08-10). */
-export function AgendaRail({ items, orientation }: AgendaRailProps) {
+export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const currentRef = useRef<HTMLDivElement>(null);
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -47,6 +52,25 @@ export function AgendaRail({ items, orientation }: AgendaRailProps) {
     );
   };
 
+  // Trailing chip when the cursor is off-plan: same pill shape/idiom as the
+  // `current` item but a lower-emphasis background — signals "the tutor is
+  // free-styling right now" without looking like an actual agenda item, and
+  // without claiming any item is current. Non-interactive, display-only v1.
+  const offPlanChip = offPlan ? (
+    <div
+      title="Off plan"
+      data-testid="agenda-rail-off-plan"
+      className={[
+        orientation === 'vertical'
+          ? 'shrink-0 whitespace-normal break-words rounded-xl px-2.5 py-1 text-xs'
+          : 'shrink-0 whitespace-nowrap rounded-full px-2.5 py-1 text-xs',
+        'bg-slate-400 text-white font-medium',
+      ].join(' ')}
+    >
+      Off plan
+    </div>
+  ) : null;
+
   const overlay = overlayOpen && (
     <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-6"
       onClick={() => setOverlayOpen(false)} data-testid="agenda-rail-overlay">
@@ -68,6 +92,7 @@ export function AgendaRail({ items, orientation }: AgendaRailProps) {
     return (
       <div className="flex flex-col gap-1.5 overflow-y-auto p-2" data-testid="agenda-rail" data-orientation="vertical">
         {items.map(tab)}
+        {offPlanChip}
       </div>
     );
   }
@@ -78,6 +103,7 @@ export function AgendaRail({ items, orientation }: AgendaRailProps) {
         className="flex items-center gap-1.5 overflow-x-auto scrollbar-none min-w-0 grow
                    [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
         {items.map(tab)}
+        {offPlanChip}
       </div>
       <button type="button" onClick={() => setOverlayOpen(true)}
         className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600 tabular-nums"

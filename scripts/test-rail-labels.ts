@@ -15,6 +15,7 @@ import {
   railStageLabel,
   loBoundaryBeat,
   buildAdvanceBeatNote,
+  railJumpCandidates,
 } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
@@ -77,7 +78,7 @@ function mkPlan(opts: {
     ],
     segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'lo-b-hook', 'lo-b-concept', 'recap'],
   });
-  const m1 = buildRailModel(gen, 'lo-a-concept', new Set(['intro', 'lo-a-hook']), null)!;
+  const m1 = buildRailModel(gen, 'lo-a-concept', new Set(['intro', 'lo-a-hook']), null)!.items;
   assert(m1.map(i => i.key).join(',') === 'intro,lo-a,lo-b,recap', 'gen grouping order');
   assert(m1[1].label === 'Photosynthesis inputs', 'gen shortTitle label');
   assert(m1[1].current === true && m1[0].done === true && m1[1].done === false, 'gen flags');
@@ -94,7 +95,7 @@ function mkPlan(opts: {
   });
   const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
     'try-saq': 'Practice: SAQ', 'misconception-one-way': 'One-way myth' };
-  const m2 = buildRailModel(curated, 'worked-letter', new Set(['hook', 'concept-cx']), labels)!;
+  const m2 = buildRailModel(curated, 'worked-letter', new Set(['hook', 'concept-cx']), labels)!.items;
   assert(m2.length === 6 && m2[0].label === 'Hook' && m2[5].label === 'Recap', 'curated fixed ends');
   assert(m2[1].label === 'Two-way exchange' && m2[2].current === true, 'curated content labels');
 }
@@ -106,16 +107,74 @@ function mkPlan(opts: {
     los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
-  const m3 = buildRailModel(curated, 'hook', new Set(), null)!;
+  const m3 = buildRailModel(curated, 'hook', new Set(), null)!.items;
   assert(m3.map(i => i.label).join('|') === 'Hook|Concept|Example|Try|Misconception|Recap', 'stage fallback');
   const twoTries = mkPlan({ los: [], segmentIds: ['hook', 'try-1', 'try-2', 'recap'] });
-  const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!;
+  const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!.items;
   assert(m4[1].label === 'Try 1' && m4[2].label === 'Try 2', 'occurrence numbering');
 }
 
 // Case 4: suppression — pendingPicker → null
 {
   assert(buildRailModel(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), 'hook', new Set(), null) === null, 'picker suppressed');
+}
+
+/* ------------------------------------------------------------------ */
+/* buildRailModel — offPlan flag (Task 3, rail-bargein): the client   */
+/* releases the cursor to '' when the tutor goes off-plan (barge-in)  */
+/* ------------------------------------------------------------------ */
+{
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  assert(buildRailModel(curated, '', new Set(), null)!.offPlan === true, 'empty cursor → offPlan flag set');
+  assert(buildRailModel(curated, '', new Set(), null)!.items.every((i) => !i.current), 'empty cursor → no item current');
+  assert(buildRailModel(curated, 'hook', new Set(), null)!.offPlan === false, 'normal cursor → offPlan false');
+}
+
+/* ------------------------------------------------------------------ */
+/* railJumpCandidates — Task 2 (rail-bargein): student-jump-intent    */
+/* candidate list, reusing buildRailModel's exact grouping            */
+/* ------------------------------------------------------------------ */
+
+// Case 5: generated plan — one candidate per LO group (matches Case 1's grouping)
+{
+  const gen = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [
+      { id: 'lo-a', description: 'Explain photosynthesis inputs and outputs', shortTitle: 'Photosynthesis inputs' },
+      { id: 'lo-b', description: 'Trace the light reactions step by step' },
+    ],
+    segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'lo-b-hook', 'lo-b-concept', 'recap'],
+  });
+  const jc1 = railJumpCandidates(gen, null);
+  assert(jc1.length === 4, 'gen: 4 candidates (intro, lo-a, lo-b, recap)');
+  assert(jc1[1].label === 'Photosynthesis inputs' && jc1[1].segmentIds.join(',') === 'lo-a-hook,lo-a-concept,lo-a-try', 'gen: lo-a candidate groups its segments under the shortTitle label');
+  assert(jc1[0].label === 'Intro' && jc1[0].segmentIds.join(',') === 'intro', 'gen: intro candidate standalone');
+  assert(jc1[3].label === 'Recap' && jc1[3].segmentIds.join(',') === 'recap', 'gen: recap candidate standalone');
+}
+
+// Case 6: curated plan + labels — one candidate per segment (matches Case 2's grouping)
+{
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
+    'try-saq': 'Practice: SAQ', 'misconception-one-way': 'One-way myth' };
+  const jc2 = railJumpCandidates(curated, labels);
+  assert(jc2.length === 6, 'curated: one candidate per segment');
+  assert(jc2[1].label === 'Two-way exchange' && jc2[1].segmentIds.join(',') === 'concept-cx', 'curated: content label + single-segment group');
+  assert(jc2[0].label === 'Hook' && jc2[5].label === 'Recap', 'curated: fixed-label ends carried through');
+}
+
+// Case 7: suppression — pendingPicker → [] (matcher no-ops on empty candidates)
+{
+  const jc3 = railJumpCandidates(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), null);
+  assert(Array.isArray(jc3) && jc3.length === 0, 'picker suppressed → []');
 }
 
 /* ------------------------------------------------------------------ */
