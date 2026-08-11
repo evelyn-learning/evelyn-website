@@ -81,23 +81,36 @@ interface CommitBody {
    *  into planContentSeen[lessonPlanId]. Client sets it only when its
    *  TUTOR_CONTENT_VARIETY flag is on. */
   captureContentFillings?: boolean;
-  /** Task 11 — one entry per mark_segment_complete this increment, used to
-   *  feed the learner model per-segment evidence rows (idempotency key
-   *  `sess:<sessionId>:<segmentId>`). Client-supplied — validated
-   *  defensively below (malformed entries skipped, list capped). */
+  /** Task 11 — one entry per EVALUATIVE mark_segment_complete this
+   *  increment, used to feed the learner model per-segment evidence rows
+   *  (idempotency key `sess:<sessionId>:<segmentId>`). Client-supplied —
+   *  validated defensively below (malformed entries skipped, non-evaluative
+   *  kinds dropped, outcome range-checked, list capped). */
   segmentOutcomes?: Array<{
     segmentId: string;
     loId: string;
     kind: string;
     completed: boolean;
+    /** 1 (streak-confirmed) or 0.5 (attempted, not clearly mastered) —
+     *  computed client-side, never hardcoded. Range-validated below. */
+    outcome: number;
     streakAtComplete?: number;
     turns?: number;
   }>;
 }
 
 /** Task 11 — client-supplied cap so a runaway/misbehaving client can't
- *  balloon a single commit into an unbounded evidence write. */
+ *  balloon a single commit into an unbounded evidence write. Applied AFTER
+ *  validation (not before) so a batch with junk entries ahead of valid ones
+ *  can't starve the valid entries out of the cap. */
 const MAX_SEGMENT_OUTCOMES_PER_COMMIT = 100;
+
+/** Task 11 (review ruling) — defense-in-depth mirror of the client's
+ *  EVALUATIVE_SEGMENT_KINDS gate (VoiceTutorRealtime.tsx): exposure kinds
+ *  (hook/concept/worked_example/recap/extension) aren't an assessed
+ *  outcome. The server drops them even if a client sends one, rather than
+ *  trusting client-side filtering alone. */
+const EVALUATIVE_SEGMENT_KINDS = new Set<string>(['try_yourself', 'misconception_check']);
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -116,28 +129,33 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // throws, so the .catch is belt-and-suspenders; NOT awaited so a slow
   // evidence write can't add latency to the profile-commit response.
   // segmentOutcomes is client-supplied — validate defensively: skip
-  // malformed entries, cap the batch.
+  // malformed entries and non-evaluative kinds, range-check outcome, THEN
+  // cap the batch (validate-then-cap, not cap-then-validate, so junk
+  // entries ahead of valid ones can't crowd valid ones out).
   if (Array.isArray(body.segmentOutcomes) && body.segmentOutcomes.length) {
     const occurredAt = new Date();
-    const evidenceInputs: EvidenceInput[] = [];
-    for (const so of body.segmentOutcomes.slice(0, MAX_SEGMENT_OUTCOMES_PER_COMMIT)) {
+    const validated: EvidenceInput[] = [];
+    for (const so of body.segmentOutcomes) {
       if (!so || typeof so !== 'object') continue;
       if (typeof so.segmentId !== 'string' || !so.segmentId) continue;
       if (typeof so.loId !== 'string' || !so.loId) continue;
       if (so.completed !== true) continue;
-      evidenceInputs.push({
+      if (typeof so.kind !== 'string' || !EVALUATIVE_SEGMENT_KINDS.has(so.kind)) continue;
+      if (typeof so.outcome !== 'number' || !(so.outcome >= 0 && so.outcome <= 1)) continue;
+      validated.push({
         idempotencyKey: `sess:${body.sessionId}:${so.segmentId}`,
         studentId: id,
         loId: so.loId,
         source: 'session',
         sessionId: body.sessionId,
-        outcome: 1,
+        outcome: so.outcome,
         streakAtComplete: typeof so.streakAtComplete === 'number' ? so.streakAtComplete : undefined,
         turns: typeof so.turns === 'number' ? so.turns : undefined,
         occurredAt,
         subject: body.subject,
       });
     }
+    const evidenceInputs = validated.slice(0, MAX_SEGMENT_OUTCOMES_PER_COMMIT);
     if (evidenceInputs.length) {
       appendEvidence(evidenceInputs).catch((err) =>
         console.error('[student-profile] segmentOutcomes evidence append failed', err),

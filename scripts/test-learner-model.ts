@@ -985,32 +985,36 @@ async function runStudentProfileSegmentOutcomesTests() {
 
   await deleteLearnerModelData(studentId);
   try {
+    // Review ruling: only EVALUATIVE kinds (try_yourself / misconception_check)
+    // carry an outcome — hook/concept/etc. are exposure, not assessment.
+    // outcome is computed client-side (1 = streak-confirmed, 0.5 =
+    // attempted-not-clearly-mastered), never hardcoded server-side.
     const body = {
       sessionId,
       subject: 'math',
       segmentOutcomes: [
-        { segmentId: 'seg-a', loId: loA, kind: 'concept', completed: true, streakAtComplete: 2, turns: 3 },
-        { segmentId: 'seg-b', loId: loB, kind: 'try_yourself', completed: true, turns: 1 },
+        { segmentId: 'seg-a', loId: loA, kind: 'try_yourself', completed: true, outcome: 1, streakAtComplete: 2, turns: 3 },
+        { segmentId: 'seg-b', loId: loB, kind: 'misconception_check', completed: true, outcome: 0.5, turns: 1 },
       ],
     };
 
     const res = await profilePOST(req(body), ctx(studentId));
-    assert(res.status === 200, 'student-profile POST: commit body with 2 segmentOutcomes → 200');
+    assert(res.status === 200, 'student-profile POST: commit body with 2 evaluative segmentOutcomes → 200');
 
     const landed = await waitFor(async () => (await EvidenceEventModel.countDocuments({ studentId })) === 2);
-    assert(landed, 'student-profile POST: 2 segmentOutcomes → 2 evidence rows');
+    assert(landed, 'student-profile POST: 2 evaluative segmentOutcomes → 2 evidence rows');
 
     const rowA = await EvidenceEventModel.findById(`sess:${sessionId}:seg-a`);
     assert(
       !!rowA && rowA.loId === loA && rowA.source === 'session' && rowA.outcome === 1
         && rowA.streakAtComplete === 2 && rowA.turns === 3 && rowA.subject === 'math'
         && rowA.sessionId === sessionId,
-      'student-profile POST: evidence row keyed sess:<sessionId>:<segmentId>, carries loId/source/outcome/streak/turns/subject',
+      'student-profile POST: evidence row keyed sess:<sessionId>:<segmentId>, carries loId/source/outcome (1)/streak/turns/subject',
     );
     const rowB = await EvidenceEventModel.findById(`sess:${sessionId}:seg-b`);
     assert(
-      !!rowB && rowB.loId === loB && rowB.turns === 1 && rowB.streakAtComplete === undefined,
-      'student-profile POST: second segment evidence row present, optional streakAtComplete omitted when absent',
+      !!rowB && rowB.loId === loB && rowB.outcome === 0.5 && rowB.turns === 1 && rowB.streakAtComplete === undefined,
+      'student-profile POST: second segment evidence row present with outcome 0.5, optional streakAtComplete omitted when absent',
     );
 
     // Replayed flush — same sessionId + same 2 segmentOutcomes (the client
@@ -1026,9 +1030,12 @@ async function runStudentProfileSegmentOutcomesTests() {
     await deleteLearnerModelData(studentId);
   }
 
-  // Malformed entries (client-supplied, defensively validated): missing
-  // segmentId, missing loId, completed: false, and non-object entries are
-  // all skipped — only the one well-formed entry produces a row.
+  // Malformed / invalid entries (client-supplied, defensively validated):
+  // missing segmentId, missing loId, completed: false, a non-evaluative
+  // kind (defense-in-depth — the server drops it even though the client is
+  // supposed to filter these out itself), an out-of-range outcome, a
+  // non-numeric outcome, and non-object entries are all skipped — only the
+  // one well-formed entry produces a row.
   {
     const studentId2 = `lmtest:segout:malformed:${process.pid}`;
     const sessionId2 = `lmtest-segout-malformed-session-${process.pid}`;
@@ -1037,20 +1044,23 @@ async function runStudentProfileSegmentOutcomesTests() {
       const malformedBody = {
         sessionId: sessionId2,
         segmentOutcomes: [
-          { segmentId: 'ok-seg', loId: 'lmtest.segout.ok', kind: 'concept', completed: true },
-          { segmentId: '', loId: 'lmtest.segout.bad1', kind: 'concept', completed: true },
-          { segmentId: 'bad2', loId: '', kind: 'concept', completed: true },
-          { segmentId: 'bad3', loId: 'lmtest.segout.bad3', kind: 'concept', completed: false },
+          { segmentId: 'ok-seg', loId: 'lmtest.segout.ok', kind: 'try_yourself', completed: true, outcome: 1 },
+          { segmentId: '', loId: 'lmtest.segout.bad1', kind: 'try_yourself', completed: true, outcome: 1 },
+          { segmentId: 'bad2', loId: '', kind: 'try_yourself', completed: true, outcome: 1 },
+          { segmentId: 'bad3', loId: 'lmtest.segout.bad3', kind: 'try_yourself', completed: false, outcome: 1 },
+          { segmentId: 'bad4', loId: 'lmtest.segout.bad4', kind: 'concept', completed: true, outcome: 1 },
+          { segmentId: 'bad5', loId: 'lmtest.segout.bad5', kind: 'try_yourself', completed: true, outcome: 1.5 },
+          { segmentId: 'bad6', loId: 'lmtest.segout.bad6', kind: 'try_yourself', completed: true, outcome: 'yes' },
           null,
           'not-an-object',
         ],
       };
       const res3 = await profilePOST(req(malformedBody), ctx(studentId2));
-      assert(res3.status === 200, 'student-profile POST: mixed valid/malformed segmentOutcomes → 200');
+      assert(res3.status === 200, 'student-profile POST: mixed valid/malformed/non-evaluative segmentOutcomes → 200');
       const landed2 = await waitFor(
         async () => (await EvidenceEventModel.countDocuments({ studentId: studentId2 })) === 1,
       );
-      assert(landed2, 'student-profile POST: malformed entries skipped — only the valid entry produces a row');
+      assert(landed2, 'student-profile POST: malformed + non-evaluative + out-of-range entries skipped — only the valid entry produces a row');
       const okRow = await EvidenceEventModel.findById(`sess:${sessionId2}:ok-seg`);
       assert(!!okRow, 'student-profile POST: the surviving row is keyed by the well-formed entry\'s segmentId');
     } finally {

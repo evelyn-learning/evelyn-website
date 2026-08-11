@@ -652,6 +652,15 @@ interface VoiceTutorRealtimeProps {
 // student still hasn't been heard at all. See pendingMicNoticeRef.
 const MIC_NOTICE_GRACE_MS = 20_000;
 
+// Task 11 (review ruling) — segment kinds that carry an actual assessed
+// outcome (the student did something gradeable) vs. pure exposure. Only
+// these push a segmentOutcomes evidence entry on mark_segment_complete —
+// hook/concept/worked_example/recap/extension completions are exposure,
+// not assessment, and would tautologically drive an LO's estimate toward
+// 1.0 on any session that simply finished. Kind strings match the Segment
+// union in src/lib/tutor/lesson-plan/types.ts.
+const EVALUATIVE_SEGMENT_KINDS = new Set<string>(['try_yourself', 'misconception_check']);
+
 // Map our voice IDs to OpenAI voices
 const VOICE_MAP: Record<string, OpenAIVoice> = {
   'female-1': 'shimmer',  // Warm, friendly
@@ -1571,7 +1580,8 @@ export function VoiceTutorRealtime({
   const commitSessionToProfile = useCallback(async (opts?: { final?: boolean; keepalive?: boolean }) => {
     if (!studentId) return;
     const accum = sessionAccumRef.current;
-    const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0;
+    const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
+      && accum.segmentOutcomes.length === 0;
     // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
     // fillings shown, even on a session that accumulated nothing gradeable
     // (e.g. a hook-only session the student didn't finish) — otherwise the
@@ -1887,17 +1897,24 @@ export function VoiceTutorRealtime({
      *  needed for SessionMemory.notesOverlaysAddedThisSession (Step 10)
      *  will read PATCH responses asynchronously. */
     topicNotesCount: { theory: number; methods: number; pointers: number };
-    /** Task 11 — per-segment outcome events, one per mark_segment_complete,
-     *  committed at session-end/flush alongside masteryDeltas/gaps and fed
+    /** Task 11 — per-segment outcome events, one per EVALUATIVE
+     *  mark_segment_complete (try_yourself / misconception_check only —
+     *  review ruling: exposure kinds like hook/concept/worked/intro/recap
+     *  aren't an assessment signal, and pushing them would tautologically
+     *  drive the LO's estimate toward 1.0 on any completed session).
+     *  Committed at session-end/flush alongside masteryDeltas/gaps and fed
      *  to the learner model as session-source evidence rows keyed by
      *  segment (`sess:<sessionId>:<segmentId>`). Deduped by segmentId
      *  within an accumulation window — see the push site in the
-     *  markSegmentComplete handler. */
+     *  markSegmentComplete handler. `outcome` is 1 when the student's
+     *  streak at completion was >= 1, else 0.5 (attempted, not clearly
+     *  mastered) — never a hardcoded 1. */
     segmentOutcomes: Array<{
       segmentId: string;
       loId: string;
       kind: string;
       completed: true;
+      outcome: number;
       streakAtComplete?: number;
       turns?: number;
     }>;
@@ -5166,9 +5183,8 @@ export function VoiceTutorRealtime({
         const segmentLoId = hasSegId && planNow && isGeneratedPlan(planNow)
           ? loGroupOf(c.segmentId)
           : undefined;
-        const loId = (segmentLoId && planNow?.los?.some((lo) => lo.id === segmentLoId))
-          ? segmentLoId
-          : planNow?.los?.[0]?.id;
+        const segmentLoResolved = !!(segmentLoId && planNow?.los?.some((lo) => lo.id === segmentLoId));
+        const loId = segmentLoResolved ? segmentLoId : planNow?.los?.[0]?.id;
         if (loId && outcome.recordMastery && md !== undefined) {
           sessionAccumRef.current.masteryDeltas.push({ loId, delta: md });
           sessionAccumRef.current.losTouched.add(loId);
@@ -5184,7 +5200,22 @@ export function VoiceTutorRealtime({
         // segmentId within this accumulation window — a re-fired
         // mark_segment_complete for an already-logged segment (e.g. brain
         // retry) shouldn't double-count.
+        // Review ruling: only EVALUATIVE segment kinds are evidence — a
+        // completed hook/concept/worked/intro/recap is exposure, not an
+        // assessed outcome, and logging it would tautologically drive the
+        // LO's estimate toward 1.0 on every finished session.
+        // Review fix: on a generated plan, a segment whose id didn't
+        // resolve to one of the plan's own LOs (intro/recap/pick-los —
+        // segmentLoResolved false) falls back to los[0] for the mastery
+        // push above, but that fallback is a proximate-scope compromise,
+        // not a real attribution — pushing THIS as segment-level evidence
+        // would misattribute an outcome to LO 1. Curated plans (no
+        // LO-group id convention, segmentLoId never computed) are exempt —
+        // their los[0] fallback IS the correct single-LO attribution.
+        const genPlanLoUnresolved = !!(planNow && isGeneratedPlan(planNow) && !segmentLoResolved);
         if (hasSegId && loId && doneSeg
+            && EVALUATIVE_SEGMENT_KINDS.has(doneSeg.kind)
+            && !genPlanLoUnresolved
             && !sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === c.segmentId)) {
           const masteredFlag = segmentMasteredFlagRef.current;
           const streakAtComplete = masteredFlag && masteredFlag.segId === c.segmentId
@@ -5193,11 +5224,16 @@ export function VoiceTutorRealtime({
           const turns = segmentTurnCountRef.current.segId === c.segmentId
             ? segmentTurnCountRef.current.count
             : undefined;
+          // 1 when the student's correct-streak at completion was >= 1
+          // (they got at least the deciding attempt right); 0.5 otherwise
+          // — "attempted, not clearly mastered", never a hardcoded 1.
+          const segEvidenceOutcome = typeof streakAtComplete === 'number' && streakAtComplete >= 1 ? 1 : 0.5;
           sessionAccumRef.current.segmentOutcomes.push({
             segmentId: c.segmentId,
             loId,
             kind: doneSeg.kind,
             completed: true,
+            outcome: segEvidenceOutcome,
             streakAtComplete,
             turns,
           });
