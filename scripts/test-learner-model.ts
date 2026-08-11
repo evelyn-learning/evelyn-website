@@ -736,6 +736,88 @@ async function runServerAppendPointTests() {
     }
   }
 
+  // --- (b) submitAssessment: purpose (Task 13) — explicit field wins over the
+  // notesTouched heuristic, in both directions ---
+  {
+    const studentId = `lmtest:purposequiz:${process.pid}`;
+    const sessionId = `lmtest-purposequiz-session-${process.pid}`;
+    const resolver = async (id: string) =>
+      id === 'qd' ? ({ responseFormat: 'numeric' as const, expectedAnswer: '5' }) : null;
+    const deps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: '' };
+      },
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await submitAssessment(
+        {
+          assessmentId: 'lmtest-asmt-purpose-quiz',
+          studentId,
+          courseId: 'ap-statistics',
+          sessionId,
+          responses: [{ itemId: 'qd', loId: 'lmtest.lo-d', response: { text: '5' } }],
+          purpose: 'quiz',
+          notesTouched: [],
+        },
+        deps,
+        resolver,
+      );
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qd`)));
+      assert(landed, 'submitAssessment (purpose=quiz, empty notesTouched): evidence row lands');
+      const row = await EvidenceEventModel.findById(`diag:${sessionId}:qd`);
+      assert(
+        !!row && row.source === 'assessment',
+        "submitAssessment: purpose 'quiz' wins over empty notesTouched → source 'assessment'",
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  {
+    const studentId = `lmtest:purposediag:${process.pid}`;
+    const sessionId = `lmtest-purposediag-session-${process.pid}`;
+    const resolver = async (id: string) =>
+      id === 'qe' ? ({ responseFormat: 'numeric' as const, expectedAnswer: '5' }) : null;
+    const deps: GradeDeps = {
+      async gradeRubricPart() {
+        return { pointsAwarded: 0, feedback: '' };
+      },
+      async judgeSingleAnswer() {
+        return { correct: false, feedback: '' };
+      },
+    };
+    await deleteLearnerModelData(studentId);
+    try {
+      await submitAssessment(
+        {
+          assessmentId: 'lmtest-asmt-purpose-diag',
+          studentId,
+          courseId: 'ap-statistics',
+          sessionId,
+          responses: [{ itemId: 'qe', loId: 'lmtest.lo-e', response: { text: '5' } }],
+          purpose: 'diagnostic',
+          notesTouched: [{ baselineId: 'b1', cedTopic: 'topic', cedTitle: 'title' }],
+        },
+        deps,
+        resolver,
+      );
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qe`)));
+      assert(landed, 'submitAssessment (purpose=diagnostic, non-empty notesTouched): evidence row lands');
+      const row = await EvidenceEventModel.findById(`diag:${sessionId}:qe`);
+      assert(
+        !!row && row.source === 'diagnostic',
+        "submitAssessment: purpose 'diagnostic' wins over non-empty notesTouched → source 'diagnostic'",
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
   // --- (c) mock grading: per-item rows + loBreakdown carry sectionId ---
   {
     const studentId = `lmtest:mock:${process.pid}`;

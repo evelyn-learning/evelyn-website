@@ -208,8 +208,17 @@ export async function submitAssessment(
   // submission's existing signal (v1.4.0 comment on AssessmentSubmissionSchema:
   // "Absent/empty (the diagnostic path)"). A unit quiz passes its baselines;
   // the course-start silent diagnostic never does.
+  // Task 13 — the contract's explicit `purpose` field (v1.13.0), when present,
+  // wins over the notesTouched heuristic in both directions; absent purpose
+  // falls back to the legacy heuristic unchanged.
   const evidenceSource: EvidenceInput['source'] =
-    sub.notesTouched && sub.notesTouched.length > 0 ? 'assessment' : 'diagnostic';
+    sub.purpose === 'quiz'
+      ? 'assessment'
+      : sub.purpose === 'diagnostic'
+        ? 'diagnostic'
+        : sub.notesTouched && sub.notesTouched.length > 0
+          ? 'assessment'
+          : 'diagnostic';
   const evidenceOccurredAt = new Date();
   const evidenceInputs: EvidenceInput[] = [];
 
