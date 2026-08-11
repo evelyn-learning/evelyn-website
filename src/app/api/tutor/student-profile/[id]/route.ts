@@ -26,9 +26,18 @@ import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { checkEmbedAuth } from '@/lib/tutor/portal/embed-token';
 
-export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  const auth = checkEmbedAuth({
+    token: req.headers.get('x-embed-token'),
+    expectedStudentId: id,
+    route: 'student-profile:GET',
+  });
+  if (!auth.allow) {
+    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
   const profile = await getOrCreateStudentProfile(id);
   return NextResponse.json({
     profile,
@@ -120,6 +129,22 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   } catch {
     return NextResponse.json({ error: 'invalid JSON' }, { status: 400 });
   }
+
+  // Token comes via the x-embed-token header (GET/POST) or, for POST only,
+  // body.embedToken (client keepalive-path symmetry with session-usage).
+  // Header wins when both are present. Strip embedToken from body BEFORE any
+  // further use so it can never leak into a profile write.
+  const bodyWithToken = body as CommitBody & { embedToken?: unknown };
+  const token =
+    req.headers.get('x-embed-token') ??
+    (typeof bodyWithToken.embedToken === 'string' ? bodyWithToken.embedToken : null);
+  delete bodyWithToken.embedToken;
+
+  const auth = checkEmbedAuth({ token, expectedStudentId: id, route: 'student-profile:POST' });
+  if (!auth.allow) {
+    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+
   if (!body.sessionId) {
     return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
   }

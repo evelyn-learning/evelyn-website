@@ -189,5 +189,101 @@ assert(
 
 resetEnv();
 
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed > 0) process.exit(1);
+// ---------------------------------------------------------------------------
+// Route-level gating: student-profile GET/POST (Task 2)
+//
+// This section only covers the DENY paths. The route short-circuits BEFORE
+// any DB access when checkEmbedAuth blocks (auth runs ahead of
+// getOrCreateStudentProfile and ahead of the segmentOutcomes evidence
+// block), so these tests are safe in this DB-free script. The 200 (allow)
+// paths necessarily touch Mongo via getOrCreateStudentProfile /
+// saveStudentProfile, so that coverage lives in test-learner-model.ts's
+// DB-backed student-profile section instead (runStudentProfileEmbedAuthTests).
+// ---------------------------------------------------------------------------
+async function runStudentProfileRouteDenyTests() {
+  console.log('\nstudent-profile route — embed-token gating (deny paths, Task 2):\n');
+
+  const { GET: profileGET, POST: profilePOST } = await import(
+    '../src/app/api/tutor/student-profile/[id]/route'
+  );
+  const { NextRequest } = await import('next/server');
+
+  function getReq(headers?: Record<string, string>) {
+    return new Request('https://engine.test/api/tutor/student-profile/stu-1', {
+      method: 'GET',
+      headers,
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function postReq(bodyObj: unknown, headers?: Record<string, string>) {
+    return new Request('https://engine.test/api/tutor/student-profile/stu-1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(headers ?? {}) },
+      body: JSON.stringify(bodyObj),
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function ctx(id: string) {
+    return { params: Promise.resolve({ id }) };
+  }
+
+  clearEnv();
+  process.env.PORTAL_PARTNER_ID = 'academy';
+  process.env.PORTAL_API_SECRET = 'test-secret';
+  process.env.EMBED_TOKEN_ENFORCE = 'on';
+
+  // (a) GET without a token header, enforce=on → 401.
+  {
+    const res = await profileGET(getReq(), ctx('stu-1'));
+    const json = await res.json();
+    assert(res.status === 401, 'GET student-profile: no token, enforce=on → 401');
+    assert(
+      json.error === 'unauthorized' && typeof json.reason === 'string' && json.reason.length > 0,
+      'GET student-profile: 401 body shape {error: "unauthorized", reason}',
+    );
+  }
+
+  // (c) POST with a token whose student_id mismatches the URL id, enforce=on
+  // → 401. Auth runs before the segmentOutcomes evidence block, so a denied
+  // commit never reaches appendEvidence or getOrCreateStudentProfile — that
+  // "no evidence appended, no profile mutated" guarantee is verified against
+  // a live DB in test-learner-model.ts (runStudentProfileEmbedAuthTests).
+  {
+    const mismatchToken = signEmbedToken(
+      { partner_id: 'academy', student_id: 'stu-OTHER', exp: Math.floor(now / 1000) + 7200 },
+      'test-secret',
+    );
+    const res = await profilePOST(
+      postReq(
+        {
+          sessionId: 'sess-x',
+          segmentOutcomes: [
+            { segmentId: 'seg', loId: 'lo', kind: 'try_yourself', completed: true, outcome: 1 },
+          ],
+        },
+        { 'x-embed-token': mismatchToken },
+      ),
+      ctx('stu-1'),
+    );
+    const json = await res.json();
+    assert(res.status === 401, 'POST student-profile: mismatched student_id token, enforce=on → 401');
+    assert(json.reason === 'student_mismatch', 'POST student-profile: 401 reason is "student_mismatch"');
+  }
+
+  // Note: the "(d) enforce=log, POST without token → 200" case from the task
+  // brief is deliberately NOT tested here — once auth allows (log mode never
+  // blocks), the route proceeds into getOrCreateStudentProfile/
+  // saveStudentProfile, which requires a live Mongo connection. That case is
+  // covered against a real DB in test-learner-model.ts
+  // (runStudentProfileEmbedAuthTests) so this script stays DB-free.
+
+  resetEnv();
+}
+
+runStudentProfileRouteDenyTests()
+  .then(() => {
+    console.log(`\n${passed} passed, ${failed} failed`);
+    process.exit(failed > 0 ? 1 : 0);
+  })
+  .catch((err) => {
+    console.error('Fatal error running embed-token route-level tests:', err);
+    process.exit(1);
+  });

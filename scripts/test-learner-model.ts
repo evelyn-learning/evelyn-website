@@ -1141,6 +1141,155 @@ async function runStudentProfileSegmentOutcomesTests() {
 }
 
 /* ------------------------------------------------------------------ */
+/* student-profile route — embed-token gating, allow paths (Task 2)    */
+/*                                                                      */
+/* runStudentProfileRouteDenyTests in test-embed-token.ts covers the    */
+/* DB-free deny (401) paths — auth is checked before any store call, so */
+/* those never touch Mongo. The allow paths below necessarily do (they  */
+/* fall through into getOrCreateStudentProfile / saveStudentProfile),   */
+/* so they live here alongside the rest of the DB-backed suite.         */
+/* ------------------------------------------------------------------ */
+
+async function runStudentProfileEmbedAuthTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 2 student-profile embed-auth tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { GET: profileGET, POST: profilePOST } = await import(
+    '../src/app/api/tutor/student-profile/[id]/route'
+  );
+  const { signEmbedToken } = await import('../src/lib/tutor/portal/embed-token');
+  const { EvidenceEventModel } = await import('../src/models');
+  const { getOrCreateStudentProfile } = await import('../src/lib/tutor/student-profile/store');
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  console.log('\nstudent-profile route — embed-token gating, allow paths (Task 2):\n');
+
+  process.env.PORTAL_PARTNER_SECRETS = process.env.PORTAL_PARTNER_SECRETS ?? JSON.stringify({ portalA: 'secret-a' });
+  const savedEnforce = process.env.EMBED_TOKEN_ENFORCE;
+
+  function getReq(id: string, headers?: Record<string, string>) {
+    return new Request(`https://engine.test/api/tutor/student-profile/${id}`, {
+      method: 'GET',
+      headers,
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function postReq(id: string, bodyObj: unknown, headers?: Record<string, string>) {
+    return new Request(`https://engine.test/api/tutor/student-profile/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(headers ?? {}) },
+      body: JSON.stringify(bodyObj),
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function ctx(id: string) {
+    return { params: Promise.resolve({ id }) };
+  }
+
+  const studentId = `lmtest:embedauth:${process.pid}`;
+
+  try {
+    await deleteLearnerModelData(studentId);
+
+    // (b) GET with a valid token whose student_id matches the URL id,
+    // enforce=on → 200.
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await profileGET(getReq(studentId, { 'x-embed-token': token }), ctx(studentId));
+      assert(res.status === 200, 'GET student-profile: matching-student valid token, enforce=on → 200');
+    }
+
+    // (c, DB half) POST with a token whose student_id mismatches the URL id,
+    // enforce=on → 401 AND no evidence row written, no SessionMemory entry
+    // created — the auth check runs before both the segmentOutcomes evidence
+    // block and getOrCreateStudentProfile.
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const mismatchSessionId = `lmtest-embedauth-mismatch-${process.pid}`;
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: 'someone-else', exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await profilePOST(
+        postReq(
+          studentId,
+          {
+            sessionId: mismatchSessionId,
+            segmentOutcomes: [
+              { segmentId: 'seg-mismatch', loId: 'lo', kind: 'try_yourself', completed: true, outcome: 1 },
+            ],
+          },
+          { 'x-embed-token': token },
+        ),
+        ctx(studentId),
+      );
+      assert(res.status === 401, 'POST student-profile: mismatched student_id token, enforce=on → 401');
+      await new Promise((r) => setTimeout(r, 300)); // let any (wrongly) fired append settle
+      const count = await EvidenceEventModel.countDocuments({ studentId });
+      assert(count === 0, 'POST student-profile: denied commit appends no evidence');
+      const profileAfterDeny = await getOrCreateStudentProfile(studentId);
+      assert(
+        !profileAfterDeny.recentSessions.some((s) => s.sessionId === mismatchSessionId),
+        'POST student-profile: denied commit creates no SessionMemory entry (profile not mutated)',
+      );
+    }
+
+    // (d) POST without a token, enforce=log → 200, unchanged behavior (log
+    // mode verifies but never blocks).
+    process.env.EMBED_TOKEN_ENFORCE = 'log';
+    {
+      const res = await profilePOST(
+        postReq(studentId, { sessionId: `lmtest-embedauth-log-${process.pid}` }),
+        ctx(studentId),
+      );
+      assert(res.status === 200, 'POST student-profile: no token, enforce=log → 200 (unchanged behavior)');
+    }
+
+    // Happy path via header, enforce=on → 200.
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await profilePOST(
+        postReq(studentId, { sessionId: `lmtest-embedauth-header-${process.pid}` }, { 'x-embed-token': token }),
+        ctx(studentId),
+      );
+      assert(res.status === 200, 'POST student-profile: matching-student valid token via header, enforce=on → 200');
+    }
+
+    // Happy path via body.embedToken (no header) → 200, and the stray
+    // embedToken field is stripped before any further use (no crash, no
+    // leakage into the CommitBody fields the route consumes).
+    process.env.EMBED_TOKEN_ENFORCE = 'on';
+    {
+      const token = signEmbedToken(
+        { partner_id: 'portalA', student_id: studentId, exp: Math.floor(Date.now() / 1000) + 7200 },
+        'secret-a',
+      );
+      const res = await profilePOST(
+        postReq(studentId, { sessionId: `lmtest-embedauth-bodytoken-${process.pid}`, embedToken: token }),
+        ctx(studentId),
+      );
+      assert(res.status === 200, 'POST student-profile: matching-student valid token via body.embedToken → 200');
+    }
+  } finally {
+    if (savedEnforce === undefined) delete process.env.EMBED_TOKEN_ENFORCE;
+    else process.env.EMBED_TOKEN_ENFORCE = savedEnforce;
+    await deleteLearnerModelData(studentId);
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* runLearnerSnapshot — DB-backed (Task 10)                            */
 /* ------------------------------------------------------------------ */
 
@@ -1644,6 +1793,7 @@ runDbTests()
   .then(() => runServerAppendPointTests())
   .then(() => runLearnerStateRouteTests())
   .then(() => runStudentProfileSegmentOutcomesTests())
+  .then(() => runStudentProfileEmbedAuthTests())
   .then(() => runLearnerSnapshotTests())
   .then(() => runStudentEraseRouteTests())
   .then(() => runBackfillEvidenceTests())
