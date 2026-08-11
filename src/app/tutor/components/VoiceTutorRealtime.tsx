@@ -84,6 +84,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
+import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
@@ -9602,6 +9603,34 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic praise-contradiction check: affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
                       onDebugEvent?.('praise_contradiction_kill', `affirmed=${affirmed}`);
+                      continue;
+                    }
+                  }
+                  // Praise-echo check (verdict-detector round, session portal-cb2addf5):
+                  // the opener affirms a value that DISAGREES with what the student
+                  // actually said ("Right — $2x$." after the student said "3x").
+                  // praise-contradiction above compares the tutor against ITSELF; this
+                  // compares the affirmation against the STUDENT. Tri-state comparator:
+                  // 'unknown' never fires, so hedges/prose can't kill. Pure, no LLM.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const praiseEchoTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                    const echoChoices = currentProblemRef.current?.hasChoices
+                      ? (currentProblemRef.current.choiceLetters ?? []).map((l) => ({ letter: l, text: l }))
+                      : undefined;
+                    const pe = checkPraiseEcho({
+                      turnTextSoFar: praiseEchoTextSoFar,
+                      studentUtterance: transcript,
+                      choices: echoChoices, // letters-only ref: resolveMcqLetter's direct-letter path needs no texts
+                    });
+                    if (pe.verdict === 'false_praise') {
+                      const reason =
+                        `Your opener affirmed "${pe.affirmed}" but the student actually said "${(pe.studentSaid ?? '').slice(0, 80)}" — those are different values. ` +
+                        `Re-evaluate the student's ACTUAL answer and open with the true verdict for what THEY said.`;
+                      rejectionsThisAttempt.push({ action: 'praise_echo_mismatch', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] praise-echo check: affirmed "${pe.affirmed}" vs student "${(pe.studentSaid ?? '').slice(0, 60)}" — kill + retry`);
+                      onDebugEvent?.('praise_echo_kill', `affirmed=${pe.affirmed} student=${(pe.studentSaid ?? '').slice(0, 40)} (${pe.matchReason})`);
                       continue;
                     }
                   }

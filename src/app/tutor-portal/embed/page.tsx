@@ -76,6 +76,14 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // R42: mcq_letter_normalized — a spoken letter homophone ("See.") was
   // rewritten to the literal MCQ choice letter before dispatch.
   'mcq_letter_normalized',
+  // Task 4, verdict-detector round (2026-08-10): praise_echo_kill (the
+  // opener disagreeing with what the STUDENT said, praise-echo-check.ts)
+  // was absent from this list — same class of gap as the 2026-08-07
+  // brain_/judge_/tool_call_ triage above. NOTE: praise_contradiction_kill
+  // (R38, the brain contradicting its OWN opener) is ALSO not covered by
+  // any prefix here — pre-existing gap, out of scope for this entry, see
+  // task-4-report.md.
+  'praise_echo',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
