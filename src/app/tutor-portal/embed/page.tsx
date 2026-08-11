@@ -24,6 +24,7 @@ import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';
 import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
+import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId } from '@/lib/tutor/voice/cartesia-voice-registry';
@@ -230,21 +231,12 @@ interface TokenUsage {
   outputTextTokens?: number;
 }
 
+// Non-authoritative UI config parsing only — see parse-embed-config.ts for
+// why this never verifies a signature (that's the API routes' job, via
+// verifyEmbedToken/checkEmbedAuth) and for the signed-JWT / legacy-base64 /
+// plain-JSON fallback chain this wraps.
 function parseToken(tokenParam: string | null): EmbedConfig | null {
-  if (!tokenParam) return null;
-  try {
-    // TODO: Replace with proper JWT verification using partner's API secret
-    // For now, accept base64-encoded JSON for development/testing
-    const decoded = atob(tokenParam);
-    return JSON.parse(decoded);
-  } catch {
-    // Try plain JSON (for sandbox testing)
-    try {
-      return JSON.parse(decodeURIComponent(tokenParam));
-    } catch {
-      return null;
-    }
-  }
+  return parseEmbedConfig<EmbedConfig>(tokenParam);
 }
 
 /** Origin of the page embedding this iframe. ancestorOrigins is the

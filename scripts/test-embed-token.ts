@@ -12,6 +12,7 @@ import {
   signEmbedToken,
   embedEnforceMode,
 } from '../src/lib/tutor/portal/embed-token';
+import { parseEmbedConfig } from '../src/lib/tutor/portal/parse-embed-config';
 
 let passed = 0;
 let failed = 0;
@@ -498,9 +499,109 @@ async function runDemoTokenRouteTests() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// parseEmbedConfig (Task 5 fix round 1) — non-authoritative, non-verifying
+// token→config decode used by the embed page. The bug this closes: the old
+// embed/page.tsx parseToken did atob(entireToken), which chokes on a signed
+// 3-segment JWT's '.' separators (not in the base64 alphabet) — so every
+// signed token, including the ones this task's demo-token route mints,
+// rendered "Invalid Session Token". This module must accept signed JWTs
+// (decode the payload segment WITHOUT verifying — verification stays
+// server-side) as well as the legacy whole-string base64 and plain JSON.
+// ---------------------------------------------------------------------------
+async function runParseEmbedConfigTests() {
+  console.log('\nparseEmbedConfig — non-verifying token decode (Task 5 fix round 1):\n');
+
+  clearEnv();
+  process.env.PORTAL_PARTNER_ID = 'academy';
+  process.env.PORTAL_API_SECRET = 'test-secret';
+
+  // (a) Signed 3-segment JWT from signEmbedToken decodes to its payload —
+  // this is the exact success path the mint endpoint produces.
+  {
+    const signed = signEmbedToken(
+      { partner_id: 'academy', student_id: 'stu-1', subject: 'math', exp: Math.floor(now / 1000) + 7200 },
+      'test-secret',
+    );
+    const parsed = parseEmbedConfig<{ partner_id: string; student_id: string; subject: string }>(signed);
+    assert(parsed !== null, 'parseEmbedConfig: signed JWT decodes (not null)');
+    assert(parsed?.partner_id === 'academy', 'parseEmbedConfig: signed JWT — partner_id survives');
+    assert(parsed?.subject === 'math', 'parseEmbedConfig: signed JWT — passthrough field (subject) survives');
+  }
+
+  // (a-regression) base64url payload segments containing '-' or '_' must
+  // decode correctly (the whole reason this isn't plain base64). A narrow
+  // alphabet (e.g. hex digits) rarely lands on base64's last two symbols —
+  // the full printable-ASCII range reliably does — so the probe spans every
+  // printable char (space through '~') to deterministically force at least
+  // one '-'/'_' substitution in the resulting payload segment.
+  {
+    const printable = Array.from({ length: 95 }, (_, i) => String.fromCharCode(32 + i)).join('');
+    const probe = printable + printable;
+    const token = signEmbedToken(
+      { partner_id: 'academy', student_id: 's', exp: Math.floor(now / 1000) + 7200, probe },
+      'test-secret',
+    );
+    const payloadSeg = token.split('.')[1] ?? '';
+    assert(
+      payloadSeg.includes('-') || payloadSeg.includes('_'),
+      'parseEmbedConfig: precondition — payload segment actually contains "-" or "_"',
+    );
+    const parsed = parseEmbedConfig<{ probe: string }>(token);
+    assert(parsed?.probe === probe, 'parseEmbedConfig: base64url payload with -/_ chars decodes correctly');
+  }
+
+  // (b) Legacy whole-string base64 (UTF-8-safe encode, matching the old
+  // client-side btoa(unescape(encodeURIComponent(...))) semantics).
+  {
+    const cfg = { partner_id: 'evelyn-marketing', student_id: 'demo-legacy', subject: 'science — chem' };
+    const legacyToken = Buffer.from(JSON.stringify(cfg), 'utf8').toString('base64');
+    const parsed = parseEmbedConfig<typeof cfg>(legacyToken);
+    assert(parsed !== null, 'parseEmbedConfig: legacy base64 token decodes (not null)');
+    assert(parsed?.student_id === 'demo-legacy', 'parseEmbedConfig: legacy base64 — student_id survives');
+    assert(parsed?.subject === 'science — chem', 'parseEmbedConfig: legacy base64 — UTF-8 field survives intact');
+  }
+
+  // (c) Plain JSON (sandbox/manual testing path).
+  {
+    const cfg = { partner_id: 'academy', student_id: 'stu-sandbox' };
+    const parsed = parseEmbedConfig<typeof cfg>(encodeURIComponent(JSON.stringify(cfg)));
+    assert(parsed?.student_id === 'stu-sandbox', 'parseEmbedConfig: plain JSON (URI-encoded) decodes');
+  }
+
+  // Garbage / non-parseable input → null, never throws.
+  assert(parseEmbedConfig(null) === null, 'parseEmbedConfig: null token → null');
+  assert(parseEmbedConfig('') === null, 'parseEmbedConfig: empty string → null');
+  assert(parseEmbedConfig('not-a-jwt') === null, 'parseEmbedConfig: garbage single-segment string → null');
+  assert(parseEmbedConfig('a.b.c') === null, 'parseEmbedConfig: garbage 3-segment string → null');
+  assert(parseEmbedConfig('....') === null, 'parseEmbedConfig: empty-segment dots-only string → null');
+
+  // End-to-end shaped: a token minted by the demo-token route (Task 5,
+  // signed path) must parse via this helper — proves the mint endpoint's
+  // success path and the embed page's parse path actually agree.
+  {
+    process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ 'evelyn-marketing': 'mkt-secret' });
+    const { POST: demoTokenPOST } = await import('../src/app/api/tutor-portal/demo-token/route');
+    const req = new Request('https://engine.test/api/tutor-portal/demo-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: { subject: 'e2e-check' } }),
+    });
+    const res = await demoTokenPOST(req as never);
+    const { token } = (await res.json()) as { token: string };
+    const parsed = parseEmbedConfig<{ partner_id: string; subject: string; student_id: string }>(token);
+    assert(parsed !== null, 'parseEmbedConfig: demo-token-route-minted signed token decodes (not null)');
+    assert(parsed?.partner_id === 'evelyn-marketing', 'parseEmbedConfig: demo-token-route token — partner_id survives');
+    assert(parsed?.subject === 'e2e-check', 'parseEmbedConfig: demo-token-route token — passthrough field survives');
+  }
+
+  resetEnv();
+}
+
 runStudentProfileRouteDenyTests()
   .then(() => runSessionUsageRouteDenyTests())
   .then(() => runDemoTokenRouteTests())
+  .then(() => runParseEmbedConfigTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     process.exit(failed > 0 ? 1 : 0);
