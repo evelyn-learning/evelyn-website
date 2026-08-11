@@ -2464,6 +2464,227 @@ async function runReviewPlanComposerTests() {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Task 17 — learner-context boot block                               */
+/* (context-block.ts render + join, and the student-profile GET       */
+/* route's flag-gated `learnerContext` field)                          */
+/* ------------------------------------------------------------------ */
+
+/** Pure — no DB, runs unconditionally (same as the estimator/hints pure
+ *  tests up top). Covers renderLearnerContextBlock's shape, the
+ *  both-empty → null case, and the LO/gap caps. */
+async function runLearnerContextBlockPureTests() {
+  const { renderLearnerContextBlock } = await import('../src/lib/tutor/learner-model/context-block');
+
+  console.log('\nlearner-context block — pure render (Task 17):\n');
+
+  // 1 strong + 1 developing-due LO + 1 gap: shape + key substrings.
+  {
+    const block = renderLearnerContextBlock(
+      [
+        { loId: 'lo-strong', title: 'Slope-intercept form', estimate: 0.9, confidence: 'high', reviewDue: false },
+        { loId: 'lo-dev', title: 'Quadratic factoring', estimate: 0.3, confidence: 'low', reviewDue: true },
+      ],
+      [{ label: 'lo-dev', observation: 'Mixes up the sign when factoring a negative constant term.' }],
+    );
+    assert(!!block, 'renderLearnerContextBlock: 1 strong + 1 developing-due LO + 1 gap → non-null');
+    assert(
+      !!block && block.startsWith('<learner_context>') && block.endsWith('</learner_context>'),
+      'renderLearnerContextBlock: fenced with <learner_context>...</learner_context>',
+    );
+    assert(!!block && block.includes('strong (high confidence)'), 'renderLearnerContextBlock: strong band + confidence wording');
+    assert(!!block && block.includes('developing (low confidence)'), 'renderLearnerContextBlock: developing band + confidence wording');
+    assert(!!block && block.includes('DUE FOR REVIEW'), 'renderLearnerContextBlock: reviewDue LO carries the DUE FOR REVIEW flag');
+    assert(!!block && block.includes('- lo-dev: Mixes up the sign when factoring'), 'renderLearnerContextBlock: gap label + observation line');
+    assert(!!block && block.includes('Teach to this:'), 'renderLearnerContextBlock: carries the "Teach to this:" instruction line');
+  }
+
+  // both-empty → null.
+  {
+    const block = renderLearnerContextBlock([], []);
+    assert(block === null, 'renderLearnerContextBlock: both LOs and gaps empty → null');
+  }
+
+  // LO-only (no gaps) and gap-only (no LOs) still render — null is reserved
+  // for the both-empty case.
+  {
+    const loOnly = renderLearnerContextBlock(
+      [{ loId: 'lo-a', title: 'LO A', estimate: 0.9, confidence: 'high', reviewDue: false }],
+      [],
+    );
+    assert(!!loOnly && !loOnly.includes('Active gaps'), 'renderLearnerContextBlock: LO-only input omits the gaps section but still renders');
+    const gapOnly = renderLearnerContextBlock([], [{ label: 'lo-a', observation: 'obs' }]);
+    assert(!!gapOnly && !gapOnly.includes('current standing'), 'renderLearnerContextBlock: gap-only input omits the LO section but still renders');
+  }
+
+  // Caps: 10 LOs in → 8 rendered; 5 gaps in → 3 rendered.
+  {
+    const manyLos = Array.from({ length: 10 }, (_, i) => ({
+      loId: `lo-${i}`, title: `LO ${i}`, estimate: 0.9, confidence: 'high', reviewDue: false,
+    }));
+    const manyGaps = Array.from({ length: 5 }, (_, i) => ({ label: `gap-${i}`, observation: `obs ${i}` }));
+    const block = renderLearnerContextBlock(manyLos, manyGaps);
+    const loLines = (block ?? '').split('\n').filter((l) => /^- LO \d+:/.test(l));
+    const gapLines = (block ?? '').split('\n').filter((l) => /^- gap-\d+:/.test(l));
+    assert(loLines.length === 8, `renderLearnerContextBlock: caps at 8 LOs (got ${loLines.length})`);
+    assert(gapLines.length === 3, `renderLearnerContextBlock: caps at 3 gaps (got ${gapLines.length})`);
+  }
+
+  // Gap observation clipped at 160 chars.
+  {
+    const longObs = 'x'.repeat(200);
+    const block = renderLearnerContextBlock([], [{ label: 'lo-a', observation: longObs }]);
+    const gapLine = (block ?? '').split('\n').find((l) => l.startsWith('- lo-a:'))!;
+    // "- lo-a: " prefix (8 chars) + clipped body (160 + ellipsis).
+    assert(gapLine.length <= 8 + 161, `renderLearnerContextBlock: long gap observation is clipped (line length ${gapLine.length})`);
+  }
+}
+
+/** DB-backed join (getLearnerContextBlock) + route-level flag/param
+ *  gating on GET /api/tutor/student-profile/[id]. Unique per-run fixture
+ *  ids (process.pid-scoped) + cleanup in a finally, mirroring Task 14's
+ *  review-plan-composer section. */
+async function runLearnerContextBlockDbTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 17 learner-context DB/route tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { getLearnerContextBlock } = await import('../src/lib/tutor/learner-model/context-block');
+  const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
+  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../src/models');
+  const { StudentProfileModel } = await import('../src/models/StudentProfile');
+  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
+  const { GET: profileGET } = await import('../src/app/api/tutor/student-profile/[id]/route');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  const studentId = `lctest:${process.pid}`;
+  const planId = `lctest-plan-${process.pid}`;
+  const loSeen = `lctest-lo-seen-${process.pid}`;
+  const loUnseen = `lctest-lo-unseen-${process.pid}`;
+
+  async function cleanup() {
+    await LearnerStateProjectionModel.deleteMany({ studentId });
+    await StudentProfileModel.deleteOne({ _id: studentId });
+    await deleteLessonPlan(planId);
+  }
+
+  function getReq(id: string, query?: string) {
+    const qs = query ? `?${query}` : '';
+    return new Request(`https://engine.test/api/tutor/student-profile/${id}${qs}`, {
+      method: 'GET',
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function ctx(id: string) {
+    return { params: Promise.resolve({ id }) };
+  }
+
+  console.log('\nlearner-context block — DB-backed join + route (Task 17):\n');
+
+  const savedFlag = process.env.TUTOR_LEARNER_CONTEXT;
+  const savedEnforce = process.env.EMBED_TOKEN_ENFORCE;
+  process.env.EMBED_TOKEN_ENFORCE = 'off'; // route-level tests below don't exercise auth — Task 2 covers that separately.
+
+  await cleanup();
+  try {
+    await upsertLessonPlan({
+      id: planId,
+      title: 'Task 17 test plan',
+      curriculum: 'freestyle',
+      grade: '9-12',
+      subject: 'math',
+      los: [
+        { id: loSeen, description: 'Seen objective', shortTitle: 'Seen LO' },
+        { id: loUnseen, description: 'Unseen objective', shortTitle: 'Unseen LO' },
+      ],
+      estimatedMinutes: 12,
+      segments: [{ id: `${loSeen}-hook`, kind: 'hook', loId: loSeen, goal: 'g' }],
+      schemaVersion: 1,
+      metadata: {},
+    });
+
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loSeen),
+      studentId,
+      loId: loSeen,
+      estimate: 0.85,
+      confidence: 'high',
+      trend: 'flat',
+      nEff: 6,
+      reviewDueAt: new Date(Date.now() - 60 * 60 * 1000), // 1h in the past → DUE
+      lastEvidenceAt: new Date(),
+    });
+
+    const nowIso = new Date().toISOString();
+    const profile = await getOrCreateStudentProfile(studentId);
+    await saveStudentProfile({
+      ...profile,
+      gaps: [
+        {
+          id: 'gap_lctest',
+          kind: 'lo',
+          loId: loSeen,
+          status: 'confirmed',
+          evidence: { signals: [], observation: 'Confuses slope and intercept when reading a graph.', studentQuotes: [] },
+          firstSeenAt: nowIso,
+          lastSeenAt: nowIso,
+        },
+      ],
+    });
+
+    // getLearnerContextBlock: seeded projection + confirmed gap → block
+    // carries both LOs (seen with real estimate/DUE, unseen with the
+    // untouched-prior fallback band) and the gap.
+    {
+      const block = await getLearnerContextBlock(studentId, planId);
+      assert(!!block, 'getLearnerContextBlock: seeded projection + confirmed gap → non-null block');
+      assert(!!block && block.includes('Seen LO') && block.includes('DUE FOR REVIEW'), 'getLearnerContextBlock: seen LO carries its real band + DUE FOR REVIEW');
+      assert(!!block && block.includes('Unseen LO'), 'getLearnerContextBlock: unseen LO still appears (untouched-prior fallback)');
+      assert(!!block && block.includes('Confuses slope and intercept'), 'getLearnerContextBlock: confirmed gap observation reaches the block');
+    }
+
+    // unknown plan id → null (never throws).
+    {
+      const block = await getLearnerContextBlock(studentId, `lctest-nonexistent-${process.pid}`);
+      assert(block === null, 'getLearnerContextBlock: unknown lessonPlanId → null');
+    }
+
+    // Route-level: flag on + lessonPlanId param → learnerContext string.
+    {
+      process.env.TUTOR_LEARNER_CONTEXT = 'on';
+      const res = await profileGET(getReq(studentId, `lessonPlanId=${planId}`), ctx(studentId));
+      assert(res.status === 200, 'GET student-profile: flag on + lessonPlanId → 200');
+      const json = await res.json();
+      assert(typeof json.learnerContext === 'string', 'GET student-profile: flag on + lessonPlanId → learnerContext is a string');
+    }
+
+    // Route-level: flag off → learnerContext key absent entirely (not null).
+    {
+      delete process.env.TUTOR_LEARNER_CONTEXT;
+      const res = await profileGET(getReq(studentId, `lessonPlanId=${planId}`), ctx(studentId));
+      const json = await res.json();
+      assert(!('learnerContext' in json), 'GET student-profile: flag off → learnerContext key absent (byte-identical to pre-Task-17 shape)');
+    }
+
+    // Route-level: flag on + NO lessonPlanId param → learnerContext key absent.
+    {
+      process.env.TUTOR_LEARNER_CONTEXT = 'on';
+      const res = await profileGET(getReq(studentId), ctx(studentId));
+      const json = await res.json();
+      assert(!('learnerContext' in json), 'GET student-profile: flag on, no lessonPlanId param → learnerContext key absent');
+    }
+  } finally {
+    if (savedFlag === undefined) delete process.env.TUTOR_LEARNER_CONTEXT;
+    else process.env.TUTOR_LEARNER_CONTEXT = savedFlag;
+    if (savedEnforce === undefined) delete process.env.EMBED_TOKEN_ENFORCE;
+    else process.env.EMBED_TOKEN_ENFORCE = savedEnforce;
+    await cleanup();
+  }
+}
+
 runDbTests()
   .then(() => runLearnerHintsTests())
   .then(() => runServerAppendPointTests())
@@ -2475,6 +2696,8 @@ runDbTests()
   .then(() => runStudentEraseRouteTests())
   .then(() => runBackfillEvidenceTests())
   .then(() => runReviewPlanComposerTests())
+  .then(() => runLearnerContextBlockPureTests())
+  .then(() => runLearnerContextBlockDbTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section

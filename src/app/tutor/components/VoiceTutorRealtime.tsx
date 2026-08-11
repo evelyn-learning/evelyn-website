@@ -1904,6 +1904,13 @@ export function VoiceTutorRealtime({
         ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote })
         : null;
   }
+  // Task 17 — learner-context boot block (flag TUTOR_LEARNER_CONTEXT,
+  // server-side). Set by the profile-load effect below when the fetch
+  // returns a `learnerContext` field (flag off or no lessonPlanId prop ⇒
+  // the field is absent from the response ⇒ this stays null and the
+  // prompt-join fallback below is unaffected). Server-rendered (not pure
+  // client render) because it needs DB-backed projections/gaps.
+  const learnerContextBlockRef = useRef<string | null>(null);
   // Opener-recency (part A) — THIS session's own opener record, captured
   // once when the opener turn's text finalizes in callBrainOnce (see the
   // capture site near `const fullText = …`). kind is stashed at seed time
@@ -7342,14 +7349,36 @@ export function VoiceTutorRealtime({
     let cancelled = false;
     (async () => {
       try {
+        // Task 17: append `lessonPlanId` when the prop is set so the server
+        // can (flag-gated) join the learner-context block for THIS lesson's
+        // objectives. Absent prop ⇒ query string unchanged ⇒ same request
+        // shape as before Task 17.
+        const url = lessonPlanId
+          ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}`
+          : `/api/tutor/student-profile/${encodeURIComponent(studentId)}`;
         const res = await fetch(
-          `/api/tutor/student-profile/${encodeURIComponent(studentId)}`,
+          url,
           embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
         );
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled) return;
         studentProfileBlockRef.current = data.block ?? '';
+        // Task 17: `learnerContext` is only present when the server flag is
+        // on AND lessonPlanId was sent. When it lands (non-null string),
+        // it replaces the thin progress-digest line in the transient
+        // block — recompute WITHOUT progressDigest (spec locked decision:
+        // the learner-context block now carries real per-LO standing, so
+        // the transient block's job shrinks to social/opener/readiness).
+        // `data.learnerContext` is `undefined` when the field is absent
+        // (flag off / no param), so `?? null` keeps the ref's default.
+        learnerContextBlockRef.current = data.learnerContext ?? null;
+        if (learnerContextBlockRef.current !== null) {
+          transientContextBlockRef.current =
+            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote)
+              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote })
+              : null;
+        }
         if (TUTOR_PEDAGOGY_OPENER) {
           studentHasPriorSessionsRef.current = Array.isArray(data?.profile?.recentSessions)
             && data.profile.recentSessions.length > 0;
@@ -8706,8 +8735,13 @@ export function VoiceTutorRealtime({
             // pedagogy-opener flag is off / no portal context) WITHOUT
             // mutating studentProfileBlockRef. Flag off ⇒ exactly the old
             // `studentProfileBlockRef.current || undefined` value.
+            // Task 17: learnerContextBlockRef slots in between — null
+            // (flag off / no lessonPlanId / fetch not yet settled) drops
+            // out of the join exactly like the other two do, so the
+            // three-way join is byte-identical to the old two-way join
+            // whenever learner-context isn't in play.
             studentProfileBlock:
-              [studentProfileBlockRef.current, transientContextBlockRef.current]
+              [studentProfileBlockRef.current, learnerContextBlockRef.current, transientContextBlockRef.current]
                 .filter(Boolean)
                 .join('\n\n') || undefined,
             // Pedagogy opener: opening-phase directive (undefined once

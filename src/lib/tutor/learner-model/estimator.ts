@@ -97,6 +97,14 @@ export const TUNING = {
     maxLos: 8,
     reteachBelowEstimate: 0.5,
   },
+  /** Learner-context boot block (Task 17) — the estimate cutoffs
+   *  `context-block.ts`'s `bandLabel` reads to word an LO's standing for
+   *  the brain: below `developing` is "developing", below `moderate` is
+   *  "moderate", at or above `moderate` is "strong". */
+  contextBands: {
+    developing: 0.5,
+    moderate: 0.75,
+  },
 };
 
 export interface LoEstimate {

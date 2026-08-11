@@ -27,6 +27,7 @@ import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/stud
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { checkEmbedAuth } from '@/lib/tutor/portal/embed-token';
+import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
   const profile = await getOrCreateStudentProfile(id);
-  return NextResponse.json({
+  const responseBody: Record<string, unknown> = {
     profile,
     // Task D1: interests ride the preferences line only behind the pedagogy
     // opener flag — flag off ⇒ byte-identical block to the pre-D1 output.
@@ -49,7 +50,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
     // Content variety (phase 1): per-plan seen-memory, read client-side at
     // mount to inject the <content_variety> directive for the current plan.
     planContentSeen: profile.planContentSeen ?? {},
-  });
+  };
+  // Task 17 — learner-context boot block. Server-side flag, read at call
+  // time (no NEXT_PUBLIC_ needed: this is a route handler, not client
+  // code). Flag off OR no `lessonPlanId` param ⇒ the `learnerContext` key
+  // is OMITTED entirely (not even `null`) so the response stays
+  // byte-identical to the pre-Task-17 shape for every existing caller.
+  const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
+  if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
+    responseBody.learnerContext = await getLearnerContextBlock(id, lessonPlanId);
+  }
+  return NextResponse.json(responseBody);
 }
 
 interface CommitBody {
