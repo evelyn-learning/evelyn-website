@@ -2924,14 +2924,23 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('uncertain_transcript', `Wrapped: "${raw}"`);
         }
 
-        // Fire-and-forget: update the topic-shift detector with THIS clean
-        // turn's embedding, and if it detects a large semantic jump, set
-        // a flag so the next batch of whiteboard commands starts a new
-        // page. Skip for 'uncertain' turns — we don't want a garbled
-        // transcript to look like a topic pivot.
-        if (classification === 'clean') {
-          runStudentTurnDetection(raw, 'voice');
-        }
+        // R44 (rail-bargein round, review round 4): student-turn detection
+        // (topic-shift embedding + new-problem keyword + student-jump
+        // inference) used to run HERE, at transcript-finalize time. It now
+        // runs at DISPATCH time inside handleStudentTranscriptForBrain,
+        // immediately before the callBrainOnce that will answer this
+        // utterance. Reason: finalize happens BEFORE the busy-queue gate
+        // decides whether this utterance dispatches now or gets queued
+        // behind an in-flight turn. Every signal detection produces
+        // (pendingStudentJumpRef, topicShiftForReleaseRef, topicShift-
+        // PendingRef, and the async embedding .then) is a live GLOBAL with
+        // no turn identity — so a queued utterance's signals would be
+        // consumed by the UNRELATED turn that happened to be in flight
+        // (spurious off-plan release / premature jump apply), or would be
+        // dropped as "late" when that turn's completion bumped
+        // turnFinishedSeqRef. Born at dispatch, each signal belongs to its
+        // own turn by construction. The 'clean'-only gate that lived here
+        // moved with it (see runStudentTurnDetection's call site).
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
           id: `user-${Date.now()}`,
@@ -3142,10 +3151,18 @@ export function VoiceTutorRealtime({
   }, []);
 
   // Run student-turn detection (topic-shift embedding + new-problem
-  // keyword). Shared between the voice-final handler and the typed-input
-  // submit path so typed prompts like "Draw a 30° inclined plane…" don't
-  // bypass newPage triggering. No-ops on empty text.
-  const runStudentTurnDetection = useCallback((rawText: string, source: 'voice' | 'typed') => {
+  // keyword + R44 student-jump inference). No-ops on empty text.
+  //
+  // R44 (review round 4): called from exactly ONE place —
+  // handleStudentTranscriptForBrain, immediately before each callBrainOnce
+  // (the direct dispatch and the busy-queue drain). It used to be called at
+  // transcript-finalize time (voice handleTranscriptUpdate + the typed
+  // submit handler), which is BEFORE the busy-queue gate — so an utterance
+  // that got queued behind an in-flight turn handed its signals to that
+  // unrelated turn. Every signal this function produces is a live global
+  // with no turn identity, so it must be born in the same synchronous tick
+  // as the callBrainOnce it belongs to. `source` is debug-only.
+  const runStudentTurnDetection = useCallback((rawText: string, source: 'voice' | 'typed' | 'queued') => {
     const text = (rawText || '').trim();
     if (!text) return;
     // Keyword-based new-problem detector — fires synchronously off the
@@ -13805,6 +13822,34 @@ export function VoiceTutorRealtime({
         turnLatencyRef.current ??= createTurnLatencyLedger();
       }
       turnLatencyRef.current.mark('brainFetch', Date.now());
+      // R44 (review round 4): student-turn detection runs HERE — the last
+      // synchronous point before the callBrainOnce that will answer this
+      // transcript, i.e. AFTER the busy-queue gate above (a queued
+      // utterance gets its own detection when it drains, below) and AFTER
+      // the R42 MCQ-homophone normalization at the top of this function (so
+      // detection sees the same normalized text the brain does). Every
+      // signal it sets is therefore born in the same tick as its own turn:
+      // turnFinishedSeqRef's "no turn has finished since detection" guard
+      // now genuinely means "my own turn hasn't finished", and turn A can
+      // never consume turn B's jump/release/newPage signals.
+      //
+      // Gates:
+      //  - !opts?.silent — bracketed/synthetic dispatches (kickoffs, idle
+      //    nudge, cutoff-resume, demo directives) are not student speech
+      //    and must never move the agenda cursor or the whiteboard page.
+      //  - voice only: classification must be 'clean'. This preserves the
+      //    gate that lived at the old voice-finalize site ("we don't want a
+      //    garbled transcript to look like a topic pivot"). 'noise' never
+      //    reaches dispatch (useOpenAIRealtime drops it before calling
+      //    onUserTranscript); 'uncertain' does, and must still be skipped.
+      //    Typed input is exempt, matching the old typed call site, which
+      //    ran detection unconditionally.
+      if (!opts?.silent) {
+        const detectSource = opts?.typed === true ? 'typed' : 'voice';
+        if (detectSource === 'typed' || classifyTranscript(transcript) === 'clean') {
+          runStudentTurnDetection(transcript, detectSource);
+        }
+      }
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
       // to armCoverForDispatch above — same call, now shared with the
       // queue-drain site below.
@@ -13917,6 +13962,29 @@ export function VoiceTutorRealtime({
         // dispatch above, not for follow-ups combined off the queue while
         // that original call was in flight. Arm the same machinery here so
         // a drained turn covers itself exactly like a direct dispatch.
+        // (armCoverForDispatch(combined) is a few lines below, after the R44
+        // detection block.)
+        //
+        // R44 (review round 4): the queued utterance(s) get their detection
+        // HERE, at the moment they actually dispatch — not back at their
+        // finalize time, when the turn above was still in flight and would
+        // have consumed their signals. Detection runs on the COMBINED,
+        // deduped string because that is exactly the transcript this brain
+        // turn receives; a jump request anywhere in it is still matched
+        // (matchStudentJumpIntent scans the whole utterance), and the
+        // topic-shift embedding of the combined text is the right input for
+        // "did the student pivot away from the plan this turn".
+        //
+        // NOT gated on opts?.silent: that flag describes the OUTER dispatch
+        // (which may be a synthetic cutoff-resume), whereas every entry in
+        // this queue is genuine student speech — the push sites filter
+        // '['-prefixed synthetic markers out, and the local `{ silent: true }`
+        // passed to callBrainOnce below only suppresses a duplicate chat-add.
+        // Same voice 'clean' gate as the direct site; queued entries are bare
+        // strings that lost their opts, so modality is unknown ('queued').
+        if (classifyTranscript(combined) === 'clean') {
+          runStudentTurnDetection(combined, 'queued');
+        }
         armCoverForDispatch(combined);
         await callBrainOnce(combined, alreadyInChat ? { silent: true } : undefined);
       }
@@ -13964,7 +14032,7 @@ export function VoiceTutorRealtime({
         void handleStudentTranscriptForBrain(pendingResume, { silent: true, bypassPerceptionDedupe: true });
       }
     }
-  }, [callBrainOnce, onDebugEvent, armCoverForDispatch]);
+  }, [callBrainOnce, onDebugEvent, armCoverForDispatch, runStudentTurnDetection]);
 
   // Resume-from-cut granularity (P5), factored so both resume sites — the
   // verdict-driven 'speaking' branch below and the R32 (H3) timeout-resume
@@ -18016,11 +18084,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             visualActionsThisTurnRef.current = new Set();
             newPageThisTurnRef.current = false;
             console.log('[VoiceTutor] Student turn start (typed) — cleared visualActionsThisTurn');
-            // Run the same new-problem / topic-shift detectors we run on
-            // voice-final transcripts, so typed prompts like "Draw a 30°
-            // inclined plane…" trigger a fresh whiteboard page. Before
-            // this hook, typed messages bypassed detection entirely.
-            runStudentTurnDetection(text, 'typed');
+            // R44 (review round 4): student-turn detection (new-problem /
+            // topic-shift / student-jump) no longer runs here. It runs at
+            // DISPATCH time inside handleStudentTranscriptForBrain — see the
+            // comment at the voice-finalize site for why (turn identity for
+            // the busy-queue case). This typed submit reaches that function
+            // via realtime.sendTextMessage(text, { typed: true }) below, and
+            // nothing between here and there reads any detection side-effect,
+            // so the relocation is behaviour-preserving for typed input —
+            // and strictly better in one respect: onBeforeTypedSubmit (the
+            // await just below) can SWAP the active lesson plan, so
+            // detection now matches jump candidates against the plan the
+            // turn will actually run against rather than the outgoing one.
             // Freestyle-text interception: if a parent handler is
             // wired, let it inspect this message before forwarding.
             // The parent currently uses this to fire plan-from-text
