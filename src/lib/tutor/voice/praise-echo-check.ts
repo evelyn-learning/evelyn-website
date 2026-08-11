@@ -7,13 +7,25 @@
  * catches the brain's affirmation contradicting the STUDENT, using the
  * tri-state utterance comparator built in Tasks 1-2.
  *
- * Deliberately thin: `extractPraiseEcho` already scopes the affirmed phrase
- * to compact math-value tokens (no bare praise, no prose phrases), and
- * `matchUtteranceToAnswer` already collapses anything ambiguous to
- * 'unknown'. This module only wires the two together and narrows to the
- * 'disagree' verdict — 'agree' and 'unknown' both resolve to 'ok', so a
- * hedged, unparseable, or genuinely-matching student utterance can never
- * trigger a kill. Pure, no LLM, no side effects, never throws.
+ * Two branches, both gated to fire ONLY on a full-parse 'disagree' verdict
+ * from `matchUtteranceToAnswer` — 'agree' and 'unknown' always resolve to
+ * 'ok', so a hedged, unparseable, or genuinely-matching student utterance
+ * can never trigger a kill:
+ *
+ * 1. PRIMARY branch — `extractPraiseEcho` returned a compact math-value
+ *    token (its own `isMathValueToken` gate gives us that guarantee: no
+ *    bare praise, no prose phrases). That token is compared against the
+ *    utterance with `choices` deliberately withheld (see the single-letter
+ *    guard below for why) — a math token is never an MCQ letter, choices
+ *    have no legitimate role in resolving it.
+ * 2. MCQ-SCOPED branch (design decision 2026-08-10) — `extractPraiseEcho`
+ *    returned null (the opener's capture wasn't a math-value token, e.g. a
+ *    bare letter like "B") AND an MCQ problem is live (`choices` supplied).
+ *    Re-derives the same opener capture directly via `PRAISE_OPENER_RE` and
+ *    resolves it against the live choices — see the branch body below for
+ *    the full rationale and guards.
+ *
+ * Pure, no LLM, no side effects, never throws.
  */
 import { extractPraiseEcho, PRAISE_OPENER_RE } from '@/lib/tutor/voice/praise-contradiction';
 import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
@@ -32,7 +44,31 @@ export function checkPraiseEcho(args: {
 }): PraiseEchoResult {
   const affirmed = extractPraiseEcho(args.turnTextSoFar);
   if (affirmed) {
-    const m = matchUtteranceToAnswer(args.studentUtterance, affirmed, args.choices);
+    // Fix (2026-08-10, review Critical): a $-wrapped SINGLE letter a-e
+    // ("Right — $b$! Good work.") is a math-variable affirmation, not an
+    // MCQ echo — but resolveMcqLetter's normMcqText strips $-delimiters
+    // before comparing, so "$b$" and choice-letter "B" collide. Worse: even
+    // WITHOUT choices, a bare single letter still reaches the EXPRESSION
+    // path in matchUtteranceToAnswer ('c' vs 'b', both parse flat →
+    // disagree) — variable names are exactly the shape that path is built
+    // to compare, so it can't tell "the variable is b" from "the choice is
+    // B" apart on its own. Strip $/\(\)/{} delimiters from the affirmed
+    // capture; if a single alphabetic character remains, the phrase is too
+    // ambiguous (variable/label vs. MCQ letter) to kill on at all — bail to
+    // 'ok' before the comparator ever runs. Multi-char tokens ("$2x$",
+    // "$0.5$") are unaffected.
+    const strippedAffirmed = affirmed.replace(/\\\(|\\\)|[${}]/g, '').trim();
+    if (/^[a-zA-Z]$/.test(strippedAffirmed)) {
+      return { verdict: 'ok' };
+    }
+    // `choices` deliberately withheld here (fix, same review): extractPraiseEcho's
+    // output is always a math token (isMathValueToken gate), never an MCQ
+    // letter — choices have no legitimate role in resolving it, and passing
+    // them through only reopens the letter/variable collision the guard
+    // above exists to close (a surviving multi-char capture could still
+    // resolve via resolveMcqLetter's TEXT-match path against a live choice
+    // whose text happens to equal the token).
+    const m = matchUtteranceToAnswer(args.studentUtterance, affirmed, undefined);
     if (m.verdict === 'disagree') {
       return { verdict: 'false_praise', affirmed, studentSaid: args.studentUtterance, matchReason: m.reason };
     }

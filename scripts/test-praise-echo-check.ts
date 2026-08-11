@@ -38,6 +38,28 @@ function check(name: string, cond: boolean, detail?: string) {
   const r = checkPraiseEcho({ turnTextSoFar: 'Right — $2x$. Good.', studentUtterance: 'yeah that thing we did' });
   check('unparseable utterance ok', r.verdict === 'ok', JSON.stringify(r));
 }
+// Single-letter ambiguity guard (fix, 2026-08-10 review Critical): a
+// $-wrapped single letter a-e ("Right — $b$! Good work.") is a math-variable
+// affirmation, not an MCQ echo. Without the guard, resolveMcqLetter's
+// $-stripping would collide "$b$" with choice letter "B" and kill a benign
+// turn — the tutor was talking about a variable, not the student's answer.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — $b$! Good work.', studentUtterance: 'C', choices: [{ letter: 'A', text: '1' }, { letter: 'B', text: '2' }, { letter: 'C', text: '3' }] });
+  check('single-letter math variable with live MCQ choices → ok (no wrongful kill)', r.verdict === 'ok', JSON.stringify(r));
+}
+// Same guard must hold even with no MCQ live — withholding `choices` alone
+// is NOT sufficient (utterance "C" vs "$b$" still reaches the EXPRESSION
+// path: 'c' vs 'b' both parse flat → disagree), so the length-1 guard has
+// to fire independent of whether choices are present.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — $b$! Good work.', studentUtterance: 'C' });
+  check('single-letter math variable, no MCQ choices → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// Regression: multi-char math tokens are unaffected by the single-letter guard.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: 'Right — $2x$.', studentUtterance: 'three x' });
+  check('multi-char token still fires false_praise (guard is length-1 only)', r.verdict === 'false_praise', JSON.stringify(r));
+}
 // MCQ shape (design decision 2026-08-10, resolving the earlier NEEDS_CONTEXT
 // — see task-4-report.md): extractPraiseEcho stays frozen and never returns
 // a bare letter, so this now goes through checkPraiseEcho's own MCQ-scoped
