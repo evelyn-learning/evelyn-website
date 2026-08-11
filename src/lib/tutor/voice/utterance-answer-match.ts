@@ -8,7 +8,10 @@
  * rather than risk a false disagreement. Consumed by later detector tasks
  * in this round; do not weaken the unknown-on-ambiguity discipline.
  */
-import { resolveMcqLetter, extractAnswerNumber } from '@/lib/tutor/voice/problem-generator';
+// answer-primitives, NOT problem-generator: this module runs in CLIENT
+// components (VoiceTutorRealtime, perception-classifier); problem-generator
+// is server-only (mongoose) and crashed the browser bundle (2026-08-10).
+import { resolveMcqLetter, extractAnswerNumber } from '@/lib/tutor/voice/answer-primitives';
 
 export type AnswerMatchVerdict = 'agree' | 'disagree' | 'unknown';
 export interface AnswerMatchResult { verdict: AnswerMatchVerdict; reason: string }
