@@ -61,6 +61,10 @@ import {
   isGeneratedPlan,
   filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
+import {
+  resolveSegmentEvidence,
+  type SegmentEvidenceSignal,
+} from '@/lib/tutor/orchestrator/segment-evidence';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -690,12 +694,17 @@ const MIC_NOTICE_GRACE_MS = 20_000;
 
 // Task 11 (review ruling) — segment kinds that carry an actual assessed
 // outcome (the student did something gradeable) vs. pure exposure. Only
-// these push a segmentOutcomes evidence entry on mark_segment_complete —
-// hook/concept/worked_example/recap/extension completions are exposure,
-// not assessment, and would tautologically drive an LO's estimate toward
-// 1.0 on any session that simply finished. Kind strings match the Segment
-// union in src/lib/tutor/lesson-plan/types.ts.
-const EVALUATIVE_SEGMENT_KINDS = new Set<string>(['try_yourself', 'misconception_check']);
+// these push a segmentOutcomes evidence entry on mark_segment_complete /
+// an auto-marked advance-past — hook/concept/worked_example/recap/
+// extension completions are exposure, not assessment, and would
+// tautologically drive an LO's estimate toward 1.0 on any session that
+// simply finished. Kind strings match the Segment union in
+// src/lib/tutor/lesson-plan/types.ts. The gate itself now lives inside
+// resolveSegmentEvidence() (segment-evidence.ts, imported above) — this
+// component no longer checks segment kind directly, it just calls the
+// resolver. The server route (student-profile/[id]/route.ts) keeps its OWN
+// EVALUATIVE_SEGMENT_KINDS copy as defense-in-depth hardening,
+// intentionally not consolidated.
 
 // Map our voice IDs to OpenAI voices
 const VOICE_MAP: Record<string, OpenAIVoice> = {
@@ -1549,7 +1558,11 @@ export function VoiceTutorRealtime({
   const pendingTutorTextRef = useRef<string | null>(null);
   const validationInFlightRef = useRef(false);
   const validationQueueRef = useRef<string[]>([]);
-  const sessionIdRef = useRef(`session-${Date.now()}`);
+  // Session-id double-mint fix: the portal passes a `portal-<uuid>` via the
+  // sessionId prop (declared above, destructured at component top) — honor
+  // it so profile commits/evidence key under the SAME id the portal reads
+  // back. The /tutor page (no prop) keeps today's self-mint unchanged.
+  const sessionIdRef = useRef(sessionId ?? `session-${Date.now()}`);
   // Track if student requested visual in their last message
   const studentRequestedVisualRef = useRef(false);
   // Track total whiteboard commands added — used to verify claims
@@ -3283,11 +3296,46 @@ export function VoiceTutorRealtime({
     const targetIdx = plan.segments.findIndex((s) => s.id === next);
     if (outgoingIdx >= 0 && targetIdx > outgoingIdx) {
       let mutated = false;
+      // Task Phase-C fix (segment-evidence): a segment that's newly
+      // auto-marked "visited" here — i.e. the brain advanced PAST it
+      // without ever calling mark_segment_complete on it — gets the same
+      // shot at learner-model evidence an explicit completion would, via
+      // the shared resolver (source: 'advance'). Only for segments
+      // NEWLY added below: one already in completedSegmentIdsRef either
+      // already got its evidence at its own mark_segment_complete site,
+      // or was itself a prior advance-past already evaluated here.
+      const planLoIds = plan.los?.map((lo) => lo.id) ?? [];
       for (let i = outgoingIdx; i < targetIdx; i++) {
         const segId = plan.segments[i].id;
         if (!completedSegmentIdsRef.current.has(segId)) {
           completedSegmentIdsRef.current.add(segId);
           mutated = true;
+          if (!sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === segId)) {
+            const skippedSeg = getSegment(plan, segId);
+            const signal: SegmentEvidenceSignal = {
+              segmentId: segId,
+              segmentKind: skippedSeg?.kind,
+              planLoIds,
+              loGroupId: loGroupOf(segId),
+              source: 'advance',
+              streakAtComplete: studentStreakRef.current.segId === segId ? studentStreakRef.current.count : undefined,
+              demonstrated: demonstratedSegmentsRef.current.has(segId),
+            };
+            const evidence = resolveSegmentEvidence(signal);
+            if (evidence && skippedSeg) {
+              sessionAccumRef.current.segmentOutcomes.push({
+                segmentId: segId,
+                loId: evidence.loId,
+                kind: skippedSeg.kind,
+                completed: true,
+                outcome: evidence.outcome,
+                streakAtComplete: evidence.streakAtComplete,
+                turns: segmentTurnCountRef.current.segId === segId ? segmentTurnCountRef.current.count : undefined,
+              });
+              scheduleProfileFlush();
+              onDebugEvent?.('segment_evidence_on_advance', `seg="${segId}" loId="${evidence.loId}" outcome=${evidence.outcome}`);
+            }
+          }
         }
       }
       if (mutated) {
@@ -5388,7 +5436,17 @@ export function VoiceTutorRealtime({
         // Task C2: outcome.recordMastery ⇔ typeof c.masteryDelta === 'number'
         // when the gate is inactive (pre-C2 condition, verbatim); the loId
         // presence check stays here in the caller.
-        const segmentLoId = hasSegId && planNow && isGeneratedPlan(planNow)
+        // Task Phase-C fix: dropped the isGeneratedPlan gate — review plans
+        // (rev-…, metadata.reviewPlan) mint segment ids on the SAME
+        // "<loId>-hook/-concept/-worked/-try" convention as generated
+        // plans but aren't "generated", so the gated version silently
+        // misattributed every non-first-LO outcome on a multi-LO review
+        // session to los[0]. loGroupOf() is safe to call unconditionally —
+        // for ids outside the convention it returns the id unchanged,
+        // which then simply fails the segmentLoResolved check below and
+        // falls through to the same los[0] fallback single-LO curated
+        // plans always used.
+        const segmentLoId = hasSegId && planNow
           ? loGroupOf(c.segmentId)
           : undefined;
         const segmentLoResolved = !!(segmentLoId && planNow?.los?.some((lo) => lo.id === segmentLoId));
@@ -5401,29 +5459,21 @@ export function VoiceTutorRealtime({
           // exits (tab close / swipe-away), starving the gaps loop.
           scheduleProfileFlush();
         }
-        // Task 11 — feed the learner model a per-segment outcome event
-        // (independent of the recordMastery gate above: a gated/visited
-        // completion is still a real segment-level event worth logging,
-        // matching completedSegmentIdsRef's unconditional add). Dedup by
-        // segmentId within this accumulation window — a re-fired
-        // mark_segment_complete for an already-logged segment (e.g. brain
-        // retry) shouldn't double-count.
-        // Review ruling: only EVALUATIVE segment kinds are evidence — a
-        // completed hook/concept/worked/intro/recap is exposure, not an
-        // assessed outcome, and logging it would tautologically drive the
-        // LO's estimate toward 1.0 on every finished session.
-        // Review fix: on a generated plan, a segment whose id didn't
-        // resolve to one of the plan's own LOs (intro/recap/pick-los —
-        // segmentLoResolved false) falls back to los[0] for the mastery
-        // push above, but that fallback is a proximate-scope compromise,
-        // not a real attribution — pushing THIS as segment-level evidence
-        // would misattribute an outcome to LO 1. Curated plans (no
-        // LO-group id convention, segmentLoId never computed) are exempt —
-        // their los[0] fallback IS the correct single-LO attribution.
-        const genPlanLoUnresolved = !!(planNow && isGeneratedPlan(planNow) && !segmentLoResolved);
-        if (hasSegId && loId && doneSeg
-            && EVALUATIVE_SEGMENT_KINDS.has(doneSeg.kind)
-            && !genPlanLoUnresolved
+        // Task 11 / Task Phase-C fix — feed the learner model a per-segment
+        // outcome event via the shared resolveSegmentEvidence (source:
+        // 'complete') — the SAME module the auto-mark-visited advance loop
+        // in applyResolvedAdvance uses, so an explicit completion and a
+        // brain-skipped-past segment are evaluated by identical
+        // evaluative-gate + LO-attribution + outcome rules (independent of
+        // the recordMastery gate above: a gated/visited completion is
+        // still a real segment-level event worth logging, matching
+        // completedSegmentIdsRef's unconditional add). Dedup by segmentId
+        // within this accumulation window — a re-fired mark_segment_complete
+        // for an already-logged segment (e.g. brain retry, or already
+        // logged by the advance-past path) shouldn't double-count. The
+        // resolver's own LO-resolution (loGroupId vs. planLoIds, no
+        // isGeneratedPlan gate) replaces the old genPlanLoUnresolved guard.
+        if (hasSegId && doneSeg
             && !sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === c.segmentId)) {
           const masteredFlag = segmentMasteredFlagRef.current;
           const streakAtComplete = masteredFlag && masteredFlag.segId === c.segmentId
@@ -5432,20 +5482,27 @@ export function VoiceTutorRealtime({
           const turns = segmentTurnCountRef.current.segId === c.segmentId
             ? segmentTurnCountRef.current.count
             : undefined;
-          // 1 when the student's correct-streak at completion was >= 1
-          // (they got at least the deciding attempt right); 0.5 otherwise
-          // — "attempted, not clearly mastered", never a hardcoded 1.
-          const segEvidenceOutcome = typeof streakAtComplete === 'number' && streakAtComplete >= 1 ? 1 : 0.5;
-          sessionAccumRef.current.segmentOutcomes.push({
+          const evidence = resolveSegmentEvidence({
             segmentId: c.segmentId,
-            loId,
-            kind: doneSeg.kind,
-            completed: true,
-            outcome: segEvidenceOutcome,
+            segmentKind: doneSeg.kind,
+            planLoIds: planNow?.los?.map((lo) => lo.id) ?? [],
+            loGroupId: planNow ? loGroupOf(c.segmentId) : null,
+            source: 'complete',
             streakAtComplete,
-            turns,
+            demonstrated: demonstratedSegmentsRef.current.has(c.segmentId),
           });
-          scheduleProfileFlush();
+          if (evidence) {
+            sessionAccumRef.current.segmentOutcomes.push({
+              segmentId: c.segmentId,
+              loId: evidence.loId,
+              kind: doneSeg.kind,
+              completed: true,
+              outcome: evidence.outcome,
+              streakAtComplete: evidence.streakAtComplete,
+              turns,
+            });
+            scheduleProfileFlush();
+          }
         }
         continue;
       }
