@@ -9615,8 +9615,12 @@ export function VoiceTutorRealtime({
                   // 'unknown' never fires, so hedges/prose can't kill. Pure, no LLM.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const praiseEchoTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
-                    const echoChoices = currentProblemRef.current?.hasChoices
-                      ? (currentProblemRef.current.choiceLetters ?? []).map((l) => ({ letter: l, text: l }))
+                    // Fold-in (round-3 review minor): mirror the mcqChoices site below
+                    // (checks `choiceLetters?.length`, not just `hasChoices`) — an empty
+                    // choiceLetters array previously produced `[]` here instead of
+                    // `undefined`, an inconsistent "live but choiceless" MCQ shape.
+                    const echoChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
                       : undefined;
                     const pe = checkPraiseEcho({
                       turnTextSoFar: praiseEchoTextSoFar,
@@ -9640,7 +9644,15 @@ export function VoiceTutorRealtime({
                   // tier = verified expectedAnswer only; brain-claimed-but-unverified card
                   // answers are advisory (correction note, no kill) — a wrong unverified
                   // card + correct denial must never kill a good turn.
-                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                  // Fix (round-3 review Important): gated on `!attemptText` — this attempt's
+                  // FIRST sentence only (mirrors the accumulation pattern above: attemptText
+                  // holds every PRIOR sentence already folded into this attempt, so empty
+                  // means updatedSentence IS the turn's verdict opener). Without this gate,
+                  // checkInverseVerdict's DENIAL_RE ran against every streamed sentence —
+                  // a mid-turn rhetorical aside ("Not quite the same thing happens when...")
+                  // could match the denial pattern and kill an otherwise-good turn that never
+                  // denied the student's actual answer at all.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
                     const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
                       ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
                       : undefined;
@@ -9669,8 +9681,17 @@ export function VoiceTutorRealtime({
                       // kill-class note" rule (R41 kill-class-wins-slot behavior) —
                       // only plant when the slot is currently empty.
                       if (!pendingJudgeCorrectionNoteRef.current) {
+                        // Safety-valve clause (fold-in, round-3 review): this note is planted
+                        // off an UNVERIFIED card answer — it might still be right, might still
+                        // be wrong (see the file-header comment above). Without an explicit
+                        // "it's fine to stand by your call" out, a brain that re-checks and
+                        // confirms its denial was correct has no guidance and may narrate the
+                        // review anyway. Exact wording copied from buildJudgeCorrectionNote's
+                        // identical clause (judge-correction-note.ts) so both planted-note call
+                        // sites give the brain the same instruction.
                         pendingJudgeCorrectionNoteRef.current =
-                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them.`;
+                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them. ` +
+                          `If on re-checking you stand by what you said, continue naturally and do not mention this review.`;
                         onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
                       }
                     }

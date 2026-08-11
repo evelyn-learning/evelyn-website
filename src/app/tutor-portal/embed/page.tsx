@@ -79,11 +79,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 4, verdict-detector round (2026-08-10): praise_echo_kill (the
   // opener disagreeing with what the STUDENT said, praise-echo-check.ts)
   // was absent from this list — same class of gap as the 2026-08-07
-  // brain_/judge_/tool_call_ triage above. NOTE: praise_contradiction_kill
-  // (R38, the brain contradicting its OWN opener) is ALSO not covered by
-  // any prefix here — pre-existing gap, out of scope for this entry, see
-  // task-4-report.md.
+  // brain_/judge_/tool_call_ triage above.
   'praise_echo',
+  // Fold-in, round-3 whole-branch review: praise_contradiction_kill (R38,
+  // the brain contradicting its OWN opener later in the same turn) was the
+  // gap flagged as out-of-scope in the note above — closing it here so
+  // embed sessions get the same triage coverage /tutor sessions already have.
+  'praise_contradiction',
   // Task 5, verdict-detector round (2026-08-10): inverse_verdict_kill /
   // inverse_verdict_advisory / inverse_verdict_unverified_pinned /
   // inverse_verdict_correction_note_planted — the false-DENIAL counterpart
