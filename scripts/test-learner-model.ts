@@ -6,7 +6,9 @@
  * / mock) that call appendEvidence internally. Task 9 further extends it
  * with pure projection.ts tests and a DB-backed learner-state route section.
  * Task 10 further extends it with a DB-backed `runLearnerSnapshot` section
- * and a DB-backed student-erase route section.
+ * and a DB-backed student-erase route section. Task 11 further extends it
+ * with a DB-backed student-profile commit-route section covering the
+ * segmentOutcomes → per-segment evidence append point.
  *
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
@@ -946,6 +948,118 @@ async function runLearnerStateRouteTests() {
 }
 
 /* ------------------------------------------------------------------ */
+/* student-profile commit route — segmentOutcomes evidence (Task 11)   */
+/* ------------------------------------------------------------------ */
+
+async function runStudentProfileSegmentOutcomesTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 11 student-profile segmentOutcomes tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { POST: profilePOST } = await import('../src/app/api/tutor/student-profile/[id]/route');
+  const { EvidenceEventModel } = await import('../src/models');
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  console.log('\nstudent-profile commit route — segmentOutcomes evidence (Task 11):\n');
+
+  function req(bodyObj: unknown): InstanceType<typeof NextRequest> {
+    return new Request('https://engine.test/api/tutor/student-profile/x', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyObj),
+    }) as unknown as InstanceType<typeof NextRequest>;
+  }
+  function ctx(id: string) {
+    return { params: Promise.resolve({ id }) };
+  }
+
+  const studentId = `lmtest:segout:${process.pid}`;
+  const sessionId = `lmtest-segout-session-${process.pid}`;
+  const loA = 'lmtest.segout.lo-a';
+  const loB = 'lmtest.segout.lo-b';
+
+  await deleteLearnerModelData(studentId);
+  try {
+    const body = {
+      sessionId,
+      subject: 'math',
+      segmentOutcomes: [
+        { segmentId: 'seg-a', loId: loA, kind: 'concept', completed: true, streakAtComplete: 2, turns: 3 },
+        { segmentId: 'seg-b', loId: loB, kind: 'try_yourself', completed: true, turns: 1 },
+      ],
+    };
+
+    const res = await profilePOST(req(body), ctx(studentId));
+    assert(res.status === 200, 'student-profile POST: commit body with 2 segmentOutcomes → 200');
+
+    const landed = await waitFor(async () => (await EvidenceEventModel.countDocuments({ studentId })) === 2);
+    assert(landed, 'student-profile POST: 2 segmentOutcomes → 2 evidence rows');
+
+    const rowA = await EvidenceEventModel.findById(`sess:${sessionId}:seg-a`);
+    assert(
+      !!rowA && rowA.loId === loA && rowA.source === 'session' && rowA.outcome === 1
+        && rowA.streakAtComplete === 2 && rowA.turns === 3 && rowA.subject === 'math'
+        && rowA.sessionId === sessionId,
+      'student-profile POST: evidence row keyed sess:<sessionId>:<segmentId>, carries loId/source/outcome/streak/turns/subject',
+    );
+    const rowB = await EvidenceEventModel.findById(`sess:${sessionId}:seg-b`);
+    assert(
+      !!rowB && rowB.loId === loB && rowB.turns === 1 && rowB.streakAtComplete === undefined,
+      'student-profile POST: second segment evidence row present, optional streakAtComplete omitted when absent',
+    );
+
+    // Replayed flush — same sessionId + same 2 segmentOutcomes (the client
+    // re-sends the whole increment on a debounce/keepalive retry). The
+    // idempotency key collides with the rows already written → still
+    // exactly 2 rows, never 4.
+    const res2 = await profilePOST(req(body), ctx(studentId));
+    assert(res2.status === 200, 'student-profile POST: replayed commit → 200');
+    await new Promise((r) => setTimeout(r, 300)); // let any (wrongly) fired append settle
+    const countAfterReplay = await EvidenceEventModel.countDocuments({ studentId });
+    assert(countAfterReplay === 2, 'student-profile POST: replayed flush produces no duplicate evidence rows');
+  } finally {
+    await deleteLearnerModelData(studentId);
+  }
+
+  // Malformed entries (client-supplied, defensively validated): missing
+  // segmentId, missing loId, completed: false, and non-object entries are
+  // all skipped — only the one well-formed entry produces a row.
+  {
+    const studentId2 = `lmtest:segout:malformed:${process.pid}`;
+    const sessionId2 = `lmtest-segout-malformed-session-${process.pid}`;
+    await deleteLearnerModelData(studentId2);
+    try {
+      const malformedBody = {
+        sessionId: sessionId2,
+        segmentOutcomes: [
+          { segmentId: 'ok-seg', loId: 'lmtest.segout.ok', kind: 'concept', completed: true },
+          { segmentId: '', loId: 'lmtest.segout.bad1', kind: 'concept', completed: true },
+          { segmentId: 'bad2', loId: '', kind: 'concept', completed: true },
+          { segmentId: 'bad3', loId: 'lmtest.segout.bad3', kind: 'concept', completed: false },
+          null,
+          'not-an-object',
+        ],
+      };
+      const res3 = await profilePOST(req(malformedBody), ctx(studentId2));
+      assert(res3.status === 200, 'student-profile POST: mixed valid/malformed segmentOutcomes → 200');
+      const landed2 = await waitFor(
+        async () => (await EvidenceEventModel.countDocuments({ studentId: studentId2 })) === 1,
+      );
+      assert(landed2, 'student-profile POST: malformed entries skipped — only the valid entry produces a row');
+      const okRow = await EvidenceEventModel.findById(`sess:${sessionId2}:ok-seg`);
+      assert(!!okRow, 'student-profile POST: the surviving row is keyed by the well-formed entry\'s segmentId');
+    } finally {
+      await deleteLearnerModelData(studentId2);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* runLearnerSnapshot — DB-backed (Task 10)                            */
 /* ------------------------------------------------------------------ */
 
@@ -1190,6 +1304,7 @@ async function runStudentEraseRouteTests() {
 runDbTests()
   .then(() => runServerAppendPointTests())
   .then(() => runLearnerStateRouteTests())
+  .then(() => runStudentProfileSegmentOutcomesTests())
   .then(() => runLearnerSnapshotTests())
   .then(() => runStudentEraseRouteTests())
   .then(() => {

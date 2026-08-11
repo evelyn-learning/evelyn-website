@@ -1601,6 +1601,9 @@ export function VoiceTutorRealtime({
       losTouched: Array.from(accum.losTouched),
       masteryDeltas: accum.masteryDeltas,
       gaps: accum.gaps,
+      // Task 11 — per-segment outcomes for learner-model evidence, same
+      // increment-since-last-flush shape as masteryDeltas/gaps above.
+      segmentOutcomes: accum.segmentOutcomes,
       ...(isFinal ? { transcript } : { generateNotes: false }),
       // Content variety (phase 1): only the FINAL commit carries the transcript
       // the extraction reads, so only it requests filling-capture. Flag-gated
@@ -1615,6 +1618,7 @@ export function VoiceTutorRealtime({
       masteryDeltas: [],
       gaps: [],
       topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
+      segmentOutcomes: [],
     };
     profileFlushCountRef.current += 1;
     try {
@@ -1883,11 +1887,26 @@ export function VoiceTutorRealtime({
      *  needed for SessionMemory.notesOverlaysAddedThisSession (Step 10)
      *  will read PATCH responses asynchronously. */
     topicNotesCount: { theory: number; methods: number; pointers: number };
+    /** Task 11 — per-segment outcome events, one per mark_segment_complete,
+     *  committed at session-end/flush alongside masteryDeltas/gaps and fed
+     *  to the learner model as session-source evidence rows keyed by
+     *  segment (`sess:<sessionId>:<segmentId>`). Deduped by segmentId
+     *  within an accumulation window — see the push site in the
+     *  markSegmentComplete handler. */
+    segmentOutcomes: Array<{
+      segmentId: string;
+      loId: string;
+      kind: string;
+      completed: true;
+      streakAtComplete?: number;
+      turns?: number;
+    }>;
   }>({
     losTouched: new Set(),
     masteryDeltas: [],
     gaps: [],
     topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
+    segmentOutcomes: [],
   });
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
@@ -5133,19 +5152,55 @@ export function VoiceTutorRealtime({
           onDebugEvent?.('pacing_segment_mastered', `seg="${c.segmentId}" streak=${studentStreakRef.current.count}`);
         }
         // Push the mastery delta into the session accumulator so it
-        // commits at end-of-session. We tag it with the lesson plan's
-        // first LO when available — the segment itself doesn't carry an
-        // LO id directly, but the plan is the proximate scope.
+        // commits at end-of-session. Task 11 (LO-attribution fix): a
+        // multi-LO generated plan's segments each belong to their OWN LO
+        // group (loGroupOf(segment.id) — "<loId>-hook"/"-concept"/etc.),
+        // so tagging every completion with the plan's first LO silently
+        // misattributed mastery on any LO after the first. Use the
+        // segment's own LO when it resolves to one the plan actually has;
+        // curated/other plans (no LO-group id convention) keep the old
+        // first-LO fallback, unaffected.
         // Task C2: outcome.recordMastery ⇔ typeof c.masteryDelta === 'number'
         // when the gate is inactive (pre-C2 condition, verbatim); the loId
         // presence check stays here in the caller.
-        const loId = planNow?.los?.[0]?.id;
+        const segmentLoId = hasSegId && planNow && isGeneratedPlan(planNow)
+          ? loGroupOf(c.segmentId)
+          : undefined;
+        const loId = (segmentLoId && planNow?.los?.some((lo) => lo.id === segmentLoId))
+          ? segmentLoId
+          : planNow?.los?.[0]?.id;
         if (loId && outcome.recordMastery && md !== undefined) {
           sessionAccumRef.current.masteryDeltas.push({ loId, delta: md });
           sessionAccumRef.current.losTouched.add(loId);
           // Learning-gaps blending: durably persist the increment soon —
           // waiting for the End button lost the whole session on abnormal
           // exits (tab close / swipe-away), starving the gaps loop.
+          scheduleProfileFlush();
+        }
+        // Task 11 — feed the learner model a per-segment outcome event
+        // (independent of the recordMastery gate above: a gated/visited
+        // completion is still a real segment-level event worth logging,
+        // matching completedSegmentIdsRef's unconditional add). Dedup by
+        // segmentId within this accumulation window — a re-fired
+        // mark_segment_complete for an already-logged segment (e.g. brain
+        // retry) shouldn't double-count.
+        if (hasSegId && loId && doneSeg
+            && !sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === c.segmentId)) {
+          const masteredFlag = segmentMasteredFlagRef.current;
+          const streakAtComplete = masteredFlag && masteredFlag.segId === c.segmentId
+            ? masteredFlag.streakAtComplete
+            : (studentStreakRef.current.segId === c.segmentId ? studentStreakRef.current.count : undefined);
+          const turns = segmentTurnCountRef.current.segId === c.segmentId
+            ? segmentTurnCountRef.current.count
+            : undefined;
+          sessionAccumRef.current.segmentOutcomes.push({
+            segmentId: c.segmentId,
+            loId,
+            kind: doneSeg.kind,
+            completed: true,
+            streakAtComplete,
+            turns,
+          });
           scheduleProfileFlush();
         }
         continue;

@@ -25,6 +25,7 @@ import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
+import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -80,7 +81,23 @@ interface CommitBody {
    *  into planContentSeen[lessonPlanId]. Client sets it only when its
    *  TUTOR_CONTENT_VARIETY flag is on. */
   captureContentFillings?: boolean;
+  /** Task 11 — one entry per mark_segment_complete this increment, used to
+   *  feed the learner model per-segment evidence rows (idempotency key
+   *  `sess:<sessionId>:<segmentId>`). Client-supplied — validated
+   *  defensively below (malformed entries skipped, list capped). */
+  segmentOutcomes?: Array<{
+    segmentId: string;
+    loId: string;
+    kind: string;
+    completed: boolean;
+    streakAtComplete?: number;
+    turns?: number;
+  }>;
 }
+
+/** Task 11 — client-supplied cap so a runaway/misbehaving client can't
+ *  balloon a single commit into an unbounded evidence write. */
+const MAX_SEGMENT_OUTCOMES_PER_COMMIT = 100;
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -92,6 +109,40 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   }
   if (!body.sessionId) {
     return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
+  }
+
+  // Task 11 — per-segment learner-model evidence (append point 1).
+  // Fire-and-forget: appendEvidence is itself best-effort and never
+  // throws, so the .catch is belt-and-suspenders; NOT awaited so a slow
+  // evidence write can't add latency to the profile-commit response.
+  // segmentOutcomes is client-supplied — validate defensively: skip
+  // malformed entries, cap the batch.
+  if (Array.isArray(body.segmentOutcomes) && body.segmentOutcomes.length) {
+    const occurredAt = new Date();
+    const evidenceInputs: EvidenceInput[] = [];
+    for (const so of body.segmentOutcomes.slice(0, MAX_SEGMENT_OUTCOMES_PER_COMMIT)) {
+      if (!so || typeof so !== 'object') continue;
+      if (typeof so.segmentId !== 'string' || !so.segmentId) continue;
+      if (typeof so.loId !== 'string' || !so.loId) continue;
+      if (so.completed !== true) continue;
+      evidenceInputs.push({
+        idempotencyKey: `sess:${body.sessionId}:${so.segmentId}`,
+        studentId: id,
+        loId: so.loId,
+        source: 'session',
+        sessionId: body.sessionId,
+        outcome: 1,
+        streakAtComplete: typeof so.streakAtComplete === 'number' ? so.streakAtComplete : undefined,
+        turns: typeof so.turns === 'number' ? so.turns : undefined,
+        occurredAt,
+        subject: body.subject,
+      });
+    }
+    if (evidenceInputs.length) {
+      appendEvidence(evidenceInputs).catch((err) =>
+        console.error('[student-profile] segmentOutcomes evidence append failed', err),
+      );
+    }
   }
 
   let profile = await getOrCreateStudentProfile(id);
