@@ -71,5 +71,12 @@ check('hedge does not flip verdict', matchUtteranceToAnswer('maybe 2x?', '3x').v
 check('pure prose still unknown', matchUtteranceToAnswer('can you walk me through it', '3x+2').verdict === 'unknown');
 check('normalizeSpokenMath direct', normalizeSpokenMath('is it three x plus two?') === '3x+2' || normalizeSpokenMath('is it three x plus two?') === '3 x + 2');
 
+// — review finding: spoken decimals ("point") must collapse cleanly, or
+// extractAnswerNumber digit-greps just the integer part before the
+// space-padded "." and produces a false disagree on a correct decimal.
+check('spoken decimal agree', matchUtteranceToAnswer('three point five', '3.5').verdict === 'agree');
+check('spoken decimal disagree outside tolerance', matchUtteranceToAnswer('three point five', '3.6').verdict === 'disagree');
+check('normalizeSpokenMath decimal direct', normalizeSpokenMath('three point five') === '3.5');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

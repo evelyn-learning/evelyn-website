@@ -204,10 +204,19 @@ export function normalizeSpokenMath(utterance: string): string {
   });
   // Collapse whitespace hugging a bare math operator ("3x + 2" → "3x+2").
   // Safe this late: every spoken operator word above has already become
-  // its symbol, so remaining spaces next to +-*/^= are just spoken pauses,
+  // its symbol, so remaining spaces next to +-*/^=. are just spoken pauses,
   // not text the multi-value guard's \b(and|is)\b checks depend on (those
   // key off word text like "and"/"is", never off operator-adjacent spacing).
-  t = t.replace(/\s*([+\-*/^=])\s*/g, '$1');
+  // '.' is included because the "point" rule above turns "three point five"
+  // into "3 . 5" (it only replaces the word, not its surrounding spaces) —
+  // without collapsing here, extractAnswerNumber digit-greps just "3" out
+  // of the space-padded decimal and a correct spoken decimal answer reads
+  // as a false `disagree` against the numeric expected side. Sentence-final
+  // periods are already gone by this point (stripped as trailing punctuation
+  // in the very first line), and a mid-string mid-word mid-digit period like
+  // typed "3.5" has no surrounding whitespace to collapse, so this is a
+  // no-op for it either way.
+  t = t.replace(/\s*([+\-*/^=.])\s*/g, '$1');
   return t.trim();
 }
 
