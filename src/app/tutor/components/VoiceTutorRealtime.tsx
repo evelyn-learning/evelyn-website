@@ -5094,6 +5094,14 @@ export function VoiceTutorRealtime({
         // it went, or whether resolution below succeeds) — the pending
         // verbal-jump inference is moot; discard it unused so the
         // turn-completion seam doesn't double-apply it.
+        //
+        // R46 (c-ii): snapshot the pending jump into a local BEFORE the
+        // unconditional clear immediately below, so the resolveAdvanceTarget
+        // branch further down can still compare against it once the actual
+        // target is known — the clear itself keeps its original position and
+        // stays unconditional (fires regardless of plan state / whether
+        // resolution below succeeds), unchanged from before this fix.
+        const pendingJumpAtEntry = pendingStudentJumpRef.current;
         pendingStudentJumpRef.current = null;
         const plan = lessonPlanRef.current;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -5157,6 +5165,16 @@ export function VoiceTutorRealtime({
             completedSegmentIds: completedSegmentIdsRef.current,
           });
           if (next) {
+            // R46 (c-ii): the student had a jump pending (e.g. "let's move
+            // to the quotient law restrictions") and the brain's own
+            // navigation this turn landed somewhere else (e.g. it read a
+            // trailing "I'm done with this" as end-session and advanced to
+            // recap instead). The brain's navigation still wins by design —
+            // this is telemetry only, so the override is visible in debug
+            // logs rather than silently swallowed.
+            if (pendingJumpAtEntry && next !== pendingJumpAtEntry.segId) {
+              onDebugEvent?.('agenda_jump_overridden', `${pendingJumpAtEntry.label} → ${pendingJumpAtEntry.segId} vs brain → ${next}`);
+            }
             // Behavior-preserving extraction (2026-05-22): the advance-
             // apply side-effects now live in applyResolvedAdvance so the
             // app-side deterministic Skip-button advance (FIX B) runs the

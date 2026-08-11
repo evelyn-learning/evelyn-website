@@ -94,5 +94,16 @@ test('Task 4: named agenda-item jump must call advance_lesson before content', (
   );
 });
 
+test('R46 (c-i): a named destination overrides closure phrases in the same utterance', () => {
+  assert.ok(
+    prompt.includes('A destination named in the same utterance OVERRIDES closure phrases'),
+    'prompt must include the named-destination-overrides-closure rule',
+  );
+  assert.ok(
+    prompt.includes('Never wrap up or advance to recap unless the student explicitly asks to end the session with no destination named'),
+    'prompt must state the never-wrap-with-a-named-destination clause',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
