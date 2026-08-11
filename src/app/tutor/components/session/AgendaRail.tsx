@@ -22,9 +22,41 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
   const currentKey = items.find((i) => i.current)?.key ?? null;
 
   // Auto-follow: keep the current tab in view, biased left so the next item peeks.
+  // Container-scoped (not scrollIntoView): scrollIntoView walks up and scrolls
+  // ANCESTOR scrollables too (whiteboard/stage shifted on pill change — R45
+  // task 3, same bug class as the R35 transcript-drawer fix). We compute the
+  // pill's position via getBoundingClientRect() deltas rather than
+  // offsetLeft/offsetTop: no ancestor here sets `position`, so the pill's
+  // offsetParent resolves to <body>, not scrollerRef — offsetLeft would be
+  // relative to the wrong box. rect deltas + current scrollLeft/scrollTop
+  // are position-agnostic and correct regardless of offsetParent.
   useEffect(() => {
-    currentRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
-  }, [currentKey]);
+    const container = scrollerRef.current;
+    const pill = currentRef.current;
+    if (!container || !pill) return;
+
+    const margin = 8; // small peek margin, mirrors the old inline:'start' bias
+    const containerRect = container.getBoundingClientRect();
+    const pillRect = pill.getBoundingClientRect();
+
+    if (orientation === 'vertical') {
+      const pillStart = pillRect.top - containerRect.top + container.scrollTop;
+      const pillEnd = pillStart + pillRect.height;
+      const visibleStart = container.scrollTop;
+      const visibleEnd = container.scrollTop + container.clientHeight;
+      if (pillStart < visibleStart + margin || pillEnd > visibleEnd - margin) {
+        container.scrollTo({ top: Math.max(0, pillStart - margin), behavior: 'smooth' });
+      }
+    } else {
+      const pillStart = pillRect.left - containerRect.left + container.scrollLeft;
+      const pillEnd = pillStart + pillRect.width;
+      const visibleStart = container.scrollLeft;
+      const visibleEnd = container.scrollLeft + container.clientWidth;
+      if (pillStart < visibleStart + margin || pillEnd > visibleEnd - margin) {
+        container.scrollTo({ left: Math.max(0, pillStart - margin), behavior: 'smooth' });
+      }
+    }
+  }, [currentKey, orientation]);
 
   const tab = (it: RailItem) => {
     const compress = it.done && !it.current && orientation === 'horizontal';
@@ -90,7 +122,7 @@ export function AgendaRail({ items, orientation, offPlan = false }: AgendaRailPr
 
   if (orientation === 'vertical') {
     return (
-      <div className="flex flex-col gap-1.5 overflow-y-auto p-2" data-testid="agenda-rail" data-orientation="vertical">
+      <div ref={scrollerRef} className="flex flex-col gap-1.5 overflow-y-auto p-2" data-testid="agenda-rail" data-orientation="vertical">
         {items.map(tab)}
         {offPlanChip}
       </div>
