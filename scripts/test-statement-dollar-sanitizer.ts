@@ -76,5 +76,29 @@ console.log('\n=== Additional coverage ===');
   check('undefined input returns empty string', sanitizeStatementDollars(t) === '');
 }
 
+console.log('\n=== Review fix: bare quantity digits stay prose (2026-08-11 review) ===');
+{
+  // FINDING (Important): the original digit test rejected on ANY digit
+  // anywhere in the span, which left a large slice of the live bug class
+  // unfixed — a math-tutor follow-up question almost always mentions a
+  // number. The fix narrows the digit rejection to "digit glued to a math
+  // signal char" only; a bare quantity digit elsewhere in prose no longer
+  // disqualifies the span.
+  const t = 'You choose the movie.$What is 2 times the ticket price?';
+  const expected = 'You choose the movie.What is 2 times the ticket price?';
+  check('stray $ before a number-bearing follow-up question dropped', sanitizeStatementDollars(t) === expected, sanitizeStatementDollars(t));
+}
+{
+  const t = 'She bought 3 more.$What changed?';
+  const expected = 'She bought 3 more.What changed?';
+  check('stray $ dropped; digit earlier in the SAME string (outside the span) is irrelevant', sanitizeStatementDollars(t) === expected, sanitizeStatementDollars(t));
+}
+{
+  // NEGATIVE: a digit immediately adjacent to a math signal char (here `=`)
+  // must still block removal — this is real math, not a bare quantity.
+  const t = 'solve $x=2 please$';
+  check('"solve $x=2 please$" untouched (digit adjacent to =)', sanitizeStatementDollars(t) === t, sanitizeStatementDollars(t));
+}
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 if (fail > 0) process.exit(1);
