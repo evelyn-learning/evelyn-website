@@ -15563,19 +15563,52 @@ export function VoiceTutorRealtime({
       //  - Same opening-turn deferral as every other 'speaking' kill path
       //    (`openingTurnFullyDelivered`) — a classifier verdict doesn't
       //    get to bypass the opener's echo-storm protection either.
-      // No double-dispatch: this only clears the poll timer and fires the
-      // kill's side effects (checkpoint + brain-abort + clearSpeechQueue);
-      // the transcript itself keeps flowing through its existing dispatch
-      // route below (now via the checkpoint branch, since the kill just
-      // set one) unchanged.
+      //  - Gated on `perceptionStage >= 3`, same threshold as `canStage3`
+      //    (the energy gate this complements, ~line 16183 pre-edit) —
+      //    review fix: this is the enforcement path a gate-pass kill
+      //    feeds, and the Stage-2 routing that consumes a checkpoint
+      //    (`applyPerceptionVerdictRef` call, ~line 15662 pre-edit) itself
+      //    requires `perceptionStage >= 2`. Firing below stage 3 would set
+      //    a checkpoint the gate mechanism was never enabled to create,
+      //    and at stage 1-2 specifically nothing routes it promptly
+      //    (Stage 1 is documented "logged, not enforced") — a silent gap
+      //    until the no-verdict timeout-restore eventually fires. Gating
+      //    here keeps the staged-rollout dial a genuine rollback lever:
+      //    dial to stage < 3 and this whole path is inert, verdict still
+      //    logged, no kill.
+      // No double-dispatch: this only clears the poll timer(s) and fires
+      // the kill's side effects (checkpoint + brain-abort +
+      // clearSpeechQueue); the transcript itself keeps flowing through its
+      // existing dispatch route below (now via the checkpoint branch,
+      // since the kill just set one) unchanged.
       const fireClassifierConfirmedBargeInKill = (v: PerceptionVerdict, text: string) => {
         if (v !== 'barge_in' && v !== 'new_turn') return;
+        if (perceptionStage < 3) return;
         if (productionStateRef.current !== 'speaking') return;
         if (!openingTurnFullyDelivered()) return;
         if (perceptionInterruptCheckpointRef.current) return; // already killed — no double-kill
+        // Review fix: clear BOTH poll mechanisms as a matched pair, same
+        // as every other supersede/disarm site in this file (fresh-onset
+        // supersede ~16190-16197 pre-edit, speech_stopped disarm
+        // ~16443-16453 pre-edit) — `bargeInGateTimerRef` (energy-poll
+        // interval) and `bargeInDeferredKillRef` (ink2/opener TIME-based
+        // deferred kill) are two DIFFERENT pending-kill mechanisms that
+        // can each independently still be armed for this same utterance.
+        // Leaving the deferred timer running is not the harmless no-op it
+        // looks like: `applyPerceptionVerdict` (the path this kill's
+        // checkpoint routes into) nulls the checkpoint as its FIRST
+        // statement, synchronously, often in the same tick as this
+        // dispatch — so by the time the deferred timer fires later, the
+        // checkpoint may already belong to a DIFFERENT, later utterance,
+        // and the stale timer would fire a spurious second
+        // `runPerceptionKill` against it.
         if (bargeInGateTimerRef.current) {
           clearInterval(bargeInGateTimerRef.current);
           bargeInGateTimerRef.current = null;
+        }
+        if (bargeInDeferredKillRef.current) {
+          clearTimeout(bargeInDeferredKillRef.current);
+          bargeInDeferredKillRef.current = null;
         }
         onDebugEvent?.('perception_bargein_classifier_kill', `verdict=${v} · "${text.slice(0, 60)}"`);
         runPerceptionKillRef.current?.('speaking');
