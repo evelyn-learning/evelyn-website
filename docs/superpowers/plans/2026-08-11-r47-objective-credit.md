@@ -1,0 +1,84 @@
+# R47 Objective-Credit Round Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:subagent-driven-development or superpowers:executing-plans.
+
+**Goal:** Board/detector-verified correct answers must credit the streak + demonstrated tracker, so a genuinely correct answer can never end a segment "visited, not mastered" with evidence outcome 0.5. Repro (prod session portal-d859df30, seg apcalcbc.ftc-try): student answered 69 correctly → the deterministic arithmetic-claim-check KILLED the brain's false denial ("72 minus 3 isn't 69") → the retry AFFIRMED — yet `streak-incorrect` fired because the pacing block's `brainCorrectionRegex` matched the retry's correction-narrative phrasing, so `demonstratedSegmentsRef` never got the segment, the C2 gate suppressed mastery, and the evidence row recorded 0.5/streak 0.
+
+**Architecture:** A per-turn objective-correctness signal, stashed at the three deterministic false_denial kill sites (arithmetic-claim, simplification-verdict, inverse-verdict — each kill is machine proof the student's answer was RIGHT), consumed by the post-stream pacing block where it overrides the affirm/correction regex reading. Plus a supersede-revert for streak changes that fired on STAGE-3 fragment turns. The C2 completion gate and segment-evidence consumer are UNTOUCHED (constraint: fix the credit, don't loosen the gate).
+
+## Global Constraints
+
+- Base: branch `r47-credit` off engine main @ 6fd50ac8, worktree `/Users/luke/Dev/evelynlearning/.claude/worktrees/rail-bargein`. VTR is hot (phase-c evidence emission + R44-46 landed) — locate every site by SYMBOL/quoted code, never by line number.
+- Do NOT modify `src/lib/tutor/ai/completion-gate.ts` or `src/lib/tutor/orchestrator/segment-evidence.ts` — the anti-brain-overclaim intent survives; only the CREDIT side changes.
+- The objective signal must be machine-derived only (the three deterministic kills). The brain's markSegmentComplete claim and the LLM judge stay non-credit-bearing.
+- Estimator thresholds only via TUNING (none should need changing — flag if a task seems to need one).
+- All suites green; known pre-existing: verdict-guard 1 failure, lint broken.
+
+---
+
+### Task 1: Objective-correct signal → pacing credit
+
+**Files:**
+- Create: `src/lib/tutor/voice/objective-credit.ts` (+ test `scripts/test-objective-credit.ts`, register `test:objective-credit`)
+- Modify: `src/app/tutor/components/VoiceTutorRealtime.tsx`
+
+**(a) Pure decision module** — keeps the policy testable:
+
+```ts
+export interface ObjectiveCorrectSignal { source: 'arith_false_denial' | 'simplification_false_denial' | 'inverse_false_denial'; segId: string; atMs: number }
+export interface PacingCreditDecision { credit: 'correct' | 'incorrect' | 'none'; objective: boolean }
+/** Decide the pacing-credit branch for a completed brain turn.
+ *  An objective signal for THIS turn forces 'correct' regardless of the
+ *  affirm/correction regex reading — the deterministic checker already
+ *  proved the student's answer right; the regexes are only fallback
+ *  heuristics over brain prose (they misread post-kill retries that
+ *  NARRATE the correction, live incident portal-d859df30). */
+export function decidePacingCredit(args: {
+  isVerification: boolean;
+  isAffirm: boolean;      // brainAffirmationRegex on the head
+  isCorrect: boolean;     // brainCorrectionRegex on fullText (misnomer kept: true = correction detected)
+  objectiveSignal: ObjectiveCorrectSignal | null;  // stashed this turn, segId-matched by caller
+}): PacingCreditDecision {
+  if (args.objectiveSignal) return { credit: 'correct', objective: true };
+  if (!args.isVerification) return { credit: 'none', objective: false };
+  if (args.isAffirm && !args.isCorrect) return { credit: 'correct', objective: false };
+  if (args.isCorrect) return { credit: 'incorrect', objective: false };
+  return { credit: 'none', objective: false };
+}
+```
+
+NOTE the one deliberate widening: an objective signal credits even when `isVerification` is false — the live repro's classifier reading of the messy utterance is exactly what's unreliable; the deterministic kill only fires when the student DID state an answer, which is a stronger version of the same evidence. Document this in the module header.
+
+Tests: objective forces correct over isCorrect=true (the live shape); objective with isVerification=false still correct; no-objective paths byte-match today's behavior (affirm→correct, correction→incorrect, non-verification→none, affirm+correction→incorrect); null-signal + nothing → none.
+
+**(b) Stash at the kill sites.** New ref `objectiveCorrectThisTurnRef: { signal: ObjectiveCorrectSignal } | null` (declare near `lastStudentVerificationRef` — grep it). At each of the three deterministic false-denial kill sites in `callBrainOnce` (locate by their debug events: `arith_claim_kill` where `arith.verdict === 'false_denial'` ONLY — the false_assertion branch is the brain being wrong about its OWN math, not proof the student was right; `simplification_verdict_kill` (its only verdict is false_denial); `inverse_verdict_kill`): set the ref with source + segId. For segId use the same segment attribution the streak uses: `lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current` — read how ver.segId is populated and match it; state your choice in the report. Clear the ref at turn START (same place per-turn refs reset — find where `lastStudentVerificationRef` or attempt state resets per turn) AND in the catch/early-return exits (grep the R44-era clear sites for the pattern).
+
+**(c) Consume in the post-stream pacing block.** Locate by `logPacing(\`streak-correct` — the `try { const ver = lastStudentVerificationRef.current; if (ver && ver.isVerification ...)` block. Restructure minimally: compute `const decision = decidePacingCredit({ isVerification: !!(ver?.isVerification && fullText.length > 0), isAffirm, isCorrect, objectiveSignal: objectiveCorrectThisTurnRef.current?.signal ?? null })` and branch on `decision.credit` instead of the raw regex conditions. The 'correct' branch must run ALL existing effects (streak increment keyed to the signal's/ver's segId, `demonstratedSegmentsRef.add` under the same `TUTOR_PEDAGOGY_OPENER` flag, incorrect-streak reset, practice-meter solve hash, booster late-fire, `pacing_streak` event) — when `decision.objective`, additionally emit `onDebugEvent?.('pacing_objective_credit', \`${signal.source} seg="${segId}"\`)` and use the signal's segId when `ver` is null (practice-meter solvedStmt: fall back to `currentProblemRef.current?.statement` as the block already does; if no statement ≥10 chars, skip the meter increment exactly as today). The 'incorrect' and 'none' branches: behavior byte-identical to today. Guard: fullText.length > 0 stays required for the REGEX paths but not the objective path (a killed-then-retried turn always has text anyway).
+
+Gates: new harness + `npx tsc --noEmit`. Report: the three stash hunks, the reset/clear hunks, the pacing-block restructure, and a manual trace of the live repro (arith false_denial kill → retry affirms with correction-narrative → decision.objective=true → streak-correct + demonstrated + pacing_objective_credit; then markSegmentComplete → gate sees demonstrated → mastery recorded → evidence outcome 1).
+
+- [ ] TDD module; implement + wire; run `npx tsx scripts/test-objective-credit.ts` + tsc; commit `feat(tutor): objective-correct signal — deterministic false-denial kills credit the streak and demonstrated tracker`.
+
+---
+
+### Task 2: STAGE-3 fragment revert for streak changes
+
+**Files:**
+- Modify: `src/app/tutor/components/VoiceTutorRealtime.tsx`
+
+The brief's second shape: a `streak-incorrect` fired on a garbled perception FRAGMENT whose turn STAGE-3 later re-cut/superseded. Design: snapshot-and-restore.
+
+- (a) New ref `lastStreakChangeRef: { segId: string; prevCorrect: {segId,count}; prevIncorrect: {segId,count}; prevPracticeStreak: number; turnMarker: unknown } | null`. In the pacing block (Task 1's restructure), BEFORE applying a 'correct' or 'incorrect' branch, snapshot the three refs' current values plus a turn identity — read how STAGE-3 supersede identifies the turn it discards (the checkpoint machinery: grep `perception_stage3_fresh` / `stage3_retro_cancel` / `perceptionInterruptCheckpointRef` and find what identity ties a checkpoint to the brain turn it kills — likely the dispatch/transcript or a checkpoint object reference; pick what is actually comparable at the supersede seam and justify in the report).
+- (b) At the supersede seam (where a STAGE-3 fresh/merge DISCARDS the prior turn's outcome and re-dispatches), when the discarded turn is the one `lastStreakChangeRef` recorded: restore all three refs to the snapshot, null the record, emit `onDebugEvent?.('pacing_streak_reverted', \`seg="${segId}" — superseded fragment turn\`)`. If reading the checkpoint flow shows there is NO clean identity linking a supersede to the specific brain turn (plausible — report honestly), implement the bounded fallback: revert only when the supersede fires within 15s of the snapshot AND the change was 'incorrect' (never revert a correct credit — losing one is worse than keeping a stale one is the WRONG bias; state it the other way: reverting a WRONG incorrect is safe, reverting a genuine incorrect just returns the streak to pre-answer state, recoverable) — and say which variant you shipped.
+- (c) No revert once a `mark_segment_complete` consumed the streak (segmentMasteredFlagRef / evidence emission already read it) — check ordering and guard if reachable; state findings.
+
+Gates: `npx tsc --noEmit`; no component harness — report carries the seam analysis + hunks + traces (fragment streak-incorrect → supersede → revert → real turn credits normally; normal turn → no revert).
+
+- [ ] Implement; tsc; commit `fix(tutor): revert streak changes fired on STAGE-3-superseded fragment turns`.
+
+---
+
+### Task 3: Battery + repro trace
+
+- [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), `npx tsc --noEmit`, `npm run build`.
+- [ ] No merge/deploy — controller gates.
