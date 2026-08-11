@@ -53,12 +53,17 @@ export function checkPraiseEcho(args: {
     // disagree) — variable names are exactly the shape that path is built
     // to compare, so it can't tell "the variable is b" from "the choice is
     // B" apart on its own. Strip $/\(\)/{} delimiters from the affirmed
-    // capture; if a single alphabetic character remains, the phrase is too
-    // ambiguous (variable/label vs. MCQ letter) to kill on at all — bail to
-    // 'ok' before the comparator ever runs. Multi-char tokens ("$2x$",
-    // "$0.5$") are unaffected.
+    // capture; if what remains is a single alphabetic character — OPTIONALLY
+    // followed by up to two primes ("y'", "b''", derivative notation, fixed
+    // 2026-08-10 re-review: "Right — $y'$!" strips to "y'", which is exactly
+    // as ambiguous a variable/label reference as the unprimed case and is
+    // common in calculus tutoring; the unprimed-only regex let it slip past
+    // this guard and back into the same wrongful-kill shape) — the phrase is
+    // too ambiguous (variable/label vs. MCQ letter) to kill on at all — bail
+    // to 'ok' before the comparator ever runs. Multi-char, non-prime tokens
+    // ("$2x$", "$0.5$") are unaffected.
     const strippedAffirmed = affirmed.replace(/\\\(|\\\)|[${}]/g, '').trim();
-    if (/^[a-zA-Z]$/.test(strippedAffirmed)) {
+    if (/^[a-zA-Z]'{0,2}$/.test(strippedAffirmed)) {
       return { verdict: 'ok' };
     }
     // `choices` deliberately withheld here (fix, same review): extractPraiseEcho's

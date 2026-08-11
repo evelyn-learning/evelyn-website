@@ -55,10 +55,23 @@ function check(name: string, cond: boolean, detail?: string) {
   const r = checkPraiseEcho({ turnTextSoFar: 'Right — $b$! Good work.', studentUtterance: 'C' });
   check('single-letter math variable, no MCQ choices → ok', r.verdict === 'ok', JSON.stringify(r));
 }
+// Widened guard (fix, 2026-08-10 re-review Important): primed single
+// letters ("$y'$", derivative notation) are exactly as ambiguous as
+// unprimed ones and common in calculus tutoring — the original
+// /^[a-zA-Z]$/ guard let "y'" (2 chars after stripping) slip through and
+// reach the comparator, reproducing the same wrongful-kill shape.
+{
+  const r = checkPraiseEcho({ turnTextSoFar: "Right — $y'$! Good.", studentUtterance: 'C', choices: [{ letter: 'A', text: '1' }, { letter: 'B', text: '2' }, { letter: 'C', text: '3' }] });
+  check('primed single-letter (derivative notation) with live MCQ choices → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  const r = checkPraiseEcho({ turnTextSoFar: "Right — $y'$! Good.", studentUtterance: 'C' });
+  check('primed single-letter, no MCQ choices → ok', r.verdict === 'ok', JSON.stringify(r));
+}
 // Regression: multi-char math tokens are unaffected by the single-letter guard.
 {
   const r = checkPraiseEcho({ turnTextSoFar: 'Right — $2x$.', studentUtterance: 'three x' });
-  check('multi-char token still fires false_praise (guard is length-1 only)', r.verdict === 'false_praise', JSON.stringify(r));
+  check("multi-char token still fires false_praise (guard is single letter ± 2 primes only)", r.verdict === 'false_praise', JSON.stringify(r));
 }
 // MCQ shape (design decision 2026-08-10, resolving the earlier NEEDS_CONTEXT
 // — see task-4-report.md): extractPraiseEcho stays frozen and never returns
