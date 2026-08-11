@@ -1,3 +1,5 @@
+import { sanitizeStatementDollars } from '../../../../lib/tutor/whiteboard/statement-dollar-sanitizer';
+
 /**
  * MCQ choice-label de-duplication.
  *
@@ -45,12 +47,22 @@ export function stripRedundantChoiceLabel(
  * whitespace-collapsed, equals choices[i]'s text. A statement that merely
  * mentions "choice B" is untouched, and stripping never blanks the
  * statement.
+ *
+ * This is also the single intake choke point where BOTH statement renderers
+ * (WhiteboardCanvas's showProblem card and TryYourselfRenderer's
+ * showTryYourself card) hand the raw statement text to InlineMathText —
+ * every call site pipes `stripEmbeddedChoiceBlock(...)` straight into
+ * `<InlineMathText text={...} />`. R47: run sanitizeStatementDollars first,
+ * so a brain-emitted stray `$` glued to prose (e.g. "...ticket.$What is...")
+ * is dropped before either the choice-block dedup or the KaTeX segmenter
+ * ever see it.
  */
 export function stripEmbeddedChoiceBlock(
-  statement: string | undefined,
+  rawStatement: string | undefined,
   choices: Array<{ letter?: string; text?: string }> | undefined,
 ): string {
-  if (!statement || !choices || choices.length === 0) return statement ?? '';
+  const statement = sanitizeStatementDollars(rawStatement);
+  if (!statement || !choices || choices.length === 0) return statement;
   const lines = statement.split('\n');
   // Collect trailing non-empty lines (allowing blank lines between them).
   const tail: { idx: number; line: string }[] = [];

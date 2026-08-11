@@ -104,6 +104,7 @@
     "test:hand-stroke": "npx tsx scripts/test-hand-stroke.ts",
     "test:ink-placement": "npx tsx scripts/test-ink-placement.ts",
     "test:inline-math": "npx tsx scripts/test-inline-math.ts",
+    "test:statement-dollars": "npx tsx scripts/test-statement-dollar-sanitizer.ts",
     "test:question-gist-text": "npx tsx scripts/test-question-gist-text.ts",
     "test:qpin": "npx tsx scripts/test-qpin-behavior.ts",
     "test:wb-markdown-strip": "npx tsx scripts/test-wb-markdown-strip.ts",

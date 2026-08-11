@@ -94,5 +94,20 @@ test('Task 4: named agenda-item jump must call advance_lesson before content', (
   );
 });
 
+test('R47 Task 3b: Rule 3b warns against a stray glued $ standing in for a period', () => {
+  assert.ok(
+    prompt.includes('never leave one stray, glued to the start of the next word as if it were a period'),
+    'prompt must include the stray-$ warning sentence',
+  );
+  assert.ok(
+    prompt.includes('a stray dollar sign stood in for the sentence\'s period'),
+    'prompt must include the stray-dollar-sign-as-period clause',
+  );
+  assert.ok(
+    prompt.includes('You choose the movie ticket.$What is the opportunity cost of that choice?'),
+    'prompt must cite the live stray-$ failure example',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
