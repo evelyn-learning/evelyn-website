@@ -62,6 +62,7 @@ import {
   filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
+import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
@@ -223,6 +224,7 @@ import {
 import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchestrator/ink-capture';
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
+import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
 
 export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -2660,6 +2662,20 @@ export function VoiceTutorRealtime({
   // survives the retry, so a retry's advance_lesson must still be
   // absorbed.
   const inferredAdvanceThisTurnRef = useRef('');
+  // R44 (rail-bargein round, Task 2): a verbal "move to <agenda item>"
+  // request the student just made, pending confirmation that the brain's
+  // NEXT turn actually navigates there. Set in runStudentTurnDetection;
+  // cleared UNUSED when the brain navigates itself this turn (advanceLesson
+  // handler and the show_segment_card inferred-advance site both null it);
+  // consumed (applied or discarded) at that same turn's completion seam
+  // otherwise. Lives for exactly one brain turn — no timers.
+  const pendingStudentJumpRef = useRef<{ segId: string; label: string; atMs: number } | null>(null);
+  // R44: did THIS brain turn call advance_lesson (any `to`, resolved or
+  // not)? Reset false at the top of callBrainOnce, set true in the
+  // advanceLesson command handler. Used by the off-plan cursor-release
+  // check at turn-completion so it doesn't fire on a turn where the brain
+  // already navigated.
+  const advanceLessonCalledThisTurnRef = useRef(false);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -3111,6 +3127,19 @@ export function VoiceTutorRealtime({
           '—', text.slice(0, 80),
         );
         onDebugEvent?.('new_problem_keyword', `(${source}) next batch will get newPage`);
+      }
+    }
+    // R44 student-jump inference: an explicit "move to <agenda item>" request.
+    // Pend it; if the brain's NEXT turn navigates (advance_lesson or an
+    // inferred segment-card advance), the pending entry is cleared unused.
+    // If the turn completes WITHOUT navigation, we apply the advance the
+    // brain forgot — same philosophy as inferAdvanceFromSegmentCard.
+    if (lessonPlanRef.current && currentSegmentIdRef.current) {
+      const candidates = railJumpCandidates(lessonPlanRef.current, segmentLabelsRef.current);
+      const jump = matchStudentJumpIntent(text, candidates, currentSegmentIdRef.current);
+      if (jump) {
+        pendingStudentJumpRef.current = { segId: jump.targetSegmentId, label: jump.matchedLabel, atMs: Date.now() };
+        onDebugEvent?.('agenda_jump_pending', `${jump.matchedLabel} → ${jump.targetSegmentId}`);
       }
     }
     // Embedding-based topic shift (async) — catches pivots that the
@@ -4957,6 +4986,14 @@ export function VoiceTutorRealtime({
       // The command itself is consumed here — it does not flow to the
       // whiteboard renderer (no visual side effect).
       if (cmd.action === 'advanceLesson') {
+        // R44: the brain navigated itself this turn (regardless of where
+        // it went, or whether resolution below succeeds) — the pending
+        // verbal-jump inference is moot; discard it unused so the
+        // turn-completion seam doesn't double-apply it. Also mark the
+        // turn as having called advance_lesson for the off-plan release
+        // check (sub-step d) further below.
+        pendingStudentJumpRef.current = null;
+        advanceLessonCalledThisTurnRef.current = true;
         const plan = lessonPlanRef.current;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const to = (cmd as any).to as string | undefined;
@@ -7875,6 +7912,10 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
+    // R44: fresh per-turn "did advance_lesson fire" tracker (sub-step d,
+    // off-plan release gate below). This is a genuinely new turn — any
+    // prior turn's advanceLesson call is irrelevant now.
+    advanceLessonCalledThisTurnRef.current = false;
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -11066,6 +11107,11 @@ export function VoiceTutorRealtime({
                           onDebugEvent?.('inferred_advance_from_segment_card', `${cursorId} → ${segId}`);
                           applyResolvedAdvance(plan, cursorId, segId);
                           inferredAdvanceThisTurnRef.current = segId;
+                          // R44: the board already moved via this inference —
+                          // a pending verbal-jump request (if any) is now
+                          // moot, regardless of whether it targeted this
+                          // same segment. Discard unused.
+                          pendingStudentJumpRef.current = null;
                         }
                       }
                     } else {
@@ -12383,6 +12429,72 @@ export function VoiceTutorRealtime({
         `in=${lastUsage?.inputTokens} out=${lastUsage?.outputTokens} cache_read=${lastUsage?.cacheReadTokens}`,
       );
       onDebugEvent?.('brain_turn', `Brain ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · first_sentence=${firstSentenceMs}ms`);
+
+      // R44 (rail-bargein round, Task 2) — turn-completion seam: runs
+      // exactly once per completed turn (success OR give-up; NOT on
+      // abort/throw — those exit the attempt loop early or land in the
+      // catch block below, never reaching here), after every tool call of
+      // this turn was dispatched through handleWhiteboardCommand /
+      // advanceLesson above.
+      //
+      // (c) Pending verbal-jump inference: the student asked to move to an
+      // agenda item last turn; if the brain navigated there itself
+      // (advance_lesson or an inferred show_segment_card advance), the
+      // pending entry was already nulled at the source (see the
+      // advanceLesson handler and the show_segment_card site above) and
+      // pendingJump is null here. Otherwise apply the advance the brain
+      // forgot — same contract as inferAdvanceFromSegmentCard: only when
+      // the target id genuinely exists in the active plan and differs
+      // from the cursor (applyResolvedAdvance auto-completes every
+      // segment it jumps over, so this guard matters).
+      const pendingJump = pendingStudentJumpRef.current;
+      if (pendingJump && lessonPlanRef.current) {
+        pendingStudentJumpRef.current = null;
+        const jumpPlan = lessonPlanRef.current;
+        if (jumpPlan.segments.some((s) => s.id === pendingJump.segId) && currentSegmentIdRef.current !== pendingJump.segId) {
+          applyResolvedAdvance(jumpPlan, currentSegmentIdRef.current, pendingJump.segId);
+          onDebugEvent?.('agenda_jump_inferred', `${pendingJump.label} → ${pendingJump.segId}`);
+        }
+      } else if (
+        topicShiftPendingRef.current
+        && !advanceLessonCalledThisTurnRef.current
+        && lessonPlanRef.current
+        && currentSegmentIdRef.current
+      ) {
+        // (d) Off-plan release: the student's utterance tripped the
+        // topic-shift heuristic and this turn called no advance_lesson at
+        // all (not even {to:"free"}) — release the cursor exactly as the
+        // to==="free" branch does (advanceLesson handler, ~line 4974),
+        // including its side effects, so the guardrails relax for the
+        // off-plan reply that already happened instead of dragging the
+        // brain back to a stale segment next turn.
+        //
+        // Double-consumption check (grepped topicShiftPendingRef): the
+        // ONLY other reader/clearer is the Cross-turn page-grouping block
+        // inside handleWhiteboardCommand ("Topic-shift is one-shot — clear
+        // it now that the decision consumed it", currentSegmentIdRef
+        // untouched there), which fires per dispatched whiteboard command
+        // and uses the flag purely to decide a page break. That code OWNS
+        // clearing it; this check only READS topicShiftPendingRef.current
+        // and never writes it, so it never steals that path's
+        // consumption. Practical effect: if this turn dispatched ANY
+        // whiteboard command, that path already nulled the ref before we
+        // get here, and this branch correctly sees false (no double
+        // release). This branch only fires when nothing reached
+        // handleWhiteboardCommand this turn (pure narration) or the async
+        // topic-shift detector resolved after the last whiteboard batch —
+        // a conservative, best-effort catch, consistent with the rest of
+        // this inference's "miss quietly rather than double-fire" design.
+        const releasedFrom = currentSegmentIdRef.current;
+        segmentBeforeFreeRef.current = releasedFrom;
+        console.log(`[VoiceTutorRealtime] agenda off-plan release — topic shift without navigation, releasing cursor from "${releasedFrom}" → free-conversation`);
+        currentSegmentIdRef.current = '';
+        setActiveSegmentId('');
+        currentProblemRef.current = null;
+        catalogRef.current.setCurrentSegment('');
+        onDebugEvent?.('agenda_offplan_release', 'topic shift without navigation');
+      }
+
       // R32: a stream that died AFTER sentences played used to just... stop —
       // indistinguishable from the tutor finishing (silence audit, worst unmarked
       // gap; live case: the 35.7s stop=error turn in portal-3d7800b3). Ask the

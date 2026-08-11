@@ -15,6 +15,7 @@ import {
   railStageLabel,
   loBoundaryBeat,
   buildAdvanceBeatNote,
+  railJumpCandidates,
 } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
 import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
@@ -116,6 +117,49 @@ function mkPlan(opts: {
 // Case 4: suppression — pendingPicker → null
 {
   assert(buildRailModel(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), 'hook', new Set(), null) === null, 'picker suppressed');
+}
+
+/* ------------------------------------------------------------------ */
+/* railJumpCandidates — Task 2 (rail-bargein): student-jump-intent    */
+/* candidate list, reusing buildRailModel's exact grouping            */
+/* ------------------------------------------------------------------ */
+
+// Case 5: generated plan — one candidate per LO group (matches Case 1's grouping)
+{
+  const gen = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [
+      { id: 'lo-a', description: 'Explain photosynthesis inputs and outputs', shortTitle: 'Photosynthesis inputs' },
+      { id: 'lo-b', description: 'Trace the light reactions step by step' },
+    ],
+    segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'lo-b-hook', 'lo-b-concept', 'recap'],
+  });
+  const jc1 = railJumpCandidates(gen, null);
+  assert(jc1.length === 4, 'gen: 4 candidates (intro, lo-a, lo-b, recap)');
+  assert(jc1[1].label === 'Photosynthesis inputs' && jc1[1].segmentIds.join(',') === 'lo-a-hook,lo-a-concept,lo-a-try', 'gen: lo-a candidate groups its segments under the shortTitle label');
+  assert(jc1[0].label === 'Intro' && jc1[0].segmentIds.join(',') === 'intro', 'gen: intro candidate standalone');
+  assert(jc1[3].label === 'Recap' && jc1[3].segmentIds.join(',') === 'recap', 'gen: recap candidate standalone');
+}
+
+// Case 6: curated plan + labels — one candidate per segment (matches Case 2's grouping)
+{
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
+    'try-saq': 'Practice: SAQ', 'misconception-one-way': 'One-way myth' };
+  const jc2 = railJumpCandidates(curated, labels);
+  assert(jc2.length === 6, 'curated: one candidate per segment');
+  assert(jc2[1].label === 'Two-way exchange' && jc2[1].segmentIds.join(',') === 'concept-cx', 'curated: content label + single-segment group');
+  assert(jc2[0].label === 'Hook' && jc2[5].label === 'Recap', 'curated: fixed-label ends carried through');
+}
+
+// Case 7: suppression — pendingPicker → [] (matcher no-ops on empty candidates)
+{
+  const jc3 = railJumpCandidates(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), null);
+  assert(Array.isArray(jc3) && jc3.length === 0, 'picker suppressed → []');
 }
 
 /* ------------------------------------------------------------------ */

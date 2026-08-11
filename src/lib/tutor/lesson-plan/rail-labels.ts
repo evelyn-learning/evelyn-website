@@ -88,6 +88,27 @@ export function buildRailModel(
   });
 }
 
+/** Task 2 (VTR rail-bargein wiring) — candidate list for the student-
+ *  jump-intent matcher (student-jump-intent.ts), reusing buildRailModel's
+ *  exact grouping (LO-grouped on generated plans, one-item-per-segment on
+ *  curated ones) so the matcher scores the verbal request against the
+ *  SAME labels the rail visually shows the student. currentSegmentId/
+ *  completedSegmentIds are irrelevant to candidate identity (only
+ *  done/current flags depend on them), so this calls buildRailModel with
+ *  neutral values and drops those flags in the mapping. Returns [] when
+ *  buildRailModel itself suppresses (pendingPicker / no segments) — the
+ *  matcher already no-ops on an empty candidate list. Structurally
+ *  compatible with student-jump-intent.ts's `JumpCandidateItem` without
+ *  importing it (lesson-plan module stays independent of orchestrator). */
+export function railJumpCandidates(
+  plan: LessonPlan,
+  labels: SegmentLabels | null,
+): { segmentIds: string[]; label: string }[] {
+  const items = buildRailModel(plan, '', new Set(), labels);
+  if (!items) return [];
+  return items.map((it) => ({ segmentIds: it.segIds, label: it.label }));
+}
+
 /** Per-kind salient field for the labeling prompt. */
 function salientText(seg: Segment): string {
   switch (seg.kind) {
