@@ -2508,18 +2508,50 @@ export function VoiceTutorRealtime({
   // always happen immediately upon the original interrupt — the STAGE-2
   // LAZY path (runPerceptionKill, called from resolveStage2LazyVerdict
   // inside the Haiku classifier's OWN async `.then()`) can defer it up to
-  // ~3s. That's fine for the turnMarker check here (only non-silent
-  // dispatches ever write a NEW lastStreakChangeRef record, and only
-  // non-silent dispatches ever advance pacingTurnCounterRef — the two
-  // move in lockstep regardless of elapsed time, so a stale `rec` can
-  // never spuriously re-match no matter how late this runs). It is NOT
-  // fine for segmentsCompletedThisTurnRef, which is why that field is
-  // captured exactly once, at pacing-snapshot time, and never re-read
-  // here — see PacingStreakSnapshot's `completedThisTurn` doc comment.
+  // ~3s. That's fine for the turnMarker check below (only non-silent
+  // dispatches ever WRITE a new lastStreakChangeRef record, and only
+  // non-silent dispatches ever advance pacingTurnCounterRef, so a write
+  // and a counter-advance always happen together — a stale `rec` can never
+  // spuriously re-match no matter how late this runs). It is NOT fine for
+  // segmentsCompletedThisTurnRef, which is why that field is captured
+  // exactly once, at pacing-snapshot time, and never re-read here — see
+  // PacingStreakSnapshot's `completedThisTurn` doc comment.
+  //
+  // Final-review CRITICAL fix: the lockstep argument above proves
+  // lastStreakChangeRef can't be OVERWRITTEN by a silent dispatch — it does
+  // NOT prove a checkpoint built for a silent dispatch's own ctx can't
+  // wrongly CLAIM an older real turn's still-sitting record. Silent
+  // dispatches (idle nudge, cutoff-resume, one-time directive, queue-drain
+  // — every one sets lastBrainCallContextRef.current, same as a real turn)
+  // don't advance pacingTurnCounterRef, so if turn N credits and then an
+  // idle nudge dispatches silently and gets barged in on before ANY real
+  // turn follows, the checkpoint built for cancelling the NUDGE still has
+  // `ctx` pointing at the nudge, while pacingTurnCounterRef is unchanged at
+  // N — the turnMarker check alone would match and hand turn N's fully
+  // legitimate credit to a checkpoint that has nothing to do with turn N,
+  // and a FRESH/MERGE verdict on the nudge's barge-in would then revert it.
+  // `ctx` (threaded in from the caller, which already has it at the exact
+  // point it builds the checkpoint) closes this: a silent/bracketed ctx
+  // never ran the pacing block in the first place (that block is gated on
+  // `!silent && !isBracketed`), so it can't have anything of ITS OWN to
+  // revert — bail without touching lastStreakChangeRef, so a later,
+  // legitimate checkpoint (the one actually built for turn N, if one ever
+  // is) can still claim the record. See also the belt-and-suspenders fix
+  // in callBrainOnce's turn-start block, which clears this ref
+  // unconditionally on every dispatch (silent included) — between the two,
+  // a stale record can survive past the FIRST dispatch of any kind after
+  // it was written, silent or not.
   // Pure ref read/write, no external deps — stable across renders.
-  const claimSupersededStreakForCheckpoint = useCallback((): PacingStreakSnapshot | null => {
+  const claimSupersededStreakForCheckpoint = useCallback((
+    ctx: { transcript: string; opts?: { silent?: boolean } } | null | undefined,
+  ): PacingStreakSnapshot | null => {
     const rec = lastStreakChangeRef.current;
     if (!rec || rec.turnMarker !== pacingTurnCounterRef.current) return null;
+    if (ctx?.opts?.silent === true || /^\s*\[/.test(ctx?.transcript ?? '')) {
+      // Checkpoint is about a silent/bracketed dispatch, not a real turn —
+      // nothing of its own to revert. Leave lastStreakChangeRef untouched.
+      return null;
+    }
     lastStreakChangeRef.current = null;
     return rec;
   }, []);
@@ -8217,6 +8249,26 @@ export function VoiceTutorRealtime({
     // from a PRIOR turn must not count as "predates this turn" evidence
     // for a guard(c) check happening later, in THIS turn's pacing block.
     segmentsCompletedThisTurnRef.current = [];
+    // R47 Task 2 (final-review CRITICAL fix, belt-and-suspenders alongside
+    // claimSupersededStreakForCheckpoint's silent-ctx check above). A
+    // pending streak record is only legitimately claimable by a checkpoint
+    // that's ACTUALLY about the turn that wrote it — once ANY new dispatch
+    // begins (this line runs unconditionally, silent/bracketed dispatches
+    // included — idle nudges, cutoff-resume, one-time directives,
+    // queue-drain all reach here too), that record is dead: no later
+    // checkpoint, however constructed, has any legitimate claim to it.
+    // Safe to clear unconditionally because a checkpoint that cancels an
+    // IN-FLIGHT (STAGE-2, 'processing') turn always aborts it BEFORE that
+    // turn's own pacing block ever runs (fullText hasn't finalized yet —
+    // see the RESTORE-after-finished guard in applyPerceptionVerdict), so
+    // no legitimate record can exist yet for a turn that's still running;
+    // the only turns that ever produce a record are ones whose pacing
+    // block already completed, and any checkpoint for THOSE is always
+    // built (see executeRetroCancel / runPerceptionKill) before this
+    // dispatch-start point ever runs for a NEXT turn — clearing here can
+    // therefore only ever discard a record that's already unclaimable for
+    // any legitimate reason.
+    lastStreakChangeRef.current = null;
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -15358,8 +15410,11 @@ export function VoiceTutorRealtime({
       // R47 Task 2: claim right here, synchronously, in the same
       // statement group that builds the checkpoint — see
       // lastStreakChangeRef's declaration for why this must happen at
-      // construction time, not later when the verdict resolves.
-      const supersededStreak = claimSupersededStreakForCheckpoint();
+      // construction time, not later when the verdict resolves. Pass
+      // `ctx` (this checkpoint's own dispatch context) so the claim can
+      // reject a silent/bracketed ctx — see the CRITICAL fix note on
+      // claimSupersededStreakForCheckpoint's declaration.
+      const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
@@ -16402,8 +16457,13 @@ export function VoiceTutorRealtime({
         // (see claimSupersededStreakForCheckpoint's comment for why); only
         // completedThisTurn needed a fix for that timing difference, and
         // that fix lives entirely in PacingStreakSnapshot's field capture,
-        // not here.
-        const supersededStreak = claimSupersededStreakForCheckpoint();
+        // not here. Passing `ctx` here matters especially for this shared
+        // function's eager onset-kill caller: an idle nudge (silent
+        // dispatch) that gets barged in on constructs ITS checkpoint via
+        // this exact call, with `ctx` pointing at the nudge — without the
+        // silent-ctx check, that checkpoint could wrongly claim an older
+        // real turn's still-legitimate credit.
+        const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
           originalOpts: ctx.opts,
@@ -17034,8 +17094,9 @@ export function VoiceTutorRealtime({
       }
       const cancelStage: 'processing' | 'speaking' = prodState === 'speaking' ? 'speaking' : 'processing';
       console.warn(`[dev] __tutorForceFalseBargein: synthetic ${cancelStage} cancel + ${cancelStage === 'speaking' ? 'silent-accept' : 'restore'}`);
-      // R47 Task 2: parity with the real cancel sites — claim synchronously.
-      const supersededStreak = claimSupersededStreakForCheckpoint();
+      // R47 Task 2: parity with the real cancel sites — claim synchronously,
+      // passing ctx so a silent/bracketed dispatch can't wrongly claim.
+      const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
