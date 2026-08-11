@@ -50,5 +50,39 @@ function check(name: string, cond: boolean, detail?: string) {
   check('asterisk emphasis does not defeat the match', r?.affirmed === '12', JSON.stringify(r));
 }
 
+// ---------- Value-substitution shape (2026-08-10, session portal-7cfa226c) ----------
+// Verbatim incident: opener affirms "$2x$", a later sentence never says
+// "not 2x" — it just silently substitutes "6x" as the final derived value,
+// via an intermediate equality that still contains "2x" as a factor.
+{
+  const r = detectPraiseContradiction(
+    'Right. $2x$.\n\n' +
+    'The derivative of $3x^2$ is $3 \\cdot 2x = 6x$ — so $f\'\'(x) = 6x$.',
+  );
+  check('value-substitution: praise "$2x$" then silent substitution to "6x" fires', r?.affirmed === '$2x$', JSON.stringify(r));
+}
+
+// ---------- Same value restated → null (no substitution) ----------
+{
+  const r = detectPraiseContradiction("Right. $2x$. So $f'(x) = 2x$.");
+  check('value-substitution: restating the SAME affirmed value → null', r === null, JSON.stringify(r));
+}
+
+// ---------- Different problem's equality in the same turn → null ----------
+// The existing detector has no cross-problem scoping of its own (it scans
+// the whole accumulated turn text) — the substring-containment gate on the
+// equality's LHS is what keeps this from false-positiving: neither "g(x)"
+// nor "g'(x)" contains the affirmed "2x" token.
+{
+  const r = detectPraiseContradiction("Right. $2x$. Now try $g(x)=x^3$: $g'(x)=3x^2$.");
+  check('value-substitution: different problem\'s equality → null', r === null, JSON.stringify(r));
+}
+
+// ---------- Plain praise, no math token at all → null ----------
+{
+  const r = detectPraiseContradiction('Right — great job! Let\'s move on to the next one.');
+  check('value-substitution: plain prose praise (no math token) → null', r === null, JSON.stringify(r));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

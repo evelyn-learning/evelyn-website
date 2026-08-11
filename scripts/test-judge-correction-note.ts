@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-judge-correction-note.ts
  */
-import { buildJudgeCorrectionNote } from '../src/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression } from '../src/lib/tutor/voice/judge-correction-note';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -36,6 +36,30 @@ check('empty claims → null', buildJudgeCorrectionNote([]) === null);
   const note = buildJudgeCorrectionNote([long, long, long]) ?? '';
   check('long claims truncated', note.length < 900);
   check('at most 2 claims quoted', (note.match(/"x{10}/g) ?? []).length === 2);
+}
+
+// ---------- Fix C planting policy (2026-08-10, session portal-7cfa226c) ----------
+// Advisory issues now ALSO plant a correction note, but only when the
+// claim carries a math expression ($, \(, or =) — the incident shape (a
+// board card contradicting the tutor's own correct narration). A bare
+// tone/phrasing advisory — the class Pillar 2b's advisory-only default
+// exists to protect — must NOT plant a note.
+check('math claim with $ qualifies', hasMathExpression('the card shows $f(x) = 2x$ but you said 3x'));
+check('math claim with \\( qualifies', hasMathExpression("the board reads \\(y = mx + b\\)"));
+check('math claim with bare = qualifies', hasMathExpression('you said x = 5 but the board shows x = 7'));
+check('tone/phrasing claim does not qualify', !hasMathExpression('your tone was a bit abrupt with the student'));
+check('common-knowledge claim does not qualify', !hasMathExpression('Paris is not typically called the capital of Germany'));
+{
+  const claims = [
+    'the board shows $2\\cos t + 2t\\sin t$ but you said 2 sin t + 2t cos t',
+    'you were a little terse just now',
+  ];
+  const filtered = claimsWithMathExpression(claims);
+  check('claimsWithMathExpression keeps only the math-bearing claim', filtered.length === 1 && filtered[0] === claims[0]);
+}
+{
+  const filtered = claimsWithMathExpression(['just a tone note', 'another plain-prose note']);
+  check('claimsWithMathExpression returns empty when nothing qualifies', filtered.length === 0);
 }
 
 if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }

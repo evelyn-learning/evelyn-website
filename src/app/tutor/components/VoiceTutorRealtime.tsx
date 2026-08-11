@@ -85,6 +85,7 @@ import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check'
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
+import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
@@ -198,7 +199,7 @@ import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/li
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
-import { buildJudgeCorrectionNote } from '@/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import {
   WHITEBOARD_INTENT_PATTERNS,
@@ -8866,6 +8867,13 @@ export function VoiceTutorRealtime({
         // (rollback scope = full attempt, original behavior).
         let renderCountAtAdvance: number | null = null;
         let attemptText = '';
+        // Fix B (2026-08-10 root cause, session portal-7cfa226c): parallel
+        // array of the raw per-sentence text (pre-TTS-normalization, so
+        // inline $...$ math survives) accumulated alongside attemptText —
+        // checkSpokenCardMismatchLocal below needs individual sentences,
+        // not one joined string, to scan for inline-math equalities.
+        // Per-attempt, same reset semantics as attemptText.
+        let attemptSentences: string[] = [];
         // E2 (prod session 2026-08-06/07): the authored card most recently
         // resolved by show_segment_card this attempt, if its text carries
         // numbers — set in the show_segment_card tool-call branch, consumed
@@ -8873,6 +8881,14 @@ export function VoiceTutorRealtime({
         // resets on every retry so a killed attempt's pending card doesn't
         // leak into the replacement attempt's check.
         let cardNarrationPending: { segId: string; cardText: string } | null = null;
+        // Fix B (2026-08-10 root cause, session portal-7cfa226c): the latex
+        // of the show_equation card most recently rendered this attempt —
+        // set in the show_equation tool-call branch, consumed (and
+        // cleared) by checkSpokenCardMismatchLocal below. Per-attempt, same
+        // reset semantics as cardNarrationPending. Scoped to show_equation
+        // only, ALL plan types (unlike cardNarrationPending, which is
+        // generated-plan-only).
+        let spokenCardPending: { cardLatex: string } | null = null;
         // Validate-before-speak chat gating: the streaming chat bubble shows
         // `attemptText`, which keeps accumulating even AFTER a kill (the
         // killed attempt streams to completion, audio-gated by attemptKilled
@@ -9253,6 +9269,31 @@ export function VoiceTutorRealtime({
           console.warn(`[brain-orchestrator] show_segment_card narration mismatch for segment "${segId}" — card="${cardText.slice(0, 60)}" spoken="${textSoFar.slice(0, 60)}". Killing attempt for retry.`);
           onDebugEvent?.('show_segment_card_narration_mismatch', `segId="${segId}"`);
           cardNarrationPending = null;
+          return true;
+        };
+        // Fix B (2026-08-10 root cause, session portal-7cfa226c): spoken-
+        // vs-card term mismatch. Mirrors checkCardNarrationMismatch's
+        // wiring exactly — called from TWO sites (right after show_equation
+        // resolves, covering "narrate first, call the tool after"; and on
+        // every subsequent sentence event, covering "call the tool, then
+        // narrate") so either ordering of tool-call vs. speech is caught.
+        // Scoped to show_equation only, and — unlike cardNarrationMismatch
+        // — ALL plan types (curated and generated), since a board/
+        // narration term contradiction is a rendering-correctness bug
+        // regardless of content source. Pushes a rejection and returns true
+        // (caller performs the kill + continue) only on an actual mismatch;
+        // a clean pass leaves spokenCardPending armed so later sentences in
+        // the same attempt keep getting checked against the same card.
+        const checkSpokenCardMismatchLocal = (sentencesSoFar: string[]): boolean => {
+          if (!spokenCardPending) return false;
+          const { cardLatex } = spokenCardPending;
+          const result = checkSpokenCardMismatch(sentencesSoFar, cardLatex);
+          if (!result.mismatch) return false;
+          const reason = `Your show_equation card renders "${cardLatex.slice(0, 160)}" but your own spoken narration this turn asserts different terms for the same expression (${result.reason ?? 'terms differ'}). The board and your explanation must agree — one of them has the wrong math. Re-emit show_equation with the SAME terms your narration derived (or, if the card is the correct one, correct your narration to match it) — whichever side is mathematically right.`;
+          rejectionsThisAttempt.push({ action: 'show_equation_spoken_mismatch', reason });
+          console.warn(`[brain-orchestrator] spoken-vs-card term mismatch — card="${cardLatex.slice(0, 80)}" (${result.reason ?? ''}). Killing attempt for retry.`);
+          onDebugEvent?.('spoken_card_mismatch', cardLatex.slice(0, 80));
+          spokenCardPending = null;
           return true;
         };
         // Skip turns (#4): never auto-open on the 1s timer — the gate
@@ -9698,6 +9739,21 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // Fix B (2026-08-10 root cause, session portal-7cfa226c):
+                  // spoken-vs-card term mismatch — the "call the tool, THEN
+                  // narrate different terms" ordering. (The reverse
+                  // ordering, "narrate first, call the tool after", is
+                  // caught inline in the show_equation tool-call branch
+                  // below.) Uses the per-sentence array (not the joined
+                  // attemptText string) so the pure checker can scan each
+                  // sentence's inline math independently.
+                  if (!attemptKilled) {
+                    const spokenSentencesSoFar = [...attemptSentences, updatedSentence];
+                    if (checkSpokenCardMismatchLocal(spokenSentencesSoFar)) {
+                      await performKill();
+                      continue;
+                    }
+                  }
                   // Round-7++ meta-narration filter. The system prompt
                   // already forbids speaking internal reasoning ("the
                   // student said X — that's a greenlight to advance",
@@ -9885,6 +9941,9 @@ export function VoiceTutorRealtime({
                     .replace(/([A-Za-z0-9])\u0304/g, '$1 bar')
                     .replace(/[\u0300-\u036F]/g, '');
                   attemptText += (attemptText ? ' ' : '') + trimmedSentence;
+                  // Fix B: raw per-sentence text (pre-TTS-normalization, so
+                  // inline $...$ math survives) — see attemptSentences decl.
+                  attemptSentences.push(trimmedSentence);
                   // Detect brain narration that signals the pipeline
                   // returned no_problem_available. Generic patterns —
                   // any utterance roughly meaning "I have nothing
@@ -10900,6 +10959,29 @@ export function VoiceTutorRealtime({
                       }
                     }
                   }
+                  // Fix B (2026-08-10 root cause, session portal-7cfa226c):
+                  // arm the spoken/card term-mismatch check for this
+                  // attempt's remaining sentences (see
+                  // checkSpokenCardMismatchLocal above), then immediately
+                  // check text spoken so far — covers "narrate the correct
+                  // math FIRST, call show_equation with different terms
+                  // after" (the reverse ordering is caught in the
+                  // sentence-branch check above). Scoped to show_equation
+                  // only; ALL plan types (no isGeneratedPlan gate — a
+                  // board/narration term contradiction is a rendering bug
+                  // regardless of content source).
+                  if (name === 'show_equation') {
+                    const latexArg = typeof (args as { latex?: unknown }).latex === 'string'
+                      ? (args as { latex: string }).latex
+                      : '';
+                    if (latexArg && latexArg.includes('=')) {
+                      spokenCardPending = { cardLatex: latexArg };
+                      if (!attemptKilled && checkSpokenCardMismatchLocal(attemptSentences)) {
+                        await performKill();
+                        continue;
+                      }
+                    }
+                  }
                   const cmd = resolvedCmd ?? mapFunctionCallToCommand(name, args);
                   if (cmd) {
                     // Phase 4.1: a Rule-8 repair frame (post-`done`) names its
@@ -11852,6 +11934,31 @@ export function VoiceTutorRealtime({
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
                     advisoryIssues.map((i) => i.claim.slice(0, 80)));
                   onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}…`);
+                  // Fix C (2026-08-10 root cause, session portal-7cfa226c):
+                  // advisories used to dead-end here — logged and dropped,
+                  // no student-visible effect at all, even when the flagged
+                  // claim carries an actual math expression (board-
+                  // contradiction claims land in advisoryIssues, restricted
+                  // to advisory by the judge prompt — see the comment below
+                  // this block). A math-bearing advisory is exactly the
+                  // incident shape (a board card whose math contradicted
+                  // the tutor's own correct narration), so it gets the same
+                  // next-turn correction note as a kill-class issue, via
+                  // the identical buildJudgeCorrectionNote mechanism.
+                  // Ordering note: this assignment happens BEFORE the
+                  // killIssues block below, which — when it also fires this
+                  // same pass — unconditionally overwrites
+                  // pendingJudgeCorrectionNoteRef.current, so a kill-class
+                  // note always wins over an advisory one from the same
+                  // judge response.
+                  const mathAdvisoryIssues = advisoryIssues.filter((i) => hasMathExpression(i.claim));
+                  if (mathAdvisoryIssues.length > 0) {
+                    const advisoryCorrectionNote = buildJudgeCorrectionNote(mathAdvisoryIssues.map((i) => i.claim));
+                    if (advisoryCorrectionNote) {
+                      pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
+                      onDebugEvent?.('judge_correction_note_planted', `advisory: ${mathAdvisoryIssues[0].claim.slice(0, 60)}`);
+                    }
+                  }
                 }
                 if (killIssues.length > 0) {
                   const summary = killIssues.map((i, idx) =>
