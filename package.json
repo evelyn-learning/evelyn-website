@@ -145,6 +145,7 @@
     "sketch-gallery": "npx tsx scripts/sketch-gallery.ts",
     "test:resume-cut": "npx tsx scripts/test-resume-from-cut.ts",
     "test:arith-claim": "npx tsx scripts/test-arithmetic-claim-check.ts",
+    "test:answer-match": "npx tsx scripts/test-utterance-answer-match.ts",
     "test:simplification-verdict": "npx tsx scripts/test-simplification-verdict-check.ts",
     "test:praise-contradiction": "npx tsx scripts/test-praise-contradiction.ts",
     "test:card-narration": "npx tsx scripts/test-card-narration.ts",
