@@ -153,6 +153,7 @@
     "test:praise-contradiction": "npx tsx scripts/test-praise-contradiction.ts",
     "test:praise-echo": "npx tsx scripts/test-praise-echo-check.ts",
     "test:inverse-verdict": "npx tsx scripts/test-inverse-verdict-check.ts",
+    "test:objective-credit": "npx tsx scripts/test-objective-credit.ts",
     "test:card-narration": "npx tsx scripts/test-card-narration.ts",
     "test:verdict-charity-rules": "npx tsx scripts/test-verdict-charity-rules.ts",
     "test:curated-demo": "npx tsx scripts/test-curated-demo-lessons.ts",

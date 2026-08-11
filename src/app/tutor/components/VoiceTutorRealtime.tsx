@@ -91,6 +91,7 @@ import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-ver
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
+import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
@@ -2367,6 +2368,16 @@ export function VoiceTutorRealtime({
   // to even consider streak changes. Pure-ack turns ("ok", "yeah")
   // never update the streak regardless of what the brain says next.
   const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
+  // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
+  // false-denial kill (arith/simplification/inverse-verdict) this turn — the
+  // checker already proved the student's answer right, so the post-stream
+  // pacing block below must credit 'correct' regardless of what the
+  // affirm/correction regexes read off the retry's prose. Cleared at turn
+  // start (mirrors the other per-turn refs reset there) and at every early
+  // exit that skips the pacing block (mirrors pendingStudentJumpRef's "don't
+  // let this turn's state survive into the next turn" pattern) so a signal
+  // from a turn that never reaches the pacing block can't bleed forward.
+  const objectiveCorrectThisTurnRef = useRef<{ signal: ObjectiveCorrectSignal } | null>(null);
   // Buffer of [pacing] events fired during the most recent brain turn.
   // Forwarded server-side on the NEXT brain stream request body so the
   // /api/tutor/brain/stream route can write them to the server log
@@ -8047,6 +8058,10 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
+    // R47 Task 1: fresh per-turn objective-credit slot. A kill site below
+    // may set this DURING this turn's retry loop; must not carry a signal
+    // stashed by a PRIOR turn (or a prior turn's attempt) into this one.
+    objectiveCorrectThisTurnRef.current = null;
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -9070,6 +9085,12 @@ export function VoiceTutorRealtime({
           // survive into whatever turn succeeds next, where it'd be
           // applied against an unrelated response.
           pendingStudentJumpRef.current = null;
+          // R47 Task 1: same reasoning — a prior attempt's kill on this
+          // turn may have already stashed an objective signal; this turn
+          // is dying here without reaching the pacing block that would
+          // consume it, so it must not survive to be misapplied against
+          // whatever turn succeeds next.
+          objectiveCorrectThisTurnRef.current = null;
           return;
         }
 
@@ -9816,6 +9837,21 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic arithmetic check: ${arith.verdict} in "${updatedSentence.slice(0, 80)}" (${arith.correct}) — kill + retry`);
                       onDebugEvent?.('arith_claim_kill', `${arith.verdict}: ${arith.claim ?? '?'} → ${arith.correct ?? '?'}`);
+                      // R47 Task 1: false_denial ONLY — the brain denied
+                      // CORRECT student arithmetic, which is machine proof
+                      // the student was right. false_assertion (the other
+                      // branch, above) is the brain wrong about its OWN
+                      // asserted math and proves nothing about the student —
+                      // must never stash a signal for it.
+                      if (arith.verdict === 'false_denial') {
+                        objectiveCorrectThisTurnRef.current = {
+                          signal: {
+                            source: 'arith_false_denial',
+                            segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                            atMs: Date.now(),
+                          },
+                        };
+                      }
                       continue;
                     }
                   }
@@ -9848,6 +9884,17 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic simplification check: false denial of "${simp.correct}" in "${updatedSentence.slice(0, 80)}" — kill + retry`);
                       onDebugEvent?.('simplification_verdict_kill', `asked=${simp.asked?.slice(0, 40) ?? '?'} correct=${simp.correct ?? '?'}`);
+                      // R47 Task 1: checkSimplificationVerdict's only kill
+                      // verdict is false_denial (no false-assertion branch
+                      // like arith above) — always machine proof the
+                      // student's simplification was right.
+                      objectiveCorrectThisTurnRef.current = {
+                        signal: {
+                          source: 'simplification_false_denial',
+                          segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                          atMs: Date.now(),
+                        },
+                      };
                       continue;
                     }
                   }
@@ -9947,6 +9994,17 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] inverse-verdict check: false denial of verified "${inv.expected}" — kill + retry`);
                       onDebugEvent?.('inverse_verdict_kill', `expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)} (${inv.matchReason})`);
+                      // R47 Task 1: this is the KILL tier (verdict ===
+                      // 'false_denial', verified expectedAnswer only) — the
+                      // advisory_false_denial tier (unverified card answer,
+                      // below) never kills and must never stash a signal.
+                      objectiveCorrectThisTurnRef.current = {
+                        signal: {
+                          source: 'inverse_false_denial',
+                          segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                          atMs: Date.now(),
+                        },
+                      };
                       continue;
                     }
                     if (inv.verdict === 'advisory_false_denial') {
@@ -12770,39 +12828,66 @@ export function VoiceTutorRealtime({
       // here against the same segId-pinned streak count.
       try {
         const ver = lastStudentVerificationRef.current;
-        if (ver && ver.isVerification && fullText.length > 0) {
+        // R47 Task 1 (live incident portal-d859df30): a deterministic
+        // false-denial kill THIS turn is machine proof the student's answer
+        // was right — it forces 'correct' credit below regardless of what
+        // the affirm/correction regexes read off the retry's prose, and
+        // even when ver is absent/stale or read this turn as
+        // non-verification. See objective-credit.ts header for why.
+        const objectiveSignal = objectiveCorrectThisTurnRef.current?.signal ?? null;
+        if (ver || objectiveSignal) {
           const head = fullText.slice(0, 200);
           const isAffirm = brainAffirmationRegex.test(head);
           const isCorrect = brainCorrectionRegex.test(fullText);
-          if (isAffirm && !isCorrect) {
-            // Streak ref keyed on the segment the student ANSWERED on
-            // (ver.segId), not whatever segment the brain advanced to.
-            const priorCount = studentStreakRef.current.segId === ver.segId
+          const decision = decidePacingCredit({
+            isVerification: !!(ver?.isVerification && fullText.length > 0),
+            isAffirm,
+            isCorrect,
+            objectiveSignal,
+          });
+          // Streak/segment refs are keyed on the segment the student
+          // ANSWERED on. That's normally ver.segId (turn-start snapshot,
+          // not whatever segment the brain advanced to mid-turn); an
+          // objective kill site stashes its segId off this SAME
+          // lastStudentVerificationRef, read at kill time earlier in this
+          // same turn, so this only degrades to the signal's own segId
+          // when ver itself is null/stale.
+          const segId = ver?.segId ?? objectiveSignal?.segId ?? '';
+          if (decision.credit === 'correct') {
+            const priorCount = studentStreakRef.current.segId === segId
               ? studentStreakRef.current.count : 0;
-            studentStreakRef.current = { segId: ver.segId, count: priorCount + 1 };
-            // Task C2 (flag-gated): a brain-affirmed genuine verification
-            // turn IS the "student demonstrated this segment" signal for the
-            // completion gate. Same guard placement as the streak increment
-            // so it inherits every existing exclusion (pure acks, help
-            // requests, too-short turns, judge-kill/restatement retries).
-            if (TUTOR_PEDAGOGY_OPENER && ver.segId) {
-              demonstratedSegmentsRef.current.add(ver.segId);
+            studentStreakRef.current = { segId, count: priorCount + 1 };
+            // Task C2 (flag-gated): a brain-affirmed (or, R47 Task 1,
+            // objectively proven) genuine verification turn IS the
+            // "student demonstrated this segment" signal for the
+            // completion gate. Same guard placement as the streak
+            // increment so it inherits every existing exclusion (pure
+            // acks, help requests, too-short turns, judge-kill/
+            // restatement retries).
+            if (TUTOR_PEDAGOGY_OPENER && segId) {
+              demonstratedSegmentsRef.current.add(segId);
             }
-            if (studentIncorrectStreakRef.current.segId === ver.segId
+            if (studentIncorrectStreakRef.current.segId === segId
                 && studentIncorrectStreakRef.current.count > 0) {
-              studentIncorrectStreakRef.current = { segId: ver.segId, count: 0 };
+              studentIncorrectStreakRef.current = { segId, count: 0 };
             }
-            logPacing(`streak-correct seg="${ver.segId}" count=${studentStreakRef.current.count}`);
+            logPacing(`streak-correct seg="${segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
-            // Practice meter: a brain-affirmed genuine verification is a
+            if (decision.objective && objectiveSignal) {
+              onDebugEvent?.('pacing_objective_credit', `${objectiveSignal.source} seg="${segId}"`);
+            }
+            // Practice meter: a confirmed genuine verification is a
             // solve — once per PROBLEM (multi-step problems affirm several
             // times), and only when a problem is actually on the board
             // (hook-phase Q&A affirmations don't count).
             {
               // Round-22: use the TURN-START snapshot — a same-turn segment
               // advance clears currentProblemRef before this post-stream
-              // code runs, silently dropping the solve.
-              const solvedStmt = (ver.activeStatement ?? currentProblemRef.current?.statement ?? '').trim();
+              // code runs, silently dropping the solve. ver may be null on
+              // the objective-only path (R47 Task 1); fall straight to
+              // currentProblemRef in that case — the block's own existing
+              // fallback for when the snapshot is empty.
+              const solvedStmt = (ver?.activeStatement ?? currentProblemRef.current?.statement ?? '').trim();
               if (solvedStmt.length >= 10) {
                 let sh = 5381;
                 for (let i = 0; i < solvedStmt.length; i++) sh = (sh * 33) ^ solvedStmt.charCodeAt(i);
@@ -12816,31 +12901,31 @@ export function VoiceTutorRealtime({
             }
             emitPracticeStatsRef.current();
             // Late-fire segment-mastered: if completedSegmentIdsRef
-            // contains ver.segId (i.e. brain emitted mark_segment_complete
+            // contains segId (i.e. brain emitted mark_segment_complete
             // earlier in this turn) AND the new streak is >= 2, fire the
             // booster now. The on-mark_segment_complete site reads the
             // streak BEFORE the post-stream increment, so it misses this
             // case.
-            if (completedSegmentIdsRef.current.has(ver.segId)
+            if (completedSegmentIdsRef.current.has(segId)
                 && studentStreakRef.current.count >= 2
                 && (!segmentMasteredFlagRef.current
-                    || segmentMasteredFlagRef.current.segId !== ver.segId)) {
+                    || segmentMasteredFlagRef.current.segId !== segId)) {
               segmentMasteredFlagRef.current = {
-                segId: ver.segId,
+                segId,
                 streakAtComplete: studentStreakRef.current.count,
               };
-              logPacing(`segment-mastered seg="${ver.segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
-              onDebugEvent?.('pacing_segment_mastered', `seg="${ver.segId}" streak=${studentStreakRef.current.count}`);
+              logPacing(`segment-mastered seg="${segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
+              onDebugEvent?.('pacing_segment_mastered', `seg="${segId}" streak=${studentStreakRef.current.count}`);
             }
-          } else if (isCorrect) {
-            const priorIncCount = studentIncorrectStreakRef.current.segId === ver.segId
+          } else if (decision.credit === 'incorrect') {
+            const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
-            studentIncorrectStreakRef.current = { segId: ver.segId, count: priorIncCount + 1 };
-            if (studentStreakRef.current.segId === ver.segId
+            studentIncorrectStreakRef.current = { segId, count: priorIncCount + 1 };
+            if (studentStreakRef.current.segId === segId
                 && studentStreakRef.current.count > 0) {
-              studentStreakRef.current = { segId: ver.segId, count: 0 };
+              studentStreakRef.current = { segId, count: 0 };
             }
-            logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
+            logPacing(`streak-incorrect seg="${segId}" count=${studentIncorrectStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
             // Practice meter: a wrong answer resets the session solve streak.
             practiceStreakRef.current = 0;
@@ -12879,7 +12964,12 @@ export function VoiceTutorRealtime({
           // above), mirroring the "Session-end signals" trigger-phrase list
           // in system-prompt-builder.ts ~907-913 — that section was
           // prompt-only with no code-side detector before this fix.
-          if (isAffirm && !isCorrect && !ver.isSessionEndSignal) {
+          // R47 Task 1: `ver &&` guard added — ver can now be null here
+          // (objective-only path with a null/stale lastStudentVerificationRef);
+          // this advisory reads ver.isSessionEndSignal/ver.segId directly and
+          // was always implicitly gated on ver being non-null via the outer
+          // if before this restructure.
+          if (ver && isAffirm && !isCorrect && !ver.isSessionEndSignal) {
             const endsWithQuestion = /\?\s*$/.test(fullText.trim());
             const opensNextMove = totalToolNamesSeen.some(
               (n) => n === 'advance_lesson' || n === 'generate_problem'
@@ -13153,6 +13243,11 @@ export function VoiceTutorRealtime({
       // targeted THIS turn must die with it, not survive to be misapplied
       // against whatever turn comes next.
       pendingStudentJumpRef.current = null;
+      // R47 Task 1: same reasoning — a kill earlier in this turn's retry
+      // loop may have stashed an objective signal, but this turn threw or
+      // aborted before reaching the pacing block that consumes it. Clear it
+      // so it can't bleed into whatever turn runs next.
+      objectiveCorrectThisTurnRef.current = null;
       // Stage 2: a perception-initiated abort surfaces as DOMException
       // name='AbortError' OR a TypeError whose message includes
       // 'aborted'. Treat both as silent — the perception layer will
