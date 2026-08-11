@@ -8254,6 +8254,19 @@ export function VoiceTutorRealtime({
     // correctly stays fixed across retries.
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
+    // Number of sentences actually dispatched to TTS this turn. Tracks
+    // a strict subset of totalSentenceCount — sentences buffered in the
+    // gate then dropped on rejection are counted in totalSentenceCount
+    // but NOT here. Used by speakKillBridge to skip the bridge phrase
+    // when no audible speech has happened yet (otherwise the bridge
+    // becomes the first thing the student hears, which sounds wrong).
+    // It's also judge_kill_snapshot's "heard=N" source (below). Declared
+    // here, ABOVE the try, rather than inline with the other per-turn
+    // counters (which live inside the try body) so the catch block
+    // (R47 Task 3d) can read this turn's dispatched-count too — a `let`
+    // declared inside `try { }` is scoped to that block and invisible
+    // from `catch { }` in JS/TS, even though both are one logical turn.
+    let audibleSentenceCount = 0;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -8652,13 +8665,6 @@ export function VoiceTutorRealtime({
       // Incremented at the same site as totalSentenceCount++ (reusing the
       // per-sentence wordCount already computed there for the dedup guard).
       let totalWordCount = 0;
-      // Number of sentences actually dispatched to TTS this turn. Tracks
-      // a strict subset of totalSentenceCount — sentences buffered in the
-      // gate then dropped on rejection are counted in totalSentenceCount
-      // but NOT here. Used by speakKillBridge to skip the bridge phrase
-      // when no audible speech has happened yet (otherwise the bridge
-      // becomes the first thing the student hears, which sounds wrong).
-      let audibleSentenceCount = 0;
       let totalToolNamesSeen: string[] = [];
       // Rule-8 v2: renders that actually landed on the board this turn.
       // Counts assignedIds across attempts, so a killed attempt's rolled-back
@@ -13502,6 +13508,19 @@ export function VoiceTutorRealtime({
         // don't double-speak a second "repeat that?" on top of it.
         if (escalationGaveUpRef.current) {
           onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
+        } else if (audibleSentenceCount > 0) {
+          // R47 Task 3d (live incident portal-1349716e, 2:49 PM): the
+          // stream already dispatched ≥1 sentence to TTS this turn (e.g.
+          // a correct answer) before ERR_NETWORK_CHANGED killed the tail
+          // and landed us here. The student already heard real content —
+          // speaking "could you repeat that?" on top of it re-asks a
+          // question that's already answered. audibleSentenceCount is the
+          // same per-turn TTS-dispatch counter judge_kill_snapshot's
+          // "heard=N" reads (declared fresh per callBrainOnce invocation,
+          // so it's THIS turn's count, not a stale cross-turn leftover).
+          // Stay silent; the cleanup below (streaming-entry purge, active
+          // flag) still runs unconditionally.
+          onDebugEvent?.('brain_error_after_partial', `${audibleSentenceCount} sentence(s) delivered — repeat-request suppressed`);
         } else {
           speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
         }
