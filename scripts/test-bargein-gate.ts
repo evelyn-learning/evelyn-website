@@ -21,6 +21,7 @@ import {
   shouldFireSpeakingWatchdog,
   resolveBargeInEnergyThreshold,
   DEFAULT_BARGEIN_ACCUM_WINDOW_MS,
+  NOMINAL_FRAME_MS,
   type BargeInFrame,
   type BargeInGateInput,
 } from '../src/lib/tutor/voice/bargein-gate';
@@ -169,20 +170,43 @@ function main() {
   // the trailing `accumWindowMs` (default 700) instead of requiring an
   // unbroken run — a genuine sustained utterance still fires; short/sparse
   // echo blips still don't.
+  //
+  // HONEST CREDITING (fix-review round): the first cut credited every
+  // above-threshold frame up to maxFrameGapMs (250ms) toward its successor
+  // WITHOUT checking whether that successor was itself voiced — so up to
+  // 250ms of pure silence after a single spike counted as coverage. That let
+  // periodic echo-burst trains fabricate enough credit to fire (a shape the
+  // OLD strict continuous-run rule correctly refused). The credit rule now
+  // only extends the real-gap credit when the successor is ALSO
+  // above-threshold; a voiced frame whose successor is silent (or which is
+  // the trailing frame of the window) gets a flat NOMINAL_FRAME_MS instead.
+  // See the module header ("HONEST CREDITING" / "ACCEPTED BOUNDARY") for the
+  // full rationale, including why >50%-duty bursts are intentionally still in
+  // reach (out of scope for THIS energy-only gate; that's Task 6).
   console.log('\nWindowed accumulation (dip-tolerant sustain) — shouldFireBargeInKill\n');
 
   test(`DEFAULT_BARGEIN_ACCUM_WINDOW_MS is 700`, () => {
     assert.equal(DEFAULT_BARGEIN_ACCUM_WINDOW_MS, 700);
   });
 
+  test(`NOMINAL_FRAME_MS is 85`, () => {
+    assert.equal(NOMINAL_FRAME_MS, 85);
+  });
+
   function framesWithDips(): BargeInGateInput {
     // ~85ms-cadence capture (FRAME_MS below), energy alternating 0.3 (voiced)
     // / 0.1 (inter-word dip) in 200ms voiced runs with 100ms dips — the exact
-    // live-incident shape. Total above-threshold coverage inside the trailing
-    // 700ms window is 440ms (>= 350 sustainMs) → FIRES under windowed
-    // accumulation. Under the OLD strict continuous-run rule the trailing run
-    // is only 200ms (600..800, broken by the 500..600 dip) → does NOT fire.
-    // This is the case that must be RED before the fix and GREEN after.
+    // live-incident shape. Direct computation under HONEST crediting (window
+    // = [100,800], threshold = 0.15, gap = 250, NOMINAL = 85):
+    //   t=160 (end of run 1, successor@200 is a dip)      → credit 85
+    //   t=300 (successor@380 also voiced)                 → credit 80
+    //   t=380 (successor@460 also voiced)                 → credit 80
+    //   t=460 (end of run 2, successor@500 is a dip)       → credit 85
+    //   t=600 (successor@680 also voiced)                 → credit 80  [running total 410 >= 350 → FIRES here]
+    // Fires at 410ms of accumulated coverage, well inside the 700ms window.
+    // Under the OLD strict continuous-run rule the trailing run is only
+    // 200ms (600..800, broken by the 500..600 dip) → does NOT fire. This is
+    // the case that must be RED before the fix and GREEN after.
     const dipFrames: BargeInFrame[] = [
       ...frames(0, 160, 0.3),    // voiced 0-200ish
       ...frames(200, 280, 0.1),  // dip
@@ -282,6 +306,122 @@ function main() {
   test('non-speaking instant path unchanged', () => {
     assert.equal(shouldFireBargeInKill(nonSpeaking()), true,
       "non-'speaking' states keep the instant kill path, untouched by accumulation");
+  });
+
+  // ── Fix-review pin: periodic echo-burst trains (the module's own named
+  // threat — the exact shape the old buggy credit rule let through) ──
+
+  function isolatedSpikeTrain(): BargeInGateInput {
+    // 3 isolated ~85ms echo spikes (period 240ms), each followed by ONE
+    // captured below-threshold sample placed near the far end of the gap to
+    // the next spike (230ms later — close to but under maxFrameGapMs=250),
+    // exactly the "successor is silent but far away" shape the OLD credit
+    // rule mishandled. Direct computation (threshold 0.15, gap 250, NOMINAL
+    // 85, window = [0, 700] so all 3 spikes are inside it):
+    //   OLD (buggy) rule — credits the real gap to whatever frame is next,
+    //   never checking its energy:
+    //     t=0   → next@230 → credit min(230, 250) = 230
+    //     t=240 → next@470 → credit min(230, 250) = 230        (sum 460, already >= 350 → WRONGLY FIRES)
+    //   Verified programmatically against the pre-fix implementation:
+    //   { fire: true, sum: 460 }.
+    //   NEW (honest) rule — successor IS captured and IS below threshold, so
+    //   each spike gets only its own nominal presence, not the gap to it:
+    //     t=0   (successor@230 silent)          → credit 85
+    //     t=240 (successor@470 silent)          → credit 85
+    //     t=480 (trailing frame of the window)  → credit min(700-480, 85) = 85
+    //   Total = 255ms < 350 sustainMs → REFUSED. Verified: { fire: false, sum: 255 }.
+    const spikes: BargeInFrame[] = [
+      { tMs: 0, energy: LOUD },
+      { tMs: 230, energy: QUIET },
+      { tMs: 240, energy: LOUD },
+      { tMs: 470, energy: QUIET },
+      { tMs: 480, energy: LOUD },
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 700,
+      frames: spikes, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  function periodicDutyCycleBurst(): BargeInGateInput {
+    // A 40%-duty periodic echo-burst train: 100ms "on" / 150ms "off" (250ms
+    // period), sampled once per on-phase onset plus one captured
+    // below-threshold sample near the end of each off-phase (249ms later —
+    // an honest capture near the far edge of the real 150ms silence, not an
+    // invented gap) — 3 periods (onsets at 0, 250, 500). Direct computation
+    // (threshold 0.15, gap 250, NOMINAL 85, window = [-30, 670]):
+    //   OLD (buggy) rule:
+    //     t=0   → next@249 → credit min(249, 250) = 249
+    //     t=250 → next@499 → credit min(249, 250) = 249        (sum 498, already >= 350 → WRONGLY FIRES,
+    //                                                            this is the reviewer-reported "40%-duty bursts firing")
+    //   Verified programmatically against the pre-fix implementation:
+    //   { fire: true, sum: 498 }.
+    //   NEW (honest) rule — each on-phase's tail sample has a captured,
+    //   below-threshold successor, so it gets flat NOMINAL instead of the
+    //   real (mostly-silent) gap:
+    //     t=0   (successor@249 silent)          → credit 85
+    //     t=250 (successor@499 silent)          → credit 85
+    //     t=500 (trailing frame of the window)  → credit min(670-500, 85) = 85
+    //   Total = 255ms < 350 sustainMs → REFUSED. Verified: { fire: false, sum: 255 }.
+    //   (True physical on-duration is 3 x 100ms = 300ms — also under
+    //   sustainMs; 40% duty sits below the 50%-duty mathematical floor
+    //   documented in the module header, so it MUST be refusable.)
+    const burstTrain: BargeInFrame[] = [
+      { tMs: 0, energy: LOUD },
+      { tMs: 249, energy: QUIET },
+      { tMs: 250, energy: LOUD },
+      { tMs: 499, energy: QUIET },
+      { tMs: 500, energy: LOUD },
+    ];
+    return {
+      state: 'speaking', speechStartMs: 0, nowMs: 670,
+      frames: burstTrain, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    };
+  }
+
+  test('isolated 3-spike echo-burst train refused (honest crediting denies the fabricated coverage)', () => {
+    assert.equal(shouldFireBargeInKill(isolatedSpikeTrain()), false,
+      'periodic isolated spikes must not accumulate enough real coverage to fire');
+  });
+
+  test('40%-duty periodic burst train refused (permanent regression — the module\'s named threat)', () => {
+    assert.equal(shouldFireBargeInKill(periodicDutyCycleBurst()), false,
+      'a sub-50%-duty periodic burst train must never accumulate sustainMs of honest coverage');
+  });
+
+  test('documents the accepted boundary: a >=60%-duty burst train DOES fire (by design, not a bug)', () => {
+    // 150ms on / 100ms off (250ms period) = 60% duty, i.e. above the
+    // sustainMs/accumWindowMs = 350/700 = 50% mathematical floor documented
+    // in the module header ("ACCEPTED BOUNDARY"). 3 on-phases (0, 250, 500),
+    // 2 samples each (onset + near-end) plus an off-phase silent marker so
+    // each phase's tail correctly hits the honest flat-NOMINAL branch.
+    // Direct computation (window = [-50, 650], all included):
+    //   t=0   (successor@80 also voiced)     → credit 80
+    //   t=80  (successor@200 is silent)      → credit 85
+    //   t=250 (successor@330 also voiced)    → credit 80
+    //   t=330 (successor@450 is silent)      → credit 85   [running total 330]
+    //   t=500 (successor@580 also voiced)    → credit 80   [running total 410 >= 350 → FIRES here]
+    // True on-coverage per period (150ms) x ~3 periods in the 700ms window is
+    // genuinely >= 350ms, so ANY coverage-based rule fires on it — that's
+    // inherent to an energy-only gate, not something this credit-rule fix is
+    // meant to close. Discriminating this shape from real sustained speech is
+    // Task 6's job (transcript classification), not this gate's.
+    const highDutyBurst: BargeInFrame[] = [
+      { tMs: 0, energy: LOUD },
+      { tMs: 80, energy: LOUD },
+      { tMs: 200, energy: QUIET },
+      { tMs: 250, energy: LOUD },
+      { tMs: 330, energy: LOUD },
+      { tMs: 450, energy: QUIET },
+      { tMs: 500, energy: LOUD },
+      { tMs: 580, energy: LOUD },
+    ];
+    const fire = shouldFireBargeInKill({
+      state: 'speaking', speechStartMs: 0, nowMs: 650,
+      frames: highDutyBurst, energyThreshold: THRESHOLD, sustainMs: SUSTAIN,
+    });
+    assert.equal(fire, true,
+      '>=60%-duty periodic energy genuinely exceeds sustainMs of real coverage in the window and fires by design');
   });
 
   // ── Task X3: Ink2 time-based deferred-kill variant (no energy window) ──

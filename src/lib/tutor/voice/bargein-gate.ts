@@ -27,6 +27,47 @@
  * liveness guards (currently-quiet mic, stale latest frame) are unchanged —
  * accumulated coverage never overrides a currently-dead mic.
  *
+ * HONEST CREDITING (R44 fix-review): the first cut of windowed accumulation
+ * credited every above-threshold frame `min(gapToSuccessor, maxFrameGapMs)`
+ * regardless of what that successor frame actually was — including up to
+ * `maxFrameGapMs` (250ms) of pure SILENCE after a single ~85ms voiced spike,
+ * since the successor's own energy was never checked. That let periodic
+ * echo-burst trains (the exact self-correlated pattern this gate exists to
+ * reject) accumulate enough fabricated coverage to fire — reviewer probes
+ * showed a 3-spike isolated-blip train crediting 480ms and a 40%-duty burst
+ * train (100ms on / 150ms off) firing, both of which the OLD strict
+ * continuous-run rule correctly refused. The credit rule is now split by what
+ * the SUCCESSOR frame actually is:
+ *   - successor ALSO above threshold → credit `min(nextT - f.tMs,
+ *     maxFrameGapMs)` (the real elapsed time; a single dropped frame inside
+ *     an otherwise-continuous voiced run is still tolerated).
+ *   - successor below threshold, OR this is the trailing frame of the window
+ *     → credit a flat `NOMINAL_FRAME_MS` (the documented ~85ms capture
+ *     cadence) instead of the real gap to that successor. Voiced energy can
+ *     no longer be assumed to persist into a gap that ends in silence — the
+ *     frame is credited only its own nominal presence, not the distance to
+ *     whatever (silent) sample comes next. The trailing frame of the window
+ *     is capped to `min(nowMs - f.tMs, NOMINAL_FRAME_MS)` so a fresh live
+ *     frame isn't over-credited either.
+ * This bounds the maximum fabricated overcredit per frame-boundary to one
+ * nominal frame (~85ms) instead of the old rule's unbounded-up-to-250ms, and
+ * denies periodic echo-burst trains and duty-cycle bursts under ~50% duty the
+ * coverage they'd need to fire (see the pinned regression tests below).
+ *
+ * ACCEPTED BOUNDARY: this is a COVERAGE-based gate, so any signal whose TRUE
+ * duty cycle exceeds `sustainMs / accumWindowMs` (350/700 = 50% at the
+ * defaults) mathematically contains ≥ `sustainMs` of genuine above-threshold
+ * time inside the window and WILL accumulate enough real coverage to fire,
+ * no matter how the per-frame credit is computed — e.g. a ≥60%-duty burst
+ * train (150ms on / 100ms off) is >50% duty and fires. That is by design,
+ * not a bug: an energy-only gate cannot distinguish a genuinely sustained
+ * utterance from an isochronous echo/doorbell-style burst once the burst
+ * carries more real voiced time than silence in the window — no coverage
+ * threshold can reject a signal that IS majority-voiced. Discriminating that
+ * case requires signal shape or content, not just coverage; that
+ * classification is a SEPARATE downstream layer (the transcript classifier,
+ * Task 6) — deliberately out of this gate's reach.
+ *
  * This module is the PURE decision core — no React, no DOM, no timers, no
  * component state — so it is script-testable (`npm run test:bargein-gate`).
  * The wiring in VoiceTutorRealtime feeds it (onset state, speechStartMs, the
@@ -63,7 +104,8 @@ export interface BargeInGateInput {
   frames: BargeInFrame[];
   /** Amplitude at/above which a frame counts as "voice present". */
   energyThreshold: number;
-  /** Required continuous above-threshold duration before the kill may fire. */
+  /** Required above-threshold duration, ACCUMULATED (not necessarily
+   *  continuous) within `accumWindowMs`, before the kill may fire. */
   sustainMs: number;
   /** Max gap between consecutive in-run frames (and between the latest frame
    *  and now) before the run is considered broken/stale. Guards against a
@@ -87,6 +129,13 @@ export const DEFAULT_MAX_FRAME_GAP_MS = 250;
  *  `sustainMs`-sized (350ms default) run of genuine speech without being so
  *  wide that sparse, unrelated echo blips accumulate into a false fire. */
 export const DEFAULT_BARGEIN_ACCUM_WINDOW_MS = 700;
+
+/** The documented perception capture cadence (see the module header). Flat
+ *  credit given to an above-threshold frame whose successor is silent (or
+ *  which is the trailing frame of the window) — its own nominal presence,
+ *  never the (possibly silent) distance to the next sample. See "HONEST
+ *  CREDITING" in the module header. */
+export const NOMINAL_FRAME_MS = 85;
 
 /**
  * Should the stage-3 barge-in kill fire?
@@ -122,21 +171,34 @@ export function shouldFireBargeInKill(input: BargeInGateInput): boolean {
   // Latest frame is stale relative to now (no fresh audio) → run not live.
   if (input.nowMs - last.tMs > gap) return false;
 
-  // Windowed accumulation (R44): walk the frames inside [nowMs -
-  // accumWindowMs, nowMs]. Each above-threshold frame is credited the
-  // duration to its successor frame (or to `nowMs` for the trailing frame),
-  // capped at `gap` so a reception gap can't be misread as sustained energy.
-  // Fire as soon as the running sum reaches `sustainMs` — this tolerates
+  // Windowed accumulation (R44, HONEST CREDITING — see module header): walk
+  // the frames inside [nowMs - accumWindowMs, nowMs]. An above-threshold
+  // frame is credited differently depending on what its successor actually
+  // is:
+  //   - successor ALSO above threshold → the real elapsed gap to it, capped
+  //     at `gap` (tolerates one dropped frame inside a continuous run).
+  //   - successor below threshold, or this is the trailing frame of the
+  //     window → a flat NOMINAL_FRAME_MS. Energy can't be assumed to persist
+  //     into a gap that ends in silence, so the frame is credited only its
+  //     own nominal cadence, never the distance to a silent sample.
+  // Fire as soon as the running sum reaches `sustainMs`. This tolerates
   // inter-word dips and AEC-attenuated capture that would break a strict
-  // continuous run, while a short/sparse blip still can't accumulate enough.
+  // continuous run, while denying periodic echo-burst trains and sub-50%-duty
+  // bursts the fabricated coverage the old (buggy) credit rule gave them.
   const windowStart = input.nowMs - accumWindowMs;
   let coveredMs = 0;
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     if (f.tMs < windowStart) continue;
     if (f.energy < input.energyThreshold) continue;
-    const nextT = i + 1 < frames.length ? frames[i + 1].tMs : input.nowMs;
-    coveredMs += Math.min(nextT - f.tMs, gap);
+    const isTrailing = i + 1 >= frames.length;
+    const next = isTrailing ? null : frames[i + 1];
+    const credit = isTrailing
+      ? Math.min(input.nowMs - f.tMs, NOMINAL_FRAME_MS)
+      : next!.energy >= input.energyThreshold
+        ? Math.min(next!.tMs - f.tMs, gap)
+        : NOMINAL_FRAME_MS;
+    coveredMs += credit;
     if (coveredMs >= input.sustainMs) return true;
   }
   return false;
