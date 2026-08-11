@@ -2,6 +2,13 @@ import React from 'react';
 import katex from 'katex';
 import { EquationRenderer } from './EquationRenderer';
 import { InlineMathText } from './InlineMathText';
+import { normalizeCellForKatex } from './cellContentNormalize';
+
+// Re-exported so existing imports of `{ normalizeCellForKatex } from
+// './CellContent'` keep working; the implementation lives in
+// cellContentNormalize.ts (a plain, CSS-import-free module) so it can be
+// unit-tested from a node script — see that file's docstring for why.
+export { normalizeCellForKatex };
 
 /** Strip LaTeX markup down to readable text — graceful fallback when a cell's
  *  LaTeX is malformed (e.g. the brain emits a stray "}"), so we never dump raw
@@ -27,8 +34,9 @@ function latexToReadableText(s: string): string {
  *
  * When a cell mixes English prose with math (e.g. "Expression with 2^x"),
  * KaTeX in math mode concatenates consecutive letters — it would render
- * "Expressionwith2^x". Auto-wrap prose word-runs in \text{} before KaTeX so
- * spaces are preserved and letters stay upright.
+ * "Expressionwith2^x". normalizeCellForKatex() auto-wraps prose word-runs in
+ * \text{} before KaTeX so spaces are preserved and letters stay upright, and
+ * braces bare parenthesized superscripts like f^(n).
  */
 export function CellContent({ value }: { value: string }) {
   if (!value) return null;
@@ -63,23 +71,9 @@ export function CellContent({ value }: { value: string }) {
     return <>{value}</>;
   }
 
-  // Heuristic: does the cell also contain English prose? If so, auto-wrap
-  // alphabetic word-runs of length ≥ 2 in \text{} so KaTeX renders them as
-  // upright prose. Common filler words (with/and/the/of/...) signal prose.
-  // Single-letter variables (x, y, etc.) are untouched.
-  const proseSignal = /\b(with|and|the|of|in|to|from|then|for|using|given|or|as|it|is|are|each|both|let|apply|rewrite|simplify|substitution|substitute|multiply|divide|expression|original|result|answer|step|formula|final|combined|limit|upper|lower|angle|base|height|width|length|opp|adj|hyp|radius|side|area|perimeter|diameter)\b/i.test(normalized);
-  let latex = normalized;
-  if (proseSignal) {
-    // Wrap each 2+ letter alphabetic run in \text{...}. Skip runs that are
-    // already inside a \text{} block (simple check: previous char was "{")
-    // and skip common math-mode function names (sin, cos, tan, log, ln, exp).
-    const mathFns = new Set(['sin', 'cos', 'tan', 'cot', 'sec', 'csc', 'log', 'ln', 'exp', 'lim', 'max', 'min', 'arg', 'det', 'dim', 'gcd', 'lcm']);
-    latex = normalized.replace(/(\\?)([a-zA-Z]{2,})/g, (match, slash, word) => {
-      if (slash) return match;
-      if (mathFns.has(word.toLowerCase())) return match;
-      return `\\text{${word}}`;
-    });
-  }
+  // Brace bare parenthesized superscripts and \text{}-wrap prose word-runs
+  // (see normalizeCellForKatex docstring for why per-word wrapping broke).
+  const latex = normalizeCellForKatex(normalized);
 
   // Validate before handing to the (red-on-error) KaTeX renderer. If the LaTeX
   // is malformed (unbalanced braces, etc.), degrade to cleaned readable text
