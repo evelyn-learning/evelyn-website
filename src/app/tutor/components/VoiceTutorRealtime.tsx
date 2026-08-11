@@ -9843,7 +9843,22 @@ export function VoiceTutorRealtime({
                       // branch, above) is the brain wrong about its OWN
                       // asserted math and proves nothing about the student —
                       // must never stash a signal for it.
-                      if (arith.verdict === 'false_denial') {
+                      // Review-round ruling: also gated on
+                      // lastStudentVerificationRef.current?.isVerification
+                      // === true, UNLIKE the simplification/inverse stashes
+                      // below. checkArithmeticClaims sees only the BRAIN's
+                      // sentence — no studentUtterance param — so a
+                      // false_denial can fire on an unprompted misconception
+                      // aside ("Some students think 15 minus 6 isn't 9…")
+                      // with no connection to what the student actually
+                      // said this turn. The other two checkers already
+                      // verify against the student's utterance, so they
+                      // keep the plan's deliberate widening unchanged. The
+                      // live repro still stashes: its streak-incorrect fired
+                      // from inside the isVerification branch, so the flag
+                      // was true when the kill happened.
+                      if (arith.verdict === 'false_denial'
+                          && lastStudentVerificationRef.current?.isVerification === true) {
                         objectiveCorrectThisTurnRef.current = {
                           signal: {
                             source: 'arith_false_denial',
@@ -12964,12 +12979,16 @@ export function VoiceTutorRealtime({
           // above), mirroring the "Session-end signals" trigger-phrase list
           // in system-prompt-builder.ts ~907-913 — that section was
           // prompt-only with no code-side detector before this fix.
-          // R47 Task 1: `ver &&` guard added — ver can now be null here
-          // (objective-only path with a null/stale lastStudentVerificationRef);
-          // this advisory reads ver.isSessionEndSignal/ver.segId directly and
-          // was always implicitly gated on ver being non-null via the outer
-          // if before this restructure.
-          if (ver && isAffirm && !isCorrect && !ver.isSessionEndSignal) {
+          // R47 Task 1: `ver && ver.isVerification` restored explicitly —
+          // ver can now be null here (objective-only path with a null/stale
+          // lastStudentVerificationRef), AND the outer guard no longer
+          // implies ver.isVerification (it's `ver || objectiveSignal` now,
+          // not `ver && ver.isVerification && ...`). Without ver.isVerification
+          // here, ANY non-verification turn (student "ok" → brain "Great,
+          // ...") with no trailing question/next-move tool call would plant
+          // the "not from the student" advisory claiming a confirmed correct
+          // answer — review-round fix, byte-identical to pre-restructure.
+          if (ver && ver.isVerification && isAffirm && !isCorrect && !ver.isSessionEndSignal) {
             const endsWithQuestion = /\?\s*$/.test(fullText.trim());
             const opensNextMove = totalToolNamesSeen.some(
               (n) => n === 'advance_lesson' || n === 'generate_problem'
@@ -13086,6 +13105,11 @@ export function VoiceTutorRealtime({
             onTranscriptUpdate([...transcriptRef.current]);
             onTrackInteraction?.('message', voiceMsg, undefined, 'tutor');
           }
+          // R47 Task 1 hygiene: the pacing block above already ran (and
+          // consumed any objective signal) before this fallback branch, so
+          // this is a no-op today — but every exit clears the ref so the
+          // guarantee holds structurally, not just by turn-start luck.
+          objectiveCorrectThisTurnRef.current = null;
           return;
         }
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
@@ -13102,6 +13126,9 @@ export function VoiceTutorRealtime({
         } else {
           speakTextRef.current?.('Sorry, could you say that again?');
         }
+        // R47 Task 1 hygiene: same as the brainUnavailable return above —
+        // the pacing block already ran; clearing here is belt-and-suspenders.
+        objectiveCorrectThisTurnRef.current = null;
         return;
       }
 

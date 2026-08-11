@@ -8,6 +8,24 @@
  * OWN asserted math and carries no proof about the student, so callers must
  * never stash a signal for it.
  *
+ * Per-source stash gating (caller-side, not encoded in this module — this
+ * module only decides the credit branch once a signal exists): the three
+ * checkers differ in whether they compare against the STUDENT's utterance.
+ * simplification-verdict-check and inverse-verdict-check both take the
+ * student's utterance as an argument and verify the false denial against
+ * it, so a false_denial from either is proof about THIS student's answer —
+ * their kill sites stash unconditionally (modulo the false_denial-only
+ * filter above). arithmetic-claim-check sees only the BRAIN's own sentence
+ * (no studentUtterance parameter) — it can fire on an unprompted
+ * misconception aside ("Some students think 15 minus 6 isn't 9…") that
+ * never touched what the student actually said this turn. So the arith kill
+ * site additionally gates its stash on
+ * `lastStudentVerificationRef.current?.isVerification === true` — the
+ * student must have just given a genuine verification-shaped answer for the
+ * kill to count as proof about them. This is stash-SITE gating in the
+ * caller (VoiceTutorRealtime.tsx), not a change to the decision surface
+ * below: decidePacingCredit still just asks "is there a signal or not."
+ *
  * Why this exists: the pacing block downstream infers correctness from two
  * regexes run over the brain's prose — `brainAffirmationRegex` on the turn's
  * opener and `brainCorrectionRegex` on the full turn text. Those are fine
