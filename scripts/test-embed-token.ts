@@ -57,7 +57,13 @@ console.log('embed-token: verifyEmbedToken + signEmbedToken + checkEmbedAuth');
 clearEnv();
 process.env.PORTAL_PARTNER_ID = 'academy';
 process.env.PORTAL_API_SECRET = 'test-secret';
-const now = Date.UTC(2026, 7, 11, 12, 0, 0);
+// Base the fixture clock on the real clock, not a pinned calendar date: every
+// checkEmbedAuth() call and every route handler in this file verifies against
+// real Date.now() internally (only the explicit verifyEmbedToken(token, now)
+// calls below inject this value directly). A token minted with `now` fixed to
+// a past date would drift past its exp+grace window on the real clock as time
+// passes, flipping every "valid token" assertion in those paths to 'expired'.
+const now = Date.now();
 const good = signEmbedToken(
   { partner_id: 'academy', student_id: 'stu-1', exp: Math.floor(now / 1000) + 7200 },
   'test-secret',
@@ -111,6 +117,23 @@ const stale1h = signEmbedToken(
 assert(verifyEmbedToken(stale1h, now).ok === false, 'custom grace=30min: 1h-stale token rejected');
 delete process.env.EMBED_TOKEN_EXP_GRACE_MINUTES;
 assert(verifyEmbedToken(stale1h, now).ok === true, 'grace restored to default 240min: 1h-stale token passes');
+
+// non-numeric grace override (e.g. a typo'd env value) must NOT fail open.
+// Number('abc') is NaN, and `expMs + NaN*60000 < nowMs` is always false —
+// without the Number.isFinite guard this would let ANY expired token
+// through regardless of age. Use a token stale well past even the 240min
+// default so a silent fall-through to "no grace at all" (0min) would also
+// wrongly pass; only the intended 240min-default fallback rejects it.
+process.env.EMBED_TOKEN_EXP_GRACE_MINUTES = 'abc';
+const staleWayPast = signEmbedToken(
+  { partner_id: 'academy', student_id: 's', exp: Math.floor(now / 1000) - 6 * 3600 },
+  'test-secret',
+);
+assert(
+  verifyEmbedToken(staleWayPast, now).ok === false,
+  'non-numeric grace env ("abc") does not fail open: expired-past-default-grace token still rejected',
+);
+delete process.env.EMBED_TOKEN_EXP_GRACE_MINUTES;
 
 // --- alg pinning --------------------------------------------------------------
 // header alg 'none' with an empty signature segment must be rejected.
@@ -393,6 +416,60 @@ async function runSessionUsageRouteDenyTests() {
 }
 
 // ---------------------------------------------------------------------------
+// session-usage GET — accepts a demo-token-minted token under enforce=on
+// (final-review Finding 2: first-party /tutor's reload-resume GET now mints
+// one of these via POST /api/tutor-portal/demo-token before its resume
+// fetch, since it has no embed-supplied token of its own to thread through).
+//
+// DB-free: the request omits sessionId from the query, so a token that
+// clears the auth gate still short-circuits at the sessionId-missing 400
+// BEFORE connectDB() runs — a rejected/missing token would 401 here instead,
+// so landing on 400 proves auth passed, without needing a live Mongo
+// connection. The full 200 (sessionId + DB) path is covered in
+// test-learner-model.ts.
+// ---------------------------------------------------------------------------
+async function runSessionUsageDemoTokenAcceptedTest() {
+  console.log('\nsession-usage route — demo-token-minted token clears the auth gate (Finding 2 fix):\n');
+
+  const { GET: usageGET } = await import('../src/app/api/tutor/session-usage/route');
+  const { POST: demoTokenPOST } = await import('../src/app/api/tutor-portal/demo-token/route');
+  const { NextRequest } = await import('next/server');
+
+  clearEnv();
+  process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({
+    'evelyn-marketing': 'mkt-secret',
+    academy: 'test-secret',
+  });
+  process.env.EMBED_TOKEN_ENFORCE = 'on';
+
+  const tokenReq = new Request('https://engine.test/api/tutor-portal/demo-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ config: {} }),
+  });
+  const tokenRes = await demoTokenPOST(tokenReq as never);
+  const { token } = (await tokenRes.json()) as { token: string };
+  assert(typeof token === 'string' && token.length > 0, 'demo-token: minted a token for the resume-fetch fixture');
+
+  const req = new Request('https://engine.test/api/tutor/session-usage', {
+    method: 'GET',
+    headers: { 'x-embed-token': token },
+  }) as unknown as InstanceType<typeof NextRequest>;
+  const res = await usageGET(req);
+  const json = await res.json();
+  assert(
+    res.status !== 401,
+    'GET session-usage: demo-token-minted token, enforce=on → not blocked by auth',
+  );
+  assert(
+    res.status === 400 && json.error === 'sessionId is required',
+    'GET session-usage: demo-token clears auth, falls through to sessionId-missing 400 (DB-free)',
+  );
+
+  resetEnv();
+}
+
+// ---------------------------------------------------------------------------
 // Route-level: POST /api/tutor-portal/demo-token (Task 5)
 //
 // DB-free: the route only signs/encodes, no Mongo. Covers the forced-claim
@@ -600,6 +677,7 @@ async function runParseEmbedConfigTests() {
 
 runStudentProfileRouteDenyTests()
   .then(() => runSessionUsageRouteDenyTests())
+  .then(() => runSessionUsageDemoTokenAcceptedTest())
   .then(() => runDemoTokenRouteTests())
   .then(() => runParseEmbedConfigTests())
   .then(() => {

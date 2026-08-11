@@ -105,7 +105,14 @@ export function verifyEmbedToken(
   }
 
   if (payload.exp !== undefined) {
-    const graceMs = Number(process.env.EMBED_TOKEN_EXP_GRACE_MINUTES ?? 240) * 60_000;
+    // Number(...) on a non-numeric env value (e.g. a typo'd override) yields
+    // NaN, and NaN in the comparison below makes it always false — a
+    // fail-open that would let every expired token through regardless of
+    // age. Fall back to the 240min default whenever the parse isn't a finite
+    // number.
+    const parsedGrace = Number(process.env.EMBED_TOKEN_EXP_GRACE_MINUTES ?? 240);
+    const graceMinutes = Number.isFinite(parsedGrace) ? parsedGrace : 240;
+    const graceMs = graceMinutes * 60_000;
     if (payload.exp * 1000 + graceMs < nowMs) {
       return { ok: false, reason: 'expired' };
     }

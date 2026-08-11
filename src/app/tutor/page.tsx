@@ -861,7 +861,35 @@ function TutorPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sidParam)}`);
+        // Mint a demo-scoped embed token before the resume GET so this
+        // first-party page still clears the gate once EMBED_TOKEN_ENFORCE is
+        // 'on' (Task 3's checkEmbedAuth requires SOME valid token — this
+        // route has no expectedStudentId, so any partner's token satisfies
+        // it). /tutor has no embed-supplied token of its own to thread
+        // through, so it borrows the same demo-token mint the marketing
+        // funnel uses (Task 5) — the forced demo- identity is fine here
+        // since this GET is keyed by opaque sessionId, not student. Best
+        // effort only: any mint failure (network error, non-OK response,
+        // missing token field) falls through to the tokenless GET exactly
+        // as before this change — off/log enforcement modes are unaffected
+        // either way, and 'on' mode is no worse off than pre-fix.
+        let embedTokenHeaders: HeadersInit | undefined;
+        try {
+          const tokenRes = await fetch('/api/tutor-portal/demo-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ config: {} }),
+          });
+          if (tokenRes.ok) {
+            const { token } = (await tokenRes.json()) as { token?: string };
+            if (token) embedTokenHeaders = { 'x-embed-token': token };
+          }
+        } catch {
+          // Mint failed — proceed tokenless below.
+        }
+        const res = await fetch(`/api/tutor/session-usage?sessionId=${encodeURIComponent(sidParam)}`, {
+          headers: embedTokenHeaders,
+        });
         if (res.ok) {
           const data = (await res.json()) as PriorSessionRead;
           const rs = buildResumeState(data);
