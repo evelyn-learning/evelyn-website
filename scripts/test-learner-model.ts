@@ -3,11 +3,14 @@
  * src/lib/tutor/learner-model/estimator.ts. No DB, no LLM calls (Task 6).
  * Task 7 extends this script with a DB-backed section for appendEvidence.
  * Task 8 further extends it with the server append points (emit / assessment
- * / mock) that call appendEvidence internally.
+ * / mock) that call appendEvidence internally. Task 9 further extends it
+ * with pure projection.ts tests and a DB-backed learner-state route section.
  *
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
 import { estimateLo, trendOf, nextReviewAt } from '../src/lib/tutor/learner-model/estimator';
+import { projectScore, scaleForTopic, mapLoIdsToSections } from '../src/lib/tutor/learner-model/projection';
+import type { ScoringSpec } from '../src/lib/tutor/mock-exam/blueprints';
 import type { SessionEmitRequest } from '@evelyn/portal-contract/v1';
 import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 
@@ -59,6 +62,100 @@ assert(
   nextReviewAt([...evs, { source: 'practice', outcome: 1, occurredAt: d(5) }], 0.75, now)!.getTime()
     === d(5).getTime() + 4 * 86400000,
   'min spacing for k',
+);
+
+/* ------------------------------------------------------------------ */
+/* Score projection — pure (Task 9)                                   */
+/* ------------------------------------------------------------------ */
+
+// scaleForTopic: digital-sat/act/ap-*/else mapping
+assert(
+  scaleForTopic('digital-sat') === 'sat' &&
+    scaleForTopic('act') === 'act' &&
+    scaleForTopic('ap-statistics') === 'ap' &&
+    scaleForTopic('ap-english-language') === 'ap' &&
+    scaleForTopic('hs-chemistry') === 'readiness' &&
+    scaleForTopic(undefined) === 'readiness',
+  'scaleForTopic: digital-sat→sat, act→act, ap-*→ap, else→readiness',
+);
+
+// readiness projection: {0.8, null, 0.6} → center ≈ (0.8+0.3+0.6)/3×100 ≈ 57
+const readinessLos = [
+  { loId: 'a', estimate: 0.8, confidence: 'low' as const },
+  { loId: 'b', estimate: null, confidence: 'low' as const },
+  { loId: 'c', estimate: 0.6, confidence: 'low' as const },
+];
+const readinessResult = projectScore({ scale: 'readiness', los: readinessLos, now });
+const readinessCenter = (readinessResult.low + readinessResult.high) / 2;
+assert(Math.abs(readinessCenter - 56.67) < 0.5, 'projectScore: readiness center ≈ 57 (untouched prior fills the null)');
+assert(
+  Math.abs(readinessResult.high - readinessResult.low - 30) < 0.01,
+  'projectScore: readiness band ±15 (width 30) at low confidence',
+);
+assert(readinessResult.basis === 'mastery-only', 'projectScore: mastery-only basis with no mock anchors');
+
+// high confidence narrows the band toward bandHalfWidth * highConfidenceScale
+const highConfResult = projectScore({
+  scale: 'readiness',
+  los: readinessLos.map((l) => ({ ...l, confidence: 'high' as const })),
+  now,
+});
+assert(
+  Math.abs(highConfResult.high - highConfResult.low - 15) < 0.01,
+  'projectScore: readiness band halves (±7.5) at high confidence (×highConfidenceScale 0.5)',
+);
+
+// mock-anchored blend moves the center toward the anchor
+const noMockCenter = readinessCenter;
+const withMock = projectScore({ scale: 'readiness', los: readinessLos, mockAnchors: [{ composite: 95, at: now }], now });
+const withMockCenter = (withMock.low + withMock.high) / 2;
+assert(withMock.basis === 'mock-anchored', 'projectScore: basis flips to mock-anchored with a mock anchor present');
+assert(
+  withMockCenter > noMockCenter && Math.abs(withMockCenter - 95) < Math.abs(noMockCenter - 95),
+  'projectScore: mock-anchored blend moves the center toward the anchor',
+);
+
+// mapLoIdsToSections: mock-evidenced LOs keep their real section; unmapped LOs spread across the rest
+const sectionMap = mapLoIdsToSections(
+  ['lo1', 'lo2', 'lo3'],
+  [{ loId: 'lo1', sectionId: 'rw', occurredAt: now }],
+  ['rw', 'math'],
+);
+assert(sectionMap.get('lo1') === 'rw', 'mapLoIdsToSections: mock-evidenced LO keeps its observed section');
+assert(
+  sectionMap.get('lo2') !== undefined && sectionMap.get('lo3') !== undefined,
+  'mapLoIdsToSections: unmapped LOs get spread across the known sections, not dropped',
+);
+
+// scaled projection (digital-SAT-shaped curves): composite sums sections, clamps to compositeMin/Max
+const SAT_CURVES: ScoringSpec = {
+  kind: 'scaled-sections',
+  sectionScaledMin: 200,
+  sectionScaledMax: 800,
+  compositeMin: 400,
+  compositeMax: 1600,
+  curves: {
+    rw: { default: [[0, 200], [54, 800]] },
+    math: { default: [[0, 200], [44, 800]] },
+  },
+};
+const satResult = projectScore({
+  scale: 'sat',
+  los: [
+    { loId: 'lo1', estimate: 0.9, confidence: 'high' as const, sectionId: sectionMap.get('lo1') },
+    { loId: 'lo2', estimate: 0.9, confidence: 'high' as const, sectionId: sectionMap.get('lo2') },
+    { loId: 'lo3', estimate: 0.9, confidence: 'high' as const, sectionId: sectionMap.get('lo3') },
+  ],
+  curves: SAT_CURVES,
+  now,
+});
+assert(
+  satResult.low >= SAT_CURVES.compositeMin && satResult.high <= SAT_CURVES.compositeMax,
+  'projectScore: scaled band clamps to curves.compositeMin/Max',
+);
+assert(
+  Math.abs(satResult.high - satResult.low - 80) < 0.01,
+  'projectScore: scaled band width = bandHalfWidth.sat × 2 × highConfidenceScale (80) at high confidence',
 );
 
 /* ------------------------------------------------------------------ */
@@ -584,8 +681,168 @@ async function runServerAppendPointTests() {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* learner-state route — signed GET/POST (Task 9)                     */
+/* ------------------------------------------------------------------ */
+
+async function runLearnerStateRouteTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 9 learner-state route tests — no MONGODB_URI)');
+    return;
+  }
+
+  process.env.PORTAL_PARTNER_SECRETS = process.env.PORTAL_PARTNER_SECRETS ?? JSON.stringify({ portalA: 'secret-a' });
+  const { signPortalRequest } = await import('@evelyn/portal-contract/auth');
+  const { LearnerStateResponseSchema } = await import('@evelyn/portal-contract/v1');
+  const { GET: learnerStateGET, POST: learnerStatePOST } = await import(
+    '../src/app/api/portal/v1/learner-state/route'
+  );
+  const { LearnerStateProjectionModel, LearnerStateSnapshotModel, buildLearnerStateProjectionId } = await import(
+    '../src/models'
+  );
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { NextRequest } = await import('next/server');
+
+  await connectDB();
+
+  const SECRET = 'secret-a';
+  const PARTNER = 'portalA';
+  function signed(method: string, pathWithQuery: string, bodyObj?: unknown) {
+    const body = bodyObj === undefined ? '' : JSON.stringify(bodyObj);
+    const timestamp = String(Date.now());
+    const sig = signPortalRequest(SECRET, { method, path: pathWithQuery, timestamp, body });
+    const init: RequestInit = {
+      method,
+      headers: { 'x-evelyn-partner': PARTNER, 'x-evelyn-timestamp': timestamp, 'x-evelyn-signature': sig },
+    };
+    if (method !== 'GET' && body) init.body = body;
+    return new Request(`https://engine.test${pathWithQuery}`, init) as unknown as InstanceType<typeof NextRequest>;
+  }
+  async function call(
+    h: (r: InstanceType<typeof NextRequest>, c: unknown) => Promise<Response>,
+    req: InstanceType<typeof NextRequest>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): Promise<{ status: number; json: any }> {
+    const res = await h(req, undefined);
+    return { status: res.status, json: await res.json() };
+  }
+
+  console.log('\nlearner-state route (Task 9):\n');
+
+  const studentId = `lmtest:route:${process.pid}`;
+  const loA = 'lmtest.route.lo-a';
+  const loB = 'lmtest.route.lo-b';
+
+  await deleteLearnerModelData(studentId);
+  try {
+    const wallClock = new Date();
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loA),
+      studentId,
+      loId: loA,
+      estimate: 0.82,
+      confidence: 'high',
+      trend: 'flat',
+      nEff: 8,
+      reviewDueAt: new Date(wallClock.getTime() - 60_000), // already past due
+      lastEvidenceAt: wallClock,
+    });
+    await LearnerStateProjectionModel.create({
+      _id: buildLearnerStateProjectionId(studentId, loB),
+      studentId,
+      loId: loB,
+      estimate: 0.4,
+      confidence: 'low',
+      trend: 'flat',
+      nEff: 1,
+      lastEvidenceAt: wallClock,
+    });
+    // 20-day-old snapshot (>= 14 days ago) with a lower prior for loA → trend 'up'.
+    await LearnerStateSnapshotModel.create({
+      studentId,
+      date: new Date(wallClock.getTime() - 20 * 86400000).toISOString().slice(0, 10),
+      los: [{ loId: loA, estimate: 0.5 }],
+    });
+
+    const { status, json } = await call(
+      learnerStateGET,
+      signed('GET', `/api/portal/v1/learner-state?studentId=${studentId}`),
+    );
+    assert(status === 200, 'learner-state GET: seeded student → 200');
+    assert(
+      LearnerStateResponseSchema.safeParse(json).success,
+      'learner-state GET: response validates against contract LearnerStateResponseSchema',
+    );
+    assert(json.los.length === 2, 'learner-state GET: no loIds → los list = all projections for the student');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const loAOut = json.los.find((l: any) => l.loId === loA);
+    assert(
+      !!loAOut && loAOut.trend === 'up',
+      "learner-state GET: trend 'up' vs the ≥14-day-old snapshot (0.82 now vs 0.5 then)",
+    );
+    assert(json.reviewDueCount === 1, 'learner-state GET: reviewDueCount counts only the past-due projection');
+
+    const { status: postStatus, json: postJson } = await call(
+      learnerStatePOST,
+      signed('POST', '/api/portal/v1/learner-state', { studentId, loIds: [loA, 'lmtest.route.never-seen'] }),
+    );
+    assert(postStatus === 200, 'learner-state POST: body-parsed request → 200');
+    assert(
+      LearnerStateResponseSchema.safeParse(postJson).success,
+      'learner-state POST: response validates against contract LearnerStateResponseSchema',
+    );
+    assert(
+      postJson.los.length === 2 &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        postJson.los.some((l: any) => l.loId === loA && l.estimate === 0.82) &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        postJson.los.some((l: any) => l.loId === 'lmtest.route.never-seen' && l.estimate === null),
+      'learner-state POST: loIds filter returns one entry per requested LO (null estimate for no-evidence LOs)',
+    );
+  } finally {
+    await deleteLearnerModelData(studentId);
+  }
+
+  {
+    const { status, json } = await call(
+      learnerStateGET,
+      signed('GET', `/api/portal/v1/learner-state?studentId=lmtest:route:unknown:${process.pid}`),
+    );
+    assert(status === 200, 'learner-state GET: unknown student → 200, never 404');
+    assert(
+      json.los.length === 0 && json.reviewDueCount === 0,
+      'learner-state GET: unknown student → los: [], reviewDueCount: 0',
+    );
+  }
+
+  {
+    const { status, json } = await call(
+      learnerStateGET,
+      signed('GET', `/api/portal/v1/learner-state?studentId=trial:lmtest:${process.pid}`),
+    );
+    assert(status === 200, 'learner-state GET: trial: student → 200');
+    assert(
+      json.los.length === 0 && json.reviewDueCount === 0,
+      'learner-state GET: trial: student → los: [] explicit (never persisted, never queried)',
+    );
+  }
+
+  {
+    const { status } = await call(learnerStateGET, unsignedRequest(`/api/portal/v1/learner-state?studentId=x`));
+    assert(status === 401, 'learner-state GET: unsigned request → 401');
+  }
+
+  function unsignedRequest(pathWithQuery: string) {
+    return new Request(`https://engine.test${pathWithQuery}`, { method: 'GET' }) as unknown as InstanceType<
+      typeof NextRequest
+    >;
+  }
+}
+
 runDbTests()
   .then(() => runServerAppendPointTests())
+  .then(() => runLearnerStateRouteTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section
