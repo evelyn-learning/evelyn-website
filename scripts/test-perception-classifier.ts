@@ -19,6 +19,7 @@ import {
   SPEAKING_ECHO_OVERLAP_THRESHOLD,
   ECHO_ANCHOR_EPSILON_MS,
   TTS_PADDING_TRAIL_MS,
+  expectedAnswerSpokenInScripts,
   type HeuristicInput,
   type ProductionStateForClassifier,
   type RecentTtsScript,
@@ -1308,6 +1309,195 @@ console.log('\n=== Mid-length echo splices past the ≤4-word cap (portal-386d96
   });
   check('same splice, onset after speech → not the mid-length echo drop',
     !/mid-length echo/.test(postSpeech.reason), `verdict=${postSpeech.verdict} (${postSpeech.reason})`);
+}
+
+// ── Task 6: expected-answer carve-out (verdict-detector round, 2026-08-10) ──
+// Session portal-cb2addf5: "-2e^(-2t)" transcribed perfectly, dropped as
+// self-echo (similarity vs the QUESTION "differentiate -2e^{-2t}...").
+// With a verified expected answer matching the utterance and the answer
+// absent from recent scripts → dispatch, carveOut set.
+console.log('\n=== Task 6: expected-answer carve-out ===');
+{
+  const now = 1_010_000;
+  const questionScript: RecentTtsScript = {
+    id: 1,
+    text: 'Differentiate $e^{-2t}$ — what do you get? Take the derivative of $e^{-2t}$.',
+    spokenStartedAt: now - 4000,
+    spokenEndedAt: null,
+  };
+  const carveBase: HeuristicInput = {
+    transcript: '-2e^(-2t)',
+    productionState: 'speaking',
+    recentTtsScripts: [questionScript],
+    onsetDuringTutorSpeech: true,
+    now,
+    speechStartedAt: now - 1500,
+  };
+
+  // (1) Pin pre-fix behaviour: without verifiedExpectedAnswer, the
+  // incident transcript is still dropped as self-voice (documents the bug
+  // this task fixes, and proves the fixture actually reproduces it).
+  const before = classifyHeuristic(carveBase);
+  check(
+    '(1) pre-fix pin: no verifiedExpectedAnswer → still drop_self_voice',
+    before.verdict === 'drop_self_voice',
+    `verdict=${before.verdict} (${before.reason})`,
+  );
+
+  // (2) verifiedExpectedAnswer matches the utterance, and the tutor never
+  // spoke that answer → carve-out rescues the drop.
+  const rescued = classifyHeuristic({ ...carveBase, verifiedExpectedAnswer: '-2e^{-2t}' });
+  check(
+    '(2) verified answer matches + not spoken by tutor → carve-out rescues',
+    rescued.verdict !== 'drop_self_voice' && rescued.carveOut === 'expected_answer',
+    `verdict=${rescued.verdict} carveOut=${rescued.carveOut} (${rescued.reason})`,
+  );
+
+  // (3) The tutor DID speak the answer in a recent script → carve-out must
+  // NOT rescue (that's the acoustic-echo-is-still-plausible case).
+  const spokenScript: RecentTtsScript = {
+    id: 2,
+    text: 'Actually, the answer is $-2e^{-2t}$, nice work.',
+    spokenStartedAt: now - 3000,
+    spokenEndedAt: now - 1000,
+  };
+  const spoken = classifyHeuristic({
+    ...carveBase,
+    recentTtsScripts: [questionScript, spokenScript],
+    verifiedExpectedAnswer: '-2e^{-2t}',
+  });
+  check(
+    '(3) tutor already spoke the answer → carve-out withheld, still drops',
+    spoken.verdict === 'drop_self_voice' && spoken.carveOut === undefined,
+    `verdict=${spoken.verdict} carveOut=${spoken.carveOut} (${spoken.reason})`,
+  );
+
+  // (4) verifiedExpectedAnswer present but the utterance doesn't match it
+  // (genuine echo of the QUESTION's un-negated term, not the answer) →
+  // comparator verdict isn't 'agree' → carve-out withheld.
+  const noMatch = classifyHeuristic({
+    ...carveBase,
+    transcript: 'e^{-2t}',
+    verifiedExpectedAnswer: '-2e^{-2t}',
+  });
+  check(
+    '(4) utterance does not match verified answer → carve-out withheld, still drops',
+    noMatch.verdict === 'drop_self_voice' && noMatch.carveOut === undefined,
+    `verdict=${noMatch.verdict} carveOut=${noMatch.carveOut} (${noMatch.reason})`,
+  );
+
+  // (5) expectedAnswerSpokenInScripts unit: finds the canonical answer
+  // inside a $-span, misses when only the un-negated form is present.
+  const found = expectedAnswerSpokenInScripts('-2e^{-2t}', [
+    { text: 'Actually, the answer is $-2e^{-2t}$, nice work.' },
+  ]);
+  check('(5a) expectedAnswerSpokenInScripts finds the answer in a $-span', found === true, `found=${found}`);
+
+  const missing = expectedAnswerSpokenInScripts('-2e^{-2t}', [
+    { text: 'Differentiate $e^{-2t}$ — what do you get? Take the derivative of $e^{-2t}$.' },
+  ]);
+  check(
+    '(5b) expectedAnswerSpokenInScripts misses when only the un-negated form is present',
+    missing === false,
+    `missing=${missing}`,
+  );
+
+  // Fail-closed guard: an unparseable / too-short expected answer can't be
+  // proven absent, so it must report "spoken" (blocks the carve-out).
+  const unparseable = expectedAnswerSpokenInScripts('the answer involves several steps', [
+    { text: 'Take the derivative and simplify.' },
+  ]);
+  check(
+    '(5c) unparseable expected answer fails closed → reports spoken (true)',
+    unparseable === true,
+    `unparseable=${unparseable}`,
+  );
+}
+
+// ── Task 6 review fix: equivalence union (2026-08-10) ──────────────────
+// Plain canonical substring containment missed a REORDERED reveal (tutor
+// says "3+2x", expected is stored "2x+3" — commutatively equal, but
+// neither canonical string contains the other) and \frac-generated paren
+// variants ("(x+1)/(2)" vs bare-text "(x+1)/2"). Both cases would have let
+// a genuine echo of a tutor reveal dispatch with credit. Fixed by unioning
+// canonical containment with matchUtteranceToAnswer agreement per span.
+console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence union ===');
+{
+  // Full classifyHeuristic pipeline: an ANCHOR script gives the transcript
+  // "3+2x" a literal-text self-voice hit (crosses SELF_VOICE_THRESHOLD via
+  // containment) so there's a real drop to rescue-or-not; a separate
+  // REVEAL script states the answer in the tutor's stored order ("3+2x")
+  // while the verified expected answer is the reordered "2x+3". Before the
+  // fix, expectedAnswerSpokenInScripts missed this (neither canonical form
+  // contains the other) and the carve-out would have incorrectly rescued a
+  // genuine echo of the tutor's own reveal. After the fix, the comparator
+  // union catches it → carve-out withheld, still drops.
+  const now = 1_010_000;
+  const anchorScript: RecentTtsScript = {
+    id: 1,
+    text: 'Combine like terms: 3+2x is what you should get.',
+    spokenStartedAt: now - 4000,
+    spokenEndedAt: null,
+  };
+  const revealScript: RecentTtsScript = {
+    id: 2,
+    text: 'the answer is $3+2x$, say it back',
+    spokenStartedAt: now - 4000,
+    spokenEndedAt: null,
+  };
+  const reordered = classifyHeuristic({
+    transcript: '3+2x',
+    productionState: 'speaking',
+    recentTtsScripts: [anchorScript, revealScript],
+    onsetDuringTutorSpeech: true,
+    now,
+    speechStartedAt: now - 1500,
+    verifiedExpectedAnswer: '2x+3',
+  });
+  check(
+    'reordered reveal ("3+2x" spoken, expected stored as "2x+3") → carve-out withheld, still drops',
+    reordered.verdict === 'drop_self_voice' && reordered.carveOut === undefined,
+    `verdict=${reordered.verdict} carveOut=${reordered.carveOut} (${reordered.reason})`,
+  );
+
+  // Unit-level: \frac-generated paren variant. canonicalizeMathExpression
+  // turns \frac{x+1}{2} into "(x+1)/(2)" — the extra parens around the
+  // denominator mean plain substring containment against bare-text
+  // "(x+1)/2" fails; the comparator's stripAtomicParens + expression-match
+  // resolves the equivalence.
+  const fracFound = expectedAnswerSpokenInScripts('(x+1)/2', [
+    { text: 'Great, so the answer is $\\frac{x+1}{2}$.' },
+  ]);
+  check(
+    'frac-paren variant: $\\frac{x+1}{2}$ recognized as spoken form of "(x+1)/2"',
+    fracFound === true,
+    `fracFound=${fracFound}`,
+  );
+
+  // Guard: the ORIGINAL rescue case (tutor never spoke the answer at all,
+  // Task 6 test 2 above) must still rescue after widening the "spoken"
+  // check — the union only ADDS true-hits, it must never flip an absent
+  // reveal into a false "spoken" via incidental comparator agreement with
+  // unrelated prose.
+  const stillRescues = classifyHeuristic({
+    transcript: '-2e^(-2t)',
+    productionState: 'speaking',
+    recentTtsScripts: [{
+      id: 1,
+      text: 'Differentiate $e^{-2t}$ — what do you get? Take the derivative of $e^{-2t}$.',
+      spokenStartedAt: now - 4000,
+      spokenEndedAt: null,
+    }],
+    onsetDuringTutorSpeech: true,
+    now,
+    speechStartedAt: now - 1500,
+    verifiedExpectedAnswer: '-2e^{-2t}',
+  });
+  check(
+    'guard: genuine no-reveal rescue case still rescues after the equivalence widening',
+    stillRescues.verdict !== 'drop_self_voice' && stillRescues.carveOut === 'expected_answer',
+    `verdict=${stillRescues.verdict} carveOut=${stillRescues.carveOut} (${stillRescues.reason})`,
+  );
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

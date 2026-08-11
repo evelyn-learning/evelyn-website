@@ -84,6 +84,8 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
+import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
+import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
@@ -2056,7 +2058,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -9696,6 +9698,95 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // Praise-echo check (verdict-detector round, session portal-cb2addf5):
+                  // the opener affirms a value that DISAGREES with what the student
+                  // actually said ("Right — $2x$." after the student said "3x").
+                  // praise-contradiction above compares the tutor against ITSELF; this
+                  // compares the affirmation against the STUDENT. Tri-state comparator:
+                  // 'unknown' never fires, so hedges/prose can't kill. Pure, no LLM.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
+                    const praiseEchoTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                    // Fold-in (round-3 review minor): mirror the mcqChoices site below
+                    // (checks `choiceLetters?.length`, not just `hasChoices`) — an empty
+                    // choiceLetters array previously produced `[]` here instead of
+                    // `undefined`, an inconsistent "live but choiceless" MCQ shape.
+                    const echoChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                      : undefined;
+                    const pe = checkPraiseEcho({
+                      turnTextSoFar: praiseEchoTextSoFar,
+                      studentUtterance: transcript,
+                      choices: echoChoices, // letters-only ref: resolveMcqLetter's direct-letter path needs no texts
+                    });
+                    if (pe.verdict === 'false_praise') {
+                      const reason =
+                        `Your opener affirmed "${pe.affirmed}" but the student actually said "${(pe.studentSaid ?? '').slice(0, 80)}" — those are different values. ` +
+                        `Re-evaluate the student's ACTUAL answer and open with the true verdict for what THEY said.`;
+                      rejectionsThisAttempt.push({ action: 'praise_echo_mismatch', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] praise-echo check: affirmed "${pe.affirmed}" vs student "${(pe.studentSaid ?? '').slice(0, 60)}" — kill + retry`);
+                      onDebugEvent?.('praise_echo_kill', `affirmed=${pe.affirmed} student=${(pe.studentSaid ?? '').slice(0, 40)} (${pe.matchReason})`);
+                      continue;
+                    }
+                  }
+                  // Inverse-verdict check (verdict-detector round): tutor DENIES an answer
+                  // that matches the verified expected answer — the "(3x+2)" class. Kill
+                  // tier = verified expectedAnswer only; brain-claimed-but-unverified card
+                  // answers are advisory (correction note, no kill) — a wrong unverified
+                  // card + correct denial must never kill a good turn.
+                  // Fix (round-3 review Important): gated on `!attemptText` — this attempt's
+                  // FIRST sentence only (mirrors the accumulation pattern above: attemptText
+                  // holds every PRIOR sentence already folded into this attempt, so empty
+                  // means updatedSentence IS the turn's verdict opener). Without this gate,
+                  // checkInverseVerdict's DENIAL_RE ran against every streamed sentence —
+                  // a mid-turn rhetorical aside ("Not quite the same thing happens when...")
+                  // could match the denial pattern and kill an otherwise-good turn that never
+                  // denied the student's actual answer at all.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
+                    const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                      : undefined;
+                    const inv = checkInverseVerdict({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript,
+                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      choices: mcqChoices,
+                    });
+                    if (inv.verdict === 'false_denial') {
+                      const reason =
+                        `You denied the student's answer, but "${(transcript ?? '').slice(0, 80)}" MATCHES the verified expected answer (${inv.expected}). ` +
+                        `Their answer is correct. Re-emit your response: affirm it plainly, then move the lesson forward.`;
+                      rejectionsThisAttempt.push({ action: 'inverse_verdict_false_denial', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] inverse-verdict check: false denial of verified "${inv.expected}" — kill + retry`);
+                      onDebugEvent?.('inverse_verdict_kill', `expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)} (${inv.matchReason})`);
+                      continue;
+                    }
+                    if (inv.verdict === 'advisory_false_denial') {
+                      onDebugEvent?.('inverse_verdict_advisory', `unverified expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)}`);
+                      // Plant a next-real-turn correction note via the same ref the
+                      // judge advisory path uses (~line 11945), same "never clobber a
+                      // kill-class note" rule (R41 kill-class-wins-slot behavior) —
+                      // only plant when the slot is currently empty.
+                      if (!pendingJudgeCorrectionNoteRef.current) {
+                        // Safety-valve clause (fold-in, round-3 review): this note is planted
+                        // off an UNVERIFIED card answer — it might still be right, might still
+                        // be wrong (see the file-header comment above). Without an explicit
+                        // "it's fine to stand by your call" out, a brain that re-checks and
+                        // confirms its denial was correct has no guidance and may narrate the
+                        // review anyway. Exact wording copied from buildJudgeCorrectionNote's
+                        // identical clause (judge-correction-note.ts) so both planted-note call
+                        // sites give the brain the same instruction.
+                        pendingJudgeCorrectionNoteRef.current =
+                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them. ` +
+                          `If on re-checking you stand by what you said, continue naturally and do not mention this review.`;
+                        onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
+                      }
+                    }
+                  }
                   // Round-7+ Fix 5: contradiction-inversion within a
                   // single sentence ("not quite right ... actually
                   // correct" / "wrong ... you're right"). The brain
@@ -10261,6 +10352,28 @@ export function VoiceTutorRealtime({
                           } else {
                             console.warn(`[VoiceTutorRealtime] improvised answer MISMATCH — claimed "${claimedAnswer.slice(0, 60)}" vs blind solve "${(v.solved ?? '').slice(0, 60)}" — nothing pinned.`);
                             onDebugEvent?.('improvised_answer_mismatch', `claimed="${claimedAnswer.slice(0, 40)}" solved="${(v.solved ?? '').slice(0, 40)}"`);
+                            // Inverse-verdict advisory tier (verdict-detector round, Task
+                            // 5): the brain's own claimed answer for this improvised card
+                            // failed pipeline verification, so it can never be pinned as a
+                            // VERIFIED expectedAnswer — but it's still what the brain
+                            // believes the card's answer is, and a false denial of a
+                            // student answer that matches it still deserves a re-check
+                            // nudge (advisory only, never a kill — see
+                            // checkInverseVerdict's tier split; a wrong unverified card +
+                            // a correct denial must never kill a good turn). Guarded the
+                            // same way the VERIFIED branch above pins expectedAnswer:
+                            // same statement-match against the currently tracked problem,
+                            // and never overwrite an existing VERIFIED expectedAnswer (the
+                            // kill tier always wins the slot).
+                            const normWsUnverified = (s: string) => s.replace(/\s+/g, ' ').trim();
+                            if (
+                              currentProblemRef.current &&
+                              !currentProblemRef.current.expectedAnswer &&
+                              normWsUnverified(currentProblemRef.current.statement) === normWsUnverified(claimedStatement)
+                            ) {
+                              currentProblemRef.current.unverifiedCardAnswer = claimedAnswer;
+                              onDebugEvent?.('inverse_verdict_unverified_pinned', claimedAnswer.slice(0, 60));
+                            }
                           }
                         })
                         .catch(() => { /* verification is best-effort */ });
@@ -15096,6 +15209,14 @@ export function VoiceTutorRealtime({
           // causes (see speakingWindowsRef).
           onsetDuringTutorSpeech:
             speechStartedAt !== undefined && wasTutorSpeakingAt(speechStartedAt),
+          // Task 6 (verdict-detector round, 2026-08-10): the CURRENT
+          // problem's verified expected answer, when one is active — powers
+          // the self-echo expected-answer carve-out (an answer to
+          // "differentiate X" is often near-identical to the tutor's own
+          // QUESTION, so it can cross the self-voice threshold even though
+          // the tutor never SPOKE that answer). undefined when no problem is
+          // active; the carve-out is a no-op in that case.
+          verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -15105,6 +15226,9 @@ export function VoiceTutorRealtime({
           `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
         );
         onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+        if (heur.carveOut) {
+          onDebugEvent?.('echo_carveout', `${heur.reason} · "${t.text.slice(0, 60)}"`);
+        }
 
         // ── Stage 2: if a perception cancel fired (checkpoint set),
         // route every NON-escalate heuristic verdict to restore/refire

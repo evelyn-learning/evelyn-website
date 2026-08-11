@@ -76,6 +76,28 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // R42: mcq_letter_normalized — a spoken letter homophone ("See.") was
   // rewritten to the literal MCQ choice letter before dispatch.
   'mcq_letter_normalized',
+  // Task 4, verdict-detector round (2026-08-10): praise_echo_kill (the
+  // opener disagreeing with what the STUDENT said, praise-echo-check.ts)
+  // was absent from this list — same class of gap as the 2026-08-07
+  // brain_/judge_/tool_call_ triage above.
+  'praise_echo',
+  // Fold-in, round-3 whole-branch review: praise_contradiction_kill (R38,
+  // the brain contradicting its OWN opener later in the same turn) was the
+  // gap flagged as out-of-scope in the note above — closing it here so
+  // embed sessions get the same triage coverage /tutor sessions already have.
+  'praise_contradiction',
+  // Task 5, verdict-detector round (2026-08-10): inverse_verdict_kill /
+  // inverse_verdict_advisory / inverse_verdict_unverified_pinned /
+  // inverse_verdict_correction_note_planted — the false-DENIAL counterpart
+  // to praise_echo above (tutor denies an answer that matches the verified
+  // expected answer). Same triage-gap class.
+  'inverse_verdict',
+  // Task 6, verdict-detector round (2026-08-10): echo_carveout — the
+  // perception classifier rescued a would-be self-echo drop because the
+  // utterance matched the verified expected answer and the tutor never
+  // spoke it (perception-classifier.ts, expectedAnswerCarveOut). Same
+  // triage-gap class as the two entries above.
+  'echo_carveout',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
