@@ -92,5 +92,37 @@ const chainItems = [
 ];
 check('near-collision labels, true tie at 1.0 → null (tie-guard fires)', matchStudentJumpIntent('move to chain rule basics and practice', chainItems, 'seg-c1') === null);
 
+// ── R46 (b): "get into" / "dig into" / "dive into" jump verbs ──────
+// Live session portal-0c48edbb: "Uh, yeah, let's get into the direct
+// substitution examples." — MOVE_VERB_RE had no verb for this phrasing,
+// so the jump-matcher never fired. These verbs carry their own
+// preposition ("into"), so they must NOT route through the existing
+// "to|on to|onto|back to" tail — the alternation gains a second,
+// self-contained branch.
+const dsItems = [
+  { segmentIds: ['seg-a'], label: 'Direct substitution examples' },
+  { segmentIds: ['seg-b'], label: 'Quotient law restrictions' },
+];
+check(
+  'get-into (live shape) matches',
+  matchStudentJumpIntent("Uh, yeah, let's get into the direct substitution examples.", dsItems, 'seg-b')?.targetSegmentId === 'seg-a',
+);
+check(
+  'dig-into matches',
+  matchStudentJumpIntent('let\'s dig into quotient law restrictions', dsItems, 'seg-a')?.targetSegmentId === 'seg-b',
+);
+check(
+  'dive-into matches',
+  matchStudentJumpIntent('can we dive into direct substitution examples', dsItems, 'seg-b')?.targetSegmentId === 'seg-a',
+);
+check(
+  'get-into with no label named → null',
+  matchStudentJumpIntent("let's get into it", dsItems, 'seg-a') === null,
+);
+check(
+  'dig (non-jump sense, no "into" destination) → null',
+  matchStudentJumpIntent('I dig this topic', dsItems, 'seg-a') === null,
+);
+
 console.log(`\nstudent-jump-intent: ${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

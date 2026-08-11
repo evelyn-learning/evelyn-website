@@ -49,8 +49,17 @@ export interface JumpCandidateItem { segmentIds: string[]; label: string }
 // after the verb — "go over X" and "go X" (no preposition) never match,
 // which is what excludes review phrasing and bare "let's move on". Global
 // so every occurrence can be found (self-correction may re-issue the verb).
+//
+// R46 (b), live session portal-0c48edbb: "let's get into the direct
+// substitution examples" carried no destination verb at all — "get into" /
+// "dig into" / "dive into" carry their OWN preposition ("into"), so they
+// are a second, self-contained alternative rather than additions to the
+// move|switch|jump|go|skip group (which all route through the separate
+// on-to/onto/back-to/to tail). Same safety property applies unchanged:
+// the verb alone never fires without the ≥0.75 clear-winner label match
+// below.
 const MOVE_VERB_RE =
-  /\b(?:move|switch|jump|go|skip)(?:\s+\w+){0,2}?\s+(?:on to|onto|back to|to)\s+/gi;
+  /\b(?:(?:move|switch|jump|go|skip)(?:\s+\w+){0,2}?\s+(?:on to|onto|back to|to)\s+|(?:get|dig|dive)\s+into\s+)/gi;
 
 // Negator immediately governing the verb, allowing up to two intervening
 // words ("don't want to move…"). Deliberately does NOT include bare "no"
