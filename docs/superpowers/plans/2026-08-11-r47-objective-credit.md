@@ -111,6 +111,18 @@ Live bug (session portal-1349716e, stored command verified): the brain emitted `
 
 - [ ] TDD; wire at the intake choke point; run the new harness + `npx tsx scripts/test-inline-math.ts` (82 — must not flip) + tsc. Commit `fix(whiteboard): strip brain-emitted stray $ glued to prose in problem statements`.
 
+### Task 3c: Q-pin cleared on segment advance
+
+**Files:**
+- Modify: `src/lib/tutor/qpin-behavior.ts` if the policy lives there, else the pin state owner in `src/app/tutor/components/session/TutorSession.tsx` (locate by `questionPin` / `latestSubstantiveTutorEntry` — the R38 persist-until-replaced logic)
+- Test: extend `test:qpin` (existing harness) if the change lands in the pure module; otherwise tsc + report hunks
+
+Live bug (session portal-1349716e, ~22:37): the Q-pin "Ready for one with a billionaire in the mix?" — a question scoped to an earlier problem — was still pinned at the Recap segment several turns later. R38's persist-until-replaced deliberately keeps a pin until a NEW substantive question arrives, but has no staleness bound: a segment advance obsoletes the pinned question (its problem context is gone) yet nothing clears it.
+
+**Fix:** clear the active Q-pin when the lesson cursor changes segment (the same signal the rail uses — `activeSegmentId`/`currentSegmentId` change, including seam-applied inferred advances). Keep persist-until-replaced semantics WITHIN a segment. Read how the pin component receives turn/pin state and add the clear at the cleanest owner (an effect keyed on the segment id, or a clear call in the advance path — mirror where other per-segment state resets). Do NOT clear on `to:'free'`-style cursor release alone if that would wipe a still-relevant pin mid-discussion — reason about it and state your call; default: clear on any segment CHANGE including to-free.
+
+- [ ] Implement; extend the qpin harness if the decision is pure; `npx tsc --noEmit`; commit `fix(tutor): Q-pin clears on segment advance — stale questions no longer outlive their problem context`.
+
 ### Task 4: Battery + repro trace
 
 - [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), full math battery + physics/chem/subject-notation, r33-prompt-rules, `npx tsc --noEmit`, `npm run build`.
