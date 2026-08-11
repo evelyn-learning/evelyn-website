@@ -1414,5 +1414,91 @@ console.log('\n=== Task 6: expected-answer carve-out ===');
   );
 }
 
+// ── Task 6 review fix: equivalence union (2026-08-10) ──────────────────
+// Plain canonical substring containment missed a REORDERED reveal (tutor
+// says "3+2x", expected is stored "2x+3" — commutatively equal, but
+// neither canonical string contains the other) and \frac-generated paren
+// variants ("(x+1)/(2)" vs bare-text "(x+1)/2"). Both cases would have let
+// a genuine echo of a tutor reveal dispatch with credit. Fixed by unioning
+// canonical containment with matchUtteranceToAnswer agreement per span.
+console.log('\n=== Task 6 review fix: expectedAnswerSpokenInScripts equivalence union ===');
+{
+  // Full classifyHeuristic pipeline: an ANCHOR script gives the transcript
+  // "3+2x" a literal-text self-voice hit (crosses SELF_VOICE_THRESHOLD via
+  // containment) so there's a real drop to rescue-or-not; a separate
+  // REVEAL script states the answer in the tutor's stored order ("3+2x")
+  // while the verified expected answer is the reordered "2x+3". Before the
+  // fix, expectedAnswerSpokenInScripts missed this (neither canonical form
+  // contains the other) and the carve-out would have incorrectly rescued a
+  // genuine echo of the tutor's own reveal. After the fix, the comparator
+  // union catches it → carve-out withheld, still drops.
+  const now = 1_010_000;
+  const anchorScript: RecentTtsScript = {
+    id: 1,
+    text: 'Combine like terms: 3+2x is what you should get.',
+    spokenStartedAt: now - 4000,
+    spokenEndedAt: null,
+  };
+  const revealScript: RecentTtsScript = {
+    id: 2,
+    text: 'the answer is $3+2x$, say it back',
+    spokenStartedAt: now - 4000,
+    spokenEndedAt: null,
+  };
+  const reordered = classifyHeuristic({
+    transcript: '3+2x',
+    productionState: 'speaking',
+    recentTtsScripts: [anchorScript, revealScript],
+    onsetDuringTutorSpeech: true,
+    now,
+    speechStartedAt: now - 1500,
+    verifiedExpectedAnswer: '2x+3',
+  });
+  check(
+    'reordered reveal ("3+2x" spoken, expected stored as "2x+3") → carve-out withheld, still drops',
+    reordered.verdict === 'drop_self_voice' && reordered.carveOut === undefined,
+    `verdict=${reordered.verdict} carveOut=${reordered.carveOut} (${reordered.reason})`,
+  );
+
+  // Unit-level: \frac-generated paren variant. canonicalizeMathExpression
+  // turns \frac{x+1}{2} into "(x+1)/(2)" — the extra parens around the
+  // denominator mean plain substring containment against bare-text
+  // "(x+1)/2" fails; the comparator's stripAtomicParens + expression-match
+  // resolves the equivalence.
+  const fracFound = expectedAnswerSpokenInScripts('(x+1)/2', [
+    { text: 'Great, so the answer is $\\frac{x+1}{2}$.' },
+  ]);
+  check(
+    'frac-paren variant: $\\frac{x+1}{2}$ recognized as spoken form of "(x+1)/2"',
+    fracFound === true,
+    `fracFound=${fracFound}`,
+  );
+
+  // Guard: the ORIGINAL rescue case (tutor never spoke the answer at all,
+  // Task 6 test 2 above) must still rescue after widening the "spoken"
+  // check — the union only ADDS true-hits, it must never flip an absent
+  // reveal into a false "spoken" via incidental comparator agreement with
+  // unrelated prose.
+  const stillRescues = classifyHeuristic({
+    transcript: '-2e^(-2t)',
+    productionState: 'speaking',
+    recentTtsScripts: [{
+      id: 1,
+      text: 'Differentiate $e^{-2t}$ — what do you get? Take the derivative of $e^{-2t}$.',
+      spokenStartedAt: now - 4000,
+      spokenEndedAt: null,
+    }],
+    onsetDuringTutorSpeech: true,
+    now,
+    speechStartedAt: now - 1500,
+    verifiedExpectedAnswer: '-2e^{-2t}',
+  });
+  check(
+    'guard: genuine no-reveal rescue case still rescues after the equivalence widening',
+    stillRescues.verdict !== 'drop_self_voice' && stillRescues.carveOut === 'expected_answer',
+    `verdict=${stillRescues.verdict} carveOut=${stillRescues.carveOut} (${stillRescues.reason})`,
+  );
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail > 0) process.exit(1);

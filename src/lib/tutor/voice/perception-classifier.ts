@@ -829,7 +829,31 @@ export function isOfferedOptionEcho(
  *  canonicalizes too short to be meaningful), we can't prove the tutor
  *  DIDN'T say it, so this returns true — "can't prove absence → no
  *  carve-out" — rather than risk opening an echo leak on unparseable
- *  input. */
+ *  input.
+ *
+ *  Review finding (2026-08-10): plain canonical SUBSTRING containment is
+ *  naive string matching — it misses an equivalent-but-REORDERED reveal
+ *  (tutor says "the answer is $3+2x$", expected is stored as "2x+3":
+ *  commutatively equal, but neither canonical string contains the other),
+ *  and misses \frac-generated paren variants (`\frac{x+1}{2}` canonicalizes
+ *  to "(x+1)/(2)", which does not contain the bare-text expected form
+ *  "(x+1)/2" as a substring even though they're the same expression). Left
+ *  as containment-only, either miss lets a GENUINE acoustic echo of a
+ *  reveal the tutor actually spoke dispatch with credit — the opposite of
+ *  this function's job.
+ *
+ *  Fixed by widening to a UNION of two checks per candidate span: the
+ *  existing canonical containment (kept — it still catches the answer
+ *  embedded inside a longer span/line, e.g. "32x" ⊇ "2x"; over-matching is
+ *  the SAFE direction for a "was it spoken" gate), OR the answer-comparator
+ *  itself agreeing that the span IS (an equivalent form of) the answer —
+ *  `matchUtteranceToAnswer` already does its own canonicalization plus
+ *  commutative term-multiset comparison, so reordering and frac/paren
+ *  variants both resolve to 'agree' there. Whole-line prose (the other
+ *  member of the `spans` array below) reliably lands on 'unknown' via its
+ *  own prose-residue rejection, so this union can't manufacture a false
+ *  hit off filler words around a span — it only widens what counts as "the
+ *  tutor said it". */
 export function expectedAnswerSpokenInScripts(
   expected: string,
   scripts: Array<{ text: string }>
@@ -843,6 +867,7 @@ export function expectedAnswerSpokenInScripts(
     for (const span of spans) {
       const c = canonicalizeMathExpression(span);
       if (c && c.includes(canonExpected)) return true;
+      if (matchUtteranceToAnswer(span, expected).verdict === 'agree') return true;
     }
   }
   return false;
