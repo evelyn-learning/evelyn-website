@@ -2133,11 +2133,11 @@ async function runBackfillEvidenceTests() {
  *  real model to do with that same marker). Lets test (c) assert on the
  *  REQUEST (which LOs got marked) rather than only on the output. */
 function makeStubExpandFn(
-  calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }>,
+  calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }>,
 ): (
   los: ReadonlyArray<LearningObjective>,
   input: GenerateFromTextInput,
-  opts?: { system?: string },
+  opts?: { system?: string; reviewMode?: boolean },
 ) => Promise<ExpandSegmentsResult> {
   return async (los, input, opts) => {
     calls.push({ los: [...los], input, opts });
@@ -2233,7 +2233,7 @@ async function runReviewPlanComposerTests() {
     // (a) ordering: ascending estimate, missing → TUNING.untouchedPrior (0.3)
     // — lands loC between loB (0.2) and loA (0.8).
     {
-      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
       const plan = await composeReviewPlan({
         studentId,
         los: [
@@ -2252,13 +2252,84 @@ async function runReviewPlanComposerTests() {
         calls[0]!.opts?.system === REVIEW_STAGE2_SYSTEM,
         '(a) composeReviewPlan invokes the expander with REVIEW_STAGE2_SYSTEM, not STAGE2_SYSTEM',
       );
+      assert(
+        calls[0]!.opts?.reviewMode === true,
+        '(fix round 1) composeReviewPlan invokes the expander with reviewMode: true',
+      );
+    }
+
+    // Fix round 1 (spec §6.2): LearnerHints conditioning (ability band +
+    // confirmed gap topics) must reach the review request, same as Task
+    // 12's fresh-lesson generation — only the ability-line phrasing
+    // differs (review has no worked_example segment to talk about).
+    {
+      const { getOrCreateStudentProfile, saveStudentProfile } = await import(
+        '../src/lib/tutor/student-profile/store'
+      );
+      const { StudentProfileModel } = await import('../src/models/StudentProfile');
+      const { buildStage2UserMessage } = await import('../src/lib/tutor/lesson-plan/generate-from-text');
+
+      const hintsStudentId = `revhints:${process.pid}`;
+      await StudentProfileModel.deleteOne({ _id: hintsStudentId });
+      try {
+        const nowIso = new Date().toISOString();
+        const gap = {
+          id: 'gap_review_conditioning',
+          kind: 'prerequisite' as const,
+          conceptLabel: 'sign errors on inequalities',
+          status: 'confirmed' as const,
+          evidence: { signals: [], observation: 'flips the sign incorrectly', studentQuotes: [] },
+          firstSeenAt: nowIso,
+          lastSeenAt: nowIso,
+        };
+        const profile = await getOrCreateStudentProfile(hintsStudentId);
+        await saveStudentProfile({ ...profile, gaps: [gap] });
+
+        const loHints = `revHints-${process.pid}`;
+        await seedProjection(loHints, 0.2); // weak — also exercises the -try2 branch
+
+        const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
+        const plan = await composeReviewPlan({
+          studentId: hintsStudentId,
+          los: [{ loId: loHints, title: 'Inequality signs' }],
+          expandFn: makeStubExpandFn(calls),
+        });
+        createdPlanIds.push(plan.id);
+
+        const sentInput = calls[0]!.input;
+        assert(
+          !!sentInput.learner && sentInput.learner.gapTopics.includes('sign errors on inequalities'),
+          '(fix round 1 - a) composeReviewPlan calls getLearnerHints and threads the result onto the expander input.learner',
+        );
+
+        // (fix round 1 - b) render the actual stage-2 user message the real
+        // expander would have sent (buildStage2UserMessage is pure) from the
+        // captured request, and assert the gap-topics text reaches it under
+        // review composition, with a review-shaped (not worked-example)
+        // ability line.
+        const rendered = buildStage2UserMessage(
+          calls[0]!.los.map((lo) => ({ id: lo.id, description: lo.description })),
+          sentInput,
+          { reviewMode: true },
+        );
+        assert(
+          rendered.includes('Known misconception areas') && rendered.includes('sign errors on inequalities'),
+          '(fix round 1 - b) gapTopics text reaches the stage-2 user message under review composition',
+        );
+        assert(
+          !rendered.includes('worked example'),
+          '(fix round 1) review-mode ability line avoids worked-example phrasing (no worked_example segment exists in review plans)',
+        );
+      } finally {
+        await StudentProfileModel.deleteOne({ _id: hintsStudentId });
+      }
     }
 
     // (c) weak LO gets a -try2 request marker, strong LO doesn't — assert
     // on the REQUEST payload (what composeReviewPlan asked the expander
     // for), not just on the resulting segments.
     {
-      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
       const plan = await composeReviewPlan({
         studentId,
         los: [
@@ -2290,7 +2361,7 @@ async function runReviewPlanComposerTests() {
       const capIds = Array.from({ length: 8 }, (_, i) => `revCap${i}-${process.pid}`);
       const estimates = [0.9, 0.2, 0.7, 0.1, 0.6, 0.3, 0.8, 0.4]; // unsorted on purpose
       for (let i = 0; i < capIds.length; i++) await seedProjection(capIds[i]!, estimates[i]!);
-      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
       const plan = await composeReviewPlan({
         studentId,
         los: capIds.map((loId, i) => ({ loId, title: `Cap topic ${i}` })),
@@ -2309,7 +2380,7 @@ async function runReviewPlanComposerTests() {
     // (d) persistence round-trip + metadata.reviewPlan, and (e) title/los
     // echo the portal-supplied titles.
     {
-      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
       const plan = await composeReviewPlan({
         studentId,
         los: [
@@ -2357,7 +2428,7 @@ async function runReviewPlanComposerTests() {
 
     // Title has no dangling ellipsis for exactly 2 kept LOs.
     {
-      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string } }> = [];
+      const calls: Array<{ los: LearningObjective[]; input: GenerateFromTextInput; opts?: { system?: string; reviewMode?: boolean } }> = [];
       const plan = await composeReviewPlan({
         studentId,
         los: [

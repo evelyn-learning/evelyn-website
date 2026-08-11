@@ -265,10 +265,10 @@ function numberWord(n: number): string {
   return String(n);
 }
 
-/** The per-band pedagogical instruction line. Worked-example counts come
- *  from TUNING.generation.workedExamples — never a literal duplicated here —
- *  so a future TUNING change (e.g. building -> 3) reflects in the prompt
- *  without a second edit site. */
+/** The per-band pedagogical instruction line for a fresh-lesson stage-2
+ *  request. Worked-example counts come from TUNING.generation.workedExamples
+ *  — never a literal duplicated here — so a future TUNING change (e.g.
+ *  building -> 3) reflects in the prompt without a second edit site. */
 function abilityLineFor(band: LearnerHints['band']): string {
   const count = TUNING.generation.workedExamples[band];
   const word = numberWord(count);
@@ -283,17 +283,39 @@ function abilityLineFor(band: LearnerHints['band']): string {
   }
 }
 
+/** Review-shaped twin of `abilityLineFor` (Task 14 fix round 1, spec §6.2):
+ *  a review request never emits a worked_example segment (REVIEW_STAGE2_SYSTEM
+ *  is recall + try_yourself only), so the worked-example-count phrasing above
+ *  would be inert noise in the rendered prompt. This talks about the same
+ *  underlying lever — how much scaffolding vs. stretch to pitch — in terms
+ *  that actually map onto review's recall/try segments. */
+function reviewAbilityLineFor(band: LearnerHints['band']): string {
+  switch (band) {
+    case 'building':
+      return 'Keep the recall gentle (more scaffolding) and make the try_yourself easier than a first exposure would be.';
+    case 'strong':
+      return 'Keep the recall brief; make the try_yourself a stretch problem.';
+    case 'steady':
+    default:
+      return 'Standard pacing for the recall and try_yourself.';
+  }
+}
+
 /** Builds the "Student profile" block appended to the stage-2 user message
  *  when `learner` is present. Reads worked-example counts and the success-
  *  target band from TUNING.generation so this text can never drift from the
  *  numbers the rest of the system (STAGE2_SYSTEM's -worked2 exception,
- *  practice generation) actually uses. */
-function studentProfileBlock(learner: LearnerHints): string {
+ *  practice generation) actually uses. `reviewMode` (Task 14 fix round 1)
+ *  swaps in the review-shaped ability line — everything else (success-target
+ *  pitch, gap-topics/misconception line) is identical either way, since both
+ *  are directly valuable for review composition too (spec §6.2). */
+function studentProfileBlock(learner: LearnerHints, opts?: { reviewMode?: boolean }): string {
   const low = Math.round(TUNING.generation.successTargetLow * 100);
   const high = Math.round(TUNING.generation.successTargetHigh * 100);
+  const abilityLine = opts?.reviewMode ? reviewAbilityLineFor(learner.band) : abilityLineFor(learner.band);
   const lines = [
     'Student profile (adapt HOW you teach, never the subject matter):',
-    `- ability: ${learner.band}. ${abilityLineFor(learner.band)}`,
+    `- ability: ${learner.band}. ${abilityLine}`,
     `- Pitch each try_yourself so this student succeeds roughly ${low}-${high}% of the time.`,
   ];
   if (learner.gapTopics.length > 0) {
@@ -311,14 +333,17 @@ function studentProfileBlock(learner: LearnerHints): string {
  *  IDENTICAL output to the pre-Task-12 inline template — that's the
  *  regression guard scripts/test-plan-generate.ts asserts. Only append the
  *  student-profile block when `input.learner` is present; never alter the
- *  base string itself. */
+ *  base string itself. `opts.reviewMode` (Task 14 fix round 1) only ever
+ *  changes which ability-line variant rides inside that appended block —
+ *  callers that omit it (every pre-existing caller) are unaffected. */
 export function buildStage2UserMessage(
   losPayload: ReadonlyArray<{ id: string; description: string }>,
   input: GenerateFromTextInput,
+  opts?: { reviewMode?: boolean },
 ): string {
   const base = `Subject: ${input.subject}\nGrade: ${input.grade}${input.topic ? `\nTopic: ${input.topic}` : ''}\n\nLearning objectives to expand (JSON):\n${JSON.stringify(losPayload, null, 2)}`;
   if (!input.learner) return base;
-  return `${base}\n\n${studentProfileBlock(input.learner)}`;
+  return `${base}\n\n${studentProfileBlock(input.learner, opts)}`;
 }
 
 export interface ExpandSegmentsOptions {
@@ -327,6 +352,14 @@ export interface ExpandSegmentsOptions {
    *  without duplicating the request-building / parsing plumbing below.
    *  Defaults to STAGE2_SYSTEM — every pre-Task-14 caller is unaffected. */
   system?: string;
+  /** Selects the review-shaped ability-line variant in the appended
+   *  student-profile block (Task 14 fix round 1, spec §6.2) — set by the
+   *  review composer since REVIEW_STAGE2_SYSTEM never emits a
+   *  worked_example segment, so the default ability line's worked-example
+   *  phrasing would be noise. Passed straight through to
+   *  buildStage2UserMessage; every pre-existing caller omits it and is
+   *  unaffected. */
+  reviewMode?: boolean;
 }
 
 export async function expandSegmentsForLOs(
@@ -352,7 +385,7 @@ export async function expandSegmentsForLOs(
           content: [
             {
               type: 'text',
-              text: buildStage2UserMessage(losPayload, input),
+              text: buildStage2UserMessage(losPayload, input, { reviewMode: opts?.reviewMode }),
             },
           ],
         },

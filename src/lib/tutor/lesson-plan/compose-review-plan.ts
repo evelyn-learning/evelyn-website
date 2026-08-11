@@ -14,6 +14,17 @@
  * — see the `opts.system` override Task 14 added to expandSegmentsForLOs
  * rather than duplicating that function's request/parse plumbing here.
  *
+ * LearnerHints conditioning (spec §6.2, fix round 1): review composition
+ * calls getLearnerHints and threads the result onto the expander input's
+ * `learner` field, same as Task 12's fresh-lesson generation — the
+ * success-target pitch and gap-topics/misconception lines are directly
+ * valuable here (arguably more so: a gap-topic student reviewing their
+ * weakest LOs is the highest-value place for misconception-aware
+ * prompting). Only the ability line differs: `opts.reviewMode: true`
+ * swaps in the review-shaped variant, since REVIEW_STAGE2_SYSTEM never
+ * emits a worked_example segment and the default ability line talks
+ * about worked-example counts.
+ *
  * NEVER cached: a review plan is a point-in-time read of the learner-state
  * projection (today's weakest LOs), not a reusable topic-shaped artifact —
  * it must never be served from generate-from-text.ts's topic cache, and
@@ -39,6 +50,7 @@ import { clampSessionMinutes } from './session-budget';
 import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/models';
 import connectDB from '@/lib/db';
 import { TUNING } from '../learner-model/estimator';
+import { getLearnerHints } from '../learner-model/hints';
 
 /** Review-shaped twin of STAGE2_SYSTEM (generate-from-text.ts:232). Same
  *  JSON-only contract and terseness/number-collision discipline; the
@@ -133,14 +145,20 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
     };
   });
 
+  // getLearnerHints never throws (falls back to the neutral steady/no-gaps
+  // default on any error) — same conditioning Task 12 applies to fresh
+  // lesson generation, per spec §6.2.
+  const learner = await getLearnerHints(input.studentId, input.subject);
+
   const expandFn = input.expandFn ?? expandSegmentsForLOs;
   const genInput: GenerateFromTextInput = {
     text: '',
     subject: input.subject ?? 'general',
     grade: 'general',
+    learner,
   };
 
-  const result = await expandFn(expandLos, genInput, { system: REVIEW_STAGE2_SYSTEM });
+  const result = await expandFn(expandLos, genInput, { system: REVIEW_STAGE2_SYSTEM, reviewMode: true });
   if (!result.ok || result.segments.length === 0) {
     throw new Error(`composeReviewPlan: stage-2 expander failed — ${result.reason}`);
   }
