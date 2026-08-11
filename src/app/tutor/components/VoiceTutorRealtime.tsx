@@ -13075,8 +13075,11 @@ export function VoiceTutorRealtime({
     // perception late-fallback, etc.) fired. Bracketed synthetic
     // dispatches never match a bare-word form, so this is a no-op for
     // them; guarded anyway for clarity and to never touch opts.silent
-    // system turns.
-    if (!opts?.silent && currentProblemRef.current?.hasChoices) {
+    // system turns. R42 review round 1: also excludes opts.typed — a
+    // student who TYPED "see" meant the word, not a mishearing of the
+    // letter C (the homophone problem is specific to ASR mishearing
+    // speech; typed text has no such ambiguity).
+    if (!opts?.silent && !opts?.typed && currentProblemRef.current?.hasChoices) {
       const activeChoiceLetters = currentProblemRef.current.choiceLetters ?? [];
       const normalized = normalizeMcqLetterUtterance(transcript, activeChoiceLetters);
       if (normalized) {

@@ -33,7 +33,10 @@ check('"Be" → "B"', normalizeMcqLetterUtterance('Be', ABCD) === 'B');
 check('"Dee" → "D"', normalizeMcqLetterUtterance('Dee', ABCD) === 'D');
 check('"Ay" → "A"', normalizeMcqLetterUtterance('Ay', ABCD) === 'A');
 check('"Aye" → "A"', normalizeMcqLetterUtterance('Aye', ABCD) === 'A');
-check('"Eh" → "A"', normalizeMcqLetterUtterance('Eh', ABCD) === 'A');
+// R42 review round 1: 'eh' deliberately NOT a homophone for A — highest-FP
+// shape (a confused student's "Eh?" must never dispatch as the answer "A").
+check('"Eh" is NOT an A-homophone (dropped — highest false-positive risk)', normalizeMcqLetterUtterance('Eh', ABCD) === null);
+check('"Eh?" is NOT an A-homophone either (trailing punctuation)', normalizeMcqLetterUtterance('Eh?', ABCD) === null);
 check('"Sea" → "C"', normalizeMcqLetterUtterance('Sea', ABCD) === 'C');
 check('"Cee" → "C"', normalizeMcqLetterUtterance('Cee', ABCD) === 'C');
 
@@ -70,11 +73,30 @@ check('"I see a bee" (multi-word, not a bare homophone) unchanged', normalizeMcq
     JSON.stringify(extractChoiceLetters(tryYourselfChoices)) === JSON.stringify(['A', 'B']));
 
   const noLetterField = [{ text: 'first' }, { text: 'second' }, { text: 'third' }];
-  check('extractChoiceLetters: falls back to positional A/B/C when no letter/id',
+  check('extractChoiceLetters: falls back to positional A/B/C when no letter/id field is present at all',
     JSON.stringify(extractChoiceLetters(noLetterField)) === JSON.stringify(['A', 'B', 'C']));
 
   check('extractChoiceLetters: empty/undefined → []',
     extractChoiceLetters(undefined).length === 0 && extractChoiceLetters([]).length === 0);
+
+  // R42 review round 1: ProblemAnswerChoice.letter can legitimately be
+  // numeric ("1", "2", ... — src/lib/knowledge/types.ts:272-275) and the
+  // renderer badges that value verbatim. A numeric-labeled MCQ must NOT
+  // get the positional A/B/C fallback — that would let "Ay" normalize to
+  // "A" against a board that shows "1".
+  const numericLetterField = [{ letter: '1', text: 'first' }, { letter: '2', text: 'second' }, { letter: '3', text: 'third' }];
+  check('extractChoiceLetters: numeric letter field → [] (normalization disabled, no positional fallback)',
+    extractChoiceLetters(numericLetterField).length === 0, JSON.stringify(extractChoiceLetters(numericLetterField)));
+
+  const numericIdField = [{ id: '1', text: 'first' }, { id: '2', text: 'second' }];
+  check('extractChoiceLetters: numeric id field (try-yourself shape) → [] (normalization disabled)',
+    extractChoiceLetters(numericIdField).length === 0, JSON.stringify(extractChoiceLetters(numericIdField)));
+
+  // End-to-end: a numeric-labeled problem's choiceLetters ([]) means
+  // normalizeMcqLetterUtterance never fires, even for an otherwise-valid
+  // homophone.
+  check('numeric-labeled choices → normalization never fires end-to-end',
+    normalizeMcqLetterUtterance('See.', extractChoiceLetters(numericLetterField)) === null);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

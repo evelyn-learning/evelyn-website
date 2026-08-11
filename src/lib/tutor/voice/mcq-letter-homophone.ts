@@ -23,9 +23,13 @@
  *  literal lowercase letter is included too (harmless — the existing bare-
  *  letter regex already accepts it, so this is just a no-op pass-through
  *  for that case rather than new behavior). Only letters actually reported
- *  in the triage are covered — no invented forms for untested letters. */
+ *  in the triage are covered — no invented forms for untested letters.
+ *  R42 review round 1: 'eh' deliberately dropped from the A-homophones —
+ *  it wasn't in the investigation's reported forms and is the highest-FP
+ *  shape: a confused student's "Eh?" (trailing punctuation stripped before
+ *  matching) would otherwise dispatch as the answer "A" and get graded. */
 const LETTER_HOMOPHONES: Record<string, string[]> = {
-  A: ['a', 'ay', 'aye', 'eh'],
+  A: ['a', 'ay', 'aye'],
   B: ['b', 'bee', 'be'],
   C: ['c', 'see', 'sea', 'cee'],
   D: ['d', 'dee'],
@@ -81,17 +85,43 @@ export function normalizeMcqLetterUtterance(
 /** Choice-shape union covering both known card shapes: showProblem's
  *  answerChoices ({letter, text}) and show_try_yourself's choices
  *  ({id, text}). Extracts the letter each choice presents to the student,
- *  falling back to positional A/B/C/... when neither field carries one. */
+ *  falling back to positional A/B/C/... ONLY when neither field is present
+ *  at all for a given choice.
+ *
+ *  R42 review round 1: `ProblemAnswerChoice.letter` can legitimately be
+ *  "1", "2", ... (src/lib/knowledge/types.ts:272-275) and the renderer
+ *  badges the choice with that value verbatim — a numeric-labeled MCQ
+ *  showing 1/2/3 on the board must NOT get a positional ['A','B','C']
+ *  fallback, or a spoken "Ay" would normalize to "A" against a board that
+ *  never shows an "A" anywhere. When a letter/id field IS present but
+ *  isn't a bare A–Z letter, normalization is disabled for the WHOLE
+ *  problem ([]) rather than guessing per-choice — a mix of "some choices
+ *  letter, some numeric" is not a shape this function tries to partially
+ *  handle. */
 export function extractChoiceLetters(
   choices: Array<{ letter?: unknown; id?: unknown }> | null | undefined,
 ): string[] {
   if (!Array.isArray(choices) || choices.length === 0) return [];
-  return choices.map((c, i) => {
+  const letters: string[] = [];
+  for (let i = 0; i < choices.length; i++) {
+    const c = choices[i];
     const raw =
       (typeof c?.letter === 'string' && c.letter) ||
       (typeof c?.id === 'string' && c.id) ||
       '';
+    if (raw === '') {
+      // No label field present at all for this choice — positional
+      // fallback (A/B/C/... by index) is the only information we have.
+      letters.push(String.fromCharCode(65 + i));
+      continue;
+    }
     const upper = raw.trim().toUpperCase();
-    return /^[A-Z]$/.test(upper) ? upper : String.fromCharCode(65 + i);
-  });
+    if (!/^[A-Z]$/.test(upper)) {
+      // A label field IS present but isn't a bare A–Z letter (e.g. "1") —
+      // disable normalization for this problem entirely.
+      return [];
+    }
+    letters.push(upper);
+  }
+  return letters;
 }
