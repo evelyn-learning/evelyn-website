@@ -338,6 +338,51 @@ console.log('OK — tts-pronunciation rewrites validated');
   console.log('OK — Task R47-3 (ALL-CAPS emphasis spoken, not spelled)');
 }
 
+// Task R47-3 review fixes (2 Important findings from code review):
+//
+// Finding 1 — blocklist over-extension: TITLE/SECTION/CHAPTER/PART/WORLD
+// were blanket-blocklisted bare, which silently un-fixed the target bug for
+// exactly those words used as ordinary emphasis ("a WORLD of difference").
+// Fix: only ARTICLE/AMENDMENT (the two directly-pinned roman-numeral
+// keywords) stay in the bare blocklist; the other five move to
+// CONTEXTUAL_CITATION_KEYWORDS and are protected ONLY when a citation
+// numeral (or, for WORLD, the literal "WAR" bigram) immediately follows.
+//
+// Finding 2 — contraction boundary: CAPS_RUN_RE's bare \b treated the
+// apostrophe as a boundary, so "DOESN'T" only matched "DOESN", stranding
+// the trailing "T" uppercase ("doesn'T"). Fix: CAPS_RUN_RE now captures an
+// optional `'[A-Z]{1,2}` suffix so the whole contraction is one match; the
+// shape tests run against the apostrophe-stripped letters, the lowercase
+// output applies to the whole match.
+{
+  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const eq = (inp, want, name) => {
+    const got = rewriteForTTS(inp);
+    if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
+  };
+  // --- Finding 1: plain-emphasis uses of the five demoted keywords ------
+  eq('That gives me a WORLD of difference.', 'That gives me a world of difference.', 'caps-world-plain-emphasis');
+  eq('Read the whole CHAPTER tonight.', 'Read the whole chapter tonight.', 'caps-chapter-plain-emphasis');
+  eq('Pick a TITLE for your essay.', 'Pick a title for your essay.', 'caps-title-plain-emphasis');
+  eq('Every SECTION of the exam matters.', 'Every section of the exam matters.', 'caps-section-plain-emphasis');
+  eq('This is my PART of the deal.', 'This is my part of the deal.', 'caps-part-plain-emphasis');
+  // --- Finding 1: the same five keywords, in genuine citation context —
+  // contextual protection (numeral/bigram immediately following) keeps
+  // these ALL-CAPS, same as the pre-existing bare-ARTICLE/AMENDMENT pins.
+  eq('SECTION IV covers voting rights.', 'SECTION four covers voting rights.', 'caps-section-citation-protected');
+  eq('WORLD WAR II reshaped Europe.', 'WORLD WAR two reshaped Europe.', 'caps-world-war-citation-protected');
+  // --- Finding 1: re-run of the pre-existing bare roman-numeral pins —
+  // ARTICLE/AMENDMENT stay in the blocklist, so this behavior is
+  // byte-unchanged by the fix.
+  eq('ARTICLE II covers the executive branch.', 'ARTICLE two covers the executive branch.', 'caps-article-citation-unchanged');
+  eq('AMENDMENT XIV guarantees equal protection.', 'AMENDMENT fourteen guarantees equal protection.', 'caps-amendment-citation-unchanged');
+  // --- Finding 2: contractions --------------------------------------
+  eq("That DOESN'T make sense.", "That doesn't make sense.", 'caps-contraction-doesnt');
+  eq("You SHOULDN'T do that.", "You shouldn't do that.", 'caps-contraction-shouldnt');
+  eq("You CAN'T skip this part.", "You can't skip this part.", 'caps-contraction-cant');
+  console.log('OK — Task R47-3 review fixes (contextual citation keywords, contraction boundary)');
+}
+
 // Task X1 (session portal-236c6e8f): TTS math verbalization + prosody
 // smoothing. Bugs: (a) `$...$` LaTeX delimiters reaching TTS raw ("dollar
 // a cubed bee circumflex 3 dollar" for $a^3 b^3$); (b) "pi" voiced as
