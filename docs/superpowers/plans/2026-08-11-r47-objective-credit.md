@@ -123,6 +123,17 @@ Live bug (session portal-1349716e, ~22:37): the Q-pin "Ready for one with a bill
 
 - [ ] Implement; extend the qpin harness if the decision is pure; `npx tsc --noEmit`; commit `fix(tutor): Q-pin clears on segment advance — stale questions no longer outlive their problem context`.
 
+### Task 3d: No "repeat that?" after a partially-delivered turn
+
+**Files:**
+- Modify: `src/app/tutor/components/VoiceTutorRealtime.tsx` (the `callBrainOnce` catch block's non-abort branch — locate by the literal `'Hmm, give me a moment — could you repeat that?'`)
+
+Live bug (session portal-1349716e, 2:49 PM): the student's long answer got a correct spoken reply, then `ERR_NETWORK_CHANGED` killed the stream tail (`[brain-orchestrator] error: TypeError: network error`) and the catch's fallback asked "could you repeat that?" on top of the already-delivered answer.
+
+**Fix:** gate the fallback line on delivery state: find the per-turn marker for sentences already dispatched to TTS in this turn (the same state the kill/judge machinery reads — e.g. the turn-sentence buffer behind `judge_kill_snapshot`'s "heard=N" or the TTS dispatch counter; name what you used). If ≥1 substantive sentence of THIS turn already reached TTS: skip `speakTextRef` entirely, emit `onDebugEvent?.('brain_error_after_partial', \`${sentencesDelivered} sentence(s) delivered — repeat-request suppressed\`)`, and keep all the existing cleanup (streaming-entry purge, flags). If 0 delivered: today's behavior unchanged. The `escalationGaveUpRef` short-circuit stays first.
+
+- [ ] Implement; `npx tsc --noEmit`; report the hunk + both traces (late network error after delivered sentences → silent cleanup + event; error before any sentence → repeat-request as today). Commit `fix(tutor): suppress "repeat that?" fallback when the turn already delivered spoken content`.
+
 ### Task 4: Battery + repro trace
 
 - [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), full math battery + physics/chem/subject-notation, r33-prompt-rules, `npx tsc --noEmit`, `npm run build`.
