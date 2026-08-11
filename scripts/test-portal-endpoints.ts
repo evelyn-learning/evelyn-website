@@ -33,6 +33,7 @@ import { POST as practicePOST } from '@/app/api/portal/v1/practice/route';
 import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
+import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 
 const SECRET = 'secret-a';
 const PARTNER = 'portalA';
@@ -205,6 +206,22 @@ const ctxBody = (studentId: string) => ({
     const { status, json } = await call(sessionProgressGET, signed('GET', '/api/portal/v1/session-progress'));
     assert.strictEqual(status, 400);
     assert.strictEqual(json.reason, 'sessionId required');
+  });
+
+  console.log('\nReview-plan (auth + validation only — 200 path composes via an LLM-backed expander):\n');
+  await test('review-plan POST without signature → 401', async () => {
+    const { status } = await call(reviewPlanPOST, unsigned('POST', '/api/portal/v1/review-plan'));
+    assert.strictEqual(status, 401);
+  });
+  await test('review-plan POST malformed (missing los) → 400', async () => {
+    const body = { studentId: 'portalA:reviewer' };
+    const { status } = await call(reviewPlanPOST, signed('POST', '/api/portal/v1/review-plan', body));
+    assert.strictEqual(status, 400);
+  });
+  await test('review-plan POST empty los array → 400', async () => {
+    const body = { studentId: 'portalA:reviewer', los: [] };
+    const { status } = await call(reviewPlanPOST, signed('POST', '/api/portal/v1/review-plan', body));
+    assert.strictEqual(status, 400);
   });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
