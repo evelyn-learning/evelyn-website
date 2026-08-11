@@ -57,6 +57,22 @@ function hasProseResidue(t: string): boolean {
   return runs.some(r => r.length > 1 && !MATH_ATOMS.has(r));
 }
 
+/** Tokens extractAnswerNumber itself normalizes into a numeric value before
+ *  grepping for a digit run (pi → its decimal value, sqrt → evaluated). Any
+ *  OTHER letter run in a canonical form — a bare variable ('x','a'), or a
+ *  function/differential name extractAnswerNumber doesn't evaluate ('theta',
+ *  'sin', 'dx') — means the number extractAnswerNumber grabbed is just the
+ *  first digit it happened to find, not a real evaluation of the expression.
+ *  Gates the numeric-eval fallback below: both sides must be free of that
+ *  residue, or the fallback isn't allowed to fire (round-2 review finding —
+ *  extractAnswerNumber('5a') / extractAnswerNumber('5b') both "evaluate" to
+ *  5 by accident, which must never read as agreement). */
+const NUMERIC_EVAL_ATOMS = new Set(['pi', 'sqrt']);
+function isNumericEvaluable(canon: string): boolean {
+  const runs = canon.match(/[a-z]+/g) ?? [];
+  return runs.every(r => NUMERIC_EVAL_ATOMS.has(r));
+}
+
 /** Strip parens wrapping a single atomic token (no operators inside) —
  *  needed only for equivalence comparison, e.g. "\frac{x+1}{2}" canonicalizes
  *  to "(x+1)/(2)" while a manually-typed "(x+1)/2" doesn't get the redundant
@@ -106,11 +122,14 @@ function expressionsMatch(a: string, b: string): boolean {
 }
 
 /** True when the utterance contains 2+ separate numeric values in a
- *  multi-assignment shape ("m is 4 and b is -2") — same class the R36
- *  cover-layer extractAnswerToken refuses. */
+ *  multi-assignment shape ("m is 4 and b is -2", or the symbolic "x=4, y=-2")
+ *  — same class the R36 cover-layer extractAnswerToken refuses. The '='
+ *  alternative (round-2 review finding) catches assignment written with an
+ *  equals sign instead of the word "is" — without it, "x=4, y=-2" slipped
+ *  past this guard and fell through to a false numeric-eval agreement. */
 function isMultiValueUtterance(t: string): boolean {
   const nums = t.match(/-?\d+(?:\.\d+)?/g) ?? [];
-  return nums.length >= 2 && /\b(and|,)\b|,/.test(t) && /\b(is|are|equals?)\b/.test(t);
+  return nums.length >= 2 && /\b(and|,)\b|,/.test(t) && /\b(is|are|equals?)\b|=/.test(t);
 }
 
 export function matchUtteranceToAnswer(
@@ -144,9 +163,27 @@ export function matchUtteranceToAnswer(
   // 3) expression path — full-parse required on BOTH sides for any verdict
   if (cu === null || ce === null) return { verdict: 'unknown', reason: 'unparseable side' };
   if (expressionsMatch(cu, ce)) return { verdict: 'agree', reason: 'expression match' };
-  // π/4 vs 0.785-style: numeric fallback when both sides EVALUATE
-  if (nu !== null && ne !== null && nu !== 0 && Math.abs(nu - ne) <= Math.max(0.01, Math.abs(ne) * 0.01)) {
+  // π/4 vs 0.785-style: numeric fallback when both sides EVALUATE. Gated to
+  // sides with no un-evaluated letter residue — extractAnswerNumber just
+  // greps the first digit run, so "5a" vs "5b" must NOT reach here (round-2
+  // review finding).
+  if (
+    nu !== null && ne !== null && nu !== 0 &&
+    isNumericEvaluable(cu) && isNumericEvaluable(ce) &&
+    Math.abs(nu - ne) <= Math.max(0.01, Math.abs(ne) * 0.01)
+  ) {
     return { verdict: 'agree', reason: 'numeric-eval match' };
+  }
+  // Term-multisets disagree, but if either side still has unresolved
+  // grouping (parens beyond the redundant-atomic ones already normalized
+  // away) we can't rule out a regrouped-but-equal expression — e.g.
+  // "3+(2-(1+4))" vs "2-(1+4)+3" are both 0, but this comparator only does
+  // top-level term comparison, not recursive re-association. A false
+  // `disagree` is worse than a missed `agree` here, so fall back to
+  // `unknown` (round-2 review finding).
+  const na = stripAtomicParens(cu), nb = stripAtomicParens(ce);
+  if (na.includes('(') || nb.includes('(')) {
+    return { verdict: 'unknown', reason: 'unresolved grouping' };
   }
   return { verdict: 'disagree', reason: `expr ${cu}≠${ce}` };
 }

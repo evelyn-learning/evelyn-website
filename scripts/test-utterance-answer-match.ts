@@ -33,5 +33,21 @@ check('canon strips $ and braces', canonicalizeMathExpression('$\\frac{1}{2}x$')
 check('canon rejects prose', canonicalizeMathExpression('walk me through it') === null);
 check('canon unicode minus', canonicalizeMathExpression('−3') === '-3');
 
+// — round-2 review: Finding 1, false agree via numeric-eval fallback —
+// extractAnswerNumber greps the first digit run, it does not evaluate the
+// expression; the fallback must not fire when either side has un-evaluated
+// variable letters.
+check('numeric-eval gate: different variables, same digit is disagree', matchUtteranceToAnswer('5a', '5b').verdict === 'disagree');
+check('numeric-eval gate: matching digit, mismatched variable is disagree', matchUtteranceToAnswer('3x + 2', '3y + 2').verdict === 'disagree');
+check('numeric-eval gate: symbolic multi-assignment (=) is unknown', matchUtteranceToAnswer('x=4, y=-2', '4').verdict === 'unknown');
+
+// — round-2 review: Finding 2, false disagree on regrouped nested arithmetic —
+// termMultiset only compares top-level terms; when either side still has
+// unresolved grouping after normalization, a mismatch must fall back to
+// unknown rather than assert disagree.
+check('nested-paren regrouping is unknown, not disagree', matchUtteranceToAnswer('3+(2-(1+4))', '2-(1+4)+3').verdict === 'unknown');
+check('regression: flat mismatch still disagree', matchUtteranceToAnswer('2x', '3x').verdict === 'disagree');
+check('regression: exponent parens still agree', matchUtteranceToAnswer('-2e^(-2t)', '-2e^{-2t}').verdict === 'agree');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
