@@ -3241,10 +3241,21 @@ export function VoiceTutorRealtime({
   // Apply a RESOLVED lesson-plan advance — move the segment cursor to
   // `next` and run every side-effect a segment transition needs. Shared
   // by the brain-driven advance_lesson command branch (handleWhiteboard-
-  // Command, below) and the app-side deterministic Skip-button advance
-  // (callBrainOnce, FIX B). `next` MUST be a real segment id already
-  // resolved via resolveAdvanceTarget — this helper does not validate it.
-  const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string) => {
+  // Command, below), the app-side deterministic Skip-button advance
+  // (callBrainOnce, FIX B), and — via `opts.seamMode` — the turn-
+  // completion seam that applies a student-requested jump the brain
+  // forgot (callBrainOnce, `agenda_jump_inferred`). `next` MUST be a
+  // real segment id already resolved via resolveAdvanceTarget — this
+  // helper does not validate it.
+  //
+  // opts.seamMode: the three non-seam callers all run BEFORE the turn's
+  // content has rendered (mid-turn or pre-turn), so their side effects
+  // assume a "clean" render pipeline ahead of them. The seam runs AFTER
+  // the turn's content already rendered — two of the effects below are
+  // written for the "ahead of render" case and misbehave when run after
+  // it (see the seamMode guards inline). Everything else is identical
+  // regardless of `opts`.
+  const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean }) => {
     console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
     // Auto-mark "visited" segments: every segment from the outgoing
     // index (inclusive) up to the target index (exclusive) is added to
@@ -3294,7 +3305,16 @@ export function VoiceTutorRealtime({
     // Clear the focus card so the judge doesn't carry a stale
     // currentProblemRef across the segment boundary (observed 2026-05-15:
     // stale focus → Path B mis-fired a KILL on a correct affirmation).
-    currentProblemRef.current = null;
+    // Turn-end seam skip (R44 review round 3, Finding 1a): the three
+    // mid-turn callers run BEFORE this turn's content renders, so any
+    // currentProblemRef is necessarily stale from a PRIOR turn — clearing
+    // it is correct. The seam runs AFTER this turn's content already
+    // rendered, and that content may have just SET currentProblemRef via
+    // show_problem (~:4991) for a problem belonging to the segment we're
+    // advancing into. Nulling it here would blind the verdict machinery
+    // to the problem the brain just established this very turn (the
+    // live-incident shape: jump + same-turn show_problem, every time).
+    if (!opts?.seamMode) currentProblemRef.current = null;
     // Item P4 (2026-05-24) — clear the equation-label dedup map on
     // segment advance. The map's purpose is to catch "Final Answer
     // (x=12)" then "Final Answer (x=5)" within the SAME segment (a
@@ -3346,9 +3366,19 @@ export function VoiceTutorRealtime({
     const pageTitleStr = String(newPageTitle).slice(0, 70);
     // Defer the auto-newPage to the next batch — fire only if that batch
     // contains a command that actually renders (see pendingAdvanceNewPageRef).
-    pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
-    console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
-    onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
+    // Turn-end seam skip (R44 review round 3, Finding 1b): the three
+    // mid-turn callers arm this BEFORE the turn's own renders happen, so
+    // "next batch" IS this turn's content — correct pairing. The seam
+    // runs AFTER this turn's renders already happened; arming here would
+    // fire the newPage on the NEXT turn's first render batch instead —
+    // one turn late, splitting content that was actually continuous
+    // (advance + what follows it, both this turn) across a page boundary
+    // that lands a full turn downstream.
+    if (!opts?.seamMode) {
+      pendingAdvanceNewPageRef.current = { title: pageTitleStr, segmentId: next };
+      console.log(`[VoiceTutorRealtime] auto-newPage on segment advance DEFERRED → "${next}" ("${pageTitleStr}")`);
+      onDebugEvent?.('auto_newpage_on_advance_deferred', `${next}: ${pageTitleStr}`);
+    }
   }, [onCompletedSegmentsChange, useRealtimeV2, onDebugEvent]);
 
   // --- Render↔speech sync control surface --------------------------------
@@ -12564,14 +12594,23 @@ export function VoiceTutorRealtime({
       // discarded rather than applied against whatever the CURRENT turn
       // just did.
       const pendingJump = pendingStudentJumpRef.current;
+      // Review round 3, Finding 2: clear the pending ref unconditionally
+      // whenever one was read here, regardless of plan state. Previously
+      // the clear lived inside `if (pendingJump && lessonPlanRef.current)`
+      // — if the plan ref was momentarily null (e.g. mid lesson-plan
+      // swap), the ref survived into later turns. The 90s belt below
+      // bounds the damage, but generic segment ids like "recap" exist in
+      // every plan, so a late apply against a DIFFERENT plan after a
+      // swap was possible. The apply itself stays conditioned on the
+      // plan being present; only the clear is hoisted.
+      if (pendingJump) pendingStudentJumpRef.current = null;
       if (pendingJump && lessonPlanRef.current) {
-        pendingStudentJumpRef.current = null;
         if (Date.now() - pendingJump.atMs > 90_000) {
           onDebugEvent?.('agenda_jump_stale', `${pendingJump.label} → ${pendingJump.segId} (${Date.now() - pendingJump.atMs}ms old)`);
         } else {
           const jumpPlan = lessonPlanRef.current;
           if (jumpPlan.segments.some((s) => s.id === pendingJump.segId) && currentSegmentIdRef.current !== pendingJump.segId) {
-            applyResolvedAdvance(jumpPlan, currentSegmentIdRef.current, pendingJump.segId);
+            applyResolvedAdvance(jumpPlan, currentSegmentIdRef.current, pendingJump.segId, { seamMode: true });
             onDebugEvent?.('agenda_jump_inferred', `${pendingJump.label} → ${pendingJump.segId}`);
           }
         }
