@@ -1311,12 +1311,225 @@ async function runStudentEraseRouteTests() {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/* Evidence backfill — portal JSONL + MockAttempt + priors (Task 12)  */
+/* ------------------------------------------------------------------ */
+
+async function runBackfillEvidenceTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Task 12 backfill-evidence tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { EvidenceEventModel } = await import('../src/models');
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+  const { MockAttempt } = await import('../src/models/MockAttempt');
+  const { ProblemBank } = await import('../src/models/ProblemBank');
+  const { StudentProfileModel } = await import('../src/models/StudentProfile');
+  const { runBackfill, parseJsonlEvidence, buildMockEvidence, buildDiagnosticPriorEvidence } = await import(
+    '../scripts/backfill-evidence'
+  );
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+
+  await connectDB();
+
+  console.log('\nbackfill-evidence — portal JSONL + MockAttempt + priors (Task 12):\n');
+
+  const studentId = `lmtest:bf:${process.pid}`;
+  const attemptId = `lmtest-bf-attempt-${process.pid}`;
+  const frqItemId = `lmtest-bf-frq-${process.pid}`;
+  const LO_MOCK = 'lmtest.bf.lo-mock';
+  const LO_FRQ = 'lmtest.bf.lo-frq';
+  const LO_PRIOR = 'lmtest.bf.lo-prior';
+  const LO_QUIZ = 'lmtest.bf.lo-quiz';
+  const LO_PRACTICE = 'lmtest.bf.lo-practice';
+
+  const jsonlPath = path.join(os.tmpdir(), `lmtest-bf-${process.pid}.jsonl`);
+  const jsonlRows = [
+    {
+      idempotencyKey: `bf:quiz:lmtest-q-${process.pid}:0:i1`,
+      studentId,
+      loId: LO_QUIZ,
+      source: 'assessment',
+      itemId: 'i1',
+      outcome: 1,
+      pointsAwarded: 1,
+      maxPoints: 1,
+      occurredAt: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      idempotencyKey: `bf:practice:lmtest-p-${process.pid}:0:i2`,
+      studentId,
+      loId: LO_PRACTICE,
+      source: 'practice',
+      itemId: 'i2',
+      outcome: 0,
+      pointsAwarded: 0,
+      maxPoints: 1,
+      occurredAt: '2026-01-02T00:00:00.000Z',
+    },
+  ];
+
+  async function cleanup() {
+    await deleteLearnerModelData(studentId);
+    await MockAttempt.deleteOne({ attemptId });
+    await ProblemBank.deleteOne({ id: frqItemId });
+    await StudentProfileModel.deleteOne({ _id: studentId });
+    if (fs.existsSync(jsonlPath)) fs.unlinkSync(jsonlPath);
+  }
+
+  await cleanup();
+  try {
+    // --- pure builders — no DB ---
+    const parsed = parseJsonlEvidence(jsonlRows.map((r) => JSON.stringify(r)).join('\n'));
+    assert(
+      parsed.length === 2 && parsed[0]!.occurredAt instanceof Date,
+      'parseJsonlEvidence: parses each JSONL line, occurredAt string → Date',
+    );
+    const parsedTrial = parseJsonlEvidence(
+      JSON.stringify({ ...jsonlRows[0], studentId: 'trial:x', idempotencyKey: 'bf:quiz:trial:0:i1' }),
+    );
+    assert(parsedTrial.length === 0, "parseJsonlEvidence: drops 'trial:' studentId rows");
+
+    const mockEv = buildMockEvidence(
+      [
+        {
+          attemptId: 'a1',
+          studentId,
+          status: 'completed',
+          completedAt: new Date('2026-01-03T00:00:00Z'),
+          loBreakdown: [{ loId: LO_MOCK, correct: 1, total: 2 }],
+          frqGrades: [
+            { itemId: 'fx1', totalPoints: 3, maxPoints: 4 },
+            { itemId: 'fx2', totalPoints: 0, maxPoints: 4, ungraded: true },
+            { itemId: 'fx3', totalPoints: 1, maxPoints: 1 }, // no ProblemBank row → loId unresolved → dropped
+          ],
+        },
+      ],
+      new Map([['fx1', LO_FRQ]]),
+    );
+    assert(
+      mockEv.length === 2,
+      'buildMockEvidence: loBreakdown row + one resolvable graded frqGrades row; ungraded + loId-unresolved rows dropped',
+    );
+    assert(
+      mockEv.some((e) => e.idempotencyKey === `bf:mock:a1:lo:${LO_MOCK}` && e.outcome === 0.5 && e.source === 'mock'),
+      'buildMockEvidence: loBreakdown row is a correct/total fraction, keyed bf:mock:<id>:lo:<loId>',
+    );
+    assert(
+      mockEv.some((e) => e.idempotencyKey === 'bf:mock:a1:fx1' && e.outcome === 0.75 && e.loId === LO_FRQ),
+      'buildMockEvidence: frqGrades row is a points fraction, keyed bf:mock:<id>:<itemId>, loId via ProblemBank lookup',
+    );
+
+    const priorEv = buildDiagnosticPriorEvidence([
+      { _id: studentId, mastery: { [LO_PRIOR]: { score: 0.42, lastTouchedAt: '2026-01-04T00:00:00.000Z' } } },
+      { _id: 'trial:someone', mastery: { 'lo.x': { score: 1, lastTouchedAt: '2026-01-01T00:00:00.000Z' } } },
+    ]);
+    assert(
+      priorEv.length === 1 &&
+        priorEv[0]!.idempotencyKey === `bf:prior:${studentId}:${LO_PRIOR}` &&
+        priorEv[0]!.outcome === 0.42 &&
+        priorEv[0]!.source === 'diagnostic',
+      "buildDiagnosticPriorEvidence: one row per mastery entry (source 'diagnostic', outcome = score), drops trial: profiles",
+    );
+
+    // --- DB-backed: seed real fixtures, dry-run, real run, re-run ---
+    fs.writeFileSync(jsonlPath, `${jsonlRows.map((r) => JSON.stringify(r)).join('\n')}\n`);
+    await MockAttempt.create({
+      attemptId,
+      studentId,
+      formId: 'lmtest-bf-form',
+      examKey: 'lmtest-bf',
+      status: 'completed',
+      cursor: { sectionIdx: 0, moduleIdx: 0 },
+      servedModules: [],
+      responses: [],
+      moduleRouting: [],
+      loBreakdown: [{ loId: LO_MOCK, correct: 1, total: 2 }],
+      frqGrades: [{ itemId: frqItemId, totalPoints: 3, maxPoints: 4, parts: [] }],
+      isRetake: false,
+      startedAt: new Date('2026-01-03T00:00:00Z'),
+      completedAt: new Date('2026-01-03T00:10:00Z'),
+    });
+    await ProblemBank.create({
+      id: frqItemId,
+      topic: 'lmtest-bf',
+      difficulty: 1,
+      loId: LO_FRQ,
+      bankScope: 'mock',
+      problemText: 'fixture',
+      answer: 'fixture',
+      source: { name: 'fixture' },
+      license: 'internal-original',
+      verifiedAt: new Date(),
+      verifierModel: 'fixture',
+    });
+    await StudentProfileModel.create({
+      _id: studentId,
+      mastery: { [LO_PRIOR]: { loId: LO_PRIOR, score: 0.42, exposures: 3, lastTouchedAt: '2026-01-04T00:00:00.000Z' } },
+      gaps: [],
+      recentSessions: [],
+      preferences: {},
+      createdAt: '2026-01-04T00:00:00.000Z',
+      updatedAt: '2026-01-04T00:00:00.000Z',
+      schemaVersion: 1,
+    });
+
+    const dryCounts = await runBackfill({ jsonlPath, dryRun: true });
+    assert(
+      dryCounts.assessment >= 1 && dryCounts.practice >= 1 && dryCounts.mock >= 2 && dryCounts.diagnostic >= 1,
+      'runBackfill dry-run: per-source counts non-zero and include this run\'s fixtures ' +
+        '(assessment/practice from jsonl, mock from loBreakdown+frqGrades, diagnostic from the prior)',
+    );
+    const countAfterDry = await EvidenceEventModel.countDocuments({ studentId });
+    assert(countAfterDry === 0, 'runBackfill dry-run: writes nothing (this student has zero evidence rows)');
+
+    await runBackfill({ jsonlPath, dryRun: false });
+    const EXPECTED_KEYS = [
+      jsonlRows[0]!.idempotencyKey,
+      jsonlRows[1]!.idempotencyKey,
+      `bf:mock:${attemptId}:lo:${LO_MOCK}`,
+      `bf:mock:${attemptId}:${frqItemId}`,
+      `bf:prior:${studentId}:${LO_PRIOR}`,
+    ];
+    const written = await EvidenceEventModel.find({ _id: { $in: EXPECTED_KEYS } }).lean();
+    assert(
+      written.length === 5,
+      'runBackfill real run: all 5 expected rows land (jsonl quiz + practice, mock loBreakdown + frqGrades, prior)',
+    );
+    const mockLoRow = written.find((w) => w._id === `bf:mock:${attemptId}:lo:${LO_MOCK}`);
+    assert(
+      !!mockLoRow && mockLoRow.source === 'mock' && mockLoRow.outcome === 0.5,
+      'runBackfill: mock loBreakdown row — source mock, outcome = correct/total',
+    );
+    const priorRow = written.find((w) => w._id === `bf:prior:${studentId}:${LO_PRIOR}`);
+    assert(
+      !!priorRow && priorRow.source === 'diagnostic' && priorRow.outcome === 0.42,
+      'runBackfill: diagnostic prior row — source diagnostic, outcome = mastery score',
+    );
+
+    const countBeforeRerun = await EvidenceEventModel.countDocuments({ studentId });
+    await runBackfill({ jsonlPath, dryRun: false });
+    const countAfterRerun = await EvidenceEventModel.countDocuments({ studentId });
+    assert(
+      countBeforeRerun === 5 && countAfterRerun === 5,
+      'runBackfill: re-run is idempotent — zero new inserts for this student',
+    );
+  } finally {
+    await cleanup();
+  }
+}
+
 runDbTests()
   .then(() => runServerAppendPointTests())
   .then(() => runLearnerStateRouteTests())
   .then(() => runStudentProfileSegmentOutcomesTests())
   .then(() => runLearnerSnapshotTests())
   .then(() => runStudentEraseRouteTests())
+  .then(() => runBackfillEvidenceTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     // Explicit exit code either way: a live mongoose connection (DB section
