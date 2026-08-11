@@ -29,10 +29,36 @@ function capWords(s: string, n: number): string {
   return s.trim().replace(/[.?!]+$/, '').split(/\s+/).filter(Boolean).slice(0, n).join(' ');
 }
 
+/** R46 (a): stopwords that read as a dangling conjunction/preposition when
+ *  capWords' hard word-count cut lands right before them — "Limit laws and"
+ *  (cut mid "...and direct substitution") or "Explain the causes and" (cut
+ *  mid "...and effects"). Case-insensitive. */
+const TRAILING_STOPWORDS = new Set(['and', 'or', 'the', 'of', 'plus', 'with', 'vs', 'to', 'for', 'a', 'an']);
+
+/** Iteratively drops trailing stopwords left dangling by a hard word-count
+ *  cut. Never empties the label — an all-stopword input keeps its last
+ *  word rather than vanishing. */
+function stripTrailingStopwords(s: string): string {
+  const words = s.split(/\s+/).filter(Boolean);
+  while (words.length > 1 && TRAILING_STOPWORDS.has(words[words.length - 1].toLowerCase())) {
+    words.pop();
+  }
+  return words.join(' ');
+}
+
+/** capWords, plus the trailing-stopword strip — for output that becomes a
+ *  user-facing LABEL (rail pill, LO title). NOT used for capWords' other
+ *  call site (buildLabelPrompt's salient-text excerpt fed to the labeling
+ *  prompt) — that's raw context text, not a rendered label, and trimming a
+ *  trailing "and" out of a prompt excerpt would be pointless. */
+function capLabel(s: string, n: number): string {
+  return stripTrailingStopwords(capWords(s, n));
+}
+
 function loDisplay(plan: LessonPlan, loId: string): string {
   const lo = (plan.los ?? []).find((l) => l.id === loId);
   if (!lo) return loId;
-  return lo.shortTitle ?? capWords(lo.description, 4);
+  return lo.shortTitle ?? capLabel(lo.description, 4);
 }
 
 /** Exported thin wrapper over the module-private `loDisplay` (Task 1) —
@@ -162,7 +188,7 @@ export function parseLabelResponse(raw: string, plan: LessonPlan): SegmentLabels
     const label = (item as { label?: unknown }).label;
     if (typeof id !== 'string' || typeof label !== 'string' || !label.trim()) return null;
     if (!validIds.has(id)) return null;
-    out[id] = capWords(label, MAX_LABEL_WORDS);
+    out[id] = capLabel(label, MAX_LABEL_WORDS);
   }
   const values = Object.values(out);
   if (values.length === 0) return null;

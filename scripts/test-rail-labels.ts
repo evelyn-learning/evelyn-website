@@ -235,6 +235,47 @@ function mkPlan(opts: {
 }
 
 /* ------------------------------------------------------------------ */
+/* R46 (a) — trailing-stopword strip after capWords' hard word cut    */
+/* Live bug (session portal-0c48edbb): "Cover the limit laws and      */
+/* direct substitution" capped at MAX_LABEL_WORDS=3 left "Limit laws  */
+/* and" — a dangling conjunction. capLabel strips it post-cap.        */
+/* ------------------------------------------------------------------ */
+
+{
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  const p = (raw: string) => parseLabelResponse(raw, curated);
+  assert(
+    p('{"labels":[{"id":"concept-cx","label":"Limit laws and direct substitution"}]}')!['concept-cx'] === 'Limit laws',
+    'live shape: dangling trailing "and" stripped after the 3-word cap',
+  );
+  assert(
+    p('{"labels":[{"id":"concept-cx","label":"River delta formation"}]}')!['concept-cx'] === 'River delta formation',
+    'no dangling stopword after cap: 3-word cap unaffected by the strip',
+  );
+  assert(
+    p('{"labels":[{"id":"concept-cx","label":"River delta"}]}')!['concept-cx'] === 'River delta',
+    '2-word label with no trailing stopword: unchanged',
+  );
+}
+
+// loDisplay's 4-word LO-description fallback (no shortTitle) hits the same
+// capWords→dangling-stopword failure mode — verify the strip applies there
+// too (generated-plan rail item + railLoTitle both route through loDisplay).
+{
+  const gen = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [{ id: 'lo-c', description: 'Explain the process and results in detail' }], // no shortTitle
+    segmentIds: ['intro', 'lo-c-hook', 'lo-c-concept', 'recap'],
+  });
+  const m5 = buildRailModel(gen, 'lo-c-concept', new Set(), null)!.items;
+  assert(m5[1].label === 'Explain the process', 'LO 4-word fallback: dangling "and" stripped');
+}
+
+/* ------------------------------------------------------------------ */
 /* buildLabelPrompt — segment list + field inclusion                  */
 /* ------------------------------------------------------------------ */
 
