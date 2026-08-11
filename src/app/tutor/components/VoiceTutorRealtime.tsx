@@ -15520,6 +15520,67 @@ export function VoiceTutorRealtime({
         return;
       }
 
+      // Task 6 (2026-08-11, classifier-confirmed barge-in kill): the
+      // sustained-energy gate (retro `perception_bargein_gate_armed …
+      // (retro)`, and its onset-time sibling) exists as an ECHO DEFENSE
+      // front — but that same defense already lives in the classifier
+      // itself (self-voice scoring above). Live incident (portal-dc74208b,
+      // 06:27:52): the retro gate armed on a genuine full-sentence
+      // barge-in and never passed (the utterance's onset-to-sustain energy
+      // profile didn't clear the gate), while the transcript's own verdict
+      // — resolved via Haiku for this ambiguous mid-length sentence — came
+      // back `new_turn`. Today's code let the still-armed gate keep
+      // polling and dispatched the turn anyway (late-fallback), so the
+      // tutor's TTS kept playing over the student until it finished on its
+      // own. Once a verdict CONFIRMS genuine speech (`barge_in` /
+      // `new_turn`) while production is still 'speaking', the classifier
+      // has already done the echo-vs-genuine job the energy gate exists
+      // for — don't make a confirmed genuine interruption wait out (or
+      // silently lose to) a poll that measures the same thing less
+      // reliably. Fires the identical stage-3 kill a gate-pass fires
+      // (`runPerceptionKillRef` — same body used by both the mid-lesson
+      // and opener energy gates, and already proven safe to call at
+      // verdict-time by the Stage-2 lazy resolver above).
+      //
+      // Scope, deliberately narrow:
+      //  - Only 'barge_in' / 'new_turn' — 'continuation', 'filler',
+      //    'escalate', and every drop verdict (noise/filler/
+      //    drop_self_voice) keep today's behavior exactly (retro energy
+      //    poll, or whatever the existing routing already does). A
+      //    back-channel ("mm-hmm") never reaches this: it's a 2-token
+      //    pure-hesitation bigram that classifyHeuristic drops as
+      //    `filler` before the state-dependent branch ever runs — no
+      //    verdict this function checks for.
+      //  - Only while production is STILL 'speaking' at verdict time (read
+      //    live via productionStateRef — Haiku resolution can land up to
+      //    ~3s after the onset, well after the turn may have finished on
+      //    its own).
+      //  - Only when no kill has already fired for this utterance —
+      //    `perceptionInterruptCheckpointRef.current` is exactly the
+      //    "gate already passed" signal every other kill site guards on;
+      //    a non-null checkpoint here means a pass (or another kill path)
+      //    already ran, so this is a deliberate no-op double-kill guard.
+      //  - Same opening-turn deferral as every other 'speaking' kill path
+      //    (`openingTurnFullyDelivered`) — a classifier verdict doesn't
+      //    get to bypass the opener's echo-storm protection either.
+      // No double-dispatch: this only clears the poll timer and fires the
+      // kill's side effects (checkpoint + brain-abort + clearSpeechQueue);
+      // the transcript itself keeps flowing through its existing dispatch
+      // route below (now via the checkpoint branch, since the kill just
+      // set one) unchanged.
+      const fireClassifierConfirmedBargeInKill = (v: PerceptionVerdict, text: string) => {
+        if (v !== 'barge_in' && v !== 'new_turn') return;
+        if (productionStateRef.current !== 'speaking') return;
+        if (!openingTurnFullyDelivered()) return;
+        if (perceptionInterruptCheckpointRef.current) return; // already killed — no double-kill
+        if (bargeInGateTimerRef.current) {
+          clearInterval(bargeInGateTimerRef.current);
+          bargeInGateTimerRef.current = null;
+        }
+        onDebugEvent?.('perception_bargein_classifier_kill', `verdict=${v} · "${text.slice(0, 60)}"`);
+        runPerceptionKillRef.current?.('speaking');
+      };
+
       // ── Stage 1: heuristic classifier + Haiku escalation (logged, not enforced)
       // Per design Q2 + Q6, every perception transcript runs through the
       // heuristic; ambiguous mid-utterances escalate to Haiku. Verdicts are
@@ -15583,6 +15644,13 @@ export function VoiceTutorRealtime({
         if (heur.carveOut) {
           onDebugEvent?.('echo_carveout', `${heur.reason} · "${t.text.slice(0, 60)}"`);
         }
+        // Task 6: the heuristic itself can only reach 'barge_in' directly
+        // (a trigger word / question-shape while 'speaking' — see
+        // classifyHeuristic's state==='speaking' branch); it never returns
+        // 'new_turn' for that state. Still checked here (not just after
+        // Haiku below) so a heuristic-confirmed barge_in doesn't wait on
+        // Haiku it was never going to call.
+        fireClassifierConfirmedBargeInKill(heur.verdict, t.text);
 
         // ── Stage 2: if a perception cancel fired (checkpoint set),
         // route every NON-escalate heuristic verdict to restore/refire
@@ -15763,6 +15831,14 @@ export function VoiceTutorRealtime({
               );
               onDebugEvent?.('perception_haiku', `${verdict}:${reason}`);
               perceptionClassifyFailCountRef.current = 0;
+              // Task 6: this is the path the live incident (portal-dc74208b)
+              // actually resolved through — a mid-length ambiguous sentence
+              // during 'speaking' escalates straight to Haiku (classifyHeuristic's
+              // state==='speaking' branch has no direct route to 'new_turn'),
+              // so THIS verdict, not the heuristic's, is what confirmed the
+              // genuine interruption. Checked before the checkpoint routing
+              // below so a still-armed energy gate gets pre-empted here.
+              fireClassifierConfirmedBargeInKill(verdict, t.text);
               // Stage 2: route to restore/refire if a cancel checkpoint is set.
               // Bug 1 fix: gate on mySeq > minSeqForDispatch. Without this,
               // a Haiku verdict for a transcript that arrived BEFORE the
